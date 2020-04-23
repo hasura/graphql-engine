@@ -1,8 +1,4 @@
-import {
-  defaultPermissionsState,
-  defaultQueryPermissions,
-  defaultPresetsState,
-} from '../DataState';
+import { defaultPermissionsState, defaultQueryPermissions } from '../DataState';
 import { getEdForm, getIngForm } from '../utils';
 import { makeMigrationCall, fetchRoleList } from '../DataActions';
 import {
@@ -19,6 +15,7 @@ import {
 import { capitalize } from '../../../Common/utils/jsUtils';
 
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
+export const PERM_SET_FILTER_TYPE = 'ModifyTable/PERM_SET_FILTER_TYPE';
 export const PERM_SET_FILTER = 'ModifyTable/PERM_SET_FILTER';
 export const PERM_SET_FILTER_SAME_AS = 'ModifyTable/PERM_SET_FILTER_SAME_AS';
 export const PERM_TOGGLE_FIELD = 'ModifyTable/PERM_TOGGLE_FIELD';
@@ -48,8 +45,6 @@ export const X_HASURA_CONST = 'x-hasura-';
 /* preset operations */
 export const SET_PRESET_VALUE = 'ModifyTable/SET_PRESET_VALUE';
 
-export const CREATE_NEW_PRESET = 'ModifyTable/CREATE_NEW_PRESET';
-
 export const DELETE_PRESET = 'ModifyTable/DELETE_PRESET';
 
 /* */
@@ -65,10 +60,15 @@ const permOpenEdit = (tableSchema, role, query) => ({
   role,
   query,
 });
-const permSetFilter = filter => ({ type: PERM_SET_FILTER, filter });
-const permSetFilterSameAs = filter => ({
+const permSetFilter = (filter, filterType) => ({
+  type: PERM_SET_FILTER,
+  filter,
+  filterType,
+});
+const permSetFilterSameAs = (filter, filterType) => ({
   type: PERM_SET_FILTER_SAME_AS,
   filter,
+  filterType,
 });
 const permToggleField = (fieldType, fieldName) => ({
   type: PERM_TOGGLE_FIELD,
@@ -79,7 +79,7 @@ const permToggleAllFields = allFields => ({
   type: PERM_TOGGLE_ALL_FIELDS,
   allFields,
 });
-const permAllowAll = () => ({ type: PERM_ALLOW_ALL });
+const permAllowAll = filterType => ({ type: PERM_ALLOW_ALL, filterType });
 const permCloseEdit = () => ({ type: PERM_CLOSE_EDIT });
 const permSetRoleName = roleName => ({
   type: PERM_SET_ROLE_NAME,
@@ -123,11 +123,10 @@ const permDelApplySamePerm = index => {
     dispatch({ type: PERM_DEL_APPLY_SAME_PERM, data: index });
   };
 };
-const permCustomChecked = () => ({ type: PERM_CUSTOM_CHECKED });
-
-const getFilterKey = query => {
-  return query === 'insert' ? 'check' : 'filter';
-};
+const permCustomChecked = filterType => ({
+  type: PERM_CUSTOM_CHECKED,
+  filterType,
+});
 
 const getBasePermissionsState = (tableSchema, role, query, isNewRole) => {
   const _permissions = JSON.parse(JSON.stringify(defaultPermissionsState));
@@ -142,34 +141,14 @@ const getBasePermissionsState = (tableSchema, role, query, isNewRole) => {
 
   if (rolePermissions) {
     Object.keys(rolePermissions.permissions).forEach(q => {
-      const localPresets = [];
       _permissions[q] = rolePermissions.permissions[q];
-      // If the query is insert, transform set object if exists to an array
+
       if (q === 'insert' || q === 'update') {
         if (!_permissions[q].columns) {
           _permissions[q].columns = [];
         }
 
-        if ('set' in _permissions[q]) {
-          if (
-            Object.keys(_permissions[q].set).length > 0 &&
-            !(_permissions[q].set.length > 0)
-          ) {
-            Object.keys(_permissions[q].set).map(s => {
-              localPresets.push({
-                key: s,
-                value: _permissions[q].set[s],
-              });
-            });
-          }
-
-          localPresets.push(defaultPresetsState[q]);
-
-          _permissions[q].localPresets = [...localPresets];
-        } else {
-          // Just to support version changes
-          // If user goes from current to previous version and back
-          _permissions[q].localPresets = [defaultPresetsState[q]];
+        if (!_permissions[q].set) {
           _permissions[q].set = {};
         }
       }
@@ -723,20 +702,6 @@ const permChangePermissions = changeType => {
         },
       };
 
-      if (
-        (query === 'insert' || query === 'update') &&
-        'localPresets' in permissionsState[query]
-      ) {
-        // Convert preset array to Object
-        const presetsObject = {};
-        permissionsState[query].localPresets.forEach(s => {
-          if (s.key) {
-            presetsObject[s.key] = s.value;
-          }
-        });
-        permissionsState[query].set = { ...presetsObject };
-      }
-
       const deleteQuery = {
         type: 'drop_' + query + '_permission',
         args: {
@@ -819,7 +784,6 @@ export {
   permSetBulkSelect,
   toggleField,
   toggleAllFields,
-  getFilterKey,
   getBasePermissionsState,
   updatePermissionsState,
   deleteFromPermissionsState,

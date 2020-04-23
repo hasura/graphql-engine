@@ -757,11 +757,11 @@ only having the schema related to insert operation.
 
 mkGCtxMap
   :: forall m. (MonadError QErr m)
-  => AnnotatedObjects -> TableCache -> FunctionCache -> ActionCache -> m GCtxMap
-mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
+  => TableCache -> FunctionCache -> ActionCache -> m GCtxMap
+mkGCtxMap tableCache functionCache actionCache = do
   typesMapL <- mapM (mkGCtxMapTable tableCache functionCache) $
                filter (tableFltr . _tiCoreInfo) $ Map.elems tableCache
-  actionsSchema <- mkActionsSchema annotatedObjects actionCache
+  let actionsSchema = mkActionsSchema actionCache
   typesMap <- combineTypes actionsSchema typesMapL
   let gCtxMap  = flip Map.map typesMap $
                  fmap (\(ty, flds, insCtxMap) -> mkGCtx ty flds insCtxMap)

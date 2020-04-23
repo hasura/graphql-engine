@@ -8,7 +8,8 @@
     "strict": true,
     "esModuleInterop": true,
     "noEmitOnError": false,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["react"]
   },
   "exclude": ["node_modules"],
   "include": ["src/**/*"]

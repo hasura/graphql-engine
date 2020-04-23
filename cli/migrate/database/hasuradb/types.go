@@ -66,6 +66,8 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		}
 	case setTableCustomFields:
 		q.Args = &setTableCustomFieldsV2Input{}
+	case setTableIsEnum:
+		q.Args = &setTableIsEnumInput{}
 	case untrackTable:
 		q.Args = &unTrackTableInput{}
 	case createObjectRelationship:
@@ -250,6 +252,7 @@ const (
 	trackTable                  requestTypes = "track_table"
 	addExistingTableOrView                   = "add_existing_table_or_view"
 	setTableCustomFields                     = "set_table_custom_fields"
+	setTableIsEnum                           = "set_table_is_enum"
 	untrackTable                             = "untrack_table"
 	trackFunction                            = "track_function"
 	unTrackFunction                          = "untrack_function"
@@ -359,6 +362,11 @@ type trackTableV2Input struct {
 type setTableCustomFieldsV2Input struct {
 	Table tableSchema `json:"table" yaml:"table"`
 	tableConfiguration
+}
+
+type setTableIsEnumInput struct {
+	Table  tableSchema `json:"table" yaml:"table"`
+	IsEnum bool        `json:"is_enum" yaml:"is_enum"`
 }
 
 type unTrackTableInput struct {
@@ -849,7 +857,10 @@ func (i InconsistentMeatadataObject) GetReason() string {
 }
 
 type RunSQLInput struct {
-	SQL string `json:"sql" yaml:"sql"`
+	SQL                      string `json:"sql" yaml:"sql"`
+	Cascade                  bool   `json:"cascade,omitempty" yaml:"cascade,omitempty"`
+	ReadOnly                 bool   `json:"read_only,omitempty" yaml:"read_only,omitempty"`
+	CheckMetadataConsistency *bool  `json:"check_metadata_consistency,omitempty" yaml:"check_metadata_consistency,omitempty"`
 }
 
 type tableConfig struct {

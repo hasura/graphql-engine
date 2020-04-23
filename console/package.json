@@ -169,6 +169,8 @@
     "@types/redux-devtools-log-monitor": "^1.0.34",
     "@types/redux-logger": "^3.0.7",
     "@types/sinon": "^7.5.2",
+    "@types/styled-components": "^5.1.0",
+    "@types/styled-system": "^5.1.9",
     "@types/terser-webpack-plugin": "^2.2.0",
     "@types/unused-files-webpack-plugin": "^3.4.1",
     "@types/webpack": "^4.41.7",

@@ -28,7 +28,10 @@ const defaultPermissionsState = {
   table: '',
   role: '',
   query: '',
-  custom_checked: false,
+  custom_checked: {
+    check: false,
+    filter: false,
+  },
   newRole: '',
   limitEnabled: true,
   bulkSelect: [],
@@ -36,16 +39,6 @@ const defaultPermissionsState = {
   isEditing: false,
 };
 
-const defaultPresetsState = {
-  insert: {
-    key: '',
-    value: '',
-  },
-  update: {
-    key: '',
-    value: '',
-  },
-};
 const defaultQueryPermissions = {
   insert: {
     check: {},
@@ -53,11 +46,6 @@ const defaultQueryPermissions = {
     backend_only: false,
     set: {},
     columns: [],
-    localPresets: [
-      {
-        ...defaultPresetsState.insert,
-      },
-    ],
   },
   select: {
     columns: [],
@@ -72,11 +60,6 @@ const defaultQueryPermissions = {
     filter: {},
     backend_only: false,
     set: {},
-    localPresets: [
-      {
-        ...defaultPresetsState.update,
-      },
-    ],
   },
   delete: {
     backend_only: false,
@@ -199,5 +182,4 @@ export {
   defaultModifyState,
   defaultPermissionsState,
   defaultQueryPermissions,
-  defaultPresetsState,
 };

@@ -12,10 +12,12 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Resolve.Action
 import           Hasura.GraphQL.Validate.Types          (evalReusabilityT, runReusabilityT)
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
+import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -46,14 +48,14 @@ data FieldPlan
 
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
 
-type Explain r =
-  (ReaderT r (Except QErr))
+type Explain r m =
+  (ReaderT r (ExceptT QErr m))
 
 runExplain
   :: (MonadError QErr m)
-  => r -> Explain r a -> m a
+  => r -> Explain r m a -> m a
 runExplain ctx m =
-  either throwError return $ runExcept $ runReaderT m ctx
+  either throwError return =<< runExceptT (runReaderT m ctx)
 
 resolveVal
   :: (MonadError QErr m)
@@ -82,9 +84,14 @@ getSessVarVal userInfo sessVar =
     sessionVariables = _uiSession userInfo
 
 explainField
-  :: (MonadTx m)
-  => UserInfo -> GCtx -> SQLGenCtx -> GV.Field -> m FieldPlan
-explainField userInfo gCtx sqlGenCtx fld =
+  :: (MonadError QErr m, MonadTx m, HasVersion, MonadIO m)
+  => UserInfo
+  -> GCtx
+  -> SQLGenCtx
+  -> QueryActionExecuter
+  -> GV.Field
+  -> m FieldPlan
+explainField userInfo gCtx sqlGenCtx actionExecuter fld =
   case fName of
     "__type"     -> return $ FieldPlan fName Nothing Nothing
     "__schema"   -> return $ FieldPlan fName Nothing Nothing
@@ -92,13 +99,12 @@ explainField userInfo gCtx sqlGenCtx fld =
     _            -> do
       unresolvedAST <-
         runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-          evalReusabilityT $ RS.queryFldToPGAST fld
-      resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo)
-                     unresolvedAST
+        evalReusabilityT $ RS.queryFldToPGAST fld actionExecuter
+      resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo) unresolvedAST
       let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
           withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
       planLines <- liftTx $ map runIdentity <$>
-        Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
+                     Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
       return $ FieldPlan fName (Just txtSQL) $ Just planLines
   where
     fName = GV._fName fld
@@ -108,14 +114,15 @@ explainField userInfo gCtx sqlGenCtx fld =
     orderByCtx = _gOrdByCtx gCtx
 
 explainGQLQuery
-  :: (MonadError QErr m, MonadIO m)
+  :: (MonadError QErr m, MonadIO m,HasVersion)
   => PGExecCtx
   -> SchemaCache
   -> SQLGenCtx
   -> Bool
+  -> QueryActionExecuter
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
+explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query userVarsRaw) = do
   userInfo <- mkUserInfo UAdminSecretSent sessionVariables $ Just adminRoleName
   (execPlan, queryReusability) <- runReusabilityT $
     E.getExecPlanPartial userInfo sc enableAL query
@@ -126,11 +133,12 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
       throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
     GV.RQuery selSet ->
-      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx) (toList selSet)
+      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx actionExecuter)
+      (toList selSet)
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
     GV.RSubscription rootField -> do
-      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability rootField
+      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter rootField
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw

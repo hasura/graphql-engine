@@ -335,12 +335,14 @@ data PGScalarType
   | PGFloat
   | PGDouble
   | PGNumeric
+  | PGMoney
   | PGBoolean
   | PGChar
   | PGVarchar
   | PGText
   | PGCitext
   | PGDate
+  | PGTimeStamp
   | PGTimeStampTZ
   | PGTimeTZ
   | PGJSON
@@ -365,12 +367,14 @@ instance ToSQL PGScalarType where
     PGFloat       -> "real"
     PGDouble      -> "float8"
     PGNumeric     -> "numeric"
+    PGMoney       -> "money"
     PGBoolean     -> "boolean"
     PGChar        -> "character"
     PGVarchar     -> "varchar"
     PGText        -> "text"
     PGCitext      -> "citext"
     PGDate        -> "date"
+    PGTimeStamp   -> "timestamp"
     PGTimeStampTZ -> "timestamptz"
     PGTimeTZ      -> "timetz"
     PGJSON        -> "json"
@@ -413,6 +417,8 @@ textToPGScalarType t = case t of
   "numeric"                  -> PGNumeric
   "decimal"                  -> PGNumeric
 
+  "money"                    -> PGMoney
+
   "boolean"                  -> PGBoolean
   "bool"                     -> PGBoolean
 
@@ -425,6 +431,9 @@ textToPGScalarType t = case t of
   "citext"                   -> PGCitext
 
   "date"                     -> PGDate
+
+  "timestamp"                -> PGTimeStamp
+  "timestamp without time zone" -> PGTimeStamp
 
   "timestamptz"              -> PGTimeStampTZ
   "timestamp with time zone" -> PGTimeStampTZ
@@ -456,12 +465,14 @@ pgTypeOid PGBigSerial   = PTI.int8
 pgTypeOid PGFloat       = PTI.float4
 pgTypeOid PGDouble      = PTI.float8
 pgTypeOid PGNumeric     = PTI.numeric
+pgTypeOid PGMoney       = PTI.numeric
 pgTypeOid PGBoolean     = PTI.bool
 pgTypeOid PGChar        = PTI.char
 pgTypeOid PGVarchar     = PTI.varchar
 pgTypeOid PGText        = PTI.text
 pgTypeOid PGCitext      = PTI.text -- Explict type cast to citext needed, See also Note [Type casting prepared params]
 pgTypeOid PGDate        = PTI.date
+pgTypeOid PGTimeStamp   = PTI.timestamp
 pgTypeOid PGTimeStampTZ = PTI.timestamptz
 pgTypeOid PGTimeTZ      = PTI.timetz
 pgTypeOid PGJSON        = PTI.json
@@ -482,6 +493,7 @@ isNumType :: PGScalarType -> Bool
 isNumType PGFloat   = True
 isNumType PGDouble  = True
 isNumType PGNumeric = True
+isNumType PGMoney   = True
 isNumType ty        = isIntegerType ty
 
 stringTypes :: [PGScalarType]
@@ -511,6 +523,7 @@ isBigNum = \case
   PGBigSerial -> True
   PGNumeric   -> True
   PGDouble    -> True
+  PGMoney     -> True
   _           -> False
 
 geoTypes :: [PGScalarType]

@@ -58,6 +58,7 @@ data ActionMetric
     = ActionMetric
     { _amSynchronous       :: !Int
     , _amAsynchronous      :: !Int
+    , _amQueryActions      :: !Int
     , _amTypeRelationships :: !Int
     , _amCustomTypes       :: !Int
     } deriving (Show, Eq)
@@ -181,10 +182,12 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
 computeActionsMetrics :: ActionCache -> AnnotatedObjects -> ActionMetric
-computeActionsMetrics ac ao = ActionMetric syncActionsLen asyncActionsLen typeRelationships customTypesLen
+computeActionsMetrics ac ao =
+  ActionMetric syncActionsLen asyncActionsLen queryActionsLen typeRelationships customTypesLen
   where actions = Map.elems ac
-        syncActionsLen  = length . filter ((==ActionSynchronous) . _adKind . _aiDefinition) $ actions
-        asyncActionsLen = (length actions) - syncActionsLen
+        syncActionsLen  = length . filter ((==(ActionMutation ActionSynchronous)) . _adType . _aiDefinition) $ actions
+        asyncActionsLen  = length . filter ((==(ActionMutation ActionAsynchronous)) . _adType . _aiDefinition) $ actions
+        queryActionsLen = length . filter ((==ActionQuery) . _adType . _aiDefinition) $ actions
 
         outputTypesLen = length . nub . (map (_adOutputType . _aiDefinition)) $ actions
         inputTypesLen = length . nub . concat . (map ((map _argType) . _adArguments . _aiDefinition)) $ actions
