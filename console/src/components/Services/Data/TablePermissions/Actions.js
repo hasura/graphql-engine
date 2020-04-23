@@ -48,8 +48,8 @@ export const DELETE_PRESET = 'ModifyTable/DELETE_PRESET';
 /* */
 
 const permChangeTypes = {
-  save: 'update',
-  delete: 'delete',
+  save: 'Update',
+  delete: 'Delete',
 };
 
 const permOpenEdit = (tableSchema, role, query) => ({
