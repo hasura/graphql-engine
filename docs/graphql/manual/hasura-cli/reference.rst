@@ -215,7 +215,7 @@ reference manual.
 .env file
 ^^^^^^^^^
 
-Alternatively, environment variables can also be read from .env file, created manually 
+Alternatively, environment variables can also be read from the ``.env`` file, created manually 
 by the user, at the project root directory. A global flag, ``--envfile``, is added to 
 explicitly get the .env filename from users, which defaults to ``.env`` filename if 
 no flag is provided. 
