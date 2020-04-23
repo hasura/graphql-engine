@@ -249,7 +249,7 @@ data PreparedSql
   }
 
 newtype DataArgs
-  = DataArgs { unDataArgs :: [(Q.PrepArg, PGScalarValue)] }
+  = DataArgs [(Q.PrepArg, PGScalarValue)]
 -- ^ The value is (Q.PrepArg, PGScalarValue) because we want to log the human-readable value of the
 -- prepared argument (PGScalarValue) and not the binary encoding in PG format (Q.PrepArg)
 
@@ -284,10 +284,6 @@ instance J.ToJSON PreparedSql where
 -- arguments, or a raw bytestring (mostly, for introspection responses)
 -- From this intermediate representation, a `LazyTx` can be generated, or the
 -- SQL can be logged etc.
-data ResolvedQuery
-  = RRRaw !B.ByteString
-  | RRSql !PreparedSql
-
 data SafeResolvedQuery
   = SRRRaw !B.ByteString
   | SRRSql !SafePreparedSql
