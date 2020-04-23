@@ -29,6 +29,7 @@ Along with the check for filtering rows that can be updated, you can now set a p
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
 - server: add graphql-engine support for timestamps without timezones (fix #1217)
 - server: support inserting unquoted bigint, and throw an error if value overflows the bounds of the integer type (fix #576) (fix #4368)
+- console: while deriving action, map selection set of parent mutation to action's returning type (#4530)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
 - console: format row count in data browser for readablity (#4433)
