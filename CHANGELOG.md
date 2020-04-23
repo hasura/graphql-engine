@@ -2,6 +2,19 @@
 
 ## Next release
 
+### cli: add support for .env file
+
+ENV vars can now be read from .env file present at the project root directory. A global flag, `--envfile`, is added so you can explicitly provide the .env filename, which defaults to `.env` filename if no flag is provided.
+
+**Example**:
+
+```
+hasura console --envfile production.env
+```
+The above command will read ENV vars from `production.env` file present at the project root directory.
+
+(close #4129) (#4454)
+
 ### console: allow setting post-update check in update permissions
 
 Along with the check for filtering rows that can be updated, you can now set a post-update permission check that needs to be satisfied by the updated rows after the update is made.
