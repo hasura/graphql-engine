@@ -119,10 +119,11 @@ queryFldToPGAST fld actionExecuter = do
     QCAsyncActionFetch ctx ->
       QRFActionSelect <$> RA.resolveAsyncActionQuery userInfo ctx fld
     QCAction ctx -> do
-      case jsonAggType of
-        DS.JASMultipleRows -> QRFActionExecuteList
-        DS.JASSingleObject -> QRFActionExecuteObject
-      <$> actionExecuter (RA.resolveActionQuery fld ctx (userVars userInfo))
+      let f = case jsonAggType of
+                DS.JASMultipleRows -> QRFActionExecuteList
+                DS.JASSingleObject -> QRFActionExecuteObject
+      markNotReusable
+      f <$> actionExecuter (RA.resolveActionQuery fld ctx (userVars userInfo))
       where
         outputType = _saecOutputType ctx
         jsonAggType = RA.mkJsonAggSelect outputType
