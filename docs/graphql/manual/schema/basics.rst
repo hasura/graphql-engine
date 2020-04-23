@@ -148,17 +148,27 @@ Here are a couple of examples:
     mutation add_author {
       insert_author(
         objects: [
-          {id: 11, name: "Jane"}
+          {name: "Jane"}
         ]
       ) {
         affected_rows
+        returning {
+          id
+          name
+        }
       }
     }
   :response:
     {
       "data": {
         "insert_author": {
-          "affected_rows": 1
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 11,
+              "name": "Jane"
+            }
+          ]
         }
       }
     }

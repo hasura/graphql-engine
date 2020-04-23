@@ -208,7 +208,6 @@ E.g.
      insert_test(
        objects: [
          {
-           id: 1,
            jsonb_col: $value
          }
        ]
