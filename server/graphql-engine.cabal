@@ -221,14 +221,15 @@ library
                      , Hasura.Server.App
                      , Hasura.Server.Auth
                      , Hasura.Server.Init
-                     , Hasura.Server.Query
+                     , Hasura.Server.Init.Config
+                     , Hasura.Server.API.Query
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
                      , Hasura.Server.Logging
-                     , Hasura.Server.Context
                      , Hasura.Server.Migrate
                      , Hasura.Server.Compression
-                     , Hasura.Server.PGDump
+                     , Hasura.Server.API.PGDump
+                     , Hasura.Server.API.Types
                      -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
                      , Data.Parser.JSONPath
@@ -255,7 +256,7 @@ library
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
-                     , Hasura.Server.Config
+                     , Hasura.Server.API.Config
                      , Hasura.Server.Migrate.Version
                      , Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging

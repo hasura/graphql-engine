@@ -22,7 +22,6 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Context
 
 import           Language.GraphQL.Draft.Instances ()
 
@@ -99,9 +98,9 @@ toParsed req = case G.parseExecutableDoc gqlText of
   where
     gqlText = _unGQLQueryText $ _grQuery req
 
-encodeGQErr :: GraphQLResponseConfig -> Bool -> QErr -> J.Value
-encodeGQErr responseConfig isAdminRole qErr =
-  J.object [ "errors" J..= [encodeGQLErr responseConfig isAdminRole qErr]]
+encodeGQErr :: Bool -> QErr -> J.Value
+encodeGQErr includeInternal qErr =
+  J.object [ "errors" J..= [encodeGQLErr includeInternal qErr]]
 
 data GQResult a
   = GQSuccess !a

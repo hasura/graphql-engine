@@ -41,38 +41,35 @@ In case of errors, the response will look like the following if the debugging mo
         {
           "extensions": {
             "internal": {
-              "debug_info": {
-                "response": {
-                  "status": 200,
-                  "body": "some-string",
-                  "headers": [
-                    {
-                      "value": "application/json",
-                      "name": "Content-Type"
-                    }
-                  ]
-                },
-                "request": {
-                  "body": {
-                    "session_variables": {
-                      "x-hasura-role": "admin"
-                    },
-                    "input": {
-                      "email": "foo@boo.com",
-                      "name": "Foo"
-                    },
-                    "action": {
-                      "name": "create_user"
-                    }
-                  },
-                  "url": "http://127.0.0.1:5593/invalid-response",
-                  "headers": [
-
-                  ]
-                }
+              "response": {
+                "status": 200,
+                "body": "some-string",
+                "headers": [
+                  {
+                    "value": "application/json",
+                    "name": "Content-Type"
+                  }
+                ]
               },
-              "error": "expecting object or array of objects for action webhook response",
-              "type": "unexpected_json"
+              "request": {
+                "body": {
+                  "session_variables": {
+                    "x-hasura-role": "admin"
+                  },
+                  "input": {
+                    "email": "foo@boo.com",
+                    "name": "Foo"
+                  },
+                  "action": {
+                    "name": "create_user"
+                  }
+                },
+                "url": "http://127.0.0.1:5593/invalid-response",
+                "headers": [
+
+                ]
+              },
+              "error": "expecting object or array of objects for action webhook response"
             },
             "path": "$",
             "code": "parse-failed"

@@ -5,31 +5,29 @@ response:
   errors:
   - extensions:
       internal:
-        debug_info:
-          response:
-            status: 200
-            body:
-              name: Alice
-              id:
-            headers:
-            - value: application/json
-              name: Content-Type
-            - value: abcd
-              name: Set-Cookie
-          request:
-            body:
-              session_variables:
-                x-hasura-role: admin
-              input:
-                arg:
-                  name: Alice
-                  id:
-              action:
-                name: mirror
-            url: http://127.0.0.1:5593/mirror-action
-            headers: []
-        error: expecting not null value for field "id"
-        type: unexpected_json
+        error: unexpected response
+        response:
+          status: 200
+          body:
+            name: Alice
+            id:
+          headers:
+          - value: application/json
+            name: Content-Type
+          - value: abcd
+            name: Set-Cookie
+        request:
+          body:
+            session_variables:
+              x-hasura-role: admin
+            input:
+              arg:
+                name: Alice
+                id:
+            action:
+              name: mirror
+          url: http://127.0.0.1:5593/mirror-action
+          headers: []
       path: $
       code: unexpected
     message: expecting not null value for field "id"

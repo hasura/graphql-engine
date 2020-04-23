@@ -3,7 +3,7 @@
 import pytest
 import time
 
-from validate import check_query_f, check_query, get_conf_f
+from validate import check_query_f, check_query
 
 """
 TODO:- Test Actions metadata
@@ -43,46 +43,26 @@ class TestActionsSync:
         return 'queries/actions/sync'
 
     def test_invalid_webhook_response(self, hge_ctx):
-        check_query_secret(hge_ctx, self.dir() + '/invalid_webhook_response.yaml')
+        check_query_f(hge_ctx, self.dir() + '/invalid_webhook_response.yaml')
 
     def test_expecting_object_response(self, hge_ctx):
-        check_query_secret(hge_ctx, self.dir() + '/expecting_object_response.yaml')
+        check_query_f(hge_ctx, self.dir() + '/expecting_object_response.yaml')
 
     def test_expecting_array_response(self, hge_ctx):
-        check_query_secret(hge_ctx, self.dir() + '/expecting_array_response.yaml')
+        check_query_f(hge_ctx, self.dir() + '/expecting_array_response.yaml')
 
     # Webhook response validation tests. See https://github.com/hasura/graphql-engine/issues/3977
     def test_mirror_action_not_null(self, hge_ctx):
-        check_query_secret(hge_ctx, self.dir() + '/mirror_action_not_null.yaml')
+        check_query_f(hge_ctx, self.dir() + '/mirror_action_not_null.yaml')
 
     def test_mirror_action_unexpected_field(self, hge_ctx):
-        check_query_secret(hge_ctx, self.dir() + '/mirror_action_unexpected_field.yaml')
+        check_query_f(hge_ctx, self.dir() + '/mirror_action_unexpected_field.yaml')
 
     def test_mirror_action_no_field(self, hge_ctx):
-        check_query_secret(hge_ctx, self.dir() + '/mirror_action_no_field.yaml')
+        check_query_f(hge_ctx, self.dir() + '/mirror_action_no_field.yaml')
 
     def test_mirror_action_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_success.yaml')
-
-# Check query with admin secret tokens
-def check_query_secret(hge_ctx, f):
-    conf = get_conf_f(f)
-    admin_secret = hge_ctx.hge_key
-    def add_secret(c):
-        if admin_secret is not None:
-            if 'headers' in c:
-                c['headers']['x-hasura-admin-secret'] = admin_secret
-            else:
-                c['headers'] = {
-                    'x-hasura-admin-secret': admin_secret
-                }
-        return c
-
-    if isinstance(conf, list):
-        for _, sconf in enumerate(conf):
-            check_query(hge_ctx, add_secret(sconf), add_auth = False)
-    else:
-            check_query(hge_ctx, add_secret(conf), add_auth = False)
 
 @use_action_fixtures
 class TestQueryActions:

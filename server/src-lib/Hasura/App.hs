@@ -3,10 +3,10 @@
 
 module Hasura.App where
 
+import           Control.Concurrent.STM.TVar          (readTVarIO)
 import           Control.Monad.Base
 import           Control.Monad.Stateless
 import           Control.Monad.STM                    (atomically)
-import           Control.Concurrent.STM.TVar          (readTVarIO)
 import           Control.Monad.Trans.Control          (MonadBaseControl (..))
 import           Data.Aeson                           ((.=))
 import           Data.Time.Clock                      (UTCTime)
@@ -20,6 +20,7 @@ import qualified Control.Concurrent.Extended          as C
 import qualified Data.Aeson                           as A
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.ByteString.Lazy.Char8           as BLC
+import qualified Data.Set                             as Set
 import qualified Data.Text                            as T
 import qualified Data.Time.Clock                      as Clock
 import qualified Data.Yaml                            as Y
@@ -29,7 +30,6 @@ import qualified Network.HTTP.Client.TLS              as HTTP
 import qualified Network.Wai.Handler.Warp             as Warp
 import qualified System.Posix.Signals                 as Signals
 import qualified Text.Mustache.Compile                as M
-import qualified Data.Set                             as Set
 
 import           Hasura.Db
 import           Hasura.EncJSON
@@ -44,13 +44,12 @@ import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasH
                                                        buildSchemaCacheStrict, decodeValue,
                                                        throw400, userRole, withPathK)
 import           Hasura.RQL.Types.Run
+import           Hasura.Server.API.Query              (requiresAdmin, runQueryM)
 import           Hasura.Server.App
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates           (checkForUpdates)
-import           Hasura.Server.Context
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Query                  (requiresAdmin, runQueryM)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
@@ -164,7 +163,7 @@ initialiseCtx hgeCmd rci = do
   pure (InitCtx httpManager instanceId loggers connInfo pool, initTime)
   where
     procConnInfo =
-      either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
+      either (printErrExit . ("Fatal Error : " <>)) return $ mkConnInfo rci
 
     getMinimalPool pgLogger ci = do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
@@ -230,7 +229,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
              soEnabledAPIs
              soLiveQueryOpts
              soPlanCacheOptions
-             (GraphQLResponseConfig soDevMode soAdminInternalErrors)
+             soResponseInternalErrorsConfig
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)

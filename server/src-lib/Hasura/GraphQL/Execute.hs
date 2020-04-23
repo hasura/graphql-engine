@@ -38,6 +38,7 @@ import qualified Network.Wreq                           as Wreq
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.Resolve.Action
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -46,11 +47,10 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Context
+import           Hasura.Server.API.Types
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
                                                          mkSetCookieHeaders)
 import           Hasura.Server.Version                  (HasVersion)
-import           Hasura.GraphQL.Resolve.Action
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP

@@ -60,7 +60,6 @@ import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types
-import           Hasura.Server.Context
 
 -- -------------------------------------------------------------------------------------------------
 -- Subscribers
@@ -367,7 +366,7 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
     getCohortOperations cohortSnapshotMap actionMeta = \case
       Left e ->
         -- TODO: this is internal error
-        let resp = GQExecError [encodeGQErr noDebugResponseConfig False e]
+        let resp = GQExecError [encodeGQErr False e]
         in [ (resp, Nothing, actionMeta, snapshot)
            | (_, snapshot) <- Map.toList cohortSnapshotMap
            ]

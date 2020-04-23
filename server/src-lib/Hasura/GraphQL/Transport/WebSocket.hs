@@ -45,9 +45,9 @@ import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Error                      (Code (StartFailed))
+import           Hasura.Server.API.Types
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
                                                               resolveUserInfo)
-import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils                         (RequestId, getRequestId)
 import           Hasura.Server.Version                       (HasVersion)
@@ -240,7 +240,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
-        (BL.toStrict $ J.encode $ encodeGQLErr noDebugResponseConfig False qErr)
+        (BL.toStrict $ J.encode $ encodeGQLErr False qErr)
 
     checkPath = case WS.requestPath requestHead of
       "/v1alpha1/graphql" -> return ERTLegacy
@@ -411,7 +411,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     getErrFn errTy =
       case errTy of
         ERTLegacy           -> encodeQErr
-        ERTGraphqlCompliant -> encodeGQLErr noDebugResponseConfig
+        ERTGraphqlCompliant -> encodeGQLErr
 
     sendStartErr e = do
       let errFn = getErrFn errRespTy
