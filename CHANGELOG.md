@@ -23,12 +23,20 @@ Along with the check for filtering rows that can be updated, you can now set a p
 
 (close #4142) (#4313)
 
+### docs: map Postgres operators to corresponding Hasura operators 
+
+Map Postgres operators to corresponding Hasura operators at various places in docs and link to PG documentation for reference.
+For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#operator).
+
+(#4502) (close #4056)
+
 ### Bug fixes and improvements
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
 - server: add graphql-engine support for timestamps without timezones (fix #1217)
 - server: support inserting unquoted bigint, and throw an error if value overflows the bounds of the integer type (fix #576) (fix #4368)
+- console: while deriving action, map selection set of parent mutation to action's returning type (#4530)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
 - console: format row count in data browser for readablity (#4433)
