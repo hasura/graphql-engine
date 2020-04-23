@@ -994,7 +994,7 @@ Fetch all authors who don't have any published articles:
     }
 
 Using multiple filters in the same query (_and, _or)
----------------------------------------------------- 
+----------------------------------------------------
 
 You can group multiple parameters in the same ``where`` argument using the ``_and`` or the ``_or`` operators to filter
 results based on more than one criteria.

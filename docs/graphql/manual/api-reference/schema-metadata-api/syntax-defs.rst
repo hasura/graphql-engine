@@ -410,7 +410,7 @@ Operator
    * - ``_st_touches``
      - ``ST_Touches(column, input)``
    * - ``_st_within``
-     - ``ST_within(column, input)``
+     - ``ST_Within(column, input)``
    * - ``_st_d_within``
      - ``ST_DWithin(column, input)``
 

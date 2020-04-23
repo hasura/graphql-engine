@@ -541,7 +541,7 @@ Operator
    * - ``_st_equals``
      - ``ST_Equals(column, input)``
    * - ``_st_intersects``
-     - ``ST_Intersect(column, input)``
+     - ``ST_Intersects(column, input)``
    * - ``_st_overlaps``
      - ``ST_Overlaps(column, input)``
    * - ``_st_touches``
