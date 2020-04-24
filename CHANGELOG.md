@@ -7,12 +7,10 @@
 Introduces optional `backend_only` (default: `false`) configuration in insert permissions
 (see [api reference](https://deploy-preview-4224--hasura-docs.netlify.com/graphql/manual/api-reference/schema-metadata-api/permission.html#insertpermission)).
 If this is set to `true`, the insert mutation is accessible to the role only if the request
-is accompanied by `x-hasura-use-backend-only-permissions` session variable whose value is set to `true` and `x-hasura-admin-secret` header.
+is accompanied by `x-hasura-use-backend-only-permissions` session variable whose value is set to `true` along with the `x-hasura-admin-secret` header.
 Otherwise, the behavior of the permission remains unchanged.
 
-This feature is highly useful in case of accessing insert mutations from a Action webhook handler. If marked `backend_only: true`,
-then the mutation is hidden for frontend clients and webhook handlers can access the mutation with admin secret and
-`x-hasura-use-backend-only-permissions` header.
+This feature allows in hiding the `insert_table` mutation from frontend clients while still being able to access it from a Action webhook handler with the same role. 
 
 (rfc #4120) (#4224)
 
