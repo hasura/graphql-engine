@@ -10,7 +10,7 @@ If this is set to `true`, the insert mutation is accessible to the role only if 
 is accompanied by `x-hasura-use-backend-only-permissions` session variable whose value is set to `true` along with the `x-hasura-admin-secret` header.
 Otherwise, the behavior of the permission remains unchanged.
 
-This feature allows in hiding the `insert_table` mutation from frontend clients while still being able to access it from a Action webhook handler with the same role. 
+This feature is highly useful in disabling `insert_table` mutation for a role from frontend clients while still being able to access it from a Action webhook handler (with the same role). 
 
 (rfc #4120) (#4224)
 
