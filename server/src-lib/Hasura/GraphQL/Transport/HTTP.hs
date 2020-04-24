@@ -15,6 +15,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Init.Config
 import           Hasura.Server.Utils                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
 
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
@@ -75,7 +76,7 @@ runGQBatched reqId responseErrorsConfig userInfo reqHdrs reqs =
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
       -- in this case, and don't forward any.
-      let includeInternal = shouldIncludeInternal (userRole userInfo) responseErrorsConfig
+      let includeInternal = shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig
           removeHeaders =
             flip HttpResponse []
             . encJFromList

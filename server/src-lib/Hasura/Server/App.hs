@@ -54,6 +54,7 @@ import           Hasura.Server.Middleware               (corsMiddleware)
 import           Hasura.Server.Migrate                  (migrateCatalog)
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Execute                 as E
@@ -190,8 +191,8 @@ parseBody reqBody =
 
 onlyAdmin :: (Monad m) => Handler m ()
 onlyAdmin = do
-  uRole <- asks (userRole . hcUser)
-  when (uRole /= adminRole) $
+  uRole <- asks (_uiRole . hcUser)
+  when (uRole /= adminRoleName) $
     throw400 AccessDenied "You have to be an admin to access this endpoint"
 
 buildQCtx :: (MonadIO m) => Handler m QCtx
@@ -234,7 +235,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
                  return userInfoE
 
     let handlerState = HandlerCtx serverCtx userInfo headers requestId
-        includeInternal = shouldIncludeInternal (userRole userInfo) $
+        includeInternal = shouldIncludeInternal (_uiRole userInfo) $
                           scResponseInternalErrorsConfig serverCtx
 
     (serviceTime, (result, q)) <- withElapsedTime $ case apiHandler of

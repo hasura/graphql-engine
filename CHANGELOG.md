@@ -2,6 +2,18 @@
 
 ## Next release
 
+### server: backend only insert permissions
+
+Introduces optional `backend_only` (default: `false`) configuration in insert permissions
+(see [api reference](https://deploy-preview-4224--hasura-docs.netlify.com/graphql/manual/api-reference/schema-metadata-api/permission.html#insertpermission)).
+If this is set to `true`, the insert mutation is accessible to the role only if the request
+is accompanied by `x-hasura-use-backend-only-permissions` session variable whose value is set to `true` along with the `x-hasura-admin-secret` header.
+Otherwise, the behavior of the permission remains unchanged.
+
+This feature is highly useful in disabling `insert_table` mutation for a role from frontend clients while still being able to access it from a Action webhook handler (with the same role).
+
+(rfc #4120) (#4224)
+
 ### server: debugging mode for non-admin roles
 
 For any errors the server sends extra information in `extensions` field under `internal` key. Till now this was only
@@ -224,7 +236,6 @@ A new CLI migrations image is introduced to account for the new migrations workf
 (close #3969) (#4145)
 
 ### Bug fixes and improvements
-
 - server: improve performance of replace_metadata tracking many tables (fix #3802)
 - server: option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
 - server: fix various space leaks to avoid excessive memory consumption

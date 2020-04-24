@@ -248,8 +248,8 @@ runDropComputedField (DropComputedField table computedField cascade) = do
   pure successMsg
   where
     purgeComputedFieldDependency = \case
-      SOTableObj qt (TOPerm role permType) | qt == table ->
-        liftTx $ dropPermFromCatalog qt role permType
+      SOTableObj qt (TOPerm roleName permType) | qt == table ->
+        liftTx $ dropPermFromCatalog qt roleName permType
       d -> throw500 $ "unexpected dependency for computed field "
            <> computedField <<> "; " <> reportSchemaObj d
 
