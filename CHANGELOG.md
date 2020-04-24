@@ -4,32 +4,26 @@
 
 ### server: debugging mode for non-admin roles
 
-For any errors the server sends extra information in `extensions` field under `internal` key. Till now this is only
-available for `admin` role requests. To enable this for other roles, start the server with `--dev-mode` flag
+For any errors the server sends extra information in `extensions` field under `internal` key. Till now this was only
+available for `admin` role requests. To enable this for other roles, start the server with `--dev-mode` flag or set `HASURA_GRAPHQL_DEV_MODE` env variable to `true`:
+
 ```bash
 $ graphql-engine --database-url <database-url> serve --dev-mode
 ```
-or set `HASURA_GRAPHQL_DEV_MODE` env variable to `true`
 
-```bash
-$ HASURA_GRAPHQL_DEV_MODE='true' graphql-engine --database-url <db-url> serve
-```
-
-In case if you want to disable `internal` field for `admin` role requests, just set `--admin-internal-errors` option to `false`
+In case you want to disable `internal` field for `admin` role requests, set `--admin-internal-errors` option to `false` or or set `HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS` env variable to `false`
 
 ```bash
 $ graphql-engine --database-url <database-url> serve --admin-internal-errors false
 ```
-or set `HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS` env variable to `false`
-```bash
-$ HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS='false' graphql-engine --database-url <db-url> serve
-```
 
-This feature come in handy when developing Actions.
+This feature come in handy during development when you may want to see detailed errors irrespective of roles.
 
-**Improved internal errors for Actions (Breaking change with only 1.2.0-beta releases)**:
+**Improved internal errors for Actions**:
 
-The `internal` field for actions' errors is improved with more debug information. It now includes `request`,
+(This is a **breaking change** with previous 1.2.0-beta releases)
+
+The `internal` field for action errors is improved with more debug information. It now includes `request`,
 `response` and `error` fields instead of just `webhook_response` field.
 
 Before:
@@ -96,9 +90,7 @@ After:
               }
             },
             "url": "http://127.0.0.1:5593/mirror-action",
-            "headers": [
-
-            ]
+            "headers": []
           }
         },
         "path": "$",
