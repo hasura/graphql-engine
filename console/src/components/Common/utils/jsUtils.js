@@ -2,6 +2,10 @@
 
 import { showErrorNotification } from '../../Services/Common/Notification';
 
+export const isNotDefined = value => {
+  return value === null || value === undefined;
+};
+
 export const exists = value => {
   return value !== null && value !== undefined;
 };
@@ -16,6 +20,10 @@ export const isObject = value => {
 
 export const isString = value => {
   return typeof value === 'string';
+};
+
+export const isNumber = value => {
+  return typeof value === 'number';
 };
 
 export const isPromise = value => {
@@ -68,7 +76,7 @@ export const isEqual = (value1, value2) => {
   return _isEqual;
 };
 
-export function isJsonString(str) {
+export const isJsonString = str => {
   try {
     JSON.parse(str);
   } catch (e) {
@@ -76,9 +84,8 @@ export function isJsonString(str) {
   }
 
   return true;
-}
-
-export function getAllJsonPaths(json, leafKeys = [], prefix = '') {
+};
+export const getAllJsonPaths = (json, leafKeys = [], prefix = '') => {
   const _paths = [];
 
   const addPrefix = subPath => {
@@ -114,7 +121,7 @@ export function getAllJsonPaths(json, leafKeys = [], prefix = '') {
   }
 
   return _paths;
-}
+};
 
 // use browser confirm and prompt to get user confirmation for actions
 export const getConfirmation = (
@@ -281,6 +288,13 @@ export const getCurrTimeForFileName = () => {
   return [year, month, day, hours, minutes, seconds, milliSeconds].join('_');
 };
 
+// return number with commas for readability
+export const getReadableNumber = number => {
+  if (!isNumber(number)) return number;
+
+  return number.toLocaleString();
+};
+
 export const isValidTemplateLiteral = literal_ => {
   const literal = literal_.trim();
   if (!literal) return false;
@@ -305,4 +319,16 @@ export const getLastArrayElement = array => {
 export const getFirstArrayElement = array => {
   if (!array) return null;
   return array[0];
+};
+
+export const capitalize = s => {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
+export const deleteArrayElementAtIndex = (array, index) => {
+  return array.splice(index, 1);
+};
+
+export const arrayDiff = (arr1, arr2) => {
+  return arr1.filter(v => !arr2.includes(v));
 };

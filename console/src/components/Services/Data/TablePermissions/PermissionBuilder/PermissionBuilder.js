@@ -992,7 +992,7 @@ class PermissionBuilder extends React.Component {
     return (
       <div className="container-fluid">
         <div className="row">
-          <div className={styles.qb_container}>
+          <div className={styles.qb_container} data-test="qb_container">
             <div className={styles.remove_margin_bottom + ' well'}>
               {showPermissionBuilder()}
             </div>

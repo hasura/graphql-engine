@@ -4,7 +4,7 @@ The easiest way to run the test suite is to do:
 
     $ scripts/dev.sh test
 
-This should install python dependencies if required, and run in isolation.
+This should install python dependencies if required, and run in isolation.  The output format is described in the [pytest documentation](https://docs.pytest.org/en/latest/usage.html#detailed-summary-report).  Errors and failures are indicated by `F`s and `E`s.
 
 ## Tests Structure
 

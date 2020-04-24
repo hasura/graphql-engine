@@ -290,36 +290,85 @@ Operator
 
 **Generic operators (all column types except json, jsonb) :**
 
-- ``"$eq"``
-- ``"$ne"``
-- ``"$in"``
-- ``"$nin"``
-- ``"$gt"``
-- ``"$lt"``
-- ``"$gte"``
-- ``"$lte"``
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``"$eq"``
+     - ``=``
+   * - ``"$ne"``
+     - ``<>``
+   * - ``"$gt"``
+     - ``>``
+   * - ``"$lt"``
+     - ``<``
+   * - ``"$gte"``
+     - ``>=``
+   * - ``"$lte"``
+     - ``<=``
+   * - ``"$in"``
+     - ``IN``
+   * - ``"$nin"``
+     - ``NOT IN``
+
+(For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/current/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/current/functions-comparisons.html>`_.)
 
 **Text related operators :**
 
-- ``"$like"``
-- ``"$nlike"``
-- ``"$ilike"``
-- ``"$nilike"``
-- ``"$similar"``
-- ``"$nsimilar"``
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``"$like"``
+     - ``LIKE``
+   * - ``"$nlike"``
+     - ``NOT LIKE``
+   * - ``"$ilike"``
+     - ``ILIKE``
+   * - ``"$nilike"``
+     - ``NOT ILIKE``
+   * - ``"$similar"``
+     - ``SIMILAR TO``
+   * - ``"$nsimilar"``
+     - ``NOT SIMILAR TO``
+
+(For more details on text related operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-matching.html>`__.)
 
 **Operators for comparing columns (all column types except json, jsonb):**
 
-- ``"$ceq"``
-- ``"$cne"``
-- ``"$cgt"``
-- ``"$clt"``
-- ``"$cgte"``
-- ``"$clte"``
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``"$ceq"``
+     - ``=``
+   * - ``"$cne"``
+     - ``<>``
+   * - ``"$cgt"``
+     - ``>``
+   * - ``"$clt"``
+     - ``<``
+   * - ``"$cgte"``
+     - ``>=``
+   * - ``"$clte"``
+     - ``<=``
+
+(For more details on comparison operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-comparison.html>`__.)
 
 **Checking for NULL values :**
 
-- ``_is_null`` (takes true/false as values)
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_is_null`` (takes true/false as values)
+     - ``IS NULL``
+
+(For more details on the ``IS NULL`` expression, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-comparison.html>`__.)
 
 **JSONB operators :**
 
@@ -335,11 +384,11 @@ Operator
    * - ``_has_key``
      - ``?``
    * - ``_has_keys_any``
-     - ``?|``
+     - ``?!``
    * - ``_has_keys_all``
      - ``?&``
 
-(For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
+(For more details on JSONB operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
 
 **PostGIS related operators on GEOMETRY columns:**
 
@@ -349,23 +398,23 @@ Operator
    * - Operator
      - PostGIS equivalent
    * - ``_st_contains``
-     - ``ST_Contains``
+     - ``ST_Contains(column, input)``
    * - ``_st_crosses``
-     - ``ST_Crosses``
+     - ``ST_Crosses(column, input)``
    * - ``_st_equals``
-     - ``ST_Equals``
+     - ``ST_Equals(column, input)``
    * - ``_st_intersects``
-     - ``ST_Intersects``
+     - ``ST_Intersects(column, input)``
    * - ``_st_overlaps``
-     - ``ST_Overlaps``
+     - ``ST_Overlaps(column, input)``
    * - ``_st_touches``
-     - ``ST_Touches``
+     - ``ST_Touches(column, input)``
    * - ``_st_within``
-     - ``ST_Within``
+     - ``ST_Within(column, input)``
    * - ``_st_d_within``
-     - ``ST_DWithin``
+     - ``ST_DWithin(column, input)``
 
-(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__).
+(For more details on spatial relationship operators, refer to the `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
 
 .. note::
 
