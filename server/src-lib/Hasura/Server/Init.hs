@@ -59,13 +59,13 @@ import qualified Hasura.Logging                   as L
 
 import           Hasura.Db
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (QErr, RoleName (..), SchemaCache (..),
-                                                   mkNonEmptyText)
+import           Hasura.RQL.Types                 (QErr, SchemaCache (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
+import           Hasura.Session
 import           Network.URI                      (parseURI)
 
 newtype DbUid
@@ -622,7 +622,7 @@ parseConnParams =
                 help (snd pgTimeoutEnv)
               )
     allowPrepare = optional $
-      option (eitherReader parseStrAsBool)
+      option (eitherReader parseStringAsBool)
               ( long "use-prepared-statements" <>
                 metavar "<true|false>" <>
                 help (snd pgUsePrepareEnv)
@@ -689,13 +689,13 @@ jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
               <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`"
 
 parseUnAuthRole :: Parser (Maybe RoleName)
-parseUnAuthRole = fmap mkRoleName $ optional $
+parseUnAuthRole = fmap mkRoleName' $ optional $
   strOption ( long "unauthorized-role" <>
               metavar "<ROLE>" <>
               help (snd unAuthRoleEnv)
             )
   where
-    mkRoleName mText = mText >>= (fmap RoleName . mkNonEmptyText)
+    mkRoleName' mText = mText >>= mkRoleName
 
 parseCorsConfig :: Parser (Maybe CorsConfig)
 parseCorsConfig = mapCC <$> disableCors <*> corsDomain
@@ -730,7 +730,7 @@ parseConsoleAssetsDir = optional $
 
 parseEnableTelemetry :: Parser (Maybe Bool)
 parseEnableTelemetry = optional $
-  option (eitherReader parseStrAsBool)
+  option (eitherReader parseStringAsBool)
          ( long "enable-telemetry" <>
            help (snd enableTelemetryEnv)
          )

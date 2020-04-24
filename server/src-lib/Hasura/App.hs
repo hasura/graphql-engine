@@ -40,9 +40,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
                                                        HasSQLGenCtx, HasSystemDefined, QErr (..),
                                                        SQLGenCtx (..), SchemaCache (..), UserInfoM,
-                                                       adminRole, adminUserInfo,
                                                        buildSchemaCacheStrict, decodeValue,
-                                                       throw400, userRole, withPathK)
+                                                       throw400, withPathK)
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query              (requiresAdmin, runQueryM)
 import           Hasura.Server.App
@@ -53,6 +52,7 @@ import           Hasura.Server.Logging
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
+import           Hasura.Session
 
 
 printErrExit :: (MonadIO m) => forall a . String -> m a
@@ -395,8 +395,8 @@ instance UserAuthentication AppM where
 
 instance MetadataApiAuthorization AppM where
   authorizeMetadataApi query userInfo = do
-    let currRole = userRole userInfo
-    when (requiresAdmin query && currRole /= adminRole) $
+    let currRole = _uiRole userInfo
+    when (requiresAdmin query && currRole /= adminRoleName) $
       withPathK "args" $ throw400 AccessDenied errMsg
     where
       errMsg = "restricted access : admin only"

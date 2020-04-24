@@ -10,7 +10,7 @@ import styles from './ModifyTable.scss';
 const TableCommentEditor = ({
   tableComment,
   tableCommentEdit,
-  isTable,
+  tableType,
   dispatch,
 }) => {
   const editCommentClicked = () => {
@@ -22,7 +22,7 @@ const TableCommentEditor = ({
   };
 
   const commentEditSave = () => {
-    dispatch(saveTableCommentSql(isTable));
+    dispatch(saveTableCommentSql(tableType));
   };
 
   const commentEditCancel = () => {
