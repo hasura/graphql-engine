@@ -36,6 +36,8 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
 - server: add graphql-engine support for timestamps without timezones (fix #1217)
 - server: support inserting unquoted bigint, and throw an error if value overflows the bounds of the integer type (fix #576) (fix #4368)
+- server: fix creating relationships for custom object types with fields reusing Postgres scalars (close #4447) (#4455)
+- server: fix recreating action's permissions (close #4377)
 - console: while deriving action, map selection set of parent mutation to action's returning type (#4530)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
@@ -46,8 +48,8 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - console: fix row delete for relationships in data browser (#4433)
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
-- server: fix recreating action's permissions (close #4377)
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
+
 
 ## `v1.2.0-beta.4`
 

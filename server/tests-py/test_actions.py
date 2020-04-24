@@ -386,14 +386,17 @@ class TestSetCustomTypes:
     def dir(cls):
         return 'queries/actions/custom-types'
 
-    def test_resuse_pgscalars(self, hge_ctx):
+    def test_reuse_pgscalars(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/reuse_pgscalars.yaml')
 
-    def test_resuse_unknown_pgscalar(self, hge_ctx):
+    def test_reuse_unknown_pgscalar(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/reuse_unknown_pgscalar.yaml')
 
     def test_create_action_pg_scalar(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_action_pg_scalar.yaml')
+
+    def test_list_type_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/list_type_relationship.yaml')
 
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestActionsMetadata:
