@@ -119,10 +119,16 @@ queryFldToPGAST fld actionExecuter = do
     QCAsyncActionFetch ctx ->
       QRFActionSelect <$> RA.resolveAsyncActionQuery userInfo ctx fld
     QCAction ctx -> do
-      case jsonAggType of
-        DS.JASMultipleRows -> QRFActionExecuteList
-        DS.JASSingleObject -> QRFActionExecuteObject
-      <$> actionExecuter (RA.resolveActionQuery fld ctx (userVars userInfo))
+      -- query actions should not be marked reusable because we aren't
+      -- capturing the variable value in the state as re-usable variables.
+      -- The variables captured in non-action queries are used to generate
+      -- an SQL query, but in case of query actions it's converted into JSON
+      -- and included in the action's webhook payload.
+      markNotReusable
+      let f = case jsonAggType of
+             DS.JASMultipleRows -> QRFActionExecuteList
+             DS.JASSingleObject -> QRFActionExecuteObject
+      f <$> actionExecuter (RA.resolveActionQuery fld ctx (userVars userInfo))
       where
         outputType = _saecOutputType ctx
         jsonAggType = RA.mkJsonAggSelect outputType

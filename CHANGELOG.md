@@ -29,6 +29,13 @@ Postgres materialized views are views that are persisted in a table-like form. T
 
 (close #91) (#4270)
 
+### docs: map Postgres operators to corresponding Hasura operators 
+
+Map Postgres operators to corresponding Hasura operators at various places in docs and link to PG documentation for reference.
+For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#operator).
+
+(#4502) (close #4056)
+
 ### Bug fixes and improvements
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
