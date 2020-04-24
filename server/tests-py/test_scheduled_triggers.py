@@ -63,6 +63,24 @@ class TestScheduledTriggerAdhoc(object):
         adhoc_event_st,adhoc_event_resp = self.get_events_count_of_trigger(hge_ctx,self.adhoc_trigger_name)
         assert int(adhoc_event_resp['result'][1][0]) == 1 # An adhoc Scheduled Trigger should create exactly one schedule event
 
+    def test_create_scheduled_events_with_valid_timestamps(self,hge_ctx,scheduled_triggers_evts_webhook):
+        event_timestamps = ['2020-01-01 15:44 Z',
+                            '2020-01-01T15:45 Z',
+                            '2020-01-01T15:46Z',
+                            '2020-01-01T15:47:00+0000',
+                            '2020-01-01T15:48:00-05:30']
+        scheduled_event_query = {
+            "type":"create_scheduled_event",
+            "args": {
+                "name": self.adhoc_trigger_name
+            }
+        }
+        for timestamp in event_timestamps:
+            scheduled_event_query['args']['timestamp'] = timestamp
+            st,resp = hge_ctx.v1q(scheduled_event_query)
+            assert st == 200,resp
+            assert resp['message'] == 'success'
+
     def test_check_adhoc_webhook_event(self,hge_ctx,scheduled_triggers_evts_webhook):
         ev_full = scheduled_triggers_evts_webhook.get_event(60)
         validate_event_webhook(ev_full['path'],'/hello')
