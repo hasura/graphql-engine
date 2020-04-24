@@ -7,13 +7,6 @@ module Hasura.GraphQL.Resolve.Select
   , parseColumns
   , processTableSelectionSet
   , AnnSimpleSelect
-  , fromSelSet
-  , QueryRootFldAST(..)
-  , traverseQueryRootFldAST
-  , QueryRootFldUnresolved
-  , QueryRootFldResolved
-  , toSQLSelect
-  , toPGQuery
   ) where
 
 import           Control.Lens                      ((^?), _2)
@@ -531,12 +524,3 @@ convertFuncQueryAgg funcOpCtx fld =
     fromAggField selectFrom colGNameMap permFilter permLimit fld
   where
     FuncQOpCtx qf argSeq _ colGNameMap permFilter permLimit = funcOpCtx
-
-toSQLSelect :: QueryRootFldResolved -> S.Select
-toSQLSelect = \case
-  QRFPk s       -> RS.mkSQLSelect True s
-  QRFSimple s   -> RS.mkSQLSelect False s
-  QRFAgg s      -> RS.mkAggSelect s
-
-toPGQuery :: QueryRootFldResolved -> Q.Query
-toPGQuery = Q.fromBuilder . toSQL . toSQLSelect

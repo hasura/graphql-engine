@@ -44,6 +44,7 @@ import           Data.Has
 import           Data.UUID                              (UUID)
 
 import qualified Hasura.GraphQL.Resolve                 as GR
+import qualified Hasura.GraphQL.Resolve.Action          as RA
 import qualified Hasura.GraphQL.Resolve.Select          as GR
 import qualified Hasura.GraphQL.Resolve.Types           as GR
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
@@ -58,6 +59,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Server.Version             (HasVersion)
 
 -- -------------------------------------------------------------------------------------------------
 -- Multiplexed queries
@@ -96,7 +98,7 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
       [ S.SELit (G.unName $ G.unAlias fieldAlias)
       , mkQualIden (aliasToIden fieldAlias) (Iden "root") ]
 
-    mkQualIden prefix = S.SEQIden . S.QIden (S.QualIden prefix)
+    mkQualIden prefix = S.SEQIden . S.QIden (S.QualIden prefix Nothing) -- TODO fix this Nothing of course
     aliasToIden = Iden . G.unName . G.unAlias
 
 -- | Resolves an 'GR.UnresolvedVal' by converting 'GR.UVPG' values to SQL expressions that refer to
@@ -271,19 +273,21 @@ buildLiveQueryPlan
      , Has GR.OrdByCtx r
      , Has GR.QueryCtxMap r
      , Has SQLGenCtx r
+     , HasVersion
      , MonadIO m
      )
   => PGExecCtx
   -> GV.QueryReusability
+  -> RA.QueryActionExecuter
   -> GV.SelSet
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
-buildLiveQueryPlan pgExecCtx initialReusability fields = do
+buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
   ((resolvedASTs, (queryVariableValues, syntheticVariableValues)), finalReusability) <-
     GV.runReusabilityTWith initialReusability . flip runStateT mempty $
       fmap Map.fromList . for (toList fields) $ \field -> case GV._fName field of
         "__typename" -> throwVE "you cannot create a subscription on '__typename' field"
         _ -> do
-          unresolvedAST <- GR.queryFldToPGAST field
+          unresolvedAST <- GR.queryFldToPGAST field actionExecutioner
           resolvedAST <- GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
           pure (GV._fAlias field, resolvedAST)
 

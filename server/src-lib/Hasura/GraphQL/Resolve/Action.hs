@@ -171,7 +171,7 @@ resolveActionMutationSync field executionContext sessionVariables = do
     (_fType field) $ _fSelSet field
   astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
   let jsonAggType = mkJsonAggSelect outputType
-  return $ (,respHeaders) $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
+  return $ (,respHeaders) $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
   where
     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
