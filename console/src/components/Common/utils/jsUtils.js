@@ -121,6 +121,44 @@ export const arrayDiff = (arr1, arr2) => {
 
 /* JSON utils */
 
+export const getAllJsonPaths = (json, leafKeys = [], prefix = '') => {
+  const _paths = [];
+
+  const addPrefix = subPath => {
+    return prefix + (prefix && subPath ? '.' : '') + subPath;
+  };
+
+  const handleSubJson = (subJson, newPrefix) => {
+    const subPaths = getAllJsonPaths(subJson, leafKeys, newPrefix);
+
+    subPaths.forEach(subPath => {
+      _paths.push(subPath);
+    });
+
+    if (!subPaths.length) {
+      _paths.push(newPrefix);
+    }
+  };
+
+  if (isArray(json)) {
+    json.forEach((subJson, i) => {
+      handleSubJson(subJson, addPrefix(i.toString()));
+    });
+  } else if (isObject(json)) {
+    Object.keys(json).forEach(key => {
+      if (leafKeys.includes(key)) {
+        _paths.push({ [addPrefix(key)]: json[key] });
+      } else {
+        handleSubJson(json[key], addPrefix(key));
+      }
+    });
+  } else {
+    _paths.push(addPrefix(json));
+  }
+
+  return _paths;
+};
+
 /* TRANSFORM utils*/
 
 export const capitalize = s => {
