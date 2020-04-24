@@ -158,7 +158,7 @@ type ServerConfig struct {
 
 func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 	// Determine from where assets should be served
-	url := c.APIPaths.Config
+	url := c.getConfigEndpoint()
 	client := http.Client{Timeout: 30 * time.Second}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -203,6 +203,13 @@ type HasuraServerInternalConfig struct {
 func (s *ServerConfig) GetVersionEndpoint() string {
 	nurl := *s.ParsedEndpoint
 	nurl.Path = path.Join(nurl.Path, s.APIPaths.Version)
+	return nurl.String()
+}
+
+// GetVersionEndpoint provides the url to contact the config API
+func (s *ServerConfig) getConfigEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.Config)
 	return nurl.String()
 }
 
