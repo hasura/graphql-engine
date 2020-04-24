@@ -116,7 +116,6 @@ module Hasura.RQL.Types.SchemaCache
   , askFunctionInfo
 
   , ScheduledTriggerInfo(..)
-  , ScheduledTriggerInfoMap
   ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -191,8 +190,6 @@ data ScheduledTriggerInfo
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''ScheduledTriggerInfo)
 
-type ScheduledTriggerInfoMap = M.HashMap TriggerName ScheduledTriggerInfo
-
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
   deriving (Show, Eq, Ord, Hashable, ToJSON, FromJSON)
@@ -219,7 +216,7 @@ data SchemaCache
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
   , scInconsistentObjs  :: ![InconsistentMetadata]
-  , scScheduledTriggers :: !ScheduledTriggerInfoMap
+  , scScheduledTriggers :: !(M.HashMap TriggerName ScheduledTriggerInfo)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 
