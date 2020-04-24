@@ -2,6 +2,106 @@
 
 ## Next release
 
+### server: debugging mode for non-admin roles
+
+For any errors the server sends extra information in `extensions` field under `internal` key. Till now this was only
+available for `admin` role requests. To enable this for other roles, start the server with `--dev-mode` flag or set `HASURA_GRAPHQL_DEV_MODE` env variable to `true`:
+
+```bash
+$ graphql-engine --database-url <database-url> serve --dev-mode
+```
+
+In case you want to disable `internal` field for `admin` role requests, set `--admin-internal-errors` option to `false` or or set `HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS` env variable to `false`
+
+```bash
+$ graphql-engine --database-url <database-url> serve --admin-internal-errors false
+```
+
+This feature come in handy during development when you may want to see detailed errors irrespective of roles.
+
+**Improved internal errors for Actions**:
+
+(This is a **breaking change** with previous 1.2.0-beta releases)
+
+The `internal` field for action errors is improved with more debug information. It now includes `request`,
+`response` and `error` fields instead of just `webhook_response` field.
+
+Before:
+```json
+{
+  "errors": [
+    {
+      "extensions": {
+        "internal": {
+          "webhook_response": {
+            "age": 25,
+            "name": "Alice",
+            "id": "some-id"
+          }
+        },
+        "path": "$",
+        "code": "unexpected"
+      },
+      "message": "unexpected fields in webhook response: age"
+    }
+  ]
+}
+```
+After:
+```json
+{
+  "errors": [
+    {
+      "extensions": {
+        "internal": {
+          "error": "unexpected response",
+          "response": {
+            "status": 200,
+            "body": {
+              "age": 25,
+              "name": "Alice",
+              "id": "some-id"
+            },
+            "headers": [
+              {
+                "value": "application/json",
+                "name": "Content-Type"
+              },
+              {
+                "value": "abcd",
+                "name": "Set-Cookie"
+              }
+            ]
+          },
+          "request": {
+            "body": {
+              "session_variables": {
+                "x-hasura-role": "admin"
+              },
+              "input": {
+                "arg": {
+                  "age": 25,
+                  "name": "Alice",
+                  "id": "some-id"
+                }
+              },
+              "action": {
+                "name": "mirror"
+              }
+            },
+            "url": "http://127.0.0.1:5593/mirror-action",
+            "headers": []
+          }
+        },
+        "path": "$",
+        "code": "unexpected"
+      },
+      "message": "unexpected fields in webhook response: age"
+    }
+  ]
+}
+```
+
 ### cli: add support for .env file
 
 ENV vars can now be read from .env file present at the project root directory. A global flag, `--envfile`, is added so you can explicitly provide the .env filename, which defaults to `.env` filename if no flag is provided.
@@ -23,7 +123,7 @@ Along with the check for filtering rows that can be updated, you can now set a p
 
 (close #4142) (#4313)
 
-### docs: map Postgres operators to corresponding Hasura operators 
+### docs: map Postgres operators to corresponding Hasura operators
 
 Map Postgres operators to corresponding Hasura operators at various places in docs and link to PG documentation for reference.
 For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#operator).
@@ -36,6 +136,8 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
 - server: add graphql-engine support for timestamps without timezones (fix #1217)
 - server: support inserting unquoted bigint, and throw an error if value overflows the bounds of the integer type (fix #576) (fix #4368)
+- server: fix creating relationships for custom object types with fields reusing Postgres scalars (close #4447) (#4455)
+- server: fix recreating action's permissions (close #4377)
 - console: while deriving action, map selection set of parent mutation to action's returning type (#4530)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
@@ -46,8 +148,8 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - console: fix row delete for relationships in data browser (#4433)
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
-- server: fix recreating action's permissions (close #4377)
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
+
 
 ## `v1.2.0-beta.4`
 
