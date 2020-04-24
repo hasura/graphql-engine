@@ -158,7 +158,7 @@ type ServerConfig struct {
 
 func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 	// Determine from where assets should be served
-	url := c.Endpoint + "/v1alpha1/config"
+	url := c.APIPaths.Config
 	client := http.Client{Timeout: 30 * time.Second}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
