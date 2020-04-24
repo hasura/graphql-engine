@@ -5,7 +5,6 @@
     "lib": ["dom", "es2017"],
     "target": "esnext",
     "types": ["cypress"],
-    "checkJs": false,
     "noImplicitAny": false
   },
   "include": ["../node_modules/cypress", "**/*.ts"]

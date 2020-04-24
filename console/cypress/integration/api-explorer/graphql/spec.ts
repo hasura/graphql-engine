@@ -1,12 +1,10 @@
-/* eslint import/prefer-default-export: 0 */
-
 import {
   getElementFromAlias,
   baseUrl,
   tableColumnTypeSelector,
+  makeDataAPIOptions,
 } from '../../../helpers/dataHelpers';
 import { validateCT } from '../../validators/validators';
-import { makeDataAPIOptions } from '../../../helpers/dataHelpers';
 import { toggleOnMigrationMode } from '../../data/migration-mode/utils';
 import { setPromptValue } from '../../../helpers/common';
 // ***************** UTIL FUNCTIONS **************************
@@ -16,6 +14,7 @@ let dataApiUrl;
 
 export const createTestTable = () => {
   cy.window().then(win => {
+    /* eslint-disable no-underscore-dangle */
     adminSecret = win.__env.adminSecret;
     dataApiUrl = win.__env.dataApiUrl;
     const { consoleMode } = win.__env;
@@ -24,22 +23,20 @@ export const createTestTable = () => {
     }
   });
 
-  //    Click on the create table button
+  // Click on the create table button
   cy.visit('/data/schema');
   cy.wait(15000);
   cy.get(getElementFromAlias('data-create-table')).click();
   // Enter the table name
   cy.get(getElementFromAlias('tableName')).type('users');
-  //   Set first column
+  // Set first column
   cy.get(getElementFromAlias('column-0'))
     .clear()
     .type('id');
-  // cy.get(getElementFromAlias('col-type-0')).click();
   tableColumnTypeSelector('col-type-0');
   cy.get(getElementFromAlias('data_test_column_type_value_serial'))
     .first()
     .click();
-  // cy.get(getElementFromAlias('col-type-0')).select('serial');
   cy.get(getElementFromAlias('column-1'))
     .clear()
     .type('name');
@@ -48,15 +45,14 @@ export const createTestTable = () => {
     .first()
     .click();
 
-  // cy.get(getElementFromAlias('col-type-1')).select('text');
-  //   Set primary key
+  // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   //  Click on create
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(10000);
-  //  Check if the table got created and navigatied to modify table
+  // Check if the table got created and navigatied to modify table
   cy.url().should('eq', `${baseUrl}/data/schema/public/tables/users/modify`);
-  //   Validate
+  // Validate
   validateCT('users', 'success');
 };
 
@@ -68,15 +64,9 @@ export const insertValue = () => {
 };
 
 export const openAPIExplorer = () => {
-  //eslint-disable-line
   // Open API Explorer
   cy.get(getElementFromAlias('api-explorer')).click();
   cy.wait(3000);
-};
-
-export const checkExecuteQueryButton = () => {
-  cy.get('.execute-button').click();
-  cy.get('.cm-def').contains('errors');
 };
 
 export const checkQuery = () => {
@@ -145,7 +135,6 @@ export const checkSub = () => {
     cy.log(JSON.stringify(res));
     cy.wait(3000);
     cy.get('.cm-string').contains('someOtherName');
-    // cy.get('.cm-number').contains('1');
   });
 };
 
@@ -153,19 +142,19 @@ export const delTestTable = () => {
   cy.get('a')
     .contains('Data')
     .click();
-  //   Go to the modify section of the table
+  // Go to the modify section of the table
   cy.get(getElementFromAlias('users')).click();
   cy.get(getElementFromAlias('table-modify')).click();
   setPromptValue('users');
-  //   Click on delete
+  // Click on delete
   cy.get(getElementFromAlias('delete-table')).click();
   //   Confirm
   cy.window()
     .its('prompt')
     .should('be.called');
   cy.wait(5000);
-  //   Match the URL
+  // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
-  //   Validate
+  // Validate
   validateCT('users', 'failure');
 };
