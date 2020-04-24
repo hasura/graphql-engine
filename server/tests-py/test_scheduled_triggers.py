@@ -8,8 +8,8 @@ from queue import Empty
 import time
 
 # The create and delete tests should ideally go in setup and teardown YAML files,
-# We can't use that here because, the payload is dynamic i.e. in case of adhoc STs
-# the value is the current timestamp and in case of cron STs, the cron schedule is
+# We can't use that here because, the payload is dynamic i.e. in case of adhoc Scheduled Triggers
+# the value is the current timestamp and in case of cron Scheduled Triggers, the cron schedule is
 # derived based on the current timestamp
 
 def stringify_datetime(dt):
@@ -61,7 +61,7 @@ class TestScheduledTriggerAdhoc(object):
 
     def test_check_adhoc_generated_events_count(self,hge_ctx,scheduled_triggers_evts_webhook):
         adhoc_event_st,adhoc_event_resp = self.get_events_count_of_trigger(hge_ctx,self.adhoc_trigger_name)
-        assert int(adhoc_event_resp['result'][1][0]) == 1 # An adhoc ST should create exactly one schedule event
+        assert int(adhoc_event_resp['result'][1][0]) == 1 # An adhoc Scheduled Trigger should create exactly one schedule event
 
     def test_check_adhoc_webhook_event(self,hge_ctx,scheduled_triggers_evts_webhook):
         ev_full = scheduled_triggers_evts_webhook.get_event(60)
