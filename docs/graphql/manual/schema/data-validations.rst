@@ -193,12 +193,12 @@ If the validation requires complex custom business logic and/or needs informatio
 from external sources, you can use :ref:`Actions <actions>` to perform your
 validation.
 
-**Example:** Make sure an author is not black-listed when creating an article.
+**Example:** Make sure an author is not black-listed before inserting them.
 
 Let's assume you have an external service that manages and stores black-listed authors.
-Before inserting an author, we need to check if an author is black-listed.
+Before inserting an author in our GraphQL API, we need to check with this service if an author is black-listed or not.
 
-Let's assume we have :ref:`derived an action <derive_actions>` from the ``insert_article`` muation. It has the following action definition:
+Let's assume we have :ref:`derived an action <derive_actions>` from the ``insert_authors_one`` muation. It has the following action definition:
 
 .. code-block:: graphql
 
@@ -236,7 +236,7 @@ Add the following business logic to your :ref:`action handler <action_handlers>`
     res.status(400).json({ message: "Author is blacklisted" });
   }
 
-When we now insert a new article, our action handler checks if the author is black-listed. If it's not, the article will be inserted and the ``id`` will be returned.
+When we now insert an author, our action handler will check if author is black-listed. If it's not, the author will be inserted into our GraphQL API and the ``id`` will be returned.
 If the author is black-listed, we get the following error message:
 
 .. code-block:: text
