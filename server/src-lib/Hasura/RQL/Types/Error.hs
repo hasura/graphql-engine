@@ -45,15 +45,16 @@ module Hasura.RQL.Types.Error
        , indexedTraverseA_
        ) where
 
+import           Hasura.Prelude
+
 import           Control.Arrow.Extended
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Aeson.Types
-import qualified Database.PG.Query      as Q
-import           Hasura.Prelude
 import           Text.Show              (Show (..))
 
 import qualified Data.Text              as T
+import qualified Database.PG.Query      as Q
 import qualified Network.HTTP.Types     as N
 
 data Code

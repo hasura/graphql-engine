@@ -10,9 +10,109 @@ If this is set to `true`, the insert mutation is accessible to the role only if 
 is accompanied by `x-hasura-use-backend-only-permissions` session variable whose value is set to `true` along with the `x-hasura-admin-secret` header.
 Otherwise, the behavior of the permission remains unchanged.
 
-This feature is highly useful in disabling `insert_table` mutation for a role from frontend clients while still being able to access it from a Action webhook handler (with the same role). 
+This feature is highly useful in disabling `insert_table` mutation for a role from frontend clients while still being able to access it from a Action webhook handler (with the same role).
 
 (rfc #4120) (#4224)
+
+### server: debugging mode for non-admin roles
+
+For any errors the server sends extra information in `extensions` field under `internal` key. Till now this was only
+available for `admin` role requests. To enable this for other roles, start the server with `--dev-mode` flag or set `HASURA_GRAPHQL_DEV_MODE` env variable to `true`:
+
+```bash
+$ graphql-engine --database-url <database-url> serve --dev-mode
+```
+
+In case you want to disable `internal` field for `admin` role requests, set `--admin-internal-errors` option to `false` or or set `HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS` env variable to `false`
+
+```bash
+$ graphql-engine --database-url <database-url> serve --admin-internal-errors false
+```
+
+This feature come in handy during development when you may want to see detailed errors irrespective of roles.
+
+**Improved internal errors for Actions**:
+
+(This is a **breaking change** with previous 1.2.0-beta releases)
+
+The `internal` field for action errors is improved with more debug information. It now includes `request`,
+`response` and `error` fields instead of just `webhook_response` field.
+
+Before:
+```json
+{
+  "errors": [
+    {
+      "extensions": {
+        "internal": {
+          "webhook_response": {
+            "age": 25,
+            "name": "Alice",
+            "id": "some-id"
+          }
+        },
+        "path": "$",
+        "code": "unexpected"
+      },
+      "message": "unexpected fields in webhook response: age"
+    }
+  ]
+}
+```
+After:
+```json
+{
+  "errors": [
+    {
+      "extensions": {
+        "internal": {
+          "error": "unexpected response",
+          "response": {
+            "status": 200,
+            "body": {
+              "age": 25,
+              "name": "Alice",
+              "id": "some-id"
+            },
+            "headers": [
+              {
+                "value": "application/json",
+                "name": "Content-Type"
+              },
+              {
+                "value": "abcd",
+                "name": "Set-Cookie"
+              }
+            ]
+          },
+          "request": {
+            "body": {
+              "session_variables": {
+                "x-hasura-role": "admin"
+              },
+              "input": {
+                "arg": {
+                  "age": 25,
+                  "name": "Alice",
+                  "id": "some-id"
+                }
+              },
+              "action": {
+                "name": "mirror"
+              }
+            },
+            "url": "http://127.0.0.1:5593/mirror-action",
+            "headers": []
+          }
+        },
+        "path": "$",
+        "code": "unexpected"
+      },
+      "message": "unexpected fields in webhook response: age"
+    }
+  ]
+}
+```
 
 ### cli: add support for .env file
 

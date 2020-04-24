@@ -234,7 +234,7 @@ data Poller
   }
 data PollerIOState
   = PollerIOState
-  { _pThread  :: !(Immortal.Thread)
+  { _pThread  :: !Immortal.Thread
   -- ^ a handle on the poller’s worker thread that can be used to 'Immortal.stop' it if all its
   -- cohorts stop listening
   , _pMetrics :: !RefetchMetrics

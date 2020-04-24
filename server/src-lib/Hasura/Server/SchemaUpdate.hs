@@ -9,10 +9,10 @@ import           Hasura.Logging
 import           Hasura.RQL.DDL.Schema       (runCacheRWT)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
+import           Hasura.Server.API.Query
 import           Hasura.Server.App           (SchemaCacheRef (..), withSCUpdate)
 import           Hasura.Server.Init          (InstanceId (..))
 import           Hasura.Server.Logging
-import           Hasura.Server.Query
 
 import           Data.Aeson
 import           Data.Aeson.Casing
