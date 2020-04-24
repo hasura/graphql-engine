@@ -1,6 +1,7 @@
 import { ADMIN_SECRET_HEADER_KEY } from '../../src/constants';
 
 export const baseUrl = Cypress.config('baseUrl');
+
 export const dataTypes = [
   'serial',
   'bigserial',
@@ -14,6 +15,7 @@ export const dataTypes = [
   'timetz',
   'boolean',
 ];
+
 export const typeDefaults = {
   integer: '5555',
   bigint: '5555555555',
@@ -25,21 +27,37 @@ export const typeDefaults = {
   timetz: 'now()',
   boolean: 'false',
 };
+
 export const queryTypes = ['insert', 'select', 'update', 'delete'];
-export const getColName = i => `Apic_test_column_${i}`;
-export const getTableName = (i, testName = '') =>
+
+export const getColName = (i: string) => `Apic_test_column_${i}`;
+
+export const getTableName = (i: string, testName: string = '') =>
   `Apic_test_table_${testName}_${i}`;
-export const getElementFromAlias = alias => `[data-test=${alias}]`;
-export const getElementFromClassName = cn => `.${cn}`;
-export const tableColumnTypeSelector = alias => {
+
+export const getElementFromAlias = (alias: string) => `[data-test=${alias}]`;
+
+export const getElementFromClassName = (cn: string) => `.${cn}`;
+
+export const tableColumnTypeSelector = (alias: string) => {
   cy.get(`${getElementFromAlias(alias)}`)
     .children('div')
     .click()
     .find('input')
     .focus();
 };
-export const makeDataAPIUrl = dataApiUrl => `${dataApiUrl}/v1/query`;
-export const makeDataAPIOptions = (dataApiUrl, key, body) => ({
+
+export const makeDataAPIUrl = (dataApiUrl: string) => `${dataApiUrl}/v1/query`;
+
+interface APIPayload {
+  [key: string]: any;
+}
+
+export const makeDataAPIOptions = (
+  dataApiUrl: string,
+  key: string,
+  body: APIPayload
+) => ({
   method: 'POST',
   url: makeDataAPIUrl(dataApiUrl),
   headers: {
@@ -49,13 +67,14 @@ export const makeDataAPIOptions = (dataApiUrl, key, body) => ({
   failOnStatusCode: false,
 });
 
-export const testCustomFunctionDefinition = i => `create function search_posts${'_' +
-  i} (search text) returns setof post as $$ select * from post where title ilike ('%' || search || '%') or content ilike ('%' || search || '%') $$ language sql stable;
+export const testCustomFunctionDefinition = (
+  i: string
+) => `create function search_posts${`_${i}`} (search text) returns setof post as $$ select * from post where title ilike ('%' || search || '%') or content ilike ('%' || search || '%') $$ language sql stable;
 `;
 
-export const getCustomFunctionName = i => `search_posts${'_' + i}`;
+export const getCustomFunctionName = (i: string) => `search_posts${`_${i}`}`;
 
-export const testCustomFunctionSQL = i => {
+export const testCustomFunctionSQL = (i: string) => {
   return {
     type: 'bulk',
     args: [

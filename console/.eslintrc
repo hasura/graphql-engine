@@ -3,8 +3,7 @@
   "env": {
     "browser": true,
     "node": true,
-    "mocha": true,
-    "cypress/globals": true
+    "mocha": true
   },
   "parser": "babel-eslint",
   "rules": {
@@ -86,7 +85,7 @@
     "eqeqeq": 0,
     "no-nested-ternary": 0
   },
-  "plugins": ["react", "import", "cypress", "@typescript-eslint/eslint-plugin"],
+  "plugins": ["react", "import", "@typescript-eslint/eslint-plugin"],
   "settings": {
     "import/resolve": {
       "moduleDirectory": ["node_modules", "src"]
@@ -112,11 +111,14 @@
       "parser": "@typescript-eslint/parser",
       "files": ["*.ts", "*.tsx"],
       "rules": {
-        "jsx-a11y/label-has-for": [ 0, {
-          "required": {
-            "some": [ "nesting", "id"  ]
+        "jsx-a11y/label-has-for": [
+          0,
+          {
+            "required": {
+              "some": ["nesting", "id"]
+            }
           }
-        }],
+        ],
         "import/extensions": 0,
         "import/prefer-default-export": "off",
         "react/prop-types": "off",
