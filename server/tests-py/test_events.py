@@ -4,6 +4,7 @@ import pytest
 import queue
 import time
 from validate import check_query_f, check_event
+from queue import Empty
 
 usefixtures = pytest.mark.usefixtures
 
@@ -588,3 +589,79 @@ class TestManualEvents(object):
         assert st_code == 200, resp
         st_code, resp = hge_ctx.v1q_f('queries/event_triggers/manual_events/disabled.yaml')
         assert st_code == 400, resp
+
+class TestPauseEventTriggers(object):
+
+    @classmethod
+    def dir(cls):
+        return 'queries/event_triggers/pause_event_triggers'
+
+    def test_setup(self, hge_ctx, evts_webhook):
+        st_code,resp = hge_ctx.v1q_f(self.dir() + '/setup.yaml')
+        assert st_code == 200, resp
+
+    def test_check_generated_events_after_pausing(self, hge_ctx, evts_webhook):
+        q = {
+            "type":"select",
+            "args":{
+                "table": {"schema": "hdb_catalog", "name": "event_log"},
+                "columns": ["paused"],
+                "order_by": ["-created_at"],
+                "where": {"trigger_name":"t1_all","archived":"f"}
+            }
+        }
+        # the event-trigger is in paused state
+        st_code,resp = hge_ctx.v1q(q)
+        assert st_code == 200,resp
+        event_log = resp[0]
+        assert event_log['paused'] # the event_log should have 'paused' as true
+        try:
+            webhook_event = evts_webhook.get_event(10)
+        except Empty:
+            # As the event triggers is in the paused state, the webhook event
+            # queue should be empty
+            assert True
+            pass
+
+
+    def test_check_generated_events_after_resuming(state, hge_ctx, evts_webhook):
+        table = {"schema": "hge_tests", "name": "test_t1"}
+        init_row = {"c1": 2, "c2": "bar"}
+        exp_ev_data = {
+            "old": None,
+            "new": init_row
+        }
+        q = {
+            "type":"resume_event_trigger",
+            "args":{
+                "name":"t1_all"
+            }
+        }
+        st_code,resp = hge_ctx.v1q(q)
+        assert st_code == 200,resp
+        q = {
+            "type":"run_sql",
+            "args":{
+                "sql":"insert into hge_tests.test_t1(c1,c2) values (2,'bar');"
+            }
+        }
+        st_code,resp = hge_ctx.v1q(q)
+        assert st_code == 200,resp
+        q = {
+            "type":"select",
+            "args":{
+                "table": {"schema": "hdb_catalog", "name": "event_log"},
+                "columns": ["paused"],
+                "order_by": ["-created_at"],
+                "where": {"trigger_name":"t1_all","archived":"f"}
+            }
+        }
+        st_code,resp = hge_ctx.v1q(q)
+        assert st_code == 200,resp
+        event_log = resp[0]
+        assert not event_log['paused']
+        check_event(hge_ctx, evts_webhook, "t1_all", table, "INSERT", exp_ev_data)
+
+    def test_teardown(self, hge_ctx, evts_webhook):
+        st_code,resp = hge_ctx.v1q_f(self.dir() + '/teardown.yaml')
+        assert st_code == 200, resp

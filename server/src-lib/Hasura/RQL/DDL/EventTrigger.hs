@@ -6,6 +6,11 @@ module Hasura.RQL.DDL.EventTrigger
   , RedeliverEventQuery
   , runRedeliverEvent
   , runInvokeEventTrigger
+  , runPauseEventTrigger
+  , runResumeEventTrigger
+  , InvokeEventTriggerQuery
+  , PauseEventTriggerQuery
+  , ResumeEventTriggerQuery
 
   -- TODO: review
   , delEventTriggerFromCatalog
@@ -18,6 +23,8 @@ module Hasura.RQL.DDL.EventTrigger
   ) where
 
 import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import           System.Environment      (lookupEnv)
 
 import           Hasura.EncJSON
@@ -26,6 +33,7 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Hasura.SQL.DML          as S
 
@@ -35,7 +43,45 @@ import qualified Database.PG.Query       as Q
 import qualified Text.Shakespeare.Text   as ST
 
 
+
 data OpVar = OLD | NEW deriving (Show)
+
+data InvokeEventTriggerQuery
+  = InvokeEventTriggerQuery
+  { ietqName    :: !TriggerName
+  , ietqPayload :: !Value
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvokeEventTriggerQuery)
+
+data PauseEventTriggerQuery
+  = PauseEventTriggerQuery
+  { petqName  :: !TriggerName
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''PauseEventTriggerQuery)
+
+data ResumeEventTriggerQuery
+  = ResumeEventTriggerQuery
+  { retqName  :: !TriggerName
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''ResumeEventTriggerQuery)
+
+newtype RedeliverEventQuery
+  = RedeliverEventQuery
+  { rdeqEventId :: EventId
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''RedeliverEventQuery)
+
+data DeleteEventTriggerQuery
+  = DeleteEventTriggerQuery
+  { detqName :: !TriggerName
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
+
 
 pgIdenTrigger:: Ops -> TriggerName -> T.Text
 pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
@@ -256,6 +302,7 @@ runCreateEventTriggerQuery q = do
   buildSchemaCacheFor $ MOTableObj qt (MTOTrigger $ etcName etc)
   return successMsg
 
+
 runDeleteEventTriggerQuery
   :: (MonadTx m, CacheRWM m)
   => DeleteEventTriggerQuery -> m EncJSON
@@ -263,6 +310,7 @@ runDeleteEventTriggerQuery (DeleteEventTriggerQuery name) = do
   liftTx $ delEventTriggerFromCatalog name
   withNewInconsistentObjsCheck buildSchemaCache
   pure successMsg
+
 
 deliverEvent
   :: (QErrM m, MonadTx m)
@@ -293,6 +341,7 @@ insertManualEvent qt trn rowData = do
     getEid []    = throw500 "could not create manual event"
     getEid (x:_) = return x
 
+
 runInvokeEventTrigger
   :: (QErrM m, CacheRM m, MonadTx m)
   => InvokeEventTriggerQuery -> m EncJSON
@@ -306,6 +355,18 @@ runInvokeEventTrigger (InvokeEventTriggerQuery name payload) = do
     assertManual (TriggerOpsDef _ _ _ man) = case man of
       Just True -> return ()
       _         -> throw400 NotSupported "manual mode is not enabled for event trigger"
+
+runPauseEventTrigger
+  :: (MonadTx m)
+  => PauseEventTriggerQuery -> m EncJSON
+runPauseEventTrigger (PauseEventTriggerQuery name) =
+  setEventTriggerPauseInCatalog name True
+
+runResumeEventTrigger
+  :: (MonadTx m)
+  => ResumeEventTriggerQuery -> m EncJSON
+runResumeEventTrigger (ResumeEventTriggerQuery name) =
+  setEventTriggerPauseInCatalog name False
 
 getHeaderInfosFromConf
   :: (QErrM m, MonadIO m)
@@ -354,3 +415,23 @@ updateEventTriggerInCatalog trigConf =
       configuration = $1
       WHERE name = $2
     |] (Q.AltJ $ toJSON trigConf, etcName trigConf) True
+
+setEventTriggerPauseInCatalog :: (MonadTx m) => TriggerName -> Bool -> m EncJSON
+setEventTriggerPauseInCatalog triggerName pause = liftTx $ do
+  affectedRows <-
+    (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+    [Q.sql|
+      WITH "cte" AS
+      (UPDATE hdb_catalog.event_triggers SET paused = $1 WHERE name = $2 RETURNING *)
+      SELECT count(*) FROM "cte"
+    |] (pause, triggerName) True
+  processAffectedRows affectedRows
+  where
+    triggerNameTxt = triggerNameToTxt triggerName
+
+    processAffectedRows :: (MonadTx m) => Int -> m EncJSON
+    processAffectedRows affectedRows =
+      if | affectedRows == 0 -> throw400 NotFound $
+           "event trigger " <> triggerNameTxt <>" not found"
+         | affectedRows == 1 -> pure successMsg
+         | otherwise -> throw500 $ "unexpected: more than one event triggers with the name " <> triggerNameTxt <> " found"

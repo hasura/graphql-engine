@@ -216,6 +216,16 @@ The various types of queries are listed in the following table:
      - 1
      - Delete an existing event trigger
 
+   * - :ref:`pause_event_trigger`
+     - :ref:`pause_event_trigger_args <pause_event_trigger_syntax>`
+     - 1
+     - Pause an existing event trigger
+
+   * - :ref:`resume_event_trigger`
+     - :ref:`resume_event_trigger_args <resume_event_trigger_syntax>`
+     - 1
+     - Resume an existing event trigger
+
    * - :ref:`redeliver_event`
      - :ref:`redeliver_event_args <redeliver_event_syntax>`
      - 1
