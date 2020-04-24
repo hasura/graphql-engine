@@ -1420,7 +1420,7 @@ code {
   flex-direction: column;
 }
 /* container height subtracting top header and bottom scroll bar */
-$mainContainerHeight: calc(100vh - 50px - 25px);
+$mainContainerHeight: calc(100vh - 50px - 45px);
 
 /* Min container width below which horizontal scroll will appear */
 $minContainerWidth: 1200px;

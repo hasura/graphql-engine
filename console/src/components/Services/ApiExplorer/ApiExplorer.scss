@@ -1,4 +1,4 @@
-@import "../../Common/Common.scss";
+@import '../../Common/Common.scss';
 
 .display_inl {
   display: inline-block;
@@ -9,13 +9,13 @@
 }
 .analyzerLabel {
   text-transform: uppercase;
-	margin: 0;
-	font-size: 12px;
-	color: #000;
-	zoom: 1;
-	border-bottom: 1px solid rgba(155,155,155,0.5);
-	line-height: 2.5;
-	padding-bottom: 2px;
+  margin: 0;
+  font-size: 12px;
+  color: #000;
+  zoom: 1;
+  border-bottom: 1px solid rgba(155, 155, 155, 0.5);
+  line-height: 2.5;
+  padding-bottom: 2px;
   .token_validity {
     font-size: 14px;
     .invalid_jwt_icon {
@@ -75,14 +75,13 @@
 }
 
 .panelInFocus {
-
 }
 
 .requestInFocus {
-
 }
 
 .apiExplorerWrapper {
+  margin-top: 20px;
   display: flex;
   height: $mainContainerHeight;
 
@@ -105,7 +104,7 @@
         -moz-padding-start: 0px;
         -moz-margin-before: 0;
         -moz-margin-after: 0;
-        border-bottom: 1px solid #D8D8D8;
+        border-bottom: 1px solid #d8d8d8;
         position: absolute;
         width: 20%;
         min-width: 240px;
@@ -120,13 +119,13 @@
           padding: 10px 11px;
           font-weight: bold;
           font-size: 16px;
-          color: #D8D8D8;
+          color: #d8d8d8;
           cursor: pointer;
         }
 
         .activeApiCollectionTab {
           border-bottom: 3px solid #ffca27;
-          color: #6B6B6B;
+          color: #6b6b6b;
         }
 
         .apiCollectionTabList:focus {
@@ -165,7 +164,6 @@
           i {
             padding-right: 5px;
           }
-
         }
       }
 
@@ -202,7 +200,7 @@
 
             .apiCollectionGet {
               text-align: left;
-              color: #70CD00;
+              color: #70cd00;
               font-size: 12px;
               font-weight: bold;
               padding-left: 15px;
@@ -214,12 +212,12 @@
 
               .apiCollectionGetDetails {
                 word-wrap: break-word;
-                padding-right: 10px !important
+                padding-right: 10px !important;
               }
 
               .apiCollectionPostDetails {
                 word-wrap: break-word;
-                padding-right: 10px !important
+                padding-right: 10px !important;
               }
 
               .apiRightArrowWrapper {
@@ -228,12 +226,12 @@
             }
 
             .activeApiCollectionGetWrapperIcon {
-                display: none;
+              display: none;
             }
           }
 
           .activeApiCollectionGetWrapper {
-            background-color: #FFF3D5;
+            background-color: #fff3d5;
             border-radius: 4px;
 
             .activeApiCollectionGetWrapperIcon {
@@ -247,7 +245,7 @@
 
             .apiCollectionPost {
               text-align: left;
-              color: #FD9540;
+              color: #fd9540;
               font-size: 12px;
               font-weight: bold;
               padding-left: 15px;
@@ -259,12 +257,12 @@
 
               .apiCollectionGetDetails {
                 word-wrap: break-word;
-                padding-right: 10px !important
+                padding-right: 10px !important;
               }
 
               .apiCollectionPostDetails {
                 word-wrap: break-word;
-                padding-right: 10px !important
+                padding-right: 10px !important;
               }
 
               .apiRightArrowWrapper {
@@ -273,12 +271,12 @@
             }
 
             .activeApiCollectionGetWrapperIcon {
-                display: none;
+              display: none;
             }
           }
 
           .activeApiCollectionGetWrapper {
-            background-color: #FFF3D5;
+            background-color: #fff3d5;
             border-radius: 4px;
 
             .activeApiCollectionGetWrapperIcon {
@@ -303,7 +301,8 @@
     display: inline-block;
   }
 
-  .showAdminSecret, .showInspector {
+  .showAdminSecret,
+  .showInspector {
     cursor: pointer;
     padding-right: 8px;
     font-size: 16px;
@@ -319,7 +318,6 @@
   }
 
   .apiRequestWrapper {
-    margin-top: 20px;
     .headerWrapper {
       margin-bottom: 20px;
     }
@@ -332,7 +330,7 @@
       background-color: #fff;
       margin-bottom: 15px;
 
-      input[type="file"] {
+      input[type='file'] {
         display: inline-block;
         width: 162px;
       }
@@ -349,20 +347,20 @@
       font-size: 14px;
 
       a {
-        color: #FEC53D;
+        color: #fec53d;
         text-decoration: underline;
       }
 
       a:hover {
-        color: #FEC53D;
+        color: #fec53d;
         text-decoration: underline;
       }
 
       code {
         background-color: transparent;
-        border: 1px solid #767E93;
+        border: 1px solid #767e93;
         padding: 1px 4px !important;
-        color: #767E93;
+        color: #767e93;
       }
     }
 
@@ -383,8 +381,8 @@
             width: 100px;
             border: 0;
             padding: 10px 12px;
-            background-color: #F9F9F9;
-            color: #FD9540;
+            background-color: #f9f9f9;
+            color: #fd9540;
             font-size: 14px;
             font-weight: bold;
             text-align: left;
@@ -414,14 +412,14 @@
           color: #606060;
           font-weight: bold;
           border-radius: 5px;
-          background-color: #FEC53D;
-          border: 1px solid #FEC53D;
+          background-color: #fec53d;
+          border: 1px solid #fec53d;
           /*
           background-color: #FFCA27;
           border: 1px solid #FFCA27;
           */
           &:hover {
-            background-color: #F2B130;
+            background-color: #f2b130;
           }
         }
 
@@ -465,7 +463,7 @@
         .viewDetails {
           padding-left: 10px;
           font-weight: normal;
-          color: #FFCA27;
+          color: #ffca27;
         }
 
         .addAdminToken {
@@ -491,7 +489,7 @@
         font-size: 14px;
         padding-bottom: 10px;
         // color: #000;
-        color: #788095
+        color: #788095;
       }
 
       .statusDetails {
@@ -502,7 +500,7 @@
         .statusView {
           padding-left: 5px;
           font-weight: normal;
-          color: #FFCA27;
+          color: #ffca27;
         }
       }
     }
@@ -563,7 +561,7 @@
             width: 56%;
             margin-right: 7px;
             height: 20px;
-            background-color: #EEEEEE;
+            background-color: #eeeeee;
             display: inline-block;
             border-radius: 4px;
           }
@@ -572,7 +570,7 @@
             width: 23%;
             margin-right: 7px;
             height: 20px;
-            background-color: #FFCA27;
+            background-color: #ffca27;
             display: inline-block;
             border-radius: 4px;
           }
@@ -581,7 +579,7 @@
             width: 13%;
             margin-right: 7px;
             height: 20px;
-            background-color: #EEEEEE;
+            background-color: #eeeeee;
             display: inline-block;
             border-radius: 4px;
           }
@@ -599,7 +597,7 @@
       .viewDetails {
         padding-left: 10px;
         font-weight: normal;
-        color: #FFCA27;
+        color: #ffca27;
       }
     }
   }
@@ -611,7 +609,7 @@
 
   .tableBorder {
     background-color: #fff;
-    border: 1px solid #E3E5E5;
+    border: 1px solid #e3e5e5;
 
     thead {
       tr {
@@ -675,7 +673,7 @@
 
   .queryBuilderTab {
     ul {
-      border: 1px solid #E7E7E7;
+      border: 1px solid #e7e7e7;
       -webkit-padding-start: 0px;
       -moz-padding-start: 0px;
       display: inline-block;
@@ -697,7 +695,7 @@
       }
 
       .activeQueryBuilderTab {
-        background-color: #FFF050;
+        background-color: #fff050;
       }
     }
   }
@@ -734,7 +732,6 @@
   }
 }
 
-
 .common_checkbox {
   opacity: 0;
   position: absolute;
@@ -766,8 +763,8 @@
   padding-top: 2px;
   margin-right: 2px;
   text-align: center;
-  border-radius:4px;
-  cursor:pointer;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 label {
@@ -775,10 +772,10 @@ label {
 }
 
 .common_checkbox:checked + .common_checkbox_label:before {
-    content: url('./tick.png');
-    background: #FFCA27;
-    color: #fff;
-    padding-top:0px;
+  content: url('./tick.png');
+  background: #ffca27;
+  color: #fff;
+  padding-top: 0px;
 }
 
 .authPanelSubHeadings {
@@ -804,7 +801,7 @@ label {
       list-style-type: none;
       background-color: #fff;
       font-weight: 600;
-      color: #6B6B6B;
+      color: #6b6b6b;
       cursor: pointer;
     }
 
@@ -813,7 +810,7 @@ label {
     }
 
     .activeApiResponseTab {
-      background-color: #FFF3D5
+      background-color: #fff3d5;
     }
   }
 
@@ -823,6 +820,4 @@ label {
       margin-bottom: 15px;
     }
   }
-
-
 }
