@@ -1419,8 +1419,15 @@ code {
   display: flex;
   flex-direction: column;
 }
+
+.apiRequestBody {
+  margin: 20px 0;
+  height: 100%;
+  min-height: 60vh;
+}
+
 /* container height subtracting top header and bottom scroll bar */
-$mainContainerHeight: calc(100vh - 50px - 45px);
+$mainContainerHeight: calc(100vh - 50px - 20px);
 
 /* Min container width below which horizontal scroll will appear */
 $minContainerWidth: 1200px;

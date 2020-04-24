@@ -558,7 +558,7 @@ class ApiRequest extends Component {
       switch (this.props.bodyType) {
         case 'graphql':
           return (
-            <div className={`${styles.add_mar_top} ${styles.height100}`}>
+            <div className={styles.apiRequestBody}>
               <GraphiQLWrapper
                 data={this.props}
                 numberOfTables={this.props.numberOfTables}
