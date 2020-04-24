@@ -117,6 +117,23 @@ class TestQueryActions:
         assert code == 200,resp
         check_query_f(hge_ctx, self.dir() + '/get_users_by_email_success.yaml')
 
+    # This test is to make sure that query actions work well with variables.
+    # Earlier the HGE used to add the query action to the plan cache, which
+    # results in interrmittent validation errors, like:
+    # {
+    #   "errors": [
+    #     {
+    #       "extensions": {
+    #         "path": "$.variableValues",
+    #         "code": "validation-failed"
+    #       },
+    #       "message": "unexpected variables: email"
+    #     }
+    #   ]
+    # }
+    def test_query_action_should_not_throw_validation_error(self, hge_ctx):
+        for _ in range(25):
+            self.test_query_action_success_output_object(hge_ctx)
 
 def mk_headers_with_secret(hge_ctx, headers={}):
     admin_secret = hge_ctx.hge_key
@@ -369,14 +386,17 @@ class TestSetCustomTypes:
     def dir(cls):
         return 'queries/actions/custom-types'
 
-    def test_resuse_pgscalars(self, hge_ctx):
+    def test_reuse_pgscalars(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/reuse_pgscalars.yaml')
 
-    def test_resuse_unknown_pgscalar(self, hge_ctx):
+    def test_reuse_unknown_pgscalar(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/reuse_unknown_pgscalar.yaml')
 
     def test_create_action_pg_scalar(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_action_pg_scalar.yaml')
+
+    def test_list_type_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/list_type_relationship.yaml')
 
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestActionsMetadata:
