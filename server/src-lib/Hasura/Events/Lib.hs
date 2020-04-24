@@ -1,5 +1,5 @@
-{-# LANGUAGE StrictData #-}  -- TODO project-wide, maybe. See #3941
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StrictData      #-}
 module Hasura.Events.Lib
   ( initEventEngineCtx
   , processEventQueue
@@ -9,16 +9,16 @@ module Hasura.Events.Lib
   , Event(..)
   ) where
 
-import           Control.Concurrent.Extended   (sleep)
-import           Control.Concurrent.Async      (wait, withAsync, async, link)
+import           Control.Concurrent.Async    (async, link, wait, withAsync)
+import           Control.Concurrent.Extended (sleep)
 import           Control.Concurrent.STM.TVar
-import           Control.Exception.Lifted      (finally, mask_, try)
+import           Control.Exception.Lifted    (finally, mask_, try)
 import           Control.Monad.STM
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
-import           Data.Int                      (Int64)
+import           Data.Int                    (Int64)
 import           Data.String
 import           Data.Time.Clock
 import           Data.Word
@@ -27,22 +27,23 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Version         (HasVersion)
+import           Hasura.Server.Version       (HasVersion)
 import           Hasura.SQL.Types
 
-import qualified Data.ByteString               as BS
-import qualified Data.CaseInsensitive          as CI
-import qualified Data.HashMap.Strict           as M
-import qualified Data.TByteString              as TBS
-import qualified Data.Text                     as T
-import qualified Data.Text.Encoding            as T
-import qualified Data.Text.Encoding            as TE
-import qualified Data.Text.Encoding.Error      as TE
-import qualified Data.Time.Clock               as Time
-import qualified Database.PG.Query             as Q
-import qualified Hasura.Logging                as L
-import qualified Network.HTTP.Client           as HTTP
-import qualified Network.HTTP.Types            as HTTP
+import qualified Data.ByteString             as BS
+import qualified Data.CaseInsensitive        as CI
+import qualified Data.HashMap.Strict         as M
+import qualified Data.Set                    as Set
+import qualified Data.TByteString            as TBS
+import qualified Data.Text                   as T
+import qualified Data.Text.Encoding          as T
+import qualified Data.Text.Encoding          as TE
+import qualified Data.Text.Encoding.Error    as TE
+import qualified Data.Time.Clock             as Time
+import qualified Database.PG.Query           as Q
+import qualified Hasura.Logging              as L
+import qualified Network.HTTP.Client         as HTTP
+import qualified Network.HTTP.Types          as HTTP
 
 type Version = T.Text
 
@@ -74,7 +75,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeliveryInfo)
 
 -- | Change data for a particular row
 --
--- https://docs.hasura.io/1.0/graphql/manual/event-triggers/payload.html 
+-- https://docs.hasura.io/1.0/graphql/manual/event-triggers/payload.html
 data Event
   = Event
   { eId        :: EventId
@@ -153,8 +154,9 @@ data Invocation
 
 data EventEngineCtx
   = EventEngineCtx
-  { _eeCtxEventThreadsCapacity  :: TVar Int
-  , _eeCtxFetchInterval         :: DiffTime
+  { _eeCtxEventThreadsCapacity :: TVar Int
+  , _eeCtxFetchInterval        :: DiffTime
+  , _eeCtxLockedEvents         :: TVar (Set.Set EventId)
   }
 
 defaultMaxEventThreads :: Int
@@ -169,6 +171,7 @@ retryAfterHeader = "Retry-After"
 initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
+  _eeCtxLockedEvents <- newTVar Set.empty
   return $ EventEngineCtx{..}
 
 -- | Service events from our in-DB queue.
@@ -176,13 +179,13 @@ initEventEngineCtx maxT _eeCtxFetchInterval = do
 -- There are a few competing concerns and constraints here; we want to...
 --   - fetch events in batches for lower DB pressure
 --   - don't fetch more than N at a time (since that can mean: space leak, less
---     effective scale out, possible double sends for events we've checked out 
+--     effective scale out, possible double sends for events we've checked out
 --     on exit (TODO clean shutdown procedure))
 --   - try not to cause webhook workers to stall waiting on DB fetch
 --   - limit webhook HTTP concurrency per HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE
 processEventQueue
   :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
-  -> IO SchemaCache -> EventEngineCtx 
+  -> IO SchemaCache -> EventEngineCtx
   -> IO void
 processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} = do
   events0 <- popEventsBatch
@@ -192,10 +195,10 @@ processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} =
     popEventsBatch = do
       let run = runExceptT . Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite)
       run (fetchEvents fetchBatchSize) >>= \case
-          Left err -> do 
+          Left err -> do
             L.unLogger logger $ EventInternalErr err
             return []
-          Right events -> 
+          Right events ->
             return events
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
@@ -210,16 +213,16 @@ processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} =
       -- worth the effort for something more fine-tuned
       eventsNext <- withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
-        forM_ events $ \event -> 
+        forM_ events $ \event ->
           mask_ $ do
             atomically $ do  -- block until < HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE threads:
               capacity <- readTVar _eeCtxEventThreadsCapacity
               check $ capacity > 0
-              writeTVar _eeCtxEventThreadsCapacity (capacity - 1) 
+              writeTVar _eeCtxEventThreadsCapacity (capacity - 1)
             -- since there is some capacity in our worker threads, we can launch another:
-            let restoreCapacity = liftIO $ atomically $ 
+            let restoreCapacity = liftIO $ atomically $
                   modifyTVar' _eeCtxEventThreadsCapacity (+ 1)
-            t <- async $ flip runReaderT (logger, httpMgr) $ 
+            t <- async $ flip runReaderT (logger, httpMgr) $
                     processEvent event `finally` restoreCapacity
             link t
 
@@ -228,7 +231,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} =
 
       let lenEvents = length events
       if | lenEvents == fetchBatchSize -> do
-             -- If we've seen N fetches in a row from the DB come back full (i.e. only limited 
+             -- If we've seen N fetches in a row from the DB come back full (i.e. only limited
              -- by our LIMIT clause), then we say we're clearly falling behind:
              let clearlyBehind = fullFetchCount >= 3
              unless alreadyWarned $
@@ -371,17 +374,15 @@ decodeHeader
   :: LogEnvHeaders -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString)
   -> HeaderConf
 decodeHeader logenv headerInfos (hdrName, hdrVal)
-  = let name = decodeBS $ CI.original hdrName
+  = let name = bsToTxt $ CI.original hdrName
         getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
                       in name'
         mehi = find (\hi -> getName hi == name) headerInfos
     in case mehi of
-         Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
+         Nothing -> HeaderConf name (HVValue (bsToTxt hdrVal))
          Just ehi -> if logenv
                      then HeaderConf name (HVValue (ehiCachedValue ehi))
                      else ehiHeaderConf ehi
-   where
-     decodeBS = TE.decodeUtf8With TE.lenientDecode
 
 mkInvo
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]

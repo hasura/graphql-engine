@@ -75,11 +75,11 @@ data GQLBatchedReqs a
 
 instance J.ToJSON a => J.ToJSON (GQLBatchedReqs a) where
   toJSON (GQLSingleRequest q) = J.toJSON q
-  toJSON (GQLBatchedReqs qs) = J.toJSON qs
+  toJSON (GQLBatchedReqs qs)  = J.toJSON qs
 
 instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
   parseJSON arr@J.Array{} = GQLBatchedReqs <$> J.parseJSON arr
-  parseJSON other = GQLSingleRequest <$> J.parseJSON other
+  parseJSON other         = GQLSingleRequest <$> J.parseJSON other
 
 newtype GQLQueryText
   = GQLQueryText

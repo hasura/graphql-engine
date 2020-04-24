@@ -18,12 +18,12 @@ import qualified Control.Immortal                         as Immortal
 import qualified Data.Aeson.Extended                      as J
 import qualified StmContainers.Map                        as STMMap
 
-import           Control.Concurrent.Extended              (sleep, forkImmortal)
+import           Control.Concurrent.Extended              (forkImmortal, sleep)
 import           Control.Exception                        (mask_)
 import           Data.String
 
-import qualified Hasura.Logging                           as L
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
+import qualified Hasura.Logging                           as L
 
 import           Hasura.Db
 import           Hasura.GraphQL.Execute.LiveQuery.Options

@@ -51,7 +51,7 @@ data Field
   = Field
   { _fAlias     :: !G.Alias
   , _fName      :: !G.Name
-  , _fType      :: !G.NamedType
+  , _fType      :: !G.Name
   , _fArguments :: !ArgsMap
   , _fSelSet    :: !SelSet
   } deriving (Eq, Show)

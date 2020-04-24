@@ -1,7 +1,5 @@
-module Hasura.Server.Config
-  ( runGetConfig
-  )
-  where
+-- | API related to server configuration
+module Hasura.Server.API.Config (runGetConfig) where
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH

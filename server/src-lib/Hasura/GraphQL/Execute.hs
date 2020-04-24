@@ -39,11 +39,9 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
                                                          mkSetCookieHeaders)
 import           Hasura.Server.Version                  (HasVersion)
--- import           Hasura.GraphQL.Resolve.Action
 
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.Inline          as EI

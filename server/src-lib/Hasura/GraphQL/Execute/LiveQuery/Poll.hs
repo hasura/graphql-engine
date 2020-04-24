@@ -334,7 +334,7 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
       let lqMeta = LiveQueryMetadata $ fromUnits dt
           operations = getCohortOperations cohortSnapshotMap lqMeta mxRes
 
-      void $ timing _rmPush $ do
+      void $ timing _rmPush $
         -- concurrently push each unique result
         A.mapConcurrently_ (uncurry4 pushResultToCohort) operations
 

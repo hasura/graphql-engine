@@ -328,7 +328,8 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         return code, resp
 
     def _send_response(self, status, body):
-        self.send_response(status)
+        self.log_request(status)
+        self.send_response_only(status)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Set-Cookie', 'abcd')
         self.end_headers()

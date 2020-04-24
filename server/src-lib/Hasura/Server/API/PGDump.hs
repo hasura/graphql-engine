@@ -1,4 +1,5 @@
-module Hasura.Server.PGDump
+-- | API related to Postgres' pg dump
+module Hasura.Server.API.PGDump
   ( PGDumpReqBody(..)
   , execPGDump
   ) where
