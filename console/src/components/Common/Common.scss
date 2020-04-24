@@ -1326,9 +1326,8 @@ code {
   visibility: hidden;
 }
 
-// keep graphiql in viewport
-.graphQLHeight {
-  height: calc(100vh - 370px);
+.height100 {
+  height: 100%;
 }
 
 .button_mar_right {
@@ -1414,6 +1413,11 @@ code {
 
 .textAlignRight {
   text-align: right;
+}
+
+.flexColumn {
+  display: flex;
+  flex-direction: column;
 }
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);
