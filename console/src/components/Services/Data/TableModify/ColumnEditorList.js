@@ -70,7 +70,6 @@ const ColumnEditorList = ({
       isNullable: col.is_nullable === 'YES',
       isIdentity: col.is_identity === 'YES',
       pkConstraint: columnPKConstraints[colName],
-      pkLength,
       isUnique: isColumnUnique(tableSchema, colName),
       // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
