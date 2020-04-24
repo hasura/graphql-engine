@@ -1,7 +1,5 @@
-module Hasura.Server.Config
-  ( runGetConfig
-  )
-  where
+-- | API related to server configuration
+module Hasura.Server.API.Config (runGetConfig) where
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -15,8 +13,8 @@ import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
 
 data JWTInfo
   = JWTInfo
-  { jwtiClaimsNamespace     :: !JWTConfigClaims
-  , jwtiClaimsFormat        :: !JWTClaimsFormat
+  { jwtiClaimsNamespace :: !JWTConfigClaims
+  , jwtiClaimsFormat    :: !JWTClaimsFormat
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''JWTInfo)

@@ -40,7 +40,7 @@ import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.Permission
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax    (Lift)
 
@@ -112,7 +112,7 @@ instance (Cacheable a) => Cacheable (ActionDefinition a)
 
 instance (J.FromJSON a) => J.FromJSON (ActionDefinition a) where
   parseJSON = J.withObject "ActionDefinition" $ \o -> do
-    _adArguments <- o J..: "arguments"
+    _adArguments <- o J..:? "arguments" J..!= []
     _adOutputType <- o J..: "output_type"
     _adHeaders <- o J..:? "headers" J..!= []
     _adForwardClientHeaders <- o J..:? "forward_client_headers" J..!= False
