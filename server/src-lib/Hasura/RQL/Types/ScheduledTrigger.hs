@@ -26,10 +26,15 @@ import qualified Hasura.RQL.Types.EventTrigger as ET
 
 data STRetryConf
   = STRetryConf
-  { strcNumRetries  :: !Int
-  , strcIntervalSec :: !DiffTime
-  , strcTimeoutSec  :: !DiffTime
-  , strcTolerance   :: !DiffTime
+  { strcNumRetries       :: !Int
+  , strcRetryIntervalSec :: !DiffTime
+  , strcTimeoutSec       :: !DiffTime
+  , strcToleranceSec     :: !DiffTime
+  -- ^ The tolerance configuration is used to determine whether a scheduled
+  --   event is not too old to process. The age of the scheduled event is the
+  --   difference between the current timestamp and the scheduled event's
+  --   timestamp, if the age is than the tolerance then the scheduled event
+  --   is marked as dead.
   } deriving (Show, Eq, Generic)
 
 instance NFData STRetryConf
@@ -41,9 +46,9 @@ defaultSTRetryConf :: STRetryConf
 defaultSTRetryConf =
   STRetryConf
   { strcNumRetries = 0
-  , strcIntervalSec = seconds 10
+  , strcRetryIntervalSec = seconds 10
   , strcTimeoutSec = seconds 60
-  , strcTolerance = hours 6
+  , strcToleranceSec = hours 6
   }
 
 data ScheduleType = Cron CronSchedule | AdHoc (Maybe UTCTime)

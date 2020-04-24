@@ -270,7 +270,7 @@ processScheduledEvent ::
   -> m ()
 processScheduledEvent logEnv pgpool ScheduledTriggerInfo {..} se@ScheduledEventFull {..} = do
   currentTime <- liftIO getCurrentTime
-  if convertDuration (diffUTCTime currentTime sefScheduledTime) > strcTolerance stiRetryConf
+  if convertDuration (diffUTCTime currentTime sefScheduledTime) > strcToleranceSec stiRetryConf
     then processDead pgpool se
     else do
       let timeoutSeconds = round $ strcTimeoutSec stiRetryConf
@@ -320,7 +320,7 @@ retryOrMarkError se@ScheduledEventFull {..} err = do
       markError
     else do
       currentTime <- liftIO getCurrentTime
-      let delay = fromMaybe (round $ strcIntervalSec sefRetryConf) mRetryHeaderSeconds
+      let delay = fromMaybe (round $ strcRetryIntervalSec sefRetryConf) mRetryHeaderSeconds
           diff = fromIntegral delay
           retryTime = addUTCTime diff currentTime
       setRetry se retryTime

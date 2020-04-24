@@ -2,7 +2,7 @@
    :description: Manage scheduled triggers with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, scheduled trigger
 
-Schema/Metadata API Reference: Scheduled Triggers 
+Schema/Metadata API Reference: Scheduled Triggers
 =================================================
 
 .. contents:: Table of contents
@@ -426,7 +426,7 @@ RetryConfST
      - false
      - Integer
      - Number of times to retry delivery. Default: 0
-   * - interval_sec
+   * - retry_interval_sec
      - false
      - Integer
      - Number of seconds to wait between each retry. Default: 10
@@ -434,8 +434,7 @@ RetryConfST
      - false
      - Integer
      - Number of seconds to wait for response before timing out. Default: 60
-   * - tolerance
+   * - tolerance_sec
      - false
      - Integer
-     - Number of minutes between scheduled time and actual delivery time that is acceptable. If the time difference is more than this, then the event is dropped. Default: 360 (6 hours)
-
+     - Number of seconds between scheduled time and actual delivery time that is acceptable. If the time difference is more than this, then the event is dropped. Default: 21600 (6 hours)
