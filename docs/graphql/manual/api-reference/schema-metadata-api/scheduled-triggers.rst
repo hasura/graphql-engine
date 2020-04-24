@@ -426,15 +426,15 @@ RetryConfST
      - false
      - Integer
      - Number of times to retry delivery. Default: 0
-   * - retry_interval_sec
+   * - retry_interval_seconds
      - false
      - Integer
      - Number of seconds to wait between each retry. Default: 10
-   * - timeout_sec
+   * - timeout_seconds
      - false
      - Integer
      - Number of seconds to wait for response before timing out. Default: 60
-   * - tolerance_sec
+   * - tolerance_seconds
      - false
      - Integer
      - Number of seconds between scheduled time and actual delivery time that is acceptable. If the time difference is more than this, then the event is dropped. Default: 21600 (6 hours)
