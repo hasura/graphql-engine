@@ -150,8 +150,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = execWriterT 
       unless (null duplicateFieldNames) $
         dispute $ pure $ ObjectDuplicateFields objectTypeName duplicateFieldNames
 
-      scalarFields <- fmap (Map.fromList . catMaybes) $
-        for fields $ \objectField -> do
+      scalarFields <- fmap Map.fromList $ for fields $ \objectField -> do
         let fieldType = _ofdType objectField
             fieldBaseType = G.getBaseType $ unGraphQLType fieldType
             fieldName = _ofdName objectField
@@ -177,10 +176,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = execWriterT 
                dispute $ pure $ ObjectFieldTypeDoesNotExist
                  objectTypeName fieldName fieldBaseType
 
-        -- collect all non list scalar types of this object
-        if (not (isListType fieldType) && Set.member fieldBaseType scalarTypes)
-          then pure $ Just (fieldName, fieldBaseType)
-          else pure Nothing
+        pure (fieldName, fieldType)
 
       for_ relationships $ \relationshipField -> do
         let relationshipName = _trName relationshipField
@@ -195,10 +191,14 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = execWriterT 
         -- check that the column mapping is sane
         forM_ (Map.toList fieldMapping) $ \(fieldName, columnName) -> do
 
-          -- the field should be a non-list type scalar
-          when (Map.lookup fieldName scalarFields == Nothing) $
-            dispute $ pure $ ObjectRelationshipFieldDoesNotExist
-            objectTypeName relationshipName fieldName
+          case Map.lookup fieldName scalarFields of
+            Nothing -> dispute $ pure $ ObjectRelationshipFieldDoesNotExist
+                       objectTypeName relationshipName fieldName
+            Just fieldType ->
+              -- the field should be a non-list type scalar
+              when (isListType fieldType) $
+                dispute $ pure $ ObjectRelationshipFieldListType
+                objectTypeName relationshipName fieldName
 
           -- the column should be a column of the table
           when (getPGColumnInfoM remoteTableInfo (fromPGCol columnName) == Nothing) $
@@ -233,6 +233,9 @@ data CustomTypeValidationError
   | ObjectRelationshipFieldDoesNotExist
     !ObjectTypeName !RelationshipName !ObjectFieldName
   -- ^ The field specified in the relationship mapping does not exist
+  | ObjectRelationshipFieldListType
+    !ObjectTypeName !RelationshipName !ObjectFieldName
+  -- ^ The field specified in the relationship mapping is a list type
   | ObjectRelationshipColumnDoesNotExist
     !ObjectTypeName !RelationshipName !QualifiedTable !PGCol
   -- ^ The column specified in the relationship mapping does not exist
@@ -276,6 +279,10 @@ showCustomTypeValidationError = \case
   ObjectRelationshipFieldDoesNotExist objType relName fieldName ->
     "the field " <> fieldName <<> " for relationship " <> relName
     <<> " in object type " <> objType <<> " does not exist"
+
+  ObjectRelationshipFieldListType objType relName fieldName ->
+    "the type of the field " <> fieldName <<> " for relationship " <> relName
+    <<> " in object type " <> objType <<> " is a list type"
 
   ObjectRelationshipColumnDoesNotExist objType relName remoteTable column ->
     "the column " <> column <<> " of remote table " <> remoteTable

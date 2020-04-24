@@ -7,10 +7,11 @@
 - Introducing Actions: https://docs.hasura.io/1.0/graphql/manual/actions/index.html
 - Downgrade command: https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine
 - console: add multi select to data table and bulk delete (#3735)
-- server: fix recreating action's permissions (close #4377)
 
   Added a checkbox to each row on Browse Rows view that allows selecting one or more rows from the table and bulk delete them.
 
+- server: fix recreating action's permissions (close #4377)
+- server: fix creating relationships for custom object types with fields reusing Postgres scalars (close #4447) (#4455)
 - server: support reusing Postgres scalars in custom types (close #4125)
 - console: allow setting check constraints during table create (#3881)
 
