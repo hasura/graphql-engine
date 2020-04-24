@@ -531,6 +531,8 @@ jobs:
     - run:
         name: test console
         command: .circleci/test-console.sh
+    - store_artifacts:
+        path: /build/_console_output/server.log
 
   # test server upgrade from last version to current build
   test_server_upgrade:
