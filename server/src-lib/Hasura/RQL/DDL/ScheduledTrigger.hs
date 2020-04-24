@@ -49,6 +49,7 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
     |] (stName, Q.AltJ stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
        ,Q.AltJ stHeaders) False
   case stSchedule of
+    AdHoc Nothing -> pure ()
     AdHoc (Just timestamp) -> Q.unitQE defaultTxErrorHandler
       [Q.sql|
         INSERT into hdb_catalog.hdb_scheduled_events
@@ -60,7 +61,6 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
       let scheduleTimes = generateScheduleTimes currentTime 100 cron -- generate next 100 events
           events = map (ScheduledEventSeed stName) scheduleTimes
       insertScheduledEvents events
-    _ -> pure ()
 
 resolveScheduledTrigger
   :: (QErrM m, MonadIO m)
