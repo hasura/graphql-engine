@@ -135,7 +135,7 @@ runScheduledEventsGenerator logger pgpool getSC = do
   forever $ do
     sc <- getSC
     -- get scheduled triggers from cache
-    let scheduledTriggers = scScheduledTriggers sc
+    let scheduledTriggersCache = scScheduledTriggers sc
 
     -- get scheduled trigger stats from db
     runExceptT
@@ -144,8 +144,10 @@ runScheduledEventsGenerator logger pgpool getSC = do
         ScheduledTriggerInternalErr $ err500 Unexpected (T.pack $ show err)
       Right deprivedScheduledTriggerStats -> do
         -- join stats with scheduled triggers and produce @[(ScheduledTriggerInfo, ScheduledTriggerStats)]@
-        scheduledTriggersForHydrationWithStats' <- mapM (withST scheduledTriggers) deprivedScheduledTriggerStats
-        let scheduledTriggersForHydrationWithStats = catMaybes scheduledTriggersForHydrationWithStats'
+        --scheduledTriggersForHydrationWithStats' <- mapM (withST scheduledTriggers) deprivedScheduledTriggerStats
+        scheduledTriggersForHydrationWithStats <-
+          catMaybes <$>
+          mapM (withST scheduledTriggersCache) deprivedScheduledTriggerStats
         -- insert scheduled events for scheduled triggers that need hydration
         runExceptT
           (Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) $
@@ -166,13 +168,16 @@ runScheduledEventsGenerator logger pgpool getSC = do
 
       uncurryStats (n, count, maxTs) = ScheduledTriggerStats n count maxTs
 
-      withST stis stat = do
-        case Map.lookup (stsName stat) stis of
+      withST scheduledTriggerCache scheduledTriggerStat = do
+        case Map.lookup (stsName scheduledTriggerStat) scheduledTriggerCache of
           Nothing -> do
             L.unLogger logger $
-              ScheduledTriggerInternalErr $ err500 Unexpected "could not find scheduled trigger in the schema cache"
+              ScheduledTriggerInternalErr $
+                err500 Unexpected $
+                "could not find scheduled trigger in the schema cache"
             pure Nothing
-          Just sti -> pure $ Just (sti, stat)
+          Just scheduledTrigger -> pure $
+            Just (scheduledTrigger, scheduledTriggerStat)
 
 insertScheduledEventsFor :: [(ScheduledTriggerInfo, ScheduledTriggerStats)] -> Q.TxE QErr ()
 insertScheduledEventsFor scheduledTriggersWithStats = do
