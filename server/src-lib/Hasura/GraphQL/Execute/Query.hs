@@ -93,7 +93,7 @@ withPlan
   -> m SafePreparedSql
 withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
-  let args = withUserVars usrVars $ DataArgs $ IntMap.elems prepMap'
+  let args = withSessionVariables usrVars $ DataArgs $ IntMap.elems prepMap'
   return $ SafePreparedSql q args
   where
     getVar accum (var, prepNo) = do
@@ -261,8 +261,8 @@ data SafePreparedArgs
   , _spaDataArgs:: DataArgs
   }
 
-withUserVars :: UserVars -> DataArgs -> SafePreparedArgs
-withUserVars usrVars dataArgs =
+withSessionVariables :: SessionVariables -> DataArgs -> SafePreparedArgs
+withSessionVariables usrVars dataArgs =
   let usrVarsAsPgScalar = PGValJSON $ Q.JSON $ J.toJSON usrVars
       prepArg = Q.toPrepVal (Q.AltJ usrVars)
   in SafePreparedArgs (UserArgs (prepArg, usrVarsAsPgScalar)) dataArgs
