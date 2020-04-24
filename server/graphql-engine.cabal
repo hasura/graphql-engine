@@ -229,7 +229,6 @@ library
                      , Hasura.Server.Migrate
                      , Hasura.Server.Compression
                      , Hasura.Server.API.PGDump
-                     , Hasura.Server.API.Types
                      -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
                      , Data.Parser.JSONPath

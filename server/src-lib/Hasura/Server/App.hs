@@ -38,13 +38,13 @@ import qualified Web.Spock.Core                         as Spock
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Action
+import           Hasura.HTTP
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Config               (runGetConfig)
 import           Hasura.Server.API.Query
-import           Hasura.Server.API.Types
 import           Hasura.Server.Auth                     (AuthMode (..), UserAuthentication (..))
 import           Hasura.Server.Compression
 import           Hasura.Server.Cors
