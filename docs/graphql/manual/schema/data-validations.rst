@@ -138,20 +138,20 @@ If the validation logic can be expressed **declaratively** using static values a
 data from the database, then you can use :ref:`row level permissions <row-level-permissions>`
 to perform the validations. (Read more about :ref:`Authorization <authorization>`).
 
-**Example 1:** Validate that an inventory can only have ``stock >= 0`` for any item.
+**Example 1:** Validate that an article cannot be inserted if ``title = null``.
 
 Suppose, we have a table:
 
 .. code-block:: sql
 
-  inventory (item_id uuid, item_name text, stock integer)
+  article (id uuid, title text, content text, article_id uuid)
 
 Now, we can create a role ``user`` on this table with the following rule:
 
-.. thumbnail:: ../../../img/graphql/manual/schema/validation-stock-gte-zero.png
+.. thumbnail:: ../../../img/graphql/manual/schema/validation-not-null.png
    :alt: validation using permission: stock should be greater than or equal to zero
 
-If we try to insert an item with ``stock = -1``, we will get a ``permission-error``:
+If we try to insert an article with ``title = null``, we will get a ``permission-error``:
 
 ``Check constraint violation. insert check constraint failed``
 
@@ -222,7 +222,7 @@ And the following :ref:`type definitions <custom_types>`:
     id : Int!
   }
 
-Add the following business logic to your :ref:`action handler <action_handlers>`:
+We the following business logic to our :ref:`action handler <action_handlers>`:
 
 .. code-block:: javascript
 
