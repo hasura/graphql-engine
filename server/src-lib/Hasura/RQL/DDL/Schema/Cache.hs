@@ -282,7 +282,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
                        _cstWebhookConf
                        _cstScheduleConf
                        _cstPayload
-                       (fromMaybe defaultRetryConfST _cstRetryConf)
+                       (fromMaybe defaultSTRetryConf _cstRetryConf)
                        (fromMaybe [] _cstHeaderConf)
                   definition = toJSON q
                   triggerName = triggerNameToTxt _cstName

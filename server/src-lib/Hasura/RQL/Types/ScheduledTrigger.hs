@@ -5,9 +5,9 @@ module Hasura.RQL.Types.ScheduledTrigger
   , ScheduledEventId(..)
   , CreateScheduledTrigger(..)
   , CreateScheduledEvent(..)
-  , RetryConfST(..)
+  , STRetryConf(..)
   , formatTime'
-  , defaultRetryConfST
+  , defaultSTRetryConf
   ) where
 
 import           Data.Aeson
@@ -24,26 +24,26 @@ import qualified Data.Aeson                    as J
 import qualified Data.Text                     as T
 import qualified Hasura.RQL.Types.EventTrigger as ET
 
-data RetryConfST
-  = RetryConfST
-  { rcstNumRetries  :: !Int
-  , rcstIntervalSec :: !DiffTime
-  , rcstTimeoutSec  :: !DiffTime
-  , rcstTolerance   :: !DiffTime
+data STRetryConf
+  = STRetryConf
+  { strcNumRetries  :: !Int
+  , strcIntervalSec :: !DiffTime
+  , strcTimeoutSec  :: !DiffTime
+  , strcTolerance   :: !DiffTime
   } deriving (Show, Eq, Generic)
 
-instance NFData RetryConfST
-instance Cacheable RetryConfST
+instance NFData STRetryConf
+instance Cacheable STRetryConf
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConfST)
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''STRetryConf)
 
-defaultRetryConfST :: RetryConfST
-defaultRetryConfST =
-  RetryConfST
-  { rcstNumRetries = 0
-  , rcstIntervalSec = seconds 10
-  , rcstTimeoutSec = seconds 60
-  , rcstTolerance = hours 6
+defaultSTRetryConf :: STRetryConf
+defaultSTRetryConf =
+  STRetryConf
+  { strcNumRetries = 0
+  , strcIntervalSec = seconds 10
+  , strcTimeoutSec = seconds 60
+  , strcTolerance = hours 6
   }
 
 data ScheduleType = Cron CronSchedule | AdHoc (Maybe UTCTime)
@@ -72,7 +72,7 @@ data CreateScheduledTrigger
   , stWebhook   :: !ET.WebhookConf
   , stSchedule  :: !ScheduleType
   , stPayload   :: !(Maybe J.Value)
-  , stRetryConf :: !RetryConfST
+  , stRetryConf :: !STRetryConf
   , stHeaders   :: ![ET.HeaderConf]
   } deriving (Show, Eq, Generic)
 
@@ -86,7 +86,7 @@ instance FromJSON CreateScheduledTrigger where
       stWebhook <- o .: "webhook"
       stPayload <- o .:? "payload"
       stSchedule <- o .: "schedule"
-      stRetryConf <- o .:? "retry_conf" .!= defaultRetryConfST
+      stRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
       stHeaders <- o .:? "headers" .!= []
       pure CreateScheduledTrigger {..}
 

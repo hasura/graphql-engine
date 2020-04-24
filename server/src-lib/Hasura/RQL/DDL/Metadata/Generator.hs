@@ -305,7 +305,7 @@ instance Arbitrary WebhookConf where
 instance Arbitrary ScheduleType where
   arbitrary = genericArbitrary
 
-instance Arbitrary RetryConfST where
+instance Arbitrary STRetryConf where
   arbitrary = genericArbitrary
 
 instance Arbitrary CronSchedule where

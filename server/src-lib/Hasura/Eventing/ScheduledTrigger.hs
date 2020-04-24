@@ -121,7 +121,7 @@ data ScheduledEventFull
   , sefTries         :: !Int
   , sefWebhook       :: !T.Text
   , sefPayload       :: !J.Value
-  , sefRetryConf     :: !RetryConfST
+  , sefRetryConf     :: !STRetryConf
   } deriving (Show, Eq)
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventFull)
@@ -270,10 +270,10 @@ processScheduledEvent ::
   -> m ()
 processScheduledEvent logEnv pgpool ScheduledTriggerInfo {..} se@ScheduledEventFull {..} = do
   currentTime <- liftIO getCurrentTime
-  if convertDuration (diffUTCTime currentTime sefScheduledTime) > rcstTolerance stiRetryConf
+  if convertDuration (diffUTCTime currentTime sefScheduledTime) > strcTolerance stiRetryConf
     then processDead pgpool se
     else do
-      let timeoutSeconds = round $ rcstTimeoutSec stiRetryConf
+      let timeoutSeconds = round $ strcTimeoutSec stiRetryConf
           httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
           headers = addDefaultHeaders $ map encodeHeader stiHeaders
           extraLogCtx = ExtraLogContext (Just currentTime) sefId
@@ -313,14 +313,14 @@ retryOrMarkError :: ScheduledEventFull -> HTTPErr a -> Q.TxE QErr ()
 retryOrMarkError se@ScheduledEventFull {..} err = do
   let mRetryHeader = getRetryAfterHeaderFromHTTPErr err
       mRetryHeaderSeconds = parseRetryHeaderValue =<< mRetryHeader
-      triesExhausted = sefTries >= rcstNumRetries sefRetryConf
+      triesExhausted = sefTries >= strcNumRetries sefRetryConf
       noRetryHeader = isNothing mRetryHeaderSeconds
   if triesExhausted && noRetryHeader
     then do
       markError
     else do
       currentTime <- liftIO getCurrentTime
-      let delay = fromMaybe (round $ rcstIntervalSec sefRetryConf) mRetryHeaderSeconds
+      let delay = fromMaybe (round $ strcIntervalSec sefRetryConf) mRetryHeaderSeconds
           diff = fromIntegral delay
           retryTime = addUTCTime diff currentTime
       setRetry se retryTime

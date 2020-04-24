@@ -184,7 +184,7 @@ data ScheduledTriggerInfo
    { stiName        :: !TriggerName
    , stiSchedule    :: !ScheduleType
    , stiPayload     :: !(Maybe Value)
-   , stiRetryConf   :: !RetryConfST
+   , stiRetryConf   :: !STRetryConf
    , stiWebhookInfo :: !WebhookConfInfo
    , stiHeaders     :: ![EventHeaderInfo]
    } deriving (Show, Eq)
