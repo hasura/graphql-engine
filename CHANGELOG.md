@@ -2,6 +2,114 @@
 
 ## Next release
 
+### server: debugging mode for non-admin roles
+
+For any errors the server sends extra information in `extensions` field under `internal` key. Till now this is only
+available for `admin` role requests. To enable this for other roles, start the server with `--dev-mode` flag
+```bash
+$ graphql-engine --database-url <database-url> serve --dev-mode
+```
+or set `HASURA_GRAPHQL_DEV_MODE` env variable to `true`
+
+```bash
+$ HASURA_GRAPHQL_DEV_MODE='true' graphql-engine --database-url <db-url> serve
+```
+
+In case if you want to disable `internal` field for `admin` role requests, just set `--admin-internal-errors` option to `false`
+
+```bash
+$ graphql-engine --database-url <database-url> serve --admin-internal-errors false
+```
+or set `HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS` env variable to `false`
+```bash
+$ HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS='false' graphql-engine --database-url <db-url> serve
+```
+
+This feature come in handy when developing Actions.
+
+**Improved internal errors for Actions (Breaking change with only 1.2.0-beta releases)**:
+
+The `internal` field for actions' errors is improved with more debug information. It now includes `request`,
+`response` and `error` fields instead of just `webhook_response` field.
+
+Before:
+```json
+{
+  "errors": [
+    {
+      "extensions": {
+        "internal": {
+          "webhook_response": {
+            "age": 25,
+            "name": "Alice",
+            "id": "some-id"
+          }
+        },
+        "path": "$",
+        "code": "unexpected"
+      },
+      "message": "unexpected fields in webhook response: age"
+    }
+  ]
+}
+```
+After:
+```json
+{
+  "errors": [
+    {
+      "extensions": {
+        "internal": {
+          "error": "unexpected response",
+          "response": {
+            "status": 200,
+            "body": {
+              "age": 25,
+              "name": "Alice",
+              "id": "some-id"
+            },
+            "headers": [
+              {
+                "value": "application/json",
+                "name": "Content-Type"
+              },
+              {
+                "value": "abcd",
+                "name": "Set-Cookie"
+              }
+            ]
+          },
+          "request": {
+            "body": {
+              "session_variables": {
+                "x-hasura-role": "admin"
+              },
+              "input": {
+                "arg": {
+                  "age": 25,
+                  "name": "Alice",
+                  "id": "some-id"
+                }
+              },
+              "action": {
+                "name": "mirror"
+              }
+            },
+            "url": "http://127.0.0.1:5593/mirror-action",
+            "headers": [
+
+            ]
+          }
+        },
+        "path": "$",
+        "code": "unexpected"
+      },
+      "message": "unexpected fields in webhook response: age"
+    }
+  ]
+}
+```
+
 ### cli: add support for .env file
 
 ENV vars can now be read from .env file present at the project root directory. A global flag, `--envfile`, is added so you can explicitly provide the .env filename, which defaults to `.env` filename if no flag is provided.
@@ -23,7 +131,7 @@ Along with the check for filtering rows that can be updated, you can now set a p
 
 (close #4142) (#4313)
 
-### docs: map Postgres operators to corresponding Hasura operators 
+### docs: map Postgres operators to corresponding Hasura operators
 
 Map Postgres operators to corresponding Hasura operators at various places in docs and link to PG documentation for reference.
 For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#operator).
@@ -90,7 +198,6 @@ The order, collapsed state of columns and rows limit is now persisted across pag
 - server: `type` field is not required if `jwk_url` is provided in JWT config
 - server: add a new field `claims_namespace_path` which accepts a JSON Path for looking up hasura claim in the JWT token (#4349)
 - server: support reusing Postgres scalars in custom types (close #4125)
-- server: start-up configuration for sending debug information with errors (close #4031)
 
 ## `v1.2.0-beta.3`
 
