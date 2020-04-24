@@ -2,6 +2,11 @@
 
 ## Next release
 
+* server: use default values when reusing a query plan (fix #3773)
+
+
+## Next release
+
 ### server: backend only insert permissions
 
 Introduces optional `backend_only` (default: `false`) configuration in insert permissions
