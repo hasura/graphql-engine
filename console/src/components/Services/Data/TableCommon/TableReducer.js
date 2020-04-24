@@ -498,21 +498,6 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ),
       };
     /* Preset operations */
-    case CREATE_NEW_PRESET:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...modifyState.permissionsState,
-          [action.data.query]: {
-            ...modifyState.permissionsState[action.data.query],
-            localPresets: [
-              ...modifyState.permissionsState[action.data.query].localPresets,
-              { ...defaultPresetsState[action.data.query] },
-            ],
-          },
-        },
-      };
-
     case DELETE_PRESET:
       const deletedSet = {
         ...modifyState.permissionsState[action.data.queryType].set,
