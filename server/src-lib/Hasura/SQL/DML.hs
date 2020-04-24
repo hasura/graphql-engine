@@ -128,9 +128,6 @@ mkSelFromExp isLateral sel tn =
   where
     alias = Alias $ toIden tn
 
-mkFuncFromItem :: QualifiedFunction -> FunctionArgs -> FromItem
-mkFuncFromItem qf args = FIFunc $ FunctionExp qf args Nothing
-
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs = let
   innerSel = mkSelect { selExtr = extrs }
@@ -396,9 +393,6 @@ mkColDefValMap :: [PGCol] -> HM.HashMap PGCol SQLExp
 mkColDefValMap cols =
   HM.fromList $ zip cols (repeat $ SEUnsafe "DEFAULT")
 
-handleIfNull :: SQLExp -> SQLExp -> SQLExp
-handleIfNull l e = SEFnApp "coalesce" [e, l] Nothing
-
 applyJsonBuildObj :: [SQLExp] -> SQLExp
 applyJsonBuildObj args =
   SEFnApp "json_build_object" args Nothing
@@ -406,17 +400,6 @@ applyJsonBuildObj args =
 applyRowToJson :: [Extractor] -> SQLExp
 applyRowToJson extrs =
   SEFnApp "row_to_json" [mkRowExp extrs] Nothing
-
-getExtrAlias :: Extractor -> Maybe Alias
-getExtrAlias (Extractor _ ma) = ma
-
-mkAliasedExtr :: (IsIden a, IsIden b) => a -> Maybe b -> Extractor
-mkAliasedExtr t = mkAliasedExtrFromExp (mkSIdenExp t)
-
-mkAliasedExtrFromExp :: (IsIden a) => SQLExp -> Maybe a -> Extractor
-mkAliasedExtrFromExp sqlExp ma = Extractor sqlExp (aliasF <$> ma)
-  where
-    aliasF = Alias . toIden
 
 mkExtr :: (IsIden a) => a -> Extractor
 mkExtr t = Extractor (mkSIdenExp t) Nothing
@@ -470,10 +453,6 @@ data FunctionAlias
   } deriving (Show, Eq, Data, Generic)
 instance NFData FunctionAlias
 instance Cacheable FunctionAlias
-
-mkSimpleFunctionAlias :: Iden -> FunctionAlias
-mkSimpleFunctionAlias identifier =
-  FunctionAlias (toAlias identifier) Nothing
 
 mkFunctionAlias :: Iden -> Maybe [(PGCol, PGScalarType)] -> FunctionAlias
 mkFunctionAlias identifier listM =
@@ -715,10 +694,6 @@ instance Show CompareOp where
 instance ToSQL CompareOp where
   toSQL = fromString . show
 
-buildInsVal :: PGCol -> Int -> (PGCol, SQLExp)
-buildInsVal colName argNumber =
-  (colName, SEPrep argNumber)
-
 data SQLDelete
   = SQLDelete
     { delTable :: !QualifiedTable
@@ -741,10 +716,6 @@ newtype SetExp = SetExp [SetExpItem]
 
 newtype SetExpItem = SetExpItem (PGCol, SQLExp)
                    deriving (Show, Eq)
-
-buildSEI :: PGCol -> Int -> SetExpItem
-buildSEI colName argNumber =
-  SetExpItem (colName, SEPrep argNumber)
 
 buildUpsertSetExp
   :: [PGCol]

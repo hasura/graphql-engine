@@ -39,7 +39,6 @@ module Hasura.RQL.Types.Table
        , _FIColumn
        , _FIRelationship
        , _FIComputedField
-       , fieldInfoName
        , fieldInfoGraphQLNames
        , getFieldInfoM
        , getPGColumnInfoM
@@ -48,11 +47,9 @@ module Hasura.RQL.Types.Table
        , getRels
        , getComputedFieldInfos
 
-       , isPGColInfo
        , RelInfo(..)
 
        , RolePermInfo(..)
-       , mkRolePermInfo
        , permIns
        , permSel
        , permUpd
@@ -172,12 +169,6 @@ $(makePrisms ''FieldInfo)
 
 type FieldInfoMap = M.HashMap FieldName
 
-fieldInfoName :: FieldInfo -> FieldName
-fieldInfoName = \case
-  FIColumn info -> fromPGCol $ pgiColumn info
-  FIRelationship info -> fromRel $ riName info
-  FIComputedField info -> fromComputedField $ _cfiName info
-
 -- | Returns all the field names created for the given field. Columns, object relationships, and
 -- computed fields only ever produce a single field, but array relationships also contain an
 -- @_aggregate@ field.
@@ -203,10 +194,6 @@ getRels = mapMaybe (^? _FIRelationship) . M.elems
 
 getComputedFieldInfos :: FieldInfoMap FieldInfo -> [ComputedFieldInfo]
 getComputedFieldInfos = mapMaybe (^? _FIComputedField) . M.elems
-
-isPGColInfo :: FieldInfo -> Bool
-isPGColInfo (FIColumn _) = True
-isPGColInfo _            = False
 
 data InsPermInfo
   = InsPermInfo
@@ -255,9 +242,6 @@ data DelPermInfo
 instance NFData DelPermInfo
 instance Cacheable DelPermInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''DelPermInfo)
-
-mkRolePermInfo :: RolePermInfo
-mkRolePermInfo = RolePermInfo Nothing Nothing Nothing Nothing
 
 data RolePermInfo
   = RolePermInfo

@@ -63,17 +63,14 @@ module Hasura.RQL.Types.SchemaCache
   , _FIColumn
   , _FIRelationship
   , _FIComputedField
-  , fieldInfoName
   , fieldInfoGraphQLNames
   , getCols
   , getRels
   , getComputedFieldInfos
 
-  , isPGColInfo
   , RelInfo(..)
 
   , RolePermInfo(..)
-  , mkRolePermInfo
   , permIns
   , permSel
   , permUpd

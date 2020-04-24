@@ -1,0 +1,13 @@
+-- A basic config file for 'weeder', which can find dead code in ghc 8.10 and above
+-- see: https://github.com/ocharles/weeder#readme 
+--
+-- This is just here FYI for now, until we switch to 8.10
+-- It's not clear to me that it will be useful to integrate this with CI.
+--
+-- TODO: 
+--  - ignore certain modules (e.g. *.Extended or *.Utils)
+--    - also whitelist any possibly-useful-utility functions
+--  - how can we use src-tests/Main.main as a root?
+--  - ignore dead code in dependencies, obviously
+--  - add TH splices as roots, e.g. 'defaultSchema'
+{ roots = [ "^Main.main$" ], type-class-roots = True }

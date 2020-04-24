@@ -5,7 +5,6 @@
 module Hasura.Incremental.Select
   ( Select(..)
   , ConstS(..)
-  , selectKey
   , FieldS(..)
   , UniqueS
   , newUniqueS
@@ -64,9 +63,6 @@ instance (GCompare k) => Select (DM.DMap k f) where
 -- unify, effectively “pinning” @b@ to @a@.
 data ConstS k a b where
   ConstS :: !k -> ConstS k a a
-
-selectKey :: (Select a, Selector a ~ ConstS k v) => k -> a -> v
-selectKey = select . ConstS
 
 instance (Eq k) => GEq (ConstS k a) where
   ConstS a `geq` ConstS b

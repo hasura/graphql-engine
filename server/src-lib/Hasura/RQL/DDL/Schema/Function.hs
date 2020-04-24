@@ -5,7 +5,6 @@ Description: Create/delete SQL functions to/from Hasura metadata.
 module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Utils          (showNames)
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -59,15 +58,6 @@ mkFunctionArgs defArgsNo tys argNames =
 
     mkArg "" (ty, hasDef) = FunctionArg Nothing ty hasDef
     mkArg n  (ty, hasDef) = FunctionArg (Just n) ty hasDef
-
-validateFuncArgs :: MonadError QErr m => [FunctionArg] -> m ()
-validateFuncArgs args =
-  unless (null invalidArgs) $ throw400 NotSupported $
-    "arguments: " <> showNames invalidArgs
-    <> " are not in compliance with GraphQL spec"
-  where
-    funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
-    invalidArgs = filter (not . G.isValidName) $ map G.Name funcArgsText
 
 data FunctionIntegrityError
   = FunctionNameNotGQLCompliant
@@ -220,18 +210,6 @@ handleMultipleFunctions qf = \case
   _       ->
     throw400 NotSupported $
     "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
-
-fetchRawFunctioInfo :: MonadTx m => QualifiedFunction -> m RawFunctionInfo
-fetchRawFunctioInfo qf@(QualifiedObject sn fn) =
-  handleMultipleFunctions qf =<< map (Q.getAltJ . runIdentity) <$> fetchFromDatabase
-  where
-    fetchFromDatabase = liftTx $
-      Q.listQE defaultTxErrorHandler [Q.sql|
-           SELECT function_info
-             FROM hdb_catalog.hdb_function_info_agg
-            WHERE function_schema = $1
-              AND function_name = $2
-          |] (sn, fn) True
 
 runTrackFunc
   :: (MonadTx m, CacheRWM m, HasSystemDefined m)

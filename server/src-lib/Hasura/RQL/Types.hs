@@ -16,7 +16,6 @@ module Hasura.RQL.Types
 
   , QCtx(..)
   , HasQCtx(..)
-  , mkAdminQCtx
   , askTabInfo
   , isTableTracked
   , getTableInfo
@@ -78,9 +77,6 @@ class HasQCtx a where
 
 instance HasQCtx QCtx where
   getQCtx = id
-
-mkAdminQCtx :: SQLGenCtx -> SchemaCache ->  QCtx
-mkAdminQCtx soc sc = QCtx adminUserInfo sc soc
 
 class (Monad m) => UserInfoM m where
   askUserInfo :: m UserInfo

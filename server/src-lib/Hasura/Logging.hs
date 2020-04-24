@@ -18,7 +18,6 @@ module Hasura.Logging
   , mkLogger
   , LoggerCtx(..)
   , mkLoggerCtx
-  , cleanLoggerCtx
   , eventTriggerLogType
   , EnabledLogTypes (..)
   , defaultEnabledEngineLogTypes
@@ -249,11 +248,6 @@ mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) enabledLogs = do
       Auto.mkAutoUpdate Auto.defaultUpdateSettings {
         Auto.updateAction = getFormattedTime tzM
       }
-
-cleanLoggerCtx :: LoggerCtx a -> IO ()
-cleanLoggerCtx =
-  FL.rmLoggerSet . _lcLoggerSet
-
 
 newtype Logger impl
   = Logger { unLogger :: forall a m. (ToEngineLog a impl, MonadIO m) => a -> m () }

@@ -2,8 +2,6 @@ module Hasura.Events.HTTP
   ( HTTPErr(..)
   , HTTPResp(..)
   , runHTTP
-  , isNetworkError
-  , isNetworkErrorHC
   , ExtraContext(..)
   ) where
 
@@ -98,18 +96,6 @@ instance J.ToJSON HTTPErr where
 -- encapsulates a http operation
 instance ToEngineLog HTTPErr Hasura where
   toEngineLog err = (LevelError, eventTriggerLogType, J.toJSON err)
-
-isNetworkError :: HTTPErr -> Bool
-isNetworkError = \case
-  HClient he -> isNetworkErrorHC he
-  _          -> False
-
-isNetworkErrorHC :: HTTP.HttpException -> Bool
-isNetworkErrorHC = \case
-  HTTP.HttpExceptionRequest _ (HTTP.ConnectionFailure _) -> True
-  HTTP.HttpExceptionRequest _ HTTP.ConnectionTimeout -> True
-  HTTP.HttpExceptionRequest _ HTTP.ResponseTimeout -> True
-  _ -> False
 
 anyBodyParser :: HTTP.Response B.ByteString -> Either HTTPErr HTTPResp
 anyBodyParser resp = do
