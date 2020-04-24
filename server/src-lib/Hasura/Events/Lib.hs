@@ -1,5 +1,5 @@
-{-# LANGUAGE StrictData #-}  -- TODO project-wide, maybe. See #3941
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StrictData      #-}
 module Hasura.Events.Lib
   ( initEventEngineCtx
   , processEventQueue
@@ -11,16 +11,16 @@ module Hasura.Events.Lib
   , EventEngineCtx(..)
   ) where
 
-import           Control.Concurrent.Extended   (sleep)
-import           Control.Concurrent.Async      (wait, withAsync, async, link)
+import           Control.Concurrent.Async    (async, link, wait, withAsync)
+import           Control.Concurrent.Extended (sleep)
 import           Control.Concurrent.STM.TVar
-import           Control.Exception.Lifted      (finally, mask_, try)
+import           Control.Exception.Lifted    (finally, mask_, try)
 import           Control.Monad.STM
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
-import           Data.Int                      (Int64)
+import           Data.Int                    (Int64)
 import           Data.String
 import           Data.Time.Clock
 import           Data.Word
@@ -29,27 +29,25 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Version         (HasVersion)
+import           Hasura.Server.Version       (HasVersion)
 import           Hasura.SQL.Types
 
 -- remove these when array encoding is merged
-import qualified Database.PG.Query.PTI         as PTI
-import qualified PostgreSQL.Binary.Encoding    as PE
+import qualified Database.PG.Query.PTI       as PTI
+import qualified PostgreSQL.Binary.Encoding  as PE
 
-import qualified Data.ByteString               as BS
-import qualified Data.CaseInsensitive          as CI
-import qualified Data.HashMap.Strict           as M
-import qualified Data.TByteString              as TBS
-import qualified Data.Text                     as T
-import qualified Data.Text.Encoding            as T
-import qualified Data.Text.Encoding            as TE
-import qualified Data.Text.Encoding.Error      as TE
-import qualified Data.Time.Clock               as Time
-import qualified Database.PG.Query             as Q
-import qualified Hasura.Logging                as L
-import qualified Network.HTTP.Client           as HTTP
-import qualified Network.HTTP.Types            as HTTP
-import qualified Data.Set                      as Set
+import qualified Data.ByteString             as BS
+import qualified Data.CaseInsensitive        as CI
+import qualified Data.HashMap.Strict         as M
+import qualified Data.Set                    as Set
+import qualified Data.TByteString            as TBS
+import qualified Data.Text                   as T
+import qualified Data.Text.Encoding          as T
+import qualified Data.Time.Clock             as Time
+import qualified Database.PG.Query           as Q
+import qualified Hasura.Logging              as L
+import qualified Network.HTTP.Client         as HTTP
+import qualified Network.HTTP.Types          as HTTP
 
 type Version = T.Text
 
@@ -160,9 +158,9 @@ data Invocation
 
 data EventEngineCtx
   = EventEngineCtx
-  { _eeCtxEventThreadsCapacity  :: TVar Int
-  , _eeCtxFetchInterval         :: DiffTime
-  , _eeCtxLockedEvents          :: TVar (Set.Set EventId)
+  { _eeCtxEventThreadsCapacity :: TVar Int
+  , _eeCtxFetchInterval        :: DiffTime
+  , _eeCtxLockedEvents         :: TVar (Set.Set EventId)
   }
 
 defaultMaxEventThreads :: Int
@@ -406,17 +404,15 @@ decodeHeader
   :: LogEnvHeaders -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString)
   -> HeaderConf
 decodeHeader logenv headerInfos (hdrName, hdrVal)
-  = let name = decodeBS $ CI.original hdrName
+  = let name = bsToTxt $ CI.original hdrName
         getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
                       in name'
         mehi = find (\hi -> getName hi == name) headerInfos
     in case mehi of
-         Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
+         Nothing -> HeaderConf name (HVValue (bsToTxt hdrVal))
          Just ehi -> if logenv
                      then HeaderConf name (HVValue (ehiCachedValue ehi))
                      else ehiHeaderConf ehi
-   where
-     decodeBS = TE.decodeUtf8With TE.lenientDecode
 
 mkInvo
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
