@@ -213,11 +213,9 @@ And the following :ref:`type definitions <custom_types>`:
 .. code-block:: graphql
 
   input AuthorInput {
-    indicator : String
-    is_active : Boolean
     name : String
-    popular_author : Boolean
     rating : Int
+    is_active : Boolean
   }
 
   type AuthorOutput {
