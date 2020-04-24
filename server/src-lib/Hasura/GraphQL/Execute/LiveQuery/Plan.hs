@@ -45,7 +45,6 @@ import           Data.UUID                              (UUID)
 
 import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Resolve.Action          as RA
-import qualified Hasura.GraphQL.Resolve.Select          as GR
 import qualified Hasura.GraphQL.Resolve.Types           as GR
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV

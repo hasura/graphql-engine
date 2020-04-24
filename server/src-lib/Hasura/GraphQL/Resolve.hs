@@ -196,3 +196,6 @@ toSQLSelect = \case
   QRFPk s       -> DS.mkSQLSelect DS.JASSingleObject s
   QRFSimple s   -> DS.mkSQLSelect DS.JASMultipleRows s
   QRFAgg s      -> DS.mkAggSelect s
+  QRFActionSelect s -> DS.mkSQLSelect DS.JASSingleObject s
+  QRFActionExecuteObject s -> DS.mkSQLSelect DS.JASSingleObject s
+  QRFActionExecuteList s -> DS.mkSQLSelect DS.JASSingleObject s
