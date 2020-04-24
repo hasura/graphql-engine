@@ -18,9 +18,8 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
-
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
 // DefaultPrefetchMigrations sets the number of migrations to pre-read
@@ -322,6 +321,10 @@ func (m *Migrate) GetIntroSpectionSchema() (interface{}, error) {
 
 func (m *Migrate) SetMetadataPlugins(plugins types.MetadataPlugins) {
 	m.databaseDrv.SetMetadataPlugins(plugins)
+}
+
+func (m *Migrate) EnableCheckMetadataConsistency(enabled bool) {
+	m.databaseDrv.EnableCheckMetadataConsistency(enabled)
 }
 
 func (m *Migrate) ExportMetadata() (map[string][]byte, error) {

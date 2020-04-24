@@ -26,3 +26,16 @@ args:
           first: foo
           last: bar
         address: foobar
+
+#Insert numerics table data
+- type: insert
+  args:
+    table: numerics
+    objects:
+    - num_smallint: 12345
+      num_integer: 12345
+      num_bigint: 12345
+      num_real: 12345.67
+      num_double: 12345.67
+      num_money: 12345.67
+      num_numeric: 12345.67

@@ -1,6 +1,6 @@
 // import Endpoints, {globalCookiePolicy} from '../../Endpoints';
 import { defaultCurFilter } from '../DataState';
-import { vMakeRequest } from './ViewActions';
+import { vMakeTableRequests } from './ViewActions';
 import { Integers, Reals } from '../constants';
 
 const LOADING = 'ViewTable/FilterQuery/LOADING';
@@ -108,7 +108,7 @@ const runQuery = tableSchema => {
       delete newQuery.order_by;
     }
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
-    dispatch(vMakeRequest());
+    dispatch(vMakeTableRequests());
   };
 };
 
@@ -133,9 +133,8 @@ const filterReducer = (state = defaultCurFilter, action) => {
           'order_by' in q
             ? [...q.order_by, ...defaultCurFilter.order_by]
             : [...defaultCurFilter.order_by];
-        newCurFilterQ.limit = 'limit' in q ? q.limit : defaultCurFilter.limit;
-        newCurFilterQ.offset =
-          'offset' in q ? q.offset : defaultCurFilter.offset;
+        newCurFilterQ.limit = q.limit || defaultCurFilter.limit;
+        newCurFilterQ.offset = q.offset || defaultCurFilter.offset;
         return newCurFilterQ;
       }
       return defaultCurFilter;
