@@ -115,6 +115,16 @@ data CreateScheduledEvent
   = CreateScheduledEvent
   { steName      :: !ET.TriggerName
   , steTimestamp :: !UTCTime
+  -- ^ The timestamp should be in the ISO8601 format.
+  -- | Supported time string formats for the API:
+  -- @YYYY-MM-DD HH:MM Z@
+  -- @YYYY-MM-DD HH:MM:SS Z@
+  -- @YYYY-MM-DD HH:MM:SS.SSS Z@
+  -- The first space may instead be a T, and the second space is optional.
+  -- The Z represents UTC.
+  -- The Z may be replaced with a time zone offset of the form +0000 or -08:00,
+  -- where the first two digits are hours, the : is optional and
+  -- the second two digits (also optional) are minutes.
   , stePayload   :: !(Maybe J.Value)
   } deriving (Show, Eq, Generic)
 
@@ -132,14 +142,5 @@ newtype ScheduledEventId
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''ScheduledEventId)
 
-
--- Supported time string formats for the API:
--- (see FromJSON for ZonedTime: https://hackage.haskell.org/package/aeson-1.4.6.0/docs/src/Data.Aeson.Types.FromJSON.html#line-2050)
-
--- YYYY-MM-DD HH:MM Z YYYY-MM-DD HH:MM:SS Z YYYY-MM-DD HH:MM:SS.SSS Z
-
--- The first space may instead be a T, and the second space is optional. The Z represents UTC.
--- The Z may be replaced with a time zone offset of the form +0000 or -08:00,
--- where the first two digits are hours, the : is optional and the second two digits (also optional) are minutes.
 formatTime' :: UTCTime -> T.Text
 formatTime'= T.pack . iso8601Show
