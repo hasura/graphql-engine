@@ -126,6 +126,8 @@ data ScheduledEventFull
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventFull)
 
+-- | runScheduledEventsGenerator makes sure that all the scheduled triggers
+--   have an adequate buffer of scheduled events.
 runScheduledEventsGenerator ::
      L.Logger L.Hasura
   -> Q.PGPool
