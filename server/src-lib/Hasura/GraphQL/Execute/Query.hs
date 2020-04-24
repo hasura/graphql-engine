@@ -113,10 +113,10 @@ mkCurPlanTx usrVars fldPlans = do
   -- generate the SQL and prepared vars or the bytestring
   resolved <- forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
-      RFPRaw resp                      -> return $ SRRRaw resp
+      RFPRaw resp                      -> return $ RRRaw resp
       RFPPostgres (PGPlan q _ prepMap) -> do
         let args = withSessionVariables usrVars $ DataArgs $ IntMap.elems prepMap
-        return $ SRRSql $ SafePreparedSql q args
+        return $ RRSql $ SafePreparedSql q args
     return (alias, fldResp)
 
   return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
@@ -232,10 +232,10 @@ queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
   -- generate the SQL and prepared vars or the bytestring
   resolved <- forM fldPlans $ \(alias, fldPlan) ->
     (alias,) <$> case fldPlan of
-      RFPRaw resp -> return $ SRRRaw resp
+      RFPRaw resp -> return $ RRRaw resp
       RFPPostgres pgPlan@(PGPlan _ plan prep) -> do
         validatedVars <- GV.validateVariablesForReuse varTypes (horizontalComposition plan prep) varValsM
-        SRRSql <$> withPlan usrVars pgPlan validatedVars
+        RRSql <$> withPlan usrVars pgPlan validatedVars
 
   return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
 
@@ -267,6 +267,8 @@ withUserVars usrVars dataArgs =
       prepArg = Q.toPrepVal (Q.AltJ usrVars)
   in SafePreparedArgs (UserArgs (prepArg, usrVarsAsPgScalar)) dataArgs
 
+-- | Variant of 'PreparedSql' that has the user arguments (session
+-- variable) stored separately from the query arguments.
 data SafePreparedSql
   = SafePreparedSql
   { _spsQuery    :: !Q.Query
@@ -284,31 +286,31 @@ instance J.ToJSON PreparedSql where
 -- arguments, or a raw bytestring (mostly, for introspection responses)
 -- From this intermediate representation, a `LazyTx` can be generated, or the
 -- SQL can be logged etc.
-data SafeResolvedQuery
-  = SRRRaw !B.ByteString
-  | SRRSql !SafePreparedSql
+data ResolvedQuery
+  = RRRaw !B.ByteString
+  | RRSql !SafePreparedSql
 
 -- | The computed SQL with alias which can be logged. Nothing here represents no
 -- SQL for cases like introspection responses. Tuple of alias to a (maybe)
 -- prepared statement
 type GeneratedSqlMap = [(G.Alias, Maybe PreparedSql)]
 
-mkLazyRespTx :: [(G.Alias, SafeResolvedQuery)] -> LazyRespTx
+mkLazyRespTx :: [(G.Alias, ResolvedQuery)] -> LazyRespTx
 mkLazyRespTx resolved =
   fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do
     resp <- case node of
-      SRRRaw bs
+      RRRaw bs
         -> return $ encJFromBS bs
-      SRRSql (SafePreparedSql q (SafePreparedArgs (UserArgs userArgs) (DataArgs dataArgs)))
+      RRSql (SafePreparedSql q (SafePreparedArgs (UserArgs userArgs) (DataArgs dataArgs)))
         -> liftTx $ asSingleRowJsonResp q (map fst (userArgs:dataArgs))
     return (G.unName $ G.unAlias alias, resp)
 
-mkGeneratedSqlMap :: [(G.Alias, SafeResolvedQuery)] -> GeneratedSqlMap
+mkGeneratedSqlMap :: [(G.Alias, ResolvedQuery)] -> GeneratedSqlMap
 mkGeneratedSqlMap resolved =
   flip map resolved $ \(alias, node) ->
     let res = case node of
-                SRRRaw _
+                RRRaw _
                   -> Nothing
-                SRRSql (SafePreparedSql q (SafePreparedArgs (UserArgs userArgs) (DataArgs dataArgs)))
+                RRSql (SafePreparedSql q (SafePreparedArgs (UserArgs userArgs) (DataArgs dataArgs)))
                   -> Just (PreparedSql q (userArgs:dataArgs))
     in (alias, res)
