@@ -1438,18 +1438,12 @@ const saveTableCommentSql = isTable => {
 };
 
 const isColumnUnique = (tableSchema, colName) => {
-  const { primary_key, unique_constraints } = tableSchema;
-
-  const columnPkConstraint =
-    primary_key.columns.includes(colName) && primary_key.columns.length === 1;
-
-  const columnUniqueConstraint =
-    unique_constraints.filter(
+  return (
+    tableSchema.unique_constraints.filter(
       constraint =>
         constraint.columns.includes(colName) && constraint.columns.length === 1
-    ).length > 0;
-
-  return columnPkConstraint || columnUniqueConstraint;
+    ).length > 0
+  );
 };
 
 const saveColumnChangesSql = (colName, column, onSuccess) => {
