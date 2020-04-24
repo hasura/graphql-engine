@@ -35,6 +35,7 @@ module Hasura.RQL.Types.Common
        , isSystemDefined
 
        , successMsg
+       , NonNegativeDiffTime(..)
        ) where
 
 import           Hasura.EncJSON
@@ -241,3 +242,12 @@ isSystemDefined = unSystemDefined
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
+
+newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: DiffTime }
+  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable)
+
+instance FromJSON NonNegativeDiffTime where
+  parseJSON = withScientific "NonNegativeDiffTime" $ \t -> do
+    case (t > 0) of
+      True -> return $ NonNegativeDiffTime . realToFrac $ t
+      False -> fail "negative value not allowed"

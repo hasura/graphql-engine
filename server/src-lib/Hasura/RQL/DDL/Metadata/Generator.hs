@@ -10,6 +10,7 @@ import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
+import           Hasura.RQL.Types.Common                       (NonNegativeDiffTime)
 
 import qualified Hasura.RQL.DDL.ComputedField                  as ComputedField
 import qualified Hasura.RQL.DDL.Permission                     as Permission
@@ -306,6 +307,9 @@ instance Arbitrary ScheduleType where
   arbitrary = genericArbitrary
 
 instance Arbitrary STRetryConf where
+  arbitrary = genericArbitrary
+
+instance Arbitrary NonNegativeDiffTime where
   arbitrary = genericArbitrary
 
 instance Arbitrary CronSchedule where
