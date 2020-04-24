@@ -2,6 +2,12 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+(Remove this and start adding entries)
+
+## `v1.2.0-beta.5`
+
 ### server: backend only insert permissions
 
 Introduces optional `backend_only` (default: `false`) configuration in insert permissions
