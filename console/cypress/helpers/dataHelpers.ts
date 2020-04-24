@@ -30,9 +30,9 @@ export const typeDefaults = {
 
 export const queryTypes = ['insert', 'select', 'update', 'delete'];
 
-export const getColName = (i: string) => `Apic_test_column_${i}`;
+export const getColName = (i: number) => `Apic_test_column_${i}`;
 
-export const getTableName = (i: string, testName: string = '') =>
+export const getTableName = (i: string, testName = '') =>
   `Apic_test_table_${testName}_${i}`;
 
 export const getElementFromAlias = (alias: string) => `[data-test=${alias}]`;

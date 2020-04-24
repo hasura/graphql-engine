@@ -9,8 +9,8 @@ import {
 
 // ***************** UTIL FUNCTIONS **************************
 
-let adminSecret;
-let dataApiUrl;
+let adminSecret: string;
+let dataApiUrl: string;
 
 export const setMetaData = () => {
   cy.window().then(win => {
@@ -23,7 +23,7 @@ export const setMetaData = () => {
   });
 };
 
-export const createView = sql => {
+export const createView = (sql: string) => {
   const reqBody = {
     type: 'run_sql',
     args: {
@@ -36,8 +36,19 @@ export const createView = sql => {
 
 // ******************* VALIDATION FUNCTIONS *******************************
 
-// ******************* Remote Schema Validator ****************************
-export const validateRS = (remoteSchemaName, result) => {
+enum Result {
+  SUCCESS = 'success',
+  FAILURE = 'failure',
+}
+interface RequestBody {
+  [key: string]: any;
+}
+/**
+ * Remote Schema validator
+ * @param remoteSchemaName
+ * @param result
+ */
+export const validateRS = (remoteSchemaName: string, result: Result): void => {
   const reqBody = {
     type: 'select',
     args: {
@@ -65,8 +76,17 @@ export const validateRS = (remoteSchemaName, result) => {
   });
 };
 
-// ******************* Custom Function Validator **************************
-export const validateCFunc = (functionName, functionSchema, result) => {
+/**
+ * Vaidate the given function
+ * @param functionName
+ * @param functionSchema
+ * @param result
+ */
+export const validateCFunc = (
+  functionName: string,
+  functionSchema: string,
+  result: Result
+): void => {
   const reqBody = {
     type: 'select',
     args: {
@@ -97,7 +117,17 @@ export const validateCFunc = (functionName, functionSchema, result) => {
   });
 };
 
-export const validateUntrackedFunc = (functionName, functionSchema, result) => {
+/**
+ * Validate untracked function
+ * @param functionName
+ * @param functionSchema
+ * @param result
+ */
+export const validateUntrackedFunc = (
+  functionName: string,
+  functionSchema: string,
+  result: Result
+): void => {
   const reqBody = {
     type: 'select',
     args: {
@@ -122,7 +152,12 @@ export const validateUntrackedFunc = (functionName, functionSchema, result) => {
   });
 };
 
-export const dataRequest = (reqBody, result) => {
+/**
+ * Make date API Request and check the repsone status
+ * @param reqBody
+ * @param result
+ */
+export const dataRequest = (reqBody: RequestBody, result: Result) => {
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
@@ -141,7 +176,12 @@ export const dataRequest = (reqBody, result) => {
   });
 };
 
-export const dropTableRequest = (reqBody, result) => {
+/**
+ * Drop a table request
+ * @param reqBody
+ * @param result
+ */
+export const dropTableRequest = (reqBody: RequestBody, result: Result) => {
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
@@ -158,7 +198,7 @@ export const dropTableRequest = (reqBody, result) => {
 
 // ****************** Table Validator *********************
 
-export const validateCT = (tableName, result) => {
+export const validateCT = (tableName: string, result: Result) => {
   const reqBody = {
     type: 'select',
     args: {
@@ -178,13 +218,17 @@ export const validateCT = (tableName, result) => {
 
 // **************** View Validator *******************
 
-export const validateView = (viewName, result) => {
+export const validateView = (viewName: string, result: Result) => {
   validateCT(viewName, result);
 };
 
 // *************** Column Validator *******************
 
-export const validateColumn = (tableName, column, result) => {
+export const validateColumn = (
+  tableName: string,
+  column: string,
+  result: Result
+) => {
   const reqBody = {
     type: 'select',
     args: {
@@ -202,7 +246,12 @@ export const validateColumn = (tableName, column, result) => {
   });
 };
 
-export const validateColumnWhere = (tableName, column, where, result) => {
+export const validateColumnWhere = (
+  tableName: string,
+  column: string,
+  where: string,
+  result: Result
+) => {
   const reqBody = {
     type: 'select',
     args: {
@@ -224,7 +273,7 @@ export const validateColumnWhere = (tableName, column, where, result) => {
 
 // ******************** Validate Insert *********************
 
-export const validateInsert = (tableName, rows) => {
+export const validateInsert = (tableName: string, rows: number) => {
   const reqBody = {
     type: 'count',
     args: {
@@ -240,7 +289,18 @@ export const validateInsert = (tableName, rows) => {
 
 // ******************* Permissiosn Validator ****************
 
-const compareChecks = (permObj, check, query, columns) => {
+type Query = 'insert' | 'select' | 'update';
+type Check = 'custom' | 'none';
+interface SchemaObject {
+  [key: string]: any;
+}
+
+const compareChecks = (
+  permObj: SchemaObject,
+  check: Check,
+  query: Query,
+  columns: string[]
+) => {
   if (check === 'none') {
     if (query === 'insert') {
       expect(Object.keys(permObj.check).length === 0).to.be.true;
@@ -272,15 +332,15 @@ const compareChecks = (permObj, check, query, columns) => {
 };
 
 const handlePermValidationResponse = (
-  tableSchema,
-  role,
-  query,
-  check,
-  result,
-  columns
+  tableSchema: SchemaObject,
+  role: string,
+  query: Query,
+  check: Check,
+  result: Result,
+  columns: string[]
 ) => {
   const rolePerms = tableSchema.permissions.find(
-    permission => permission.role_name === role
+    (permission: { role_name: string }) => permission.role_name === role
   );
   if (rolePerms) {
     const permObj = rolePerms.permissions[query];
@@ -296,13 +356,22 @@ const handlePermValidationResponse = (
   }
 };
 
+/**
+ * Validate Permissions
+ * @param tableName
+ * @param role
+ * @param query
+ * @param check
+ * @param result
+ * @param columns
+ */
 export const validatePermission = (
-  tableName,
-  role,
-  query,
-  check,
-  result,
-  columns
+  tableName: string,
+  role: string,
+  query: Query,
+  check: Check,
+  result: Result,
+  columns: string[]
 ) => {
   const reqBody = {
     type: 'select',
@@ -320,7 +389,7 @@ export const validatePermission = (
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     const tableSchema = response.body.find(
-      table => table.table_name === tableName
+      (table: { table_name: string }) => table.table_name === tableName
     );
     handlePermValidationResponse(
       tableSchema,
@@ -332,9 +401,13 @@ export const validatePermission = (
     );
   });
 };
-// ********************** Validate Migration mode ******************
 
-export const validateMigrationMode = mode => {
+// ********************** Validate Migration mode ******************
+/**
+ * Validate the migration mode
+ * @param mode
+ */
+export const validateMigrationMode = (mode: boolean) => {
   cy.request({
     method: 'GET',
     url: migrateModeUrl,
@@ -344,8 +417,12 @@ export const validateMigrationMode = mode => {
 };
 
 // ****************** Trigger Validator *********************
-
-export const validateCTrigger = (triggerName, result) => {
+/**
+ * Validate the trigger based on trigger name
+ * @param triggerName
+ * @param result
+ */
+export const validateCTrigger = (triggerName: string, result: Result) => {
   const reqBody = {
     type: 'select',
     args: {
