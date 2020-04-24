@@ -38,7 +38,7 @@ Using Postgres check constraints
 --------------------------------
 
 If the validation logic can be expressed by using only static values and the
-columns of the table, you can use `Postgres check constraints <https://www.postgresql.org/docs/current/ddl-constraints.html>`__
+columns of the table, you can use `Postgres check constraints <https://www.postgresql.org/docs/current/ddl-constraints.html>`__.
 
 .. min_price > 0. max_price >= min_price, selling_price >= min_price AND selling_price <= max_price
 
@@ -175,7 +175,7 @@ Now, we can create a role ``user`` on this table with the following rule:
 .. thumbnail:: ../../../img/graphql/manual/schema/validation-author-isactive.png
    :alt: validation using permissions: author should be active
 
-Similar to previous example, if we try to insert an article for an author for
+Similar to the previous example, if we try to insert an article for an author for
 whom ``is_active = false``, we will receive a ``permission-error`` response.
 
 .. note::
@@ -195,4 +195,54 @@ validation.
 
 **Example:** Make sure an author is not black-listed when creating an article.
 
-<TODO>
+Let's assume you have an external service that manages and stores black-listed authors.
+Before inserting an author, we need to check if an author is black-listed.
+
+Let's assume we have :ref:`derived an action <derive_actions>` from the ``insert_article`` muation. It has the following action definition:
+
+.. code-block:: graphql
+
+  type Mutation {
+    InsertAuthor (
+      author: AuthorInput!
+    ): AuthorOutput
+  }
+
+And the following :ref:`type definitions <custom_types>`:
+
+.. code-block:: graphql
+
+  input AuthorInput {
+    indicator : String
+    is_active : Boolean
+    name : String
+    popular_author : Boolean
+    rating : Int
+  }
+
+  type AuthorOutput {
+    id : Int!
+  }
+
+Add the following business logic to your :ref:`action handler <action_handlers>`:
+
+.. code-block:: javascript
+
+  // run some business logic
+
+  const blacklistedAuthors = ["Dr. Doom", "Thanos", "Joker"];
+
+  if (blacklistedAuthors.includes(author.name)) {
+    res.status(400).json({ message: "Author is blacklisted" });
+  }
+
+When we now insert a new article, our action handler checks if the author is black-listed. If it's not, the article will be inserted and the ``id`` will be returned.
+If the author is black-listed, we get the following error message:
+
+.. code-block:: text
+
+  "Author is blacklisted"
+
+.. note::
+
+  For examples of data validations with actions, please refer to this `Github repo <https://github.com/hasura/hasura-actions-examples/tree/master/data-validations>`__.
