@@ -13,6 +13,7 @@ import jwt
 import queue
 import random
 import warnings
+import pytest
 
 from context import GQLWsClient, PytestConf
 
