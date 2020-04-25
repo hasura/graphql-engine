@@ -2,6 +2,137 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+(Remove this and start adding entries)
+
+## `v1.2.0-beta.5`
+
+### server: backend only insert permissions
+
+Introduces optional `backend_only` (default: `false`) configuration in insert permissions
+(see [api reference](https://deploy-preview-4224--hasura-docs.netlify.com/graphql/manual/api-reference/schema-metadata-api/permission.html#insertpermission)).
+If this is set to `true`, the insert mutation is accessible to the role only if the request
+is accompanied by `x-hasura-use-backend-only-permissions` session variable whose value is set to `true` along with the `x-hasura-admin-secret` header.
+Otherwise, the behavior of the permission remains unchanged.
+
+This feature is highly useful in disabling `insert_table` mutation for a role from frontend clients while still being able to access it from a Action webhook handler (with the same role).
+
+(rfc #4120) (#4224)
+
+### server: debugging mode for non-admin roles
+
+For any errors the server sends extra information in `extensions` field under `internal` key. Till now this was only
+available for `admin` role requests. To enable this for other roles, start the server with `--dev-mode` flag or set `HASURA_GRAPHQL_DEV_MODE` env variable to `true`:
+
+```bash
+$ graphql-engine --database-url <database-url> serve --dev-mode
+```
+
+In case you want to disable `internal` field for `admin` role requests, set `--admin-internal-errors` option to `false` or or set `HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS` env variable to `false`
+
+```bash
+$ graphql-engine --database-url <database-url> serve --admin-internal-errors false
+```
+
+This feature come in handy during development when you may want to see detailed errors irrespective of roles.
+
+**Improved internal errors for Actions**:
+
+(This is a **breaking change** with previous 1.2.0-beta releases)
+
+The `internal` field for action errors is improved with more debug information. It now includes `request`,
+`response` and `error` fields instead of just `webhook_response` field.
+
+Before:
+```json
+{
+  "errors": [
+    {
+      "extensions": {
+        "internal": {
+          "webhook_response": {
+            "age": 25,
+            "name": "Alice",
+            "id": "some-id"
+          }
+        },
+        "path": "$",
+        "code": "unexpected"
+      },
+      "message": "unexpected fields in webhook response: age"
+    }
+  ]
+}
+```
+After:
+```json
+{
+  "errors": [
+    {
+      "extensions": {
+        "internal": {
+          "error": "unexpected response",
+          "response": {
+            "status": 200,
+            "body": {
+              "age": 25,
+              "name": "Alice",
+              "id": "some-id"
+            },
+            "headers": [
+              {
+                "value": "application/json",
+                "name": "Content-Type"
+              },
+              {
+                "value": "abcd",
+                "name": "Set-Cookie"
+              }
+            ]
+          },
+          "request": {
+            "body": {
+              "session_variables": {
+                "x-hasura-role": "admin"
+              },
+              "input": {
+                "arg": {
+                  "age": 25,
+                  "name": "Alice",
+                  "id": "some-id"
+                }
+              },
+              "action": {
+                "name": "mirror"
+              }
+            },
+            "url": "http://127.0.0.1:5593/mirror-action",
+            "headers": []
+          }
+        },
+        "path": "$",
+        "code": "unexpected"
+      },
+      "message": "unexpected fields in webhook response: age"
+    }
+  ]
+}
+```
+
+### cli: add support for .env file
+
+ENV vars can now be read from .env file present at the project root directory. A global flag, `--envfile`, is added so you can explicitly provide the .env filename, which defaults to `.env` filename if no flag is provided.
+
+**Example**:
+
+```
+hasura console --envfile production.env
+```
+The above command will read ENV vars from `production.env` file present at the project root directory.
+
+(close #4129) (#4454)
+
 ### console: allow setting post-update check in update permissions
 
 Along with the check for filtering rows that can be updated, you can now set a post-update permission check that needs to be satisfied by the updated rows after the update is made.
@@ -9,6 +140,19 @@ Along with the check for filtering rows that can be updated, you can now set a p
 <add-screenshot>
 
 (close #4142) (#4313)
+
+### console: support for Postgres [materialized views](https://www.postgresql.org/docs/current/rules-materializedviews.html)
+
+Postgres materialized views are views that are persisted in a table-like form. They are now supported in the Hasura Console, in the same way as views. They will appear on the 'Schema' page, under the 'Data' tab, in the 'Untracked tables or views' section.
+
+(close #91) (#4270)
+
+### docs: map Postgres operators to corresponding Hasura operators
+
+Map Postgres operators to corresponding Hasura operators at various places in docs and link to PG documentation for reference.
+For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#operator).
+
+(#4502) (close #4056)
 
 ### Bug fixes and improvements
 
@@ -26,6 +170,7 @@ Along with the check for filtering rows that can be updated, you can now set a p
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
+- docs: add reference docs for CLI (clsoe #4327) (#4408)
 
 ## `v1.2.0-beta.4`
 
@@ -100,7 +245,6 @@ A new CLI migrations image is introduced to account for the new migrations workf
 (close #3969) (#4145)
 
 ### Bug fixes and improvements
-
 - server: improve performance of replace_metadata tracking many tables (fix #3802)
 - server: option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
 - server: fix various space leaks to avoid excessive memory consumption
