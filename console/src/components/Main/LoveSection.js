@@ -2,6 +2,7 @@ import React from 'react';
 
 import globals from '../../Globals';
 import pixHeart from './images/pix-heart.svg';
+import { Icon } from '../UIKit/atoms';
 import styles from './Main.scss';
 
 const LoveSection = () => {
@@ -12,18 +13,23 @@ const LoveSection = () => {
   return (
     <>
       <div
-        key="main_love_1"
         className={styles.shareSection + ' dropdown-toggle'}
         aria-expanded="false"
         onClick={toggleDropdown}
       >
         <img className={'img-responsive'} src={pixHeart} alt={'pix Heart'} />
       </div>
-      <ul key="main_love_2" className={'dropdown-menu ' + styles.dropdown_menu}>
+      <ul className={'dropdown-menu ' + styles.dropdown_menu}>
         <div className={styles.dropdown_menu_container}>
-          <div className={styles.closeDropDown}>
-            <i className="fa fa-close" onClick={toggleDropdown} />
-          </div>
+          <Icon
+            type="close"
+            position="absolute"
+            pointer
+            color="black.secondary"
+            top="10px"
+            left="20px"
+            onClick={toggleDropdown}
+          />
           <div className={styles.displayFlex}>
             <li className={styles.pixelText1}>
               Roses are red, <br />
@@ -31,7 +37,7 @@ const LoveSection = () => {
               <br />
               Star us on GitHub,
               <br />
-              To make our <i className={'fa fa-heart'} /> go wooooo!
+              To make our <Icon type="love" size={10} mx="xs" /> go wooooo!
             </li>
             <li className={'dropdown-item'}>
               <a
@@ -47,8 +53,8 @@ const LoveSection = () => {
                   />
                 </div>
                 <div className={styles.pixelText}>
-                  <i className="fa fa-star" />
-                  &nbsp; Star
+                  <Icon type="star" size={12} mr="5px" />
+                  Star
                 </div>
               </a>
             </li>
@@ -66,8 +72,8 @@ const LoveSection = () => {
                   />
                 </div>
                 <div className={styles.pixelText}>
-                  <i className="fa fa-twitter" />
-                  &nbsp; Tweet
+                  <Icon type="twitter" size={12} mr="5px" />
+                  Tweet
                 </div>
               </a>
             </li>

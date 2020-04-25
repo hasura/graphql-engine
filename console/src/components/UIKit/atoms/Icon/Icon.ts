@@ -1,5 +1,6 @@
 import styled from 'styled-components';
-import { color, typography, layout, space } from 'styled-system';
+import { color, typography, layout, space, position } from 'styled-system';
+
 import { IconProps } from './index';
 
 export const StyledIcon = styled.svg<IconProps>`
@@ -9,4 +10,5 @@ export const StyledIcon = styled.svg<IconProps>`
   ${typography}
   ${layout}
   ${space}
+  ${position}
 `;

@@ -122,8 +122,10 @@ export const Icon: React.FC<IconProps> = props => {
   const CurrentActiveIcon = iconReferenceMap[type]
     ? iconReferenceMap[type]
     : iconReferenceMap.default;
+
   return <StyledIcon as={CurrentActiveIcon} {...props} aria-hidden="true" />;
 };
+
 Icon.defaultProps = {
   size: 14,
 };
