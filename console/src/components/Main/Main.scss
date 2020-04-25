@@ -1310,8 +1310,7 @@
   }
 }
 
-@media(max-width: 1500px) {
-
+@media (max-width: 1500px) {
   .header_items {
     width: 52%;
   }
@@ -1336,12 +1335,13 @@
   }
 
   .helpSection {
-    font-size: 12px;    
+    font-size: 12px;
   }
 
-  .proWrapper{
-    .proName, .proNameClicked {
-      font-size: 12px
+  .proWrapper {
+    .proName,
+    .proNameClicked {
+      font-size: 12px;
     }
   }
 
@@ -1350,5 +1350,4 @@
       font-size: 12px;
     }
   }
-
 }

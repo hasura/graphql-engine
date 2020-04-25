@@ -10,6 +10,7 @@ import { getPathRoot } from '../Common/utils/urlUtils';
 
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
+import LoveSection from './LoveSection';
 
 import {
   loadServerVersion,
@@ -24,13 +25,7 @@ import {
   redirectToMetadataStatus,
 } from '../Services/Settings/Actions';
 
-import {
-  getLoveConsentState,
-  setLoveConsentState,
-  getProClickState,
-  setProClickState,
-} from './utils';
-
+import { getProClickState, setProClickState } from './utils';
 import { checkStableVersion, versionGT } from '../../helpers/versionUtils';
 import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
 import {
@@ -40,6 +35,7 @@ import {
 } from '../Common/utils/localStorageUtils';
 import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
+import styles from './Main.scss';
 
 class Main extends React.Component {
   constructor(props) {
@@ -47,7 +43,6 @@ class Main extends React.Component {
 
     this.state = {
       updateNotificationVersion: null,
-      loveConsentState: getLoveConsentState(),
       proClickState: getProClickState(),
       isPopUpOpen: false,
     };
@@ -143,24 +138,10 @@ class Main extends React.Component {
     }
   }
 
-  handleDropdownToggle() {
-    document.getElementById('dropdown_wrapper').classList.toggle('open');
-  }
-
   handleMetadataRedirect() {
     if (this.props.metadata.inconsistentObjects.length > 0) {
       this.props.dispatch(redirectToMetadataStatus());
     }
-  }
-
-  closeLoveIcon() {
-    const s = {
-      isDismissed: true,
-    };
-    setLoveConsentState(s);
-    this.setState({
-      loveConsentState: { ...getLoveConsentState() },
-    });
   }
 
   updateLocalStorageState() {
@@ -202,8 +183,6 @@ class Main extends React.Component {
 
     const { isProClicked } = this.state.proClickState;
 
-    const styles = require('./Main.scss');
-
     const appPrefix = '';
 
     const logo = require('./images/white-logo.svg');
@@ -212,7 +191,6 @@ class Main extends React.Component {
     const mail = require('./images/mail.svg');
     const docs = require('./images/docs-logo.svg');
     const about = require('./images/console-logo.svg');
-    const pixHeart = require('./images/pix-heart.svg');
     const close = require('./images/x-circle.svg');
     const monitoring = require('./images/monitoring.svg');
     const rate = require('./images/rate.svg');
@@ -253,6 +231,7 @@ class Main extends React.Component {
       if (metadata.inconsistentObjects.length === 0) {
         return <i className={styles.question + ' fa fa-cog'} />;
       }
+
       return (
         <div className={styles.question}>
           <i className={'fa fa-cog'} />
@@ -372,132 +351,6 @@ class Main extends React.Component {
       }
 
       return updateNotificationHtml;
-    };
-
-    const getLoveSection = () => {
-      let loveSectionHtml = null;
-
-      if (!this.state.loveConsentState.isDismissed) {
-        loveSectionHtml = [
-          <div
-            key="main_love_1"
-            className={styles.shareSection + ' dropdown-toggle'}
-            aria-expanded="false"
-            onClick={this.handleDropdownToggle.bind(this)}
-          >
-            <img
-              className={'img-responsive'}
-              src={pixHeart}
-              alt={'pix Heart'}
-            />
-            {/* <i className={styles.heart + ' fa fa-heart'} /> */}
-          </div>,
-          <ul
-            key="main_love_2"
-            className={'dropdown-menu ' + styles.dropdown_menu}
-          >
-            <div className={styles.dropdown_menu_container}>
-              <div className={styles.closeDropDown}>
-                <i
-                  className="fa fa-close"
-                  onClick={this.closeLoveIcon.bind(this)}
-                />
-                {/*
-                        <img
-                          className={'img-responsive'}
-                          src={closeIcon}
-                          alt={'closeIcon'}
-                          onClick={this.closeLoveIcon.bind(this)}
-                        />
-                        */}
-              </div>
-              {/*
-                      <div className={styles.arrow_up_dropdown} />
-                      <div className={styles.graphqlHeartText}>
-                        Love GraphQL Engine? Shout it from the rooftops!
-                        <br />
-                        Or just spread the word{' '}
-                        <span role="img" aria-label="smile">
-                          😊
-                        </span>
-                      </div>
-                      */}
-              <div className={styles.displayFlex}>
-                <li className={styles.pixelText1}>
-                  Roses are red, <br />
-                  Violets are blue;
-                  <br />
-                  Star us on GitHub,
-                  <br />
-                  To make our <i className={'fa fa-heart'} /> go wooooo!
-                </li>
-                <li className={'dropdown-item'}>
-                  <a
-                    href="https://github.com/hasura/graphql-engine"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <div className={styles.socialIcon}>
-                      <img
-                        className="img img-responsive"
-                        src={`${globals.assetsPath}/common/img/githubicon.png`}
-                        alt={'GitHub'}
-                      />
-                    </div>
-                    <div className={styles.pixelText}>
-                      <i className="fa fa-star" />
-                      &nbsp; Star
-                    </div>
-                  </a>
-                  {/*
-                          <div className={styles.gitHubBtn}>
-                            <iframe
-                              title="github"
-                              src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
-                              frameBorder="0"
-                              scrolling="0"
-                              width="100px"
-                              height="30px"
-                            />
-                          </div>
-                          */}
-                </li>
-                <li className={'dropdown-item '}>
-                  <a
-                    href="https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com/hasura/graphql-engine%0A"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <div className={styles.socialIcon}>
-                      <img
-                        className="img img-responsive"
-                        src={`${globals.assetsPath}/common/img/twittericon.png`}
-                        alt={'Twitter'}
-                      />
-                    </div>
-                    <div className={styles.pixelText}>
-                      <i className="fa fa-twitter" />
-                      &nbsp; Tweet
-                    </div>
-                  </a>
-                </li>
-              </div>
-            </div>
-          </ul>,
-        ];
-      }
-
-      return loveSectionHtml;
-    };
-
-    const getHelpDropdownPosStyle = () => {
-      let helpDropdownPosStyle = '';
-
-      if (this.state.loveConsentState.isDismissed) {
-        helpDropdownPosStyle = styles.help_dropdown_menu_heart_dismissed;
-      }
-
-      return helpDropdownPosStyle;
     };
 
     const getSidebarItem = (
@@ -718,12 +571,7 @@ class Main extends React.Component {
                   <i className={styles.question + ' fa fa-question'} />
                 </div>
                 <ul
-                  className={
-                    'dropdown-menu ' +
-                    styles.help_dropdown_menu +
-                    ' ' +
-                    getHelpDropdownPosStyle()
-                  }
+                  className={'dropdown-menu ' + styles.help_dropdown_menu}
                   aria-labelledby="help"
                 >
                   <div className={styles.help_dropdown_menu_container}>
@@ -792,8 +640,7 @@ class Main extends React.Component {
                   </div>
                 </ul>
               </div>
-
-              {getLoveSection()}
+              <LoveSection />
             </div>
           </div>
 
