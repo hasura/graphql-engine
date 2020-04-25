@@ -1,12 +1,9 @@
-/* eslint import/prefer-default-export: 0 */
-
 import { validateMigrationMode } from '../../validators/validators';
 
 import { toggleOnMigrationMode, toggleOffMigrationMode } from './utils';
 import { getElementFromAlias } from '../../../helpers/dataHelpers';
 
 export const testToggleButton = () => {
-  // eslint-disable-line
   // Turn off migration mode
   toggleOffMigrationMode();
   cy.wait(10000);
@@ -24,6 +21,7 @@ export const testToggleButton = () => {
 
 export const checkToggleButton = () => {
   cy.window().then(win => {
+    // eslint-disable-next-line no-underscore-dangle
     const { consoleMode } = win.__env;
     if (consoleMode === 'cli') {
       testToggleButton();

@@ -16,7 +16,7 @@ export const dataTypes = [
   'boolean',
 ];
 
-export const typeDefaults = {
+export const typeDefaults: { [key: string]: string } = {
   integer: '5555',
   bigint: '5555555555',
   uuid: 'gen_random_uuid()',

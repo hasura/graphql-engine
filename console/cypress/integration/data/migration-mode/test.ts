@@ -1,6 +1,3 @@
-/* eslint no-unused-vars: 0 */
-/* eslint import/prefer-default-export: 0 */
-
 import { checkToggleButton } from './spec';
 import { testMode } from '../../../helpers/common';
 
