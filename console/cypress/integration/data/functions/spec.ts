@@ -13,18 +13,18 @@ import {
   dataRequest,
   validateCFunc,
   validateUntrackedFunc,
-  Result,
+  ResultType,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
 export const createCustomFunctionSuccess = () => {
   // Round about way to create a function
-  dataRequest(createTable(), Result.SUCCESS);
+  dataRequest(createTable(), ResultType.SUCCESS);
   cy.wait(5000);
-  dataRequest(testCustomFunctionSQL(1), Result.SUCCESS);
+  dataRequest(testCustomFunctionSQL(1), ResultType.SUCCESS);
   cy.wait(5000);
   // Check if the track checkbox is clicked or not
-  validateCFunc(getCustomFunctionName(1), getSchema(), Result.SUCCESS);
+  validateCFunc(getCustomFunctionName(1), getSchema(), ResultType.SUCCESS);
   cy.wait(5000);
 };
 
@@ -33,7 +33,11 @@ export const unTrackFunction = () => {
   cy.wait(5000);
   cy.get(getElementFromAlias('custom-function-edit-untrack-btn')).click();
   cy.wait(5000);
-  validateUntrackedFunc(getCustomFunctionName(1), getSchema(), Result.SUCCESS);
+  validateUntrackedFunc(
+    getCustomFunctionName(1),
+    getSchema(),
+    ResultType.SUCCESS
+  );
   cy.wait(5000);
 };
 
@@ -46,7 +50,7 @@ export const trackFunction = () => {
     getElementFromAlias(`add-track-function-${getCustomFunctionName(1)}`)
   ).click();
   cy.wait(5000);
-  validateCFunc(getCustomFunctionName(1), getSchema(), Result.SUCCESS);
+  validateCFunc(getCustomFunctionName(1), getSchema(), ResultType.SUCCESS);
   cy.wait(5000);
 };
 
@@ -73,6 +77,6 @@ export const deleteCustomFunction = () => {
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
   cy.wait(5000);
 
-  dropTableRequest(dropTable(), Result.SUCCESS);
+  dropTableRequest(dropTable(), ResultType.SUCCESS);
   cy.wait(5000);
 };

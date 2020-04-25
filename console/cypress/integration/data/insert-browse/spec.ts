@@ -12,7 +12,7 @@ import {
   validateInsert,
   setMetaData,
   validateCT,
-  Result,
+  ResultType,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
@@ -104,7 +104,7 @@ export const passBICreateTable = () => {
   // Click on create
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
-  validateCT(getTableName(0, testName), Result.SUCCESS);
+  validateCT(getTableName(0, testName), ResultType.SUCCESS);
 };
 
 export const passSearchTables = () => {
@@ -123,7 +123,7 @@ export const passSearchTables = () => {
   // Click on create
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
-  validateCT(getTableName(0, testName), Result.SUCCESS);
+  validateCT(getTableName(0, testName), ResultType.SUCCESS);
   cy.get(getElementFromAlias('search-tables')).type('0');
   cy.get(getElementFromAlias('table-links')).should('not.contain', '1');
   cy.get(getElementFromAlias('search-tables')).type('{home}{del}');
@@ -297,7 +297,7 @@ export const deleteBITestTable = () => {
   cy.wait(7000);
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
-  validateCT(getTableName(2, testName), Result.FAILURE);
+  validateCT(getTableName(2, testName), ResultType.FAILURE);
 
   cy.get(getElementFromAlias(getTableName(1, testName))).click();
   // Go to the modify section of the table
@@ -313,7 +313,7 @@ export const deleteBITestTable = () => {
   cy.wait(7000);
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
-  validateCT(getTableName(1, testName), Result.FAILURE);
+  validateCT(getTableName(1, testName), ResultType.FAILURE);
 
   cy.get(getElementFromAlias(getTableName(0, testName))).click();
   // Go to the modify section of the table
@@ -330,7 +330,7 @@ export const deleteBITestTable = () => {
 
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
-  validateCT(getTableName(0, testName), Result.FAILURE);
+  validateCT(getTableName(0, testName), ResultType.FAILURE);
 };
 
 export const failBIUniqueKeys = () => {
@@ -422,7 +422,7 @@ export const checkViewRelationship = () => {
   // Click on create
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
-  validateCT(getTableName(0, testName), Result.SUCCESS);
+  validateCT(getTableName(0, testName), ResultType.SUCCESS);
   // Add foreign key
   cy.get(getElementFromAlias('modify-table-edit-fk-0')).click();
   cy.get(getElementFromAlias('foreign-key-ref-table-0')).select(

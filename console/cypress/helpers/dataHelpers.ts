@@ -1,3 +1,4 @@
+import { QueryType } from './../integration/validators/validators';
 import { ADMIN_SECRET_HEADER_KEY } from '../../src/constants';
 
 export const baseUrl = Cypress.config('baseUrl');
@@ -28,7 +29,7 @@ export const typeDefaults: { [key: string]: string } = {
   boolean: 'false',
 };
 
-export const queryTypes = ['insert', 'select', 'update', 'delete'];
+export const queryTypes: QueryType[] = ['insert', 'select', 'update', 'delete'];
 
 export const getColName = (i: number) => `Apic_test_column_${i}`;
 

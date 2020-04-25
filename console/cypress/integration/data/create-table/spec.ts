@@ -5,7 +5,11 @@ import {
   getColName,
   baseUrl,
 } from '../../../helpers/dataHelpers';
-import { setMetaData, validateCT, Result } from '../../validators/validators';
+import {
+  setMetaData,
+  validateCT,
+  ResultType,
+} from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
 const testName = 'ct';
@@ -27,7 +31,7 @@ export const failCTWithoutColumns = () => {
   // Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   // Validate
-  validateCT(getTableName(0, testName), Result.FAILURE);
+  validateCT(getTableName(0, testName), ResultType.FAILURE);
 };
 
 export const failCTWithoutPK = () => {
@@ -42,7 +46,7 @@ export const failCTWithoutPK = () => {
   // Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   // Validate
-  validateCT(getTableName(0, testName), Result.FAILURE);
+  validateCT(getTableName(0, testName), ResultType.FAILURE);
 };
 
 export const failCTDuplicateColumns = () => {
@@ -65,7 +69,7 @@ export const failCTDuplicateColumns = () => {
   // Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   // Validate
-  validateCT(getTableName(0, testName), Result.FAILURE);
+  validateCT(getTableName(0, testName), ResultType.FAILURE);
 };
 
 export const failCTWrongDefaultValue = () => {
@@ -85,7 +89,7 @@ export const failCTWrongDefaultValue = () => {
   // Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   // Validate
-  validateCT(getTableName(0, testName), Result.FAILURE);
+  validateCT(getTableName(0, testName), ResultType.FAILURE);
 };
 
 export const passCT = () => {
@@ -111,7 +115,7 @@ export const passCT = () => {
   );
   cy.get(getElementFromAlias(getTableName(0, testName)));
   // Validate
-  validateCT(getTableName(0, testName), Result.SUCCESS);
+  validateCT(getTableName(0, testName), ResultType.SUCCESS);
 };
 
 export const passCTWithFK = () => {
@@ -178,7 +182,7 @@ export const passCTWithFK = () => {
   );
   cy.get(getElementFromAlias(getTableName(1, testName)));
   // Validate
-  validateCT(getTableName(1, testName), Result.SUCCESS);
+  validateCT(getTableName(1, testName), ResultType.SUCCESS);
 };
 
 export const failCTDuplicateTable = () => {
@@ -213,7 +217,7 @@ const deleteTable = (tableName: string) => {
     .should('be.called');
 
   cy.wait(5000);
-  validateCT(tableName, Result.FAILURE);
+  validateCT(tableName, ResultType.FAILURE);
 };
 
 export const deleteCTTestTables = () => {

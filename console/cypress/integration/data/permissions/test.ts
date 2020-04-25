@@ -1,6 +1,3 @@
-/* eslint no-unused-vars: 0 */
-/* eslint import/prefer-default-export: 0 */
-
 import {
   passPTCreateTable,
   passPTCheckRoute,

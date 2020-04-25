@@ -6,29 +6,29 @@ import {
   makeDataAPIOptions,
 } from '../../../helpers/dataHelpers';
 
-import { validatePermission } from '../../validators/validators';
+import {
+  validatePermission,
+  QueryType,
+  ResultType,
+  CheckType,
+} from '../../validators/validators';
 
 const testName = 'perm';
 
 export const savePermission = () => {
   cy.get(getElementFromAlias('Save-Permissions-button')).click();
   cy.wait(7000);
-  // Check for success notif
-  // cy.get('.notification-success').click();
 };
 
-export const permNoCheck = (tableName, query) => {
+export const permNoCheck = (tableName: string, query: QueryType) => {
   // click on the query type to edit permission
   cy.get(getElementFromAlias(`role0-${query}`)).click();
-  // check the custom check textbox
-  // cy.get(getElementFromAlias('toggle-row-permission')).click();
   cy.get(getElementFromAlias('without-checks'))
     .first()
     .click();
   // set filter { }
   // Toggle all columns in case
   if (query === 'select' || query === 'update') {
-    // cy.get(getElementFromAlias('toggle-col-permission')).click();
     cy.get(getElementFromAlias('toggle-all-col-btn')).click();
   }
   if (query === 'insert' || query === 'update') {
@@ -49,10 +49,17 @@ export const permNoCheck = (tableName, query) => {
   // Save
   savePermission();
   // Validate
-  validatePermission(tableName, 'role0', query, 'none', 'success', null, true);
+  validatePermission(
+    tableName,
+    'role0',
+    query,
+    'none',
+    ResultType.SUCCESS,
+    null
+  );
 };
 
-export const permCustomCheck = (tableName, query) => {
+export const permCustomCheck = (tableName: string, query: QueryType) => {
   // click on the query type to edit permission
   cy.get(getElementFromAlias(`role0-${query}`)).click();
   // check the without checks textbox
@@ -85,28 +92,36 @@ export const permCustomCheck = (tableName, query) => {
     'role0',
     query,
     'custom',
-    'success',
-    [0, 1, 2].map(i => getColName(i)),
-    false
+    ResultType.SUCCESS,
+    [0, 1, 2].map(i => getColName(i))
   );
   // Do not allow users to make upset queries in case of Insert
 };
 
-export const permRemove = (tableName, query) => {
+export const permRemove = (tableName: string, query: QueryType) => {
   // click on the query type to edit permission
   cy.get(getElementFromAlias(`role0-${query}`)).click();
   // Remove permission
   cy.get(getElementFromAlias('Delete-Permissions-button')).click();
   cy.wait(2500);
-  // Check for notif
-  // cy.get('.notification-success').click();
   cy.wait(5000);
   // Validate
-  validatePermission(tableName, 'role0', query, 'custom', 'failure');
+  validatePermission(
+    tableName,
+    'role0',
+    query,
+    'custom',
+    ResultType.FAILURE,
+    null
+  );
 };
 
-export const testPermissions = (tableName, check, isView) => {
-  let allQueryTypes = queryTypes;
+export const testPermissions = (
+  tableName: string,
+  check: CheckType,
+  isView?: boolean
+) => {
+  let allQueryTypes: QueryType[] = queryTypes;
   if (isView) {
     allQueryTypes = ['select'];
   }
@@ -136,7 +151,7 @@ export const trackView = () => {
   cy.get(getElementFromAlias('table-permissions')).click();
 };
 
-export const createView = (viewName, tableName) => {
+export const createView = (viewName: string, tableName: string) => {
   const reqBody = {
     type: 'run_sql',
     args: {

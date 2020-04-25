@@ -27,7 +27,6 @@ export const passPTCreateTable = () => {
   cy.get(getElementFromAlias('data_test_column_type_value_serial'))
     .first()
     .click();
-  // cy.get(getElementFromAlias('col-type-0')).select('serial');
   // Set second column
   cy.get(getElementFromAlias('column-1')).type(getColName(1));
   tableColumnTypeSelector('col-type-1');
@@ -35,14 +34,12 @@ export const passPTCreateTable = () => {
     .first()
     .click();
 
-  // cy.get(getElementFromAlias('col-type-1')).select('integer');
   // Set third column
   cy.get(getElementFromAlias('column-2')).type(getColName(2));
   tableColumnTypeSelector('col-type-2');
   cy.get(getElementFromAlias('data_test_column_type_value_text'))
     .first()
     .click();
-  // cy.get(getElementFromAlias('col-type-2')).select('text');
   // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   // Create

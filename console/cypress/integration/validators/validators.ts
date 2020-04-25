@@ -38,7 +38,7 @@ export const createView = (sql: string) => {
 
 // ******************* VALIDATION FUNCTIONS *******************************
 
-export enum Result {
+export enum ResultType {
   SUCCESS = 'success',
   FAILURE = 'failure',
 }
@@ -50,7 +50,10 @@ interface RequestBody {
  * @param remoteSchemaName
  * @param result
  */
-export const validateRS = (remoteSchemaName: string, result: Result): void => {
+export const validateRS = (
+  remoteSchemaName: string,
+  result: ResultType
+): void => {
   const reqBody = {
     type: 'select',
     args: {
@@ -87,7 +90,7 @@ export const validateRS = (remoteSchemaName: string, result: Result): void => {
 export const validateCFunc = (
   functionName: string,
   functionSchema: string,
-  result: Result
+  result: ResultType
 ): void => {
   const reqBody = {
     type: 'select',
@@ -128,7 +131,7 @@ export const validateCFunc = (
 export const validateUntrackedFunc = (
   functionName: string,
   functionSchema: string,
-  result: Result
+  result: ResultType
 ): void => {
   const reqBody = {
     type: 'select',
@@ -159,7 +162,7 @@ export const validateUntrackedFunc = (
  * @param reqBody
  * @param result
  */
-export const dataRequest = (reqBody: RequestBody, result: Result) => {
+export const dataRequest = (reqBody: RequestBody, result: ResultType) => {
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
@@ -183,7 +186,7 @@ export const dataRequest = (reqBody: RequestBody, result: Result) => {
  * @param reqBody
  * @param result
  */
-export const dropTableRequest = (reqBody: RequestBody, result: Result) => {
+export const dropTableRequest = (reqBody: RequestBody, result: ResultType) => {
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     if (result === 'success') {
@@ -200,7 +203,7 @@ export const dropTableRequest = (reqBody: RequestBody, result: Result) => {
 
 // ****************** Table Validator *********************
 
-export const validateCT = (tableName: string, result: Result) => {
+export const validateCT = (tableName: string, result: ResultType) => {
   const reqBody = {
     type: 'select',
     args: {
@@ -220,7 +223,7 @@ export const validateCT = (tableName: string, result: Result) => {
 
 // **************** View Validator *******************
 
-export const validateView = (viewName: string, result: Result) => {
+export const validateView = (viewName: string, result: ResultType) => {
   validateCT(viewName, result);
 };
 
@@ -228,8 +231,8 @@ export const validateView = (viewName: string, result: Result) => {
 
 export const validateColumn = (
   tableName: string,
-  column: string,
-  result: Result
+  column: string[],
+  result: ResultType
 ) => {
   const reqBody = {
     type: 'select',
@@ -252,7 +255,7 @@ export const validateColumnWhere = (
   tableName: string,
   column: string,
   where: string,
-  result: Result
+  result: ResultType
 ) => {
   const reqBody = {
     type: 'select',
@@ -291,16 +294,16 @@ export const validateInsert = (tableName: string, rows: number) => {
 
 // ******************* Permissiosn Validator ****************
 
-type Query = 'insert' | 'select' | 'update';
-type Check = 'custom' | 'none';
+export type QueryType = 'insert' | 'select' | 'update' | 'delete';
+export type CheckType = 'custom' | 'none';
 interface SchemaObject {
   [key: string]: any;
 }
 
 const compareChecks = (
   permObj: SchemaObject,
-  check: Check,
-  query: Query,
+  check: CheckType,
+  query: QueryType,
   columns: string[]
 ) => {
   if (check === 'none') {
@@ -337,9 +340,9 @@ const compareChecks = (
 const handlePermValidationResponse = (
   tableSchema: SchemaObject,
   role: string,
-  query: Query,
-  check: Check,
-  result: Result,
+  query: QueryType,
+  check: CheckType,
+  result: ResultType,
   columns: string[]
 ) => {
   const rolePerms = tableSchema.permissions.find(
@@ -371,10 +374,10 @@ const handlePermValidationResponse = (
 export const validatePermission = (
   tableName: string,
   role: string,
-  query: Query,
-  check: Check,
-  result: Result,
-  columns: string[]
+  query: QueryType,
+  check: CheckType,
+  result: ResultType,
+  columns: string[] | null
 ) => {
   const reqBody = {
     type: 'select',
@@ -425,7 +428,7 @@ export const validateMigrationMode = (mode: boolean) => {
  * @param triggerName
  * @param result
  */
-export const validateCTrigger = (triggerName: string, result: Result) => {
+export const validateCTrigger = (triggerName: string, result: ResultType) => {
   const reqBody = {
     type: 'select',
     args: {

@@ -7,7 +7,7 @@ import {
   getRemoteGraphQLURLFromEnv,
 } from '../../../helpers/remoteSchemaHelpers';
 
-import { validateRS, Result } from '../../validators/validators';
+import { validateRS, ResultType } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
 const testName = 'rs';
@@ -35,7 +35,7 @@ export const failRSWithInvalidRemoteUrl = () => {
 
   cy.get(getElementFromAlias('add-remote-schema-submit')).click();
 
-  validateRS(getRemoteSchemaName(0, testName), Result.FAILURE);
+  validateRS(getRemoteSchemaName(0, testName), ResultType.FAILURE);
   cy.wait(5000);
 };
 
@@ -48,7 +48,7 @@ export const createSimpleRemoteSchema = () => {
     .type(getRemoteGraphQLURL());
   cy.get(getElementFromAlias('add-remote-schema-submit')).click();
   cy.wait(15000);
-  validateRS(getRemoteSchemaName(1, testName), Result.SUCCESS);
+  validateRS(getRemoteSchemaName(1, testName), ResultType.SUCCESS);
   cy.url().should(
     'eq',
     `${baseUrl}/remote-schemas/manage/${getRemoteSchemaName(
@@ -210,7 +210,7 @@ export const passWithRemoteSchemaHeader = () => {
 
   cy.get(getElementFromAlias('add-remote-schema-submit')).click();
   cy.wait(15000);
-  validateRS(getRemoteSchemaName(3, testName), Result.SUCCESS);
+  validateRS(getRemoteSchemaName(3, testName), ResultType.SUCCESS);
   cy.url().should(
     'eq',
     `${baseUrl}/remote-schemas/manage/${getRemoteSchemaName(
@@ -238,7 +238,7 @@ export const passWithEditRemoteSchema = () => {
 
   cy.get(getElementFromAlias('remote-schema-edit-save-btn')).click();
   cy.wait(10000);
-  validateRS(getRemoteSchemaName(5, testName), Result.SUCCESS);
+  validateRS(getRemoteSchemaName(5, testName), ResultType.SUCCESS);
 
   cy.get(getElementFromAlias('remote-schemas-modify')).click();
   cy.get(getElementFromAlias('remote-schema-schema-name')).should(
