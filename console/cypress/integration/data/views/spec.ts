@@ -10,12 +10,25 @@ import {
   createView,
   validateColumn,
   validateView,
+  ResultType,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
 const userId = 5555;
 
-export const Createtable = (name, dict) => {
+interface TableDict {
+  [key: string]: any;
+  id?: string;
+  name?: string;
+  title?: string;
+  Content?: string;
+  author_id?: string;
+  rating?: string;
+  user_id?: string;
+  article_id?: string;
+  comment?: string;
+}
+export const Createtable = (name: string, dict: TableDict) => {
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   cy.get(getElementFromAlias('tableName')).type(`${name}_table_vt`);
   const keys = Object.keys(dict).map(k => k);
@@ -35,7 +48,7 @@ export const Createtable = (name, dict) => {
     `${baseUrl}/data/schema/public/tables/${name}_table_vt/modify`
   );
 
-  validateCT(`${name}_table_vt`, 'success');
+  validateCT(`${name}_table_vt`, ResultType.SUCCESS);
 };
 
 export const passVCreateTables = () => {
@@ -73,8 +86,7 @@ export const passTrackTable = () => {
     getElementFromAlias('add-track-table-author_average_rating_vt')
   ).click();
   cy.wait(7000);
-  // cy.get('.notification-error');
-  validateView('author_average_rating_vt', 'success');
+  validateView('author_average_rating_vt', ResultType.SUCCESS);
 };
 
 export const passViewRoute = () => {
@@ -85,7 +97,8 @@ export const passViewRoute = () => {
   );
 };
 
-export const passVAddDataarticle = (data, index) => {
+type Data = (string | number)[];
+export const passVAddDataarticle = (data: Data, index: number) => {
   // Click the Insert Again button.
   cy.get('label')
     .contains('id')
@@ -98,7 +111,7 @@ export const passVAddDataarticle = (data, index) => {
     .next()
     .find('input')
     .last()
-    .type(data[0]);
+    .type(`${data[0]}`);
   cy.get('label')
     .contains('title')
     .next()
@@ -110,7 +123,7 @@ export const passVAddDataarticle = (data, index) => {
     .next()
     .find('input')
     .last()
-    .type(data[1]);
+    .type(`${data[1]}`);
   cy.get('label')
     .contains('Content')
     .next()
@@ -122,7 +135,7 @@ export const passVAddDataarticle = (data, index) => {
     .next()
     .find('input')
     .last()
-    .type(data[2]);
+    .type(`${data[2]}`);
   cy.get('label')
     .contains('author_id')
     .next()
@@ -134,7 +147,7 @@ export const passVAddDataarticle = (data, index) => {
     .next()
     .find('input')
     .last()
-    .type(data[3]);
+    .type(`${data[3]}`);
   cy.get('label')
     .contains('rating')
     .next()
@@ -146,7 +159,7 @@ export const passVAddDataarticle = (data, index) => {
     .next()
     .find('input')
     .last()
-    .type(data[4]);
+    .type(`${data[4]}`);
   if (index) {
     cy.get(getElementFromAlias('insert-save-button')).click();
   } else {
@@ -156,7 +169,7 @@ export const passVAddDataarticle = (data, index) => {
   cy.wait(5000);
 };
 
-export const passVAddDataauthor = (data, index) => {
+export const passVAddDataauthor = (data: Data, index: number) => {
   cy.get('label')
     .contains('id')
     .next()
@@ -168,7 +181,7 @@ export const passVAddDataauthor = (data, index) => {
     .next()
     .find('input')
     .last()
-    .type(data[0]);
+    .type(`${data[0]}`);
   cy.get('label')
     .contains('name')
     .next()
@@ -180,7 +193,7 @@ export const passVAddDataauthor = (data, index) => {
     .next()
     .find('input')
     .last()
-    .type(data[1]);
+    .type(`${data[1]}`);
   if (index) {
     cy.get(getElementFromAlias('insert-save-button')).click();
   } else {
@@ -189,7 +202,7 @@ export const passVAddDataauthor = (data, index) => {
   cy.wait(5000);
 };
 
-export const passVAddDatacomment = (data, index) => {
+export const passVAddDatacomment = (data: Data, index: number) => {
   cy.get('label')
     .contains('id')
     .next()
@@ -201,7 +214,7 @@ export const passVAddDatacomment = (data, index) => {
     .next()
     .find('input')
     .last()
-    .type(data[0]);
+    .type(`${data[0]}`);
   cy.get('label')
     .contains('user_id')
     .next()
@@ -213,7 +226,7 @@ export const passVAddDatacomment = (data, index) => {
     .next()
     .find('input')
     .last()
-    .type(data[1]);
+    .type(`${data[1]}`);
   cy.get('label')
     .contains('article_id')
     .next()
@@ -225,7 +238,7 @@ export const passVAddDatacomment = (data, index) => {
     .next()
     .find('input')
     .last()
-    .type(data[2]);
+    .type(`${data[2]}`);
   cy.get('label')
     .contains('comment')
     .next()
@@ -237,7 +250,7 @@ export const passVAddDatacomment = (data, index) => {
     .next()
     .find('input')
     .last()
-    .type(data[3]);
+    .type(`${data[3]}`);
   if (index) {
     cy.get(getElementFromAlias('insert-save-button')).click();
   } else {
@@ -300,7 +313,7 @@ export const passVFilterQueryEq = () => {
   // Type value as `filter-text`
   cy.get("input[placeholder='-- value --']")
     .last()
-    .type(userId);
+    .type(`${userId}`);
   // Run query
   cy.get(getElementFromAlias('run-query')).click();
   cy.wait(5000);
@@ -308,7 +321,7 @@ export const passVFilterQueryEq = () => {
   checkQuerySuccess();
 };
 
-const checkOrder = order => {
+const checkOrder = (order: string) => {
   // Utility function to get right element
   const curElement = cy.get('[role=row]');
   if (order === 'asc') {
@@ -355,7 +368,6 @@ const checkOrder = order => {
 export const passVAscendingSort = () => {
   // Scroll to top TODO responsive is messy
   cy.wait(7000);
-  // cy.scrollTo('top');
   // Select column with type 'serial'
   cy.get('select')
     .find('option')
@@ -399,7 +411,7 @@ export const passVAddManualObjRel = () => {
   validateColumn(
     'author_average_rating_vt',
     ['avg', { name: 'author', columns: ['name'] }],
-    'success'
+    ResultType.SUCCESS
   );
 };
 
@@ -415,7 +427,7 @@ export const passVDeleteRelationships = () => {
   validateColumn(
     'author_average_rating_vt',
     ['avg', { name: 'author', columns: ['name'] }],
-    'failure'
+    ResultType.FAILURE
   );
 };
 
@@ -427,11 +439,10 @@ export const passVDeleteView = () => {
     .its('prompt')
     .should('be.called');
   cy.wait(7000);
-  // cy.get('.notification-error');
-  validateView('author_average_rating_vt', 'failure');
+  validateView('author_average_rating_vt', ResultType.FAILURE);
 };
 
-export const Deletetable = name => {
+export const Deletetable = (name: string) => {
   cy.get(getElementFromAlias(name)).click();
   cy.get(getElementFromAlias('table-modify')).click();
   setPromptValue(name);
@@ -440,7 +451,7 @@ export const Deletetable = name => {
     .its('prompt')
     .should('be.called');
   cy.wait(7000);
-  validateCT(name, 'failure');
+  validateCT(name, ResultType.FAILURE);
   cy.wait(7000);
 };
 
@@ -449,8 +460,6 @@ export const passVDeleteTables = () => {
   Deletetable('article_table_vt');
   Deletetable('author_table_vt');
 };
-
-// //////////////////////////////////////////////////////////////////////////////////////
 
 export const setValidationMetaData = () => {
   setMetaData();

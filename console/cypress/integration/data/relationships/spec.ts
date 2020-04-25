@@ -8,10 +8,11 @@ import {
   setMetaData,
   validateCT,
   validateColumn,
+  ResultType,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
-const delRel = (table, relname) => {
+const delRel = (table: string, relname: string) => {
   cy.get(getElementFromAlias(table)).click();
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias(`relationship-toggle-editor-${relname}`)).click();
@@ -22,7 +23,19 @@ const delRel = (table, relname) => {
   cy.wait(15000);
 };
 
-export const Createtable = (name, fields) => {
+interface Fields {
+  [key: string]: any;
+  id?: string;
+  name?: string;
+  title?: string;
+  Content?: string;
+  author_id?: string;
+  rating?: string;
+  user_id?: string;
+  article_id?: string;
+  comment?: string;
+}
+export const Createtable = (name: string, fields: Fields) => {
   // Click on the "Add table" button and input the table name
   cy.get(getElementFromAlias('sidebar-add-table')).click();
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
@@ -30,15 +43,16 @@ export const Createtable = (name, fields) => {
 
   // Enter column info
   let i = 0;
+  // eslint-disable-next-line no-restricted-syntax
   for (const key in fields) {
+    // eslint-disable-next-line no-prototype-builtins
     if (fields.hasOwnProperty(key)) {
       cy.get(getElementFromAlias(`column-${i}`)).type(key);
       tableColumnTypeSelector(`col-type-${i}`);
       cy.get(getElementFromAlias(`data_test_column_type_value_${fields[key]}`))
         .first()
         .click();
-      // cy.get(getElementFromAlias(`col-type-${i}`)).select(fields[key]);
-      i++;
+      i += 1;
     }
   }
 
@@ -80,7 +94,7 @@ export const Createtable = (name, fields) => {
     `${baseUrl}/data/schema/public/tables/${name}_table_rt/modify`
   );
 
-  validateCT(`${name}_table_rt`, 'success');
+  validateCT(`${name}_table_rt`, ResultType.SUCCESS);
 };
 
 export const passRTCreateTables = () => {
@@ -105,7 +119,7 @@ export const passRTMoveToTable = () => {
   cy.get(getElementFromAlias('table-relationships')).click();
 };
 
-export const Deletetable = name => {
+export const Deletetable = (name: string) => {
   cy.get(getElementFromAlias(name)).click();
   cy.get(getElementFromAlias('table-modify')).click();
   setPromptValue(name);
@@ -114,7 +128,7 @@ export const Deletetable = name => {
     .its('prompt')
     .should('be.called');
   cy.wait(15000);
-  validateCT(name, 'failure');
+  validateCT(name, ResultType.SUCCESS);
 };
 
 export const passRTDeleteTables = () => {
@@ -142,7 +156,7 @@ export const passRTAddManualObjRel = () => {
   validateColumn(
     'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
-    'success'
+    ResultType.SUCCESS
   );
 };
 
@@ -167,7 +181,7 @@ export const passRTAddManualArrayRel = () => {
   validateColumn(
     'article_table_rt',
     ['title', { name: 'comments', columns: ['comment'] }],
-    'success'
+    ResultType.SUCCESS
   );
 };
 
@@ -176,13 +190,13 @@ export const passRTDeleteRelationships = () => {
   validateColumn(
     'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
-    'failure'
+    ResultType.SUCCESS
   );
   delRel('article_table_rt', 'comments');
   validateColumn(
     'article_table_rt',
     ['title', { name: 'comments', columns: ['comment'] }],
-    'failure'
+    ResultType.SUCCESS
   );
 };
 
@@ -198,7 +212,7 @@ export const passRTAddSuggestedRel = () => {
   validateColumn(
     'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
-    'success'
+    ResultType.SUCCESS
   );
   cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
@@ -211,7 +225,7 @@ export const passRTAddSuggestedRel = () => {
   validateColumn(
     'article_table_rt',
     ['title', { name: 'comments', columns: ['comment'] }],
-    'success'
+    ResultType.SUCCESS
   );
 };
 
@@ -225,7 +239,7 @@ export const passRTRenameRelationship = () => {
   validateColumn(
     'article_table_rt',
     ['title', { name: 'comments_renamed', columns: ['comment'] }],
-    'success'
+    ResultType.SUCCESS
   );
   cy.get(
     getElementFromAlias('relationship-toggle-editor-comments_renamed')
@@ -238,7 +252,7 @@ export const passRTRenameRelationship = () => {
   validateColumn(
     'article_table_rt',
     ['title', { name: 'comments', columns: ['comment'] }],
-    'success'
+    ResultType.SUCCESS
   );
 };
 
@@ -248,20 +262,18 @@ export const failRTAddSuggestedRel = () => {
   cy.get(getElementFromAlias('obj-rel-add-0')).click();
   cy.get(getElementFromAlias('suggested-rel-name')).clear();
   cy.get(getElementFromAlias('obj-rel-save-0')).click();
-  // cy.get('.notification-error');
   cy.wait(15000);
   cy.get(getElementFromAlias('suggested-rel-name'))
     .clear()
-    .type(123123);
+    .type(`${123123}`);
   cy.get('button')
     .contains('Save')
     .click();
-  // cy.get('.notification-error');
   cy.wait(15000);
   validateColumn(
     'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
-    'failure'
+    ResultType.SUCCESS
   );
   cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
@@ -274,7 +286,7 @@ export const failRTAddSuggestedRel = () => {
   validateColumn(
     'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
-    'success'
+    ResultType.SUCCESS
   );
   cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();

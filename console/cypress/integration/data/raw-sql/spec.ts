@@ -1,8 +1,4 @@
-/* eslint import/prefer-default-export: 0 */
-
-import { baseUrl } from '../../../helpers/dataHelpers';
-import { getElementFromAlias } from '../../../helpers/dataHelpers';
-// import { validateCT } from '../../validators/validators';
+import { baseUrl, getElementFromAlias } from '../../../helpers/dataHelpers';
 
 let prevStr = '';
 
@@ -24,7 +20,6 @@ export const passCreateTable = () => {
   cy.get('textarea').type(prevStr, { force: true });
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
-  // validateCT('Apic_test_table_rsql', 'success');
 };
 
 export const passInsertValues = () => {
@@ -35,7 +30,6 @@ export const passInsertValues = () => {
   cy.get('textarea').type(prevStr, { force: true });
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
-  // validateCT('Apic_test_table_rsql', 'success');
 };
 
 export const passAlterTable = () => {
@@ -48,7 +42,6 @@ export const passAlterTable = () => {
   cy.get(getElementFromAlias('raw-sql-track-check')).uncheck();
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
-  // validateCT('Apic_test_table_rsql', 'success');
 };
 
 export const passCreateView = () => {
@@ -61,7 +54,6 @@ export const passCreateView = () => {
   cy.get(getElementFromAlias('raw-sql-track-check')).check();
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
-  // validateCT('Apic_test_table_rsql', 'success');
 };
 
 export const delTestTables = () => {
@@ -81,10 +73,4 @@ export const delTestTables = () => {
   cy.get('textarea').type(prevStr, { force: true });
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
-  // cy.visit(`${baseUrl}/data/schema/public`);
-  // cy.get(getElementFromAlias('add-track-table-Apic_test_table_rsql')).click();
-  // cy.get(getElementFromAlias('delete-table')).click();
-  // cy.on('window:confirm', () => true);
-  // cy.wait(5000);
-  // validateCT('Apic_test_table_rsql', 'failure');
 };

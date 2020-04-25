@@ -231,7 +231,7 @@ export const validateView = (viewName: string, result: ResultType) => {
 
 export const validateColumn = (
   tableName: string,
-  column: string[],
+  column: (string | { name: string; columns: string[] })[],
   result: ResultType
 ) => {
   const reqBody = {
