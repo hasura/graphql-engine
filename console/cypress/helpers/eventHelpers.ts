@@ -3,10 +3,10 @@ import { ADMIN_SECRET_HEADER_KEY } from '../../src/constants';
 export const baseUrl = Cypress.config('baseUrl');
 export const queryTypes = ['insert', 'update', 'delete'];
 
-export const getTriggerName = (i: string, testName = '') =>
+export const getTriggerName = (i: number, testName = '') =>
   `Apic_test_trigger_${testName}_${i}`;
 
-export const getTableName = (i: string, testName = '') =>
+export const getTableName = (i: number, testName = '') =>
   `Apic_test_table_${testName}_${i}`;
 
 export const getWebhookURL = () => 'http://httpbin.org/post';

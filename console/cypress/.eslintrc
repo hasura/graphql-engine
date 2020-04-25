@@ -1,11 +1,18 @@
 {
   "plugins": ["cypress", "chai-friendly"],
-  "extends": ["plugin:cypress/recommended"],
   "env": {
     "cypress/globals": true
   },
   "rules": {
-    "no-unused-expressions": "off",
-    "chai-friendly/no-unused-expressions": "error"
-  }
+    "no-unused-expressions": 0,
+    "chai-friendly/no-unused-expressions": 2
+  },
+  "overrides": [
+    {
+      "files": ["./integration/validators/*"],
+      "rules": {
+        "@typescript-eslint/no-unused-expressions": "off"
+      }
+    }
+  ]
 }

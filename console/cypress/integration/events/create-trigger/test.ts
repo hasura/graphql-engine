@@ -10,7 +10,6 @@ import {
   failCTWithoutData,
   passCT,
   failCTDuplicateTrigger,
-  failAddExistingTrigger,
   insertTableRow,
   deleteCTTestTrigger,
   deleteCTTestTable,

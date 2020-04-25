@@ -17,6 +17,7 @@ import {
   validateCT,
   validateCTrigger,
   validateInsert,
+  Result,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
@@ -83,7 +84,7 @@ export const failCTWithoutData = () => {
   //    Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/events/manage/triggers/add`);
   //   Validate
-  validateCT(getTriggerName(0, testName), 'failure');
+  validateCT(getTriggerName(0, testName), Result.FAILURE);
 };
 
 export const passCT = () => {
@@ -121,7 +122,7 @@ export const passCT = () => {
   );
   cy.get(getElementFromAlias(getTriggerName(0, testName)));
   //   Validate
-  validateCTrigger(getTriggerName(0, testName), 'success');
+  validateCTrigger(getTriggerName(0, testName), Result.SUCCESS);
 };
 
 export const failCTDuplicateTrigger = () => {
@@ -182,7 +183,7 @@ export const deleteCTTestTrigger = () => {
   //  Match the URL
   cy.url().should('eq', `${baseUrl}/events/manage/triggers`);
   //  Validate
-  validateCTrigger(getTriggerName(0, testName), 'failure');
+  validateCTrigger(getTriggerName(0, testName), Result.FAILURE);
 };
 
 export const deleteCTTestTable = () => {
@@ -200,7 +201,7 @@ export const deleteCTTestTable = () => {
   //   Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
   //   Validate
-  validateCT(getTableName(0, testName), 'failure');
+  validateCT(getTableName(0, testName), Result.FAILURE);
 };
 
 export const setValidationMetaData = () => {

@@ -12,6 +12,7 @@ import {
 let adminSecret: string;
 let dataApiUrl: string;
 
+/* eslint-disable no-underscore-dangle */
 export const setMetaData = () => {
   cy.window().then(win => {
     adminSecret = win.__env.adminSecret;
@@ -22,6 +23,7 @@ export const setMetaData = () => {
     }
   });
 };
+/* eslint-enable no-underscore-dangle */
 
 export const createView = (sql: string) => {
   const reqBody = {
@@ -36,7 +38,7 @@ export const createView = (sql: string) => {
 
 // ******************* VALIDATION FUNCTIONS *******************************
 
-enum Result {
+export enum Result {
   SUCCESS = 'success',
   FAILURE = 'failure',
 }
@@ -319,9 +321,10 @@ const compareChecks = (
       }
     }
   } else if (query === 'insert') {
-    // eslint-disable-line no-lonely-if
+    // eslint-disable-next-line no-underscore-dangle
     expect(permObj.check[getColName(0)]._eq === 1).to.be.true;
   } else {
+    // eslint-disable-next-line no-underscore-dangle
     expect(permObj.filter[getColName(0)]._eq === 1).to.be.true;
     if (query === 'select' || query === 'update') {
       columns.forEach((col, index) => {
