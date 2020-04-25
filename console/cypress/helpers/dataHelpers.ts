@@ -32,7 +32,7 @@ export const queryTypes = ['insert', 'select', 'update', 'delete'];
 
 export const getColName = (i: number) => `Apic_test_column_${i}`;
 
-export const getTableName = (i: string, testName = '') =>
+export const getTableName = (i: number, testName = '') =>
   `Apic_test_table_${testName}_${i}`;
 
 export const getElementFromAlias = (alias: string) => `[data-test=${alias}]`;
@@ -72,9 +72,9 @@ export const testCustomFunctionDefinition = (
 ) => `create function search_posts${`_${i}`} (search text) returns setof post as $$ select * from post where title ilike ('%' || search || '%') or content ilike ('%' || search || '%') $$ language sql stable;
 `;
 
-export const getCustomFunctionName = (i: string) => `search_posts${`_${i}`}`;
+export const getCustomFunctionName = (i: number) => `search_posts${`_${i}`}`;
 
-export const testCustomFunctionSQL = (i: string) => {
+export const testCustomFunctionSQL = (i: number) => {
   return {
     type: 'bulk',
     args: [

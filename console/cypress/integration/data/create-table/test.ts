@@ -1,5 +1,3 @@
-/* eslint no-unused-vars: 0 */
-/* eslint import/prefer-default-export: 0 */
 import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
 
@@ -9,11 +7,8 @@ import {
   failCTWithoutPK,
   failCTDuplicateColumns,
   failCTWrongDefaultValue,
-  failCTDuplicatePrimaryKey,
   passCT,
   failCTDuplicateTable,
-  failAddExistingTable,
-  passAddExistingTable,
   deleteCTTestTables,
   passCTWithFK,
 } from './spec';

@@ -1,7 +1,6 @@
 import {
   getElementFromAlias,
   baseUrl,
-  // testCustomFunctionDefinition,
   getCustomFunctionName,
   getSchema,
   testCustomFunctionSQL,
@@ -14,32 +13,18 @@ import {
   dataRequest,
   validateCFunc,
   validateUntrackedFunc,
+  Result,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
-export const openRawSQL = () => {
-  // eslint-disable-line
-  // Open RawSQL
-  cy.get('a')
-    .contains('Data')
-    .click();
-  cy.wait(3000);
-  cy.get(getElementFromAlias('sql-link')).click();
-  cy.wait(3000);
-  // Match URL
-  cy.url().should('eq', `${baseUrl}/data/sql`);
-};
-
 export const createCustomFunctionSuccess = () => {
-  // cy.get('textarea').type(testCustomFunctionDefinition(1), { timeout: 10000, force: true});
   // Round about way to create a function
-  dataRequest(createTable(1), 'success');
+  dataRequest(createTable(), Result.SUCCESS);
   cy.wait(5000);
-  dataRequest(testCustomFunctionSQL(1), 'success');
+  dataRequest(testCustomFunctionSQL(1), Result.SUCCESS);
   cy.wait(5000);
-  // cy.get(getElementFromAlias('run-sql')).click();
   // Check if the track checkbox is clicked or not
-  validateCFunc(getCustomFunctionName(1), getSchema(), 'success');
+  validateCFunc(getCustomFunctionName(1), getSchema(), Result.SUCCESS);
   cy.wait(5000);
 };
 
@@ -48,7 +33,7 @@ export const unTrackFunction = () => {
   cy.wait(5000);
   cy.get(getElementFromAlias('custom-function-edit-untrack-btn')).click();
   cy.wait(5000);
-  validateUntrackedFunc(getCustomFunctionName(1), getSchema(), 'success');
+  validateUntrackedFunc(getCustomFunctionName(1), getSchema(), Result.SUCCESS);
   cy.wait(5000);
 };
 
@@ -61,7 +46,7 @@ export const trackFunction = () => {
     getElementFromAlias(`add-track-function-${getCustomFunctionName(1)}`)
   ).click();
   cy.wait(5000);
-  validateCFunc(getCustomFunctionName(1), getSchema(), 'success');
+  validateCFunc(getCustomFunctionName(1), getSchema(), Result.SUCCESS);
   cy.wait(5000);
 };
 
@@ -88,6 +73,6 @@ export const deleteCustomFunction = () => {
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
   cy.wait(5000);
 
-  dropTableRequest(dropTable(1), 'success');
+  dropTableRequest(dropTable(), Result.SUCCESS);
   cy.wait(5000);
 };

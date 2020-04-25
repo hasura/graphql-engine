@@ -5,102 +5,71 @@ import {
   getColName,
   baseUrl,
 } from '../../../helpers/dataHelpers';
-import { setMetaData, validateCT } from '../../validators/validators';
+import { setMetaData, validateCT, Result } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
 const testName = 'ct';
 
 export const checkCreateTableRoute = () => {
-  //    Click on the create table button
+  // Click on the create table button
   cy.visit('/data/schema');
   cy.wait(15000);
   cy.get(getElementFromAlias('data-create-table')).click();
-  //   Match the URL
+  // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
 };
 
 export const failCTWithoutColumns = () => {
-  //    Type table name
+  // Type table name
   cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
-  //    Click on create
+  // Click on create
   cy.get(getElementFromAlias('table-create')).click();
-  //    Check for an error
-  // cy.get('div').contains('Column name cannot be empty');
-  // cy.get('.notification-error');
-  //    Check if the route didn't change
+  // Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
-  //   Validate
-  validateCT(getTableName(0, testName), 'failure');
+  // Validate
+  validateCT(getTableName(0, testName), Result.FAILURE);
 };
 
 export const failCTWithoutPK = () => {
-  //   Set first column
+  // Set first column
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
   tableColumnTypeSelector('col-type-0');
   cy.get(getElementFromAlias('data_test_column_type_value_serial'))
     .first()
     .click();
-  //   Click on create
+  // Click on create
   cy.get(getElementFromAlias('table-create')).click();
-  //   Check for an error
-  // cy.get('.notification-error');
-  //   Check if the route didn't change
+  // Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
-  //   Validate
-  validateCT(getTableName(0, testName), 'failure');
+  // Validate
+  validateCT(getTableName(0, testName), Result.FAILURE);
 };
 
 export const failCTDuplicateColumns = () => {
-  //   Set second column
+  // Set second column
   cy.get(getElementFromAlias('column-1')).type(getColName(0));
   tableColumnTypeSelector('col-type-1');
   cy.get(getElementFromAlias('data_test_column_type_value_serial'))
     .first()
     .click();
-  //   Set primary key
+  // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
-  //   Click on create
+  // Click on create
   cy.get(getElementFromAlias('table-create')).click();
-  //   Check for an alert
+  // Check for an alert
   cy.on('window:alert', str => {
     expect(
       str === `You have the following column names repeated: [${getColName(0)}]`
     ).to.be.true;
   });
-  //   Check if the route didn't change
+  // Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
-  //   Validate
-  validateCT(getTableName(0, testName), 'failure');
-};
-
-export const failCTDuplicatePrimaryKey = () => {
-  //   Set second column
-  cy.get(getElementFromAlias('column-1'))
-    .clear()
-    .type(getColName(1));
-  tableColumnTypeSelector('col-type-1');
-  cy.get(getElementFromAlias('data_test_column_type_value_serial'))
-    .first()
-    .click();
-  //   Set primary key
-  cy.get(getElementFromAlias('primary-key-select-0')).select('0');
-  cy.get(getElementFromAlias('primary-key-select-1')).select('0');
-  cy.on('window:alert', str => {
-    expect(
-      str ===
-        `You key [${getColName(
-          0
-        )}] is already present in the current set of primary keys.`
-    ).to.be.true;
-  });
-  //   Check if the route didn't change
-  cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
-  //   Validate
-  validateCT(getTableName(0, testName), 'failure');
+  // Validate
+  validateCT(getTableName(0, testName), Result.FAILURE);
 };
 
 export const failCTWrongDefaultValue = () => {
-  //   Set second column
+  // Set second column
   cy.get(getElementFromAlias('column-1'))
     .clear()
     .type(getColName(1));
@@ -109,18 +78,18 @@ export const failCTWrongDefaultValue = () => {
     .first()
     .click();
   cy.get(getElementFromAlias('col-default-1')).type('qwerty');
-  //   Set primary key
+  // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
-  //   Click on create
+  // Click on create
   cy.get(getElementFromAlias('table-create')).click();
-  //   Check if the route didn't change
+  // Check if the route didn't change
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
-  //   Validate
-  validateCT(getTableName(0, testName), 'failure');
+  // Validate
+  validateCT(getTableName(0, testName), Result.FAILURE);
 };
 
 export const passCT = () => {
-  //   Set second column
+  // Set second column
   cy.get(getElementFromAlias('column-1'))
     .clear()
     .type(getColName(1));
@@ -129,20 +98,20 @@ export const passCT = () => {
     .first()
     .click();
   cy.get(getElementFromAlias('col-default-1')).clear();
-  //   Set primary key
+  // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   cy.get(getElementFromAlias('primary-key-select-1')).select('1');
-  //  Click on create
+  // Click on create
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(10000);
-  //  Check if the table got created and navigatied to modify table
+  // Check if the table got created and navigatied to modify table
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
   );
   cy.get(getElementFromAlias(getTableName(0, testName)));
-  //   Validate
-  validateCT(getTableName(0, testName), 'success');
+  // Validate
+  validateCT(getTableName(0, testName), Result.SUCCESS);
 };
 
 export const passCTWithFK = () => {
@@ -152,7 +121,7 @@ export const passCTWithFK = () => {
   cy.get(getElementFromAlias('tableName'))
     .clear()
     .type(getTableName(1, testName));
-  //   Set first column
+  // Set first column
   cy.get(getElementFromAlias('column-0')).type(getColName(0));
   tableColumnTypeSelector('col-type-0');
   cy.get(getElementFromAlias('data_test_column_type_value_serial'))
@@ -171,7 +140,7 @@ export const passCTWithFK = () => {
     .first()
     .click();
 
-  //   Set primary key
+  // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
   // Set foreign key
   cy.get(getElementFromAlias('add-table-edit-fk-0')).click();
@@ -185,21 +154,21 @@ export const passCTWithFK = () => {
   cy.get(getElementFromAlias('foreign-key-0-onUpdate-cascade')).check();
   cy.get(getElementFromAlias('foreign-key-0-onDelete-cascade')).check();
 
-  //set unique key 1
+  // set unique key 1
   cy.get(getElementFromAlias('add-table-edit-unique-key-0')).click();
   cy.get(getElementFromAlias('unique-key-0-column-0')).select('1');
 
-  //set unique key 2
+  // set unique key 2
   cy.get(getElementFromAlias('add-table-edit-unique-key-1')).click();
   cy.get(getElementFromAlias('unique-key-1-column-0')).select('1');
   cy.get(getElementFromAlias('unique-key-1-column-1')).select('2');
   cy.get(getElementFromAlias('unique-key-1-column-2')).select('0');
   cy.get(getElementFromAlias('remove-uk-1-column-1')).click();
 
-  //  Click on create
+  // Click on create
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(10000);
-  //  Check if the table got created and navigatied to modify table
+  // Check if the table got created and navigatied to modify table
   cy.url().should(
     'eq',
     `${baseUrl}/data/schema/public/tables/${getTableName(1, testName)}/modify`
@@ -208,56 +177,54 @@ export const passCTWithFK = () => {
     `${getTableName(1, testName)}_${getColName(1)}_${getColName(0)}`
   );
   cy.get(getElementFromAlias(getTableName(1, testName)));
-  //   Validate
-  validateCT(getTableName(1, testName), 'success');
+  // Validate
+  validateCT(getTableName(1, testName), Result.SUCCESS);
 };
 
 export const failCTDuplicateTable = () => {
-  //  Visit data page
+  // Visit data page
   cy.get(getElementFromAlias('sidebar-add-table')).click();
-  //  Type table name
+  // Type table name
   cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
-  //   Set column
+  // Set column
   cy.get(getElementFromAlias('column-0')).type(getColName(1));
   tableColumnTypeSelector('col-type-0');
   cy.get(getElementFromAlias('data_test_column_type_value_serial'))
     .first()
     .click();
-  //   Set primary key
+  // Set primary key
   cy.get(getElementFromAlias('primary-key-select-0')).select('0');
-  //  Click on create
+  // Click on create
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
-  //  Detect error
-  // cy.get('.notification-error');
 };
 
-const deleteTable = tableName => {
+const deleteTable = (tableName: string) => {
   cy.get(getElementFromAlias(tableName)).click();
   cy.get(getElementFromAlias('table-modify')).click();
 
   setPromptValue(tableName);
 
-  //   Click on delete
+  // Click on delete
   cy.get(getElementFromAlias('delete-table')).click();
-  //   Confirm
+  // Confirm
   cy.window()
     .its('prompt')
     .should('be.called');
 
   cy.wait(5000);
-  validateCT(tableName, 'failure');
+  validateCT(tableName, Result.FAILURE);
 };
 
 export const deleteCTTestTables = () => {
-  //   Go to the modify section of the second table
+  // Go to the modify section of the second table
   const secondTableName = getTableName(1, testName);
   deleteTable(secondTableName);
-  //   Go to the modify section of the first table
+  // Go to the modify section of the first table
   const firstTableName = getTableName(0, testName);
   deleteTable(firstTableName);
 
-  //Match the URL
+  // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
 };
 
