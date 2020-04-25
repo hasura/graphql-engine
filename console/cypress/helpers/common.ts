@@ -4,7 +4,7 @@ export const migrateUrl = Cypress.env('MIGRATE_URL');
 export const migrateModeUrl = `${migrateUrl}/settings`;
 
 // sets value of window.prompt and reloads page
-export const setPromptValue = (value: string) => {
+export const setPromptValue = (value: string | null) => {
   cy.log(`Set window.prompt to "${value}"`).then(() => {
     cy.removeAllListeners('window:before:load');
     cy.on('window:before:load', win => {

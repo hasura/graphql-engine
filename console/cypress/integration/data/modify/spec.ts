@@ -267,7 +267,7 @@ export const passMTDeleteCol = () => {
 };
 
 export const passMTDeleteTableCancel = () => {
-  setPromptValue('');
+  setPromptValue(null);
   cy.get(getElementFromAlias('delete-table')).click();
   cy.window()
     .its('prompt')

@@ -84,7 +84,7 @@ export const failRSDuplicateSchemaNodes = () => {
   cy.get(getElementFromAlias('add-remote-schema-submit')).click();
   cy.wait(5000);
   cy.url().should('eq', `${baseUrl}/remote-schemas/manage/add`);
-  cy.wait(5000);
+  cy.wait(10000);
 };
 
 export const deleteSimpleRemoteSchemaFailUserConfirmationError = () => {
@@ -92,7 +92,7 @@ export const deleteSimpleRemoteSchemaFailUserConfirmationError = () => {
 
   cy.get(getElementFromAlias('remote-schemas-modify')).click();
   cy.wait(5000);
-  setPromptValue('');
+  setPromptValue(null);
   cy.get(getElementFromAlias('remote-schema-edit-delete-btn')).click();
   cy.wait(5000);
   cy.window()
