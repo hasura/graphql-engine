@@ -71,12 +71,9 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := initCmd.Flags()
 	f.Var(cli.NewConfigVersionValue(cli.V2, &opts.Version), "version", "config version to be used")
 	f.StringVar(&opts.InitDir, "directory", "", "name of directory where files will be created")
-	f.StringVar(&opts.MetadataDir, "metadata-directory", "metadata", "name of directory where metadata files will be created")
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
-	f.StringVar(&opts.ActionKind, "action-kind", "synchronous", "kind to be used for an action")
-	f.StringVar(&opts.ActionHandler, "action-handler-webhook-baseurl", "http://localhost:3000", "webhook baseurl to be used for an action")
 	f.StringVar(&opts.Template, "install-manifest", "", "install manifest to be cloned")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.MarkDeprecated("directory", "use directory-name argument instead")
@@ -91,10 +88,6 @@ type InitOptions struct {
 	Endpoint    string
 	AdminSecret string
 	InitDir     string
-	MetadataDir string
-
-	ActionKind    string
-	ActionHandler string
 
 	Template string
 }
@@ -209,10 +202,10 @@ func (o *InitOptions) createFiles() error {
 			ServerConfig: cli.ServerConfig{
 				Endpoint: "http://localhost:8080",
 			},
-			MetadataDirectory: o.MetadataDir,
+			MetadataDirectory: "metadata",
 			ActionConfig: &types.ActionExecutionConfig{
-				Kind:                  o.ActionKind,
-				HandlerWebhookBaseURL: o.ActionHandler,
+				Kind:                  "synchronous",
+				HandlerWebhookBaseURL: "http://localhost:3000",
 			},
 		}
 	}
