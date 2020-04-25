@@ -23,7 +23,7 @@
     "watch-client": "better-npm-run watch-client",
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\" ",
     "cypress": "cypress open",
-    "test": "cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record",
+    "test": "cypress run --spec 'cypress/integration/**/**/test.ts' --key $CYPRESS_KEY --parallel --record",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\""
   },
   "lint-staged": {
@@ -197,7 +197,7 @@
     "eslint-config-prettier": "^6.10.0",
     "eslint-loader": "^1.0.0",
     "eslint-plugin-chai-friendly": "^0.4.1",
-    "eslint-plugin-cypress": "^2.0.1",
+    "eslint-plugin-cypress": "^2.10.3",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.9.1",
