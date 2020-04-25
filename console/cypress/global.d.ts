@@ -12,7 +12,7 @@ interface Env {
   dataApiUrl: string;
   enableTelemetry: boolean;
   featuresCompatibility: string;
-  isAdminSecretSet: string;
+  isAdminSecretSet: boolean;
   isproduction: boolean;
   nodeEnv: string;
   serverVersion: string;
