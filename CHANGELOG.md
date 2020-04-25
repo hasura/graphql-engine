@@ -4,7 +4,7 @@
 
 ### Bug fixes and improvements
 
-(Remove this and start adding entries)
+- cli: remove irrelevant flags from init command (close #4508) (#4549)
 
 ## `v1.2.0-beta.5`
 
