@@ -43,12 +43,14 @@ const defaultQueryPermissions = {
   insert: {
     check: {},
     allow_upsert: true,
+    backend_only: false,
     set: {},
     columns: [],
   },
   select: {
     columns: [],
     computed_fields: [],
+    backend_only: false,
     filter: {},
     limit: null,
     allow_aggregations: false,
@@ -56,9 +58,11 @@ const defaultQueryPermissions = {
   update: {
     columns: [],
     filter: {},
+    backend_only: false,
     set: {},
   },
   delete: {
+    backend_only: false,
     filter: {},
   },
 };

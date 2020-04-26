@@ -3,6 +3,8 @@ module Hasura.GraphQL.Context where
 import           Hasura.Prelude
 
 import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import           Data.Has
 
 import qualified Data.HashMap.Strict           as Map
@@ -11,8 +13,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.Instances          ()
-import           Hasura.RQL.Types.Permission
+import           Hasura.Session
 
 -- | A /GraphQL context/, aka the final output of GraphQL schema generation. Used to both validate
 -- incoming queries and respond to introspection queries.
@@ -49,12 +50,27 @@ instance Has TypeMap GCtx where
 instance ToJSON GCtx where
   toJSON _ = String "ToJSON for GCtx is not implemented"
 
-type GCtxMap = Map.HashMap RoleName GCtx
+data RoleContext a
+  = RoleContext
+  { _rctxDefault :: !a -- ^ The default context for normal sessions
+  , _rctxBackend :: !(Maybe a) -- ^ The context for sessions with backend privilege.
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+$(deriveToJSON (aesonDrop 5 snakeCase) ''RoleContext)
+
+type GCtxMap = Map.HashMap RoleName (RoleContext GCtx)
+
+queryRootNamedType :: G.NamedType
+queryRootNamedType = G.NamedType "query_root"
+
+mutationRootNamedType :: G.NamedType
+mutationRootNamedType = G.NamedType "mutation_root"
+
+subscriptionRootNamedType :: G.NamedType
+subscriptionRootNamedType = G.NamedType "subscription_root"
 
 mkQueryRootTyInfo :: [ObjFldInfo] -> ObjTyInfo
 mkQueryRootTyInfo flds =
-  mkHsraObjTyInfo (Just "query root")
-  (G.NamedType "query_root") Set.empty $
+  mkHsraObjTyInfo (Just "query root") queryRootNamedType Set.empty $
   mapFromL _fiName $ schemaFld:typeFld:flds
   where
     schemaFld = mkHsraObjFldInfo Nothing "__schema" Map.empty $
