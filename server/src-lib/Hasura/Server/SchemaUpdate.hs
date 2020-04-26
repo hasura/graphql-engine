@@ -3,6 +3,7 @@ module Hasura.Server.SchemaUpdate
 where
 
 import           Hasura.Prelude
+import           Hasura.Session
 
 import           Hasura.Logging
 import           Hasura.RQL.DDL.Schema       (runCacheRWT)
