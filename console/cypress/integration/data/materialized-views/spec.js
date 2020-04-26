@@ -58,8 +58,8 @@ export const passVCreateTables = () => {
   });
 };
 
-export const passVCreateViews = () => {
-  createView(`CREATE VIEW author_average_rating_vt AS
+export const passVCreateMaterializedViews = () => {
+  createView(`CREATE MATERIALIZED VIEW author_average_rating_vt AS
     SELECT author_table_vt.id, avg(article_table_vt.rating)
     From author_table_vt, article_table_vt
     WHERE author_table_vt.id = article_table_vt.author_id
@@ -77,7 +77,7 @@ export const passTrackTable = () => {
   validateView('author_average_rating_vt', 'success');
 };
 
-export const passViewRoute = () => {
+export const passMaterializedViewRoute = () => {
   cy.get(getElementFromAlias('author_average_rating_vt')).click();
   cy.url().should(
     'eq',
@@ -369,7 +369,7 @@ export const passVAscendingSort = () => {
   checkOrder('asc');
 };
 
-export const passModifyView = () => {
+export const passModifyMaterializedView = () => {
   cy.get(getElementFromAlias('table-modify')).click();
   cy.get('button')
     .contains('Modify')
@@ -419,7 +419,7 @@ export const passVDeleteRelationships = () => {
   );
 };
 
-export const passVDeleteView = () => {
+export const passVDeleteMaterializedView = () => {
   cy.get(getElementFromAlias('table-modify')).click();
   setPromptValue('author_average_rating_vt');
   cy.get(getElementFromAlias('delete-view')).click();

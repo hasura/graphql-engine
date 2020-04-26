@@ -33,6 +33,7 @@ const ModifyView = props => {
   const {
     sql,
     tableName,
+    tableType,
     allSchemas,
     ongoingRequest,
     lastError,
@@ -182,7 +183,6 @@ const ModifyView = props => {
 
   const getViewRootFieldsSection = () => {
     const existingRootFields = getTableCustomRootFields(tableSchema);
-
     return (
       <React.Fragment>
         <h4 className={styles.subheading_text}>
@@ -240,7 +240,7 @@ const ModifyView = props => {
     const confirmMessage = `This will permanently delete the view "${tableName}" from the database`;
     const isOk = getConfirmation(confirmMessage, true, tableName);
     if (isOk) {
-      dispatch(deleteViewSql(tableName));
+      dispatch(deleteViewSql(tableName, tableType));
     }
   };
   const deleteBtn = (
@@ -270,7 +270,7 @@ const ModifyView = props => {
           <TableCommentEditor
             tableComment={tableComment}
             tableCommentEdit={tableCommentEdit}
-            isTable={false}
+            tableType={tableType}
             dispatch={dispatch}
           />
           <h4 className={styles.subheading_text}>Columns</h4>
@@ -307,6 +307,7 @@ const ModifyView = props => {
 ModifyView.propTypes = {
   sql: PropTypes.string.isRequired,
   tableName: PropTypes.string.isRequired,
+  tableType: PropTypes.string.isRequired,
   allSchemas: PropTypes.array.isRequired,
   currentSchema: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
@@ -319,12 +320,29 @@ ModifyView.propTypes = {
   serverVersion: PropTypes.string,
 };
 
+const findViewType = (currentSchema, viewName, allItems) => {
+  for (const item of allItems) {
+    if (item.table_schema === currentSchema && item.table_name === viewName) {
+      return item.table_type;
+    }
+  }
+  return 'VIEW';
+};
+
 const mapStateToProps = (state, ownProps) => {
+  const tableName = ownProps.params.table;
+  const schemaName = state.tables.currentSchema;
+  const tableType = findViewType(
+    schemaName,
+    tableName,
+    state.tables.allSchemas
+  );
   return {
-    tableName: ownProps.params.table,
+    tableName,
+    tableType,
+    currentSchema: schemaName,
     allSchemas: state.tables.allSchemas,
     sql: state.rawSQL.sql,
-    currentSchema: state.tables.currentSchema,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,

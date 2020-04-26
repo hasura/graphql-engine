@@ -18,6 +18,7 @@ module Hasura.GraphQL.Resolve
   ) where
 
 import           Data.Has
+import           Hasura.Session
 
 import qualified Data.HashMap.Strict               as Map
 import qualified Database.PG.Query                 as Q
@@ -77,9 +78,9 @@ toPGQuery = \case
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
 validateHdrs userInfo hdrs = do
-  let receivedVars = userVars userInfo
+  let receivedVars = _uiSession userInfo
   forM_ hdrs $ \hdr ->
-    unless (isJust $ getVarVal hdr receivedVars) $
+    unless (isJust $ getSessionVariableValue (mkSessionVariable hdr) receivedVars) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
 
 queryFldToPGAST
@@ -128,7 +129,7 @@ queryFldToPGAST fld actionExecuter = do
       let f = case jsonAggType of
              DS.JASMultipleRows -> QRFActionExecuteList
              DS.JASSingleObject -> QRFActionExecuteObject
-      f <$> actionExecuter (RA.resolveActionQuery fld ctx (userVars userInfo))
+      f <$> actionExecuter (RA.resolveActionQuery fld ctx (_uiSession userInfo))
       where
         outputType = _saecOutputType ctx
         jsonAggType = RA.mkJsonAggSelect outputType
@@ -154,13 +155,14 @@ mutFldToTx fld = do
   userInfo <- asks getter
   opCtx <- getOpCtx $ V._fName fld
   let noRespHeaders = fmap (,[])
+      roleName = _uiRole userInfo
   case opCtx of
     MCInsert ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsert (userRole userInfo) (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsert roleName (_iocTable ctx) fld
     MCInsertOne ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsertOne (userRole userInfo) (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsertOne roleName (_iocTable ctx) fld
     MCUpdate ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
       noRespHeaders $ RM.convertUpdate ctx fld
@@ -174,7 +176,7 @@ mutFldToTx fld = do
       validateHdrs userInfo (_docHeaders ctx)
       noRespHeaders $ RM.convertDeleteByPk ctx fld
     MCAction ctx ->
-      RA.resolveActionMutation fld ctx (userVars userInfo)
+      RA.resolveActionMutation fld ctx (_uiSession userInfo)
 
 getOpCtx
   :: ( MonadReusability m

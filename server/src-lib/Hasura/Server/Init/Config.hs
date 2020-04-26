@@ -18,9 +18,9 @@ import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (RoleName (..), isAdmin, mkNonEmptyText)
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
+import           Hasura.Session
 
 data RawConnParams
   = RawConnParams
@@ -222,9 +222,9 @@ instance FromEnv AdminSecret where
   fromEnv = Right . AdminSecret . T.pack
 
 instance FromEnv RoleName where
-  fromEnv string = case mkNonEmptyText (T.pack string) of
-    Nothing     -> Left "empty string not allowed"
-    Just neText -> Right $ RoleName neText
+  fromEnv string = case mkRoleName (T.pack string) of
+    Nothing       -> Left "empty string not allowed"
+    Just roleName -> Right roleName
 
 instance FromEnv Bool where
   fromEnv = parseStrAsBool

@@ -2,6 +2,24 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+- cli: remove irrelevant flags from init command (close #4508) (#4549)
+
+## `v1.2.0-beta.5`
+
+### server: backend only insert permissions
+
+Introduces optional `backend_only` (default: `false`) configuration in insert permissions
+(see [api reference](https://deploy-preview-4224--hasura-docs.netlify.com/graphql/manual/api-reference/schema-metadata-api/permission.html#insertpermission)).
+If this is set to `true`, the insert mutation is accessible to the role only if the request
+is accompanied by `x-hasura-use-backend-only-permissions` session variable whose value is set to `true` along with the `x-hasura-admin-secret` header.
+Otherwise, the behavior of the permission remains unchanged.
+
+This feature is highly useful in disabling `insert_table` mutation for a role from frontend clients while still being able to access it from a Action webhook handler (with the same role).
+
+(rfc #4120) (#4224)
+
 ### server: debugging mode for non-admin roles
 
 For any errors the server sends extra information in `extensions` field under `internal` key. Till now this was only
@@ -123,6 +141,12 @@ Along with the check for filtering rows that can be updated, you can now set a p
 
 (close #4142) (#4313)
 
+### console: support for Postgres [materialized views](https://www.postgresql.org/docs/current/rules-materializedviews.html)
+
+Postgres materialized views are views that are persisted in a table-like form. They are now supported in the Hasura Console, in the same way as views. They will appear on the 'Schema' page, under the 'Data' tab, in the 'Untracked tables or views' section.
+
+(close #91) (#4270)
+
 ### docs: map Postgres operators to corresponding Hasura operators
 
 Map Postgres operators to corresponding Hasura operators at various places in docs and link to PG documentation for reference.
@@ -136,9 +160,6 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
 - server: add graphql-engine support for timestamps without timezones (fix #1217)
 - server: support inserting unquoted bigint, and throw an error if value overflows the bounds of the integer type (fix #576) (fix #4368)
-- server: fix creating relationships for custom object types with fields reusing Postgres scalars (close #4447) (#4455)
-- server: fix recreating action's permissions (close #4377)
-- console: while deriving action, map selection set of parent mutation to action's returning type (#4530)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
 - console: format row count in data browser for readablity (#4433)
@@ -148,8 +169,8 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - console: fix row delete for relationships in data browser (#4433)
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
+- server: fix recreating action's permissions (close #4377)
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
-
 
 ## `v1.2.0-beta.4`
 
@@ -224,7 +245,6 @@ A new CLI migrations image is introduced to account for the new migrations workf
 (close #3969) (#4145)
 
 ### Bug fixes and improvements
-
 - server: improve performance of replace_metadata tracking many tables (fix #3802)
 - server: option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
 - server: fix various space leaks to avoid excessive memory consumption
