@@ -37,11 +37,11 @@ const spinnerChildStyles = css`
   }
 `;
 
-export type SpinnerProps = {
+export interface SpinnerProps extends StyledSpinnerProps {
   size: string;
-};
+}
 
-export const Spinner: React.FC<SpinnerProps & StyledSpinnerProps> = props => {
+export const Spinner: React.FC<SpinnerProps> = props => {
   const { size } = props;
 
   const spinnerWidth = size === 'small' ? smallSpinnerSize : largeSpinnerSize;
@@ -49,11 +49,7 @@ export const Spinner: React.FC<SpinnerProps & StyledSpinnerProps> = props => {
   const spinnerHeight = size === 'small' ? smallSpinnerSize : largeSpinnerSize;
 
   return (
-    <StyledSpinner
-      {...(props as SpinnerProps)}
-      height={spinnerHeight}
-      width={spinnerWidth}
-    >
+    <StyledSpinner {...props} height={spinnerHeight} width={spinnerWidth}>
       {Array.from(new Array(12), (_, i) => i).map(i => (
         <div
           key={i}

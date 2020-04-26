@@ -14,14 +14,18 @@ import {
   ShadowProps,
 } from 'styled-system';
 
-export type StyledSpinnerProps = ColorProps &
-  BorderProps &
-  TypographyProps &
-  LayoutProps &
-  SpaceProps &
-  ShadowProps;
+interface BoxProps extends Omit<React.ComponentPropsWithRef<'div'>, 'color'> {}
+const Box = ('div' as any) as React.FC<BoxProps>;
 
-export const StyledSpinner = styled.div<StyledSpinnerProps>`
+interface StyledSpinnerOwnProps
+  extends ColorProps,
+    BorderProps,
+    TypographyProps,
+    LayoutProps,
+    SpaceProps,
+    ShadowProps {}
+
+export const StyledSpinner = styled(Box)<StyledSpinnerOwnProps>`
   position: relative;
 
   ${color}
@@ -31,3 +35,5 @@ export const StyledSpinner = styled.div<StyledSpinnerProps>`
   ${space}
   ${shadow}
 `;
+
+export interface StyledSpinnerProps extends BoxProps, StyledSpinnerOwnProps {}
