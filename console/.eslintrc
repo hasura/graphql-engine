@@ -71,51 +71,7 @@
     "react/prop-types": 0,
     "react/prefer-stateless-function": 0,
     "react/no-unescaped-entities": 0,
-    "react/sort-comp": [
-      "error",
-      {
-        "order": [
-          "static-methods",
-          "instance-variables",
-          "lifecycle",
-          "/^on.+$/",
-          "getters",
-          "setters",
-          "/^(get|set)(?!(InitialState$|DefaultProps$|ChildContext$)).+$/",
-          "instance-methods",
-          "everything-else",
-          "rendering"
-        ],
-        "groups": {
-          "lifecycle": [
-            "displayName",
-            "propTypes",
-            "contextTypes",
-            "childContextTypes",
-            "mixins",
-            "statics",
-            "defaultProps",
-            "constructor",
-            "getDefaultProps",
-            "getInitialState",
-            "state",
-            "getChildContext",
-            "componentWillMount",
-            "componentDidMount",
-            "componentWillReceiveProps",
-            "shouldComponentUpdate",
-            "componentWillUpdate",
-            "componentDidUpdate",
-            "componentDidCatch",
-            "componentWillUnmount"
-          ],
-          "rendering": [
-            "/^render.+$/",
-            "render"
-          ]
-        }
-      }
-    ],
+    "react/sort-comp": 0,
     "react/jsx-indent": 0,
     "jsx-a11y/click-events-have-key-events": 0,
     "jsx-a11y/no-static-element-interactions": 0,
