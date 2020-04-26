@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- cli: allow initialising project in current directory (fix #4560) #4566
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
 
 ## `v1.2.0-beta.5`
