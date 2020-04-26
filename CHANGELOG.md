@@ -5,6 +5,7 @@
 ### Bug fixes and improvements
 
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
+- console: update graphiql explorer to support operation transform (#4567)
 
 ## `v1.2.0-beta.5`
 
