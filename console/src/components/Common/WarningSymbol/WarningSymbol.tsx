@@ -6,7 +6,7 @@ import styles from './WarningSymbol.scss';
 
 export interface WarningSymbolProps {
   tooltipText: string;
-  tooltipPlacement?: string;
+  tooltipPlacement?: 'left' | 'right' | 'top' | 'bottom';
   customStyle?: string;
 }
 
