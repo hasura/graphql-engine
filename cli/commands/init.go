@@ -90,50 +90,47 @@ type InitOptions struct {
 }
 
 func (o *InitOptions) Run() error {
-	var dir string
-	// prompt for init directory if it's not set already
-	if o.InitDir == "" {
-		p := promptui.Prompt{
-			Label:   "Name of project directory ",
-			Default: defaultDirectory,
-		}
-		r, err := p.Run()
-		if err != nil {
-			return handlePromptError(err)
-		}
-		if strings.TrimSpace(r) != "" {
-			dir = r
-		} else {
-			dir = defaultDirectory
-		}
-	} else {
-		dir = o.InitDir
-	}
-
-	if o.EC.ExecutionDirectory == "" {
-		o.EC.ExecutionDirectory = dir
-	} else {
-		o.EC.ExecutionDirectory = filepath.Join(o.EC.ExecutionDirectory, dir)
-	}
-
 	var infoMsg string
-
-	// create the execution directory
-	if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
-		return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
-	}
-	err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
-	if err != nil {
-		return errors.Wrap(err, "error creating setup directories")
-	}
-	infoMsg = fmt.Sprintf(`directory created. execute the following commands to continue:
+	if o.InitDir == "." {
+		dir, err := os.Getwd()
+		if err != nil {
+			return errors.Wrap(err, "error getting present working directory")
+		}
+		o.EC.ExecutionDirectory = dir
+		infoMsg = fmt.Sprintf(`hasura project initialised. execute the following command to continue:
+  hasura console
+`)
+	} else {
+		// prompt for init directory if it's not set already
+		if o.InitDir == "" {
+			p := promptui.Prompt{
+				Label:   "Name of project directory ",
+				Default: defaultDirectory,
+			}
+			r, err := p.Run()
+			if err != nil {
+				return handlePromptError(err)
+			}
+			if strings.TrimSpace(r) != "" {
+				o.InitDir = r
+			} else {
+				o.InitDir = defaultDirectory
+			}
+		}
+		// create execution directory
+		err := o.createExecutionDirectory()
+		if err != nil {
+			return err
+		}
+		infoMsg = fmt.Sprintf(`directory created. execute the following commands to continue:
 
   cd %s
   hasura console
 `, o.EC.ExecutionDirectory)
+	}
 
 	// create template files
-	err = o.createTemplateFiles()
+	err := o.createTemplateFiles()
 	if err != nil {
 		return err
 	}
@@ -145,6 +142,26 @@ func (o *InitOptions) Run() error {
 	}
 
 	o.EC.Logger.Info(infoMsg)
+	return nil
+}
+
+//create the execution directory
+func (o *InitOptions) createExecutionDirectory() error {
+	if o.EC.ExecutionDirectory == "" {
+		o.EC.ExecutionDirectory = o.InitDir
+	} else {
+		o.EC.ExecutionDirectory = filepath.Join(o.EC.ExecutionDirectory, o.InitDir)
+	}
+
+	// create the execution directory
+	if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
+		return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
+	}
+	err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
+	if err != nil {
+		return errors.Wrap(err, "error creating setup directories")
+	}
+
 	return nil
 }
 
