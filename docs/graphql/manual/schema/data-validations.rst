@@ -149,7 +149,7 @@ Suppose, we have a table:
 Now, we can create a role ``user`` on this table with the following rule:
 
 .. thumbnail:: ../../../img/graphql/manual/schema/validation-not-null.png
-   :alt: validation using permission: stock should be greater than or equal to zero
+   :alt: validation using permission: title cannot be null
 
 If we try to insert an article with ``title = null``, we will get a ``permission-error``:
 
@@ -193,12 +193,18 @@ If the validation requires complex custom business logic and/or needs informatio
 from external sources, you can use :ref:`Actions <actions>` to perform your
 validation.
 
-**Example:** Make sure an author is not black-listed before inserting them.
+**Example:** Check with an external service that an author's name is not black-listed before inserting them in the GraphQL API.
 
-Let's assume we have an external service that manages and stores black-listed authors.
+Let's assume we have an external service that stores and manages black-listed authors.
 Before inserting an author in our GraphQL API, we need to check with this service if an author is black-listed or not.
+The validation process looks as follows:
 
-Let's assume we have :ref:`derived an action <derive_actions>` from the ``insert_authors_one`` muation. It has the following action definition:
+.. thumbnail:: ../../../img/graphql/manual/schema/actions-data-validation.png
+   :alt: validation using actions: article not blacklisted
+   :width: 60%
+
+We create a new action called ``InsertAuthor`` that takes an ``author`` object with type ``AuthorInput`` as input and 
+returns an object of type ``AuthorOutput``:
 
 .. code-block:: graphql
 
@@ -208,7 +214,8 @@ Let's assume we have :ref:`derived an action <derive_actions>` from the ``insert
     ): AuthorOutput
   }
 
-And the following :ref:`type definitions <custom_types>`:
+Actions allow us to define :ref:`custom types <custom_types>`. In the above action, we defined ``AuthorInput`` and ``AuthorOutput`` as new custom types:
+We define these two new custom types as follows:
 
 .. code-block:: graphql
 
@@ -222,11 +229,12 @@ And the following :ref:`type definitions <custom_types>`:
     id : Int!
   }
 
-We the following business logic to our :ref:`action handler <action_handlers>`:
+The business logic of an action - in our case the author validation - happens in the :ref:`action handler <action_handlers>` (HTTP webhook).
+It is the *external* service that is called. The following is a sample code that could be added to the event handler to implement the data validation:
 
 .. code-block:: javascript
 
-  // run some business logic
+  // business logic
 
   const blacklistedAuthors = ["Dr. Doom", "Thanos", "Joker"];
 
@@ -234,7 +242,7 @@ We the following business logic to our :ref:`action handler <action_handlers>`:
     res.status(400).json({ message: "Author is blacklisted" });
   }
 
-When we now insert an author, our action handler will check if the author is black-listed. If it's not, the author will be inserted into our GraphQL API and the ``id`` will be returned.
+When we now insert an author, our action handler will be called and it will check if the author is black-listed. If it's not, the author will be inserted into our GraphQL API and the ``id`` will be returned.
 If the author is black-listed, we get the following error message:
 
 .. code-block:: text
