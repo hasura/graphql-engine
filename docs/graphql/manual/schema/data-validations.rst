@@ -108,17 +108,18 @@ that will call this function every time before an article is inserted or updated
 .. code-block:: plpgsql
 
   CREATE FUNCTION check_content_length()
-  RETURNS trigger AS $BODY$
+  RETURNS trigger AS $$
   DECLARE content_length INTEGER;
   BEGIN
-    -- split content into words and get count
+    -- split article content into words and get count
     select array_length(regexp_split_to_array(NEW.content, '\s'),1) INTO content_length;
 
-    -- validate content length & raise exception if failure
+    -- throw an error if article content is too long
     IF content_length > 100 THEN
         RAISE EXCEPTION 'Content can not have more than 100 words';
     END IF;
 
+    -- return the article row if no error
     RETURN NEW;
   END;
   $BODY$ LANGUAGE plpgsql;
