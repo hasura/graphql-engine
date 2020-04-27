@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- console: make GraphiQL Explorer taking the whole viewport
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
 - console: update graphiql explorer to support operation transform (#4567)
 
@@ -169,6 +170,7 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - console: make nullable and unique labels for columns clickable in insert and modify (#4433)
 - console: fix row delete for relationships in data browser (#4433)
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
+- console: fix table columns type comparision during column edit (close #4125) (#4393)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
