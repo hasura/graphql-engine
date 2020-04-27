@@ -25,7 +25,7 @@ const Modal = ({
   submitTestId?: string;
   children?: any;
 }) => {
-  const getHeader = (): JSX.Element => {
+  const getHeader = () => {
     return (
       <BootstrapModal.Header closeButton>
         <BootstrapModal.Title>{title}</BootstrapModal.Title>
@@ -33,11 +33,11 @@ const Modal = ({
     );
   };
 
-  const getBody = (): JSX.Element => {
+  const getBody = () => {
     return <BootstrapModal.Body>{children}</BootstrapModal.Body>;
   };
 
-  const triggerOnClose = (): void => {
+  const triggerOnClose = () => {
     if (onCancel) {
       onCancel();
     } else if (onClose) {
@@ -45,7 +45,7 @@ const Modal = ({
     }
   };
 
-  const getFooter = (): JSX.Element | null => {
+  const getFooter = () => {
     if (!onSubmit) {
       return null;
     }

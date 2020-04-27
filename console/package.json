@@ -66,7 +66,7 @@
   "dependencies": {
     "@graphql-codegen/core": "^1.11.2",
     "@graphql-codegen/typescript": "^1.11.2",
-    "@types/react-bootstrap": "^0.32.21",
+    "@types/react-bootstrap": "0.32.21",
     "apollo-link": "^1.2.2",
     "apollo-link-ws": "^1.0.8",
     "brace": "^0.11.1",
