@@ -88,14 +88,14 @@ showError qf = \case
   CFVENotValidGraphQLName computedField ->
     computedField <<> " is not valid GraphQL name"
   CFVEInvalidTableArgument (ITANotFound argName) ->
-    argName <<> " is not an input argument of " <> qf <<> " function"
+    argName <<> " is not an input argument of the function " <>> qf
   CFVEInvalidTableArgument (ITANotComposite functionArg) ->
     showFunctionTableArgument functionArg <> " is not COMPOSITE type"
   CFVEInvalidTableArgument (ITANotTable ty functionArg) ->
     showFunctionTableArgument functionArg <> " of type " <> ty
     <<> " is not the table to which the computed field is being added"
   CFVEInvalidSessionArgument (ISANotFound argName) ->
-    argName <<> " is not an input argument of " <> qf <<> " function"
+    argName <<> " is not an input argument of the function " <>> qf
   CFVEInvalidSessionArgument (ISANotJSON functionArg) ->
     showFunctionSessionArgument functionArg <> " is not of type JSON"
   CFVENotBaseReturnType scalarType ->

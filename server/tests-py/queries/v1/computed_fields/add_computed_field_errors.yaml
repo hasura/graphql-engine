@@ -40,6 +40,7 @@
     path: $.args
     error: field definition conflicts with postgres column
     code: constraint-violation
+
 - description: Try adding computed field with invalid function
   url: /v1/query
   status: 400
@@ -69,6 +70,7 @@
     error: 'in table "author": in computed field "full_name": no such function exists
       in postgres : "random_function"'
     code: constraint-violation
+
 - description: Try adding computed field with invalid table argument name
   url: /v1/query
   status: 400
@@ -95,13 +97,14 @@
           name: author
       reason: 'in table "author": in computed field "full_name": the computed field
         "full_name" cannot be added to table "author" because "random" is not an input
-        argument of "full_name" function'
+        argument of the function "full_name"'
       type: computed_field
     path: $.args
     error: 'in table "author": in computed field "full_name": the computed field "full_name"
       cannot be added to table "author" because "random" is not an input argument
-      of "full_name" function'
+      of the function "full_name"'
     code: constraint-violation
+
 - description: Try adding computed field with a volatile function
   url: /v1/query
   status: 400
@@ -130,15 +133,16 @@
         \ field \"get_articles\" cannot be added to table \"author\" for the following\
         \ reasons:\n  • the function \"fetch_articles_volatile\" is of type VOLATILE;\
         \ cannot be added as a computed field\n  • \"random\" is not an input argument\
-        \ of \"fetch_articles_volatile\" function\n"
+        \ of the function \"fetch_articles_volatile\"\n"
       type: computed_field
     path: $.args
     error: "in table \"author\": in computed field \"get_articles\": the computed\
       \ field \"get_articles\" cannot be added to table \"author\" for the following\
       \ reasons:\n  • the function \"fetch_articles_volatile\" is of type VOLATILE;\
       \ cannot be added as a computed field\n  • \"random\" is not an input argument\
-      \ of \"fetch_articles_volatile\" function\n"
+      \ of the function \"fetch_articles_volatile\"\n"
     code: constraint-violation
+
 - description: Try adding a computed field with a function with no input arguments
   url: /v1/query
   status: 400
@@ -170,6 +174,7 @@
       "hello_world" cannot be added to table "author" because the function "hello_world"
       has no input arguments'
     code: constraint-violation
+
 - description: Try adding a computed field with first argument as table argument
   url: /v1/query
   status: 400
@@ -204,4 +209,74 @@
       \ reasons:\n  • first argument of the function \"fetch_articles\" is not COMPOSITE\
       \ type\n  • first argument of the function \"fetch_articles\" of type \"pg_catalog.text\"\
       \ is not the table to which the computed field is being added\n"
+    code: constraint-violation
+
+- description: Try adding a computed field with an invalid session argument name
+  url: /v1/query
+  status: 400
+  query:
+    type: add_computed_field
+    args:
+      table: author
+      name: full_name
+      definition:
+        function: full_name
+        session_argument: random
+  response:
+    internal:
+    - definition:
+        definition:
+          function:
+            schema: public
+            name: full_name
+          session_argument: random
+        name: full_name
+        comment:
+        table:
+          schema: public
+          name: author
+      reason: 'in table "author": in computed field "full_name": the computed field
+        "full_name" cannot be added to table "author" because "random" is not an input
+        argument of the function "full_name"'
+      type: computed_field
+    path: $.args
+    error: 'in table "author": in computed field "full_name": the computed field "full_name"
+      cannot be added to table "author" because "random" is not an input argument
+      of the function "full_name"'
+    code: constraint-violation
+
+- description: Try adding a computed field with a non-JSON session argument
+  url: /v1/query
+  status: 400
+  query:
+    type: add_computed_field
+    args:
+      table: author
+      name: fetch_articles
+      definition:
+        function: fetch_articles
+        table_argument: author_row
+        session_argument: search
+  response:
+    internal:
+    - definition:
+        definition:
+          function:
+            schema: public
+            name: fetch_articles
+          table_argument: author_row
+          session_argument: search
+        name: fetch_articles
+        comment:
+        table:
+          schema: public
+          name: author
+      reason: 'in table "author": in computed field "fetch_articles": the computed field
+        "fetch_articles" cannot be added to table "author" because "search" argument
+        of the function "fetch_articles" is not of type JSON'
+      type: computed_field
+    path: $.args
+    error: 'in table "author": in computed field "fetch_articles": the computed field
+      "fetch_articles" cannot be added to table "author" because "search" argument of
+      the function "fetch_articles" is not of type JSON'
     code: constraint-violation
