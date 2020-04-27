@@ -4,13 +4,13 @@ import {
   tableColumnTypeSelector,
   makeDataAPIOptions,
 } from '../../../helpers/dataHelpers';
-import { validateCT } from '../../validators/validators';
+import { validateCT, ResultType } from '../../validators/validators';
 import { toggleOnMigrationMode } from '../../data/migration-mode/utils';
 import { setPromptValue } from '../../../helpers/common';
 // ***************** UTIL FUNCTIONS **************************
 
-let adminSecret;
-let dataApiUrl;
+let adminSecret: string;
+let dataApiUrl: string;
 
 export const createTestTable = () => {
   cy.window().then(win => {
@@ -53,7 +53,7 @@ export const createTestTable = () => {
   // Check if the table got created and navigatied to modify table
   cy.url().should('eq', `${baseUrl}/data/schema/public/tables/users/modify`);
   // Validate
-  validateCT('users', 'success');
+  validateCT('users', ResultType.SUCCESS);
 };
 
 export const insertValue = () => {
@@ -156,5 +156,5 @@ export const delTestTable = () => {
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
   // Validate
-  validateCT('users', 'failure');
+  validateCT('users', ResultType.FAILURE);
 };

@@ -69,7 +69,7 @@ export const validateRS = (
   };
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
-    if (result === 'success') {
+    if (result === ResultType.SUCCESS) {
       expect(
         response.body.length > 0 && response.body[0].name === remoteSchemaName
       ).to.be.true;
@@ -108,7 +108,7 @@ export const validateCFunc = (
   };
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
-    if (result === 'success') {
+    if (result === ResultType.SUCCESS) {
       expect(
         response.body.length > 0 &&
           response.body[0].function_name === functionName
@@ -149,7 +149,7 @@ export const validateUntrackedFunc = (
   };
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
-    if (result === 'success') {
+    if (result === ResultType.SUCCESS) {
       expect(response.body.length === 0).to.be.true;
     } else {
       expect(response.body.length === 0).to.be.false;
@@ -165,17 +165,17 @@ export const validateUntrackedFunc = (
 export const dataRequest = (reqBody: RequestBody, result: ResultType) => {
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
-    if (result === 'success') {
+    if (result === ResultType.SUCCESS) {
       expect(
         response.body.length > 0 &&
           response.body[0].result_type === 'CommandOk' &&
-          response.body[1].message === 'success'
+          response.body[1].message === ResultType.SUCCESS
       ).to.be.true;
     } else {
       expect(
         response.body.length > 0 &&
           response.body[0].result_type === 'CommandOk' &&
-          response.body[1].message === 'success'
+          response.body[1].message === ResultType.SUCCESS
       ).to.be.false;
     }
   });
@@ -189,7 +189,7 @@ export const dataRequest = (reqBody: RequestBody, result: ResultType) => {
 export const dropTableRequest = (reqBody: RequestBody, result: ResultType) => {
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
-    if (result === 'success') {
+    if (result === ResultType.SUCCESS) {
       expect(
         response.body.length > 0 && response.body[0].result_type === 'CommandOk'
       ).to.be.true;
@@ -213,7 +213,7 @@ export const validateCT = (tableName: string, result: ResultType) => {
   };
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
-    if (result === 'success') {
+    if (result === ResultType.SUCCESS) {
       expect(response.status === 200).to.be.true;
     } else {
       expect(response.status === 200).to.be.false;
@@ -243,7 +243,7 @@ export const validateColumn = (
   };
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
-    if (result === 'success') {
+    if (result === ResultType.SUCCESS) {
       expect(response.status === 200).to.be.true;
     } else {
       expect(response.status === 200).to.be.false;
@@ -268,7 +268,7 @@ export const validateColumnWhere = (
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
     cy.log(JSON.stringify(response));
-    if (result === 'success') {
+    if (result === ResultType.SUCCESS) {
       expect(response.body.length > 0).to.be.true;
     } else {
       expect(response.body.length === 0).to.be.true;
@@ -304,7 +304,7 @@ const compareChecks = (
   permObj: SchemaObject,
   check: CheckType,
   query: QueryType,
-  columns: string[]
+  columns: string[] | null
 ) => {
   if (check === 'none') {
     if (query === 'insert') {
@@ -330,9 +330,11 @@ const compareChecks = (
     // eslint-disable-next-line no-underscore-dangle
     expect(permObj.filter[getColName(0)]._eq === 1).to.be.true;
     if (query === 'select' || query === 'update') {
-      columns.forEach((col, index) => {
-        expect(permObj.columns.includes(getColName(index)));
-      });
+      if (columns) {
+        columns.forEach((col, index) => {
+          expect(permObj.columns.includes(getColName(index)));
+        });
+      }
     }
   }
 };
@@ -343,7 +345,7 @@ const handlePermValidationResponse = (
   query: QueryType,
   check: CheckType,
   result: ResultType,
-  columns: string[]
+  columns: string[] | null
 ) => {
   const rolePerms = tableSchema.permissions.find(
     (permission: { role_name: string }) => permission.role_name === role
@@ -354,11 +356,11 @@ const handlePermValidationResponse = (
       compareChecks(permObj, check, query, columns);
     } else {
       // this block can be reached only if the permission doesn't exist (failure case)
-      expect(result === 'failure').to.be.true;
+      expect(result === ResultType.FAILURE).to.be.true;
     }
   } else {
     // this block can be reached only if the permission doesn't exist (failure case)
-    expect(result === 'failure').to.be.true;
+    expect(result === ResultType.FAILURE).to.be.true;
   }
 };
 
@@ -439,7 +441,7 @@ export const validateCTrigger = (triggerName: string, result: ResultType) => {
   };
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
   cy.request(requestOptions).then(response => {
-    if (result === 'success') {
+    if (result === ResultType.SUCCESS) {
       expect(response.status === 200).to.be.true;
       expect(response.body.length === 1).to.be.true;
       const trigger = response.body[0];
