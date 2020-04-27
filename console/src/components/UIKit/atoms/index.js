@@ -8,3 +8,5 @@ export * from './Tooltip';
 export * from './SwitchButton';
 export * from './RadioButton';
 export * from './Checkbox';
+export * from './Box';
+export * from './Flex';

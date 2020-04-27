@@ -16,6 +16,7 @@ const colors = {
   blue: {
     original: '#0000ff',
     primary: '#1f88e5',
+    link: '#337ab7',
     hover: 'rgba(31, 136, 229, 0.4)',
     light: '#f0f8ff',
   },
@@ -38,7 +39,7 @@ const colors = {
   black: {
     original: '#000',
     secondary: '#484538',
-    text: '#292822',
+    text: '#4d4d4d',
     hover: 'rgba(0, 0, 0, 0.16)',
   },
   white: '#fff',
@@ -215,7 +216,8 @@ type FontSizeKey =
   | 'button'
   | 'tab'
   | 'explain'
-  | 'icon';
+  | 'icon'
+  | 'link';
 
 const fontSizes: Partial<Record<number | FontSizeKey, number>> = {
   0: 12,
@@ -239,6 +241,7 @@ fontSizes.button = fontSizes[1];
 fontSizes.tab = fontSizes[3];
 fontSizes.explain = fontSizes[0];
 fontSizes.icon = fontSizes[3];
+fontSizes.link = fontSizes[1];
 
 // ****************************** //
 
