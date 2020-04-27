@@ -1,6 +1,29 @@
 # Hasura GraphQL Engine Changelog
 
-## Next release
+## `v1.2.0`
+
+Include the changelog from **v1.2.0-beta.1**, **v1.2.0-beta.2**, **v1.2.0-beta.3**, **v1.2.0-beta.4**, **v1.2.0-beta.5**
+
+Additional changelog:
+
+### CLI: Support servers with self-signed certificates (close #4564) (#4582)
+
+A new flag `--certificate-authority` is added so that the CA certificate can be
+provided to trust the Hasura Endpoint with a self-signed SSL certificate.
+
+Another flag `--insecure-skip-tls-verification` is added to skip verifying the certificate
+in case you don't have access to the CA certificate. As the name suggests,
+using this flag is insecure since verification is not carried out.
+
+### Bug fixes and improvements
+
+- console: update graphiql explorer to support operation transform (#4567)
+- console: make GraphiQL Explorer taking the whole viewport (#4553)
+- console: fix table columns type comparision during column edit (close #4125) (#4393)
+- cli: allow initialising project in current directory (fix #4560) #4566
+- cli: remove irrelevant flags from init command (close #4508) (#4549)
+
+## `v1.2.0-beta.5`
 
 ### Heterogeneous execution
 
