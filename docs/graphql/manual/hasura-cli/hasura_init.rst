@@ -32,6 +32,9 @@ Examples
     # Create a directory with endpoint and admin secret configured:
     hasura init <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
 
+    # Create a hasura project in the current working directory
+    hasura init .
+
     # See https://hasura.io/docs/1.0/graphql/manual/migrations/index.html for more details
 
 Options
