@@ -69,61 +69,45 @@ Learn more about `Postgres check constraints <https://www.postgresql.org/docs/9.
 Using Postgres triggers
 -----------------------
 
-If the validation logic is more complex and requires use of data from other tables
+If the validation logic is more complex and requires the use of data from other tables
 and/or functions, then you can use `Postgres triggers <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__.
 
-**Example:** Validate that an article does not contain bad words.
+**Example:** Validate that an article's content does not exceed a certain number of words.
 
-Suppose we have 2 tables:
+Suppose we have the following table:
 
 .. code-block:: sql
 
   articles(article_id uuid, content text)
-  bad_words(word text)
 
 Now, we can head to the ``Data -> SQL`` tab in the console and
 create a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-that checks if an article is "clean" using the PG ``similarity`` function (described `here <https://www.postgresql.org/docs/current/pgtrgm.html#id-1.11.7.40.5>`__)
+that checks if an article's content exceeds a certain number of words,
 and then add a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__
 that will call this function every time before an article is inserted or updated.
 
 .. code-block:: plpgsql
 
-  CREATE FUNCTION check_article_clean()
-   RETURNS trigger
-   LANGUAGE plpgsql
-  AS $$
-  DECLARE
-    all_bad_words text;
-    dirtyness real;
+  CREATE FUNCTION check_content_length()
+  RETURNS trigger AS $BODY$
+  DECLARE content_length INTEGER;
   BEGIN
-    -- get all bad words from the "bad_words" table
-    SELECT string_agg(name, ' ') INTO all_bad_words from bad_words;
-
-    -- check the overlap between the bad words and the article content using
-    SELECT similarity(NEW.content, all_bad_words) INTO dirtyness;
-
-    -- throw an error if the article is too dirty
-    IF dirtyness >= 0.25 THEN
-      RAISE EXCEPTION 'article is very dirty';
-    END IF;
-
-    -- return the article row if no error
-    RETURN NEW;
+  select array_length(regexp_split_to_array(NEW.content, '\s'),1) INTO content_length;
+  IF content_length > 100 THEN
+      RAISE EXCEPTION 'Content can't have more than 100 words';
+  END IF;
+  RETURN NEW;
   END;
-  $$
+  $BODY$ LANGUAGE plpgsql;
+  
+  CREATE TRIGGER insert_article_content BEFORE INSERT OR UPDATE ON "articles" FOR EACH ROW EXECUTE PROCEDURE check_content_length();
 
-  CREATE TRIGGER insert_article
-    BEFORE INSERT OR UPDATE ON "articles"
-    FOR EACH ROW
-    EXECUTE PROCEDURE check_article_clean();
-
-Now, if we try to insert an article which has lot of bad words, we would receive
-an error:
+Now, if we try to insert an article whose content has more than 100 words, we'll receive
+the following error:
 
 .. code-block:: text
 
-  Insert failed! unexpected : article is very dirty
+  Insert failed! unexpected : Content can't have more than 100 words
 
 .. note::
 
@@ -245,9 +229,26 @@ It is the *external* service that is called. The following is a sample code that
 When we now insert an author, our action handler will be called and it will check if the author is black-listed. If it's not, the author will be inserted into our GraphQL API and the ``id`` will be returned.
 If the author is black-listed, we get the following error message:
 
-.. code-block:: text
-
-  "Author is blacklisted"
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insertArticle {
+      InsertAuthor(author: { name: "Thanos" }) {
+        id
+      }
+    } 
+  :response:
+    {
+      "errors": [
+        {
+          "extensions": {
+            "path": "$",
+            "code": "unexpected"
+          },
+          "message": "Author is blacklisted"
+        }
+      ]
+    }
 
 .. note::
 
