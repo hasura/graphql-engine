@@ -51,7 +51,7 @@ Let's say we have a table:
 Now, we can head to the ``Modify`` tab in the table page and add a check
 constraint in the ``Check Constraints`` section:
 
-.. thumbnail:: ../../../img/graphql/manual/schema/add-check-constraint.png
+.. thumbnail:: ../../../img/graphql/manual/schema/validation-add-check-constraint.png
    :alt: Add check constraint
 
 If someone now tries to add an author with a rating of ``11``, the following
@@ -301,23 +301,8 @@ Actions allow us to define :ref:`custom types <custom_types>` in our GraphQL sch
 We create a new action called ``InsertAuthor`` that takes an ``author`` object with type ``AuthorInput`` as input and
 returns an object of type ``AuthorOutput``:
 
-.. code-block:: graphql
-
-  type Mutation {
-    InsertAuthor (
-      author: AuthorInput!
-    ): AuthorOutput
-  }
-
-  input AuthorInput {
-    name : String
-    rating : Int
-    is_active : Boolean
-  }
-
-  type AuthorOutput {
-    id : Int!
-  }
+.. thumbnail:: ../../../img/graphql/manual/schema/validation-actions-def.png
+   :alt: Create action
 
 The business logic of an action - in our case the author validation - happens in the :ref:`action handler <action_handlers>`
 which is an HTTP webhook which contains the code to call the external service.
