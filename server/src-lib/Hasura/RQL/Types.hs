@@ -38,6 +38,7 @@ module Hasura.RQL.Types
   ) where
 
 import           Hasura.Prelude
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 import           Hasura.Db                          as R
@@ -286,6 +287,6 @@ askFieldInfo m f =
     ]
 
 askCurRole :: (UserInfoM m) => m RoleName
-askCurRole = userRole <$> askUserInfo
+askCurRole = _uiRole <$> askUserInfo
 
 type HeaderObj = M.HashMap T.Text T.Text

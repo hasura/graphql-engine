@@ -40,6 +40,7 @@ module Hasura.Eventing.EventTrigger
   , EventEngineCtx(..)
   ) where
 
+
 import           Control.Concurrent.Async    (wait, withAsync)
 import           Control.Concurrent.Extended (sleep)
 import           Control.Concurrent.STM.TVar
@@ -61,13 +62,13 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Version       (HasVersion)
 import           Hasura.SQL.Types
 
-import qualified Data.HashMap.Strict         as M
-import qualified Data.TByteString            as TBS
-import qualified Data.Text                   as T
-import qualified Data.Time.Clock             as Time
-import qualified Database.PG.Query           as Q
-import qualified Hasura.Logging              as L
-import qualified Network.HTTP.Client         as HTTP
+import qualified Data.HashMap.Strict           as M
+import qualified Data.TByteString              as TBS
+import qualified Data.Text                     as T
+import qualified Data.Time.Clock               as Time
+import qualified Database.PG.Query             as Q
+import qualified Hasura.Logging                as L
+import qualified Network.HTTP.Client           as HTTP
 import qualified Database.PG.Query.PTI         as PTI
 import qualified PostgreSQL.Binary.Encoding    as PE
 import qualified Data.Set                      as Set

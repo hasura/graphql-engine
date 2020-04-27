@@ -42,15 +42,16 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
+import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Error                      (Code (StartFailed))
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
                                                               resolveUserInfo)
-import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils                         (RequestId, getRequestId)
 import           Hasura.Server.Version                       (HasVersion)
+import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
@@ -160,7 +161,7 @@ $(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''WsConnInfo)
 
 data WSLogInfo
   = WSLogInfo
-  { _wsliUserVars       :: !(Maybe UserVars)
+  { _wsliUserVars       :: !(Maybe SessionVariables)
   , _wsliConnectionInfo :: !WsConnInfo
   , _wsliEvent          :: !WSEvent
   } deriving (Show, Eq)
@@ -176,11 +177,11 @@ instance L.ToEngineLog WSLog L.Hasura where
   toEngineLog (WSLog logLevel wsLog) =
     (logLevel, L.ELTWebsocketLog, J.toJSON wsLog)
 
-mkWsInfoLog :: Maybe UserVars -> WsConnInfo -> WSEvent -> WSLog
+mkWsInfoLog :: Maybe SessionVariables -> WsConnInfo -> WSEvent -> WSLog
 mkWsInfoLog uv ci ev =
   WSLog L.LevelInfo $ WSLogInfo uv ci ev
 
-mkWsErrorLog :: Maybe UserVars -> WsConnInfo -> WSEvent -> WSLog
+mkWsErrorLog :: Maybe SessionVariables -> WsConnInfo -> WSEvent -> WSLog
 mkWsErrorLog uv ci ev =
   WSLog L.LevelError $ WSLogInfo uv ci ev
 
@@ -516,7 +517,7 @@ logWSEvent
 logWSEvent (L.Logger logger) wsConn wsEv = do
   userInfoME <- liftIO $ STM.readTVarIO userInfoR
   let (userVarsM, tokenExpM) = case userInfoME of
-        CSInitialised userInfo tokenM _ -> ( Just $ userVars userInfo
+        CSInitialised userInfo tokenM _ -> ( Just $ _uiSession userInfo
                                            , tokenM
                                            )
         _                               -> (Nothing, Nothing)

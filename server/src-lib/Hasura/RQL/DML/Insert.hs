@@ -15,6 +15,7 @@ import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances     ()
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query        as Q
@@ -95,9 +96,9 @@ convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
     preSetCols = HM.keys setInsVals
 
     throwNotInsErr c = do
-      role <- userRole <$> askUserInfo
+      roleName <- _uiRole <$> askUserInfo
       throw400 NotSupported $ "column " <> c <<> " is not insertable"
-        <> " for role " <>> role
+        <> " for role " <>> roleName
 
 validateInpCols :: (MonadError QErr m) => [PGCol] -> [PGCol] -> m ()
 validateInpCols inpCols updColsPerm = forM_ inpCols $ \inpCol ->

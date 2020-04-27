@@ -47,7 +47,9 @@ const CodeTabs = ({
     return (
       <div>
         Error generating code.&nbsp;
-        <a onClick={init} className={styles.cursorPointer}>Try again</a>
+        <a onClick={init} className={styles.cursorPointer}>
+          Try again
+        </a>
       </div>
     );
   }

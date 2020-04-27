@@ -29,13 +29,13 @@ import qualified Data.Text                   as T
 import qualified Network.HTTP.Client         as H
 import qualified Network.HTTP.Types          as N
 
-import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT
 import           Hasura.Server.Auth.WebHook
 import           Hasura.Server.Utils
+import           Hasura.Session
 
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
@@ -139,9 +139,6 @@ mkJwtCtx JWTConfig{..} httpManager logger = do
           JFEJwkParseError _ e    -> throwError e
           JFEExpiryParseError _ _ -> return Nothing
 
-
-
-
 getUserInfo
   :: (HasVersion, MonadIO m, MonadError QErr m)
   => Logger Hasura
@@ -160,7 +157,7 @@ getUserInfoWithExpTime
   -> m (UserInfo, Maybe UTCTime)
 getUserInfoWithExpTime logger manager rawHeaders = \case
 
-  AMNoAuth -> return (userInfoFromHeaders, Nothing)
+  AMNoAuth -> (, Nothing) <$> userInfoFromHeaders UAuthNotSet
 
   AMAdminSecret adminScrt unAuthRole ->
     case adminSecretM of
@@ -183,23 +180,21 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
       maybe action (withNoExpTime . userInfoWhenAdminSecret ak) adminSecretM
 
     adminSecretM= foldl1 (<|>) $
-      map (`getVarVal` usrVars) [adminSecretHeader, deprecatedAccessKeyHeader]
+      map (`getSessionVariableValue` sessionVariables) [adminSecretHeader, deprecatedAccessKeyHeader]
 
-    usrVars = mkUserVars $ hdrsToText rawHeaders
+    sessionVariables = mkSessionVariables rawHeaders
 
     userInfoWhenAdminSecret key reqKey = do
       when (reqKey /= getAdminSecret key) $ throw401 $
         "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
-      return userInfoFromHeaders
+      userInfoFromHeaders UAdminSecretSent
 
     userInfoWhenNoAdminSecret = \case
       Nothing -> throw401 $ adminSecretHeader <> "/"
                  <> deprecatedAccessKeyHeader <> " required, but not found"
-      Just role -> return $ mkUserInfo role usrVars
+      Just roleName -> mkUserInfo UAdminSecretNotSent sessionVariables $ Just roleName
 
     withNoExpTime a = (, Nothing) <$> a
 
-    userInfoFromHeaders =
-      case roleFromVars usrVars of
-        Just rn -> mkUserInfo rn usrVars
-        Nothing -> mkUserInfo adminRole usrVars
+    userInfoFromHeaders uas =
+      mkUserInfo uas sessionVariables $ Just adminRoleName

@@ -59,7 +59,8 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Error
+import           Hasura.Session
 
 -- -------------------------------------------------------------------------------------------------
 -- Subscribers
@@ -233,7 +234,7 @@ data Poller
   }
 data PollerIOState
   = PollerIOState
-  { _pThread  :: !(Immortal.Thread)
+  { _pThread  :: !Immortal.Thread
   -- ^ a handle on the poller’s worker thread that can be used to 'Immortal.stop' it if all its
   -- cohorts stop listening
   , _pMetrics :: !RefetchMetrics
@@ -335,7 +336,7 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
       let lqMeta = LiveQueryMetadata $ convertDuration dt
           operations = getCohortOperations cohortSnapshotMap lqMeta mxRes
 
-      void $ timing _rmPush $ do
+      void $ timing _rmPush $
         -- concurrently push each unique result
         A.mapConcurrently_ (uncurry4 pushResultToCohort) operations
 
@@ -366,7 +367,7 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
     getCohortOperations cohortSnapshotMap actionMeta = \case
       Left e ->
         -- TODO: this is internal error
-        let resp = GQExecError [encodeGQErr False e]
+        let resp = GQExecError [encodeGQLErr False e]
         in [ (resp, Nothing, actionMeta, snapshot)
            | (_, snapshot) <- Map.toList cohortSnapshotMap
            ]

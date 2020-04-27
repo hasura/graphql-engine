@@ -37,6 +37,7 @@ import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.ScheduledTrigger
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 newtype CatalogForeignKey
