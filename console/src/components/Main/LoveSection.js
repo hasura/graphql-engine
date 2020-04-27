@@ -1,8 +1,10 @@
 import React from 'react';
+import { css } from 'styled-components';
 
 import globals from '../../Globals';
 import pixHeart from './images/pix-heart.svg';
-import { Icon, Box } from '../UIKit/atoms';
+import { Icon, Box, Flex, Heading } from '../UIKit/atoms';
+import consoleLogo from './images/console-logo.svg';
 import styles from './Main.scss';
 
 // eslint-disable-next-line no-unused-vars
@@ -70,7 +72,7 @@ const OldLoveSection = ({ toggleDropdown }) => (
   </ul>
 );
 
-const NewLoveSection = () => (
+const NewLoveSection = ({ toggleDropdown }) => (
   <Box
     className="dropdown-menu"
     border={0}
@@ -79,7 +81,46 @@ const NewLoveSection = () => (
     margin={0}
     height="400px"
     bg="white"
-  />
+    padding="0px"
+    left="auto"
+  >
+    <Flex
+      justifyContent="space-between"
+      px="25px"
+      py="22px"
+      borderBottom={1}
+      bg="#f8f8f8"
+      css={css`
+        h2 {
+          text-transform: none;
+        }
+
+        svg {
+          &:hover {
+            color: black;
+          }
+        }
+
+        #console-logo {
+          width: 20px;
+          margin-top: -3px;
+          margin-left: 8px;
+        }
+      `}
+    >
+      <Heading as="h2" color="#000" fontSize="20px">
+        Latest updates
+        <img src={consoleLogo} alt="hasura-console" id="console-logo" />
+      </Heading>
+      <Icon
+        type="close"
+        color="black.text"
+        size={16}
+        pointer
+        onClick={toggleDropdown}
+      />
+    </Flex>
+  </Box>
 );
 
 const LoveSection = () => {
