@@ -47,7 +47,9 @@ instance ToJSON FunctionTableArgument where
 -- | The session argument, which passes Hasura session variables to a
 -- SQL function as a JSON object.
 data FunctionSessionArgument
-  = FunctionSessionArgument !FunctionArgName !Int
+  = FunctionSessionArgument
+    !FunctionArgName -- ^ The argument name
+    !Int -- ^ The ordinal position in the function input parameters
   deriving (Show, Eq, Generic)
 instance Cacheable FunctionSessionArgument
 
