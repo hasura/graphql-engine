@@ -5,6 +5,7 @@ module Hasura.GraphQL.Parser.Column
   , column
   , mkColumnTypeName
   , mkScalarTypeName
+  , qualifiedObjectToName
 
   , UnpreparedValue(..)
 
@@ -26,7 +27,6 @@ import qualified Hasura.RQL.Types.Column               as RQL
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.GraphQL.Schema.Common          (qualifiedObjectToName)
 import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission           (SessVar)
@@ -138,3 +138,11 @@ mkScalarTypeName :: MonadError QErr m => PGScalarType -> m Name
 mkScalarTypeName scalarType = mkName (toSQLTxt scalarType) `onNothing` throw400 ValidationFailed
   ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
   <> "valid GraphQL identifier")
+
+-- FIXME: this doesn't belong here
+qualifiedObjectToName :: (ToTxt a, MonadError QErr m) => QualifiedObject a -> m Name
+qualifiedObjectToName objectName = do
+  let textName = snakeCaseQualObject objectName
+  mkName textName `onNothing` throw400 ValidationFailed
+    ("cannot include " <> objectName <<> " in the GraphQL schema because " <> textName
+    <<> " is not a valid GraphQL identifier")

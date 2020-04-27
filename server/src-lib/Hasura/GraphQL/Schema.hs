@@ -11,7 +11,5 @@ import qualified Hasura.RQL.DML.Select         as RQL
 import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser,
                                                 UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Schema.Common  (qualifiedObjectToName)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-

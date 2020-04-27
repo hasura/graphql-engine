@@ -12,7 +12,7 @@ import qualified Hasura.GraphQL.Parser         as P
 import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser, UnpreparedValue,
                                                 mkParameter)
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Schema.Common  (qualifiedObjectToName)
+import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.SQL.DML
