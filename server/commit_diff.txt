@@ -449,19 +449,3 @@ Date:   Wed May 13 10:09:44 2020 +0200
     * Add missing call to withConstructorFn in live queries (fix #3239)
 
     Co-authored-by: Alexis King <lexi.lambda@gmail.com>
-
-commit ee7c7b16729c0eef01c2957e5532b4bfd3ee5e4f
-Author: Auke Booij <auke@hasura.io>
-Date:   Mon Apr 27 17:07:03 2020 +0200
-
-    server: allow computed fields to have access to Hasura's session variables (fix #3846) (#4486)
-
-    * Allow computed fields to have access to Hasura's session variables
-
-    * Inform about session args for computed fields in changelog and docs
-
-    * Add tests for session arguments for computed fields (and the respective errors)
-
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-    Co-authored-by: Marion Schleifer <marion@hasura.io>
-    Co-authored-by: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>

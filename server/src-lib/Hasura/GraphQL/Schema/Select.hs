@@ -1052,13 +1052,20 @@ computedFieldFunctionArgs
   => ComputedFieldFunction
   -> m (InputFieldsParser n (RQL.FunctionArgsExpTableRow UnpreparedValue))
 computedFieldFunctionArgs ComputedFieldFunction{..} =
-  functionArgs _cffName (IAUserProvided <$> _cffInputArgs) <&> fmap addTableRowArgument
+  functionArgs _cffName (IAUserProvided <$> _cffInputArgs) <&> fmap addTableAndSessionArgument
   where
-    addTableRowArgument args@(RQL.FunctionArgsExp positional named) = case _cffTableArgument of
-      FTAFirst               -> RQL.FunctionArgsExp (tableRowArgument : positional) named
-      FTANamed argName index -> RQL.insertFunctionArg argName index tableRowArgument args
     tableRowArgument = RQL.AETableRow Nothing
 
+    addTableAndSessionArgument args@(RQL.FunctionArgsExp positional named) =
+      let withTable = case _cffTableArgument of
+            FTAFirst               -> RQL.FunctionArgsExp (tableRowArgument : positional) named
+            FTANamed argName index -> RQL.insertFunctionArg argName index tableRowArgument args
+          sessionArgVal = RQL.AESession UVSession
+      in
+        case _cffSessionArgument of
+          Nothing -> withTable
+          Just (FunctionSessionArgument argName index) ->
+            RQL.insertFunctionArg argName index sessionArgVal withTable
 
 -- FIXME: move to common?
 jsonPathArg :: MonadParse n => PGColumnType -> InputFieldsParser n (Maybe RQL.ColumnOp)
