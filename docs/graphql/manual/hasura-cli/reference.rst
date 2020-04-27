@@ -231,6 +231,12 @@ Example:
 The above command will read ENV vars from the ``production.env`` file present at the 
 project root directory. 
 
+.. admonition:: Supported from
+
+   .env file support available since version ``v1.2.0-beta.5``.
+
+   .. .env file is supported in versions ``v.1.2.0`` and above.
+
 .. note::
 
   Precedence order is flag > ENV vars > ``.env`` file values > configuration file values > default.
