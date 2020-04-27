@@ -9,6 +9,7 @@ import {
   validateCT,
   validateColumn,
   ResultType,
+  TableFields,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
@@ -23,19 +24,7 @@ const delRel = (table: string, relname: string) => {
   cy.wait(15000);
 };
 
-interface Fields {
-  [key: string]: any;
-  id?: string;
-  name?: string;
-  title?: string;
-  Content?: string;
-  author_id?: string;
-  rating?: string;
-  user_id?: string;
-  article_id?: string;
-  comment?: string;
-}
-export const Createtable = (name: string, fields: Fields) => {
+export const createTable = (name: string, fields: TableFields) => {
   // Click on the "Add table" button and input the table name
   cy.get(getElementFromAlias('sidebar-add-table')).click();
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
@@ -98,15 +87,15 @@ export const Createtable = (name: string, fields: Fields) => {
 };
 
 export const passRTCreateTables = () => {
-  Createtable('author', { id: 'integer', name: 'text' });
-  Createtable('article', {
+  createTable('author', { id: 'integer', name: 'text' });
+  createTable('article', {
     id: 'integer',
     title: 'text',
     Content: 'text',
     author_id: 'integer',
     rating: 'integer',
   });
-  Createtable('comment', {
+  createTable('comment', {
     id: 'integer',
     user_id: 'integer',
     article_id: 'integer',

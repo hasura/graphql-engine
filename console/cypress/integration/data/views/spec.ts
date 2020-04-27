@@ -11,24 +11,13 @@ import {
   validateColumn,
   validateView,
   ResultType,
+  TableFields,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
 const userId = 5555;
 
-interface TableDict {
-  [key: string]: any;
-  id?: string;
-  name?: string;
-  title?: string;
-  Content?: string;
-  author_id?: string;
-  rating?: string;
-  user_id?: string;
-  article_id?: string;
-  comment?: string;
-}
-export const createTable = (name: string, dict: TableDict) => {
+export const createTable = (name: string, dict: TableFields) => {
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   cy.get(getElementFromAlias('tableName')).type(`${name}_table_vt`);
   const keys = Object.keys(dict).map(k => k);

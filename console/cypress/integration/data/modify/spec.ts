@@ -297,7 +297,7 @@ export const setValidationMetaData = () => {
 
 //  Views Modify /////////////////////////////////////////////////
 
-export const Createtable = (name: string, dict: { [key: string]: any }) => {
+export const createTable = (name: string, dict: { [key: string]: any }) => {
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   cy.get(getElementFromAlias('tableName')).type(`${name}_table_mod`);
   const keys = Object.keys(dict).map(k => k);
@@ -329,9 +329,9 @@ export const Createtable = (name: string, dict: { [key: string]: any }) => {
 
 export const Createtables = () => {
   cy.get(getElementFromAlias('data-create-table')).click();
-  Createtable('author', { id: 'integer', name: 'Text' });
+  createTable('author', { id: 'integer', name: 'Text' });
   cy.get(getElementFromAlias('sidebar-add-table')).click();
-  Createtable('article', {
+  createTable('article', {
     id: 'integer',
     title: 'text',
     Content: 'text',

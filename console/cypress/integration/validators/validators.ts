@@ -45,6 +45,19 @@ export enum ResultType {
 interface RequestBody {
   [key: string]: any;
 }
+
+export interface TableFields {
+  [x: string]: any;
+  id?: string;
+  name?: string;
+  title?: string;
+  Content?: string;
+  author_id?: string;
+  rating?: string;
+  user_id?: string;
+  article_id?: string;
+  comment?: string;
+}
 /**
  * Remote Schema validator
  * @param remoteSchemaName
