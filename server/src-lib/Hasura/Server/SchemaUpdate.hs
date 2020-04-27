@@ -3,15 +3,16 @@ module Hasura.Server.SchemaUpdate
 where
 
 import           Hasura.Prelude
+import           Hasura.Session
 
 import           Hasura.Logging
-import           Hasura.RQL.DDL.Schema     (runCacheRWT)
+import           Hasura.RQL.DDL.Schema       (runCacheRWT)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.App         (SchemaCacheRef (..), withSCUpdate)
-import           Hasura.Server.Init        (InstanceId (..))
+import           Hasura.Server.API.Query
+import           Hasura.Server.App           (SchemaCacheRef (..), withSCUpdate)
+import           Hasura.Server.Init          (InstanceId (..))
 import           Hasura.Server.Logging
-import           Hasura.Server.Query
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -93,7 +94,7 @@ startSchemaSyncThreads sqlGenCtx pool logger httpMgr cacheRef instanceId cacheIn
   updateEventRef <- liftIO $ STM.newTVarIO Nothing
 
   -- Start listener thread
-  lTId <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $ 
+  lTId <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $
     listener sqlGenCtx pool logger httpMgr updateEventRef cacheRef instanceId cacheInitTime
   logThreadStarted TTListener lTId
 
@@ -165,7 +166,7 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
             STM.atomically $ STM.writeTVar updateEventRef $ Just payload
 
     onError = logError logger threadType . TEQueryError
-    -- NOTE: we handle expected error conditions here, while unexpected exceptions will result in 
+    -- NOTE: we handle expected error conditions here, while unexpected exceptions will result in
     -- a restart and log from 'forkImmortal'
     logWarn = unLogger logger $
       SchemaSyncThreadLog LevelWarn TTListener $ String

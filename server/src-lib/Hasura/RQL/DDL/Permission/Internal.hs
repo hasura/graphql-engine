@@ -1,7 +1,4 @@
 {-# LANGUAGE QuasiQuotes            #-}
-{-# LANGUAGE RankNTypes             #-}
-{-# LANGUAGE TypeApplications       #-}
-{-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
 
 module Hasura.RQL.DDL.Permission.Internal where
@@ -23,6 +20,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -180,7 +178,7 @@ getDepHeadersFromVal val = case val of
   where
     parseOnlyString v = case v of
       (String t)
-        | isUserVar t -> [T.toLower t]
+        | isSessionVariable t -> [T.toLower t]
         | isReqUserId t -> [userIdHeader]
         | otherwise -> []
       _ -> []
@@ -197,7 +195,7 @@ valueParser
 valueParser pgType = \case
   -- When it is a special variable
   String t
-    | isUserVar t   -> return $ mkTypedSessionVar pgType t
+    | isSessionVariable t   -> return $ mkTypedSessionVar pgType $ mkSessionVariable t
     | isReqUserId t -> return $ mkTypedSessionVar pgType userIdHeader
   -- Typical value as Aeson's value
   val -> case pgType of
@@ -280,7 +278,7 @@ dropPermP1 dp@(DropPerm tn rn) = do
   askPermInfo tabInfo rn $ getPermAcc2 dp
 
 dropPermP2 :: forall a m. (MonadTx m, IsPerm a) => DropPerm a -> m ()
-dropPermP2 dp@(DropPerm tn rn) = do
+dropPermP2 dp@(DropPerm tn rn) =
   liftTx $ dropPermFromCatalog tn rn pt
   where
     pa = getPermAcc2 dp
