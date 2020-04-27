@@ -28,7 +28,7 @@ querying them using both ``queries`` and ``subscriptions``.
 .. _supported_sql_functions:
 
 Supported SQL functions
-^^^^^^^^^^^^^^^^^^^^^^^
+***********************
 
 Currently, only functions which satisfy the following constraints can be exposed as top level fields in the GraphQL API
 (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
