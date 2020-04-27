@@ -122,6 +122,23 @@ args:
       function: fetch_articles
       table_argument: author_row
 
+#Computed field with session argument
+- type: run_sql
+  args:
+    sql: |
+      CREATE FUNCTION test_session(author_row author, key text, session json)
+      RETURNS TEXT AS $$
+        SELECT $3->>$2
+      $$ LANGUAGE sql STABLE;
+
+- type: add_computed_field
+  args:
+    table: author
+    name: test_session
+    definition:
+      function: test_session
+      session_argument: session
+
 - type: run_sql
   args:
     sql: |
