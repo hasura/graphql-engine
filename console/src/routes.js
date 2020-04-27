@@ -21,7 +21,7 @@ import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 
 import { getActionsRouter } from './components/Services/Actions';
 
-import { getTriggersRouter } from './components/Services/Triggers';
+import { getEventsRouter } from './components/Services/Triggers';
 
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
 
@@ -93,7 +93,7 @@ const routes = store => {
 
   const actionsRouter = getActionsRouter(connect, store, composeOnEnterHooks);
 
-  const triggersRouter = getTriggersRouter(connect, store, composeOnEnterHooks);
+  const eventsRouter = getEventsRouter(connect, store, composeOnEnterHooks);
 
   const uiKitRouter = globals.isProduction ? null : (
     <Route
@@ -147,7 +147,7 @@ const routes = store => {
           {eventRouter}
           {remoteSchemaRouter}
           {actionsRouter}
-          {triggersRouter}
+          {eventsRouter}
           {uiKitRouter}
         </Route>
       </Route>

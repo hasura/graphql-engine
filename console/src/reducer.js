@@ -5,7 +5,7 @@ import { eventReducer } from './components/Services/EventTrigger';
 import { remoteSchemaReducer } from './components/Services/RemoteSchema';
 import { actionsReducer } from './components/Services/Actions';
 import { typesReducer } from './components/Services/Types';
-import { triggersReducer } from './components/Services/Triggers';
+import { eventsReducer } from './components/Services/Events';
 import mainReducer from './components/Main/Actions';
 import apiExplorerReducer from 'components/Services/ApiExplorer/Actions';
 import progressBarReducer from 'components/App/Actions';
@@ -27,7 +27,7 @@ const reducer = combineReducers({
   notifications,
   metadata: metadataReducer,
   types: typesReducer,
-  triggers: triggersReducer,
+  events: eventsReducer,
 });
 
 export default reducer;

@@ -686,10 +686,10 @@ class Main extends React.Component {
                 {' '}
 */}{' '}
                 {getSidebarItem(
-                  'Triggers',
+                  'Events',
                   'fa-cloud',
                   tooltips.events,
-                  '/triggers/events/manage'
+                  '/events/data/manage'
                 )}
               </ul>
             </div>
