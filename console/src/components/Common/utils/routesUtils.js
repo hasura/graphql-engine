@@ -65,10 +65,7 @@ export const getActionsBaseRoute = () => {
   return '/actions/manage';
 };
 
-export const getActionsCreateRoute = isDerived => {
-  if (isDerived) {
-    return `${getActionsBaseRoute()}/add?is_derived=true`;
-  }
+export const getActionsCreateRoute = () => {
   return `${getActionsBaseRoute()}/add`;
 };
 
@@ -83,21 +80,21 @@ export const getAddSTRoute = () => {
 export const getAddETRoute = () => {
   return `/${eventsPrefix}/${dataEventsPrefix}/add`;
 };
-export const isDataEventsRoute = (route) => {
-  return route.includes(`/${eventsPrefix}/${dataEventsPrefix}`)
-}
-export const isScheduledEventsRoute = (route) => {
-  return route.includes(`/${eventsPrefix}/${scheduledEventsPrefix}`)
-}
+export const isDataEventsRoute = route => {
+  return route.includes(`/${eventsPrefix}/${dataEventsPrefix}`);
+};
+export const isScheduledEventsRoute = route => {
+  return route.includes(`/${eventsPrefix}/${scheduledEventsPrefix}`);
+};
 export const getDataEventsLandingRoute = () => {
   return `/${eventsPrefix}/${dataEventsPrefix}/manage`;
-}
+};
 export const getScheduledEventsLandingRoute = () => {
   return `/${eventsPrefix}/${scheduledEventsPrefix}/manage`;
-}
-export const getSTModifyRoute = (stName) => {
+};
+export const getSTModifyRoute = stName => {
   return `/${eventsPrefix}/${scheduledEventsPrefix}/${stName}/modify`;
-}
-export const getETModifyRoute = (etName) => {
+};
+export const getETModifyRoute = etName => {
   return `/${eventsPrefix}/${scheduledEventsPrefix}/${etName}/modify`;
-}
+};

@@ -18,6 +18,10 @@ func (h *HasuraDB) SetMetadataPlugins(plugins types.MetadataPlugins) {
 	h.config.Plugins = plugins
 }
 
+func (h *HasuraDB) EnableCheckMetadataConsistency(enabled bool) {
+	h.config.enableCheckMetadataConsistency = enabled
+}
+
 func (h *HasuraDB) ExportMetadata() (map[string][]byte, error) {
 	query := HasuraQuery{
 		Type: "export_metadata",

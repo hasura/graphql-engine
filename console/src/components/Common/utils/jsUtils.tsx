@@ -1,6 +1,12 @@
 // TODO: make functions from this file available without imports
 import React from 'react';
 
+/* TYPE utils */
+
+export const isNotDefined = (value: any) => {
+  return value === null || value === undefined;
+};
+
 export const exists = (value: any) => {
   return value !== null && value !== undefined;
 };
@@ -17,54 +23,66 @@ export const isString = (value: any) => {
   return typeof value === 'string';
 };
 
+export const isNumber = (value: any) => {
+  return typeof value === 'number';
+};
+
 export const isPromise = (value: any) => {
   if (!value) return false;
   return value.constructor.name === 'Promise';
 };
 
+export const isValidTemplateLiteral = (literal_: string) => {
+  const literal = literal_.trim();
+  if (!literal) return false;
+  const templateStartIndex = literal.indexOf('{{');
+  const templateEndEdex = literal.indexOf('}}');
+  return templateStartIndex !== -1 && templateEndEdex > templateStartIndex + 2;
+};
+
 export const isEmpty = (value: any) => {
-  let _isEmpty = false;
+  let empty = false;
 
   if (!exists(value)) {
-    _isEmpty = true;
+    empty = true;
   } else if (isArray(value)) {
-    _isEmpty = value.length === 0;
+    empty = value.length === 0;
   } else if (isObject(value)) {
-    _isEmpty = JSON.stringify(value) === JSON.stringify({});
+    empty = JSON.stringify(value) === JSON.stringify({});
   } else if (isString(value)) {
-    _isEmpty = value === '';
+    empty = value === '';
   }
 
-  return _isEmpty;
+  return empty;
 };
 
 export const isEqual = (value1: any, value2: any) => {
-  let _isEqual = false;
+  let equal = false;
 
   if (typeof value1 === typeof value2) {
     if (isArray(value1)) {
-      _isEqual = JSON.stringify(value1) === JSON.stringify(value2);
+      equal = JSON.stringify(value1) === JSON.stringify(value2);
     } else if (isObject(value2)) {
       const value1Keys = Object.keys(value1);
       const value2Keys = Object.keys(value2);
 
       if (value1Keys.length === value2Keys.length) {
-        _isEqual = true;
+        equal = true;
 
         for (let i = 0; i < value1Keys.length; i++) {
           const key = value1Keys[i];
           if (!isEqual(value1[key], value2[key])) {
-            _isEqual = false;
+            equal = false;
             break;
           }
         }
       }
     } else {
-      _isEqual = value1 === value2;
+      equal = value1 === value2;
     }
   }
 
-  return _isEqual;
+  return equal;
 };
 
 export function isJsonString(str: string) {
@@ -73,12 +91,21 @@ export function isJsonString(str: string) {
   } catch (e) {
     return false;
   }
-
   return true;
 }
+/* ARRAY utils */
+export const deleteArrayElementAtIndex = (array: unknown[], index: number) => {
+  return array.splice(index, 1);
+};
+
+export const arrayDiff = (arr1: unknown[], arr2: unknown[]) => {
+  return arr1.filter(v => !arr2.includes(v));
+};
+
+/* JSON utils */
 
 export function getAllJsonPaths(json: any, leafKeys: any[], prefix = '') {
-  const _paths = [];
+  const paths = [];
 
   const addPrefix = (subPath: string) => {
     return prefix + (prefix && subPath ? '.' : '') + subPath;
@@ -88,11 +115,11 @@ export function getAllJsonPaths(json: any, leafKeys: any[], prefix = '') {
     const subPaths = getAllJsonPaths(subJson, leafKeys, newPrefix);
 
     subPaths.forEach(subPath => {
-      _paths.push(subPath);
+      paths.push(subPath);
     });
 
     if (!subPaths.length) {
-      _paths.push(newPrefix);
+      paths.push(newPrefix);
     }
   };
 
@@ -103,17 +130,36 @@ export function getAllJsonPaths(json: any, leafKeys: any[], prefix = '') {
   } else if (isObject(json)) {
     Object.keys(json).forEach(key => {
       if (leafKeys.includes(key)) {
-        _paths.push({ [addPrefix(key)]: json[key] });
+        paths.push({ [addPrefix(key)]: json[key] });
       } else {
         handleSubJson(json[key], addPrefix(key));
       }
     });
   } else {
-    _paths.push(addPrefix(json));
+    paths.push(addPrefix(json));
   }
 
-  return _paths;
+  return paths;
 }
+
+/* TRANSFORM utils */
+
+export const capitalize = (s: string) => {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
+// return number with commas for readability
+export const getReadableNumber = (number: number) => {
+  return number.toLocaleString();
+};
+
+/* URL utils */
+
+export const getUrlSearchParamValue = (param: string) => {
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  return urlSearchParams.get(param);
+};
+/* ALERT utils */
 
 // use browser confirm and prompt to get user confirmation for actions
 export const getConfirmation = (
@@ -133,7 +179,7 @@ export const getConfirmation = (
   }
 
   if (!hardConfirmation) {
-    isConfirmed = confirm(modalContent);
+    isConfirmed = window.confirm(modalContent);
   } else {
     modalContent += '\n\n';
     modalContent += `Type "${confirmationText}" to confirm:`;
@@ -151,11 +197,13 @@ export const getConfirmation = (
   return isConfirmed;
 };
 
+/* FILE utils */
+
 export const uploadFile = (
   fileHandler: (s: string | ArrayBufferLike | null) => void,
   fileFormat: string | null,
   invalidFileHandler: any
-) => (dispatch: any) => {
+) => {
   const fileInputElement = document.createElement('div');
   fileInputElement.innerHTML = '<input style="display:none" type="file">';
   const fileInput: any = fileInputElement.firstChild;
@@ -167,7 +215,7 @@ export const uploadFile = (
 
     let isValidFile = true;
     if (fileFormat) {
-      const expectedFileSuffix = '.' + fileFormat;
+      const expectedFileSuffix = `.${fileFormat}`;
 
       if (!fileName.endsWith(expectedFileSuffix)) {
         isValidFile = false;
@@ -224,11 +272,9 @@ export const downloadObjectAsJsonFile = (fileName: string, object: any) => {
     ? fileName
     : fileName + jsonSuffix;
 
-  const dataString =
-    'data:' +
-    contentType +
-    ',' +
-    encodeURIComponent(JSON.stringify(object, null, 2));
+  const dataString = `data:${contentType},${encodeURIComponent(
+    JSON.stringify(object, null, 2)
+  )}`;
 
   downloadFile(fileNameWithSuffix, dataString);
 };
@@ -275,30 +321,6 @@ export const getCurrTimeForFileName = () => {
     .padStart(3, '0');
 
   return [year, month, day, hours, minutes, seconds, milliSeconds].join('_');
-};
-
-export const isValidTemplateLiteral = (literal_: string) => {
-  const literal = literal_.trim();
-  if (!literal) return false;
-  const templateStartIndex = literal.indexOf('{{');
-  const templateEndEdex = literal.indexOf('}}');
-  return templateStartIndex != -1 && templateEndEdex > templateStartIndex + 2;
-};
-
-export const getUrlSearchParamValue = (param: string) => {
-  const urlSearchParams = new URLSearchParams(window.location.search);
-  return urlSearchParams.get(param);
-};
-
-export const getLastArrayElement = (array: Array<any>) => {
-  if (!array) return null;
-  if (!array.length) return null;
-  return array[array.length - 1];
-};
-
-export const getFirstArrayElement = (array: Array<any>) => {
-  if (!array) return null;
-  return array[0];
 };
 
 export const getEventTargetValue = (e: React.BaseSyntheticEvent) => {

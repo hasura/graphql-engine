@@ -7,7 +7,7 @@ import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
 
 const editorLabel = 'Action definition';
 const editorTooltip =
-  'Define the action as mutation using GraphQL SDL. You can use the custom types already defined by you or define new types in the new types definition editor below.';
+  'Define the action as a query or a mutation using GraphQL SDL. You can use the custom types already defined by you or define new types in the new types definition editor below.';
 
 const ActionDefinitionEditor = ({
   value,
@@ -69,7 +69,7 @@ const ActionDefinitionEditor = ({
           {error && (
             <div className={`${styles.display_flex}  ${styles.errorMessage}`}>
               <CrossIcon className={styles.add_mar_right_small} />
-              <p>{errorMessage}</p>
+              <div>{errorMessage}</div>
             </div>
           )}
         </div>

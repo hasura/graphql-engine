@@ -134,7 +134,7 @@ func IsWindows() bool {
 }
 
 func createOrUpdateLink(binDir, binary, plugin string) error {
-	dst := filepath.Join(binDir, pluginNameToBin(plugin, IsWindows()))
+	dst := filepath.Join(binDir, PluginNameToBin(plugin, IsWindows()))
 
 	if err := removeLink(dst); err != nil {
 		return errors.Wrap(err, "failed to remove old symlink")
@@ -168,9 +168,9 @@ func removeLink(path string) error {
 	return nil
 }
 
-// pluginNameToBin creates the name of the symlink file for the plugin name.
+// PluginNameToBin creates the name of the symlink file for the plugin name.
 // It converts dashes to underscores.
-func pluginNameToBin(name string, isWindows bool) string {
+func PluginNameToBin(name string, isWindows bool) string {
 	name = strings.ReplaceAll(name, "-", "_")
 	name = "hasura-" + name
 	if isWindows {

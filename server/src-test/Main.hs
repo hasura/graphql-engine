@@ -18,14 +18,16 @@ import qualified Network.HTTP.Client.TLS      as HTTP
 import qualified Test.Hspec.Runner            as Hspec
 
 import           Hasura.Db                    (PGExecCtx (..))
-import           Hasura.RQL.Types             (SQLGenCtx (..), adminUserInfo)
+import           Hasura.RQL.Types             (SQLGenCtx (..))
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init           (RawConnInfo, mkConnInfo, mkRawConnInfo,
                                                parseRawConnInfo, runWithEnv)
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version
+import           Hasura.Session               (adminUserInfo)
 
 import qualified Data.Parser.CacheControlSpec as CacheControlParser
+import qualified Data.Parser.JSONPathSpec     as JsonPath
 import qualified Data.Parser.URLTemplate      as URLTemplate
 import qualified Data.TimeSpec                as TimeSpec
 import qualified Hasura.IncrementalSpec       as IncrementalSpec
@@ -57,6 +59,7 @@ unitSpecs :: Spec
 unitSpecs = do
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.URLTemplate" URLTemplate.spec
+  describe "Data.Parser.JsonPath" JsonPath.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
   -- describe "Hasura.RQL.Metadata" MetadataSpec.spec -- Commenting until optimizing the test in CI
   describe "Data.Time" TimeSpec.spec

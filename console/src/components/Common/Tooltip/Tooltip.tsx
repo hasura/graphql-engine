@@ -4,20 +4,17 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import styles from './Tooltip.scss';
 
 const tooltipGen = (message: string) => {
-  return (
-    <Tooltip id={message}>
-      {message}
-    </Tooltip>
-  );
+  return <Tooltip id={message}>{message}</Tooltip>;
 };
 
 export interface TooltipProps extends React.ComponentProps<'i'> {
-  message: string,
-  className: string
-};
+  message: string;
+  placement?: 'right' | 'left' | 'top' | 'bottom';
+  className: string;
+}
 
-const ToolTip: React.FC<TooltipProps> = ({ message })=> (
-  <OverlayTrigger placement="right" overlay={tooltipGen(message)}>
+const ToolTip: React.FC<TooltipProps> = ({ message, placement = 'right' }) => (
+  <OverlayTrigger placement={placement} overlay={tooltipGen(message)}>
     <i
       className={`fa fa-question-circle + ${styles.tooltipIcon}`}
       aria-hidden="true"

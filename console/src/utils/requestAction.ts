@@ -8,6 +8,7 @@ import {
   FAILED_REQUEST,
   ERROR_REQUEST,
 } from '../components/App/Actions';
+import { globalCookiePolicy } from '../Endpoints';
 
 const requestAction = (
   url: string,
@@ -21,7 +22,7 @@ const requestAction = (
     const requestOptions = { ...options };
 
     if (!options.credentials && includeCredentials) {
-      requestOptions.credentials = 'omit';
+      requestOptions.credentials = globalCookiePolicy;
     }
 
     if (includeAdminHeaders) {
@@ -30,7 +31,6 @@ const requestAction = (
         ...dataHeaders(getState),
       };
     }
-
     return new Promise((resolve, reject) => {
       dispatch({ type: LOAD_REQUEST });
       fetch(url, requestOptions).then(
@@ -54,20 +54,20 @@ const requestAction = (
                 dispatch({
                   type: ERROR_REQUEST,
                   data: msg,
-                  url: url,
+                  url,
                   params: options.body,
                   statusCode: response.status,
                 });
               }
               if (msg.code && msg.code === 'access-denied') {
-                if (window.location.pathname !== globals.urlPrefix + '/login') {
-                  dispatch(push(globals.urlPrefix + '/login'));
+                if (window.location.pathname !== `${globals.urlPrefix}/login`) {
+                  dispatch(push(`${globals.urlPrefix}/login`));
                 }
               }
               reject(msg);
             });
           }
-          response.text().then(errorMsg => {
+          return response.text().then(errorMsg => {
             dispatch({ type: FAILED_REQUEST });
             if (ERROR) {
               dispatch({ type: ERROR, response, data: errorMsg });

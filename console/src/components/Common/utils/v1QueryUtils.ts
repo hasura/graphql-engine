@@ -12,6 +12,7 @@ type WhereClause = any;
 type OrderBy = {
   column: string;
   type: 'asc' | 'desc';
+  nulls?: 'last' | 'first';
 };
 
 export type TableDefinition = {
@@ -58,11 +59,11 @@ export const getCreatePermissionQuery = (
   permission: any
 ) => {
   return {
-    type: 'create_' + action + '_permission',
+    type: `create_${action}_permission`,
     args: {
       table: tableDef,
-      role: role,
-      permission: permission,
+      role,
+      permission,
     },
   };
 };
@@ -73,10 +74,10 @@ export const getDropPermissionQuery = (
   role: string
 ) => {
   return {
-    type: 'drop_' + action + '_permission',
+    type: `drop_${action}_permission`,
     args: {
       table: tableDef,
-      role: role,
+      role,
     },
   };
 };
@@ -323,7 +324,7 @@ export const getAddComputedFieldQuery = (
       definition: {
         ...definition,
       },
-      comment: comment,
+      comment,
     },
   };
 };
@@ -552,3 +553,22 @@ export const getFetchInvocationLogsQuery = (
 };
 
 export type SelectQueryGenerator = typeof getFetchInvocationLogsQuery;
+
+export const getFetchManualTriggersQuery = (tableDef: TableDefinition) =>
+  getSelectQuery(
+    tableDef,
+    ['*'],
+    {
+      table_name: tableDef.name,
+      table_schema: tableDef.schema,
+    },
+    undefined,
+    undefined,
+    [
+      {
+        column: 'name',
+        type: 'asc',
+        nulls: 'last',
+      },
+    ]
+  );

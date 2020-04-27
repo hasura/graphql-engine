@@ -1,7 +1,15 @@
+-- This pragma is needed for allowQueryActionExecuter
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
+
 module Hasura.GraphQL.Resolve.Action
   ( resolveActionMutation
   , resolveAsyncActionQuery
   , asyncActionsProcessor
+  , resolveActionQuery
+  , mkJsonAggSelect
+  , QueryActionExecuter
+  , allowQueryActionExecuter
+  , restrictActionExecuter
   ) where
 
 import           Hasura.Prelude
@@ -16,6 +24,7 @@ import qualified Control.Concurrent.Async          as A
 import qualified Data.Aeson                        as J
 import qualified Data.Aeson.Casing                 as J
 import qualified Data.Aeson.TH                     as J
+import qualified Data.ByteString.Lazy              as BL
 import qualified Data.CaseInsensitive              as CI
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.Text                         as T
@@ -36,13 +45,14 @@ import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
-import           Hasura.RQL.DDL.Headers            (HeaderConf, makeHeadersFromConf)
+import           Hasura.RQL.DDL.Headers            (HeaderConf, makeHeadersFromConf, toHeadersConf)
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Utils               (mkClientHeadersForward, mkSetCookieHeaders)
 import           Hasura.Server.Version             (HasVersion)
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
                                                     toTxtValue)
@@ -55,7 +65,7 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ActionContext)
 data ActionWebhookPayload
   = ActionWebhookPayload
   { _awpAction           :: !ActionContext
-  , _awpSessionVariables :: !UserVars
+  , _awpSessionVariables :: !SessionVariables
   , _awpInput            :: !J.Value
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookPayload)
@@ -82,6 +92,30 @@ instance J.ToJSON ActionWebhookResponse where
   toJSON (AWRArray objects) = J.toJSON objects
   toJSON (AWRObject object) = J.toJSON object
 
+data ActionRequestInfo
+  = ActionRequestInfo
+  { _areqiUrl     :: !Text
+  , _areqiBody    :: !J.Value
+  , _areqiHeaders :: ![HeaderConf]
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 6 J.snakeCase) ''ActionRequestInfo)
+
+data ActionResponseInfo
+  = ActionResponseInfo
+  { _aresiStatus  :: !Int
+  , _aresiBody    :: !J.Value
+  , _aresiHeaders :: ![HeaderConf]
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 6 J.snakeCase) ''ActionResponseInfo)
+
+data ActionInternalError
+  = ActionInternalError
+  { _aieError    :: !J.Value
+  , _aieRequest  :: !ActionRequestInfo
+  , _aieResponse :: !(Maybe ActionResponseInfo)
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionInternalError)
+
 resolveActionMutation
   :: ( HasVersion
      , MonadReusability m
@@ -95,14 +129,14 @@ resolveActionMutation
      , Has [HTTP.Header] r
      )
   => Field
-  -> ActionExecutionContext
-  -> UserVars
+  -> ActionMutationExecutionContext
+  -> SessionVariables
   -> m (RespTx, HTTP.ResponseHeaders)
 resolveActionMutation field executionContext sessionVariables =
   case executionContext of
-    ActionExecutionSyncWebhook executionContextSync ->
+    ActionMutationSyncWebhook executionContextSync ->
       resolveActionMutationSync field executionContextSync sessionVariables
-    ActionExecutionAsync ->
+    ActionMutationAsync ->
       (,[]) <$> resolveActionMutationAsync field sessionVariables
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
@@ -119,8 +153,8 @@ resolveActionMutationSync
      , Has [HTTP.Header] r
      )
   => Field
-  -> SyncActionExecutionContext
-  -> UserVars
+  -> ActionExecutionContext
+  -> SessionVariables
   -> m (RespTx, HTTP.ResponseHeaders)
 resolveActionMutationSync field executionContext sessionVariables = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
@@ -139,7 +173,57 @@ resolveActionMutationSync field executionContext sessionVariables = do
   let jsonAggType = mkJsonAggSelect outputType
   return $ (,respHeaders) $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
   where
-    SyncActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
+    ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
+      forwardClientHeaders = executionContext
+
+-- QueryActionExecuter is a type for a higher function, this is being used
+-- to allow or disallow where a query action can be executed. We would like
+-- to explicitly control where a query action can be run.
+-- Example: We do not explain a query action, so we use the `restrictActionExecuter`
+-- to prevent resolving the action query.
+type QueryActionExecuter =
+  forall m a. (MonadError QErr m)
+  => (HTTP.Manager -> [HTTP.Header] -> m a)
+  -> m a
+
+allowQueryActionExecuter :: HTTP.Manager -> [HTTP.Header] -> QueryActionExecuter
+allowQueryActionExecuter manager reqHeaders actionResolver =
+  actionResolver manager reqHeaders
+
+restrictActionExecuter :: Text -> QueryActionExecuter
+restrictActionExecuter errMsg _ =
+  throw400 NotSupported errMsg
+
+resolveActionQuery
+  :: ( HasVersion
+     , MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , MonadIO m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     )
+  => Field
+  -> ActionExecutionContext
+  -> SessionVariables
+  -> HTTP.Manager
+  -> [HTTP.Header]
+  -> m (RS.AnnSimpleSelG UnresolvedVal)
+resolveActionQuery field executionContext sessionVariables httpManager reqHeaders = do
+  let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
+      actionContext = ActionContext actionName
+      handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
+  (webhookRes, _) <- callWebhook httpManager outputType outputFields reqHeaders confHeaders
+                               forwardClientHeaders resolvedWebhook handlerPayload
+  let webhookResponseExpression = RS.AEInput $ UVSQL $
+        toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
+  selectAstUnresolved <-
+    processOutputSelectionSet webhookResponseExpression outputType definitionList
+    (_fType field) $ _fSelSet field
+  return selectAstUnresolved
+  where
+    ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
 
 {- Note: [Async action architecture]
@@ -161,7 +245,7 @@ resolveActionMutationAsync
      , Has [HTTP.Header] r
      )
   => Field
-  -> UserVars
+  -> SessionVariables
   -> m RespTx
 resolveActionMutationAsync field sessionVariables = do
   reqHeaders <- asks getter
@@ -250,13 +334,13 @@ resolveAsyncActionQuery userInfo selectOpCtx field = do
           sessionVarsColumnInfo = PGColumnInfo (unsafePGCol "session_variables") "session_variables"
                                   0 (PGColumnScalar PGJSONB) False Nothing
           sessionVarValue = UVPG $ AnnPGVal Nothing False $ WithScalarType PGJSONB
-                            $ PGValJSONB $ Q.JSONB $ J.toJSON $ userVars userInfo
+                            $ PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
           sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
 
       -- For non-admin roles, accessing an async action's response should be allowed only for the user
       -- who initiated the action through mutation. The action's response is accessible for a query/subscription
       -- only when it's session variables are equal to that of action's.
-      in if isAdmin (userRole userInfo) then actionIdColumnEq
+      in if isAdmin (_uiRole userInfo) then actionIdColumnEq
          else BoolAnd [actionIdColumnEq, sessionVarsColumnEq]
 
 data ActionLogItem
@@ -264,7 +348,7 @@ data ActionLogItem
   { _aliId               :: !UUID.UUID
   , _aliActionName       :: !ActionName
   , _aliRequestHeaders   :: ![HTTP.Header]
-  , _aliSessionVariables :: !UserVars
+  , _aliSessionVariables :: !SessionVariables
   , _aliInputPayload     :: !J.Value
   } deriving (Show, Eq)
 
@@ -295,7 +379,7 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
         Nothing -> return ()
         Just actionInfo -> do
           let definition = _aiDefinition actionInfo
-              outputFields = _aiOutputFields actionInfo
+              outputFields = getActionOutputFields $ _aiOutputObject actionInfo
               webhookUrl = _adHandler definition
               forwardClientHeaders = _adForwardClientHeaders definition
               confHeaders = _adHeaders definition
@@ -359,7 +443,7 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
     getUndeliveredEvents = runTx undeliveredEventsQuery
 
 callWebhook
-  :: (HasVersion, MonadIO m, MonadError QErr m)
+  :: forall m. (HasVersion, MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -> GraphQLType
   -> ActionOutputFields
@@ -379,49 +463,61 @@ callWebhook manager outputType outputFields reqHeaders confHeaders
                 -- and client headers where configuration headers are preferred
                 contentType : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
       postPayload = J.toJSON actionWebhookPayload
-      url = (T.unpack $ unResolvedWebhook resolvedWebhook)
-  httpResponse <- liftIO $ try $ try $
-                  Wreq.asJSON =<< Wreq.postWith options url postPayload
+      url = unResolvedWebhook resolvedWebhook
+  httpResponse <- liftIO $ try $ Wreq.postWith options (T.unpack url) postPayload
+  let requestInfo = ActionRequestInfo url postPayload $
+                     confHeaders <> toHeadersConf clientHeaders
   case httpResponse of
     Left e ->
       throw500WithDetail "http exception when calling webhook" $
-      J.toJSON $ HttpException e
+      J.toJSON $ ActionInternalError (J.toJSON $ HttpException e) requestInfo Nothing
 
-    Right (Left (Wreq.JSONError e)) ->
-      throw500WithDetail "not a valid json response from webhook" $
-      J.toJSON e
-
-    Right (Right responseWreq) -> do
-      let responseValue = responseWreq ^. Wreq.responseBody
+    Right responseWreq -> do
+      let responseBody = responseWreq ^. Wreq.responseBody
           responseStatus = responseWreq ^. Wreq.responseStatus
-          webhookResponseObject = J.object ["webhook_response" J..= responseValue]
+          mkResponseInfo respBody =
+            ActionResponseInfo (HTTP.statusCode responseStatus) respBody $
+            toHeadersConf $ responseWreq ^. Wreq.responseHeaders
+      case J.eitherDecode responseBody of
+        Left e -> do
+          let responseInfo = mkResponseInfo $ J.String $ bsToTxt $ BL.toStrict responseBody
+          throw500WithDetail "not a valid json response from webhook" $ J.toJSON $
+            ActionInternalError (J.toJSON $ "invalid json: " <> e) requestInfo $ Just responseInfo
 
-      if | HTTP.statusIsSuccessful responseStatus  -> do
-             let expectingArray = isListType outputType
-                 addInternalToErr e = e{qeInternal = Just webhookResponseObject}
-             -- Incase any error, add webhook response in internal
-             modifyQErr addInternalToErr $ do
-               webhookResponse <- decodeValue responseValue
-               case webhookResponse of
-                 AWRArray objs -> do
-                   when (not expectingArray) $
-                     throwUnexpected "expecting object for action webhook response but got array"
-                   mapM_ validateResponseObject objs
-                 AWRObject obj -> do
-                   when expectingArray $
-                     throwUnexpected "expecting array for action webhook response but got object"
-                   validateResponseObject obj
-               pure (webhookResponse, mkSetCookieHeaders responseWreq)
+        Right responseValue -> do
+          let responseInfo = mkResponseInfo responseValue
+              addInternalToErr e =
+                let actionInternalError = J.toJSON $
+                      ActionInternalError (J.String "unexpected response") requestInfo $ Just responseInfo
+                in e{qeInternal = Just actionInternalError}
 
-         | HTTP.statusIsClientError responseStatus -> do
-             ActionWebhookErrorResponse message maybeCode <-
-               modifyErr ("webhook response: " <>) $ decodeValue responseValue
-             let code = maybe Unexpected ActionWebhookCode maybeCode
-                 qErr = QErr [] responseStatus message code Nothing
-             throwError qErr
+          if | HTTP.statusIsSuccessful responseStatus  -> do
+                 let expectingArray = isListType outputType
+                 modifyQErr addInternalToErr $ do
+                   webhookResponse <- decodeValue responseValue
+                   case webhookResponse of
+                     AWRArray objs -> do
+                       when (not expectingArray) $
+                         throwUnexpected "expecting object for action webhook response but got array"
+                       mapM_ validateResponseObject objs
+                     AWRObject obj -> do
+                       when expectingArray $
+                         throwUnexpected "expecting array for action webhook response but got object"
+                       validateResponseObject obj
+                   pure (webhookResponse, mkSetCookieHeaders responseWreq)
 
-         | otherwise ->
-             throw500WithDetail "internal error" webhookResponseObject
+             | HTTP.statusIsClientError responseStatus -> do
+                 ActionWebhookErrorResponse message maybeCode <-
+                   modifyQErr addInternalToErr $ decodeValue responseValue
+                 let code = maybe Unexpected ActionWebhookCode maybeCode
+                     qErr = QErr [] responseStatus message code Nothing
+                 throwError qErr
+
+             | otherwise -> do
+                 let err = J.toJSON $ "expecting 2xx or 4xx status code, but found "
+                           ++ show (HTTP.statusCode responseStatus)
+                 throw500WithDetail "internal error" $ J.toJSON $
+                   ActionInternalError err requestInfo $ Just responseInfo
     where
       throwUnexpected = throw400 Unexpected
 
