@@ -2,10 +2,13 @@
 
 ## Next release
 
-* server: use default values when reusing a query plan (fix #3773)
+### Bug fixes and improvements
 
+- server: use default values when reusing a query plan (fix #3773)
+- console: make GraphiQL Explorer taking the whole viewport
+- cli: remove irrelevant flags from init command (close #4508) (#4549)
 
-## Next release
+## `v1.2.0-beta.5`
 
 ### server: backend only insert permissions
 
