@@ -8,6 +8,8 @@
 package cli
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io/ioutil"
 	"net/url"
@@ -246,6 +248,12 @@ type ExecutionContext struct {
 	// NoColor indicates if the outputs shouldn't be colorized
 	NoColor bool
 
+	// InsecureSkipVerify indicates if TLS verification is disabled or not.
+	InsecureSkipTLSVerify bool
+	// CAPath is the path to a cert file for the certificate authority.
+	CAPath string
+	// TLS config object
+	TLSClientConfig *tls.Config
 	// Telemetry collects the telemetry data throughout the execution
 	Telemetry *telemetry.Data
 
@@ -295,6 +303,8 @@ func (ec *ExecutionContext) Prepare() error {
 	// set logger
 	ec.setupLogger()
 
+	ec.setTLSConfig()
+
 	// populate version
 	ec.setVersion()
 
@@ -342,6 +352,44 @@ func (ec *ExecutionContext) Prepare() error {
 	ec.Telemetry.ExecutionID = ec.ID
 
 	return nil
+}
+
+// setTLSConfig sets the TLS config
+func (ec *ExecutionContext) setTLSConfig() error {
+	if ec.InsecureSkipTLSVerify {
+		ec.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	} else if ec.CAPath != "" {
+		// Get the SystemCertPool, continue with an empty pool on error
+		rootCAs, _ := x509.SystemCertPool()
+		if rootCAs == nil {
+			rootCAs = x509.NewCertPool()
+		}
+
+		cert, err := ec.getCAData(ec.CAPath)
+		if err != nil {
+			return err
+		}
+		if ok := rootCAs.AppendCertsFromPEM(cert); !ok {
+			return errors.Errorf("Unable to append given CA cert.")
+		}
+		ec.TLSClientConfig = &tls.Config{
+			RootCAs:            rootCAs,
+			InsecureSkipVerify: true,
+		}
+	} else {
+		ec.TLSClientConfig = nil
+	}
+	return nil
+}
+
+// getCAData gets the cert from the given file location
+func (ec *ExecutionContext) getCAData(name string) ([]byte, error) {
+	ec.CAPath, _ = filepath.Abs(ec.CAPath)
+	cert, err := ioutil.ReadFile(ec.CAPath)
+	if err != nil {
+		return nil, errors.Errorf("error reading CA %s", ec.CAPath)
+	}
+	return cert, nil
 }
 
 // setupPlugins create and returns the inferred paths for hasura. By default, it assumes
@@ -420,6 +468,7 @@ func (ec *ExecutionContext) Validate() error {
 	if err != nil {
 		return errors.Wrap(err, "loading .env file failed")
 	}
+
 	// set names of config file
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
 

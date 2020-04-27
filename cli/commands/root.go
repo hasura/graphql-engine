@@ -78,6 +78,8 @@ func init() {
 	f.BoolVar(&ec.SkipUpdateCheck, "skip-update-check", false, "Skip automatic update check on command execution")
 	f.BoolVar(&ec.NoColor, "no-color", false, "do not colorize output (default: false)")
 	f.StringVar(&ec.Envfile, "envfile", ".env", ".env filename to load ENV vars from")
+	f.BoolVar(&ec.InsecureSkipTLSVerify, "insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
+	f.StringVar(&ec.CAPath, "certificate-authority", "", "cert filepath for loading the certificate authority")
 }
 
 // NewDefaultHasuraCommand creates the `hasura` command with default arguments
