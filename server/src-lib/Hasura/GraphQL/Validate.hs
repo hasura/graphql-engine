@@ -256,6 +256,7 @@ unValidateInpVal (AnnInpVal _ _ val) = fromMaybe G.VNull $
       PGValDouble d   -> G.VFloat $ realToFrac d
       -- TODO: Scientific is a danger zone; use its safe conv function.
       PGValNumeric sc -> G.VFloat $ realToFrac sc
+      PGValMoney m    -> G.VFloat $ realToFrac m
       PGValBoolean b  -> G.VBoolean b
       PGValChar t     -> toStringValue $ T.singleton t
       PGValVarchar t  -> toStringValue t
@@ -263,6 +264,8 @@ unValidateInpVal (AnnInpVal _ _ val) = fromMaybe G.VNull $
       PGValCitext t   -> toStringValue t
       PGValDate d     -> toStringValue $ T.pack $ showGregorian d
       PGValTimeStampTZ u -> toStringValue $ T.pack $
+                            formatTime defaultTimeLocale "%FT%T%QZ" u
+      PGValTimeStamp u   -> toStringValue $ T.pack $
                             formatTime defaultTimeLocale "%FT%T%QZ" u
       PGValTimeTZ (ZonedTimeOfDay tod tz) ->
         toStringValue $ T.pack (show tod ++ timeZoneOffsetString tz)

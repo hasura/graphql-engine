@@ -1,5 +1,4 @@
 {-# LANGUAGE ViewPatterns #-}
-
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
   , runRemoveRemoteSchema
@@ -12,10 +11,6 @@ module Hasura.RQL.DDL.RemoteSchema
   , addRemoteSchemaToCatalog
   ) where
 
-import           Hasura.EncJSON
-import           Hasura.Prelude
-import           Hasura.RQL.DDL.Deps
-
 import qualified Data.Aeson                        as J
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashSet                      as S
@@ -23,7 +18,11 @@ import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
 import qualified Database.PG.Query                 as Q
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
+import           Hasura.GraphQL.Schema.Merge
+import           Hasura.Prelude
+import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.Types
 import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types

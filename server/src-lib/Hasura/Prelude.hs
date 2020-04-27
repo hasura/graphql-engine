@@ -2,6 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.Prelude
   ( module M
+  , alphabet
   , alphaNumerics
   , onNothing
   , onJust
@@ -32,7 +33,8 @@ import           Control.Monad.Fail                as M (MonadFail)
 import           Control.Monad.Identity            as M
 import           Control.Monad.Reader              as M
 import           Control.Monad.State.Strict        as M
-import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..))
+import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..),
+                                                         execWriterT, runWriterT)
 import           Data.Align                        as M (Align (align, alignWith))
 import           Data.Align.Key                    as M (AlignWithKey (..))
 import           Data.Bool                         as M (bool)
@@ -77,8 +79,11 @@ import qualified GHC.Clock                         as Clock
 import qualified Test.QuickCheck                   as QC
 import           Unsafe.Coerce
 
+alphabet :: String
+alphabet = ['a'..'z'] ++ ['A'..'Z']
+
 alphaNumerics :: String
-alphaNumerics = ['a'..'z'] ++ ['A'..'Z'] ++ "0123456789 "
+alphaNumerics = alphabet ++ "0123456789"
 
 instance Arbitrary Text where
   arbitrary = T.pack <$> QC.listOf (QC.elements alphaNumerics)

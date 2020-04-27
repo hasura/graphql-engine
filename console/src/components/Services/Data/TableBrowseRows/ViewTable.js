@@ -2,74 +2,20 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import {
   vSetDefaults,
-  vMakeRequest,
   // vExpandHeading,
   fetchManualTriggers,
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
+  vMakeTableRequests,
 } from './ViewActions';
+import { checkIfTable } from '../../../Common/utils/pgUtils';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
-
-/*
-const genHeadings = headings => {
-  if (headings.length === 0) {
-    return [];
-  }
-
-  const heading = headings[0];
-  if (typeof heading === 'string') {
-    return [heading, ...genHeadings(headings.slice(1))];
-  }
-  if (typeof heading === 'object') {
-    if (!heading._expanded) {
-      const headingName =
-        heading.type === 'obj_rel' ? heading.lcol : heading.relname;
-      return [
-        { name: headingName, type: heading.type },
-        ...genHeadings(headings.slice(1)),
-      ];
-    }
-    if (heading.type === 'obj_rel') {
-      const subheadings = genHeadings(heading.headings).map(h => {
-        if (typeof h === 'string') {
-          return heading.relname + '.' + h;
-        }
-        return heading.relname + '.' + h.name;
-      });
-      return [...subheadings, ...genHeadings(headings.slice(1))];
-    }
-  }
-
-  throw 'Incomplete pattern match'; // eslint-disable-line no-throw-literal
-};
-
-const genRow = (row, headings) => {
-  if (headings.length === 0) {
-    return [];
-  }
-
-  const heading = headings[0];
-  if (typeof heading === 'string') {
-    return [row[heading], ...genRow(row, headings.slice(1))];
-  }
-  if (typeof heading === 'object') {
-    if (!heading._expanded) {
-      const rowVal = heading.type === 'obj_rel' ? row[heading.lcol] : '[...]';
-      return [rowVal, ...genRow(row, headings.slice(1))];
-    }
-    if (heading.type === 'obj_rel') {
-      const subrow = genRow(row[heading.relname], heading.headings);
-      return [...subrow, ...genRow(row, headings.slice(1))];
-    }
-  }
-
-  throw 'Incomplete pattern match'; // eslint-disable-line no-throw-literal
-};
-*/
+import { exists } from '../../../Common/utils/jsUtils';
+import { getPersistedPageSize } from './localStorageUtils';
 
 class ViewTable extends Component {
   constructor(props) {
@@ -90,11 +36,12 @@ class ViewTable extends Component {
   }
 
   getInitialData(tableName) {
-    const { dispatch } = this.props;
+    const { dispatch, currentSchema } = this.props;
+    const limit = getPersistedPageSize(tableName, currentSchema);
     Promise.all([
       dispatch(setTable(tableName)),
-      dispatch(vSetDefaults(tableName)),
-      dispatch(vMakeRequest()),
+      dispatch(vSetDefaults(limit)),
+      dispatch(vMakeTableRequests()),
       dispatch(fetchManualTriggers(tableName)),
     ]);
   }
@@ -121,7 +68,7 @@ class ViewTable extends Component {
   componentWillUnmount() {
     // Remove state data beloging to this table
     const dispatch = this.props.dispatch;
-    dispatch(vSetDefaults(this.props.tableName));
+    dispatch(vSetDefaults());
   }
 
   updateInvocationRow = row => {
@@ -162,6 +109,7 @@ class ViewTable extends Component {
       triggeredRow,
       triggeredFunction,
       location,
+      estimatedCount,
     } = this.props;
 
     // check if table exists
@@ -177,7 +125,7 @@ class ViewTable extends Component {
     const styles = require('../../../Common/Common.scss');
 
     // Is this a view
-    const isView = tableSchema.table_type !== 'BASE TABLE';
+    const isView = !checkIfTable(tableSchema);
 
     // Are there any expanded columns
     const viewRows = (
@@ -197,7 +145,7 @@ class ViewTable extends Component {
         lastSuccess={lastSuccess}
         schemas={schemas}
         curDepth={0}
-        count={count}
+        count={exists(count) ? count : estimatedCount}
         dispatch={dispatch}
         expandedRow={expandedRow}
         manualTriggers={manualTriggers}

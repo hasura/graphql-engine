@@ -4,13 +4,11 @@ import           Control.Exception                      (try)
 import           Control.Lens                           ((^.))
 import           Data.Aeson                             ((.:), (.:?))
 import           Data.Foldable                          (foldlM)
-import           Data.Text.Conversions
 import           Hasura.HTTP
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
-import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Parser          as G
@@ -20,11 +18,13 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
 
+import           Hasura.GraphQL.Schema.Merge
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.DDL.Headers                 (makeHeadersFromConf)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
 
 import qualified Hasura.GraphQL.Context                 as GC
 import qualified Hasura.GraphQL.Schema                  as GS
@@ -128,58 +128,11 @@ mergeRemoteSchema
   => GS.GCtxMap
   -> GS.GCtx
   -> m GS.GCtxMap
-mergeRemoteSchema ctxMap mergedRemoteGCtx = do
-  res <- forM (Map.toList ctxMap) $ \(role, gCtx) -> do
-    updatedGCtx <- mergeGCtx gCtx mergedRemoteGCtx
-    return (role, updatedGCtx)
-  return $ Map.fromList res
+mergeRemoteSchema ctxMap mergedRemoteGCtx =
+  flip Map.traverseWithKey ctxMap $ \_ schemaCtx ->
+    for schemaCtx $ \gCtx -> mergeGCtx gCtx mergedRemoteGCtx
 
-mergeGCtx
-  :: (MonadError QErr m)
-  => GS.GCtx
-  -> GS.GCtx
-  -> m GS.GCtx
-mergeGCtx gCtx rmMergedGCtx = do
-  let rmTypes = GS._gTypes rmMergedGCtx
-      hsraTyMap = GS._gTypes gCtx
-  GS.checkSchemaConflicts gCtx rmMergedGCtx
-  let newQR = mergeQueryRoot gCtx rmMergedGCtx
-      newMR = mergeMutRoot gCtx rmMergedGCtx
-      newSR = mergeSubRoot gCtx rmMergedGCtx
-      newTyMap = mergeTyMaps hsraTyMap rmTypes newQR newMR
-      updatedGCtx = gCtx { GS._gTypes = newTyMap
-                         , GS._gQueryRoot = newQR
-                         , GS._gMutRoot = newMR
-                         , GS._gSubRoot = newSR
-                         }
-  return updatedGCtx
-
-mergeQueryRoot :: GS.GCtx -> GS.GCtx -> VT.ObjTyInfo
-mergeQueryRoot a b = GS._gQueryRoot a <> GS._gQueryRoot b
-
-mergeMutRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
-mergeMutRoot a b = GS._gMutRoot a <> GS._gMutRoot b
-
-mergeSubRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
-mergeSubRoot a b = GS._gSubRoot a <> GS._gSubRoot b
-
-mergeTyMaps
-  :: VT.TypeMap
-  -> VT.TypeMap
-  -> VT.ObjTyInfo
-  -> Maybe VT.ObjTyInfo
-  -> VT.TypeMap
-mergeTyMaps hTyMap rmTyMap newQR newMR =
-  let newTyMap  = hTyMap <> rmTyMap
-      newTyMap' =
-        Map.insert (G.NamedType "query_root") (VT.TIObj newQR) newTyMap
-  in maybe newTyMap' (\mr -> Map.insert
-                              (G.NamedType "mutation_root")
-                              (VT.TIObj mr) newTyMap') newMR
-
-
--- parsing the introspection query result
-
+-- | Parsing the introspection query result
 newtype FromIntrospection a
   = FromIntrospection { fromIntrospection :: a }
   deriving (Show, Eq, Generic)
@@ -431,5 +384,4 @@ execRemoteGQ' manager userInfo reqHdrs q rsi opType = do
       HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
       HTTP.InvalidUrlException _url reason -> throw500 $ T.pack . show $ reason
 
-    userInfoToHdrs = userInfoToList userInfo
-      & map (CI.mk . unUTF8 . fromText *** unUTF8 . fromText)
+    userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo

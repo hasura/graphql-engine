@@ -7,17 +7,18 @@ module Hasura.Incremental.Internal.Dependency where
 import           Hasura.Prelude
 
 import qualified Data.Dependent.Map            as DM
+import qualified Data.URL.Template             as UT
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.URI.Extended          as N
-import qualified Data.URL.Template             as UT
 
-import           Data.Set                      (Set)
 import           Control.Applicative
 import           Data.Aeson                    (Value)
+import           Data.CaseInsensitive          (CI)
 import           Data.Functor.Classes          (Eq1 (..), Eq2 (..))
 import           Data.GADT.Compare
 import           Data.Int
 import           Data.Scientific               (Scientific)
+import           Data.Set                      (Set)
 import           Data.Vector                   (Vector)
 import           GHC.Generics                  ((:*:) (..), (:+:) (..), Generic (..), K1 (..),
                                                 M1 (..), U1 (..), V1)
@@ -171,6 +172,8 @@ instance (Cacheable k, Cacheable v) => Cacheable (HashMap k v) where
   unchanged accesses = liftEq2 (unchanged accesses) (unchanged accesses)
 instance (Cacheable a) => Cacheable (HashSet a) where
   unchanged = liftEq . unchanged
+instance (Cacheable a) => Cacheable (CI a) where
+  unchanged _ = (==)
 instance (Cacheable a) => Cacheable (Set a) where
   unchanged = liftEq . unchanged
 

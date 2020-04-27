@@ -36,20 +36,23 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-jsonPathToColExp :: (MonadError QErr m) => T.Text -> m S.SQLExp
+jsonPathToColExp :: (MonadError QErr m) => T.Text -> m (Maybe S.SQLExp)
 jsonPathToColExp t = case parseJSONPath t of
   Left s       -> throw400 ParseFailed $ T.pack $ "parse json path error: " ++ s
-  Right jPaths -> return $ S.SEArray $ map elToColExp jPaths
+  Right []     -> return Nothing
+  Right jPaths -> return $ Just $ S.SEArray $ map elToColExp jPaths
   where
     elToColExp (Key k)   = S.SELit k
     elToColExp (Index i) = S.SELit $ T.pack (show i)
 
 
 argsToColOp :: (MonadReusability m, MonadError QErr m) => ArgsMap -> m (Maybe RS.ColOp)
-argsToColOp args = maybe (return Nothing) toOp $ Map.lookup "path" args
-  where
-    toJsonPathExp = fmap (RS.ColOp S.jsonbPathOp) . jsonPathToColExp
-    toOp v = asPGColTextM v >>= traverse toJsonPathExp
+argsToColOp args = case Map.lookup "path" args of
+  Nothing -> return Nothing
+  Just txt -> do
+    mColTxt <- asPGColTextM txt
+    mColExps <- maybe (return Nothing) jsonPathToColExp mColTxt
+    return $ RS.ColOp S.jsonbPathOp <$> mColExps
 
 type AnnFlds = RS.AnnFldsG UnresolvedVal
 

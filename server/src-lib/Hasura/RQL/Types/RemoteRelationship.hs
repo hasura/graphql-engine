@@ -1,5 +1,6 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns           #-}
+{-# LANGUAGE RecordWildCards          #-}
 
 module Hasura.RQL.Types.RemoteRelationship
   ( RemoteRelationshipName(..)
@@ -166,7 +167,7 @@ instance FromJSON RemoteArguments where
                 | otherwise -> pure (G.VVariable (G.Variable (G.Name rest)))
               _ -> pure (G.VString (G.StringValue text))
           Number !scientificNum ->
-            pure (either G.VFloat G.VInt (floatingOrInteger scientificNum))
+            pure (either (\(_::Float) -> G.VFloat scientificNum) G.VInt (floatingOrInteger scientificNum))
           Bool !boolean -> pure (G.VBoolean boolean)
           Null -> pure G.VNull
 

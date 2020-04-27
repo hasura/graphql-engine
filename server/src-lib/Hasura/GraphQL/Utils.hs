@@ -87,7 +87,7 @@ jsonValueToGValue :: A.Value -> G.Value
 jsonValueToGValue = \case
   A.String t -> G.VString $ G.StringValue t
   -- TODO: Note the danger zone of scientific:
-  A.Number n -> either G.VFloat G.VInt (floatingOrInteger n)
+  A.Number n -> either (\(_::Float) -> G.VFloat n) G.VInt (floatingOrInteger n)
   A.Bool b -> G.VBoolean b
   A.Object o -> G.VObject $ G.ObjectValueG $
     map (uncurry G.ObjectFieldG . (G.Name *** jsonValueToGValue)) $ Map.toList o

@@ -22,7 +22,9 @@ export const permNoCheck = (tableName, query) => {
   cy.get(getElementFromAlias(`role0-${query}`)).click();
   // check the custom check textbox
   // cy.get(getElementFromAlias('toggle-row-permission')).click();
-  cy.get(getElementFromAlias('without-checks')).click();
+  cy.get(getElementFromAlias('without-checks'))
+    .first()
+    .click();
   // set filter { }
   // Toggle all columns in case
   if (query === 'select' || query === 'update') {
@@ -55,17 +57,26 @@ export const permCustomCheck = (tableName, query) => {
   cy.get(getElementFromAlias(`role0-${query}`)).click();
   // check the without checks textbox
   cy.get(getElementFromAlias('toggle-row-permission')).click();
-  cy.get(getElementFromAlias('custom-check')).click();
-  // Select column
-  cy.get(getElementFromAlias('qb-select'))
+  cy.get(getElementFromAlias('custom-check'))
     .first()
-    .select(getColName(0));
-  // Select operator
-  cy.get(getElementFromAlias('qb-select'))
-    .last()
-    .select(`${getColName(0)}._eq`);
+    .click();
+
+  cy.get(getElementFromAlias('qb_container'))
+    .first()
+    .within(() => {
+      // Select column
+      cy.get(getElementFromAlias('qb-select'))
+        .first()
+        .select(getColName(0));
+      // Select operator
+      cy.get(getElementFromAlias('qb-select'))
+        .last()
+        .select(`${getColName(0)}._eq`);
+    });
   // Set filter to 1
-  cy.get(getElementFromAlias('perm-check-textbox')).type('1');
+  cy.get(getElementFromAlias('perm-check-textbox'))
+    .first()
+    .type('1');
   // Save
   savePermission();
   // Validate
@@ -99,14 +110,14 @@ export const testPermissions = (tableName, check, isView) => {
   if (isView) {
     allQueryTypes = ['select'];
   }
-  const first = isView ? 'select' : 'insert';
+
   if (check === 'none') {
     allQueryTypes.forEach(query => {
       permNoCheck(tableName, query);
     });
   } else {
     allQueryTypes.forEach(query => {
-      permCustomCheck(tableName, query, first);
+      permCustomCheck(tableName, query);
     });
   }
 };

@@ -28,6 +28,7 @@ import qualified Language.Haskell.TH.Syntax         as TH
 import qualified Network.URI                        as N
 
 import           Data.List.Extended                 (duplicates)
+import           Data.Scientific
 import           Test.QuickCheck
 
 genReplaceMetadata :: Gen ReplaceMetadata
@@ -89,6 +90,9 @@ instance Arbitrary ComputedField.ComputedFieldDefinition where
 instance Arbitrary ComputedFieldMeta where
   arbitrary = genericArbitrary
 
+instance Arbitrary Scientific where
+  arbitrary = ((fromRational . toRational) :: Int -> Scientific) <$> arbitrary
+
 instance Arbitrary J.Value where
   arbitrary = sized sizedArbitraryValue
     where
@@ -98,7 +102,7 @@ instance Arbitrary J.Value where
         where
           n' = n `div` 2
           boolean = J.Bool <$> arbitrary
-          number = (J.Number . fromRational . toRational :: Int -> J.Value) <$> arbitrary
+          number = J.Number <$> arbitrary
           string = J.String <$> arbitrary
           array = J.Array . V.fromList <$> arbitrary
           object' = J.Object <$> arbitrary
@@ -276,7 +280,10 @@ instance Arbitrary ArgumentName where
 instance Arbitrary ArgumentDefinition where
   arbitrary = genericArbitrary
 
-instance Arbitrary ActionKind where
+instance Arbitrary ActionMutationKind where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ActionType where
   arbitrary = genericArbitrary
 
 instance (Arbitrary a) => Arbitrary (ActionDefinition a) where

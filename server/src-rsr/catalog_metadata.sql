@@ -8,7 +8,7 @@ select
     'functions', functions.items,
     'allowlist_collections', allowlist.item,
     'computed_fields', computed_field.items,
-    'custom_types', coalesce((select custom_types from hdb_catalog.hdb_custom_types), '{}'),
+    'custom_types', custom_types.item,
     'actions', actions.items,
     'remote_relationships', remote_relationships.items
   )
@@ -174,6 +174,15 @@ from
         where function_name = cc.function_name and function_schema = cc.function_schema
       ) fi on 'true'
   ) as computed_field,
+  (
+    select
+      json_build_object(
+        'custom_types',
+         coalesce((select custom_types from hdb_catalog.hdb_custom_types), '{}'),
+        'pg_scalars', -- See Note [Postgres scalars in custom types]
+         coalesce((select json_agg(typname) from pg_catalog.pg_type where typtype = 'b'), '[]')
+      ) as item
+  ) as custom_types,
   (
     select
       coalesce(

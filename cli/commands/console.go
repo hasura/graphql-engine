@@ -4,7 +4,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
@@ -66,9 +66,10 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
-	v.BindPFlag("endpoint", f.Lookup("endpoint"))
-	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
-	v.BindPFlag("access_key", f.Lookup("access-key"))
+	util.BindPFlag(v, "endpoint", f.Lookup("endpoint"))
+	util.BindPFlag(v, "admin_secret", f.Lookup("admin-secret"))
+	util.BindPFlag(v, "access_key", f.Lookup("access-key"))
+
 	return consoleCmd
 }
 
@@ -108,7 +109,7 @@ func (o *ConsoleOptions) Run() error {
 	consoleAssetsVersion := templateProvider.GetAssetsVersion(o.EC.Version)
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
-	adminSecretHeader := migrate.GetAdminSecretHeaderName(o.EC.Version)
+	adminSecretHeader := cli.GetAdminSecretHeaderName(o.EC.Version)
 	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":         "http://" + o.Address,
 		"apiPort":         o.APIPort,
@@ -116,7 +117,7 @@ func (o *ConsoleOptions) Run() error {
 		"serverVersion":   o.EC.Version.GetServerVersion(),
 		"dataApiUrl":      o.EC.Config.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
-		"hasAccessKey":    adminSecretHeader == migrate.XHasuraAccessKey,
+		"hasAccessKey":    adminSecretHeader == cli.XHasuraAccessKey,
 		"adminSecret":     o.EC.Config.ServerConfig.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
@@ -151,7 +152,7 @@ func (o *ConsoleOptions) Run() error {
 		Address:                 o.Address,
 		SignalChanConsoleServer: o.ConsoleServerInterruptSignal,
 		SignalChanAPIServer:     o.APIServerInterruptSignal,
-		WG: o.WG,
+		WG:                      o.WG,
 	}
 
 	return console.Serve(serveOpts)

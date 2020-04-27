@@ -21,6 +21,7 @@ import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
 import           Hasura.SQL.Types                       ((<<>))
 
 import qualified Data.Aeson                             as A
