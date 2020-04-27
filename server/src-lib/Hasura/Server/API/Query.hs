@@ -1,5 +1,7 @@
+-- | The RQL query ('/v1/query')
 {-# LANGUAGE NamedFieldPuns #-}
-module Hasura.Server.Query where
+
+module Hasura.Server.API.Query where
 
 import           Control.Lens
 import           Data.Aeson
@@ -36,6 +38,7 @@ import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
+import           Hasura.Session
 
 
 data RQLQueryV1

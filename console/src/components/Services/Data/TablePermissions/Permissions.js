@@ -28,7 +28,9 @@ import {
   permRemoveMultipleRoles,
   permSetApplySamePerm,
   permDelApplySamePerm,
+  permToggleBackendOnly,
   applySamePermissionsBulk,
+  isQueryTypeBackendOnlyCompatible,
   SET_PRESET_VALUE,
   DELETE_PRESET,
   X_HASURA_CONST,
@@ -42,6 +44,7 @@ import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
+import Toggle from '../../../Common/Toggle/Toggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
 import {
   fetchFunctionInit,
@@ -79,6 +82,7 @@ import {
   QUERY_TYPES,
 } from '../../../Common/utils/pgUtils';
 import { showErrorNotification } from '../../Common/Notification';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
   getFilterQueries,
   replaceLegacyOperators,
@@ -582,7 +586,7 @@ class Permissions extends Component {
         sectionClasses += ' ' + styles.disabled;
       }
 
-      const getSectionHeader = (title, toolTip, sectionStatus) => {
+      const getSectionHeader = (title, toolTip, sectionStatus, knowMoreRef) => {
         let sectionStatusHtml;
         if (sectionStatus) {
           sectionStatusHtml = (
@@ -592,9 +596,20 @@ class Permissions extends Component {
           );
         }
 
+        let knowMoreHtml;
+        if (knowMoreRef) {
+          knowMoreHtml = (
+            <span
+              className={`${styles.add_mar_left_small} ${styles.sectionStatus}`}
+            >
+              <KnowMoreLink href={knowMoreRef} />
+            </span>
+          );
+        }
+
         return (
           <div>
-            {addTooltip(title, toolTip)} {sectionStatusHtml}
+            {addTooltip(title, toolTip)} {knowMoreHtml} {sectionStatusHtml}
           </div>
         );
       };
@@ -1812,6 +1827,50 @@ class Permissions extends Component {
         );
       };
 
+      const getBackendOnlySection = () => {
+        if (!isQueryTypeBackendOnlyCompatible(permissionsState.query)) {
+          return null;
+        }
+        const tooltip = (
+          <Tooltip id="tooltip-backend-only">
+            When enabled, this {permissionsState.query} mutation is accessible
+            only via "trusted backends"
+          </Tooltip>
+        );
+        const isBackendOnly = !!(
+          permissionsState[permissionsState.query] &&
+          permissionsState[permissionsState.query].backend_only
+        );
+        const backendStatus = isBackendOnly ? 'enabled' : 'disabled';
+        return (
+          <CollapsibleToggle
+            title={getSectionHeader(
+              'Backend only',
+              tooltip,
+              backendStatus,
+              'https://docs.hasura.io/1.0/graphql/manual/auth/authorization/permission-rules.html#backend-only-inserts'
+            )}
+            useDefaultTitleStyle
+            testId={'toggle-backend-only'}
+          >
+            <div
+              className={`${styles.editPermsSection} ${styles.display_flex}`}
+            >
+              <div
+                className={`${styles.display_flex} ${styles.add_mar_right_mid}`}
+              >
+                <Toggle
+                  checked={isBackendOnly}
+                  onChange={() => dispatch(permToggleBackendOnly())}
+                  icons={false}
+                />
+              </div>
+              <span>Allow from backends only</span>
+            </div>
+          </CollapsibleToggle>
+        );
+      };
+
       return (
         <div
           id={'permission-edit-section'}
@@ -1840,6 +1899,7 @@ class Permissions extends Component {
             {/*{getUpsertSection()}*/}
             {getPresetsSection('insert')}
             {getPresetsSection('update')}
+            {getBackendOnlySection()}
             {getButtonsSection()}
             {getClonePermsSection()}
           </div>
