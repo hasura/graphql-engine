@@ -4,8 +4,8 @@
 
 .. _cli_reference:
 
-Configuration reference 
-=======================
+Hasura CLI Configuration reference 
+==================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -134,10 +134,9 @@ The configuration can also be set in the form of environment variables:
 
 .. list-table::
    :header-rows: 1
-   :widths: 25 20 30
 
    * - ENV variable
-     - Configuration file key
+     - Config file key
      - Description
    
    * - ``HASURA_GRAPHQL_VERSION``
@@ -233,7 +232,7 @@ project root directory.
 
 .. admonition:: Supported from
 
-   .env file support available since version ``v1.2.0-beta.5``.
+   ``.env`` file support is available since version ``v1.2.0-beta.5``.
 
    .. .env file is supported in versions ``v.1.2.0`` and above.
 
