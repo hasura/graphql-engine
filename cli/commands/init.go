@@ -110,20 +110,25 @@ func (o *InitOptions) Run() error {
 			o.InitDir = defaultDirectory
 		}
 	}
-	if o.InitDir == "." {
-		dir, err := os.Getwd()
-		if err != nil {
-			return errors.Wrap(err, "error getting current working directory")
-		}
+
+	cwdir, err := os.Getwd()
+	if err != nil {
+		return errors.Wrap(err, "error getting current working directory")
+	}
+	initPath, err := filepath.Abs(o.InitDir)
+	if err != nil {
+		return err
+	}
+	if initPath == cwdir {
 		// check if pwd is filesystem root
-		if err := cli.CheckFilesystemBoundary(dir); err != nil {
+		if err := cli.CheckFilesystemBoundary(cwdir); err != nil {
 			return errors.Wrap(err, "can't initialise hasura project in filesystem root")
 		}
 		// check if the current directory is already a hasura project
-		if err := cli.ValidateDirectory(dir); err == nil {
+		if err := cli.ValidateDirectory(cwdir); err == nil {
 			return errors.Errorf("current working directory is already a hasura project directory")
 		}
-		o.EC.ExecutionDirectory = dir
+		o.EC.ExecutionDirectory = cwdir
 		infoMsg = fmt.Sprintf(`hasura project initialised. execute the following command to continue:
   hasura console
 `)
@@ -141,7 +146,7 @@ func (o *InitOptions) Run() error {
 	}
 
 	// create template files
-	err := o.createTemplateFiles()
+	err = o.createTemplateFiles()
 	if err != nil {
 		return err
 	}
