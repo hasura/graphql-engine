@@ -128,7 +128,7 @@ export const Deletetable = (name: string) => {
     .its('prompt')
     .should('be.called');
   cy.wait(15000);
-  validateCT(name, ResultType.SUCCESS);
+  validateCT(name, ResultType.FAILURE);
 };
 
 export const passRTDeleteTables = () => {
@@ -190,13 +190,13 @@ export const passRTDeleteRelationships = () => {
   validateColumn(
     'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
-    ResultType.SUCCESS
+    ResultType.FAILURE
   );
   delRel('article_table_rt', 'comments');
   validateColumn(
     'article_table_rt',
     ['title', { name: 'comments', columns: ['comment'] }],
-    ResultType.SUCCESS
+    ResultType.FAILURE
   );
 };
 
@@ -273,7 +273,7 @@ export const failRTAddSuggestedRel = () => {
   validateColumn(
     'article_table_rt',
     ['title', { name: 'author', columns: ['name'] }],
-    ResultType.SUCCESS
+    ResultType.FAILURE
   );
   cy.get(getElementFromAlias('article_table_rt')).click();
   cy.get(getElementFromAlias('table-relationships')).click();
