@@ -137,18 +137,21 @@ The data is sent to Hasura's servers addressed by ``telemetry.hasura.io``.
 How do I turn off telemetry (opt-out)?
 --------------------------------------
 
-You can turn off telemetry on the server and on the console hosted by the server
-by setting the following environment variable on the server or by using
-the flag ``--enable-telemetry=false``:
+Disable server telemetry
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: bash
+You can turn off telemetry on **the server and on the console hosted by the server**
+by setting the env variable ``HASURA_GRAPHQL_ENABLE_TELEMETRY=false`` or the flag
+``--enable-telemetry=false`` on the server.
 
-   HASURA_GRAPHQL_ENABLE_TELEMETRY=false
+Disable CLI telemetry
+~~~~~~~~~~~~~~~~~~~~~
 
-In order to turn off telemetry on the CLI and on the console served by the CLI,
-you can set the same environment varibale on the machine running CLI.
-You can also set ``"enable_telemetry": false`` in the JSON file created
-by the CLI at ``~/.hasura/config.json`` to perisist the setting.
+You can turn off on **the CLI and on the console served by the CLI**
+by setting the env variable ``HASURA_GRAPHQL_ENABLE_TELEMETRY=false`` on the
+machine running the CLI. You can also set ``"enable_telemetry": false`` in the
+JSON config file created by the CLI at ``~/.hasura/config.json`` to persist the
+setting.
 
 Privacy Policy
 --------------
