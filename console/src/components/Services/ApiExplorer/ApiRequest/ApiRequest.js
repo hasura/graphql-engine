@@ -526,7 +526,11 @@ class ApiRequest extends Component {
           useDefaultTitleStyle
         >
           <div className={styles.responseTable + ' ' + styles.remove_all_pad}>
-            <table className={'table ' + styles.tableBorder}>
+            <table
+              className={
+                'table ' + styles.tableBorder + ' ' + styles.remove_margin
+              }
+            >
               <thead>
                 <tr>
                   <th className={styles.wd4 + ' ' + styles.headerHeading} />

@@ -305,10 +305,6 @@ table tbody tr th {
   }
 }
 
-.apiExplorerFlex {
-  display: flex;
-}
-
 .collectionWrapper {
   padding-top: 25px;
   background-color: #f8f8f8;
@@ -375,54 +371,6 @@ input {
 
 .header_path_input:focus {
   box-shadow: none;
-}
-
-.ApiExplorerTable {
-  margin-bottom: 0;
-
-  thead {
-    tr {
-      th {
-        border-bottom: 0;
-        padding: 8px;
-      }
-
-      .ApiExplorerTableSuccess {
-        background-color: #fff;
-      }
-
-      .ApiExplorerTableDefault {
-        background-color: #f3f3f3;
-      }
-
-      td {
-        padding: 8px;
-        width: 50%;
-      }
-    }
-  }
-
-  tbody {
-    tr {
-      th {
-        border-bottom: 0;
-        padding: 8px;
-      }
-
-      td {
-        padding: 8px;
-        width: 50%;
-      }
-
-      .ApiExplorerTableSuccess {
-        background-color: #fff;
-      }
-
-      .ApiExplorerTableDefault {
-        background-color: #f3f3f3;
-      }
-    }
-  }
 }
 
 .padd_left_remove {
@@ -1418,12 +1366,6 @@ code {
 .flexColumn {
   display: flex;
   flex-direction: column;
-}
-
-.apiRequestBody {
-  margin: 20px 0;
-  height: 100%;
-  min-height: 60vh;
 }
 
 /* container height subtracting top header and bottom scroll bar */
