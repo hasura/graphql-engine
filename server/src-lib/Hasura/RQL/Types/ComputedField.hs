@@ -52,8 +52,7 @@ data FunctionSessionArgument
 instance Cacheable FunctionSessionArgument
 
 instance ToJSON FunctionSessionArgument where
-  -- TODO is this the right JSON to output?
-  toJSON (FunctionSessionArgument argName _) = object ["name" .= argName]
+  toJSON (FunctionSessionArgument argName _) = toJSON argName
 
 data ComputedFieldReturn
   = CFRScalar !PGScalarType
