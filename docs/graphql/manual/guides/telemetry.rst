@@ -147,7 +147,7 @@ by setting the env variable ``HASURA_GRAPHQL_ENABLE_TELEMETRY=false`` or the fla
 Disable CLI telemetry
 ~~~~~~~~~~~~~~~~~~~~~
 
-You can turn off on **the CLI and on the console served by the CLI**
+You can turn off telemetry on **the CLI and on the console served by the CLI**
 by setting the env variable ``HASURA_GRAPHQL_ENABLE_TELEMETRY=false`` on the
 machine running the CLI. You can also set ``"enable_telemetry": false`` in the
 JSON config file created by the CLI at ``~/.hasura/config.json`` to persist the
