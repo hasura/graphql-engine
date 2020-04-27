@@ -10,14 +10,14 @@ const filterEventsBlockList = [
   'RNS_REMOVE_ALL_NOTIFICATIONS',
 ];
 
-const filterPayloadAllowList = [];
+const filterPayloadAllowList: unknown[] = [];
 
 const DATA_PATH = '/data';
 const API_EXPLORER_PATH = '/api-explorer';
 const REMOTE_SCHEMAS_PATH = '/remote-schemas';
 const EVENTS_PATH = '/events';
 
-const dataHandler = path => {
+const dataHandler = (path: string): string => {
   return (
     DATA_PATH +
     path
@@ -34,25 +34,25 @@ const dataHandler = path => {
   );
 };
 
-const apiExplorerHandler = () => {
+const apiExplorerHandler = (): string => {
   return API_EXPLORER_PATH;
 };
 
-const remoteSchemasHandler = path => {
+const remoteSchemasHandler = (path: string): string => {
   return (
     REMOTE_SCHEMAS_PATH +
     path.replace(/(\/manage\/)[^/]*(\/\w+.*)$/, '$1REMOTE_SCHEMA_NAME$2')
   );
 };
 
-const eventsHandler = path => {
+const eventsHandler = (path: string): string => {
   return (
     EVENTS_PATH +
     path.replace(/(\/manage\/triggers\/)[^/]*(\/\w+.*)$/, '$1TRIGGER_NAME$2')
   );
 };
 
-const sanitiseUrl = path => {
+const sanitiseUrl = (path: string): string => {
   path = path.replace(new RegExp(globals.urlPrefix, 'g'), '');
   if (path.indexOf(DATA_PATH) === 0) {
     return dataHandler(path.slice(DATA_PATH.length));
