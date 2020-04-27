@@ -526,7 +526,11 @@ class ApiRequest extends Component {
           useDefaultTitleStyle
         >
           <div className={styles.responseTable + ' ' + styles.remove_all_pad}>
-            <table className={'table ' + styles.tableBorder}>
+            <table
+              className={
+                'table ' + styles.tableBorder + ' ' + styles.remove_margin
+              }
+            >
               <thead>
                 <tr>
                   <th className={styles.wd4 + ' ' + styles.headerHeading} />
@@ -558,7 +562,7 @@ class ApiRequest extends Component {
       switch (this.props.bodyType) {
         case 'graphql':
           return (
-            <div className={styles.add_mar_top}>
+            <div className={styles.apiRequestBody}>
               <GraphiQLWrapper
                 data={this.props}
                 numberOfTables={this.props.numberOfTables}
@@ -746,7 +750,9 @@ class ApiRequest extends Component {
     };
 
     return (
-      <div className={styles.apiRequestWrapper}>
+      <div
+        className={`${styles.apiRequestWrapper} ${styles.height100} ${styles.flexColumn}`}
+      >
         {getGraphQLEndpointBar()}
         {getHeaderTable()}
         {getRequestBody()}
