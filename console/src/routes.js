@@ -21,7 +21,7 @@ import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 
 import { getActionsRouter } from './components/Services/Actions';
 
-import { getEventsRouter } from './components/Services/Triggers';
+import { getEventsRouter } from './components/Services/Events';
 
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
 

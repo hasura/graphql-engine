@@ -1,2 +1,2 @@
-export const appPrefix = '/triggers';
-export const pageTitle = 'Triggers';
+export const appPrefix = '/events';
+export const pageTitle = 'Events';

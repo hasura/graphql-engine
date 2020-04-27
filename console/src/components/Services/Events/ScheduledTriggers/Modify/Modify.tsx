@@ -8,7 +8,7 @@ import {
   getEventTargetValue,
 } from '../../../../Common/utils/jsUtils';
 import { parseServerScheduledTrigger } from '../utils';
-import styles from '../../Triggers.scss';
+import styles from '../../Events.scss';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import Helmet from 'react-helmet';
 import Modal from '../../../../Common/Modal/Modal';

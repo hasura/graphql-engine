@@ -15,7 +15,7 @@ import CronBuilder from '../../../../Common/CronBuilder/CronBuilder';
 import { stripNonStandardElements } from '../../../../Common/CronBuilder/utils';
 import Modal from '../../../../Common/Modal/Modal';
 import { addScheduledTrigger } from '../../ServerIO';
-import { TriggersState } from '../../state';
+import { EventsState } from '../../state';
 
 type AddScheduledTriggerProps = {
   dispatch: any;
@@ -274,9 +274,9 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
   );
 };
 
-const mapStateToProps = (state: { triggers: TriggersState }) => {
+const mapStateToProps = (state: { events: EventsState }) => {
   return {
-    ...state.triggers,
+    ...state.events,
   };
 };
 

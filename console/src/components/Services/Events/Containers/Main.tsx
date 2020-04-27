@@ -7,7 +7,13 @@ import LeftSidebar from '../Sidebar/Sidebar';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { Triggers } from '../Types';
 import { appPrefix } from '../constants';
-import { TriggersState } from '../state';
+import { EventsState } from '../state';
+import {
+  getScheduledEventsLandingRoute,
+  getDataEventsLandingRoute,
+  isScheduledEventsRoute,
+  isDataEventsRoute
+} from '../../../Common/utils/routesUtils';
 
 interface TriggersContainerProps extends React.ComponentProps<'div'> {
   triggers: Triggers;
@@ -26,14 +32,13 @@ const Container: React.FC<TriggersContainerProps> = props => {
       <li
         role="presentation"
         className={
-          currentLocation.includes('triggers/event') ? styles.active : ''
+          isDataEventsRoute(currentLocation) ? styles.active : ''
         }
       >
-        <Link className={styles.linkBorder} to={appPrefix + '/events/manage'}>
+        <Link className={styles.linkBorder} to={getDataEventsLandingRoute()}>
           Event Triggers
         </Link>
         <LeftSidebar
-          appPrefix={appPrefix}
           triggers={triggers.event}
           currentTrigger={{ name: '' }}
           service={'event triggers'}
@@ -42,17 +47,16 @@ const Container: React.FC<TriggersContainerProps> = props => {
       <li
         role="presentation"
         className={
-          currentLocation.includes('triggers/scheduled') ? styles.active : ''
+          isScheduledEventsRoute(currentLocation) ? styles.active : ''
         }
       >
         <Link
           className={styles.linkBorder}
-          to={appPrefix + '/scheduled/manage'}
+          to={getScheduledEventsLandingRoute()}
         >
           Scheduled Triggers
         </Link>
         <LeftSidebar
-          appPrefix={appPrefix}
           triggers={triggers.scheduled}
           currentTrigger={{ name: '' }}
           service={'scheduled triggers'}
@@ -72,9 +76,9 @@ const Container: React.FC<TriggersContainerProps> = props => {
   );
 };
 
-const mapStateToProps = (state: { triggers: TriggersState }) => {
+const mapStateToProps = (state: { events: EventsState }) => {
   return {
-    ...state.triggers,
+    ...state.events,
   };
 };
 

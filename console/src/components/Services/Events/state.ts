@@ -1,6 +1,6 @@
 import { Triggers } from './Types';
 
-export type TriggersState = {
+export type EventsState = {
   triggers: Triggers;
   currentTrigger: string;
   loading: {
@@ -11,7 +11,7 @@ export type TriggersState = {
   };
 };
 
-const state: TriggersState = {
+const state: EventsState = {
   triggers: {
     scheduled: [],
     event: [],

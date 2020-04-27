@@ -9,15 +9,15 @@ interface LeftSidebarItem {
 interface LeftSidebarSectionProps extends React.ComponentProps<'div'> {
   items: LeftSidebarItem[];
   currentItem: LeftSidebarItem;
+  getServiceEntityLink: (s: string) => string,
   service: string;
-  appPrefix: string;
 }
 
 const getLeftSidebarSection = ({
   items = [],
   currentItem,
   service,
-  appPrefix,
+  getServiceEntityLink
 }: LeftSidebarSectionProps) => {
   // TODO needs refactor to acoomodate other services
   const serviceIdentifiers: { [svc: string]: string } = {
@@ -63,7 +63,7 @@ const getLeftSidebarSection = ({
       childList = (
         <li
           className={styles.noChildren}
-          data-test="actions-sidebar-no-actions"
+          data-test="sidebar-no-services"
         >
           <i>No {service} available</i>
         </li>
@@ -82,12 +82,7 @@ const getLeftSidebarSection = ({
             data-test={`action-sidebar-links-${i + 1}`}
           >
             <Link
-              to={
-                appPrefix +
-                `/${serviceIdentifiers[service]}/` +
-                a.name +
-                '/modify'
-              }
+              to={getServiceEntityLink(a.name)}
               data-test={a.name}
             >
               <i

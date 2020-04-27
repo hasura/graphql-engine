@@ -6,7 +6,7 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
 import { setCurrentTrigger } from '../reducer';
 import { Triggers } from '../Types';
-import styles from '../Triggers.scss';
+import styles from '../Events.scss';
 
 interface ScheduledTriggerProps extends React.ComponentProps<'div'> {
   triggerName: string;

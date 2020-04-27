@@ -1,7 +1,8 @@
 import React from 'react';
 import Button from '../../../Common/Button/Button';
-import styles from '../Triggers.scss';
+import styles from '../Events.scss';
 import { push } from 'react-router-redux';
+import { getAddSTRoute } from '../../../Common/utils/routesUtils';
 
 const Landing = ({ dispatch }: { dispatch: any }) => {
   return (
@@ -16,7 +17,7 @@ const Landing = ({ dispatch }: { dispatch: any }) => {
           <Button
             color="yellow"
             size="sm"
-            onClick={() => dispatch(push('/triggers/scheduled/add'))}
+            onClick={() => dispatch(push(getAddSTRoute()))}
           >
             Create
           </Button>
