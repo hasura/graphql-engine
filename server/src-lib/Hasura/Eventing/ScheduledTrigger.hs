@@ -365,6 +365,38 @@ retryOrMarkError se@ScheduledEventFull {..} err = do
         WHERE id = $1
       |] (Identity sefId) True
 
+{- Note [Scheduled event lifecycle]
+
+A scheduled event can be in one of the five following states at any time:
+
+1. Delivered
+2. Cancelled
+3. Error
+4. Locked
+5. Dead
+
+A scheduled event is marked as delivered when the scheduled event is processed
+successfully.
+
+A scheduled event is marked as error when while processing the scheduled event
+the webhook returns an error and the retries have exhausted (user configurable)
+it's marked as error.
+
+A scheduled event will be in the locked state when the graphql-engine fetches it
+from the database to process it. After processing the event, the graphql-engine
+will unlock it. This state is used to prevent multiple graphql-engine instances
+running on the same database to process the same event concurrently.
+
+A scheduled event will be marked as dead, when the difference between the
+current time and the scheduled time is greater than the tolerance of the event.
+
+A scheduled event will be in the cancelled state, if the `cancel_scheduled_event`
+API is called against a particular scheduled event.
+
+The graphql-engine will not consider those events which have been delivered,
+cancelled, marked as error or in the dead state to process.
+-}
+
 processSuccess
   :: (MonadIO m, MonadError QErr m)
   => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> HTTPResp a -> m ()
