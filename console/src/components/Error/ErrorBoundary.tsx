@@ -10,15 +10,15 @@ import PageNotFound, { NotFoundError } from './PageNotFound';
 import RuntimeError from './RuntimeError';
 import { registerRunTimeError } from '../Main/Actions';
 
-export type DefaultState = {
-  inconsistentObjects: Array<object>;
+export type Metadata = {
+  inconsistentObjects: object[];
   ongoingRequest: boolean;
-  allowedQueries: Array<object>;
-}
+  allowedQueries: object[];
+};
 
 export interface ErrorBoundaryProps {
-  metadata: DefaultState;
-  dispatch: (arg: object) => Promise<object>;
+  metadata: Metadata;
+  dispatch: (arg: unknown) => Promise<unknown>; // TODO update when Redux is migrated to TS;
 }
 
 type ErrorBoundaryState = {
@@ -26,25 +26,17 @@ type ErrorBoundaryState = {
   info: object | null;
   error: Error | null;
   type: string;
-} 
+};
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
-  initialState: ErrorBoundaryState = {
-    hasError: false,
-    info: null,
-    error: null,
-    type: '500',
-  };
-
+class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
 
     this.state = this.initialState;
   }
-
-  resetState = () => {
-    this.setState({ ...this.initialState });
-  };
 
   componentDidCatch(error: Error, info: object) {
     const { dispatch } = this.props;
@@ -56,7 +48,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
       });
     }
 
-    this.setState({ hasError: true, info: info, error: error });
+    this.setState({ hasError: true, info, error });
 
     // trigger telemetry
     dispatch(
@@ -77,9 +69,20 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
     );
   }
 
+  initialState = {
+    hasError: false,
+    info: null,
+    error: null,
+    type: '500',
+  };
+
+  resetState = () => {
+    this.setState({ ...this.initialState });
+  };
+
   render() {
     const { metadata } = this.props;
-    const { hasError, type, error } = this.state as ErrorBoundaryState;
+    const { hasError, type, info, error } = this.state;
 
     if (hasError && metadata.ongoingRequest) {
       return (
@@ -93,7 +96,11 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
       return type === '404' ? (
         <PageNotFound resetCallback={this.resetState} />
       ) : (
-        <RuntimeError resetCallback={this.resetState} error={error} />
+        <RuntimeError
+          resetCallback={this.resetState}
+          error={error}
+          info={info}
+        />
       );
     }
 
