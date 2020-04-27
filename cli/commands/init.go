@@ -91,32 +91,40 @@ type InitOptions struct {
 
 func (o *InitOptions) Run() error {
 	var infoMsg string
+	// prompt for init directory if it's not set already
+	if o.InitDir == "" {
+		p := promptui.Prompt{
+			Label:   "Name of project directory ",
+			Default: defaultDirectory,
+		}
+		r, err := p.Run()
+		if err != nil {
+			return handlePromptError(err)
+		}
+		if strings.TrimSpace(r) != "" {
+			o.InitDir = r
+		} else {
+			o.InitDir = defaultDirectory
+		}
+	}
 	if o.InitDir == "." {
 		dir, err := os.Getwd()
 		if err != nil {
-			return errors.Wrap(err, "error getting present working directory")
+			return errors.Wrap(err, "error getting current working directory")
+		}
+		// check if pwd is filesystem root
+		if err := cli.CheckFilesystemBoundary(dir); err != nil {
+			return errors.Wrap(err, "can't initialise hasura project in filesystem root")
+		}
+		// check if the current directory is already a hasura project
+		if err := cli.ValidateDirectory(dir); err == nil {
+			return errors.Errorf("current working directory is already a hasura project directory")
 		}
 		o.EC.ExecutionDirectory = dir
 		infoMsg = fmt.Sprintf(`hasura project initialised. execute the following command to continue:
   hasura console
 `)
 	} else {
-		// prompt for init directory if it's not set already
-		if o.InitDir == "" {
-			p := promptui.Prompt{
-				Label:   "Name of project directory ",
-				Default: defaultDirectory,
-			}
-			r, err := p.Run()
-			if err != nil {
-				return handlePromptError(err)
-			}
-			if strings.TrimSpace(r) != "" {
-				o.InitDir = r
-			} else {
-				o.InitDir = defaultDirectory
-			}
-		}
 		// create execution directory
 		err := o.createExecutionDirectory()
 		if err != nil {
