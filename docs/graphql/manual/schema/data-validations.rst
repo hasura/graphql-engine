@@ -64,7 +64,7 @@ error is thrown:
   Check constraint violation. new row for relation "authors" violates check
   constraint "authors_rating_check"
 
-Learn more about `Postgres check constraints <https://www.postgresql.org/docs/9.4/ddl-constraints.html>`__.
+Learn more about `Postgres check constraints <https://www.postgresql.org/docs/current/ddl-constraints.html>`__.
 
 Using Postgres triggers
 -----------------------
@@ -114,6 +114,8 @@ the following error:
   If you create the trigger function from the SQL tab in the Hasura console,
   make sure that the ``Track this`` box is **not** checked since trigger functions
   are not trackable.
+
+Learn more about `Postgres triggers <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__.
 
 Using Hasura permissions
 ------------------------
