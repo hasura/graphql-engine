@@ -7,7 +7,29 @@ import { isEmpty } from './components/Common/utils/jsUtils';
 /* set helper tools into window */
 
 import sqlFormatter from './helpers/sql-formatter.min';
-import hljs from './helpers/highlight.min';
+import hljs from 'highlightjs';
+
+declare global {
+  interface Window {
+    __env: {
+      nodeEnv: string;
+      apiHost: string;
+      apiPort: string;
+      dataApiUrl: string;
+      urlPrefix: string;
+      adminSecret: string;
+      isAdminSecretSet: boolean;
+      consoleMode: string;
+      enableTelemetry: boolean;
+      assetsPath: string;
+      serverVersion: string;
+      consolePath: string;
+    },
+    sqlFormatter: unknown;
+    hljs: unknown;
+    CONSOLE_ASSET_VERSION: string;
+  }
+}
 
 if (
   window &&
@@ -38,7 +60,7 @@ const globals = {
   telemetryTopic: isProduction ? 'console' : 'console_test',
   assetsPath: window.__env.assetsPath,
   serverVersion: window.__env.serverVersion,
-  consoleAssetVersion: CONSOLE_ASSET_VERSION, // set during console build
+  consoleAssetVersion: window.CONSOLE_ASSET_VERSION, // set during console build
   featuresCompatibility: window.__env.serverVersion
     ? getFeaturesCompatibility(window.__env.serverVersion)
     : null,
