@@ -2,6 +2,11 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+- docs: update migrations docs with config v2 workflows (#4586)
+
+
 ### Allow access to session variables by computed fields (fix #3846)
 
 Sometimes it is useful for computed fields to have access to the Hasura session variables directly. For example, suppose you want to fetch some articles but also get related user info, say `likedByMe`. Now, you can define a function like:
