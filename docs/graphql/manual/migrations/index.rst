@@ -82,6 +82,7 @@ Reference documentation
   :hidden:
 
   Basics <basics>
+  Manage metadata <manage-metadata>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>
   Upgrading to config v2 <upgrade-v2>

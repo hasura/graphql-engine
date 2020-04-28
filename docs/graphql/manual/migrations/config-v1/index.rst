@@ -4,7 +4,7 @@
 
 .. _migrations_v1:
 
-Migrations & Metadata (config v1)
+Migrations & Metadata (v1 config)
 =================================
 
 .. contents:: Table of contents
@@ -76,7 +76,6 @@ Reference documentation
   :maxdepth: 1
   :hidden:
 
-  Manage Metadata <manage-metadata>
   Manage Migrations (Metadata + Postgres Schema) <manage-migrations>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>

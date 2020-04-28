@@ -2,10 +2,10 @@
    :description: Manage Hasura metadata
    :keywords: hasura, docs, metadata
 
-.. _manage_hasura_metadata_v1:
+.. _manage_hasura_metadata:
 
-Managing Hasura metadata (config v1)
-=====================================
+Managing Hasura metadata
+========================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -33,6 +33,11 @@ Exporting Hasura metadata
 .. rst-class:: api_tabs
 .. tabs::
 
+  .. tab:: CLI
+
+     Metadata can be exported with the :ref:`hasura metadata export <hasura_metadata_export>`
+     command.
+
   .. tab:: Console
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
@@ -54,8 +59,8 @@ Exporting Hasura metadata
      If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
      admin-only API.
 
-Importing Hasura metadata
--------------------------
+Applying/Importing Hasura metadata
+----------------------------------
 
 You can apply exported metadata from one Hasura GraphQL engine instance to another. You can also apply an older or
 modified version of an instance's metadata onto itself.
@@ -65,6 +70,11 @@ before.
 
 .. rst-class:: api_tabs
 .. tabs::
+
+  .. tab:: CLI
+
+     Metadata can be applied with the :ref:`hasura metadata apply <hasura_metadata_apply>`
+     command.
 
   .. tab:: Console
 
@@ -107,6 +117,11 @@ when a new column has been added to a table via an external tool such as ``psql`
 .. rst-class:: api_tabs
 .. tabs::
 
+  .. tab:: CLI
+
+     Metadata can be reloaded with the :ref:`hasura metadata reload <hasura_metadata_reload>`
+     command.
+
   .. tab:: Console
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
@@ -135,9 +150,7 @@ when a new column has been added to a table via an external tool such as ``psql`
 Managing Hasura metadata in CI/CD
 ---------------------------------
 
-Using tools like ``curl`` you can easily integrate the metadata API requests for the above metadata management
-actions with your CI/CD workflows.
-
 In case you need an automated way of applying/importing the metadata, take a
-look at the :ref:`CLI-Migrations <auto_apply_migrations_v1>` Docker image, which
-can start the GraphQL engine after automatically importing a mounted metadata file.
+look at the :ref:`cli-migrations <auto_apply_migrations>` Docker image, which
+can start the GraphQL engine after automatically importing a mounted metadata
+directory.
