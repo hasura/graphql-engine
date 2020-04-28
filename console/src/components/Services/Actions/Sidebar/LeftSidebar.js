@@ -32,9 +32,9 @@ const LeftSidebar = ({ appPrefix, common: { actions, currentAction } }) => {
         actionsList.push(a);
       } else if (a.action_name.includes(searchText)) {
         secondaryResults.push(a);
-      } else if(a.action_name.toLowerCase.startsWith(searchText.toLowerCase)){
+      } else if(a.action_name.toLowerCase().startsWith(searchText.toLowerCase())){
         primaryResultsLower.push(a);
-      } else if(a.action_name.toLowerCase.includes(searchText.toLowerCase)){
+      } else if(a.action_name.toLowerCase().includes(searchText.toLowerCase())){
         secondaryResultsLower.push(a);
       }
     });
