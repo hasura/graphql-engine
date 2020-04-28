@@ -32,10 +32,18 @@ Support for this is now added through the `add_computed_field` API.
 
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
+### CLI: Support servers with self-signed certificates (close #4564) (#4582)
+
+A new global flag is added to the CLI for working with GraphQL Engine servers with
+self-signed TLS certificates. A new flag `--certificate-authority` is added so that
+the CA certificate can be provided to trust the Hasura Endpoint.
+
+Another flag `--insecure-skip-tls-verification` is added to skip verifying the certificate
+in case you don't have access to the CA certificate. Use this flag with caution.
+
 ### Bug fixes and improvements
 
 - console: make GraphiQL Explorer taking the whole viewport
-- cli: add insecure-skip-tls-verification and certificate-authority flags (close #4564) (#4582)
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
 - console: update graphiql explorer to support operation transform (#4567)
 
