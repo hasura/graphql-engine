@@ -60,8 +60,8 @@ Setup
      Actions are supported only in the v2 config of the CLI. Check the ``config.yaml``
      of your Hasura project for the ``version`` key.
 
-     If you are in ``version: 1``, actions commands are not supported. Upgrade to
-     version 2 by running:
+     If you see ``version: 1`` (or do not see a version key), upgrade to version
+     2 by running:
 
      .. code-block:: bash
 
@@ -77,10 +77,16 @@ Mutation type action
 Let's start with a mutation that accepts a username and password, and returns
 an access token. We'll call this mutation ``login``.
 
+.. contents::
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Step 1: Define your mutation and associated types
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Start with defining the mutation and the required types. These types will reflect in the GraphQL schema.
+Start with defining the mutation and the required types. These types will reflect
+in the GraphQL schema.
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -92,6 +98,7 @@ Start with defining the mutation and the required types. These types will reflec
 
      .. thumbnail:: ../../../img/graphql/manual/actions/mutation-action-create.png
         :alt: Console action create
+        :width: 70%
 
      Define the action as follows in the ``Action Definition`` editor.
 
@@ -144,7 +151,10 @@ Step 2: Create the action handler
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A handler is an HTTP webhook where you can perform the custom logic for the
-action. In this case, we will just return an access token, but typically you would want to run all the business logic that the action demands. NodeJS/Express code
+action.
+
+In this case, we will just return an access token, but typically you would want
+to run all the business logic that the action demands. NodeJS/Express code
 for this handler would look something like:
 
 .. code-block:: js
@@ -240,10 +250,17 @@ Query type action
 Let's start with a basic query that accepts a list of numbers and returns
 their sum. We'll call this query ``addNumbers``.
 
-Step 1: Define your query and associated types
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. contents::
+  :backlinks: none
+  :depth: 1
+  :local:
 
-Start with defining the query and the required types. These types will reflect in the GraphQL schema.
+
+Step 1: Define your query and associated types
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Start with defining the query and the required types. These types will reflect in
+the GraphQL schema.
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -255,6 +272,7 @@ Start with defining the query and the required types. These types will reflect i
 
      .. thumbnail:: ../../../img/graphql/manual/actions/query-action-create.png
         :alt: Console action create
+        :width: 70%
 
      Define the action as follows in the ``Action Definition`` editor.
 
@@ -307,7 +325,9 @@ Step 2: Create the action handler
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A handler is an HTTP webhook where you can perform the custom logic for the
-action. In this case, it is the addition of the numbers. NodeJS/Express code
+action.
+
+In this case, it is the addition of the numbers. NodeJS/Express code
 for this handler would look something like:
 
 .. code-block:: js
