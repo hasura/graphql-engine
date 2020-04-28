@@ -4,8 +4,8 @@
 
 .. _cli_reference:
 
-Configuration reference 
-=======================
+Hasura CLI Configuration Reference 
+==================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -25,6 +25,8 @@ The configuration file can be configured with the following config keys:
   version: 
   endpoint: 
   admin_secret:
+  insecure_skip_tls_verify:
+  certificate_authority:
   access_key: #deprecated
   api_paths:
     query: 
@@ -65,6 +67,14 @@ The configuration file can be configured with the following config keys:
      - false
      - 1 (Deprecated)
      - 
+   * - insecure_skip_tls_verify
+     - false
+     - 1 (added in ``v1.2.0``)
+     - false
+   * - certificate_authority
+     - false
+     - 1 (added in ``v1.2.0``)
+     -
    * - api_paths
      - false
      - 1
@@ -134,10 +144,9 @@ The configuration can also be set in the form of environment variables:
 
 .. list-table::
    :header-rows: 1
-   :widths: 25 20 30
 
    * - ENV variable
-     - Configuration file key
+     - Config file key
      - Description
    
    * - ``HASURA_GRAPHQL_VERSION``
@@ -156,6 +165,16 @@ The configuration can also be set in the form of environment variables:
      - ``access_key``
      - Access key for Hasura GraphQL engine. Note: Deprecated. Use admin 
        secret instead. 
+
+   * - ``HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY``
+     - ``insecure_skip_tls_verify``
+     - Skip verifying SSL certificate for the Hasura endpoint. Useful if you have
+       a self-singed certificate and don't have access to the CA cert.
+
+   * - ``HASURA_GRAPHQL_CERTIFICATE_AUTHORITY``
+     - ``certificate_authority``
+     - Path to the CA certificate for validating the self-signed certificate for
+       the Hasura endpoint.
 
    * - ``HASURA_GRAPHQL_API_PATHS_QUERY``
      - ``api_paths.query``
@@ -230,6 +249,12 @@ Example:
 
 The above command will read ENV vars from the ``production.env`` file present at the 
 project root directory. 
+
+.. admonition:: Supported from
+
+   ``.env`` file support is available since version ``v1.2.0-beta.5``.
+
+   .. .env file is supported in versions ``v.1.2.0`` and above.
 
 .. note::
 

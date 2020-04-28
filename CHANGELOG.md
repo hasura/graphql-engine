@@ -32,10 +32,20 @@ Support for this is now added through the `add_computed_field` API.
 
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
+### CLI: Support servers with self-signed certificates (close #4564) (#4582)
+
+A new flag `--certificate-authority` is added so that the CA certificate can be
+provided to trust the Hasura Endpoint with a self-signed SSL certificate.
+
+Another flag `--insecure-skip-tls-verification` is added to skip verifying the certificate
+in case you don't have access to the CA certificate. As the name suggests,
+using this flag is insecure since verification is not carried out.
+
 ### Bug fixes and improvements
 
-- console: make GraphiQL Explorer taking the whole viewport
+- cli: allow initialising project in current directory (fix #4560) #4566
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
+- console: make GraphiQL Explorer taking the whole viewport
 - console: update graphiql explorer to support operation transform (#4567)
 
 ## `v1.2.0-beta.5`
@@ -278,6 +288,7 @@ A new CLI migrations image is introduced to account for the new migrations workf
 (close #3969) (#4145)
 
 ### Bug fixes and improvements
+
 - server: improve performance of replace_metadata tracking many tables (fix #3802)
 - server: option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
 - server: fix various space leaks to avoid excessive memory consumption
@@ -361,3 +372,4 @@ Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
 - console: show pre-release update notifications with opt out option (#3888)
 - console: handle invalid keys in permission builder (close #3848) (#3863)
+- docs: add page on data validation to docs (close #4085) (#4260)
