@@ -72,7 +72,7 @@ func (o *updateOptions) run(showPrompt bool) (err error) {
 		}
 	} else {
 		o.EC.Spin("Checking for update... ")
-		hasUpdate, latestVersion, hasPreReleaseUpdate, preReleaseVersion, err := update.HasUpdate(o.EC.HTTPClient, currentVersion, o.EC.LastUpdateCheckFile)
+		hasUpdate, latestVersion, hasPreReleaseUpdate, preReleaseVersion, err := update.HasUpdate(currentVersion, o.EC.LastUpdateCheckFile)
 		o.EC.Spinner.Stop()
 		if err != nil {
 			return errors.Wrap(err, "command: check update")
@@ -114,7 +114,7 @@ to update cli to this version, execute:
 	ec.Logger.Debugln("versionToBeInstalled: ", versionToBeInstalled.String())
 
 	o.EC.Spin(fmt.Sprintf("Updating cli to v%s... ", versionToBeInstalled.String()))
-	err = update.ApplyUpdate(o.EC.HTTPClient, versionToBeInstalled)
+	err = update.ApplyUpdate(versionToBeInstalled)
 	o.EC.Spinner.Stop()
 	if err != nil {
 		if os.IsPermission(err) {

@@ -9,7 +9,6 @@ source: https://github.com/kubernetes-sigs/krew/tree/master/internal
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -112,7 +111,7 @@ func MatchPlatform(platforms []Platform) (Platform, bool, error) {
 // downloadAndExtract downloads the specified archive uri (or uses the provided overrideFile, if a non-empty value)
 // while validating its checksum with the provided sha256sum, and extracts its contents to extractDir that must be.
 // created.
-func downloadAndExtract(client *http.Client, extractDir, uri, sha256sum string) error {
+func downloadAndExtract(extractDir, uri, sha256sum string) error {
 	nurl, err := url.Parse(uri)
 	if err != nil {
 		return errors.Wrap(err, "unable to parse uri")
@@ -121,9 +120,7 @@ func downloadAndExtract(client *http.Client, extractDir, uri, sha256sum string) 
 	if nurl.Scheme == "file" {
 		fetcher = download.NewFileFetcher(nurl.Path)
 	} else {
-		fetcher = download.HTTPFetcher{
-			Client: client,
-		}
+		fetcher = download.HTTPFetcher{}
 	}
 	verifier := download.NewSha256Verifier(sha256sum)
 	err = download.NewDownloader(verifier, fetcher).Get(uri, extractDir)

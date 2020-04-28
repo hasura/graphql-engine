@@ -31,13 +31,11 @@ type Fetcher interface {
 var _ Fetcher = HTTPFetcher{}
 
 // HTTPFetcher is used to get a file from a http:// or https:// schema path.
-type HTTPFetcher struct {
-	Client *http.Client
-}
+type HTTPFetcher struct{}
 
 // Get gets the file and returns an stream to read the file.
-func (h HTTPFetcher) Get(uri string) (io.ReadCloser, error) {
-	resp, err := h.Client.Get(uri)
+func (HTTPFetcher) Get(uri string) (io.ReadCloser, error) {
+	resp, err := http.Get(uri)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to download %q", uri)
 	}
