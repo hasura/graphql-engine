@@ -2,7 +2,7 @@
    :description: Use Postgres views with Hasura
    :keywords: hasura, docs, postgres, views
 
-.. _views:
+.. _postgres_views:
 
 Postgres views
 ==============
@@ -12,7 +12,7 @@ Postgres views
   :depth: 1
   :local:
 
-A `view <https://www.postgresql.org/docs/9.2/sql-createview.html>`_ is a virtual table in Postgres. It represents the result of a query to one or more underlying tables in Postgres without actually storing data.
+A `view <https://www.postgresql.org/docs/current/sql-createview.html>`__ is a virtual table in Postgres. It represents the result of a query to one or more underlying tables in Postgres without actually storing data.
 Views are used to simplify complex queries since these queries are defined once in the view, and can then be directly queried via the same.
 
 **Example:**
@@ -35,7 +35,7 @@ The created view can now be queried as follows:
 Materialized views
 ^^^^^^^^^^^^^^^^^^
 
-Compared to the regular view described above, `materialized views <https://www.postgresql.org/docs/9.3/rules-materializedviews.html>`_ **do** store data physically in the database.
+Compared to the regular view described above, `materialized views <https://www.postgresql.org/docs/current/rules-materializedviews.html>`__ **do** store data physically in the database.
 
 **Example:**
 
@@ -55,4 +55,4 @@ Since the result of a query is stored in a materialized view like in a cache, yo
 
 .. note::
 
-  Please refer to the Postgres documentation for more details on `views <https://www.postgresql.org/docs/9.2/sql-createview.html>`_ and `materialized views <https://www.postgresql.org/docs/9.3/rules-materializedviews.html>`_.
+  Please refer to the Postgres documentation for more details on `views <https://www.postgresql.org/docs/current/sql-createview.html>`__ and `materialized views <https://www.postgresql.org/docs/current/rules-materializedviews.html>`__.

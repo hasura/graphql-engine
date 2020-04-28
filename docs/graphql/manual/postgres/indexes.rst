@@ -2,7 +2,7 @@
    :description: Use Postgres indexes with Hasura
    :keywords: hasura, docs, postgres, indexes
 
-.. _indexes:
+.. _postgres_indexes:
 
 Postgres indexes
 ================
@@ -11,9 +11,9 @@ Postgres indexes
   :backlinks: none
   :depth: 1
   :local:
-  
 
-`Indexes <https://www.postgresql.org/docs/9.1/sql-createindex.html>`_ are a way of increasing performance on a field that is queried frequently. The concept is similar to the one of an index in a book. 
+
+`Indexes <https://www.postgresql.org/docs/current/sql-createindex.html>`__ are a way of increasing performance on a field that is queried frequently. The concept is similar to the one of an index in a book. 
 It helps accessing the data you're looking for more quickly.
 
 **Example:**
@@ -34,4 +34,4 @@ Since the database is now able to look up the result of these queries more quick
 
 .. note::
 
-  Learn more about creating indexes in the `Postgres documentation <https://www.postgresql.org/docs/9.1/sql-createindex.html>`_.
+  Learn more about creating indexes in the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createindex.html>`__.

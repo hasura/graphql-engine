@@ -2,7 +2,7 @@
    :description: Use Postgres functions with Hasura
    :keywords: hasura, docs, postgres, functions
 
-.. _functions:
+.. _postgres_functions:
 
 Postgres functions
 ==================
@@ -13,12 +13,12 @@ Postgres functions
   :local:
 
 
-`Postgres functions <https://www.postgresql.org/docs/9.1/sql-createfunction.html>`_ allow you to define a set of operations that can include several statements such as declarations, assignments and conditional workflows.
+`Postgres functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ allow you to define a set of operations that can include several statements such as declarations, assignments and conditional workflows.
 They are a way of customizing your database schema.
 
 **Example:**
 
-.. code-block:: sql
+.. code-block:: plpgsql
 
   CREATE FUNCTION check_author_active()
       RETURNS trigger AS $BODY$
@@ -46,4 +46,4 @@ Let's break this function apart:
 
 .. note::
 
-  For more information on Postgres functions, please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.1/sql-createfunction.html>`_.
+  For more information on Postgres functions, please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createfunction.html>`__.

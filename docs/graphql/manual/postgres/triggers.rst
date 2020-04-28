@@ -2,7 +2,7 @@
    :description: Use Postgres triggers with Hasura
    :keywords: hasura, docs, postgres, triggers
 
-.. _triggers:
+.. _postgres_triggers:
 
 Postgres triggers
 =================
@@ -13,11 +13,11 @@ Postgres triggers
   :local:
 
 
-`Postgres triggers <https://www.postgresql.org/docs/9.1/sql-createtrigger.html>`_ are used to invoke previously defined Postgres functions *before* or *after* a specific database event (e.g. ``INSERT``) occurs.
+`Postgres triggers <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ are used to invoke previously defined Postgres functions *before* or *after* a specific database event (e.g. ``INSERT``) occurs.
 
 **Example:**
 
-Let's say we want the Postgres function :ref:`from above<postgres_functions>` to be executed whenever a new article is about to be inserted or updated.
+Let's say we want the :ref:`Postgres function<postgres_functions>` to be executed whenever a new article is about to be inserted or updated.
 We can create a trigger as follows:
 
 .. code-block:: plpgsql
@@ -32,4 +32,4 @@ If someone now tries to insert an article for an author that is not active, the 
 
 .. note::
 
-  For more information on how to create triggers, please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.1/sql-createtrigger.html>`_.
+  For more information on how to create triggers, please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__.

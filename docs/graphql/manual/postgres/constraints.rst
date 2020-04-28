@@ -2,7 +2,7 @@
    :description: Use Postgres constraints with Hasura
    :keywords: hasura, docs, postgres, constraints
 
-.. _constraints:
+.. _postgres_constraints:
 
 Postgres constraints
 ====================
@@ -13,7 +13,7 @@ Postgres constraints
   :local:
 
 
-`Constraints <https://www.postgresql.org/docs/9.4/ddl-constraints.html>`_ are used to define rules for fields in a database table. They ensure that
+`Constraints <https://www.postgresql.org/docs/current/ddl-constraints.html>`__ are used to define rules for fields in a database table. They ensure that
 no invalid data is entered into the database.
 
 **Example**
@@ -36,4 +36,4 @@ There are a number of different constraint types in the above example:
 
 .. note::
 
-  For more details and examples on Postgres constraints, please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.4/ddl-constraints.html>`_.
+  For more details and examples on Postgres constraints, please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/ddl-constraints.html>`__.
