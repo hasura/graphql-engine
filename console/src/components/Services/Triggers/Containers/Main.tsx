@@ -23,6 +23,7 @@ const Container: React.FC<TriggersContainerProps> = props => {
 
   const sidebarContent = (
     <ul>
+      {/*
       <li
         role="presentation"
         className={
@@ -39,6 +40,7 @@ const Container: React.FC<TriggersContainerProps> = props => {
           service={'event triggers'}
         />
       </li>
+      */}
       <li
         role="presentation"
         className={
@@ -61,7 +63,7 @@ const Container: React.FC<TriggersContainerProps> = props => {
     </ul>
   );
 
-  const helmetTitle = 'Triggers | Hasura';
+  const helmetTitle = 'Event Triggers | Hasura';
 
   const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 

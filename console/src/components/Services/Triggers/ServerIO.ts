@@ -5,6 +5,7 @@ import {
   generateCreateScheduledTriggerQuery,
   getDropScheduledTriggerQuery,
   generateUpdateScheduledTriggerQuery,
+  getCreateScheduledEventQuery,
 } from '../../Common/utils/v1QueryUtils';
 import globals from '../../../Globals';
 import { makeMigrationCall } from '../Data/DataActions';
@@ -133,6 +134,32 @@ export const addScheduledTrigger = (
     errorMsg,
     false
   );
+};
+
+export const invokeScheduledTrigger = (triggerName: string) => (
+  dispatch: any,
+  getState: any
+) => {
+  const query = getCreateScheduledEventQuery(triggerName);
+  const errorMsg = 'Invocation failed';
+  return dispatch(
+    requestAction(Endpoints.query, {
+      method: 'POST',
+      credentials: globalCookiePolicy,
+      headers: dataHeaders(getState),
+      body: JSON.stringify(query),
+    })
+  ).catch((e: any) => {
+    console.error(e);
+    let errorString = '';
+    try {
+      errorString = JSON.stringify(e);
+    } catch (err) {
+      errorString = err.toString();
+    }
+    dispatch(showErrorNotification(errorMsg, errorString));
+    return Promise.reject();
+  });
 };
 
 export const saveScheduledTrigger = (

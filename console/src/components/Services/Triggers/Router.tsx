@@ -4,9 +4,9 @@ import rightContainerConnector from '../../Common/Layout/RightContainer/RightCon
 import Container from './Containers/Main';
 import { fetchTriggers } from './ServerIO';
 import globals from '../../../Globals';
-import EventTriggersLanding from '../EventTrigger/Landing/EventTrigger';
+// import EventTriggersLanding from '../EventTrigger/Landing/EventTrigger';
 import {
-  ScheduledTriggers,
+  // ScheduledTriggers,
   AddScheduledTrigger,
   ScheduledTriggerLogs,
   ScheduledTriggeModify,
@@ -39,12 +39,14 @@ const getTriggersRouter = (
       onEnter={composeOnEnterHooks([triggersInit(store)])}
       onChange={triggersInit(store)}
     >
-      <IndexRedirect to="events" />
+      <IndexRedirect to="scheduled" />
+      {/*
       <Route path="events" component={rightContainerConnector(connect)}>
         <IndexRedirect to="manage" />
         <Route path="add" component={ScheduledTriggers} />
         <Route path="manage" component={EventTriggersLanding(connect)} />
       </Route>
+      */}
       <Route path="scheduled" component={rightContainerConnector(connect)}>
         <IndexRedirect to="manage" />
         <Route path="add" component={AddScheduledTrigger(connect)} />
