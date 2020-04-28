@@ -12,6 +12,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
@@ -171,6 +172,18 @@ func (s *ServerConfig) ParseEndpoint() error {
 	return nil
 }
 
+// GetServerClient returns the http client for server
+func (s *ServerConfig) GetServerClient(config *tls.Config) *http.Client {
+	if config != nil {
+		tr := &http.Transport{TLSClientConfig: config}
+		client := &http.Client{Transport: tr}
+		return client
+	} else {
+		client := &http.Client{Transport: http.DefaultTransport}
+		return client
+	}
+}
+
 // Config represents configuration required for the CLI to function
 type Config struct {
 	// Version of the config.
@@ -303,13 +316,17 @@ func (ec *ExecutionContext) Prepare() error {
 	// set logger
 	ec.setupLogger()
 
-	ec.setTLSConfig()
+	// set TLS config
+	err := ec.setTLSConfig()
+	if err != nil {
+		return errors.Wrap(err, "setting up TLS config failed")
+	}
 
 	// populate version
 	ec.setVersion()
 
 	// setup global config
-	err := ec.setupGlobalConfig()
+	err = ec.setupGlobalConfig()
 	if err != nil {
 		return errors.Wrap(err, "setting up global config failed")
 	}
@@ -529,7 +546,8 @@ func (ec *ExecutionContext) Validate() error {
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint())
+	client := ec.Config.ServerConfig.GetServerClient(ec.TLSClientConfig)
+	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint(), client)
 	if err != nil {
 		return errors.Wrap(err, "failed to get version from server")
 	}
