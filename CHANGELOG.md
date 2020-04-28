@@ -43,8 +43,9 @@ using this flag is insecure since verification is not carried out.
 
 ### Bug fixes and improvements
 
-- console: make GraphiQL Explorer taking the whole viewport
+- cli: allow initialising project in current directory (fix #4560) #4566
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
+- console: make GraphiQL Explorer taking the whole viewport
 - console: update graphiql explorer to support operation transform (#4567)
 
 ## `v1.2.0-beta.5`
