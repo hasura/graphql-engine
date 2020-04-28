@@ -10,3 +10,4 @@ export * from './RadioButton';
 export * from './Checkbox';
 export * from './Box';
 export * from './Flex';
+export * from './Badge';

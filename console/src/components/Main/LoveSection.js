@@ -5,7 +5,15 @@ import globals from '../../Globals';
 import pixHeart from './images/pix-heart.svg';
 import consoleLogo from './images/console-logo.svg';
 import arrowForwardRed from './images/arrow_forward-red.svg';
-import { Icon, Box, Flex, Heading, TextLink, Text } from '../UIKit/atoms';
+import {
+  Icon,
+  Box,
+  Flex,
+  Heading,
+  TextLink,
+  Text,
+  Badge,
+} from '../UIKit/atoms';
 import styles from './Main.scss';
 
 // eslint-disable-next-line no-unused-vars
@@ -75,24 +83,43 @@ const OldLoveSection = ({ toggleDropdown }) => (
 
 const updateData = [
   {
-    title: 'GraphQL Asia, Bengaluru',
-    time: '12 August, 2019',
-    description: 'GraphQL Meetup is happening at the Hasura office this month.',
+    title: 'HasuraCon, Online',
+    time: '12 May, 2020',
+    description: 'HasuraCon is happening at the Hasura office this month.',
+    badge: 'event',
   },
   {
     title: 'GraphQL Asia, Bengaluru',
-    time: '12 August, 2019',
-    description: 'GraphQL Meetup is happening at the Hasura office this month.',
+    time: '20 Feb, 2020',
+    description:
+      "GraphQL Asia is the largest gathering of the GraphQL community in Asia with over 500 people expected at 2020 edition, you'll meet the creators of leading GraphQL tooling, talk to the experts implementing GraphQL in their companies as well as practicioners and enthusiasts from Asia and the rest of the world.",
+    badge: 'community',
+  },
+  {
+    title: 'v1.2.0-beta.5',
+    time: '24 April, 2020',
+    description:
+      'We fixed some major bugs, added some new features and made life generally easier. Check it out!',
+    badge: 'update',
   },
 ];
 
-const Update = ({ title, time, description }) => (
+const Update = ({ title, time, description, badge }) => (
   <Box borderBottom={1}>
     <Flex height="55px" justifyContent="space-between" px="25px" pt="5px">
-      <Heading as="h4" color="#1CD3C6" fontSize="16px">
-        {title}
-      </Heading>
-      <Text color="#acacac" fontSize="13px" fontWeight="medium">
+      <Flex>
+        <Badge type={badge} mr="12px" />
+        <Heading as="h4" color="#1cd3c6" fontSize="16px">
+          {title}
+        </Heading>
+      </Flex>
+      <Text
+        color="#acacac"
+        fontSize="13px"
+        fontWeight="medium"
+        fontFamily="roboto"
+        letterSpacing="0.25px"
+      >
         {time}
       </Text>
     </Flex>
@@ -159,15 +186,16 @@ const NewLoveSection = ({ toggleDropdown }) => (
     </Flex>
     {updateData &&
       updateData.length >= 1 &&
-      updateData.map(({ title, time, description }) => (
+      updateData.map(({ title, time, description, badge }) => (
         <Update
           key={title}
           title={title}
           time={time}
           description={description}
+          badge={badge}
         />
       ))}
-    <Flex px="25px" py="22px" color="red.primary">
+    <Flex px="25px" py="20px" color="red.primary">
       <TextLink href="#" id="update-link">
         View all updates{' '}
         <img className={styles.arrow} src={arrowForwardRed} alt={'Arrow'} />
