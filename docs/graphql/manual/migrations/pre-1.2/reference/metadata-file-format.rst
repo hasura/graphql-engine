@@ -15,12 +15,6 @@ Metadata file format reference (pre v1.2)
 Introduction
 ------------
 
-The ``config.yaml`` of your Hasura project would look like:
-
-.. code-block:: bash
-
-    endpoint: http://localhost:8080
-
 The metadata file that is exported from the server is a JSON/YAML representation
 of the Hasura metadata stored in the ``hdb_catalog`` schema on the Postgres
 database.
