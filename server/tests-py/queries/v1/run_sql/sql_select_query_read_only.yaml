@@ -1,0 +1,72 @@
+- url: /v1/query
+  status: 200
+  response:
+    result_type: TuplesOk
+    result:
+    - - id
+      - name
+    - - '1'
+      - Author 1
+    - - '2'
+      - Author 2
+  query:
+    type: run_sql
+    args:
+      read_only: True
+      sql: |
+        SELECT * from author
+
+- url: /v1/query
+  status: 200
+  response:
+    result_type: TuplesOk
+    result:
+    - - alterable
+      - droppable
+    - - t
+      - f
+    - - f
+      - t
+  query:
+    type: run_sql
+    args:
+      read_only: True
+      sql: |
+        SELECT alterable, droppable FROM malicious
+
+- url: /v1/query
+  status: 200
+  response:
+    result_type: TuplesOk
+    result:
+    - - drop
+    - - ' alter '
+  query:
+    type: run_sql
+    args:
+      read_only: True
+      sql: |
+        SELECT ' alter ' as drop
+
+- url: /v1/query
+  status: 400
+  response:
+    internal:
+      statement: "DROP TABLE malicious\n"
+      prepared: false
+      error:
+        exec_status: FatalError
+        hint:
+        message: cannot execute DROP TABLE in a read-only transaction
+        status_code: '25006'
+        description:
+      arguments: []
+    path: $.args
+    error: query execution failed
+    code: postgres-error
+  query:
+    type: run_sql
+    args:
+      read_only: True
+      sql: |
+        DROP TABLE malicious

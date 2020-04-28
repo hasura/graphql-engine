@@ -34,8 +34,6 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		ec.Telemetry.Command = cmd.CommandPath()
-
 		if cmd.Use != updateCLICmdUse {
 			if update.ShouldRunCheck(ec.LastUpdateCheckFile) && ec.GlobalConfig.ShowUpdateNotification && !ec.SkipUpdateCheck {
 				u := &updateOptions{
@@ -79,6 +77,7 @@ func init() {
 	f.StringVar(&ec.ExecutionDirectory, "project", "", "directory where commands are executed (default: current dir)")
 	f.BoolVar(&ec.SkipUpdateCheck, "skip-update-check", false, "Skip automatic update check on command execution")
 	f.BoolVar(&ec.NoColor, "no-color", false, "do not colorize output (default: false)")
+	f.StringVar(&ec.Envfile, "envfile", ".env", ".env filename to load ENV vars from")
 }
 
 // NewDefaultHasuraCommand creates the `hasura` command with default arguments
@@ -116,10 +115,11 @@ func Execute() error {
 	if err != nil {
 		return errors.Wrap(err, "preparing execution context failed")
 	}
-	err = NewDefaultHasuraCommand().Execute()
+	execCmd, err := NewDefaultHasuraCommand().ExecuteC()
 	if err != nil {
 		ec.Telemetry.IsError = true
 	}
+	ec.Telemetry.Command = execCmd.CommandPath()
 	ec.Telemetry.Beam()
 	if ec.Spinner != nil {
 		ec.Spinner.Stop()

@@ -196,10 +196,11 @@ module.exports = {
         NODE_ENV: JSON.stringify('production'),
       },
       CONSOLE_ASSET_VERSION: Date.now().toString(),
+      'process.hrtime': () => null,
     }),
     new ForkTsCheckerWebpackPlugin({
       compilerOptions: {
-        allowJs: false,
+        allowJs: true,
         checkJs: false,
       },
     }),

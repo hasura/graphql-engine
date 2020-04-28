@@ -5,6 +5,7 @@
     "@babel/preset-typescript"
   ],
   "plugins": [
+    "babel-plugin-styled-components",
     "transform-react-remove-prop-types",
     "@babel/plugin-proposal-class-properties",
     "@babel/plugin-syntax-dynamic-import",

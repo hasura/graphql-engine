@@ -65,9 +65,11 @@ class Main extends React.Component {
     dispatch(loadServerVersion()).then(() => {
       dispatch(featureCompatibilityInit());
 
-      dispatch(loadInconsistentObjects()).then(() => {
-        this.handleMetadataRedirect();
-      });
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false })).then(
+        () => {
+          this.handleMetadataRedirect();
+        }
+      );
 
       dispatch(loadLatestServerVersion()).then(() => {
         this.setShowUpdateNotification();
@@ -314,7 +316,10 @@ class Main extends React.Component {
               <a href={'#'} onClick={handlePreRelNotifOptOut}>
                 Opt out of pre-release notifications
               </a>
-              <ToolTip message={'Only be notified about stable releases'} />
+              <ToolTip
+                message={'Only be notified about stable releases'}
+                placement={'top'}
+              />
             </i>
           </React.Fragment>
         );

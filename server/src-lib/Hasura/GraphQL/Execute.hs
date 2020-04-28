@@ -25,10 +25,8 @@ import           Control.Lens
 import           Data.Has
 
 import qualified Data.Aeson                             as J
-import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
-import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
@@ -38,6 +36,7 @@ import qualified Network.Wreq                           as Wreq
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.Resolve.Action
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -46,9 +45,10 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Context
-import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward)
+import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
+                                                         mkSetCookieHeaders)
 import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -130,7 +130,7 @@ getExecPlanPartial userInfo sc enableAL req = do
   -- check if query is in allowlist
   when enableAL checkQueryInAllowlist
 
-  gCtx <- flip runCacheRT sc $ getGCtx role gCtxRoleMap
+  let gCtx = getGCtx (_uiBackendOnlyFieldAccess userInfo) sc roleName
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
   let opDef = VQ.qpOpDef queryParts
@@ -150,12 +150,11 @@ getExecPlanPartial userInfo sc enableAL req = do
     VT.TLCustom ->
       throw500 "unexpected custom type for top level field"
   where
-    role = userRole userInfo
-    gCtxRoleMap = scGCtxMap sc
+    roleName = _uiRole userInfo
 
     checkQueryInAllowlist =
       -- only for non-admin roles
-      when (role /= adminRole) $ do
+      when (roleName /= adminRoleName) $ do
         let notInAllowlist =
               not $ VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)
         when notInAllowlist $ modifyQErr modErr $ throwVE "query is not allowed"
@@ -170,12 +169,11 @@ getExecPlanPartial userInfo sc enableAL req = do
 -- to be executed
 data ExecOp
   = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
-  | ExOpMutation !LazyRespTx
+  | ExOpMutation !N.ResponseHeaders !LazyRespTx
   | ExOpSubs !EL.LiveQueryPlan
 
 -- The graphql query is resolved into an execution operation
-type ExecPlanResolved
-  = GQExecPlan ExecOp
+type ExecPlanResolved = GQExecPlan ExecOp
 
 getResolvedExecPlan
   :: (HasVersion, MonadError QErr m, MonadIO m)
@@ -192,9 +190,9 @@ getResolvedExecPlan
   -> m (Telem.CacheHit, ExecPlanResolved)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   enableAL sc scVer httpManager reqHeaders reqUnparsed = do
-  planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
+  planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo)
            opNameM queryStr planCache
-  let usrVars = userVars userInfo
+  let usrVars = _uiSession userInfo
   case planM of
     -- plans are only for queries and subscriptions
     Just plan -> (Telem.Hit,) . GExPHasura <$> case plan of
@@ -207,7 +205,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
-      liftIO $ EP.addPlan scVer (userRole userInfo)
+      liftIO $ EP.addPlan scVer (_uiRole userInfo)
       opNameM queryStr plan planCache
     noExistingPlan = do
       req <- toParsed reqUnparsed
@@ -215,14 +213,15 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
         getExecPlanPartial userInfo sc enableAL req
       forM partialExecPlan $ \(gCtx, rootSelSet) ->
         case rootSelSet of
-          VQ.RMutation selSet ->
-            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
+          VQ.RMutation selSet -> do
+            (tx, respHeaders) <- getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
+            pure $ ExOpMutation respHeaders tx
           VQ.RQuery selSet -> do
-            (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability selSet
+            (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability (allowQueryActionExecuter httpManager reqHeaders) selSet
             traverse_ (addPlanToCache . EP.RPQuery) plan
             return $ ExOpQuery queryTx (Just genSql)
           VQ.RSubscription fld -> do
-            (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld
+            (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability (restrictActionExecuter "query actions cannot be run as a subscription") fld
             traverse_ (addPlanToCache . EP.RPSubs) plan
             return $ ExOpSubs lqOp
 
@@ -258,18 +257,18 @@ runE ctx sqlGenCtx userInfo action = do
     insCtxMap = _gInsCtxMap ctx
 
 getQueryOp
-  :: (MonadError QErr m)
+  :: ( HasVersion
+     , MonadError QErr m
+     , MonadIO m)
   => GCtx
   -> SQLGenCtx
   -> UserInfo
   -> QueryReusability
+  -> QueryActionExecuter
   -> VQ.SelSet
   -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
-getQueryOp gCtx sqlGenCtx userInfo queryReusability fields =
-  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet queryReusability fields
-
-mutationRootName :: Text
-mutationRootName = "mutation_root"
+getQueryOp gCtx sqlGenCtx userInfo queryReusability actionExecuter selSet =
+  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet queryReusability selSet actionExecuter
 
 resolveMutSelSet
   :: ( HasVersion
@@ -286,16 +285,16 @@ resolveMutSelSet
      , MonadIO m
      )
   => VQ.SelSet
-  -> m LazyRespTx
+  -> m (LazyRespTx, N.ResponseHeaders)
 resolveMutSelSet fields = do
   aliasedTxs <- forM (toList fields) $ \fld -> do
     fldRespTx <- case VQ._fName fld of
-      "__typename" -> return $ return $ encJFromJValue mutationRootName
-      _            -> fmap liftTx . evalReusabilityT $ GR.mutFldToTx fld
+      "__typename" -> return (return $ encJFromJValue mutationRootNamedType, [])
+      _            -> evalReusabilityT $ GR.mutFldToTx fld
     return (G.unName $ G.unAlias $ VQ._fAlias fld, fldRespTx)
 
   -- combines all transactions into a single transaction
-  return $ liftTx $ toSingleTx aliasedTxs
+  return (liftTx $ toSingleTx aliasedTxs, concatMap (snd . snd) aliasedTxs)
   where
     -- A list of aliased transactions for eg
     -- [("f1", Tx r1), ("f2", Tx r2)]
@@ -304,7 +303,7 @@ resolveMutSelSet fields = do
     -- toSingleTx :: [(Text, LazyRespTx)] -> LazyRespTx
     toSingleTx aliasedTxs =
       fmap encJFromAssocList $
-      forM aliasedTxs $ \(al, tx) -> (,) al <$> tx
+      forM aliasedTxs $ \(al, (tx, _)) -> (,) al <$> tx
 
 getMutOp
   :: (HasVersion, MonadError QErr m, MonadIO m)
@@ -314,17 +313,16 @@ getMutOp
   -> HTTP.Manager
   -> [N.Header]
   -> VQ.SelSet
-  -> m LazyRespTx
+  -> m (LazyRespTx, N.ResponseHeaders)
 getMutOp ctx sqlGenCtx userInfo manager reqHeaders selSet =
-  runE_ $ resolveMutSelSet selSet
+  peelReaderT $ resolveMutSelSet selSet
   where
-    runE_ action = do
-      res <- runExceptT $ runReaderT action
+    peelReaderT action =
+      runReaderT action
         ( userInfo, queryCtxMap, mutationCtxMap
         , typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx
         , manager, reqHeaders
         )
-      either throwError return res
       where
         queryCtxMap = _gQueryCtxMap ctx
         mutationCtxMap = _gMutationCtxMap ctx
@@ -342,34 +340,38 @@ getSubsOpM
      , Has SQLGenCtx r
      , Has UserInfo r
      , MonadIO m
+     , HasVersion
      )
   => PGExecCtx
   -> QueryReusability
   -> VQ.Field
+  -> QueryActionExecuter
   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
-getSubsOpM pgExecCtx initialReusability fld =
+getSubsOpM pgExecCtx initialReusability fld actionExecuter =
   case VQ._fName fld of
     "__typename" ->
       throwVE "you cannot create a subscription on '__typename' field"
     _            -> do
       (astUnresolved, finalReusability) <- runReusabilityTWith initialReusability $
-        GR.queryFldToPGAST fld
+        GR.queryFldToPGAST fld actionExecuter
       let varTypes = finalReusability ^? _Reusable
       EL.buildLiveQueryPlan pgExecCtx (VQ._fAlias fld) astUnresolved varTypes
 
 getSubsOp
   :: ( MonadError QErr m
      , MonadIO m
+     , HasVersion
      )
   => PGExecCtx
   -> GCtx
   -> SQLGenCtx
   -> UserInfo
   -> QueryReusability
+  -> QueryActionExecuter
   -> VQ.Field
   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
-getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld =
-  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx queryReusability fld
+getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter fld =
+  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx queryReusability fld actionExecuter
 
 execRemoteGQ
   :: ( HasVersion
@@ -414,9 +416,7 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   L.unLogger logger $ QueryLog q Nothing reqId
   (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
-  let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
-      respHdrs  = Just $ mkRespHeaders cookieHdrs
-      !httpResp = HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
+  let !httpResp = HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) $ mkSetCookieHeaders resp
   return (time, httpResp)
 
   where
@@ -426,9 +426,4 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
       HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
       HTTP.InvalidUrlException _url reason -> throw500 $ T.pack . show $ reason
 
-    userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-                     userInfoToList userInfo
-
-    getCookieHdr = fmap (\h -> ("Set-Cookie", h))
-
-    mkRespHeaders = map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v))
+    userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo

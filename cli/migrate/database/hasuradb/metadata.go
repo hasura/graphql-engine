@@ -18,6 +18,10 @@ func (h *HasuraDB) SetMetadataPlugins(plugins types.MetadataPlugins) {
 	h.config.Plugins = plugins
 }
 
+func (h *HasuraDB) EnableCheckMetadataConsistency(enabled bool) {
+	h.config.enableCheckMetadataConsistency = enabled
+}
+
 func (h *HasuraDB) ExportMetadata() (map[string][]byte, error) {
 	query := HasuraQuery{
 		Type: "export_metadata",
@@ -31,14 +35,8 @@ func (h *HasuraDB) ExportMetadata() (map[string][]byte, error) {
 	}
 	h.logger.Debug("response: ", string(body))
 
-	var horror HasuraError
 	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(body, &horror)
-		if err != nil {
-			h.logger.Debug(err)
-			return nil, fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
-		}
-		return nil, horror.Error(h.config.isCMD)
+		return nil, NewHasuraError(body, h.config.isCMD)
 	}
 
 	var c yaml.MapSlice
@@ -74,14 +72,8 @@ func (h *HasuraDB) ResetMetadata() error {
 	}
 	h.logger.Debug("response: ", string(body))
 
-	var horror HasuraError
 	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(body, &horror)
-		if err != nil {
-			h.logger.Debug(err)
-			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
-		}
-		return horror.Error(h.config.isCMD)
+		return NewHasuraError(body, h.config.isCMD)
 	}
 	return nil
 }
@@ -100,14 +92,8 @@ func (h *HasuraDB) ReloadMetadata() error {
 	}
 	h.logger.Debug("response: ", string(body))
 
-	var horror HasuraError
 	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(body, &horror)
-		if err != nil {
-			h.logger.Debug(err)
-			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
-		}
-		return horror.Error(h.config.isCMD)
+		return NewHasuraError(body, h.config.isCMD)
 	}
 	return nil
 }
@@ -125,14 +111,8 @@ func (h *HasuraDB) GetInconsistentMetadata() (bool, []database.InconsistentMetad
 	}
 	h.logger.Debug("response: ", string(body))
 
-	var horror HasuraError
 	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(body, &horror)
-		if err != nil {
-			h.logger.Debug(err)
-			return false, nil, err
-		}
-		return false, nil, horror.Error(h.config.isCMD)
+		return false, nil, NewHasuraError(body, h.config.isCMD)
 	}
 
 	var inMet InconsistentMetadata
@@ -160,14 +140,8 @@ func (h *HasuraDB) DropInconsistentMetadata() error {
 	}
 	h.logger.Debug("response: ", string(body))
 
-	var horror HasuraError
 	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(body, &horror)
-		if err != nil {
-			h.logger.Debug(err)
-			return err
-		}
-		return horror.Error(h.config.isCMD)
+		return NewHasuraError(body, h.config.isCMD)
 	}
 	return nil
 }
@@ -221,34 +195,32 @@ func (h *HasuraDB) ApplyMetadata() error {
 	}
 	h.logger.Debug("response: ", string(body))
 
-	var horror HasuraError
 	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(body, &horror)
-		if err != nil {
-			h.logger.Debug(err)
-			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
-		}
-
-		if horror.Path != "" {
-			jsonData, err := json.Marshal(query)
-			if err != nil {
-				return err
-			}
-			var metadataQuery interface{}
-			err = json.Unmarshal(jsonData, &metadataQuery)
-			if err != nil {
-				return err
-			}
-			lookup, err := jsonpath.JsonPathLookup(metadataQuery, horror.Path)
-			if err == nil {
-				queryData, err := json.MarshalIndent(lookup, "", "  ")
+		switch herror := NewHasuraError(body, h.config.isCMD).(type) {
+		case HasuraError:
+			if herror.Path != "" {
+				jsonData, err := json.Marshal(query)
 				if err != nil {
 					return err
 				}
-				horror.migrationQuery = "offending object: \n\r\n\r" + string(queryData)
+				var metadataQuery interface{}
+				err = json.Unmarshal(jsonData, &metadataQuery)
+				if err != nil {
+					return err
+				}
+				lookup, err := jsonpath.JsonPathLookup(metadataQuery, herror.Path)
+				if err == nil {
+					queryData, err := json.MarshalIndent(lookup, "", "  ")
+					if err != nil {
+						return err
+					}
+					herror.migrationQuery = "offending object: \n\r\n\r" + string(queryData)
+				}
 			}
+			return herror
+		default:
+			return herror
 		}
-		return horror.Error(h.config.isCMD)
 	}
 	return nil
 }
@@ -266,14 +238,8 @@ func (h *HasuraDB) Query(data interface{}) error {
 	}
 	h.logger.Debug("response: ", string(body))
 
-	var horror HasuraError
 	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(body, &horror)
-		if err != nil {
-			h.logger.Debug(err)
-			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
-		}
-		return horror.Error(h.config.isCMD)
+		return NewHasuraError(body, h.config.isCMD)
 	}
 	return nil
 }

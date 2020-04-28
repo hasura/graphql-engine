@@ -157,11 +157,12 @@ module.exports = {
     // set global consts
     new webpack.DefinePlugin({
       CONSOLE_ASSET_VERSION: Date.now().toString(),
+      'process.hrtime': () => null,
     }),
     webpackIsomorphicToolsPlugin.development(),
     new ForkTsCheckerWebpackPlugin({
       compilerOptions: {
-        allowJs: false,
+        allowJs: true,
         checkJs: false,
       },
     }),

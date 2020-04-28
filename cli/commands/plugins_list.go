@@ -72,11 +72,12 @@ func (p *pluginListOptions) run() error {
 	if err != nil {
 		return errors.Wrap(err, "failed to load the list of plugins from the index")
 	}
-	names := make([]string, len(availablePlugins))
+	names := make([]string, 0, len(availablePlugins))
 	pluginMap := make(map[string]plugins.Plugin, len(availablePlugins))
-	for i, p := range availablePlugins {
-		names[i] = p.Name
-		pluginMap[p.Name] = p
+	for i, ap := range availablePlugins {
+		names = append(names, i)
+		latestVersion := ap.Index[len(ap.Index)-1]
+		pluginMap[i] = ap.Versions[latestVersion]
 	}
 	installed, err := ec.PluginsConfig.ListInstalledPlugins()
 	if err != nil {

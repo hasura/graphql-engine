@@ -34,15 +34,15 @@ if [[ ! -z "$CIRCLE_COMPARE_URL" ]]; then
         COMMIT_RANGE=$(echo $CIRCLE_COMPARE_URL | sed 's:^.*/compare/::g')
     fi
     echo "Diff: $COMMIT_RANGE"
-    changes="$(git diff $COMMIT_RANGE --name-only -- . ':!scripts' ':!assets' ':!docs' ':!community' ':!install-manifests' ':!github' ':!*.md' ':!.ciignore' ':!.gitignore' ':!LICENSE')"
+    changes="$(git diff $COMMIT_RANGE --name-only -- . ':!scripts' ':!assets' ':!docs' ':!community' ':!install-manifests' ':!github' ':!*.md' ':!.ciignore' ':!.gitignore' ':!LICENSE' ':!.github')"
 elif [[ "$CIRCLE_BRANCH" == "master" ]]; then
     # CIRCLE_COMPARE_URL is not set, but branch is master, diff with last commit
     echo "Diff: HEAD~1"
-    changes="$(git diff HEAD~1 --name-only -- . ':!scripts' ':!assets' ':!docs' ':!community' ':!install-manifests' ':!github' ':!*.md' ':!.ciignore' ':!.gitignore' ':!LICENSE')"
+    changes="$(git diff HEAD~1 --name-only -- . ':!scripts' ':!assets' ':!docs' ':!community' ':!install-manifests' ':!github' ':!*.md' ':!.ciignore' ':!.gitignore' ':!LICENSE' ':!.github')"
 else
     # CIRCLE_COMPARE_URL is not set, branch is not master, diff with origin/master
     echo "Diff: origin/master..HEAD"
-    changes="$(git diff-tree --no-commit-id --name-only -r origin/master..HEAD -- . ':!scripts' ':!assets' ':!docs' ':!community' ':!install-manifests' ':!github' ':!*.md' ':!.ciignore' ':!.gitignore' ':!LICENSE')"
+    changes="$(git diff-tree --no-commit-id --name-only -r origin/master..HEAD -- . ':!scripts' ':!assets' ':!docs' ':!community' ':!install-manifests' ':!github' ':!*.md' ':!.ciignore' ':!.gitignore' ':!LICENSE' ':!.github')"
 fi
 
 echo "Changes in this build:"
