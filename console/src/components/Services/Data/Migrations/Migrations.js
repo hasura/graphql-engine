@@ -6,7 +6,7 @@ import 'react-toggle/style.css';
 
 import { updateMigrationModeStatus } from '../../../Main/Actions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import { Heading, TextLink } from '../../../UIKit/atoms';
+import { Heading, Link } from '../../../UIKit/atoms';
 import '../../../Common/ReactToggle/ReactToggleOverrides.css';
 import styles from './Migrations.scss';
 
@@ -28,13 +28,13 @@ const Migrations = ({ dispatch, migrationMode }) => {
         </li>
         <li>
           Read more about managing migrations with Hasura at the{' '}
-          <TextLink
+          <Link
             href="https://hasura.io/docs/1.0/graphql/manual/migrations/index.html"
             target="_blank"
             hover="underline"
           >
             Hasura migrations guide
-          </TextLink>
+          </Link>
         </li>
       </ul>
     );
@@ -73,12 +73,12 @@ const Migrations = ({ dispatch, migrationMode }) => {
 
 Migrations.propTypes = {
   dispatch: PropTypes.func.isRequired,
-  migrationMode: PropTypes.bool.isRequired
+  migrationMode: PropTypes.bool.isRequired,
 };
 
 const mapStateToProps = state => ({
   ...state.rawSQL,
-  migrationMode: state.main.migrationMode
+  migrationMode: state.main.migrationMode,
 });
 
 const migrationsConnector = connect => connect(mapStateToProps)(Migrations);

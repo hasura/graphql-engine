@@ -5,7 +5,7 @@ import { Link as RouterLink } from 'react-router';
 import Helmet from 'react-helmet';
 
 import globals from '../../Globals';
-import { Heading, TextLink } from '../UIKit/atoms';
+import { Heading, Link } from '../UIKit/atoms';
 import styles from './ErrorPage.scss';
 
 const errorImage = `${globals.assetsPath}/common/img/hasura_icon_green.svg`;
@@ -34,17 +34,17 @@ const RuntimeError = ({ resetCallback, error }) => (
           <br />
           <div>
             You can report this issue on our
-            <TextLink
+            <Link
               mx="xs"
               href="https://github.com/hasura/graphql-engine/issues"
               hover="underline"
             >
               GitHub
-            </TextLink>
+            </Link>
             or chat with us on
-            <TextLink href="http://discord.gg/hasura" hover="underline" ml="xs">
+            <Link href="http://discord.gg/hasura" hover="underline" ml="xs">
               Discord
-            </TextLink>
+            </Link>
           </div>
         </div>
         <div className="col-xs-4">

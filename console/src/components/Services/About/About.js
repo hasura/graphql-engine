@@ -7,13 +7,13 @@ import requestAction from '../../../utils/requestAction';
 import { showErrorNotification } from '../Common/Notification';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { versionGT } from '../../../helpers/versionUtils';
-import { Spinner, Heading, Text, TextLink } from '../../UIKit/atoms';
+import { Spinner, Heading, Text, Link } from '../../UIKit/atoms';
 import styles from './About.scss';
 
 class About extends Component {
   state = {
     consoleAssetVersion: globals.consoleAssetVersion,
-    pgVersion: null
+    pgVersion: null,
   };
 
   componentDidMount() {
@@ -25,13 +25,13 @@ class About extends Component {
         method: 'POST',
         credentials: globalCookiePolicy,
         headers: dataHeaders,
-        body: JSON.stringify(getRunSqlQuery('SELECT version();', false, true))
+        body: JSON.stringify(getRunSqlQuery('SELECT version();', false, true)),
       };
 
       dispatch(requestAction(url, options)).then(
         data => {
           this.setState({
-            pgVersion: data.result[1][0]
+            pgVersion: data.result[1][0],
           });
         },
         error => {
@@ -72,7 +72,7 @@ class About extends Component {
       ) {
         updateLinks = (
           <>
-            <TextLink
+            <Link
               href={
                 'https://github.com/hasura/graphql-engine/releases/tag/' +
                 latestStableServerVersion
@@ -83,9 +83,9 @@ class About extends Component {
               mx="sm"
             >
               View Changelog
-            </TextLink>
+            </Link>
             <b>&middot;</b>
-            <TextLink
+            <Link
               href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
               target="_blank"
               fontStyle="italic"
@@ -93,7 +93,7 @@ class About extends Component {
               ml="sm"
             >
               Update Now
-            </TextLink>
+            </Link>
           </>
         );
       }
@@ -159,7 +159,7 @@ const mapStateToProps = state => {
   return {
     dataHeaders: state.tables.dataHeaders,
     serverVersion: state.main.serverVersion,
-    latestStableServerVersion: state.main.latestStableServerVersion
+    latestStableServerVersion: state.main.latestStableServerVersion,
   };
 };
 

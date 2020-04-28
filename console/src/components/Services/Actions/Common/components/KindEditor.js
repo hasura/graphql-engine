@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { ToolTip, Heading, TextLink } from '../../../../UIKit/atoms';
+import { ToolTip, Heading, Link } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
 const editorLabel = 'Kind';
@@ -25,7 +25,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
           ml="sm"
           mr="20px"
         />
-        <TextLink type="moreInfo" href={docsRef} />
+        <Link type="moreInfo" href={docsRef} />
       </Heading>
       <div className={styles.display_flex}>
         <label

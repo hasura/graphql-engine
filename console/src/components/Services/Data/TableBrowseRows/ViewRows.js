@@ -54,7 +54,7 @@ import {
   persistPageSizeChange,
 } from './localStorageUtils';
 import Button from '../../../Common/Button/Button';
-import { Icon, Spinner, TextLink } from '../../../UIKit/atoms';
+import { Icon, Spinner, Link } from '../../../UIKit/atoms';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 const ViewRows = ({
@@ -568,7 +568,7 @@ const ViewRows = ({
 
           const getRelExpander = (value, color, clickHandler) => {
             return (
-              <TextLink
+              <Link
                 href="#"
                 color={color}
                 hover="underline"
@@ -576,7 +576,7 @@ const ViewRows = ({
                 onClick={clickHandler}
               >
                 {value}
-              </TextLink>
+              </Link>
             );
           };
 
@@ -749,7 +749,7 @@ const ViewRows = ({
       const isActive = q.name === activePath[curDepth + 1] ? 'active' : null;
       return (
         <li key={i} className={isActive} role="presentation">
-          <TextLink
+          <Link
             href="#"
             color="black.text"
             onClick={e => {
@@ -758,7 +758,7 @@ const ViewRows = ({
             }}
           >
             {[...activePath.slice(0, 1), ...curPath, q.name].join('.')}
-          </TextLink>
+          </Link>
         </li>
       );
     });

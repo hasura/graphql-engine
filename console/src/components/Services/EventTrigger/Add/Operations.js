@@ -3,14 +3,14 @@ import PropTypes from 'prop-types';
 
 import * as tooltip from './Tooltips';
 import { TOGGLE_ENABLE_MANUAL_CONFIG } from './AddActions';
-import { ToolTip, Heading, TextLink } from '../../../UIKit/atoms';
+import { ToolTip, Heading, Link } from '../../../UIKit/atoms';
 import styles from '../TableCommon/EventTable.scss';
 
 const Operations = ({
   enableManual,
   selectedOperations,
   handleOperationSelection,
-  dispatch
+  dispatch,
 }) => {
   const databaseOperations = [
     {
@@ -18,22 +18,22 @@ const Operations = ({
       testIdentifier: 'insert-operation',
       isChecked: selectedOperations.insert,
       onChange: handleOperationSelection,
-      displayName: 'Insert'
+      displayName: 'Insert',
     },
     {
       name: 'update',
       testIdentifier: 'update-operation',
       isChecked: selectedOperations.update,
       onChange: handleOperationSelection,
-      displayName: 'Update'
+      displayName: 'Update',
     },
     {
       name: 'delete',
       testIdentifier: 'delete-operation',
       isChecked: selectedOperations.delete,
       onChange: handleOperationSelection,
-      displayName: 'Delete'
-    }
+      displayName: 'Delete',
+    },
   ];
 
   const getManualInvokeOperation = () => {
@@ -54,12 +54,12 @@ const Operations = ({
             mr="20px"
             message={tooltip.manualOperationsDescription}
           />
-          <TextLink
+          <Link
             type="moreInfo"
             href="https://hasura.io/docs/1.0/graphql/manual/event-triggers/invoke-trigger-console.html"
           />
         </span>
-      )
+      ),
     };
   };
 
@@ -107,7 +107,7 @@ const Operations = ({
 Operations.propTypes = {
   enableManual: PropTypes.bool.isRequired,
   selectedOperations: PropTypes.object.isRequired,
-  handleOperationSelection: PropTypes.func.isRequired
+  handleOperationSelection: PropTypes.func.isRequired,
 };
 
 export default Operations;

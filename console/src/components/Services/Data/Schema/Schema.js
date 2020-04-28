@@ -37,7 +37,7 @@ import {
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import RawSqlButton from '../Common/Components/RawSqlButton';
-import { Icon, ToolTip, Heading, TextLink } from '../../../UIKit/atoms';
+import { Icon, ToolTip, Heading, Link } from '../../../UIKit/atoms';
 import styles from '../../../Common/Common.scss';
 
 class Schema extends Component {
@@ -590,7 +590,7 @@ class Schema extends Component {
       const heading = getSectionHeading(
         'Untracked custom functions',
         'Custom functions that are not exposed over the GraphQL API',
-        <TextLink
+        <Link
           type="moreInfo"
           ml="xs"
           href="https://hasura.io/docs/1.0/graphql/manual/queries/custom-functions.html"

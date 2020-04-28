@@ -9,13 +9,13 @@ import {
   untrackTableSql,
   RESET,
   setUniqueKeys,
-  toggleTableAsEnum
+  toggleTableAsEnum,
 } from '../TableModify/ModifyActions';
 import {
   setTable,
   fetchColumnTypeInfo,
   RESET_COLUMN_TYPE_INFO,
-  fetchFunctionInit
+  fetchFunctionInit,
 } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import ColumnEditorList from './ColumnEditorList';
@@ -23,7 +23,7 @@ import ColumnCreator from './ColumnCreator';
 import PrimaryKeyEditor from './PrimaryKeyEditor';
 import TableCommentEditor from './TableCommentEditor';
 import EnumsSection, {
-  EnumTableModifyWarning
+  EnumTableModifyWarning,
 } from '../Common/Components/EnumsSection';
 import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
@@ -38,7 +38,7 @@ import {
   findTable,
   generateTableDef,
   getTableCustomRootFields,
-  getTableCustomColumnNames
+  getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
 
 import ComputedFieldsEditor from './ComputedFieldsEditor';
@@ -46,9 +46,9 @@ import {
   foreignKeyDescription,
   primaryKeyDescription,
   uniqueKeyDescription,
-  checkConstraintsDescription
+  checkConstraintsDescription,
 } from '../Common/TooltipMessages';
-import { ToolTip, Heading, TextLink } from '../../../UIKit/atoms';
+import { ToolTip, Heading, Link } from '../../../UIKit/atoms';
 import styles from './ModifyTable.scss';
 
 class ModifyTable extends React.Component {
@@ -62,7 +62,7 @@ class ModifyTable extends React.Component {
 
   componentWillUnmount() {
     this.props.dispatch({
-      type: RESET_COLUMN_TYPE_INFO
+      type: RESET_COLUMN_TYPE_INFO,
     });
   }
 
@@ -87,7 +87,7 @@ class ModifyTable extends React.Component {
       columnDefaultFunctions,
       schemaList,
       tableEnum,
-      rootFieldsEdit
+      rootFieldsEdit,
     } = this.props;
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
@@ -194,7 +194,7 @@ class ModifyTable extends React.Component {
               ml="sm"
               mr="20px"
             />
-            <TextLink
+            <Link
               type="moreInfo"
               href="https://hasura.io/docs/1.0/graphql/manual/schema/computed-fields.html"
             />
@@ -339,7 +339,7 @@ ModifyTable.propTypes = {
   dispatch: PropTypes.func.isRequired,
   pkModify: PropTypes.array.isRequired,
   fkModify: PropTypes.array.isRequired,
-  serverVersion: PropTypes.string
+  serverVersion: PropTypes.string,
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -359,7 +359,7 @@ const mapStateToProps = (state, ownProps) => ({
   validTypeCasts: state.tables.columnTypeCasts,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
-  ...state.tables.modify
+  ...state.tables.modify,
 });
 
 const modifyTableConnector = connect => connect(mapStateToProps)(ModifyTable);
