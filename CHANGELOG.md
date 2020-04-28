@@ -32,6 +32,15 @@ Support for this is now added through the `add_computed_field` API.
 
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
+### CLI: Support servers with self-signed certificates (close #4564) (#4582)
+
+A new flag `--certificate-authority` is added so that the CA certificate can be
+provided to trust the Hasura Endpoint with a self-signed SSL certificate.
+
+Another flag `--insecure-skip-tls-verification` is added to skip verifying the certificate
+in case you don't have access to the CA certificate. As the name suggests,
+using this flag is insecure since verification is not carried out.
+
 ### Bug fixes and improvements
 
 - cli: allow initialising project in current directory (fix #4560) #4566
