@@ -4,7 +4,7 @@
 
 .. _cli_reference:
 
-Hasura CLI Configuration reference 
+Hasura CLI Configuration Reference 
 ==================================
 
 .. contents:: Table of contents
