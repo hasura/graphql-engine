@@ -354,8 +354,7 @@ getSubsOpM pgExecCtx initialReusability fld actionExecuter =
     _            -> do
       (astUnresolved, finalReusability) <- runReusabilityTWith initialReusability $
         GR.queryFldToPGAST fld actionExecuter
-      let varTypes = finalReusability ^? _Reusable
-      EL.buildLiveQueryPlan pgExecCtx (VQ._fAlias fld) astUnresolved varTypes
+      EL.buildLiveQueryPlan pgExecCtx (VQ._fAlias fld) astUnresolved finalReusability
 
 getSubsOp
   :: ( MonadError QErr m

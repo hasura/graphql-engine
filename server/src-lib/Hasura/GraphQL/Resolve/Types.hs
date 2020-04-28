@@ -1,7 +1,5 @@
 module Hasura.GraphQL.Resolve.Types
   ( module Hasura.GraphQL.Resolve.Types
-  -- * Re-exports
-  , MonadReusability(..)
   ) where
 
 import           Control.Lens.TH
@@ -12,7 +10,6 @@ import qualified Data.Sequence                  as Seq
 import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
 
-import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DDL.Headers         (HeaderConf)
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp

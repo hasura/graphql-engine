@@ -71,10 +71,10 @@ module Hasura.GraphQL.Validate.Types
   , ReusableVariableValues
 
   , QueryReusability(..)
-  , _Reusable
-  , _NotReusable
-  , MonadReusability(..)
+  , MonadReusability
   , ReusabilityT
+  , markNotReusable
+  , recordVariableUse
   , runReusabilityT
   , runReusabilityTWith
   , evalReusabilityT
@@ -94,8 +94,6 @@ import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.GraphQL.Draft.TH     as G
 import qualified Language.Haskell.TH.Syntax    as TH
-
-import           Control.Lens                  (makePrisms)
 
 import qualified Hasura.RQL.Types.Column       as RQL
 
@@ -247,9 +245,6 @@ instance EquatableGType ObjTyInfo where
     (G.NamedType, Set.HashSet G.NamedType,  Map.HashMap G.Name (G.Name, G.GType, ParamMap))
   getEqProps a = (,,) (_otiName a) (_otiImplIFaces a) (Map.map getEqProps (_otiFields a))
 
-instance Monoid ObjTyInfo where
-  mempty = ObjTyInfo Nothing (G.NamedType "") Set.empty Map.empty
-
 instance Semigroup ObjTyInfo where
   objA <> objB =
     objA { _otiFields = Map.union (_otiFields objA) (_otiFields objB)
@@ -303,14 +298,6 @@ instance EquatableGType IFaceTyInfo where
     (G.NamedType, Map.HashMap G.Name (G.Name, G.GType, ParamMap))
   getEqProps a = (,) (_ifName a) (Map.map getEqProps (_ifFields a))
 
-instance Monoid IFaceTyInfo where
-  mempty = IFaceTyInfo Nothing (G.NamedType "") Map.empty
-
-instance Semigroup IFaceTyInfo where
-  objA <> objB =
-    objA { _ifFields = Map.union (_ifFields objA) (_ifFields objB)
-         }
-
 fromIFaceDef :: G.InterfaceTypeDefinition -> TypeLoc -> IFaceTyInfo
 fromIFaceDef (G.InterfaceTypeDefinition descM n _ flds) loc =
   mkIFaceTyInfo descM (G.NamedType n) fldMap loc
@@ -330,14 +317,6 @@ instance EquatableGType UnionTyInfo where
   type EqProps UnionTyInfo =
     (G.NamedType, Set.HashSet G.NamedType)
   getEqProps a = (,) (_utiName a) (_utiMemberTypes a)
-
-instance Monoid UnionTyInfo where
-  mempty = UnionTyInfo Nothing (G.NamedType "") Set.empty
-
-instance Semigroup UnionTyInfo where
-  objA <> objB =
-    objA { _utiMemberTypes = Set.union (_utiMemberTypes objA) (_utiMemberTypes objB)
-         }
 
 fromUnionTyDef :: G.UnionTypeDefinition -> UnionTyInfo
 fromUnionTyDef (G.UnionTypeDefinition descM n _ mt) = UnionTyInfo descM (G.NamedType n) $ Set.fromList mt
@@ -810,36 +789,28 @@ data QueryReusability
   = Reusable !ReusableVariableTypes
   | NotReusable
   deriving (Show, Eq)
-$(makePrisms ''QueryReusability)
 
-instance Semigroup QueryReusability where
-  Reusable a <> Reusable b = Reusable (a <> b)
-  _          <> _          = NotReusable
-instance Monoid QueryReusability where
-  mempty = Reusable mempty
+type MonadReusability m = MonadState QueryReusability m
 
-class (Monad m) => MonadReusability m where
-  recordVariableUse :: G.Variable -> RQL.PGColumnType -> m ()
-  markNotReusable :: m ()
+type ReusabilityT m a = StateT QueryReusability m a
 
-instance (MonadReusability m) => MonadReusability (ReaderT r m) where
-  recordVariableUse a b = lift $ recordVariableUse a b
-  markNotReusable = lift markNotReusable
+markNotReusable :: MonadReusability m => m ()
+markNotReusable = put NotReusable
 
-newtype ReusabilityT m a = ReusabilityT { unReusabilityT :: StateT QueryReusability m a }
-  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r, MonadIO)
-
-instance (Monad m) => MonadReusability (ReusabilityT m) where
-  recordVariableUse varName varType = ReusabilityT $
-    modify' (<> Reusable (ReusableVariableTypes $ Map.singleton varName varType))
-  markNotReusable = ReusabilityT $ put NotReusable
+recordVariableUse :: MonadReusability m => G.Variable -> RQL.PGColumnType -> m ()
+recordVariableUse varName varType = modify' combine
+  where
+    combine :: QueryReusability -> QueryReusability
+    combine (Reusable (ReusableVariableTypes ts)) =
+      Reusable (ReusableVariableTypes (Map.insert varName varType ts))
+    combine NotReusable = NotReusable
 
 runReusabilityT :: ReusabilityT m a -> m (a, QueryReusability)
-runReusabilityT = runReusabilityTWith mempty
+runReusabilityT = runReusabilityTWith (Reusable mempty)
 
 -- | Like 'runReusabilityT', but starting from an existing 'QueryReusability' state.
 runReusabilityTWith :: QueryReusability -> ReusabilityT m a -> m (a, QueryReusability)
-runReusabilityTWith initialReusability = flip runStateT initialReusability . unReusabilityT
+runReusabilityTWith initialReusability = flip runStateT initialReusability
 
 evalReusabilityT :: (Monad m) => ReusabilityT m a -> m a
-evalReusabilityT = flip evalStateT mempty . unReusabilityT
+evalReusabilityT = flip evalStateT (Reusable mempty)

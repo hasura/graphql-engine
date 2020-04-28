@@ -46,6 +46,7 @@ import           Data.UUID                              (UUID)
 import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
+import           Hasura.GraphQL.Validate.Types          (QueryReusability(..))
 import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.Db
@@ -254,7 +255,7 @@ buildLiveQueryPlan
   => PGExecCtx
   -> G.Alias
   -> GR.QueryRootFldUnresolved
-  -> Maybe GV.ReusableVariableTypes
+  -> QueryReusability
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
 buildLiveQueryPlan pgExecCtx fieldAlias astUnresolved varTypes = do
   userInfo <- asks getter
@@ -273,7 +274,11 @@ buildLiveQueryPlan pgExecCtx fieldAlias astUnresolved varTypes = do
   validatedSyntheticVars <- validateVariables pgExecCtx (toList syntheticVariableValues)
   let cohortVariables = CohortVariables (_uiSession userInfo) validatedQueryVars validatedSyntheticVars
       plan = LiveQueryPlan parameterizedPlan cohortVariables
-      reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars <$> varTypes
+      reusablePlan =
+        case varTypes of
+          Reusable types ->
+            Just $ ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars types
+          NotReusable -> Nothing
   pure (plan, reusablePlan)
 
 reuseLiveQueryPlan

@@ -15,7 +15,6 @@ import qualified Data.TByteString                       as TBS
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
-import           Control.Lens                           ((^?))
 import           Data.Has
 
 import qualified Hasura.GraphQL.Resolve                 as R
@@ -208,8 +207,10 @@ convertQuerySelSet initialReusability fields actionRunner = do
             R.traverseQueryRootFldAST prepareWithPlan unresolvedAst
           pure . RFPPostgres $ PGPlan (R.toPGQuery q) vars prepped
       pure (V._fAlias fld, fldPlan)
-  let varTypes = finalReusability ^? _Reusable
-      reusablePlan = ReusableQueryPlan <$> varTypes <*> pure fldPlans
+  let reusablePlan =
+        case finalReusability of
+          Reusable varTypes -> Just $ ReusableQueryPlan varTypes fldPlans
+          NotReusable       -> Nothing
   (tx, sql) <- mkCurPlanTx usrVars fldPlans
   pure (tx, reusablePlan, sql)
 
