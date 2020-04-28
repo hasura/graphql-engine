@@ -75,7 +75,7 @@ Refer to :ref:`uninstall_hasura_cli`.
    :hidden:
 
    install-hasura-cli
-   reference
+   Configuration reference <reference>
    hasura <hasura>
    hasura actions <hasura_actions>
    hasura actions codegen <hasura_actions_codegen>
