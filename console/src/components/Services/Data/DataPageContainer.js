@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 import globals from '../../../Globals';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
@@ -39,9 +39,9 @@ const DataPageContainer = ({
           currentLocation.includes('data/migrations') ? styles.active : ''
         }
       >
-        <Link className={styles.linkBorder} to={'/data/migrations'}>
+        <RouterLink className={styles.linkBorder} to={'/data/migrations'}>
           Migrations
-        </Link>
+        </RouterLink>
       </li>
     );
   }
@@ -64,7 +64,7 @@ const DataPageContainer = ({
         role="presentation"
         className={currentLocation.includes('data/schema') ? styles.active : ''}
       >
-        <Link
+        <RouterLink
           className={styles.linkBorder}
           to={getSchemaBaseRoute(currentSchema)}
         >
@@ -81,20 +81,20 @@ const DataPageContainer = ({
               <GqlCompatibilityWarning identifier={currentSchema} />
             </div>
           </div>
-        </Link>
+        </RouterLink>
         <DataSubSidebar location={location} />
       </li>
       <li
         role="presentation"
         className={currentLocation.includes('data/sql') ? styles.active : ''}
       >
-        <Link
+        <RouterLink
           className={styles.linkBorder}
           to={'/data/sql'}
           data-test="sql-link"
         >
           SQL
-        </Link>
+        </RouterLink>
       </li>
       {migrationTab}
     </ul>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import { Icon } from '../../UIKit/atoms';
@@ -62,13 +62,13 @@ const RemoteSchemaSubSidebar = ({
             key={i}
             data-test={`remote-schema-sidebar-links-${i + 1}`}
           >
-            <Link
+            <RouterLink
               to={appPrefix + '/manage/' + d.name + '/details'}
               data-test={d.name}
             >
               <Icon type="fork" mr="xs" />
               {d.name}
-            </Link>
+            </RouterLink>
           </li>
         );
       });

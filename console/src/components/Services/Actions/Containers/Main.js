@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 import PropTypes from 'prop-types';
 
 import LeftContainer from '../../../Common/Layout/LeftContainer/LeftContainer';
@@ -22,9 +22,9 @@ class Container extends React.Component {
             currentLocation.includes('actions/manage') ? styles.active : ''
           }
         >
-          <Link className={styles.linkBorder} to={appPrefix + '/manage'}>
+          <RouterLink className={styles.linkBorder} to={appPrefix + '/manage'}>
             Manage
-          </Link>
+          </RouterLink>
           <LeftSidebar appPrefix={appPrefix} {...this.props} />
         </li>
         <li
@@ -33,9 +33,9 @@ class Container extends React.Component {
             currentLocation.includes('actions/types') ? styles.active : ''
           }
         >
-          <Link className={styles.linkBorder} to={appPrefix + '/types'}>
+          <RouterLink className={styles.linkBorder} to={appPrefix + '/types'}>
             Custom types
-          </Link>
+          </RouterLink>
         </li>
       </ul>
     );

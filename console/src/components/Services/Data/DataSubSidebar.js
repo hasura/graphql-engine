@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
@@ -112,7 +112,7 @@ class DataSubSidebar extends React.Component {
               className={isActive ? styles.activeLink : ''}
               key={'table ' + i}
             >
-              <Link
+              <RouterLink
                 to={getTableBrowseRoute(
                   currentSchema,
                   tableName,
@@ -122,7 +122,7 @@ class DataSubSidebar extends React.Component {
               >
                 <Icon type="table" size={12} mr="6px" mb="-1px" />
                 {displayTableName(table)}
-              </Link>
+              </RouterLink>
               <GqlCompatibilityWarning identifier={tableName} />
             </li>
           );
@@ -157,7 +157,7 @@ class DataSubSidebar extends React.Component {
 
           return (
             <li className={isActive ? styles.activeLink : ''} key={'fn ' + i}>
-              <Link
+              <RouterLink
                 to={getFunctionModifyRoute(getFunctionSchema(func), funcName)}
                 data-test={funcName}
               >
@@ -166,7 +166,7 @@ class DataSubSidebar extends React.Component {
                   className={styles.functionIcon}
                 />
                 <span>{funcName}</span>
-              </Link>
+              </RouterLink>
             </li>
           );
         });

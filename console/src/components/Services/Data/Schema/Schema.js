@@ -2,28 +2,28 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 
 import Button from '../../../Common/Button/Button';
 import {
   setTableName,
   addExistingTableSql,
   addAllUntrackedTablesSql,
-  addExistingFunction
+  addExistingFunction,
 } from '../Add/AddExistingTableViewActions';
 import {
   updateSchemaInfo,
   fetchFunctionInit,
-  updateCurrentSchema
+  updateCurrentSchema,
 } from '../DataActions';
 import {
   autoAddRelName,
-  autoTrackRelations
+  autoTrackRelations,
 } from '../TableRelationships/Actions';
 import { getRelDef } from '../TableRelationships/utils';
 import {
   getSchemaAddTableRoute,
-  getSchemaPermissionsRoute
+  getSchemaPermissionsRoute,
 } from '../../../Common/utils/routesUtils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
@@ -32,7 +32,7 @@ import {
   displayTableName,
   getFunctionName,
   getSchemaTables,
-  getUntrackedTables
+  getUntrackedTables,
 } from '../../../Common/utils/pgUtils';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -47,7 +47,7 @@ class Schema extends Component {
     this.state = {
       isExporting: false,
       createSchemaOpen: false,
-      schemaNameEdit: ''
+      schemaNameEdit: '',
     };
 
     this.props.dispatch(fetchFunctionInit());
@@ -67,7 +67,7 @@ class Schema extends Component {
       dispatch,
       functionsList,
       nonTrackableFunctions,
-      trackedFunctions
+      trackedFunctions,
     } = this.props;
 
     const handleSchemaChange = e => {
@@ -167,7 +167,7 @@ class Schema extends Component {
 
               this.setState({
                 schemaNameEdit: '',
-                createSchemaOpen: false
+                createSchemaOpen: false,
               });
             };
 
@@ -176,7 +176,7 @@ class Schema extends Component {
 
           const handleCancelCreateNewSchema = () => {
             this.setState({
-              createSchemaOpen: false
+              createSchemaOpen: false,
             });
           };
 
@@ -675,9 +675,9 @@ class Schema extends Component {
     const getPermissionsSummaryLink = () => {
       return (
         <div className={styles.add_mar_top}>
-          <Link to={getSchemaPermissionsRoute(currentSchema)}>
+          <RouterLink to={getSchemaPermissionsRoute(currentSchema)}>
             Schema permissions summary
-          </Link>
+          </RouterLink>
         </div>
       );
     };
@@ -712,7 +712,7 @@ Schema.propTypes = {
   untrackedRelations: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   currentSchema: PropTypes.string.isRequired,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = state => ({
@@ -725,7 +725,7 @@ const mapStateToProps = state => ({
   functionsList: [...state.tables.postgresFunctions],
   nonTrackableFunctions: [...state.tables.nonTrackablePostgresFunctions],
   trackedFunctions: [...state.tables.trackedFunctions],
-  serverVersion: state.main.serverVersion ? state.main.serverVersion : ''
+  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 
 const schemaConnector = connect => connect(mapStateToProps)(Schema);

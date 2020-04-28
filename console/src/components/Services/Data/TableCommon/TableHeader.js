@@ -1,6 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 import Helmet from 'react-helmet';
+
 import { changeTableName } from '../TableModify/ModifyActions';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
@@ -74,9 +75,9 @@ const TableHeader = ({
   const getTab = (tab, link, title, dataTestId) => {
     return (
       <li role="presentation" className={tabName === tab ? styles.active : ''}>
-        <Link to={link} data-test={dataTestId || 'table-' + tab}>
+        <RouterLink to={link} data-test={dataTestId || 'table-' + tab}>
           {title}
-        </Link>
+        </RouterLink>
       </li>
     );
   };
@@ -141,4 +142,5 @@ const TableHeader = ({
     </div>
   );
 };
+
 export default TableHeader;

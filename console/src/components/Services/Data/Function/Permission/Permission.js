@@ -2,7 +2,7 @@ import React from 'react';
 
 import Helmet from 'react-helmet';
 import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 import { push } from 'react-router-redux';
 
 import { pageTitle, appPrefix } from '../Modify/constants';
@@ -137,13 +137,13 @@ class Permission extends React.Component {
           <br />
           <br />
           See <b>{setOffTable}</b> permissions{' '}
-          <Link
+          <RouterLink
             to={permissionTableUrl}
             data-test="custom-function-permission-link"
             onClick={onClickPerm}
           >
             here
-          </Link>
+          </RouterLink>
           .
         </Text>
       </div>

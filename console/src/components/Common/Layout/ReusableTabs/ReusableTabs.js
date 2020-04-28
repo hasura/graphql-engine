@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 
 import { Icon } from '../../../UIKit/atoms';
 
@@ -35,7 +35,7 @@ const Tabs = ({
             className={tabName === t ? styles.active : ''}
             key={i}
           >
-            <Link
+            <RouterLink
               to={`${baseUrl}/${t}`}
               data-test={`${
                 testPrefix ? testPrefix + '-' : ''
@@ -43,7 +43,7 @@ const Tabs = ({
             >
               {tabsInfo[t].display_text} {tabName === t ? showCount : null}
               {tabName === t && showLoader ? dataLoader() : null}
-            </Link>
+            </RouterLink>
           </li>
         ))}
       </ul>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 import { css } from 'styled-components';
 
 import * as tooltips from './Tooltips';
@@ -520,7 +520,7 @@ class Main extends React.Component {
       return (
         <ToolTip message={tooltipText} height="100%">
           <li>
-            <Link
+            <RouterLink
               className={
                 currentActiveBlock === block ||
                 (isDefault && currentActiveBlock === '')
@@ -542,7 +542,7 @@ class Main extends React.Component {
                 mr="xs"
               />
               <Text>{title}</Text>
-            </Link>
+            </RouterLink>
           </li>
         </ToolTip>
       );
@@ -660,13 +660,13 @@ class Main extends React.Component {
           <div className={styles.header_logo_wrapper}>
             <div className={styles.logoParent}>
               <div className={styles.logo}>
-                <Link to="/">
+                <RouterLink to="/">
                   <img className="img img-responsive" src={logo} />
-                </Link>
+                </RouterLink>
               </div>
-              <Link to="/">
+              <RouterLink to="/">
                 <div className={styles.project_version}>{serverVersion}</div>
-              </Link>
+              </RouterLink>
             </div>
           </div>
           <div className={styles.navigation_wrapper}>
@@ -716,12 +716,12 @@ class Main extends React.Component {
                 </span>
                 {renderProPopup()}
               </div>
-              <Link to="/settings">
+              <RouterLink to="/settings">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
                   {getMetadataStatusIcon()}
                   {getSettingsSelectedMarker()}
                 </div>
-              </Link>
+              </RouterLink>
               <div className={styles.supportSection}>
                 <div
                   id="help"
@@ -795,14 +795,14 @@ class Main extends React.Component {
                       </TextLink>
                     </li>
                     <li className={'dropdown-item'}>
-                      <Link to="/about">
+                      <RouterLink to="/about">
                         <img
                           className={'img-responsive'}
                           src={about}
                           alt={'about'}
                         />
                         <span>About</span>
-                      </Link>
+                      </RouterLink>
                     </li>
                   </div>
                 </ul>
