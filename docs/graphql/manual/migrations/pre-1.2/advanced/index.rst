@@ -13,6 +13,5 @@ Migrations advanced use cases (pre v1.2)
   Auto-apply migrations/metadata when the server starts <auto-apply-migrations>
   Writing migrations manually <writing-migrations-manually>
   Rolling back applied migrations <rolling-back-migrations>
-  Creating a seed data migration <seed-data-migration>
 
   

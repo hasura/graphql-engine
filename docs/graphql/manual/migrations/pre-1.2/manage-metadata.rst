@@ -12,6 +12,9 @@ Managing Hasura metadata (pre v1.2)
   :depth: 1
   :local:
 
+Introduction
+------------
+
 If your Postgres schema is already managed with a tool like knex, TypeORM,
 Django/Rails migrations, you will still need a way to export the actions you
 performed on the Hasura console to apply it later on another Hasura instance.
