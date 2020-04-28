@@ -25,6 +25,8 @@ The configuration file can be configured with the following config keys:
   version: 
   endpoint: 
   admin_secret:
+  insecure_skip_tls_verify:
+  ca_cert_path:
   access_key: #deprecated
   api_paths:
     query: 
@@ -65,6 +67,14 @@ The configuration file can be configured with the following config keys:
      - false
      - 1 (Deprecated)
      - 
+   * - insecure_skip_tls_verify
+     - false
+     - 1 (added in ``v1.2.0``)
+     - false
+   * - ca_cert_path
+     - false
+     - 1 (added in ``v1.2.0``)
+     -
    * - api_paths
      - false
      - 1
@@ -156,6 +166,16 @@ The configuration can also be set in the form of environment variables:
      - ``access_key``
      - Access key for Hasura GraphQL engine. Note: Deprecated. Use admin 
        secret instead. 
+
+   * - ``HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY``
+     - ``insecure_skip_tls_verify``
+     - Skip verifying SSL certificate for Hasura Endpoint. Useful if you have
+       a self-singed certificate and don't have access to the CA cert.
+
+   * - ``HASURA_GRAPHQL_CA_CERT_PATH``
+     - ``ca_cert_path``
+     - Path to the CA certificate for validating the self-signed certificate for
+       Hasura Endpoint.
 
    * - ``HASURA_GRAPHQL_API_PATHS_QUERY``
      - ``api_paths.query``
