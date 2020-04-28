@@ -174,14 +174,12 @@ func (s *ServerConfig) ParseEndpoint() error {
 
 // GetServerClient returns the http client for server
 func (s *ServerConfig) GetServerClient(config *tls.Config) *http.Client {
+	client := &http.Client{Transport: http.DefaultTransport}
 	if config != nil {
 		tr := &http.Transport{TLSClientConfig: config}
-		client := &http.Client{Transport: tr}
-		return client
-	} else {
-		client := &http.Client{Transport: http.DefaultTransport}
-		return client
+		client.Transport = tr
 	}
+	return client
 }
 
 // Config represents configuration required for the CLI to function
@@ -391,10 +389,8 @@ func (ec *ExecutionContext) setTLSConfig() error {
 		}
 		ec.TLSClientConfig = &tls.Config{
 			RootCAs:            rootCAs,
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: ec.InsecureSkipTLSVerify,
 		}
-	} else {
-		ec.TLSClientConfig = nil
 	}
 	return nil
 }
@@ -530,11 +526,10 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "error in getting server feature flags")
 	}
 
-	state := util.GetServerState(ec.Config.ServerConfig.Endpoint, ec.Config.ServerConfig.AdminSecret, ec.Version.ServerSemver, ec.Logger)
+	state := util.GetServerState(ec.Config.ServerConfig.Endpoint, ec.Config.ServerConfig.AdminSecret, ec.TLSClientConfig, ec.Version.ServerSemver, ec.Logger)
 	ec.ServerUUID = state.UUID
 	ec.Telemetry.ServerUUID = ec.ServerUUID
 	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
-
 	// Set headers required for communicating with HGE
 	if ec.Config.AdminSecret != "" {
 		headers := map[string]string{

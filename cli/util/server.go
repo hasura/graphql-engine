@@ -1,6 +1,8 @@
 package util
 
 import (
+	"crypto/tls"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/Masterminds/semver"
@@ -19,7 +21,7 @@ type hdbVersion struct {
 }
 
 // GetServerState queries a server for the state.
-func GetServerState(endpoint, adminSecret string, serverVersion *semver.Version, log *logrus.Logger) *ServerState {
+func GetServerState(endpoint, adminSecret string, config *tls.Config, serverVersion *semver.Version, log *logrus.Logger) *ServerState {
 	state := &ServerState{
 		UUID: "00000000-0000-0000-0000-000000000000",
 	}
@@ -37,6 +39,9 @@ func GetServerState(endpoint, adminSecret string, serverVersion *semver.Version,
 		}
 	}`
 	req := gorequest.New()
+	if config != nil {
+		req = req.TLSClientConfig(config)
+	}
 	req = req.Post(endpoint + "/v1/query").Send(payload)
 	req.Set("X-Hasura-Admin-Secret", adminSecret)
 
