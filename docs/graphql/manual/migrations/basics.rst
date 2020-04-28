@@ -1,11 +1,11 @@
 .. meta::
-  :description: Setup Hasura migrations
+  :description: Hasura migrations basics
   :keywords: hasura, docs, migration, metadata
 
-.. _setup_migrations:
+.. _migrations_basics:
 
-Setting up Hasura migrations
-============================
+Hasura migrations basics
+========================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,9 +15,7 @@ Setting up Hasura migrations
 Initializing migrations
 -----------------------
 
-Download the latest pre-release CLI version from the `releases page <https://github.com/hasura/graphql-engine/releases>`_
-
-.. Install the Hasura CLI as described in :ref:`install_hasura_cli`
+Install the Hasura CLI as described in :ref:`install_hasura_cli`
 
 Run:
 

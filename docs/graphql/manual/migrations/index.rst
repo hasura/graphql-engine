@@ -81,7 +81,7 @@ Reference documentation
   :maxdepth: 1
   :hidden:
 
-  Setting up <setup>
+  Basics <basics>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>
   Upgrading to migrations v2 <upgrade-v2>
