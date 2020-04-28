@@ -46,6 +46,9 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Create a directory with endpoint and admin secret configured:
   hasura init <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
 
+  # Create a hasura project in the current working directory
+  hasura init .
+
   # See https://hasura.io/docs/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
 		Args:         cobra.MaximumNArgs(1),
@@ -97,7 +100,7 @@ type InitOptions struct {
 }
 
 func (o *InitOptions) Run() error {
-	var dir string
+	var infoMsg string
 	// prompt for init directory if it's not set already
 	if o.InitDir == "" {
 		p := promptui.Prompt{
@@ -109,35 +112,45 @@ func (o *InitOptions) Run() error {
 			return handlePromptError(err)
 		}
 		if strings.TrimSpace(r) != "" {
-			dir = r
+			o.InitDir = r
 		} else {
-			dir = defaultDirectory
+			o.InitDir = defaultDirectory
 		}
-	} else {
-		dir = o.InitDir
 	}
 
-	if o.EC.ExecutionDirectory == "" {
-		o.EC.ExecutionDirectory = dir
-	} else {
-		o.EC.ExecutionDirectory = filepath.Join(o.EC.ExecutionDirectory, dir)
-	}
-
-	var infoMsg string
-
-	// create the execution directory
-	if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
-		return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
-	}
-	err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
+	cwdir, err := os.Getwd()
 	if err != nil {
-		return errors.Wrap(err, "error creating setup directories")
+		return errors.Wrap(err, "error getting current working directory")
 	}
-	infoMsg = fmt.Sprintf(`directory created. execute the following commands to continue:
+	initPath, err := filepath.Abs(o.InitDir)
+	if err != nil {
+		return err
+	}
+	if initPath == cwdir {
+		// check if pwd is filesystem root
+		if err := cli.CheckFilesystemBoundary(cwdir); err != nil {
+			return errors.Wrap(err, "can't initialise hasura project in filesystem root")
+		}
+		// check if the current directory is already a hasura project
+		if err := cli.ValidateDirectory(cwdir); err == nil {
+			return errors.Errorf("current working directory is already a hasura project directory")
+		}
+		o.EC.ExecutionDirectory = cwdir
+		infoMsg = fmt.Sprintf(`hasura project initialised. execute the following command to continue:
+  hasura console
+`)
+	} else {
+		// create execution directory
+		err := o.createExecutionDirectory()
+		if err != nil {
+			return err
+		}
+		infoMsg = fmt.Sprintf(`directory created. execute the following commands to continue:
 
   cd %s
   hasura console
 `, o.EC.ExecutionDirectory)
+	}
 
 	// create template files
 	err = o.createTemplateFiles()
@@ -152,6 +165,26 @@ func (o *InitOptions) Run() error {
 	}
 
 	o.EC.Logger.Info(infoMsg)
+	return nil
+}
+
+//create the execution directory
+func (o *InitOptions) createExecutionDirectory() error {
+	if o.EC.ExecutionDirectory == "" {
+		o.EC.ExecutionDirectory = o.InitDir
+	} else {
+		o.EC.ExecutionDirectory = filepath.Join(o.EC.ExecutionDirectory, o.InitDir)
+	}
+
+	// create the execution directory
+	if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
+		return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
+	}
+	err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
+	if err != nil {
+		return errors.Wrap(err, "error creating setup directories")
+	}
+
 	return nil
 }
 
