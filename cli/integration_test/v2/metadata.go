@@ -34,7 +34,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 			},
 			nil,
 			"",
-			filepath.Join(currDir, getMetadataDir(), "1_metadata"),
+			filepath.Join(currDir, getMetadataDir(ec.Version.ServerSemver), "1_metadata"),
 		},
 		{
 			"metadata-apply",
@@ -43,7 +43,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 				ActionType: "apply",
 			},
 			nil,
-			filepath.Join(currDir, getMetadataDir(), "2_metadata"),
+			filepath.Join(currDir, getMetadataDir(ec.Version.ServerSemver), "2_metadata"),
 			"",
 		},
 		{
@@ -54,7 +54,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 			},
 			nil,
 			"",
-			filepath.Join(currDir, getMetadataDir(), "2_metadata"),
+			filepath.Join(currDir, getMetadataDir(ec.Version.ServerSemver), "2_metadata"),
 		},
 		{
 			"metadata-clear",
@@ -74,13 +74,13 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 			},
 			nil,
 			"",
-			filepath.Join(currDir, getMetadataDir(), "1_metadata"),
+			filepath.Join(currDir, getMetadataDir(ec.Version.ServerSemver), "1_metadata"),
 		},
 		{
 			"metadata-diff",
 			&commands.MetadataDiffOptions{
 				EC:     ec,
-				Args:   []string{filepath.Join(currDir, getMetadataDir(), "1_metadata")},
+				Args:   []string{filepath.Join(currDir, getMetadataDir(ec.Version.ServerSemver), "1_metadata")},
 				Output: new(bytes.Buffer),
 			},
 			nil,

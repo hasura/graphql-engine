@@ -3,6 +3,7 @@ module Hasura.GraphQL.Schema.Action
   ) where
 
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashSet                  as Set
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Coerce                   (coerce)
@@ -14,6 +15,7 @@ import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 mkAsyncActionSelectionType :: ActionName -> G.NamedType
@@ -52,30 +54,68 @@ mkAsyncActionQueryResponseObj actionName outputType =
         , unGraphQLType outputType)
       ]
 
-mkMutationField
+mkQueryActionField
   :: ActionName
   -> ActionInfo
   -> [(PGCol, PGScalarType)]
   -> (ActionExecutionContext, ObjFldInfo)
-mkMutationField actionName actionInfo definitionList =
+mkQueryActionField actionName actionInfo definitionList =
   ( actionExecutionContext
   , fieldInfo
   )
   where
     definition = _aiDefinition actionInfo
     actionExecutionContext =
-      case _adKind definition of
+      ActionExecutionContext
+      actionName
+      (_adOutputType definition)
+      (getActionOutputFields $ _aiOutputObject actionInfo)
+      definitionList
+      (_adHandler definition)
+      (_adHeaders definition)
+      (_adForwardClientHeaders definition)
+
+    description = mkDescriptionWith (PGDescription <$> _aiComment actionInfo) $
+                  "perform the action: " <>> actionName
+
+    fieldInfo =
+      mkHsraObjFldInfo
+      (Just description)
+      (unActionName actionName)
+      (mapFromL _iviName $ map mkActionArgument $ _adArguments definition)
+      actionFieldResponseType
+
+    mkActionArgument argument =
+      InpValInfo (_argDescription argument) (unArgumentName $ _argName argument)
+      Nothing $ unGraphQLType $ _argType argument
+
+    actionFieldResponseType = unGraphQLType $ _adOutputType definition
+
+mkMutationActionField
+  :: ActionName
+  -> ActionInfo
+  -> [(PGCol, PGScalarType)]
+  -> ActionMutationKind
+  -> (ActionMutationExecutionContext, ObjFldInfo)
+mkMutationActionField actionName actionInfo definitionList kind =
+  ( actionExecutionContext
+  , fieldInfo
+  )
+  where
+    definition = _aiDefinition actionInfo
+    actionExecutionContext =
+      case kind of
         ActionSynchronous  ->
-          ActionExecutionSyncWebhook $ SyncActionExecutionContext actionName
+          ActionMutationSyncWebhook $ ActionExecutionContext actionName
           (_adOutputType definition)
-          (_aiOutputFields actionInfo)
+          (getActionOutputFields $ _aiOutputObject actionInfo)
           definitionList
           (_adHandler definition)
           (_adHeaders definition)
           (_adForwardClientHeaders definition)
-        ActionAsynchronous -> ActionExecutionAsync
+        ActionAsynchronous -> ActionMutationAsync
 
-    description = mkDescriptionWith (PGDescription <$> (_aiComment actionInfo)) $
+    description = mkDescriptionWith (PGDescription <$> _aiComment actionInfo) $
                   "perform the action: " <>> actionName
 
     fieldInfo =
@@ -90,7 +130,7 @@ mkMutationField actionName actionInfo definitionList =
       Nothing $ unGraphQLType $ _argType argument
 
     actionFieldResponseType =
-      case _adKind definition of
+      case kind of
         ActionSynchronous  -> unGraphQLType $ _adOutputType definition
         ActionAsynchronous -> G.toGT $ G.toNT $ mkScalarTy PGUUID
 
@@ -99,9 +139,10 @@ mkQueryField
   -> Maybe Text
   -> ResolvedActionDefinition
   -> [(PGCol, PGScalarType)]
+  -> ActionMutationKind
   -> Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
-mkQueryField actionName comment definition definitionList =
-  case _adKind definition of
+mkQueryField actionName comment definition definitionList kind =
+  case kind of
     ActionAsynchronous ->
       Just ( ActionSelectOpContext (_adOutputType definition) definitionList
 
@@ -122,73 +163,60 @@ mkQueryField actionName comment definition definitionList =
       where
         idDescription = G.Description $ "id of the action: " <>> actionName
 
-mkActionFieldsAndTypes
-  :: (QErrM m)
-  => ActionInfo
-  -> AnnotatedObjectType
-  -> ActionPermissionInfo
-  -> m ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
-       -- context, field, response type info
-     , (ActionExecutionContext, ObjFldInfo) -- mutation field
-     , FieldMap
-     )
-mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
-  return ( mkQueryField actionName comment definition definitionList
-         , mkMutationField actionName actionInfo definitionList
-         , fieldMap
-         )
+mkPGFieldType
+  :: ObjectFieldName
+  -> (G.GType, OutputFieldTypeInfo)
+  -> HashMap ObjectFieldName PGColumnInfo
+  -> PGScalarType
+mkPGFieldType fieldName (fieldType, fieldTypeInfo) fieldReferences =
+  case (G.isListType fieldType, fieldTypeInfo) of
+  -- for scalar lists, we treat them as json columns
+    (True, _) -> PGJSON
+    -- enums the same
+    (False, OutputFieldEnum _) -> PGJSON
+    -- default to PGJSON unless you have to join with a postgres table
+    -- i.e, if this field is specified as part of some relationship's
+    -- mapping, we can cast this column's value as the remote column's type
+    (False, OutputFieldScalar _) ->
+      case Map.lookup fieldName fieldReferences of
+        Just columnInfo -> unsafePGColumnToRepresentation $ pgiType columnInfo
+        Nothing         -> PGJSON
+
+
+mkDefinitionList :: AnnotatedObjectType -> HashMap ObjectFieldName PGColumnInfo -> [(PGCol, PGScalarType)]
+mkDefinitionList annotatedOutputType fieldReferences =
+  [ (unsafePGCol $ coerce k, mkPGFieldType k v fieldReferences)
+  | (k, v) <- Map.toList $ _aotAnnotatedFields annotatedOutputType
+  ]
+
+mkFieldMap
+  :: AnnotatedObjectType
+  -> ActionInfo
+  -> HashMap ObjectFieldName PGColumnInfo
+  -> RoleName
+  -> HashMap (G.NamedType,G.Name) ResolveField
+mkFieldMap annotatedOutputType actionInfo fieldReferences roleName =
+  Map.fromList $ fields <> catMaybes relationships
   where
-    actionName = _aiName actionInfo
-    definition = _aiDefinition actionInfo
-    roleName = _apiRole permission
-    comment = _aiComment actionInfo
-
-    -- all the possible field references
-    fieldReferences =
-      Map.unions $ map _trFieldMapping $ Map.elems $
-      _aotRelationships annotatedOutputType
-
-    mkPGFieldType fieldName (fieldType, fieldTypeInfo) =
-      case (G.isListType fieldType, fieldTypeInfo) of
-        -- for scalar lists, we treat them as json columns
-        (True, _) -> PGJSON
-        -- enums the same
-        (False, OutputFieldEnum _) -> PGJSON
-        -- default to PGJSON unless you have to join with a postgres table
-        -- i.e, if this field is specified as part of some relationship's
-        -- mapping, we can cast this column's value as the remote column's type
-        (False, OutputFieldScalar _) ->
-          case Map.lookup fieldName fieldReferences of
-            Just columnInfo -> unsafePGColumnToRepresentation $ pgiType columnInfo
-            Nothing         -> PGJSON
-
-    definitionList =
-      [ (unsafePGCol $ coerce k, mkPGFieldType k v)
-      | (k, v) <- Map.toList $ _aotAnnotatedFields annotatedOutputType
-      ]
-    -- mkFieldMap annotatedOutputType =
-    fieldMap =
-      Map.fromList $ fields <> catMaybes relationships
-      where
-        fields =
-          flip map (Map.toList $ _aotAnnotatedFields annotatedOutputType) $
-          \(fieldName, (fieldType, fieldTypeInfo)) ->
-            ( (actionOutputBaseType, unObjectFieldName fieldName)
-            , RFPGColumn $ PGColumnInfo
-              (unsafePGCol $ coerce fieldName)
-              (coerce fieldName)
-              0
-              (PGColumnScalar $ mkPGFieldType fieldName (fieldType, fieldTypeInfo))
-              (G.isNullable fieldType)
-              Nothing
-            )
-        relationships =
-          flip map (Map.toList $ _aotRelationships annotatedOutputType) $
-          \(relationshipName, relationship) ->
-            let remoteTableInfo = _trRemoteTable relationship
-                remoteTable = _tciName $ _tiCoreInfo remoteTableInfo
-                filterAndLimitM = getFilterAndLimit remoteTableInfo
-                columnMapping = Map.fromList $
+    fields =
+      flip map (Map.toList $ _aotAnnotatedFields annotatedOutputType) $
+      \(fieldName, (fieldType, fieldTypeInfo)) ->
+        ( (actionOutputBaseType, unObjectFieldName fieldName)
+        , RFPGColumn $ PGColumnInfo
+          (unsafePGCol $ coerce fieldName)
+          (coerce fieldName)
+          0
+          (PGColumnScalar $ mkPGFieldType fieldName (fieldType, fieldTypeInfo) fieldReferences)
+          (G.isNullable fieldType)
+          Nothing
+        )
+    relationships =
+      flip map (Map.toList $ _aotRelationships annotatedOutputType) $
+      \(relationshipName, relationship) ->
+        let remoteTableInfo = _trRemoteTable relationship
+            remoteTable = _tciName $ _tiCoreInfo remoteTableInfo
+            filterAndLimitM = getFilterAndLimit remoteTableInfo
+            columnMapping = Map.fromList $
                   [ (unsafePGCol $ coerce k, pgiColumn v)
                   | (k, v) <- Map.toList $ _trFieldMapping relationship
                   ]
@@ -209,70 +237,144 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
                        tableLimit
                      )
               Nothing -> Nothing
+
     getFilterAndLimit remoteTableInfo =
-      if roleName == adminRole
+      if roleName == adminRoleName
       then Just (annBoolExpTrue, Nothing)
       else do
         selectPermisisonInfo <-
           getSelectPermissionInfoM remoteTableInfo roleName
         return (spiFilter selectPermisisonInfo, spiLimit selectPermisisonInfo)
+
     actionOutputBaseType =
       G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefinition actionInfo
 
-mkActionSchemaOne
-  :: (QErrM m)
-  => AnnotatedObjects
-  -> ActionInfo
-  -> m (Map.HashMap RoleName
+mkFieldReferences :: AnnotatedObjectType -> HashMap ObjectFieldName PGColumnInfo
+mkFieldReferences annotatedOutputType=
+  Map.unions $ map _trFieldMapping $ Map.elems $
+  _aotRelationships annotatedOutputType
+
+mkMutationActionFieldsAndTypes
+  :: ActionInfo
+  -> ActionPermissionInfo
+  -> ActionMutationKind
+  -> ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
+       -- context, field, response type info
+     , (ActionMutationExecutionContext, ObjFldInfo) -- mutation field
+     , FieldMap
+     )
+mkMutationActionFieldsAndTypes actionInfo permission kind =
+  ( mkQueryField actionName comment definition definitionList kind
+  , mkMutationActionField actionName actionInfo definitionList kind
+  , fieldMap
+  )
+  where
+    actionName = _aiName actionInfo
+    annotatedOutputType = _aiOutputObject actionInfo
+    definition = _aiDefinition actionInfo
+    roleName = _apiRole permission
+    comment = _aiComment actionInfo
+
+    -- all the possible field references
+    fieldReferences = mkFieldReferences annotatedOutputType
+
+    definitionList = mkDefinitionList annotatedOutputType fieldReferences
+
+    fieldMap = mkFieldMap annotatedOutputType actionInfo fieldReferences roleName
+
+mkQueryActionFieldsAndTypes
+  :: ActionInfo
+  -> ActionPermissionInfo
+  -> ((ActionExecutionContext, ObjFldInfo)
+     , FieldMap
+     )
+mkQueryActionFieldsAndTypes actionInfo permission =
+  ( mkQueryActionField actionName actionInfo definitionList
+  , fieldMap
+  )
+  where
+    actionName = _aiName actionInfo
+    roleName = _apiRole permission
+    annotatedOutputType = _aiOutputObject actionInfo
+
+    fieldReferences = mkFieldReferences annotatedOutputType
+
+    definitionList = mkDefinitionList annotatedOutputType fieldReferences
+
+    fieldMap = mkFieldMap annotatedOutputType actionInfo fieldReferences roleName
+
+mkMutationActionSchemaOne
+  :: ActionInfo
+  -> ActionMutationKind
+  -> Map.HashMap RoleName
          ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
-         , (ActionExecutionContext, ObjFldInfo)
+         , (ActionMutationExecutionContext, ObjFldInfo)
          , FieldMap
          )
-       )
-mkActionSchemaOne annotatedObjects actionInfo = do
-  annotatedOutputType <- onNothing
-      (Map.lookup (ObjectTypeName actionOutputBaseType) annotatedObjects) $
-      throw500 $ "missing annotated type for: " <> showNamedTy actionOutputBaseType
-  forM permissions $ \permission ->
-    mkActionFieldsAndTypes actionInfo annotatedOutputType permission
+mkMutationActionSchemaOne actionInfo kind =
+  flip Map.map permissions $ \permission ->
+    mkMutationActionFieldsAndTypes actionInfo permission kind
   where
-    adminPermission = ActionPermissionInfo adminRole
-    permissions = Map.insert adminRole adminPermission $ _aiPermissions actionInfo
-    actionOutputBaseType =
-      G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefinition actionInfo
+    adminPermission = ActionPermissionInfo adminRoleName
+    permissions = Map.insert adminRoleName adminPermission $ _aiPermissions actionInfo
+
+mkQueryActionSchemaOne
+  :: ActionInfo
+  -> Map.HashMap RoleName
+         ( (ActionExecutionContext, ObjFldInfo)
+         , FieldMap
+         )
+mkQueryActionSchemaOne actionInfo =
+  flip Map.map permissions $ \permission ->
+    mkQueryActionFieldsAndTypes actionInfo permission
+  where
+    adminPermission = ActionPermissionInfo adminRoleName
+    permissions = Map.insert adminRoleName adminPermission $ _aiPermissions actionInfo
 
 mkActionsSchema
-  :: (QErrM m)
-  => AnnotatedObjects
-  -> ActionCache
-  -> m (Map.HashMap RoleName (RootFields, TyAgg))
-mkActionsSchema annotatedObjects =
-  foldM
+  :: ActionCache
+  -> Map.HashMap RoleName (RootFields, TyAgg)
+mkActionsSchema =
+  foldl'
   (\aggregate actionInfo ->
-     Map.foldrWithKey f aggregate <$>
-     mkActionSchemaOne annotatedObjects actionInfo
+     case _adType $ _aiDefinition actionInfo of
+       ActionQuery ->
+         Map.foldrWithKey (accumulateQuery (_aiPgScalars actionInfo)) aggregate $ mkQueryActionSchemaOne actionInfo
+       ActionMutation kind ->
+         Map.foldrWithKey (accumulateMutation (_aiPgScalars actionInfo)) aggregate $ mkMutationActionSchemaOne actionInfo kind
   )
   mempty
   where
     -- we'll need to add uuid and timestamptz for actions
-    newRoleState = (mempty, addScalarToTyAgg PGJSON $
-                            addScalarToTyAgg PGTimeStampTZ $
-                            addScalarToTyAgg PGUUID mempty)
-    f roleName (queryFieldM, mutationField, fields) =
-      Map.alter (Just . addToState . fromMaybe newRoleState) roleName
+    mkNewRoleState pgScalars =
+      ( mempty
+      , foldr addScalarToTyAgg mempty $
+        pgScalars <> Set.fromList [PGJSON, PGTimeStampTZ, PGUUID]
+      )
+
+    accumulateQuery pgScalars roleName (actionField, fields) =
+      Map.alter (Just . addToStateSync . fromMaybe (mkNewRoleState pgScalars)) roleName
+      where
+        addToStateSync (rootFields, tyAgg) =
+          ( addQueryField (first QCAction actionField) rootFields
+          , addFieldsToTyAgg fields tyAgg
+          )
+
+    accumulateMutation pgScalars roleName (queryFieldM, actionField, fields) =
+      Map.alter (Just . addToState . fromMaybe (mkNewRoleState pgScalars)) roleName
       where
         addToState = case queryFieldM of
           Just (fldCtx, fldDefinition, responseTypeInfo) ->
             addToStateAsync (fldCtx, fldDefinition) responseTypeInfo
           Nothing -> addToStateSync
         addToStateSync (rootFields, tyAgg) =
-          ( addMutationField (first MCAction mutationField) rootFields
+          ( addMutationField (first MCAction actionField) rootFields
           , addFieldsToTyAgg fields tyAgg
           )
         addToStateAsync queryField responseTypeInfo (rootFields, tyAgg) =
-          ( addMutationField (first MCAction mutationField) $
+          ( addMutationField (first MCAction actionField) $
             addQueryField
-            (first QCActionFetch queryField)
+            (first QCAsyncActionFetch queryField)
             rootFields
           , addTypeInfoToTyAgg responseTypeInfo $
             addFieldsToTyAgg fields tyAgg

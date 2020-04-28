@@ -1,4 +1,4 @@
-FROM hasura/graphql-engine:v1.1.1
+FROM hasura/graphql-engine:v1.2.0-beta.5
 
 # set an env var to let the cli know that
 # it is running in server environment

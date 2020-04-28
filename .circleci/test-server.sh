@@ -318,6 +318,45 @@ kill_hge_servers
 
 unset HASURA_GRAPHQL_JWT_SECRET
 
+##########
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_namespace_path) #####################################>\n"
+TEST_TYPE="jwt-with-claims-namespace-path"
+
+# hasura claims at one level of nesting
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura_claims"}')"
+
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py
+
+kill_hge_servers
+
+unset HASURA_GRAPHQL_JWT_SECRET
+
+# hasura claims at two levels of nesting with claims_namespace_path containing special character
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura['\''claims%'\'']"}')"
+
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py
+
+kill_hge_servers
+
+unset HASURA_GRAPHQL_JWT_SECRET
+
+# hasura claims at the root of the JWT token
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$"}')"
+
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py
+
+kill_hge_servers
+
+unset HASURA_GRAPHQL_JWT_SECRET
 
 # test with CORS modes
 
@@ -559,10 +598,10 @@ TEST_TYPE="jwk-url"
 python3 jwk_server.py > "$OUTPUT_FOLDER/jwk_server.log" 2>&1  & JWKS_PID=$!
 wait_for_port 5001
 
-cache_control_jwk_url='{"type": "RS256", "jwk_url": "http://localhost:5001/jwk-cache-control"}'
-expires_jwk_url='{"type": "RS256", "jwk_url": "http://localhost:5001/jwk-expires"}'
-cc_nomaxage_jwk_url='{"type": "RS256", "jwk_url": "http://localhost:5001/jwk-cache-control?nomaxage"}'
-cc_nocache_jwk_url='{"type": "RS256", "jwk_url": "http://localhost:5001/jwk-cache-control?nocache"}'
+cache_control_jwk_url='{"jwk_url": "http://localhost:5001/jwk-cache-control"}'
+expires_jwk_url='{"jwk_url": "http://localhost:5001/jwk-expires"}'
+cc_nomaxage_jwk_url='{"jwk_url": "http://localhost:5001/jwk-cache-control?nomaxage"}'
+cc_nocache_jwk_url='{"jwk_url": "http://localhost:5001/jwk-cache-control?nocache"}'
 
 # start HGE with cache control JWK URL
 export HASURA_GRAPHQL_JWT_SECRET=$cache_control_jwk_url
