@@ -22,7 +22,7 @@ a dev -> staging -> production environment promotion scenario.
 .. note::
 
   This documentation is for **Hasura migrations v2** which was introduced in
-  Hasura GraphQL engine version ``v1.2``. See the :ref:`upgrade guide <migrations_upgrade_v2>`.
+  Hasura GraphQL engine version ``v1.2``. (See :ref:`upgrade guide <migrations_upgrade_v2>`).
 
   For earlier versions, see :ref:`migrations_v1`.
 
