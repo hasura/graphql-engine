@@ -23,7 +23,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Hasura.GraphQL.Parser         as P
 import qualified Hasura.RQL.DML.Select         as RQL
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.SQL.DML                as SQL
 
 import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser,
                                                 UnpreparedValue (..))
@@ -46,7 +46,7 @@ type AnnotatedFields = RQL.AnnFldsG UnpreparedValue
 type AnnotatedField  = RQL.AnnFldG UnpreparedValue
 
 
--- TODO: move to schema
+-- TODO: move to Schema.hs
 queryExp
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => HashSet QualifiedTable
@@ -54,10 +54,10 @@ queryExp
   -> m (Parser 'Output n (HashMap G.Name SelectExp))
 queryExp allTables stringifyNum = do
   selectExpParsers <- for (toList allTables) $ \tableName -> do
-    displayName <- qualifiedObjectToName tableName
     selectPerms <- tableSelectPermissions tableName
-    let desc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName tableName) <> "\""
-    for selectPerms $ \perms ->
+    for selectPerms $ \perms -> do
+      displayName <- qualifiedObjectToName tableName
+      let desc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName tableName) <> "\""
       selectTable tableName displayName (Just desc) perms stringifyNum
     -- TODO: add aggregation tables and primary key queries
   let queryFieldsParser = fmap (Map.fromList . catMaybes) $ sequenceA $ catMaybes selectExpParsers
@@ -88,16 +88,16 @@ selectTable
   -> Bool
   -> m (FieldsParser 'Output n (Maybe (G.Name, SelectExp)))
 selectTable table fieldName description selectPermissions stringifyNum = do
-  tableArgsParser    <- tableArgs table
+  tableArgsParser    <- tableArgs table selectPermissions
   selectionSetParser <- tableFields table selectPermissions stringifyNum
   pure $ P.selection fieldName description tableArgsParser selectionSetParser `mapField`
-    \(aliasName, tableArgs, tableFields) ->
+    \(aliasName, args, fields) ->
       ( aliasName
       , RQL.AnnSelG
-        { RQL._asnFields   = tableFields
+        { RQL._asnFields   = fields
         , RQL._asnFrom     = RQL.FromTable table
         , RQL._asnPerm     = tablePermissions selectPermissions
-        , RQL._asnArgs     = tableArgs
+        , RQL._asnArgs     = args
         , RQL._asnStrfyNum = stringifyNum
         }
       )
@@ -119,34 +119,34 @@ selectTableAggregate
   -> Bool
   -> m (FieldsParser 'Output n (Maybe (G.Name, AggSelectExp)))
 selectTableAggregate table fieldName description selectPermissions stringifyNum = do
-  tableArgsParser   <- tableArgs table
-  tableFieldsParser <- selectTable table nodesName Nothing selectPermissions stringifyNum
-  selectionName     <- qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
-  let aggregationParser = P.selectionSet selectionName Nothing $ sequenceA
-        [ fmap (fmap RQL.TAFNodes) <$> tableFieldsParser
-        , tableAggregationFields undefined undefined
+  tableArgsParser <- tableArgs table selectPermissions
+  nodesParser     <- tableFields table selectPermissions stringifyNum
+  aggregateParser <- tableAggregationFields table selectPermissions
+  selectionName   <- qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
+  let aggregationParser = fmap catMaybes $ P.selectionSet selectionName Nothing $ sequenceA
+        [ P.selection_ $$(G.litName "nodes") Nothing nodesParser
+          `mapField` fmap RQL.TAFNodes
+        , P.selection_ $$(G.litName "aggregate") Nothing aggregateParser
+          `mapField` fmap RQL.TAFAgg
         -- TODO: handle __typename here
         ]
-  pure $ P.selection fieldName description tableArgsParser aggregationParser <&> fmap
-    \(aliasName, tableArgs, aggregationFields) ->
+  pure $ P.selection fieldName description tableArgsParser aggregationParser `mapField`
+    \(aliasName, args, fields) ->
       ( aliasName
       , RQL.AnnSelG
-        { RQL._asnFields   = aggregationFields
+        { RQL._asnFields   = map (first nameToAlias) fields
         , RQL._asnFrom     = RQL.FromTable table
         , RQL._asnPerm     = tablePermissions selectPermissions
-        , RQL._asnArgs     = tableArgs
+        , RQL._asnArgs     = args
         , RQL._asnStrfyNum = stringifyNum
         }
       )
-  where
-    nodesName     = $$(G.litName "nodes")
-    aggregateName = $$(G.litName "aggregate")
 
 
 
 -- 2. local parsers
 -- Parsers that are used but not exported: sub-components
--- todo write better blurb
+-- TODO: write better blurb
 
 -- | Arguments for a table selection
 --
@@ -161,21 +161,21 @@ tableArgs
   -> SelPermInfo
   -> m (FieldsParser 'Input n TableArgs)
 tableArgs table selectPermissions = do
-  boolExpParser <- boolExp table
-  orderByParser <- orderByExp table
+  boolExpParser <- boolExp table selectPermissions
+  orderByParser <- orderByExp table selectPermissions
   columnsEnum   <- tableColumnsEnum table selectPermissions
   pure $ do
     whereF   <- P.fieldOptional whereName   whereDesc   boolExpParser
     orderBy  <- P.fieldOptional orderByName orderByDesc orderByParser
     limit    <- P.fieldOptional limitName   limitDesc   P.int
     offset   <- P.fieldOptional offsetName  offsetDesc  P.int
-    distinct <- P.fieldOptional offsetName  offsetDesc  columnsEnum
+    distinct <- maybe (pure Nothing) (P.fieldOptional offsetName  offsetDesc . P.list) columnsEnum
     pure $ RQL.TableArgs
       { RQL._taWhere    = whereF
       , RQL._taOrderBy  = nonEmpty =<< orderBy
       , RQL._taLimit    = fromIntegral <$> limit
       , RQL._taOffset   = txtEncoder . PGValInteger <$> offset
-      , RQL._taDistCols = distinct
+      , RQL._taDistCols = nonEmpty =<< distinct
       }
   where
     -- TH splices mess up ApplicativeDo
@@ -194,7 +194,7 @@ tableArgs table selectPermissions = do
 
 -- | Fields of a table
 --
--- TODO: can this be merged with selectTable?
+-- TODO: write a better blurb
 tableFields
   :: (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
@@ -202,36 +202,14 @@ tableFields
   -> Bool
   -> m (Parser 'Output n AnnotatedFields)
 tableFields table selectPermissions stringifyNum =
-  memoizeOn 'tableSelectionSet tableName $ do
+  memoizeOn 'tableFields table $ do
+    tableInfo <- _tiCoreInfo <$> askTableInfo table
     tableName <- qualifiedObjectToName table
     fields    <- fmap catMaybes
       $ traverse (\fieldInfo -> fieldSelection fieldInfo selectPermissions stringifyNum)
       =<< tableSelectFields table selectPermissions
     -- TODO: handle __typename here
     pure $ P.selectionSet tableName (_tciDescription tableInfo) $ catMaybes <$> sequenceA fields
-
--- | Table columns enum
---
--- Parser for an enum type that matches the columns of the given
--- table. Used as a parameter for "distinct", among others. Maps to
--- the table_select_columns object.
--- TODO: move this to Table?
-tableColumnsEnum
-  :: (MonadSchema n m, MonadError QErr m)
-  => QualifiedTable
-  -> SelPermInfo
-  -> m (Parser 'Both n PGCol)
-tableColumnsEnum table selectPermissions = do
-  tableName <- qualifiedObjectToName table
-  columns   <- tableSelectColumns table selectPermissions
-  let enumName    = tableName <> $$(G.litName "_select_columns")
-      description = Just $ G.Description $ "select columns of table \"" <> tableName <> "\""
-  pure $ P.enum enumName description $ NE.fromList
-    [ ( P.mkDefinition (pgiName column) (G.Description "column name") P.EnumValueInfo
-      , pgiColumn column
-      )
-    | column <- columns
-    ]
 
 
 -- | Aggregation fields
@@ -249,55 +227,68 @@ tableColumnsEnum table selectPermissions = do
 -- >   min: table_min_fields
 -- > }
 tableAggregationFields
-  :: (MonadSchema n m, MonadError QErr m)
-  => QualifiedTable       -- ^ qualified name of the table
-  -> G.Name               -- ^ field display name
-  -> Maybe G.Description  -- ^ field description, if any
-  -> SelPermInfo          -- ^ select permissions of the table
-  -> m (Parser 'Output n _)
-tableAggregationFields table fieldName description selectPermissions =
-  memoizeOn 'tableSelectionSet table $ do
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable
+  -> SelPermInfo
+  -> m (Parser 'Output n RQL.AggFlds)
+tableAggregationFields table selectPermissions = do
     tableName  <- qualifiedObjectToName table
     allColumns <- tableSelectColumns table selectPermissions
-    numFields  <- fmap sequenceA $ traverse mkField $ RQL.onlyNumCols  columns
-    compFields <- fmap sequenceA $ traverse mkField $ RQL.onlyCompCols columns
-    fields <- fmap (sequenceA . concat) $ sequenceA $ catMaybes
-      [ Just $ do
+    let numColumns  = onlyNumCols allColumns
+    let compColumns = onlyComparableCols allColumns
+    numFields  <- mkFields numColumns
+    compFields <- mkFields compColumns
+    aggFields  <- fmap (fmap catMaybes . sequenceA . concat) $ sequenceA $ catMaybes
+      [ -- count
+        Just $ do
           columnsEnum <- tableColumnsEnum table selectPermissions
           let columnsName  = $$(G.litName "columns")
               distinctName = $$(G.litName "distinct")
               args = do
                 distinct <- P.fieldOptional columnsName  Nothing P.boolean
-                columns  <- P.fieldOptional distinctName Nothing columnsEnum
-                case columns of
-                  Nothing   -> pure SQL.CTStar
-                  Just cols -> if fromMaybe False distinct
-                               then SQL.CTDistinct cols
-                               else SQL.CTSimple cols
-                pure $ RS.AFCount <$> countField
-      , if null numFields then Nothing else Just $
+                columns  <- maybe (pure Nothing) (P.fieldOptional distinctName Nothing . P.list) columnsEnum
+                pure $ case columns of
+                         Nothing   -> SQL.CTStar
+                         Just cols -> if fromMaybe False distinct
+                                      then SQL.CTDistinct cols
+                                      else SQL.CTSimple   cols
+          pure $ pure $ P.selection $$(G.litName "count") Nothing args P.int
+            `mapField` (nameToAlias *** RQL.AFCount)
+      , -- operators on numeric columns
+        if null numColumns then Nothing else Just $
         for [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
             , "variance", "var_samp", "var_pop"
             ] \operator -> do
-          operatorName <- textToName operator
-          let setName = tableName <> "_" <> operatorName <> $$(G.litName "_fields")
-          pure $ P.selection_ operatorName Nothing $ selectionSet setName numFields
-            `mapField` \(name, selection) -> RQL.AFOp $ RQL.AggOp name selection
-      , if null compFields then Nothing else Just $
+          opName <- textToName operator
+          pure $ parseOperator operator opName tableName numFields
+      , -- operators on comparable columns
+        if null compColumns then Nothing else Just $
         for ["max", "min"] \operator -> do
-          operatorName <- textToName operator
-          let setName = tableName <> "_" <> operatorName <> $$(G.litName "_fields")
-          pure $ P.selection_ operatorName Nothing $ selectionSet setName compFields
-            `mapField` \(name, selection) -> RQL.AFOp $ RQL.AggOp name selection
-      -- TODO: handle __typename here
+          opName <- textToName operator
+          pure $ parseOperator operator opName tableName compFields
+        -- TODO: handle __typename here
       ]
-    let selectName = tableName <> $$(G.litName "_aggregate_fields")
-    pure $ P.selection fieldName description $ selectionSet selectName description fields
+    let selectName  = tableName <> $$(G.litName "_aggregate_fields")
+        description = G.Description $ "aggregate fields of \"" <> G.unName tableName <> "\""
+    pure $ P.selectionSet selectName (Just description) aggFields
   where
-    mkField columnInfo = do
-      let annotated = RQL.mkAnnColField columnInfo Nothing -- FIXME: support ColOp?
+    mkFields :: [PGColumnInfo] -> m (FieldsParser 'Output n RQL.ColFlds)
+    mkFields = fmap (fmap catMaybes . sequenceA) . traverse \columnInfo -> do
       field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
-      pure $ fmap (, annotated) <$> P.selection_ fieldName (pgiDescription columnInfo) field
+      pure $ P.selection_ (pgiName columnInfo) (pgiDescription columnInfo) field
+        `mapField` \name -> (nameToAlias name, RQL.PCFCol $ pgiColumn columnInfo)
+
+    parseOperator
+      :: Text
+      -> G.Name
+      -> G.Name
+      -> FieldsParser 'Output n RQL.ColFlds
+      -> FieldsParser 'Output n (Maybe (FieldName, RQL.AggFld))
+    parseOperator operator opName tableName columns =
+      let setName = tableName <> $$(G.litName "_") <> opName <> $$(G.litName "_fields")
+          setDesc = Just $ G.Description $ "aggregate " <> operator <> " on columns"
+      in P.selection_ opName Nothing (P.selectionSet setName setDesc columns)
+           `mapField` (nameToAlias *** RQL.AFOp . RQL.AggOp operator)
 
 
 -- | An individual field of a table
@@ -341,7 +332,7 @@ fieldSelection fieldInfo selectPermissions stringifyNum =
       FIComputedField computedFieldInfo ->
         computedField computedFieldInfo selectPermissions stringifyNum
   where
-    aliasToFieldName = fmap $ fmap $ first $ FieldName . G.unName
+    aliasToFieldName = fmap $ fmap $ first nameToAlias
 
 
 
@@ -405,6 +396,7 @@ computedFieldFunctionArgs ComputedFieldFunction{..}
                       else Just <$> P.field fieldName Nothing columnParser
       pure $ fmap (RQL.AEInput . P.mkParameter) <$> argParser
 
+-- FIXME: move to common?
 jsonPathArg :: MonadParse n => PGScalarType -> FieldsParser 'Input n (Maybe RQL.ColOp)
 jsonPathArg functionReturnType
   | isJSONType functionReturnType =
@@ -415,9 +407,9 @@ jsonPathArg functionReturnType
     description = Just "JSON select path"
     toColExp textValue = case parseJSONPath textValue of
       Left err     -> parseError $ T.pack $ "parse json path error: " ++ err
-      Right jPaths -> return $ RQL.ColOp S.jsonbPathOp $ S.SEArray $ map elToColExp jPaths
-    elToColExp (Key k)   = S.SELit k
-    elToColExp (Index i) = S.SELit $ T.pack (show i)
+      Right jPaths -> return $ RQL.ColOp SQL.jsonbPathOp $ SQL.SEArray $ map elToColExp jPaths
+    elToColExp (Key k)   = SQL.SELit k
+    elToColExp (Index i) = SQL.SELit $ T.pack (show i)
 
 computedField
   :: (MonadSchema n m, MonadError QErr m)
@@ -451,17 +443,17 @@ computedField ComputedFieldInfo{..} selectPermissions stringifyNum = do
         -- I wonder if it would make sense to merge them
         -- I'm erring on the side of no for now, but to be reconsidered
         -- when we clean the code after reaching feature parity
-        selectArgsParser   <- tableArgs tableName
-        selectionSetParser <- tableSelectionSet tableName perms stringifyNum
+        selectArgsParser   <- tableArgs tableName perms
+        selectionSetParser <- tableFields tableName perms stringifyNum
         let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
         pure $ P.selection fieldName Nothing fieldArgsParser selectionSetParser
-          <&> fmap \(aliasName, (functionArgs, tableArgs), tableFields) ->
+          <&> fmap \(aliasName, (functionArgs, args), fields) ->
             ( aliasName
             , RQL.FComputedField $ RQL.CFSTable RQL.JASMultipleRows $ RQL.AnnSelG
-              { RQL._asnFields   = tableFields
+              { RQL._asnFields   = fields
               , RQL._asnFrom     = RQL.FromFunction (_cffName _cfiFunction) functionArgs Nothing
               , RQL._asnPerm     = tablePermissions perms
-              , RQL._asnArgs     = tableArgs
+              , RQL._asnArgs     = args
               , RQL._asnStrfyNum = stringifyNum
               }
             )
@@ -489,3 +481,6 @@ mapField
   :: Functor m
   => FieldsParser k m (Maybe a) -> (a -> b) -> FieldsParser k m (Maybe b)
 mapField fp f = fmap (fmap f) fp
+
+nameToAlias :: G.Name -> FieldName
+nameToAlias = FieldName . G.unName
