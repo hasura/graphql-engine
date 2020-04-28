@@ -26,7 +26,7 @@ The configuration file can be configured with the following config keys:
   endpoint: 
   admin_secret:
   insecure_skip_tls_verify:
-  ca_cert_path:
+  certificate_authority:
   access_key: #deprecated
   api_paths:
     query: 
@@ -71,7 +71,7 @@ The configuration file can be configured with the following config keys:
      - false
      - 1 (added in ``v1.2.0``)
      - false
-   * - ca_cert_path
+   * - certificate_authority
      - false
      - 1 (added in ``v1.2.0``)
      -
@@ -172,8 +172,8 @@ The configuration can also be set in the form of environment variables:
      - Skip verifying SSL certificate for Hasura Endpoint. Useful if you have
        a self-singed certificate and don't have access to the CA cert.
 
-   * - ``HASURA_GRAPHQL_CA_CERT_PATH``
-     - ``ca_cert_path``
+   * - ``HASURA_GRAPHQL_CERTIFICATE_AUTHORITY``
+     - ``certificate_authority``
      - Path to the CA certificate for validating the self-signed certificate for
        Hasura Endpoint.
 
