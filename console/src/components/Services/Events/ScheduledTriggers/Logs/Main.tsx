@@ -26,9 +26,9 @@ const LogsContainer = ({ dispatch, allTriggers, params }: LogsProps) => {
   );
 };
 
-const mapStateToProps = (state: { events: EventsState } ) => {
+const mapStateToProps = (state: { events: { new: EventsState } }) => {
   return {
-    allTriggers: state.events.triggers,
+    allTriggers: state.events.new.triggers,
   };
 };
 

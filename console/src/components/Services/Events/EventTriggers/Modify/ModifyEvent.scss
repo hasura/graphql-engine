@@ -1,0 +1,298 @@
+@import "../TableCommon/EventTable.scss";
+
+.containerWhole {
+  padding: 0;
+  padding-left: 15px;
+  height: calc(100vh - 50px - 25px);
+  overflow: auto;
+  padding-right: 15px;
+  padding-top: 20px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.modifySection {
+  display: flex;
+  flex-direction: column;
+  margin: 10px 0;
+}
+
+.modifySectionHeading {
+  font-weight: bold;
+  font-size: 15px;
+  margin-bottom: 20px;
+}
+
+.modifyEditButton {
+  display: flex;
+  flex-direction: column;
+  max-width: 40px;
+  align-items: center;
+  justify-content: center;
+  max-height: 23px;
+  margin-bottom: 10px;
+}
+
+.modifySaveButton {
+  display: flex;
+  flex-direction: column;
+  max-width: 40px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.modifySaveButtonDisabled {
+  display: flex;
+  flex-direction: column;
+  max-width: 55px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.modifyWebhookCollapsed {
+  display: flex;
+  flex-direction: row;
+  margin: 10px 0;
+}
+
+.modifyWebhookExpanded {
+  display: flex;
+  margin: 10px 0;
+  padding: 10px;
+  flex-direction: column;
+  background-color: white;
+  border: 1px solid #ccc;
+  max-width: 700px;
+}
+
+.textRight {
+  text-align: right;
+}
+
+.modifyOpsCollapsedContent {
+  padding-bottom: 5px;
+  max-width: 530px;
+  display: block;
+  flex-direction: row;
+  font-size: 13px;
+  align-items: center;
+}
+
+.modifyOpsCollapsedContent1 {
+  padding-bottom: 5px;
+  max-width: 530px;
+  display: flex;
+  flex-direction: row;
+  font-size: 13px;
+  align-items: center;
+}
+
+.modifyOpsCollapsedContent p, .modifyOpsCollapsedContent1 p {
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+.modifyHeadersCollapsedContent {
+  padding-bottom: 10px;
+  max-width: 600px;
+  display: flex;
+  flex-direction: row;
+  font-size: 13px;
+}
+
+modifyHeadersCollapsedHeadings {
+  max-width: 600px;
+  display: flex;
+  flex-direction: row;
+  font-size: 13px;
+}
+
+.modifyHeadersCollapsedContent p{
+  font-size: 14px;
+  width: 100%
+}
+
+.modifyOpsCollapsed {
+  display: block;
+  margin: 10px 0;
+  flex-direction: row;
+}
+
+.modifyOpsExpanded {
+  display: flex;
+  margin: 10px 0;
+  padding: 10px;
+  flex-direction: column;
+  background-color: white;
+  border: 1px solid #ccc;
+  max-width: 700px;
+}
+
+.modifyWhDropdownWrapper {
+  padding-bottom: 10px;
+  padding-top: 10px;
+  max-width: 408px;
+}
+
+.modifyProperty {
+  align-self: center;
+  font-size: 13px;
+  display:flex;
+  flex-direction: row;
+}
+
+.modifyProperty p{
+  font-size: 14px;
+}
+
+.modifyOpsCollapsedtitle {
+  margin:5px 0;
+
+  i {
+    font-size: 11px;
+  }
+}
+
+.opsCheckboxWrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+  margin: 10px 0;
+
+  input {
+    margin-top: 0;
+  }
+}
+
+.opsCheckboxWrapper p {
+  font-size: 13px;
+  font-style:italic;
+  align-self: center;
+  margin-top: 8px;
+}
+
+.headersInputWrapper {
+  margin: 0 10px;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.headersInputWrapper p {
+  font-size: 13px;
+  font-style:italic;
+  align-self: center;
+  margin-top: 8px;
+}
+
+.modifyOps {
+  display: flex;
+  flex-direction: column;
+}
+
+.modifyHeaders {
+  display: flex;
+  flex-direction: column;
+  width: 70%;
+}
+
+.modifyOpsPadLeft {
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.opsCheckbox {
+  margin-right: 5px !important;
+}
+
+
+.opsCheckboxDisabled {
+  margin-right: 5px !important;
+}
+
+.opsCheckboxDisabled:hover {
+  margin-right: 5px !important;
+  cursor: default;
+}
+
+
+.modifyHeadersTextbox {
+  width: 200px;
+}
+
+
+.modifyHeadersTextboxDisabled {
+  width: 200px;
+}
+
+
+.modifyHeadersTextboxDisabled:hover {
+  width: 200px;
+  cursor: text;
+}
+
+.modifyHeadersDropdown {
+  width: 200px;
+}
+
+.modifyRetryConfTextbox {
+  height: 25px;
+  width: 100px;
+}
+
+.removeHeader {
+  align-self: center;
+}
+
+.modifyHeaderCollapsedInput {
+  width: 200px;
+}
+
+
+.modifyHeaderCollapsedInput:hover {
+  cursor: text;
+}
+
+.info {
+  display: flex;
+  flex-direction: row;
+  margin: 5px 0;
+
+  input {
+    height: 25px;
+    margin-left: 5px;
+    width: 300px
+  }
+}
+
+.infoContent {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+
+  table {
+    width: 80%;
+    margin-top: 20px;
+  }
+}
+
+.borderBottom {
+  border-bottom: 1px solid #eee;
+  margin-bottom: 20px;
+}
+
+.cursorPointer {
+  cursor: pointer;
+}
+
+.addPaddSmall {
+  padding-left: 5px;
+}

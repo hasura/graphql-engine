@@ -1,13 +1,24 @@
-export eventPageConnector from './EventPageContainer';
-export eventRouterUtils from './EventRouter';
+import eventPageConnector from './EventPageContainer';
+import eventRouterUtils from './EventRouter';
 
-export eventReducer from './EventReducer';
-export addTriggerConnector from './Add/AddTrigger';
+import eventReducer from './EventReducer';
 
-export modifyTriggerConnector from './Modify/Connector';
+import modifyTriggerConnector from './Modify/Connector';
 
-export processedEventsConnector from './ProcessedEvents/ViewTable';
-export pendingEventsConnector from './PendingEvents/ViewTable';
-export runningEventsConnector from './RunningEvents/ViewTable';
-export streamingLogsConnector from './StreamingLogs/Logs';
-export landingConnector from './Landing/EventTrigger';
+import processedEventsConnector from './ProcessedEvents/ViewTable';
+import pendingEventsConnector from './PendingEvents/ViewTable';
+import runningEventsConnector from './RunningEvents/ViewTable';
+import streamingLogsConnector from './StreamingLogs/Logs';
+import landingConnector from './Landing/EventTrigger';
+
+export {
+  eventPageConnector,
+  eventRouterUtils,
+  eventReducer,
+  modifyTriggerConnector,
+  processedEventsConnector,
+  pendingEventsConnector,
+  runningEventsConnector,
+  streamingLogsConnector,
+  landingConnector,
+};

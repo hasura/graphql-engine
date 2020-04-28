@@ -6,13 +6,12 @@ import { fetchTriggers } from './ServerIO';
 import globals from '../../../Globals';
 import EventTriggersLanding from '../EventTrigger/Landing/EventTrigger';
 import {
-  ScheduledTriggers,
   AddScheduledTrigger,
   ScheduledTriggerLogs,
   ScheduledTriggeModify,
   ScheduledTriggerLanding,
 } from './ScheduledTriggers';
-import { appPrefix } from './constants';
+import AddEventTrigger from './EventTriggers/Add/Add';
 
 const triggersInit = ({ dispatch }: { dispatch: any }) => {
   return (nextState: any, replaceState: any, cb: any) => {
@@ -35,7 +34,7 @@ const getTriggersRouter = (
 ) => {
   return (
     <Route
-      path={'events'}
+      path="events"
       component={Container(connect)}
       onEnter={composeOnEnterHooks([triggersInit(store)])}
       onChange={triggersInit(store)}
@@ -43,7 +42,11 @@ const getTriggersRouter = (
       <IndexRedirect to="data" />
       <Route path="data" component={rightContainerConnector(connect)}>
         <IndexRedirect to="manage" />
-        <Route path="add" component={ScheduledTriggers} />
+        <Route path="add" component={AddEventTrigger(connect)} />
+        {/* <Route
+          path=":trigger/modify"
+          component={ModifyEventTrigger(connect)}
+        /> */}
         <Route path="manage" component={EventTriggersLanding(connect)} />
       </Route>
       <Route path="scheduled" component={rightContainerConnector(connect)}>

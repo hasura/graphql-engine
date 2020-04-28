@@ -47,6 +47,10 @@ export type ComputedField = {
   };
 };
 
+export type Schema = {
+  schema_name: string;
+};
+
 export type Table = {
   table_name: string;
   table_schema: string;

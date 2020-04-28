@@ -15,8 +15,6 @@ import { loadMigrationStatus } from './components/Main/Actions';
 
 import { dataRouterUtils } from './components/Services/Data';
 
-import { eventRouterUtils } from './components/Services/EventTrigger';
-
 import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 
 import { getActionsRouter } from './components/Services/Actions';
@@ -78,13 +76,6 @@ const routes = store => {
   const requireSchema = _dataRouterUtils.requireSchema;
   const dataRouter = _dataRouterUtils.makeDataRouter;
 
-  const _eventRouterUtils = eventRouterUtils(
-    connect,
-    store,
-    composeOnEnterHooks
-  );
-  const eventRouter = _eventRouterUtils.makeEventRouter;
-
   const remoteSchemaRouter = getRemoteSchemaRouter(
     connect,
     store,
@@ -144,7 +135,6 @@ const routes = store => {
             <Route path="logout" component={logoutContainer(connect)} />
           </Route>
           {dataRouter}
-          {eventRouter}
           {remoteSchemaRouter}
           {actionsRouter}
           {eventsRouter}

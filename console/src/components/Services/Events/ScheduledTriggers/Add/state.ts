@@ -1,15 +1,8 @@
 import React from 'react';
 import { Header, defaultHeader } from '../../../../Common/Headers/Headers';
-import { ScheduleTriggerType } from '../../Types';
+import { ScheduleTriggerType, URLType, URLConf } from '../../Types';
 
 export const defaultCronExpr = '2 * * * *';
-
-type URLType = 'static' | 'env';
-
-type URLConf = {
-  type: URLType;
-  value: string;
-};
 
 export type LocalScheduledTriggerState = {
   name: string;
@@ -55,7 +48,7 @@ export const useScheduledTriggerAdd = (
         setState(s => ({ ...s, webhook: { type, value: '' } }));
       },
       setWebhookValue: (value: string) => {
-        setState(s => ({ ...s, webhook: { ...s.webhook, value: value } }));
+        setState(s => ({ ...s, webhook: { ...s.webhook, value } }));
       },
       scheduleType: (type: ScheduleTriggerType) => {
         setState(s => ({

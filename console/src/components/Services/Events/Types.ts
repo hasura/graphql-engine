@@ -1,13 +1,30 @@
 import { Header as ServerHeader } from '../../Common/utils/v1QueryUtils';
 
-export const LOADING_TRIGGERS = 'Triggers/LOADING_TRIGGERS';
-export const LOADED_TRIGGERS = 'Triggers/LOADED_TRIGGERS';
-export const LOADING_SCHEDULED_TRIGGERS = 'Triggers/LOADING_SCHEDULED_TRIGGERS';
-export const LOADED_SCHEDULED_TRIGGERS = 'Triggers/LOADED_SCHEDULED_TRIGGERS';
-export const LOADING_EVENT_TRIGGERS = 'Triggers/LOADING_EVENT_TRIGGERS';
-export const LOADED_EVENT_TRIGGERS = 'Triggers/LOADED_EVENT_TRIGGERS';
-export const LOADING_TRIGGERS_ERROR = 'Triggers/LOADING_TRIGGERS_ERROR';
-export const SET_CURRENT_TRIGGER = 'Triggers/SET_CURRENT_TRIGGER';
+export const LOADING_TRIGGERS = 'Events/LOADING_TRIGGERS';
+export const LOADED_TRIGGERS = 'Events/LOADED_TRIGGERS';
+export const LOADING_SCHEDULED_TRIGGERS = 'Events/LOADING_SCHEDULED_TRIGGERS';
+export const LOADED_SCHEDULED_TRIGGERS = 'Events/LOADED_SCHEDULED_TRIGGERS';
+export const LOADING_EVENT_TRIGGERS = 'Events/LOADING_EVENT_TRIGGERS';
+export const LOADED_EVENT_TRIGGERS = 'Events/LOADED_EVENT_TRIGGERS';
+export const LOADING_TRIGGERS_ERROR = 'Events/LOADING_TRIGGERS_ERROR';
+export const SET_CURRENT_TRIGGER = 'Events/SET_CURRENT_TRIGGER';
+
+export const LOAD_PENDING_DATA_EVENTS = 'Events/LOAD_PENDING_DATA_EVENTS';
+
+export type EventTriggerOperation = 'insert' | 'update' | 'delete' | 'manual';
+
+export type ETOperationColumn = {
+  name: string;
+  type: string;
+  enabled: boolean;
+};
+
+export type URLType = 'static' | 'env';
+
+export type URLConf = {
+  type: URLType;
+  value: string;
+};
 
 export type WebhookConf =
   | string

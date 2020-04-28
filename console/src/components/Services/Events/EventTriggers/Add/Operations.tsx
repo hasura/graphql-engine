@@ -2,52 +2,28 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import * as tooltip from './Tooltips';
-import { TOGGLE_ENABLE_MANUAL_CONFIG } from './AddActions';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
+import { capitalize } from '../../../../Common/utils/jsUtils';
+import styles from '../TableCommon/EventTable.scss';
+import { EVENT_TRIGGER_OPERATIONS } from '../../constants';
+import { EventTriggerOperation  } from '../../Types';
+
+type OperationProps = {
+  selectedOperations: Record <EventTriggerOperation, boolean>,
+  handleOperationSelection: (e: React.BaseSyntheticEvent) => void
+}
 
 const Operations = ({
-  enableManual,
   selectedOperations,
   handleOperationSelection,
-  dispatch,
-}) => {
-  const styles = require('../TableCommon/EventTable.scss');
-
-  const databaseOperations = [
-    {
-      name: 'insert',
-      testIdentifier: 'insert-operation',
-      isChecked: selectedOperations.insert,
-      onChange: handleOperationSelection,
-      displayName: 'Insert',
-    },
-    {
-      name: 'update',
-      testIdentifier: 'update-operation',
-      isChecked: selectedOperations.update,
-      onChange: handleOperationSelection,
-      displayName: 'Update',
-    },
-    {
-      name: 'delete',
-      testIdentifier: 'delete-operation',
-      isChecked: selectedOperations.delete,
-      onChange: handleOperationSelection,
-      displayName: 'Delete',
-    },
-  ];
-
-  const getManualInvokeOperation = () => {
-    const handleManualOperationSelection = () => {
-      dispatch({ type: TOGGLE_ENABLE_MANUAL_CONFIG });
-    };
-
-    return {
-      name: 'enable_manual',
-      testIdentifier: 'enable-manual-operation',
-      isChecked: enableManual,
-      onChange: handleManualOperationSelection,
-      displayName: (
+}: OperationProps) => {
+  const allOperations = EVENT_TRIGGER_OPERATIONS.map(o => ({
+    name: o,
+    testIdentifier: `${o}-operation`,
+    isChecked: selectedOperations[o],
+    onChange: handleOperationSelection,
+    displayName:
+      o === 'manual' ? (
         <span>
           Via console &nbsp;&nbsp;
           <OverlayTrigger
@@ -59,18 +35,12 @@ const Operations = ({
           &nbsp;&nbsp;
           <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/event-triggers/invoke-trigger-console.html" />
         </span>
+      ) : (
+        capitalize(o)
       ),
-    };
-  };
+  }));
 
   const getOperationsList = () => {
-    const manualOperation = getManualInvokeOperation();
-
-    const allOperations = databaseOperations;
-    if (manualOperation) {
-      allOperations.push(manualOperation);
-    }
-
     return allOperations.map((o, i) => (
       <div
         key={i}
@@ -82,7 +52,7 @@ const Operations = ({
             data-test={o.testIdentifier}
             className={`${styles.display_inline} ${styles.add_mar_right}`}
             type="checkbox"
-            value={o.name}
+            name={o.name}
             checked={o.isChecked}
           />
           {o.displayName}

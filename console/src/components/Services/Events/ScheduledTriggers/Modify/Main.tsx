@@ -1,6 +1,7 @@
 import React from 'react';
 import STContainer from '../../Containers/ScheduledTriggerContainer';
 import { Triggers } from '../../Types';
+import { ReduxState } from '../../../../../Types';
 import Modify from './Modify';
 
 type ModifyProps = {
@@ -25,9 +26,9 @@ const ModifyContainer = ({ dispatch, allTriggers, params }: ModifyProps) => {
   );
 };
 
-const mapStateToProps = (state: { triggers: { triggers: Triggers } }) => {
+const mapStateToProps = (state: ReduxState) => {
   return {
-    allTriggers: state.triggers.triggers,
+    allTriggers: state.events.triggers,
   };
 };
 

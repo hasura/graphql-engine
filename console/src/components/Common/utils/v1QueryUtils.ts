@@ -1,5 +1,6 @@
 import { terminateSql } from './sqlUtils';
 import { LocalScheduledTriggerState } from '../../Services/Events/ScheduledTriggers/Add/state';
+import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/Add/state';
 import { transformHeaders } from '../Headers/utils';
 import { generateTableDef } from './pgUtils';
 
@@ -456,6 +457,50 @@ export const getBulkQuery = (args: any[]) => {
     args,
   };
 };
+
+export const generateCreateEventTriggerQuery = (
+  state: LocalEventTriggerState,
+  replace = false
+) => {
+  return {
+    type: 'create_event_trigger',
+    args: {
+      name: state.name.trim(),
+      table: state.table,
+      webhook:
+        state.webhook.type === 'static' ? state.webhook.value.trim() : null,
+      webhook_from_env:
+        state.webhook.type === 'env' ? state.webhook.value.trim() : null,
+      insert: state.operations.insert
+        ? {
+            columns: '*',
+          }
+        : null,
+      update: state.operations.update
+        ? {
+            columns: state.operationColumns.map(c => c.name),
+            payload: state.operationColumns.map(c => c.name),
+          }
+        : null,
+      delete: state.operations.delete
+        ? {
+            columns: '*',
+          }
+        : null,
+      enable_manual: state.operations.manual,
+      retry_conf: state.retryConf,
+      headers: transformHeaders(state.headers),
+      replace,
+    },
+  };
+};
+
+export const getDropEventTriggerQuery = (name: string) => ({
+  type: 'delete_event_trigger',
+  args: {
+    name: name.trim(),
+  },
+});
 
 export const generateCreateScheduledTriggerQuery = (
   state: LocalScheduledTriggerState

@@ -6,14 +6,14 @@ import PageContainer from '../../../Common/Layout/PageContainer/PageContainer';
 import LeftSidebar from '../Sidebar/Sidebar';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { Triggers } from '../Types';
-import { appPrefix } from '../constants';
-import { EventsState } from '../state';
 import {
   getScheduledEventsLandingRoute,
   getDataEventsLandingRoute,
   isScheduledEventsRoute,
-  isDataEventsRoute
+  isDataEventsRoute,
 } from '../../../Common/utils/routesUtils';
+
+import { ReduxState } from '../../../../Types';
 
 interface TriggersContainerProps extends React.ComponentProps<'div'> {
   triggers: Triggers;
@@ -31,9 +31,7 @@ const Container: React.FC<TriggersContainerProps> = props => {
     <ul>
       <li
         role="presentation"
-        className={
-          isDataEventsRoute(currentLocation) ? styles.active : ''
-        }
+        className={isDataEventsRoute(currentLocation) ? styles.active : ''}
       >
         <Link className={styles.linkBorder} to={getDataEventsLandingRoute()}>
           Event Triggers
@@ -41,14 +39,12 @@ const Container: React.FC<TriggersContainerProps> = props => {
         <LeftSidebar
           triggers={triggers.event}
           currentTrigger={{ name: '' }}
-          service={'event triggers'}
+          service="event triggers"
         />
       </li>
       <li
         role="presentation"
-        className={
-          isScheduledEventsRoute(currentLocation) ? styles.active : ''
-        }
+        className={isScheduledEventsRoute(currentLocation) ? styles.active : ''}
       >
         <Link
           className={styles.linkBorder}
@@ -59,7 +55,7 @@ const Container: React.FC<TriggersContainerProps> = props => {
         <LeftSidebar
           triggers={triggers.scheduled}
           currentTrigger={{ name: '' }}
-          service={'scheduled triggers'}
+          service="scheduled triggers"
         />
       </li>
     </ul>
@@ -76,7 +72,7 @@ const Container: React.FC<TriggersContainerProps> = props => {
   );
 };
 
-const mapStateToProps = (state: { events: EventsState }) => {
+const mapStateToProps = (state: ReduxState) => {
   return {
     ...state.events,
   };

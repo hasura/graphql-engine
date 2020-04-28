@@ -96,5 +96,5 @@ export const getSTModifyRoute = stName => {
   return `/${eventsPrefix}/${scheduledEventsPrefix}/${stName}/modify`;
 };
 export const getETModifyRoute = etName => {
-  return `/${eventsPrefix}/${scheduledEventsPrefix}/${etName}/modify`;
+  return `/${eventsPrefix}/${dataEventsPrefix}/${etName}/modify`;
 };

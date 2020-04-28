@@ -15,7 +15,7 @@ import CronBuilder from '../../../../Common/CronBuilder/CronBuilder';
 import { stripNonStandardElements } from '../../../../Common/CronBuilder/utils';
 import Modal from '../../../../Common/Modal/Modal';
 import { addScheduledTrigger } from '../../ServerIO';
-import { EventsState } from '../../state';
+import { ReduxState } from '../../../../../Types';
 
 type AddScheduledTriggerProps = {
   dispatch: any;
@@ -63,7 +63,7 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
           Name
           <Tooltip
             id="trigger-name"
-            message={'Name of the trigger'}
+            message="Name of the trigger"
             className={styles.add_mar_left_mid}
           />
         </h2>
@@ -86,7 +86,7 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
           Webhook
           <Tooltip
             id="trigger-webhook"
-            message={'The HTTP endpoint that must be triggered'}
+            message="The HTTP endpoint that must be triggered"
             className={styles.add_mar_left_mid}
           />
         </h2>
@@ -109,9 +109,7 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
           Trigger Type
           <Tooltip
             id="trigger-type"
-            message={
-              'Scheduled triggers could be scheduled with a cron and adhoc triggers can be invoked manually'
-            }
+            message="Scheduled triggers could be scheduled with a cron and adhoc triggers can be invoked manually"
             className={styles.add_mar_left_mid}
           />
         </h2>
@@ -160,7 +158,7 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
         onClose={modalReset}
         onCancel={modalReset}
         onSubmit={modalOnSubmit}
-        submitText={'Use'}
+        submitText="Use"
       >
         <div>
           <CronBuilder
@@ -180,7 +178,7 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
           Cron schedule
           <Tooltip
             id="trigger-schedule"
-            message={'Schedule for your cron'}
+            message="Schedule for your cron"
             className={styles.add_mar_left_mid}
           />
         </h2>
@@ -208,7 +206,7 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
           Payload
           <Tooltip
             id="trigger-payload"
-            message={'The request payload for the HTTP trigger'}
+            message="The request payload for the HTTP trigger"
             className={styles.add_mar_left_mid}
           />
         </h2>
@@ -216,7 +214,7 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
           mode="json"
           value={payload}
           onChange={setState.payload}
-          height={'200px'}
+          height="200px"
         />
       </React.Fragment>
     );
@@ -230,7 +228,7 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
           Headers
           <Tooltip
             id="trigger-headers"
-            message={'Configure headers for the request to the webhook'}
+            message="Configure headers for the request to the webhook"
             className={styles.add_mar_left_mid}
           />
         </h2>
@@ -274,7 +272,7 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
   );
 };
 
-const mapStateToProps = (state: { events: EventsState }) => {
+const mapStateToProps = (state: ReduxState) => {
   return {
     ...state.events,
   };

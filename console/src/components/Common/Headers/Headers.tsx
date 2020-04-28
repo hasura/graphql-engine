@@ -73,7 +73,7 @@ const Headers = ({ headers, setHeaders }: HeadersListProps) => {
                 dataKey={type === 'env' ? 'env' : 'static'}
                 onButtonChange={setHeaderType}
                 onInputChange={setHeaderValue}
-                required
+                required={false}
                 bsClass={styles.dropdown_button}
                 inputVal={value}
                 id={`header-value-${i}`}
@@ -97,7 +97,7 @@ const Headers = ({ headers, setHeaders }: HeadersListProps) => {
         return (
           <div
             className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
-            key={i}
+            key={i.toString()}
           >
             {getHeaderNameInput()}
             {getHeaderValueInput()}
