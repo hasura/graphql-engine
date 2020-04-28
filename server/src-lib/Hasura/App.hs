@@ -246,7 +246,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
 
   -- prepare event triggers data
-  prepareEvents _icPgPool logger
+  -- TODO: do not EXIT on prepare events in read only mode
+  -- prepareEvents _icPgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
   _eventQueueThread <- C.forkImmortal "processEventQueue" logger $ liftIO $
