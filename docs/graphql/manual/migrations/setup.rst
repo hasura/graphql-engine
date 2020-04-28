@@ -1,3 +1,7 @@
+.. meta::
+  :description: Setup Hasura migrations
+  :keywords: hasura, docs, migration, metadata
+
 .. _setup_migrations:
 
 Setting up Hasura migrations

@@ -2,7 +2,7 @@
    :description: Roll back Hasura migrations
    :keywords: hasura, docs, migration, roll back
 
-.. _roll_back_migrations_old:
+.. _roll_back_migrations_v1:
 
 Rolling back applied migrations (pre v1.2)
 ==========================================

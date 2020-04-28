@@ -2,7 +2,7 @@
    :description: Manage Hasura migrations and metadata
    :keywords: hasura, docs, migration, metadata
 
-.. _migrations_old:
+.. _migrations_v1:
 
 Migrations & Metadata (pre v1.2)
 ================================
@@ -39,32 +39,38 @@ bundled with a schema/metadata migration system which can be used to
 declaratively track and version control all the changes happening to the
 database.
 
+.. note::
+
+  This documentation is for **Hasura migrations v1**. Hasura migrations v2 was
+  introduced in Hasura GraphQL engine version ``v1.2``
+
+  See :ref:`migrations`
+
 Simple use cases
 ----------------
 
 We will split the use cases into two:
 
 1. :ref:`You're already using a migration tool for the Postgres schema
-   <manage_hasura_metadata_old>`. (like knex, TypeORM, Sequelize, Rails/Django
+   <manage_hasura_metadata_v1>`. (like knex, TypeORM, Sequelize, Rails/Django
    migrations. In this case you only need to manage the Hasura metadata)
 2. :ref:`You're not using any migration tool for the Postgres schema
-   <postgres_schema_metadata_old>`. (Hasura will take care of the
+   <postgres_schema_metadata_v1>`. (Hasura will take care of the
    Postgres schema also)
 
 Advanced use cases
 ------------------
 
 
-- :ref:`auto_apply_migrations_old`
-- :ref:`manual_migrations_old`
-- :ref:`roll_back_migrations_old`
+- :ref:`auto_apply_migrations_v1`
+- :ref:`manual_migrations_v1`
+- :ref:`roll_back_migrations_v1`
 
 Reference documentation
 -----------------------
 
-- :ref:`migrations_how_it_works_old`
-- :ref:`migration_file_format_old`
-- :ref:`metadata_file_format_old`
+- :ref:`migration_file_format_v1`
+- :ref:`metadata_file_format_v1`
 
 .. toctree::
   :maxdepth: 1

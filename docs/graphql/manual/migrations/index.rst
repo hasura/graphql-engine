@@ -19,6 +19,13 @@ It is a typical requirement to export an existing Hasura "setup" so that you can
 apply it on another instance to reproduce the same setup. For example, to achieve
 a dev -> staging -> production environment promotion scenario.
 
+.. note::
+
+  This documentation is for **Hasura migrations v2** which was introduced in
+  Hasura GraphQL engine version ``v1.2``. See the :ref:`upgrade guide <migrations_upgrade_v2>`.
+
+  For earlier versions, see :ref:`migrations_v1`.
+
 How is Hasura state managed?
 ----------------------------
 
@@ -77,4 +84,5 @@ Reference documentation
   Setting up <setup>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>
+  Upgrading to migrations v2 <upgrade-v2>
   Pre v1.2 <pre-1.2/index>

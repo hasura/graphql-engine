@@ -2,7 +2,7 @@
    :description: Manage Hasura migrations
    :keywords: hasura, docs, migration
 
-.. _postgres_schema_metadata_old:
+.. _postgres_schema_metadata_v1:
 
 Managing Postgres schema and Hasura metadata (pre v1.2)
 =======================================================
@@ -21,8 +21,8 @@ controlled and can be used with your CI/CD system to make incremental updates.
 
 When you're looking to set up migrations, there are two scenarios:
 
-#. :ref:`You already have a database and Hasura setup <migrations_existing_db_old>`.
-#. :ref:`You're starting from scratch - an empty database and a fresh Hasura instance <migrations_new_db_old>`.
+#. :ref:`You already have a database and Hasura setup <migrations_existing_db_v1>`.
+#. :ref:`You're starting from scratch - an empty database and a fresh Hasura instance <migrations_new_db_v1>`.
 
 .. toctree::
   :maxdepth: 1

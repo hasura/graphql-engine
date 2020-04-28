@@ -2,7 +2,7 @@
    :description: Manage Hasura metadata
    :keywords: hasura, docs, metadata
 
-.. _manage_hasura_metadata_old:
+.. _manage_hasura_metadata_v1:
 
 Managing Hasura metadata (pre v1.2)
 ===================================
@@ -136,5 +136,5 @@ Using tools like ``curl`` you can easily integrate the metadata API requests for
 actions with your CI/CD workflows.
 
 In case you need an automated way of applying/importing the metadata, take a
-look at the :ref:`CLI-Migrations <auto_apply_migrations_old>` Docker image, which
+look at the :ref:`CLI-Migrations <auto_apply_migrations_v1>` Docker image, which
 can start the GraphQL engine after automatically importing a mounted metadata file.
