@@ -25,6 +25,7 @@ export type TextProps = {
   mt: keyof Theme['space'];
   mr: keyof Theme['space'];
   ml: keyof Theme['space'];
+  color: string;
 };
 
 export const Text: React.FC<TextProps> = props => {
@@ -53,7 +54,6 @@ export const Text: React.FC<TextProps> = props => {
       lineHeight={lineHeight}
       fontSize={fontSizeValue}
       fontWeight={fontWeightValue}
-      color="black.text"
     >
       {children}
     </StyledText>
@@ -65,6 +65,7 @@ Text.defaultProps = {
   mt: 'zero',
   mr: 'zero',
   ml: 'zero',
+  color: 'black.text',
 };
 
 type TextLinkProps = {
