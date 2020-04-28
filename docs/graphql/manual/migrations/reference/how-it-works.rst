@@ -54,7 +54,7 @@ can be written by hand. They are stored as SQL files in a directory
 called ``migrations``.
 
 For more details on the format of these files, refer to
-:ref:`migration_file_format`.
+:ref:`migration_file_format_v2`.
 
 When someone executes ``migrate apply`` using the Hasura CLI, the CLI will first
 read the migration files present in the designated directory. The CLI would then

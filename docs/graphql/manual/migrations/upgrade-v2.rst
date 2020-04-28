@@ -5,8 +5,8 @@
 
 .. _migrations_upgrade_v2:
 
-Upgrading to Hasura migrations v2
-=================================
+Upgrading to Hasura migrations config v2
+========================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,6 +15,8 @@ Upgrading to Hasura migrations v2
 
 Step 1: Upgrade to the latest CLI
 ---------------------------------
+
+Config v2 is available since ``v1.2.0``.
 
 Run:
 

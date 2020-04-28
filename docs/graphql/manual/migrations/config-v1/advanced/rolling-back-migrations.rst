@@ -4,8 +4,8 @@
 
 .. _roll_back_migrations_v1:
 
-Rolling back applied migrations (pre v1.2)
-==========================================
+Rolling back applied migrations (config v1)
+===========================================
 
 .. contents:: Table of contents
   :backlinks: none

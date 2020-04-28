@@ -4,8 +4,8 @@
 
 .. _migrations_existing_db_v1:
 
-Migrations for an existing database and Hasura instance (pre v1.2)
-==================================================================
+Migrations for an existing database and Hasura instance (config v1)
+===================================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -21,7 +21,6 @@ action that you do on the console, including creating tables/views and schema
 modifying SQL statements, as YAML files. These files are called migrations and
 they can be applied and rolled back step-by-step. These files can be version
 controlled and can be used with your CI/CD system to make incremental updates.
-
 
 Step 0: Disable the console on the server
 -----------------------------------------

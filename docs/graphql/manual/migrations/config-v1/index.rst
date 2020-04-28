@@ -4,8 +4,8 @@
 
 .. _migrations_v1:
 
-Migrations & Metadata (pre v1.2)
-================================
+Migrations & Metadata (config v1)
+=================================
 
 .. contents:: Table of contents
   :backlinks: none

@@ -15,9 +15,10 @@ Hasura migrations basics
 Initializing migrations
 -----------------------
 
-Install the Hasura CLI as described in :ref:`install_hasura_cli`
+:ref:`Install <install_hasura_cli>` the Hasura CLI or :ref:`update <hasura_update-cli>`
+to the latest version if current version is ``< v1.2.0``.
 
-Run:
+Now run:
 
 .. code-block:: bash
 

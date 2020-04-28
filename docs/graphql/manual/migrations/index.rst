@@ -21,10 +21,10 @@ a dev -> staging -> production environment promotion scenario.
 
 .. note::
 
-  This documentation is for **Hasura migrations v2** which was introduced in
-  Hasura GraphQL engine version ``v1.2``. (See :ref:`upgrade guide <migrations_upgrade_v2>`).
+  This documentation is for Hasura migrations **config v2**, supported from
+  ``v1.2.0``. (See :ref:`upgrade guide <migrations_upgrade_v2>`).
 
-  For earlier versions, see :ref:`migrations_v1`.
+  For config v1, see :ref:`migrations_v1`.
 
 How is Hasura state managed?
 ----------------------------
@@ -58,7 +58,7 @@ Hasura metadata can be exported and imported as a whole.
 Setting up migrations
 ---------------------
 
-Follow the :ref:`setup_migrations` guide.
+See :ref:`migrations_basics`.
 
 
 Advanced use cases
@@ -68,14 +68,14 @@ Advanced use cases
 - :ref:`manual_migrations`
 - :ref:`roll_back_migrations`
 - :ref:`seed_data_migration`
-- :ref:`collaborate_migrations`
+.. - :ref:`collaborate_migrations`
 
 Reference documentation
 -----------------------
 
 - :ref:`migrations_how_it_works`
-- :ref:`migration_file_format`
-- :ref:`metadata_file_format`
+- :ref:`Migration file format <migration_file_format_v2>`
+- :ref:`Metadata format <metadata_format_v2>`
 
 .. toctree::
   :maxdepth: 1
@@ -84,5 +84,5 @@ Reference documentation
   Basics <basics>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>
-  Upgrading to migrations v2 <upgrade-v2>
-  Pre v1.2 <pre-1.2/index>
+  Upgrading to config v2 <upgrade-v2>
+  Config v1 <config-v1/index>

@@ -4,8 +4,8 @@
 
 .. _auto_apply_migrations_v1:
 
-Auto-apply migrations/metadata when the server starts (pre v1.2)
-================================================================
+Auto-apply migrations/metadata when the server starts (config v1)
+=================================================================
 
 .. contents:: Table of contents
   :backlinks: none

@@ -2,10 +2,10 @@
    :description: Hasura Migration file format reference
    :keywords: hasura, docs, migration, file format
 
-.. _migration_file_format:
+.. _migration_file_format_v2:
 
-Migration file format reference
-===============================
+Migration file format reference (config v2)
+===========================================
 
 .. contents:: Table of contents
   :backlinks: none

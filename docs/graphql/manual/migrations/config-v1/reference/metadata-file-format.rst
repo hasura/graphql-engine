@@ -4,8 +4,8 @@
 
 .. _metadata_file_format_v1:
 
-Metadata file format reference (pre v1.2)
-=========================================
+Metadata file format reference (config v1)
+==========================================
 
 .. contents:: Table of contents
   :backlinks: none

@@ -4,8 +4,8 @@
 
 .. _manage_hasura_metadata_v1:
 
-Managing Hasura metadata (pre v1.2)
-===================================
+Managing Hasura metadata (config v1)
+=====================================
 
 .. contents:: Table of contents
   :backlinks: none

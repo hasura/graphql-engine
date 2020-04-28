@@ -2,10 +2,10 @@
    :description: Hasura Metadata file format reference
    :keywords: hasura, docs, metadata, file format
 
-.. _metadata_file_format:
+.. _metadata_format_v2:
 
-Metadata file format reference
-==============================
+Metadata format reference (config v2)
+=====================================
 
 .. contents:: Table of contents
   :backlinks: none
