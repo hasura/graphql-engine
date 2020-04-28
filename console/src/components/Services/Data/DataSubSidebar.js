@@ -70,6 +70,10 @@ class DataSubSidebar extends React.Component {
       getTableName(t).includes(searchInput)
     );
 
+    const filteredTableListLower = trackedTablesInSchema.filter(t =>
+      getTableName(t).toLowerCase().includes(searchInput.toLowerCase())
+    );
+
     const filteredFunctionsList = trackedFunctions.filter(f =>
       getFunctionName(f).includes(searchInput)
     );
@@ -92,9 +96,12 @@ class DataSubSidebar extends React.Component {
       const currentLocation = location.pathname;
 
       let tableLinks;
-      if (filteredTableList && filteredTableList.length) {
+      if ((filteredTableList && filteredTableList.length) || (filteredTableListLower && filteredTableList.length)){
+
+        allFilteredTablesList = [...filteredTableList, ...filteredTableListLower];
+
         const filteredTablesObject = {};
-        filteredTableList.forEach(t => {
+        allFilteredTablesList.forEach(t => {
           filteredTablesObject[getTableName(t)] = t;
         });
 
