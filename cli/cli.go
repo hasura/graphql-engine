@@ -154,7 +154,7 @@ type ServerConfig struct {
 	// InsecureSkipTLSVerify - indicates if TLS verification is disabled or not.
 	InsecureSkipTLSVerify bool `yaml:"insecure_skip_tls_verify,omitempty"`
 	// CAPath - Path to a cert file for the certificate authority
-	CAPath string `json:"certificate_authority,omitempty"`
+	CAPath string `yaml:"certificate_authority,omitempty"`
 
 	ParsedEndpoint *url.URL `yaml:"-"`
 
