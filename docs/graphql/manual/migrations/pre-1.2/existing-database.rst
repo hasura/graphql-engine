@@ -1,28 +1,27 @@
 .. meta::
-   :description: Manage migrations on a new database and Hasura instance
-   :keywords: hasura, docs, migration, new database
+   :description: Manage migrations on an existing database and Hasura instance
+   :keywords: hasura, docs, migration, existing database
 
-.. _migrations_new_db_old:
+.. _migrations_existing_db_old:
 
-Migrations for a new database and Hasura instance
-=================================================
+Migrations for an existing database and Hasura instance (pre v1.2)
+==================================================================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
-This guide will help you if you are about to start setting up your schema from
-scratch. You can use migrations to help track the database and GraphQL schema
-changes.
+This guide is to be followed if you already have set up a database and Hasura
+instance and now want to start using migrations to help you track the database
+and GraphQL schema changes.
 
-
-Step 0: Disable the console on the server
------------------------------------------
+Step 0: Disable console on the server
+-------------------------------------
 
 To use migrations effectively, the console on the server (which is served at
 ``/console``) should be disabled and all changes must go through the console
-served by the CLI. Otherwise, changes could be made through the server console and
+served by CLI. Otherwise, changes could be made through the server console and
 they will not be tracked by migrations.
 
 So, the first step is to disable the console served by the GraphQL engine server. In
@@ -66,28 +65,69 @@ Hasura migrations. You can commit this directory to version control.
 .. note::
 
    In case there is an admin secret set, you can set it as an environment
-   variable ``HASURA_GRAPHQL_ADMIN_SECRET=<your-admin-secret`` on the local
+   variable ``HASURA_GRAPHQL_ADMIN_SECRET=<your-admin-secret>`` on the local
    machine and the CLI will use it. You can also use it as a flag to CLI:
-   ``--admin-secret "<your-admin-secret>"``.
+   ``--admin-secret '<your-admin-secret>'``.
 
-Step 3: Open the console from the CLI
--------------------------------------
+Step 3: Initialize the migrations as per your current state
+-----------------------------------------------------------
 
-Instead of using the console at ``http://my-graphql.herokuapp.com/console`` you
-should now use the console by running: 
+Create a migration called ``init`` by exporting the current Postgres schema and
+metadata from the server:
+
+.. code-block:: bash
+
+   # (available after version v1.0.0-alpha45)
+   # create migration files (note that this will only export public schema from postgres)
+   hasura migrate create "init" --from-server
+
+   # note down the version
+   # mark the migration as applied on this server
+   hasura migrate apply --version "<version>" --skip-execution
+
+
+This command will create a new "migration" under the ``migrations`` directory
+with the file name as ``<timestamp(version)>_init.up.yaml``. This file will
+contain the required information to reproduce the current state of the server
+including the Postgres (public) schema and Hasura metadata. The apply command
+will mark this migration as "applied" on the server. If you'd like to read more
+about the format of migration files, check out the :ref:`migration_file_format_old`.
+
+.. note::
+
+  If you need to export other schemas along with ``public``, you can name them using the
+  ``--schema`` flag. 
+  
+  For example, to export schemas ``public``, ``schema1`` and ``schema2``,
+  execute the following command:
+
+  .. code-block:: bash
+
+     hasura migrate create "init" --from-server --schema "public" --schema "schema1" --schema "schema2"
+
+Step 4: Use the console from the CLI
+------------------------------------
+
+From this point onwards, instead of using the console at
+``http://my-graphql.herokuapp.com/console`` you should use the console from the CLI
+by running:
 
 .. code-block:: bash
 
    # in project dir
    hasura console
 
-Step 4: Add a new table and see how a migration is added
+Step 5: Add a new table and see how a migration is added
 --------------------------------------------------------
 
-As you use the Hasura console UI to make changes to your schema, migration files
-are automatically generated in the ``migrations/`` directory in your project. 
+As you use the Hasura console UI to make changes to your schema, migration files are automatically generated
+in the ``migrations/`` directory in your project.
 
-Step 5: Apply the migrations on another instance of the GraphQL engine
+.. note::
+
+   Migrations are only created when using the console through CLI.
+
+Step 6: Apply the migrations on another instance of the GraphQL engine
 ----------------------------------------------------------------------
 
 Apply all migrations present in the ``migrations/`` directory on a new
@@ -101,9 +141,9 @@ instance at ``http://another-graphql-instance.herokuapp.com``:
 In case you need an automated way of applying the migrations, take a look at the
 :ref:`CLI-Migrations <auto_apply_migrations_old>` Docker image, which can start the
 GraphQL engine after automatically applying the migrations which are
-mounted into a directory.
+mounted into a directory.  
 
-Step 6: Check the status of migrations
+Step 7: Check the status of migrations
 --------------------------------------
 
 .. code-block:: bash

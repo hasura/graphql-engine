@@ -4,8 +4,8 @@
 
 .. _migrations_advanced_old:
 
-Migrations advanced use cases
-=============================
+Migrations advanced use cases (pre v1.2)
+========================================
 
 .. toctree::
   :maxdepth: 1

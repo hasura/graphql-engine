@@ -4,8 +4,8 @@
 
 .. _manual_migrations_old:
 
-Writing migrations manually
-===========================
+Writing migrations manually (pre v1.2)
+======================================
 
 .. contents:: Table of contents
   :backlinks: none

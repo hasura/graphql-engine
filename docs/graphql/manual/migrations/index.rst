@@ -77,3 +77,4 @@ Reference documentation
   Setting up <setup>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>
+  Pre v1.2 <pre-1.2/index>

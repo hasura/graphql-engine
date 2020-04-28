@@ -4,8 +4,8 @@
 
 .. _seed_data_migration_old:
 
-Creating a seed data migration
-==============================
+Creating a seed data migration (pre v1.2)
+=========================================
 
 .. contents:: Table of contents
   :backlinks: none

@@ -4,8 +4,8 @@
 
 .. _migrations_how_it_works_old:
 
-How Hasura migrations work
-==========================
+How Hasura migrations work (pre v1.2)
+=====================================
 
 .. contents:: Table of contents
   :backlinks: none

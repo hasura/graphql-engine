@@ -4,8 +4,8 @@
 
 .. _postgres_schema_metadata_old:
 
-Managing Postgres schema and Hasura metadata
-============================================
+Managing Postgres schema and Hasura metadata (pre v1.2)
+=======================================================
 
 .. contents:: Table of contents
   :backlinks: none

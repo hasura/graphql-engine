@@ -4,8 +4,8 @@
 
 .. _migration_file_format_old:
 
-Migration file format reference
-===============================
+Migration file format reference (pre v1.2)
+==========================================
 
 .. contents:: Table of contents
   :backlinks: none
