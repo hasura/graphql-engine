@@ -26,7 +26,7 @@ import qualified Hasura.RQL.DML.Select         as RQL
 import qualified Hasura.SQL.DML                as SQL
 
 import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser,
-                                                UnpreparedValue (..))
+                                                UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.BoolExp
@@ -70,15 +70,13 @@ queryExp allTables stringifyNum = do
 
 -- | Simple table selection.
 --
--- Parser for an output field for a given table, such as
--- > field_name(limit: 10) {
+-- The field for the table accepts table selection arguments, and
+-- expects a selection of fields
+--
+-- > table_name(limit: 10) {
 -- >   col1: col1_type
 -- >   col2: col2_type
 -- > }: [table!]
---
--- Note that the name of the selection field does not necessarily
--- match the name of the table, which is why it is given as an
--- argument.
 selectTable
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable       -- ^ qualified name of the table
@@ -103,6 +101,46 @@ selectTable table fieldName description selectPermissions stringifyNum = do
       )
 
 
+-- | Table selection by primary key.
+--
+-- > table_name(id: 42) {
+-- >   col1: col1_type
+-- >   col2: col2_type
+-- > }: [table!]
+selectTableByPk
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable       -- ^ qualified name of the table
+  -> G.Name               -- ^ field display name
+  -> Maybe G.Description  -- ^ field description, if any
+  -> SelPermInfo          -- ^ select permissions of the table
+  -> Bool
+  -> m (Maybe (FieldsParser 'Output n (Maybe (G.Name, SelectExp))))
+selectTableByPk table fieldName description selectPermissions stringifyNum = do
+  tablePrimaryKeys <- _tciPrimaryKey . _tiCoreInfo <$> askTableInfo table
+  join <$> for tablePrimaryKeys \(_pkColumns -> columns) -> do
+    if any (\c -> not $ pgiColumn c `Set.member` spiCols selectPermissions) columns
+    then pure Nothing
+    else do
+      argsParser <- sequenceA <$> for columns \columnInfo -> do
+        field <- P.column (pgiType columnInfo) (G.Nullability False)
+        pure $ BoolFld . AVCol columnInfo . pure . AEQ True . mkParameter <$>
+          P.field (pgiName columnInfo) (pgiDescription columnInfo) field
+      selectionSetParser <- tableFields table selectPermissions stringifyNum
+      pure $ Just $ P.selection fieldName description argsParser selectionSetParser
+        `mapField` \(aliasName, boolExpr, fields) ->
+        let defaultPerms = tablePermissions selectPermissions
+            whereExpr    = BoolAnd $ toList boolExpr
+        in ( aliasName
+           , RQL.AnnSelG
+             { RQL._asnFields   = fields
+             , RQL._asnFrom     = RQL.FromTable table
+             , RQL._asnPerm     = defaultPerms { RQL._tpLimit = Nothing }
+             , RQL._asnArgs     = RQL.noTableArgs { RQL._taWhere = Just whereExpr }
+             , RQL._asnStrfyNum = stringifyNum
+             }
+           )
+
+
 -- | Table aggregation selection
 --
 -- Parser for an aggregation selection of a table.
@@ -110,6 +148,9 @@ selectTable table fieldName description selectPermissions stringifyNum = do
 -- >   aggregate: table_aggregate_fields
 -- >   nodes: [table!]!
 -- > } :: table_aggregate
+--
+-- FIXME: check for aggregate permissions
+-- FIXME: change output to maybe
 selectTableAggregate
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable       -- ^ qualified name of the table
@@ -394,7 +435,7 @@ computedFieldFunctionArgs ComputedFieldFunction{..}
           argParser = if unHasDefault $ faHasDefault arg
                       then P.fieldOptional  fieldName Nothing columnParser
                       else Just <$> P.field fieldName Nothing columnParser
-      pure $ fmap (RQL.AEInput . P.mkParameter) <$> argParser
+      pure $ fmap (RQL.AEInput . mkParameter) <$> argParser
 
 -- FIXME: move to common?
 jsonPathArg :: MonadParse n => PGScalarType -> FieldsParser 'Input n (Maybe RQL.ColOp)
