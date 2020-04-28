@@ -25,7 +25,7 @@ query {
     content
     likedByMe
   }
-}     
+}
 ```
 
 Support for this is now added through the `add_computed_field` API.
@@ -35,6 +35,8 @@ Read more about the session argument for computed fields in the [docs](https://h
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
+
+- server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
 
 
 ## `v1.2.0`
