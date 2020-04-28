@@ -1,7 +1,11 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ViewPatterns    #-}
 
-module Hasura.GraphQL.Schema.Select where
+module Hasura.GraphQL.Schema.Select
+  ( queryExp
+  , selectTable
+  , selectTableAggregate
+  ) where
 
 import           Hasura.Prelude
 
@@ -34,14 +38,15 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 
-
 type SelectExp       = RQL.AnnSimpleSelG UnpreparedValue
+type AggSelectExp    = RQL.AnnAggSelG UnpreparedValue
 type TableArgs       = RQL.TableArgsG UnpreparedValue
 type TablePerms      = RQL.TablePermG UnpreparedValue
 type AnnotatedFields = RQL.AnnFldsG UnpreparedValue
 type AnnotatedField  = RQL.AnnFldG UnpreparedValue
 
 
+-- TODO: move to schema
 queryExp
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => HashSet QualifiedTable
@@ -49,26 +54,43 @@ queryExp
   -> m (Parser 'Output n (HashMap G.Name SelectExp))
 queryExp allTables stringifyNum = do
   selectExpParsers <- for (toList allTables) $ \tableName -> do
+    displayName <- qualifiedObjectToName tableName
     selectPerms <- tableSelectPermissions tableName
     let desc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName tableName) <> "\""
-    for selectPerms $ \perms -> selectFromTable tableName (Just desc) perms stringifyNum
-    -- TODO: add aggregation tables and primary key queries?
-    -- WIP note: move this to Schema.hs?
+    for selectPerms $ \perms ->
+      selectTable tableName displayName (Just desc) perms stringifyNum
+    -- TODO: add aggregation tables and primary key queries
   let queryFieldsParser = fmap (Map.fromList . catMaybes) $ sequenceA $ catMaybes selectExpParsers
   pure $ P.selectionSet $$(G.litName "Query") Nothing queryFieldsParser
 
-selectFromTable
+
+
+-- 1. top level selection functions
+-- write a blurb?
+
+-- | Simple table selection.
+--
+-- Parser for an output field for a given table, such as
+-- > field_name(limit: 10) {
+-- >   col1: col1_type
+-- >   col2: col2_type
+-- > }: [table!]
+--
+-- Note that the name of the selection field does not necessarily
+-- match the name of the table, which is why it is given as an
+-- argument.
+selectTable
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => QualifiedTable
-  -> Maybe G.Description
-  -> SelPermInfo
+  => QualifiedTable       -- ^ qualified name of the table
+  -> G.Name               -- ^ field display name
+  -> Maybe G.Description  -- ^ field description, if any
+  -> SelPermInfo          -- ^ select permissions of the table
   -> Bool
   -> m (FieldsParser 'Output n (Maybe (G.Name, SelectExp)))
-selectFromTable table description selectPermissions stringifyNum = do
-  name               <- qualifiedObjectToName table
+selectTable table fieldName description selectPermissions stringifyNum = do
   tableArgsParser    <- tableArgs table
-  selectionSetParser <- tableSelectionSet table selectPermissions stringifyNum
-  pure $ P.selection name description tableArgsParser selectionSetParser <&> fmap
+  selectionSetParser <- tableFields table selectPermissions stringifyNum
+  pure $ P.selection fieldName description tableArgsParser selectionSetParser `mapField`
     \(aliasName, tableArgs, tableFields) ->
       ( aliasName
       , RQL.AnnSelG
@@ -80,41 +102,80 @@ selectFromTable table description selectPermissions stringifyNum = do
         }
       )
 
-tablePermissions :: SelPermInfo -> TablePerms
-tablePermissions selectPermissions = RQL.TablePerm
-  { RQL._tpFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter selectPermissions
-  , RQL._tpLimit  = spiLimit selectPermissions
-  }
 
-
--- | Corresponds to an object type for table arguments:
+-- | Table aggregation selection
 --
--- FIXME: is that the correct name?
--- > type table_arguments {
--- >   distinct_on: [table_select_column!]
--- >   limit: Int
--- >   offset: Int
--- >   order_by: [table_order_by!]
--- >   where: table_bool_exp
--- > }
+-- Parser for an aggregation selection of a table.
+-- > table_aggregate(limit: 10) {
+-- >   aggregate: table_aggregate_fields
+-- >   nodes: [table!]!
+-- > } :: table_aggregate
+selectTableAggregate
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable       -- ^ qualified name of the table
+  -> G.Name               -- ^ field display name
+  -> Maybe G.Description  -- ^ field description, if any
+  -> SelPermInfo          -- ^ select permissions of the table
+  -> Bool
+  -> m (FieldsParser 'Output n (Maybe (G.Name, AggSelectExp)))
+selectTableAggregate table fieldName description selectPermissions stringifyNum = do
+  tableArgsParser   <- tableArgs table
+  tableFieldsParser <- selectTable table nodesName Nothing selectPermissions stringifyNum
+  selectionName     <- qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
+  let aggregationParser = P.selectionSet selectionName Nothing $ sequenceA
+        [ fmap (fmap RQL.TAFNodes) <$> tableFieldsParser
+        , tableAggregationFields undefined undefined
+        -- TODO: handle __typename here
+        ]
+  pure $ P.selection fieldName description tableArgsParser aggregationParser <&> fmap
+    \(aliasName, tableArgs, aggregationFields) ->
+      ( aliasName
+      , RQL.AnnSelG
+        { RQL._asnFields   = aggregationFields
+        , RQL._asnFrom     = RQL.FromTable table
+        , RQL._asnPerm     = tablePermissions selectPermissions
+        , RQL._asnArgs     = tableArgs
+        , RQL._asnStrfyNum = stringifyNum
+        }
+      )
+  where
+    nodesName     = $$(G.litName "nodes")
+    aggregateName = $$(G.litName "aggregate")
+
+
+
+-- 2. local parsers
+-- Parsers that are used but not exported: sub-components
+-- todo write better blurb
+
+-- | Arguments for a table selection
+--
+-- > distinct_on: [table_select_column!]
+-- > limit: Int
+-- > offset: Int
+-- > order_by: [table_order_by!]
+-- > where: table_bool_exp
 tableArgs
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
+  -> SelPermInfo
   -> m (FieldsParser 'Input n TableArgs)
-tableArgs table = do
+tableArgs table selectPermissions = do
   boolExpParser <- boolExp table
   orderByParser <- orderByExp table
+  columnsEnum   <- tableColumnsEnum table selectPermissions
   pure $ do
-    whereF  <- P.fieldOptional whereName   whereDesc   boolExpParser
-    orderBy <- P.fieldOptional orderByName orderByDesc orderByParser
-    limit   <- P.fieldOptional limitName   limitDesc   P.int
-    offset  <- P.fieldOptional offsetName  offsetDesc  P.int
+    whereF   <- P.fieldOptional whereName   whereDesc   boolExpParser
+    orderBy  <- P.fieldOptional orderByName orderByDesc orderByParser
+    limit    <- P.fieldOptional limitName   limitDesc   P.int
+    offset   <- P.fieldOptional offsetName  offsetDesc  P.int
+    distinct <- P.fieldOptional offsetName  offsetDesc  columnsEnum
     pure $ RQL.TableArgs
       { RQL._taWhere    = whereF
       , RQL._taOrderBy  = nonEmpty =<< orderBy
       , RQL._taLimit    = fromIntegral <$> limit
       , RQL._taOffset   = txtEncoder . PGValInteger <$> offset
-      , RQL._taDistCols = Nothing -- TODO
+      , RQL._taDistCols = distinct
       }
   where
     -- TH splices mess up ApplicativeDo
@@ -131,29 +192,115 @@ tableArgs table = do
     distinctOnDesc = Just $ G.Description "distinct select on columns"
 
 
--- | Corresponds to an object type for a table:
+-- | Fields of a table
 --
--- > type table {
--- >   col1: colty1
--- >   ...
--- >   rel1: relty1
--- > }
-tableSelectionSet
+-- TODO: can this be merged with selectTable?
+tableFields
   :: (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
   -> SelPermInfo
   -> Bool
   -> m (Parser 'Output n AnnotatedFields)
-tableSelectionSet tableName selectPermissions stringifyNum = memoizeOn 'tableSelectionSet tableName $ do
-  tableInfo <- _tiCoreInfo <$> askTableInfo tableName
-  name <- qualifiedObjectToName $ _tciName tableInfo
-  fields <- fmap catMaybes
-    $ traverse (\fieldInfo -> fieldSelection fieldInfo selectPermissions stringifyNum)
-    $ Map.elems
-    $ _tciFieldInfoMap tableInfo
-  pure $ P.selectionSet name (_tciDescription tableInfo) $ catMaybes <$> sequenceA fields
+tableFields table selectPermissions stringifyNum =
+  memoizeOn 'tableSelectionSet tableName $ do
+    tableName <- qualifiedObjectToName table
+    fields    <- fmap catMaybes
+      $ traverse (\fieldInfo -> fieldSelection fieldInfo selectPermissions stringifyNum)
+      =<< tableSelectFields table selectPermissions
+    -- TODO: handle __typename here
+    pure $ P.selectionSet tableName (_tciDescription tableInfo) $ catMaybes <$> sequenceA fields
 
--- | A field for a table.
+-- | Table columns enum
+--
+-- Parser for an enum type that matches the columns of the given
+-- table. Used as a parameter for "distinct", among others. Maps to
+-- the table_select_columns object.
+-- TODO: move this to Table?
+tableColumnsEnum
+  :: (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable
+  -> SelPermInfo
+  -> m (Parser 'Both n PGCol)
+tableColumnsEnum table selectPermissions = do
+  tableName <- qualifiedObjectToName table
+  columns   <- tableSelectColumns table selectPermissions
+  let enumName    = tableName <> $$(G.litName "_select_columns")
+      description = Just $ G.Description $ "select columns of table \"" <> tableName <> "\""
+  pure $ P.enum enumName description $ NE.fromList
+    [ ( P.mkDefinition (pgiName column) (G.Description "column name") P.EnumValueInfo
+      , pgiColumn column
+      )
+    | column <- columns
+    ]
+
+
+-- | Aggregation fields
+--
+-- TODO: are the names and description correct?
+-- > type table_aggregate_fields{
+-- >   count: Int
+-- >   sum: table_sum_fields
+-- >   avg: table_avg_fields
+-- >   stddev: table_stddev_fields
+-- >   stddev_pop: table_stddev_pop_fields
+-- >   variance: table_variance_fields
+-- >   var_pop: table_var_pop_fields
+-- >   max: table_max_fields
+-- >   min: table_min_fields
+-- > }
+tableAggregationFields
+  :: (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable       -- ^ qualified name of the table
+  -> G.Name               -- ^ field display name
+  -> Maybe G.Description  -- ^ field description, if any
+  -> SelPermInfo          -- ^ select permissions of the table
+  -> m (Parser 'Output n _)
+tableAggregationFields table fieldName description selectPermissions =
+  memoizeOn 'tableSelectionSet table $ do
+    tableName  <- qualifiedObjectToName table
+    allColumns <- tableSelectColumns table selectPermissions
+    numFields  <- fmap sequenceA $ traverse mkField $ RQL.onlyNumCols  columns
+    compFields <- fmap sequenceA $ traverse mkField $ RQL.onlyCompCols columns
+    fields <- fmap (sequenceA . concat) $ sequenceA $ catMaybes
+      [ Just $ do
+          columnsEnum <- tableColumnsEnum table selectPermissions
+          let columnsName  = $$(G.litName "columns")
+              distinctName = $$(G.litName "distinct")
+              args = do
+                distinct <- P.fieldOptional columnsName  Nothing P.boolean
+                columns  <- P.fieldOptional distinctName Nothing columnsEnum
+                case columns of
+                  Nothing   -> pure SQL.CTStar
+                  Just cols -> if fromMaybe False distinct
+                               then SQL.CTDistinct cols
+                               else SQL.CTSimple cols
+                pure $ RS.AFCount <$> countField
+      , if null numFields then Nothing else Just $
+        for [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
+            , "variance", "var_samp", "var_pop"
+            ] \operator -> do
+          operatorName <- textToName operator
+          let setName = tableName <> "_" <> operatorName <> $$(G.litName "_fields")
+          pure $ P.selection_ operatorName Nothing $ selectionSet setName numFields
+            `mapField` \(name, selection) -> RQL.AFOp $ RQL.AggOp name selection
+      , if null compFields then Nothing else Just $
+        for ["max", "min"] \operator -> do
+          operatorName <- textToName operator
+          let setName = tableName <> "_" <> operatorName <> $$(G.litName "_fields")
+          pure $ P.selection_ operatorName Nothing $ selectionSet setName compFields
+            `mapField` \(name, selection) -> RQL.AFOp $ RQL.AggOp name selection
+      -- TODO: handle __typename here
+      ]
+    let selectName = tableName <> $$(G.litName "_aggregate_fields")
+    pure $ P.selection fieldName description $ selectionSet selectName description fields
+  where
+    mkField columnInfo = do
+      let annotated = RQL.mkAnnColField columnInfo Nothing -- FIXME: support ColOp?
+      field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+      pure $ fmap (, annotated) <$> P.selection_ fieldName (pgiDescription columnInfo) field
+
+
+-- | An individual field of a table
 --
 -- > field_name(arg_name: arg_type, ...): field_type
 fieldSelection
@@ -182,7 +329,8 @@ fieldSelection fieldInfo selectPermissions stringifyNum =
             let desc = Just $ G.Description $ case riType relationshipInfo of
                   ObjRel -> "An object relationship"
                   ArrRel -> "An array relationship"
-            otherTableParser <- selectFromTable otherTable desc perms stringifyNum
+            relFieldName <- textToName $ relNameToTxt relName
+            otherTableParser <- selectTable otherTable relFieldName desc perms stringifyNum
             pure $ otherTableParser <&> fmap \(psName, selectExp) ->
               ( psName
               , let annotatedRelationship = RQL.AnnRelG relName colMapping selectExp
@@ -325,3 +473,19 @@ computedField ComputedFieldInfo{..} selectPermissions stringifyNum = do
       -- WIP note: the original code contained one "\n" (^ here) instead
       -- I kept that behaviour but made it explicit
       -- I feel it's an error and should be only one ""?
+
+
+
+-- 3. local helpers
+-- TODO: move to common?
+
+tablePermissions :: SelPermInfo -> TablePerms
+tablePermissions selectPermissions = RQL.TablePerm
+  { RQL._tpFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter selectPermissions
+  , RQL._tpLimit  = spiLimit selectPermissions
+  }
+
+mapField
+  :: Functor m
+  => FieldsParser k m (Maybe a) -> (a -> b) -> FieldsParser k m (Maybe b)
+mapField fp f = fmap (fmap f) fp

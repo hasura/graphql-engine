@@ -1,6 +1,7 @@
 module Hasura.GraphQL.Schema.Table
   ( tableSelectPermissions
   , tableSelectFields
+  , tableSelectColumns
   ) where
 
 import           Hasura.Prelude
@@ -26,21 +27,31 @@ tableSelectPermissions table = do
 tableSelectFields
   :: forall m n. (MonadSchema n m)
   => QualifiedTable
+  -> SelPermInfo
   -> m [FieldInfo]
-tableSelectFields table = do
+tableSelectFields table permissions = do
   -- TODO: memoize this?
   tableFields <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
-  tableSelectPermissions table >>= \case
-    Nothing    -> pure []
-    Just perms -> filterM (canBeSelected perms) $ Map.elems tableFields
+  filterM canBeSelected $ Map.elems tableFields
   where
-    canBeSelected perms (FIColumn columnInfo) =
-      pure $ Set.member (pgiColumn columnInfo) (spiCols perms)
-    canBeSelected _     (FIRelationship relationshipInfo) =
+    canBeSelected (FIColumn columnInfo) =
+      pure $ Set.member (pgiColumn columnInfo) (spiCols permissions)
+    canBeSelected (FIRelationship relationshipInfo) =
       isJust <$> tableSelectPermissions (riRTable relationshipInfo)
-    canBeSelected perms (FIComputedField computedFieldInfo) =
+    canBeSelected (FIComputedField computedFieldInfo) =
       case _cfiReturnType computedFieldInfo of
         CFRScalar _ ->
-          pure $ Set.member (_cfiName computedFieldInfo) $ spiScalarComputedFields perms
+          pure $ Set.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
         CFRSetofTable tableName ->
           isJust <$> tableSelectPermissions tableName
+
+tableSelectColumns
+  :: forall m n. (MonadSchema n m)
+  => QualifiedTable
+  -> SelPermInfo
+  -> m [PGColumnInfo]
+tableSelectColumns table permissions =
+  mapMaybe columnInfo <$> tableSelectFields table permissions
+  where
+    columnInfo (FIColumn ci) = Just ci
+    columnInfo _             = Nothing

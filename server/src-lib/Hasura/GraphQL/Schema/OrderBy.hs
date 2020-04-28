@@ -32,12 +32,13 @@ import           Hasura.SQL.Types
 orderByExp
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
+  -> SelPermInfo
   -> m (Parser 'Input n [RQL.AnnOrderByItemG UnpreparedValue])
-orderByExp = P.memoize 'orderByExp \tableName -> do
-  name <- qualifiedObjectToName tableName <&> (<> $$(G.litName "_order_by"))
+orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
+  name <- qualifiedObjectToName table <&> (<> $$(G.litName "_order_by"))
   let description = G.Description $
-        "Ordering options when selecting data from " <> tableName <<> "."
-  tableFieldParsers <- fmap catMaybes $ traverse mkField =<< tableSelectFields tableName
+        "Ordering options when selecting data from " <> table <<> "."
+  tableFieldParsers <- fmap catMaybes $ traverse mkField =<< tableSelectFields table selectPermissions
   pure $ fmap (concat . catMaybes) $ P.object name (Just description) $ sequenceA tableFieldParsers
   where
     mkField fieldInfo = join <$> for (fieldInfoGraphQLName fieldInfo) \fieldName ->
@@ -51,18 +52,19 @@ orderByExp = P.memoize 'orderByExp \tableName -> do
               }
         FIRelationship relationshipInfo -> do
           let remoteTable = riRTable relationshipInfo
-          otherTableParser  <- orderByExp remoteTable
-          selectPermissions <- tableSelectPermissions remoteTable
-          for selectPermissions $ \perms -> case riType relationshipInfo of
-            ObjRel -> pure $ P.fieldOptional fieldName Nothing otherTableParser <&>
-              fmap (map \orderByItem ->
-                       orderByItem { obiColumn = RQL.AOCObj
-                                     relationshipInfo
-                                     (fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter perms)
-                                     (obiColumn orderByItem)
-                                   }
-                   )
-            ArrRel -> undefined -- FIXME
+          remotePermissions <- tableSelectPermissions remoteTable
+          for remotePermissions $ \perms -> do
+            otherTableParser <- orderByExp remoteTable perms
+            case riType relationshipInfo of
+              ObjRel -> pure $ P.fieldOptional fieldName Nothing otherTableParser <&>
+                fmap (map \orderByItem ->
+                         orderByItem { obiColumn = RQL.AOCObj
+                                       relationshipInfo
+                                       (fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter perms)
+                                       (obiColumn orderByItem)
+                                     }
+                     )
+              ArrRel -> undefined -- FIXME
         FIComputedField _ -> pure Nothing
 
 orderByOperator :: MonadParse m => Parser 'Both m (SQL.OrderType, SQL.NullsOrder)

@@ -35,6 +35,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+
 jsonPathToColExp :: (MonadError QErr m) => T.Text -> m S.SQLExp
 jsonPathToColExp t = case parseJSONPath t of
   Left s       -> throw400 ParseFailed $ T.pack $ "parse json path error: " ++ s
