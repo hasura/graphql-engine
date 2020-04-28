@@ -8,49 +8,47 @@ import LeftSidebar from '../Sidebar/LeftSidebar';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { appPrefix } from '../constants';
 
-class Container extends React.Component {
-  render() {
-    const { children } = this.props;
+const Container = props => {
+  const { children } = props;
 
-    const currentLocation = location.pathname;
+  const currentLocation = location.pathname;
 
-    const sidebarContent = (
-      <ul>
-        <li
-          role="presentation"
-          className={
-            currentLocation.includes('actions/manage') ? styles.active : ''
-          }
-        >
-          <RouterLink className={styles.linkBorder} to={appPrefix + '/manage'}>
-            Manage
-          </RouterLink>
-          <LeftSidebar appPrefix={appPrefix} {...this.props} />
-        </li>
-        <li
-          role="presentation"
-          className={
-            currentLocation.includes('actions/types') ? styles.active : ''
-          }
-        >
-          <RouterLink className={styles.linkBorder} to={appPrefix + '/types'}>
-            Custom types
-          </RouterLink>
-        </li>
-      </ul>
-    );
+  const sidebarContent = (
+    <ul>
+      <li
+        role="presentation"
+        className={
+          currentLocation.includes('actions/manage') ? styles.active : ''
+        }
+      >
+        <RouterLink className={styles.linkBorder} to={appPrefix + '/manage'}>
+          Manage
+        </RouterLink>
+        <LeftSidebar appPrefix={appPrefix} {...props} />
+      </li>
+      <li
+        role="presentation"
+        className={
+          currentLocation.includes('actions/types') ? styles.active : ''
+        }
+      >
+        <RouterLink className={styles.linkBorder} to={appPrefix + '/types'}>
+          Custom types
+        </RouterLink>
+      </li>
+    </ul>
+  );
 
-    const helmet = 'Actions | Hasura';
+  const helmet = 'Actions | Hasura';
 
-    const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
+  const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 
-    return (
-      <PageContainer helmet={helmet} leftContainer={leftContainer}>
-        {children}
-      </PageContainer>
-    );
-  }
-}
+  return (
+    <PageContainer helmet={helmet} leftContainer={leftContainer}>
+      {children}
+    </PageContainer>
+  );
+};
 
 Container.propTypes = {
   appPrefix: PropTypes.string.isRequired,
