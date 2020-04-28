@@ -34,12 +34,12 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 ### CLI: Support servers with self-signed certificates (close #4564) (#4582)
 
-A new global flag is added to the CLI for working with GraphQL Engine servers with
-self-signed TLS certificates. A new flag `--certificate-authority` is added so that
-the CA certificate can be provided to trust the Hasura Endpoint.
+A new flag `--certificate-authority` is added so that the CA certificate can be
+provided to trust the Hasura Endpoint with a self-signed SSL certificate.
 
 Another flag `--insecure-skip-tls-verification` is added to skip verifying the certificate
-in case you don't have access to the CA certificate. Use this flag with caution.
+in case you don't have access to the CA certificate. As the name suggests,
+using this flag is insecure since verification is not carried out.
 
 ### Bug fixes and improvements
 
