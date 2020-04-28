@@ -41,8 +41,8 @@ database.
 
 .. note::
 
-  This documentation is for **Hasura migrations v1**. Hasura migrations v2 was
-  introduced in Hasura GraphQL engine version ``v1.2``
+  This documentation is for **Hasura migrations config v1**. Hasura migrations
+  config v2 was introduced in Hasura GraphQL engine version ``v1.2.0``
 
   See :ref:`migrations`
 
@@ -52,15 +52,14 @@ Simple use cases
 We will split the use cases into two:
 
 1. :ref:`You're already using a migration tool for the Postgres schema
-   <manage_hasura_metadata_v1>`. (like knex, TypeORM, Sequelize, Rails/Django
+   <manage_hasura_metadata>`. (like knex, TypeORM, Sequelize, Rails/Django
    migrations. In this case you only need to manage the Hasura metadata)
 2. :ref:`You're not using any migration tool for the Postgres schema
-   <postgres_schema_metadata_v1>`. (Hasura will take care of the
+   <manage_migrations_v1>`. (Hasura will take care of the
    Postgres schema also)
 
 Advanced use cases
 ------------------
-
 
 - :ref:`auto_apply_migrations_v1`
 - :ref:`manual_migrations_v1`
@@ -76,6 +75,6 @@ Reference documentation
   :maxdepth: 1
   :hidden:
 
-  Manage Migrations (Metadata + Postgres Schema) <manage-migrations>
+  Manage Postgres Schema and metadata <manage-migrations>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>

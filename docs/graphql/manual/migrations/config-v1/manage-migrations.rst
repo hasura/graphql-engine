@@ -2,10 +2,10 @@
    :description: Manage migrations on an existing database and Hasura instance
    :keywords: hasura, docs, migration, existing database
 
-.. _migrations_existing_db_v1:
+.. _manage_migrations_v1:
 
-Migrations for an existing database and Hasura instance (config v1)
-===================================================================
+Managing Postgres schema migrations and metadata (config v1)
+============================================================
 
 .. contents:: Table of contents
   :backlinks: none

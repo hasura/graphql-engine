@@ -68,7 +68,6 @@ Advanced use cases
 - :ref:`manual_migrations`
 - :ref:`roll_back_migrations`
 - :ref:`seed_data_migration`
-.. - :ref:`collaborate_migrations`
 
 Reference documentation
 -----------------------
