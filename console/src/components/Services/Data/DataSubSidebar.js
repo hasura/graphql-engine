@@ -77,6 +77,10 @@ class DataSubSidebar extends React.Component {
     const filteredFunctionsList = trackedFunctions.filter(f =>
       getFunctionName(f).includes(searchInput)
     );
+    
+    const filteredFunctionsListLower = trackedFunctions.filter(f =>
+      getFunctionName(f).toLowerCase().includes(searchInput.toLowerCase())
+    );
 
     const getSearchInput = () => {
       return (
@@ -153,9 +157,12 @@ class DataSubSidebar extends React.Component {
         </li>,
       ];
 
-      if (filteredFunctionsList && filteredFunctionsList.length > 0) {
+      if ((filteredFunctionsList && filteredFunctionsList.length > 0) || (filteredFunctionsListLower && filteredFunctionsListLower.length > 0)) {
+
+        allFilteredFunctionsList = [...filteredFunctionsList, ...filteredFunctionsListLower]
+
         const filteredFunctionsObject = {};
-        filteredFunctionsList.forEach(f => {
+        allFilteredFunctionsList.forEach(f => {
           filteredFunctionsObject[getFunctionName(f)] = f;
         });
 
