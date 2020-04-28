@@ -10,6 +10,7 @@ source: https://github.com/kubernetes-sigs/krew/tree/master/internal
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -46,6 +47,9 @@ type Config struct {
 	Repo *util.GitUtil
 
 	Logger *logrus.Logger
+
+	// HTTPClient - http client to be used for download
+	HTTPClient *http.Client
 }
 
 // FetchOpts - options available during fetching plugin manifest
@@ -58,8 +62,9 @@ type FetchOpts struct {
 func New(base string) *Config {
 	p := paths.NewPaths(base)
 	return &Config{
-		Paths: p,
-		Repo:  util.NewGitUtil(indexURI, p.IndexPath(), IndexBranchRef),
+		Paths:      p,
+		Repo:       util.NewGitUtil(indexURI, p.IndexPath(), IndexBranchRef),
+		HTTPClient: &http.Client{},
 	}
 }
 
@@ -204,7 +209,7 @@ func (c *Config) installPlugin(plugin Plugin, platform Platform) error {
 			}
 		}()
 
-		if err := downloadAndExtract(downloadStagingDir, platform.URI, platform.Sha256); err != nil {
+		if err := downloadAndExtract(c.HTTPClient, downloadStagingDir, platform.URI, platform.Sha256); err != nil {
 			return errors.Wrap(err, "failed to unpack into staging dir")
 		}
 

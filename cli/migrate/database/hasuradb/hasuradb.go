@@ -86,7 +86,7 @@ func WithInstance(config *Config, logger *log.Logger) (database.Driver, error) {
 	return hx, nil
 }
 
-func (h *HasuraDB) Open(url string, isCMD bool, tls *tls.Config, logger *log.Logger) (database.Driver, error) {
+func (h *HasuraDB) Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger) (database.Driver, error) {
 	if logger == nil {
 		logger = log.New()
 	}
@@ -116,8 +116,8 @@ func (h *HasuraDB) Open(url string, isCMD bool, tls *tls.Config, logger *log.Log
 	}
 
 	req := gorequest.New()
-	if tls != nil {
-		req = req.TLSClientConfig(tls)
+	if tlsConfig != nil {
+		req.TLSClientConfig(tlsConfig)
 	}
 
 	config := &Config{

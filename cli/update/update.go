@@ -26,8 +26,8 @@ type updateCheckResponse struct {
 	PreRelease *semver.Version `json:"prerelease"`
 }
 
-func getLatestVersion() (*semver.Version, *semver.Version, error) {
-	res, err := http.Get(updateCheckURL)
+func getLatestVersion(client *http.Client) (*semver.Version, *semver.Version, error) {
+	res, err := client.Get(updateCheckURL)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "update check request")
 	}
@@ -55,8 +55,8 @@ func buildAssetURL(v string) string {
 	)
 }
 
-func downloadAsset(url, fileName, filePath string) (*os.File, error) {
-	res, err := http.Get(url)
+func downloadAsset(client *http.Client, url, fileName, filePath string) (*os.File, error) {
+	res, err := client.Get(url)
 	if err != nil {
 		return nil, errors.Wrap(err, "downloading asset")
 	}
@@ -85,12 +85,12 @@ func downloadAsset(url, fileName, filePath string) (*os.File, error) {
 }
 
 // HasUpdate tells us if there is a new stable or prerelease update available.
-func HasUpdate(currentVersion *semver.Version, timeFile string) (bool, *semver.Version, bool, *semver.Version, error) {
+func HasUpdate(client *http.Client, currentVersion *semver.Version, timeFile string) (bool, *semver.Version, bool, *semver.Version, error) {
 	if timeFile != "" {
 		defer writeTimeToFile(timeFile, time.Now().UTC())
 	}
 
-	latestVersion, preReleaseVersion, err := getLatestVersion()
+	latestVersion, preReleaseVersion, err := getLatestVersion(client)
 	if err != nil {
 		return false, nil, false, nil, errors.Wrap(err, "get latest version")
 	}
@@ -99,7 +99,7 @@ func HasUpdate(currentVersion *semver.Version, timeFile string) (bool, *semver.V
 }
 
 // ApplyUpdate downloads and applies the update indicated by version v.
-func ApplyUpdate(v *semver.Version) error {
+func ApplyUpdate(client *http.Client, v *semver.Version) error {
 	// get the current executable
 	exe, err := osext.Executable()
 	if err != nil {
@@ -112,6 +112,7 @@ func ApplyUpdate(v *semver.Version) error {
 
 	// download the new binary
 	asset, err := downloadAsset(
+		client,
 		buildAssetURL(v.String()), "."+exeName+".new", exePath,
 	)
 	if err != nil {

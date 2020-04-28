@@ -44,7 +44,7 @@ type Driver interface {
 	// Open returns a new driver instance configured with parameters
 	// coming from the URL string. Migrate will call this function
 	// only once per instance.
-	Open(url string, isCMD bool, tls *tls.Config, logger *log.Logger) (Driver, error)
+	Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger) (Driver, error)
 
 	// Close closes the underlying database instance managed by the driver.
 	// Migrate will call this function only once per instance.
@@ -116,7 +116,7 @@ type Driver interface {
 }
 
 // Open returns a new driver instance.
-func Open(url string, isCMD bool, tls *tls.Config, logger *log.Logger) (Driver, error) {
+func Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger) (Driver, error) {
 	u, err := nurl.Parse(url)
 	if err != nil {
 		log.Debug(err)
@@ -138,7 +138,7 @@ func Open(url string, isCMD bool, tls *tls.Config, logger *log.Logger) (Driver, 
 		logger = log.New()
 	}
 
-	return d.Open(url, isCMD, tls, logger)
+	return d.Open(url, isCMD, tlsConfig, logger)
 }
 
 func Register(name string, driver Driver) {

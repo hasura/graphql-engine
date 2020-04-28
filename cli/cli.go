@@ -162,6 +162,13 @@ func (s *ServerConfig) GetVersionEndpoint() string {
 	return nurl.String()
 }
 
+// GetQueryEndpoint provides the url to contact the query API
+func (s *ServerConfig) GetQueryEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.Query)
+	return nurl.String()
+}
+
 // ParseEndpoint ensures the endpoint is valid.
 func (s *ServerConfig) ParseEndpoint() error {
 	nurl, err := url.ParseRequestURI(s.Endpoint)
@@ -170,16 +177,6 @@ func (s *ServerConfig) ParseEndpoint() error {
 	}
 	s.ParsedEndpoint = nurl
 	return nil
-}
-
-// GetServerClient returns the http client for server
-func (s *ServerConfig) GetServerClient(config *tls.Config) *http.Client {
-	client := &http.Client{Transport: http.DefaultTransport}
-	if config != nil {
-		tr := &http.Transport{TLSClientConfig: config}
-		client.Transport = tr
-	}
-	return client
 }
 
 // Config represents configuration required for the CLI to function
@@ -265,6 +262,9 @@ type ExecutionContext struct {
 	CAPath string
 	// TLS config object
 	TLSClientConfig *tls.Config
+	// HTTPClient is the http client to be used
+	HTTPClient *http.Client
+
 	// Telemetry collects the telemetry data throughout the execution
 	Telemetry *telemetry.Data
 
@@ -319,6 +319,9 @@ func (ec *ExecutionContext) Prepare() error {
 	if err != nil {
 		return errors.Wrap(err, "setting up TLS config failed")
 	}
+
+	// setup http client
+	ec.setupHTTPClient()
 
 	// populate version
 	ec.setVersion()
@@ -395,6 +398,15 @@ func (ec *ExecutionContext) setTLSConfig() error {
 	return nil
 }
 
+// setupHTTPClient - sets the http client
+func (ec *ExecutionContext) setupHTTPClient() {
+	ec.HTTPClient = &http.Client{Transport: http.DefaultTransport}
+	if ec.TLSClientConfig != nil {
+		tr := &http.Transport{TLSClientConfig: ec.TLSClientConfig}
+		ec.HTTPClient.Transport = tr
+	}
+}
+
 // getCAData gets the cert from the given file location
 func (ec *ExecutionContext) getCAData(name string) ([]byte, error) {
 	ec.CAPath, _ = filepath.Abs(ec.CAPath)
@@ -416,6 +428,7 @@ func (ec *ExecutionContext) setupPlugins() error {
 	ec.PluginsConfig = plugins.New(base)
 	ec.PluginsConfig.Logger = ec.Logger
 	ec.PluginsConfig.Repo.Logger = ec.Logger
+	ec.PluginsConfig.HTTPClient = ec.HTTPClient
 	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
 		ec.PluginsConfig.Repo.DisableCloneOrUpdate = true
 	}
@@ -526,7 +539,7 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "error in getting server feature flags")
 	}
 
-	state := util.GetServerState(ec.Config.ServerConfig.Endpoint, ec.Config.ServerConfig.AdminSecret, ec.TLSClientConfig, ec.Version.ServerSemver, ec.Logger)
+	state := util.GetServerState(ec.Config.ServerConfig.GetQueryEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.TLSClientConfig, ec.Version.ServerSemver, ec.Logger)
 	ec.ServerUUID = state.UUID
 	ec.Telemetry.ServerUUID = ec.ServerUUID
 	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
@@ -541,8 +554,7 @@ func (ec *ExecutionContext) Validate() error {
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	client := ec.Config.ServerConfig.GetServerClient(ec.TLSClientConfig)
-	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint(), client)
+	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint(), ec.HTTPClient)
 	if err != nil {
 		return errors.Wrap(err, "failed to get version from server")
 	}
