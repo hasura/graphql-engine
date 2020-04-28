@@ -169,13 +169,13 @@ The configuration can also be set in the form of environment variables:
 
    * - ``HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY``
      - ``insecure_skip_tls_verify``
-     - Skip verifying SSL certificate for Hasura Endpoint. Useful if you have
+     - Skip verifying SSL certificate for the Hasura endpoint. Useful if you have
        a self-singed certificate and don't have access to the CA cert.
 
    * - ``HASURA_GRAPHQL_CERTIFICATE_AUTHORITY``
      - ``certificate_authority``
      - Path to the CA certificate for validating the self-signed certificate for
-       Hasura Endpoint.
+       the Hasura endpoint.
 
    * - ``HASURA_GRAPHQL_API_PATHS_QUERY``
      - ``api_paths.query``
