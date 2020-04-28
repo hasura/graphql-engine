@@ -6,6 +6,7 @@ export const StyledTextLink = styled.a`
 
   &&& {
     text-decoration: none;
+    color: inherit;
   }
 
   ${typography}

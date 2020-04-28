@@ -5,8 +5,8 @@ import PropTypes from 'prop-types';
 import LeftContainer from '../../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../../Common/Layout/PageContainer/PageContainer';
 import LeftSidebar from '../Sidebar/LeftSidebar';
-import styles from '../../../Common/TableCommon/Table.scss';
 import { appPrefix } from '../constants';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 const Container = props => {
   const { children } = props;
