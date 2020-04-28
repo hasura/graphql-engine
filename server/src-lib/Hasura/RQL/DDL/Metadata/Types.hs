@@ -341,10 +341,11 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
         insPermDefToOrdJSON :: Permission.InsPermDef -> AO.Value
         insPermDefToOrdJSON = permDefToOrdJSON insPermToOrdJSON
           where
-            insPermToOrdJSON (Permission.InsPerm check set columns) =
+            insPermToOrdJSON (Permission.InsPerm check set columns mBackendOnly) =
               let columnsPair = ("columns",) . AO.toOrdered <$> columns
+                  backendOnlyPair = ("backend_only",) . AO.toOrdered <$> mBackendOnly
               in AO.object $ [("check", AO.toOrdered check)]
-                 <> catMaybes [maybeSetToMaybeOrdPair set, columnsPair]
+                 <> catMaybes [maybeSetToMaybeOrdPair set, columnsPair, backendOnlyPair]
 
         selPermDefToOrdJSON :: Permission.SelPermDef -> AO.Value
         selPermDefToOrdJSON = permDefToOrdJSON selPermToOrdJSON
@@ -436,9 +437,13 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                  , maybeAnyToMaybeOrdPair "retry_conf" AO.toOrdered (maybeRetryConfiguration retryConf)
                                  , maybeAnyToMaybeOrdPair "headers" AO.toOrdered (maybeHeader headers)]
       where
-        maybeRetryConfiguration rc = if rc == defaultRetryConfST then Nothing else Just rc
+        maybeRetryConfiguration retryConfig
+          | retryConfig == defaultSTRetryConf = Nothing
+          | otherwise = Just retryConfig
 
-        maybeHeader headerConf = if headerConf == [] then Nothing else Just headerConf
+        maybeHeader headerConfig
+          | headerConfig == [] = Nothing
+          | otherwise = Just headerConfig
 
     customTypesToOrdJSON :: CustomTypes -> AO.Value
     customTypesToOrdJSON (CustomTypes inpObjs objs scalars enums) =
@@ -502,23 +507,27 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                    , listToMaybeOrdPair "permissions" permToOrdJSON permissions
                    ]
       where
+        argDefinitionToOrdJSON :: ArgumentDefinition -> AO.Value
+        argDefinitionToOrdJSON (ArgumentDefinition argName ty descM) =
+          AO.object $  [ ("name", AO.toOrdered argName)
+                       , ("type", AO.toOrdered ty)
+                       ]
+          <> catMaybes [maybeAnyToMaybeOrdPair "description" AO.toOrdered descM]
+
         actionDefinitionToOrdJSON :: ActionDefinitionInput -> AO.Value
-        actionDefinitionToOrdJSON (ActionDefinition args outputType kind headers frwrdClientHdrs handler) =
-          AO.object $ [ ("kind", AO.toOrdered kind)
-                      , ("handler", AO.toOrdered handler)
-                      , ("arguments", AO.array $ map argDefinitionToOrdJSON args)
+        actionDefinitionToOrdJSON (ActionDefinition args outputType actionType headers frwrdClientHdrs handler) =
+          let typeAndKind = case actionType of
+                ActionQuery -> [("type", AO.toOrdered ("query" :: String))]
+                ActionMutation kind -> [ ("type", AO.toOrdered ("mutation" :: String))
+                                       , ("kind", AO.toOrdered kind)]
+          in
+          AO.object $ [ ("handler", AO.toOrdered handler)
                       , ("output_type", AO.toOrdered outputType)
                       ]
           <> [("forward_client_headers", AO.toOrdered frwrdClientHdrs) | frwrdClientHdrs]
           <> catMaybes [ listToMaybeOrdPair "headers" AO.toOrdered headers
-                       ]
-          where
-            argDefinitionToOrdJSON :: ArgumentDefinition -> AO.Value
-            argDefinitionToOrdJSON (ArgumentDefinition argName ty descM) =
-              AO.object $  [ ("name", AO.toOrdered argName)
-                           , ("type", AO.toOrdered ty)
-                           ]
-              <> catMaybes [maybeAnyToMaybeOrdPair "description" AO.toOrdered descM]
+                       , listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args]
+          <> typeAndKind
 
         permToOrdJSON :: ActionPermissionMetadata -> AO.Value
         permToOrdJSON (ActionPermissionMetadata role permComment) =

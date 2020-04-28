@@ -10,6 +10,7 @@ import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
+import           Hasura.RQL.Types.Common                       (NonNegativeDiffTime)
 
 import qualified Hasura.RQL.DDL.ComputedField                  as ComputedField
 import qualified Hasura.RQL.DDL.Permission                     as Permission
@@ -275,7 +276,10 @@ instance Arbitrary ArgumentName where
 instance Arbitrary ArgumentDefinition where
   arbitrary = genericArbitrary
 
-instance Arbitrary ActionKind where
+instance Arbitrary ActionMutationKind where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ActionType where
   arbitrary = genericArbitrary
 
 instance (Arbitrary a) => Arbitrary (ActionDefinition a) where
@@ -302,12 +306,31 @@ instance Arbitrary WebhookConf where
 instance Arbitrary ScheduleType where
   arbitrary = genericArbitrary
 
-instance Arbitrary RetryConfST where
+instance Arbitrary STRetryConf where
+  arbitrary = genericArbitrary
+
+instance Arbitrary NonNegativeDiffTime where
   arbitrary = genericArbitrary
 
 instance Arbitrary CronSchedule where
   arbitrary = elements sampleCronSchedules
 
--- TODO: add more
 sampleCronSchedules :: [CronSchedule]
-sampleCronSchedules = rights $ map Cr.parseCronSchedule [ "* * * * *" ]
+sampleCronSchedules = rights $ map Cr.parseCronSchedule $
+  [ "* * * * *"
+  -- every minute
+  , "5 * * * *"
+  -- every hour at the 5th minute
+  , "\5 * * * *"
+  -- every 5 minutes
+  , "* 5 * * *"
+  -- every minute of the 5th hour of the day
+  , "5 5 * * *"
+  -- fifth minute of the fifth hour every day
+  , "0 0 5 * *"
+  -- 00:00 of the 5th day of every month
+  , "0 0 1 1 *"
+  -- 00:00 of 1st of January
+  , "0 0 * * 0"
+  -- Every sunday at 00:00
+  ]

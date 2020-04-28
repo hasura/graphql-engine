@@ -59,7 +59,8 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Error
+import           Hasura.Session
 
 -- -------------------------------------------------------------------------------------------------
 -- Subscribers
@@ -146,7 +147,7 @@ mkRespHash = ResponseHash . CH.hash
 -- 'CohortId'; the latter is a completely synthetic key used only to identify the cohort in the
 -- generated SQL query.
 type CohortKey = CohortVariables
--- | This has the invariant, maintained in 'removeLiveQuery', that it contains no 'Cohort' with 
+-- | This has the invariant, maintained in 'removeLiveQuery', that it contains no 'Cohort' with
 -- zero total (existing + new) subscribers.
 type CohortMap = TMap.TMap CohortKey Cohort
 
@@ -233,8 +234,8 @@ data Poller
   }
 data PollerIOState
   = PollerIOState
-  { _pThread  :: !(Immortal.Thread)
-  -- ^ a handle on the poller’s worker thread that can be used to 'Immortal.stop' it if all its 
+  { _pThread  :: !Immortal.Thread
+  -- ^ a handle on the poller’s worker thread that can be used to 'Immortal.stop' it if all its
   -- cohorts stop listening
   , _pMetrics :: !RefetchMetrics
   }
@@ -330,12 +331,12 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
       return (cohortSnapshotMap, queryVarsBatches)
 
     flip A.mapConcurrently_ queryVarsBatches $ \queryVars -> do
-      (dt, mxRes) <- timing _rmQuery $ 
+      (dt, mxRes) <- timing _rmQuery $
         runExceptT $ runLazyTx' pgExecCtx $ executeMultiplexedQuery pgQuery queryVars
-      let lqMeta = LiveQueryMetadata $ fromUnits dt
+      let lqMeta = LiveQueryMetadata $ convertDuration dt
           operations = getCohortOperations cohortSnapshotMap lqMeta mxRes
 
-      void $ timing _rmPush $ do
+      void $ timing _rmPush $
         -- concurrently push each unique result
         A.mapConcurrently_ (uncurry4 pushResultToCohort) operations
 
@@ -366,7 +367,7 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
     getCohortOperations cohortSnapshotMap actionMeta = \case
       Left e ->
         -- TODO: this is internal error
-        let resp = GQExecError [encodeGQErr False e]
+        let resp = GQExecError [encodeGQLErr False e]
         in [ (resp, Nothing, actionMeta, snapshot)
            | (_, snapshot) <- Map.toList cohortSnapshotMap
            ]

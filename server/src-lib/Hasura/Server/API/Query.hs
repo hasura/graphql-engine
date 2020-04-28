@@ -1,6 +1,7 @@
+-- | The RQL query ('/v1/query')
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Hasura.Server.Query where
+module Hasura.Server.API.Query where
 
 import           Control.Lens
 import           Data.Aeson
@@ -37,6 +38,7 @@ import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
+import           Hasura.Session
 
 
 data RQLQueryV1
@@ -276,10 +278,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQAddCollectionToAllowlist _    -> True
   RQDropCollectionFromAllowlist _ -> True
 
-  RQRunSql RunSQL{rTxAccessMode}  ->
-    case rTxAccessMode of
-      Q.ReadOnly  -> False
-      Q.ReadWrite -> True
+  RQRunSql q                      -> isSchemaCacheBuildRequiredRunSQL q
 
   RQReplaceMetadata _             -> True
   RQExportMetadata _              -> False

@@ -42,15 +42,16 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
+import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Error                      (Code (StartFailed))
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
                                                               resolveUserInfo)
-import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils                         (RequestId, getRequestId)
 import           Hasura.Server.Version                       (HasVersion)
+import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
@@ -82,7 +83,7 @@ data WSConnState
   = CSNotInitialised !WsHeaders
   | CSInitError !Text
   -- headers from the client (in conn params) to forward to the remote schema
-  -- and JWT expiry time if any
+  -- and token expiry time if any
   | CSInitialised !UserInfo !(Maybe TC.UTCTime) ![H.Header]
 
 data WSConnData
@@ -153,14 +154,14 @@ $(J.deriveToJSON
 data WsConnInfo
   = WsConnInfo
   { _wsciWebsocketId :: !WS.WSId
-  , _wsciJwtExpiry   :: !(Maybe TC.UTCTime)
+  , _wsciTokenExpiry :: !(Maybe TC.UTCTime)
   , _wsciMsg         :: !(Maybe Text)
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''WsConnInfo)
 
 data WSLogInfo
   = WSLogInfo
-  { _wsliUserVars       :: !(Maybe UserVars)
+  { _wsliUserVars       :: !(Maybe SessionVariables)
   , _wsliConnectionInfo :: !WsConnInfo
   , _wsliEvent          :: !WSEvent
   } deriving (Show, Eq)
@@ -176,11 +177,11 @@ instance L.ToEngineLog WSLog L.Hasura where
   toEngineLog (WSLog logLevel wsLog) =
     (logLevel, L.ELTWebsocketLog, J.toJSON wsLog)
 
-mkWsInfoLog :: Maybe UserVars -> WsConnInfo -> WSEvent -> WSLog
+mkWsInfoLog :: Maybe SessionVariables -> WsConnInfo -> WSEvent -> WSLog
 mkWsInfoLog uv ci ev =
   WSLog L.LevelInfo $ WSLogInfo uv ci ev
 
-mkWsErrorLog :: Maybe UserVars -> WsConnInfo -> WSEvent -> WSLog
+mkWsErrorLog :: Maybe SessionVariables -> WsConnInfo -> WSEvent -> WSLog
 mkWsErrorLog uv ci ev =
   WSLog L.LevelError $ WSLogInfo uv ci ev
 
@@ -214,7 +215,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       sendMsg wsConn SMConnKeepAlive
       sleep $ seconds 5
 
-    jwtExpiryHandler wsConn = do
+    tokenExpiryHandler wsConn = do
       expTime <- liftIO $ STM.atomically $ do
         connState <- STM.readTVar $ (_wscUser . WS.getData) wsConn
         case connState of
@@ -223,7 +224,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
           CSInitialised _ expTimeM _ ->
             maybe STM.retry return expTimeM
       currTime <- TC.getCurrentTime
-      sleep $ fromUnits $ TC.diffUTCTime expTime currTime
+      sleep $ convertDuration $ TC.diffUTCTime expTime currTime
 
     accept hdrs errType = do
       logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing Nothing) EAccepted
@@ -233,7 +234,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
                   <*> pure errType
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
-      return $ Right $ WS.AcceptWith connData acceptRequest keepAliveAction jwtExpiryHandler
+      return $ Right $ WS.AcceptWith connData acceptRequest keepAliveAction tokenExpiryHandler
 
     reject qErr = do
       logger $ mkWsErrorLog Nothing (WsConnInfo wsId Nothing Nothing) (ERejected qErr)
@@ -355,7 +356,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               -- Telemetry. NOTE: don't time network IO:
               telemTimeTot <- Seconds <$> timerTot
               sendSuccResp encJson $ LQ.LiveQueryMetadata telemTimeIO_DT
-              let telemTimeIO = fromUnits telemTimeIO_DT
+              let telemTimeIO = convertDuration telemTimeIO_DT
               Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
           sendCompleted (Just reqId)
@@ -381,7 +382,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             -- Telemetry. NOTE: don't time network IO:
             telemTimeTot <- Seconds <$> timerTot
             sendRemoteResp reqId (_hrBody val) $ LQ.LiveQueryMetadata telemTimeIO_DT
-            let telemTimeIO = fromUnits telemTimeIO_DT
+            let telemTimeIO = convertDuration telemTimeIO_DT
             Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
       sendCompleted (Just reqId)
@@ -487,15 +488,22 @@ onMessage authMode serverEnv wsConn msgRaw =
 
 onStop :: WSServerEnv -> WSConn -> StopMsg -> IO ()
 onStop serverEnv wsConn (StopMsg opId) = do
+  -- When a stop message is received for an operation, it may not be present in OpMap
+  -- in these cases:
+  -- 1. If the operation is a query/mutation - as we remove the operation from the
+  -- OpMap as soon as it is executed
+  -- 2. A misbehaving client
+  -- 3. A bug on our end
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   case opM of
     Just (lqId, opNameM) -> do
       logWSEvent logger wsConn $ EOperation $ opDet opNameM
       LQ.removeLiveQuery logger lqMap lqId
     Nothing    ->
-      L.unLogger logger $ L.UnstructuredLog L.LevelError $ fromString $
-        "Received STOP for an operation "<>(show opId)<>" we have no record for. "<>
-        "this could be a misbehaving client or a bug"
+      L.unLogger logger $ L.UnstructuredLog L.LevelDebug $ fromString $
+        "Received STOP for an operation that we have no record for: "
+        <> show (unOperationId opId)
+        <> " (could be a query/mutation operation or a misbehaving client or a bug)"
   STM.atomically $ STMMap.delete opId opMap
   where
     logger = _wseLogger serverEnv
@@ -508,12 +516,12 @@ logWSEvent
   => L.Logger L.Hasura -> WSConn -> WSEvent -> m ()
 logWSEvent (L.Logger logger) wsConn wsEv = do
   userInfoME <- liftIO $ STM.readTVarIO userInfoR
-  let (userVarsM, jwtExpM) = case userInfoME of
-        CSInitialised userInfo jwtM _ -> ( Just $ userVars userInfo
-                                         , jwtM
-                                         )
-        _                             -> (Nothing, Nothing)
-  liftIO $ logger $ WSLog logLevel $ WSLogInfo userVarsM (WsConnInfo wsId jwtExpM Nothing) wsEv
+  let (userVarsM, tokenExpM) = case userInfoME of
+        CSInitialised userInfo tokenM _ -> ( Just $ _uiSession userInfo
+                                           , tokenM
+                                           )
+        _                               -> (Nothing, Nothing)
+  liftIO $ logger $ WSLog logLevel $ WSLogInfo userVarsM (WsConnInfo wsId tokenExpM Nothing) wsEv
   where
     WSConnData userInfoR _ _ = WS.getData wsConn
     wsId = WS.getWSId wsConn
@@ -541,7 +549,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
       let !initErr = CSInitError $ qeError e
       liftIO $ do
         $assertNFHere initErr  -- so we don't write thunks to mutable vars
-        STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) initErr 
+        STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) initErr
 
       let connErr = ConnErrMsg $ qeError e
       logWSEvent logger wsConn $ EConnErr connErr

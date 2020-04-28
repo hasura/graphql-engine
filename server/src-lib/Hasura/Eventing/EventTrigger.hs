@@ -1,52 +1,56 @@
 {-|
-  = Event Triggers
+= Event Triggers
 
-  This module implements the functionality of Event Triggers.
+Event triggers are like ordinary SQL triggers, except instead of calling a SQL
+procedure, they call a webhook. The event delivery mechanism involves coordination
+between both the database and graphql-engine: only the SQL database knows
+when the events should fire, but only graphql-engine know how to actually
+deliver them.
 
-  - Event triggers work in the following manner:
-    - When a new event trigger is created (check server/src-rsr/trigger.sql.shakespeare),
-      - a function is created in postgres with the name of hdb_view.<trigger_name> which handles the trigger logic.
-        this function will insert a new event row in the hdb_catalog.event_log table with appropriate data.
-      - a new db trigger is created it's procedure as the function discussed above.
-      - So, whenever there's a mutation on which there's an event trigger, a new event-log will be created
+Therefore, event triggers are implemented in two parts:
 
-  - During startup, a thread is created which handles the processing of events (Processor)
-    - The processor will get events(max 100 events) that have not yet been delivered from the DB.
-    - If no events were fetched from the DB, then the thread will sleep. The sleep interval can be configured
-      via `HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL` (default 1000ms)
-    - If events were found, the fetched events are processed asynchronously, the HTTP pool size is configurable
-      via the `HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE` ENV variable(default is set to 100).
+1. Every event trigger is backed by a bona fide SQL trigger. When the SQL trigger
+   fires, it creates a new record in the hdb_catalog.event_log table.
 
-  - Post calling the webhook:
-    - If an event is processed successfully i.e the HTTP status is between (200 and 300) then the
-      it's marked as delivered
-    - If there was an error while processing the event,
-      - If there is a retry configuration set, then the event will be retried for as many times/until processed successfully.
-      - If the retries have exhausted, then the event trigger's error status will be marked as true.
-      - The next retry time can be configured using the `Retry-After` header, then the event will be redelivered once more after
-        the duration (in seconds) found in the header
+2. Concurrently, a thread in graphql-engine monitors the hdb_catalog.event_log
+   table for new events. When new event(s) are found, it uses the information
+   (URL,payload and headers) stored in the event to deliver the event
+   to the webhook.
+
+The creation and deletion of SQL trigger itself is managed by the metadata DDL
+APIs (see Hasura.RQL.DDL.EventTrigger), so this module focuses on event delivery.
+
+Most of the subtleties involve guaranteeing reliable delivery of events:
+we guarantee that every event will be delivered at least once,
+even if graphql-engine crashes. This means we have to record the state
+of each event in the database, and we have to retry
+failed requests at a regular (user-configurable) interval.
+
 -}
-{-# LANGUAGE StrictData #-}  -- TODO project-wide, maybe. See #3941
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StrictData      #-}
 module Hasura.Eventing.EventTrigger
   ( initEventEngineCtx
   , processEventQueue
   , unlockAllEvents
   , defaultMaxEventThreads
-  , defaultFetchIntervalMilliSec
+  , defaultFetchInterval
   , Event(..)
+  , unlockEvents
+  , EventEngineCtx(..)
   ) where
 
-import           Control.Concurrent.Extended   (sleep)
-import           Control.Concurrent.Async      (wait, withAsync)
+
+import           Control.Concurrent.Async    (wait, withAsync)
+import           Control.Concurrent.Extended (sleep)
 import           Control.Concurrent.STM.TVar
+import           Control.Monad.Catch         (MonadMask, bracket_)
 import           Control.Monad.STM
-import           Control.Monad.Catch           (MonadMask, bracket_)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
-import           Data.Int                      (Int64)
+import           Data.Int                    (Int64)
 import           Data.String
 import           Data.Time.Clock
 import           Data.Word
@@ -55,7 +59,7 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Version         (HasVersion)
+import           Hasura.Server.Version       (HasVersion)
 import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict           as M
@@ -65,9 +69,9 @@ import qualified Data.Time.Clock               as Time
 import qualified Database.PG.Query             as Q
 import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Client           as HTTP
-
-invocationVersion :: Version
-invocationVersion = "2"
+import qualified Database.PG.Query.PTI         as PTI
+import qualified PostgreSQL.Binary.Encoding    as PE
+import qualified Data.Set                      as Set
 
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
@@ -99,8 +103,9 @@ $(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
 
 data EventEngineCtx
   = EventEngineCtx
-  { _eeCtxEventThreadsCapacity  :: TVar Int
-  , _eeCtxFetchInterval         :: DiffTime
+  { _eeCtxEventThreadsCapacity :: TVar Int
+  , _eeCtxFetchInterval        :: DiffTime
+  , _eeCtxLockedEvents         :: TVar (Set.Set EventId)
   }
 
 data DeliveryInfo
@@ -136,12 +141,13 @@ $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
 
-defaultFetchIntervalMilliSec :: (Milliseconds 'Absolute)
-defaultFetchIntervalMilliSec = 1000
+defaultFetchInterval :: DiffTime
+defaultFetchInterval = seconds 1
 
 initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
+  _eeCtxLockedEvents <- newTVar Set.empty
   return $ EventEngineCtx{..}
 
 -- | Service events from our in-DB queue.
@@ -168,8 +174,21 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
           Left err -> do
             L.unLogger logger $ EventInternalErr err
             return []
-          Right events ->
+          Right events -> do
+            saveLockedEvents events
             return events
+
+    -- After the events are fetched from the DB, we store the locked events
+    -- in a hash set(order doesn't matter and look ups are faster) in the
+    -- event engine context
+    saveLockedEvents :: [Event] -> IO ()
+    saveLockedEvents evts =
+      liftIO $ atomically $ do
+        lockedEvents <- readTVar _eeCtxLockedEvents
+        let evtsIds = map eId evts
+        let newLockedEvents = Set.union lockedEvents (Set.fromList evtsIds)
+        writeTVar _eeCtxLockedEvents newLockedEvents
+
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
@@ -220,7 +239,15 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       let meti = getEventTriggerInfoFromEvent cache e
       case meti of
         Nothing -> do
+          --  This rare error can happen in the following known cases:
+          --  i) schema cache is not up-to-date (due to some bug, say during schema syncing across multiple instances)
+          --  ii) the event trigger is dropped when this event was just fetched
           logQErr $ err500 Unexpected "table or event-trigger not found in schema cache"
+          liftIO . runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+            currentTime <- liftIO getCurrentTime
+            -- For such an event, we unlock the event and retry after a minute
+            setRetry e (addUTCTime 60 currentTime)
+          >>= flip onLeft logQErr
         Just eti -> do
           let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
               retryConf = etiRetryConf eti
@@ -247,15 +274,14 @@ withEventEngineCtx ::
 withEventEngineCtx eeCtx = bracket_ (decrementThreadCount eeCtx) (incrementThreadCount eeCtx)
 
 incrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
-incrementThreadCount (EventEngineCtx c _) = liftIO $ atomically $ modifyTVar' c (+1)
+incrementThreadCount (EventEngineCtx c _ _) = liftIO $ atomically $ modifyTVar' c (+1)
 
 decrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
-decrementThreadCount (EventEngineCtx c _) = liftIO $ atomically $ do
+decrementThreadCount (EventEngineCtx c _ _) = liftIO $ atomically $ do
   countThreads <- readTVar c
   if countThreads > 0
      then modifyTVar' c (\v -> v - 1)
      else retry
-
 
 createEventPayload :: RetryConf -> Event ->  EventPayload
 createEventPayload retryConf e = EventPayload
@@ -332,7 +358,7 @@ retryOrSetError e retryConf err = do
 
 mkInvocation
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
-  -> Invocation
+  -> (Invocation 'EventType)
 mkInvocation ep status reqHeaders respBody respHeaders
   = let resp = if isClientError status
           then mkClientErr respBody
@@ -341,7 +367,7 @@ mkInvocation ep status reqHeaders respBody respHeaders
       Invocation
       (epId ep)
       status
-      (mkWebhookReq (toJSON ep) reqHeaders invocationVersion)
+      (mkWebhookReq (toJSON ep) reqHeaders invocationVersionET)
       resp
 
 logQErr :: ( MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
@@ -389,13 +415,13 @@ fetchEvents limitI =
           }
         limit = fromIntegral limitI :: Word64
 
-insertInvocation :: Invocation -> Q.TxE QErr ()
+insertInvocation :: Invocation 'EventType -> Q.TxE QErr ()
 insertInvocation invo = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
           INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, request, response)
           VALUES ($1, $2, $3, $4)
           |] ( iEventId invo
-             , fromIntegral $ iStatus invo :: Int64
+             , toInt64 $ iStatus invo :: Int64
              , Q.AltJ $ toJSON $ iRequest invo
              , Q.AltJ $ toJSON $ iResponse invo) True
   Q.unitQE defaultTxErrorHandler [Q.sql|
@@ -432,4 +458,27 @@ unlockAllEvents =
           UPDATE hdb_catalog.event_log
           SET locked = 'f'
           WHERE locked = 't'
-          |] () False
+          |] () True
+
+toInt64 :: (Integral a) => a -> Int64
+toInt64 = fromIntegral
+
+-- EventIdArray is only used for PG array encoding
+newtype EventIdArray = EventIdArray { unEventIdArray :: [EventId]} deriving (Show, Eq)
+
+instance Q.ToPrepArg EventIdArray where
+  toPrepVal (EventIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ l
+    where
+      -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
+      encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)
+
+unlockEvents :: [EventId] -> Q.TxE QErr Int
+unlockEvents eventIds =
+   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+   [Q.sql|
+     WITH "cte" AS
+     (UPDATE hdb_catalog.event_log
+     SET locked = 'f'
+     WHERE id = ANY($1::text[]) RETURNING *)
+     SELECT count(*) FROM "cte"
+   |] (Identity $ EventIdArray eventIds) True

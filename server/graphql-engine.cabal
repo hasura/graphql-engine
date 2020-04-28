@@ -128,7 +128,6 @@ library
 
                      -- String related
                      , case-insensitive
-                     , string-conversions
                      , text-conversions
 
                      -- Http client
@@ -167,7 +166,7 @@ library
                      , auto-update
 
                      -- regex related
-                     , regex-tdfa >= 1.2
+                     , regex-tdfa >=1.3.1 && <1.4
 
                      -- pretty printer
                      , ansi-wl-pprint
@@ -229,16 +228,17 @@ library
                      , Hasura.Server.App
                      , Hasura.Server.Auth
                      , Hasura.Server.Init
-                     , Hasura.Server.Query
+                     , Hasura.Server.Init.Config
+                     , Hasura.Server.API.Query
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
                      , Hasura.Server.Logging
-                     , Hasura.Server.Context
                      , Hasura.Server.Migrate
                      , Hasura.Server.Compression
-                     , Hasura.Server.PGDump
+                     , Hasura.Server.API.PGDump
                      -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
+                     , Data.Parser.JSONPath
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Run
@@ -247,6 +247,7 @@ library
                      , Hasura.RQL.DDL.Metadata.Generator
                      , Hasura.RQL.DDL.Schema
                      , Hasura.EncJSON
+                     , Hasura.Session
 
                      , Data.Aeson.Ordered
 
@@ -256,12 +257,13 @@ library
                      , Hasura.Incremental.Internal.Rule
 
                      , Hasura.Server.Auth.JWT
+                     , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
-                     , Hasura.Server.Config
+                     , Hasura.Server.API.Config
                      , Hasura.Server.Migrate.Version
                      , Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
@@ -384,10 +386,10 @@ library
                      , Data.List.Extended
                      , Data.HashMap.Strict.Extended
                      , Data.HashMap.Strict.InsOrd.Extended
-                     , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.Text.Extended
+                     , Data.Parser.Expires
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error
@@ -435,11 +437,13 @@ test-suite graphql-engine-tests
     , time
     , transformers-base
     , unordered-containers
+    , text
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
     Data.Parser.CacheControlSpec
     Data.Parser.URLTemplate
+    Data.Parser.JSONPathSpec
     Data.TimeSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec

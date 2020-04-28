@@ -49,9 +49,9 @@ instance Hashable RequestDimensions
 -- | Accumulated time metrics.
 data RequestTimings  =
   RequestTimings {
-      telemTimeIO  :: !(Seconds 'Absolute)
+      telemTimeIO  :: !Seconds
     -- ^ Time spent waiting on PG/remote http calls
-    , telemTimeTot :: !(Seconds 'Absolute)
+    , telemTimeTot :: !Seconds
     -- ^ Total service time for request (including 'telemTimeIO')
     }
 
@@ -62,8 +62,8 @@ instance Semigroup RequestTimings where
 -- | 'RequestTimings' along with the count
 data RequestTimingsCount  =
   RequestTimingsCount {
-      telemTimeIO  :: !(Seconds 'Absolute)
-    , telemTimeTot :: !(Seconds 'Absolute)
+      telemTimeIO  :: !Seconds
+    , telemTimeTot :: !Seconds
     , telemCount   :: !Word
     -- ^ The number of requests that have contributed to the accumulated timings above.
     -- So e.g. @telemTimeTot / count@ would give the mean service time.
@@ -125,7 +125,7 @@ instance A.FromJSON Transport
 
 -- | The timings and counts here were from requests with total time longer than
 -- 'bucketGreaterThan' (but less than any larger bucket cutoff times).
-newtype RunningTimeBucket = RunningTimeBucket { bucketGreaterThan :: Seconds 'Absolute }
+newtype RunningTimeBucket = RunningTimeBucket { bucketGreaterThan :: Seconds }
   deriving (Fractional, Num, Ord, Eq, Show, Generic, A.ToJSON, A.FromJSON, Hashable)
 
 
@@ -148,36 +148,34 @@ recordTimingMetric reqDimensions RequestTimings{..} = liftIO $ do
 -- | The final shape of this part of our metrics data JSON. This should allow
 -- reasonably efficient querying using GIN indexes and JSONB containment
 -- operations (which treat arrays as sets).
-data ServiceTimingMetrics 
+data ServiceTimingMetrics
   = ServiceTimingMetrics
   { collectionTag        :: Int
     -- ^ This is set to a new unique value when the counters reset (e.g. because of a restart)
   , serviceTimingMetrics :: [ServiceTimingMetric]
-  } 
+  }
   deriving (Show, Generic, Eq)
-data ServiceTimingMetric 
+data ServiceTimingMetric
   = ServiceTimingMetric
   { dimensions :: RequestDimensions
-  , bucket   :: RunningTimeBucket
-  , metrics  :: RequestTimingsCount
+  , bucket     :: RunningTimeBucket
+  , metrics    :: RequestTimingsCount
   }
   deriving (Show, Generic, Eq)
 
 
-$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestTimingsCount) 
-$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestDimensions) 
+$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestTimingsCount)
+$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestDimensions)
 
 instance A.ToJSON ServiceTimingMetric
 instance A.FromJSON ServiceTimingMetric
 instance A.ToJSON ServiceTimingMetrics
 instance A.FromJSON ServiceTimingMetrics
 
-dumpServiceTimingMetrics :: MonadIO m=> m ServiceTimingMetrics
+dumpServiceTimingMetrics :: MonadIO m => m ServiceTimingMetrics
 dumpServiceTimingMetrics = liftIO $ do
   cs <- readIORef requestCounters
   let serviceTimingMetrics = flip map (HM.toList cs) $
         \((dimensions, bucket), metrics)-> ServiceTimingMetric{..}
       collectionTag = round approxStartTime
   return ServiceTimingMetrics{..}
-
-

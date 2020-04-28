@@ -49,6 +49,7 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
     |] (stName, Q.AltJ stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
        ,Q.AltJ stHeaders) False
   case stSchedule of
+    AdHoc Nothing -> pure ()
     AdHoc (Just timestamp) -> Q.unitQE defaultTxErrorHandler
       [Q.sql|
         INSERT into hdb_catalog.hdb_scheduled_events
@@ -60,7 +61,6 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
       let scheduleTimes = generateScheduleTimes currentTime 100 cron -- generate next 100 events
           events = map (ScheduledEventSeed stName) scheduleTimes
       insertScheduledEvents events
-    _ -> pure ()
 
 resolveScheduledTrigger
   :: (QErrM m, MonadIO m)
@@ -68,24 +68,20 @@ resolveScheduledTrigger
 resolveScheduledTrigger CreateScheduledTrigger {..} = do
   webhookInfo <- getWebhookInfoFromConf stWebhook
   headerInfo <- getHeaderInfosFromConf stHeaders
-  let stInfo =
-        ScheduledTriggerInfo
-          stName
-          stSchedule
-          stPayload
-          stRetryConf
-          webhookInfo
-          headerInfo
-  pure stInfo
+  pure $
+    ScheduledTriggerInfo stName
+                         stSchedule
+                         stPayload
+                         stRetryConf
+                         webhookInfo
+                         headerInfo
 
 runUpdateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger -> m EncJSON
 runUpdateScheduledTrigger q = do
-  updateScheduledTriggerP1 (stName q)
+  checkExists (stName q)
   updateScheduledTriggerInCatalog q
   buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
-  where
-    updateScheduledTriggerP1 = checkExists
 
 updateScheduledTriggerInCatalog :: (MonadTx m) => CreateScheduledTrigger -> m ()
 updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
