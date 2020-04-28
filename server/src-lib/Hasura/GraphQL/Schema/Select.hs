@@ -128,17 +128,19 @@ selectTableByPk table fieldName description selectPermissions stringifyNum = do
       selectionSetParser <- tableFields table selectPermissions stringifyNum
       pure $ Just $ P.selection fieldName description argsParser selectionSetParser
         `mapField` \(aliasName, boolExpr, fields) ->
-        let defaultPerms = tablePermissions selectPermissions
-            whereExpr    = BoolAnd $ toList boolExpr
-        in ( aliasName
-           , RQL.AnnSelG
-             { RQL._asnFields   = fields
-             , RQL._asnFrom     = RQL.FromTable table
-             , RQL._asnPerm     = defaultPerms { RQL._tpLimit = Nothing }
-             , RQL._asnArgs     = RQL.noTableArgs { RQL._taWhere = Just whereExpr }
-             , RQL._asnStrfyNum = stringifyNum
-             }
-           )
+          let defaultPerms = tablePermissions selectPermissions
+              whereExpr    = Just $ BoolAnd $ toList boolExpr
+          in ( aliasName
+             , RQL.AnnSelG
+               { RQL._asnFields   = fields
+               , RQL._asnFrom     = RQL.FromTable table
+               , RQL._asnPerm     = defaultPerms { RQL._tpLimit = Nothing }
+                 -- TODO: check whether this is necessary:        ^^^^^^^
+                 -- This is how it was in legacy code.
+               , RQL._asnArgs     = RQL.noTableArgs { RQL._taWhere = whereExpr }
+               , RQL._asnStrfyNum = stringifyNum
+               }
+             )
 
 
 -- | Table aggregation selection
@@ -148,9 +150,6 @@ selectTableByPk table fieldName description selectPermissions stringifyNum = do
 -- >   aggregate: table_aggregate_fields
 -- >   nodes: [table!]!
 -- > } :: table_aggregate
---
--- FIXME: check for aggregate permissions
--- FIXME: change output to maybe
 selectTableAggregate
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable       -- ^ qualified name of the table
@@ -158,30 +157,33 @@ selectTableAggregate
   -> Maybe G.Description  -- ^ field description, if any
   -> SelPermInfo          -- ^ select permissions of the table
   -> Bool
-  -> m (FieldsParser 'Output n (Maybe (G.Name, AggSelectExp)))
-selectTableAggregate table fieldName description selectPermissions stringifyNum = do
-  tableArgsParser <- tableArgs table selectPermissions
-  nodesParser     <- tableFields table selectPermissions stringifyNum
-  aggregateParser <- tableAggregationFields table selectPermissions
-  selectionName   <- qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
-  let aggregationParser = fmap catMaybes $ P.selectionSet selectionName Nothing $ sequenceA
-        [ P.selection_ $$(G.litName "nodes") Nothing nodesParser
-          `mapField` fmap RQL.TAFNodes
-        , P.selection_ $$(G.litName "aggregate") Nothing aggregateParser
-          `mapField` fmap RQL.TAFAgg
-        -- TODO: handle __typename here
-        ]
-  pure $ P.selection fieldName description tableArgsParser aggregationParser `mapField`
-    \(aliasName, args, fields) ->
-      ( aliasName
-      , RQL.AnnSelG
-        { RQL._asnFields   = map (first nameToAlias) fields
-        , RQL._asnFrom     = RQL.FromTable table
-        , RQL._asnPerm     = tablePermissions selectPermissions
-        , RQL._asnArgs     = args
-        , RQL._asnStrfyNum = stringifyNum
-        }
-      )
+  -> m (Maybe (FieldsParser 'Output n (Maybe (G.Name, AggSelectExp))))
+selectTableAggregate table fieldName description selectPermissions stringifyNum
+  | not $ spiAllowAgg selectPermissions = pure Nothing
+  | otherwise = do
+      tableArgsParser <- tableArgs table selectPermissions
+      nodesParser     <- tableFields table selectPermissions stringifyNum
+      aggregateParser <- tableAggregationFields table selectPermissions
+      selectionName   <- qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
+      let aggregationParser =
+            fmap catMaybes $ P.selectionSet selectionName Nothing $ sequenceA
+            [ P.selection_ $$(G.litName "nodes") Nothing nodesParser
+              `mapField` fmap RQL.TAFNodes
+            , P.selection_ $$(G.litName "aggregate") Nothing aggregateParser
+              `mapField` fmap RQL.TAFAgg
+            -- TODO: handle __typename here
+            ]
+      pure $ Just $ P.selection fieldName description tableArgsParser aggregationParser
+        `mapField` \(aliasName, args, fields) ->
+          ( aliasName
+          , RQL.AnnSelG
+            { RQL._asnFields   = map (first nameToAlias) fields
+            , RQL._asnFrom     = RQL.FromTable table
+            , RQL._asnPerm     = tablePermissions selectPermissions
+            , RQL._asnArgs     = args
+            , RQL._asnStrfyNum = stringifyNum
+            }
+          )
 
 
 
