@@ -246,8 +246,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
 
   -- prepare event triggers data
-  -- TODO: do not EXIT on prepare events in read only mode
-  -- prepareEvents _icPgPool logger
+  prepareEvents _icPgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
   _eventQueueThread <- C.forkImmortal "processEventQueue" logger $ liftIO $
@@ -296,7 +295,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     prepareEvents pool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
       res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllEvents
-      either printErrJExit return res
+      -- if unlocking events failed, we warn and continue
+      either (liftIO . logger . mkGenericLog LevelWarn "event_triggers") return res
 
     -- | shutdownEvents will be triggered when a graceful shutdown has been inititiated, it will
     -- get the locked events from the event engine context and then it will unlock all those events.
@@ -308,7 +308,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "unlocking events that are locked by the HGE"
       lockedEvents <- readTVarIO _eeCtxLockedEvents
       liftIO $ do
-        when (not $ Set.null $ lockedEvents) $ do
+        when (not $ Set.null lockedEvents) $ do
           res <- runTx pool (Q.ReadCommitted, Nothing) (unlockEvents $ toList lockedEvents)
           case res of
             Left err -> logger $ mkGenericStrLog
