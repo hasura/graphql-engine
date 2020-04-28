@@ -4,8 +4,8 @@
 
 .. _custom_sql_functions:
 
-Customise schema with SQL functions
-===================================
+Extend schema with SQL functions
+================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -18,15 +18,19 @@ What are custom SQL functions?
 Custom SQL functions are `user-defined SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`_
 that can be used to either encapsulate some custom business logic or extend the built-in SQL functions and operators.
 
-Hasura GraphQL engine lets you expose certain types of custom functions over the GraphQL API to allow querying them
-using both ``queries`` and ``subscriptions``.
+Hasura GraphQL engine lets you expose certain types of custom functions as top level fields in the GraphQL API to allow
+querying them using both ``queries`` and ``subscriptions``.
+
+.. note::
+
+  Custom SQL functions can also be queried as :ref:`computed fields <computed_fields>` of tables.
 
 .. _supported_sql_functions:
 
 Supported SQL functions
------------------------
+***********************
 
-Currently, only functions which satisfy the following constraints can be exposed over the GraphQL API
+Currently, only functions which satisfy the following constraints can be exposed as top level fields in the GraphQL API
 (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
 
 - **Function behaviour**: ONLY ``STABLE`` or ``IMMUTABLE``

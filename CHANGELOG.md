@@ -2,6 +2,36 @@
 
 ## Next release
 
+### Allow access to session variables by computed fields (fix #3846)
+
+Sometimes it is useful for computed fields to have access to the Hasura session variables directly. For example, suppose you want to fetch some articles but also get related user info, say `likedByMe`. Now, you can define a function like:
+
+```
+CREATE OR REPLACE FUNCTION article_liked(article_row article, hasura_session json)
+RETURNS boolean AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM liked_article A
+    WHERE A.user_id = hasura_session ->> 'x-hasura-user-id' AND A.article_id = article_row.id
+  );
+$$ LANGUAGE sql STABLE;
+```
+and make a query like:
+
+```
+query {
+  articles {
+    title
+    content
+    likedByMe
+  }
+}     
+```
+
+Support for this is now added through the `add_computed_field` API.
+
+Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
+
 ### Bug fixes and improvements
 
 - console: make GraphiQL Explorer taking the whole viewport
@@ -248,6 +278,7 @@ A new CLI migrations image is introduced to account for the new migrations workf
 (close #3969) (#4145)
 
 ### Bug fixes and improvements
+
 - server: improve performance of replace_metadata tracking many tables (fix #3802)
 - server: option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
 - server: fix various space leaks to avoid excessive memory consumption
@@ -332,3 +363,4 @@ Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
 - console: show pre-release update notifications with opt out option (#3888)
 - console: handle invalid keys in permission builder (close #3848) (#3863)
+- docs: add page on data validation to docs (close #4085) (#4260)
