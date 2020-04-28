@@ -38,9 +38,8 @@ Setup
 
   .. tab:: CLI
 
-     .. :ref:`Install <install_hasura_cli>` or :ref:`update to <hasura_update-cli>` the latest version of Hasura CLI.
-
-     Download the latest pre-release CLI version from the `releases page <https://github.com/hasura/graphql-engine/releases>`_
+     :ref:`Install <install_hasura_cli>` or :ref:`update to <hasura_update-cli>`
+     the latest version of Hasura CLI.
 
      You can either get started with an existing project or create a new project.
 

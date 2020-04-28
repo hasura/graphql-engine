@@ -4,8 +4,8 @@
 
 .. _actions:
 
-Actions (beta)
-==============
+Actions
+=======
 
 .. contents:: Table of contents
   :backlinks: none
@@ -26,9 +26,7 @@ enrichment from external sources and any other complex business logic.
 
 .. admonition:: Supported from
 
-   Actions are currently available in beta in the pre-release versions of ``v1.2.0``.
-
-   .. Actions are supported in versions ``v.1.2.0`` and above.
+   Actions are supported in versions ``v.1.2.0`` and above.
 
 .. admonition:: Postgres support
 
