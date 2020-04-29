@@ -177,7 +177,7 @@ selectTableAggregate table fieldName description selectPermissions stringifyNum
         `mapField` \(aliasName, args, fields) ->
           ( aliasName
           , RQL.AnnSelG
-            { RQL._asnFields   = map (first nameToAlias) fields
+            { RQL._asnFields   = map (first aliasToName) fields
             , RQL._asnFrom     = RQL.FromTable table
             , RQL._asnPerm     = tablePermissions selectPermissions
             , RQL._asnArgs     = args
@@ -296,7 +296,7 @@ tableAggregationFields table selectPermissions = do
                                       then SQL.CTDistinct cols
                                       else SQL.CTSimple   cols
           pure $ pure $ P.selection $$(G.litName "count") Nothing args P.int
-            `mapField` (nameToAlias *** RQL.AFCount)
+            `mapField` (aliasToName *** RQL.AFCount)
       , -- operators on numeric columns
         if null numColumns then Nothing else Just $
         for [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
@@ -317,7 +317,7 @@ tableAggregationFields table selectPermissions = do
     mkFields = fmap (fmap catMaybes . sequenceA) . traverse \columnInfo -> do
       field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
       pure $ P.selection_ (pgiName columnInfo) (pgiDescription columnInfo) field
-        `mapField` \name -> (nameToAlias name, RQL.PCFCol $ pgiColumn columnInfo)
+        `mapField` \name -> (aliasToName name, RQL.PCFCol $ pgiColumn columnInfo)
 
     parseOperator
       :: Text
@@ -329,7 +329,7 @@ tableAggregationFields table selectPermissions = do
       let setName = tableName <> $$(G.litName "_") <> opName <> $$(G.litName "_fields")
           setDesc = Just $ G.Description $ "aggregate " <> operator <> " on columns"
       pure $ P.selection_ opName Nothing (P.selectionSet setName setDesc columns)
-        `mapField` (nameToAlias *** RQL.AFOp . RQL.AggOp operator)
+        `mapField` (aliasToName *** RQL.AFOp . RQL.AggOp operator)
 
 
 -- | An individual field of a table
@@ -373,7 +373,7 @@ fieldSelection fieldInfo selectPermissions stringifyNum =
       FIComputedField computedFieldInfo ->
         computedField computedFieldInfo selectPermissions stringifyNum
   where
-    aliasToFieldName = fmap $ fmap $ first nameToAlias
+    aliasToFieldName = fmap $ fmap $ first aliasToName
 
 
 
@@ -523,5 +523,5 @@ mapField
   => FieldsParser k m (Maybe a) -> (a -> b) -> FieldsParser k m (Maybe b)
 mapField fp f = fmap (fmap f) fp
 
-nameToAlias :: G.Name -> FieldName
-nameToAlias = FieldName . G.unName
+aliasToName :: G.Name -> FieldName
+aliasToName = FieldName . G.unName
