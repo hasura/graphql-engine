@@ -1,5 +1,14 @@
 @import '../Common.scss';
 
+.wd750 {
+  width: 750px;
+}
+
+.pkEditorWrapper {
+  width: 325px;
+  text-align: left;
+}
+
 .pageSidebar {
   height: calc(100vh - 50px);
   overflow: auto;

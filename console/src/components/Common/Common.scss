@@ -449,18 +449,6 @@ code {
   height: calc(100vh - 370px);
 }
 
-.button_mar_right {
-  margin-right: 20px;
-}
-
-.wd750 {
-  width: 750px;
-}
-
-.fontStyleNormal {
-  font-style: normal;
-}
-
 .cursorPointer {
   cursor: pointer;
 }
@@ -479,42 +467,11 @@ code {
   z-index: 1000;
 }
 
-.pkEditorWrapper {
-  width: 325px;
-  text-align: left;
-}
-
-.pkEditorExpandedTextWrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 15px;
-}
-
-.pkEditorExpandedText {
-  width: 325px;
-}
-
-.cursorNotAllowed {
-  cursor: not-allowed;
-}
-
 .columnListElement {
   float: left;
   margin-right: 50px !important;
 }
 
-.bottom5 {
-  bottom: 5px;
-}
-
-.marginLeftAuto {
-  margin-left: auto;
-}
-
-.textAlignRight {
-  text-align: right;
-}
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);
 

@@ -1,5 +1,9 @@
 @import '../../Common/Common.scss';
 
+.cursorNotAllowed {
+  cursor: not-allowed;
+}
+
 .wd4 {
   width: 4%;
   text-align: center;

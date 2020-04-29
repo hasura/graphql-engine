@@ -13,7 +13,7 @@ import { getPersistedDerivedAction } from '../lsUtils';
 import { Icon } from '../../../UIKit/atoms';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
-import { Spinner, Link, Flex, Box } from '../../../UIKit/atoms';
+import { Spinner, Link, Flex, Box, Text } from '../../../UIKit/atoms';
 import styles from '../Common/components/Styles.scss';
 
 const Codegen = ({ allActions, allTypes, currentAction }) => {
@@ -143,17 +143,15 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
       }
 
       return (
-        <div className={styles.marginLeftAuto}>
-          <div
-            className={`${styles.add_mar_bottom_small} ${styles.textAlignRight}`}
-          >
-            <b>Need help getting started quickly?</b>
-          </div>
+        <Box ml="auto">
+          <Text fontWeight="bold" textAlign="right" mb="5px">
+            Need help getting started quickly?
+          </Text>
           <Flex mb="20px">
             {getGlitchButton()}
             {getStarterKitButton()}
           </Flex>
-        </div>
+        </Box>
       );
     };
 
