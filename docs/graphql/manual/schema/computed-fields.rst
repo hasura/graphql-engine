@@ -198,9 +198,16 @@ Computed fields permissions
 Accessing Hasura session variables in computed fields
 -----------------------------------------------------
 
-It can be useful to have access to the session variable from the SQL function defining a computed field.  For instance, suppose we want to record which users have liked which articles. We can do so using a table ``article_likes`` that specifies a many-to-many relationship between ``article`` and ``user``. In such a case it can be useful to know if the current user has liked a specific article, and this information can be exposed as a *Boolean* computed field on ``article``.
+It can be useful to have access to the session variable from the SQL function defining a computed field.
+For instance, suppose we want to record which users have liked which articles. We can do so using a table
+``article_likes`` that specifies a many-to-many relationship between ``article`` and ``user``. In such a
+case it can be useful to know if the current user has liked a specific article, and this information can be
+exposed as a *Boolean* computed field on ``article``.
 
-Use the :ref:`add_computed_field` API to add a function, and specify the name of the argument taking a session argument in ``session_argument``.  The session argument is a JSON object where keys are session variable names (in lower case) and values are strings.  Use the ``->>`` JSON operator to fetch the value of a session variable as shown in the following example.
+Create a function with an argument for session variables and add it with :ref:`add_computed_field` API with the
+``session_argument`` key set. The session argument is a JSON object where keys are session variable names
+(in lower case) and values are strings.  Use the ``->>`` JSON operator to fetch the value of a session variable
+as shown in the following example.
 
 .. code-block:: plpgsql
 
@@ -262,8 +269,14 @@ Use the :ref:`add_computed_field` API to add a function, and specify the name of
 
 .. note::
 
-   The specified session argument is not included in the ``<function-name>_args`` input object in the GraphQL schema.
+   The specified session argument is not included in the argument options of the computed
+   field in the GraphQL schema.
 
+.. admonition:: Supported from
+
+   This feature will be available in ``v1.3.0-beta.1`` and above
+
+   .. This feature is available in ``v1.3.0`` and above
 
 Computed fields vs. Postgres generated columns
 ----------------------------------------------
