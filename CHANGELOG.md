@@ -60,6 +60,7 @@ using this flag is insecure since verification is not carried out.
 - cli: allow initialising project in current directory (fix #4560) #4566
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
 - docs: update migrations docs with config v2 (#4586)
+- docs: update actions docs (#4586)
 
 ## `v1.2.0-beta.5`
 
