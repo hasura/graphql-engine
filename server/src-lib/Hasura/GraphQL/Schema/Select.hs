@@ -30,7 +30,7 @@ import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser,
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.BoolExp
-import           Hasura.GraphQL.Schema.Common  (partialSQLExpToUnpreparedValue, textToName)
+import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
@@ -275,43 +275,43 @@ tableAggregationFields
   -> SelPermInfo
   -> m (Parser 'Output n RQL.AggFlds)
 tableAggregationFields table selectPermissions = do
-    tableName  <- qualifiedObjectToName table
-    allColumns <- tableSelectColumns table selectPermissions
-    let numColumns  = onlyNumCols allColumns
-    let compColumns = onlyComparableCols allColumns
-    numFields  <- mkFields numColumns
-    compFields <- mkFields compColumns
-    aggFields  <- fmap (fmap catMaybes . sequenceA . concat) $ sequenceA $ catMaybes
-      [ -- count
-        Just $ do
-          columnsEnum <- tableColumnsEnum table selectPermissions
-          let columnsName  = $$(G.litName "columns")
-              distinctName = $$(G.litName "distinct")
-              args = do
-                distinct <- P.fieldOptional columnsName  Nothing P.boolean
-                columns  <- maybe (pure Nothing) (P.fieldOptional distinctName Nothing . P.list) columnsEnum
-                pure $ case columns of
-                         Nothing   -> SQL.CTStar
-                         Just cols -> if fromMaybe False distinct
-                                      then SQL.CTDistinct cols
-                                      else SQL.CTSimple   cols
-          pure $ pure $ P.selection $$(G.litName "count") Nothing args P.int
-            `mapField` (aliasToName *** RQL.AFCount)
-      , -- operators on numeric columns
-        if null numColumns then Nothing else Just $
-        for [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
-            , "variance", "var_samp", "var_pop"
-            ] \operator ->
-          parseOperator operator tableName numFields
-      , -- operators on comparable columns
-        if null compColumns then Nothing else Just $
-        for ["max", "min"] \operator ->
-          parseOperator operator tableName compFields
-        -- TODO: handle __typename here
-      ]
-    let selectName  = tableName <> $$(G.litName "_aggregate_fields")
-        description = G.Description $ "aggregate fields of \"" <> G.unName tableName <> "\""
-    pure $ P.selectionSet selectName (Just description) aggFields
+  tableName  <- qualifiedObjectToName table
+  allColumns <- tableSelectColumns table selectPermissions
+  let numColumns  = onlyNumCols allColumns
+      compColumns = onlyComparableCols allColumns
+  numFields  <- mkFields numColumns
+  compFields <- mkFields compColumns
+  aggFields  <- fmap (fmap catMaybes . sequenceA . concat) $ sequenceA $ catMaybes
+    [ -- count
+      Just $ do
+        columnsEnum <- tableColumnsEnum table selectPermissions
+        let columnsName  = $$(G.litName "columns")
+            distinctName = $$(G.litName "distinct")
+            args = do
+              distinct <- P.fieldOptional columnsName  Nothing P.boolean
+              columns  <- maybe (pure Nothing) (P.fieldOptional distinctName Nothing . P.list) columnsEnum
+              pure $ case columns of
+                       Nothing   -> SQL.CTStar
+                       Just cols -> if fromMaybe False distinct
+                                    then SQL.CTDistinct cols
+                                    else SQL.CTSimple   cols
+        pure $ pure $ P.selection $$(G.litName "count") Nothing args P.int
+          `mapField` (aliasToName *** RQL.AFCount)
+    , -- operators on numeric columns
+      if null numColumns then Nothing else Just $
+      for [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
+          , "variance", "var_samp", "var_pop"
+          ] \operator ->
+        parseOperator operator tableName numFields
+    , -- operators on comparable columns
+      if null compColumns then Nothing else Just $
+      for ["max", "min"] \operator ->
+        parseOperator operator tableName compFields
+      -- TODO: handle __typename here
+    ]
+  let selectName  = tableName <> $$(G.litName "_aggregate_fields")
+      description = G.Description $ "aggregate fields of \"" <> G.unName tableName <> "\""
+  pure $ P.selectionSet selectName (Just description) aggFields
   where
     mkFields :: [PGColumnInfo] -> m (FieldsParser 'Output n RQL.ColFlds)
     mkFields = fmap (fmap catMaybes . sequenceA) . traverse \columnInfo -> do
@@ -463,7 +463,7 @@ computedField ComputedFieldInfo{..} selectPermissions stringifyNum = do
   functionArgsParser <- computedFieldFunctionArgs _cfiFunction
   case _cfiReturnType of
     CFRScalar scalarReturnType ->
-      if Set.member _cfiName $ spiScalarComputedFields selectPermissions
+      if _cfiName `Set.member` spiScalarComputedFields selectPermissions
       then do
         let fieldArgsParser = do
               args  <- functionArgsParser
@@ -517,11 +517,6 @@ tablePermissions selectPermissions = RQL.TablePerm
   { RQL._tpFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter selectPermissions
   , RQL._tpLimit  = spiLimit selectPermissions
   }
-
-mapField
-  :: Functor m
-  => FieldsParser k m (Maybe a) -> (a -> b) -> FieldsParser k m (Maybe b)
-mapField fp f = fmap (fmap f) fp
 
 aliasToName :: G.Name -> FieldName
 aliasToName = FieldName . G.unName

@@ -1,6 +1,7 @@
 module Hasura.GraphQL.Schema.Common
   ( textToName
   , partialSQLExpToUnpreparedValue
+  , mapField
   ) where
 
 import           Hasura.Prelude
@@ -20,3 +21,10 @@ textToName textName = mkName textName `onNothing` throw400 ValidationFailed
 partialSQLExpToUnpreparedValue :: PartialSQLExp -> P.UnpreparedValue
 partialSQLExpToUnpreparedValue (PSESessVar pftype var) = P.UVSessionVar pftype var
 partialSQLExpToUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
+
+mapField
+  :: Functor m
+  => P.FieldsParser k m (Maybe a)
+  -> (a -> b)
+  -> P.FieldsParser k m (Maybe b)
+mapField fp f = fmap (fmap f) fp
