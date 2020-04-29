@@ -3,8 +3,8 @@ url: /v1/graphql
 status: 200
 query:
   query: |
-    query {
-      get_user_by_email(email: "clarke@gmail.com"){
+    query ($email: String!){
+      get_user_by_email(email: $email){
           id
           user {
             name
@@ -13,6 +13,8 @@ query:
       }
     }
 
+  variables:
+    email: clarke@gmail.com
 
 response:
   data:

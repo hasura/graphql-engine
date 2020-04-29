@@ -121,7 +121,7 @@ func FilterCustomQuery(u *nurl.URL) *nurl.URL {
 func NewMigrate(ec *cli.ExecutionContext, isCmd bool) (*Migrate, error) {
 	dbURL := GetDataPath(ec)
 	fileURL := GetFilePath(ec.MigrationDir)
-	t, err := New(fileURL.String(), dbURL.String(), isCmd, int(ec.Config.Version), ec.Logger)
+	t, err := New(fileURL.String(), dbURL.String(), isCmd, int(ec.Config.Version), ec.Config.ServerConfig.TLSConfig, ec.Logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create migrate instance")
 	}
