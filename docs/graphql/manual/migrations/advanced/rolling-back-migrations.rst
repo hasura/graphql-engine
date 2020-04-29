@@ -18,6 +18,10 @@ Introduction
 If there are any issues with changes made to the DB schema and Hasura metadata it
 is possible to roll back their state to a previous stable version.
 
+.. note::
+
+  For ``config v1``, see :ref:`roll_back_migrations_v1`.
+
 Rolling back database schema
 ----------------------------
 

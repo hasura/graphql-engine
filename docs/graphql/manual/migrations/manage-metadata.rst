@@ -21,10 +21,9 @@ performed on the Hasura console to apply it later on another Hasura instance.
 
 All the actions performed on the console, like tracking tables/views/functions,
 creating relationships, configuring permissions, creating event triggers and remote
-schemas, etc. can be exported as a JSON file which can be version
-controlled. The content of this JSON file is called "Hasura metadata". The
-metadata file can be later imported to another Hasura instance to get the same
-configuration. You can also manually edit the JSON file to add more objects to
+schemas, etc. can be exported as a JSON/yaml metadata file which can be version
+controlled. The metadata file can be later imported to another Hasura instance to get the same
+configuration. You can also manually edit the metadata file to add more objects to
 it and then use it to update the instance.
 
 Exporting Hasura metadata
@@ -37,6 +36,8 @@ Exporting Hasura metadata
 
      Metadata can be exported with the :ref:`hasura metadata export <hasura_metadata_export>`
      command.
+
+     This will export the metadata as yaml files in the ``/metadata`` directory
 
   .. tab:: Console
 

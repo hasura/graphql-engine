@@ -12,6 +12,10 @@ Hasura migrations basics
   :depth: 1
   :local:
 
+.. note::
+
+  For ``config v1``, see :ref:`manage_migrations_v1`.
+
 Initializing migrations
 -----------------------
 

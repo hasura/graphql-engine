@@ -4,13 +4,23 @@
 
 .. _migration_file_format_v2:
 
-Migration file format reference (config v2)
-===========================================
+Migration file format reference
+===============================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
+
+Introduction
+------------
+
+With ``config v2``, the migrations files are pure SQL files.
+
+
+.. note::
+
+  For ``config v1``, see :ref:`migration_file_format_v1`.
 
 Migration filename format
 -------------------------
@@ -28,8 +38,8 @@ it is ``up``, it means that this is the forward step, e.g. creating a table.
 The ``down`` indicates that it is the corresponding
 rollback step.
 
-File format
------------
+Migration file format
+---------------------
 
 A migration SQL file can contain SQL statements which are executed
 on the apply step of the migration. There can be an ``up`` migration and a ``down``

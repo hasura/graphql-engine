@@ -21,10 +21,10 @@ a dev -> staging -> production environment promotion scenario.
 
 .. note::
 
-  This documentation is for Hasura migrations **config v2**, supported from
+  This documentation is for Hasura migrations ``config v2``, supported from
   ``v1.2.0``. (See :ref:`upgrade guide <migrations_upgrade_v2>`).
 
-  For config v1, see :ref:`migrations_v1`.
+  For ``config v1``, see :ref:`migrations_v1`.
 
 How is Hasura state managed?
 ----------------------------

@@ -20,12 +20,14 @@ automatically apply migrations/metadata when the server starts:
 
 .. code-block:: bash
 
-   hasura/graphql-engine:<version>.cli-migrations
+   hasura/graphql-engine:<version>.cli-migrations-v2
+
+This container image includes the Hasura CLI at ``/bin/hasura-cli`` and can be
+used for running any other CI/CD scripts in your workflow.
 
 .. note::
 
-   This container image includes the Hasura CLI at ``/bin/hasura-cli`` and can be
-   used for running any other CI/CD scripts in your workflow.
+  For ``config v1``, see :ref:`auto_apply_migrations_v1`.
 
 Applying migrations
 -------------------
@@ -51,11 +53,12 @@ Example:
 
 .. code-block:: bash
 
-   # Start Hasura after applying the migrations present in /home/me/my-project/migrations
+   # Start Hasura after applying the migrations and metadata present in the Hasura project
    docker run -p 8080:8080 \
           -v /home/me/my-project/migrations:/hasura-migrations \
+          -v /home/me/my-project/metadata:/hasura-metadata \
           -e HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:@postgres:5432/postgres \
-          hasura/graphql-engine:v1.2.0.cli-migrations
+          hasura/graphql-engine:v1.2.0.cli-migrations-v2
 
 
 .. _auto_apply_metadata:

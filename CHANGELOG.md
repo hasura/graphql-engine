@@ -39,9 +39,9 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 ### Bug fixes and improvements
 
-- console: make GraphiQL Explorer taking the whole viewport
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
 - console: update graphiql explorer to support operation transform (#4567)
+- console: make GraphiQL Explorer take the whole viewport (#4553)
 
 ## `v1.2.0-beta.5`
 
