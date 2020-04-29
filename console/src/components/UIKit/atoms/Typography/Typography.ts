@@ -27,6 +27,7 @@ export const StyledText = styled.p<
     ${color}
     ${space}
     ${border}
+    ${layout}
 `;
 
 export const StyledTextLink = styled.a<
