@@ -5,7 +5,7 @@
   "Hasura.Eventing.EventTriggers" and "Hasura.Eventing.ScheduledTriggers".
 
   The event triggers and scheduled triggers share the event delivery
-  mechanism using the `tryWebhook` function defined in this module.
+  mechanism using the 'tryWebhook' function defined in this module.
 -}
 module Hasura.Eventing.HTTP
   ( HTTPErr(..)
