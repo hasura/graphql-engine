@@ -36,6 +36,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- console: rollback graphiql explorer to ^0.5.1 (closes #4605) (#4608)
 
 ## `v1.2.0`
 
