@@ -9,13 +9,13 @@ import {
   untrackTableSql,
   RESET,
   setUniqueKeys,
-  toggleTableAsEnum
+  toggleTableAsEnum,
 } from '../TableModify/ModifyActions';
 import {
   setTable,
   fetchColumnTypeInfo,
   RESET_COLUMN_TYPE_INFO,
-  fetchFunctionInit
+  fetchFunctionInit,
 } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import ColumnEditorList from './ColumnEditorList';
@@ -23,7 +23,7 @@ import ColumnCreator from './ColumnCreator';
 import PrimaryKeyEditor from './PrimaryKeyEditor';
 import TableCommentEditor from './TableCommentEditor';
 import EnumsSection, {
-  EnumTableModifyWarning
+  EnumTableModifyWarning,
 } from '../Common/Components/EnumsSection';
 import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
@@ -38,7 +38,7 @@ import {
   findTable,
   generateTableDef,
   getTableCustomRootFields,
-  getTableCustomColumnNames
+  getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import ComputedFieldsEditor from './ComputedFieldsEditor';
@@ -46,7 +46,7 @@ import {
   foreignKeyDescription,
   primaryKeyDescription,
   uniqueKeyDescription,
-  checkConstraintsDescription
+  checkConstraintsDescription,
 } from '../Common/TooltipMessages';
 import { ToolTip, Heading } from '../../../UIKit/atoms';
 import styles from './ModifyTable.scss';
@@ -62,7 +62,7 @@ class ModifyTable extends React.Component {
 
   componentWillUnmount() {
     this.props.dispatch({
-      type: RESET_COLUMN_TYPE_INFO
+      type: RESET_COLUMN_TYPE_INFO,
     });
   }
 
@@ -87,7 +87,7 @@ class ModifyTable extends React.Component {
       columnDefaultFunctions,
       schemaList,
       tableEnum,
-      rootFieldsEdit
+      rootFieldsEdit,
     } = this.props;
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
@@ -106,10 +106,10 @@ class ModifyTable extends React.Component {
 
     const untrackBtn = (
       <Button
-        type='submit'
+        type="submit"
         className={styles.add_mar_right}
-        color='white'
-        size='sm'
+        color="white"
+        size="sm"
         onClick={() => {
           const confirmMessage = `This will remove the table "${tableName}" from the GraphQL schema`;
           const isOk = getConfirmation(confirmMessage);
@@ -117,7 +117,7 @@ class ModifyTable extends React.Component {
             dispatch(untrackTableSql(tableName));
           }
         }}
-        data-test='untrack-table'
+        data-test="untrack-table"
       >
         Untrack Table
       </Button>
@@ -125,9 +125,9 @@ class ModifyTable extends React.Component {
 
     const deleteBtn = (
       <Button
-        type='submit'
-        color='red'
-        size='sm'
+        type="submit"
+        color="red"
+        size="sm"
         onClick={() => {
           const confirmMessage = `This will permanently delete the table "${tableName}" from the database`;
           const isOk = getConfirmation(confirmMessage, true, tableName);
@@ -135,7 +135,7 @@ class ModifyTable extends React.Component {
             dispatch(deleteTableSql(tableName, table));
           }
         }}
-        data-test='delete-table'
+        data-test="delete-table"
       >
         Delete table
       </Button>
@@ -162,13 +162,13 @@ class ModifyTable extends React.Component {
 
       return (
         <React.Fragment>
-          <Heading type='subHeading'>
+          <Heading type="subHeading">
             Custom GraphQL Root Fields
             <ToolTip
               message={
                 'Change the root fields for the table in the GraphQL API'
               }
-              ml='sm'
+              ml="sm"
             />
           </Heading>
           <RootFields
@@ -187,14 +187,14 @@ class ModifyTable extends React.Component {
 
       return (
         <React.Fragment>
-          <Heading type='subHeading'>
+          <Heading type="subHeading">
             Computed fields
             <ToolTip
               message={'Add a function as a virtual field in the GraphQL API'}
-              ml='sm'
-              mr='20px'
+              ml="sm"
+              mr="20px"
             />
-            <KnowMoreLink href='https://hasura.io/docs/1.0/graphql/manual/schema/computed-fields.html' />
+            <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/computed-fields.html" />
           </Heading>
           <ComputedFieldsEditor
             table={table}
@@ -214,7 +214,7 @@ class ModifyTable extends React.Component {
         <TableHeader
           dispatch={dispatch}
           table={table}
-          tabName='modify'
+          tabName="modify"
           migrationMode={migrationMode}
           readOnlyMode={readOnlyMode}
         />
@@ -230,11 +230,11 @@ class ModifyTable extends React.Component {
             <TableCommentEditor
               tableComment={tableComment}
               tableCommentEdit={tableCommentEdit}
-              isTable
+              tableType="TABLE"
               dispatch={dispatch}
             />
             <EnumTableModifyWarning isEnum={table.is_enum} />
-            <Heading type='subHeading'>Columns</Heading>
+            <Heading type="subHeading">Columns</Heading>
             <ColumnEditorList
               validTypeCasts={validTypeCasts}
               dataTypeIndexMap={dataTypeIndexMap}
@@ -246,7 +246,7 @@ class ModifyTable extends React.Component {
               customColumnNames={getTableCustomColumnNames(table)}
             />
             <hr />
-            <Heading type='subHeading'>Add a new column</Heading>
+            <Heading type="subHeading">Add a new column</Heading>
             <ColumnCreator
               dispatch={dispatch}
               tableName={tableName}
@@ -256,9 +256,9 @@ class ModifyTable extends React.Component {
             />
             <hr />
             {getComputedFieldsSection()}
-            <Heading type='subHeading'>
+            <Heading type="subHeading">
               Primary Key
-              <ToolTip message={primaryKeyDescription} ml='sm' />
+              <ToolTip message={primaryKeyDescription} ml="sm" />
             </Heading>
             <PrimaryKeyEditor
               tableSchema={table}
@@ -267,9 +267,9 @@ class ModifyTable extends React.Component {
               currentSchema={currentSchema}
             />
             <hr />
-            <Heading type='subHeading'>
+            <Heading type="subHeading">
               Foreign Keys
-              <ToolTip message={foreignKeyDescription} ml='sm' />
+              <ToolTip message={foreignKeyDescription} ml="sm" />
             </Heading>
             <ForeignKeyEditor
               tableSchema={table}
@@ -280,9 +280,9 @@ class ModifyTable extends React.Component {
               fkModify={fkModify}
             />
             <hr />
-            <Heading type='subHeading'>
+            <Heading type="subHeading">
               Unique Keys
-              <ToolTip message={uniqueKeyDescription} ml='sm' />
+              <ToolTip message={uniqueKeyDescription} ml="sm" />
             </Heading>
             <UniqueKeyEditor
               tableSchema={table}
@@ -293,12 +293,12 @@ class ModifyTable extends React.Component {
               setUniqueKeys={setUniqueKeys}
             />
             <hr />
-            <Heading type='subHeading'>Triggers</Heading>
+            <Heading type="subHeading">Triggers</Heading>
             <TriggerEditorList tableSchema={table} dispatch={dispatch} />
             <hr />
-            <Heading type='subHeading'>
+            <Heading type="subHeading">
               Check Constraints
-              <ToolTip message={checkConstraintsDescription} ml='sm' />
+              <ToolTip message={checkConstraintsDescription} ml="sm" />
             </Heading>
             <CheckConstraints
               constraints={getTableCheckConstraints(table)}
@@ -336,7 +336,7 @@ ModifyTable.propTypes = {
   dispatch: PropTypes.func.isRequired,
   pkModify: PropTypes.array.isRequired,
   fkModify: PropTypes.array.isRequired,
-  serverVersion: PropTypes.string
+  serverVersion: PropTypes.string,
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -356,7 +356,7 @@ const mapStateToProps = (state, ownProps) => ({
   validTypeCasts: state.tables.columnTypeCasts,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
-  ...state.tables.modify
+  ...state.tables.modify,
 });
 
 const modifyTableConnector = connect => connect(mapStateToProps)(ModifyTable);
