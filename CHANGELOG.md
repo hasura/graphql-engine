@@ -59,6 +59,7 @@ using this flag is insecure since verification is not carried out.
 - console: fix table columns type comparision during column edit (close #4125) (#4393)
 - cli: allow initialising project in current directory (fix #4560) #4566
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
+- docs: update migrations docs with config v2 (#4586)
 - docs: update actions docs (#4586)
 
 ## `v1.2.0-beta.5`
@@ -296,6 +297,8 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 ### CLI: V2 migrations architecture
 
 A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
+
+See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-v2.html).
 
 (close #3969) (#4145)
 
