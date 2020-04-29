@@ -39,7 +39,7 @@ An action consists of the following parts:
 2. ``Definition``: The definition of the query or mutation
 3. ``Handler``: The logic to be run when the query or mutation is executed
 4. ``Kind``: Sync or async. In case of a query action, there is no ``Kind``
-   associated with it. A query action is always Sync
+   associated with it. A query action is always sync
 
 Type
 ****
