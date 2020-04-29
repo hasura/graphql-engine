@@ -301,14 +301,12 @@ tableAggregationFields table selectPermissions = do
         if null numColumns then Nothing else Just $
         for [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
             , "variance", "var_samp", "var_pop"
-            ] \operator -> do
-          opName <- textToName operator
-          pure $ parseOperator operator opName tableName numFields
+            ] \operator ->
+          parseOperator operator tableName numFields
       , -- operators on comparable columns
         if null compColumns then Nothing else Just $
-        for ["max", "min"] \operator -> do
-          opName <- textToName operator
-          pure $ parseOperator operator opName tableName compFields
+        for ["max", "min"] \operator ->
+          parseOperator operator tableName compFields
         -- TODO: handle __typename here
       ]
     let selectName  = tableName <> $$(G.litName "_aggregate_fields")
@@ -324,14 +322,14 @@ tableAggregationFields table selectPermissions = do
     parseOperator
       :: Text
       -> G.Name
-      -> G.Name
       -> FieldsParser 'Output n RQL.ColFlds
-      -> FieldsParser 'Output n (Maybe (FieldName, RQL.AggFld))
-    parseOperator operator opName tableName columns =
+      -> m (FieldsParser 'Output n (Maybe (FieldName, RQL.AggFld)))
+    parseOperator operator tableName columns = do
+      opName <- textToName operator
       let setName = tableName <> $$(G.litName "_") <> opName <> $$(G.litName "_fields")
           setDesc = Just $ G.Description $ "aggregate " <> operator <> " on columns"
-      in P.selection_ opName Nothing (P.selectionSet setName setDesc columns)
-           `mapField` (nameToAlias *** RQL.AFOp . RQL.AggOp operator)
+      pure $ P.selection_ opName Nothing (P.selectionSet setName setDesc columns)
+        `mapField` (nameToAlias *** RQL.AFOp . RQL.AggOp operator)
 
 
 -- | An individual field of a table
