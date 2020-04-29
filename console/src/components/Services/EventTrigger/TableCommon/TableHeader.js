@@ -2,13 +2,12 @@ import React from 'react';
 import { Link as RouterLink } from 'react-router';
 import Helmet from 'react-helmet';
 
+import { capitalize } from '../../../Common/utils/jsUtils';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { Heading } from '../../../UIKit/atoms';
 import styles from './EventTable.scss';
 
 const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
-  let capitalised = tabName;
-  capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
   let showCount = '';
   if (!(count === null || count === undefined)) {
     showCount = '(' + count + ')';
@@ -52,7 +51,12 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
   return (
     <div>
       <Helmet
-        title={capitalised + ' - ' + triggerName + ' - Event Triggers | Hasura'}
+        title={
+          capitalize(tabName) +
+          ' - ' +
+          triggerName +
+          ' - Event Triggers | Hasura'
+        }
       />
       <div className={styles.subHeader}>
         <BreadCrumb breadCrumbs={getBreadCrumbs()} />

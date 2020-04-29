@@ -359,7 +359,7 @@ const ViewRows = ({
           const deleteIcon = <Icon type="delete" size={10} />;
 
           const handleDeleteClick = () => {
-            dispatch(deleteItem(pkClause));
+            dispatch(deleteItem(pkClause, curTableName, currentSchema));
           };
 
           const deleteTitle = 'Delete row';
@@ -709,7 +709,7 @@ const ViewRows = ({
       const pkClauses = selectedRows.map(row =>
         getPKClause(row, hasPrimaryKey, tableSchema)
       );
-      dispatch(deleteItems(pkClauses));
+      dispatch(deleteItems(pkClauses, curTableName, currentSchema));
       setSelectedRows([]);
     };
 

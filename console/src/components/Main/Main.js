@@ -404,32 +404,15 @@ class Main extends React.Component {
             className={'dropdown-menu ' + styles.dropdown_menu}
           >
             <div className={styles.dropdown_menu_container}>
-              <div className={styles.closeDropDown}>
-                <Icon
-                  type="close"
-                  onClick={this.closeLoveIcon.bind(this)}
-                  pointer
-                />
-                {/*
-                        <img
-                          className={'img-responsive'}
-                          src={closeIcon}
-                          alt={'closeIcon'}
-                          onClick={this.closeLoveIcon.bind(this)}
-                        />
-                        */}
-              </div>
-              {/*
-                      <div className={styles.arrow_up_dropdown} />
-                      <div className={styles.graphqlHeartText}>
-                        Love GraphQL Engine? Shout it from the rooftops!
-                        <br />
-                        Or just spread the word{' '}
-                        <span role="img" aria-label="smile">
-                          😊
-                        </span>
-                      </div>
-                      */}
+              <Icon
+                type="close"
+                onClick={this.closeLoveIcon.bind(this)}
+                pointer
+                color="black.secondary"
+                position="absolute"
+                top="10px"
+                left="20px"
+              />
               <div className={styles.displayFlex}>
                 <li className={styles.pixelText1}>
                   Roses are red, <br />
@@ -453,7 +436,7 @@ class Main extends React.Component {
                       />
                     </div>
                     <div className={styles.pixelText}>
-                      <Icon type="star" size={12} mr="xs" />
+                      <Icon type="star" size={12} mr="5px" />
                       Star
                     </div>
                   </Link>
@@ -484,7 +467,7 @@ class Main extends React.Component {
                       />
                     </div>
                     <div className={styles.pixelText}>
-                      <Icon type="twitter" size={12} mr="xs" />
+                      <Icon type="twitter" size={12} mr="5px" />
                       Tweet
                     </div>
                   </Link>

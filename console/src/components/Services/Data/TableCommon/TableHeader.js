@@ -3,6 +3,7 @@ import { Link as RouterLink } from 'react-router';
 import Helmet from 'react-helmet';
 
 import { changeTableName } from '../TableModify/ModifyActions';
+import { capitalize } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
@@ -10,6 +11,7 @@ import {
   checkIfTable,
   getTableName,
   getTableSchema,
+  getTableType,
 } from '../../../Common/utils/pgUtils';
 import {
   getSchemaBaseRoute,
@@ -20,6 +22,7 @@ import {
   getTablePermissionsRoute,
   getTableRelationshipsRoute,
 } from '../../../Common/utils/routesUtils';
+import { getReadableNumber } from '../../../Common/utils/jsUtils';
 
 const TableHeader = ({
   tabName,
@@ -31,20 +34,18 @@ const TableHeader = ({
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
-  const capitalisedTabName = tabName[0].toUpperCase() + tabName.slice(1);
-
   const tableName = getTableName(table);
   const tableSchema = getTableSchema(table);
   const isTable = checkIfTable(table);
 
   let countDisplay = '';
   if (!(count === null || count === undefined)) {
-    countDisplay = '(' + count + ')';
+    countDisplay = '(' + getReadableNumber(count) + ')';
   }
   const activeTab = tabNameMap[tabName];
 
   const saveTableNameChange = newName => {
-    dispatch(changeTableName(tableName, newName, isTable));
+    dispatch(changeTableName(tableName, newName, isTable, getTableType(table)));
   };
 
   const getBreadCrumbs = () => {
@@ -85,7 +86,7 @@ const TableHeader = ({
   return (
     <div>
       <Helmet
-        title={capitalisedTabName + ' - ' + tableName + ' - Data | Hasura'}
+        title={capitalize(tabName) + ' - ' + tableName + ' - Data | Hasura'}
       />
       <div className={styles.subHeader}>
         <BreadCrumb breadCrumbs={getBreadCrumbs()} />
