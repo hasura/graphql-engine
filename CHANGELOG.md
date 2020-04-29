@@ -2,11 +2,6 @@
 
 ## Next release
 
-### Bug fixes and improvements
-
-- docs: update migrations docs with config v2 workflows (#4586)
-
-
 ### Allow access to session variables by computed fields (fix #3846)
 
 Sometimes it is useful for computed fields to have access to the Hasura session variables directly. For example, suppose you want to fetch some articles but also get related user info, say `likedByMe`. Now, you can define a function like:
@@ -39,9 +34,32 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 ### Bug fixes and improvements
 
-- cli: remove irrelevant flags from init command (close #4508) (#4549)
+(Add entries here in the order of: server, console, cli, docs, others)
+
+
+## `v1.2.0`
+
+Include the changelog from **v1.2.0-beta.1**, **v1.2.0-beta.2**, **v1.2.0-beta.3**, **v1.2.0-beta.4**, **v1.2.0-beta.5**
+
+Additional changelog:
+
+### CLI: Support servers with self-signed certificates (close #4564) (#4582)
+
+A new flag `--certificate-authority` is added so that the CA certificate can be
+provided to trust the Hasura Endpoint with a self-signed SSL certificate.
+
+Another flag `--insecure-skip-tls-verification` is added to skip verifying the certificate
+in case you don't have access to the CA certificate. As the name suggests,
+using this flag is insecure since verification is not carried out.
+
+### Bug fixes and improvements
+
 - console: update graphiql explorer to support operation transform (#4567)
-- console: make GraphiQL Explorer take the whole viewport (#4553)
+- console: make GraphiQL Explorer taking the whole viewport (#4553)
+- console: fix table columns type comparision during column edit (close #4125) (#4393)
+- cli: allow initialising project in current directory (fix #4560) #4566
+- cli: remove irrelevant flags from init command (close #4508) (#4549)
+- docs: update migrations docs with config v2 (#4586)
 
 ## `v1.2.0-beta.5`
 
@@ -205,7 +223,6 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - console: make nullable and unique labels for columns clickable in insert and modify (#4433)
 - console: fix row delete for relationships in data browser (#4433)
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
-- console: fix table columns type comparision during column edit (close #4125) (#4393)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
