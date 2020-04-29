@@ -194,76 +194,89 @@ Computed fields permissions
 
 - For **table computed fields**, the permissions set on the return table are respected.
 
+..
+  Accessing Hasura session variables in computed fields
+  -----------------------------------------------------
 
-Accessing Hasura session variables in computed fields
------------------------------------------------------
+  It can be useful to have access to the session variable from the SQL function defining a computed field.
+  For instance, suppose we want to record which users have liked which articles. We can do so using a table
+  ``article_likes`` that specifies a many-to-many relationship between ``article`` and ``user``. In such a
+  case it can be useful to know if the current user has liked a specific article, and this information can be
+  exposed as a *Boolean* computed field on ``article``.
 
-It can be useful to have access to the session variable from the SQL function defining a computed field.  For instance, suppose we want to record which users have liked which articles. We can do so using a table ``article_likes`` that specifies a many-to-many relationship between ``article`` and ``user``. In such a case it can be useful to know if the current user has liked a specific article, and this information can be exposed as a *Boolean* computed field on ``article``.
+  Create a function with an argument for session variables and add it with the :ref:`add_computed_field` API with the
+  ``session_argument`` key set. The session argument is a JSON object where keys are session variable names
+  (in lower case) and values are strings.  Use the ``->>`` JSON operator to fetch the value of a session variable
+  as shown in the following example.
 
-Use the :ref:`add_computed_field` API to add a function, and specify the name of the argument taking a session argument in ``session_argument``.  The session argument is a JSON object where keys are session variable names (in lower case) and values are strings.  Use the ``->>`` JSON operator to fetch the value of a session variable as shown in the following example.
+  .. code-block:: plpgsql
 
-.. code-block:: plpgsql
+        -- 'hasura_session' will be the session argument
+        CREATE OR REPLACE FUNCTION article_liked_by_user(article_row article, hasura_session json)
+        RETURNS boolean AS $$
+        SELECT EXISTS (
+            SELECT 1
+            FROM article_likes A
+            WHERE A.user_id = hasura_session ->> 'x-hasura-user-id' AND A.article_id = article_row.id
+        );
+        $$ LANGUAGE sql STABLE;
 
-      -- 'hasura_session' will be the session argument
-      CREATE OR REPLACE FUNCTION article_liked_by_user(article_row article, hasura_session json)
-      RETURNS boolean AS $$
-      SELECT EXISTS (
-          SELECT 1
-          FROM article_likes A
-          WHERE A.user_id = hasura_session ->> 'x-hasura-user-id' AND A.article_id = article_row.id
-      );
-      $$ LANGUAGE sql STABLE;
+  .. code-block:: http
 
-.. code-block:: http
+     POST /v1/query HTTP/1.1
+     Content-Type: application/json
+     X-Hasura-Role: admin
 
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
-
-   {
-       "type":"add_computed_field",
-       "args":{
-           "table":{
-               "name":"article",
-               "schema":"public"
-           },
-           "name":"liked_by_user",
-           "definition":{
-               "function":{
-                   "name":"article_liked_by_user",
-                   "schema":"public"
-               },
-               "table_argument":"article_row",
-               "session_argument":"hasura_session"
-           }
-       }
-   }
-
-.. graphiql::
-  :view_only:
-  :query:
-     query {
-       article(where: {id: {_eq: 3}}) {
-         id
-         liked_by_user
-       }
+     {
+         "type":"add_computed_field",
+         "args":{
+             "table":{
+                 "name":"article",
+                 "schema":"public"
+             },
+             "name":"liked_by_user",
+             "definition":{
+                 "function":{
+                     "name":"article_liked_by_user",
+                     "schema":"public"
+                 },
+                 "table_argument":"article_row",
+                 "session_argument":"hasura_session"
+             }
+         }
      }
-  :response:
-    {
+
+  .. graphiql::
+    :view_only:
+    :query:
+       query {
+         article(where: {id: {_eq: 3}}) {
+           id
+           liked_by_user
+         }
+       }
+    :response:
+      {
         "data": {
-            "article": [
-                {
-                    "id": "3",
-                    "liked_by_user": true
-                }
-             ]
+          "article": [
+            {
+              "id": "3",
+              "liked_by_user": true
+            }
+          ]
         }
-    }
+      }
 
-.. note::
+  .. note::
 
-   The specified session argument is not included in the ``<function-name>_args`` input object in the GraphQL schema.
+     The specified session argument is not included in the argument options of the computed
+     field in the GraphQL schema.
 
+  .. admonition:: Supported from
+
+     This feature will be available in ``v1.3.0-beta.1`` and above
+
+     .. This feature is available in ``v1.3.0`` and above
 
 Computed fields vs. Postgres generated columns
 ----------------------------------------------
