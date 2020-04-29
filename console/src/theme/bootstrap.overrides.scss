@@ -186,7 +186,8 @@ select.form-control {
 }
 
 .btn-xs {
-  height: 22px;
+  min-height: 22px;
+  max-height: auto;
 }
 
 .btn-warning:hover {

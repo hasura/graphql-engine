@@ -127,6 +127,9 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool) (*Migrate, error) {
 	}
 	// Set Plugins
 	SetMetadataPluginsWithDir(ec, t)
+	if ec.Config.Version == cli.V2 {
+		t.EnableCheckMetadataConsistency(true)
+	}
 	return t, nil
 }
 

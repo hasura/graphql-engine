@@ -25,8 +25,8 @@ const ActionDefinitionEditor = ({
   editorHeight = '200px',
   editorWidth = '600px',
 }) => {
-  const [modalOpen, setModalState] = React.useState(false);
-  const toggleModal = () => setModalState(!modalOpen);
+  // const [modalOpen, setModalState] = React.useState(false);
+  // const toggleModal = () => setModalState(!modalOpen);
 
   const onChangeWithError = v => {
     if (timer) {
@@ -53,9 +53,9 @@ const ActionDefinitionEditor = ({
   const errorMessage =
     error && (error.message || 'This is not valid GraphQL SDL');
 
-  const handleClonedTypes = types => {
-    onChange(`${value}\n\n${getTypesSdl(types)}`);
-  };
+  // const handleClonedTypes = types => {
+  //   onChange(`${value}\n\n${getTypesSdl(types)}`);
+  // };
 
   return (
     <div className={`${className || ''}`}>

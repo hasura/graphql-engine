@@ -97,6 +97,10 @@ const deriveAction = (
   const operationDefinition = rootFields[0];
   const operationName = operationDefinition.name.value;
 
+  const selectedFields = operationDefinition.selectionSet.selections.map(s => {
+    return s.name.value;
+  });
+
   // get action name if not provided
   if (!actionName) {
     actionName = operationAst.definitions[0].name
@@ -212,7 +216,10 @@ const deriveAction = (
     Object.values(getTypeFields(refOperationOutputType)).forEach(
       outputTypeField => {
         const fieldTypeMetadata = getUnderlyingType(outputTypeField.type);
-        if (isScalarType(fieldTypeMetadata.type)) {
+        if (
+          isScalarType(fieldTypeMetadata.type) &&
+          selectedFields.includes(outputTypeField.name)
+        ) {
           outputTypeFields[outputTypeField.name] = wrapTypename(
             fieldTypeMetadata.type.name,
             fieldTypeMetadata.wraps
@@ -221,6 +228,11 @@ const deriveAction = (
       }
     );
   });
+  if (!Object.keys(outputTypeFields).length) {
+    throw new Error(
+      `no scalar found in the selection set of your operation; only scalar fields of the operation get mapped onto the output type of the derived action`
+    );
+  }
 
   Object.keys(outputTypeFields).forEach(fieldName => {
     actionOutputType.fields.push({
