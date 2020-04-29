@@ -90,21 +90,19 @@ orderByAggregation table selectPermissions = do
       compColumns = onlyComparableCols allColumns
       numFields   = catMaybes <$> traverse mkField numColumns
       compFields  = catMaybes <$> traverse mkField compColumns
-  aggFields  <- fmap (fmap (concat . catMaybes) . sequenceA . concat) $ sequenceA $ catMaybes
-    [ -- count
-      Just $ pure $ pure $ P.fieldOptional $$(G.litName "count") Nothing orderByOperator
-        `mapField` (pure . mkOrderByItemG RQL.AAOCount)
-    , -- operators on numeric columns
-      if null numColumns then Nothing else Just $
-      for [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
-          , "variance", "var_samp", "var_pop"
-          ] \operator ->
-        parseOperator operator tableName numFields
-    , -- operators on comparable columns
-      if null compColumns then Nothing else Just $
-      for ["max", "min"] \operator ->
-        parseOperator operator tableName compFields
-    ]
+      aggFields   = fmap (concat . catMaybes . concat) $ sequenceA $ catMaybes
+        [ -- count
+          Just $ P.fieldOptional $$(G.litName "count") Nothing orderByOperator
+            <&> pure . fmap (pure . mkOrderByItemG RQL.AAOCount)
+        , -- operators on numeric columns
+          if null numColumns then Nothing else Just $
+          for numericAggOperators \operator ->
+            parseOperator operator tableName numFields
+        , -- operators on comparable columns
+          if null compColumns then Nothing else Just $
+          for comparisonAggOperators \operator ->
+            parseOperator operator tableName compFields
+        ]
   let objectName  = tableName <> $$(G.litName "_aggregate_order_by")
       description = G.Description $ "order by aggregate values of table \"" <> table <<> "\""
   pure $ P.object objectName (Just description) aggFields
@@ -115,16 +113,27 @@ orderByAggregation table selectPermissions = do
         `mapField` (pgiColumn columnInfo,)
 
     parseOperator
-      :: Text
+      :: G.Name
       -> G.Name
       -> FieldsParser 'Input n [(PGCol, OrderInfo)]
-      -> m (FieldsParser 'Input n (Maybe [OrderByItemG RQL.AnnAggOrdBy]))
-    parseOperator operator tableName columns = do
-      opName <- textToName operator
-      let objectName = tableName <> $$(G.litName "_") <> opName <> $$(G.litName "_order_by")
-          objectDesc = Just $ G.Description $ "order by" <> operator <> "() on columns of table " <> G.unName tableName <> "\""
-      pure $ P.fieldOptional opName Nothing (P.object objectName objectDesc columns)
-        `mapField` map (\(col, info) -> mkOrderByItemG (RQL.AAOOp operator col) info)
+      -> FieldsParser 'Input n (Maybe [OrderByItemG RQL.AnnAggOrdBy])
+    parseOperator operator tableName columns =
+      let opText     = G.unName operator
+          -- FIXME: isn't G.Name a Monoid?
+          objectName = foldr1 (<>) [ tableName
+                                   , $$(G.litName "_")
+                                   , operator
+                                   , $$(G.litName "_order_by")
+                                   ]
+          objectDesc = Just $ G.Description $ mconcat [ "order by"
+                                                      , opText
+                                                      , "() on columns of table "
+                                                      , G.unName tableName
+                                                      , "\""
+                                                      ]
+      in  P.fieldOptional operator Nothing (P.object objectName objectDesc columns)
+        `mapField` map (\(col, info) -> mkOrderByItemG (RQL.AAOOp opText col) info)
+
 
 
 orderByOperator :: MonadParse m => Parser 'Both m OrderInfo

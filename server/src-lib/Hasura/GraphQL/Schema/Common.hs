@@ -1,12 +1,8 @@
-module Hasura.GraphQL.Schema.Common
-  ( textToName
-  , partialSQLExpToUnpreparedValue
-  , mapField
-  ) where
+module Hasura.GraphQL.Schema.Common where
 
 import           Hasura.Prelude
 
-import           Language.GraphQL.Draft.Syntax (Name, mkName)
+import           Language.GraphQL.Draft.Syntax (Name, litName, mkName)
 
 import qualified Hasura.GraphQL.Parser         as P
 
@@ -28,3 +24,18 @@ mapField
   -> (a -> b)
   -> P.FieldsParser k m (Maybe b)
 mapField fp f = fmap (fmap f) fp
+
+numericAggOperators :: [Name]
+numericAggOperators =
+  [ $$(litName "sum")
+  , $$(litName "avg")
+  , $$(litName "stddev")
+  , $$(litName "stddev_samp")
+  , $$(litName "stddev_pop")
+  , $$(litName "variance")
+  , $$(litName "var_samp")
+  , $$(litName "var_pop")
+  ]
+
+comparisonAggOperators :: [Name]
+comparisonAggOperators = [$$(litName "max"), $$(litName "min")]

@@ -281,7 +281,7 @@ tableAggregationFields table selectPermissions = do
       compColumns = onlyComparableCols allColumns
   numFields  <- mkFields numColumns
   compFields <- mkFields compColumns
-  aggFields  <- fmap (fmap catMaybes . sequenceA . concat) $ sequenceA $ catMaybes
+  aggFields  <- fmap (fmap (catMaybes . concat) . sequenceA) $ sequenceA $ catMaybes
     [ -- count
       Just $ do
         columnsEnum <- tableColumnsEnum table selectPermissions
@@ -295,17 +295,15 @@ tableAggregationFields table selectPermissions = do
                        Just cols -> if fromMaybe False distinct
                                     then SQL.CTDistinct cols
                                     else SQL.CTSimple   cols
-        pure $ pure $ P.selection $$(G.litName "count") Nothing args P.int
-          `mapField` (aliasToName *** RQL.AFCount)
+        pure $ P.selection $$(G.litName "count") Nothing args P.int
+          <&> pure . fmap (aliasToName *** RQL.AFCount)
     , -- operators on numeric columns
-      if null numColumns then Nothing else Just $
-      for [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
-          , "variance", "var_samp", "var_pop"
-          ] \operator ->
+      if null numColumns then Nothing else Just $ pure $
+      for numericAggOperators \operator ->
         parseOperator operator tableName numFields
     , -- operators on comparable columns
-      if null compColumns then Nothing else Just $
-      for ["max", "min"] \operator ->
+      if null compColumns then Nothing else Just $ pure $
+      for comparisonAggOperators \operator ->
         parseOperator operator tableName compFields
       -- TODO: handle __typename here
     ]
@@ -320,16 +318,16 @@ tableAggregationFields table selectPermissions = do
         `mapField` \name -> (aliasToName name, RQL.PCFCol $ pgiColumn columnInfo)
 
     parseOperator
-      :: Text
+      :: G.Name
       -> G.Name
       -> FieldsParser 'Output n RQL.ColFlds
-      -> m (FieldsParser 'Output n (Maybe (FieldName, RQL.AggFld)))
-    parseOperator operator tableName columns = do
-      opName <- textToName operator
-      let setName = tableName <> $$(G.litName "_") <> opName <> $$(G.litName "_fields")
-          setDesc = Just $ G.Description $ "aggregate " <> operator <> " on columns"
-      pure $ P.selection_ opName Nothing (P.selectionSet setName setDesc columns)
-        `mapField` (aliasToName *** RQL.AFOp . RQL.AggOp operator)
+      -> FieldsParser 'Output n (Maybe (FieldName, RQL.AggFld))
+    parseOperator operator tableName columns =
+      let opText  = G.unName operator
+          setName = tableName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
+          setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
+      in  P.selection_ operator Nothing (P.selectionSet setName setDesc columns)
+        `mapField` (aliasToName *** RQL.AFOp . RQL.AggOp opText)
 
 
 -- | An individual field of a table
