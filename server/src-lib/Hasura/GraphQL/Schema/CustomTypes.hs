@@ -12,6 +12,7 @@ import           Hasura.GraphQL.Context        (defaultTypes)
 import           Hasura.GraphQL.Schema.Common  (mkTableTy)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Validate.Types as VT
@@ -30,7 +31,7 @@ buildObjectTypeInfo roleName annotatedObjectType =
       flip map (toList $ _aotRelationships annotatedObjectType) $
       \(TypeRelationship name ty remoteTableInfo _) ->
         if isJust (getSelectPermissionInfoM remoteTableInfo roleName) ||
-           roleName == adminRole
+           roleName == adminRoleName
         then Just (relationshipToFieldInfo name ty $ _tciName $ _tiCoreInfo remoteTableInfo)
         else Nothing
       where

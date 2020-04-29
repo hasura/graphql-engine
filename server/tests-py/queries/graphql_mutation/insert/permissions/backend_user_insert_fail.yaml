@@ -1,0 +1,22 @@
+description: As backend user without header
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: backend_user
+response:
+  errors:
+  - extensions:
+      path: $
+      code: validation-failed
+    message: no mutations exist
+query:
+  query: |
+    mutation {
+      insert_user(objects: [
+        {
+          name: "FooBar"
+        }
+      ]){
+        affected_rows
+      }
+    }

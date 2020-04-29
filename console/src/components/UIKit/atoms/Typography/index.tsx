@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { StyledHeading, StyledText, StyledTextLink } from './Typography';
+import { Theme } from '../../theme';
 
 export const Heading = props => {
   const { children, type } = props;
@@ -26,7 +27,7 @@ export const Heading = props => {
 
 Heading.defaultProps = {
   color: 'black.text',
-  fontWeight: 'bold'
+  fontWeight: 'bold',
 };
 
 /**
@@ -36,7 +37,17 @@ Heading.defaultProps = {
  *  fontSize: 'explain'
  *  fontWeight: 'bold'
  */
-export const Text = props => {
+export type TextProps = {
+  type: keyof Theme['lineHeights'];
+  fontWeight: keyof Theme['fontWeights'];
+  fontSize: keyof Theme['fontSizes'];
+  mb: keyof Theme['space'];
+  mt: keyof Theme['space'];
+  mr: keyof Theme['space'];
+  ml: keyof Theme['space'];
+};
+
+export const Text: React.FC<TextProps> = props => {
   const { children, type, fontWeight, fontSize } = props;
 
   const lineHeight = type === 'explain' ? 'explain' : 'body';
@@ -59,10 +70,15 @@ export const Text = props => {
 
 Text.defaultProps = {
   mb: 0,
-  mt: 0
+  mt: 0,
 };
 
-export const TextLink = props => {
+type TextLinkProps = {
+  underline: boolean;
+  color: string;
+};
+
+export const TextLink: React.FC<TextLinkProps> = props => {
   const { children, underline } = props;
 
   return (
@@ -79,5 +95,5 @@ export const TextLink = props => {
 };
 
 TextLink.defaultProps = {
-  color: 'black.text'
+  color: 'black.text',
 };

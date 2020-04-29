@@ -463,3 +463,33 @@ args:
           _where:
             id: X-Hasura-User-Id
             is_admin: true
+
+- type: create_insert_permission
+  args:
+    table: user
+    role: backend_user
+    permission:
+      check: {}
+      columns: '*'
+      backend_only: true
+      set:
+        is_admin: true
+
+- type: create_select_permission
+  args:
+    table: user
+    role: backend_user
+    permission:
+      columns: '*'
+      filter: {}
+
+- type: create_insert_permission
+  args:
+    table: user
+    role: user
+    permission:
+      check: {}
+      columns: '*'
+      backend_only: false
+      set:
+        is_admin: false
