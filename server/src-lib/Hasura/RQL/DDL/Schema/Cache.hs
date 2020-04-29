@@ -276,25 +276,26 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
           returnA -< M.empty
 
       -- scheduled triggers
-      scheduledTriggersMap <- (mapFromL _cstName scheduledTriggers >- returnA)
-        >-> (| Inc.keyed (\_ (CatalogScheduledTrigger{..}) -> do
-              let q = CreateScheduledTrigger
-                       _cstName
-                       _cstWebhookConf
-                       _cstScheduleConf
-                       _cstPayload
-                       (fromMaybe defaultSTRetryConf _cstRetryConf)
-                       (fromMaybe [] _cstHeaderConf)
-                  definition = toJSON q
-                  triggerName = triggerNameToTxt _cstName
-                  metadataObject = MetadataObject (MOScheduledTrigger _cstName) definition
-                  addScheduledTriggerContext e = "in scheduled trigger " <> triggerName <> ": " <> e
-              (| withRecordInconsistency (
-                 (| modifyErrA (bindErrorA -< resolveScheduledTrigger q)
-                  |) addScheduledTriggerContext)
-               |) metadataObject)
-           |)
-        >-> (\infos -> M.catMaybes infos >- returnA)
+      -- scheduledTriggersMap <- (mapFromL _cstName scheduledTriggers >- returnA)
+      --   >-> (| Inc.keyed (\_ (CatalogScheduledTrigger{..}) -> do
+      --         let q = CreateScheduledTrigger
+      --                  _cstName
+      --                  _cstWebhookConf
+      --                  _cstScheduleConf
+      --                  _cstPayload
+      --                  (fromMaybe defaultSTRetryConf _cstRetryConf)
+      --                  (fromMaybe [] _cstHeaderConf)
+      --             definition = toJSON q
+      --             triggerName = triggerNameToTxt _cstName
+      --             metadataObject = MetadataObject (MOScheduledTrigger _cstName) definition
+      --             addScheduledTriggerContext e = "in scheduled trigger " <> triggerName <> ": " <> e
+      --         (| withRecordInconsistency (
+      --            (| modifyErrA (bindErrorA -< resolveScheduledTrigger q)
+      --             |) addScheduledTriggerContext)
+      --          |) metadataObject)
+      --      |)
+      --   >-> (\infos -> M.catMaybes infos >- returnA)
+      scheduledTriggersMap <- buildScheduledTriggers -< (mempty,scheduledTriggers) -- This should not be mempty
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
@@ -316,6 +317,12 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
       let objectId = MOTableObj qt $ MTOTrigger trn
           definition = object ["table" .= qt, "configuration" .= configuration]
       in MetadataObject objectId definition
+
+    mkScheduledTriggerMetadataObject catalogScheduledTrigger =
+      let q = catalogToCreateScheduledTrigger catalogScheduledTrigger
+          definition = toJSON q
+      in MetadataObject (MOScheduledTrigger (_cstName catalogScheduledTrigger))
+                        definition
 
     mkActionMetadataObject (ActionMetadata name comment defn _) =
       MetadataObject (MOAction name) (toJSON $ CreateAction name defn comment)
@@ -377,6 +384,35 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
             when (buildReason == CatalogUpdate) $ do
               liftTx $ delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
               mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
+
+    buildScheduledTriggers
+      :: ( ArrowChoice arr
+         , Inc.ArrowDistribute arr
+         , ArrowWriter (Seq CollectedInfo) arr
+         , Inc.ArrowCache m arr
+         , MonadIO m
+         , MonadTx m)
+      => (String,[CatalogScheduledTrigger])   -- definitely should not be String here
+         `arr` HashMap TriggerName ScheduledTriggerInfo
+    buildScheduledTriggers = buildInfoMap _cstName mkScheduledTriggerMetadataObject buildScheduledTrigger
+      where
+        buildScheduledTrigger = proc (_,scheduledTrigger) -> do
+          let q = catalogToCreateScheduledTrigger scheduledTrigger
+              triggerName = triggerNameToTxt $ _cstName scheduledTrigger
+              addScheduledTriggerContext e = "in scheduled trigger " <> triggerName <> ": " <> e
+          (| withRecordInconsistency (
+            (| modifyErrA (bindErrorA -< resolveScheduledTrigger q)
+             |) addScheduledTriggerContext)
+           |) (mkScheduledTriggerMetadataObject scheduledTrigger)
+
+    catalogToCreateScheduledTrigger :: CatalogScheduledTrigger -> CreateScheduledTrigger
+    catalogToCreateScheduledTrigger CatalogScheduledTrigger {..} =
+      CreateScheduledTrigger _cstName
+                             _cstWebhookConf
+                             _cstScheduleConf
+                             _cstPayload
+                             (fromMaybe defaultSTRetryConf _cstRetryConf)
+                             (fromMaybe [] _cstHeaderConf)
 
     buildActions
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
