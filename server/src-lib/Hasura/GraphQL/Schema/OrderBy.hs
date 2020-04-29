@@ -60,11 +60,11 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
             ObjRel -> do
               otherTableParser <- lift $ orderByExp remoteTable perms
               pure $ P.fieldOptional fieldName Nothing otherTableParser `mapField`
-                map (fmapColumn $ RQL.AOCObj relationshipInfo newPerms)
+                map (fmap $ RQL.AOCObj relationshipInfo newPerms)
             ArrRel -> do
               aggregationParser <- lift $ orderByAggregation remoteTable perms
               pure $ P.fieldOptional fieldName Nothing aggregationParser `mapField`
-                map (fmapColumn $ RQL.AOCAgg relationshipInfo newPerms)
+                map (fmap $ RQL.AOCAgg relationshipInfo newPerms)
         FIComputedField _ -> empty
 
 
@@ -171,9 +171,6 @@ mkOrderByItemG column (orderType, nullsOrder) =
                , obiColumn = column
                , obiNulls  = Just $ RQL.NullsOrder nullsOrder
                }
-
-fmapColumn :: (a -> b) -> OrderByItemG a -> OrderByItemG b
-fmapColumn f orderByItem = orderByItem { obiColumn = f $ obiColumn orderByItem }
 
 aliasToName :: G.Name -> FieldName
 aliasToName = FieldName . G.unName
