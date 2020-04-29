@@ -51,12 +51,12 @@ Simple use cases
 
 We will split the use cases into two:
 
-1. :ref:`You're already using a migration tool for the Postgres schema
-   <manage_hasura_metadata>`. (like knex, TypeORM, Sequelize, Rails/Django
-   migrations. In this case you only need to manage the Hasura metadata)
-2. :ref:`You're not using any migration tool for the Postgres schema
-   <manage_migrations_v1>`. (Hasura will take care of the
-   Postgres schema also)
+1. You're **already using a migration tool** for the Postgres schema migrations.
+
+   In this case you only need to manage the Hasura metadata. See :ref:`manage_hasura_metadata_v1`
+2. You're **not using any migration tool** for the Postgres schema.
+
+   See :ref:`manage_migrations_v1`
 
 Advanced use cases
 ------------------
@@ -76,5 +76,6 @@ Reference documentation
   :hidden:
 
   Manage Postgres Schema and metadata <manage-migrations>
+  Manage metadata <manage-metadata>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>
