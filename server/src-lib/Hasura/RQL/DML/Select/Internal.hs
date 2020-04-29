@@ -3,11 +3,13 @@ module Hasura.RQL.DML.Select.Internal
   , mkAggSelect
   -- , mkConnectionSelect
   -- , JoinCandidate(..)
+  , mkConnectionSelect
   , module Hasura.RQL.DML.Select.Types
   )
 where
 
 import           Control.Lens                hiding (op)
+import           Control.Monad.Writer.Strict
 import           Data.List                   (delete, sort)
 import           Instances.TH.Lift           ()
 
@@ -364,7 +366,7 @@ processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
         (extr, arrFlds) = mkAggObExtrAndFlds annAggOb
         selFld = TAFAgg arrFlds
         bn = mkBaseNode False (Prefixes arrPfx pfx) fldName selFld tabFrom
-             tabPerm noTableArgs strfyNum
+             tabPerm noTableArgs Nothing strfyNum
         aggNode = ArrNode [extr] colMapping $ mergeBaseNodes bn $
                   mkEmptyBaseNode arrPfx tabFrom
         obAls = arrPfx <> Iden "." <> toIden fldName
@@ -415,7 +417,7 @@ aggSelToArrNode pfxs als aggSel =
     mergedBN = foldr mergeBaseNodes emptyBN allBNs
 
     mkAggBaseNode (fn, selFld) =
-      mkBaseNode subQueryReq pfxs fn selFld tabFrm tabPerm tabArgs strfyNum
+      mkBaseNode subQueryReq pfxs fn selFld tabFrm tabPerm tabArgs Nothing strfyNum
 
     selFldToExtr (FieldName t, fld) = (:) (S.SELit t) $ pure $ case fld of
       TAFAgg flds -> aggFldToExp flds
@@ -427,39 +429,6 @@ aggSelToArrNode pfxs als aggSel =
         [ S.SELit e , S.SEUnsafe "bool_or('true')::text"] Nothing
 
     subQueryReq = hasAggFld aggFlds
-
--- connectionSelToArrNode
---   :: Prefixes -> FieldName -> ArrRelConnection S.SQLExp -> ArrNode
--- connectionSelToArrNode pfxs als aggSel =
---   ArrNode [extr] colMapping mergedBN
---   where
---     AnnRelG _ colMapping annSel = aggSel
---     AnnSelG aggFlds tabFrm tabPerm tabArgs strfyNum = annSel
---     fldAls = S.Alias $ toIden als
-
---     extr = flip S.Extractor (Just fldAls) $ S.applyJsonBuildObj $
---            concatMap selFldToExtr aggFlds
-
---     permLimit = _tpLimit tabPerm
---     ordBy = _bnOrderBy mergedBN
-
---     allBNs = map mkAggBaseNode aggFlds
---     emptyBN = mkEmptyBaseNode (_pfThis pfxs) tabFrm
---     mergedBN = foldr mergeBaseNodes emptyBN allBNs
-
---     mkAggBaseNode (fn, selFld) =
---       mkBaseNode subQueryReq pfxs fn selFld tabFrm tabPerm tabArgs strfyNum
-
---     selFldToExtr (FieldName t, fld) = (:) (S.SELit t) $ pure $ case fld of
---       TAFAgg flds -> aggFldToExp flds
---       TAFNodes _  ->
---         withJsonAggExtr subQueryReq permLimit ordBy $ S.Alias $ Iden t
---       TAFExp e    ->
---         -- bool_or to force aggregation
---         S.SEFnApp "coalesce"
---         [ S.SELit e , S.SEUnsafe "bool_or('true')::text"] Nothing
-
---     subQueryReq = hasAggFld aggFlds
 
 hasAggFld :: Foldable t => t (a, TableAggFldG v) -> Bool
 hasAggFld = any (isTabAggFld . snd)
@@ -557,6 +526,17 @@ mkOrdByItems pfx fldAls orderByM strfyNum arrRelCtx =
     getOrdByAggNode (OBNArrNode als node) = Just (als, node)
     getOrdByAggNode _                     = Nothing
 
+cursorAlias :: S.Alias
+cursorAlias = S.Alias $ Iden "__cursor"
+
+mkCursorExtractor :: Iden -> [PGCol] -> S.SQLExp
+mkCursorExtractor pfx columns =
+  flip S.SETyAnn S.textTypeAnn $
+  S.applyJsonBuildObj $ flip concatMap columns $
+  \column -> [ S.SELit $ getPGColTxt column
+             , S.mkQIdenExp (mkBaseTableAls pfx) column
+             ]
+
 mkBaseNode
   :: Bool
   -> Prefixes
@@ -565,10 +545,11 @@ mkBaseNode
   -> SelectFrom
   -> TablePerm
   -> TableArgs
+  -> Maybe (NonEmpty PGCol)
   -> Bool
   -> BaseNode
 mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
-           tablePerm tableArgs strfyNum =
+           tablePerm tableArgs primaryKeyColumns strfyNum =
 
   BaseNode thisPfx distExprM fromItem finalWhere ordByExpM finalLimit offsetM
   allExtrs allObjsWithOb allArrsWithOb computedFields
@@ -599,6 +580,8 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
           let arrFlds = mapMaybe getAnnArr flds
               arrRelCtx = mkArrRelCtx arrFlds
               selExtr = buildJsonObject thisPfx fldAls arrRelCtx strfyNum flds
+              cursorExtrs = maybe [] (pure . (cursorAlias,) . mkCursorExtractor thisPfx . toList)
+                            primaryKeyColumns
               -- all object relationships
               objNodes = HM.fromListWith mergeObjNodes $
                         map mkObjItem (mapMaybe getAnnObj flds)
@@ -614,7 +597,7 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
               allObjs = HM.unionWith mergeObjNodes objNodes ordByObjs
               allArrs = HM.unionWith mergeArrNodes arrNodes ordByArrs
 
-          in ( HM.fromList $ selExtr:obExtrs <> distExtrs
+          in ( HM.fromList $ selExtr:obExtrs <> distExtrs <> cursorExtrs
              , allObjs
              , allArrs
              , computedFieldNodes
@@ -683,7 +666,7 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
     -- process a computed field, which returns a table
     mkComputedFieldTable (fld, jsonAggSelect, sel) =
       let prefixes = Prefixes (mkComputedFieldTableAls thisPfx fld) thisPfx
-          baseNode = annSelToBaseNode False prefixes fld sel
+          baseNode = annSelToBaseNode False prefixes fld Nothing sel
       in (fld, CFTableNode jsonAggSelect baseNode)
 
     getAnnObj (f, annFld) = case annFld of
@@ -698,27 +681,28 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
       FComputedField (CFSTable jas sel) -> Just (f, jas, sel)
       _                                 -> Nothing
 
-annSelToBaseNode :: Bool -> Prefixes -> FieldName -> AnnSimpleSel -> BaseNode
-annSelToBaseNode subQueryReq pfxs fldAls annSel =
-  mkBaseNode subQueryReq pfxs fldAls (TAFNodes selFlds) tabFrm tabPerm tabArgs strfyNum
+annSelToBaseNode
+  :: Bool -> Prefixes -> FieldName -> Maybe (NonEmpty PGCol) -> AnnSimpleSel -> BaseNode
+annSelToBaseNode subQueryReq pfxs fldAls pkeyCols annSel =
+  mkBaseNode subQueryReq pfxs fldAls (TAFNodes selFlds) tabFrm tabPerm tabArgs pkeyCols strfyNum
   where
     AnnSelG selFlds tabFrm tabPerm tabArgs strfyNum = annSel
 
 mkObjNode :: Prefixes -> (FieldName, ObjSel) -> ObjNode
 mkObjNode pfxs (fldName, AnnRelG _ rMapn rAnnSel) =
-  ObjNode rMapn $ annSelToBaseNode False pfxs fldName rAnnSel
+  ObjNode rMapn $ annSelToBaseNode False pfxs fldName Nothing rAnnSel
 
 mkArrNode :: Bool -> Prefixes -> (FieldName, ArrSel) -> ArrNode
 mkArrNode subQueryReq pfxs (fldName, annArrSel) = case annArrSel of
   ASSimple annArrRel ->
-    let bn = annSelToBaseNode subQueryReq pfxs fldName $ aarAnnSel annArrRel
+    let bn = annSelToBaseNode subQueryReq pfxs fldName Nothing $ aarAnnSel annArrRel
         permLimit = getPermLimit $ aarAnnSel annArrRel
         extr = asJsonAggExtr JASMultipleRows (S.toAlias fldName) subQueryReq permLimit $
                _bnOrderBy bn
     in ArrNode [extr] (aarMapping annArrRel) bn
 
   ASAgg annAggSel -> aggSelToArrNode pfxs fldName annAggSel
-  -- TODO: ASConnection connectionSel -> connectionSelToArrNode pfxs fldName connectionSel
+  ASConnection connectionSel -> connectionSelToArrNode pfxs fldName connectionSel
 
 injectJoinCond :: S.BoolExp       -- ^ Join condition
                -> S.BoolExp -- ^ Where condition
@@ -791,23 +775,12 @@ baseNodeToSel joinCond baseNode =
                 }
       in S.mkLateralFromItem sel als
 
--- mkConnectionSelect :: ConnectionSelect S.SQLExp -> S.Select
--- mkConnectionSelect annConnectionSel =
---   prefixNumToAliases $ arrNodeToSelect bn extr $ S.BELit True
---   where
---     connectionSelect = AnnRelG rootRelName HM.empty annConnectionSel
---     rootIden = Iden "root"
---     rootPrefix = Prefixes rootIden rootIden
---     ArrNode extr _ bn =
---       connectionSelToArrNode rootPrefix (FieldName "root") connectionSelect
-
 data TableSource
   = TableSource
     { _tsFrom       :: !SelectFrom
     , _tsPermission :: !TablePerm
     , _tsArgs       :: !TableArgs
-    }
-  deriving (Show, Eq, Generic)
+    } deriving (Show, Eq, Generic)
 instance Hashable TableSource
 
 
@@ -825,8 +798,8 @@ instance Hashable TableSource
 
 data BuildState
   = BuildState
-    { _bsAliasGenerator  :: !Int
-    , _bsJoinTree        :: !JoinTree
+    { _bsAliasGenerator :: !Int
+    , _bsJoinTree       :: !JoinTree
     }
 
 type Build = State BuildState
@@ -923,6 +896,72 @@ mkSQLSelect jsonAggSelect annSel =
             $ _bnOrderBy baseNode
     rootFldIden = toIden rootFldName
     rootPrefix = Prefixes rootFldIden rootFldIden
-    baseNode = annSelToBaseNode False rootPrefix rootFldName annSel
+    baseNode = annSelToBaseNode False rootPrefix rootFldName Nothing annSel
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
+
+mkConnectionSelectNodeAndExtr
+  :: Prefixes
+  -> FieldName
+  -> Maybe (NonEmpty PGCol)
+  -> ConnectionSelect S.SQLExp
+  -> (BaseNode, S.Extractor)
+mkConnectionSelectNodeAndExtr pfxs fieldAlias primaryKeyColumns connectionSelect =
+  (baseNode, extractor)
+  where
+    AnnSelG fields selFrom perm args strfyNum = connectionSelect
+    fieldIden = toIden fieldAlias
+    mkSimpleJsonAgg rowExp ob =
+      let jsonAggExp = S.SEFnApp "json_agg" [rowExp] ob
+      in S.SEFnApp "coalesce" [jsonAggExp, S.SELit "[]"] Nothing
+
+    baseNode = foldr mergeBaseNodes (mkEmptyBaseNode fieldIden selFrom) nodeList
+    encodeBase64 t = S.SEFnApp "encode" [S.SETyAnn t $ S.TypeAnn "bytea", S.SELit "base64"] Nothing
+
+    extractor = S.Extractor extractorExp $ Just $ S.Alias fieldIden
+    (extractorExp, nodeList) = runWriter $
+      fmap (S.applyJsonBuildObj . concat) $ forM fields $
+        \(FieldName fieldText, field) -> (S.SELit fieldText:) . pure <$>
+        case field of
+          ConnectionTypename t -> pure $ S.SELit t
+          ConnectionPageInfo f -> pure $ processPageInfoFields f
+          ConnectionEdges edges ->
+            -- TODO:- Add order by here
+            fmap (flip mkSimpleJsonAgg Nothing . S.applyJsonBuildObj . concat) $ forM edges $
+            \(FieldName edgeText, edge) -> (S.SELit edgeText:) . pure <$>
+            case edge of
+              EdgeTypename t -> pure $ S.SELit t
+              EdgeCursor     -> pure $ encodeBase64 $ S.SEIden (toIden cursorAlias)
+              EdgeNode annFields -> do
+                let rootFieldName = FieldName $ "root." <> fieldText <> "." <> edgeText
+                    rootFieldIden = toIden rootFieldName
+                    edgeBaseNode = annSelToBaseNode False pfxs rootFieldName primaryKeyColumns $
+                                   AnnSelG annFields selFrom perm args strfyNum
+                tell [edgeBaseNode]
+                pure $ S.SEIden rootFieldIden
+
+    processPageInfoFields infoFields =
+      S.applyJsonBuildObj $ flip concatMap infoFields $
+      \(FieldName fieldText, field) -> S.SELit fieldText: case field of
+        PageInfoTypename t      -> pure $ S.SELit t
+        PageInfoHasNextPage     -> pure $ S.SEBool $ S.BELit True
+        PageInfoHasPreviousPage -> pure $ S.SEBool $ S.BELit False
+        PageInfoStartCursor     -> pure $ S.SELit "start cursor"
+        PageInfoEndCursor       -> pure $ S.SELit "end cursor"
+
+connectionSelToArrNode
+  :: Prefixes -> FieldName -> ArrRelConnection S.SQLExp -> ArrNode
+connectionSelToArrNode pfxs als arrRelConnSel =
+  -- TODO:- Get primary key context here.
+  let (baseNode, extr) = mkConnectionSelectNodeAndExtr pfxs als Nothing connSel
+  in ArrNode [extr] colMapping baseNode
+  where
+    AnnRelG _ colMapping connSel = arrRelConnSel
+
+mkConnectionSelect :: Maybe (NonEmpty PGCol) -> ConnectionSelect S.SQLExp -> S.Select
+mkConnectionSelect primaryKeyColumns connectionSelect =
+  let rootFieldName = FieldName "root"
+      rootIden = toIden rootFieldName
+      prefixes = Prefixes rootIden rootIden
+      (baseNode, extractor) = mkConnectionSelectNodeAndExtr prefixes rootFieldName primaryKeyColumns connectionSelect
+  in prefixNumToAliases $ arrNodeToSelect baseNode [extractor] $ S.BELit True

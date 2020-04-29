@@ -274,8 +274,8 @@ traverseEdgeField
   :: (Applicative f)
   => (a -> f b) -> EdgeField a -> f (EdgeField b)
 traverseEdgeField f = \case
-  EdgeTypename t -> pure $ EdgeTypename t
-  EdgeCursor -> pure EdgeCursor
+  EdgeTypename t  -> pure $ EdgeTypename t
+  EdgeCursor      -> pure EdgeCursor
   EdgeNode fields -> EdgeNode <$> traverseAnnFlds f fields
 
 data ConnectionField v

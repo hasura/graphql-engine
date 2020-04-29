@@ -170,14 +170,14 @@ parsePageInfoSelectionSet
 parsePageInfoSelectionSet fldTy selSet =
   fmap toFields $ withSelSet selSet $ \f ->
     case _fName f of
-      "__typename"  -> pure $ RS.PageInfoTypename $ G.unName $ G.unNamedType fldTy
-      "hasNextPage" -> pure $ RS.PageInfoHasNextPage
+      "__typename"      -> pure $ RS.PageInfoTypename $ G.unName $ G.unNamedType fldTy
+      "hasNextPage"     -> pure $ RS.PageInfoHasNextPage
       "hasPreviousPage" -> pure $ RS.PageInfoHasPreviousPage
-      "startCursor" -> pure $ RS.PageInfoStartCursor
-      "endCursor" -> pure $ RS.PageInfoEndCursor
+      "startCursor"     -> pure $ RS.PageInfoStartCursor
+      "endCursor"       -> pure $ RS.PageInfoEndCursor
       -- "aggregate"  -> RS.TAFAgg <$> convertAggFld colGNameMap fTy fSelSet
       -- "nodes"      -> RS.TAFNodes <$> processTableSelectionSet fTy fSelSet
-      G.Name t     -> throw500 $ "unexpected field in PageInfo node: " <> t
+      G.Name t          -> throw500 $ "unexpected field in PageInfo node: " <> t
 
 type TableArgs = RS.TableArgsG UnresolvedVal
 

@@ -258,7 +258,6 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
       -- custom types
       resolvedCustomTypes <- bindA -< resolveCustomTypes tableCache customTypes
 
-      -- actions
       actionCache <- (mapFromL _amName actions >- returnA)
         >-> (| Inc.keyed (\_ action -> do
                let ActionMetadata name comment def actionPermissions = action

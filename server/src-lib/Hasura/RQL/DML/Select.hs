@@ -265,8 +265,7 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   let fieldInfo = _tciFieldInfoMap $ _tiCoreInfo tabInfo
   extSelQ <- resolveStar fieldInfo selPermInfo selQ
   validateHeaders $ spiRequiredHeaders selPermInfo
-  convSelectQ fieldInfo selPermInfo
-    extSelQ sessVarBldr prepArgBuilder
+  convSelectQ fieldInfo selPermInfo extSelQ sessVarBldr prepArgBuilder
 
 selectP2 :: JsonAggSelect -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 jsonAggSelect (sel, p) =

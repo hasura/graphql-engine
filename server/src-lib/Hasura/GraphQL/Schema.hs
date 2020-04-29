@@ -363,6 +363,7 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
         ]
     }
   where
+    primaryKeyColumn = fmap (fmap pgiColumn . _pkColumns) primaryKey
     makeFieldMap = mapFromL (_fiName . snd)
     customRootFields = _tcCustomRootFields tableConfig
     colGNameMap = mkPGColGNameMap $ getCols fields
@@ -421,7 +422,7 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
     getSelDet (selFltr, pLimit, hdrs, _) =
       selFldHelper QCSelect (mkSelFld selCustName) selFltr pLimit hdrs
     getSelConnectionDet (selFltr, pLimit, hdrs, _) =
-      selFldHelper QCSelectConnection (mkSelFldConnection Nothing) selFltr pLimit hdrs
+      selFldHelper (QCSelectConnection primaryKeyColumn) (mkSelFldConnection Nothing) selFltr pLimit hdrs
 
     selAggCustName = getCustomNameWith _tcrfSelectAggregate
     getSelAggDet (Just (selFltr, pLimit, hdrs, True)) =
@@ -445,7 +446,7 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
       funcFldHelper QCFuncQuery mkFuncQueryFld selFltr pLimit hdrs
 
     getFuncQueryConnectionFlds (selFltr, pLimit, hdrs, _) =
-      funcFldHelper QCFuncConnection mkFuncQueryConnectionFld selFltr pLimit hdrs
+      funcFldHelper (QCFuncConnection primaryKeyColumn) mkFuncQueryConnectionFld selFltr pLimit hdrs
 
     getFuncAggQueryFlds (selFltr, pLimit, hdrs, True) =
       funcFldHelper QCFuncAggQuery mkFuncAggQueryFld selFltr pLimit hdrs
