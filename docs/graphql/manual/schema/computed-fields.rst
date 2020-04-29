@@ -257,14 +257,14 @@ as shown in the following example.
      }
   :response:
     {
-        "data": {
-            "article": [
-                {
-                    "id": "3",
-                    "liked_by_user": true
-                }
-             ]
-        }
+      "data": {
+        "article": [
+          {
+            "id": "3",
+            "liked_by_user": true
+          }
+        ]
+      }
     }
 
 .. note::
