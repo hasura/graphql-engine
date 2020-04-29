@@ -361,12 +361,19 @@ ScheduleConf
      - Description
    * - type
      - true
-     - cron | adhoc
+     - cron expression | optional timestamp (ISO-8601 format)
      - Type of scheduled trigger
    * - value
-     - false
+     - true (when type is ``cron``).
+       false (when type is ``adhoc``)
      - String
-     - If type is cron, then cron expression. If type is adhoc, then optional timestamp
+     - When the type is ``cron``, then a cron expression is expected
+       . When the  type is ``adhoc``, then an optional timestamp(in ISO-8601 format) is expected,
+       if a timestamp is provided, then a scheduled event will be created with the timestamp provided
+       along with creating the scheduled trigger.
+
+
+
 
 .. _HeaderFromValue:
 
