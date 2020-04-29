@@ -23,10 +23,8 @@ module Hasura.GraphQL.Execute
 import           Control.Exception                      (try)
 import           Control.Lens
 import           Data.Has
-import           Data.Text.Conversions
 
 import qualified Data.Aeson                             as J
-import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
 import qualified Data.Text                              as T
@@ -38,6 +36,7 @@ import qualified Network.Wreq                           as Wreq
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.Resolve.Action
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -46,11 +45,10 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
                                                          mkSetCookieHeaders)
 import           Hasura.Server.Version                  (HasVersion)
-import           Hasura.GraphQL.Resolve.Action
+import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -132,7 +130,7 @@ getExecPlanPartial userInfo sc enableAL req = do
   -- check if query is in allowlist
   when enableAL checkQueryInAllowlist
 
-  gCtx <- flip runCacheRT sc $ getGCtx role gCtxRoleMap
+  let gCtx = getGCtx (_uiBackendOnlyFieldAccess userInfo) sc roleName
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
   let opDef = VQ.qpOpDef queryParts
@@ -152,12 +150,11 @@ getExecPlanPartial userInfo sc enableAL req = do
     VT.TLCustom ->
       throw500 "unexpected custom type for top level field"
   where
-    role = userRole userInfo
-    gCtxRoleMap = scGCtxMap sc
+    roleName = _uiRole userInfo
 
     checkQueryInAllowlist =
       -- only for non-admin roles
-      when (role /= adminRole) $ do
+      when (roleName /= adminRoleName) $ do
         let notInAllowlist =
               not $ VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)
         when notInAllowlist $ modifyQErr modErr $ throwVE "query is not allowed"
@@ -193,9 +190,9 @@ getResolvedExecPlan
   -> m (Telem.CacheHit, ExecPlanResolved)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   enableAL sc scVer httpManager reqHeaders reqUnparsed = do
-  planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
+  planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo)
            opNameM queryStr planCache
-  let usrVars = userVars userInfo
+  let usrVars = _uiSession userInfo
   case planM of
     -- plans are only for queries and subscriptions
     Just plan -> (Telem.Hit,) . GExPHasura <$> case plan of
@@ -208,7 +205,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
-      liftIO $ EP.addPlan scVer (userRole userInfo)
+      liftIO $ EP.addPlan scVer (_uiRole userInfo)
       opNameM queryStr plan planCache
     noExistingPlan = do
       req <- toParsed reqUnparsed
@@ -273,9 +270,6 @@ getQueryOp
 getQueryOp gCtx sqlGenCtx userInfo queryReusability actionExecuter selSet =
   runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet queryReusability selSet actionExecuter
 
-mutationRootName :: Text
-mutationRootName = "mutation_root"
-
 resolveMutSelSet
   :: ( HasVersion
      , MonadError QErr m
@@ -295,7 +289,7 @@ resolveMutSelSet
 resolveMutSelSet fields = do
   aliasedTxs <- forM (toList fields) $ \fld -> do
     fldRespTx <- case VQ._fName fld of
-      "__typename" -> return (return $ encJFromJValue mutationRootName, [])
+      "__typename" -> return (return $ encJFromJValue mutationRootNamedType, [])
       _            -> evalReusabilityT $ GR.mutFldToTx fld
     return (G.unName $ G.unAlias $ VQ._fAlias fld, fldRespTx)
 
@@ -432,5 +426,4 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
       HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
       HTTP.InvalidUrlException _url reason -> throw500 $ T.pack . show $ reason
 
-    userInfoToHdrs = userInfoToList userInfo
-      & map (CI.mk . unUTF8 . fromText *** unUTF8 . fromText)
+    userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo

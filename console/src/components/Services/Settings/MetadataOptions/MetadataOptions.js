@@ -4,7 +4,7 @@ import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
-import { Heading, TextLink } from '../../../UIKit/atoms';
+import { Heading, Link } from '../../../UIKit/atoms';
 import styles from '../Settings.scss';
 
 const MetadataOptions = props => {
@@ -72,14 +72,14 @@ const MetadataOptions = props => {
         <div className={styles.content_width}>
           Hasura metadata stores information about your tables, relationships,
           permissions, etc. that is used to generate the GraphQL schema and API.
-          <TextLink
+          <Link
             href="https://hasura.io/docs/1.0/graphql/manual/how-it-works/metadata-schema.html"
             type="moreInfo"
             ml="sm"
             fontSize="link"
           >
             Read more
-          </TextLink>
+          </Link>
         </div>
       </div>
 
@@ -94,7 +94,7 @@ const mapStateToProps = state => {
   return {
     ...state.main,
     metadata: state.metadata,
-    dataHeaders: { ...state.tables.dataHeaders }
+    dataHeaders: { ...state.tables.dataHeaders },
   };
 };
 

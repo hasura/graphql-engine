@@ -4,7 +4,7 @@ import { isInputObjectType, isObjectType, isEnumType } from 'graphql';
 
 import { deriveExistingType } from '../utils';
 import { useIntrospectionSchema } from '../../../../Common/utils/graphqlUtils';
-import { Spinner, ToolTip, TextLink } from '../../../../UIKit/atoms';
+import { Spinner, ToolTip, Link } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
 const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
@@ -21,7 +21,7 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
     return (
       <div>
         Error introspecting schema.&nbsp;
-        <TextLink onClick={introspect}>Try again</TextLink>
+        <Link onClick={introspect}>Try again</Link>
       </div>
     );
   }
@@ -99,7 +99,7 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
 
 const mapStateToprops = state => {
   return {
-    headers: state.tables.dataHeaders
+    headers: state.tables.dataHeaders,
   };
 };
 

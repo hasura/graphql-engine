@@ -1,14 +1,14 @@
 import React from 'react';
 import { css } from 'styled-components';
 
-import { StyledTextLink } from './TextLink';
+import { StyledLink } from './Link';
 
-export const TextLink = props => {
+export const Link = props => {
   const { children, underline, type, href, hover, fontSize } = props;
 
   if (type === 'moreInfo') {
     return (
-      <StyledTextLink
+      <StyledLink
         {...props}
         href={href}
         fontSize={fontSize || '12px'}
@@ -22,12 +22,12 @@ export const TextLink = props => {
         `}
       >
         {`(${children || 'Know more'})`}
-      </StyledTextLink>
+      </StyledLink>
     );
   }
 
   return (
-    <StyledTextLink
+    <StyledLink
       {...props}
       href={href}
       borderBottom={underline ? 1 : 'none'}
@@ -43,11 +43,11 @@ export const TextLink = props => {
       }
     >
       {children}
-    </StyledTextLink>
+    </StyledLink>
   );
 };
 
-TextLink.defaultProps = {
+Link.defaultProps = {
   color: 'blue.link',
   fontWeight: 'medium'
 };

@@ -15,6 +15,7 @@ import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 mkAsyncActionSelectionType :: ActionName -> G.NamedType
@@ -74,7 +75,7 @@ mkQueryActionField actionName actionInfo definitionList =
       (_adHeaders definition)
       (_adForwardClientHeaders definition)
 
-    description = mkDescriptionWith (PGDescription <$> (_aiComment actionInfo)) $
+    description = mkDescriptionWith (PGDescription <$> _aiComment actionInfo) $
                   "perform the action: " <>> actionName
 
     fieldInfo =
@@ -238,7 +239,7 @@ mkFieldMap annotatedOutputType actionInfo fieldReferences roleName =
               Nothing -> Nothing
 
     getFilterAndLimit remoteTableInfo =
-      if roleName == adminRole
+      if roleName == adminRoleName
       then Just (annBoolExpTrue, Nothing)
       else do
         selectPermisisonInfo <-
@@ -310,12 +311,12 @@ mkMutationActionSchemaOne
          , (ActionMutationExecutionContext, ObjFldInfo)
          , FieldMap
          )
-mkMutationActionSchemaOne actionInfo kind = do
+mkMutationActionSchemaOne actionInfo kind =
   flip Map.map permissions $ \permission ->
     mkMutationActionFieldsAndTypes actionInfo permission kind
   where
-    adminPermission = ActionPermissionInfo adminRole
-    permissions = Map.insert adminRole adminPermission $ _aiPermissions actionInfo
+    adminPermission = ActionPermissionInfo adminRoleName
+    permissions = Map.insert adminRoleName adminPermission $ _aiPermissions actionInfo
 
 mkQueryActionSchemaOne
   :: ActionInfo
@@ -327,8 +328,8 @@ mkQueryActionSchemaOne actionInfo =
   flip Map.map permissions $ \permission ->
     mkQueryActionFieldsAndTypes actionInfo permission
   where
-    adminPermission = ActionPermissionInfo adminRole
-    permissions = Map.insert adminRole adminPermission $ _aiPermissions actionInfo
+    adminPermission = ActionPermissionInfo adminRoleName
+    permissions = Map.insert adminRoleName adminPermission $ _aiPermissions actionInfo
 
 mkActionsSchema
   :: ActionCache

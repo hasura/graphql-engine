@@ -342,6 +342,7 @@ data PGScalarType
   | PGText
   | PGCitext
   | PGDate
+  | PGTimeStamp
   | PGTimeStampTZ
   | PGTimeTZ
   | PGJSON
@@ -373,6 +374,7 @@ instance ToSQL PGScalarType where
     PGText        -> "text"
     PGCitext      -> "citext"
     PGDate        -> "date"
+    PGTimeStamp   -> "timestamp"
     PGTimeStampTZ -> "timestamptz"
     PGTimeTZ      -> "timetz"
     PGJSON        -> "json"
@@ -430,6 +432,9 @@ textToPGScalarType t = case t of
 
   "date"                     -> PGDate
 
+  "timestamp"                -> PGTimeStamp
+  "timestamp without time zone" -> PGTimeStamp
+
   "timestamptz"              -> PGTimeStampTZ
   "timestamp with time zone" -> PGTimeStampTZ
 
@@ -467,6 +472,7 @@ pgTypeOid PGVarchar     = PTI.varchar
 pgTypeOid PGText        = PTI.text
 pgTypeOid PGCitext      = PTI.text -- Explict type cast to citext needed, See also Note [Type casting prepared params]
 pgTypeOid PGDate        = PTI.date
+pgTypeOid PGTimeStamp   = PTI.timestamp
 pgTypeOid PGTimeStampTZ = PTI.timestamptz
 pgTypeOid PGTimeTZ      = PTI.timetz
 pgTypeOid PGJSON        = PTI.json

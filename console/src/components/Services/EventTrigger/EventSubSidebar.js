@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 // import globals from '../../../Globals';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
@@ -74,13 +74,13 @@ const EventSubSidebar = ({
 
           return (
             <li className={activeTableClass} key={i}>
-              <Link
+              <RouterLink
                 to={appPrefix + '/manage/triggers/' + trigger + '/processed'}
                 data-test={trigger}
               >
                 <Icon type="send" mr="xs" size={12} />
                 {trigger}
-              </Link>
+              </RouterLink>
             </li>
           );
         });

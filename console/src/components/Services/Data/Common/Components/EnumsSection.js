@@ -1,7 +1,7 @@
 import React from 'react';
 import Toggle from 'react-toggle';
 
-import { ToolTip, Heading, TextLink } from '../../../../UIKit/atoms';
+import { ToolTip, Heading, Link } from '../../../../UIKit/atoms';
 import styles from '../../../../Common/Common.scss';
 
 const enumCompatibilityDocsUrl =
@@ -18,9 +18,9 @@ export const EnumTableModifyWarning = ({ isEnum }) => {
         * This table is set as an enum. Modifying it may cause your Hasura
         metadata to become inconsistent.
         <br />
-        <TextLink href={enumCompatibilityDocsUrl} type="moreInfo">
+        <Link href={enumCompatibilityDocsUrl} type="moreInfo">
           See enum table requirements
-        </TextLink>
+        </Link>
       </i>
     </div>
   );
@@ -37,12 +37,12 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
   //     <div>
   //       <i>
   //         * The table must meet some requirements for you to set it as an enum.{' '}
-  //         <TextLink
+  //         <Link
   //           href={enumCompatibilityDocsUrl}
   //           type="moreInfo"
   //         >
   //           See requirements.
-  //         </TextLink>
+  //         </Link>
   //       </i>
   //     </div>
   //   );
@@ -59,9 +59,9 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
           ml="sm"
           mr="20px"
         />
-        <TextLink type="moreInfo" href={enumCompatibilityDocsUrl}>
+        <Link type="moreInfo" href={enumCompatibilityDocsUrl}>
           See table requirements
-        </TextLink>
+        </Link>
       </Heading>
       <div
         className={`${styles.display_flex} ${styles.add_mar_bottom}`}

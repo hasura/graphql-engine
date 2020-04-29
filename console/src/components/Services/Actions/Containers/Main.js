@@ -1,56 +1,54 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 import PropTypes from 'prop-types';
 
 import LeftContainer from '../../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../../Common/Layout/PageContainer/PageContainer';
 import LeftSidebar from '../Sidebar/LeftSidebar';
-import styles from '../../../Common/TableCommon/Table.scss';
 import { appPrefix } from '../constants';
+import styles from '../../../Common/TableCommon/Table.scss';
 
-class Container extends React.Component {
-  render() {
-    const { children } = this.props;
+const Container = props => {
+  const { children } = props;
 
-    const currentLocation = location.pathname;
+  const currentLocation = location.pathname;
 
-    const sidebarContent = (
-      <ul>
-        <li
-          role="presentation"
-          className={
-            currentLocation.includes('actions/manage') ? styles.active : ''
-          }
-        >
-          <Link className={styles.linkBorder} to={appPrefix + '/manage'}>
-            Manage
-          </Link>
-          <LeftSidebar appPrefix={appPrefix} {...this.props} />
-        </li>
-        <li
-          role="presentation"
-          className={
-            currentLocation.includes('actions/types') ? styles.active : ''
-          }
-        >
-          <Link className={styles.linkBorder} to={appPrefix + '/types'}>
-            Custom types
-          </Link>
-        </li>
-      </ul>
-    );
+  const sidebarContent = (
+    <ul>
+      <li
+        role="presentation"
+        className={
+          currentLocation.includes('actions/manage') ? styles.active : ''
+        }
+      >
+        <RouterLink className={styles.linkBorder} to={appPrefix + '/manage'}>
+          Manage
+        </RouterLink>
+        <LeftSidebar appPrefix={appPrefix} {...props} />
+      </li>
+      <li
+        role="presentation"
+        className={
+          currentLocation.includes('actions/types') ? styles.active : ''
+        }
+      >
+        <RouterLink className={styles.linkBorder} to={appPrefix + '/types'}>
+          Custom types
+        </RouterLink>
+      </li>
+    </ul>
+  );
 
-    const helmet = 'Actions | Hasura';
+  const helmet = 'Actions | Hasura';
 
-    const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
+  const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 
-    return (
-      <PageContainer helmet={helmet} leftContainer={leftContainer}>
-        {children}
-      </PageContainer>
-    );
-  }
-}
+  return (
+    <PageContainer helmet={helmet} leftContainer={leftContainer}>
+      {children}
+    </PageContainer>
+  );
+};
 
 Container.propTypes = {
   appPrefix: PropTypes.string.isRequired,
