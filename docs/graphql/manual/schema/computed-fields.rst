@@ -204,7 +204,7 @@ For instance, suppose we want to record which users have liked which articles. W
 case it can be useful to know if the current user has liked a specific article, and this information can be
 exposed as a *Boolean* computed field on ``article``.
 
-Create a function with an argument for session variables and add it with :ref:`add_computed_field` API with the
+Create a function with an argument for session variables and add it with the :ref:`add_computed_field` API with the
 ``session_argument`` key set. The session argument is a JSON object where keys are session variable names
 (in lower case) and values are strings.  Use the ``->>`` JSON operator to fetch the value of a session variable
 as shown in the following example.
