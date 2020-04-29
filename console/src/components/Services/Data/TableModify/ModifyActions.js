@@ -35,7 +35,7 @@ import {
   getDropPkSql,
   getCreatePkSql,
 } from '../../../Common/utils/sqlUtils';
-import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { getConfirmation, capitalize } from '../../../Common/utils/jsUtils';
 import {
   findTable,
   generateTableDef,
@@ -715,12 +715,11 @@ const setUniqueKeys = keys => ({
   keys,
 });
 
-const changeTableName = (oldName, newName, isTable) => {
+const changeTableName = (oldName, newName, isTable, tableType) => {
   return (dispatch, getState) => {
-    const property = isTable ? 'table' : 'view';
-
     dispatch({ type: SAVE_NEW_TABLE_NAME });
 
+    const property = tableType.toLowerCase();
     if (oldName === newName) {
       return dispatch(
         showErrorNotification(
@@ -742,13 +741,19 @@ const changeTableName = (oldName, newName, isTable) => {
         )
       );
     }
+    const compositeName = {
+      TABLE: 'table',
+      VIEW: 'view',
+      'MATERIALIZED VIEW': 'materialized_view',
+    }[tableType];
     const currentSchema = getState().tables.currentSchema;
     const upSql = `alter ${property} "${currentSchema}"."${oldName}" rename to "${newName}";`;
     const downSql = `alter ${property} "${currentSchema}"."${newName}" rename to "${oldName}";`;
     const migrateUp = [getRunSqlQuery(upSql)];
     const migrateDown = [getRunSqlQuery(downSql)];
     // apply migrations
-    const migrationName = `rename_${property}_` + currentSchema + '_' + oldName;
+    const migrationName =
+      `rename_${compositeName}_` + currentSchema + '_' + oldName;
 
     const requestMsg = `Renaming ${property}...`;
     const successMsg = `Renaming ${property} successful`;
@@ -908,11 +913,19 @@ const untrackTableSql = tableName => {
 const fetchViewDefinition = (viewName, isRedirect) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const sqlQuery =
-      'select view_definition from information_schema.views where table_name = ' +
-      "'" +
-      viewName +
-      "'";
+    const sqlQuery = `
+SELECT
+  CASE WHEN pg_has_role(c.relowner, 'USAGE') THEN pg_get_viewdef(c.oid)
+  ELSE null
+  END AS view_definition,
+  CASE WHEN c.relkind = 'v' THEN 'VIEW' ELSE 'MATERIALIZED VIEW' END AS view_type
+FROM pg_class c
+WHERE c.relname = '${viewName}'
+  AND c.relkind in ('v', 'm')
+  AND (pg_has_role(c.relowner, 'USAGE')
+    OR has_table_privilege(c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
+    OR has_any_column_privilege(c.oid, 'SELECT, INSERT, UPDATE, REFERENCES')
+  )`;
     const reqBody = getRunSqlQuery(sqlQuery, false, true);
 
     const url = Endpoints.query;
@@ -937,17 +950,23 @@ const fetchViewDefinition = (viewName, isRedirect) => {
           dispatch(_push('/data/sql'));
         }
 
-        const runSqlDef =
-          'CREATE OR REPLACE VIEW ' +
-          '"' +
-          currentSchema +
-          '"' +
-          '.' +
-          '"' +
-          viewName +
-          '"' +
-          ' AS \n' +
-          finalDef;
+        const viewType = data.result[1][1];
+        const fullName = '"' + currentSchema + '"."' + viewName + '"';
+        let runSqlDef = '';
+
+        if (viewType == 'VIEW') {
+          runSqlDef =
+            'CREATE OR REPLACE VIEW ' + fullName + ' AS \n' + finalDef;
+        } else {
+          runSqlDef =
+            'DROP MATERIALIZED VIEW ' +
+            fullName +
+            ';\n' +
+            'CREATE MATERIALIZED VIEW ' +
+            fullName +
+            ' AS \n' +
+            finalDef;
+        }
         dispatch({ type: SET_SQL, data: runSqlDef });
       },
       err => {
@@ -959,11 +978,11 @@ const fetchViewDefinition = (viewName, isRedirect) => {
   };
 };
 
-const deleteViewSql = viewName => {
+const deleteViewSql = (viewName, viewType) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const sqlDropView =
-      'DROP VIEW ' + '"' + currentSchema + '"' + '.' + '"' + viewName + '"';
+    const property = viewType.toLowerCase();
+    const sqlDropView = `DROP ${viewType} "${currentSchema}"."${viewName}"`;
     const sqlUpQueries = [getRunSqlQuery(sqlDropView)];
     // const sqlCreateView = ''; //pending
     // const sqlDownQueries = [
@@ -976,9 +995,9 @@ const deleteViewSql = viewName => {
     // Apply migrations
     const migrationName = 'drop_view_' + currentSchema + '_' + viewName;
 
-    const requestMsg = 'Deleting view...';
-    const successMsg = 'View deleted';
-    const errorMsg = 'Deleting view failed';
+    const requestMsg = `Deleting ${property}...`;
+    const successMsg = `${capitalize(property)} deleted`;
+    const errorMsg = `Deleting ${property} failed`;
 
     const customOnSuccess = () => {
       dispatch(_push('/data/'));
@@ -1358,7 +1377,7 @@ const deleteConstraintSql = (tableName, cName) => {
   };
 };
 
-const saveTableCommentSql = isTable => {
+const saveTableCommentSql = tableType => {
   return (dispatch, getState) => {
     let updatedComment = getState().tables.modify.tableCommentEdit.editedValue;
     if (!updatedComment) {
@@ -1369,7 +1388,7 @@ const saveTableCommentSql = isTable => {
 
     const commentQueryBase =
       'COMMENT ON ' +
-      (isTable ? 'TABLE' : 'VIEW') +
+      tableType +
       ' ' +
       '"' +
       currentSchema +
