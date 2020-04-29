@@ -1,6 +1,17 @@
 @import '~bootstrap-sass/assets/stylesheets/bootstrap/variables';
 @import '../../Common.scss';
 
+.sidebarCreateTable {
+  a {
+    color: #767e93;
+    background-color: transparent !important;
+  }
+
+  a:hover {
+    color: #767e93;
+  }
+}
+
 .flexRow {
   display: flex;
   margin-bottom: 20px;
@@ -9,21 +20,9 @@
 .sidebar {
   height: calc(100vh - 26px);
   overflow: auto;
-  // background: #444;
-  // color: $navbar-inverse-color;
   color: #333;
   border: 1px solid #e5e5e5;
   background-color: #f8f8f8;
-
-  /*
-  a,a:visited {
-    color: $navbar-inverse-link-color;
-  }
-
-  a:hover {
-    color: $navbar-inverse-link-hover-color;
-  }
-  */
 
   hr {
     margin: 0;
@@ -39,16 +38,6 @@
       padding: 7px 0;
       transition: color 0.5s;
 
-      /*
-      a,a:visited {
-        color: $navbar-inverse-link-color;
-      }
-
-      a:hover {
-        color: $navbar-inverse-link-hover-color;
-      }
-      */
-
       a {
         color: #767e93;
         word-wrap: break-word;
@@ -57,7 +46,6 @@
 
     li:hover {
       padding: 7px 0;
-      // color: $navbar-inverse-link-hover-color;
       transition: color 0.5s;
       cursor: pointer;
     }
@@ -102,8 +90,6 @@
 }
 
 .subSidebarList {
-  // max-height: 300px;
-  // overflow-y: auto;
   overflow: auto;
   padding-left: 20px;
   max-height: calc(100vh - 275px);
@@ -132,7 +118,6 @@
       display: initial !important;
 
       .functionIcon {
-        //display: inline;
         margin-right: 5px;
         font-size: 12px;
         width: 12px;
@@ -153,7 +138,6 @@
 
 .activeLink {
   a {
-    // border-left: 4px solid #FFC627;
     color: #fd9540 !important;
   }
 }

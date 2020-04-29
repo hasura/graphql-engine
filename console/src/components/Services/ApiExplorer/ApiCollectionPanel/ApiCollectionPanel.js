@@ -5,7 +5,7 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 
 import Globals from 'Globals';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, Box } from '../../../UIKit/atoms';
 import styles from '../ApiExplorer.scss';
 
 const ApiCollectionPanel = props => {
@@ -19,8 +19,6 @@ const ApiCollectionPanel = props => {
     authApiExpanded,
     apiSelectionCallback,
     authApiExpandCallback,
-    authApiExpandCallback,
-    apiSelectionCallback,
   } = props;
 
   const onClearHistoryClicked = () => {
@@ -370,16 +368,10 @@ const ApiCollectionPanel = props => {
   };
 
   return (
-    <div
-      className={
-        styles.padd_remove +
-        ' ' +
-        styles.apiCollectionWrapper +
-        ' ' +
-        styles.wd20 +
-        ' ' +
-        panelStyles
-      }
+    <Box
+      width="20%"
+      px="0px"
+      className={styles.apiCollectionWrapper + ' ' + panelStyles}
     >
       <Tabs
         className={styles.apiCollectionTabWrapper + ' ' + styles.wd100}
@@ -391,7 +383,7 @@ const ApiCollectionPanel = props => {
         </TabList>
         {getTabPanels(tabs, selectedApi, styles, authApiExpanded)}
       </Tabs>
-    </div>
+    </Box>
   );
 };
 

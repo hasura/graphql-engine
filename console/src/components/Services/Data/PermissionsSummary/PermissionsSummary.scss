@@ -1,7 +1,21 @@
 @import '../../../Common/Common';
 
-//.rolesTableWrapper {
-//}
+.flex_0 {
+  flex: 0;
+}
+
+.fit_content {
+  width: fit-content;
+}
+
+.text_link {
+  color: #337ab7;
+}
+
+.text_link:hover,
+.text_link:focus {
+  color: #23527c;
+}
 
 .rolesTable {
   width: fit-content;

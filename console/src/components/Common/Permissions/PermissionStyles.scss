@@ -1,5 +1,13 @@
 @import '../../Services/Data/TableModify/ModifyTable.scss';
 
+.mar_small_left {
+  margin-left: 5px;
+}
+
+.disabled {
+  color: #999;
+}
+
 .permissionsTable {
   width: 85%;
 

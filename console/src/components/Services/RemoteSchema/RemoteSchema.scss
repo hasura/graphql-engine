@@ -16,6 +16,16 @@
   width: 300px;
 }
 
+.subHeaderText {
+  display: flex;
+
+  img {
+    display: inline-block;
+    width: 8px;
+    margin-right: 12px;
+  }
+}
+
 .detailsSection {
   width: 80%;
   margin-top: 20px;

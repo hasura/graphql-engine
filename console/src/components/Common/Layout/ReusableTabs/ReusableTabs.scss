@@ -1,4 +1,56 @@
-@import "../../Common.scss";
+@import '../../Common.scss';
+
+.common_nav {
+  border-bottom: 1px solid #e6e6e6;
+  margin-left: -15px !important;
+  padding-left: 15px !important;
+
+  ul {
+    margin-bottom: -2px;
+
+    li {
+      border: 1px solid transparent;
+      border-top: 3px solid transparent;
+      margin-right: 10px;
+      background-color: #e6e6e6;
+      border-radius: 4px;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      margin-bottom: 1px;
+      font-weight: bold;
+
+      a {
+        color: #666666;
+        padding: 12px 16px;
+      }
+
+      a:hover {
+        background-color: transparent;
+      }
+
+      a:focus {
+        background-color: transparent;
+      }
+    }
+
+    .active {
+      border-radius: 4px;
+      background-color: #f8fafb;
+      /* color: #333; */
+      border: 1px solid #e6e6e6;
+      border-bottom: 0;
+      border-radius: 4px;
+      border-bottom-right-radius: 0;
+      border-bottom-left-radius: 0;
+      border-top: 3px solid #ffc627;
+
+      a {
+        color: #333;
+        margin-bottom: 1px;
+      }
+    }
+  }
+}
 
 .loader_ml {
   margin-left: 3px;

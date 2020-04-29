@@ -1,5 +1,74 @@
 @import '../../Common/Common.scss';
 
+.wd4 {
+  width: 4%;
+  text-align: center;
+  vertical-align: middle !important;
+}
+
+.wd48 {
+  width: 48%;
+  padding: 3px;
+}
+
+.border_bottom {
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.border_right {
+  border-right: 1px solid #ccc;
+}
+
+.remove_all_pad {
+  padding: 0 !important;
+}
+
+.collectionButtonLess {
+  border: 0;
+  background-color: transparent;
+  padding: 0 0;
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  span {
+    font-size: 14px;
+    width: 90%;
+    text-align: left;
+    padding-left: 5px;
+  }
+
+  i {
+    font-size: 12px;
+    width: 10%;
+    text-align: right;
+  }
+}
+
+.collectionButtonWrapper {
+  padding: 10px 10px;
+}
+
+/* Explore slider ends here*/
+.stickyHeader {
+  display: block;
+  top: 0;
+  z-index: 11;
+
+  .stickySeparator {
+    padding-top: 60px;
+    margin-left: -15px;
+    margin-right: -15px;
+  }
+}
+
+.fixed_header_internal_link {
+  display: block;
+  position: relative;
+  top: -65px;
+  visibility: hidden;
+}
+
 .display_inl {
   display: inline-block;
 }

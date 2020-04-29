@@ -39,9 +39,6 @@ class Add extends React.Component {
             >
               {isRequesting ? 'Adding...' : 'Add Remote Schema'}
             </Button>
-            {/*
-            <button className={styles.default_button}>Cancel</button>
-            */}
           </div>
         </form>
       </div>

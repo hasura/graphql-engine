@@ -1,5 +1,75 @@
 @import '../Common.scss';
 
+.pageSidebar {
+  height: calc(100vh - 50px);
+  overflow: auto;
+  // background: #444;
+  // color: $navbar-inverse-color;
+  color: #333;
+  border: 1px solid #e5e5e5;
+  border-bottom: 0px;
+  // background-color: #F8F8F8;
+  background-color: #fff;
+
+  /*
+  a,a:visited {
+    color: $navbar-inverse-link-color;
+  }
+
+  a:hover {
+    color: $navbar-inverse-link-hover-color;
+  }
+  */
+
+  hr {
+    margin: 0;
+  }
+
+  ul {
+    list-style-type: none;
+    -webkit-padding-start: 0px;
+    -moz-padding-start: 0px;
+
+    li {
+      transition: color 0.5s;
+      font-size: 16px;
+      border-bottom: 1px solid #e6e6e6;
+      padding: 0px 0px;
+      // border-left: 5px solid transparent;
+
+      a {
+        color: #767e93;
+        background-color: #f0f0f0;
+        width: 100%;
+        word-wrap: break-word;
+        padding: 15px 0 15px 20px;
+        display: block;
+      }
+    }
+
+    .linkBorder {
+      border-bottom: 1px solid #e6e6e6;
+    }
+
+    li:last-child {
+      border-bottom: 0px;
+    }
+
+    .active {
+      // border-left: 5px solid #FFC627;
+      font-weight: bold;
+      color: #333;
+      text-decoration: none;
+
+      a {
+        text-decoration: none;
+        background-color: #fff3d5;
+        display: inline-block;
+      }
+    }
+  }
+}
+
 .container {
   padding: 0;
 }

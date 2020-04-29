@@ -1,1 +1,10 @@
-@import "../Settings.scss";
+@import '../Settings.scss';
+
+.ul_left_small {
+  -webkit-padding-start: 15px;
+}
+
+.subsection {
+  padding-left: 15px;
+  padding-right: 15px;
+}

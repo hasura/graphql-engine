@@ -1,5 +1,21 @@
 @import '../../../Common/Common.scss';
 
+.commentEdit {
+  display: inline-block;
+  padding-left: 10px;
+  cursor: pointer;
+}
+
+.comment_action {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.commentInput {
+  width: 30%;
+  display: inline-block;
+}
+
 .container {
   padding: 0;
 }
@@ -21,8 +37,7 @@
       0 0 0 rgba(102, 175, 233, 0.6);
   }
 
-  .yellow_button,
-  .yellow_button1 {
+  .yellow_button {
     text-align: center !important;
     margin-right: 15px;
   }

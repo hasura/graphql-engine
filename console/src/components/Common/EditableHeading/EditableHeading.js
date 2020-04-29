@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Icon, Heading } from '../../UIKit/atoms';
-import styles from '../Common.scss';
+import styles from './EditableHeading.scss';
 
 class EditableHeading extends React.Component {
   state = {
