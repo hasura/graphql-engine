@@ -34,7 +34,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 ### Bug fixes and improvements
 
-(Add entries here in the order of: server, console, cli, docs, others)
+-cli: add support for alternative configuration filename (fix #4561) #4611
 
 - console: add read replica support section to pro popup (#4118)
 

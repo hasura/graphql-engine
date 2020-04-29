@@ -49,9 +49,11 @@ func (ec *ExecutionContext) validateDirectory() error {
 }
 
 // filesRequired are the files that are mandatory to qualify for a project
-// directory.
+// directory. Either of the configuration files, config.yaml or hasura-config.yaml
+// validate the project directory.
 var filesRequired = []string{
 	"config.yaml",
+	"hasura-config.yaml",
 }
 
 // recursivelyValidateDirectory tries to parse 'startFrom' as a project
@@ -83,7 +85,8 @@ func ValidateDirectory(dir string) error {
 			notFound = append(notFound, f)
 		}
 	}
-	if len(notFound) > 0 {
+	// if neither config.yaml or hasura-config.yaml is found, return error
+	if len(notFound) > 1 {
 		return errors.Errorf("cannot validate directory '%s': [%s] not found", dir, strings.Join(notFound, ", "))
 	}
 	return nil
