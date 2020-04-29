@@ -1,3 +1,9 @@
+.. meta::
+   :description: Manage queries with Hasura
+   :keywords: hasura, docs, query
+
+.. _queries:
+
 Queries
 =======
 
@@ -34,7 +40,7 @@ Auto-generated query field schema
       order_by:  [author_order_by!]
     ): [author]
 
-See the :doc:`Query API reference <../api-reference/graphql-api/query>` for the full specifications
+See the :ref:`Query API reference <graphql_api_query>` for the full specifications
 
 .. note::
 

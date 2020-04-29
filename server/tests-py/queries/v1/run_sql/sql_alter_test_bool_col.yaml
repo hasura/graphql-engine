@@ -3,7 +3,7 @@ url: /v1/query
 status: 400
 response:
   path: "$.args"
-  error: 'cannot change type of column "bool_col" in table "test" because of the following dependencies : permission test.user.select, permission test.user.insert'
+  error: 'cannot change type of column "bool_col" in table "test" because of the following dependencies : permission test.user.insert, permission test.user.select'
   code: dependency-error
 query:
   type: run_sql

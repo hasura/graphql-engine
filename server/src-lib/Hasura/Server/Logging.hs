@@ -24,7 +24,6 @@ import           Data.Bits                 (shift, (.&.))
 import           Data.ByteString.Char8     (ByteString)
 import           Data.Int                  (Int64)
 import           Data.List                 (find)
-import           Data.Time.Clock
 import           Data.Word                 (Word32)
 import           Network.Socket            (SockAddr (..))
 import           System.ByteOrder          (ByteOrder (..), byteOrder)
@@ -42,6 +41,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
 import           Hasura.Server.Utils
+import           Hasura.Session
 
 data StartupLog
   = StartupLog
@@ -91,7 +91,7 @@ instance ToEngineLog MetadataLog Hasura where
   toEngineLog ml =
     (mlLogLevel ml, ELTInternal ILTMetadata, toJSON ml)
 
-mkInconsMetadataLog :: [InconsistentMetadataObj] -> MetadataLog
+mkInconsMetadataLog :: [InconsistentMetadata] -> MetadataLog
 mkInconsMetadataLog objs =
   MetadataLog LevelWarn "Inconsistent Metadata!" $
     object [ "objects" .= objs]
@@ -104,6 +104,7 @@ data WebHookLog
   , whlMethod     :: !HTTP.StdMethod
   , whlError      :: !(Maybe HttpException)
   , whlResponse   :: !(Maybe T.Text)
+  , whlMessage    :: !(Maybe T.Text)
   } deriving (Show)
 
 instance ToEngineLog WebHookLog Hasura where
@@ -117,6 +118,7 @@ instance ToJSON WebHookLog where
            , "method" .= show (whlMethod whl)
            , "http_error" .= whlError whl
            , "response" .= whlResponse whl
+           , "message" .= whlMessage whl
            ]
 
 
@@ -154,8 +156,8 @@ class (Monad m) => HttpLog m where
     -> BL.ByteString
     -- ^ the compressed response bytes
     -- ^ TODO: make the above two type represented
-    -> Maybe (UTCTime, UTCTime)
-    -- ^ possible execution time
+    -> Maybe (DiffTime, DiffTime)
+    -- ^ IO/network wait time and service time (respectively) for this request, if available.
     -> Maybe CompressionType
     -- ^ possible compression type
     -> [HTTP.Header]
@@ -190,9 +192,12 @@ instance ToJSON HttpInfoLog where
 data OperationLog
   = OperationLog
   { olRequestId          :: !RequestId
-  , olUserVars           :: !(Maybe UserVars)
+  , olUserVars           :: !(Maybe SessionVariables)
   , olResponseSize       :: !(Maybe Int64)
-  , olQueryExecutionTime :: !(Maybe Double)
+  , olRequestReadTime    :: !(Maybe Seconds)
+  -- ^ Request IO wait time, i.e. time spent reading the full request from the socket.
+  , olQueryExecutionTime :: !(Maybe Seconds)
+  -- ^ Service time, not including request IO wait time.
   , olQuery              :: !(Maybe Value)
   , olRawQuery           :: !(Maybe Text)
   , olError              :: !(Maybe QErr)
@@ -215,11 +220,11 @@ mkHttpAccessLogContext
   -> RequestId
   -> Wai.Request
   -> BL.ByteString
-  -> Maybe (UTCTime, UTCTime)
+  -> Maybe (DiffTime, DiffTime)
   -> Maybe CompressionType
   -> [HTTP.Header]
   -> HttpLogContext
-mkHttpAccessLogContext userInfoM reqId req res mTimeT compressTypeM headers =
+mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = status
              , hlMethod      = bsToTxt $ Wai.requestMethod req
@@ -231,9 +236,10 @@ mkHttpAccessLogContext userInfoM reqId req res mTimeT compressTypeM headers =
              }
       op = OperationLog
            { olRequestId    = reqId
-           , olUserVars     = userVars <$> userInfoM
+           , olUserVars     = _uiSession <$> userInfoM
            , olResponseSize = respSize
-           , olQueryExecutionTime = respTime
+           , olRequestReadTime    = Seconds . fst <$> mTiming
+           , olQueryExecutionTime = Seconds . snd <$> mTiming
            , olQuery = Nothing
            , olRawQuery = Nothing
            , olError = Nothing
@@ -242,7 +248,6 @@ mkHttpAccessLogContext userInfoM reqId req res mTimeT compressTypeM headers =
   where
     status = HTTP.status200
     respSize = Just $ BL.length res
-    respTime = computeTimeDiff mTimeT
 
 mkHttpErrorLogContext
   :: Maybe UserInfo
@@ -251,11 +256,11 @@ mkHttpErrorLogContext
   -> Wai.Request
   -> QErr
   -> Either BL.ByteString Value
-  -> Maybe (UTCTime, UTCTime)
+  -> Maybe (DiffTime, DiffTime)
   -> Maybe CompressionType
   -> [HTTP.Header]
   -> HttpLogContext
-mkHttpErrorLogContext userInfoM reqId req err query mTimeT compressTypeM headers =
+mkHttpErrorLogContext userInfoM reqId req err query mTiming compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = qeStatus err
              , hlMethod      = bsToTxt $ Wai.requestMethod req
@@ -267,9 +272,10 @@ mkHttpErrorLogContext userInfoM reqId req err query mTimeT compressTypeM headers
              }
       op = OperationLog
            { olRequestId          = reqId
-           , olUserVars           = userVars <$> userInfoM
+           , olUserVars           = _uiSession <$> userInfoM
            , olResponseSize       = Just $ BL.length $ encode err
-           , olQueryExecutionTime = computeTimeDiff mTimeT
+           , olRequestReadTime    = Seconds . fst <$> mTiming
+           , olQueryExecutionTime = Seconds . snd <$> mTiming
            , olQuery              = either (const Nothing) Just query
            , olRawQuery           = either (Just . bsToTxt . BL.toStrict) (const Nothing) query
            , olError              = Just err
@@ -291,9 +297,6 @@ mkHttpLog httpLogCtx =
   let isError = isJust $ olError $ hlcOperation httpLogCtx
       logLevel = bool LevelInfo LevelError isError
   in HttpLogLine logLevel httpLogCtx
-
-computeTimeDiff :: Maybe (UTCTime, UTCTime) -> Maybe Double
-computeTimeDiff = fmap (realToFrac . uncurry (flip diffUTCTime))
 
 getSourceFromSocket :: Wai.Request -> ByteString
 getSourceFromSocket = BS.pack . showSockAddr . Wai.remoteHost

@@ -32,19 +32,22 @@ type Migration struct {
 	// Raw holds the raw location path to this migration in source.
 	// ReadUp and ReadDown will use this.
 	Raw string
+
+	// Check if the file exists in a directory
+	IsDir bool
 }
 
 // Migrations wraps Migration and has an internal index
 // to keep track of Migration order.
 type Migrations struct {
-	index      uint64Slice
-	migrations map[uint64]map[Direction]*Migration
+	Index      uint64Slice
+	Migrations map[uint64]map[Direction]*Migration
 }
 
 func NewMigrations() *Migrations {
 	return &Migrations{
-		index:      make(uint64Slice, 0),
-		migrations: make(map[uint64]map[Direction]*Migration),
+		Index:      make(uint64Slice, 0),
+		Migrations: make(map[uint64]map[Direction]*Migration),
 	}
 }
 
@@ -53,65 +56,65 @@ func (i *Migrations) Append(m *Migration) (err error) {
 		return fmt.Errorf("migration cannot be nill")
 	}
 
-	if i.migrations[m.Version] == nil {
-		i.migrations[m.Version] = make(map[Direction]*Migration)
+	if i.Migrations[m.Version] == nil {
+		i.Migrations[m.Version] = make(map[Direction]*Migration)
 	}
 
 	// reject duplicate versions
-	if migration, dup := i.migrations[m.Version][m.Direction]; dup {
+	if migration, dup := i.Migrations[m.Version][m.Direction]; dup {
 		return fmt.Errorf("found duplicate migrations for version %d\n- %s\n- %s", m.Version, m.Raw, migration.Raw)
 	}
 
-	i.migrations[m.Version][m.Direction] = m
+	i.Migrations[m.Version][m.Direction] = m
 	i.buildIndex()
 	return nil
 }
 
 func (i *Migrations) buildIndex() {
-	i.index = make(uint64Slice, 0)
-	for version := range i.migrations {
-		i.index = append(i.index, version)
+	i.Index = make(uint64Slice, 0)
+	for version := range i.Migrations {
+		i.Index = append(i.Index, version)
 	}
-	sort.Sort(i.index)
+	sort.Sort(i.Index)
 }
 
 func (i *Migrations) First() (version uint64, ok bool) {
-	if len(i.index) == 0 {
+	if len(i.Index) == 0 {
 		return 0, false
 	}
-	return i.index[0], true
+	return i.Index[0], true
 }
 
 func (i *Migrations) GetLocalVersion() uint64 {
-	if len(i.index) == 0 {
+	if len(i.Index) == 0 {
 		return 0
 	}
-	return i.index[len(i.index)-1]
+	return i.Index[len(i.Index)-1]
 }
 
 func (i *Migrations) GetUnappliedMigrations(version uint64) (versions []uint64) {
 	if version == 0 {
-		return i.index[0:]
+		return i.Index[0:]
 	}
 	pos := i.findPos(version)
-	if pos >= 0 && len(i.index) > pos+1 {
-		return i.index[pos+1:]
+	if pos >= 0 && len(i.Index) > pos+1 {
+		return i.Index[pos+1:]
 	}
 	return versions
 }
 
 func (i *Migrations) Prev(version uint64) (prevVersion uint64, ok bool) {
 	pos := i.findPos(version)
-	if pos >= 1 && len(i.index) > pos-1 {
-		return i.index[pos-1], true
+	if pos >= 1 && len(i.Index) > pos-1 {
+		return i.Index[pos-1], true
 	}
 	return 0, false
 }
 
 func (i *Migrations) Next(version uint64) (nextVersion uint64, ok bool) {
 	pos := i.findPos(version)
-	if pos >= 0 && len(i.index) > pos+1 {
-		return i.index[pos+1], true
+	if pos >= 0 && len(i.Index) > pos+1 {
+		return i.Index[pos+1], true
 	}
 	return 0, false
 }
@@ -124,15 +127,15 @@ func (i *Migrations) GetDirections(version uint64) map[Direction]bool {
 		MetaDown: false,
 		MetaUp:   false,
 	}
-	for k := range i.migrations[version] {
+	for k := range i.Migrations[version] {
 		directions[k] = true
 	}
 	return directions
 }
 
 func (i *Migrations) Up(version uint64) (m *Migration, ok bool) {
-	if _, ok := i.migrations[version]; ok {
-		if mx, ok := i.migrations[version][Up]; ok {
+	if _, ok := i.Migrations[version]; ok {
+		if mx, ok := i.Migrations[version][Up]; ok {
 			return mx, true
 		}
 	}
@@ -140,8 +143,8 @@ func (i *Migrations) Up(version uint64) (m *Migration, ok bool) {
 }
 
 func (i *Migrations) MetaUp(version uint64) (m *Migration, ok bool) {
-	if _, ok := i.migrations[version]; ok {
-		if mx, ok := i.migrations[version][MetaUp]; ok {
+	if _, ok := i.Migrations[version]; ok {
+		if mx, ok := i.Migrations[version][MetaUp]; ok {
 			return mx, true
 		}
 	}
@@ -149,8 +152,8 @@ func (i *Migrations) MetaUp(version uint64) (m *Migration, ok bool) {
 }
 
 func (i *Migrations) Down(version uint64) (m *Migration, ok bool) {
-	if _, ok := i.migrations[version]; ok {
-		if mx, ok := i.migrations[version][Down]; ok {
+	if _, ok := i.Migrations[version]; ok {
+		if mx, ok := i.Migrations[version][Down]; ok {
 			return mx, true
 		}
 	}
@@ -158,8 +161,8 @@ func (i *Migrations) Down(version uint64) (m *Migration, ok bool) {
 }
 
 func (i *Migrations) MetaDown(version uint64) (m *Migration, ok bool) {
-	if _, ok := i.migrations[version]; ok {
-		if mx, ok := i.migrations[version][MetaDown]; ok {
+	if _, ok := i.Migrations[version]; ok {
+		if mx, ok := i.Migrations[version][MetaDown]; ok {
 			return mx, true
 		}
 	}
@@ -167,16 +170,16 @@ func (i *Migrations) MetaDown(version uint64) (m *Migration, ok bool) {
 }
 
 func (i *Migrations) ReadName(version uint64) (name string) {
-	for k := range i.migrations[version] {
-		return i.migrations[version][k].Identifier
+	for k := range i.Migrations[version] {
+		return i.Migrations[version][k].Identifier
 	}
 	return "-"
 }
 
 func (i *Migrations) findPos(version uint64) int {
-	if len(i.index) > 0 {
-		ix := i.index.Search(version)
-		if ix < len(i.index) && i.index[ix] == version {
+	if len(i.Index) > 0 {
+		ix := i.Index.Search(version)
+		if ix < len(i.Index) && i.Index[ix] == version {
 			return ix
 		}
 	}

@@ -5,7 +5,8 @@ own machine and how to contribute.
 
 ## Pre-requisites
 
-- [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
+- [GHC](https://www.haskell.org/ghc/) 8.6.5 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
+  - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
 - [Node.js](https://nodejs.org/en/) (>= v8.9)
 - npm >= 5.7
 - [gsutil](https://cloud.google.com/storage/docs/gsutil)
@@ -15,6 +16,11 @@ own machine and how to contribute.
 The last two prerequisites can be installed on Debian with:
 
     $ sudo apt install libpq-dev python3 python3-pip python3-venv
+
+Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
+
+- [PostgreSQL](https://www.postgresql.org) >= 9.5
+- [postgis](https://postgis.net)
 
 ### Upgrading npm
 
@@ -42,7 +48,13 @@ After making your changes
 ...and the server:
 
     $ cd server
-    $ stack build --fast
+    $ ln -s cabal.project.dev cabal.project.local
+    $ cabal new-update
+    $ cabal new-build
+
+To set up the project configuration to coincide with the testing scripts below, thus avoiding recompilation when testing locally, rather use `cabal.project.dev-sh.local` instead of `cabal.project.dev`:
+
+    $ ln -s cabal.project.dev-sh.local cabal.project.local
 
 ### Run and test via `dev.sh`
 
@@ -65,7 +77,7 @@ You can run the test suite with:
 
     $ scripts/dev.sh test
 
-This should run in isolation.
+This should run in isolation.  The output format is described in the [pytest documentation](https://docs.pytest.org/en/latest/usage.html#detailed-summary-report).  Errors and failures are indicated by `F`s and `E`s.
 
 ### Run and test manually
 
@@ -73,10 +85,10 @@ If you want, you can also run the server and test suite manually against a Postg
 
 #### Run
 
-After building the `graphql-engine` executable with `stack build`, the following command can be used to launch a local `graphql-engine` instance:
+The following command can be used to build and launch a local `graphql-engine` instance:
 
 ```
-stack exec -- graphql-engine \
+cabal new-run -- exe:graphql-engine \
   --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
   serve --enable-console --console-assets-dir=../console/static/dist
 ```
@@ -96,7 +108,8 @@ Both sets of tests require a running Postgres database.
 ##### Running the Haskell test suite
 
 ```
-stack test --fast --test-arguments='--database-url=postgres://<user>:<password>@<host>:<port>/<dbname>'
+cabal new-run -- test:graphql-engine-tests \
+  --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>'
 ```
 
 ##### Running the Python test suite
@@ -131,7 +144,7 @@ stack test --fast --test-arguments='--database-url=postgres://<user>:<password>@
    ```
    env EVENT_WEBHOOK_HEADER=MyEnvValue \
        WEBHOOK_FROM_ENV=http://localhost:5592/ \
-     stack exec -- graphql-engine \
+     cabal new-run -- exe:graphql-engine \
        --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
        serve --stringify-numeric-types
    ```
@@ -154,9 +167,10 @@ Some other useful points of note:
 
   - You can pass the `-v` or `-vv` options to `pytest` to enable more verbose output while running the tests and in test failures. You can also pass the `-l` option to display the current values of Python local variables in test failures.
 
-
 ### Create Pull Request
+
 - Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
+- If you changed the versions of any dependencies, run `cabal new-freeze` to update the freeze file.
 - Create a pull request from your forked repo to the main repo.
 - Every pull request will automatically build and run the tests.
 

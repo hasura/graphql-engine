@@ -8,6 +8,7 @@ import {
   setColumnEdit,
   resetColumnEdit,
   editColumn,
+  isColumnUnique,
 } from '../TableModify/ModifyActions';
 import { ordinalColSort } from '../utils';
 import { defaultDataTypeToCast } from '../constants';
@@ -17,7 +18,6 @@ import {
   inferDefaultValues,
 } from '../Common/utils';
 
-import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
 import styles from './ModifyTable.scss';
@@ -70,15 +70,12 @@ const ColumnEditorList = ({
       isNullable: col.is_nullable === 'YES',
       isIdentity: col.is_identity === 'YES',
       pkConstraint: columnPKConstraints[colName],
-      isUnique:
-        (columnPKConstraints[colName] && pkLength === 1) ||
-        columnUniqueConstraints[colName]
-          ? true
-          : false,
+      isUnique: isColumnUnique(tableSchema, colName),
       // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
       comment: col.comment || '',
       customFieldName: customColumnNames[colName] || '',
+      isOnlyPrimaryKey: columnPKConstraints[colName] && pkLength === 1,
     };
 
     const onSubmit = toggleEditor => {
@@ -98,11 +95,12 @@ const ColumnEditorList = ({
     };
 
     const gqlCompatibilityWarning = () => {
-      return !gqlPattern.test(colName) ? (
-        <span className={styles.add_mar_left_small}>
-          <GqlCompatibilityWarning />
-        </span>
-      ) : null;
+      return (
+        <GqlCompatibilityWarning
+          identifier={colName}
+          className={styles.add_mar_left_small}
+        />
+      );
     };
 
     const keyProperties = () => {
@@ -116,7 +114,7 @@ const ColumnEditorList = ({
         propertiesList.push('primary key');
       }
 
-      if (columnProperties.isUnique) {
+      if (columnProperties.isUnique || columnProperties.isOnlyPrimaryKey) {
         propertiesList.push('unique');
       }
 

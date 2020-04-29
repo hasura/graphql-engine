@@ -64,7 +64,7 @@
           objects: [
             { c1_smallint: 32767
             , c2_integer: 2147483647
-            , c3_bigint: "9223372036854775807"
+            , c3_bigint: 9223372036854775807
             , c4_decimal: 123.45
             , c5_numeric: 1.234
             , c6_real: 0.00390625

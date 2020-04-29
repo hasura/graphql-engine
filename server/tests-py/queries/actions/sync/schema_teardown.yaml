@@ -1,0 +1,31 @@
+type: bulk
+args:
+- type: drop_action
+  args:
+    name: create_user
+    clear_data: true
+- type: drop_action
+  args:
+    name: create_users
+    clear_data: true
+- type: drop_action
+  args:
+    name: mirror
+    clear_data: true
+- type: drop_action
+  args:
+    name: get_user_by_email
+    clear_data: true
+- type: drop_action
+  args:
+    name: get_users_by_email
+    clear_data: true
+# clear custom types
+- type: set_custom_types
+  args: {}
+
+- type: run_sql
+  args:
+    cascade: true
+    sql: |
+      DROP TABLE "user";

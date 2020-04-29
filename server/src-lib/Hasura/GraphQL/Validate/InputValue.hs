@@ -6,7 +6,6 @@ module Hasura.GraphQL.Validate.InputValue
   , pPrintValueC
   ) where
 
-import           Data.Scientific                 (fromFloatDigits)
 import           Hasura.Prelude
 import           Hasura.Server.Utils             (duplicates)
 
@@ -124,7 +123,7 @@ valueParser =
     pScalar (G.VVariable var) = pVar var
     pScalar G.VNull           = pNull
     pScalar (G.VInt v)        = pVal $ J.Number $ fromIntegral v
-    pScalar (G.VFloat v)      = pVal $ J.Number $ fromFloatDigits v
+    pScalar (G.VFloat v)      = pVal $ J.Number v
     pScalar (G.VBoolean b)    = pVal $ J.Bool b
     pScalar (G.VString sv)    = pVal $ J.String $ G.unStringValue sv
     pScalar (G.VEnum _)       = throwVE "unexpected enum for a scalar"
@@ -181,7 +180,7 @@ constValueParser =
     -- scalar json
     pScalar G.VCNull        = pNull
     pScalar (G.VCInt v)     = pVal $ J.Number $ fromIntegral v
-    pScalar (G.VCFloat v)   = pVal $ J.Number $ fromFloatDigits v
+    pScalar (G.VCFloat v)   = pVal $ J.Number v
     pScalar (G.VCBoolean b) = pVal $ J.Bool b
     pScalar (G.VCString sv) = pVal $ J.String $ G.unStringValue sv
     pScalar (G.VCEnum _)    = throwVE "unexpected enum for a scalar"
@@ -252,7 +251,7 @@ validateNamedTypeVal inpValParser (nullability, nt) val = do
     TIEnum eti ->
       withParsed gType (getEnum inpValParser) val $
       fmap (AGEnum nt) . validateEnum eti
-    TIScalar (ScalarTyInfo _ pgColTy _) ->
+    TIScalar (ScalarTyInfo _ _ pgColTy _) ->
       withParsed gType (getScalar inpValParser) val $
       fmap (AGScalar pgColTy) . mapM (validateScalar pgColTy)
   where

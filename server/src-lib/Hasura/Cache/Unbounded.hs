@@ -13,8 +13,7 @@ module Hasura.Cache.Unbounded
 
 import           Hasura.Prelude      hiding (lookup)
 
-import           Control.Concurrent  (getNumCapabilities, myThreadId,
-                                      threadCapability)
+import           Control.Concurrent  (getNumCapabilities, myThreadId, threadCapability)
 
 import qualified Data.HashMap.Strict as Map
 import qualified Data.IORef          as IORef

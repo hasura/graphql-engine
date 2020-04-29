@@ -78,4 +78,4 @@ HASURA_GRAPHQL_AUTH_WEBHOOK=http://localhost:5000/auth-webhook
 
 All queries will be now validated through the webhook.
 
-> Read more on [authentication and access control](https://docs.hasura.io/1.0/graphql/manual/auth/index.html).
+> Read more on [authentication and access control](https://hasura.io/docs/1.0/graphql/manual/auth/index.html).

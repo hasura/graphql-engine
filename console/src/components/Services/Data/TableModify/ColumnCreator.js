@@ -16,7 +16,7 @@ import Button from '../../../Common/Button/Button';
 import { addColSql } from '../TableModify/ModifyActions';
 
 import styles from './ModifyTable.scss';
-import FrequentlyUsedColumnSelector from '../Common/ReusableComponents/FrequentlyUsedColumnSelector';
+import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
 
 const useColumnEditor = (dispatch, tableName) => {
   const initialState = {
@@ -192,13 +192,15 @@ const ColumnCreator = ({
   const getColumnNullableInput = () => {
     return (
       <span>
-        <input
-          type="checkbox"
-          className={`${styles.input} ${styles.nullable} input-sm form-control`}
-          data-test="nullable-checkbox"
-          {...colNull}
-        />
-        <label className={styles.nullLabel}>Nullable</label>
+        <label className={styles.nullLabel}>
+          <input
+            type="checkbox"
+            className={`${styles.input} ${styles.nullable} input-sm form-control`}
+            data-test="nullable-checkbox"
+            {...colNull}
+          />
+          Nullable
+        </label>
       </span>
     );
   };
@@ -206,13 +208,15 @@ const ColumnCreator = ({
   const getColumnUniqueInput = () => {
     return (
       <span>
-        <input
-          type="checkbox"
-          className={`${styles.input} ${styles.nullable} input-sm form-control`}
-          {...colUnique}
-          data-test="unique-checkbox"
-        />
-        <label className={styles.nullLabel}>Unique</label>
+        <label className={styles.nullLabel}>
+          <input
+            type="checkbox"
+            className={`${styles.input} ${styles.nullable} input-sm form-control`}
+            {...colUnique}
+            data-test="unique-checkbox"
+          />
+          Unique
+        </label>
       </span>
     );
   };

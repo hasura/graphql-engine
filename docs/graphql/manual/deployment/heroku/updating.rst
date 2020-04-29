@@ -1,3 +1,9 @@
+.. meta::
+   :description: Update Hasura GraphQL engine with Heroku deployment
+   :keywords: hasura, docs, deployment, heroku, update
+
+.. _heroku_update:
+
 Updating Hasura GraphQL engine on Heroku
 ========================================
 
@@ -77,4 +83,4 @@ Change ``v1.0.0-alpha01`` to ``v1.0.0-alpha02`` for example, and then ``git push
 .. note::
 
   If you are downgrading to an older version of the GraphQL engine you might need to downgrade your metadata catalogue version
-  as described in :doc:`../downgrading`
+  as described in :ref:`downgrade_hge`

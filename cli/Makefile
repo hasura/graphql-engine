@@ -1,16 +1,20 @@
 PWD := $(shell pwd)
 PARENT_DIR := $(shell dirname $(PWD))
 VERSION ?= $(shell ../scripts/get-version.sh)
+PLUGINS_BRANCH ?= master
 OS ?= linux darwin windows
 OUTPUT_DIR := _output
 
 # compile assets
 .PHONY: assets
 assets:
-	go-bindata --pkg assets -o assets/assets.go assets/**/*.html
+ifndef HAS_PKGER
+	go get github.com/markbates/pkger/cmd/pkger
+endif
+	pkger -o pkg/console/templates/packed -include /pkg/console/templates/gohtml/
 
 HAS_GOX := $(shell command -v gox;)
-HAS_BINDATA := $(shell command -v go-bindata;)
+HAS_PKGER := $(shell command -v pkger;)
 
 .PHONY: deps
 # get dependencies
@@ -19,15 +23,12 @@ deps:
 ifndef HAS_GOX
 	go get github.com/mitchellh/gox
 endif
-ifndef HAS_BINDATA
-	go get github.com/hasura/go-bindata/go-bindata
-endif
 
 # build cli locally, for all given platform/arch
 .PHONY: build
 build: export CGO_ENABLED=0
 build:
-	gox -ldflags '-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -s -w -extldflags "-static"' \
+	gox -ldflags '-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -X github.com/hasura/graphql-engine/cli/plugins.IndexBranchRef=$(PLUGINS_BRANCH) -s -w -extldflags "-static"' \
 	-rebuild \
 	-os="$(OS)" \
 	-arch="amd64" \
@@ -48,7 +49,9 @@ ci-copy-binary:
 # run tests
 .PHONY: test
 test:
-	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" ./...
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" `go list ./... | grep -v integration_test`
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v1 ./integration_test
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v2 ./integration_test
 
 # clean the output directory
 .PHONY: clean

@@ -12,6 +12,7 @@ import qualified Data.HashSet                       as Set
 import qualified Data.Text                          as T
 import qualified Language.GraphQL.Draft.Syntax      as G
 
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Context
@@ -59,13 +60,13 @@ scalarR
   => ScalarTyInfo
   -> Field
   -> m J.Object
-scalarR (ScalarTyInfo descM pgColType _) fld =
+scalarR (ScalarTyInfo descM name _ _) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"  -> retJT "__Type"
     "kind"        -> retJ TKSCALAR
     "description" -> retJ $ fmap G.unDescription descM
-    "name"        -> retJ $ pgColTyToScalar pgColType
+    "name"        -> retJ name
     _             -> return J.Null
 
 -- 4.5.2.2
@@ -75,7 +76,7 @@ objectTypeR
   => ObjTyInfo
   -> Field
   -> m J.Object
-objectTypeR (ObjTyInfo descM n iFaces flds) fld =
+objectTypeR objectType fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"  -> retJT "__Type"
@@ -87,6 +88,11 @@ objectTypeR (ObjTyInfo descM n iFaces flds) fld =
                      sortOn _fiName $
                      filter notBuiltinFld $ Map.elems flds
     _             -> return J.Null
+  where
+    descM = _otiDesc objectType
+    n = _otiName objectType
+    iFaces = _otiImplIFaces objectType
+    flds = _otiFields objectType
 
 notBuiltinFld :: ObjFldInfo -> Bool
 notBuiltinFld f =
@@ -209,7 +215,7 @@ nonNullR gTyp fld =
     "ofType"     -> case gTyp of
       G.TypeNamed (G.Nullability False) nt -> J.toJSON <$> namedTypeR nt subFld
       G.TypeList (G.Nullability False) lt  -> J.toJSON <$> listTypeR lt subFld
-      _ -> throw500 "nullable type passed to nonNullR"
+      _                                    -> throw500 "nullable type passed to nonNullR"
     _        -> return J.Null
 
 namedTypeR
@@ -325,9 +331,9 @@ schemaR fld =
     "__typename"   -> retJT "__Schema"
     "types"        -> fmap J.toJSON $ mapM (namedTypeR' subFld) $
                       sortOn getNamedTy $ Map.elems tyMap
-    "queryType"    -> J.toJSON <$> namedTypeR (G.NamedType "query_root") subFld
-    "mutationType" -> typeR' "mutation_root" subFld
-    "subscriptionType" -> typeR' "subscription_root" subFld
+    "queryType"    -> J.toJSON <$> namedTypeR queryRootNamedType subFld
+    "mutationType" -> typeR' mutationRootNamedType subFld
+    "subscriptionType" -> typeR' subscriptionRootNamedType subFld
     "directives"   -> J.toJSON <$> mapM (directiveR subFld)
                       (sortOn _diName defaultDirectives)
     _              -> return J.Null
@@ -337,15 +343,15 @@ typeR
   => Field -> m J.Value
 typeR fld = do
   name <- asPGColText =<< getArg args "name"
-  typeR' (G.Name name) fld
+  typeR' (G.NamedType $ G.Name name) fld
   where
     args = _fArguments fld
 
 typeR'
   :: (MonadReader r m, Has TypeMap r, MonadError QErr m)
-  => G.Name -> Field -> m J.Value
+  => G.NamedType -> Field -> m J.Value
 typeR' n fld = do
   tyMap <- asks getter
-  case Map.lookup (G.NamedType n) tyMap of
+  case Map.lookup n tyMap of
     Nothing     -> return J.Null
     Just tyInfo -> J.Object <$> namedTypeR' fld tyInfo

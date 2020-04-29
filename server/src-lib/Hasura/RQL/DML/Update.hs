@@ -16,12 +16,14 @@ import qualified Data.Sequence            as DS
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DML.Insert    (insertCheckExpr)
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances     ()
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query        as Q
@@ -32,10 +34,11 @@ data AnnUpdG v
   { uqp1Table   :: !QualifiedTable
   , uqp1SetExps :: ![(PGCol, v)]
   , uqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
+  , upq1Check   :: !(AnnBoolExp v)
   -- we don't prepare the arguments for returning
   -- however the session variable can still be
   -- converted as desired
-  , uqp1MutFlds :: !(MutFldsG v)
+  , uqp1Output  :: !(MutationOutputG v)
   , uqp1AllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
@@ -48,22 +51,30 @@ traverseAnnUpd f annUpd =
   AnnUpd tn
   <$> traverse (traverse f) setExps
   <*> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
-  <*> traverseMutFlds f mutFlds
+  <*> traverseAnnBoolExp f chk
+  <*> traverseMutationOutput f mutOutput
   <*> pure allCols
   where
-    AnnUpd tn setExps (whr, fltr) mutFlds allCols = annUpd
+    AnnUpd tn setExps (whr, fltr) chk mutOutput allCols = annUpd
 
 type AnnUpd = AnnUpdG S.SQLExp
 
 mkUpdateCTE
   :: AnnUpd -> S.CTE
-mkUpdateCTE (AnnUpd tn setExps (permFltr, wc) _ _) =
+mkUpdateCTE (AnnUpd tn setExps (permFltr, wc) chk _ _) =
   S.CTEUpdate update
   where
-    update = S.SQLUpdate tn setExp Nothing tableFltr $ Just S.returningStar
+    update =
+      S.SQLUpdate tn setExp Nothing tableFltr
+        . Just
+        . S.RetExp
+        $ [ S.selectStar
+          , S.Extractor (insertCheckExpr "update check constraint failed" checkExpr) Nothing
+          ]
     setExp    = S.SetExp $ map S.SetExpItem setExps
-    tableFltr = Just $ S.WhereFrag $
-                toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
+    tableFltr = Just $ S.WhereFrag tableFltrExpr
+    tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
+    checkExpr = toSQLBoolExp (S.QualTable tn) chk
 
 convInc
   :: (QErrM m)
@@ -103,7 +114,7 @@ convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 
 convOp
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap PGColumnInfo
+  => FieldInfoMap FieldInfo
   -> [PGCol]
   -> UpdPermInfo
   -> [(PGCol, a)]
@@ -122,9 +133,9 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
     allowedCols  = upiCols updPerm
     relWhenPgErr = "relationships can't be updated"
     throwNotUpdErr c = do
-      role <- userRole <$> askUserInfo
+      roleName <- _uiRole <$> askUserInfo
       throw400 NotSupported $ "column " <> c <<> " is not updatable"
-        <> " for role " <> role <<> "; its value is predefined in permission"
+        <> " for role " <> roleName <<> "; its value is predefined in permission"
 
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, CacheRM m)
@@ -135,10 +146,11 @@ validateUpdateQueryWith
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
   tableInfo <- withPathK "table" $ askTabInfo tableName
+  let coreInfo = _tiCoreInfo tableInfo
 
   -- If it is view then check if it is updatable
   mutableView tableName viIsUpdatable
-    (_tiViewInfo tableInfo) "updatable"
+    (_tciViewInfo coreInfo) "updatable"
 
   -- Check if the role has update permissions
   updPerm <- askUpdPermInfo tableInfo
@@ -150,7 +162,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   selPerm <- modifyErr (<> selNecessaryMsg) $
              askSelPermInfo tableInfo
 
-  let fieldInfoMap = _tiFieldInfoMap tableInfo
+  let fieldInfoMap = _tciFieldInfoMap coreInfo
       allCols = getCols fieldInfoMap
       preSetObj = upiSet updPerm
       preSetCols = M.keys preSetObj
@@ -187,11 +199,15 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
   resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      upiFilter updPerm
+  resolvedUpdCheck <- fromMaybe gBoolExpTrue <$>
+                        traverse (convAnnBoolExpPartialSQL sessVarBldr)
+                          (upiCheck updPerm)
 
   return $ AnnUpd
     tableName
     setExpItems
     (resolvedUpdFltr, annSQLBoolExp)
+    resolvedUpdCheck
     (mkDefaultMutFlds mAnnRetCols)
     allCols
   where
@@ -202,21 +218,21 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
       <> "without \"select\" permission on the table"
 
 validateUpdateQuery
-  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m)
   => UpdateQuery -> m (AnnUpd, DS.Seq Q.PrepArg)
 validateUpdateQuery =
-  liftDMLP1 . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
+  runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
 
 updateQueryToTx
   :: Bool -> (AnnUpd, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 updateQueryToTx strfyNum (u, p) =
   runMutation $ Mutation (uqp1Table u) (updateCTE, p)
-                (uqp1MutFlds u) (uqp1AllCols u) strfyNum
+                (uqp1Output u) (uqp1AllCols u) strfyNum
   where
     updateCTE = mkUpdateCTE u
 
 runUpdate
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
   => UpdateQuery -> m EncJSON
 runUpdate q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx

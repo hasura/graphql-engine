@@ -74,7 +74,7 @@
 
 ## प्रलेखन
 
-पूरा पढ़ें [प्रलेखन](https://docs.hasura.io/1.0/graphql/manual/remote-schemas/index.html).
+पूरा पढ़ें [प्रलेखन](https://hasura.io/docs/1.0/graphql/manual/remote-schemas/index.html).
 
 ## अनुवाद
 

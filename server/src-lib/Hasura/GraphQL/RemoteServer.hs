@@ -10,19 +10,18 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as BL
-import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashSet                  as Set
 import qualified Data.Text                     as T
-import qualified Data.Text.Encoding            as T
 import qualified Language.GraphQL.Draft.Parser as G
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
 
-import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
+import           Hasura.GraphQL.Schema.Merge
+import           Hasura.RQL.DDL.Headers        (makeHeadersFromConf)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils           (httpExceptToJSON)
+import           Hasura.Server.Version         (HasVersion)
 
 import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
@@ -32,16 +31,14 @@ introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
 
 fetchRemoteSchema
-  :: (MonadIO m, MonadError QErr m)
+  :: (HasVersion, MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -> RemoteSchemaName
   -> RemoteSchemaInfo
   -> m GC.RemoteGCtx
 fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) = do
-  headers <- getHeadersFromConf headerConf
-  let hdrs = flip map headers $
-             \(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)
-      hdrsWithDefaults = addDefaultHeaders hdrs
+  headers <- makeHeadersFromConf headerConf
+  let hdrsWithDefaults = addDefaultHeaders headers
 
   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
   initReq <- either throwHttpErr pure initReqE
@@ -123,31 +120,9 @@ mergeRemoteSchema
   => GS.GCtxMap
   -> GS.GCtx
   -> m GS.GCtxMap
-mergeRemoteSchema ctxMap mergedRemoteGCtx = do
-  res <- forM (Map.toList ctxMap) $ \(role, gCtx) -> do
-    updatedGCtx <- mergeGCtx gCtx mergedRemoteGCtx
-    return (role, updatedGCtx)
-  return $ Map.fromList res
-
-mergeGCtx
-  :: (MonadError QErr m)
-  => GS.GCtx
-  -> GS.GCtx
-  -> m GS.GCtx
-mergeGCtx gCtx rmMergedGCtx = do
-  let rmTypes = GS._gTypes rmMergedGCtx
-      hsraTyMap = GS._gTypes gCtx
-  GS.checkSchemaConflicts gCtx rmMergedGCtx
-  let newQR = mergeQueryRoot gCtx rmMergedGCtx
-      newMR = mergeMutRoot gCtx rmMergedGCtx
-      newSR = mergeSubRoot gCtx rmMergedGCtx
-      newTyMap = mergeTyMaps hsraTyMap rmTypes newQR newMR
-      updatedGCtx = gCtx { GS._gTypes = newTyMap
-                         , GS._gQueryRoot = newQR
-                         , GS._gMutRoot = newMR
-                         , GS._gSubRoot = newSR
-                         }
-  return updatedGCtx
+mergeRemoteSchema ctxMap mergedRemoteGCtx =
+  flip Map.traverseWithKey ctxMap $ \_ schemaCtx ->
+    for schemaCtx $ \gCtx -> mergeGCtx gCtx mergedRemoteGCtx
 
 convRemoteGCtx :: GC.RemoteGCtx -> GS.GCtx
 convRemoteGCtx rmGCtx =
@@ -157,66 +132,7 @@ convRemoteGCtx rmGCtx =
                , GS._gSubRoot   = GC._rgSubscriptionRoot rmGCtx
                }
 
-
-mergeQueryRoot :: GS.GCtx -> GS.GCtx -> VT.ObjTyInfo
-mergeQueryRoot a b = GS._gQueryRoot a <> GS._gQueryRoot b
-
-mergeMutRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
-mergeMutRoot a b =
-  let objA' = fromMaybe mempty $ GS._gMutRoot a
-      objB  = fromMaybe mempty $ GS._gMutRoot b
-      objA  = newRootOrEmpty objA' objB
-      merged = objA <> objB
-  in bool (Just merged) Nothing $ merged == mempty
-  where
-    newRootOrEmpty x y =
-      if x == mempty && y /= mempty
-      then mkNewEmptyMutRoot
-      else x
-
-mkNewEmptyMutRoot :: VT.ObjTyInfo
-mkNewEmptyMutRoot = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") Set.empty Map.empty
-
-mkNewMutRoot :: VT.ObjFieldMap -> VT.ObjTyInfo
-mkNewMutRoot flds = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") Set.empty flds
-
-mergeSubRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
-mergeSubRoot a b =
-  let objA' = fromMaybe mempty $ GS._gSubRoot a
-      objB  = fromMaybe mempty $ GS._gSubRoot b
-      objA  = newRootOrEmpty objA' objB
-      merged = objA <> objB
-  in bool (Just merged) Nothing $ merged == mempty
-  where
-    newRootOrEmpty x y =
-      if x == mempty && y /= mempty
-      then mkNewEmptySubRoot
-      else x
-
-mkNewEmptySubRoot :: VT.ObjTyInfo
-mkNewEmptySubRoot = VT.ObjTyInfo (Just "subscription root")
-                    (G.NamedType "subscription_root") Set.empty Map.empty
-
-
-mergeTyMaps
-  :: VT.TypeMap
-  -> VT.TypeMap
-  -> VT.ObjTyInfo
-  -> Maybe VT.ObjTyInfo
-  -> VT.TypeMap
-mergeTyMaps hTyMap rmTyMap newQR newMR =
-  let newTyMap  = hTyMap <> rmTyMap
-      newTyMap' =
-        Map.insert (G.NamedType "query_root") (VT.TIObj newQR) newTyMap
-  in maybe newTyMap' (\mr -> Map.insert
-                              (G.NamedType "mutation_root")
-                              (VT.TIObj mr) newTyMap') newMR
-
-
--- parsing the introspection query result
-
+-- | Parsing the introspection query result
 newtype FromIntrospection a
   = FromIntrospection { fromIntrospection :: a }
   deriving (Show, Eq, Generic)

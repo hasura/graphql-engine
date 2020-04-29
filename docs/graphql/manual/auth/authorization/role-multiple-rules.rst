@@ -1,3 +1,9 @@
+.. meta::
+   :description: Manage multiple column + row permissions for the same role in Hasura
+   :keywords: hasura, docs, authorization, access control, permission, role
+
+.. _role_multiple_rules:
+
 Multiple column + row permissions for the same role
 ===================================================
 
@@ -33,7 +39,7 @@ We can achieve this via the following steps:
 Step 1: Create a view 
 ---------------------
 
-Create a :ref:`view <create_views>` called ``user_private`` with columns ``(user_id, email, phone, address)``:
+:ref:`Create a view <create_views>` called ``user_private`` with columns ``(user_id, email, phone, address)``:
 
 .. code-block:: SQL
 
@@ -44,10 +50,11 @@ Create a :ref:`view <create_views>` called ``user_private`` with columns ``(user
 Step 2: Create a relationship
 -----------------------------
 
-For the table ``user_info``, create a :ref:`manual object relationship <create_manual_relationships>` called
+For the table ``user_info``, :ref:`create a manual object relationship <create_manual_relationships>` called
 ``private_info`` using ``user_info : id -> user_private : user_id``:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/multiple-rules-create-manual-relationship.png
+   :alt: Create a manual object relationship
 
 Step 3: Define permissions
 --------------------------
@@ -57,11 +64,13 @@ For the role ``user``, create the following permissions for ``select``:
 - Table ``user_info``: allow access to ``id``, ``name`` and ``city`` without any row conditions.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/multiple-rules-define-public-permissions.png
+   :alt: Column access for the role user
 
 - View ``user_private``: allow access to ``id``, ``phone``, ``email`` and ``address`` if the ``user-id``
   passed in the session variable is equal to the row's ``user_id``.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/multiple-rules-define-private-permissions.png
+   :alt: Column access for the role user based on row level permissions
 
 Step 4: Query with appropriate access control
 ---------------------------------------------

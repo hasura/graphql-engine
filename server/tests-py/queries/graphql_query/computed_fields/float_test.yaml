@@ -1,0 +1,28 @@
+description: Fetch data from float_test table with scalar computed field of type float8
+url: /v1/graphql
+status: 200
+response:
+  data:
+    float_test:
+    - id: 1
+      first_int: 1
+      second_int: 2
+      sum_float: '3'
+    - id: 2
+      first_int: 3
+      second_int: 2
+      sum_float: '5'
+    - id: 3
+      first_int: 4
+      second_int: 6
+      sum_float: '10'
+query:
+  query: |
+    query {
+      float_test{
+        id
+        first_int
+        second_int
+        sum_float
+      }
+    }

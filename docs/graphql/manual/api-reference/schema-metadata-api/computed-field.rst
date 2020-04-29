@@ -1,3 +1,9 @@
+.. meta::
+   :description: Manage computed fields with the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, computed field
+
+.. _api_computed_field:
+
 Schema/Metadata API Reference: Computed Fields
 ==============================================
 
@@ -22,8 +28,8 @@ add_computed_field
 There cannot be an existing column or relationship or computed field with
 the same name.
 
-Create a ``computed field`` called ``get_articles`` on an ``author`` *table*, using
-an SQL function called ``fetch_articles``:
+Create a ``computed field`` called ``full_name`` on an ``author`` *table*, using
+an SQL function called ``author_full_name``:
 
 .. code-block:: http
 
@@ -38,10 +44,10 @@ an SQL function called ``fetch_articles``:
                "name":"author",
                "schema":"public"
            },
-           "name":"get_articles",
+           "name":"full_name",
            "definition":{
                "function":{
-                   "name":"fetch_articles",
+                   "name":"author_full_name",
                    "schema":"public"
                },
                "table_argument":"author_row"
@@ -99,6 +105,12 @@ ComputedFieldDefinition
      - String
      - Name of the argument which accepts a table row type. If omitted, the first
        argument is considered a table argument
+   * - session_argument
+     - false
+     - String
+     - Name of the argument which accepts the Hasura session object as
+       a JSON/JSONB value. If omitted, the Hasura session object is
+       not passed to the function
 
 .. _drop_computed_field:
 
@@ -106,11 +118,11 @@ drop_computed_field
 -------------------
 
 ``drop_computed_field`` is used to drop a computed field of a table. If
-there are other objects dependent on this computed field, like permissions, the query will fail and report the dependencies unless ``cascade`` is
-set to ``true``. If ``cascade`` is set to ``true``, the dependent objects
+there are other objects dependent on this computed field, like permissions, the query will fail and report the
+dependencies unless ``cascade`` is set to ``true``. If ``cascade`` is set to ``true``, the dependent objects
 are also dropped.
 
-Drop a computed field ``get_articles`` from a table ``author``:
+Drop a computed field ``full_name`` from a table ``author``:
 
 .. code-block:: http
 
@@ -125,7 +137,7 @@ Drop a computed field ``get_articles`` from a table ``author``:
                "name":"author",
                "schema":"public"
            },
-           "name":"get_articles",
+           "name":"full_name",
            "cascade": false
        }
    }

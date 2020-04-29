@@ -2,9 +2,25 @@ description: Try to define a relationship with custom column name
 url: /v1/query
 status: 400
 response:
-  path: "$.args"
-  error: custom column name "AuthorId" of table "author" already exists
-  code: already-exists
+  internal:
+  - definition:
+      using:
+        foreign_key_constraint_on:
+          column: author_id
+          table:
+            schema: public
+            name: article
+      name: AuthorId
+      comment:
+      table:
+        schema: public
+        name: author
+    reason: field definition conflicts with custom field name for postgres column
+      "id"
+    type: array_relation
+  path: $.args
+  error: field definition conflicts with custom field name for postgres column "id"
+  code: constraint-violation
 query:
   type: create_array_relationship
   args:

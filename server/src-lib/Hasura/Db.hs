@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 -- A module for postgres execution related types and operations
 
 module Hasura.Db
@@ -17,6 +19,8 @@ module Hasura.Db
   ) where
 
 import           Control.Lens
+import           Control.Monad.Trans.Control  (MonadBaseControl (..))
+import           Control.Monad.Unique
 import           Control.Monad.Validate
 
 import qualified Data.Aeson.Extended          as J
@@ -26,7 +30,7 @@ import qualified Database.PG.Query.Connection as Q
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.Permission
+import           Hasura.Session
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 
@@ -44,6 +48,8 @@ class (MonadError QErr m) => MonadTx m where
 instance (MonadTx m) => MonadTx (StateT s m) where
   liftTx = lift . liftTx
 instance (MonadTx m) => MonadTx (ReaderT s m) where
+  liftTx = lift . liftTx
+instance (Monoid w, MonadTx m) => MonadTx (WriterT w m) where
   liftTx = lift . liftTx
 instance (MonadTx m) => MonadTx (ValidateT e m) where
   liftTx = lift . liftTx
@@ -87,14 +93,14 @@ runLazyTx' (PGExecCtx pgPool _) = \case
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON
 
-setHeadersTx :: UserVars -> Q.TxE QErr ()
-setHeadersTx uVars =
+setHeadersTx :: SessionVariables -> Q.TxE QErr ()
+setHeadersTx session =
   Q.unitQE defaultTxErrorHandler setSess () False
   where
     setSess = Q.fromText $
-      "SET LOCAL \"hasura.user\" = " <> toSQLTxt (sessionInfoJsonExp uVars)
+      "SET LOCAL \"hasura.user\" = " <> toSQLTxt (sessionInfoJsonExp session)
 
-sessionInfoJsonExp :: UserVars -> S.SQLExp
+sessionInfoJsonExp :: SessionVariables -> S.SQLExp
 sessionInfoJsonExp = S.SELit . J.encodeToStrictText
 
 defaultTxErrorHandler :: Q.PGTxErr -> QErr
@@ -105,7 +111,7 @@ defaultTxErrorHandler = mkTxErrorHandler (const False)
 mkTxErrorHandler :: (PGErrorType -> Bool) -> Q.PGTxErr -> QErr
 mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
   where
-    unexpectedError = (internalError "postgres query error") { qeInternal = Just $ J.toJSON txe }
+    unexpectedError = (internalError "database query error") { qeInternal = Just $ J.toJSON txe }
     expectedError = uncurry err400 <$> do
       errorDetail <- Q.getPGStmtErr txe
       message <- Q.edMessage errorDetail
@@ -125,7 +131,7 @@ mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
 
         PGDataException code -> case code of
           Just (PGErrorSpecific PGInvalidEscapeSequence) -> (BadRequest, message)
-          _ -> (DataException, message)
+          _                                              -> (DataException, message)
 
         PGSyntaxErrorOrAccessRuleViolation code -> (ConstraintError,) $ case code of
           Just (PGErrorSpecific PGInvalidColumnReference) ->
@@ -136,7 +142,7 @@ withUserInfo :: UserInfo -> LazyTx QErr a -> LazyTx QErr a
 withUserInfo uInfo = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
-  LTTx tx  -> LTTx $ setHeadersTx (userVars uInfo) >> tx
+  LTTx tx  -> LTTx $ setHeadersTx (_uiSession uInfo) >> tx
 
 instance Functor (LazyTx e) where
   fmap f = \case
@@ -172,5 +178,16 @@ instance MonadTx (LazyTx QErr) where
 instance MonadTx (Q.TxE QErr) where
   liftTx = id
 
-instance MonadIO (LazyTx QErr) where
+instance MonadIO (LazyTx e) where
   liftIO = LTTx . liftIO
+
+instance MonadBase IO (LazyTx e) where
+  liftBase = liftIO
+
+instance MonadBaseControl IO (LazyTx e) where
+  type StM (LazyTx e) a = StM (Q.TxE e) a
+  liftBaseWith f = LTTx $ liftBaseWith \run -> f (run . lazyTxToQTx)
+  restoreM = LTTx . restoreM
+
+instance MonadUnique (LazyTx e) where
+  newUnique = liftIO newUnique

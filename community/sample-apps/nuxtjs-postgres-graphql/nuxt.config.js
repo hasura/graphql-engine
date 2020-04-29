@@ -42,13 +42,13 @@ module.exports = {
   modules: ['@nuxtjs/apollo'],
   // Give apollo module options
   apollo: {
-    tokenExpires: 10, // optional, default: 7 (days)
-    includeNodeModules: true, // optional, default: false (this includes graphql-tag for node_modules folder)
-    authenticationType: 'Basic', // optional, default: 'Bearer'
-    // optional
-    errorHandler (error) {
-      console.log('%cError', 'background: red; color: white; padding: 2px 4px; border-radius: 3px; font-weight: bold;', error.message)
+    cookieAttributes: {
+      expires: 7, // optional, default: 7 (days)
     },
+    includeNodeModules: true, // optional, default: false (this includes graphql-tag for node_modules folder)
+    authenticationType: 'Bearer', // optional, default: 'Bearer'
+    // optional
+    errorHandler: '~/plugins/apollo-error-handler.js',
     // required
     clientConfigs: {
       default: '~/apollo/clientConfig.js'

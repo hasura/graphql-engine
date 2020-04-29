@@ -11,7 +11,7 @@ class AllowedQueriesNotes extends React.Component {
           <code>--enable-allowlist</code> flag set to <i>true</i>, only queries
           added to the allow-list will be allowed to be executed.&nbsp;
           <a
-            href="https://docs.hasura.io/1.0/graphql/manual/deployment/allow-list.html"
+            href="https://hasura.io/docs/1.0/graphql/manual/deployment/allow-list.html"
             target="_blank"
             rel="noopener noreferrer"
           >

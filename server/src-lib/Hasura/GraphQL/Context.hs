@@ -6,17 +6,14 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
-import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
-import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.Types.Permission
-import           Hasura.Server.Utils           (duplicates)
+import           Hasura.Session
 
 -- | A /GraphQL context/, aka the final output of GraphQL schema generation. Used to both validate
 -- incoming queries and respond to introspection queries.
@@ -53,12 +50,27 @@ instance Has TypeMap GCtx where
 instance ToJSON GCtx where
   toJSON _ = String "ToJSON for GCtx is not implemented"
 
-type GCtxMap = Map.HashMap RoleName GCtx
+data RoleContext a
+  = RoleContext
+  { _rctxDefault :: !a -- ^ The default context for normal sessions
+  , _rctxBackend :: !(Maybe a) -- ^ The context for sessions with backend privilege.
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+$(deriveToJSON (aesonDrop 5 snakeCase) ''RoleContext)
+
+type GCtxMap = Map.HashMap RoleName (RoleContext GCtx)
+
+queryRootNamedType :: G.NamedType
+queryRootNamedType = G.NamedType "query_root"
+
+mutationRootNamedType :: G.NamedType
+mutationRootNamedType = G.NamedType "mutation_root"
+
+subscriptionRootNamedType :: G.NamedType
+subscriptionRootNamedType = G.NamedType "subscription_root"
 
 mkQueryRootTyInfo :: [ObjFldInfo] -> ObjTyInfo
 mkQueryRootTyInfo flds =
-  mkHsraObjTyInfo (Just "query root")
-  (G.NamedType "query_root") Set.empty $
+  mkHsraObjTyInfo (Just "query root") queryRootNamedType Set.empty $
   mapFromL _fiName $ schemaFld:typeFld:flds
   where
     schemaFld = mkHsraObjFldInfo Nothing "__schema" Map.empty $
@@ -78,44 +90,3 @@ emptyGCtx =
       allTys    = mkTyInfoMap $ TIObj queryRoot:defaultTypes
   -- for now subscription root is query root
   in GCtx allTys mempty queryRoot Nothing Nothing mempty mempty mempty mempty
-
-data TableCustomRootFields
-  = TableCustomRootFields
-  { _tcrfSelect          :: !(Maybe G.Name)
-  , _tcrfSelectByPk      :: !(Maybe G.Name)
-  , _tcrfSelectAggregate :: !(Maybe G.Name)
-  , _tcrfInsert          :: !(Maybe G.Name)
-  , _tcrfUpdate          :: !(Maybe G.Name)
-  , _tcrfDelete          :: !(Maybe G.Name)
-  } deriving (Show, Eq, Lift, Generic)
-$(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''TableCustomRootFields)
-
-instance FromJSON TableCustomRootFields where
-  parseJSON = withObject "Object" $ \obj -> do
-    select <- obj .:? "select"
-    selectByPk <- obj .:? "select_by_pk"
-    selectAggregate <- obj .:? "select_aggregate"
-    insert <- obj .:? "insert"
-    update <- obj .:? "update"
-    delete <- obj .:? "delete"
-
-    let duplicateRootFields = duplicates $
-                              catMaybes [ select, selectByPk, selectAggregate
-                                        , insert, update, delete
-                                        ]
-    when (not $ null duplicateRootFields) $ fail $ T.unpack $
-      "the following custom root field names are duplicated: "
-      <> showNames duplicateRootFields
-
-    pure $ TableCustomRootFields select selectByPk selectAggregate
-                                 insert update delete
-emptyCustomRootFields :: TableCustomRootFields
-emptyCustomRootFields =
-  TableCustomRootFields
-  { _tcrfSelect          = Nothing
-  , _tcrfSelectByPk      = Nothing
-  , _tcrfSelectAggregate = Nothing
-  , _tcrfInsert          = Nothing
-  , _tcrfUpdate          = Nothing
-  , _tcrfDelete          = Nothing
-  }

@@ -2,141 +2,127 @@ module Main (main) where
 
 import           Hasura.Prelude
 
-import           Data.Aeson                        (eitherDecodeStrict)
-import           Data.Either                       (isRight)
-import           Data.Time.Clock                   (getCurrentTime)
-import           Hasura.EncJSON
+import           Control.Concurrent.MVar
+import           Control.Natural              ((:~>) (..))
+import           Data.Time.Clock              (getCurrentTime)
 import           Options.Applicative
-import           System.Environment                (getEnvironment)
-import           System.Exit                       (exitFailure)
+import           System.Environment           (getEnvironment)
+import           System.Exit                  (exitFailure)
 import           Test.Hspec
-import           Test.QuickCheck
 
-import qualified Data.Aeson.Ordered                as AO
-import qualified Database.PG.Query                 as Q
-import qualified Network.HTTP.Client               as HTTP
-import qualified Network.HTTP.Client.TLS           as HTTP
-import qualified Test.Hspec.Runner                 as Hspec
+import qualified Data.Aeson                   as A
+import qualified Data.ByteString.Lazy.Char8   as BL
+import qualified Database.PG.Query            as Q
+import qualified Network.HTTP.Client          as HTTP
+import qualified Network.HTTP.Client.TLS      as HTTP
+import qualified Test.Hspec.Runner            as Hspec
 
-import           Hasura.Db                         (PGExecCtx (..))
-import           Hasura.RQL.DDL.Metadata           (ClearMetadata (..),
-                                                    runClearMetadata)
-import           Hasura.RQL.DDL.Metadata.Generator (genReplaceMetadata)
-import           Hasura.RQL.DDL.Metadata.Types     (ReplaceMetadata,
-                                                    replaceMetadataToOrdJSON)
-import           Hasura.RQL.Types                  (QErr, SQLGenCtx (..),
-                                                    adminUserInfo,
-                                                    emptySchemaCache,
-                                                    successMsg)
-import           Hasura.Server.Init                (RawConnInfo, mkConnInfo,
-                                                    mkRawConnInfo,
-                                                    parseRawConnInfo,
-                                                    runWithEnv)
+import           Hasura.Db                    (PGExecCtx (..))
+import           Hasura.RQL.Types             (SQLGenCtx (..))
+import           Hasura.RQL.Types.Run
+import           Hasura.Server.Init           (RawConnInfo, mkConnInfo, mkRawConnInfo,
+                                               parseRawConnInfo, runWithEnv)
 import           Hasura.Server.Migrate
-import           Hasura.Server.PGDump
-import           Hasura.Server.Query               (Run, RunCtx (..), peelRun)
+import           Hasura.Server.Version
+import           Hasura.Session               (adminUserInfo)
 
-data TestCommand
-  = TCMigrate !RawConnInfo -- ^ Run migrate tests
-  | TCProperty -- ^ Run property tests
+import qualified Data.Parser.CacheControlSpec as CacheControlParser
+import qualified Data.Parser.JSONPathSpec     as JsonPath
+import qualified Data.Parser.URLTemplate      as URLTemplate
+import qualified Data.TimeSpec                as TimeSpec
+import qualified Hasura.IncrementalSpec       as IncrementalSpec
+-- import qualified Hasura.RQL.MetadataSpec      as MetadataSpec
+import qualified Hasura.Server.MigrateSpec    as MigrateSpec
+import qualified Hasura.Server.TelemetrySpec  as TelemetrySpec
 
-data TestArgs
-  = TANoCommand !RawConnInfo -- ^ Run all tests
-  | TACommand !TestCommand -- ^ Run specified tests
+data TestSuites
+  = AllSuites !RawConnInfo
+  -- ^ Run all test suites. It probably doesn't make sense to be able to specify additional
+  -- hspec args here.
+  | SingleSuite ![String] !TestSuite
+  -- ^ Args to pass through to hspec (as if from 'getArgs'), and the specific suite to run.
 
-parseArgs :: ParserInfo TestArgs
-parseArgs =
-  info (helper <*> (parseNoCommand <|> (TACommand <$> parseSubCommand))) $
-    fullDesc <> header "Hasura GraphQL Engine test suite"
-  where
-    parseNoCommand = TANoCommand <$> parseRawConnInfo
-    parseSubCommand = subparser
-                     ( command "migrate" (info (helper <*> (TCMigrate <$> parseRawConnInfo))
-                         (progDesc "Run catalog migrate tests")
-                       )
-                       <> command "property" (info (pure TCProperty)
-                            (progDesc "Run property tests")
-                          )
-                     )
+data TestSuite
+  = UnitSuite
+  | PostgresSuite !RawConnInfo
 
 main :: IO ()
-main = do
-  testArgs <- execParser parseArgs
-  case testArgs of
-    TANoCommand pgConnOptions           -> runMigrateTests pgConnOptions >> runPropertyTests
-    TACommand (TCMigrate pgConnOptions) -> runMigrateTests pgConnOptions
-    TACommand TCProperty                -> runPropertyTests
+main = withVersion $$(getVersionFromEnvironment) $ parseArgs >>= \case
+  AllSuites pgConnOptions -> do
+    postgresSpecs <- buildPostgresSpecs pgConnOptions
+    runHspec [] (unitSpecs *> postgresSpecs)
+  SingleSuite hspecArgs suite -> runHspec hspecArgs =<< case suite of
+    UnitSuite                   -> pure unitSpecs
+    PostgresSuite pgConnOptions -> buildPostgresSpecs pgConnOptions
+
+unitSpecs :: Spec
+unitSpecs = do
+  describe "Data.Parser.CacheControl" CacheControlParser.spec
+  describe "Data.Parser.URLTemplate" URLTemplate.spec
+  describe "Data.Parser.JsonPath" JsonPath.spec
+  describe "Hasura.Incremental" IncrementalSpec.spec
+  -- describe "Hasura.RQL.Metadata" MetadataSpec.spec -- Commenting until optimizing the test in CI
+  describe "Data.Time" TimeSpec.spec
+  describe "Hasura.Server.Telemetry" TelemetrySpec.spec
+
+buildPostgresSpecs :: (HasVersion) => RawConnInfo -> IO Spec
+buildPostgresSpecs pgConnOptions = do
+  env <- getEnvironment
+
+  rawPGConnInfo <- flip onLeft printErrExit $ runWithEnv env (mkRawConnInfo pgConnOptions)
+  pgConnInfo <- flip onLeft printErrExit $ mkConnInfo rawPGConnInfo
+
+  let setupCacheRef = do
+        pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
+
+        httpManager <- HTTP.newManager HTTP.tlsManagerSettings
+        let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)
+            pgContext = PGExecCtx pgPool Q.Serializable
+
+            runAsAdmin :: Run a -> IO a
+            runAsAdmin =
+                  peelRun runContext pgContext Q.ReadWrite
+              >>> runExceptT
+              >=> flip onLeft printErrJExit
+
+        schemaCache <- snd <$> runAsAdmin (migrateCatalog =<< liftIO getCurrentTime)
+        cacheRef <- newMVar schemaCache
+        pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef)
+
+  pure $ beforeAll setupCacheRef $
+    describe "Hasura.Server.Migrate" $ MigrateSpec.spec pgConnInfo
+
+parseArgs :: IO TestSuites
+parseArgs = execParser $ info (helper <*> (parseNoCommand <|> parseSubCommand)) $
+  fullDesc <> header "Hasura GraphQL Engine test suite"
   where
-    runMigrateTests pgConnOptions = do
-      env <- getEnvironment
-      rawPGConnInfo <- flip onLeft printErrExit $ runWithEnv env (mkRawConnInfo pgConnOptions)
-      pgConnInfo <- flip onLeft printErrExit $ mkConnInfo rawPGConnInfo
-      pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
-
-      httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-      let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)
-          pgContext = PGExecCtx pgPool Q.Serializable
-
-          runAsAdmin :: Run a -> IO (Either QErr a)
-          runAsAdmin = runExceptT . fmap fst . peelRun emptySchemaCache runContext pgContext Q.ReadWrite
-
-      runHspec $ do
-        describe "Hasura.Server.Migrate" $ do
-          let dropAndInit time = runAsAdmin (dropCatalog *> migrateCatalog time)
-
-          describe "migrateCatalog" $ do
-            it "initializes the catalog" $ do
-              (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
-
-            it "is idempotent" $ do
-              let dumpSchema = runAsAdmin $
-                    execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
-              time <- getCurrentTime
-              dropAndInit time `shouldReturn` Right MRInitialized
-              firstDump <- dumpSchema
-              firstDump `shouldSatisfy` isRight
-              dropAndInit time `shouldReturn` Right MRInitialized
-              secondDump <- dumpSchema
-              secondDump `shouldBe` firstDump
-
-          describe "recreateSystemMetadata" $ do
-            let dumpMetadata = runAsAdmin $
-                  execPGDump (PGDumpReqBody ["--schema=hdb_catalog"] (Just False)) pgConnInfo
-
-            it "is idempotent" $ do
-              (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
-              firstDump <- dumpMetadata
-              firstDump `shouldSatisfy` isRight
-              runAsAdmin recreateSystemMetadata `shouldReturn` Right ()
-              secondDump <- dumpMetadata
-              secondDump `shouldBe` firstDump
-
-            it "does not create any objects affected by ClearMetadata" $ do
-              (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
-              firstDump <- dumpMetadata
-              firstDump `shouldSatisfy` isRight
-              runAsAdmin (runClearMetadata ClearMetadata) `shouldReturn` Right successMsg
-              secondDump <- dumpMetadata
-              secondDump `shouldBe` firstDump
-
-    runPropertyTests = do
-      putStrLn "Running property tests"
-      passed <- isSuccess <$> quickCheckResult (withMaxSuccess 30 prop_replacemetadata)
-      unless passed $ printErrExit "Property tests failed"
+    parseNoCommand = AllSuites <$> parseRawConnInfo
+    parseSubCommand = SingleSuite <$> parseHspecPassThroughArgs <*> subCmd
       where
-        prop_replacemetadata =
-          forAll (resize 3 genReplaceMetadata) $ \metadata ->
-            let encodedString = encJToBS $ AO.toEncJSON $ replaceMetadataToOrdJSON metadata
-                eitherResult :: Either String ReplaceMetadata
-                  = eitherDecodeStrict encodedString
-            in case eitherResult of
-                 Left err -> counterexample err False
-                 Right _  -> property True
+        subCmd = subparser $ mconcat
+          [ command "unit" $ info (pure UnitSuite) $
+              progDesc "Only run unit tests"
+          , command "postgres" $ info (helper <*> (PostgresSuite <$> parseRawConnInfo)) $
+              progDesc "Only run Postgres integration tests"
+          ]
+        -- Add additional arguments and tweak as needed:
+        hspecArgs = ["match", "skip"]
+        -- parse to a list of arguments as they'd appear from 'getArgs':
+        parseHspecPassThroughArgs :: Parser [String]
+        parseHspecPassThroughArgs = fmap concat $ for hspecArgs $ \nm->
+          fmap (maybe [] (\a -> ["--"<>nm , a])) $ optional $
+            strOption ( long nm <>
+                        metavar "<PATTERN>" <>
+                        help "Flag passed through to hspec (see hspec docs)." )
 
-    runHspec :: Spec -> IO ()
-    runHspec m = do
-      config <- Hspec.readConfig Hspec.defaultConfig []
-      Hspec.evaluateSummary =<< Hspec.runSpec m config
 
-    printErrExit :: String -> IO a
-    printErrExit = (*> exitFailure) . putStrLn
+runHspec :: [String] -> Spec -> IO ()
+runHspec hspecArgs m = do
+  config <- Hspec.readConfig Hspec.defaultConfig hspecArgs
+  Hspec.evaluateSummary =<< Hspec.runSpec m config
+
+printErrExit :: String -> IO a
+printErrExit = (*> exitFailure) . putStrLn
+
+printErrJExit :: (A.ToJSON a) => a -> IO b
+printErrJExit = (*> exitFailure) . BL.putStrLn . A.encode

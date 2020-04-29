@@ -1,93 +1,142 @@
 module Hasura.GraphQL.Resolve
   ( mutFldToTx
+
   , queryFldToPGAST
-  , RS.traverseQueryRootFldAST
-  , RS.toPGQuery
+  , traverseQueryRootFldAST
   , UnresolvedVal(..)
 
   , AnnPGVal(..)
   , txtConverter
 
-  , RS.QueryRootFldUnresolved
-  , resolveValPrep
-  , queryFldToSQL
+  , QueryRootFldAST(..)
+  , QueryRootFldUnresolved
+  , QueryRootFldResolved
+  , toPGQuery
+
   , RIntro.schemaR
   , RIntro.typeR
   ) where
 
 import           Data.Has
+import           Hasura.Session
 
 import qualified Data.HashMap.Strict               as Map
 import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Network.HTTP.Client               as HTTP
+import qualified Network.HTTP.Types                as HTTP
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.Prelude
-import           Hasura.RQL.DML.Internal           (currentSession,
-                                                    sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
+import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types
 
+import qualified Hasura.GraphQL.Resolve.Action     as RA
 import qualified Hasura.GraphQL.Resolve.Insert     as RI
 import qualified Hasura.GraphQL.Resolve.Introspect as RIntro
 import qualified Hasura.GraphQL.Resolve.Mutation   as RM
 import qualified Hasura.GraphQL.Resolve.Select     as RS
 import qualified Hasura.GraphQL.Validate           as V
+import qualified Hasura.RQL.DML.Select             as DS
+import qualified Hasura.SQL.DML                    as S
+
+data QueryRootFldAST v
+  = QRFPk !(DS.AnnSimpleSelG v)
+  | QRFSimple !(DS.AnnSimpleSelG v)
+  | QRFAgg !(DS.AnnAggSelG v)
+  | QRFActionSelect !(DS.AnnSimpleSelG v)
+  | QRFActionExecuteObject !(DS.AnnSimpleSelG v)
+  | QRFActionExecuteList !(DS.AnnSimpleSelG v)
+  deriving (Show, Eq)
+
+type QueryRootFldUnresolved = QueryRootFldAST UnresolvedVal
+type QueryRootFldResolved = QueryRootFldAST S.SQLExp
+
+traverseQueryRootFldAST
+  :: (Applicative f)
+  => (a -> f b)
+  -> QueryRootFldAST a
+  -> f (QueryRootFldAST b)
+traverseQueryRootFldAST f = \case
+  QRFPk s                  -> QRFPk <$> DS.traverseAnnSimpleSel f s
+  QRFSimple s              -> QRFSimple <$> DS.traverseAnnSimpleSel f s
+  QRFAgg s                 -> QRFAgg <$> DS.traverseAnnAggSel f s
+  QRFActionSelect s        -> QRFActionSelect <$> DS.traverseAnnSimpleSel f s
+  QRFActionExecuteObject s -> QRFActionExecuteObject <$> DS.traverseAnnSimpleSel f s
+  QRFActionExecuteList s   -> QRFActionExecuteList <$> DS.traverseAnnSimpleSel f s
+
+toPGQuery :: QueryRootFldResolved -> Q.Query
+toPGQuery = \case
+  QRFPk s                  -> DS.selectQuerySQL DS.JASSingleObject s
+  QRFSimple s              -> DS.selectQuerySQL DS.JASMultipleRows s
+  QRFAgg s                 -> DS.selectAggQuerySQL s
+  QRFActionSelect s        -> DS.selectQuerySQL DS.JASSingleObject s
+  QRFActionExecuteObject s -> DS.selectQuerySQL DS.JASSingleObject s
+  QRFActionExecuteList s   -> DS.selectQuerySQL DS.JASMultipleRows s
 
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
 validateHdrs userInfo hdrs = do
-  let receivedVars = userVars userInfo
+  let receivedVars = _uiSession userInfo
   forM_ hdrs $ \hdr ->
-    unless (isJust $ getVarVal hdr receivedVars) $
+    unless (isJust $ getSessionVariableValue (mkSessionVariable hdr) receivedVars) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
 
 queryFldToPGAST
-  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
+  :: ( MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     , Has UserInfo r
      , Has QueryCtxMap r
+     , HasVersion
+     , MonadIO m
      )
   => V.Field
-  -> m RS.QueryRootFldUnresolved
-queryFldToPGAST fld = do
+  -> RA.QueryActionExecuter
+  -> m QueryRootFldUnresolved
+queryFldToPGAST fld actionExecuter = do
   opCtx <- getOpCtx $ V._fName fld
   userInfo <- asks getter
   case opCtx of
     QCSelect ctx -> do
       validateHdrs userInfo (_socHeaders ctx)
-      RS.convertSelect ctx fld
+      QRFSimple <$> RS.convertSelect ctx fld
     QCSelectPkey ctx -> do
       validateHdrs userInfo (_spocHeaders ctx)
-      RS.convertSelectByPKey ctx fld
+      QRFPk <$> RS.convertSelectByPKey ctx fld
     QCSelectAgg ctx -> do
       validateHdrs userInfo (_socHeaders ctx)
-      RS.convertAggSelect ctx fld
+      QRFAgg <$> RS.convertAggSelect ctx fld
     QCFuncQuery ctx -> do
       validateHdrs userInfo (_fqocHeaders ctx)
-      RS.convertFuncQuerySimple ctx fld
+      QRFSimple <$> RS.convertFuncQuerySimple ctx fld
     QCFuncAggQuery ctx -> do
       validateHdrs userInfo (_fqocHeaders ctx)
-      RS.convertFuncQueryAgg ctx fld
-
-queryFldToSQL
-  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
-     , Has QueryCtxMap r
-     )
-  => PrepFn m
-  -> V.Field
-  -> m Q.Query
-queryFldToSQL fn fld = do
-  pgAST <- queryFldToPGAST fld
-  resolvedAST <- flip RS.traverseQueryRootFldAST pgAST $ \case
-    UVPG annPGVal -> fn annPGVal
-    UVSQL sqlExp  -> return sqlExp
-    UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
-    UVSession -> pure currentSession
-  return $ RS.toPGQuery resolvedAST
+      QRFAgg <$> RS.convertFuncQueryAgg ctx fld
+    QCAsyncActionFetch ctx ->
+      QRFActionSelect <$> RA.resolveAsyncActionQuery userInfo ctx fld
+    QCAction ctx -> do
+      -- query actions should not be marked reusable because we aren't
+      -- capturing the variable value in the state as re-usable variables.
+      -- The variables captured in non-action queries are used to generate
+      -- an SQL query, but in case of query actions it's converted into JSON
+      -- and included in the action's webhook payload.
+      markNotReusable
+      let f = case jsonAggType of
+             DS.JASMultipleRows -> QRFActionExecuteList
+             DS.JASSingleObject -> QRFActionExecuteObject
+      f <$> actionExecuter (RA.resolveActionQuery fld ctx (_uiSession userInfo))
+      where
+        outputType = _saecOutputType ctx
+        jsonAggType = RA.mkJsonAggSelect outputType
 
 mutFldToTx
-  :: ( MonadReusability m
+  :: ( HasVersion
+     , MonadReusability m
      , MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
@@ -96,23 +145,38 @@ mutFldToTx
      , Has OrdByCtx r
      , Has SQLGenCtx r
      , Has InsCtxMap r
+     , Has HTTP.Manager r
+     , Has [HTTP.Header] r
+     , MonadIO m
      )
   => V.Field
-  -> m RespTx
+  -> m (RespTx, HTTP.ResponseHeaders)
 mutFldToTx fld = do
   userInfo <- asks getter
   opCtx <- getOpCtx $ V._fName fld
+  let noRespHeaders = fmap (,[])
+      roleName = _uiRole userInfo
   case opCtx of
     MCInsert ctx -> do
-      let roleName = userRole userInfo
       validateHdrs userInfo (_iocHeaders ctx)
-      RI.convertInsert roleName (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsert roleName (_iocTable ctx) fld
+    MCInsertOne ctx -> do
+      validateHdrs userInfo (_iocHeaders ctx)
+      noRespHeaders $ RI.convertInsertOne roleName (_iocTable ctx) fld
     MCUpdate ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
-      RM.convertUpdate ctx fld
+      noRespHeaders $ RM.convertUpdate ctx fld
+    MCUpdateByPk ctx -> do
+      validateHdrs userInfo (_uocHeaders ctx)
+      noRespHeaders $ RM.convertUpdateByPk ctx fld
     MCDelete ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
-      RM.convertDelete ctx fld
+      noRespHeaders $ RM.convertDelete ctx fld
+    MCDeleteByPk ctx -> do
+      validateHdrs userInfo (_docHeaders ctx)
+      noRespHeaders $ RM.convertDeleteByPk ctx fld
+    MCAction ctx ->
+      RA.resolveActionMutation fld ctx (_uiSession userInfo)
 
 getOpCtx
   :: ( MonadReusability m

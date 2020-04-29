@@ -1,3 +1,9 @@
+.. meta::
+   :description: Use serverless functions with Hasura event triggers
+   :keywords: hasura, docs, event trigger, serverless function
+
+.. _triggers_serverless:
+
 Using serverless functions
 ==========================
 
@@ -54,9 +60,9 @@ Consider the following simplified schema for the above:
 
 Whenever an update happens to the ``notes`` table, we want to insert a row into the ``note_revision`` table.
 
-For this we :doc:`setup an event trigger <create-trigger>` on ``UPDATE`` to the ``notes`` table which calls an
+For this we :ref:`setup an event trigger <create_trigger>` on ``UPDATE`` to the ``notes`` table which calls an
 AWS Lambda function. The AWS Lambda function itself uses a GraphQL mutation to insert a new row into the
-``note_revision`` table. As the :doc:`event trigger payload <payload>` in case of updates gives us both the old and
+``note_revision`` table. As the :ref:`event trigger payload <trigger_payload>` in case of updates gives us both the old and
 the new data, we can store the old note data in our revision table.
 
 Our AWS Lambda code looks like this:

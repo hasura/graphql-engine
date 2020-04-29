@@ -1,0 +1,83 @@
+- description: Update actions webhook to another route which retuns array response
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: create_user
+      definition:
+        kind: synchronous
+        arguments:
+        - name: users
+          type: '[UserInput!]!'
+        output_type: UserId
+        handler: http://127.0.0.1:5593/create-users
+
+- description: Run create_users sync action
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        create_user(users: [{email: "blake@hasura.io", name: "Blake"}, {email: "elsa@hasura.io", name: "Elsa"}]){
+          id
+          user {
+            name
+            email
+            is_admin
+          }
+        }
+      }
+
+  response:
+    errors:
+    - extensions:
+        internal:
+          error: unexpected response
+          response:
+            status: 200
+            body:
+            - id: 1
+            - id: 2
+            headers:
+            - value: application/json
+              name: Content-Type
+            - value: abcd
+              name: Set-Cookie
+          request:
+            body:
+              session_variables:
+                x-hasura-role: admin
+              input:
+                users:
+                - email: blake@hasura.io
+                  name: Blake
+                - email: elsa@hasura.io
+                  name: Elsa
+              action:
+                name: create_user
+            url: http://127.0.0.1:5593/create-users
+            headers: []
+        path: $
+        code: unexpected
+      message: expecting object for action webhook response but got array
+- description: Revert action definition
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: create_user
+      definition:
+        kind: synchronous
+        arguments:
+        - name: email
+          type: String!
+        - name: name
+          type: String!
+        output_type: UserId
+        handler: http://127.0.0.1:5593/create-user

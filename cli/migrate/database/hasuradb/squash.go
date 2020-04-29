@@ -40,14 +40,23 @@ func (q CustomQuery) MergeEventTriggers(squashList *database.CustomList) error {
 		prevElems := make([]*list.Element, 0)
 		for _, val := range g.Group {
 			element := val.(*list.Element)
-			switch element.Value.(type) {
-			case *trackTableInput:
+			switch obj := element.Value.(type) {
+			case *createEventTriggerInput:
+				if obj.Replace {
+					for _, e := range prevElems {
+						squashList.Remove(e)
+					}
+					err := eventTriggerTransition.Trigger("delete_event_trigger", &evCfg, nil)
+					if err != nil {
+						return err
+					}
+				}
 				err := eventTriggerTransition.Trigger("create_event_trigger", &evCfg, nil)
 				if err != nil {
 					return err
 				}
 				prevElems = append(prevElems, element)
-			case *unTrackTableInput:
+			case *deleteEventTriggerInput:
 				err := eventTriggerTransition.Trigger("delete_event_trigger", &evCfg, nil)
 				if err != nil {
 					return err
@@ -413,6 +422,11 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 					}
 				}
 				prevElems = append(prevElems, element)
+			case *setTableIsEnumInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot set table %s on schema %s has a enum when it is untracked", tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
 			}
 		}
 	}
@@ -730,7 +744,7 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 		if body == "" {
 			break
 		}
-		tt := &runSQLInput{
+		tt := &RunSQLInput{
 			SQL: body,
 		}
 		l.PushBack(tt)
@@ -748,7 +762,7 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 				for e := l.Front(); e != nil; e = next {
 					next = e.Next()
 					switch e.Value.(type) {
-					case *runSQLInput:
+					case *RunSQLInput:
 						// do nothing
 					default:
 						l.Remove(e)
@@ -765,7 +779,7 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 				for e := l.Front(); e != nil; e = next {
 					next = e.Next()
 					switch e.Value.(type) {
-					case *runSQLInput:
+					case *RunSQLInput:
 						// do nothing
 					default:
 						l.Remove(e)
@@ -984,6 +998,11 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 					args.Table.Name,
 					args.Table.Schema,
 				}
+			case *setTableIsEnumInput:
+				return tableMap{
+					args.Table.Name,
+					args.Table.Schema,
+				}
 			case *createEventTriggerInput:
 				return tableMap{
 					args.Table.Name,
@@ -1185,6 +1204,8 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		case *trackTableV2Input:
 			q.Version = v2
 			q.Type = trackTable
+		case *setTableIsEnumInput:
+			q.Type = setTableIsEnum
 		case *unTrackTableInput:
 			q.Type = untrackTable
 		case *setTableCustomFieldsV2Input:
@@ -1246,7 +1267,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			q.Type = addComputedField
 		case *dropComputedFieldInput:
 			q.Type = dropComputedField
-		case *runSQLInput:
+		case *RunSQLInput:
 			ret <- []byte(args.SQL)
 			continue
 		default:

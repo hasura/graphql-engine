@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura migrate create to create migration files for Hasura migrations with the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura migrate create
+
 .. _hasura_migrate_create:
 
 Hasura CLI: hasura migrate create
@@ -20,16 +24,20 @@ Examples
 
 ::
 
-    # Set up migration files for the first time by introspecting a server:
+    # Setup migration files for the first time by introspecting a server:
     hasura migrate create "init" --from-server
+
+    # Use with admin secret:
+    hasura migrate create --admin-secret "<admin-secret>"
+
+    # Setup migration files from an instance mentioned by the flag:
+    hasura migrate create init --from-server --endpoint "<endpoint>"
 
 Options
 ~~~~~~~
 
 ::
 
-      --admin-secret string         admin secret for Hasura GraphQL engine
-      --endpoint string             http(s) endpoint for Hasura GraphQL engine
       --from-server                 get SQL statements and Hasura metadata from the server
   -h, --help                        help for create
       --metadata-from-file string   path to a hasura metadata file to be used for up actions
@@ -43,10 +51,12 @@ Options inherited from parent commands
 
 ::
 
-      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --no-color            do not colorize output (default: false)
-      --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   Skip automatic update check on command execution
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
+      --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color              do not colorize output (default: false)
+      --project string        directory where commands are executed (default: current dir)
+      --skip-update-check     skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

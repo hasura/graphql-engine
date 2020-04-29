@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
@@ -20,6 +20,10 @@ import {
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
 import './AceEditorFix.css';
+import {
+  ACE_EDITOR_THEME,
+  ACE_EDITOR_FONT_SIZE,
+} from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 const RawSQL = ({
@@ -39,6 +43,35 @@ const RawSQL = ({
   allSchemas,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
+
+  // local storage key for SQL
+  const LS_RAW_SQL_SQL = 'rawSql:sql';
+
+  /* hooks */
+
+  // set up sqlRef to use in unmount
+  const sqlRef = useRef(sql);
+
+  // set SQL from localStorage on mount and write back to localStorage on unmount
+  useEffect(() => {
+    if (!sql) {
+      const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
+      if (sqlFromLocalStorage) {
+        dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
+      }
+    }
+
+    return () => {
+      localStorage.setItem(LS_RAW_SQL_SQL, sqlRef.current);
+    };
+  }, []);
+
+  // set SQL to sqlRef
+  useEffect(() => {
+    sqlRef.current = sql;
+  }, [sql]);
+
+  /* hooks - end */
 
   const cascadeTip = (
     <Tooltip id="tooltip-cascade">
@@ -64,6 +97,9 @@ const RawSQL = ({
   );
 
   const submitSQL = () => {
+    // set SQL to LS
+    localStorage.setItem(LS_RAW_SQL_SQL, sql);
+
     // check migration mode global
     if (migrationMode) {
       const checkboxElem = document.getElementById('migration-checkbox');
@@ -137,14 +173,14 @@ const RawSQL = ({
         title={'Run SQL'}
         onClose={onModalClose}
         onSubmit={onConfirmNoMigration}
-        submitText={'Yes, i confirm'}
+        submitText={'Yes, I confirm'}
         submitTestId={'not-migration-confirm'}
       >
         <div className="content-fluid">
           <div className="row">
             <div className="col-xs-12">
-              Your SQL Statement is most likely modifying the database schema.
-              Are you sure its not a migration?
+              Your SQL statement is most likely modifying the database schema.
+              Are you sure it is not a migration?
             </div>
           </div>
         </div>
@@ -203,7 +239,8 @@ const RawSQL = ({
         <AceEditor
           data-test="sql-test-editor"
           mode="sql"
-          theme="github"
+          theme={ACE_EDITOR_THEME}
+          fontSize={ACE_EDITOR_FONT_SIZE}
           name="raw_sql"
           value={sql}
           minLines={15}

@@ -1,6 +1,7 @@
 module Hasura.SQL.Value
   ( PGScalarValue(..)
   , pgColValueToInt
+  , pgScalarValueToJson
   , withConstructorFn
   , parsePGValue
 
@@ -35,6 +36,7 @@ import qualified Data.Text                  as T
 import qualified Data.Text.Conversions      as TC
 import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Lazy             as TL
+import qualified Data.UUID                  as UUID
 
 import qualified Database.PostgreSQL.LibPQ  as PQ
 import qualified PostgreSQL.Binary.Encoding as PE
@@ -51,6 +53,9 @@ instance FromJSON RasterWKB where
         "invalid hexadecimal representation of raster well known binary format"
     _        -> fail "expecting String for raster"
 
+instance ToJSON RasterWKB where
+  toJSON = toJSON . TC.toText . getRasterWKB
+
 --  Binary value. Used in prepared sq
 data PGScalarValue
   = PGValInteger !Int32
@@ -59,11 +64,14 @@ data PGScalarValue
   | PGValFloat !Float
   | PGValDouble !Double
   | PGValNumeric !Scientific
+  | PGValMoney !Scientific
   | PGValBoolean !Bool
   | PGValChar !Char
   | PGValVarchar !T.Text
   | PGValText !T.Text
+  | PGValCitext !T.Text
   | PGValDate !Day
+  | PGValTimeStamp !LocalTime
   | PGValTimeStampTZ !UTCTime
   | PGValTimeTZ !ZonedTimeOfDay
   | PGNull !PGScalarType
@@ -71,8 +79,38 @@ data PGScalarValue
   | PGValJSONB !Q.JSONB
   | PGValGeo !GeometryWithCRS
   | PGValRaster !RasterWKB
+  | PGValUUID !UUID.UUID
   | PGValUnknown !T.Text
   deriving (Show, Eq)
+
+pgScalarValueToJson :: PGScalarValue -> Value
+pgScalarValueToJson = \case
+  PGValInteger i  -> toJSON i
+  PGValSmallInt i -> toJSON i
+  PGValBigInt i   -> toJSON i
+  PGValFloat f    -> toJSON f
+  PGValDouble d   -> toJSON d
+  PGValNumeric sc -> toJSON sc
+  PGValMoney m    -> toJSON m
+  PGValBoolean b  -> toJSON b
+  PGValChar t     -> toJSON t
+  PGValVarchar t  -> toJSON t
+  PGValText t     -> toJSON t
+  PGValCitext t   -> toJSON t
+  PGValDate d     -> toJSON d
+  PGValTimeStamp u ->
+    toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
+  PGValTimeStampTZ u ->
+    toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
+  PGValTimeTZ (ZonedTimeOfDay tod tz) ->
+    toJSON (show tod ++ timeZoneOffsetString tz)
+  PGNull _ -> Null
+  PGValJSON (Q.JSON j)    -> j
+  PGValJSONB (Q.JSONB j)  -> j
+  PGValGeo o    -> toJSON o
+  PGValRaster r -> toJSON r
+  PGValUUID u -> toJSON u
+  PGValUnknown t -> toJSON t
 
 pgColValueToInt :: PGScalarValue -> Maybe Int
 pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i
@@ -94,20 +132,46 @@ parsePGValue ty val = case (ty, val) of
   (_          , String t) -> parseTyped <|> pure (PGValUnknown t)
   (_          , _)        -> parseTyped
   where
+    parseBoundedInt :: forall i. (Integral i, Bounded i) => Value -> AT.Parser i
+    parseBoundedInt val' =
+      withScientific
+        ("Integer expected for input type: " ++ show ty)
+        go
+        val'
+      where
+        go num = case toBoundedInteger num of
+          Just parsed -> return parsed
+          Nothing     -> fail $ "The value " ++ show num ++ " lies outside the "
+                         ++ "bounds or is not an integer.  Maybe it is a "
+                         ++ "float, or is there integer overflow?"
+    parseBoundedFloat :: forall a. (RealFloat a) => Value -> AT.Parser a
+    parseBoundedFloat val' =
+      withScientific
+        ("Float expected for input type: " ++ show ty)
+        go
+        val'
+      where
+        go num = case toBoundedRealFloat num of
+          Left _       -> fail $ "The value " ++ show num ++ " lies outside the "
+                          ++ "bounds.  Is it overflowing the float bounds?"
+          Right parsed -> return parsed
     parseTyped = case ty of
-      PGSmallInt -> PGValSmallInt <$> parseJSON val
-      PGInteger -> PGValInteger <$> parseJSON val
-      PGBigInt -> PGValBigInt <$> parseJSON val
-      PGSerial -> PGValInteger <$> parseJSON val
-      PGBigSerial -> PGValBigInt <$> parseJSON val
-      PGFloat -> PGValFloat <$> parseJSON val
-      PGDouble -> PGValDouble <$> parseJSON val
+      PGSmallInt -> PGValSmallInt <$> parseBoundedInt val
+      PGInteger -> PGValInteger <$> parseBoundedInt val
+      PGBigInt -> PGValBigInt <$> parseBoundedInt val
+      PGSerial -> PGValInteger <$> parseBoundedInt val
+      PGBigSerial -> PGValBigInt <$> parseBoundedInt val
+      PGFloat -> PGValFloat <$> parseBoundedFloat val
+      PGDouble -> PGValDouble <$> parseBoundedFloat val
       PGNumeric -> PGValNumeric <$> parseJSON val
+      PGMoney -> PGValMoney <$> parseJSON val
       PGBoolean -> PGValBoolean <$> parseJSON val
       PGChar -> PGValChar <$> parseJSON val
       PGVarchar -> PGValVarchar <$> parseJSON val
       PGText -> PGValText <$> parseJSON val
+      PGCitext -> PGValCitext <$> parseJSON val
       PGDate -> PGValDate <$> parseJSON val
+      PGTimeStamp -> PGValTimeStamp <$> parseJSON val
       PGTimeStampTZ -> PGValTimeStampTZ <$> parseJSON val
       PGTimeTZ -> PGValTimeTZ <$> parseJSON val
       PGJSON -> PGValJSON . Q.JSON <$> parseJSON val
@@ -115,8 +179,9 @@ parsePGValue ty val = case (ty, val) of
       PGGeometry -> PGValGeo <$> parseJSON val
       PGGeography -> PGValGeo <$> parseJSON val
       PGRaster -> PGValRaster <$> parseJSON val
+      PGUUID -> PGValUUID <$> parseJSON val
       PGUnknown tyName ->
-        fail $ "A string is expected for type : " ++ T.unpack tyName
+        fail $ "A string is expected for type: " ++ T.unpack tyName
 
 data TxtEncodedPGVal
   = TENull
@@ -143,11 +208,15 @@ txtEncodedPGVal colVal = case colVal of
   PGValFloat f    -> TELit $ T.pack $ show f
   PGValDouble d   -> TELit $ T.pack $ show d
   PGValNumeric sc -> TELit $ T.pack $ show sc
+  PGValMoney m    -> TELit $ T.pack $ show m
   PGValBoolean b  -> TELit $ bool "false" "true" b
   PGValChar t     -> TELit $ T.pack $ show t
   PGValVarchar t  -> TELit t
   PGValText t     -> TELit t
+  PGValCitext t   -> TELit t
   PGValDate d     -> TELit $ T.pack $ showGregorian d
+  PGValTimeStamp u ->
+    TELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeStampTZ u ->
     TELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeTZ (ZonedTimeOfDay tod tz) ->
@@ -161,37 +230,53 @@ txtEncodedPGVal colVal = case colVal of
   PGValGeo o    -> TELit $ TL.toStrict $
     AE.encodeToLazyText o
   PGValRaster r -> TELit $ TC.toText $ getRasterWKB r
+  PGValUUID u -> TELit $ UUID.toText u
   PGValUnknown t -> TELit t
 
 binEncoder :: PGScalarValue -> Q.PrepArg
 binEncoder colVal = case colVal of
-  PGValInteger i -> Q.toPrepVal i
-  PGValSmallInt i -> Q.toPrepVal i
-  PGValBigInt i -> Q.toPrepVal i
-  PGValFloat f -> Q.toPrepVal f
-  PGValDouble d -> Q.toPrepVal d
-  PGValNumeric sc -> Q.toPrepVal sc
-  PGValBoolean b -> Q.toPrepVal b
-  PGValChar t -> Q.toPrepVal t
-  PGValVarchar t -> Q.toPrepVal t
-  PGValText t -> Q.toPrepVal t
-  PGValDate d -> Q.toPrepVal d
-  PGValTimeStampTZ u -> Q.toPrepVal u
+  PGValInteger i                   -> Q.toPrepVal i
+  PGValSmallInt i                  -> Q.toPrepVal i
+  PGValBigInt i                    -> Q.toPrepVal i
+  PGValFloat f                     -> Q.toPrepVal f
+  PGValDouble d                    -> Q.toPrepVal d
+  PGValNumeric sc                  -> Q.toPrepVal sc
+  PGValMoney m                     -> Q.toPrepVal m
+  PGValBoolean b                   -> Q.toPrepVal b
+  PGValChar t                      -> Q.toPrepVal t
+  PGValVarchar t                   -> Q.toPrepVal t
+  PGValText t                      -> Q.toPrepVal t
+  PGValCitext t                    -> Q.toPrepVal t
+  PGValDate d                      -> Q.toPrepVal d
+  PGValTimeStamp u                 -> Q.toPrepVal u
+  PGValTimeStampTZ u               -> Q.toPrepVal u
   PGValTimeTZ (ZonedTimeOfDay t z) -> Q.toPrepValHelper PTI.timetz PE.timetz_int (t, z)
-  PGNull ty -> (pgTypeOid ty, Nothing)
-  PGValJSON u -> Q.toPrepVal u
-  PGValJSONB u -> Q.toPrepVal u
-  PGValGeo o -> Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
-  PGValRaster r -> Q.toPrepVal $ TC.toText $ getRasterWKB r
-  PGValUnknown t -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
+  PGNull ty                        -> (pgTypeOid ty, Nothing)
+  PGValJSON u                      -> Q.toPrepVal u
+  PGValJSONB u                     -> Q.toPrepVal u
+  PGValGeo o                       -> Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
+  PGValRaster r                    -> Q.toPrepVal $ TC.toText $ getRasterWKB r
+  PGValUUID u                      -> Q.toPrepVal u
+  PGValUnknown t                   -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
 
 txtEncoder :: PGScalarValue -> S.SQLExp
 txtEncoder colVal = case txtEncodedPGVal colVal of
   TENull  -> S.SENull
   TELit t -> S.SELit t
 
+{- Note [Type casting prepared params]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Prepared values are passed to Postgres via text encoding. Explicit type cast for prepared params
+is needed to distinguish the column types. For example, the parameter for citext column type is
+generated as ($i)::citext where 'i' is parameter position (integer).
+
+Also see https://github.com/hasura/graphql-engine/issues/2818
+-}
+
 toPrepParam :: Int -> PGScalarType -> S.SQLExp
-toPrepParam i ty = withConstructorFn ty $ S.SEPrep i
+toPrepParam i ty =
+  -- See Note [Type casting prepared params] above
+  S.withTyAnn ty . withConstructorFn ty $ S.SEPrep i
 
 toBinaryValue :: WithScalarType PGScalarValue -> Q.PrepArg
 toBinaryValue = binEncoder . pstValue

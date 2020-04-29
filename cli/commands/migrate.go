@@ -2,17 +2,13 @@ package commands
 
 import (
 	"fmt"
-	"net/url"
-	"runtime"
-	"strings"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
-	"github.com/hasura/graphql-engine/cli/version"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	// Initialize migration drivers
 	_ "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
@@ -21,10 +17,20 @@ import (
 
 // NewMigrateCmd returns the migrate command
 func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
+	v := viper.New()
 	migrateCmd := &cobra.Command{
 		Use:          "migrate",
 		Short:        "Manage migrations on the database",
 		SilenceUsage: true,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Root().PersistentPreRun(cmd, args)
+			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
+			return ec.Validate()
+		},
 	}
 	migrateCmd.AddCommand(
 		newMigrateApplyCmd(ec),
@@ -32,17 +38,23 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newMigrateCreateCmd(ec),
 		newMigrateSquashCmd(ec),
 	)
-	return migrateCmd
-}
 
-func newMigrate(dir string, db *url.URL, adminSecretValue string, logger *logrus.Logger, v *version.Version, isCmd bool) (*migrate.Migrate, error) {
-	dbURL := getDataPath(db, getAdminSecretHeaderName(v), adminSecretValue)
-	fileURL := getFilePath(dir)
-	t, err := migrate.New(fileURL.String(), dbURL.String(), isCmd, logger)
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot create migrate instance")
-	}
-	return t, nil
+	f := migrateCmd.PersistentFlags()
+
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.MarkDeprecated("access-key", "use --admin-secret instead")
+	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
+	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
+
+	util.BindPFlag(v, "endpoint", f.Lookup("endpoint"))
+	util.BindPFlag(v, "admin_secret", f.Lookup("admin-secret"))
+	util.BindPFlag(v, "access_key", f.Lookup("access-key"))
+	util.BindPFlag(v, "insecure_skip_tls_verify", f.Lookup("insecure-skip-tls-verify"))
+	util.BindPFlag(v, "certificate_authority", f.Lookup("certificate-authority"))
+
+	return migrateCmd
 }
 
 // ExecuteMigration runs the actual migration
@@ -54,6 +66,8 @@ func ExecuteMigration(cmd string, t *migrate.Migrate, stepOrVersion int64) error
 		err = mig.UpCmd(t, stepOrVersion)
 	case "down":
 		err = mig.DownCmd(t, stepOrVersion)
+	case "gotoVersion":
+		err = mig.GotoVersionCmd(t, stepOrVersion)
 	case "version":
 		var direction string
 		if stepOrVersion >= 0 {
@@ -76,57 +90,4 @@ func executeStatus(t *migrate.Migrate) (*migrate.Status, error) {
 		return nil, err
 	}
 	return status, nil
-}
-
-func getDataPath(nurl *url.URL, adminSecretHeader, adminSecretValue string) *url.URL {
-	host := &url.URL{
-		Scheme: "hasuradb",
-		Host:   nurl.Host,
-		Path:   nurl.Path,
-	}
-	q := nurl.Query()
-	// Set sslmode in query
-	switch scheme := nurl.Scheme; scheme {
-	case "https":
-		q.Set("sslmode", "enable")
-	default:
-		q.Set("sslmode", "disable")
-	}
-	if adminSecretValue != "" {
-		q.Add("headers", fmt.Sprintf("%s:%s", adminSecretHeader, adminSecretValue))
-	}
-	host.RawQuery = q.Encode()
-	return host
-}
-
-func getFilePath(dir string) *url.URL {
-	host := &url.URL{
-		Scheme: "file",
-		Path:   dir,
-	}
-
-	// Add Prefix / to path if runtime.GOOS equals to windows
-	if runtime.GOOS == "windows" && !strings.HasPrefix(host.Path, "/") {
-		host.Path = "/" + host.Path
-	}
-	return host
-}
-
-const (
-	XHasuraAdminSecret = "X-Hasura-Admin-Secret"
-	XHasuraAccessKey   = "X-Hasura-Access-Key"
-)
-
-func getAdminSecretHeaderName(v *version.Version) string {
-	if v.ServerSemver == nil {
-		return XHasuraAdminSecret
-	}
-	flags, err := v.GetServerFeatureFlags()
-	if err != nil {
-		return XHasuraAdminSecret
-	}
-	if flags.HasAccessKey {
-		return XHasuraAccessKey
-	}
-	return XHasuraAdminSecret
 }

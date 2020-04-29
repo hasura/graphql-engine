@@ -8,7 +8,6 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import qualified Data.HashMap.Strict        as HM
-import qualified Data.Map.Strict            as M
 import qualified Data.Text                  as T
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
@@ -35,7 +34,7 @@ instance (ToJSON a) => ToAesonPairs (RelDef a) where
 data RelManualConfig
   = RelManualConfig
   { rmTable   :: !QualifiedTable
-  , rmColumns :: !(M.Map PGCol PGCol)
+  , rmColumns :: !(HashMap PGCol PGCol)
   } deriving (Show, Eq, Lift, Generic)
 
 instance FromJSON RelManualConfig where
@@ -53,22 +52,22 @@ instance ToJSON RelManualConfig where
            , "column_mapping" .= cm
            ]
 
-data RelUsing a b
-  = RUFKeyOn a
-  | RUManual b
+data RelUsing a
+  = RUFKeyOn !a
+  | RUManual !RelManualConfig
   deriving (Show, Eq, Lift, Generic)
 
-instance (ToJSON a, ToJSON b) => ToJSON (RelUsing a b) where
+instance (ToJSON a) => ToJSON (RelUsing a) where
   toJSON (RUFKeyOn fkey) =
     object [ "foreign_key_constraint_on" .= fkey ]
   toJSON (RUManual manual) =
     object [ "manual_configuration" .= manual ]
 
-instance (FromJSON a, FromJSON b) => FromJSON (RelUsing a b) where
+instance (FromJSON a) => FromJSON (RelUsing a) where
   parseJSON (Object o) = do
     let fkeyOnM = HM.lookup "foreign_key_constraint_on" o
         manualM = HM.lookup "manual_configuration" o
-    let msgFrag = "one of foreign_key_constraint_on/manual_configuration should be present"
+        msgFrag = "one of foreign_key_constraint_on/manual_configuration should be present"
     case (fkeyOnM, manualM) of
       (Nothing, Nothing) -> fail $ "atleast " <> msgFrag
       (Just a, Nothing)  -> RUFKeyOn <$> parseJSON a
@@ -76,10 +75,6 @@ instance (FromJSON a, FromJSON b) => FromJSON (RelUsing a b) where
       _                  -> fail $ "only " <> msgFrag
   parseJSON _ =
     fail "using should be an object"
-
-newtype ArrRelManualConfig =
-  ArrRelManualConfig { getArrRelMapping :: RelManualConfig }
-  deriving (Show, Eq, FromJSON, ToJSON, Lift, Generic)
 
 data ArrRelUsingFKeyOn
   = ArrRelUsingFKeyOn
@@ -89,17 +84,12 @@ data ArrRelUsingFKeyOn
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''ArrRelUsingFKeyOn)
 
-type ArrRelUsing = RelUsing ArrRelUsingFKeyOn ArrRelManualConfig
+type ArrRelUsing = RelUsing ArrRelUsingFKeyOn
 type ArrRelDef = RelDef ArrRelUsing
 type CreateArrRel = WithTable ArrRelDef
 
-newtype ObjRelManualConfig =
-  ObjRelManualConfig { getObjRelMapping :: RelManualConfig }
-  deriving (Show, Eq, FromJSON, ToJSON, Lift, Generic)
-
-type ObjRelUsing = RelUsing PGCol ObjRelManualConfig
+type ObjRelUsing = RelUsing PGCol
 type ObjRelDef = RelDef ObjRelUsing
-
 type CreateObjRel = WithTable ObjRelDef
 
 data DropRel

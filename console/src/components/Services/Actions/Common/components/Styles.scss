@@ -1,0 +1,33 @@
+@import "../../../../Common/Common.scss";
+
+.inputWidthLarge {
+  width: 300px;
+}
+
+.inputWidth {
+  width: 200px;
+}
+
+.inputWidthMid {
+  width: 150px;
+}
+
+.modal {
+  margin-top: 10px;
+}
+
+.errorMarker {
+  background-color: red;
+}
+
+.errorMessage {
+  color: red;
+}
+
+.sdlEditorContainer {
+  width: 600px;
+}
+
+.cloneTypeText {
+  margin-left: auto;
+}

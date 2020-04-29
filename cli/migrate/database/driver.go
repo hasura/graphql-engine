@@ -1,6 +1,7 @@
 package database
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"sync"
@@ -43,7 +44,7 @@ type Driver interface {
 	// Open returns a new driver instance configured with parameters
 	// coming from the URL string. Migrate will call this function
 	// only once per instance.
-	Open(url string, isCMD bool, logger *log.Logger) (Driver, error)
+	Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger) (Driver, error)
 
 	// Close closes the underlying database instance managed by the driver.
 	// Migrate will call this function only once per instance.
@@ -82,9 +83,6 @@ type Driver interface {
 	// Dirty means, a previous migration failed and user interaction is required.
 	Version() (version int64, dirty bool, err error)
 
-	// Reset cleans public schema
-	Reset() error
-
 	// First returns the very first migration version available to the driver.
 	// Migrate will call this function multiple times
 	First() (version uint64, ok bool)
@@ -112,11 +110,13 @@ type Driver interface {
 
 	MetadataDriver
 
+	GraphQLDriver
+
 	SchemaDriver
 }
 
 // Open returns a new driver instance.
-func Open(url string, isCMD bool, logger *log.Logger) (Driver, error) {
+func Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger) (Driver, error) {
 	u, err := nurl.Parse(url)
 	if err != nil {
 		log.Debug(err)
@@ -131,16 +131,24 @@ func Open(url string, isCMD bool, logger *log.Logger) (Driver, error) {
 
 	d, ok := drivers[u.Scheme]
 	if !ok {
-		return nil, fmt.Errorf("database driver: unknown driver hasuradb (forgotten import?)")
+		return nil, fmt.Errorf("database driver: unknown driver %v", u.Scheme)
 	}
 
 	if logger == nil {
 		logger = log.New()
 	}
 
-	return d.Open(url, isCMD, logger)
+	return d.Open(url, isCMD, tlsConfig, logger)
 }
 
 func Register(name string, driver Driver) {
+	driversMu.Lock()
+	defer driversMu.Unlock()
+	if driver == nil {
+		panic("Register driver is nil")
+	}
+	if _, dup := drivers[name]; dup {
+		panic("Register called twice for driver " + name)
+	}
 	drivers[name] = driver
 }
