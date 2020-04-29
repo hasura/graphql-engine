@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
@@ -62,13 +62,13 @@ const LeftSidebar = ({ appPrefix, common: { actions, currentAction } }) => {
             key={i}
             data-test={`action-sidebar-links-${i + 1}`}
           >
-            <Link
+            <RouterLink
               to={appPrefix + '/manage/' + a.action_name + '/modify'}
               data-test={a.action_name}
             >
               <Icon type="wrench" mr="xs" size={12} />
               {a.action_name}
-            </Link>
+            </RouterLink>
           </li>
         );
       });

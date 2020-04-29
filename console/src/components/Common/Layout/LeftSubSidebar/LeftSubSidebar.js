@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 
 import Button from '../../Button/Button';
 import { Icon, Flex } from '../../../UIKit/atoms';
@@ -30,11 +30,11 @@ const LeftSubSidebar = props => {
             styles.sidebarCreateTable
           }
         >
-          <Link className={styles.padd_remove_full} to={addLink}>
+          <RouterLink className={styles.padd_remove_full} to={addLink}>
             <Button size="xs" color="white" data-test={addTestString}>
               {addLabel}
             </Button>
-          </Link>
+          </RouterLink>
         </div>
       );
     }

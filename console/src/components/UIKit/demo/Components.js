@@ -5,14 +5,14 @@ import {
   AlertBox,
   ToolTip,
   Heading,
-  TextLink,
+  Link,
   Text,
   RadioButton,
   Checkbox,
   SwitchButton,
   Tabs,
   Spinner,
-  Icon
+  Icon,
 } from '../atoms';
 import { Flex } from './styles';
 
@@ -21,24 +21,24 @@ import { Flex } from './styles';
 const dummytabsData = [
   {
     title: 'Title 1',
-    tabContent: 'Content 1'
+    tabContent: 'Content 1',
   },
   {
     title: 'Title 2',
-    tabContent: 'Content 2'
+    tabContent: 'Content 2',
   },
   {
     title: 'Title 3',
-    tabContent: 'Content 3'
+    tabContent: 'Content 3',
   },
   {
     title: 'Title 4',
-    tabContent: 'Content 4'
+    tabContent: 'Content 4',
   },
   {
     title: 'Title 5',
-    tabContent: 'Content 5'
-  }
+    tabContent: 'Content 5',
+  },
 ];
 
 export const UIComponents = () => (
@@ -524,16 +524,16 @@ export const UIComponents = () => (
     </Heading>
     <Heading as="h4">Sub section Heading</Heading>
 
-    {/* TextLink */}
+    {/* Link */}
     <Heading as="h2" mb="lg" mt="xl">
-      {'<TextLink />'}
+      {'<Link />'}
     </Heading>
-    <TextLink>Check it out</TextLink>
+    <Link>Check it out</Link>
 
     <Heading as="h2" mb="lg" mt="xl">
-      {'<TextLink underline />'}
+      {'<Link underline />'}
     </Heading>
-    <TextLink underline>Check it out</TextLink>
+    <Link underline>Check it out</Link>
 
     {/* Text */}
     <Heading mb="lg" mt="xl" as="h2">

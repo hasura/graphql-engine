@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
@@ -26,9 +26,9 @@ const EventPageContainer = ({
           currentLocation.includes('events/manage') ? styles.active : ''
         }
       >
-        <Link className={styles.linkBorder} to={appPrefix + '/manage'}>
+        <RouterLink className={styles.linkBorder} to={appPrefix + '/manage'}>
           Manage
-        </Link>
+        </RouterLink>
         <EventSubSidebar
           location={location}
           schema={schema}

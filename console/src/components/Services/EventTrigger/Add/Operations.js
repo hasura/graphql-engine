@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import * as tooltip from './Tooltips';
 import { TOGGLE_ENABLE_MANUAL_CONFIG } from './AddActions';
-import { ToolTip, Heading, TextLink, Box } from '../../../UIKit/atoms';
+import { ToolTip, Heading, Link, Box } from '../../../UIKit/atoms';
 import styles from '../TableCommon/EventTable.scss';
 
 const Operations = ({
@@ -54,7 +54,7 @@ const Operations = ({
             mr="20px"
             message={tooltip.manualOperationsDescription}
           />
-          <TextLink
+          <Link
             type="moreInfo"
             href="https://hasura.io/docs/1.0/graphql/manual/event-triggers/invoke-trigger-console.html"
           />

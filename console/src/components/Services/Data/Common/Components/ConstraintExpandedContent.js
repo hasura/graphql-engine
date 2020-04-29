@@ -2,7 +2,7 @@ import React from 'react';
 import AceEditor from 'react-ace';
 
 import { checkConstraintExpression } from '../TooltipMessages';
-import { ToolTip, Text, TextLink, Box } from '../../../../UIKit/atoms';
+import { ToolTip, Text, Link, Box } from '../../../../UIKit/atoms';
 import styles from '../../../../Common/Common.scss';
 
 export const ConstraintExpandedContent = ({
@@ -30,7 +30,7 @@ export const ConstraintExpandedContent = ({
           Check Expression:
           <ToolTip message={checkConstraintExpression} ml="sm" mr="20px" />
         </Text>
-        <TextLink
+        <Link
           type="moreInfo"
           href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS"
         />

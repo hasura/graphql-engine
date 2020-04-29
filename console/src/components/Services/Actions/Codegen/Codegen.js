@@ -13,7 +13,7 @@ import { getPersistedDerivedAction } from '../lsUtils';
 import { Icon } from '../../../UIKit/atoms';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
-import { Spinner, TextLink, Flex, Box } from '../../../UIKit/atoms';
+import { Spinner, Link, Flex, Box } from '../../../UIKit/atoms';
 import styles from '../Common/components/Styles.scss';
 
 const Codegen = ({ allActions, allTypes, currentAction }) => {
@@ -58,7 +58,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     return (
       <div>
         Error fetching codegen assets.&nbsp;
-        <TextLink onClick={init}>Try again</TextLink>
+        <Link onClick={init}>Try again</Link>
       </div>
     );
   }
@@ -89,14 +89,14 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     const getGlitchButton = () => {
       if (selectedFramework !== 'nodejs-express') return null;
       return (
-        <TextLink
+        <Link
           href={getGlitchProjectURL()}
           target="_blank"
           mr="20px"
           hover="underline"
         >
           <Icon type="link" mb="-2px" mr="3px" /> Try on glitch
-        </TextLink>
+        </Link>
       );
     };
 
@@ -113,7 +113,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
 
       return (
         <React.Fragment>
-          <TextLink
+          <Link
             href={getStarterKitDownloadPath(selectedFramework)}
             target="_blank"
             mr="20px"
@@ -121,15 +121,15 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
             hover="underline"
           >
             <Icon type="download" mr="3px" /> Starter-kit.zip
-          </TextLink>
-          <TextLink
+          </Link>
+          <Link
             href={getStarterKitPath(selectedFramework)}
             target="_blank"
             title={`View the starter kit for ${selectedFramework} on GitHub`}
             hover="underline"
           >
             <Icon type="github" mr="3px" mb="-2px" /> View on GitHub
-          </TextLink>
+          </Link>
         </React.Fragment>
       );
     };

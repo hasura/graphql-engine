@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import globals from '../../../Globals';
@@ -66,13 +66,13 @@ const Sidebar = ({ location, metadata }) => {
         key={section.key}
         className={currentLocation.includes(section.link) ? styles.active : ''}
       >
-        <Link
+        <RouterLink
           className={styles.linkBorder}
           to={section.link}
           data-test={section.dataTestVal}
         >
           {section.title}
-        </Link>
+        </RouterLink>
       </li>
     );
   });

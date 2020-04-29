@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 
 import { Icon } from '../../../UIKit/atoms';
 import styles from '../../TableCommon/Table.scss';
@@ -28,9 +28,9 @@ const BreadCrumb = ({ breadCrumbs }) => {
 
       if (!isLastElem) {
         bCElem = [
-          <Link key={'l' + i} to={`${b.url}`}>
+          <RouterLink key={'l' + i} to={`${b.url}`}>
             {b.title}
-          </Link>,
+          </RouterLink>,
           addArrow(),
         ];
       } else {

@@ -1,14 +1,13 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 import Helmet from 'react-helmet';
 
+import { capitalize } from '../../../Common/utils/jsUtils';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { Heading } from '../../../UIKit/atoms';
 import styles from './EventTable.scss';
 
 const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
-  let capitalised = tabName;
-  capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
   let showCount = '';
   if (!(count === null || count === undefined)) {
     showCount = '(' + count + ')';
@@ -52,7 +51,12 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
   return (
     <div>
       <Helmet
-        title={capitalised + ' - ' + triggerName + ' - Event Triggers | Hasura'}
+        title={
+          capitalize(tabName) +
+          ' - ' +
+          triggerName +
+          ' - Event Triggers | Hasura'
+        }
       />
       <div className={styles.subHeader}>
         <BreadCrumb breadCrumbs={getBreadCrumbs()} />
@@ -65,43 +69,45 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
               role="presentation"
               className={tabName === 'processed' ? styles.active : ''}
             >
-              <Link
+              <RouterLink
                 to={'/events/manage/triggers/' + triggerName + '/processed'}
                 data-test="trigger-processed-events"
               >
                 Processed Events {tabName === 'processed' ? showCount : null}
-              </Link>
+              </RouterLink>
             </li>
             <li
               role="presentation"
               className={tabName === 'pending' ? styles.active : ''}
             >
-              <Link
+              <RouterLink
                 to={'/events/manage/triggers/' + triggerName + '/pending'}
                 data-test="trigger-pending-events"
               >
                 Pending Events {tabName === 'pending' ? showCount : null}
-              </Link>
+              </RouterLink>
             </li>
             <li
               role="presentation"
               className={tabName === 'running' ? styles.active : 'hide'}
             >
-              <Link
+              <RouterLink
                 to={'/events/manage/triggers/' + triggerName + '/running'}
                 data-test="trigger-running-events"
               >
                 Running {tabName === 'running' ? showCount : null}
-              </Link>
+              </RouterLink>
             </li>
             <li
               role="presentation"
               className={tabName === 'logs' ? styles.active : ''}
               data-test="trigger-logs"
             >
-              <Link to={'/events/manage/triggers/' + triggerName + '/logs'}>
+              <RouterLink
+                to={'/events/manage/triggers/' + triggerName + '/logs'}
+              >
                 Invocation Logs
-              </Link>
+              </RouterLink>
             </li>
             {!readOnlyMode && (
               <li
@@ -109,9 +115,11 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
                 className={tabName === 'modify' ? styles.active : ''}
                 data-test="trigger-modify"
               >
-                <Link to={'/events/manage/triggers/' + triggerName + '/modify'}>
+                <RouterLink
+                  to={'/events/manage/triggers/' + triggerName + '/modify'}
+                >
                   Modify
-                </Link>
+                </RouterLink>
               </li>
             )}
           </ul>

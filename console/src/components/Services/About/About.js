@@ -7,7 +7,7 @@ import requestAction from '../../../utils/requestAction';
 import { showErrorNotification } from '../Common/Notification';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { versionGT } from '../../../helpers/versionUtils';
-import { Spinner, Heading, Text, TextLink, Box } from '../../UIKit/atoms';
+import { Spinner, Heading, Text, Link, Box } from '../../UIKit/atoms';
 import styles from './About.scss';
 
 class About extends Component {
@@ -72,7 +72,7 @@ class About extends Component {
       ) {
         updateLinks = (
           <Box mt="20px">
-            <TextLink
+            <Link
               href={
                 'https://github.com/hasura/graphql-engine/releases/tag/' +
                 latestStableServerVersion
@@ -83,9 +83,9 @@ class About extends Component {
               mx="sm"
             >
               View Changelog
-            </TextLink>
+            </Link>
             <b>&middot;</b>
-            <TextLink
+            <Link
               href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
               target="_blank"
               fontStyle="italic"
@@ -93,7 +93,7 @@ class About extends Component {
               ml="sm"
             >
               Update Now
-            </TextLink>
+            </Link>
           </Box>
         );
       }

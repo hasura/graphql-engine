@@ -8,7 +8,7 @@ import googleCloud from './images/google_cloud.svg';
 import MicrosoftAzure from './images/Microsoft_Azure_Logo.svg';
 import AWS from './images/AWS.png';
 import externalLink from './images/external-link.svg';
-import { Heading, TextLink, Icon } from '../../../UIKit/atoms';
+import { Heading, Link, Icon } from '../../../UIKit/atoms';
 import styles from '../../RemoteSchema/RemoteSchema.scss';
 
 const TryItOut = ({
@@ -21,7 +21,7 @@ const TryItOut = ({
   footerDescription,
   MicrosoftAzureLink,
   awsLink,
-  adMoreLink
+  adMoreLink,
 }) => {
   const [isPopUp, setPopUp] = useState(false);
 
@@ -44,7 +44,7 @@ const TryItOut = ({
           <div className={styles.logoIcon}>
             <img className={'img-responsive'} src={glitch} alt={'glitch'} />
           </div>
-          <TextLink href={glitchLink} target="_blank">
+          <Link href={glitchLink} target="_blank">
             <button className={styles.default_button}>
               Try it with Glitch{' '}
               <img
@@ -53,7 +53,7 @@ const TryItOut = ({
                 alt={'externalLink'}
               />
             </button>
-          </TextLink>
+          </Link>
           <div className={styles.displayFlex + ' ' + commonStyle}>
             <span
               onClick={togglePopup}
@@ -75,11 +75,7 @@ const TryItOut = ({
           </div>
         </div>
         <div className={styles.boxSmallWrapper}>
-          <TextLink
-            href={googleCloudLink}
-            target={'_blank'}
-            title={'Google Cloud'}
-          >
+          <Link href={googleCloudLink} target={'_blank'} title={'Google Cloud'}>
             <div className={styles.boxSmall}>
               <div className={styles.logoIcon}>
                 <img
@@ -89,8 +85,8 @@ const TryItOut = ({
                 />
               </div>
             </div>
-          </TextLink>
-          <TextLink
+          </Link>
+          <Link
             href={MicrosoftAzureLink}
             target={'_blank'}
             title={'Microsoft Azure'}
@@ -104,8 +100,8 @@ const TryItOut = ({
                 />
               </div>
             </div>
-          </TextLink>
-          <TextLink href={awsLink} target={'_blank'} title={'AWS'}>
+          </Link>
+          <Link href={awsLink} target={'_blank'} title={'AWS'}>
             <div className={styles.boxSmall}>
               <div className={styles.logoIcon}>
                 <img
@@ -115,12 +111,12 @@ const TryItOut = ({
                 />
               </div>
             </div>
-          </TextLink>
+          </Link>
           <div className={styles.instructions}>
-            <TextLink href={adMoreLink} target="_blank" fontWeight="bold">
+            <Link href={adMoreLink} target="_blank" fontWeight="bold">
               And many more
               <Icon type="play" ml="12px" size={10} />
-            </TextLink>
+            </Link>
           </div>
         </div>
       </div>
@@ -135,7 +131,7 @@ TryItOut.propTypes = {
   googleCloudLink: PropTypes.string.isRequired,
   MicrosoftAzureLink: PropTypes.string.isRequired,
   awsLink: PropTypes.string.isRequired,
-  adMoreLink: PropTypes.string.isRequired
+  adMoreLink: PropTypes.string.isRequired,
   // imgUrl: PropTypes.string.isRequired,
   // imgAlt: PropTypes.string.isRequired,
   // description: PropTypes.string.isRequired,

@@ -82,9 +82,13 @@ Args syntax
      - :ref:`QualifiedTable <QualifiedTable>`
      - Object with table name and schema
    * - webhook
-     - true
+     - false
      - String
-     - Full url of webhook
+     - Full url of webhook (*)
+   * - webhook_from_env
+     - false
+     - String
+     - Environment variable name of webhook (must exist at boot time) (*)
    * - insert
      - false
      - OperationSpec_
@@ -105,6 +109,8 @@ Args syntax
      - false
      - Boolean
      - If set to true, the event trigger is replaced with the new definition
+
+(*) Either ``webhook`` or ``webhook_from_env`` are required.
 
 .. _delete_event_trigger:
 

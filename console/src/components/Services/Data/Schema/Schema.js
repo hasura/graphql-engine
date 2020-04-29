@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 
 import Button from '../../../Common/Button/Button';
 import {
@@ -37,14 +37,7 @@ import {
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import RawSqlButton from '../Common/Components/RawSqlButton';
-import {
-  Icon,
-  ToolTip,
-  Heading,
-  TextLink,
-  Box,
-  Flex,
-} from '../../../UIKit/atoms';
+import { Icon, ToolTip, Heading, Link, Box, Flex } from '../../../UIKit/atoms';
 import styles from '../../../Common/Common.scss';
 
 class Schema extends Component {
@@ -595,7 +588,7 @@ class Schema extends Component {
       const heading = getSectionHeading(
         'Untracked custom functions',
         'Custom functions that are not exposed over the GraphQL API',
-        <TextLink
+        <Link
           type="moreInfo"
           ml="xs"
           href="https://hasura.io/docs/1.0/graphql/manual/queries/custom-functions.html"
@@ -677,9 +670,9 @@ class Schema extends Component {
     const getPermissionsSummaryLink = () => {
       return (
         <Box mt="20px">
-          <Link to={getSchemaPermissionsRoute(currentSchema)}>
+          <RouterLink to={getSchemaPermissionsRoute(currentSchema)}>
             Schema permissions summary
-          </Link>
+          </RouterLink>
         </Box>
       );
     };
