@@ -1,7 +1,6 @@
 module Hasura.SQL.Value
   ( PGScalarValue(..)
   , pgColValueToInt
-  , pgScalarValueToJson
   , withConstructorFn
   , parsePGValue
 
@@ -61,56 +60,63 @@ data PGScalarValue
   = PGValInteger !Int32
   | PGValSmallInt !Int16
   | PGValBigInt !Int64
+
   | PGValFloat !Float
   | PGValDouble !Double
   | PGValNumeric !Scientific
   | PGValMoney !Scientific
+
   | PGValBoolean !Bool
   | PGValChar !Char
   | PGValVarchar !T.Text
   | PGValText !T.Text
   | PGValCitext !T.Text
+
   | PGValDate !Day
   | PGValTimeStamp !LocalTime
   | PGValTimeStampTZ !UTCTime
   | PGValTimeTZ !ZonedTimeOfDay
+
   | PGNull !PGScalarType
+
   | PGValJSON !Q.JSON
   | PGValJSONB !Q.JSONB
+
   | PGValGeo !GeometryWithCRS
   | PGValRaster !RasterWKB
+
   | PGValUUID !UUID.UUID
   | PGValUnknown !T.Text
   deriving (Show, Eq)
 
-pgScalarValueToJson :: PGScalarValue -> Value
-pgScalarValueToJson = \case
-  PGValInteger i  -> toJSON i
-  PGValSmallInt i -> toJSON i
-  PGValBigInt i   -> toJSON i
-  PGValFloat f    -> toJSON f
-  PGValDouble d   -> toJSON d
-  PGValNumeric sc -> toJSON sc
-  PGValMoney m    -> toJSON m
-  PGValBoolean b  -> toJSON b
-  PGValChar t     -> toJSON t
-  PGValVarchar t  -> toJSON t
-  PGValText t     -> toJSON t
-  PGValCitext t   -> toJSON t
-  PGValDate d     -> toJSON d
-  PGValTimeStamp u ->
-    toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
-  PGValTimeStampTZ u ->
-    toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
-  PGValTimeTZ (ZonedTimeOfDay tod tz) ->
-    toJSON (show tod ++ timeZoneOffsetString tz)
-  PGNull _ -> Null
-  PGValJSON (Q.JSON j)    -> j
-  PGValJSONB (Q.JSONB j)  -> j
-  PGValGeo o    -> toJSON o
-  PGValRaster r -> toJSON r
-  PGValUUID u -> toJSON u
-  PGValUnknown t -> toJSON t
+instance ToJSON PGScalarValue where
+  toJSON = \case
+    PGValInteger i  -> toJSON i
+    PGValSmallInt i -> toJSON i
+    PGValBigInt i   -> toJSON i
+    PGValFloat f    -> toJSON f
+    PGValDouble d   -> toJSON d
+    PGValNumeric sc -> toJSON sc
+    PGValMoney m    -> toJSON m
+    PGValBoolean b  -> toJSON b
+    PGValChar t     -> toJSON t
+    PGValVarchar t  -> toJSON t
+    PGValText t     -> toJSON t
+    PGValCitext t   -> toJSON t
+    PGValDate d     -> toJSON d
+    PGValTimeStamp u ->
+      toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
+    PGValTimeStampTZ u ->
+      toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
+    PGValTimeTZ (ZonedTimeOfDay tod tz) ->
+      toJSON (show tod ++ timeZoneOffsetString tz)
+    PGNull _ -> Null
+    PGValJSON (Q.JSON j)    -> j
+    PGValJSONB (Q.JSONB j)  -> j
+    PGValGeo o    -> toJSON o
+    PGValRaster r -> toJSON r
+    PGValUUID u -> toJSON u
+    PGValUnknown t -> toJSON t
 
 pgColValueToInt :: PGScalarValue -> Maybe Int
 pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i

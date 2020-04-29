@@ -334,26 +334,33 @@ data PGScalarType
   = PGSmallInt
   | PGInteger
   | PGBigInt
+
   | PGSerial
   | PGBigSerial
+
   | PGFloat
   | PGDouble
   | PGNumeric
   | PGMoney
+
   | PGBoolean
   | PGChar
   | PGVarchar
   | PGText
   | PGCitext
+
   | PGDate
   | PGTimeStamp
   | PGTimeStampTZ
   | PGTimeTZ
+
   | PGJSON
   | PGJSONB
+
   | PGGeometry
   | PGGeography
   | PGRaster
+
   | PGUUID
   | PGUnknown !T.Text
   deriving (Show, Eq, Lift, Generic, Data)

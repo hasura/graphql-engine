@@ -30,6 +30,7 @@ import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.SQL.Types
 import           Hasura.RQL.Types
 
 data QueryParts
@@ -121,11 +122,23 @@ validateVariablesForReuse (ReusableVariableTypes varTypes) varValsM =
 
     flip Map.traverseWithKey varTypes $ \varName varType ->
       withPathK (G.unName $ G.unVariable varName) $ do
-        varVal <- onNothing (Map.lookup varName varVals) $
+        let
+          (ReusableVariableInfo varPGColType defValR) = varType
+          defValM = case defValR of
+            -- No default value specified for this argument
+            ReusableNoDefault -> Nothing
+            -- We have a default value: so construct a WithScalarType,
+            -- following the logic of parsePGScalarValue
+            ReusableDefault x -> Just $
+              case varPGColType of
+                PGColumnScalar st -> WithScalarType st x
+                _                 -> WithScalarType PGText x
+          specValM = Map.lookup varName varVals
+        specVal <- traverse (parsePGScalarValue varPGColType) specValM
+        onNothing (specVal <|> defValM) $
           throwVE "expected a value for non-nullable variable"
           -- TODO: we don't have the graphql type
           -- <> " of type: " <> T.pack (show varType)
-        parsePGScalarValue varType varVal
     where
       varVals = fromMaybe Map.empty varValsM
 

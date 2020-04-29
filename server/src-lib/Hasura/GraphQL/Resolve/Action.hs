@@ -54,8 +54,7 @@ import           Hasura.Server.Utils               (mkClientHeadersForward, mkSe
 import           Hasura.Server.Version             (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
-                                                    toTxtValue)
+import           Hasura.SQL.Value                  (PGScalarValue(..), toTxtValue)
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -539,7 +538,7 @@ callWebhook manager outputType outputFields reqHeaders confHeaders
 annInpValueToJson :: AnnInpVal -> J.Value
 annInpValueToJson annInpValue =
   case _aivValue annInpValue of
-    AGScalar _ pgColumnValueM -> maybe J.Null pgScalarValueToJson pgColumnValueM
+    AGScalar _ pgColumnValueM -> maybe J.Null J.toJSON pgColumnValueM
     AGEnum _ enumValue        -> case enumValue of
       AGESynthetic enumValueM   -> J.toJSON enumValueM
       AGEReference _ enumValueM -> J.toJSON enumValueM
