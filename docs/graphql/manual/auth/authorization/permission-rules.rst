@@ -250,12 +250,17 @@ or static data instead.
 
 .. _backend-only-permissions:
 
-Backend only inserts
-^^^^^^^^^^^^^^^^^^^^
+Backend only
+^^^^^^^^^^^^
 
-If an insert mutation permission is marked as ``backend_only``, the mutation is accessible to the
+If a permission is marked as ``backend_only``, the mutation is accessible to the
 given role only if ``x-hasura-use-backend-only-permissions`` session variable exists and is set to ``true``
 and request is made with ``x-hasura-admin-secret`` set if any auth is configured.
 
 This might be useful if you would like to hide a mutation from the public facing API but allow access to it
 via a "trusted backend".
+
+.. note::
+
+  Setting ``backend-only`` is currently available for insert mutations only.
+
