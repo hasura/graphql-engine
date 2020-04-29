@@ -59,15 +59,11 @@ var filesRequired = []string{
 // (nextDir) is filesystem root, error is returned. Otherwise, 'nextDir' is
 // validated, recursively.
 func recursivelyValidateDirectory(startFrom string) (validDir string, err error) {
-	err = validateDirectory(startFrom)
+	err = ValidateDirectory(startFrom)
 	if err != nil {
 		nextDir := filepath.Dir(startFrom)
-		cleaned := filepath.Clean(nextDir)
-		isWindowsRoot, _ := regexp.MatchString(`^[a-zA-Z]:\\$`, cleaned)
-		// return error if filesystem boundary is hit
-		if cleaned == "/" || isWindowsRoot {
-			return nextDir, errors.Errorf("cannot find [%s] | search stopped at filesystem boundary", strings.Join(filesRequired, ", "))
-
+		if err := CheckFilesystemBoundary(nextDir); err != nil {
+			return nextDir, errors.Wrapf(err, "cannot find [%s] | search stopped", strings.Join(filesRequired, ", "))
 		}
 		return recursivelyValidateDirectory(nextDir)
 	}
@@ -76,7 +72,7 @@ func recursivelyValidateDirectory(startFrom string) (validDir string, err error)
 
 // validateDirectory tries to parse dir for the filesRequired and returns error
 // if any one of them is missing.
-func validateDirectory(dir string) error {
+func ValidateDirectory(dir string) error {
 	notFound := []string{}
 	for _, f := range filesRequired {
 		if _, err := os.Stat(filepath.Join(dir, f)); os.IsNotExist(err) {
@@ -89,6 +85,18 @@ func validateDirectory(dir string) error {
 	}
 	if len(notFound) > 0 {
 		return errors.Errorf("cannot validate directory '%s': [%s] not found", dir, strings.Join(notFound, ", "))
+	}
+	return nil
+}
+
+// CheckFilesystemBiundary returns an error if dir is filesystem root
+func CheckFilesystemBoundary(dir string) error {
+	cleaned := filepath.Clean(dir)
+	isWindowsRoot, _ := regexp.MatchString(`^[a-zA-Z]:\\$`, cleaned)
+	// return error if filesystem boundary is hit
+	if cleaned == "/" || isWindowsRoot {
+		return errors.Errorf("filesystem boundary hit")
+
 	}
 	return nil
 }
