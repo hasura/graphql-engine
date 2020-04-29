@@ -80,7 +80,6 @@ import {
   QUERY_TYPES,
 } from '../../../Common/utils/pgUtils';
 import { showErrorNotification } from '../../Common/Notification';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
   getFilterQueries,
   replaceLegacyOperators,
@@ -89,7 +88,7 @@ import {
   getDefaultFilterType,
   getUpdateTooltip,
 } from './utils';
-import { Icon, ToolTip, Heading, Text } from '../../../UIKit/atoms';
+import { Icon, ToolTip, Heading, Text, Link } from '../../../UIKit/atoms';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 class Permissions extends Component {
@@ -598,13 +597,7 @@ class Permissions extends Component {
 
         let knowMoreHtml;
         if (knowMoreRef) {
-          knowMoreHtml = (
-            <span
-              className={`${styles.add_mar_left_small} ${styles.sectionStatus}`}
-            >
-              <KnowMoreLink href={knowMoreRef} />
-            </span>
-          );
+          knowMoreHtml = <Link href={knowMoreRef} type="moreInfo" ml="xs" />;
         }
 
         return (
