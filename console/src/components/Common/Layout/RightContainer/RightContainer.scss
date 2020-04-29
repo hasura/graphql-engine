@@ -1,5 +1,5 @@
-@import "~bootstrap-sass/assets/stylesheets/bootstrap/variables";
-@import "../../Common.scss";
+@import '~bootstrap-sass/assets/stylesheets/bootstrap/variables';
+@import '../../Common.scss';
 
 .container {
 }
@@ -10,15 +10,6 @@
 
 .padd_left_remove {
   padding-left: 0;
-}
-
-.add_btn {
-  margin: 10px 0;
-}
-
-.account {
-  padding: 20px 0;
-  line-height: 26px;
 }
 
 .sidebar {
@@ -41,7 +32,8 @@
       padding: 7px 0;
       transition: color 0.5s;
 
-      a,a:visited {
+      a,
+      a:visited {
         color: $navbar-inverse-link-color;
       }
 
@@ -57,7 +49,7 @@
       transition: color 0.5s;
       pointer: cursor;
     }
-   }
+  }
 }
 
 .main {

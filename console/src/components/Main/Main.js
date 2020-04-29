@@ -440,18 +440,6 @@ class Main extends React.Component {
                       Star
                     </div>
                   </Link>
-                  {/*
-                          <div className={styles.gitHubBtn}>
-                            <iframe
-                              title="github"
-                              src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
-                              frameBorder="0"
-                              scrolling="0"
-                              width="100px"
-                              height="30px"
-                            />
-                          </div>
-                          */}
                 </li>
                 <li className={'dropdown-item '}>
                   <Link
