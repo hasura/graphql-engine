@@ -300,7 +300,6 @@ A new CLI migrations image is introduced to account for the new migrations workf
 
 See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-v2.html).
 
-
 (close #3969) (#4145)
 
 ### Bug fixes and improvements
