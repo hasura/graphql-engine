@@ -37,8 +37,10 @@ create_scheduled_trigger
            "payload": {
                "key1": "value1",
                "key2": "value2"
-           }
+           },
+           "include_in_metadata":false
        }
+
    }
 
 .. _create_scheduled_trigger_syntax:
@@ -77,7 +79,11 @@ Args syntax
      - false
      - RetryConfST_
      - Retry configuration if scheduled event delivery fails
-
+   * - include_in_metadata
+     - false
+     - Boolean
+     - Flag to indicate whether a scheduled trigger should be included in the metadata. When a scheduled trigger is included in the metadata, the user will be able to export it when the metadata of the graphql-engine is
+       exported.
 
 .. _update_scheduled_trigger:
 
@@ -85,6 +91,30 @@ update_scheduled_trigger
 ------------------------
 
 ``update_scheduled_trigger`` is used to update an existing scheduled trigger.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "update_scheduled_trigger",
+       "args" : {
+           "name": "sample_cron",
+           "webhook": "https://httpbin.org/post",
+           "schedule": {
+               "type": "cron",
+               "value": "* * * * *"
+           },
+           "payload": {
+               "key1": "value1",
+               "key2": "value2"
+           },
+           "include_in_metadata":false
+       }
+
+   }
 
 .. _update_scheduled_trigger_syntax:
 
@@ -122,6 +152,11 @@ Args syntax
      - false
      - RetryConfST_
      - Retry configuration if scheduled event delivery fails
+   * - include_in_metadata
+     - false
+     - Boolean
+     - Flag to indicate whether a scheduled trigger should be included in the metadata. When a scheduled trigger is included in the metadata, the user will be able to export it when the metadata of the graphql-engine is
+       exported.
 
 .. _delete_scheduled_trigger:
 
@@ -160,12 +195,18 @@ Args syntax
      - TriggerName_
      - Name of the scheduled trigger
 
-.. _create_scheduled_event:
+.. _invoke_scheduled_trigger:
 
-create_scheduled_event
+invoke_scheduled_trigger
 ----------------------
 
-``create_scheduled_event`` is used to create a new scheduled event with a given timestamp and optional payload.
+``invoke_scheduled_trigger`` is used to create new invocations of an existing scheduled trigger
+at the given timestamp along with an optional payload. This API should be used to create new
+invocations of an adhoc scheduled trigger.
+
+When the payload is provided, it will
+override the configured payload (the payload with which the scheduled trigger was created).
+When the payload is not provided, the configured payload will be used.
 
 .. code-block:: http
 
@@ -174,7 +215,7 @@ create_scheduled_event
    X-Hasura-Role: admin
 
    {
-       "type" : "create_scheduled_event",
+       "type" : "invoke_scheduled_trigger",
        "args" : {
            "name": "sample-adhoc",
            "timestamp": "2020-02-14 22:00:00 Z",
@@ -182,7 +223,7 @@ create_scheduled_event
        }
    }
 
-.. _create_scheduled_event_syntax:
+.. _invoke_scheduled_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -204,8 +245,8 @@ Args syntax
      - UTC Timestamp to invoke the trigger in ISO8601 format
    * - payload
      - false
-     - Object
-     - Any object to send with the trigger, will override configured payload
+     - JSON
+     - Any JSON object to send with the scheduled trigger, will override configured payload
 
 .. _cancel_scheduled_event:
 
@@ -243,83 +284,6 @@ Args syntax
      - true
      - UUID
      - ID of the scheduled event
-
-.. _track_scheduled_trigger:
-
-track_scheduled_trigger
------------------------
-
-``track_scheduled_trigger`` is used to enable export of scheduled trigger in metadata. By default, scheduled triggers are untracked.
-This is because different Scheduled Triggers can have different configurations which may be related to user data and hence may not make
-sense to be included in the metadata. For e.g. a one-time scheduled event which has a payload of some user-id should not be in metadata.
-
-.. code-block:: http
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
-
-   {
-       "type" : "track_scheduled_trigger",
-       "args" : {
-           "name": "sample_cron"
-       }
-   }
-
-.. _track_scheduled_trigger_syntax:
-
-Args syntax
-^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - name
-     - true
-     - TriggerName_
-     - Name of the scheduled trigger
-
-.. _untrack_scheduled_trigger:
-
-untrack_scheduled_trigger
--------------------------
-
-``untrack_scheduled_trigger`` is used to disable export of scheduled trigger in metadata. See track_scheduled_trigger_ .
-
-.. code-block:: http
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
-
-   {
-       "type" : "untrack_scheduled_trigger",
-       "args" : {
-           "name": "sample_cron"
-       }
-   }
-
-.. _untrack_scheduled_trigger_syntax:
-
-Args syntax
-^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - name
-     - true
-     - TriggerName_
-     - Name of the scheduled trigger
-
 
 .. _TriggerName:
 
@@ -361,18 +325,14 @@ ScheduleConf
      - Description
    * - type
      - true
-     - cron expression | optional timestamp (ISO-8601 format)
+     - ``cron`` | ``adhoc``
      - Type of scheduled trigger
    * - value
      - true (when type is ``cron``).
        false (when type is ``adhoc``)
      - String
      - When the type is ``cron``, then a cron expression is expected
-       . When the  type is ``adhoc``, then an optional timestamp(in ISO-8601 format) is expected,
-       if a timestamp is provided, then a scheduled event will be created with the timestamp provided
-       along with creating the scheduled trigger.
-
-
+       . There is no value expected when the type is ``adhoc``.
 
 
 .. _HeaderFromValue:
