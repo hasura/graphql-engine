@@ -7,7 +7,7 @@ import ApiResponse from './ApiResponse/ApiResponse';
 import styles from './ApiExplorer.scss';
 
 const ApiRequestWrapper = props => {
-  const { bodyType, request, details, explorerData } = props;
+  const { request, details, explorerData } = props;
 
   const getAPIRequestDetailsSection = () => {
     // return (
@@ -23,7 +23,7 @@ const ApiRequestWrapper = props => {
   const getAPIResponseSection = () => {
     let apiResponseSection = null;
 
-    if (bodyType !== 'graphql') {
+    if (request.bodyType !== 'graphql') {
       apiResponseSection = (
         <ApiResponse
           {...props.explorerData}
