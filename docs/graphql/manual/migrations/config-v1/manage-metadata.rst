@@ -2,10 +2,10 @@
    :description: Manage Hasura metadata
    :keywords: hasura, docs, metadata
 
-.. _manage_hasura_metadata:
+.. _manage_hasura_metadata_v1:
 
-Managing Hasura metadata
-========================
+Managing Hasura metadata (config v1)
+====================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -37,7 +37,7 @@ Exporting Hasura metadata
      Metadata can be exported with the :ref:`hasura metadata export <hasura_metadata_export>`
      command.
 
-     This will export the metadata as yaml files in the ``/metadata`` directory
+     This will export the metadata as a ``metadata.yaml`` file
 
   .. tab:: Console
 
@@ -74,8 +74,8 @@ before.
 
   .. tab:: CLI
 
-     Metadata can be applied with the :ref:`hasura metadata apply <hasura_metadata_apply>`
-     command.
+     An exported ``metadata.yaml`` file can be applied with
+     the :ref:`hasura metadata apply <hasura_metadata_apply>` command.
 
   .. tab:: Console
 
@@ -152,6 +152,6 @@ Managing Hasura metadata in CI/CD
 ---------------------------------
 
 In case you need an automated way of applying/importing the metadata, take a
-look at the :ref:`cli-migrations <auto_apply_migrations>` Docker image, which
-can start the GraphQL engine after automatically importing a mounted metadata
-directory.
+look at the :ref:`cli-migrations <auto_apply_migrations_v1>` Docker image, which
+can start the GraphQL engine after automatically importing a mounted ``metadata.yaml``
+file.
