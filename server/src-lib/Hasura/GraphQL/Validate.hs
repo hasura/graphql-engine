@@ -97,7 +97,11 @@ validateVariables varDefsL inpVals = withPathK "variableValues" $ do
       let inpValM = Map.lookup var inpVals
       annInpValM <- withPathK (G.unName $ G.unVariable var) $
                     mapM (validateInputValue jsonParser ty) inpValM
-      let varValM = annInpValM <|> annDefM
+      let varValM = case annInpValM of
+            Nothing -> annDefM
+            Just iv -> case annDefM of
+              Nothing -> Just iv
+              Just dv -> Just $ iv { _aivDefault = Just $ _aivValue dv }
       onNothing varValM $ throwVE $
         "expecting a value for non-nullable variable: " <>
         showVars [var] <>

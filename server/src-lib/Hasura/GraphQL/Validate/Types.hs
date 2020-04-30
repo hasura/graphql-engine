@@ -713,6 +713,7 @@ data AnnInpVal
   { _aivType     :: !G.GType
   , _aivVariable :: !(Maybe G.Variable)
   , _aivValue    :: !AnnGValue
+  , _aivDefault  :: !(Maybe AnnGValue)
   } deriving (Show, Eq)
 
 type AnnGObject = OMap.InsOrdHashMap G.Name AnnInpVal

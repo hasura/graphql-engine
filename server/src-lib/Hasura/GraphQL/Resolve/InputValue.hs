@@ -95,13 +95,20 @@ asPGColumnTypeAndValueM v = do
     -- whether the result is 'Nothing' or 'Just', which would change the generated query, so we have
     -- to unconditionally mark the query non-reusable.
     | G.isNullable (_aivType v) -> markNotReusable
-    | otherwise                 -> do
-      -- TODO fix: the wrong value is being saved here
-      let defVal = case scalarValueM of
-            (WithScalarType _ Nothing   ) -> ReusableNoDefault
-            (WithScalarType _ (Just val)) -> ReusableDefault val
-      recordVariableUse variableName columnType defVal
-
+    | otherwise                 -> case _aivDefault v of
+        Nothing -> do
+          recordVariableUse variableName columnType ReusableNoDefault
+        Just dv -> do
+          defValueM <- case dv of
+            AGScalar colTy val -> pure $ WithScalarType colTy val
+            AGEnum _ (AGEReference _ maybeValue) -> do
+              let maybeScalarValue = PGValText . RQL.getEnumValue <$> maybeValue
+              pure $ WithScalarType PGText maybeScalarValue
+            _ -> tyMismatch "pgvalue" v
+          let defVal = case defValueM of
+                (WithScalarType _ Nothing   ) -> ReusableNoDefault
+                (WithScalarType _ (Just val)) -> ReusableDefault val
+          recordVariableUse variableName columnType defVal
   let isVariable = isJust $ _aivVariable v
   pure (columnType, fmap (flip OpaqueValue isVariable) <$> scalarValueM)
 

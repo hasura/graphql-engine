@@ -312,10 +312,14 @@ withParsed expectedTy valParser val fn = do
   case unP parsedVal of
     Nothing              ->
       if G.isNullable expectedTy
-      then AnnInpVal expectedTy Nothing <$> fn Nothing
+      then do
+        v <- fn Nothing
+        return $ AnnInpVal expectedTy Nothing v Nothing
       else throwVE $ "null value found for non-nullable type: "
            <> G.showGT expectedTy
-    Just (Right v)       -> AnnInpVal expectedTy Nothing <$> fn (Just v)
+    Just (Right v)       -> do
+      v' <- fn (Just v)
+      return $ AnnInpVal expectedTy Nothing v' Nothing
     Just (Left (var, v)) -> do
       let varTxt = G.unName $ G.unVariable var
       unless (isTypeAllowed expectedTy $ _aivType v) $
