@@ -328,8 +328,7 @@ ScheduleConf
      - ``cron`` | ``adhoc``
      - Type of scheduled trigger
    * - value
-     - true (when type is ``cron``).
-       false (when type is ``adhoc``)
+     - When type is ``cron``, true, otherwise false.
      - String
      - When the type is ``cron``, then a cron expression is expected
        . There is no value expected when the type is ``adhoc``.
