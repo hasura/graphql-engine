@@ -89,12 +89,13 @@ instance ToJSON ScheduleType where
 
 data CreateScheduledTrigger
   = CreateScheduledTrigger
-  { stName      :: !ET.TriggerName
-  , stWebhook   :: !ET.WebhookConf
-  , stSchedule  :: !ScheduleType
-  , stPayload   :: !(Maybe J.Value)
-  , stRetryConf :: !STRetryConf
-  , stHeaders   :: ![ET.HeaderConf]
+  { stName              :: !ET.TriggerName
+  , stWebhook           :: !ET.WebhookConf
+  , stSchedule          :: !ScheduleType
+  , stPayload           :: !(Maybe J.Value)
+  , stRetryConf         :: !STRetryConf
+  , stHeaders           :: ![ET.HeaderConf]
+  , stIncludeInMetadata :: !Bool
   } deriving (Show, Eq, Generic)
 
 instance NFData CreateScheduledTrigger
@@ -109,6 +110,8 @@ instance FromJSON CreateScheduledTrigger where
       stSchedule <- o .: "schedule"
       stRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
       stHeaders <- o .:? "headers" .!= []
+      stIncludeInMetadata <-
+          o .:? "include_in_metadata" .!= False
       pure CreateScheduledTrigger {..}
 
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)

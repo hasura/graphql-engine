@@ -429,13 +429,20 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                   ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
     scheduledTriggerQToOrdJSON :: CreateScheduledTrigger -> AO.Value
-    scheduledTriggerQToOrdJSON (CreateScheduledTrigger name webhook schedule payload retryConf headers) =
-      AO.object $ [ ("name", AO.toOrdered name)
-                  , ("webhook", AO.toOrdered webhook)
-                  , ("schedule", AO.toOrdered schedule)
-                  ] <> catMaybes [ maybeAnyToMaybeOrdPair "payload" AO.toOrdered payload
-                                 , maybeAnyToMaybeOrdPair "retry_conf" AO.toOrdered (maybeRetryConfiguration retryConf)
-                                 , maybeAnyToMaybeOrdPair "headers" AO.toOrdered (maybeHeader headers)]
+    scheduledTriggerQToOrdJSON
+      (CreateScheduledTrigger name webhook schedule payload retryConf headers includeInMetadata) =
+      AO.object $
+            [ ("name", AO.toOrdered name)
+            , ("webhook", AO.toOrdered webhook)
+            , ("schedule", AO.toOrdered schedule)
+            ]
+            <> catMaybes
+            [ maybeAnyToMaybeOrdPair "payload" AO.toOrdered payload
+            , maybeAnyToMaybeOrdPair "retry_conf" AO.toOrdered (maybeRetryConfiguration retryConf)
+            , maybeAnyToMaybeOrdPair "headers" AO.toOrdered (maybeHeader headers)]
+            <> if includeInMetadata
+               then [("include_in_metadata", AO.toOrdered includeInMetadata)]
+               else []
       where
         maybeRetryConfiguration retryConfig
           | retryConfig == defaultSTRetryConf = Nothing

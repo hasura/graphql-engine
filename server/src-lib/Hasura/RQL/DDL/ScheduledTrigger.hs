@@ -105,10 +105,11 @@ updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
     SET webhook_conf = $2,
         schedule_conf = $3,
         payload = $4,
-        retry_conf = $5
+        retry_conf = $5,
+        include_in_metadata = $6
     WHERE name = $1
    |] (stName, Q.AltJ stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
-      ) False
+      , stIncludeInMetadata) False
   -- since the scheduled trigger is updated, clear all its future events which are not retries
   Q.unitQE defaultTxErrorHandler
    [Q.sql|
