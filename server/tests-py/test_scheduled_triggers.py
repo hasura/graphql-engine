@@ -82,7 +82,8 @@ class TestScheduledTriggerAdhoc(object):
             assert resp['message'] == 'success'
 
     def test_check_adhoc_webhook_event(self,hge_ctx,scheduled_triggers_evts_webhook):
-        ev_full = scheduled_triggers_evts_webhook.get_event(60)
+        ev_full = scheduled_triggers_evts_webhook.get_event(65)
+        # 60 seconds will be the worst case, adding 5 seconds just so the test is not flaky
         validate_event_webhook(ev_full['path'],'/hello')
         validate_event_headers(ev_full['headers'],{"header-1":"header-1-value"})
         assert ev_full['body'] == self.webhook_payload
