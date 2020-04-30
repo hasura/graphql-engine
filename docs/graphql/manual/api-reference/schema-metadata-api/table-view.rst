@@ -199,39 +199,39 @@ Custom Root Fields
      - Description
    * - select
      - false
-     - `String`
+     - ``String``
      - Customise the ``<table-name>`` root field
    * - select_by_pk
      - false
-     - `String`
+     - ``String``
      - Customise the ``<table-name>_by_pk`` root field
    * - select_aggregate
      - false
-     - `String`
+     - ``String``
      - Customise the ``<table-name>_aggregete`` root field
    * - insert
      - false
-     - `String`
+     - ``String``
      - Customise the ``insert_<table-name>`` root field
    * - insert_one
      - false
-     - `String`
+     - ``String``
      - Customise the ``insert_<table-name>_one`` root field
    * - update
      - false
-     - `String`
+     - ``String``
      - Customise the ``update_<table-name>`` root field
    * - update_by_pk
      - false
-     - `String`
+     - ``String``
      - Customise the ``update_<table-name>_by_pk`` root field
    * - delete
      - false
-     - `String`
+     - ``String``
      - Customise the ``delete_<table-name>`` root field
    * - delete_by_pk
      - false
-     - `String`
+     - ``String``
      - Customise the ``delete_<table-name>_by_pk`` root field
 
 .. _set_table_custom_fields:
