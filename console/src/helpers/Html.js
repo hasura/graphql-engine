@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { env } from './localDev';
@@ -12,41 +12,34 @@ import { env } from './localDev';
  * by the server.js file.
  */
 
-export default class Html extends Component {
-  static propTypes = {
-    assets: PropTypes.object,
-    component: PropTypes.node,
-    baseDomain: PropTypes.string,
-  };
+const Html = ({ assets }) => {
+  const head = Helmet.rewind();
 
-  render() {
-    const { assets } = this.props;
-    const head = Helmet.rewind();
-    return (
-      <html lang="en-us">
-        <head>
-          <link rel="icon" type="image/png" href="/rstatic/favicon_green.png" />
-          {Object.keys(assets.styles).map((style, key) => (
-            <link
-              href={assets.styles[style]}
-              key={key}
-              media="screen, projection"
-              rel="stylesheet"
-              type="text/css"
-              charSet="UTF-8"
-            />
-          ))}
-
-          <script
-            dangerouslySetInnerHTML={{
-              __html: env,
-            }}
+  return (
+    <html lang="en-us">
+      <head>
+        <link rel="icon" type="image/png" href="/rstatic/favicon_green.png" />
+        {Object.keys(assets.styles).map((style, key) => (
+          <link
+            href={assets.styles[style]}
+            key={key}
+            media="screen, projection"
+            rel="stylesheet"
+            type="text/css"
+            charSet="UTF-8"
           />
-        </head>
-        <body>
-          <style
-            dangerouslySetInnerHTML={{
-              __html: `
+        ))}
+
+        <script
+          dangerouslySetInnerHTML={{
+            __html: env,
+          }}
+        />
+      </head>
+      <body>
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
             .content {
               display: 'none';
               opacity: 0;
@@ -58,12 +51,12 @@ export default class Html extends Component {
               transition: opacity .20s linear;
             }
           `,
-            }}
-          />
-          <div
-            id="loading"
-            dangerouslySetInnerHTML={{
-              __html: `<div class="page-loading" style="
+          }}
+        />
+        <div
+          id="loading"
+          dangerouslySetInnerHTML={{
+            __html: `<div class="page-loading" style="
                 min-height: 100vh;
                 width: 100%;
                 display: flex;
@@ -79,17 +72,24 @@ export default class Html extends Component {
               Loading...
               </span>
             </div>`,
-            }}
-          />
+          }}
+        />
 
-          <div id="content" className="content" />
-          <script src={`${assets.javascript.main}`} charSet="UTF-8" />
-          {/*
+        <div id="content" className="content" />
+        <script src={`${assets.javascript.main}`} charSet="UTF-8" />
+        {/*
           <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.13.1/build/highlight.min.js" />
           <script type="text/javascript" src="https://unpkg.com/sql-formatter@latest/dist/sql-formatter.min.js" />
           */}
-        </body>
-      </html>
-    );
-  }
-}
+      </body>
+    </html>
+  );
+};
+
+Html.propTypes = {
+  assets: PropTypes.object,
+  component: PropTypes.node,
+  baseDomain: PropTypes.string,
+};
+
+export default Html;
