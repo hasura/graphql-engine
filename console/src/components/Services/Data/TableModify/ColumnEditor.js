@@ -15,7 +15,7 @@ const ColumnEditor = ({
   alterTypeOptions,
   defaultOptions,
 }) => {
-  const { name: colName, isArray } = columnProperties;
+  const { name: colName, isArrayDataType } = columnProperties;
 
   if (!selectedProperties[colName]) {
     return null;
@@ -63,7 +63,7 @@ const ColumnEditor = ({
       editColumn(
         colName,
         'type',
-        isArray ? selected.value + '[]' : selected.value
+        isArrayDataType ? selected.value + '[]' : selected.value
       )
     );
   };
