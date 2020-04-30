@@ -213,14 +213,26 @@ Custom Root Fields
      - false
      - `String`
      - Customise the ``insert_<table-name>`` root field
+   * - insert_one
+     - false
+     - `String`
+     - Customise the ``insert_<table-name>_one`` root field
    * - update
      - false
      - `String`
      - Customise the ``update_<table-name>`` root field
+   * - update_by_pk
+     - false
+     - `String`
+     - Customise the ``update_<table-name>_by_pk`` root field
    * - delete
      - false
      - `String`
      - Customise the ``delete_<table-name>`` root field
+   * - delete_by_pk
+     - false
+     - `String`
+     - Customise the ``delete_<table-name>_by_pk`` root field
 
 .. _set_table_custom_fields:
 

@@ -33,6 +33,14 @@ Auto-generated update mutation schema
     returning: [article!]!
   }
 
+  # single object update (supported from v1.2.0)
+  update_article_by_pk (
+    _inc: article_inc_input
+    _set: article_set_input
+    # primary key columns input value
+    pk_columns: article_pk_columns_input!
+  ): article # the article table object
+
 As you can see from the schema:
 
 - The ``where`` argument is compulsory to filter rows to be updated. See :ref:`Filter queries <filter_queries>`
@@ -235,6 +243,65 @@ evaluates to ``true`` for all objects.
         }
       }
     }
+
+Update a single object
+----------------------
+
+You can update a single object in a table using the primary key columns value.
+The output type is the nullable table object. The mutation returns the updated
+row object or ``null`` if the row does not exist.
+
+**Examples:**
+
+1. Update an article whose ``id`` is ``1``:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation update_an_article {
+      update_article_by_pk (
+        pk_columns: {id: 1}
+        _set: { is_published: true }
+      ) {
+        id
+        is_published
+      }
+    }
+  :response:
+    {
+      "data": {
+        "update_article_by_pk": {
+          "id": 1,
+          "is_published": true
+        }
+      }
+    }
+
+2. Update a non-existent article:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation update_an_article {
+      update_article_by_pk (
+        pk_columns: {id: 1000000}
+        _set: { is_published: true }
+      ) {
+        id
+        is_published
+      }
+    }
+  :response:
+    {
+      "data": {
+        "update_article_by_pk": null
+      }
+    }
+
+.. admonition:: Supported from
+
+   The ``update_<table>_by_pk`` mutation is supported in versions ``v1.2.0``
+   and above.
 
 Increment **int** columns
 -------------------------
@@ -551,5 +618,3 @@ one to delete all the existing objects and one to add a list of new nested objec
     {
       "author_id": 21
     }
-
-
