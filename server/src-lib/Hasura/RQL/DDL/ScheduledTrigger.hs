@@ -19,7 +19,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.EventTrigger ( getWebhookInfoFromConf
                                              , getHeaderInfosFromConf)
 import           Hasura.RQL.Types
-
+import           Hasura.RQL.Types.Catalog    (CatalogScheduledTrigger(..))
 import           Hasura.Eventing.ScheduledTrigger
 
 import qualified Database.PG.Query     as Q
@@ -72,17 +72,23 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
 
 resolveScheduledTrigger
   :: (QErrM m, MonadIO m)
-  => CreateScheduledTrigger -> m ScheduledTriggerInfo
-resolveScheduledTrigger CreateScheduledTrigger {..} = do
-  webhookInfo <- getWebhookInfoFromConf stWebhook
-  headerInfo <- getHeaderInfosFromConf stHeaders
+  => CatalogScheduledTrigger -> m ScheduledTriggerInfo
+resolveScheduledTrigger CatalogScheduledTrigger {..} = do
+  webhookInfo <- getWebhookInfoFromConf _cstWebhookConf
+  headerInfo <- getHeaderInfosFromConf headers
   pure $
-    ScheduledTriggerInfo stName
-                         stSchedule
-                         stPayload
-                         stRetryConf
+    ScheduledTriggerInfo _cstName
+                         _cstScheduleConf
+                         _cstPayload
+                         retryConf
                          webhookInfo
                          headerInfo
+  where
+    retryConf = fromMaybe defaultSTRetryConf _cstRetryConf
+
+    headers = fromMaybe [] _cstHeaderConf
+
+
 
 runUpdateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger -> m EncJSON
 runUpdateScheduledTrigger q = do

@@ -175,7 +175,7 @@ data CatalogScheduledTrigger
   } deriving (Show, Eq, Generic)
 instance NFData CatalogScheduledTrigger
 instance Cacheable CatalogScheduledTrigger
-$(deriveFromJSON (aesonDrop 4 snakeCase) ''CatalogScheduledTrigger)
+$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogScheduledTrigger)
 
 data CatalogMetadata
   = CatalogMetadata

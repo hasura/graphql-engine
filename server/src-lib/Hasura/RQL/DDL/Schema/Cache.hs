@@ -299,8 +299,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
       in MetadataObject objectId definition
 
     mkScheduledTriggerMetadataObject catalogScheduledTrigger =
-      let q = catalogToCreateScheduledTrigger catalogScheduledTrigger
-          definition = toJSON q
+      let definition = toJSON catalogScheduledTrigger
       in MetadataObject (MOScheduledTrigger (_cstName catalogScheduledTrigger))
                         definition
 
@@ -377,22 +376,12 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     buildScheduledTriggers = buildInfoMap _cstName mkScheduledTriggerMetadataObject buildScheduledTrigger
       where
         buildScheduledTrigger = proc (_,scheduledTrigger) -> do
-          let q = catalogToCreateScheduledTrigger scheduledTrigger
-              triggerName = triggerNameToTxt $ _cstName scheduledTrigger
+          let triggerName = triggerNameToTxt $ _cstName scheduledTrigger
               addScheduledTriggerContext e = "in scheduled trigger " <> triggerName <> ": " <> e
           (| withRecordInconsistency (
-            (| modifyErrA (bindErrorA -< resolveScheduledTrigger q)
+            (| modifyErrA (bindErrorA -< resolveScheduledTrigger scheduledTrigger)
              |) addScheduledTriggerContext)
            |) (mkScheduledTriggerMetadataObject scheduledTrigger)
-
-    catalogToCreateScheduledTrigger :: CatalogScheduledTrigger -> CreateScheduledTrigger
-    catalogToCreateScheduledTrigger CatalogScheduledTrigger {..} =
-      CreateScheduledTrigger _cstName
-                             _cstWebhookConf
-                             _cstScheduleConf
-                             _cstPayload
-                             (fromMaybe defaultSTRetryConf _cstRetryConf)
-                             (fromMaybe [] _cstHeaderConf)
 
     buildActions
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
