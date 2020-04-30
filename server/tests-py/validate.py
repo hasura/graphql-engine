@@ -222,7 +222,7 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
         # make the query into a subscription and add the
         # _multiple_subscriptions directive that enables having more
         # than 1 root field in a subscription
-        query['query'] = 'subscription' + query_text[len('query'):].replace("{"," @_multiple_subscriptions {",1)
+        query['query'] = 'subscription' + query_text[len('query'):].replace("{"," @_multiple_top_level_fields {",1)
 
     if endpoint == '/v1alpha1/graphql':
         ws_client = GQLWsClient(hge_ctx, '/v1alpha1/graphql')

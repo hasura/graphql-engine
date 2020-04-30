@@ -177,7 +177,7 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
           -- As an internal testing feature, we support subscribing to
           -- multiple selection sets.  First check if the
           -- corresponding directive is set.
-          let multipleAllowed = elem (G.Directive "_multiple_subscriptions" []) (G._todDirectives opDef)
+          let multipleAllowed = elem (G.Directive "_multiple_top_level_fields" []) (G._todDirectives opDef)
           unless (multipleAllowed || null rst) $
             throwVE "subscriptions must select one top level field"
           return $ RSubscription selSet
