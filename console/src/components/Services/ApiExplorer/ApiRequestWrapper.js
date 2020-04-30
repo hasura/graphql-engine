@@ -1,84 +1,78 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
+
 import ApiRequest from './ApiRequest/ApiRequest';
 import ApiResponse from './ApiResponse/ApiResponse';
 // import ApiRequestDetails from './ApiRequestDetails';
+import styles from './ApiExplorer.scss';
 
-class ApiRequestWrapper extends Component {
-  render() {
-    const styles = require('./ApiExplorer.scss');
+const ApiRequestWrapper = props => {
+  const { bodyType, request, details, explorerData } = props;
 
-    const getAPIRequestDetailsSection = () => {
-      // return (
-      //   <ApiRequestDetails
-      //     title={this.props.details.title}
-      //     description={this.props.details.description}
-      //   />
-      // );
+  const getAPIRequestDetailsSection = () => {
+    // return (
+    //   <ApiRequestDetails
+    //     title={details.title}
+    //     description={details.description}
+    //   />
+    // );
 
-      return null;
-    };
+    return null;
+  };
 
-    const getAPIResponseSection = () => {
-      let apiResponseSection = null;
+  const getAPIResponseSection = () => {
+    let apiResponseSection = null;
 
-      if (this.props.request.bodyType !== 'graphql') {
-        apiResponseSection = (
-          <ApiResponse
-            {...this.props.explorerData}
-            categoryType={this.props.details.category}
-            showHelpBulb={
-              this.props.request.showHelpBulb
-                ? this.props.request.showHelpBulb
-                : false
-            }
-            url={this.props.request.url}
-          />
-        );
-      }
-
-      return apiResponseSection;
-    };
-
-    return (
-      <div
-        id="apiRequestBlock"
-        className={
-          styles.padd_left +
-          ' ' +
-          styles.padd_right +
-          ' ' +
-          styles.ApiRequestWrapperVH
-        }
-      >
-        {getAPIRequestDetailsSection()}
-
-        <ApiRequest
-          bodyType={
-            this.props.request.bodyType ? this.props.request.bodyType : ''
-          }
-          credentials={this.props.credentials}
-          method={this.props.request.method}
-          url={this.props.request.url}
-          headers={this.props.request.headers}
-          headersInitialised={this.props.request.headersInitialised}
-          params={this.props.request.params}
-          explorerData={this.props.explorerData}
-          dispatch={this.props.dispatch}
-          dataHeaders={this.props.dataHeaders}
-          numberOfTables={this.props.numberOfTables}
-          headerFocus={this.props.headerFocus}
-          urlParams={this.props.urlParams}
-          serverVersion={this.props.serverVersion}
-          consoleUrl={this.props.consoleUrl}
-          serverConfig={this.props.serverConfig}
+    if (bodyType !== 'graphql') {
+      apiResponseSection = (
+        <ApiResponse
+          {...props.explorerData}
+          categoryType={details.category}
+          showHelpBulb={request.showHelpBulb ? request.showHelpBulb : false}
+          url={request.url}
         />
+      );
+    }
 
-        {getAPIResponseSection()}
-      </div>
-    );
-  }
-}
+    return apiResponseSection;
+  };
+
+  return (
+    <div
+      id="apiRequestBlock"
+      className={
+        styles.padd_left +
+        ' ' +
+        styles.padd_right +
+        ' ' +
+        styles.ApiRequestWrapperVH
+      }
+    >
+      {getAPIRequestDetailsSection()}
+
+      <ApiRequest
+        bodyType={request.bodyType ? request.bodyType : ''}
+        credentials={props.credentials}
+        method={request.method}
+        url={request.url}
+        headers={request.headers}
+        headersInitialised={request.headersInitialised}
+        params={request.params}
+        explorerData={explorerData}
+        dispatch={props.dispatch}
+        dataHeaders={props.dataHeaders}
+        numberOfTables={props.numberOfTables}
+        headerFocus={props.headerFocus}
+        urlParams={props.urlParams}
+        serverVersion={props.serverVersion}
+        consoleUrl={props.consoleUrl}
+        serverConfig={props.serverConfig}
+      />
+
+      {getAPIResponseSection()}
+    </div>
+  );
+};
 
 ApiRequestWrapper.propTypes = {
   details: PropTypes.object.isRequired,
