@@ -46,7 +46,6 @@ export const ColumnTypeSelector: React.FC<Props> = ({
 
   return (
     <SearchableSelect
-      isClearable
       onInputChange={(v: string) => setSearchValue(v)}
       // Treating last search value the same was as selected option,
       // so that user don't have to click in the dropdown, they can just leave the input

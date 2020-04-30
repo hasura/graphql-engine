@@ -58,14 +58,28 @@ const ColumnEditorList = ({
    * */
   return columns.map((col, i) => {
     const colName = col.column_name;
+    const isArray = col.data_type === 'ARRAY';
+
+    const getDisplayName = () => {
+      if (isArray) {
+        return col.udt_name.replace('_', '') + '[]';
+      }
+      if (col.data_type === 'USER-DEFINED') {
+        return col.udt_name;
+      }
+      return col.data_type;
+    };
+
+    const getType = () =>
+      isArray ? col.udt_name.replace('_', '') + '[]' : col.udt_name;
 
     const columnProperties = {
       name: colName,
       tableName: col.table_name,
       schemaName: col.table_schema,
-      display_type_name:
-        col.data_type !== 'USER-DEFINED' ? col.data_type : col.udt_name,
-      type: col.udt_name,
+      display_type_name: getDisplayName(),
+      type: getType(),
+      isArray,
       isNullable: col.is_nullable === 'YES',
       isIdentity: col.is_identity === 'YES',
       pkConstraint: columnPKConstraints[colName],
@@ -174,6 +188,9 @@ const ColumnEditorList = ({
      * */
 
     const getValidTypeCasts = udtName => {
+      if (isArray) {
+        udtName = udtName.replace('_', '');
+      }
       const lowerUdtName = udtName.toLowerCase();
       if (lowerUdtName in validTypeCasts) {
         return validTypeCasts[lowerUdtName];
@@ -217,8 +234,8 @@ const ColumnEditorList = ({
     const colEditorExpanded = () => {
       return (
         <ColumnEditor
-          alterTypeOptions={getValidTypeCasts(col.udt_name)}
-          defaultOptions={getValidDefaultTypes(col.udt_name)}
+          alterTypeOptions={getValidTypeCasts(col.udt_name, isArray)}
+          defaultOptions={getValidDefaultTypes(col.udt_name)} // todo
           column={col}
           onSubmit={onSubmit}
           tableName={tableName}

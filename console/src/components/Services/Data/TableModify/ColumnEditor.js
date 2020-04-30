@@ -15,7 +15,7 @@ const ColumnEditor = ({
   alterTypeOptions,
   defaultOptions,
 }) => {
-  const colName = columnProperties.name;
+  const { name: colName, isArray } = columnProperties;
 
   if (!selectedProperties[colName]) {
     return null;
@@ -59,7 +59,13 @@ const ColumnEditor = ({
     dispatch(editColumn(colName, 'name', e.target.value));
   };
   const updateColumnType = selected => {
-    dispatch(editColumn(colName, 'type', selected.value));
+    dispatch(
+      editColumn(
+        colName,
+        'type',
+        isArray ? selected.value + '[]' : selected.value
+      )
+    );
   };
   const toggleColumnNullable = e => {
     dispatch(editColumn(colName, 'isNullable', e.target.value === 'true'));
