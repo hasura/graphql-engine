@@ -210,6 +210,7 @@ deriving instance (Hashable (f TxtEncodedPGVal)) => Hashable (ValidatedVariables
 deriving instance (J.ToJSON (f TxtEncodedPGVal)) => J.ToJSON (ValidatedVariables f)
 
 type ValidatedQueryVariables = ValidatedVariables (Map.HashMap G.Variable)
+-- | See the explanation for 'CohortVariables'.
 type ValidatedSyntheticVariables = ValidatedVariables []
 
 -- | Checks if the provided arguments are valid values for their corresponding types.
