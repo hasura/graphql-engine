@@ -93,6 +93,11 @@ import {
   changeRequestHeader,
   removeRequestHeader,
 } from './src/components/Services/ApiExplorer/Actions';
+
+import actionReducer from './src/components/Services/Actions/reducer';
+import getActionsRouter from './src/components/Services/Actions/Router';
+import typesReducer from './src/components/Services/Types/reducer';
+
 import validateLogin from './src/utils/validateLogin';
 
 import DragFoldTable from './src/components/Common/TableCommon/DragFoldTable';
@@ -167,5 +172,5 @@ export { CONSOLE_ADMIN_SECRET };
 
 // export styles
 export { filterQueryScss, tableScss };
-
 export * from './src/components/Common';
+export { actionReducer, getActionsRouter, typesReducer };

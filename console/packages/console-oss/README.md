@@ -1,6 +1,6 @@
 Package history
 
-0.0.5-41.2.1 - Exports 1.2.0
+0.0.6-1.2.0 - Merges with stable branch for 1.2.0 and releases a package with corresponding exports
 0.0.5-2 - Exports certain modules from src/components/Common
 0.0.5-1 - Merges v1.1.0 of upstream into ex-bundle and release
 0.0.4-2 - Merges schema/table filtering changes from cisco branch and merges with main (ex-bundle)
