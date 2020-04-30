@@ -295,7 +295,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
       --          |) metadataObject)
       --      |)
       --   >-> (\infos -> M.catMaybes infos >- returnA)
-      scheduledTriggersMap <- buildScheduledTriggers -< (mempty,scheduledTriggers) -- This should not be mempty
+      scheduledTriggersMap <- buildScheduledTriggers -< ((),scheduledTriggers) -- This should not be mempty
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
@@ -392,7 +392,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
          , Inc.ArrowCache m arr
          , MonadIO m
          , MonadTx m)
-      => (String,[CatalogScheduledTrigger])   -- definitely should not be String here
+      => ((),[CatalogScheduledTrigger])
          `arr` HashMap TriggerName ScheduledTriggerInfo
     buildScheduledTriggers = buildInfoMap _cstName mkScheduledTriggerMetadataObject buildScheduledTrigger
       where
