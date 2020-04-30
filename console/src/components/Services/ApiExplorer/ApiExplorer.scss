@@ -102,45 +102,11 @@
   color: #ffffff;
   border-radius: 5px;
 }
-.width_80 {
-  width: 80%;
-}
 
 .responseHeader {
   color: #788095;
   font-weight: bold;
   font-size: 14px;
-}
-
-.admin_token_align {
-  vertical-align: middle;
-  margin-left: 2px;
-}
-
-.marginBottom {
-  margin-bottom: 15px;
-}
-
-.apiExplorerMini {
-  width: 80%;
-}
-
-.wrapperOnBoarding {
-  // width: 80% !important;
-}
-
-.panelGreyed {
-  opacity: 0.1;
-}
-
-.requestGreyed {
-  opacity: 0.1;
-}
-
-.panelInFocus {
-}
-
-.requestInFocus {
 }
 
 .apiExplorerWrapper {
@@ -199,18 +165,8 @@
         padding: 0 15px;
         margin: 0;
         border-bottom: 1px solid #e5e5e5;
-        /*
-        position: absolute;
-        bottom: 0;
-        transform: translateX(-88%);
-        */
 
         .apiCollectionClearHistoryButton {
-          /*
-          float: right;
-          margin: 10px 0;
-          cursor: pointer;
-          */
           margin: 10px 0;
           cursor: pointer;
           position: fixed;
@@ -236,7 +192,6 @@
       .apiCollectionTabListDetails {
         padding: 0 15px;
         margin: 10px 0;
-        // padding-top: 46px;
 
         .apiCollectionTabListHead {
           padding-left: 15px;
@@ -352,8 +307,6 @@
 
   .apiContentPadd {
     padding-top: 20px;
-    // padding-bottom: 10px;
-    // margin-bottom: -15px;
   }
 
   .closeHeader {
@@ -455,51 +408,6 @@
           padding: 10px 12px;
           height: auto;
           background-color: #fff;
-        }
-      }
-
-      .sendBtn {
-        button {
-          width: 100%;
-          text-align: center;
-          height: 39px;
-          color: #606060;
-          font-weight: bold;
-          border-radius: 5px;
-          background-color: #fec53d;
-          border: 1px solid #fec53d;
-          /*
-          background-color: #FFCA27;
-          border: 1px solid #FFCA27;
-          */
-          &:hover {
-            background-color: #f2b130;
-          }
-        }
-
-        /*
-        button:hover {
-          border: 1px solid #F2B130;
-          background-color: #F2B130;
-        }
-        */
-      }
-
-      .generateBtn {
-        button {
-          width: 100%;
-          background-color: transparent;
-          text-align: center;
-          height: 39px;
-          border: 1px solid #606060;
-          color: #606060;
-          font-weight: bold;
-          border-radius: 5px;
-        }
-
-        button:hover {
-          border: 1px solid #606060;
-          background-color: #efefef;
         }
       }
     }
@@ -722,68 +630,10 @@
   }
 }
 
-.queryBuilderWrapper {
-  padding-bottom: 20px;
-
-  .queryBuilderTab {
-    ul {
-      border: 1px solid #e7e7e7;
-      -webkit-padding-start: 0px;
-      -moz-padding-start: 0px;
-      display: inline-block;
-
-      li {
-        list-style-type: none;
-        display: inline-block;
-        padding: 12px 20px;
-        width: 150px;
-        text-align: center;
-        color: #788094;
-        cursor: pointer;
-        background-color: #fff;
-        font-weight: bold;
-      }
-
-      li:focus {
-        outline: none;
-      }
-
-      .activeQueryBuilderTab {
-        background-color: #fff050;
-      }
-    }
-  }
-}
-
 .AceEditorWrapper {
   -webkit-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
   -moz-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
   box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
-  /*
-  margin-top: 15px;
-  margin-bottom: 20px;
-  margin-top: 20px;
-  */
-}
-
-.queryBuilderLayout {
-  background-color: #fff;
-  // padding: 15px;
-}
-
-.queryBuilderLayoutSub {
-  padding: 20px;
-}
-
-.qbTabHeading {
-  font-weight: bold;
-  padding-top: 15px;
-  padding-left: 20px;
-  padding-bottom: 15px;
-
-  i {
-    padding-left: 5px;
-  }
 }
 
 .common_checkbox {
@@ -830,13 +680,6 @@ label {
   background: #ffca27;
   color: #fff;
   padding-top: 0px;
-}
-
-.authPanelSubHeadings {
-  font-size: 16px;
-  font-weight: italic;
-  padding-left: 15px;
-  padding-bottom: 10px;
 }
 
 .apiResponseTab {
