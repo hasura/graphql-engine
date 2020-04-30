@@ -1,14 +1,19 @@
+import {
+  buildClientSchema,
+  getIntrospectionQuery,
+  GraphQLSchema,
+} from 'graphql';
 import React from 'react';
-import { getIntrospectionQuery, buildClientSchema } from 'graphql';
 import endpoints from '../../../Endpoints';
 
 export const useIntrospectionSchema = (headers = {}) => {
-  const [schema, setSchema] = React.useState(null);
+  const [schema, setSchema] = React.useState<GraphQLSchema | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
 
   const introspect = () => {
     setLoading(true);
+
     fetch(endpoints.graphQLUrl, {
       method: 'POST',
       headers,
@@ -28,6 +33,7 @@ export const useIntrospectionSchema = (headers = {}) => {
         setLoading(false);
         setError(e);
       });
+
     return () => setSchema(null);
   };
 

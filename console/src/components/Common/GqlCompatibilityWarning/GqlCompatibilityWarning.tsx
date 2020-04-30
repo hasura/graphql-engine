@@ -4,7 +4,15 @@ import WarningSymbol from '../WarningSymbol/WarningSymbol';
 
 const gqlPattern = /^[_A-Za-z][_0-9A-Za-z]*$/;
 
-const GqlCompatibilityWarning = ({ identifier, className = null }) => {
+export interface GqlCompatibilityWarningProps {
+  identifier: string;
+  className?: string;
+}
+
+const GqlCompatibilityWarning: React.FC<GqlCompatibilityWarningProps> = ({
+  identifier,
+  className = '',
+}) => {
   const isGraphQLCompatible = gqlPattern.test(identifier);
 
   if (isGraphQLCompatible) {

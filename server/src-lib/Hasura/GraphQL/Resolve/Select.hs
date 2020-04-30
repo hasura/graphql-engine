@@ -63,7 +63,7 @@ resolveComputedField
   => ComputedField -> Field -> m (RS.ComputedFieldSel UnresolvedVal)
 resolveComputedField computedField fld = fieldAsPath fld $ do
   funcArgs <- parseFunctionArgs argSeq argFn $ Map.lookup "args" $ _fArguments fld
-  let argsWithTableArgument = withTableArgument funcArgs
+  let argsWithTableArgument = withTableAndSessionArgument funcArgs
   case fieldType of
     CFTScalar scalarTy -> do
       colOpM <- argsToColOp $ _fArguments fld
@@ -74,16 +74,25 @@ resolveComputedField computedField fld = fieldAsPath fld $ do
       RS.CFSTable RS.JASMultipleRows <$> fromField functionFrom cols permFilter permLimit fld
   where
     ComputedField _ function argSeq fieldType = computedField
-    ComputedFieldFunction qf _ tableArg _ = function
+    ComputedFieldFunction qf _ tableArg sessionArg _ = function
+    argFn :: FunctionArgItem -> InputFunctionArgument
     argFn = IFAUnknown
-    withTableArgument resolvedArgs =
+    withTableAndSessionArgument :: RS.FunctionArgsExpG        UnresolvedVal
+                                -> RS.FunctionArgsExpTableRow UnresolvedVal
+    withTableAndSessionArgument resolvedArgs =
       let argsExp@(RS.FunctionArgsExp positional named) = RS.AEInput <$> resolvedArgs
           tableRowArg = RS.AETableRow Nothing
-      in case tableArg of
-        FTAFirst      ->
-          RS.FunctionArgsExp (tableRowArg:positional) named
-        FTANamed argName index ->
-          RS.insertFunctionArg argName index tableRowArg argsExp
+          withTable = case tableArg of
+            FTAFirst      ->
+              RS.FunctionArgsExp (tableRowArg:positional) named
+            FTANamed argName index ->
+              RS.insertFunctionArg argName index tableRowArg argsExp
+          sessionArgVal = RS.AESession UVSession
+          alsoWithSession = case sessionArg of
+            Nothing -> withTable
+            Just (FunctionSessionArgument argName index) ->
+              RS.insertFunctionArg argName index sessionArgVal withTable
+      in alsoWithSession
 
 processTableSelectionSet
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
