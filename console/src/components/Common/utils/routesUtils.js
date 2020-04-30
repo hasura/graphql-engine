@@ -65,9 +65,6 @@ export const getActionsBaseRoute = () => {
   return '/actions/manage';
 };
 
-export const getActionsCreateRoute = isDerived => {
-  if (isDerived) {
-    return `${getActionsBaseRoute()}/add?is_derived=true`;
-  }
+export const getActionsCreateRoute = () => {
   return `${getActionsBaseRoute()}/add`;
 };

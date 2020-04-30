@@ -8,6 +8,7 @@ package migrate
 import (
 	"bytes"
 	"container/list"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"os"
@@ -18,9 +19,8 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
-
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
 // DefaultPrefetchMigrations sets the number of migrations to pre-read
@@ -103,7 +103,7 @@ type Migrate struct {
 
 // New returns a new Migrate instance from a source URL and a database URL.
 // The URL scheme is defined by each driver.
-func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, logger *log.Logger) (*Migrate, error) {
+func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, tlsConfig *tls.Config, logger *log.Logger) (*Migrate, error) {
 	m := newCommon(cmd)
 
 	sourceName, err := schemeFromUrl(sourceUrl)
@@ -137,7 +137,7 @@ func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, logg
 		m.sourceDrv.DefaultParser(source.DefaultParsev2)
 	}
 
-	databaseDrv, err := database.Open(databaseUrl, cmd, logger)
+	databaseDrv, err := database.Open(databaseUrl, cmd, tlsConfig, logger)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
@@ -322,6 +322,10 @@ func (m *Migrate) GetIntroSpectionSchema() (interface{}, error) {
 
 func (m *Migrate) SetMetadataPlugins(plugins types.MetadataPlugins) {
 	m.databaseDrv.SetMetadataPlugins(plugins)
+}
+
+func (m *Migrate) EnableCheckMetadataConsistency(enabled bool) {
+	m.databaseDrv.EnableCheckMetadataConsistency(enabled)
 }
 
 func (m *Migrate) ExportMetadata() (map[string][]byte, error) {

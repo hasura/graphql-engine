@@ -7,6 +7,7 @@ args:
       DROP FUNCTION fetch_articles(text, author);
       DROP FUNCTION fetch_articles_volatile(text, author);
       DROP FUNCTION full_name(author);
+      DROP FUNCTION test_session(author, text, json);
       DROP TABLE article;
       DROP TABLE author;
     cascade: true

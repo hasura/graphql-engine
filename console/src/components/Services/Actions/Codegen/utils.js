@@ -14,7 +14,7 @@ const {
   isScalarType,
 } = require('graphql');
 const { camelize } = require('inflection');
-import { getPersistedDerivedMutation } from '../lsUtils';
+import { getPersistedDerivedAction } from '../lsUtils';
 
 export const getCodegenFilePath = framework => {
   return `${globals.assetsPath}/common/codegen/${framework}/actions-codegen.js`;
@@ -24,6 +24,9 @@ export const getStarterKitPath = framework => {
   return `https://github.com/${CODEGEN_REPO}/tree/master/${framework}/starter-kit/`;
 };
 
+export const getStarterKitDownloadPath = framework => {
+  return `https://github.com/${CODEGEN_REPO}/raw/master/${framework}/${framework}.zip`;
+};
 export const getGlitchProjectURL = () => {
   return 'https://glitch.com/edit/?utm_content=project_hasura-actions-starter-kit&utm_source=remix_this&utm_medium=button&utm_campaign=glitchButton#!/remix/hasura-actions-starter-kit';
 };
@@ -58,12 +61,12 @@ export const getFrameworkCodegen = (
   framework,
   actionName,
   actionsSdl,
-  parentMutation
+  parentOperation
 ) => {
   return getCodegenFunc(framework)
     .then(codegenerator => {
       const derive = {
-        operation: parentMutation,
+        operation: parentOperation,
         endpoint: endpoints.graphQLUrl,
       };
       const codegenFiles = codegenerator(actionName, actionsSdl, derive);
