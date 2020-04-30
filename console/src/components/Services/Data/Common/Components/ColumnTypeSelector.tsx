@@ -37,6 +37,7 @@ export const ColumnTypeSelector: React.FC<Props> = ({
 
   const onMenuClose = () => {
     if (searchValue !== '') onChange(createOpt(searchValue, colIdentifier));
+    setSearchValue('');
   };
 
   // Creating new option based on input
