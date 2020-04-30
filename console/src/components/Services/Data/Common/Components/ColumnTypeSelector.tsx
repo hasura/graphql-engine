@@ -19,7 +19,7 @@ type Option = {
 type Props = {
   options: Array<{ label: string; options: Option[] }>;
   onChange: (option: any) => void;
-  value: Option;
+  value: Option | string;
   bsClass: string;
   styleOverrides: Record<string, any>;
   colIdentifier: number;

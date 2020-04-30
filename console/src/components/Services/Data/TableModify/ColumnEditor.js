@@ -50,22 +50,24 @@ const ColumnEditor = ({
     },
   };
 
-  const { alterOptions, alterOptionsValueMap } = getValidAlterOptions(
+  // eslint-disable-next-line prefer-const
+  let { alterOptions, alterOptionsValueMap } = getValidAlterOptions(
     alterTypeOptions,
     colName
   );
+
+  if (isArrayDataType) {
+    alterOptions = alterOptions.map(opt => ({
+      value: opt.value + '[]',
+      label: opt.label + '[]',
+    }));
+  }
 
   const updateColumnName = e => {
     dispatch(editColumn(colName, 'name', e.target.value));
   };
   const updateColumnType = selected => {
-    dispatch(
-      editColumn(
-        colName,
-        'type',
-        isArrayDataType ? selected.value + '[]' : selected.value
-      )
-    );
+    dispatch(editColumn(colName, 'type', selected.value));
   };
   const toggleColumnNullable = e => {
     dispatch(editColumn(colName, 'isNullable', e.target.value === 'true'));
