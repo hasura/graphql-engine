@@ -12,8 +12,13 @@ Postgres triggers
   :depth: 1
   :local:
 
+Introduction
+------------
 
 `Postgres triggers <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ are used to invoke previously defined Postgres functions *before* or *after* a specific database event (e.g. ``INSERT``) occurs.
+
+Examples
+--------
 
 **Example:**
 
@@ -30,6 +35,11 @@ If someone now tries to insert an article for an author that is not active, the 
 
   unexpected : Author must be active
 
+
+Triggers & Hasura
+-----------------
+
+
 .. note::
 
-  For more information on how to create triggers, please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__.
+  For more information on Postgres triggers, please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__.

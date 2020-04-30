@@ -12,9 +12,14 @@ Postgres constraints
   :depth: 1
   :local:
 
+Introduction
+------------
 
 `Constraints <https://www.postgresql.org/docs/current/ddl-constraints.html>`__ are used to define rules for fields in a database table. They ensure that
 no invalid data is entered into the database.
+
+Examples
+--------
 
 **Example**
 
@@ -33,6 +38,9 @@ There are a number of different constraint types in the above example:
 - ``NOT NULL``: Makes sure a certain field is not null.
 - ``UNIQUE``: Prevents database entries with a duplicate value of the respective field.
 - ``CHECK``: Checks the field value of a database entry for a certain condition.
+
+Constraints & Hasura
+--------------------
 
 .. note::
 

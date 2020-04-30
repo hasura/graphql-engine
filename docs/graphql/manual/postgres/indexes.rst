@@ -12,9 +12,14 @@ Postgres indexes
   :depth: 1
   :local:
 
+Introduction
+------------
 
 `Indexes <https://www.postgresql.org/docs/current/sql-createindex.html>`__ are a way of increasing performance on a field that is queried frequently. The concept is similar to the one of an index in a book. 
 It helps accessing the data you're looking for more quickly.
+
+Examples
+--------
 
 **Example:**
 
@@ -31,6 +36,10 @@ We can now create an index on the ``name`` field of the ``authors`` table:
   CREATE INDEX author_name_index ON authors (name);
 
 Since the database is now able to look up the result of these queries more quickly, the performance of these queries increases significantly.
+
+Indexes & Hasura
+----------------
+
 
 .. note::
 

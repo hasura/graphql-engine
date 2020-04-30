@@ -12,8 +12,17 @@ Postgres views
   :depth: 1
   :local:
 
+Standard views
+--------------
+
+Introduction
+************
+
 A `view <https://www.postgresql.org/docs/current/sql-createview.html>`__ is a virtual table in Postgres. It represents the result of a query to one or more underlying tables in Postgres without actually storing data.
 Views are used to simplify complex queries since these queries are defined once in the view, and can then be directly queried via the same.
+
+Examples
+********
 
 **Example:**
 
@@ -33,9 +42,15 @@ The created view can now be queried as follows:
   SELECT name, rating from popular_authors;
 
 Materialized views
-^^^^^^^^^^^^^^^^^^
+------------------
 
-Compared to the regular view described above, `materialized views <https://www.postgresql.org/docs/current/rules-materializedviews.html>`__ **do** store data physically in the database.
+Introduction
+************
+
+Compared to the standard view described above, `materialized views <https://www.postgresql.org/docs/current/rules-materializedviews.html>`__ **do** store data physically in the database.
+
+Examples
+********
 
 **Example:**
 
@@ -52,6 +67,9 @@ Since the result of a query is stored in a materialized view like in a cache, yo
 .. code-block:: sql
 
   REFRESH MATERIALIZED VIEW popular_authors;
+
+Views & Hasura
+--------------
 
 .. note::
 

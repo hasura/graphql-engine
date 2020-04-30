@@ -12,9 +12,14 @@ Postgres functions
   :depth: 1
   :local:
 
+Introduction
+------------
 
 `Postgres functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ allow you to define a set of operations that can include several statements such as declarations, assignments and conditional workflows.
 They are a way of customizing your database schema.
+
+Examples
+--------
 
 **Example:**
 
@@ -43,6 +48,9 @@ Let's break this function apart:
 - Variable declaration: A variable called ``active_author`` is declared
 - Function body: Block between ``BEGIN`` and ``END`` checking if the author for whom the article is to be inserted is active
 - Response: The response (``$BODY$``) is returned in the ``slpgsql`` language
+
+Functions & Hasura
+------------------
 
 .. note::
 
