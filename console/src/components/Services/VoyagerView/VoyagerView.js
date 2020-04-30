@@ -1,32 +1,31 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { GraphQLVoyager } from 'graphql-voyager';
 import fetch from 'isomorphic-fetch';
+
 import Endpoints from '../../../Endpoints';
 import '../../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
 
-class VoyagerView extends Component {
-  introspectionProvider(query) {
+const VoyagerView = ({ headers }) => {
+  const introspectionProvider = query => {
     return fetch(Endpoints.graphQLUrl, {
       method: 'POST',
-      headers: this.props.headers,
+      headers: headers,
       body: JSON.stringify({ query: query }),
     }).then(response => response.json());
-  }
+  };
 
-  render() {
-    return (
-      <div>
-        <GraphQLVoyager
-          introspection={this.introspectionProvider.bind(this)}
-          workerURI={
-            'https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.27/dist/voyager.worker.min.js'
-          }
-        />
-      </div>
-    );
-  }
-}
+  return (
+    <div>
+      <GraphQLVoyager
+        introspection={introspectionProvider}
+        workerURI={
+          'https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.27/dist/voyager.worker.min.js'
+        }
+      />
+    </div>
+  );
+};
 
 const generatedVoyagerConnector = connect => {
   const mapStateToProps = state => {
