@@ -16,6 +16,7 @@ RETURNS boolean AS $$
   );
 $$ LANGUAGE sql STABLE;
 ```
+
 and make a query like:
 
 ```
@@ -25,7 +26,7 @@ query {
     content
     likedByMe
   }
-}     
+}
 ```
 
 Support for this is now added through the `add_computed_field` API.
@@ -36,6 +37,9 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+### Docs improvements
+
+- Add guide on migrating from graph.cool to Hasura (#4065)
 
 ## `v1.2.0`
 
@@ -101,6 +105,7 @@ The `internal` field for action errors is improved with more debug information. 
 `response` and `error` fields instead of just `webhook_response` field.
 
 Before:
+
 ```json
 {
   "errors": [
@@ -121,7 +126,9 @@ Before:
   ]
 }
 ```
+
 After:
+
 ```json
 {
   "errors": [
@@ -185,6 +192,7 @@ ENV vars can now be read from .env file present at the project root directory. A
 ```
 hasura console --envfile production.env
 ```
+
 The above command will read ENV vars from `production.env` file present at the project root directory.
 
 (close #4129) (#4454)
