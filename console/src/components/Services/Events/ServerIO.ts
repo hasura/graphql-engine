@@ -12,7 +12,13 @@ import {
 import globals from '../../../Globals';
 import { makeMigrationCall } from '../Data/DataActions';
 import requestAction from '../../../utils/requestAction';
-import { getETModifyRoute } from '../../Common/utils/routesUtils';
+import {
+  getETModifyRoute,
+  getDataEventsLandingRoute,
+} from '../../Common/utils/routesUtils';
+import { transformHeaders } from '../../Common/Headers/utils';
+import { Table } from '../../Common/utils/pgUtils';
+import { getConfirmation, isValidURL } from '../../Common/utils/jsUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import dataHeaders from '../Data/Common/Headers';
 import {
@@ -23,7 +29,10 @@ import {
 } from './Types';
 import { setScheduledTriggers, setEventTriggers, setTriggers } from './reducer';
 import { LocalScheduledTriggerState } from './ScheduledTriggers/Add/state';
-import { LocalEventTriggerState } from './EventTriggers/Add/state';
+import {
+  LocalEventTriggerState,
+  parseServerETDefinition,
+} from './EventTriggers/state';
 import { validateAddETState } from './EventTriggers/utils';
 import {
   validateAddState,
@@ -31,6 +40,7 @@ import {
 } from './ScheduledTriggers/utils';
 import { showErrorNotification } from '../Common/Notification';
 import { appPrefix } from './constants';
+import { EventTriggerProperty } from './EventTriggers/Modify/utils';
 
 export const fetchTriggers = (kind?: TriggerKind) => (
   dispatch: any,
@@ -309,6 +319,154 @@ export const createEventTrigger = (
   };
 };
 
+export const modifyEventTrigger = (
+  property: EventTriggerProperty,
+  state: LocalEventTriggerState,
+  trigger: EventTrigger,
+  table?: Table,
+  successCb?: () => void,
+  errorCb?: () => void
+) => (dispatch: any, getState: any) => {
+  const downQuery = generateCreateEventTriggerQuery(
+    parseServerETDefinition(trigger, table),
+    true
+  );
+
+  // TODO optimise redeclaration of queries
+
+  const upQuery = generateCreateEventTriggerQuery(
+    parseServerETDefinition(trigger, table),
+    true
+  );
+
+  const errorMsg = 'Saving failed';
+
+  switch (property) {
+    case 'webhook': {
+      if (state.webhook.type === 'static' && !isValidURL(state.webhook.value)) {
+        return dispatch(showErrorNotification(errorMsg, 'Invalid URL'));
+      }
+      upQuery.args = {
+        ...upQuery.args,
+        webhook: state.webhook.type === 'static' ? state.webhook.value : null,
+        webhook_from_env:
+          state.webhook.type === 'env' ? state.webhook.value : null,
+      };
+      break;
+    }
+    case 'ops': {
+      upQuery.args = {
+        ...upQuery.args,
+        insert: state.operations.insert ? { columns: '*' } : null,
+        update: state.operations.update
+          ? {
+              columns: state.operationColumns.map(c => c.name),
+              payload: state.operationColumns.map(c => c.name),
+            }
+          : null,
+        delete: state.operations.delete ? { columns: '*' } : null,
+        enable_manual: state.operations.enable_manual,
+      };
+      break;
+    }
+    case 'retry_conf': {
+      upQuery.args.retry_conf = state.retryConf;
+      break;
+    }
+    case 'headers': {
+      upQuery.args.headers = transformHeaders(state.headers);
+      break;
+    }
+    default:
+      break;
+  }
+
+  const migrationName = `set_et_${state.name.trim()}_${property}`;
+
+  const requestMsg = 'Saving...';
+  const successMsg = 'Saved';
+
+  const customOnSuccess = () => {
+    if (successCb) {
+      successCb();
+    }
+    dispatch(fetchTriggers('event'));
+  };
+
+  const customOnError = () => {
+    if (errorCb) {
+      errorCb();
+    }
+  };
+
+  return makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    [downQuery],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg,
+    true
+  );
+};
+
+export const deleteEventTrigger = (
+  trigger: EventTrigger,
+  successCb?: () => void,
+  errorCb?: () => void
+) => (dispatch: any, getState: any) => {
+  const isOk = getConfirmation(
+    `This will permanently delete the event trigger and the associated metadata`,
+    true,
+    trigger.name
+  );
+  if (!isOk) {
+    return undefined;
+  }
+
+  const upQuery = getDropEventTriggerQuery(trigger.name);
+  const downQuery = generateCreateEventTriggerQuery(
+    parseServerETDefinition(trigger)
+  );
+
+  const migrationName = `delete_et_${trigger.name}`;
+
+  const requestMsg = 'Deleting event trigger...';
+  const successMsg = 'Deleted event trigger';
+  const errorMsg = 'Deleting event trigger failed';
+
+  const customOnSuccess = () => {
+    if (successCb) {
+      successCb();
+    }
+    dispatch(push(getDataEventsLandingRoute()));
+    dispatch(fetchTriggers('event'));
+  };
+
+  const customOnError = () => {
+    if (errorCb) {
+      errorCb();
+    }
+  };
+
+  return makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    [downQuery],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg,
+    true
+  );
+};
 // const loadPendingDataEvents = () => (dispatch: any, getState: any) => {
 //   const url = Endpoints.getSchema;
 //   const body = {

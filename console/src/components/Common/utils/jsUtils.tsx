@@ -32,6 +32,15 @@ export const isPromise = (value: any) => {
   return value.constructor.name === 'Promise';
 };
 
+export const isValidURL = (value: string) => {
+  try {
+    new URL(value);
+  } catch {
+    return false;
+  }
+  return true;
+};
+
 export const isValidTemplateLiteral = (literal_: string) => {
   const literal = literal_.trim();
   if (!literal) return false;

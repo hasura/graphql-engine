@@ -10,20 +10,33 @@ import { EventTriggerOperation  } from '../../Types';
 
 type OperationProps = {
   selectedOperations: Record <EventTriggerOperation, boolean>,
-  handleOperationSelection: (e: React.BaseSyntheticEvent) => void
+  setOperations: (o: Record <EventTriggerOperation, boolean>) => void,
+  readOnly: boolean
 }
 
 const Operations = ({
   selectedOperations,
-  handleOperationSelection,
+  setOperations,
+  readOnly
 }: OperationProps) => {
+
+  const setOperation = (e: React.BaseSyntheticEvent) => {
+    const label: EventTriggerOperation = e.target.name;
+    const checked = e.target.checked;
+    setOperations({
+      ...selectedOperations,
+      [label]: checked
+    })
+  }
+ 
   const allOperations = EVENT_TRIGGER_OPERATIONS.map(o => ({
     name: o,
     testIdentifier: `${o}-operation`,
     isChecked: selectedOperations[o],
-    onChange: handleOperationSelection,
+    onChange: setOperation,
+    disabled: readOnly,
     displayName:
-      o === 'manual' ? (
+      o === 'enable_manual' ? (
         <span>
           Via console &nbsp;&nbsp;
           <OverlayTrigger
@@ -54,6 +67,7 @@ const Operations = ({
             type="checkbox"
             name={o.name}
             checked={o.isChecked}
+            disabled={readOnly}
           />
           {o.displayName}
         </label>
@@ -62,27 +76,8 @@ const Operations = ({
   };
 
   return (
-    <div>
-      <div className={styles.add_mar_bottom + ' ' + styles.selectOperations}>
-        <h4 className={styles.subheading_text}>
-          Trigger Operations &nbsp; &nbsp;
-          <OverlayTrigger
-            placement="right"
-            overlay={tooltip.operationsDescription}
-          >
-            <i className="fa fa-question-circle" aria-hidden="true" />
-          </OverlayTrigger>{' '}
-        </h4>
-        <div className={styles.add_mar_left_small}>{getOperationsList()}</div>
-      </div>
-    </div>
+    <div className={styles.add_mar_left_small}>{getOperationsList()}</div>
   );
-};
-
-Operations.propTypes = {
-  enableManual: PropTypes.bool.isRequired,
-  selectedOperations: PropTypes.object.isRequired,
-  handleOperationSelection: PropTypes.func.isRequired,
 };
 
 export default Operations;

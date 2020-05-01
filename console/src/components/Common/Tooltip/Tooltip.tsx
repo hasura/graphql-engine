@@ -10,7 +10,7 @@ const tooltipGen = (message: string) => {
 export interface TooltipProps extends React.ComponentProps<'i'> {
   message: string;
   placement?: 'right' | 'left' | 'top' | 'bottom';
-  className: string;
+  className?: string;
 }
 
 const ToolTip: React.FC<TooltipProps> = ({ message, placement = 'right' }) => (

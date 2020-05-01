@@ -2,11 +2,16 @@ import React from 'react';
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import getLeftSidebarSection from '../../../Common/Layout/LeftSubSidebar/LeftSidebarSection';
 import { ScheduledTrigger, EventTrigger } from '../Types';
-import { getAddETRoute, getAddSTRoute, getSTModifyRoute, getETModifyRoute } from '../../../Common/utils/routesUtils';
+import {
+  getAddETRoute,
+  getAddSTRoute,
+  getSTModifyRoute,
+  getETModifyRoute,
+} from '../../../Common/utils/routesUtils';
 
 interface LeftSidebarProps extends React.ComponentProps<'div'> {
   triggers: ScheduledTrigger[] | EventTrigger[];
-  currentTrigger: ScheduledTrigger | EventTrigger;
+  currentTrigger?: ScheduledTrigger | EventTrigger;
   service: string;
 }
 
@@ -20,12 +25,11 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
     getSearchInput,
     count,
   } = getLeftSidebarSection({
-    getServiceEntityLink: (entityName) => {
+    getServiceEntityLink: entityName => {
       if (service.includes('scheduled')) {
         return getSTModifyRoute(entityName);
-      } else {
-        return getETModifyRoute(entityName);
       }
+      return getETModifyRoute(entityName);
     },
     items: triggers,
     currentItem: currentTrigger,
@@ -44,7 +48,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       searchInput={getSearchInput()}
       heading={`${heading} (${count})`}
       addLink={addLink}
-      addLabel={'Create'}
+      addLabel="Create"
       addTestString={`${isScheduledTrigger ? 'st' : 'et'}-sidebar-add`}
       childListTestString={`${isScheduledTrigger ? 'st' : 'et'}-links`}
     >

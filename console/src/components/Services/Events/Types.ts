@@ -11,7 +11,11 @@ export const SET_CURRENT_TRIGGER = 'Events/SET_CURRENT_TRIGGER';
 
 export const LOAD_PENDING_DATA_EVENTS = 'Events/LOAD_PENDING_DATA_EVENTS';
 
-export type EventTriggerOperation = 'insert' | 'update' | 'delete' | 'manual';
+export type EventTriggerOperation =
+  | 'insert'
+  | 'update'
+  | 'delete'
+  | 'enable_manual';
 
 export type ETOperationColumn = {
   name: string;
@@ -47,8 +51,28 @@ export type ScheduledTrigger = {
   schedule_conf: ScheduleConf;
 };
 
+export type EventTriggerOperationDefinition = {
+  columns: string[] | '*';
+};
+
+export type RetryConf = {
+  num_retries: number;
+  interval_sec: number;
+  timeout_sec: number;
+};
+
 export type EventTrigger = {
   name: string;
+  table_name: string;
+  schema_name: string;
+  comment: string | null;
+  configuration: {
+    definition: Record<EventTriggerOperation, EventTriggerOperationDefinition>;
+    headers: ServerHeader[];
+    retry_conf: RetryConf;
+    webhook?: string;
+    webhook_from_env?: string;
+  };
 };
 
 export type Triggers = {

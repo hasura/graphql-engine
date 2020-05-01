@@ -4,14 +4,17 @@ import rightContainerConnector from '../../Common/Layout/RightContainer/RightCon
 import Container from './Containers/Main';
 import { fetchTriggers } from './ServerIO';
 import globals from '../../../Globals';
-import EventTriggersLanding from '../EventTrigger/Landing/EventTrigger';
 import {
   AddScheduledTrigger,
   ScheduledTriggerLogs,
   ScheduledTriggeModify,
   ScheduledTriggerLanding,
 } from './ScheduledTriggers';
-import AddEventTrigger from './EventTriggers/Add/Add';
+import {
+  AddEventTrigger,
+  ModifyEventTrigger,
+  EventTriggerLanding,
+} from './EventTriggers';
 
 const triggersInit = ({ dispatch }: { dispatch: any }) => {
   return (nextState: any, replaceState: any, cb: any) => {
@@ -43,11 +46,11 @@ const getTriggersRouter = (
       <Route path="data" component={rightContainerConnector(connect)}>
         <IndexRedirect to="manage" />
         <Route path="add" component={AddEventTrigger(connect)} />
-        {/* <Route
-          path=":trigger/modify"
+        <Route
+          path=":triggerName/modify"
           component={ModifyEventTrigger(connect)}
-        /> */}
-        <Route path="manage" component={EventTriggersLanding(connect)} />
+        />
+        <Route path="manage" component={EventTriggerLanding(connect)} />
       </Route>
       <Route path="scheduled" component={rightContainerConnector(connect)}>
         <IndexRedirect to="manage" />

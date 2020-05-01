@@ -1,6 +1,6 @@
 import React from 'react';
-import styles from './LeftSubSidebar.scss';
 import { Link } from 'react-router';
+import styles from './LeftSubSidebar.scss';
 
 interface LeftSidebarItem {
   name: string;
@@ -8,8 +8,8 @@ interface LeftSidebarItem {
 
 interface LeftSidebarSectionProps extends React.ComponentProps<'div'> {
   items: LeftSidebarItem[];
-  currentItem: LeftSidebarItem;
-  getServiceEntityLink: (s: string) => string,
+  currentItem?: LeftSidebarItem;
+  getServiceEntityLink: (s: string) => string;
   service: string;
 }
 
@@ -17,13 +17,9 @@ const getLeftSidebarSection = ({
   items = [],
   currentItem,
   service,
-  getServiceEntityLink
+  getServiceEntityLink,
 }: LeftSidebarSectionProps) => {
-  // TODO needs refactor to acoomodate other services
-  const serviceIdentifiers: { [svc: string]: string } = {
-    'event triggers': 'events',
-    'scheduled triggers': 'scheduled',
-  };
+  // TODO needs refactor to accomodate other services
 
   const [searchText, setSearchText] = React.useState('');
 
@@ -61,32 +57,26 @@ const getLeftSidebarSection = ({
     let childList;
     if (itemList.length === 0) {
       childList = (
-        <li
-          className={styles.noChildren}
-          data-test="sidebar-no-services"
-        >
+        <li className={styles.noChildren} data-test="sidebar-no-services">
           <i>No {service} available</i>
         </li>
       );
     } else {
-      childList = itemList.map((a, i) => {
+      childList = itemList.map(a => {
         let activeTableClass = '';
-        if (a.name === currentItem.name) {
+        if (currentItem && currentItem.name === a.name) {
           activeTableClass = styles.activeLink;
         }
 
         return (
           <li
             className={activeTableClass}
-            key={i}
-            data-test={`action-sidebar-links-${i + 1}`}
+            key={a.name}
+            data-test={`action-sidebar-links-${a.name}`}
           >
-            <Link
-              to={getServiceEntityLink(a.name)}
-              data-test={a.name}
-            >
+            <Link to={getServiceEntityLink(a.name)} data-test={a.name}>
               <i
-                className={styles.tableIcon + ' fa fa-wrench'}
+                className={`${styles.tableIcon} fa fa-wrench`}
                 aria-hidden="true"
               />
               {a.name}

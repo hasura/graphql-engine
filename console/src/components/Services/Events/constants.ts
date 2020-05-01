@@ -7,5 +7,5 @@ export const EVENT_TRIGGER_OPERATIONS: EventTriggerOperation[] = [
   'insert',
   'update',
   'delete',
-  'manual',
+  'enable_manual',
 ];

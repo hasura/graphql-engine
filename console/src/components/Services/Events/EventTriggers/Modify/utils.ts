@@ -11,3 +11,5 @@ export const triggerOperationMap = {
   delete: 'delete',
   [MANUAL_TRIGGER_TEXT]: MANUAL_TRIGGER_VAR,
 };
+
+export type EventTriggerProperty = 'webhook' | 'ops' | 'retry_conf' | 'headers';

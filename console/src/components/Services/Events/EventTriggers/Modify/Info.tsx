@@ -1,7 +1,13 @@
 import React from 'react';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
+import { EventTrigger } from '../../Types'
 
-const Info = ({ triggerName, tableName, schemaName, styles }) => (
+type ETInfoProps = {
+  currentTrigger: EventTrigger
+  styles: Record<string, any>
+};
+
+const Info = ({currentTrigger, styles}: ETInfoProps) => (
   <div className={`${styles.container} ${styles.borderBottom}`}>
     <div className={styles.modifySection}>
       <h4 className={styles.modifySectionHeading}>
@@ -14,15 +20,15 @@ const Info = ({ triggerName, tableName, schemaName, styles }) => (
           <tbody>
             <tr>
               <td>Trigger name</td>
-              <td>{triggerName}</td>
+              <td>{currentTrigger.name}</td>
             </tr>
             <tr>
               <td>Table</td>
-              <td>{tableName}</td>
+              <td>{currentTrigger.table_name}</td>
             </tr>
             <tr>
               <td>Schema</td>
-              <td>{schemaName}</td>
+              <td>{currentTrigger.schema_name}</td>
             </tr>
           </tbody>
         </table>

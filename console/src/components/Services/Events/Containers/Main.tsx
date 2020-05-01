@@ -12,6 +12,7 @@ import {
   isScheduledEventsRoute,
   isDataEventsRoute,
 } from '../../../Common/utils/routesUtils';
+import { findEventTrigger, findScheduledTrigger } from '../utils';
 
 import { ReduxState } from '../../../../Types';
 
@@ -19,13 +20,34 @@ interface TriggersContainerProps extends React.ComponentProps<'div'> {
   triggers: Triggers;
   location: {
     pathname: string;
+    triggerName?: string;
   };
 }
 
 const Container: React.FC<TriggersContainerProps> = props => {
   const { triggers, children, location } = props;
 
-  const currentLocation = location.pathname;
+  const {
+    pathname: currentLocation,
+    triggerName: currentTriggerName,
+  } = location;
+
+  let currentEventTrigger;
+  let currentScheduledTrigger;
+
+  if (currentTriggerName) {
+    if (isDataEventsRoute(currentLocation)) {
+      currentEventTrigger = findEventTrigger(
+        currentTriggerName,
+        triggers.event
+      );
+    } else {
+      currentScheduledTrigger = findScheduledTrigger(
+        currentTriggerName,
+        triggers.scheduled
+      );
+    }
+  }
 
   const sidebarContent = (
     <ul>
@@ -38,8 +60,8 @@ const Container: React.FC<TriggersContainerProps> = props => {
         </Link>
         <LeftSidebar
           triggers={triggers.event}
-          currentTrigger={{ name: '' }}
           service="event triggers"
+          currentTrigger={currentEventTrigger}
         />
       </li>
       <li
@@ -54,8 +76,8 @@ const Container: React.FC<TriggersContainerProps> = props => {
         </Link>
         <LeftSidebar
           triggers={triggers.scheduled}
-          currentTrigger={{ name: '' }}
           service="scheduled triggers"
+          currentTrigger={currentScheduledTrigger}
         />
       </li>
     </ul>

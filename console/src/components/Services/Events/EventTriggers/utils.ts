@@ -1,4 +1,5 @@
-import { LocalEventTriggerState } from './Add/state';
+import { LocalEventTriggerState } from './state';
+import { isValidURL } from '../../../Common/utils/jsUtils';
 
 // check 2xx success status codes
 
@@ -74,12 +75,8 @@ export const validateAddETState = (state: LocalEventTriggerState) => {
   if (!state.webhook.value) {
     return 'Webhook URL cannot be empty';
   }
-  if (state.webhook.type === 'static') {
-    try {
-      new URL(state.webhook.value);
-    } catch {
-      return 'Invalid webhook URL';
-    }
+  if (state.webhook.type === 'static' && !isValidURL(state.webhook.value)) {
+    return 'Invalid webhook URL';
   }
 
   return null;

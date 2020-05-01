@@ -9,8 +9,7 @@ import {
   getSchemaName,
   getTableName,
 } from '../../../../Common/utils/pgUtils';
-import { useEventTriggerAdd } from './state';
-import { EventTriggerOperation } from '../../Types';
+import { useEventTrigger } from '../state';
 import styles from '../TableCommon/EventTable.scss';
 import DropdownButton from '../../../../Common/DropdownButton/DropdownButton';
 import Headers from '../../../../Common/Headers/Headers';
@@ -18,8 +17,8 @@ import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleT
 import Button from '../../../../Common/Button/Button';
 import { updateSchemaInfo } from '../../../Data/DataActions';
 import { createEventTrigger } from '../../ServerIO';
-import Operations from './Operations';
-import * as tooltip from './Tooltips';
+import Operations from '../Common/Operations';
+import * as tooltip from '../Common/Tooltips';
 
 type AddProps = {
   allSchemas: Table[];
@@ -28,7 +27,7 @@ type AddProps = {
 };
 
 const Add = (props: AddProps) => {
-  const { state, setState } = useEventTriggerAdd();
+  const { state, setState } = useEventTrigger();
   const {
     name,
     table,
@@ -84,24 +83,28 @@ const Add = (props: AddProps) => {
 
   const handleWebhookTypeChange = (e: React.BaseSyntheticEvent) => {
     const type = e.target.getAttribute('value');
-    setState.webhook(undefined, type);
+    setState.webhook({
+      type,
+      value: '',
+    });
   };
 
   const handleWebhookValueChange = (e: React.BaseSyntheticEvent) => {
     const value = e.target.value;
-    setState.webhook(value);
-  };
-
-  const handleOperationSelection = (e: React.BaseSyntheticEvent) => {
-    const label: EventTriggerOperation = e.target.name;
-    const value = e.target.checked;
-    setState.operation(label, value);
+    setState.webhook({
+      type: webhook.type,
+      value,
+    });
   };
 
   const handleRetryConfChange = (e: React.BaseSyntheticEvent) => {
     const label = e.target.name;
     const value = parseInt(e.target.value, 10);
-    setState.retryConf(label, value);
+    const newRetryConf = {
+      ...retryConf,
+      [label]: value,
+    };
+    setState.retryConf(newRetryConf);
   };
 
   const getColumnList = () => {
@@ -254,11 +257,24 @@ const Add = (props: AddProps) => {
             <div
               className={`${styles.add_mar_bottom} ${styles.selectOperations}`}
             >
-              <Operations
-                enableManual
-                selectedOperations={operations}
-                handleOperationSelection={handleOperationSelection}
-              />
+              <div
+                className={`${styles.add_mar_bottom} ${styles.selectOperations}`}
+              >
+                <h4 className={styles.subheading_text}>
+                  Trigger Operations &nbsp; &nbsp;
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={tooltip.operationsDescription}
+                  >
+                    <i className="fa fa-question-circle" aria-hidden="true" />
+                  </OverlayTrigger>{' '}
+                </h4>
+                <Operations
+                  selectedOperations={operations}
+                  setOperations={setState.operations}
+                  readOnly={false}
+                />
+              </div>
             </div>
             <hr />
             <div className={styles.add_mar_bottom}>

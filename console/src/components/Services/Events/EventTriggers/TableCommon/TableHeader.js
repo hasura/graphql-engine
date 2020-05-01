@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
-import { capitalize } from '../../../Common/utils/jsUtils';
-import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
+import { capitalize } from '../../../../Common/utils/jsUtils';
+import BreadCrumb from '../../../../Common/Layout/BreadCrumb/BreadCrumb';
 
 const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
   const styles = require('./EventTable.scss');

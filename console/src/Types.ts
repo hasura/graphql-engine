@@ -7,4 +7,7 @@ export type ReduxState = {
     allSchemas: Table[];
   };
   events: EventsState;
+  main: {
+    readOnlyMode: boolean;
+  };
 };

@@ -8,7 +8,7 @@ import globals from '../../../../../Globals';
 import Button from '../../../../Common/Button/Button';
 import TopicDescription from '../../../Common/Landing/TopicDescription';
 import TryItOut from '../../../Common/Landing/TryItOut';
-import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import styles from '../../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 
 const appPrefix = `${globals.urlPrefix}/events`;
 

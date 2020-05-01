@@ -228,8 +228,8 @@ export const getTableSupportedQueries = (table: Table) => {
 
 /** * Table/View column utils ** */
 
-export const getTableColumns = (table: Table) => {
-  return table.columns;
+export const getTableColumns = (table?: Table) => {
+  return table ? table.columns : [];
 };
 
 export const getColumnName = (column: TableColumn) => {

@@ -1,6 +1,6 @@
 import { terminateSql } from './sqlUtils';
 import { LocalScheduledTriggerState } from '../../Services/Events/ScheduledTriggers/Add/state';
-import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/Add/state';
+import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
 import { transformHeaders } from '../Headers/utils';
 import { generateTableDef } from './pgUtils';
 
@@ -487,7 +487,7 @@ export const generateCreateEventTriggerQuery = (
             columns: '*',
           }
         : null,
-      enable_manual: state.operations.manual,
+      enable_manual: state.operations.enable_manual,
       retry_conf: state.retryConf,
       headers: transformHeaders(state.headers),
       replace,

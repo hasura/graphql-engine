@@ -21,6 +21,7 @@ const defaultViewState = {
     offset: 0,
   },
   rows: [],
+
   expandedRow: '',
   count: 0,
   curFilter: defaultCurFilter,
