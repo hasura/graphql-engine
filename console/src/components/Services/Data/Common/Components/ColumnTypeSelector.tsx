@@ -17,7 +17,7 @@ type Option = {
 };
 
 type Props = {
-  options: Array<{ label: string; options: Option[] }>;
+  options: Array<{ label: string; options?: Option[] }>;
   onChange: (option: any) => void;
   value: Option | string;
   bsClass: string;
@@ -35,6 +35,9 @@ export const ColumnTypeSelector: React.FC<Props> = ({
 }) => {
   const [searchValue, setSearchValue] = useState('');
 
+  // Treating last search value as selected option.
+  // This way user doesn't have to click in the dropdown to select a newly created option,
+  // they can leave the input — close the menu
   const onMenuClose = () => {
     if (searchValue !== '') onChange(createOpt(searchValue, colIdentifier));
     setSearchValue('');
@@ -42,14 +45,12 @@ export const ColumnTypeSelector: React.FC<Props> = ({
 
   // Creating new option based on input
   if (searchValue !== '') {
-    options = [createOpt(searchValue, colIdentifier) as any, ...options]; // todo
+    options = [createOpt(searchValue, colIdentifier), ...options];
   }
 
   return (
     <SearchableSelect
       onInputChange={(v: string) => setSearchValue(v)}
-      // Treating last search value the same was as selected option,
-      // so that user don't have to click in the dropdown, they can just leave the input
       onMenuClose={onMenuClose}
       options={options}
       onChange={onChange}

@@ -233,7 +233,7 @@ const ColumnEditorList = ({
       return (
         <ColumnEditor
           alterTypeOptions={getValidTypeCasts(col.udt_name, isArrayDataType)}
-          defaultOptions={getValidDefaultTypes(col.udt_name)} // todo
+          defaultOptions={getValidDefaultTypes(col.udt_name)}
           column={col}
           onSubmit={onSubmit}
           tableName={tableName}

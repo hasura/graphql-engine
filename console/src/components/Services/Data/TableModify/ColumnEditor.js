@@ -2,7 +2,7 @@ import React from 'react';
 
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
-import { getValidAlterOptions } from './utils';
+import { getValidAlterOptions, convertToArrayOptions } from './utils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
 
@@ -57,10 +57,7 @@ const ColumnEditor = ({
   );
 
   if (isArrayDataType) {
-    alterOptions = alterOptions.map(opt => ({
-      value: opt.value + '[]',
-      label: opt.label + '[]',
-    }));
+    alterOptions = convertToArrayOptions(alterOptions);
   }
 
   const updateColumnName = e => {
@@ -128,14 +125,6 @@ const ColumnEditor = ({
     );
   };
 
-  console.log({
-    alterOptions,
-    columnTypePG,
-    alterOptionsValueMap,
-    alterTypeOptions,
-    columnProperties,
-  });
-
   return (
     <div className={`${styles.colEditor} container-fluid`}>
       <form className="form-horizontal" onSubmit={onSubmit}>
@@ -157,10 +146,7 @@ const ColumnEditor = ({
             <ColumnTypeSelector
               options={alterOptions}
               onChange={updateColumnType}
-              value={
-                (columnTypePG && alterOptionsValueMap[columnTypePG]) ||
-                columnTypePG
-              }
+              value={alterOptionsValueMap[columnTypePG] || columnTypePG}
               colIdentifier={0}
               bsClass={`col-type-${0} modify_select`}
               styleOverrides={customSelectBoxStyles}
