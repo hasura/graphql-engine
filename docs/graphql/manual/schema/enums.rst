@@ -45,6 +45,8 @@ approach is strongly recommended. Modifying an enum defined this way is easy: si
 rows in the enum table (and updates or deletes can even be cascaded to references, and they may be done within
 a transaction).
 
+.. _enums_graphql_engine:
+
 Enums in the Hasura GraphQL engine
 ----------------------------------
 
