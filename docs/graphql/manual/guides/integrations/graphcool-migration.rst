@@ -64,11 +64,11 @@ Replace host and pathtomysqlexport as required. This step should have migrated s
 6. Start Hasura and Postgres using docker-compose
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Since MySQL is now setup with all the data from graph.cool, we need to create Hasura and Postgres instance to proceed.
+Since MySQL is now set up with all the data from graph.cool, we need to create Hasura and Postgres instance to proceed.
 
-Refer the :ref:`Getting started <docker_simple>` guide to setup Hasura using ``docker-compose``.
+Refer to the :ref:`Getting started <docker_simple>` guide to setup Hasura using ``docker-compose``.
 
-We will use ``pgloader`` to migrate from MySQL to Postgres. Refer their `installation guide <https://github.com/dimitri/pgloader>`__ for setting this up.
+We will use ``pgloader`` to migrate from MySQL to Postgres. Refer to their `installation guide <https://github.com/dimitri/pgloader>`__ for setting this up.
 
 Once you have installed, execute the following command:
 
@@ -82,21 +82,22 @@ This step should have migrated data from MySQL to Postgres.
 
 Connect Hasura to Postgres
 --------------------------
-Once the dataset is in Postgres, Hasura should be able to track tables and relationships. 
 
+Once the dataset is migrated to Postgres, Hasura should be able to track tables and relationships. 
 
-You might also have to look at :ref:`configuring enums differently <enums_graphql_engine>` in case you have them in your Graph.cool project. 
+You might also want to look at how to :ref:`configure enums <enums_graphql_engine>` in case you have them in your Graph.cool project. 
 
 Restructuring connection tables
 -------------------------------
 
-Now you can rename tables/columns to match your client side queries as required. 
-Do note that, for every one to one relationship, Graph.cool would have created a connection table to link them. This would require a bit of work to restructure. Currently there is no automation available for this step. Carefully review the connection tables and make the necessary changes.
+Now you can rename tables/columns to match your client-side queries as required. 
+Do note that, for every one-to-one relationship, Graph.cool would have created a connection table to link them. This would require a bit of work to restructure. 
+Currently, there is no automation available for this step. Carefully review the connection tables and make the necessary changes.
 
 Migrating functions
 -------------------
 
-In case you have functions in Graph.cool, Hasura has an equivalent feature called :ref:`event triggers <event_triggers>`. Migrating this would involve taking your code and deploying it on a different platform (preferably serverless functions).
+In case you have functions in Graph.cool, Hasura has an equivalent feature called :ref:`event triggers <event_triggers>`. Migrating this involves taking your code and deploying it on a different platform (preferably serverless functions).
 
 Do note that for event triggers, the payload that Hasura sends might be different and you might have to change the way request body parameters are handled in your function code.
 
@@ -109,7 +110,10 @@ If you were using Auth0 with Graph.cool, the migration should be fairly straight
 Migrating permissions
 ---------------------
 
-The CRUD permissions in Graph.cool can be manually migrated to Hasura's Permission system. You can define role(s) in Hasura and configure permissions declaratively for all the CRUD operations. 
+The CRUD permissions in Graph.cool can be manually migrated to Hasura's permission system. You can define roles in Hasura and configure permissions declaratively for all the CRUD operations. 
+Refer to :ref:`this page <authorization>` for configuring Hasura permissions.
 
-Note that this guide is not comprehensive and some steps require manual intervention.
+.. note::
+
+   This guide is not comprehensive and some steps require manual intervention.
 
