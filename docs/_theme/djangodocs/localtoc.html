@@ -11,9 +11,9 @@
     <a class="version_txt">
       <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
         {%- if version == '1.0' %}
-          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.0</option>
+          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.x</option>
         {%- else -%}
-          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.0</option>
+          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.x</option>
         {% endif %}
       </select>
     </a>

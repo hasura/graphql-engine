@@ -62,6 +62,8 @@ For ``insert`` operations or for GraphQL mutations of the type *insert*, you can
 
 * :ref:`col-presets-permissions`
 
+* :ref:`backend-only-permissions`
+
 **Update** permissions
 ^^^^^^^^^^^^^^^^^^^^^^
 For ``update`` operations or for GraphQL mutations of the type *update*, you can configure the following:
@@ -245,3 +247,20 @@ While this is strictly not a permission configuration, defining
 removes access to it. This preset can be defined for ``insert`` and ``update`` operations. This configuration
 is also very useful to avoid sending sensitive user-information in the query and leverage session variables
 or static data instead.
+
+.. _backend-only-permissions:
+
+Backend only
+^^^^^^^^^^^^
+
+If a permission is marked as ``backend_only``, the mutation is accessible to the
+given role only if ``x-hasura-use-backend-only-permissions`` session variable exists and is set to ``true``
+and request is made with ``x-hasura-admin-secret`` set if any auth is configured.
+
+This might be useful if you would like to hide a mutation from the public facing API but allow access to it
+via a "trusted backend".
+
+.. note::
+
+  Setting ``backend-only`` is currently available for insert mutations only.
+
