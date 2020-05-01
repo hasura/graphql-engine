@@ -38,7 +38,6 @@ export default function Html(props: HtmlProps) {
             media="screen, projection"
             rel="stylesheet"
             type="text/css"
-            charSet="UTF-8"
           />
         ))}
 

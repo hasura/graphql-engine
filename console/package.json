@@ -66,6 +66,7 @@
   "dependencies": {
     "@graphql-codegen/core": "1.13.0",
     "@graphql-codegen/typescript": "1.13.0",
+    "@types/react-router-redux": "^4.0.44",
     "apollo-link": "1.2.13",
     "apollo-link-ws": "1.0.19",
     "brace": "0.11.1",
@@ -162,7 +163,6 @@
     "@types/react-hot-loader": "4.1.1",
     "@types/react-redux": "7.1.7",
     "@types/react-router": "^3.0.8",
-    "@types/react-router-redux": "5.0.18",
     "@types/react-toggle": "4.0.2",
     "@types/redux-devtools": "3.0.47",
     "@types/redux-devtools-dock-monitor": "1.1.33",
