@@ -31,7 +31,7 @@ Now run:
 
   # Export current Hasura state
   hasura migrate create --from-server <endpoint>
-  hasura metadata export --from-server <endpoint>
+  hasura metadata export <endpoint>
 
 Generating migrations
 ---------------------
