@@ -21,7 +21,7 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.Permission
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -231,7 +231,7 @@ partialSQLExpToUnresolvedVal = \case
 data UnresolvedVal
   -- | an entire session variables JSON object
   = UVSession
-  | UVSessVar !(PGType PGScalarType) !SessVar
+  | UVSessVar !(PGType PGScalarType) !SessionVariable
   -- | a SQL value literal that can be parameterized over
   | UVPG !AnnPGVal
   -- | an arbitrary SQL expression, which /cannot/ be parameterized over
