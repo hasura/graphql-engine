@@ -163,11 +163,16 @@ const createTableSql = () => {
       alert('Table name cannot be empty');
     }
 
-    const currentCols = state.columns.filter(c => c.name !== '');
+    const currentCols = state.columns
+      .map(c => ({
+        ...c,
+        name: c.name.trim(),
+      }))
+      .filter(c => c.name !== '');
 
     const pKeys = state.primaryKeys
       .filter(p => p !== '')
-      .map(p => state.columns[p].name);
+      .map(p => currentCols[p].name);
 
     let hasUUIDDefault = false;
     const columnSpecificSql = [];
