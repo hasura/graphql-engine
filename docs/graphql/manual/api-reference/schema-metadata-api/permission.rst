@@ -154,11 +154,12 @@ InsertPermission
      - false
      - :ref:`PGColumn` array (or) ``'*'``
      - Can insert into only these columns (or all when ``'*'`` is specified)
-
-
-
-
-
+   * - backend_only
+     - false
+     - Boolean
+     - When set to ``true`` the mutation is accessible only if ``x-hasura-use-backend-only-permissions``
+       session variable exists and is set to ``true`` and request is made with ``x-hasura-admin-secret``
+       set if any auth is configured
 
 .. _drop_insert_permission:
 

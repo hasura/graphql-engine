@@ -63,6 +63,7 @@ import {
   PERM_RESET_APPLY_SAME,
   PERM_SET_APPLY_SAME_PERM,
   PERM_DEL_APPLY_SAME_PERM,
+  PERM_TOGGLE_BACKEND_ONLY,
   toggleField,
   toggleAllFields,
   getBasePermissionsState,
@@ -484,7 +485,19 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ),
         },
       };
-
+    case PERM_TOGGLE_BACKEND_ONLY:
+      const pState = modifyState.permissionsState;
+      const isBackendOnly =
+        pState[pState.query] && pState[pState.query].backend_only;
+      return {
+        ...modifyState,
+        permissionsState: updatePermissionsState(
+          modifyState.permissionsState,
+          'backend_only',
+          !isBackendOnly
+        ),
+      };
+    /* Preset operations */
     case DELETE_PRESET:
       const deletedSet = {
         ...modifyState.permissionsState[action.data.queryType].set,

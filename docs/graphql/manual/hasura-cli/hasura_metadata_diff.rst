@@ -33,8 +33,8 @@ Examples
     # Show changes between server metadata and that in local_metadata.yaml:
     hasura metadata diff local_metadata.yaml
 
-    # Show changes between metadata from metadata.yaml and metadata_old.yaml:
-    hasura metadata diff metadata.yaml metadata_old.yaml
+    # Show changes between metadata from metadata.yaml and metadata_v1.yaml:
+    hasura metadata diff metadata.yaml metadata_v1.yaml
 
     # Apply admin secret for Hasura GraphQL engine:
     hasura metadata diff --admin-secret "<admin-secret>"

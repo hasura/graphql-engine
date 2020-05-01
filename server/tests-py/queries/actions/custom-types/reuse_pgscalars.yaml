@@ -11,6 +11,12 @@ query:
         type: uuid!
       - name: location
         type: geography
+      relationships:
+      - name: user
+        type: object
+        remote_table: user
+        field_mapping:
+          user_id: id
     input_objects:
     - name: UserInput
       fields:

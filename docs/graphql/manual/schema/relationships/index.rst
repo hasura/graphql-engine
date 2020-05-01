@@ -17,6 +17,8 @@ be connected via relationships.
 
 Let's say we have the following tables in our database: ``author``, ``passport_info``, ``article`` and ``tag``.
 
+.. _table_relationships:
+
 Table relationships
 -------------------
 
@@ -36,11 +38,13 @@ following types of table relationships:
 |                  |                                   | - a ``tag`` can have many ``articles``         |
 +------------------+-----------------------------------+------------------------------------------------+
 
+.. _graphql_relationships:
+
 GraphQL schema relationships
 ----------------------------
 
-As you can see, each table relationship will have two component relationships (one in either direction) in the GraphQL
-schema. These relationships can be one of the following types:
+Each table relationship, as you can see from the above section, will have two component relationships
+(one in either direction) in the GraphQL schema. These relationships can be one of the following types:
 
 +-----------------------------------------+------------------------------------------+---------------------------------------------------------------------------------------+
 | Type                                    | Example                                  | Meaning                                                                               |
