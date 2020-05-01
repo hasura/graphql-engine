@@ -1,14 +1,27 @@
 ## Benchmarking Hasura GraphQL Engine ##
 
-The script `hge_wrk_bench.py` helps in benchmarking the given version of Hasura GraphQL Engine using a set of GraphQL queries. The results are stored (into the *results GraphQL engine*) along with details like the version of GraphQL engine against which the benchmark is run, the version of Postgres database etc. The stored results can help in comparing benchmarks of different versions of GraphQL engine.
+The script `hge_wrk_bench.py` helps in benchmarking the given version of Hasura
+GraphQL Engine using a set of GraphQL queries. The results are stored (into the
+*results GraphQL engine*) along with details like the version of GraphQL engine
+against which the benchmark is run, the version of Postgres database etc. The
+stored results can help in comparing benchmarks of different versions of
+GraphQL engine.
 
 ### Setup ###
 
-The setup includes two Postgres databases with [sportsdb](https://www.thesportsdb.com/) schema and data, and two GraphQL engines running on the Postgres databases. Then one of the GraphQL engines is added as a remote schema to another GraphQL engine.
+The setup includes two Postgres databases with
+[sportsdb](https://www.thesportsdb.com/) schema and data, and two GraphQL
+engines running on the Postgres databases. Then one of the GraphQL engines is
+added as a remote schema to another GraphQL engine.
 
-The data will be same in both the databases. The tables reside in different database schema in-order to avoid GraphQL schema conflicts.
+The data will be same in both the databases. The tables reside in different
+database schema in-order to avoid GraphQL schema conflicts.
 
-The methods in script `sportsdb_setup.py` helps in setting up the databases, starting the Hasura GraphQL engines, and setting up relationships. This script can either take urls of already running Postgres databases as input, or it can start the databases as Docker instances. The GraphQL engines can be run either with `stack exec` or as Docker containers.
+The methods in script `sportsdb_setup.py` helps in setting up the databases,
+starting the Hasura GraphQL engines, and setting up relationships. This script
+can either take urls of already running Postgres databases as input, or it can
+start the databases as Docker instances. The GraphQL engines can be run either
+with `cabal run` or as Docker containers.
 
 ### Run benchmark ###
 - Install Python 3.7.6 using pyenv
@@ -25,7 +38,9 @@ $ pip3 install -r requirements.txt
 ```sh
 $ python3 hge_wrk_bench.py
 ```
-This script uses [wrk](https://github.com/wg/wrk) to benchmark Hasura GraphQL Engine against a list of queries defined in `queries.graphql`. The results are then stored through a results Hasura GraphQL Engine.
+This script uses [wrk](https://github.com/wg/wrk) to benchmark Hasura GraphQL
+Engine against a list of queries defined in `queries.graphql`. The results are
+then stored through a results Hasura GraphQL Engine.
 
 ### Arguments ###
 - For the list of arguments supported, do
@@ -48,13 +63,13 @@ $ python3 hge_wrk_bench.py --help
   - The Hasura GraphQL Engine to which resuls should be pushed can be specified using argument `--results-hge-url HGE_URL`, or environmental variable `HASURA_BENCH_RESULTS_HGE_URL`. The admin secret for this GraphQL engine can be specified using environmental variable `HASURA_BENCH_RESULTS_HGE_ADMIN_SECRET`.
 
 ### Work directory ###
-- The files used by Postgres docker containers, logs of Hasura GraphQL engines run with stack exec, and other stuff are stored in the work directory.
+- The files used by Postgres docker containers, logs of Hasura GraphQL engines run with `cabal run`, and other stuff are stored in the work directory.
 - Storing data volumes of Postgres docker containers in the work directory helps in avoiding database setup time for benchmarks after the first time setup.
-- The logs of Hasura GraphQL engines (when they are run using stack exec) are stored in files *hge.log* and *remote\_hge.log*
+- The logs of Hasura GraphQL engines (when they are run using `cabal run`) are stored in files *hge.log* and *remote\_hge.log*
 
 ### Default settings ###
 - Postgres databases will be run as docker containers
-- Hasura GraphQL Engines by default will be run using `stack exec`. `stack build` will be done before that.
+- Hasura GraphQL Engines by default will be run using `cabal run`
 - With wrk
   - Number of threads used by *wrk* will be number of CPUs
   - Number of connections = 50
@@ -68,7 +83,7 @@ $ python3 hge_wrk_bench.py --help
   -  *cpu_key*: This is a foriegn key reference to *cpu_info(key)*. The table *cpu_info* captures the various parameters of the CPU inwhich the benchmark was run, including the model and number of vCPUS
   - *query_name*: This is a forieng key reference to *gql_query(name)*. The table *gql_query* stores the name of the query and the query itself used for tests.
   - *docker_image*: Stores the docker images of Hasura GraphQL Engine when the HGE is run as docker
-  - *server_shasum*, *version*: These are stored when HGE is run with stack exec. Version stores the version generated by script *gen-version.sh*. The *server_shasum* stores the shasum of the files in the server folder (excluding tests folder). This shasum shows whether the server code has actually varied between the commits.
+  - *server_shasum*, *version*: These are stored when HGE is run with `cabal run`. Version stores the version generated by script *gen-version.sh*. The *server_shasum* stores the shasum of the files in the server folder (excluding tests folder). This shasum shows whether the server code has actually varied between the commits.
   - *postgres_version* : Stores the version of Postgres
   - *latency*, *requests_per_sec*: Stores the benchmark latency and requests\_per\_sec results
   - *wrk_parameters*: Stores the parameters used by wrk during benchmarking, including number of threads, total number of open connections, and duration of tests

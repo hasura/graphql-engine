@@ -4,6 +4,8 @@ local _M = {}
 
 local json = require "cjson"
 local os = require "os"
+-- Use `null` to represent any NaN or Inf:
+json.encode_invalid_numbers("null") 
 
 function _M.init(args)
   local query = args[1]

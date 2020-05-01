@@ -31,6 +31,7 @@ class HGEWrkBench(HGETestSetup):
 
     wrk_docker_image = 'hasura/wrk:v0.3'
 
+    # We'll bind mount the lua script dir to this directory within the wrk container:
     lua_dir = '/tmp/bench_scripts'
 
     rps_steps = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
@@ -212,6 +213,7 @@ class HGEWrkBench(HGETestSetup):
                     })
         return histogram
 
+    # The appropriate Lua env vars for execution within wrk container:
     def get_lua_env(self):
         return {
             'LUA_PATH': '/usr/share/lua/5.1/?.lua;' +
@@ -246,6 +248,7 @@ class HGEWrkBench(HGETestSetup):
             query_str
         ]
         self.docker_client = docker.from_env()
+
         result = self.docker_client.containers.run(
             self.wrk_docker_image,
             detach = False,
@@ -259,6 +262,7 @@ class HGEWrkBench(HGETestSetup):
             user = self.get_current_user()
         )
         summary = json.loads(result)['summary']
+        # TODO explain this calculation. Why aren't we using wrk's reported 'max'? Should we call this avg_sustained_rps or something?
         max_rps = round(summary['requests']/float(duration))
         self.insert_max_rps_result(query, max_rps)
         print("Max RPS", max_rps)
