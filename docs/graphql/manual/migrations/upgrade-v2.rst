@@ -37,11 +37,17 @@ For example,
 
 - if the ``cli-migrations`` Docker image is used for :ref:`auto applying migrations <auto_apply_migrations>`
   at server start, now you will have to use the ``cli-migrations-v2`` image and
-  the ``/metadata`` directory will also have to be mounted along with the ``migrations``
+  the ``/metadata`` directory will also have to be mounted along with the ``/migrations``
   directory
 
 Upgrade steps
 -------------
+
+Step 0: Take a backup
+^^^^^^^^^^^^^^^^^^^^^
+
+It is recommended that you take a backup of your Hasura project before attempting
+to upgrade to ``config v2``
 
 Step 1: Upgrade to the latest CLI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
