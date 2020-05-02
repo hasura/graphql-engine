@@ -255,6 +255,22 @@ fetch_scheduled_events
 
 ``fetch_scheduled_events`` is used to fetch the scheduled events of an existing scheduled trigger.
 
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "fetch_scheduled_events",
+       "args" : {
+           "name": "sample_adhoc",
+           "limit": 50,
+           "start": 0
+       }
+   }
+
+
 .. _fetch_scheduled_events_syntax:
 
 Args syntax
@@ -272,11 +288,11 @@ Args syntax
      - Name of the scheduled trigger
    * - limit
      - false
-     - Int
+     - Integer
      - Maximum number of scheduled events to be returned.
    * - offset
      - false
-     - Int
+     - Integer
      - The starting offset of the scheduled events to be returned in the API call to be returned.
 
 
