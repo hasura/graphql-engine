@@ -246,6 +246,11 @@ The various types of queries are listed in the following table:
      - 1
      - Create a new invocation of an existing scheduled trigger
 
+   * - :ref:`fetch_scheduled_events`
+     - :ref:`fetch_scheduled_events_args <fetch_scheduled_events_syntax>`
+     - 1
+     - Create a new invocation of an existing scheduled trigger
+
    * - :ref:`cancel_scheduled_event`
      - :ref:`cancel_scheduled_event_args <cancel_scheduled_event_syntax>`
      - 1

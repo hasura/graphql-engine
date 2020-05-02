@@ -248,6 +248,40 @@ Args syntax
      - JSON
      - Any JSON object to send with the scheduled trigger, will override configured payload
 
+.. _fetch_scheduled_events:
+
+fetch_scheduled_events
+----------------------
+
+``fetch_scheduled_events`` is used to fetch the scheduled events of an existing scheduled trigger.
+
+.. _fetch_scheduled_events_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - name
+     - true
+     - Text
+     - Name of the scheduled trigger
+   * - limit
+     - false
+     - Int
+     - Maximum number of scheduled events to be returned.
+   * - offset
+     - false
+     - Int
+     - The starting offset of the scheduled events to be returned in the API call to be returned.
+
+
+
+
 .. _cancel_scheduled_event:
 
 cancel_scheduled_event
