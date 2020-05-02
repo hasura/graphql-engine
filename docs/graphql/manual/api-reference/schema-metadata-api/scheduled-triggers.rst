@@ -266,7 +266,7 @@ fetch_scheduled_events
        "args" : {
            "name": "sample_adhoc",
            "limit": 50,
-           "start": 0
+           "offset": 0
        }
    }
 
