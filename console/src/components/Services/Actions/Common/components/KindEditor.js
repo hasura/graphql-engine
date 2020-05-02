@@ -35,6 +35,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
           <input
             type="radio"
             checked={value === 'synchronous'}
+            readOnly
             className={styles.add_mar_right_small}
           />
           Synchronous
@@ -45,6 +46,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
         >
           <input
             type="radio"
+            readOnly
             checked={value === 'asynchronous'}
             className={styles.add_mar_right_small}
           />

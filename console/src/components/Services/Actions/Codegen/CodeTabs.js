@@ -5,6 +5,7 @@ import TSEditor from '../../../Common/AceEditor/TypescriptEditor';
 import { getFrameworkCodegen } from './utils';
 import { getFileExtensionFromFilename } from '../../../Common/utils/jsUtils';
 import { Tabs, Tab } from 'react-bootstrap';
+import styles from '../Actions.scss';
 
 const CodeTabs = ({
   framework,
@@ -19,6 +20,7 @@ const CodeTabs = ({
 
   const init = () => {
     setLoading(true);
+    setError(null);
     getFrameworkCodegen(
       framework,
       currentAction.action_name,
@@ -45,15 +47,17 @@ const CodeTabs = ({
     return (
       <div>
         Error generating code.&nbsp;
-        <a onClick={init}>Try again</a>
+        <a onClick={init} className={styles.cursorPointer}>
+          Try again
+        </a>
       </div>
     );
   }
 
-  const files = codegenFiles.map(({ name, content }) => {
+  const files = codegenFiles.map(({ name, content }, i) => {
     const getFileTab = (component, filename) => {
       return (
-        <Tab eventKey={filename} title={filename}>
+        <Tab eventKey={filename} title={filename} key={i}>
           {component}
         </Tab>
       );
@@ -73,7 +77,7 @@ const CodeTabs = ({
     }
   });
 
-  return <Tabs id="uncontrolled-tab-example">{files} </Tabs>;
+  return <Tabs id="codegen-files-tabs">{files} </Tabs>;
 };
 
 export default CodeTabs;

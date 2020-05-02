@@ -34,6 +34,7 @@ const Relationships = ({
         typename={objectType.name}
         allTables={allTables}
         schemaList={schemaList}
+        isNew
       />
     </div>
   );

@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,6 +46,9 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Create a directory with endpoint and admin secret configured:
   hasura init <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
 
+  # Create a hasura project in the current working directory
+  hasura init .
+
   # See https://hasura.io/docs/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
 		Args:         cobra.MaximumNArgs(1),
@@ -65,14 +69,11 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := initCmd.Flags()
-	f.StringVar(&opts.Version, "version", "2", "config version to be used")
+	f.Var(cli.NewConfigVersionValue(cli.V2, &opts.Version), "version", "config version to be used")
 	f.StringVar(&opts.InitDir, "directory", "", "name of directory where files will be created")
-	f.StringVar(&opts.MetadataDir, "metadata-directory", "metadata", "name of directory where metadata files will be created")
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
-	f.StringVar(&opts.ActionKind, "action-kind", "synchronous", "kind to be used for an action")
-	f.StringVar(&opts.ActionHandler, "action-handler-webhook-baseurl", "http://localhost:3000", "webhook baseurl to be used for an action")
 	f.StringVar(&opts.Template, "install-manifest", "", "install manifest to be cloned")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.MarkDeprecated("directory", "use directory-name argument instead")
@@ -83,20 +84,16 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 type InitOptions struct {
 	EC *cli.ExecutionContext
 
-	Version     string
+	Version     cli.ConfigVersion
 	Endpoint    string
 	AdminSecret string
 	InitDir     string
-	MetadataDir string
-
-	ActionKind    string
-	ActionHandler string
 
 	Template string
 }
 
 func (o *InitOptions) Run() error {
-	var dir string
+	var infoMsg string
 	// prompt for init directory if it's not set already
 	if o.InitDir == "" {
 		p := promptui.Prompt{
@@ -108,35 +105,45 @@ func (o *InitOptions) Run() error {
 			return handlePromptError(err)
 		}
 		if strings.TrimSpace(r) != "" {
-			dir = r
+			o.InitDir = r
 		} else {
-			dir = defaultDirectory
+			o.InitDir = defaultDirectory
 		}
-	} else {
-		dir = o.InitDir
 	}
 
-	if o.EC.ExecutionDirectory == "" {
-		o.EC.ExecutionDirectory = dir
-	} else {
-		o.EC.ExecutionDirectory = filepath.Join(o.EC.ExecutionDirectory, dir)
-	}
-
-	var infoMsg string
-
-	// create the execution directory
-	if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
-		return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
-	}
-	err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
+	cwdir, err := os.Getwd()
 	if err != nil {
-		return errors.Wrap(err, "error creating setup directories")
+		return errors.Wrap(err, "error getting current working directory")
 	}
-	infoMsg = fmt.Sprintf(`directory created. execute the following commands to continue:
+	initPath, err := filepath.Abs(o.InitDir)
+	if err != nil {
+		return err
+	}
+	if initPath == cwdir {
+		// check if pwd is filesystem root
+		if err := cli.CheckFilesystemBoundary(cwdir); err != nil {
+			return errors.Wrap(err, "can't initialise hasura project in filesystem root")
+		}
+		// check if the current directory is already a hasura project
+		if err := cli.ValidateDirectory(cwdir); err == nil {
+			return errors.Errorf("current working directory is already a hasura project directory")
+		}
+		o.EC.ExecutionDirectory = cwdir
+		infoMsg = fmt.Sprintf(`hasura project initialised. execute the following command to continue:
+  hasura console
+`)
+	} else {
+		// create execution directory
+		err := o.createExecutionDirectory()
+		if err != nil {
+			return err
+		}
+		infoMsg = fmt.Sprintf(`directory created. execute the following commands to continue:
 
   cd %s
   hasura console
 `, o.EC.ExecutionDirectory)
+	}
 
 	// create template files
 	err = o.createTemplateFiles()
@@ -154,6 +161,26 @@ func (o *InitOptions) Run() error {
 	return nil
 }
 
+//create the execution directory
+func (o *InitOptions) createExecutionDirectory() error {
+	if o.EC.ExecutionDirectory == "" {
+		o.EC.ExecutionDirectory = o.InitDir
+	} else {
+		o.EC.ExecutionDirectory = filepath.Join(o.EC.ExecutionDirectory, o.InitDir)
+	}
+
+	// create the execution directory
+	if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
+		return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
+	}
+	err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
+	if err != nil {
+		return errors.Wrap(err, "error creating setup directories")
+	}
+
+	return nil
+}
+
 // createFiles creates files required by the CLI in the ExecutionDirectory
 func (o *InitOptions) createFiles() error {
 	// create the directory
@@ -163,7 +190,7 @@ func (o *InitOptions) createFiles() error {
 	}
 	// set config object
 	var config *cli.Config
-	if o.Version == "1" {
+	if o.Version == cli.V1 {
 		config = &cli.Config{
 			ServerConfig: cli.ServerConfig{
 				Endpoint: "http://localhost:8080",
@@ -171,18 +198,21 @@ func (o *InitOptions) createFiles() error {
 		}
 	} else {
 		config = &cli.Config{
-			Version: cli.V2,
+			Version: o.Version,
 			ServerConfig: cli.ServerConfig{
 				Endpoint: "http://localhost:8080",
 			},
-			MetadataDirectory: o.MetadataDir,
-			ActionConfig: types.ActionExecutionConfig{
-				Kind:                  o.ActionKind,
-				HandlerWebhookBaseURL: o.ActionHandler,
+			MetadataDirectory: "metadata",
+			ActionConfig: &types.ActionExecutionConfig{
+				Kind:                  "synchronous",
+				HandlerWebhookBaseURL: "http://localhost:3000",
 			},
 		}
 	}
 	if o.Endpoint != "" {
+		if _, err := url.ParseRequestURI(o.Endpoint); err != nil {
+			return errors.Wrap(err, "error validating endpoint URL")
+		}
 		config.ServerConfig.Endpoint = o.Endpoint
 	}
 	if o.AdminSecret != "" {

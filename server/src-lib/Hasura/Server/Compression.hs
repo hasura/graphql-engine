@@ -24,7 +24,7 @@ compressionTypeToTxt CTGZip   = "gzip"
 compressResponse
   :: NH.RequestHeaders
   -> BL.ByteString
-  -> (BL.ByteString, Maybe (Text, Text), Maybe CompressionType)
+  -> (BL.ByteString, Maybe NH.Header, Maybe CompressionType)
 compressResponse reqHeaders unCompressedResp =
   let compressionTypeM = getRequestedCompression reqHeaders
       appendCompressionType (res, headerM) = (res, headerM, compressionTypeM)

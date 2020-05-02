@@ -240,7 +240,6 @@ def hge_ctx(request):
         # TODO this breaks things (https://github.com/pytest-dev/pytest-xdist/issues/86)
         #      so at least make sure the real error gets printed (above)
         pytest.exit(str(e))
-
     yield hge_ctx  # provide the fixture value
     print("teardown hge_ctx")
     hge_ctx.teardown()
@@ -257,7 +256,12 @@ def evts_webhook(request):
     web_server.join()
 
 @pytest.fixture(scope='module')
-def actions_webhook(hge_ctx):
+def actions_fixture(hge_ctx):
+    pg_version = hge_ctx.pg_version
+    if pg_version < 100000: # version less than 10.0
+        pytest.skip('Actions are not supported on Postgres version < 10')
+
+    # Start actions' webhook server
     webhook_httpd = ActionsWebhookServer(hge_ctx, server_address=('127.0.0.1', 5593))
     web_server = threading.Thread(target=webhook_httpd.serve_forever)
     web_server.start()
@@ -265,6 +269,12 @@ def actions_webhook(hge_ctx):
     webhook_httpd.shutdown()
     webhook_httpd.server_close()
     web_server.join()
+
+@pytest.fixture(scope='class')
+def gql_server(request, hge_ctx):
+    server = HGECtxGQLServer(request.config.getoption('--pg-urls'), 5991)
+    yield server
+    server.teardown()
 
 @pytest.fixture(scope='class')
 def ws_client(request, hge_ctx):

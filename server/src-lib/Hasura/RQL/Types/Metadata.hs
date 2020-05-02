@@ -2,8 +2,10 @@ module Hasura.RQL.Types.Metadata where
 
 import qualified Data.HashMap.Strict.Extended   as M
 
+import           Control.Lens                   hiding ((.=))
 import           Data.Aeson
 import           Hasura.Prelude
+import           Hasura.Session
 
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common
@@ -30,6 +32,7 @@ data MetadataObjId
   | MOAction !ActionName
   | MOActionPermission !ActionName !RoleName
   deriving (Show, Eq, Generic)
+$(makePrisms ''MetadataObjId)
 instance Hashable MetadataObjId
 
 moiTypeName :: MetadataObjId -> Text
@@ -60,19 +63,25 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
     in tableObjectName <> " in " <> moiName (MOTable tableName)
   MOCustomTypes -> "custom_types"
   MOAction name -> dquoteTxt name
-  MOActionPermission name role -> dquoteTxt role <> " permission in " <> dquoteTxt name
+  MOActionPermission name roleName -> dquoteTxt roleName <> " permission in " <> dquoteTxt name
 
 data MetadataObject
   = MetadataObject
   { _moId         :: !MetadataObjId
   , _moDefinition :: !Value
   } deriving (Show, Eq)
+$(makeLenses ''MetadataObject)
 
 data InconsistentMetadata
   = InconsistentObject !Text !MetadataObject
   | ConflictingObjects !Text ![MetadataObject]
   | DuplicateObjects !MetadataObjId ![Value]
   deriving (Show, Eq)
+$(makePrisms ''InconsistentMetadata)
+
+getInconsistentRemoteSchemas :: [InconsistentMetadata] -> [RemoteSchemaName]
+getInconsistentRemoteSchemas =
+  toListOf (traverse._InconsistentObject._2.moId._MORemoteSchema)
 
 imObjectIds :: InconsistentMetadata -> [MetadataObjId]
 imObjectIds = \case
