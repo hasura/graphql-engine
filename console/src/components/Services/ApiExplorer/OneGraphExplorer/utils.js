@@ -32,3 +32,17 @@ export const getExplorerIsOpen = () => {
 export const setExplorerIsOpen = isOpen => {
   window.localStorage.setItem('graphiql:explorerOpen', isOpen);
 };
+
+export const setCodeExporterOpen = isOpen => {
+  window.localStorage.setItem('graphiql:graphiqlCodeExporterOpen', isOpen);
+};
+
+export const getCodeExporterIsOpen = () => {
+  const defaultIsOpen = false;
+
+  const isOpen = window.localStorage.getItem(
+    'graphiql:graphiqlCodeExporterOpen'
+  );
+
+  return isOpen ? isOpen === 'true' : defaultIsOpen;
+};
