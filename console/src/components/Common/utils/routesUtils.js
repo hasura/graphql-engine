@@ -98,3 +98,12 @@ export const getSTModifyRoute = stName => {
 export const getETModifyRoute = etName => {
   return `/${eventsPrefix}/${dataEventsPrefix}/${etName}/modify`;
 };
+export const getETPendingEventsRoute = etName => {
+  return `/${eventsPrefix}/${dataEventsPrefix}/${etName}/pending`;
+};
+export const getETProcessedEventsRoute = etName => {
+  return `/${eventsPrefix}/${dataEventsPrefix}/${etName}/processed`;
+};
+export const getETInvocationLogsRoute = etName => {
+  return `/${eventsPrefix}/${dataEventsPrefix}/${etName}/logs`;
+};

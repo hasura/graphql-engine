@@ -3,6 +3,13 @@ import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 import { capitalize } from '../../../../Common/utils/jsUtils';
 import BreadCrumb from '../../../../Common/Layout/BreadCrumb/BreadCrumb';
+import {
+  getETModifyRoute,
+  getETInvocationLogsRoute,
+  getETPendingEventsRoute,
+  getETProcessedEventsRoute,
+  getDataEventsLandingRoute,
+} from '../../../../Common/utils/routesUtils';
 
 const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
   const styles = require('./EventTable.scss');
@@ -25,19 +32,19 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
     return [
       {
         title: 'Events',
-        url: '/events',
+        url: '',
       },
       {
         title: 'Manage',
-        url: '/events/manage',
+        url: getDataEventsLandingRoute(),
       },
       {
-        title: 'Triggers',
-        url: '/events/manage/triggers/',
+        title: 'Data Events',
+        url: getDataEventsLandingRoute(),
       },
       {
         title: triggerName,
-        url: '/events/manage/triggers/' + triggerName + '/processed',
+        url: getETProcessedEventsRoute(triggerName),
       },
       {
         title: activeTab,
@@ -66,7 +73,7 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
               className={tabName === 'processed' ? styles.active : ''}
             >
               <Link
-                to={'/events/manage/triggers/' + triggerName + '/processed'}
+                to={getETProcessedEventsRoute(triggerName)}
                 data-test="trigger-processed-events"
               >
                 Processed Events {tabName === 'processed' ? showCount : null}
@@ -77,7 +84,7 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
               className={tabName === 'pending' ? styles.active : ''}
             >
               <Link
-                to={'/events/manage/triggers/' + triggerName + '/pending'}
+                to={getETPendingEventsRoute(triggerName)}
                 data-test="trigger-pending-events"
               >
                 Pending Events {tabName === 'pending' ? showCount : null}
@@ -85,21 +92,13 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
             </li>
             <li
               role="presentation"
-              className={tabName === 'running' ? styles.active : 'hide'}
-            >
-              <Link
-                to={'/events/manage/triggers/' + triggerName + '/running'}
-                data-test="trigger-running-events"
-              >
-                Running {tabName === 'running' ? showCount : null}
-              </Link>
-            </li>
-            <li
-              role="presentation"
               className={tabName === 'logs' ? styles.active : ''}
               data-test="trigger-logs"
             >
-              <Link to={'/events/manage/triggers/' + triggerName + '/logs'}>
+              <Link
+                to={getETInvocationLogsRoute(triggerName)}
+                data-test="trigger-invocation-logs"
+              >
                 Invocation Logs
               </Link>
             </li>
@@ -109,7 +108,10 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
                 className={tabName === 'modify' ? styles.active : ''}
                 data-test="trigger-modify"
               >
-                <Link to={'/events/manage/triggers/' + triggerName + '/modify'}>
+                <Link
+                  to={getETModifyRoute(triggerName)}
+                  data-test="trigger-invocation-logs"
+                >
                   Modify
                 </Link>
               </li>

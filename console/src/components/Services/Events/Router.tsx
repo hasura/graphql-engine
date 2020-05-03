@@ -14,6 +14,9 @@ import {
   AddEventTrigger,
   ModifyEventTrigger,
   EventTriggerLanding,
+  ETPendingEvents,
+  ETProcessedEvents,
+  ETInvocationLogs,
 } from './EventTriggers';
 
 const triggersInit = ({ dispatch }: { dispatch: any }) => {
@@ -50,6 +53,16 @@ const getTriggersRouter = (
           path=":triggerName/modify"
           component={ModifyEventTrigger(connect)}
         />
+        <Route
+          path=":triggerName/pending"
+          component={ETPendingEvents(connect)}
+        />
+        <Route
+          path=":triggerName/processed"
+          component={ETProcessedEvents(connect)}
+        />
+        <Route path=":triggerName/logs" component={ETInvocationLogs(connect)} />
+
         <Route path="manage" component={EventTriggerLanding(connect)} />
       </Route>
       <Route path="scheduled" component={rightContainerConnector(connect)}>

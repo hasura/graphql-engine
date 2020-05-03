@@ -12,6 +12,7 @@ import {
   Table,
   generateTableDef,
 } from '../../Common/utils/pgUtils';
+import { convertDateTimeToReadable } from '../../Common/utils/jsUtils';
 
 export const parseServerWebhook = (
   webhook?: string,
@@ -62,3 +63,14 @@ export const findScheduledTrigger = (
   triggerName: string,
   allTriggers: ScheduledTrigger[]
 ) => allTriggers.find(t => t.name === triggerName);
+
+export const sanitiseRow = (column: string, row: Record<string, string>) => {
+  if (column === 'created_at') {
+    return convertDateTimeToReadable(row.created_at);
+  }
+  const content =
+    row[column] === undefined || row[column] === null
+      ? 'NULL'
+      : row[column].toString();
+  return content;
+};

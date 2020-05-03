@@ -8,11 +8,13 @@ import { generateTableDef } from './pgUtils';
 
 // TODO extend all queries with v1 query type
 
-type WhereClause = any;
+export type WhereClause = any;
 
-type OrderBy = {
+export type OrderByType = 'asc' | 'desc';
+
+export type OrderBy = {
   column: string;
-  type: 'asc' | 'desc';
+  type: OrderByType;
   nulls?: 'last' | 'first';
 };
 
@@ -560,16 +562,19 @@ export const getCreateScheduledEventQuery = (triggerName: string) => {
   };
 };
 
+export type SelectColumn = string | { name: string; columns: SelectColumn[] };
+
 export const getSelectQuery = (
+  type: 'select' | 'count',
   table: TableDefinition,
-  columns: string[],
+  columns: SelectColumn[],
   where?: WhereClause,
   offset?: number,
   limit?: number,
   order_by?: OrderBy[]
 ) => {
   return {
-    type: 'select',
+    type,
     args: {
       table,
       columns,
@@ -588,6 +593,7 @@ export const getFetchInvocationLogsQuery = (
   limit?: number
 ) => {
   return getSelectQuery(
+    'select',
     generateTableDef('hdb_scheduled_event_invocation_logs', 'hdb_catalog'),
     ['*'],
     where,
@@ -601,6 +607,7 @@ export type SelectQueryGenerator = typeof getFetchInvocationLogsQuery;
 
 export const getFetchManualTriggersQuery = (tableDef: TableDefinition) =>
   getSelectQuery(
+    'select',
     tableDef,
     ['*'],
     {

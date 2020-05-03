@@ -335,3 +335,23 @@ export const getCurrTimeForFileName = () => {
 export const getEventTargetValue = (e: React.BaseSyntheticEvent) => {
   return e.target.value;
 };
+
+export const convertDateTimeToLocale = (dateTime: string) => {
+  const options = {
+    hourCycle: 'h24',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: 'short',
+    second: '2-digit',
+    timeZoneName: 'short',
+    weekday: 'short',
+    year: 'numeric',
+  };
+
+  return new Date(`${dateTime}Z`).toLocaleString('en-US', options);
+};
+
+export const convertDateTimeToReadable = (dateTime: string) => {
+  return new Date(`${dateTime}Z`).toTimeString();
+};

@@ -1,5 +1,6 @@
 import { LocalEventTriggerState } from './state';
 import { isValidURL } from '../../../Common/utils/jsUtils';
+import { makeBaseTable } from '../../../Common/utils/pgUtils';
 
 // check 2xx success status codes
 
@@ -81,3 +82,29 @@ export const validateAddETState = (state: LocalEventTriggerState) => {
 
   return null;
 };
+
+export const etEventsTable = makeBaseTable('event_log', 'hdb_catalog', [
+  { column_name: 'id', data_type: 'uuid' },
+  { column_name: 'trigger_name', data_type: 'text' },
+  { column_name: 'payload', data_type: 'jsonb' },
+  { column_name: 'delivered', data_type: 'text' },
+  { column_name: 'error', data_type: 'text' },
+  { column_name: 'tries', data_type: 'int' },
+  { column_name: 'created_at', data_type: 'timestamptz' },
+  { column_name: 'locked', data_type: 'text' },
+  { column_name: 'next_retry_at', data_type: 'timestamptz' },
+  { column_name: 'archived', data_type: 'text' },
+]);
+
+export const etInvocationLogsTable = makeBaseTable(
+  'event_invocation_logs',
+  'hdb_catalog',
+  [
+    { column_name: 'id', data_type: 'uuid' },
+    { column_name: 'event_id', data_type: 'uuid' },
+    { column_name: 'status', data_type: 'int' },
+    { column_name: 'request', data_type: 'text' },
+    { column_name: 'response', data_type: 'text' },
+    { column_name: 'created_at', data_type: 'timestamptz' },
+  ]
+);

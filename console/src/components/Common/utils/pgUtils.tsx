@@ -20,12 +20,17 @@ export type TablePermission = {
   };
 };
 
-export type TableColumn = {
+export interface BaseTableColumn {
+  column_name: string;
+  data_type: string;
+}
+
+export interface TableColumn extends BaseTableColumn {
   column_name: string;
   data_type: string;
   udt_name: string;
   column_default: string;
-};
+}
 
 export type ForeignKeyConstraint = {
   ref_table: string;
@@ -51,7 +56,25 @@ export type Schema = {
   schema_name: string;
 };
 
-export type Table = {
+export interface BaseTable {
+  table_name: string;
+  table_schema: string;
+  columns: BaseTableColumn[];
+  is_enum: boolean;
+}
+export const makeBaseTable = (
+  name: string,
+  schema: string,
+  columns: BaseTableColumn[],
+  isEnum = false
+): BaseTable => ({
+  table_name: name,
+  table_schema: schema,
+  columns,
+  is_enum: isEnum,
+});
+
+export interface Table extends BaseTable {
   table_name: string;
   table_schema: string;
   table_type: string;
@@ -86,7 +109,7 @@ export type Table = {
     is_trigger_updatable: 'YES' | 'NO';
     is_trigger_deletable: 'YES' | 'NO';
   };
-};
+}
 
 export type PGFunction = {
   function_name: string;

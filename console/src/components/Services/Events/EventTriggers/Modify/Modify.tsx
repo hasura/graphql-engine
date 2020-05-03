@@ -69,7 +69,7 @@ const Modify = (props: ModifyProps) => {
   };
 
   return (
-    <div className={`${styles.containerWhole} container-fluid`}>
+    <div>
       <TableHeader
         count={null}
         triggerName={currentTrigger.name}
