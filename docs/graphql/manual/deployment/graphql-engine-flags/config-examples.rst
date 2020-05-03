@@ -173,7 +173,7 @@ the right content-type headers.
 .. _errors-debugging:
 
 Debugging mode
-----------------
+--------------
 
 The Hasura GraphQL engine may provide additional information for each object in the ``extensions`` key of ``errors``.
 The ``internal`` key contains error information including the

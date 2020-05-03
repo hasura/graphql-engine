@@ -2,7 +2,7 @@
    :description: Haura GarphQL CLI configuration reference 
    :keywords: hasura, docs, CLI, CLI reference, config 
 
-.. _cli_reference:
+.. _cli_config_reference:
 
 Hasura CLI Configuration Reference 
 ==================================
@@ -12,15 +12,20 @@ Hasura CLI Configuration Reference
   :depth: 1
   :local:
 
-Hasura CLI commands get key values from flags, ENV variables, ``.env`` file and configuration file ``config.yaml``. 
+Introduction
+------------
+
+Hasura CLI commands can get key values from flags, ENV variables, a ``.env`` file
+or the configuration file ``config.yaml``.
 
 Configuration file
-^^^^^^^^^^^^^^^^^^
+------------------
  
-In order for the Hasura CLI to work, the ``config.yaml`` file is required (created automatically via the :ref:`hasura init<hasura_init>` command).
+In order for the Hasura CLI to work, the ``config.yaml`` file is required
+(created automatically via the :ref:`hasura init<hasura_init>` command).
 The configuration file can be configured with the following config keys:
 
-.. code-block:: none
+.. code-block:: yaml
 
   version: 
   endpoint: 
@@ -136,9 +141,18 @@ The configuration file can be configured with the following config keys:
      - 2
      -
 
+.. note::
+
+  The above structure is for ``config v2`` file which is supported since ``v1.2.0``
+
+  A ``config v1`` file of your Hasura project would look like:
+
+  .. code-block:: yaml
+
+      endpoint: http://localhost:8080
 
 Environment variables
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 The configuration can also be set in the form of environment variables:
 
@@ -225,14 +239,14 @@ The configuration can also be set in the form of environment variables:
      - URI to codegen for actions.
 
 CLI flags
-^^^^^^^^^
+---------
 
 The above keys can be set using command-line flags as well. The corresponding flag, 
 for the ENV vars or the configuration keys, can be found in the respective commands 
 reference manual. 
 
 .env file
-^^^^^^^^^
+---------
 
 Alternatively, environment variables can also be read from the ``.env`` file, created manually 
 by the user, at the project root directory. A global flag, ``--envfile``, is available to 
@@ -252,9 +266,7 @@ project root directory.
 
 .. admonition:: Supported from
 
-   ``.env`` file support is available since version ``v1.2.0-beta.5``.
-
-   .. .env file is supported in versions ``v.1.2.0`` and above.
+   ``.env`` file is supported in versions ``v.1.2.0`` and above.
 
 .. note::
 
