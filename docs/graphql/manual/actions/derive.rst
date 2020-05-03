@@ -75,13 +75,13 @@ derive our action:
 
      Next hit the ``Derive action`` button as shown below:
 
-     .. thumbnail:: ../../../img/graphql/manual/actions/actions-derive-button.png
+     .. thumbnail:: /img/graphql/manual/actions/actions-derive-button.png
         :alt: Console derive action button
 
      This will redirect you to the ``Add a new action`` page with the action
      definition auto filled.
 
-     .. thumbnail:: ../../../img/graphql/manual/actions/actions-derive-types.png
+     .. thumbnail:: /img/graphql/manual/actions/actions-derive-types.png
         :alt: Console derived action types
 
 
@@ -149,7 +149,7 @@ the action back to the original operation.
     You can select the framework of your choice to get the corresponding
     handler boilerplate code.
 
-    .. thumbnail:: ../../../img/graphql/manual/actions/actions-derive-codegen.png
+    .. thumbnail:: /img/graphql/manual/actions/actions-derive-codegen.png
        :alt: Console derived action codegen
 
     .. note::
