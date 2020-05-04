@@ -18,6 +18,7 @@ import Button from '../../../../Common/Button/Button';
 import { updateSchemaInfo } from '../../../Data/DataActions';
 import { createEventTrigger } from '../../ServerIO';
 import Operations from '../Common/Operations';
+import RetryConfEditor from '../../Common/Components/RetryConfEditor';
 import * as tooltip from '../Common/Tooltips';
 
 type AddProps = {
@@ -95,16 +96,6 @@ const Add = (props: AddProps) => {
       type: webhook.type,
       value,
     });
-  };
-
-  const handleRetryConfChange = (e: React.BaseSyntheticEvent) => {
-    const label = e.target.name;
-    const value = parseInt(e.target.value, 10);
-    const newRetryConf = {
-      ...retryConf,
-      [label]: value,
-    };
-    setState.retryConf(newRetryConf);
   };
 
   const getColumnList = () => {
@@ -330,69 +321,10 @@ const Add = (props: AddProps) => {
                 <hr />
                 <div className={styles.add_mar_top}>
                   <h4 className={styles.subheading_text}>Retry Logic</h4>
-                  <div className={styles.retrySection}>
-                    <div className={`col-md-3 ${styles.padd_left_remove}`}>
-                      <label
-                        className={`${styles.add_mar_right} ${styles.retryLabel}`}
-                      >
-                        Number of retries (default: 0)
-                      </label>
-                    </div>
-                    <div className={`col-md-6 ${styles.padd_left_remove}`}>
-                      <input
-                        onChange={handleRetryConfChange}
-                        name="num_retries"
-                        data-test="no-of-retries"
-                        className={`${styles.display_inline} form-control ${styles.width300}`}
-                        type="number"
-                        min="0"
-                        value={retryConf.num_retries}
-                        placeholder="no of retries"
-                      />
-                    </div>
-                  </div>
-                  <div className={styles.retrySection}>
-                    <div className={`col-md-3 ${styles.padd_left_remove}`}>
-                      <label
-                        className={`${styles.add_mar_right} ${styles.retryLabel}`}
-                      >
-                        Retry Interval in seconds (default: 10)
-                      </label>
-                    </div>
-                    <div className={`col-md-6 ${styles.padd_left_remove}`}>
-                      <input
-                        onChange={handleRetryConfChange}
-                        name="interval_sec"
-                        data-test="interval-seconds"
-                        className={`${styles.display_inline} form-control ${styles.width300}`}
-                        type="number"
-                        min="0"
-                        value={retryConf.interval_sec}
-                        placeholder="interval time in seconds"
-                      />
-                    </div>
-                  </div>
-                  <div className={styles.retrySection}>
-                    <div className={`col-md-3 ${styles.padd_left_remove}`}>
-                      <label
-                        className={`${styles.add_mar_right} ${styles.retryLabel}`}
-                      >
-                        Timeout in seconds (default: 60)
-                      </label>
-                    </div>
-                    <div className={`col-md-6 ${styles.padd_left_remove}`}>
-                      <input
-                        onChange={handleRetryConfChange}
-                        name="timeout_sec"
-                        data-test="timeout-seconds"
-                        className={`${styles.display_inline} form-control ${styles.width300}`}
-                        type="number"
-                        min="0"
-                        value={retryConf.timeout_sec}
-                        placeholder="timeout in seconds"
-                      />
-                    </div>
-                  </div>
+                  <RetryConfEditor
+                    retryConf={retryConf}
+                    setRetryConf={setState.retryConf}
+                  />
                 </div>
                 <hr />
                 <div className={styles.add_mar_top}>
