@@ -202,6 +202,7 @@ module.exports = {
         // Useful to reduce the size of client-side libraries, e.g. react
         NODE_ENV: JSON.stringify('production'),
       },
+      'process.hrtime': () => null,
     }),
     new webpack.DefinePlugin({
       CONSOLE_ASSET_VERSION: JSON.stringify(getRandomHexString()),
