@@ -105,7 +105,21 @@ Do note that for event triggers, the payload that Hasura sends might be differen
 Migrating auth
 --------------
 
+There are two ways to Authenticate users in Graph.cool.
+
+1. Using Auth0
+2. Using Email-Password Auth.
+
 If you were using Auth0 with Graph.cool, the migration should be fairly straightforward. You can configure Hasura with Auth0 easily by following :ref:`this guide <guides_auth0_jwt>`.
+
+In case you are using Email-Password Auth, Graph.cool generates mutations for 
+
+- creating a user ``createUser(authProvider: { email: { email, password } })`` and 
+- login ``signinUser(email: { email, password })``. 
+
+You will need to implement these custom mutations using :ref:`Hasura Actions <actions>`. 
+
+Refer to this example for a `custom signup mutation <https://github.com/hasura/hasura-actions-examples/tree/master/auth>`__.
 
 Migrating permissions
 ---------------------
