@@ -87,7 +87,7 @@ func ValidateDirectory(dir string) error {
 	}
 	// if neither config.yaml or hasura-config.yaml is found, return error
 	if len(notFound) > 1 {
-		return errors.Errorf("cannot validate directory '%s': [%s] not found", dir, strings.Join(notFound, ", "))
+		return errors.Errorf("cannot validate directory | configuration file not found")
 	}
 	return nil
 }

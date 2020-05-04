@@ -43,9 +43,6 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 
   # Now, edit <my-directory>/config.yaml to add endpoint and admin secret
 
-  # Create a directory with configuration filename hasura-config.yaml
-  hasura init <my-project> --hasura-config
-
   # Create a directory with endpoint and admin secret configured:
   hasura init <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
 
@@ -78,7 +75,6 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
 	f.StringVar(&opts.Template, "install-manifest", "", "install manifest to be cloned")
-	f.BoolVar(&opts.HasuraConfig, "hasura-config", false, "config filename hasura-config.yaml (default: config.yaml)")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.MarkDeprecated("directory", "use directory-name argument instead")
 
@@ -88,11 +84,10 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 type InitOptions struct {
 	EC *cli.ExecutionContext
 
-	Version      cli.ConfigVersion
-	Endpoint     string
-	AdminSecret  string
-	InitDir      string
-	HasuraConfig bool
+	Version     cli.ConfigVersion
+	Endpoint    string
+	AdminSecret string
+	InitDir     string
 
 	Template string
 }
@@ -224,17 +219,9 @@ func (o *InitOptions) createFiles() error {
 		config.ServerConfig.AdminSecret = o.AdminSecret
 	}
 
-	// set config filename
-	var configFilename string
-	if o.HasuraConfig {
-		configFilename = "hasura-config.yaml"
-	} else {
-		configFilename = "config.yaml"
-	}
-
 	// write the config file
 	o.EC.Config = config
-	o.EC.ConfigFile = filepath.Join(o.EC.ExecutionDirectory, configFilename)
+	o.EC.ConfigFile = filepath.Join(o.EC.ExecutionDirectory, "config.yaml")
 	err = o.EC.WriteConfig(nil)
 	if err != nil {
 		return errors.Wrap(err, "cannot write config file")
