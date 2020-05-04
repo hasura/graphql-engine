@@ -520,6 +520,12 @@ export const generateCreateScheduledTriggerQuery = (
     },
     payload: JSON.parse(state.payload),
     headers: transformHeaders(state.headers),
+    retry_conf: {
+      num_retries: state.retryConf.num_retries,
+      retry_interval_seconds: state.retryConf.interval_sec,
+      timeout_seconds: state.retryConf.timeout_sec,
+      tolerance_seconds: state.retryConf.tolerance_sec,
+    },
   },
 });
 
@@ -539,6 +545,12 @@ export const generateUpdateScheduledTriggerQuery = (
     },
     payload: JSON.parse(state.payload),
     headers: transformHeaders(state.headers),
+  },
+  retry_conf: {
+    num_retries: state.retryConf.num_retries,
+    retry_interval_seconds: state.retryConf.interval_sec,
+    timeout_seconds: state.retryConf.timeout_sec,
+    tolerance_seconds: state.retryConf.tolerance_sec,
   },
 });
 

@@ -11,6 +11,7 @@ import styles from '../ScheduledTriggers.scss';
 import Button from '../../../../Common/Button/Button';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import Headers from '../../../../Common/Headers/Headers';
+import RetryConf from '../../Common/Components/RetryConfEditor';
 import CronBuilder from '../../../../Common/CronBuilder/CronBuilder';
 import { stripNonStandardElements } from '../../../../Common/CronBuilder/utils';
 import Modal from '../../../../Common/Modal/Modal';
@@ -236,6 +237,25 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
       </React.Fragment>
     );
 
+  const getRetryConfInput = () => {
+    return sectionize(
+      <div className={styles.add_mar_bottom}>
+        <h2 className={`${styles.subheading_text}`}>
+          Retry configuration
+          <Tooltip
+            id="trigger-headers"
+            message="Retry configuration if the call to the webhook fails"
+            className={styles.add_mar_left_mid}
+          />
+        </h2>
+        <RetryConf
+          retryConf={state.retryConf}
+          setRetryConf={setState.retryConf}
+        />
+      </div>
+    );
+  };
+
   const getSaveButton = () => {
     const callback = () => setState.loading(false);
     const onClick = (e: React.SyntheticEvent) => {
@@ -266,6 +286,7 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
       {getScheduleInput()}
       {getPayloadInput()}
       {getHeadersInput()}
+      {getRetryConfInput()}
       <hr />
       {getSaveButton()}
     </div>

@@ -22,8 +22,6 @@ type Props = {
 };
 
 const InvocationLogsTable = (props: Props) => {
-  console.log(props);
-
   const { rows, filterState, setFilterState, runQuery, columns, count } = props;
 
   if (rows.length === 0) {

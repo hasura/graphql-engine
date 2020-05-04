@@ -33,17 +33,13 @@ const Modify = (props: ModifyProps) => {
   const { state, setState } = useEventTriggerModify(currentTrigger, allSchemas);
 
   React.useEffect(() => {
-    console.log('Entering effect');
     if (currentTrigger) {
-      console.log('inside current trigger true');
       dispatch(
         updateSchemaInfo({
           schemas: [currentTrigger.schema_name],
         })
       );
-      console.log('inside current trigger true');
     }
-    console.log('Entering effect');
   }, [currentTrigger]);
 
   const table = findETTable(currentTrigger, allSchemas);

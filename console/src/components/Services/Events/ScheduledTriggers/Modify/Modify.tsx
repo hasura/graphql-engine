@@ -14,6 +14,7 @@ import Modal from '../../../../Common/Modal/Modal';
 import CronBuilder from '../../../../Common/CronBuilder/CronBuilder';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import Headers from '../../../../Common/Headers/Headers';
+import RetryConf from '../../Common/Components/RetryConfEditor';
 import {
   saveScheduledTrigger,
   invokeScheduledTrigger,
@@ -49,7 +50,6 @@ const Modify = (props: ModifyProps) => {
     loading,
     showScheduleModal,
   } = state;
-  console.log(state);
 
   React.useEffect(() => {
     setCronBuilderState(schedule.value || defaultCronExpr);
@@ -260,6 +260,25 @@ const Modify = (props: ModifyProps) => {
       </React.Fragment>
     );
 
+  const getRetryConfInput = () => {
+    return sectionize(
+      <div className={styles.add_mar_bottom}>
+        <h2 className={`${styles.subheading_text}`}>
+          Retry configuration
+          <Tooltip
+            id="trigger-headers"
+            message="Retry configuration if the call to the webhook fails"
+            className={styles.add_mar_left_mid}
+          />
+        </h2>
+        <RetryConf
+          retryConf={state.retryConf}
+          setRetryConf={setState.retryConf}
+        />
+      </div>
+    );
+  };
+
   const getActionButtons = () => {
     const callback = () => setState.loading(false);
     const onSave = (e: React.SyntheticEvent) => {
@@ -335,6 +354,7 @@ const Modify = (props: ModifyProps) => {
       {getScheduleInput()}
       {getPayloadInput()}
       {getHeadersInput()}
+      {getRetryConfInput()}
       <hr />
       {getActionButtons()}
     </div>

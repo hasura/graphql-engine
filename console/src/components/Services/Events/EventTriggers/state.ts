@@ -163,8 +163,6 @@ export const useEventTriggerModify = (
     parseServerETDefinition(eventTrigger, table)
   );
 
-  console.log(state);
-
   React.useEffect(() => {
     if (allTables.length) {
       const etTable = findETTable(eventTrigger, allTables);

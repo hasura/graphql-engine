@@ -1,6 +1,6 @@
 import React from 'react';
 import { Header, defaultHeader } from '../../../../Common/Headers/Headers';
-import { ScheduleTriggerType, URLType, URLConf } from '../../Types';
+import { ScheduleTriggerType, URLType, URLConf, RetryConf } from '../../Types';
 
 export const defaultCronExpr = '2 * * * *';
 
@@ -14,6 +14,7 @@ export type LocalScheduledTriggerState = {
   payload: string;
   headers: Array<Header>;
   loading: boolean;
+  retryConf: RetryConf;
   showScheduleModal?: boolean;
 };
 
@@ -31,6 +32,12 @@ const defaultState: LocalScheduledTriggerState = {
   headers: [defaultHeader],
   loading: false,
   showScheduleModal: false,
+  retryConf: {
+    timeout_sec: 60,
+    num_retries: 0,
+    interval_sec: 10,
+    tolerance_sec: 21600,
+  },
 };
 
 export const useScheduledTriggerAdd = (
@@ -90,6 +97,12 @@ export const useScheduledTriggerAdd = (
         setState(s => ({
           ...s,
           showScheduleModal: !s.showScheduleModal,
+        }));
+      },
+      retryConf: (r: RetryConf) => {
+        setState(s => ({
+          ...s,
+          retryConf: r,
         }));
       },
       bulk: setState,
