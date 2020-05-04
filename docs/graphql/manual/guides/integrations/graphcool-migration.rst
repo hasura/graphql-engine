@@ -1,6 +1,6 @@
 .. meta::
    :description: Instructions to migrate your graph.cool project to Hasura
-   :keywords: hasura, docs, guide, GraphQL subscriptions, apollo, apollo-client
+   :keywords: hasura, docs, guide, migration, graph.cool
 
 .. _graphcool_migration:
 
