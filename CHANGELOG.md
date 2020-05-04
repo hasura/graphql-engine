@@ -32,6 +32,10 @@ Support for this is now added through the `add_computed_field` API.
 
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
+### Docs 
+
+- Add guides on actions codegens for frameworks
+
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
