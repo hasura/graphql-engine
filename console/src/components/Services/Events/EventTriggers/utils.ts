@@ -88,12 +88,12 @@ export const etEventsTable = makeBaseTable('event_log', 'hdb_catalog', [
   { column_name: 'trigger_name', data_type: 'text' },
   { column_name: 'payload', data_type: 'jsonb' },
   { column_name: 'delivered', data_type: 'text' },
-  { column_name: 'error', data_type: 'text' },
+  { column_name: 'error', data_type: 'boolean' },
   { column_name: 'tries', data_type: 'int' },
   { column_name: 'created_at', data_type: 'timestamptz' },
-  { column_name: 'locked', data_type: 'text' },
+  { column_name: 'locked', data_type: 'boolean' },
   { column_name: 'next_retry_at', data_type: 'timestamptz' },
-  { column_name: 'archived', data_type: 'text' },
+  { column_name: 'archived', data_type: 'boolean' },
 ]);
 
 export const etInvocationLogsTable = makeBaseTable(

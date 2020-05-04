@@ -9,6 +9,8 @@ import {
   ScheduledTriggerLogs,
   ScheduledTriggeModify,
   ScheduledTriggerLanding,
+  STPendingEvents,
+  STProcessedEvents,
 } from './ScheduledTriggers';
 import {
   AddEventTrigger,
@@ -72,6 +74,14 @@ const getTriggersRouter = (
         <Route
           path=":triggerName/logs"
           component={ScheduledTriggerLogs(connect)}
+        />
+        <Route
+          path=":triggerName/pending"
+          component={STPendingEvents(connect)}
+        />
+        <Route
+          path=":triggerName/processed"
+          component={STProcessedEvents(connect)}
         />
         <Route
           path=":triggerName/modify"

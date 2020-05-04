@@ -8,6 +8,7 @@ import {
   generateUpdateScheduledTriggerQuery,
   generateCreateEventTriggerQuery,
   getDropEventTriggerQuery,
+  getCreateScheduledEventQuery,
 } from '../../Common/utils/v1QueryUtils';
 import globals from '../../../Globals';
 import { makeMigrationCall } from '../Data/DataActions';
@@ -467,224 +468,77 @@ export const deleteEventTrigger = (
     true
   );
 };
-// const loadPendingDataEvents = () => (dispatch: any, getState: any) => {
-//   const url = Endpoints.getSchema;
-//   const body = {
-//     type: 'select',
-//     args: {
-//       table: {
-//         name: 'event_triggers',
-//         schema: 'hdb_catalog',
-//       },
-//       columns: [
-//         '*',
-//         {
-//           name: 'events',
-//           columns: [
-//             '*',
-//             { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
-//           ],
-//           where: { delivered: false, error: false, tries: 0, archived: false },
-//           order_by: ['-created_at'],
-//           limit: 10,
-//         },
-//       ],
-//     },
-//   };
 
-//   const options = {
-//     method: 'POST',
-//     headers: dataHeaders(getState),
-//     body: JSON.stringify(body),
-//   };
-//   return dispatch(requestAction(url, options)).then(
-//     (data: any) => {
-//       dispatch({ type: LOAD_PENDING_DATA_EVENTS, data: data });
-//     },
-//     (error: any) => {
-//       console.error('Failed to load triggers' + JSON.stringify(error));
-//     }
-//   );
-// };
+export const invokeScheduledTrigger = (
+  triggerName: string,
+  successCb?: () => void,
+  errorCb?: () => void
+) => (dispatch: any) => {
+  const query = getCreateScheduledEventQuery(triggerName);
+  return dispatch(
+    requestAction(
+      Endpoints.query,
+      {
+        method: 'POST',
+        body: JSON.stringify(query),
+      },
+      undefined,
+      undefined,
+      true,
+      true
+    )
+  ).then(
+    () => {
+      if (successCb) {
+        successCb();
+      }
+    },
+    (error: any) => {
+      console.log(error);
+      dispatch(
+        showErrorNotification('Unable to invoke trigger', error.message || '')
+      );
+      if (errorCb) {
+        errorCb();
+      }
+    }
+  );
+};
 
-// const loadRunningDataEvents = () => (dispatch, getState) => {
-//   const url = Endpoints.getSchema;
-//   const body = {
-//     type: 'select',
-//     args: {
-//       table: {
-//         name: 'event_triggers',
-//         schema: 'hdb_catalog',
-//       },
-//       columns: [
-//         '*',
-//         {
-//           name: 'events',
-//           columns: [
-//             '*',
-//             { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
-//           ],
-//           where: {
-//             delivered: false,
-//             error: false,
-//             tries: { $gt: 0 },
-//             archived: false,
-//           },
-//           order_by: ['-created_at'],
-//           limit: 10,
-//         },
-//       ],
-//     },
-//   };
-
-//   const options = {
-//     credentials: globalCookiePolicy,
-//     method: 'POST',
-//     headers: dataHeaders(getState),
-//     body: JSON.stringify(body),
-//   };
-//   return dispatch(requestAction(url, options)).then(
-//     data => {
-//       dispatch({ type: LOAD_RUNNING_EVENTS, data: data });
-//     },
-//     error => {
-//       console.error('Failed to load triggers' + JSON.stringify(error));
-//     }
-//   );
-// };
-
-// const loadDataEventLogs = triggerName => (dispatch, getState) => {
-//   const url = Endpoints.getSchema;
-//   const triggerOptions = {
-//     method: 'POST',
-//     headers: dataHeaders(getState),
-//     body: JSON.stringify({
-//       type: 'select',
-//       args: {
-//         table: {
-//           name: 'event_triggers',
-//           schema: 'hdb_catalog',
-//         },
-//         columns: ['*'],
-//         where: {
-//           name: triggerName,
-//         },
-//       },
-//     }),
-//   };
-//   return dispatch(requestAction(url, triggerOptions)).then(
-//     triggerData => {
-//       if (triggerData.length !== 0) {
-//         const body = {
-//           type: 'bulk',
-//           args: [
-//             {
-//               type: 'select',
-//               args: {
-//                 table: {
-//                   name: 'event_invocation_logs',
-//                   schema: 'hdb_catalog',
-//                 },
-//                 columns: [
-//                   '*',
-//                   {
-//                     name: 'event',
-//                     columns: ['*'],
-//                   },
-//                 ],
-//                 where: {
-//                   event: { trigger_name: triggerData[0].name, archived: false },
-//                 },
-//                 order_by: ['-created_at'],
-//                 limit: 10,
-//               },
-//             },
-//           ],
-//         };
-
-//         const logOptions = {
-//           credentials: globalCookiePolicy,
-//           method: 'POST',
-//           headers: dataHeaders(getState),
-//           body: JSON.stringify(body),
-//         };
-//         dispatch(requestAction(url, logOptions)).then(
-//           logsData => {
-//             dispatch({ type: LOAD_EVENT_LOGS, data: logsData[0] });
-//           },
-//           error => {
-//             console.error(
-//               'Failed to load trigger logs' + JSON.stringify(error)
-//             );
-//           }
-//         );
-//       } else {
-//         dispatch(replace('/404'));
-//       }
-//     },
-//     error => {
-//       console.error(
-//         'Failed to fetch trigger information' + JSON.stringify(error)
-//       );
-//     }
-//   );
-// }
-
-// const loadDataEventInvocations = eventId => (dispatch, getState) => {
-//   const url = Endpoints.getSchema;
-//   const options = {
-//     credentials: globalCookiePolicy,
-//     method: 'POST',
-//     headers: dataHeaders(getState),
-//     body: JSON.stringify({
-//       type: 'select',
-//       args: {
-//         table: {
-//           name: 'event_invocation_logs',
-//           schema: 'hdb_catalog',
-//         },
-//         columns: [
-//           '*',
-//           {
-//             name: 'event',
-//             columns: ['*'],
-//           },
-//         ],
-//         where: { event_id: eventId },
-//         order_by: ['-created_at'],
-//       },
-//     }),
-//   };
-//   return dispatch(requestAction(url, options)).then(
-//     data => {
-//       dispatch({ type: LOAD_EVENT_INVOCATIONS, data: data });
-//     },
-//     error => {
-//       console.error('Failed to load triggers' + JSON.stringify(error));
-//     }
-//   );
-// }
-
-// const redeliverEvent = eventId => (dispatch, getState) => {
-//   const url = Endpoints.getSchema;
-//   const options = {
-//     credentials: globalCookiePolicy,
-//     method: 'POST',
-//     headers: dataHeaders(getState),
-//     body: JSON.stringify({
-//       type: 'redeliver_event',
-//       args: {
-//         event_id: eventId,
-//       },
-//     }),
-//   };
-//   return dispatch(requestAction(url, options)).then(
-//     data => {
-//       dispatch({ type: REDELIVER_EVENT_SUCCESS, data: data });
-//     },
-//     error => {
-//       console.error('Failed to load triggers' + JSON.stringify(error));
-//       dispatch({ type: REDELIVER_EVENT_FAILURE, data: error });
-//     }
-//   );
-// }
+export const redeliverDataEvent = (
+  eventId: string,
+  successCb?: CallableFunction,
+  errorCb?: CallableFunction
+) => (dispatch: any, getState: any) => {
+  const url = Endpoints.getSchema;
+  const options = {
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify({
+      type: 'redeliver_event',
+      args: {
+        event_id: eventId,
+      },
+    }),
+  };
+  return dispatch(
+    requestAction(url, options, undefined, undefined, true, true)
+  ).then(
+    () => {
+      if (successCb) {
+        successCb();
+      }
+    },
+    (error: any) => {
+      if (errorCb) {
+        errorCb();
+      }
+      dispatch(
+        showErrorNotification(
+          'Failed to redeliver event',
+          error.message || 'unexpected'
+        )
+      );
+    }
+  );
+};

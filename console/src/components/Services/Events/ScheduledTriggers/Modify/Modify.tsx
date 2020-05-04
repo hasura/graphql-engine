@@ -1,5 +1,5 @@
 import React from 'react';
-import Endpoints from '../../../../../Endpoints';
+import Helmet from 'react-helmet';
 import Button from '../../../../Common/Button/Button';
 import { useScheduledTriggerAdd, defaultCronExpr } from '../Add/state';
 import { ScheduledTrigger } from '../../Types';
@@ -10,35 +10,19 @@ import {
 import { parseServerScheduledTrigger } from '../utils';
 import styles from '../../Events.scss';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
-import Helmet from 'react-helmet';
 import Modal from '../../../../Common/Modal/Modal';
 import CronBuilder from '../../../../Common/CronBuilder/CronBuilder';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import Headers from '../../../../Common/Headers/Headers';
-import { saveScheduledTrigger, deleteScheduledTrigger } from '../../ServerIO';
-import { getCreateScheduledEventQuery } from '../../../../Common/utils/v1QueryUtils';
+import {
+  saveScheduledTrigger,
+  invokeScheduledTrigger,
+  deleteScheduledTrigger,
+} from '../../ServerIO';
 
 type ModifyProps = {
   dispatch: any;
   currentTrigger?: ScheduledTrigger;
-};
-
-const invokeTrigger = (triggerName: string) => {
-  const query = getCreateScheduledEventQuery(triggerName);
-  return fetch(Endpoints.query, {
-    method: 'POST',
-    body: JSON.stringify(query),
-  })
-    .then(r => {
-      if (r.status === 200) {
-        return Promise.resolve();
-      }
-      return Promise.reject();
-    })
-    .catch(e => {
-      console.error(e);
-      return Promise.reject();
-    });
 };
 
 const Modify = (props: ModifyProps) => {
@@ -103,7 +87,7 @@ const Modify = (props: ModifyProps) => {
           Name
           <Tooltip
             id="trigger-name"
-            message={'Name of the trigger'}
+            message="Name of the trigger"
             className={styles.add_mar_left_mid}
           />
         </h2>
@@ -126,7 +110,7 @@ const Modify = (props: ModifyProps) => {
           Webhook
           <Tooltip
             id="trigger-webhook"
-            message={'The HTTP endpoint that must be triggered'}
+            message="The HTTP endpoint that must be triggered"
             className={styles.add_mar_left_mid}
           />
         </h2>
@@ -149,9 +133,7 @@ const Modify = (props: ModifyProps) => {
           Trigger Type
           <Tooltip
             id="trigger-type"
-            message={
-              'Scheduled triggers could be scheduled with a cron and adhoc triggers can be invoked manually'
-            }
+            message="Scheduled triggers could be scheduled with a cron and adhoc triggers can be invoked manually"
             className={styles.add_mar_left_mid}
           />
         </h2>
@@ -200,7 +182,7 @@ const Modify = (props: ModifyProps) => {
         onClose={modalReset}
         onCancel={modalReset}
         onSubmit={modalOnSubmit}
-        submitText={'Use'}
+        submitText="Use"
       >
         <div>
           <CronBuilder
@@ -220,7 +202,7 @@ const Modify = (props: ModifyProps) => {
           Cron schedule
           <Tooltip
             id="trigger-schedule"
-            message={'Schedule for your cron'}
+            message="Schedule for your cron"
             className={styles.add_mar_left_mid}
           />
         </h2>
@@ -248,7 +230,7 @@ const Modify = (props: ModifyProps) => {
           Payload
           <Tooltip
             id="trigger-payload"
-            message={'The request payload for the HTTP trigger'}
+            message="The request payload for the HTTP trigger"
             className={styles.add_mar_left_mid}
           />
         </h2>
@@ -256,7 +238,7 @@ const Modify = (props: ModifyProps) => {
           mode="json"
           value={payload}
           onChange={setState.payload}
-          height={'200px'}
+          height="200px"
         />
       </React.Fragment>
     );
@@ -270,7 +252,7 @@ const Modify = (props: ModifyProps) => {
           Headers
           <Tooltip
             id="trigger-headers"
-            message={'Configure headers for the request to the webhook'}
+            message="Configure headers for the request to the webhook"
             className={styles.add_mar_left_mid}
           />
         </h2>
@@ -288,13 +270,25 @@ const Modify = (props: ModifyProps) => {
 
     const invoke = () => {
       setInvokeButtonText('Invoking...');
-      invokeTrigger(currentTrigger.name)
-        .then(() => {
+      const successCallback = () => {
+        setInvokeButtonText('Done');
+        setTimeout(() => {
           setInvokeButtonText('Invoke');
-        })
-        .catch(() => {
+        }, 1000);
+      };
+      const errorCallback = () => {
+        setInvokeButtonText('Error');
+        setTimeout(() => {
           setInvokeButtonText('Invoke');
-        });
+        }, 1000);
+      };
+      dispatch(
+        invokeScheduledTrigger(
+          currentTrigger.name,
+          successCallback,
+          errorCallback
+        )
+      );
     };
 
     return (

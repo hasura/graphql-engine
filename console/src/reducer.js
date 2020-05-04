@@ -5,6 +5,7 @@ import { remoteSchemaReducer } from './components/Services/RemoteSchema';
 import { actionsReducer } from './components/Services/Actions';
 import { typesReducer } from './components/Services/Types';
 import { eventsReducer } from './components/Services/Events';
+import invokeEventTriggerReducer from './components/Services/Events/InvokeManualTrigger/InvokeManualTriggerAction';
 import mainReducer from './components/Main/Actions';
 import apiExplorerReducer from 'components/Services/ApiExplorer/Actions';
 import progressBarReducer from 'components/App/Actions';
@@ -26,6 +27,7 @@ const reducer = combineReducers({
   metadata: metadataReducer,
   types: typesReducer,
   events: eventsReducer,
+  invokeEventTrigger: invokeEventTriggerReducer,
 });
 
 export default reducer;

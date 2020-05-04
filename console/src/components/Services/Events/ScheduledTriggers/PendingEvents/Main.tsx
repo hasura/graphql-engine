@@ -2,9 +2,9 @@ import React from 'react';
 import STContainer from '../../Containers/ScheduledTriggerContainer';
 import { Triggers } from '../../Types';
 import { ReduxState } from '../../../../../Types';
-import Modify from './Modify';
+import PendingEvents from './PendingEvents';
 
-type ModifyProps = {
+type Props = {
   allTriggers: Triggers;
   params?: {
     triggerName: string;
@@ -13,16 +13,21 @@ type ModifyProps = {
   readOnlyMode: boolean;
 };
 
-const ModifyContainer = ({ dispatch, allTriggers, params }: ModifyProps) => {
+const PendingEventsContainer = ({
+  dispatch,
+  allTriggers,
+  params,
+  readOnlyMode,
+}: Props) => {
   const triggerName = params ? params.triggerName : '';
   return (
     <STContainer
-      tabName="modify"
+      tabName="pending"
       dispatch={dispatch}
       triggerName={triggerName}
       allTriggers={allTriggers}
     >
-      <Modify dispatch={dispatch} />
+      <PendingEvents dispatch={dispatch} readOnlyMode={readOnlyMode} />
     </STContainer>
   );
 };
@@ -34,4 +39,5 @@ const mapStateToProps = (state: ReduxState) => {
   };
 };
 
-export default (connect: any) => connect(mapStateToProps)(ModifyContainer);
+export default (connect: any) =>
+  connect(mapStateToProps)(PendingEventsContainer);

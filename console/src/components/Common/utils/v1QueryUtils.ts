@@ -608,11 +608,11 @@ export type SelectQueryGenerator = typeof getFetchInvocationLogsQuery;
 export const getFetchManualTriggersQuery = (tableDef: TableDefinition) =>
   getSelectQuery(
     'select',
-    tableDef,
+    generateTableDef('event_triggers', 'hdb_catalog'),
     ['*'],
     {
       table_name: tableDef.name,
-      table_schema: tableDef.schema,
+      schema_name: tableDef.schema,
     },
     undefined,
     undefined,

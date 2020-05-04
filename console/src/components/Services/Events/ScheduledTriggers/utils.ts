@@ -1,5 +1,6 @@
 import { LocalScheduledTriggerState } from './Add/state';
 import { isObject } from '../../../Common/utils/jsUtils';
+import { makeBaseTable } from '../../../Common/utils/pgUtils';
 import { Triggers, ScheduledTrigger } from '../Types';
 import { parseServerHeaders } from '../../../Common/Headers/utils';
 
@@ -61,3 +62,34 @@ export const parseServerScheduledTrigger = (trigger: ScheduledTrigger) => {
     loading: false,
   };
 };
+
+export const stEventsTable = makeBaseTable(
+  'hdb_scheduled_events',
+  'hdb_catalog',
+  [
+    { column_name: 'id', data_type: 'uuid' },
+    { column_name: 'name', data_type: 'text' },
+    { column_name: 'scheduled_time', data_type: 'timestamptz' },
+    { column_name: 'cancelled', data_type: 'boolean' },
+    { column_name: 'delivered', data_type: 'boolean' },
+    { column_name: 'error', data_type: 'boolean' },
+    { column_name: 'tries', data_type: 'int' },
+    { column_name: 'created_at', data_type: 'timestamptz' },
+    { column_name: 'locked', data_type: 'text' },
+    { column_name: 'next_retry_at', data_type: 'timestamptz' },
+    { column_name: 'dead', data_type: 'boolean' },
+  ]
+);
+
+export const stInvocationLogsTable = makeBaseTable(
+  'event_invocation_logs',
+  'hdb_catalog',
+  [
+    { column_name: 'id', data_type: 'uuid' },
+    { column_name: 'event_id', data_type: 'uuid' },
+    { column_name: 'status', data_type: 'int' },
+    { column_name: 'request', data_type: 'text' },
+    { column_name: 'response', data_type: 'text' },
+    { column_name: 'created_at', data_type: 'timestamptz' },
+  ]
+);
