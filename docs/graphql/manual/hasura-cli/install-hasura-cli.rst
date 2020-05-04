@@ -71,7 +71,7 @@ Install through npm
 
 Hasura CLI is available as an npm package that is independently maintained by some members of the community.
 It can be beneficial to use the npm package if you want a version-fixed cli dedicated to your node.js project.
-You can find usage details(e.g. script flag tips) in  the `original repository <https://github.com/jjangga0214/hasura-cli>`_.
+You can find usage details (e.g. flag information) in  the `original repository <https://github.com/jjangga0214/hasura-cli>`_.
 
 .. code-block:: bash
    
