@@ -4,7 +4,7 @@
 
 .. _graphcool_migration:
 
-Migrate from graph.cool to Hasura
+Migrate from Graph.cool to Hasura
 =================================
 
 .. contents:: Table of contents
@@ -12,7 +12,7 @@ Migrate from graph.cool to Hasura
   :depth: 1
   :local:
 
-If you are looking to migrate your graph.cool project to Hasura, these are the steps that you will need to roughly follow.
+If you are looking to migrate your Graph.cool project to Hasura, these are the steps that you will need to roughly follow.
 
 Migrating data
 --------------
@@ -41,7 +41,7 @@ Step 3: Connect to MySQL via mysql CLI
 
    mysql --user=root --password=my-secret-pw --host=<host>
 
-Replace the host and password as necessary.
+Replace the host and password as required.
 
 Step 4: Create a database in MySQL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -53,20 +53,20 @@ Step 4: Create a database in MySQL
 Step 5: Import data
 ^^^^^^^^^^^^^^^^^^^
 
-Import graphcool's MySQL export into your local MySQL instance
+Import Graph.cool's MySQL export into your local MySQL instance:
 
 .. code-block:: bash
 
    mysql --user=root --password=my-secret-pw --host=<host> public --binary-mode=1 < <pathtomysqlexport>
 
-Replace host and pathtomysqlexport as required. This step should have migrated schema with the data.
+Replace host and pathtomysqlexport as required. This step should have migrated the schema with the data.
 
 6. Start Hasura and Postgres using docker-compose
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Since MySQL is now set up with all the data from graph.cool, we need to create Hasura and Postgres instance to proceed.
+Since MySQL is now set up with all the data from Graph.cool, we need to create a Hasura and Postgres instance to proceed.
 
-Refer to the :ref:`Getting started <docker_simple>` guide to setup Hasura using ``docker-compose``.
+Refer to the :ref:`Getting started <docker_simple>` guide to set up Hasura using ``docker-compose``.
 
 We will use ``pgloader`` to migrate from MySQL to Postgres. Refer to their `installation guide <https://github.com/dimitri/pgloader>`__ for setting this up.
 
@@ -76,9 +76,9 @@ Once you have installed, execute the following command:
 
    pgloader mysql://root:my-secret-pw@<host>/public postgresql://postgres:postgrespassword@<host>:5432/postgres
 
-Replace ``<host>`` as necessary.
+Replace ``<host>`` as required.
 
-This step should have migrated data from MySQL to Postgres.
+This step should have migrated the data from MySQL to Postgres.
 
 Connect Hasura to Postgres
 --------------------------
@@ -91,7 +91,7 @@ Restructuring connection tables
 -------------------------------
 
 Now you can rename tables/columns to match your client-side queries as required. 
-Do note that, for every one-to-one relationship, Graph.cool would have created a connection table to link them. This would require a bit of work to restructure. 
+Do note that, for every one-to-one relationship, Graph.cool would have created a connection table to link them. This would require a bit of manual work to restructure. 
 Currently, there is no automation available for this step. Carefully review the connection tables and make the necessary changes.
 
 Migrating functions
@@ -99,25 +99,25 @@ Migrating functions
 
 In case you have functions in Graph.cool, Hasura has an equivalent feature called :ref:`event triggers <event_triggers>`. Migrating this involves taking your code and deploying it on a different platform (preferably serverless functions).
 
-Do note that for event triggers, the payload that Hasura sends might be different and you might have to change the way request body parameters are handled in your function code.
+Do note that for event triggers, the payload that Hasura sends might be different, and you might have to change the way the request body parameters are handled in your function code.
 
 
 Migrating auth
 --------------
 
-There are two ways to Authenticate users in Graph.cool.
+There are two ways to authenticate users in Graph.cool.
 
 1. Using Auth0
-2. Using Email-Password Auth.
+2. Using email-password auth.
 
 If you were using Auth0 with Graph.cool, the migration should be fairly straightforward. You can configure Hasura with Auth0 easily by following :ref:`this guide <guides_auth0_jwt>`.
 
-In case you are using Email-Password Auth, Graph.cool generates mutations for 
+In case you are using email-password auth, Graph.cool generates mutations for 
 
 - creating a user ``createUser(authProvider: { email: { email, password } })`` and 
 - login ``signinUser(email: { email, password })``. 
 
-You will need to implement these custom mutations using :ref:`Hasura Actions <actions>`. 
+You will need to implement these custom mutations using :ref:`Hasura actions <actions>`. 
 
 Refer to this example for a `custom signup mutation <https://github.com/hasura/hasura-actions-examples/tree/master/auth>`__.
 
