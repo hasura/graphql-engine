@@ -449,6 +449,14 @@ func (ec *ExecutionContext) SetHGEHeaders(headers map[string]string) {
 	ec.HGEHeaders = headers
 }
 
+// getConfigFilename returns the name of the configuration file
+func (ec *ExecutionContext) getConfigFilename() string {
+	if _, err := os.Stat(filepath.Join(ec.ExecutionDirectory, "hasura-config.yaml")); err == nil {
+		return "hasura-config"
+	}
+	return "config"
+}
+
 // Validate prepares the ExecutionContext ec and then validates the
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
@@ -478,7 +486,8 @@ func (ec *ExecutionContext) Validate() error {
 	}
 
 	// set names of config file
-	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
+	configFilename := ec.getConfigFilename() + ".yaml"
+	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, configFilename)
 
 	// read config and parse the values into Config
 	err = ec.readConfig()
@@ -574,7 +583,7 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetEnvPrefix(util.ViperEnvPrefix)
 	v.SetEnvKeyReplacer(util.ViperEnvReplacer)
 	v.AutomaticEnv()
-	v.SetConfigName("config")
+	v.SetConfigName(ec.getConfigFilename())
 	v.SetDefault("version", "1")
 	v.SetDefault("endpoint", "http://localhost:8080")
 	v.SetDefault("admin_secret", "")
