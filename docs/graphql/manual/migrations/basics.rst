@@ -30,8 +30,8 @@ Now run:
   hasura init
 
   # Export current Hasura state
-  hasura migrate create --from-server <endpoint>
-  hasura metadata export --from-server <endpoint>
+  hasura migrate create <init-migration-name> --from-server --endpoint <endpoint>
+  hasura metadata export --endpoint <endpoint>
 
 Generating migrations
 ---------------------
