@@ -1,4 +1,4 @@
-import { LocalScheduledTriggerState } from './Add/state';
+import { LocalScheduledTriggerState } from './state';
 import { isObject } from '../../../Common/utils/jsUtils';
 import { makeBaseTable } from '../../../Common/utils/pgUtils';
 import { Triggers, ScheduledTrigger } from '../Types';
