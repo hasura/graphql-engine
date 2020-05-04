@@ -179,10 +179,7 @@ const ColumnCreator = ({
         <ColumnTypeSelector
           options={columnDataTypes}
           onChange={colType.onChange}
-          value={
-            (colType.value && columnTypeValueMap[colType.value]) ||
-            colType.value
-          }
+          value={columnTypeValueMap[colType.value] || colType.value}
           colIdentifier={0}
           bsClass={`col-type-${0} modify_select`}
           styleOverrides={customSelectBoxStyles}
