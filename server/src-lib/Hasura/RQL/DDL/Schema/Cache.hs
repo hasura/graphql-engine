@@ -275,27 +275,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
                                    , "custom types are inconsistent" )
           returnA -< M.empty
 
-      -- scheduled triggers
-      -- scheduledTriggersMap <- (mapFromL _cstName scheduledTriggers >- returnA)
-      --   >-> (| Inc.keyed (\_ (CatalogScheduledTrigger{..}) -> do
-      --         let q = CreateScheduledTrigger
-      --                  _cstName
-      --                  _cstWebhookConf
-      --                  _cstScheduleConf
-      --                  _cstPayload
-      --                  (fromMaybe defaultSTRetryConf _cstRetryConf)
-      --                  (fromMaybe [] _cstHeaderConf)
-      --             definition = toJSON q
-      --             triggerName = triggerNameToTxt _cstName
-      --             metadataObject = MetadataObject (MOScheduledTrigger _cstName) definition
-      --             addScheduledTriggerContext e = "in scheduled trigger " <> triggerName <> ": " <> e
-      --         (| withRecordInconsistency (
-      --            (| modifyErrA (bindErrorA -< resolveScheduledTrigger q)
-      --             |) addScheduledTriggerContext)
-      --          |) metadataObject)
-      --      |)
-      --   >-> (\infos -> M.catMaybes infos >- returnA)
-      scheduledTriggersMap <- buildScheduledTriggers -< ((),scheduledTriggers) -- This should not be mempty
+      scheduledTriggersMap <- buildScheduledTriggers -< ((),scheduledTriggers)
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
