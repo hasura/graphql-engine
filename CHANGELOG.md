@@ -37,6 +37,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: avoid an error when calling a cached introspection query (fix #4547)
 - server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
