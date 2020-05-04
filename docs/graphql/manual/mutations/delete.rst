@@ -58,9 +58,8 @@ You can delete a single object in a table using the primary key.
 The output type is the nullable table object. The mutation returns the deleted
 row object or ``null`` if the row does not exist.
 
-**Examples:**
 
-1. Delete an article where ``id`` is ``1``:
+**Example:** Delete an article where ``id`` is ``1``:
 
 .. graphiql::
   :view_only:
@@ -85,7 +84,7 @@ row object or ``null`` if the row does not exist.
       }
     }
 
-2. Delete a non-existent article:
+**Example:** Delete a non-existent article:
 
 .. graphiql::
   :view_only:
