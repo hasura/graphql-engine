@@ -96,8 +96,6 @@
     "react-autosuggest": "^9.4.3",
     "react-bootstrap": "^0.32.1",
     "react-copy-to-clipboard": "^5.0.0",
-    "react-cron-builder": "^1.0.4",
-    "react-cron-generator": "^1.1.5",
     "react-dom": "16.8.6",
     "react-helmet": "^5.2.0",
     "react-icons": "^3.9.0",
