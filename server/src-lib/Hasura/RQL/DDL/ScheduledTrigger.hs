@@ -27,17 +27,14 @@ import qualified Data.HashMap.Strict   as Map
 
 runCreateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger ->  m EncJSON
 runCreateScheduledTrigger q = do
-  addScheduledTriggerP1
+  stMap <- scScheduledTriggers <$> askSchemaCache
+  case Map.lookup (stName q) stMap of
+    Nothing -> pure ()
+    Just _ -> throw400 AlreadyExists $
+      "scheduled trigger with name: " <> (triggerNameToTxt $ stName q) <> " already exists"
   addScheduledTriggerToCatalog q
   buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
-  where
-    addScheduledTriggerP1 = do
-      stMap <- scScheduledTriggers <$> askSchemaCache
-      case Map.lookup (stName q) stMap of
-        Nothing -> pure ()
-        Just _ -> throw400 AlreadyExists $
-          "scheduled trigger with name: " <> (triggerNameToTxt $ stName q) <> " already exists"
 
 addScheduledTriggerToCatalog :: (MonadTx m) => CreateScheduledTrigger ->  m ()
 addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
@@ -104,12 +101,10 @@ updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
 
 runDeleteScheduledTrigger :: (CacheRWM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
 runDeleteScheduledTrigger (ScheduledTriggerName stName) = do
-  deleteScheduledTriggerP1 stName
+  checkExists stName
   deleteScheduledTriggerFromCatalog stName
   withNewInconsistentObjsCheck buildSchemaCache
   return successMsg
-  where
-    deleteScheduledTriggerP1 = checkExists
 
 deleteScheduledTriggerFromCatalog :: (MonadTx m) => TriggerName -> m ()
 deleteScheduledTriggerFromCatalog stName = liftTx $ do
@@ -121,7 +116,7 @@ deleteScheduledTriggerFromCatalog stName = liftTx $ do
 
 runCreateScheduledEvent :: (CacheRM m, MonadTx m) => CreateScheduledEvent -> m EncJSON
 runCreateScheduledEvent CreateScheduledEvent{..} = do
-  createScheduledEventP1 steName
+  checkExists steName
   liftTx $ Q.unitQE defaultTxErrorHandler
     [Q.sql|
       INSERT into hdb_catalog.hdb_scheduled_events
@@ -129,15 +124,13 @@ runCreateScheduledEvent CreateScheduledEvent{..} = do
        VALUES ($1, $2, $3)
     |] (steName, steTimestamp, Q.AltJ <$> stePayload) False
   pure successMsg
-  where
-    createScheduledEventP1 = checkExists
 
 runCancelScheduledEvent :: (MonadTx m) => ScheduledEventId -> m EncJSON
 runCancelScheduledEvent (ScheduledEventId seId) = do
   affectedRows <- deleteScheduledEventFromCatalog seId
   if | affectedRows == 1 -> pure successMsg
-     | affectedRows == 0 -> throw400 NotFound "scheduled event not found"
-     | otherwise -> throw500 "unexpected: more than one scheduled events cancelled"
+     | affectedRows == 0 -> throw400 NotFound $ "scheduled event with id " <> seId <> " not found"
+     | otherwise -> throw500 $ "unexpected: more than one scheduled events found with id " <> seId
 
 deleteScheduledEventFromCatalog :: (MonadTx m) => EventId -> m Int
 deleteScheduledEventFromCatalog seId = liftTx $ do
@@ -150,11 +143,9 @@ deleteScheduledEventFromCatalog seId = liftTx $ do
 
 runTrackScheduledTrigger :: (CacheRM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
 runTrackScheduledTrigger (ScheduledTriggerName stName) = do
-  trackScheduledTriggerP1 stName
+  checkExists stName
   trackScheduledTriggerInCatalog stName
   return successMsg
-  where
-    trackScheduledTriggerP1 = checkExists
 
 trackScheduledTriggerInCatalog :: (MonadTx m) => TriggerName -> m ()
 trackScheduledTriggerInCatalog stName = liftTx $ do
@@ -167,11 +158,9 @@ trackScheduledTriggerInCatalog stName = liftTx $ do
 
 runUntrackScheduledTrigger :: (CacheRM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
 runUntrackScheduledTrigger (ScheduledTriggerName stName) = do
-  untrackScheduledTriggerP1 stName
+  checkExists stName
   untrackScheduledTriggerInCatalog stName
   return successMsg
-  where
-    untrackScheduledTriggerP1 = checkExists
 
 untrackScheduledTriggerInCatalog :: (MonadTx m) => TriggerName -> m ()
 untrackScheduledTriggerInCatalog stName = liftTx $ do
@@ -185,7 +174,6 @@ untrackScheduledTriggerInCatalog stName = liftTx $ do
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do
   stMap <- scScheduledTriggers <$> askSchemaCache
-  void $ onNothing (Map.lookup name stMap) notExistsErr
-  where
-    notExistsErr= throw400 NotExists $
+  void $ onNothing (Map.lookup name stMap) $
+    throw400 NotExists $
       "scheduled trigger with name: " <> (triggerNameToTxt name) <> " does not exist"
