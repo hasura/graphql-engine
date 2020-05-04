@@ -167,17 +167,30 @@ export const saveScheduledTrigger = (
     return dispatch(showErrorNotification(errorMsg, validationError));
   }
 
-  const upQuery = generateUpdateScheduledTriggerQuery(state);
-  const downQuery = generateUpdateScheduledTriggerQuery(
+  const isRenamed = state.name !== existingTrigger.name;
+
+  const replaceQueryUp = generateUpdateScheduledTriggerQuery(state);
+  const replaceQueryDown = generateUpdateScheduledTriggerQuery(
     parseServerScheduledTrigger(existingTrigger)
   );
+
+  const upRenameQueries = [
+    getDropScheduledTriggerQuery(existingTrigger.name),
+    generateCreateScheduledTriggerQuery(state),
+  ];
+  const downRenameQueries = [
+    getDropScheduledTriggerQuery(state.name),
+    generateCreateScheduledTriggerQuery(
+      parseServerScheduledTrigger(existingTrigger)
+    ),
+  ];
 
   const migrationName = `update_scheduled_trigger_${existingTrigger.name}_to_${state.name}`;
   const requestMsg = 'Updating scheduled trigger...';
   const successMsg = 'Updated scheduled trigger successfully';
 
   const customOnSuccess = () => {
-    if (state.name !== existingTrigger.name) {
+    if (isRenamed) {
       const newHref = window.location.href.replace(
         `${existingTrigger.name}/modify`,
         `${state.name}/modify`
@@ -205,8 +218,8 @@ export const saveScheduledTrigger = (
   return makeMigrationCall(
     dispatch,
     getState,
-    [upQuery],
-    [downQuery],
+    isRenamed ? upRenameQueries : [replaceQueryUp],
+    isRenamed ? downRenameQueries : [replaceQueryDown],
     migrationName,
     customOnSuccess,
     customOnError,
