@@ -1,5 +1,4 @@
-const path = require('path');
-const webpack = require('webpack');
+const path = require('path'); const webpack = require('webpack');
 const CleanPlugin = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 // const hasuraConfig = require('../hasuraconfig');
@@ -16,7 +15,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const nodeExternals = require('webpack-node-externals');
 
-// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const getRandomHexString = () => {
   return Math.random()
@@ -202,6 +201,6 @@ module.exports = {
     new webpack.DefinePlugin({
       CONSOLE_ASSET_VERSION: JSON.stringify(getRandomHexString()),
     }),
-    // new BundleAnalyzerPlugin()
+    new BundleAnalyzerPlugin()
   ],
 };
