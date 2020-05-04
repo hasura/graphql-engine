@@ -11,6 +11,7 @@ import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
 import           System.Environment
 import           System.Exit
 import           System.Process
+import           Data.Aeson.Internal
 
 import qualified Data.ByteString            as B
 import qualified Data.CaseInsensitive       as CI
@@ -27,6 +28,7 @@ import qualified Network.Wreq               as Wreq
 import qualified Text.Regex.TDFA            as TDFA
 import qualified Text.Regex.TDFA.ReadRegex  as TDFA
 import qualified Text.Regex.TDFA.TDFA       as TDFA
+import qualified Data.Vector                as V
 
 import           Hasura.RQL.Instances       ()
 
@@ -61,10 +63,26 @@ userIdHeader = "x-hasura-user-id"
 requestIdHeader :: IsString a => a
 requestIdHeader = "x-request-id"
 
+useBackendOnlyPermissionsHeader :: IsString a => a
+useBackendOnlyPermissionsHeader = "x-hasura-use-backend-only-permissions"
+
 getRequestHeader :: HTTP.HeaderName -> [HTTP.Header] -> Maybe B.ByteString
 getRequestHeader hdrName hdrs = snd <$> mHeader
   where
     mHeader = find (\h -> fst h == hdrName) hdrs
+
+parseStringAsBool :: String -> Either String Bool
+parseStringAsBool t
+  | map toLower t `elem` truthVals = Right True
+  | map toLower t `elem` falseVals = Right False
+  | otherwise = Left errMsg
+  where
+    truthVals = ["true", "t", "yes", "y"]
+    falseVals = ["false", "f", "no", "n"]
+
+    errMsg = " Not a valid boolean text. " ++ "True values are "
+             ++ show truthVals ++ " and  False values are " ++ show falseVals
+             ++ ". All values are case insensitive"
 
 getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
 getRequestId headers =
@@ -152,14 +170,14 @@ commonResponseHeadersIgnored =
   , "Content-Type", "Content-Length"
   ]
 
-isUserVar :: Text -> Bool
-isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
+isSessionVariable :: Text -> Bool
+isSessionVariable = T.isPrefixOf "x-hasura-" . T.toLower
 
 mkClientHeadersForward :: [HTTP.Header] -> [HTTP.Header]
 mkClientHeadersForward reqHeaders =
-  xForwardedHeaders <> (filterUserVars . filterRequestHeaders) reqHeaders
+  xForwardedHeaders <> (filterSessionVariables . filterRequestHeaders) reqHeaders
   where
-    filterUserVars = filter (\(k, _) -> not $ isUserVar $ bsToTxt $ CI.original k)
+    filterSessionVariables = filter (\(k, _) -> not $ isSessionVariable $ bsToTxt $ CI.original k)
     xForwardedHeaders = flip mapMaybe reqHeaders $ \(hdrName, hdrValue) ->
       case hdrName of
         "Host"       -> Just ("X-Forwarded-Host", hdrValue)
@@ -227,3 +245,16 @@ makeReasonMessage errors showError =
     [singleError] -> "because " <> showError singleError
     _ -> "for the following reasons:\n" <> T.unlines
          (map (("  • " <>) . showError) errors)
+
+executeJSONPath :: JSONPath -> Value -> IResult Value
+executeJSONPath jsonPath = iparse (valueParser jsonPath)
+  where
+    valueParser path value = case path of
+      []                      -> pure value
+      (pathElement:remaining) -> parseWithPathElement pathElement value >>=
+                                 ((<?> pathElement) . valueParser remaining)
+      where
+        parseWithPathElement = \case
+                  Key k   -> withObject "Object" (.: k)
+                  Index i -> withArray "Array" $
+                             maybe (fail "Array index out of range") pure . (V.!? i)

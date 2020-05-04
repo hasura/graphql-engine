@@ -49,8 +49,8 @@ func newActionsCreateCmd(ec *cli.ExecutionContext, v *viper.Viper) *cobra.Comman
 	f.String("webhook", "", "webhook to use in action")
 
 	// bind to viper
-	v.BindPFlag("actions.kind", f.Lookup("kind"))
-	v.BindPFlag("actions.handler_webhook_baseurl", f.Lookup("webhook"))
+	util.BindPFlag(v, "actions.kind", f.Lookup("kind"))
+	util.BindPFlag(v, "actions.handler_webhook_baseurl", f.Lookup("webhook"))
 
 	return actionsCreateCmd
 }
@@ -83,8 +83,8 @@ func (o *actionsCreateOptions) run() error {
 
 	// create new action
 	o.EC.Spin("Creating the action...")
-	o.EC.Spinner.Stop()
 	actionCfg := actions.New(o.EC, o.EC.MetadataDir)
+	o.EC.Spinner.Stop()
 	err = actionCfg.Create(o.name, introSchema, o.deriveFrom)
 	if err != nil {
 		return errors.Wrap(err, "error in creating action")
@@ -93,8 +93,6 @@ func (o *actionsCreateOptions) run() error {
 	if err != nil {
 		return errors.Wrap(err, "error in applying metadata")
 	}
-
-	o.EC.Spinner.Stop()
 	o.EC.Logger.WithField("name", o.name).Infoln("action created")
 
 	// if codegen config not present, skip codegen
