@@ -157,6 +157,7 @@
     "babel-loader": "8.0.6",
     "babel-plugin-istanbul": "5.2.0",
     "babel-plugin-styled-components": "1.10.7",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
     "babel-plugin-transform-react-remove-prop-types": "0.4.24",
     "bootstrap-loader": "2.2.0",
     "bootstrap-sass": "3.4.1",
