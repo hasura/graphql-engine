@@ -308,7 +308,7 @@ export const createEventTrigger = (
         successCb();
       }
       dispatch(fetchTriggers('event')).then(() => {
-        dispatch(push(getETModifyRoute()));
+        dispatch(push(getETModifyRoute(state.name)));
       });
     };
     const customOnError = () => {
