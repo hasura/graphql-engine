@@ -9,13 +9,11 @@ version:             0.1.0.0
 -- description:
 -- bug-reports:
 -- license:
-license-file:        LICENSE
 author:              Nizar Malangadan
 maintainer:          nizar-m@users.noreply.github.com
 -- copyright:
 -- category:
 build-type:          Simple
-extra-source-files:  CHANGELOG.md
 
 executable wrk-websocket-server
   ghc-options:         -Wall -Wcompat
