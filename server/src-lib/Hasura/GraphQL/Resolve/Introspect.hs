@@ -253,8 +253,11 @@ namedTypeR' fld tyInfo = do
     TIIFace iFaceTyInfo   -> ifaceR' iFaceTyInfo fld
     TIUnion unionTyInfo   -> unionR unionTyInfo fld
   where
-    readIncludeDeprecated subFld = void $ do
-      openOpaqueValue =<< asPGColumnValue =<< getArg (_fArguments subFld) "includeDeprecated"
+    readIncludeDeprecated subFld = do
+      let argM = Map.lookup "includeDeprecated" (_fArguments subFld)
+      case argM of
+        Nothing -> return ()
+        Just arg -> void $ openOpaqueValue =<< asPGColumnValue arg
 
 -- 4.5.3
 fieldR
