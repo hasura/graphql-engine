@@ -29,7 +29,7 @@ import {
   EventTrigger,
 } from './Types';
 import { setScheduledTriggers, setEventTriggers, setTriggers } from './reducer';
-import { LocalScheduledTriggerState } from './ScheduledTriggers/Add/state';
+import { LocalScheduledTriggerState } from './ScheduledTriggers/state';
 import {
   LocalEventTriggerState,
   parseServerETDefinition,

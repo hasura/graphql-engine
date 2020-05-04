@@ -1,5 +1,5 @@
 import { terminateSql } from './sqlUtils';
-import { LocalScheduledTriggerState } from '../../Services/Events/ScheduledTriggers/Add/state';
+import { LocalScheduledTriggerState } from '../../Services/Events/ScheduledTriggers/state';
 import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
 import { transformHeaders } from '../Headers/utils';
 import { generateTableDef } from './pgUtils';

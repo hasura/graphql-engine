@@ -1,6 +1,6 @@
 import React from 'react';
-import { Header, defaultHeader } from '../../../../Common/Headers/Headers';
-import { ScheduleTriggerType, URLType, URLConf, RetryConf } from '../../Types';
+import { Header, defaultHeader } from '../../../Common/Headers/Headers';
+import { ScheduleTriggerType, URLType, URLConf, RetryConf } from '../Types';
 
 export const defaultCronExpr = '2 * * * *';
 
@@ -40,7 +40,7 @@ const defaultState: LocalScheduledTriggerState = {
   },
 };
 
-export const useScheduledTriggerAdd = (
+export const useScheduledTrigger = (
   initState?: LocalScheduledTriggerState
 ) => {
   const [state, setState] = React.useState(initState || defaultState);

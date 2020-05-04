@@ -13,7 +13,12 @@ type ModifyProps = {
   readOnlyMode: boolean;
 };
 
-const ModifyContainer = ({ dispatch, allTriggers, params }: ModifyProps) => {
+const ModifyContainer = ({
+  dispatch,
+  allTriggers,
+  params,
+  readOnlyMode,
+}: ModifyProps) => {
   const triggerName = params ? params.triggerName : '';
   return (
     <STContainer
@@ -22,7 +27,11 @@ const ModifyContainer = ({ dispatch, allTriggers, params }: ModifyProps) => {
       triggerName={triggerName}
       allTriggers={allTriggers}
     >
-      <Modify dispatch={dispatch} />
+      {readOnlyMode ? (
+        'Cannot modify in read-only mode'
+      ) : (
+        <Modify dispatch={dispatch} />
+      )}
     </STContainer>
   );
 };
