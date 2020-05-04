@@ -54,6 +54,11 @@ Here's how a GraphQL query is processed in JWT mode:
 .. thumbnail:: ../../../../img/graphql/manual/auth/auth-jwt-overview.png
    :alt: Authentication using JWT
 
+3. Admin secret
+^^^^^^^^^^^^^^^
+
+An admin secret is added to prevent admin access for the Hasura console through third parties.
+
 **See more details at:**
 
 .. toctree::
@@ -61,4 +66,5 @@ Here's how a GraphQL query is processed in JWT mode:
 
   Using webhooks <webhook>
   Using JWT <jwt>
+  Using admin secret <admin-secret>
   Unauthenticated access <unauthenticated-access>

@@ -22,6 +22,10 @@ access to your GraphQL endpoint and the Hasura console:
 - :ref:`For Docker <docker_secure>`
 - :ref:`For Kubernetes <kubernetes_secure>`
 
+.. admonition:: Limitations
+
+  There is no direct length limit for the admin secret apart from the HTTP header size set by the webserver/gateway which defaults to 5MB on Hasura.
+
 .. note::
 
   If you're looking at adding access control rules for your data to your GraphQL API then head
