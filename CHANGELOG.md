@@ -8,7 +8,7 @@ A scheduled trigger can be used to execute custom business logic based on time. 
 
 A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to  generate an end-of-day sales report every weekday at 9pm.
 
-You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience. 
+You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience.
 
 <Add docs links>
 
@@ -51,6 +51,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 (Add entries here in the order of: server, console, cli, docs, others)
 - server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
 
+- server: cache default variables for non-optional variables better (fix #3773)
 - server: avoid loss of precision when passing values in scientific notation (fix #4733)
 - server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
 - console: avoid count queries for large tables (#4692)
