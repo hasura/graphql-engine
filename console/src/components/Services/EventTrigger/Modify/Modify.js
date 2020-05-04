@@ -3,6 +3,8 @@ import TableHeader from '../TableCommon/TableHeader';
 import styles from './ModifyEvent.scss';
 
 import { getTableColumns } from '../utils';
+import { updateSchemaInfo } from '../../Data/DataActions';
+import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 
 import Info from './Info';
 import WebhookEditor from './WebhookEditor';
@@ -17,8 +19,18 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 
 class Modify extends React.Component {
   componentDidMount() {
-    const { dispatch } = this.props;
+    const { dispatch, currentTrigger } = this.props;
     dispatch(setDefaults());
+    dispatch(
+      updateSchemaInfo({
+        tables: [
+          {
+            table_name: currentTrigger.table_name,
+            table_schema: currentTrigger.table_schema,
+          },
+        ],
+      })
+    );
   }
 
   componentWillUnmount() {
@@ -32,14 +44,11 @@ class Modify extends React.Component {
     const {
       modifyTriggerName,
       modifyTrigger,
-      triggerList,
       readOnlyMode,
       dispatch,
+      allSchemas,
+      currentTrigger,
     } = this.props;
-
-    const currentTrigger = triggerList.find(
-      tr => tr.name === modifyTriggerName
-    );
 
     if (!currentTrigger) {
       // throw a 404 exception
@@ -53,6 +62,11 @@ class Modify extends React.Component {
       webhook_from_env,
       retry_conf,
     } = currentTrigger.configuration;
+
+    const triggerTableSchema = findTable(
+      allSchemas,
+      generateTableDef(currentTrigger.table_name, currentTrigger.table_schema)
+    );
 
     return (
       <div className={styles.containerWhole + ' container-fluid'}>
@@ -81,7 +95,7 @@ class Modify extends React.Component {
           />
           <OperationEditor
             definition={definition}
-            allTableColumns={getTableColumns(currentTrigger)}
+            allTableColumns={getTableColumns(triggerTableSchema)}
             dispatch={dispatch}
             modifyTrigger={modifyTrigger}
             newDefinition={null}

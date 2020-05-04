@@ -8,13 +8,12 @@ import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 import TryItOut from '../../Common/Landing/TryItOut';
+import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 
-const appPrefix = globals.urlPrefix + '/events';
+const appPrefix = `${globals.urlPrefix}/events`;
 
 const EventTrigger = (props: { dispatch: any }) => {
   const { dispatch } = props;
-
-  const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
   const queryDefinition = `mutation {
 insert_user(objects: [{name: "testuser"}] ){

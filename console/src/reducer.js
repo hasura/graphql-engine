@@ -1,11 +1,11 @@
 import { combineReducers } from 'redux';
 import { routerReducer } from 'react-router-redux';
 import { dataReducer } from './components/Services/Data';
-import { eventReducer } from './components/Services/EventTrigger';
 import { remoteSchemaReducer } from './components/Services/RemoteSchema';
 import { actionsReducer } from './components/Services/Actions';
 import { typesReducer } from './components/Services/Types';
-import { triggersReducer } from './components/Services/Triggers';
+import { eventsReducer } from './components/Services/Events';
+import invokeEventTriggerReducer from './components/Services/Events/InvokeManualTrigger/InvokeManualTriggerAction';
 import mainReducer from './components/Main/Actions';
 import apiExplorerReducer from 'components/Services/ApiExplorer/Actions';
 import progressBarReducer from 'components/App/Actions';
@@ -16,7 +16,6 @@ import { reducer as notifications } from 'react-notification-system-redux';
 
 const reducer = combineReducers({
   ...dataReducer,
-  ...eventReducer,
   remoteSchemas: remoteSchemaReducer,
   actions: actionsReducer,
   progressBar: progressBarReducer,
@@ -27,7 +26,8 @@ const reducer = combineReducers({
   notifications,
   metadata: metadataReducer,
   types: typesReducer,
-  triggers: triggersReducer,
+  events: eventsReducer,
+  invokeEventTrigger: invokeEventTriggerReducer,
 });
 
 export default reducer;

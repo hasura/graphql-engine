@@ -25,3 +25,8 @@ declare module 'react-cron-generator' {
   export { CronBuilderProps };
   export default CronBuilder;
 }
+declare namespace SvgPanZoom {
+  export interface Instance {}
+}
+
+declare module 'react-bootstrap/lib/Tooltip';

@@ -79,8 +79,8 @@ export const showValidationError = message => {
 
 export const save = (property, triggerName) => {
   return (dispatch, getState) => {
-    const { modifyTrigger } = getState();
-    const oldTrigger = getState().triggers.triggerList.find(
+    const { modifyTrigger } = getState().events.legacy;
+    const oldTrigger = getState().events.new.triggers.find(
       tr => tr.name === triggerName
     );
     const downPayload = {

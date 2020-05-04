@@ -1,5 +1,6 @@
 import { terminateSql } from './sqlUtils';
-import { LocalScheduledTriggerState } from '../../Services/Triggers/ScheduledTriggers/Add/state';
+import { LocalScheduledTriggerState } from '../../Services/Events/ScheduledTriggers/Add/state';
+import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
 import { transformHeaders } from '../Headers/utils';
 import { generateTableDef } from './pgUtils';
 
@@ -7,11 +8,14 @@ import { generateTableDef } from './pgUtils';
 
 // TODO extend all queries with v1 query type
 
-type WhereClause = any;
+export type WhereClause = any;
 
-type OrderBy = {
+export type OrderByType = 'asc' | 'desc';
+
+export type OrderBy = {
   column: string;
-  type: 'asc' | 'desc';
+  type: OrderByType;
+  nulls?: 'last' | 'first';
 };
 
 export type TableDefinition = {
@@ -58,11 +62,11 @@ export const getCreatePermissionQuery = (
   permission: any
 ) => {
   return {
-    type: 'create_' + action + '_permission',
+    type: `create_${action}_permission`,
     args: {
       table: tableDef,
-      role: role,
-      permission: permission,
+      role,
+      permission,
     },
   };
 };
@@ -73,10 +77,10 @@ export const getDropPermissionQuery = (
   role: string
 ) => {
   return {
-    type: 'drop_' + action + '_permission',
+    type: `drop_${action}_permission`,
     args: {
       table: tableDef,
-      role: role,
+      role,
     },
   };
 };
@@ -323,7 +327,7 @@ export const getAddComputedFieldQuery = (
       definition: {
         ...definition,
       },
-      comment: comment,
+      comment,
     },
   };
 };
@@ -456,6 +460,50 @@ export const getBulkQuery = (args: any[]) => {
   };
 };
 
+export const generateCreateEventTriggerQuery = (
+  state: LocalEventTriggerState,
+  replace = false
+) => {
+  return {
+    type: 'create_event_trigger',
+    args: {
+      name: state.name.trim(),
+      table: state.table,
+      webhook:
+        state.webhook.type === 'static' ? state.webhook.value.trim() : null,
+      webhook_from_env:
+        state.webhook.type === 'env' ? state.webhook.value.trim() : null,
+      insert: state.operations.insert
+        ? {
+            columns: '*',
+          }
+        : null,
+      update: state.operations.update
+        ? {
+            columns: state.operationColumns.map(c => c.name),
+            payload: state.operationColumns.map(c => c.name),
+          }
+        : null,
+      delete: state.operations.delete
+        ? {
+            columns: '*',
+          }
+        : null,
+      enable_manual: state.operations.enable_manual,
+      retry_conf: state.retryConf,
+      headers: transformHeaders(state.headers),
+      replace,
+    },
+  };
+};
+
+export const getDropEventTriggerQuery = (name: string) => ({
+  type: 'delete_event_trigger',
+  args: {
+    name: name.trim(),
+  },
+});
+
 export const generateCreateScheduledTriggerQuery = (
   state: LocalScheduledTriggerState
 ) => ({
@@ -514,16 +562,19 @@ export const getCreateScheduledEventQuery = (triggerName: string) => {
   };
 };
 
+export type SelectColumn = string | { name: string; columns: SelectColumn[] };
+
 export const getSelectQuery = (
+  type: 'select' | 'count',
   table: TableDefinition,
-  columns: string[],
+  columns: SelectColumn[],
   where?: WhereClause,
   offset?: number,
   limit?: number,
   order_by?: OrderBy[]
 ) => {
   return {
-    type: 'select',
+    type,
     args: {
       table,
       columns,
@@ -542,6 +593,7 @@ export const getFetchInvocationLogsQuery = (
   limit?: number
 ) => {
   return getSelectQuery(
+    'select',
     generateTableDef('hdb_scheduled_event_invocation_logs', 'hdb_catalog'),
     ['*'],
     where,
@@ -552,3 +604,23 @@ export const getFetchInvocationLogsQuery = (
 };
 
 export type SelectQueryGenerator = typeof getFetchInvocationLogsQuery;
+
+export const getFetchManualTriggersQuery = (tableDef: TableDefinition) =>
+  getSelectQuery(
+    'select',
+    generateTableDef('event_triggers', 'hdb_catalog'),
+    ['*'],
+    {
+      table_name: tableDef.name,
+      schema_name: tableDef.schema,
+    },
+    undefined,
+    undefined,
+    [
+      {
+        column: 'name',
+        type: 'asc',
+        nulls: 'last',
+      },
+    ]
+  );

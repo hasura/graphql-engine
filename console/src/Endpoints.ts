@@ -4,7 +4,7 @@ const baseUrl = globals.dataApiUrl;
 const hasuractlApiHost = globals.apiHost;
 const hasuractlApiPort = globals.apiPort;
 
-const hasuractlUrl = hasuractlApiHost + ':' + hasuractlApiPort;
+const hasuractlUrl = `${hasuractlApiHost}:${hasuractlApiPort}`;
 
 const Endpoints = {
   getSchema: `${baseUrl}/v1/query`,
@@ -21,7 +21,7 @@ const Endpoints = {
   telemetryServer: 'wss://telemetry.hasura.io/v1/ws',
 };
 
-const globalCookiePolicy = 'omit';
+const globalCookiePolicy = 'same-origin';
 
 export default Endpoints;
 export { globalCookiePolicy, baseUrl, hasuractlUrl };

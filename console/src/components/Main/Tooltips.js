@@ -5,7 +5,6 @@ export const actions = 'Manage Actions';
 export const apiExplorer = 'Test the GraphQL APIs';
 
 export const events = 'Manage Event Triggers';
-export const scheduled = 'Manage Event Triggers';
 
 export const remoteSchema = 'Manage Remote Schemas';
 
