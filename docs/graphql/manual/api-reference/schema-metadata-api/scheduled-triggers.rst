@@ -40,7 +40,7 @@ create_scheduled_trigger_cron
        }
    }
 
-.. _create_scheduled_trigger_syntax:
+.. _create_scheduled_trigger_cron_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -200,7 +200,7 @@ Args syntax
 .. _fetch_scheduled_trigger_cron_events:
 
 fetch_scheduled_trigger_cron_events
------------------------------
+-----------------------------------
 
 ``fetch_scheduled_trigger_cron_events`` is used to fetch scheduled events of an existing scheduled trigger.
 
@@ -311,8 +311,10 @@ Args syntax
      - Text
      - Custom comment.
 
+.. _fetch_scheduled_trigger_one_off:
+
 fetch_scheduled_trigger_one_off
------------------------------
+-------------------------------
 
 ``fetch_scheduled_trigger_one_off`` is used to fetch the scheduled one-off triggers.
 

@@ -226,35 +226,60 @@ The various types of queries are listed in the following table:
      - 1
      - Invoke a trigger with custom payload
 
-   * - :ref:`create_scheduled_trigger`
-     - :ref:`create_scheduled_trigger_args <create_scheduled_trigger_syntax>`
+   * - :ref:`create_scheduled_trigger_cron`
+     - :ref:`create_scheduled_trigger_cron_args <create_scheduled_trigger_cron_syntax>`
      - 1
-     - Create a scheduled trigger
+     - Create a cron scheduled trigger
 
-   * - :ref:`update_scheduled_trigger`
-     - :ref:`update_scheduled_trigger_args <update_scheduled_trigger_syntax>`
+   * - :ref:`update_scheduled_trigger_cron`
+     - :ref:`update_scheduled_trigger_cron_args <update_scheduled_trigger_cron_syntax>`
      - 1
-     - Update an existing scheduled trigger
+     - Update an existing cron scheduled trigger
 
-   * - :ref:`delete_scheduled_trigger`
-     - :ref:`delete_scheduled_trigger_args <delete_scheduled_trigger_syntax>`
+   * - :ref:`delete_scheduled_trigger_cron`
+     - :ref:`delete_scheduled_trigger_cron_args <delete_scheduled_trigger_cron_syntax>`
      - 1
-     - Delete an existing scheduled trigger
+     - Delete an existing cron scheduled trigger
 
-   * - :ref:`invoke_scheduled_trigger`
-     - :ref:`invoke_scheduled_trigger_args <invoke_scheduled_trigger_syntax>`
+   * - :ref:`fetch_scheduled_trigger_cron_events`
+     - :ref:`fetch_scheduled_trigger_cron_events_args <fetch_scheduled_trigger_cron_events_syntax>`
      - 1
-     - Create a new invocation of an existing scheduled trigger
+     - Fetch events of an existing cron scheduled trigger
 
-   * - :ref:`fetch_scheduled_events`
-     - :ref:`fetch_scheduled_events_args <fetch_scheduled_events_syntax>`
+   * - :ref:`create_scheduled_trigger_one_off`
+     - :ref:`create_scheduled_trigger_one_off_args <create_scheduled_trigger_one_off_syntax>`
      - 1
-     - Create a new invocation of an existing scheduled trigger
+     - Create a one-off scheduled trigger
 
-   * - :ref:`cancel_scheduled_event`
-     - :ref:`cancel_scheduled_event_args <cancel_scheduled_event_syntax>`
+   * - :ref:`fetch_scheduled_trigger_one_off`
+     - :ref:`fetch_scheduled_trigger_one_off_args <fetch_scheduled_trigger_one_off_syntax>`
      - 1
-     - Cancel a particular event of a scheduled trigger
+     - Fetch the one-off scheduled triggers
+
+   * - :ref:`create_scheduled_trigger_one_off_template`
+     - :ref:`create_scheduled_trigger_one_off_template_args <create_scheduled_trigger_one_off_template_syntax>`
+     - 1
+     - Create a one_off scheduled trigger template
+
+   * - :ref:`update_scheduled_trigger_one_off_template`
+     - :ref:`update_scheduled_trigger_one_off_template_args <update_scheduled_trigger_one_off_template_syntax>`
+     - 1
+     - Update an existing one_off scheduled trigger template
+
+   * - :ref:`invoke_scheduled_trigger_one_off_template`
+     - :ref:`invoke_scheduled_trigger_one_off_template_args <invoke_scheduled_trigger_one_off_template_syntax>`
+     - 1
+     - Invoke an existing scheduled trigger one-off template
+
+   * - :ref:`delete_scheduled_trigger_one_off_template`
+     - :ref:`delete_scheduled_trigger_one_off_template_args <delete_scheduled_trigger_one_off_template_syntax>`
+     - 1
+     - Delete an existing one_off template scheduled trigger template
+
+   * - :ref:`fetch_scheduled_trigger_one_off_template_events`
+     - :ref:`fetch_scheduled_trigger_one_off_template_events_args <fetch_scheduled_trigger_one_off_template_events_syntax>`
+     - 1
+     - Fetch events of an one_off_template scheduled trigger template
 
    * - :ref:`add_remote_schema`
      - :ref:`add_remote_schema_args <add_remote_schema_syntax>`
