@@ -4,11 +4,8 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , runDeleteScheduledTrigger
   , runCreateScheduledEvent
   , runCancelScheduledEvent
-  , runTrackScheduledTrigger
-  , runUntrackScheduledTrigger
   , addScheduledTriggerToCatalog
   , deleteScheduledTriggerFromCatalog
-  , trackScheduledTriggerInCatalog
   , resolveScheduledTrigger
   , runFetchEventsOfScheduledTrigger
   ) where
@@ -52,10 +49,10 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
   Q.unitQE defaultTxErrorHandler
     [Q.sql|
       INSERT into hdb_catalog.hdb_scheduled_trigger
-        (name, webhook_conf, schedule_conf, payload, retry_conf, header_conf)
-      VALUES ($1, $2, $3, $4, $5, $6)
+        (name, webhook_conf, schedule_conf, payload, retry_conf, header_conf, include_in_metadata)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
     |] (stName, Q.AltJ stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
-       ,Q.AltJ stHeaders) False
+       ,Q.AltJ stHeaders, stIncludeInMetadata) False
   case stSchedule of
     AdHoc Nothing -> pure ()
     AdHoc (Just timestamp) -> Q.unitQE defaultTxErrorHandler
@@ -87,8 +84,6 @@ resolveScheduledTrigger CatalogScheduledTrigger {..} = do
     retryConf = fromMaybe defaultSTRetryConf _cstRetryConf
 
     headers = fromMaybe [] _cstHeaderConf
-
-
 
 runUpdateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger -> m EncJSON
 runUpdateScheduledTrigger q = do
@@ -162,12 +157,6 @@ deleteScheduledEventFromCatalog seId = liftTx $ do
     SELECT count(*) FROM "cte"
    |] (Identity seId) False
 
-runTrackScheduledTrigger :: (CacheRM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
-runTrackScheduledTrigger (ScheduledTriggerName stName) = do
-  checkExists stName
-  trackScheduledTriggerInCatalog stName
-  return successMsg
-
 runFetchEventsOfScheduledTrigger
     :: (CacheRM m, MonadTx m) => FetchEventsScheduledTrigger -> m EncJSON
 runFetchEventsOfScheduledTrigger (FetchEventsScheduledTrigger stName stOffset stLimit) = do
@@ -185,30 +174,6 @@ runFetchEventsOfScheduledTrigger (FetchEventsScheduledTrigger stName stOffset st
   where
     uncurryScheduledEvent (seId,name,scheduledTime,payload,status,tries) =
       ScheduledEventDb seId name scheduledTime (Q.getAltJ <$> payload) status tries
-
-trackScheduledTriggerInCatalog :: (MonadTx m) => TriggerName -> m ()
-trackScheduledTriggerInCatalog stName = liftTx $ do
-  Q.unitQE defaultTxErrorHandler
-   [Q.sql|
-    UPDATE hdb_catalog.hdb_scheduled_trigger
-    SET include_in_metadata = 't'
-    WHERE name = $1
-   |] (Identity stName) False
-
-runUntrackScheduledTrigger :: (CacheRM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
-runUntrackScheduledTrigger (ScheduledTriggerName stName) = do
-  checkExists stName
-  untrackScheduledTriggerInCatalog stName
-  return successMsg
-
-untrackScheduledTriggerInCatalog :: (MonadTx m) => TriggerName -> m ()
-untrackScheduledTriggerInCatalog stName = liftTx $ do
-  Q.unitQE defaultTxErrorHandler
-   [Q.sql|
-    UPDATE hdb_catalog.hdb_scheduled_trigger
-    SET include_in_metadata = 'f'
-    WHERE name = $1
-   |] (Identity stName) False
 
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do

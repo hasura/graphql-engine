@@ -30,8 +30,7 @@ import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
 import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaToCatalog, fetchRemoteSchemas,
                                                      removeRemoteSchemaFromCatalog)
 import           Hasura.RQL.DDL.ScheduledTrigger    (addScheduledTriggerToCatalog,
-                                                     deleteScheduledTriggerFromCatalog,
-                                                     trackScheduledTriggerInCatalog)
+                                                     deleteScheduledTriggerFromCatalog)
 import           Hasura.RQL.DDL.Schema.Catalog      (saveTableToCatalog)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -203,7 +202,6 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
   withPathK "scheduled_triggers" $
     indexedForM_ scheduledTriggers $ \st -> liftTx $ do
     addScheduledTriggerToCatalog st
-    trackScheduledTriggerInCatalog (stName st)
 
   -- actions
   withPathK "actions" $
