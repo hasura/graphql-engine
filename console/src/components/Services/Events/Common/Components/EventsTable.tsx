@@ -100,8 +100,6 @@ const EventsTable = (props: Props) => {
     };
   });
 
-  console.log(count ? Math.ceil(count / filterState.limit) : 1);
-
   return (
     <ReactTable
       className="-highlight"

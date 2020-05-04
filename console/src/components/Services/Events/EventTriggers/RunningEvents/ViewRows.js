@@ -224,10 +224,6 @@ const ViewRows = ({
       });
     });
 
-    console.log('=============');
-    console.log(newCurRows);
-    console.log('=============');
-
     return (
       <ReactTable
         className="-highlight"

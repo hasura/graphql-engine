@@ -507,7 +507,6 @@ export const invokeScheduledTrigger = (
       }
     },
     (error: any) => {
-      console.log(error);
       dispatch(
         showErrorNotification('Unable to invoke trigger', error.message || '')
       );

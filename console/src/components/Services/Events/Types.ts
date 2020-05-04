@@ -49,7 +49,12 @@ export type ScheduledTrigger = {
   payload: any;
   webhook_conf: WebhookConf;
   schedule_conf: ScheduleConf;
-  retry_conf: RetryConf;
+  retry_conf: {
+    num_retries: number;
+    retry_interval_seconds: number;
+    timeout_seconds: number;
+    tolerance_seconds: number;
+  };
 };
 
 export type EventTriggerOperationDefinition = {

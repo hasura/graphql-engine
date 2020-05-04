@@ -43,7 +43,9 @@ export const findScheduledTrigger = (
   return triggers.scheduled.find(t => t.name === triggerName);
 };
 
-export const parseServerScheduledTrigger = (trigger: ScheduledTrigger) => {
+export const parseServerScheduledTrigger = (
+  trigger: ScheduledTrigger
+): LocalScheduledTriggerState => {
   return {
     name: trigger.name,
     webhook: {
@@ -60,6 +62,12 @@ export const parseServerScheduledTrigger = (trigger: ScheduledTrigger) => {
     payload: JSON.stringify(trigger.payload),
     headers: parseServerHeaders(trigger.header_conf),
     loading: false,
+    retryConf: {
+      timeout_sec: trigger.retry_conf.timeout_seconds,
+      interval_sec: trigger.retry_conf.retry_interval_seconds,
+      num_retries: trigger.retry_conf.num_retries,
+      tolerance_sec: trigger.retry_conf.tolerance_seconds,
+    },
   };
 };
 

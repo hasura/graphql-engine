@@ -2,6 +2,7 @@ import React from 'react';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import { EventTrigger, RetryConf } from '../../Types';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
+import CommonRetryConf from '../../Common/Components/RetryConfEditor';
 
 type Callback = () => void;
 
@@ -20,18 +21,6 @@ const RetryConfEditor = (props: RetryConfEditorProps) => {
 
   const reset = () => {
     setRetryConf(existingConf);
-  };
-
-  const handleChange = (e: React.BaseSyntheticEvent) => {
-    const label = e.target.name;
-    const value = e.target.value;
-    console.log('Handling change');
-    console.log(label);
-    console.log(value);
-    setRetryConf({
-      ...conf,
-      [label]: parseInt(value, 10),
-    });
   };
 
   const collapsed = () => (
@@ -62,53 +51,7 @@ const RetryConfEditor = (props: RetryConfEditorProps) => {
   );
 
   const expanded = () => (
-    <div className={styles.modifyOpsPadLeft}>
-      <div className={styles.modifyOpsCollapsedContent1}>
-        <div className={`col-md-4 ${styles.padd_remove}`}>
-          Number of retries: &nbsp;
-        </div>
-        <div className="col-md-12">
-          <input
-            type="number"
-            min="0"
-            className={`${styles.input} form-control ${styles.add_mar_right} ${styles.modifyRetryConfTextbox}`}
-            value={conf.num_retries}
-            name="num_retries"
-            onChange={handleChange}
-          />
-        </div>
-      </div>
-      <div className={styles.modifyOpsCollapsedContent1}>
-        <div className={`col-md-4 ${styles.padd_remove}`}>
-          Retry interval (sec):&nbsp;
-        </div>
-        <div className="col-md-12">
-          <input
-            type="number"
-            min="0"
-            className={`${styles.input} form-control ${styles.add_mar_right} ${styles.modifyRetryConfTextbox}`}
-            value={conf.interval_sec}
-            name="interval_sec"
-            onChange={handleChange}
-          />
-        </div>
-      </div>
-      <div className={styles.modifyOpsCollapsedContent1}>
-        <div className={`col-md-4 ${styles.padd_remove}`}>
-          Timeout (sec):&nbsp;
-        </div>
-        <div className="col-md-12">
-          <input
-            type="number"
-            min="0"
-            className={`${styles.input} form-control ${styles.add_mar_right} ${styles.modifyRetryConfTextbox}`}
-            value={conf.timeout_sec}
-            name="timeout_sec"
-            onChange={handleChange}
-          />
-        </div>
-      </div>
-    </div>
+    <CommonRetryConf retryConf={conf} setRetryConf={setRetryConf} />
   );
 
   return (

@@ -173,8 +173,6 @@ export const useInvocationLogs = (
     ).then(
       (data: InvocationLog[]) => {
         if (data.length) {
-          console.log(data[0].id);
-          console.log(getNewestId());
           if (data[0].id !== getNewestId()) {
             setNewLogsExist(true);
           }
