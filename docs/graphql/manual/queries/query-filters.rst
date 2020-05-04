@@ -1700,7 +1700,7 @@ The expression ``{}`` evaluates to ``true`` for all objects.
 - any query with the condition ``{ where: {} }`` will return all objects without
   applying any filter.
 
-- any query with the condition ``{ where: {nested_object: {}} }`` will return all
+- any query with the condition ``{ where: { nested_object: {} } }`` will return all
   objects for which atleast one ``nested_object`` exists.
 
 .. _null_value_evaluation:
