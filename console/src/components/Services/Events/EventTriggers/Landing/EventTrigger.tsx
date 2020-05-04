@@ -7,10 +7,9 @@ import { push } from 'react-router-redux';
 import globals from '../../../../../Globals';
 import Button from '../../../../Common/Button/Button';
 import TopicDescription from '../../../Common/Landing/TopicDescription';
+import { getAddETRoute } from '../../../../Common/utils/routesUtils';
 import TryItOut from '../../../Common/Landing/TryItOut';
 import styles from '../../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
-
-const appPrefix = `${globals.urlPrefix}/events`;
 
 const EventTrigger = (props: { dispatch: any }) => {
   const { dispatch } = props;
@@ -37,9 +36,8 @@ insert_user(objects: [{name: "testuser"}] ){
   const getAddBtn = () => {
     const handleClick = (e: React.BaseSyntheticEvent) => {
       e.preventDefault();
-      dispatch(push(`${appPrefix}/triggers/events/add`));
+      dispatch(push(getAddETRoute()));
     };
-    console.log(handleClick);
 
     return (
       <Button
@@ -47,7 +45,7 @@ insert_user(objects: [{name: "testuser"}] ){
         color="yellow"
         size="sm"
         className={styles.add_mar_left}
-        onClick={() => 'something'}
+        onClick={handleClick}
       >
         Create
       </Button>
