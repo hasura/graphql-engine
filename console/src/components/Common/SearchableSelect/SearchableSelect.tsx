@@ -1,4 +1,4 @@
-import React, { ReactText } from 'react';
+import React, { ReactText, useState, useMemo } from 'react';
 import Select, {
   components,
   createFilter,
@@ -24,15 +24,14 @@ const CustomOption: React.FC<OptionProps<OptionTypeBase>> = props => {
 
 type Props = {
   options: OptionTypeBase | ReactText[];
-  onChange: (value: ValueType<OptionTypeBase>) => void;
+  onChange: (value: ValueType<OptionTypeBase> | string) => void;
   value?: Option | string;
-  bsClass: string;
-  styleOverrides: Record<PropertyKey, any>;
+  bsClass?: string;
+  styleOverrides?: Record<PropertyKey, any>;
   placeholder: string;
   filterOption: 'prefix' | 'fulltext';
-  onInputChange?: (v: string) => void;
-  isClearable?: boolean;
-  onMenuClose?: () => void;
+  isCreatable?: boolean;
+  createNewOption?: (v: string) => ValueType<OptionTypeBase>;
 };
 const SearchableSelect: React.FC<Props> = ({
   options,
@@ -42,9 +41,29 @@ const SearchableSelect: React.FC<Props> = ({
   styleOverrides,
   placeholder,
   filterOption,
-  onInputChange,
-  onMenuClose,
+  isCreatable,
+  createNewOption,
 }) => {
+  const [searchValue, setSearchValue] = useState<string | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
+
+  const inputValue = useMemo(() => {
+    // if input is not focused we don't want to show inputValue
+    if (!isFocused) return;
+
+    // if user is searching we don't want to control the input
+    if (searchValue !== null) return;
+
+    // otherwise we display last selected option
+    // this way typing after selecting an options is allowed
+    return typeof value === 'string' ? value : value?.label;
+  }, [searchValue, value, isFocused]);
+
+  const onMenuClose = () => {
+    if (searchValue && createNewOption) onChange(createNewOption(searchValue));
+    setSearchValue(null);
+  };
+
   const customStyles: Record<string, any> = {};
   if (styleOverrides) {
     Object.keys(styleOverrides).forEach(comp => {
@@ -78,19 +97,29 @@ const SearchableSelect: React.FC<Props> = ({
     value = { value: value as string, label: value as string };
   }
 
+  if (isCreatable && createNewOption) {
+    if (searchValue) {
+      options = [createNewOption(searchValue), ...(options as Option[])];
+    }
+  }
+
   return (
     <Select
       isSearchable
+      blurInputOnSelect
       components={{ Option: CustomOption }}
       classNamePrefix={bsClass}
       placeholder={placeholder}
       options={options as Option[]}
       onChange={onChange}
       value={value as Option}
-      styles={customStyles}
-      filterOption={customFilter}
-      onInputChange={onInputChange}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
+      inputValue={inputValue}
+      onInputChange={s => setSearchValue(s)}
       onMenuClose={onMenuClose}
+      styles={customStyles}
+      filterOption={searchValue ? customFilter : null}
     />
   );
 };

@@ -1,12 +1,6 @@
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 
 import SearchableSelect from '../../../../Common/SearchableSelect/SearchableSelect';
-
-const createOpt = (prevValue: string, index: number) => ({
-  value: prevValue,
-  label: prevValue,
-  colIdentifier: index,
-});
 
 type Option = {
   value: string;
@@ -33,25 +27,19 @@ export const ColumnTypeSelector: React.FC<Props> = ({
   styleOverrides,
   colIdentifier,
 }) => {
-  const [searchValue, setSearchValue] = useState('');
-
-  // Treating last search value as selected option.
-  // This way user doesn't have to click in the dropdown to select a newly created option,
-  // they can leave the input — close the menu
-  const onMenuClose = () => {
-    if (searchValue !== '') onChange(createOpt(searchValue, colIdentifier));
-    setSearchValue('');
-  };
-
-  // Creating new option based on input
-  if (searchValue !== '') {
-    options = [createOpt(searchValue, colIdentifier), ...options];
-  }
+  const createOpt = useCallback(
+    (prevValue: string) => ({
+      value: prevValue,
+      label: prevValue,
+      colIdentifier,
+    }),
+    [colIdentifier]
+  );
 
   return (
     <SearchableSelect
-      onInputChange={(v: string) => setSearchValue(v)}
-      onMenuClose={onMenuClose}
+      isCreatable
+      createNewOption={createOpt}
       options={options}
       onChange={onChange}
       value={value}
