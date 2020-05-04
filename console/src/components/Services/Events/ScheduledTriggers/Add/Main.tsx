@@ -12,9 +12,6 @@ import Button from '../../../../Common/Button/Button';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import Headers from '../../../../Common/Headers/Headers';
 import RetryConf from '../../Common/Components/RetryConfEditor';
-import CronBuilder from '../../../../Common/CronBuilder/CronBuilder';
-import { stripNonStandardElements } from '../../../../Common/CronBuilder/utils';
-import Modal from '../../../../Common/Modal/Modal';
 import { addScheduledTrigger } from '../../ServerIO';
 import { ReduxState } from '../../../../../Types';
 
@@ -25,22 +22,7 @@ type AddScheduledTriggerProps = {
 
 const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
   const { state, setState } = useScheduledTriggerAdd(initState);
-  const [cronBuilderState, setCronBuilderState] = React.useState(
-    defaultCronExpr
-  );
-  const {
-    name,
-    webhook,
-    schedule,
-    payload,
-    headers,
-    loading,
-    showScheduleModal,
-  } = state;
-
-  React.useEffect(() => {
-    setCronBuilderState(schedule.value || defaultCronExpr);
-  }, [schedule.value]);
+  const { name, webhook, schedule, payload, headers, loading } = state;
 
   const setName = (e: React.BaseSyntheticEvent) =>
     setState.name(getEventTargetValue(e));
@@ -144,33 +126,6 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
       />
     );
 
-    const modalOnSubmit = () => {
-      setState.scheduleValue(stripNonStandardElements(cronBuilderState));
-      setState.toggleScheduleModal();
-    };
-    const modalReset = () => {
-      setCronBuilderState(schedule.value || '');
-      setState.toggleScheduleModal();
-    };
-    const modal = (
-      <Modal
-        show={!!showScheduleModal}
-        title="Build your CRON expression"
-        onClose={modalReset}
-        onCancel={modalReset}
-        onSubmit={modalOnSubmit}
-        submitText="Use"
-      >
-        <div>
-          <CronBuilder
-            value={cronBuilderState}
-            showResultText
-            showResultCron
-            onChange={setCronBuilderState}
-          />
-        </div>
-      </Modal>
-    );
     return sectionize(
       <React.Fragment>
         <h2
@@ -185,7 +140,6 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
         </h2>
         <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>
           {getScheduleInputText(false, styles.add_mar_right_mid)}
-          {modal}
           {/* <a
             onClick={setState.toggleScheduleModal}
             className={styles.cursorPointer}

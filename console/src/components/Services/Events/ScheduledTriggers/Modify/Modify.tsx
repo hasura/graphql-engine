@@ -10,8 +10,6 @@ import {
 import { parseServerScheduledTrigger } from '../utils';
 import styles from '../../Events.scss';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
-import Modal from '../../../../Common/Modal/Modal';
-import CronBuilder from '../../../../Common/CronBuilder/CronBuilder';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import Headers from '../../../../Common/Headers/Headers';
 import RetryConf from '../../Common/Components/RetryConfEditor';
@@ -30,9 +28,6 @@ const Modify = (props: ModifyProps) => {
   const [invokeButtonText, setInvokeButtonText] = React.useState('Invoke');
   const { dispatch, currentTrigger } = props;
   const { state, setState } = useScheduledTriggerAdd();
-  const [cronBuilderState, setCronBuilderState] = React.useState(
-    defaultCronExpr
-  );
 
   React.useEffect(() => {
     if (currentTrigger) {
@@ -41,19 +36,7 @@ const Modify = (props: ModifyProps) => {
     }
   }, [currentTrigger]);
 
-  const {
-    name,
-    webhook,
-    schedule,
-    payload,
-    headers,
-    loading,
-    showScheduleModal,
-  } = state;
-
-  React.useEffect(() => {
-    setCronBuilderState(schedule.value || defaultCronExpr);
-  }, [schedule.value]);
+  const { name, webhook, schedule, payload, headers, loading } = state;
 
   if (!currentTrigger) {
     return null;
@@ -167,33 +150,6 @@ const Modify = (props: ModifyProps) => {
       />
     );
 
-    const modalOnSubmit = () => {
-      setState.scheduleValue(cronBuilderState);
-      setState.toggleScheduleModal();
-    };
-    const modalReset = () => {
-      setCronBuilderState(schedule.value || '');
-      setState.toggleScheduleModal();
-    };
-    const modal = (
-      <Modal
-        show={!!showScheduleModal}
-        title="Build your CRON expression"
-        onClose={modalReset}
-        onCancel={modalReset}
-        onSubmit={modalOnSubmit}
-        submitText="Use"
-      >
-        <div>
-          <CronBuilder
-            value={cronBuilderState}
-            showResultText
-            showResultCron
-            onChange={setCronBuilderState}
-          />
-        </div>
-      </Modal>
-    );
     return sectionize(
       <React.Fragment>
         <h2
@@ -208,7 +164,6 @@ const Modify = (props: ModifyProps) => {
         </h2>
         <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>
           {getScheduleInputText(false, styles.add_mar_right_mid)}
-          {modal}
           {/* <a
             onClick={setState.toggleScheduleModal}
             className={styles.cursorPointer}
