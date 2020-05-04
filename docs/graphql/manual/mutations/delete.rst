@@ -27,15 +27,15 @@ Auto-generated delete mutation schema
   type article_mutation_response {
     # number of affected rows by the mutation
     affected_rows: Int!
-    #data of the affected rows by the mutation
+    # data of the affected rows by the mutation
     returning: [article!]!
   }
 
   # single object delete (supported from v1.2.0)
   delete_article_by_pk (
-    # all primary key columns input
-    id: Int!
-  ): article # the article table object
+    # all primary key columns args
+    id: Int
+  ): article
 
 As you can see from the schema:
 
@@ -51,8 +51,69 @@ See the :ref:`delete mutation API reference <delete_syntax>` for the full specif
   If a table is not in the ``public`` Postgres schema, the delete mutation field will be of the format
   ``delete_<schema_name>_<table_name>``.
 
-Delete based on an object's fields
-----------------------------------
+Delete an object by its primary key
+-----------------------------------
+
+You can delete a single object in a table using the primary key.
+The output type is the nullable table object. The mutation returns the deleted
+row object or ``null`` if the row does not exist.
+
+**Examples:**
+
+1. Delete an article where ``id`` is ``1``:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation delete_an_object {
+      delete_article_by_pk (
+        id: 1
+      ) {
+        id
+        title
+        user_id
+      }
+    }
+  :response:
+    {
+      "data": {
+        "delete_article_by_pk": {
+          "id": 1,
+          "title": "Article 1",
+          "user_id": 1
+        }
+      }
+    }
+
+2. Delete a non-existent article:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation delete_an_object {
+      delete_article_by_pk (
+        id: 100
+      ) {
+        id
+        title
+        user_id
+      }
+    }
+  :response:
+    {
+      "data": {
+        "delete_article_by_pk": null
+      }
+    }
+
+.. admonition:: Supported from
+
+   The ``delete_<table>_by_pk`` mutation is supported in versions ``v1.2.0``
+   and above.
+
+
+Delete objects based on an their fields
+---------------------------------------
 **Example:** Delete all articles rated less than 3:
 
 .. graphiql::
@@ -75,8 +136,8 @@ Delete based on an object's fields
     }
 
 
-Delete based on a nested object's fields
-----------------------------------------
+Delete objects based on nested objects' fields
+----------------------------------------------
 **Example:** Delete all articles written by a particular author:
 
 .. graphiql::
@@ -124,63 +185,3 @@ evaluates to ``true`` for all objects.
         }
       }
     }
-
-Delete a single object
-----------------------
-
-You can delete a single object in a table using the primary key.
-The output type is the nullable table object. The mutation returns the deleted
-row object or ``null`` if the row does not exist.
-
-**Examples:**
-
-1. Delete an article where ``id`` is ``1``:
-
-.. graphiql::
-  :view_only:
-  :query:
-    mutation delete_an_object {
-      delete_article_by_pk (
-        id: 1
-      ) {
-        id
-        title
-        user_id
-      }
-    }
-  :response:
-    {
-      "data": {
-        "delete_article_by_pk": {
-          "id": 1,
-          "title": "Article 1",
-          "user_id": 1
-        }
-      }
-    }
-
-2. Delete a non-existent article:
-
-.. graphiql::
-  :view_only:
-  :query:
-    mutation delete_an_object {
-      delete_article_by_pk (
-        id: 10000000
-      ) {
-        id
-        title
-        user_id
-      }
-    }
-  :response:
-    {
-      "data": {
-        "delete_article_by_pk": null
-      }
-    }
-
-.. admonition:: Supported from
-
-   The ``delete_<table>_by_pk`` mutation is supported in versions ``v1.2.0``
-   and above.

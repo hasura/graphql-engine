@@ -29,7 +29,7 @@ Auto-generated update mutation schema
   type article_mutation_response {
     # number of affected rows by the mutation
     affected_rows: Int!
-    #data of the affected rows by the mutation
+    # data of the affected rows by the mutation
     returning: [article!]!
   }
 
@@ -37,9 +37,9 @@ Auto-generated update mutation schema
   update_article_by_pk (
     _inc: article_inc_input
     _set: article_set_input
-    # primary key columns input value
+    # primary key columns arg
     pk_columns: article_pk_columns_input!
-  ): article # the article table object
+  ): article
 
 As you can see from the schema:
 
@@ -58,8 +58,68 @@ See the :ref:`update mutation API reference <update_syntax>` for the full specif
   - If a table is not in the ``public`` Postgres schema, the update mutation field will be of the format
     ``update_<schema_name>_<table_name>``.
 
-Update based on an object's fields
-----------------------------------
+Update an object by its primary key
+-----------------------------------
+
+You can update a single object in a table using the primary key.
+The output type is the nullable table object. The mutation returns the updated
+row object or ``null`` if the row does not exist.
+
+**Examples:**
+
+1. Update an article where ``id`` is ``1``:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation update_an_article {
+      update_article_by_pk (
+        pk_columns: {id: 1}
+        _set: { is_published: true }
+      ) {
+        id
+        is_published
+      }
+    }
+  :response:
+    {
+      "data": {
+        "update_article_by_pk": {
+          "id": 1,
+          "is_published": true
+        }
+      }
+    }
+
+  2. Update a non-existent article:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation update_an_article {
+      update_article_by_pk (
+        pk_columns: {id: 1000000}
+        _set: { is_published: true }
+      ) {
+        id
+        is_published
+      }
+    }
+  :response:
+    {
+      "data": {
+        "update_article_by_pk": null
+      }
+    }
+
+.. admonition:: Supported from
+
+   The ``update_<table>_by_pk`` mutation is supported in versions ``v1.2.0``
+   and above.
+
+
+Update objects based on their fields
+------------------------------------
 **Example:** Update the ``title``, ``content`` and ``rating`` of the article with a given ``id``:
 
 .. graphiql::
@@ -192,8 +252,8 @@ OR
       "rating": 2
     }
 
-Update based on a nested object's fields
-----------------------------------------
+Update objects based on nested objects' fields
+----------------------------------------------
 **Example:** Reset the ``rating`` of all articles authored by "Sidney":
 
 .. graphiql::
@@ -243,65 +303,6 @@ evaluates to ``true`` for all objects.
         }
       }
     }
-
-Update a single object
-----------------------
-
-You can update a single object in a table using the primary key.
-The output type is the nullable table object. The mutation returns the updated
-row object or ``null`` if the row does not exist.
-
-**Examples:**
-
-1. Update an article where ``id`` is ``1``:
-
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_an_article {
-      update_article_by_pk (
-        pk_columns: {id: 1}
-        _set: { is_published: true }
-      ) {
-        id
-        is_published
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_article_by_pk": {
-          "id": 1,
-          "is_published": true
-        }
-      }
-    }
-
-2. Update a non-existent article:
-
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_an_article {
-      update_article_by_pk (
-        pk_columns: {id: 1000000}
-        _set: { is_published: true }
-      ) {
-        id
-        is_published
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_article_by_pk": null
-      }
-    }
-
-.. admonition:: Supported from
-
-   The ``update_<table>_by_pk`` mutation is supported in versions ``v1.2.0``
-   and above.
 
 Increment **int** columns
 -------------------------

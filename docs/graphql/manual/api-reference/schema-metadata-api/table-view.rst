@@ -133,8 +133,11 @@ Add a table/view ``author``:
               "select_by_pk": "Author",
               "select_aggregate": "AuthorAggregate",
               "insert": "AddAuthors",
+              "insert_one":"AddAuthor",
               "update": "UpdateAuthors",
-              "delete": "DeleteAuthors"
+              "update_by_pk": "UpdateAuthor",
+              "delete": "DeleteAuthors",
+              "delete_by_pk": "DeleteAuthor"
            },
            "custom_column_names": {
               "id": "authorId"
@@ -261,8 +264,11 @@ Set custom fields for table/view ``author``:
            "select_by_pk": "Author",
            "select_aggregate": "AuthorAggregate",
            "insert": "AddAuthors",
+           "insert_one":"AddAuthor",
            "update": "UpdateAuthors",
-           "delete": "DeleteAuthors"
+           "update_by_pk": "UpdateAuthor",
+           "delete": "DeleteAuthors",
+           "delete_by_pk": "DeleteAuthor"
         },
         "custom_column_names": {
            "id": "authorId"
