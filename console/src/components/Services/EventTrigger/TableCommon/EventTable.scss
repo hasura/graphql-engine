@@ -1,4 +1,4 @@
-@import "../../../Common/TableCommon/Table.scss";
+@import '../../../Common/TableCommon/Table.scss';
 
 .dropdown_wrapper {
   width: 300px;
@@ -28,15 +28,13 @@
   display: flex;
   align-items: center;
 }
-.tabletdCenter
-{
+.tabletdCenter {
   height: 21px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.tableArrowCenter
-{
+.tableArrowCenter {
   height: 100%;
   display: flex;
   align-items: center;
@@ -56,7 +54,7 @@
   }
 
   .invocationSuccess {
-    color: #28a745
+    color: #28a745;
   }
   .invocationFailure {
     color: red;
@@ -107,7 +105,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #FFF3D5;
+  background-color: #fff3d5;
   padding: 5px;
   min-height: 41px;
 }
@@ -116,7 +114,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #FFF3D5;
+  background-color: #fff3d5;
   padding: 5px;
   min-height: 41px;
   position: relative;
@@ -176,7 +174,7 @@
   }
 
   i:hover {
-    color: #4D4D4D ;
+    color: #4d4d4d;
   }
 }
 
