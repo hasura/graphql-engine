@@ -209,12 +209,12 @@ const Modify = (props: ModifyProps) => {
         <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>
           {getScheduleInputText(false, styles.add_mar_right_mid)}
           {modal}
-          <a
+          {/* <a
             onClick={setState.toggleScheduleModal}
             className={styles.cursorPointer}
           >
             Build a cron expression
-          </a>
+          </a> */}
         </div>
       </React.Fragment>
     );
