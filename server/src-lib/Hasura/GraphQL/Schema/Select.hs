@@ -171,7 +171,7 @@ selectTableAggregate table fieldName description selectPermissions stringifyNum
               `mapField` fmap RQL.TAFNodes
             , P.selection_ $$(G.litName "aggregate") Nothing aggregateParser
               `mapField` fmap RQL.TAFAgg
-            -- TODO: handle __typename here
+            , typenameField (, RQL.TAFExp $ G.unName selectionName)
             ]
       pure $ Just $ P.selection fieldName description tableArgsParser aggregationParser
         `mapField` \(aliasName, args, fields) ->
@@ -235,6 +235,14 @@ tableArgs table selectPermissions = do
     distinctOnDesc = Just $ G.Description "distinct select on columns"
 
 
+-- | Typename field
+--
+-- Most selection sets accept the __typename keyword as a field,
+-- which is simply expanded to the name of the type.
+typenameField :: MonadParse m => (G.Name -> a) -> FieldsParser 'Output m (Maybe a)
+typenameField f =
+  P.selection_ $$(G.litName "__typename") Nothing P.string `mapField` f
+
 -- | Fields of a table
 --
 -- TODO: write a better blurb
@@ -251,8 +259,11 @@ tableFields table selectPermissions stringifyNum =
     fields    <- fmap concat
       $ traverse (\fieldInfo -> fieldSelection fieldInfo selectPermissions stringifyNum)
       =<< tableSelectFields table selectPermissions
-    -- TODO: handle __typename here
-    pure $ P.selectionSet tableName (_tciDescription tableInfo) $ catMaybes <$> sequenceA fields
+    let typename = typenameField $ \name -> (aliasToName name, RQL.FExp $ G.unName tableName)
+    pure $ P.selectionSet tableName (_tciDescription tableInfo)
+         $ fmap catMaybes
+         $ sequenceA
+         $ typename : fields
 
 
 -- | Aggregation fields
@@ -279,8 +290,8 @@ tableAggregationFields table selectPermissions = do
   allColumns <- tableSelectColumns table selectPermissions
   let numColumns  = onlyNumCols allColumns
       compColumns = onlyComparableCols allColumns
-  numFields  <- mkFields numColumns
-  compFields <- mkFields compColumns
+      selectName  = tableName <> $$(G.litName "_aggregate_fields")
+      description = G.Description $ "aggregate fields of \"" <> G.unName tableName <> "\""
   aggFields  <- fmap (fmap (catMaybes . concat) . sequenceA) $ sequenceA $ catMaybes
     [ -- count
       Just $ do
@@ -298,35 +309,38 @@ tableAggregationFields table selectPermissions = do
         pure $ P.selection $$(G.litName "count") Nothing args P.int
           <&> pure . fmap (aliasToName *** RQL.AFCount)
     , -- operators on numeric columns
-      if null numColumns then Nothing else Just $ pure $
+      if null numColumns then Nothing else Just $ fmap sequenceA $
       for numericAggOperators \operator ->
-        parseOperator operator tableName numFields
+        parseOperator operator tableName numColumns
     , -- operators on comparable columns
-      if null compColumns then Nothing else Just $ pure $
+      if null compColumns then Nothing else Just $ fmap sequenceA $
       for comparisonAggOperators \operator ->
-        parseOperator operator tableName compFields
-      -- TODO: handle __typename here
+        parseOperator operator tableName compColumns
+    , -- typename
+      Just $ pure $ fmap pure $ typenameField \name -> (aliasToName name, RQL.AFExp $ G.unName selectName)
     ]
-  let selectName  = tableName <> $$(G.litName "_aggregate_fields")
-      description = G.Description $ "aggregate fields of \"" <> G.unName tableName <> "\""
   pure $ P.selectionSet selectName (Just description) aggFields
   where
-    mkFields :: [PGColumnInfo] -> m (FieldsParser 'Output n RQL.ColFlds)
-    mkFields = fmap (fmap catMaybes . sequenceA) . traverse \columnInfo -> do
-      field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
-      pure $ P.selection_ (pgiName columnInfo) (pgiDescription columnInfo) field
-        `mapField` \name -> (aliasToName name, RQL.PCFCol $ pgiColumn columnInfo)
+    mkFields :: Text -> [PGColumnInfo] -> m (FieldsParser 'Output n RQL.ColFlds)
+    mkFields name columns = do
+      columnFields <- for columns \columnInfo -> do
+        field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+        pure $ P.selection_ (pgiName columnInfo) (pgiDescription columnInfo) field
+          `mapField` \alias -> (aliasToName alias, RQL.PCFCol $ pgiColumn columnInfo)
+      let typename = typenameField \alias -> (aliasToName alias, RQL.PCFExp name)
+      pure $ fmap catMaybes $ sequenceA $ typename : columnFields
 
     parseOperator
       :: G.Name
       -> G.Name
-      -> FieldsParser 'Output n RQL.ColFlds
-      -> FieldsParser 'Output n (Maybe (FieldName, RQL.AggFld))
-    parseOperator operator tableName columns =
+      -> [PGColumnInfo]
+      -> m (FieldsParser 'Output n (Maybe (FieldName, RQL.AggFld)))
+    parseOperator operator tableName columns = do
       let opText  = G.unName operator
           setName = tableName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
-      in  P.selection_ operator Nothing (P.selectionSet setName setDesc columns)
+      columnFields <- mkFields (G.unName setName) columns
+      pure $ P.selection_ operator Nothing (P.selectionSet setName setDesc columnFields)
         `mapField` (aliasToName *** RQL.AFOp . RQL.AggOp opText)
 
 
@@ -340,7 +354,6 @@ fieldSelection
   -> Bool
   -> m [FieldsParser 'Output n (Maybe (FieldName, AnnotatedField))]
 fieldSelection fieldInfo selectPermissions stringifyNum = do
-  -- TODO: support __typename
   case fieldInfo of
     FIColumn columnInfo -> do
       let annotated = RQL.mkAnnColField columnInfo Nothing -- FIXME: support ColOp
