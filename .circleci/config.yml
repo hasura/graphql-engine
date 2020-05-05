@@ -10,6 +10,21 @@ refs:
         else
           echo "no skip_job file present, full steam ahead"
         fi
+  skip_server_tests: &skip_server_tests
+    run:
+      name: checking if server tests can be skipped
+      command: |
+        echo "PR number: $CIRCLE_PR_NUMBER"
+        if [ -z "$CIRCLE_PR_NUMBER" ]; then
+          echo "Not a PR build, continuing test" && exit 0
+        fi
+        echo "Compare refs: ${CIRCLE_COMPARE_URL##http*/}" 
+        if git diff --quiet "${CIRCLE_COMPARE_URL##http*/}" -- server; then
+          echo "No server changes present, skipping test"
+          circleci-agent step halt
+        else
+          echo "Server changes present, continuing test"
+        fi
   wait_for_postgres: &wait_for_postgres
     run:
       name: waiting for postgres to be ready
@@ -79,6 +94,7 @@ refs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
+    - *skip_server_tests
     - *wait_for_postgres
     - run:
         name: Install deps
@@ -274,6 +290,7 @@ jobs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
+    - *skip_server_tests
     - run:
         name: Run unit tests
         environment:
@@ -514,6 +531,8 @@ jobs:
     - run:
         name: test console
         command: .circleci/test-console.sh
+    - store_artifacts:
+        path: /build/_console_output/server.log
 
   # test server upgrade from last version to current build
   test_server_upgrade:
@@ -532,6 +551,7 @@ jobs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
+    - *skip_server_tests
     - run:
         name: install_necessary_packages
         command: |
@@ -633,6 +653,7 @@ workflows:
     - test_and_build_cli_migrations:
         <<: *filter_only_vtags
         requires:
+        - build_image
         - test_and_build_cli
     - test_console:
         <<: *filter_only_vtags

@@ -5,7 +5,7 @@ export const getOperationType = (schema, operation) => {
     return schema._queryType;
   }
   if (operation === 'subscription') {
-    return schema._subscriptionType
+    return schema._subscriptionType;
   }
   return schema._mutationType;
 };
