@@ -99,6 +99,8 @@ data RQLQueryV1
 
   | RQCreateScheduledEvent     !CreateScheduledEvent
 
+  | RQCreateScheduledTriggerOneOff !CreateScheduledTriggerOneOff
+
   -- query collections, allow list related
   | RQCreateQueryCollection !CreateCollection
   | RQDropQueryCollection !DropCollection
@@ -268,6 +270,8 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQFetchScheduledTriggerCronEvents _ -> False
   RQCreateScheduledEvent _            -> False
 
+  RQCreateScheduledTriggerOneOff _    -> False
+
   RQCreateQueryCollection _           -> True
   RQDropQueryCollection _             -> True
   RQAddQueryToCollection _            -> True
@@ -397,6 +401,8 @@ runQueryM rq = withPathK "args" $ case rq of
 
       RQCreateScheduledEvent q         -> runCreateScheduledEvent q
 
+      RQCreateScheduledTriggerOneOff q -> runCreateScheduledTriggerOneOff q
+
       RQCreateQueryCollection q        -> runCreateCollection q
       RQDropQueryCollection q          -> runDropCollection q
       RQAddQueryToCollection q         -> runAddQueryToCollection q
@@ -481,8 +487,11 @@ requiresAdmin = \case
     RQCreateScheduledTriggerCron _      -> True
     RQUpdateScheduledTriggerCron _      -> True
     RQDeleteScheduledTriggerCron _      -> True
-    RQCreateScheduledEvent _            -> True
     RQFetchScheduledTriggerCronEvents _ -> False
+
+    RQCreateScheduledEvent _            -> True
+
+    RQCreateScheduledTriggerOneOff _    -> True
 
     RQCreateQueryCollection _           -> True
     RQDropQueryCollection _             -> True

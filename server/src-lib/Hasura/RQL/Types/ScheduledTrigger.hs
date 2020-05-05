@@ -8,6 +8,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , CreateScheduledEvent(..)
   , STRetryConf(..)
   , FetchEventsScheduledTrigger(..)
+  , CreateScheduledTriggerOneOff(..)
   , formatTime'
   , defaultSTRetryConf
   ) where
@@ -204,10 +205,10 @@ instance FromJSON CreateScheduledTriggerOneOff where
   parseJSON =
     withObject "CreateScheduledTriggerOneOff" $ \o ->
       CreateScheduledTriggerOneOff <$> o .: "webhook"
-                                   <*> o .: "scheduled_at"
+                                   <*> o .: "schedule_at"
                                    <*> o .:? "payload"
                                    <*> o .:? "headers" .!= []
                                    <*> o .:? "retry_conf" .!= defaultSTRetryConf
                                    <*> o .:? "comment"
 
-$(deriveToJSON (aesonDrop 4 CreateScheduledTriggerOneOff) ''CreateScheduledTriggerOneOff)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''CreateScheduledTriggerOneOff)

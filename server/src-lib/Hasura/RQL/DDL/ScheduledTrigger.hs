@@ -7,6 +7,7 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , deleteScheduledTriggerFromCatalog
   , resolveScheduledTrigger
   , runFetchEventsOfScheduledTrigger
+  , runCreateScheduledTriggerOneOff
   ) where
 
 import           Hasura.Db
@@ -166,6 +167,22 @@ runFetchEventsOfScheduledTrigger (FetchEventsScheduledTrigger stName stOffset st
   where
     uncurryScheduledEvent (seId,name,scheduledTime,payload,status,tries) =
       ScheduledEventDb seId name scheduledTime (Q.getAltJ <$> payload) status tries
+
+runCreateScheduledTriggerOneOff :: (MonadTx m) => CreateScheduledTriggerOneOff -> m EncJSON
+runCreateScheduledTriggerOneOff CreateScheduledTriggerOneOff {..} = do
+  liftTx $ Q.unitQE defaultTxErrorHandler
+     [Q.sql|
+      INSERT INTO hdb_catalog.hdb_one_off_scheduled_events
+      (webhook_conf,scheduled_time,retry_conf,payload,comment)
+      VALUES
+      ($1, $2, $3, $4, $5)
+     |] ( Q.AltJ cstoWebhook
+        , cstoScheduleAt
+        , Q.AltJ cstoPayload
+        , Q.AltJ cstoRetryConf
+        , cstoComment)
+        False
+  pure successMsg
 
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do
