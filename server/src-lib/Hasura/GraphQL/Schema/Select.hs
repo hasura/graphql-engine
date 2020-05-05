@@ -2,8 +2,8 @@
 {-# LANGUAGE ViewPatterns    #-}
 
 module Hasura.GraphQL.Schema.Select
-  ( queryExp
-  , selectTable
+  ( selectTable
+  , selectTableByPk
   , selectTableAggregate
   ) where
 
@@ -44,24 +44,6 @@ type TableArgs       = RQL.TableArgsG UnpreparedValue
 type TablePerms      = RQL.TablePermG UnpreparedValue
 type AnnotatedFields = RQL.AnnFldsG UnpreparedValue
 type AnnotatedField  = RQL.AnnFldG UnpreparedValue
-
-
--- TODO: move to Schema.hs
-queryExp
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => HashSet QualifiedTable
-  -> Bool
-  -> m (Parser 'Output n (HashMap G.Name SelectExp))
-queryExp allTables stringifyNum = do
-  selectExpParsers <- for (toList allTables) $ \tableName -> do
-    selectPerms <- tableSelectPermissions tableName
-    for selectPerms $ \perms -> do
-      displayName <- qualifiedObjectToName tableName
-      let desc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName tableName) <> "\""
-      selectTable tableName displayName (Just desc) perms stringifyNum
-    -- TODO: add aggregation tables and primary key queries
-  let queryFieldsParser = fmap (Map.fromList . catMaybes) $ sequenceA $ catMaybes selectExpParsers
-  pure $ P.selectionSet $$(G.litName "Query") Nothing queryFieldsParser
 
 
 
