@@ -58,6 +58,7 @@ During the startup, two threads are started:
 module Hasura.Eventing.ScheduledTrigger
   ( runScheduledEventsGenerator
   , processScheduledQueue
+  , processOneOffScheduledQueue
 
   , ScheduledEventSeed(..)
   , generateScheduleTimes
@@ -77,6 +78,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Version             (HasVersion)
+import           Hasura.RQL.DDL.EventTrigger       (getHeaderInfosFromConf,getWebhookInfoFromConf)
 import           Hasura.SQL.DML
 import           Hasura.SQL.Types
 import           System.Cron
@@ -174,15 +176,33 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ScheduledEventDb)
 data ScheduledEventFull
   = ScheduledEventFull
   { sefId            :: !Text
-  , sefName          :: !TriggerName
+  , sefName          :: !(Maybe TriggerName)
+  -- ^ sefName is the name of the scheduled trigger, it's being
+  -- used by both cron scheduled events and one-off scheduled events.
+  -- A one-off scheduled event is not associated with a name, so in that
+  -- case, 'sefName' will be @Nothing@
   , sefScheduledTime :: !UTCTime
   , sefTries         :: !Int
   , sefWebhook       :: !T.Text
   , sefPayload       :: !J.Value
   , sefRetryConf     :: !STRetryConf
+  , sefHeaders       :: ![EventHeaderInfo]
   } deriving (Show, Eq)
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventFull)
+
+data ScheduledEventOneOff
+  = ScheduledEventOneOff
+  { seoId            :: !Text
+  , seoScheduledTime :: !UTCTime
+  , seoTries         :: !Int
+  , seoWebhook       :: !WebhookConf
+  , seoPayload       :: !(Maybe J.Value)
+  , seoRetryConf     :: !STRetryConf
+  , seoHeaderConf    :: ![HeaderConf]
+  } deriving (Show, Eq)
+
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventOneOff)
 
 -- | runScheduledEventsGenerator makes sure that all the scheduled triggers
 --   have an adequate buffer of scheduled events.
@@ -308,13 +328,74 @@ processScheduledQueue logger logEnv httpMgr pgpool getSC =
           case Map.lookup name scheduledTriggersInfo of
             Nothing ->  logInternalError $
               err500 Unexpected "could not find scheduled trigger in cache"
-            Just stInfo@ScheduledTriggerInfo{..} -> do
+            Just ScheduledTriggerInfo{..} -> do
               let webhook = wciCachedValue stiWebhookInfo
                   payload' = fromMaybe (fromMaybe J.Null stiPayload) payload -- override if neccessary
-                  scheduledEvent = ScheduledEventFull id' name st tries webhook payload' stiRetryConf
+                  scheduledEvent =
+                      ScheduledEventFull id'
+                                         (Just name)
+                                         st
+                                         tries
+                                         webhook
+                                         payload'
+                                         stiRetryConf
+                                         stiHeaders
               finally <- runExceptT $
-                runReaderT (processScheduledEvent logEnv pgpool stInfo scheduledEvent) (logger, httpMgr)
+                runReaderT (processScheduledEvent logEnv pgpool scheduledEvent) (logger, httpMgr)
               either logInternalError pure finally
+      Left err -> logInternalError err
+    sleep (minutes 1)
+    where
+      logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
+
+processOneOffScheduledQueue
+  :: HasVersion
+  => L.Logger L.Hasura
+  -> LogEnvHeaders
+  -> HTTP.Manager
+  -> Q.PGPool
+  -> IO void
+processOneOffScheduledQueue logger logEnv httpMgr pgpool =
+  forever $ do
+    scheduledEventsE <-
+      runExceptT $
+      Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getOneOffScheduledEvents
+    case scheduledEventsE of
+      Right partialEvents ->
+        for_ partialEvents $ \(ScheduledEventOneOff id'
+                                                    scheduledTime
+                                                    tries'
+                                                    webhookConf
+                                                    payload'
+                                                    retryConf
+                                                    headerConf
+                                                    )
+          -> do
+          webhookInfo <- runExceptT $ getWebhookInfoFromConf webhookConf
+          headerInfo <- runExceptT $ getHeaderInfosFromConf headerConf
+
+          case webhookInfo of
+            Right webhookInfo' -> do
+              case headerInfo of
+                Right headerInfo' -> do
+                  let webhook = wciCachedValue webhookInfo'
+                      payload = fromMaybe J.Null payload'
+                      scheduledEvent = ScheduledEventFull id'
+                                                          Nothing
+                                                          scheduledTime
+                                                          tries'
+                                                          webhook
+                                                          payload
+                                                          retryConf
+                                                          headerInfo'
+                  finally <- runExceptT $
+                    runReaderT (processScheduledEvent logEnv pgpool scheduledEvent) (logger, httpMgr)
+                  either logInternalError pure finally
+
+                Left err'' -> logInternalError err''
+
+            Left err' -> logInternalError err'
+
       Left err -> logInternalError err
     sleep (minutes 1)
     where
@@ -330,24 +411,23 @@ processScheduledEvent ::
   )
   => LogEnvHeaders
   -> Q.PGPool
-  -> ScheduledTriggerInfo
   -> ScheduledEventFull
   -> m ()
 processScheduledEvent
-  logEnv pgpool ScheduledTriggerInfo {..} se@ScheduledEventFull {..} = do
+  logEnv pgpool se@ScheduledEventFull {..} = do
   currentTime <- liftIO getCurrentTime
   if convertDuration (diffUTCTime currentTime sefScheduledTime)
-    > unNonNegativeDiffTime (strcToleranceSeconds stiRetryConf)
+    > unNonNegativeDiffTime (strcToleranceSeconds sefRetryConf)
     then processDead pgpool se
     else do
       let timeoutSeconds = round $ unNonNegativeDiffTime
-                             $ strcTimeoutSeconds stiRetryConf
+                             $ strcTimeoutSeconds sefRetryConf
           httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
-          headers = addDefaultHeaders $ map encodeHeader stiHeaders
+          headers = addDefaultHeaders $ map encodeHeader sefHeaders
           extraLogCtx = ExtraLogContext (Just currentTime) sefId
       res <- runExceptT $ tryWebhook headers httpTimeout sefPayload (T.unpack sefWebhook)
       logHTTPForST res extraLogCtx
-      let decodedHeaders = map (decodeHeader logEnv stiHeaders) headers
+      let decodedHeaders = map (decodeHeader logEnv sefHeaders) headers
       either
         (processError pgpool se decodedHeaders)
         (processSuccess pgpool se decodedHeaders)
@@ -512,6 +592,39 @@ getScheduledEvents = do
       RETURNING id, name, scheduled_time, additional_payload, tries
       |] () True
   where uncurryEvent (i, n, st, p, tries) = ScheduledEventPartial i n st (Q.getAltJ <$> p) tries
+
+getOneOffScheduledEvents :: Q.TxE QErr [ScheduledEventOneOff]
+getOneOffScheduledEvents = do
+  map uncurryOneOffEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
+      UPDATE hdb_catalog.hdb_one_off_scheduled_events
+      SET status = 'locked'
+      WHERE id IN ( SELECT t.id
+                    FROM hdb_catalog.hdb_one_off_scheduled_events t
+                    WHERE ( t.status = 'scheduled'
+                            and (
+                             (t.next_retry_at is NULL and t.scheduled_time <= now()) or
+                             (t.next_retry_at is not NULL and t.next_retry_at <= now())
+                            )
+                          )
+                    FOR UPDATE SKIP LOCKED
+                    )
+      RETURNING id, webhook_conf, scheduled_time, retry_conf, payload, header_conf, tries
+      |] () True
+  where
+    uncurryOneOffEvent ( eventId
+                       , webhookConf
+                       , scheduledTime
+                       , retryConf
+                       , payload
+                       , headerConf
+                       , tries) =
+      ScheduledEventOneOff eventId
+                           scheduledTime
+                           tries
+                           (Q.getAltJ webhookConf)
+                           (Q.getAltJ payload)
+                           (Q.getAltJ retryConf)
+                           (Q.getAltJ headerConf)
 
 liftExceptTIO :: (MonadError e m, MonadIO m) => ExceptT e IO a -> m a
 liftExceptTIO m = liftEither =<< liftIO (runExceptT m)
