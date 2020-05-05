@@ -11,8 +11,7 @@ export const checkIfHasPrimaryKey = (
   tableSchema: TableSchema
 ): tableSchema is TableSchemaWithPK => {
   return (
-    tableSchema.primary_key !== undefined &&
-    tableSchema.primary_key.columns.length > 0
+    !!tableSchema.primary_key && tableSchema.primary_key.columns.length > 0
   );
 };
 
