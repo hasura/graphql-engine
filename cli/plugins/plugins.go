@@ -30,6 +30,9 @@ var (
 	ErrVersionNotAvailable = errors.New("plugin version is not available")
 )
 
+// IndexBranchRef - branch to be used for index
+var IndexBranchRef = "master"
+
 const (
 	indexURI string = "https://github.com/hasura/cli-plugins-index.git"
 )
@@ -45,11 +48,18 @@ type Config struct {
 	Logger *logrus.Logger
 }
 
+// FetchOpts - options available during fetching plugin manifest
+type FetchOpts struct {
+	ManifestFile string
+
+	Version *semver.Version
+}
+
 func New(base string) *Config {
 	p := paths.NewPaths(base)
 	return &Config{
 		Paths: p,
-		Repo:  util.NewGitUtil(indexURI, p.IndexPath(), ""),
+		Repo:  util.NewGitUtil(indexURI, p.IndexPath(), IndexBranchRef),
 	}
 }
 
@@ -86,54 +96,57 @@ func (c *Config) ListPlugins() (Plugins, error) {
 	return c.LoadPluginListFromFS(c.Paths.IndexPluginsPath())
 }
 
-func (c *Config) Install(pluginName string, mainfestFile string, version *semver.Version) error {
+func (c *Config) GetPlugin(pluginName string, opts FetchOpts) (Plugin, error) {
 	var plugin Plugin
 	var err error
-	if mainfestFile == "" {
+	if opts.ManifestFile == "" {
 		// Load the plugin index by name
 		ps, err := c.LoadPluginByName(pluginName)
 		if err != nil {
 			if os.IsNotExist(err) {
-				return errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
+				return plugin, errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
 			}
-			return errors.Wrapf(err, "failed to load plugin %q from the index", pluginName)
+			return plugin, errors.Wrapf(err, "failed to load plugin %q from the index", pluginName)
 		}
 
 		// Load the installed manifest
 		pluginReceipt, err := c.LoadManifest(c.Paths.PluginInstallReceiptPath(pluginName))
 		if err != nil && !os.IsNotExist(err) {
-			return errors.Wrap(err, "failed to look up plugin receipt")
+			return plugin, errors.Wrap(err, "failed to look up plugin receipt")
 		}
 
-		if version != nil {
-			if pluginReceipt.Version == version.Original() {
-				return ErrIsAlreadyInstalled
+		if opts.Version != nil {
+			if pluginReceipt.Version == opts.Version.Original() {
+				return plugin, ErrIsAlreadyInstalled
 			}
 			// check if version is available
-			ver := ps.Index.Search(version)
+			ver := ps.Index.Search(opts.Version)
 			if ver != nil {
 				plugin = ps.Versions[ver]
 			} else {
-				return ErrVersionNotAvailable
+				return plugin, ErrVersionNotAvailable
 			}
 		} else {
 			if err == nil {
-				return ErrIsAlreadyInstalled
+				return plugin, ErrIsAlreadyInstalled
 			}
 			// get the latest version
 			latestVersion := ps.Index[len(ps.Index)-1]
 			plugin = ps.Versions[latestVersion]
 		}
 	} else {
-		plugin, err = c.ReadPluginFromFile(mainfestFile)
+		plugin, err = c.ReadPluginFromFile(opts.ManifestFile)
 		if err != nil {
-			return errors.Wrap(err, "failed to load plugin manifest from file")
+			return plugin, errors.Wrap(err, "failed to load plugin manifest from file")
 		}
 		if plugin.Name != pluginName {
-			return fmt.Errorf("plugin name %s doesn't match with plugin in the manifest file %s", pluginName, mainfestFile)
+			return plugin, fmt.Errorf("plugin name %s doesn't match with plugin in the manifest file %s", pluginName, opts.ManifestFile)
 		}
 	}
+	return plugin, nil
+}
 
+func (c *Config) Install(plugin Plugin) error {
 	// Find available installation platform
 	platform, ok, err := MatchPlatform(plugin.Platforms)
 	if err != nil {
@@ -142,7 +155,6 @@ func (c *Config) Install(pluginName string, mainfestFile string, version *semver
 	if !ok {
 		return errors.Errorf("plugin %q does not offer installation for this platform", plugin.Name)
 	}
-
 	if err := c.installPlugin(plugin, platform); err != nil {
 		return errors.Wrap(err, "install failed")
 	}
@@ -159,7 +171,7 @@ func (c *Config) Uninstall(name string) error {
 		return errors.Wrapf(err, "failed to look up install receipt for plugin %q", name)
 	}
 
-	symlinkPath := filepath.Join(c.Paths.BinPath(), pluginNameToBin(name, IsWindows()))
+	symlinkPath := filepath.Join(c.Paths.BinPath(), PluginNameToBin(name, IsWindows()))
 	if err := removeLink(symlinkPath); err != nil {
 		return errors.Wrap(err, "could not uninstall symlink of plugin")
 	}

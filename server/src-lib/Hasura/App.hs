@@ -3,6 +3,7 @@
 
 module Hasura.App where
 
+import           Control.Concurrent.STM.TVar          (readTVarIO)
 import           Control.Monad.Base
 import           Control.Monad.Stateless
 import           Control.Monad.STM                    (atomically)
@@ -20,6 +21,7 @@ import qualified Control.Concurrent.Extended          as C
 import qualified Data.Aeson                           as A
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.ByteString.Lazy.Char8           as BLC
+import qualified Data.Set                             as Set
 import qualified Data.Text                            as T
 import qualified Data.Time.Clock                      as Clock
 import qualified Data.Yaml                            as Y
@@ -38,19 +40,19 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
                                                        HasSQLGenCtx, HasSystemDefined, QErr (..),
                                                        SQLGenCtx (..), SchemaCache (..), UserInfoM,
-                                                       adminRole, adminUserInfo,
                                                        buildSchemaCacheStrict, decodeValue,
-                                                       throw400, userRole, withPathK)
+                                                       throw400, withPathK)
 import           Hasura.RQL.Types.Run
+import           Hasura.Server.API.Query              (requiresAdmin, runQueryM)
 import           Hasura.Server.App
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates           (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Query                  (requiresAdmin, runQueryM)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
+import           Hasura.Session
 
 
 printErrExit :: (MonadIO m) => forall a . String -> m a
@@ -163,7 +165,7 @@ initialiseCtx hgeCmd rci = do
   pure (InitCtx httpManager instanceId loggers connInfo pool latch, initTime)
   where
     procConnInfo =
-      either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
+      either (printErrExit . ("Fatal Error : " <>)) return $ mkConnInfo rci
 
     getMinimalPool pgLogger ci = do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
@@ -227,22 +229,24 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
 
-  HasuraApp app cacheRef cacheInitTime shutdownApp <- mkWaiApp soTxIso
-                                                               logger
-                                                               sqlGenCtx
-                                                               soEnableAllowlist
-                                                               _icPgPool
-                                                               _icConnInfo
-                                                               _icHttpManager
-                                                               authMode
-                                                               soCorsConfig
-                                                               soEnableConsole
-                                                               soConsoleAssetsDir
-                                                               soEnableTelemetry
-                                                               _icInstanceId
-                                                               soEnabledAPIs
-                                                               soLiveQueryOpts
-                                                               soPlanCacheOptions
+  HasuraApp app cacheRef cacheInitTime shutdownApp <-
+    mkWaiApp soTxIso
+             logger
+             sqlGenCtx
+             soEnableAllowlist
+             _icPgPool
+             _icConnInfo
+             _icHttpManager
+             authMode
+             soCorsConfig
+             soEnableConsole
+             soConsoleAssetsDir
+             soEnableTelemetry
+             _icInstanceId
+             soEnabledAPIs
+             soLiveQueryOpts
+             soPlanCacheOptions
+             soResponseInternalErrorsConfig
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
@@ -252,12 +256,6 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   (_schemaSyncListenerThread, _schemaSyncProcessorThread) <-
     startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
                            cacheRef _icInstanceId cacheInitTime
-
-  let warpSettings = Warp.setPort soPort
-                     . Warp.setHost soHost
-                     . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler (shutdownHandler logger shutdownApp)
-                     $ Warp.defaultSettings
 
   maxEvThrds <- liftIO $ getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
   fetchI  <- fmap milliseconds $ liftIO $
@@ -292,13 +290,47 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
   unLogger logger $
     mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
+  let warpSettings = Warp.setPort soPort
+                     . Warp.setHost soHost
+                     . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
+                     . Warp.setInstallShutdownHandler (shutdownHandler logger shutdownApp eventEngineCtx _icPgPool)
+                     $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 
   where
+    -- | prepareEvents is a function to unlock all the events that are
+    -- locked and unprocessed, which is called while hasura is started.
+    -- Locked and unprocessed events can occur in 2 ways
+    -- 1.
+    -- Hasura's shutdown was not graceful in which all the fetched
+    -- events will remain locked and unprocessed(TODO: clean shutdown)
+    -- state.
+    -- 2.
+    -- There is another hasura instance which is processing events and
+    -- it will lock events to process them.
+    -- So, unlocking all the locked events might re-deliver an event(due to #2).
     prepareEvents pool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
-      res <- runUnlockTx pool unlockAllEvents
+      res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllEvents
       either printErrJExit return res
+
+    -- | shutdownEvents will be triggered when a graceful shutdown has been inititiated, it will
+    -- get the locked events from the event engine context and then it will unlock all those events.
+    -- It may happen that an event may be processed more than one time, an event that has been already
+    -- processed but not been marked as delivered in the db will be unlocked by `shutdownEvents`
+    -- and will be processed when the events are proccessed next time.
+    shutdownEvents :: Q.PGPool -> Logger Hasura -> EventEngineCtx -> IO ()
+    shutdownEvents pool (Logger logger) EventEngineCtx {..} = do
+      liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "unlocking events that are locked by the HGE"
+      lockedEvents <- readTVarIO _eeCtxLockedEvents
+      liftIO $ do
+        when (not $ Set.null $ lockedEvents) $ do
+          res <- runTx pool (Q.ReadCommitted, Nothing) (unlockEvents $ toList lockedEvents)
+          case res of
+            Left err -> logger $ mkGenericStrLog
+                         LevelWarn "event_triggers" ("Error in unlocking the events " ++ (show err))
+            Right count -> logger $ mkGenericStrLog
+                            LevelInfo "event_triggers" ((show count) ++ " events were updated")
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
@@ -309,8 +341,9 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
           eRes = maybe (Left $ "Wrong expected type for environment variable: " <> env) Right mRes
       either printErrExit return eRes
 
-    runUnlockTx pool tx =
-      liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Nothing) tx
+    runTx :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO (Either QErr a)
+    runTx pool txLevel tx =
+      liftIO $ runExceptT $ Q.runTx pool txLevel tx
 
     -- | Waits for the shutdown latch 'MVar' to be filled, and then
     -- shuts down the server and associated resources.
@@ -321,6 +354,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
       void . Async.async $ do 
         waitForShutdown _icShutdownLatch
         logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
+        shutdownEvents pool (Logger logger) eeCtx
         closeSocket
         shutdownApp
 
@@ -371,8 +405,8 @@ instance UserAuthentication AppM where
 
 instance MetadataApiAuthorization AppM where
   authorizeMetadataApi query userInfo = do
-    let currRole = userRole userInfo
-    when (requiresAdmin query && currRole /= adminRole) $
+    let currRole = _uiRole userInfo
+    when (requiresAdmin query && currRole /= adminRoleName) $
       withPathK "args" $ throw400 AccessDenied errMsg
     where
       errMsg = "restricted access : admin only"
