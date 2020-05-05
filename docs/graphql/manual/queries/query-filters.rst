@@ -1587,7 +1587,7 @@ Fetch all authors which have not written any articles:
     {
       author (
         where: {
-          _not {
+          _not: {
             articles: {}
           }
         }
