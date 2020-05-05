@@ -157,6 +157,8 @@ Insert / upsert one syntax
       }
     }
 
+.. _update_by_pk_syntax:
+
 Update by pk syntax
 -------------------
 
@@ -226,9 +228,12 @@ Update by pk syntax
 
 .. code-block:: graphql
 
-    mutation update_an_article {
+    mutation update_articles {
       update_article_by_pk (
-        pk_columns: {id: 1}
+        pk_columns: {
+          id: 1
+          id: 2
+        }
         _set: { is_published: true }
       ) {
         affected_rows
@@ -312,6 +317,56 @@ Update syntax
         _set: {name: "Jane"}
       ) {
         affected_rows
+      }
+    }
+
+.. _delete_by_pk_syntax:
+
+Delete by pk syntax
+-------------------
+
+.. code-block:: none
+
+    mutation [<mutation-name>] {
+      <mutation-field-name> (
+        column1: value1
+        column2: value2
+      )
+      <table-response>
+    }
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - mutation-name
+     - false
+     - Value
+     - Name of mutation for observability
+   * - mutation-field-name
+     - true
+     - Value
+     - Name of the auto-generated delete mutation field, e.g. *delete_author_by_pk*
+   * - mutation-response
+     - true
+     - MutationResponse_
+     - Object to be returned after mutation succeeds
+
+**E.g. DELETE BY PK**:
+
+.. code-block:: graphql
+
+    mutation delete_articles {
+      delete_article_by_pk (
+        id: 1
+      ) {
+        affected_rows
+        returning {
+          id
+        }
       }
     }
 
