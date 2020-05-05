@@ -307,8 +307,8 @@ library
                      -- , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      -- , Hasura.RQL.DML.Insert
-                     -- , Hasura.RQL.DML.Mutation
-                     -- , Hasura.RQL.DML.Returning
+                     , Hasura.RQL.DML.Mutation
+                     , Hasura.RQL.DML.Returning
                      , Hasura.RQL.DML.Select.Internal
                      , Hasura.RQL.DML.Select.Types
                      , Hasura.RQL.DML.Select
