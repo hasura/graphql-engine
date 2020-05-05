@@ -1,5 +1,6 @@
 import pytest
 from validate import check_query_f
+from context import PytestConf
 
 # Mark that all tests in this module can be run as server upgrade tests
 pytestmark = pytest.mark.allow_server_upgrade_test
@@ -609,3 +610,17 @@ class TestGraphQLQueryCaching:
 
     def test_introspection(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/introspection.yaml', transport)
+
+@pytest.mark.skipif(
+    not PytestConf.config.getoption("--test-unauthorized-role"),
+    reason="--test-unauthorized-role missing"
+)
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestUnauthorizedRolePermission:
+    @classmethod
+    def dir(cls):
+        return 'queries/unauthorized_role'
+
+    def test_unauth_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
