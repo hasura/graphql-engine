@@ -10,8 +10,6 @@ const filterEventsBlockList = [
   'RNS_REMOVE_ALL_NOTIFICATIONS',
 ];
 
-const filterPayloadAllowList: unknown[] = [];
-
 const DATA_PATH = '/data' as const;
 const API_EXPLORER_PATH = '/api-explorer' as const;
 const REMOTE_SCHEMAS_PATH = '/remote-schemas' as const;
@@ -69,4 +67,4 @@ const sanitiseUrl = (path: string) => {
   return '/';
 };
 
-export { filterEventsBlockList, filterPayloadAllowList, sanitiseUrl };
+export { filterEventsBlockList, sanitiseUrl };
