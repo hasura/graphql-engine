@@ -6,6 +6,11 @@ BINARY ?= $(BUILD_DIR)/_cli_output/binaries/cli-hasura-linux-amd64
 IMAGE_TAG ?= cli-migrations
 BUILD_OUTPUT ?= $(BUILD_DIR)/_cli_migrations_output
 CLI_EXT_MANIFEST_FILE ?= $(BUILD_DIR)/_cli_ext_output/manifest-dev.yaml
+SERVER_BUILD_OUTPUT := $(BUILD_DIR)/_server_output
+
+.PHONY: load-server-image
+load-server-image:
+	docker load -i '$(SERVER_BUILD_OUTPUT)/image.tar'
 
 .PHONY: build-cli-migrations-v1
 .ONESHELL:
@@ -37,4 +42,4 @@ test-cli-migrations-v2:
 	./test.sh
 
 .PHONY: all
-all: build-cli-migrations-v1 build-cli-migrations-v2 test-cli-migrations-v1 test-cli-migrations-v2
+all: load-server-image build-cli-migrations-v1 build-cli-migrations-v2 test-cli-migrations-v1 test-cli-migrations-v2
