@@ -27,7 +27,7 @@ ON UPDATE CASCADE ON DELETE CASCADE,
 CONSTRAINT valid_status CHECK (status IN ('scheduled','locked','delivered','cancelled','error','dead'))
 );
 
-CREATE INDEX hdb_scheduled_event_status ON hdb_scheduled_events (status);
+CREATE INDEX hdb_scheduled_event_status ON hdb_catalog.hdb_scheduled_events (status);
 
 CREATE TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
 (
