@@ -10,6 +10,7 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , deleteScheduledTriggerFromCatalog
   , trackScheduledTriggerInCatalog
   , resolveScheduledTrigger
+  , runFetchEventsOfScheduledTrigger
   ) where
 
 import           Hasura.Db
@@ -24,6 +25,16 @@ import           Hasura.Eventing.ScheduledTrigger
 import qualified Database.PG.Query     as Q
 import qualified Data.Time.Clock       as C
 import qualified Data.HashMap.Strict   as Map
+import qualified Data.Aeson            as J
+import qualified Data.Aeson.Casing     as J
+import qualified Data.Aeson.TH         as J
+
+data FetchEventsResponse
+  = FetchEventsResponse
+  { feerScheduledEvents :: ![ScheduledEventDb]
+  } deriving (Eq, Show)
+
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''FetchEventsResponse)
 
 runCreateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger ->  m EncJSON
 runCreateScheduledTrigger q = do
@@ -137,7 +148,10 @@ deleteScheduledEventFromCatalog seId = liftTx $ do
   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
     WITH "cte" AS
-    (UPDATE hdb_catalog.hdb_scheduled_events SET cancelled = 't' WHERE id = $1 RETURNING *)
+    (UPDATE hdb_catalog.hdb_scheduled_events
+     SET status = 'cancelled'
+     WHERE id = $1
+     RETURNING *)
     SELECT count(*) FROM "cte"
    |] (Identity seId) False
 
@@ -146,6 +160,24 @@ runTrackScheduledTrigger (ScheduledTriggerName stName) = do
   checkExists stName
   trackScheduledTriggerInCatalog stName
   return successMsg
+
+runFetchEventsOfScheduledTrigger
+    :: (CacheRM m, MonadTx m) => FetchEventsScheduledTrigger -> m EncJSON
+runFetchEventsOfScheduledTrigger (FetchEventsScheduledTrigger stName stOffset stLimit) = do
+  checkExists stName
+  events <- liftTx $ map uncurryScheduledEvent <$> Q.listQE defaultTxErrorHandler
+    [Q.sql|
+      SELECT id,name,scheduled_time,additional_payload,status,tries
+      FROM hdb_catalog.hdb_scheduled_events
+      WHERE name = $1
+      ORDER BY scheduled_time
+      OFFSET $2
+      LIMIT $3
+     |] (stName,stOffset,stLimit) True
+  pure $ encJFromJValue $ J.toJSON $ FetchEventsResponse events
+  where
+    uncurryScheduledEvent (seId,name,scheduledTime,payload,status,tries) =
+      ScheduledEventDb seId name scheduledTime (Q.getAltJ <$> payload) status tries
 
 trackScheduledTriggerInCatalog :: (MonadTx m) => TriggerName -> m ()
 trackScheduledTriggerInCatalog stName = liftTx $ do

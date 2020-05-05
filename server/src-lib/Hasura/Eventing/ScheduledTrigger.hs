@@ -62,6 +62,7 @@ module Hasura.Eventing.ScheduledTrigger
   , ScheduledEventSeed(..)
   , generateScheduleTimes
   , insertScheduledEvents
+  , ScheduledEventDb(..)
   ) where
 
 import           Control.Arrow.Extended            (dup)
@@ -90,6 +91,7 @@ import qualified Database.PG.Query                 as Q
 import qualified Hasura.Logging                    as L
 import qualified Network.HTTP.Client               as HTTP
 import qualified Text.Builder                      as TB (run)
+import qualified PostgreSQL.Binary.Decoding        as PD
 
 newtype ScheduledTriggerInternalErr
   = ScheduledTriggerInternalErr QErr
@@ -104,6 +106,39 @@ scheduledEventsTable =
   QualifiedObject
     hdbCatalogSchema
     (TableName $ T.pack "hdb_scheduled_events")
+
+data ScheduledEventStatus
+  = SESScheduled
+  | SESLocked
+  | SESDelivered
+  | SESCancelled
+  | SESError
+  | SESDead
+  deriving (Show, Eq)
+
+scheduledEventStatusToText :: ScheduledEventStatus -> Text
+scheduledEventStatusToText SESScheduled = "scheduled"
+scheduledEventStatusToText SESLocked = "locked"
+scheduledEventStatusToText SESDelivered = "delivered"
+scheduledEventStatusToText SESCancelled = "cancelled"
+scheduledEventStatusToText SESError = "error"
+scheduledEventStatusToText SESDead = "dead"
+
+instance Q.ToPrepArg ScheduledEventStatus where
+  toPrepVal = Q.toPrepVal . scheduledEventStatusToText
+
+instance Q.FromCol ScheduledEventStatus where
+  fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
+    "scheduled" -> Just SESScheduled
+    "locked"    -> Just SESLocked
+    "delivered" -> Just SESDelivered
+    "cancelled" -> Just SESCancelled
+    "error"     -> Just SESError
+    "dead"      -> Just SESDead
+    _           -> Nothing
+
+instance J.ToJSON ScheduledEventStatus where
+  toJSON = J.String . scheduledEventStatusToText
 
 data ScheduledTriggerStats
   = ScheduledTriggerStats
@@ -126,6 +161,18 @@ data ScheduledEventPartial
   , sepPayload       :: !(Maybe J.Value)
   , sepTries         :: !Int
   } deriving (Show, Eq)
+
+data ScheduledEventDb
+  = ScheduledEventDb
+  { sedbId                :: !Text
+  , sedbName              :: !TriggerName
+  , sedbScheduledTime     :: !UTCTime
+  , sedbAdditionalPayload :: !(Maybe J.Value)
+  , sedbStatus            :: !ScheduledEventStatus
+  , sedbTries             :: !Int
+  } deriving (Show, Eq)
+
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ScheduledEventDb)
 
 data ScheduledEventFull
   = ScheduledEventFull
@@ -341,7 +388,7 @@ retryOrMarkError se@ScheduledEventFull {..} err = do
       noRetryHeader = isNothing mRetryHeaderSeconds
   if triesExhausted && noRetryHeader
     then do
-      markError
+      setScheduledEventStatus sefId SESError
     else do
       currentTime <- liftIO getCurrentTime
       let delay = fromMaybe (round $ unNonNegativeDiffTime
@@ -350,15 +397,6 @@ retryOrMarkError se@ScheduledEventFull {..} err = do
           diff = fromIntegral delay
           retryTime = addUTCTime diff currentTime
       setRetry se retryTime
-  where
-    markError =
-      Q.unitQE
-        defaultTxErrorHandler
-        [Q.sql|
-        UPDATE hdb_catalog.hdb_scheduled_events
-        SET error = 't', locked = 'f'
-        WHERE id = $1
-      |] (Identity sefId) True
 
 {- Note [Scheduled event lifecycle]
 
@@ -403,36 +441,20 @@ processSuccess pgpool se decodedHeaders resp = do
   liftExceptTIO $
     Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
     insertInvocation invocation
-    markSuccess
-  where
-    markSuccess =
-      Q.unitQE
-        defaultTxErrorHandler
-        [Q.sql|
-        UPDATE hdb_catalog.hdb_scheduled_events
-        SET delivered = 't', locked = 'f'
-        WHERE id = $1
-      |] (Identity $ sefId se) True
+    setScheduledEventStatus (sefId se) SESDelivered
 
 processDead :: (MonadIO m, MonadError QErr m) => Q.PGPool -> ScheduledEventFull -> m ()
 processDead pgpool se =
   liftExceptTIO $
-  Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) markDead
-  where
-    markDead =
-      Q.unitQE
-        defaultTxErrorHandler
-        [Q.sql|
-          UPDATE hdb_catalog.hdb_scheduled_events
-          SET dead = 't', locked = 'f'
-          WHERE id = $1
-        |] (Identity $ sefId se) False
+  Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $
+    setScheduledEventStatus (sefId se) SESDead
 
 setRetry :: ScheduledEventFull -> UTCTime -> Q.TxE QErr ()
 setRetry se time =
   Q.unitQE defaultTxErrorHandler [Q.sql|
           UPDATE hdb_catalog.hdb_scheduled_events
-          SET next_retry_at = $1, locked = 'f'
+          SET next_retry_at = $1,
+          status = 'locked'
           WHERE id = $2
           |] (time, sefId se) True
 
@@ -466,22 +488,27 @@ insertInvocation invo = do
           WHERE id = $1
           |] (Identity $ iEventId invo) True
 
+setScheduledEventStatus :: Text -> ScheduledEventStatus -> Q.TxE QErr ()
+setScheduledEventStatus scheduledEventId status = do
+  Q.unitQE defaultTxErrorHandler
+   [Q.sql|
+    UPDATE hdb_catalog.hdb_scheduled_events
+    SET status = $2
+    where id = $1
+    |] (scheduledEventId, status) True
+
 getScheduledEvents :: Q.TxE QErr [ScheduledEventPartial]
 getScheduledEvents = do
   map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.hdb_scheduled_events
-      SET locked = 't'
+      SET status = 'locked'
       WHERE id IN ( SELECT t.id
                     FROM hdb_catalog.hdb_scheduled_events t
-                    WHERE ( t.locked = 'f'
-                            and t.cancelled = 'f'
-                            and t.delivered = 'f'
-                            and t.error = 'f'
+                    WHERE ( t.status = 'scheduled'
                             and (
                              (t.next_retry_at is NULL and t.scheduled_time <= now()) or
                              (t.next_retry_at is not NULL and t.next_retry_at <= now())
                             )
-                            and t.dead = 'f'
                           )
                     FOR UPDATE SKIP LOCKED
                     )

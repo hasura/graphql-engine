@@ -6,6 +6,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , CreateScheduledTrigger(..)
   , CreateScheduledEvent(..)
   , STRetryConf(..)
+  , FetchEventsScheduledTrigger(..)
   , formatTime'
   , defaultSTRetryConf
   ) where
@@ -19,6 +20,7 @@ import           Data.Time.Format.ISO8601
 import           Hasura.Incremental
 import           Hasura.RQL.Types.Common     (NonNegativeDiffTime(..))
 import           Hasura.Prelude
+import           Data.Int                    (Int64)
 import           System.Cron.Types
 
 import qualified Data.Aeson                    as J
@@ -115,16 +117,8 @@ data CreateScheduledEvent
   = CreateScheduledEvent
   { steName      :: !ET.TriggerName
   , steTimestamp :: !UTCTime
-  -- ^ The timestamp should be in the ISO8601 format.
-  -- | Supported time string formats for the API:
-  -- @YYYY-MM-DD HH:MM Z@
-  -- @YYYY-MM-DD HH:MM:SS Z@
-  -- @YYYY-MM-DD HH:MM:SS.SSS Z@
-  -- The first space may instead be a T, and the second space is optional.
-  -- The Z represents UTC.
-  -- The Z may be replaced with a time zone offset of the form +0000 or -08:00,
-  -- where the first two digits are hours, the : is optional and
-  -- the second two digits (also optional) are minutes.
+  -- ^ The timestamp should be in the <ISO 8601 https://en.wikipedia.org/wiki/ISO_8601>
+  -- format (which is what @aeson@ expects by default for 'UTCTime').
   , stePayload   :: !(Maybe J.Value)
   } deriving (Show, Eq, Generic)
 
@@ -144,3 +138,19 @@ $(deriveJSON (aesonDrop 2 snakeCase) ''ScheduledEventId)
 
 formatTime' :: UTCTime -> T.Text
 formatTime'= T.pack . iso8601Show
+
+data FetchEventsScheduledTrigger
+  = FetchEventsScheduledTrigger
+  { festName   :: !ET.TriggerName
+  , festOffset :: !Int64
+  , festLimit  :: !(Maybe Int64)
+  } deriving (Show, Eq, Generic)
+
+$(deriveToJSON (aesonDrop 4 snakeCase) ''FetchEventsScheduledTrigger)
+
+instance FromJSON FetchEventsScheduledTrigger where
+  parseJSON =
+    withObject "FetchEventsScheduledTrigger" $ \o ->
+      FetchEventsScheduledTrigger <$> o .: "name"
+                                  <*> o .:? "offset" .!= 0
+                                  <*> o .:? "limit" .!= Nothing
