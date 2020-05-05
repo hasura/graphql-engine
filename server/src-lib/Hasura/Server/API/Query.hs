@@ -96,7 +96,6 @@ data RQLQueryV1
   | RQUpdateScheduledTrigger   !CreateScheduledTrigger
   | RQDeleteScheduledTrigger   !ScheduledTriggerName
   | RQCreateScheduledEvent     !CreateScheduledEvent
-  | RQCancelScheduledEvent     !ScheduledEventId
   | RQFetchScheduledEvents     !FetchEventsScheduledTrigger
 
   -- query collections, allow list related
@@ -266,7 +265,6 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQUpdateScheduledTrigger _      -> True
   RQDeleteScheduledTrigger _      -> True
   RQCreateScheduledEvent _        -> False
-  RQCancelScheduledEvent _        -> False
   RQFetchScheduledEvents _        -> False
 
   RQCreateQueryCollection _       -> True
@@ -395,7 +393,6 @@ runQueryM rq = withPathK "args" $ case rq of
       RQUpdateScheduledTrigger q       -> runUpdateScheduledTrigger q
       RQDeleteScheduledTrigger q       -> runDeleteScheduledTrigger q
       RQCreateScheduledEvent q         -> runCreateScheduledEvent q
-      RQCancelScheduledEvent q         -> runCancelScheduledEvent q
       RQFetchScheduledEvents q         -> runFetchEventsOfScheduledTrigger q
 
       RQCreateQueryCollection q        -> runCreateCollection q
@@ -483,7 +480,6 @@ requiresAdmin = \case
     RQUpdateScheduledTrigger _      -> True
     RQDeleteScheduledTrigger _      -> True
     RQCreateScheduledEvent _        -> True
-    RQCancelScheduledEvent _        -> True
     RQFetchScheduledEvents _        -> False
 
     RQCreateQueryCollection _       -> True

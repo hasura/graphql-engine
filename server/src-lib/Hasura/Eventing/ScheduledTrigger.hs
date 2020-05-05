@@ -111,7 +111,6 @@ data ScheduledEventStatus
   = SESScheduled
   | SESLocked
   | SESDelivered
-  | SESCancelled
   | SESError
   | SESDead
   deriving (Show, Eq)
@@ -120,7 +119,6 @@ scheduledEventStatusToText :: ScheduledEventStatus -> Text
 scheduledEventStatusToText SESScheduled = "scheduled"
 scheduledEventStatusToText SESLocked = "locked"
 scheduledEventStatusToText SESDelivered = "delivered"
-scheduledEventStatusToText SESCancelled = "cancelled"
 scheduledEventStatusToText SESError = "error"
 scheduledEventStatusToText SESDead = "dead"
 
@@ -132,7 +130,6 @@ instance Q.FromCol ScheduledEventStatus where
     "scheduled" -> Just SESScheduled
     "locked"    -> Just SESLocked
     "delivered" -> Just SESDelivered
-    "cancelled" -> Just SESCancelled
     "error"     -> Just SESError
     "dead"      -> Just SESDead
     _           -> Nothing

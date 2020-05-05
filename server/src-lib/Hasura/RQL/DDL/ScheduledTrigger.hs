@@ -3,7 +3,6 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , runUpdateScheduledTrigger
   , runDeleteScheduledTrigger
   , runCreateScheduledEvent
-  , runCancelScheduledEvent
   , addScheduledTriggerToCatalog
   , deleteScheduledTriggerFromCatalog
   , resolveScheduledTrigger
@@ -137,25 +136,6 @@ runCreateScheduledEvent CreateScheduledEvent{..} = do
        VALUES ($1, $2, $3)
     |] (steName, steTimestamp, Q.AltJ <$> stePayload) False
   pure successMsg
-
-runCancelScheduledEvent :: (MonadTx m) => ScheduledEventId -> m EncJSON
-runCancelScheduledEvent (ScheduledEventId seId) = do
-  affectedRows <- deleteScheduledEventFromCatalog seId
-  if | affectedRows == 1 -> pure successMsg
-     | affectedRows == 0 -> throw400 NotFound $ "scheduled event with id " <> seId <> " not found"
-     | otherwise -> throw500 $ "unexpected: more than one scheduled events found with id " <> seId
-
-deleteScheduledEventFromCatalog :: (MonadTx m) => EventId -> m Int
-deleteScheduledEventFromCatalog seId = liftTx $ do
-  (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
-   [Q.sql|
-    WITH "cte" AS
-    (UPDATE hdb_catalog.hdb_scheduled_events
-     SET status = 'cancelled'
-     WHERE id = $1
-     RETURNING *)
-    SELECT count(*) FROM "cte"
-   |] (Identity seId) False
 
 runFetchEventsOfScheduledTrigger
     :: (CacheRM m, MonadTx m) => FetchEventsScheduledTrigger -> m EncJSON
