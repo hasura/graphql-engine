@@ -14,6 +14,7 @@ module Hasura.Session
   , getSessionVariableValue
   , getSessionVariables
   , UserAdminSecret(..)
+  , UserRoleBuild(..)
   , UserInfo
   , _uiRole
   , _uiSession
@@ -135,42 +136,62 @@ data UserInfo
   } deriving (Show, Eq, Generic)
 instance Hashable UserInfo
 
--- | Build user info from @'SessionVariables'
+-- | Represents how to build a role from the session variables
+data UserRoleBuild
+  = URBFromSessionVariables
+  -- ^ Look for `x-hasura-role` session variable value and absence will raise an exception
+  | URBFromSessionVariablesFallback !RoleName
+  -- ^ Look for `x-hasura-role` session variable value, if absent fall back to given role
+  | URBPreDetermined !RoleName
+  -- ^ Use only the pre-determined role
+  deriving (Show, Eq)
+
+-- | Build @'UserInfo' from @'SessionVariables'
 mkUserInfo
-  :: (MonadError QErr m)
-  => UserAdminSecret
-  -> SessionVariables
-  -> Maybe RoleName -- ^ Default role if x-hasura-role session variable not found
-  -> m UserInfo
-mkUserInfo userAdminSecret sess@(SessionVariables sessVars) defaultRole = do
-  roleName <- onNothing (maybeRoleFromSession <|> defaultRole) $
-              throw400 InvalidParams $ userRoleHeader <> " not found in session variables"
-  -- see Note [Backend only permissions] to know more about the following logic.
-  backendOnlyFieldAccess <- case userAdminSecret of
+  :: forall m. (MonadError QErr m)
+  => UserRoleBuild -> UserAdminSecret -> SessionVariables -> m UserInfo
+mkUserInfo roleBuild userAdminSecret sessionVariables = do
+  roleName <- case roleBuild of
+    URBFromSessionVariables -> onNothing maybeSessionRole $
+      throw400 InvalidParams $ userRoleHeader <> " not found in session variables"
+    URBFromSessionVariablesFallback role -> pure $ fromMaybe role maybeSessionRole
+    URBPreDetermined role -> pure role
+  backendOnlyFieldAccess <- getBackendOnlyFieldAccess
+  let modifiedSession = modifySessionVariables roleName sessionVariables
+  pure $ UserInfo roleName modifiedSession backendOnlyFieldAccess
+  where
+    maybeSessionRole = maybeRoleFromSessionVariables sessionVariables
+
+    -- | Add x-hasura-role header and remove admin secret headers
+    modifySessionVariables :: RoleName -> SessionVariables -> SessionVariables
+    modifySessionVariables roleName =
+      SessionVariables
+      . Map.insert userRoleHeader (roleNameToTxt roleName)
+      . Map.delete adminSecretHeader
+      . Map.delete deprecatedAccessKeyHeader
+      . unSessionVariables
+
+    -- | See Note [Backend only permissions] to know more about the function
+    getBackendOnlyFieldAccess :: m BackendOnlyFieldAccess
+    getBackendOnlyFieldAccess = case userAdminSecret of
       UAdminSecretNotSent -> pure BOFADisallowed
       UAdminSecretSent    -> lookForBackendOnlyPermissionsConfig
       UAuthNotSet         -> lookForBackendOnlyPermissionsConfig
-  let modifiedSession = SessionVariables $ modifySessionVariables roleName sessVars
-  pure $ UserInfo roleName modifiedSession backendOnlyFieldAccess
-  where
-    -- Add x-hasura-role header and remove admin secret headers
-    modifySessionVariables roleName
-      = Map.insert userRoleHeader (roleNameToTxt roleName)
-        . Map.delete adminSecretHeader
-        . Map.delete deprecatedAccessKeyHeader
+      where
+        lookForBackendOnlyPermissionsConfig =
+          case getSessionVariableValue useBackendOnlyPermissionsHeader sessionVariables of
+            Nothing     -> pure BOFADisallowed
+            Just varVal ->
+              case parseStringAsBool (T.unpack varVal) of
+                Left err        -> throw400 BadRequest $
+                  useBackendOnlyPermissionsHeader <> ": " <> T.pack err
+                Right privilege -> pure $ if privilege then BOFAAllowed else BOFADisallowed
 
-    -- returns Nothing if x-hasura-role is an empty string
-    maybeRoleFromSession =
-      getSessionVariableValue userRoleHeader sess >>= mkRoleName
 
-    lookForBackendOnlyPermissionsConfig =
-      case getSessionVariableValue useBackendOnlyPermissionsHeader sess of
-        Nothing     -> pure BOFADisallowed
-        Just varVal ->
-          case parseStringAsBool (T.unpack varVal) of
-            Left err        -> throw400 BadRequest $
-              useBackendOnlyPermissionsHeader <> ": " <> T.pack err
-            Right privilege -> pure $ if privilege then BOFAAllowed else BOFADisallowed
+maybeRoleFromSessionVariables :: SessionVariables -> Maybe RoleName
+maybeRoleFromSessionVariables sessionVariables =
+  -- returns Nothing if x-hasura-role is an empty string
+  getSessionVariableValue userRoleHeader sessionVariables >>= mkRoleName
 
 adminUserInfo :: UserInfo
 adminUserInfo = UserInfo adminRoleName mempty BOFADisallowed

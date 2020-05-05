@@ -1,5 +1,6 @@
 import pytest
 from validate import check_query_f
+from context import PytestConf
 
 # Mark that all tests in this module can be run as server upgrade tests
 pytestmark = pytest.mark.allow_server_upgrade_test
@@ -18,7 +19,7 @@ class TestGraphQLQueryBasic:
 
     def test_select_query_author_with_include_directive(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_include_directive.yaml', transport)
-    
+
     # Can't run server upgrade tests, as this test has a schema change
     @pytest.mark.skip_server_upgrade_test
     def test_select_various_postgres_types(self, hge_ctx, transport):
@@ -606,3 +607,17 @@ class TestGraphQLQueryCaching:
 
     def test_include_directive(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/include_directive.yaml', transport)
+
+@pytest.mark.skipif(
+    not PytestConf.config.getoption("--test-unauthorized-role"),
+    reason="--test-unauthorized-role missing"
+)
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestUnauthorizedRolePermission:
+    @classmethod
+    def dir(cls):
+        return 'queries/unauthorized_role'
+
+    def test_unauth_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
