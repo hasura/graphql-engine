@@ -355,14 +355,18 @@ fieldSelection
   -> m [FieldsParser 'Output n (Maybe (FieldName, AnnotatedField))]
 fieldSelection fieldInfo selectPermissions stringifyNum = do
   case fieldInfo of
-    FIColumn columnInfo -> do
-      let annotated = RQL.mkAnnColField columnInfo Nothing -- FIXME: support ColOp
-          fieldName = pgiName columnInfo
-      field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
-      pure [ P.selection_ fieldName (pgiDescription columnInfo) field
-             `mapField` \name -> (aliasToName name, annotated)
-           | Set.member (pgiColumn columnInfo) $ spiCols selectPermissions
-           ]
+    FIColumn columnInfo ->
+      if Set.member (pgiColumn columnInfo) $ spiCols selectPermissions
+      then do
+        let fieldName = pgiName columnInfo
+            pathArg = jsonPathArg $ pgiType columnInfo
+        field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+        pure $ pure $ P.selection fieldName (pgiDescription columnInfo) pathArg field
+          `mapField` \(name, colOp) ->
+            ( aliasToName name
+            , RQL.mkAnnColField columnInfo colOp
+            )
+      else pure []
     FIRelationship relationshipInfo -> do
       -- TODO: move this to a separate function?
       let otherTable = riRTable  relationshipInfo
@@ -465,9 +469,9 @@ computedFieldFunctionArgs ComputedFieldFunction{..}
       pure $ fmap (RQL.AEInput . mkParameter) <$> argParser
 
 -- FIXME: move to common?
-jsonPathArg :: MonadParse n => PGScalarType -> FieldsParser 'Input n (Maybe RQL.ColOp)
-jsonPathArg functionReturnType
-  | isJSONType functionReturnType =
+jsonPathArg :: MonadParse n => PGColumnType -> FieldsParser 'Input n (Maybe RQL.ColOp)
+jsonPathArg columnType
+  | isScalarColumnWhere isJSONType columnType =
       P.fieldOptional fieldName description P.string `P.bindFields` traverse toColExp
   | otherwise = pure Nothing
   where
@@ -494,7 +498,7 @@ computedField ComputedFieldInfo{..} selectPermissions stringifyNum = do
       then do
         let fieldArgsParser = do
               args  <- functionArgsParser
-              colOp <- jsonPathArg scalarReturnType
+              colOp <- jsonPathArg $ PGColumnScalar scalarReturnType
               pure $ RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
                 { RQL._cfssFunction  = _cffName _cfiFunction
                 , RQL._cfssType      = scalarReturnType
