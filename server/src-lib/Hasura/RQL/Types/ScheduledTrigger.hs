@@ -189,4 +189,25 @@ instance FromJSON FetchEventsScheduledTrigger where
     withObject "FetchEventsScheduledTrigger" $ \o ->
       FetchEventsScheduledTrigger <$> o .: "name"
                                   <*> o .:? "offset" .!= 0
-                                  <*> o .:? "limit" .!= Nothing
+                                  <*> o .:? "limit"
+data CreateScheduledTriggerOneOff
+  = CreateScheduledTriggerOneOff
+  { cstoWebhook           :: !ET.WebhookConf
+  , cstoScheduleAt        :: !UTCTime
+  , cstoPayload           :: !(Maybe J.Value)
+  , cstoHeaders           :: ![ET.HeaderConf]
+  , cstoRetryConf         :: !STRetryConf
+  , cstoComment           :: !(Maybe Text)
+  } deriving (Show, Eq, Generic)
+
+instance FromJSON CreateScheduledTriggerOneOff where
+  parseJSON =
+    withObject "CreateScheduledTriggerOneOff" $ \o ->
+      CreateScheduledTriggerOneOff <$> o .: "webhook"
+                                   <*> o .: "scheduled_at"
+                                   <*> o .:? "payload"
+                                   <*> o .:? "headers" .!= []
+                                   <*> o .:? "retry_conf" .!= defaultSTRetryConf
+                                   <*> o .:? "comment"
+
+$(deriveToJSON (aesonDrop 4 CreateScheduledTriggerOneOff) ''CreateScheduledTriggerOneOff)

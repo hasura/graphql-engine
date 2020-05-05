@@ -24,7 +24,7 @@ next_retry_at TIMESTAMPTZ,
 PRIMARY KEY (name, scheduled_time),
 FOREIGN KEY (name) REFERENCES hdb_catalog.hdb_scheduled_trigger(name)
 ON UPDATE CASCADE ON DELETE CASCADE,
-CONSTRAINT valid_status CHECK (status IN ('scheduled','locked','delivered','cancelled','error','dead'))
+CONSTRAINT valid_status CHECK (status IN ('scheduled','locked','delivered','error','dead'))
 );
 
 CREATE INDEX hdb_scheduled_event_status ON hdb_catalog.hdb_scheduled_events (status);
@@ -53,3 +53,19 @@ CREATE VIEW hdb_catalog.hdb_scheduled_events_stats AS
     GROUP BY name
   ) ste
   ON st.name = ste.name;
+
+CREATE TABLE hdb_catalog.hdb_one_off_scheduled_events
+(
+  id TEXT DEFAULT gen_random_uuid() UNIQUE,
+  webhook_conf JSON NOT NULL,
+  scheduled_time TIMESTAMPTZ NOT NULL,
+  retry_conf JSON,
+  payload JSON,
+  status TEXT NOT NULL DEFAULT 'scheduled',
+  tries INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW(),
+
+  CONSTRAINT valid_status CHECK (status IN ('scheduled','locked','delivered','error','dead'))
+);
+
+CREATE INDEX hdb_hdb_one_off_scheduled_event_status ON hdb_catalog.hdb_one_off_scheduled_events (status);
