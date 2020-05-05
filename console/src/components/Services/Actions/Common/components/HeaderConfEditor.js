@@ -32,7 +32,7 @@ const HandlerEditor = ({
         />
       </h2>
       <div className={`${styles.add_mar_bottom_mid}`}>
-        <label className={styles.add_mar_right}>
+        <label className={`${styles.add_mar_right} ${styles.cursorPointer}`}>
           <input
             type="checkbox"
             checked={forwardClientHeaders}
