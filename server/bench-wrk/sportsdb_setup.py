@@ -1,14 +1,15 @@
-import requests
+import argparse
 from zipfile import ZipFile
-import requests_cache
 import os
+from contextlib import contextmanager
 import threading
+import requests
+import requests_cache
+from colorama import Fore, Style
+
 from port_allocator import PortAllocator
 from run_postgres import Postgres
 from run_hge import HGE
-from colorama import Fore, Style
-import argparse
-from contextlib import contextmanager
 
 
 def _first_true(iterable, default=False, pred=None):
@@ -23,19 +24,24 @@ class HGETestSetup:
 
     previous_work_dir_file = '.previous_work_dir'
 
-    def __init__(self, pg_urls, pg_docker_image, hge_docker_image=None, hge_args=[], skip_stack_build=False):
-        self.pg_url, self.remote_pg_url = pg_urls or (None, None)
+    def __init__(self, pg_url, remote_pg_url, pg_docker_image, hge_url, remote_hge_url, hge_docker_image=None, hge_args=[], skip_remote_graphql_setup=False, skip_stack_build=False):
+        self.pg_url = pg_url
+        self.remote_pg_url = remote_pg_url
         self.pg_docker_image = pg_docker_image
+        self.hge_url = hge_url
+        self.remote_hge_url = remote_hge_url
         self.hge_docker_image = hge_docker_image
         self.hge_args = hge_args
+        self.skip_remote_graphql_setup = skip_remote_graphql_setup
         self.skip_stack_build = skip_stack_build
         self.port_allocator = PortAllocator()
-        self.set_work_dir()
+        self.init_work_dir()
         self.init_pgs()
         self.init_hges()
         self.set_previous_work_dir()
 
     def get_previous_work_dir(self):
+        """Get the work directory of the previous error"""
         try:
             with open(self.previous_work_dir_file) as f:
                 return f.read()
@@ -43,10 +49,17 @@ class HGETestSetup:
             return None
 
     def set_previous_work_dir(self):
+        """
+        Set the current work directory as previous work directory
+        This directory will be used as the default work directory choice
+        """
         with open(self.previous_work_dir_file, 'w') as f:
             return f.write(self.work_dir)
 
     def get_work_dir(self):
+        """
+        Get the work directory from environmental variable, or from the user input
+        """
         default_work_dir = self.get_previous_work_dir() or self.default_work_dir
         return os.environ.get('WORK_DIR') \
             or input(Fore.YELLOW + '(Set WORK_DIR environmental variable to avoid this)\n'
@@ -54,37 +67,40 @@ class HGETestSetup:
                      + Style.RESET_ALL).strip() \
             or default_work_dir
 
-
-    def set_work_dir(self):
+    def init_work_dir(self):
+        """
+        Get the current work directory from user input or environmental variables
+        and create the work directory if it is not present
+        """
         self.work_dir = self.get_work_dir()
         print ("WORK_DIR: ", self.work_dir)
         os.makedirs(self.work_dir, exist_ok=True)
         requests_cache.install_cache(self.work_dir + '/sportsdb_cache')
 
     def init_pgs(self):
-        pg_confs = [
-            ('sportsdb_data', self.pg_url),
-            ('remote_sportsdb_data', self.remote_pg_url)
-        ]
-        self.pg, self.remote_pg = [
-            Postgres(
+        def _init_pg(data_dir, url):
+            return Postgres(
                 port_allocator=self.port_allocator, docker_image=self.pg_docker_image,
                 db_data_dir= self.work_dir + '/' + data_dir, url=url
             )
-            for (data_dir, url) in pg_confs
-        ]
+
+        self.pg = _init_pg('sportsdb_data', self.pg_url)
+
+        if not self.skip_remote_graphql_setup:
+            self.remote_pg = _init_pg('remote_sportsdb_data', self.remote_pg_url)
 
     def init_hges(self):
-        hge_confs = [
-            (self.pg, 'hge.log'),
-            (self.remote_pg, 'remote_hge.log')
-        ]
-        self.hge, self.remote_hge = [
-            HGE(
-                pg=pg, port_allocator=self.port_allocator, args=self.hge_args,
-                log_file= self.work_dir + '/' + log_file, docker_image=self.hge_docker_image)
-            for (pg, log_file) in hge_confs
-        ]
+        def _init_hge(pg, hge_url, log_file):
+            return HGE(
+                pg=pg, url=hge_url, port_allocator=self.port_allocator,
+                args=self.hge_args, log_file= self.work_dir + '/' + log_file,
+                docker_image=self.hge_docker_image
+            )
+
+        self.hge = _init_hge(self.pg, self.hge_url, 'hge.log')
+
+        if not self.skip_remote_graphql_setup:
+            self.remote_hge = _init_hge(self.remote_pg, self.remote_hge_url, 'remote_hge.log')
 
     @contextmanager
     def graphql_engines_setup(self):
@@ -122,13 +138,20 @@ class HGETestSetup:
             hge.create_obj_fk_relationships(schema)
             hge.create_arr_fk_relationships(schema)
 
+        def start_remote_postgres_docker():
+            if not self.skip_remote_graphql_setup:
+                self.remote_pg.start_postgres_docker()
+
         run_concurrently_fns(
             self.pg.start_postgres_docker,
-            self.remote_pg.start_postgres_docker)
-        print("Postgres url:", self.pg.url)
-        print("Remote Postgres url:", self.remote_pg.url)
+            start_remote_postgres_docker)
 
-        self.remote_hge.run()
+        print("Postgres url:", self.pg.url)
+
+        if not self.skip_remote_graphql_setup:
+            print("Remote Postgres url:", self.remote_pg.url)
+            self.remote_hge.run()
+
         self.hge.run()
 
         # Skip if the tables are already present
@@ -140,38 +163,58 @@ class HGETestSetup:
         zip_file = self.download_sportsdb_zip(self.work_dir+ '/sportsdb.zip')
         sql_file = self.unzip_sql_file(zip_file)
 
+        def set_remote_hge():
+            if not self.skip_remote_graphql_setup:
+                set_hge(self.remote_hge, 'remote_hge', 'Remote')
+
         # Create the required tables and move them to required schemas
         hge_thread = threading.Thread(
             target=set_hge, args=(self.hge, 'hge', 'Main'))
         remote_hge_thread = threading.Thread(
-            target=set_hge, args=(self.remote_hge, 'remote_hge', 'Remote'))
+            target=set_remote_hge)
         run_concurrently([hge_thread, remote_hge_thread])
 
-        # Add remote_hge as remote schema
-        self.hge.add_remote_schema(
-            'remote_hge', self.remote_hge.url + '/v1/graphql',
-            self.remote_hge.admin_auth_headers())
+        if not self.skip_remote_graphql_setup:
+            # Add remote_hge as remote schema
+            self.hge.add_remote_schema(
+                'remote_hge', self.remote_hge.url + '/v1/graphql',
+                self.remote_hge.admin_auth_headers()
+            )
 
         # TODO update the remote schema url if needed
-
         tables = self.pg.get_all_tables_in_a_schema('hdb_catalog')
+
+	    # Create remote relationships only if it is supported
         if 'hdb_remote_relationship' not in tables:
             return
 
         # Create remote relationships
+        if not self.skip_remote_graphql_setup:
+            self.create_remote_relationships()
+
+    def create_remote_relationships(self):
         self.hge.create_remote_obj_rel_to_itself('hge', 'remote_hge', 'remote_hge')
         self.hge.create_remote_arr_fk_ish_relationships('hge', 'remote_hge', 'remote_hge')
         self.hge.create_remote_obj_fk_ish_relationships('hge', 'remote_hge', 'remote_hge')
 
-
     def teardown(self):
-        for res in [self.hge, self.remote_hge, self.pg, self.remote_pg]:
-           res.teardown()
+        for res in [self.hge, self.pg]:
+            res.teardown()
+        if not self.skip_remote_graphql_setup:
+            for res in [self.remote_hge, self.remote_pg]:
+                res.teardown()
+
+    def unzip_sql_file(self, zip_file):
+        with ZipFile(zip_file, 'r') as zip:
+            sql_file = zip.infolist()[0]
+            print('DB SQL file:', sql_file.filename)
+            zip.extract(sql_file, self.work_dir)
+        return self.work_dir + '/' + sql_file.filename
 
     def download_sportsdb_zip(self, filename, url=sportsdb_url):
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
-            total=0
+            total = 0
             print()
             with open(filename, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=8192):
@@ -181,13 +224,6 @@ class HGETestSetup:
                         f.write(chunk)
             print('\nDB Zip File:', filename)
         return filename
-
-    def unzip_sql_file(self, zip_file):
-        with ZipFile(zip_file, 'r') as zip:
-            sql_file = zip.infolist()[0]
-            print('DB SQL file:', sql_file.filename)
-            zip.extract(sql_file, self.work_dir)
-        return self.work_dir + '/' + sql_file.filename
 
 
 class HGETestSetupArgs:
@@ -209,40 +245,53 @@ class HGETestSetupArgs:
         self.set_hge_confs()
 
     def set_pg_confs(self):
-        self.pg_urls, self.pg_docker_image = self.get_params([
-            ('pg_urls', 'HASURA_BENCH_PG_URLS'),
-            ('pg_docker_image', 'HASURA_BENCH_PG_DOCKER_IMAGE')
-        ])
-        if self.pg_urls:
-            self.pg_urls = self.pg_urls.split(',')
-        else:
+        self.pg_url, self.remote_pg_url, self.pg_docker_image = self.get_params(
+            ['pg_url', 'remote_pg_url', 'pg_docker_image']
+        )
+        if not self.pg_url:
             self.pg_docker_image = self.pg_docker_image or self.default_pg_docker_image
 
     def set_hge_confs(self):
-        self.hge_docker_image = self.get_param(
-            'hge_docker_image',
-            'HASURA_BENCH_DOCKER_IMAGE'
+        self.hge_docker_image, self.hge_url, self.remote_hge_url = self.get_params(
+            ['hge_docker_image', 'hge_url', 'remote_hge_url']
         )
         self.skip_stack_build = self.parsed_args.skip_stack_build
+        self.skip_remote_graphql_setup = self.parsed_args.skip_remote_graphql_setup
         self.hge_args =  self.parsed_args.hge_args[1:]
 
     def set_pg_options(self):
         pg_opts = self.arg_parser.add_argument_group('Postgres').add_mutually_exclusive_group()
-        pg_opts.add_argument('--pg-urls', metavar='HASURA_BENCH_PG_URLS', help='Postgres database urls to be used for tests, given as comma separated values', required=False)
+        pg_opts.add_argument('--pg-url', metavar='HASURA_BENCH_PG_URLS', help='Postgres database url to be used for tests', required=False)
+        pg_opts.add_argument('--remote-pg-url', metavar='HASURA_BENCH_REMOTE_PG_URLS', help='Url of Postgres database which is attached/has to be attached, with remote graphql-engine', required=False)
         pg_opts.add_argument('--pg-docker-image', metavar='HASURA_BENCH_PG_DOCKER_IMAGE', help='Postgres docker image to be used for tests', required=False)
 
     def set_hge_options(self):
         hge_opts = self.arg_parser.add_argument_group('Hasura GraphQL Engine')
+        hge_opts.add_argument('--hge-url', metavar='HASURA_BENCH_HGE_URL', help='Url of Hasura graphql-engine')
+        hge_opts.add_argument('--remote-hge-url', metavar='HASURA_BENCH_REMOTE_HGE_URL', help='Url of remote Hasura graphql-engine')
         hge_opts.add_argument('--hge-docker-image', metavar='HASURA_BENCH_HGE_DOCKER_IMAGE', help='GraphQl engine docker image to be used for tests', required=False)
         hge_opts.add_argument('--skip-stack-build', help='Skip stack build if this option is set', action='store_true', required=False)
+        hge_opts.add_argument('--skip-remote-graphql-setup', help='Skip setting up of remote graphql engine', action='store_true', required=False)
         self.arg_parser.add_argument('hge_args', nargs=argparse.REMAINDER)
 
-    def get_param(self, attr, env):
-        return _first_true([getattr(self.parsed_args, attr), os.getenv(env)])
+    def default_env(self, attr):
+        return 'HASURA_BENCH_' + attr.upper()
+
+    def get_param(self, attr, env_key=None):
+        if not env_key:
+            env_key = self.default_env(attr)
+        return _first_true([getattr(self.parsed_args, attr), os.getenv(env_key)])
 
     def get_params(self, params_loc):
         params_out = []
-        for (attr, env) in params_loc:
+        for param_loc in params_loc:
+            # You can specify just the attribute name for the parameter
+            if isinstance(param_loc, str):
+                attr = param_loc
+                env = self.default_env(attr)
+            # Or you can specify attribute and environmental variables as a tuple
+            else:
+                (attr, env) = param_loc
             param = self.get_param(attr, env)
             params_out.append(param)
         return params_out
@@ -254,10 +303,14 @@ class HGETestSetupWithArgs(HGETestSetup, HGETestSetupArgs):
         HGETestSetupArgs.__init__(self)
         HGETestSetup.__init__(
             self,
-            pg_urls = self.pg_urls,
+            pg_url = self.pg_url,
+            remote_pg_url = self.remote_pg_url,
             pg_docker_image = self.pg_docker_image,
+            hge_url = self.hge_url,
+            remote_hge_url = self.remote_hge_url,
             hge_docker_image = self.hge_docker_image,
             skip_stack_build = self.skip_stack_build,
+            skip_remote_graphql_setup = self.skip_remote_graphql_setup,
             hge_args = self.hge_args
         )
 

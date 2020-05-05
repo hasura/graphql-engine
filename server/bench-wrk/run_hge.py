@@ -1,24 +1,24 @@
 import os
 import subprocess
+import argparse
+import json
+import signal
+import time
+import contextlib
 import requests
 import inflection
-import json
-import time
-import signal
 import docker
-import argparse
-from requests.exceptions import ConnectionError
 from colorama import Fore, Style
-import contextlib
 
 
 def rm_file_if_exists(f):
+    """Remove a file if it exists"""
     with contextlib.suppress(FileNotFoundError):
         os.remove(f)
 
 
 class HGEError(Exception):
-    pass
+    """Exception type for class HGE"""
 
 
 class HGE:
@@ -34,6 +34,7 @@ class HGE:
     def __init__(self, pg, port_allocator, docker_image=None, log_file='hge.log', url=None, args=[]):
         self.pg = pg
         self.log_file = log_file
+        self.tix_file = self.log_file[:-4] + '.tix'
         self.docker_image = docker_image
         self.introspection = None
         self.obj_fk_rels = set()
@@ -71,7 +72,6 @@ class HGE:
     def run(self):
         if self.url:
             return
-        self.tix_file = self.log_file[:-4] + '.tix'
         if self.docker_image:
             self.run_with_docker()
         else:
@@ -151,6 +151,8 @@ class HGE:
             if r.status_code == 200:
                 print()
                 return
+        except requests.exceptions.ConnectionError:
+            pass
         except ConnectionError:
             pass
         print(".", end="", flush=True),
@@ -287,7 +289,7 @@ class HGE:
     def create_remote_obj_rel_to_itself(self, tables_schema, remote, remote_tables_schema):
         print("Creating remote relationship to the tables in schema {} to itself using remote {}".format(tables_schema, remote))
         fk_constrnts = self.pg.get_all_fk_constraints(tables_schema)
-        for (s,_,t,c,fs,ft,fc) in fk_constrnts:
+        for (s, _, t, c, _, ft, _) in fk_constrnts:
             table_cols = self.pg.get_all_columns_of_a_table(t, s)
             if not 'id' in table_cols:
                 continue
@@ -328,7 +330,7 @@ class HGE:
     def create_remote_obj_fk_ish_relationships(self, tables_schema, remote, remote_tables_schema):
         print("Creating object foreign key ish relationships for tables in schema {} using remote {}".format(tables_schema, remote))
         fk_constrnts = self.pg.get_all_fk_constraints(tables_schema)
-        for (s,_,t,c,fs,ft,fc) in fk_constrnts:
+        for (s, _, t, c, _, ft, _) in fk_constrnts:
             rel_name = inflection.singularize(ft)
             if c.endswith('_id'):
                 rel_name = c[:-3]
@@ -360,7 +362,7 @@ class HGE:
         print("Creating object foreign key relationships for tables in schema ", schema)
         fk_constrnts = self.pg.get_all_fk_constraints(schema)
         queries = []
-        for (s,_,t,c,fs,ft,fc) in fk_constrnts:
+        for (s, _, t, c, _, ft, _) in fk_constrnts:
             rel_name = inflection.singularize(ft)
             if c.endswith('_id'):
                 rel_name = c[:-3]
@@ -385,7 +387,7 @@ class HGE:
 
     def create_remote_arr_fk_ish_relationships(self, tables_schema, remote, remote_tables_schema):
         fk_constrnts = self.pg.get_all_fk_constraints(tables_schema)
-        for (s,_,t,c,fs,ft,fc) in fk_constrnts:
+        for (_, _, t, c, fs, ft, _) in fk_constrnts:
             rel_name = 'remote_' + inflection.pluralize(t) + '_by_' + c
             query ={
                 'type': 'create_remote_relationship',
@@ -417,7 +419,7 @@ class HGE:
         print("Creating array foreign key relationships for tables in schema ", schema)
         fk_constrnts = self.pg.get_all_fk_constraints(schema)
         queries = []
-        for (s,cn,t,c,fs,ft,fc) in fk_constrnts:
+        for (s, _, t, c, fs, ft, _) in fk_constrnts:
             rel_name = inflection.pluralize(t) + '_by_' + c
             queries.append({
                 'type' : 'create_array_relationship',
@@ -441,13 +443,13 @@ class HGE:
             self.arr_fk_rels.add(((fs,ft),rel_name))
         return self.run_bulk(queries)
 
-    def run_sql(self, sql, exp_status=200):
-        return self.v1q(self.mk_run_sql_q(sql))
-
-    def mk_run_sql_q(self, sql):
-        return {
-            'type' : 'run_sql',
-            'args': {
-                'sql' : sql
+    def run_sql(self, sql):
+        """Run given SQL query"""
+        def mk_run_sql_q(sql):
+            return {
+                'type' : 'run_sql',
+                'args': {
+                    'sql' : sql
+                }
             }
-        }
+        return self.v1q(mk_run_sql_q(sql))

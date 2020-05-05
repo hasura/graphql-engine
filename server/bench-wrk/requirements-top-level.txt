@@ -10,7 +10,7 @@ dash-renderer
 dash-html-components
 dash-bootstrap-components
 dash-core-components
-graphene==3.0.dev20190817210753
+graphene==3.0b1
 matplotlib
 pandas
 boto3
