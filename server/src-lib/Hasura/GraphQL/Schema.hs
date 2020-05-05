@@ -22,6 +22,7 @@ data QueryRootField
   = QRFSimple      !(RQL.AnnSimpleSelG UnpreparedValue)
   | QRFPrimaryKey  !(RQL.AnnSimpleSelG UnpreparedValue)
   | QRFAggregation !(RQL.AnnAggSelG    UnpreparedValue)
+  | QRFExp         !Text
 
 query
   :: forall m n. (MonadSchema n m, MonadError QErr m)
@@ -43,7 +44,7 @@ query allTables stringifyNum = do
         , toQrf QRFPrimaryKey  $ selectTableByPk      tableName pkName      (Just pkDesc)     perms stringifyNum
         , toQrf QRFAggregation $ selectTableAggregate tableName aggName     (Just aggDesc)    perms stringifyNum
         ]
-  -- handle __typename
-  let queryFieldsParser = fmap (M.fromList . catMaybes) $ sequenceA $ concat $ catMaybes selectExpParsers
-  pure $ P.selectionSet $$(G.litName "Query") Nothing queryFieldsParser
+  let queryFieldsParser = fmap catMaybes $ sequenceA $ concat $ catMaybes selectExpParsers
+      typenameRepr = ($$(G.litName "__typename"), QRFExp "query_root")
+  pure $ M.fromList <$> P.selectionSet $$(G.litName "Query") Nothing typenameRepr queryFieldsParser
   where toQrf = fmap . fmap . fmap . fmap . fmap

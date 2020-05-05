@@ -264,9 +264,10 @@ selectionSet
   :: MonadParse m
   => Name
   -> Maybe Description
-  -> FieldsParser 'Output m a
-  -> Parser 'Output m a
-selectionSet name description parser = Parser
+  -> a
+  -> FieldsParser 'Output m [a]
+  -> Parser 'Output m [a]
+selectionSet name description typenameRepr parser = Parser
   { pType = NonNullable $ TNamed $ mkDefinition name description $ TIObject (ifDefinitions parser)
   , pParser = \input -> do
       let fields = input & mapMaybe \case
@@ -278,7 +279,11 @@ selectionSet name description parser = Parser
       for_ fields \Field{ _fName = fieldName } -> do
         unless (fieldName `S.member` fieldNames) $
           parseError $ name <<> " has no field named " <>> fieldName
-      ifParser parser $! M.fromListOn _fName fields
+      parsedFields <- ifParser parser $! M.fromListOn _fName fields
+      -- __typename is a special case: while every selection set
+      -- must accept it as a potential output field, it is not
+      -- exposed as part of the schema
+      pure $ [typenameRepr | any (== $$(litName "__typename")) $ _fName <$> fields] <> parsedFields
   }
   where
     fieldNames = S.fromList (dName <$> ifDefinitions parser)
