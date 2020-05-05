@@ -516,7 +516,10 @@ export const generateCreateScheduledTriggerQuery = (
         : state.webhook.value.trim(),
     schedule: {
       type: state.schedule.type,
-      value: state.schedule.type === 'cron' ? state.schedule.value : undefined,
+      value:
+        state.schedule.type === 'cron'
+          ? state.schedule.value
+          : state.schedule.value.toISOString(),
     },
     payload: JSON.parse(state.payload),
     headers: transformHeaders(state.headers),
@@ -541,7 +544,10 @@ export const generateUpdateScheduledTriggerQuery = (
         : state.webhook.value.trim(),
     schedule: {
       type: state.schedule.type,
-      value: state.schedule.type === 'cron' ? state.schedule.value : undefined,
+      value:
+        state.schedule.type === 'cron'
+          ? state.schedule.value
+          : state.schedule.value.toISOString(),
     },
     payload: JSON.parse(state.payload),
     headers: transformHeaders(state.headers),

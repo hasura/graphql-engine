@@ -1,8 +1,12 @@
 import React from 'react';
+import DateTimePicker from 'react-datetime';
+import { Moment } from 'moment';
+import './ReactDateTime.css';
 import {
   useScheduledTrigger,
   defaultCronExpr,
 } from '../../ScheduledTriggers/state';
+import { ScheduleTriggerType } from '../../Types';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import { getEventTargetValue } from '../../../../Common/utils/jsUtils';
 import styles from '../../Events.scss';
@@ -21,10 +25,46 @@ const Form = (props: Props) => {
     setState.name(getEventTargetValue(e));
   const setWebhookValue = (e: React.BaseSyntheticEvent) =>
     setState.setWebhookValue(getEventTargetValue(e));
-  const setTriggerType = (e: React.BaseSyntheticEvent) =>
-    setState.scheduleType(getEventTargetValue(e));
+  const setTriggerType = (e: React.BaseSyntheticEvent) => {
+    const type: ScheduleTriggerType = getEventTargetValue(e);
+    switch (type) {
+      case 'adhoc': {
+        setState.schedule({
+          type,
+          value: new Date(),
+        });
+        break;
+      }
+      case 'cron': {
+        setState.schedule({
+          type,
+          value: defaultCronExpr,
+        });
+        break;
+      }
+      default:
+        break;
+    }
+  };
   const setScheduleValue = (e: React.BaseSyntheticEvent) =>
-    setState.scheduleValue(getEventTargetValue(e));
+    setState.schedule({
+      ...schedule,
+      value: getEventTargetValue(e),
+    });
+
+  const setAdhocTriggerValue = (value: string | Moment) => {
+    if (typeof value === 'string') {
+      setState.schedule({
+        type: 'adhoc',
+        value: new Date(value),
+      });
+    } else {
+      setState.schedule({
+        type: 'adhoc',
+        value: value.toDate(),
+      });
+    }
+  };
 
   const sectionize = (section: JSX.Element) => (
     <div className={styles.add_mar_bottom}>{section}</div>
@@ -106,7 +146,38 @@ const Form = (props: Props) => {
   };
 
   const getScheduleInput = () => {
-    if (schedule.type === 'adhoc') return null;
+    if (schedule.type === 'adhoc') {
+      return sectionize(
+        <React.Fragment>
+          <h2
+            className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
+          >
+            Ad-hoc Trigger Time
+            <Tooltip
+              id="trigger-timestamp"
+              message="Time to invoke the ad-hoc trigger at. You can also invoke ad-hoc triggers manually after it is created"
+              className={styles.add_mar_left_mid}
+            />
+          </h2>
+          <div
+            className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}
+          >
+            <DateTimePicker
+              onChange={setAdhocTriggerValue}
+              inputProps={{
+                className: `form-control ${styles.inputWidthLarge}`,
+              }}
+            />
+            {/* <a
+              onClick={setState.toggleScheduleModal}
+              className={styles.cursorPointer}
+            >
+              Build a cron expression
+            </a> */}
+          </div>
+        </React.Fragment>
+      );
+    }
 
     const getScheduleInputText = (disabled: boolean, className: string) => (
       <input

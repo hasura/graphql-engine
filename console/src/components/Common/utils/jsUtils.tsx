@@ -49,6 +49,15 @@ export const isValidTemplateLiteral = (literal_: string) => {
   return templateStartIndex !== -1 && templateEndEdex > templateStartIndex + 2;
 };
 
+export const isValidDate = (date: Date) => {
+  try {
+    date.toISOString();
+  } catch {
+    return false;
+  }
+  return true;
+};
+
 export const isEmpty = (value: any) => {
   let empty = false;
 

@@ -36,12 +36,20 @@ export type WebhookConf =
       from_env: string;
     };
 
-export type ScheduleTriggerType = 'cron' | 'adhoc';
-
-export type ScheduleConf = {
-  type: ScheduleTriggerType;
+export type AdhocTriggerConf = {
+  type: 'adhoc';
+  value: Date;
+};
+export type CronTriggerConf = {
+  type: 'cron';
   value: string;
 };
+
+export type ScheduleTriggerType =
+  | AdhocTriggerConf['type']
+  | CronTriggerConf['type'];
+
+export type ScheduleConf = AdhocTriggerConf | CronTriggerConf;
 
 export type ScheduledTrigger = {
   name: string;
