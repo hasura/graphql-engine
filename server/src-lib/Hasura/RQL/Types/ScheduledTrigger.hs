@@ -68,7 +68,7 @@ defaultSTRetryConf =
   , strcToleranceSeconds = NonNegativeDiffTime $ hours 6
   }
 
-data ScheduleType = Cron CronSchedule | AdHoc (Maybe UTCTime)
+data ScheduleType = Cron CronSchedule | OneOff
   deriving (Show, Eq, Generic)
 
 instance NFData ScheduleType
@@ -80,13 +80,12 @@ instance FromJSON ScheduleType where
       type' <- o .: "type"
       case type' of
         String "cron"  -> Cron <$> o .: "value"
-        String "adhoc" -> AdHoc <$> o .:? "value"
+        String "one-off" -> pure OneOff
         _              -> fail "expected type to be cron or adhoc"
 
 instance ToJSON ScheduleType where
-  toJSON (Cron cs)         = object ["type" .= String "cron", "value" .= toJSON cs]
-  toJSON (AdHoc (Just ts)) = object ["type" .= String "adhoc", "value" .= toJSON ts]
-  toJSON (AdHoc Nothing)   = object ["type" .= String "adhoc"]
+  toJSON (Cron cs) = object ["type" .= String "cron", "value" .= toJSON cs]
+  toJSON OneOff    = object ["type" .= String "one-off"]
 
 data CreateScheduledTrigger
   = CreateScheduledTrigger

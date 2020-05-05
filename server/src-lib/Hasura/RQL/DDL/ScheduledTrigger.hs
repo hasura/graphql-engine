@@ -62,13 +62,7 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
     |] (stName, Q.AltJ stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
        ,Q.AltJ stHeaders, stIncludeInMetadata, stComment) False
   case stSchedule of
-    AdHoc Nothing -> pure ()
-    AdHoc (Just timestamp) -> Q.unitQE defaultTxErrorHandler
-      [Q.sql|
-        INSERT into hdb_catalog.hdb_scheduled_events
-          (name, scheduled_time)
-         VALUES ($1, $2)
-      |] (stName, timestamp) False
+    OneOff -> pure ()
     Cron cron -> do
       currentTime <- liftIO C.getCurrentTime
       let scheduleTimes = generateScheduleTimes currentTime 100 cron -- generate next 100 events
