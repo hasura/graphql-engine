@@ -267,7 +267,7 @@ create_scheduled_trigger_one_off
                "key2": "value2"
            },
            "headers" : {
-               "key":"header-key",
+               "name":"header-key",
                "value":"header-value"
            },
            "comment":"sample one-off scheduled trigger commment"
@@ -376,7 +376,7 @@ create_scheduled_trigger_one_off_template
                "key2": "value2"
            },
            "headers" : {
-               "key":"header-key",
+               "name":"header-key",
                "value":"header-value"
            },
            "include_in_metadata":true,

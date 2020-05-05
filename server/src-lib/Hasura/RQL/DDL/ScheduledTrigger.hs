@@ -173,13 +173,14 @@ runCreateScheduledTriggerOneOff CreateScheduledTriggerOneOff {..} = do
   liftTx $ Q.unitQE defaultTxErrorHandler
      [Q.sql|
       INSERT INTO hdb_catalog.hdb_one_off_scheduled_events
-      (webhook_conf,scheduled_time,retry_conf,payload,comment)
+      (webhook_conf,scheduled_time,payload,retry_conf,header_conf,comment)
       VALUES
-      ($1, $2, $3, $4, $5)
+      ($1, $2, $3, $4, $5, $6)
      |] ( Q.AltJ cstoWebhook
         , cstoScheduleAt
         , Q.AltJ cstoPayload
         , Q.AltJ cstoRetryConf
+        , Q.AltJ cstoHeaders
         , cstoComment)
         False
   pure successMsg

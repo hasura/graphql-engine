@@ -783,6 +783,7 @@ CREATE TABLE hdb_catalog.hdb_one_off_scheduled_events
   scheduled_time TIMESTAMPTZ NOT NULL,
   retry_conf JSON,
   payload JSON,
+  header_conf JSON,
   status TEXT NOT NULL DEFAULT 'scheduled',
   tries INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
