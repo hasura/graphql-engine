@@ -332,7 +332,7 @@ Delete by pk syntax
         column1: value1
         column2: value2
       )
-      <table-response>
+      <mutation-response>
     }
 
 .. list-table::

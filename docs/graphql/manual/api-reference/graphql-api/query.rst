@@ -69,6 +69,61 @@ Query / subscription syntax
 
     For more examples and details of usage, please see :ref:`this <queries>`.
 
+Query / subscription by pk syntax
+---------------------------------
+
+.. code-block:: none
+
+    query|subscription [<op-name>] {
+      <query-field-name> (
+        column1: value1
+        column2: value2
+      )
+      <object-fields>
+    }
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - op-name
+     - false
+     - Value
+     - Name query/subscription for observability
+   * - query-field-name
+     - true
+     - Value
+     - Name of the auto-generated query field, e.g. *article_by_pk*
+
+**E.g. QUERY BY PK**:
+
+.. code-block:: graphql
+
+    query  {
+      article_by_pk(id: 1) {
+        id
+        title
+      }
+    }
+
+**E.g. SUBSCRIPTION BY PK**:
+
+.. code-block:: graphql
+
+    subscription {
+      article_by_pk(id: 1) {
+        id
+        title
+      }
+    }
+
+.. note::
+
+    For more examples and details of usage, please see :ref:`this <simple_object_queries>`.
+
 Syntax definitions
 ------------------
 
