@@ -93,7 +93,7 @@ data RQLQueryV1
   | RQInvokeEventTrigger !InvokeEventTriggerQuery
 
   | RQCreateScheduledTriggerCron   !CreateScheduledTriggerCron
-  | RQUpdateScheduledTrigger   !CreateScheduledTrigger
+  | RQUpdateScheduledTriggerCron   !CreateScheduledTriggerCron
   | RQDeleteScheduledTrigger   !ScheduledTriggerName
   | RQCreateScheduledEvent     !CreateScheduledEvent
   | RQFetchScheduledEvents     !FetchEventsScheduledTrigger
@@ -262,7 +262,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQInvokeEventTrigger _          -> False
 
   RQCreateScheduledTriggerCron _  -> True
-  RQUpdateScheduledTrigger _      -> True
+  RQUpdateScheduledTriggerCron _  -> True
   RQDeleteScheduledTrigger _      -> True
   RQCreateScheduledEvent _        -> False
   RQFetchScheduledEvents _        -> False
@@ -390,7 +390,7 @@ runQueryM rq = withPathK "args" $ case rq of
       RQInvokeEventTrigger q       -> runInvokeEventTrigger q
 
       RQCreateScheduledTriggerCron q   -> runCreateScheduledTriggerCron q
-      RQUpdateScheduledTrigger q       -> runUpdateScheduledTrigger q
+      RQUpdateScheduledTriggerCron q   -> runUpdateScheduledTriggerCron q
       RQDeleteScheduledTrigger q       -> runDeleteScheduledTrigger q
       RQCreateScheduledEvent q         -> runCreateScheduledEvent q
       RQFetchScheduledEvents q         -> runFetchEventsOfScheduledTrigger q
@@ -477,7 +477,7 @@ requiresAdmin = \case
     RQInvokeEventTrigger _          -> True
 
     RQCreateScheduledTriggerCron _  -> True
-    RQUpdateScheduledTrigger _      -> True
+    RQUpdateScheduledTriggerCron _  -> True
     RQDeleteScheduledTrigger _      -> True
     RQCreateScheduledEvent _        -> True
     RQFetchScheduledEvents _        -> False

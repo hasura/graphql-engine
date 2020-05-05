@@ -1,6 +1,6 @@
 module Hasura.RQL.DDL.ScheduledTrigger
   ( runCreateScheduledTriggerCron
-  , runUpdateScheduledTrigger
+  , runUpdateScheduledTriggerCron
   , runDeleteScheduledTrigger
   , runCreateScheduledEvent
   , addScheduledTriggerToCatalog
@@ -93,9 +93,17 @@ resolveScheduledTrigger CatalogScheduledTrigger {..} = do
 
     headers = fromMaybe [] _cstHeaderConf
 
-runUpdateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger -> m EncJSON
-runUpdateScheduledTrigger q = do
-  checkExists (stName q)
+runUpdateScheduledTriggerCron :: (CacheRWM m, MonadTx m) => CreateScheduledTriggerCron -> m EncJSON
+runUpdateScheduledTriggerCron CreateScheduledTriggerCron {..} = do
+  let q = (CreateScheduledTrigger stcName
+                                  stcWebhook
+                                  (Cron stcCronSchedule)
+                                  stcPayload
+                                  stcRetryConf
+                                  stcHeaders
+                                  stcIncludeInMetadata
+                                  stcComment)
+  checkExists stcName
   updateScheduledTriggerInCatalog q
   buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
