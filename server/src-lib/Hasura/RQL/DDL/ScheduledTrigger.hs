@@ -1,5 +1,5 @@
 module Hasura.RQL.DDL.ScheduledTrigger
-  ( runCreateScheduledTrigger
+  ( runCreateScheduledTriggerCron
   , runUpdateScheduledTrigger
   , runDeleteScheduledTrigger
   , runCreateScheduledEvent
@@ -32,13 +32,22 @@ data FetchEventsResponse
 
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''FetchEventsResponse)
 
-runCreateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger ->  m EncJSON
-runCreateScheduledTrigger q = do
+runCreateScheduledTriggerCron :: (CacheRWM m, MonadTx m) => CreateScheduledTriggerCron ->  m EncJSON
+runCreateScheduledTriggerCron CreateScheduledTriggerCron {..} = do
+  let q = (CreateScheduledTrigger stcName
+                                  stcWebhook
+                                  (Cron stcCronSchedule)
+                                  stcPayload
+                                  stcRetryConf
+                                  stcHeaders
+                                  stcIncludeInMetadata
+                                  stcComment)
   stMap <- scScheduledTriggers <$> askSchemaCache
   case Map.lookup (stName q) stMap of
     Nothing -> pure ()
     Just _ -> throw400 AlreadyExists $
       "scheduled trigger with name: " <> (triggerNameToTxt $ stName q) <> " already exists"
+
   addScheduledTriggerToCatalog q
   buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
@@ -48,10 +57,10 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
   Q.unitQE defaultTxErrorHandler
     [Q.sql|
       INSERT into hdb_catalog.hdb_scheduled_trigger
-        (name, webhook_conf, schedule_conf, payload, retry_conf, header_conf, include_in_metadata)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+        (name, webhook_conf, schedule_conf, payload, retry_conf, header_conf, include_in_metadata, comment)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     |] (stName, Q.AltJ stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
-       ,Q.AltJ stHeaders, stIncludeInMetadata) False
+       ,Q.AltJ stHeaders, stIncludeInMetadata, stComment) False
   case stSchedule of
     AdHoc Nothing -> pure ()
     AdHoc (Just timestamp) -> Q.unitQE defaultTxErrorHandler
@@ -100,10 +109,11 @@ updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
         schedule_conf = $3,
         payload = $4,
         retry_conf = $5,
-        include_in_metadata = $6
+        include_in_metadata = $6,
+        comment = $7
     WHERE name = $1
    |] (stName, Q.AltJ stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
-      , stIncludeInMetadata) False
+      , stIncludeInMetadata, stComment) False
   -- since the scheduled trigger is updated, clear all its future events which are not retries
   Q.unitQE defaultTxErrorHandler
    [Q.sql|

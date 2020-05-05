@@ -430,7 +430,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
 
     scheduledTriggerQToOrdJSON :: CreateScheduledTrigger -> AO.Value
     scheduledTriggerQToOrdJSON
-      (CreateScheduledTrigger name webhook schedule payload retryConf headers includeInMetadata) =
+      (CreateScheduledTrigger name webhook schedule payload retryConf headers includeInMetadata comment) =
       AO.object $
             [ ("name", AO.toOrdered name)
             , ("webhook", AO.toOrdered webhook)
@@ -439,7 +439,8 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
             <> catMaybes
             [ maybeAnyToMaybeOrdPair "payload" AO.toOrdered payload
             , maybeAnyToMaybeOrdPair "retry_conf" AO.toOrdered (maybeRetryConfiguration retryConf)
-            , maybeAnyToMaybeOrdPair "headers" AO.toOrdered (maybeHeader headers)]
+            , maybeAnyToMaybeOrdPair "headers" AO.toOrdered (maybeHeader headers)
+            , maybeAnyToMaybeOrdPair "comment" AO.toOrdered comment]
             <> if includeInMetadata
                then [("include_in_metadata", AO.toOrdered includeInMetadata)]
                else []

@@ -4,6 +4,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , ScheduledTriggerName(..)
   , ScheduledEventId(..)
   , CreateScheduledTrigger(..)
+  , CreateScheduledTriggerCron(..)
   , CreateScheduledEvent(..)
   , STRetryConf(..)
   , FetchEventsScheduledTrigger(..)
@@ -96,6 +97,7 @@ data CreateScheduledTrigger
   , stRetryConf         :: !STRetryConf
   , stHeaders           :: ![ET.HeaderConf]
   , stIncludeInMetadata :: !Bool
+  , stComment           :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 
 instance NFData CreateScheduledTrigger
@@ -112,9 +114,41 @@ instance FromJSON CreateScheduledTrigger where
       stHeaders <- o .:? "headers" .!= []
       stIncludeInMetadata <-
           o .:? "include_in_metadata" .!= False
+      stComment <- o .:? "comment"
       pure CreateScheduledTrigger {..}
 
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)
+
+data CreateScheduledTriggerCron
+  = CreateScheduledTriggerCron
+  { stcName              :: !ET.TriggerName
+  , stcWebhook           :: !ET.WebhookConf
+  , stcCronSchedule      :: !CronSchedule
+  , stcPayload           :: !(Maybe J.Value)
+  , stcRetryConf         :: !STRetryConf
+  , stcHeaders           :: ![ET.HeaderConf]
+  , stcIncludeInMetadata :: !Bool
+  , stcComment           :: !(Maybe Text)
+  } deriving (Show, Eq, Generic)
+
+instance NFData CreateScheduledTriggerCron
+instance Cacheable CreateScheduledTriggerCron
+
+instance FromJSON CreateScheduledTriggerCron where
+  parseJSON =
+    withObject "CreateScheduledTriggerCron" $ \o -> do
+      stcName <- o .: "name"
+      stcWebhook <- o .: "webhook"
+      stcPayload <- o .:? "payload"
+      stcCronSchedule <- o .: "schedule"
+      stcRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
+      stcHeaders <- o .:? "headers" .!= []
+      stcIncludeInMetadata <-
+          o .:? "include_in_metadata" .!= False
+      stcComment <- o .:? "comment"
+      pure CreateScheduledTriggerCron {..}
+
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateScheduledTriggerCron)
 
 data CreateScheduledEvent
   = CreateScheduledEvent
