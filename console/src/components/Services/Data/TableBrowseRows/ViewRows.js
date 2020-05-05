@@ -55,7 +55,7 @@ import {
   getPersistedColumnsOrder,
   persistPageSizeChange,
 } from './localStorageUtils';
-import { compareRows, checkIfHasPrimaryKey } from './utils';
+import { compareRows, isTableWithPK } from './utils';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 const ViewRows = ({
@@ -620,7 +620,7 @@ const ViewRows = ({
   const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort);
   const tableRelationships = tableSchema.relationships;
 
-  const hasPrimaryKey = checkIfHasPrimaryKey(tableSchema);
+  const hasPrimaryKey = isTableWithPK(tableSchema);
 
   const isSingleRow = checkIfSingleRow(curRelName);
 
