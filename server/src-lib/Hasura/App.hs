@@ -349,8 +349,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     -- shuts down the server and associated resources.
     -- Structuring things this way lets us decide elsewhere exactly how
     -- we want to control shutdown. 
-    shutdownHandler :: Logger Hasura -> IO () -> IO () -> IO ()
-    shutdownHandler (Logger logger) shutdownApp closeSocket =
+    shutdownHandler :: Logger Hasura -> IO () -> EventEngineCtx -> Q.PGPool -> IO () -> IO ()
+    shutdownHandler (Logger logger) shutdownApp eeCtx pool closeSocket =
       void . Async.async $ do 
         waitForShutdown _icShutdownLatch
         logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
