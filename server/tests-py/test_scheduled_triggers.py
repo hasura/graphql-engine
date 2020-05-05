@@ -110,14 +110,11 @@ class TestScheduledTriggerCron(object):
         TestScheduledTriggerCron.cron_schedule = "{} * * * *".format(min_after_30_mins)
 
         cron_st_api_query = {
-            "type":"create_scheduled_trigger",
+            "type":"create_scheduled_trigger_cron",
             "args":{
                 "name":self.cron_trigger_name,
                 "webhook":"http://127.0.0.1:5594" + "/foo",
-                "schedule":{
-                    "type":"cron",
-                    "value":self.cron_schedule
-                },
+                "schedule":self.cron_schedule,
                 "headers":[
                     {
                         "name":"foo",
@@ -165,7 +162,7 @@ class TestScheduledTriggerCron(object):
 
     def test_delete_cron_scheduled_trigger(self,hge_ctx):
         q = {
-            "type":"delete_scheduled_trigger",
+            "type":"delete_scheduled_trigger_cron",
             "args":{
                 "name":self.cron_trigger_name
             }
