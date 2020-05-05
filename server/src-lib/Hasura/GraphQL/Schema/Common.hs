@@ -2,12 +2,13 @@ module Hasura.GraphQL.Schema.Common where
 
 import           Hasura.Prelude
 
-import           Language.GraphQL.Draft.Syntax as G
+import           Language.GraphQL.Draft.Syntax         as G
 
-import qualified Hasura.GraphQL.Parser         as P
+import qualified Hasura.GraphQL.Parser                 as P
 
-import           Hasura.GraphQL.Parser         (FieldsParser (..), Kind (..))
+import           Hasura.GraphQL.Parser                 (FieldsParser, Kind (..))
 import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Parser.Internal.Parser (ifDefinitions)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -62,6 +63,6 @@ comparisonAggOperators = [$$(litName "max"), $$(litName "min")]
 -- field "invisible".
 typenameField :: MonadParse m => (G.Name -> a) -> FieldsParser 'Output m (Maybe a)
 typenameField f =
-  P.selection_ $$(G.litName "__typename") Nothing P.string `mapField` f
-  { ifDefinitions = []
-  }
+  (P.selection_ $$(G.litName "__typename") Nothing P.string `mapField` f)
+    { ifDefinitions = []
+    }
