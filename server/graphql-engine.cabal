@@ -363,6 +363,7 @@ library
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
                      , Hasura.GraphQL.Schema.Select
+                     , Hasura.GraphQL.Schema.Mutation
                      , Hasura.GraphQL.Schema.OrderBy
 
                      -- , Hasura.Events.Lib

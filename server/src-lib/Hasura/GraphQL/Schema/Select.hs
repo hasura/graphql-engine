@@ -5,7 +5,9 @@ module Hasura.GraphQL.Schema.Select
   ( selectTable
   , selectTableByPk
   , selectTableAggregate
+  , tableFields
   ) where
+
 
 import           Hasura.Prelude
 
@@ -168,6 +170,30 @@ selectTableAggregate table fieldName description selectPermissions stringifyNum
           )
 
 
+-- | Fields of a table
+--
+-- TODO: write a better blurb
+-- TODO: now that this is exported, change name to be consistent?
+tableFields
+  :: (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable
+  -> SelPermInfo
+  -> Bool
+  -> m (Parser 'Output n AnnotatedFields)
+tableFields table selectPermissions stringifyNum =
+  memoizeOn 'tableFields table $ do
+    tableInfo <- _tiCoreInfo <$> askTableInfo table
+    tableName <- qualifiedObjectToName table
+    fields    <- fmap concat
+      $ traverse (\fieldInfo -> fieldSelection fieldInfo selectPermissions stringifyNum)
+      =<< tableSelectFields table selectPermissions
+    let typename = typenameField $ \name -> (aliasToName name, RQL.FExp $ G.unName tableName)
+    pure $ P.selectionSet tableName (_tciDescription tableInfo)
+         $ fmap catMaybes
+         $ sequenceA
+         $ typename : fields
+
+
 
 -- 2. local parsers
 -- Parsers that are used but not exported: sub-components
@@ -215,37 +241,6 @@ tableArgs table selectPermissions = do
     limitDesc      = Just $ G.Description "limit the number of rows returned"
     offsetDesc     = Just $ G.Description "skip the first n rows. Use only with order_by"
     distinctOnDesc = Just $ G.Description "distinct select on columns"
-
-
--- | Typename field
---
--- Most selection sets accept the __typename keyword as a field,
--- which is simply expanded to the name of the type.
-typenameField :: MonadParse m => (G.Name -> a) -> FieldsParser 'Output m (Maybe a)
-typenameField f =
-  P.selection_ $$(G.litName "__typename") Nothing P.string `mapField` f
-
--- | Fields of a table
---
--- TODO: write a better blurb
-tableFields
-  :: (MonadSchema n m, MonadError QErr m)
-  => QualifiedTable
-  -> SelPermInfo
-  -> Bool
-  -> m (Parser 'Output n AnnotatedFields)
-tableFields table selectPermissions stringifyNum =
-  memoizeOn 'tableFields table $ do
-    tableInfo <- _tiCoreInfo <$> askTableInfo table
-    tableName <- qualifiedObjectToName table
-    fields    <- fmap concat
-      $ traverse (\fieldInfo -> fieldSelection fieldInfo selectPermissions stringifyNum)
-      =<< tableSelectFields table selectPermissions
-    let typename = typenameField $ \name -> (aliasToName name, RQL.FExp $ G.unName tableName)
-    pure $ P.selectionSet tableName (_tciDescription tableInfo)
-         $ fmap catMaybes
-         $ sequenceA
-         $ typename : fields
 
 
 -- | Aggregation fields
