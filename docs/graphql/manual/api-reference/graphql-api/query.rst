@@ -120,10 +120,6 @@ Query / subscription by pk syntax
       }
     }
 
-.. note::
-
-    For more examples and details of usage, please see :ref:`this <simple_object_queries>`.
-
 Syntax definitions
 ------------------
 

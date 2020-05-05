@@ -190,7 +190,7 @@ Update by pk syntax
    * - pk-columns-argument
      - true
      - pkColumnsArgExp_
-     - Primary keys for rows to be updated
+     - Primary key(s) for row(s) to be updated
    * - set-argument
      - false
      - setArgExp_
@@ -362,6 +362,7 @@ Delete by pk syntax
     mutation delete_articles {
       delete_article_by_pk (
         id: 1
+        id: 2
       ) {
         affected_rows
         returning {
