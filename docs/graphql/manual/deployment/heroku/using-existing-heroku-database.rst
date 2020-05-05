@@ -41,7 +41,7 @@ Step 2: Remove the created Postgres add-on in the app
 
 Head to your Heroku dashboard and delete the Postgres add-on created in the previous step:
 
-.. thumbnail:: ../../../../img/graphql/manual/deployment/remove-heroku-postgres-addon.png
+.. thumbnail:: /img/graphql/manual/deployment/remove-heroku-postgres-addon.png
    :alt: Delete the Postgres add-on
 
 Step 3: Configure environment variables
@@ -50,7 +50,7 @@ Step 3: Configure environment variables
 Now configure the ``DATABASE_URL`` with your existing Heroku Postgres database URL and a ``HASURA_GRAPHQL_ADMIN_SECRET``
 if you want to secure your endpoint.
 
-.. thumbnail:: ../../../../img/graphql/manual/deployment/heroku-database-url-access.png
+.. thumbnail:: /img/graphql/manual/deployment/heroku-database-url-access.png
    :alt: Configure environment variables
 
 .. note::
