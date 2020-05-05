@@ -104,6 +104,7 @@ export const addScheduledTrigger = (
     }
     return dispatch(showErrorNotification(errorMsg, validationError));
   }
+  console.log('No validation error');
 
   const upQuery = generateCreateScheduledTriggerQuery(state);
   const downQuery = getDropScheduledTriggerQuery(state.name);

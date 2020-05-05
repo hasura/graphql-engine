@@ -1,16 +1,13 @@
 import React from 'react';
 import { Header, defaultHeader } from '../../../Common/Headers/Headers';
-import { ScheduleTriggerType, URLType, URLConf, RetryConf } from '../Types';
+import { ScheduleConf, URLType, URLConf, RetryConf } from '../Types';
 
-export const defaultCronExpr = '2 * * * *';
+export const defaultCronExpr = '* * * * *';
 
 export type LocalScheduledTriggerState = {
   name: string;
   webhook: URLConf;
-  schedule: {
-    type: ScheduleTriggerType;
-    value?: string;
-  };
+  schedule: ScheduleConf;
   payload: string;
   headers: Array<Header>;
   loading: boolean;
@@ -40,9 +37,7 @@ const defaultState: LocalScheduledTriggerState = {
   },
 };
 
-export const useScheduledTrigger = (
-  initState?: LocalScheduledTriggerState
-) => {
+export const useScheduledTrigger = (initState?: LocalScheduledTriggerState) => {
   const [state, setState] = React.useState(initState || defaultState);
 
   return {
@@ -57,22 +52,10 @@ export const useScheduledTrigger = (
       setWebhookValue: (value: string) => {
         setState(s => ({ ...s, webhook: { ...s.webhook, value } }));
       },
-      scheduleType: (type: ScheduleTriggerType) => {
+      schedule: (conf: ScheduleConf) => {
         setState(s => ({
           ...s,
-          schedule: {
-            type,
-            value: '',
-          },
-        }));
-      },
-      scheduleValue: (scheduleValue: string) => {
-        setState(s => ({
-          ...s,
-          schedule: {
-            ...s.schedule,
-            value: scheduleValue,
-          },
+          schedule: conf,
         }));
       },
       payload: (jsonString: string) => {

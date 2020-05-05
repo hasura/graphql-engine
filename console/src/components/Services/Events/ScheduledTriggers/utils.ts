@@ -1,5 +1,5 @@
 import { LocalScheduledTriggerState } from './state';
-import { isObject } from '../../../Common/utils/jsUtils';
+import { isObject, isValidDate } from '../../../Common/utils/jsUtils';
 import { makeBaseTable } from '../../../Common/utils/pgUtils';
 import { Triggers, ScheduledTrigger } from '../Types';
 import { parseServerHeaders } from '../../../Common/Headers/utils';
@@ -21,6 +21,12 @@ export const validateAddState = (state: LocalScheduledTriggerState) => {
   if (state.schedule.type === 'cron') {
     if (!state.schedule.value) {
       return 'cron schedule cannot be empty';
+    }
+  }
+
+  if (state.schedule.type === 'adhoc') {
+    if (!isValidDate(state.schedule.value)) {
+      return 'time of the adhoc trigger must be a valid date';
     }
   }
 
@@ -58,7 +64,18 @@ export const parseServerScheduledTrigger = (
           ? trigger.webhook_conf
           : trigger.webhook_conf.from_env,
     },
-    schedule: trigger.schedule_conf,
+    schedule:
+      trigger.schedule_conf.type === 'adhoc'
+        ? {
+            type: 'adhoc',
+            value: trigger.schedule_conf.value
+              ? new Date(trigger.schedule_conf.value)
+              : new Date(),
+          }
+        : {
+            type: 'cron',
+            value: trigger.schedule_conf.value,
+          },
     payload: JSON.stringify(trigger.payload),
     headers: parseServerHeaders(trigger.header_conf),
     loading: false,
