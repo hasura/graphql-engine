@@ -10,11 +10,11 @@ import PageNotFound, { NotFoundError } from './PageNotFound';
 import RuntimeError from './RuntimeError';
 import { registerRunTimeError } from '../Main/Actions';
 
-export type Metadata = {
+export interface Metadata {
   inconsistentObjects: object[];
   ongoingRequest: boolean;
   allowedQueries: object[];
-};
+}
 
 export interface ErrorBoundaryProps {
   metadata: Metadata;
@@ -23,7 +23,6 @@ export interface ErrorBoundaryProps {
 
 type ErrorBoundaryState = {
   hasError: boolean;
-  info: object | null;
   error: Error | null;
   type: string;
 };
@@ -38,7 +37,7 @@ class ErrorBoundary extends React.Component<
     this.state = this.initialState;
   }
 
-  componentDidCatch(error: Error, info: object) {
+  componentDidCatch(error: Error) {
     const { dispatch } = this.props;
 
     // for invalid path segment errors
@@ -48,7 +47,7 @@ class ErrorBoundary extends React.Component<
       });
     }
 
-    this.setState({ hasError: true, info, error });
+    this.setState({ hasError: true, error });
 
     // trigger telemetry
     dispatch(
@@ -71,7 +70,6 @@ class ErrorBoundary extends React.Component<
 
   initialState = {
     hasError: false,
-    info: null,
     error: null,
     type: '500',
   };
@@ -82,7 +80,7 @@ class ErrorBoundary extends React.Component<
 
   render() {
     const { metadata } = this.props;
-    const { hasError, type, info, error } = this.state;
+    const { hasError, type, error } = this.state;
 
     if (hasError && metadata.ongoingRequest) {
       return (
@@ -96,11 +94,7 @@ class ErrorBoundary extends React.Component<
       return type === '404' ? (
         <PageNotFound resetCallback={this.resetState} />
       ) : (
-        <RuntimeError
-          resetCallback={this.resetState}
-          error={error}
-          info={info}
-        />
+        <RuntimeError resetCallback={this.resetState} error={error} />
       );
     }
 
