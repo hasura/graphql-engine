@@ -7,9 +7,9 @@ type TableSchemaWithPK = {
   [P in keyof TableSchema]-?: TableSchema[P];
 };
 
-export const checkIfHasPrimaryKey = (tableSchema: {
-  primary_key?: { columns: string[] };
-}): tableSchema is TableSchemaWithPK => {
+export const checkIfHasPrimaryKey = (
+  tableSchema: TableSchema
+): tableSchema is TableSchemaWithPK => {
   return (
     tableSchema.primary_key !== undefined &&
     tableSchema.primary_key.columns.length > 0
@@ -22,9 +22,8 @@ export const compareRows = (
   tableSchema: TableSchema,
   isView: boolean
 ) => {
-  const hasPrimaryKey = checkIfHasPrimaryKey(tableSchema);
   let same = true;
-  if (!isView && hasPrimaryKey && checkIfHasPrimaryKey(tableSchema)) {
+  if (!isView && checkIfHasPrimaryKey(tableSchema)) {
     tableSchema.primary_key.columns.forEach(pk => {
       if (row1[pk] !== row2[pk]) {
         same = false;

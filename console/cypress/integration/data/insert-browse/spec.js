@@ -484,7 +484,6 @@ export const checkViewRelationship = () => {
   cy.get('.rt-table').within(() => {
     cy.get('a')
       .contains('View')
-      .first()
       .click();
     cy.wait(1000);
   });
