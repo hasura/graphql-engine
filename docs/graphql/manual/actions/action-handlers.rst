@@ -100,7 +100,9 @@ Hasura will call the handler with the following payload:
 .. code-block:: json
 
     {
-      "action": "UserLogin",
+      "action": {
+        "name": "UserLogin"
+      },  
       "input": {
         "username": "jake",
         "password": "secretpassword"
