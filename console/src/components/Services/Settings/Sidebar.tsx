@@ -1,6 +1,6 @@
 import React from 'react';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
 import globals from '../../../Globals';
@@ -9,8 +9,26 @@ import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
 
 import styles from '../../Common/TableCommon/Table.scss';
 
-const Sidebar = ({ location, metadata }) => {
-  const sectionsData = [];
+type SidebarProps = {
+  location: Location;
+  metadata: Metadata;
+}
+
+interface Metadata {
+  inconsistentObjects: object[];
+}
+
+type SectionDataKey = 'actions' | 'status' | 'allowed-queries' | 'logout';
+
+interface SectionData {
+  key: SectionDataKey;
+  link: string;
+  dataTestVal: string;
+  title: string | JSX.Element;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
+  const sectionsData: SectionData[] = [];
 
   sectionsData.push({
     key: 'actions',
@@ -19,8 +37,7 @@ const Sidebar = ({ location, metadata }) => {
     title: 'Metadata Actions',
   });
 
-  const consistentIcon =
-    metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
+  const consistentIcon = metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
 
   sectionsData.push({
     key: 'status',
@@ -54,7 +71,7 @@ const Sidebar = ({ location, metadata }) => {
 
   const currentLocation = location.pathname;
 
-  const sections = [];
+  const sections: any[] = [];
 
   sectionsData.forEach(section => {
     sections.push(
