@@ -36,8 +36,8 @@ import qualified System.Process               as Proc
 benchWsApp :: TMVar.TMVar () -> WS.ServerApp
 benchWsApp lock pending = do
  conn <- WS.acceptRequest pending
- -- WS.withPingThread conn 30 (return ()) $
- forever $ do
+ WS.withPingThread conn 30 (return ()) $
+   forever $ do
      msg <- WS.receiveData conn
      fork_ $ processReq conn msg lock
  where

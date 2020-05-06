@@ -1,0 +1,20 @@
+framework:  wrk
+arguments:
+  rate: 10
+  duration: 15
+  threads: 2
+  graphql_url: http://127.0.0.1:8181/v1/graphql
+  query: |
+    query remote_50_rows {
+      remote_hge_events(limit: 50){
+        event_status
+        last_update
+        affiliations_events_by_event_id(limit: 2) {
+          affiliation{
+            publisher{
+              publisher_name
+            }
+          }
+        }
+      }
+    }

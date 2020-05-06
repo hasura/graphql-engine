@@ -1,9 +1,0 @@
-{ "framework" : "wrk2"
-, "arguments" :
-  { "rate"  : 10
-  , "query" : "query foo { _schema { queryType { kind } } }"
-  , "duration"  : 10
-  , "threads"   : 2
-  , "graphql_url" : "http://127.0.0.1:8181/v1/graphql"
-  }
-}

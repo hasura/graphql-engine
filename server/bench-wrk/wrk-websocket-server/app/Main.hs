@@ -14,7 +14,7 @@ main = do
   void checkIfWrksPresent
   lock <- TMVar.newEmptyTMVarIO
   print "Running wrk websocket server or port 9160"
-  WS.runServer "127.0.0.1" 9160 $ benchWsApp lock
+  WS.runServer "0.0.0.0" 9160 $ benchWsApp lock
 
 checkIfWrksPresent :: IO [FilePath]
 checkIfWrksPresent = mapM findExec ["wrk", "wrk2"]
