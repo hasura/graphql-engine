@@ -22,10 +22,12 @@ import {
   getTableRelationshipsRoute,
 } from '../../../Common/utils/routesUtils';
 import { getReadableNumber } from '../../../Common/utils/jsUtils';
+import { COUNT_LIMIT } from '../constants';
 
 const TableHeader = ({
   tabName,
   count,
+  isCountEstimated,
   table,
   migrationMode,
   readOnlyMode,
@@ -39,7 +41,9 @@ const TableHeader = ({
 
   let countDisplay = '';
   if (!(count === null || count === undefined)) {
-    countDisplay = '(' + getReadableNumber(count) + ')';
+    countDisplay = `(${
+      isCountEstimated ? ` > ${COUNT_LIMIT} ` : getReadableNumber(count)
+    })`;
   }
   const activeTab = tabNameMap[tabName];
 

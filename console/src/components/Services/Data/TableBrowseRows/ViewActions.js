@@ -17,6 +17,7 @@ import {
   getRunSqlQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { generateTableDef } from '../../../Common/utils/pgUtils';
+import { COUNT_LIMIT } from '../constants';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -157,9 +158,20 @@ const vMakeCountRequest = () => {
   };
 };
 
-const vMakeTableRequests = () => dispatch => {
-  dispatch(vMakeRowsRequest());
-  dispatch(vMakeCountRequest());
+const vMakeTableRequests = () => (dispatch, getState) => {
+  dispatch(vMakeRowsRequest()).then(() => {
+    const estimatedCountResult = getState().tables.view.estimatedCount[0];
+    const estimatedCount = parseInt(estimatedCountResult, 10);
+    if (estimatedCount > COUNT_LIMIT) {
+      dispatch({
+        type: V_COUNT_REQUEST_SUCCESS,
+        count: estimatedCount,
+        isEstimated: true,
+      });
+    } else {
+      dispatch(vMakeCountRequest());
+    }
+  });
 };
 
 const fetchManualTriggers = tableName => {
@@ -572,7 +584,11 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
     case V_REQUEST_PROGRESS:
       return { ...viewState, isProgressing: action.data };
     case V_COUNT_REQUEST_SUCCESS:
-      return { ...viewState, count: action.count };
+      return {
+        ...viewState,
+        count: action.count,
+        isCountEstimated: action.isEstimated === true,
+      };
     case V_EXPAND_ROW:
       return {
         ...viewState,
