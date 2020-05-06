@@ -238,9 +238,7 @@ class AddTable extends Component {
   trimColumnNames(columns) {
     const trimmedColumns = columns.map((column, index) => {
       const trimmedColumn = column.name.trim();
-      this.props.dispatch(
-        setColName(trimmedColumn, index, column.isNullableChecked)
-      );
+      this.props.dispatch(setColName(trimmedColumn, index, column.nullable));
       return {
         ...column,
         name: trimmedColumn,
