@@ -363,14 +363,14 @@ processOneOffScheduledQueue logger logEnv httpMgr pgpool =
       runExceptT $
       Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getOneOffScheduledEvents
     case oneOffScheduledEvents of
-      Right events ->
-        for_ events $ \(ScheduledEventOneOff id'
-                                             scheduledTime
-                                             tries'
-                                             webhookConf
-                                             payload'
-                                             retryConf
-                                             headerConf )
+      Right oneOffScheduledEvents' ->
+        for_ oneOffScheduledEvents' $ \(ScheduledEventOneOff id'
+                                                             scheduledTime
+                                                             tries
+                                                             webhookConf
+                                                             payload
+                                                             retryConf
+                                                             headerConf )
           -> do
           webhookInfo <- runExceptT $ getWebhookInfoFromConf webhookConf
           headerInfo <- runExceptT $ getHeaderInfosFromConf headerConf
@@ -380,24 +380,24 @@ processOneOffScheduledQueue logger logEnv httpMgr pgpool =
               case headerInfo of
                 Right headerInfo' -> do
                   let webhook = wciCachedValue webhookInfo'
-                      payload = fromMaybe J.Null payload'
+                      payload' = fromMaybe J.Null payload
                       scheduledEvent = ScheduledEventFull id'
                                                           Nothing
                                                           scheduledTime
-                                                          tries'
+                                                          tries
                                                           webhook
-                                                          payload
+                                                          payload'
                                                           retryConf
                                                           headerInfo'
                   finally <- runExceptT $
                     runReaderT (processScheduledEvent logEnv pgpool scheduledEvent StandAlone) (logger, httpMgr)
                   either logInternalError pure finally
 
-                Left err'' -> logInternalError err''
+                Left headerInfoErr -> logInternalError headerInfoErr
 
-            Left err' -> logInternalError err'
+            Left webhookInfoErr -> logInternalError webhookInfoErr
 
-      Left err -> logInternalError err
+      Left oneOffScheduledEventsErr -> logInternalError oneOffScheduledEventsErr
     sleep (minutes 1)
     where
       logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
