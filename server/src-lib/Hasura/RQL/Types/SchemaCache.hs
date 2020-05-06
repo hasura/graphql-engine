@@ -186,6 +186,7 @@ data ScheduledTriggerInfo
    , stiRetryConf   :: !STRetryConf
    , stiWebhookInfo :: !WebhookConfInfo
    , stiHeaders     :: ![EventHeaderInfo]
+   , stiComment     :: !(Maybe Text)
    } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''ScheduledTriggerInfo)

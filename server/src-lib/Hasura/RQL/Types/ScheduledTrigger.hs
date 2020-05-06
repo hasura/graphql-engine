@@ -9,6 +9,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , STRetryConf(..)
   , FetchEventsScheduledTrigger(..)
   , CreateScheduledTriggerOneOff(..)
+  , FetchOneOffScheduledTriggers(..)
   , formatTime'
   , defaultSTRetryConf
   ) where
@@ -183,7 +184,7 @@ data FetchEventsScheduledTrigger
   , festLimit  :: !(Maybe Int64)
   } deriving (Show, Eq, Generic)
 
-$(deriveToJSON (aesonDrop 4 snakeCase) ''FetchEventsScheduledTrigger)
+$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''FetchEventsScheduledTrigger)
 
 instance FromJSON FetchEventsScheduledTrigger where
   parseJSON =
@@ -191,6 +192,21 @@ instance FromJSON FetchEventsScheduledTrigger where
       FetchEventsScheduledTrigger <$> o .: "name"
                                   <*> o .:? "offset" .!= 0
                                   <*> o .:? "limit"
+
+data FetchOneOffScheduledTriggers
+  = FetchOneOffScheduledTriggers
+  { feostOffset :: !Int64
+  , feostLimit  :: !(Maybe Int64)
+  } deriving (Show, Eq, Generic)
+
+$(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields = True} ''FetchOneOffScheduledTriggers)
+
+instance FromJSON FetchOneOffScheduledTriggers where
+  parseJSON =
+    withObject "FetchOneOffScheduledTriggers" $ \o ->
+      FetchOneOffScheduledTriggers <$> o .:? "offset" .!= 0
+                                   <*> o .:? "limit"
+
 data CreateScheduledTriggerOneOff
   = CreateScheduledTriggerOneOff
   { cstoWebhook           :: !ET.WebhookConf

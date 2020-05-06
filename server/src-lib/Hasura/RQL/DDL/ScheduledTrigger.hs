@@ -8,6 +8,7 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , resolveScheduledTrigger
   , runFetchEventsOfScheduledTrigger
   , runCreateScheduledTriggerOneOff
+  , runFetchOneOffScheduledTriggers
   ) where
 
 import           Hasura.Db
@@ -32,6 +33,13 @@ data FetchEventsResponse
   } deriving (Eq, Show)
 
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''FetchEventsResponse)
+
+data FetchOneOffScheduledTriggersResponse
+  = FetchOneOffScheduledTriggersResponse
+  { fostrOneOffScheduledTriggers :: ![ScheduledEventOneOff]
+  } deriving (Eq, Show)
+
+$(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''FetchOneOffScheduledTriggersResponse)
 
 runCreateScheduledTriggerCron :: (CacheRWM m, MonadTx m) => CreateScheduledTriggerCron ->  m EncJSON
 runCreateScheduledTriggerCron CreateScheduledTriggerCron {..} = do
@@ -83,6 +91,7 @@ resolveScheduledTrigger CatalogScheduledTrigger {..} = do
                          retryConf
                          webhookInfo
                          headerInfo
+                         _cstComment
   where
     retryConf = fromMaybe defaultSTRetryConf _cstRetryConf
 
@@ -184,6 +193,40 @@ runCreateScheduledTriggerOneOff CreateScheduledTriggerOneOff {..} = do
         , cstoComment)
         False
   pure successMsg
+
+runFetchOneOffScheduledTriggers
+    :: (MonadTx m) => FetchOneOffScheduledTriggers -> m EncJSON
+runFetchOneOffScheduledTriggers (FetchOneOffScheduledTriggers stOffset stLimit) = do
+  oneOffScheduledTriggers <- liftTx $ map uncurryScheduledTrigger
+                             <$> Q.listQE defaultTxErrorHandler
+    [Q.sql|
+      SELECT id,webhook_conf,scheduled_time,retry_conf,payload,header_conf,status,tries,comment
+      FROM hdb_catalog.hdb_one_off_scheduled_events
+      ORDER BY scheduled_time
+      OFFSET $1
+      LIMIT $2
+     |] (stOffset,stLimit) True
+  pure $ encJFromJValue $ J.toJSON $
+       FetchOneOffScheduledTriggersResponse oneOffScheduledTriggers
+  where
+    uncurryScheduledTrigger ( id'
+                            , webhookConf
+                            , scheduledTime
+                            , retryConf
+                            , payload
+                            , headerConf
+                            , status
+                            , tries
+                            , comment) =
+      ScheduledEventOneOff id'
+                           scheduledTime
+                           tries
+                           (Q.getAltJ webhookConf)
+                           (Q.getAltJ <$> payload)
+                           (Q.getAltJ retryConf)
+                           (Q.getAltJ headerConf)
+                           comment
+                           status
 
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do

@@ -64,6 +64,7 @@ module Hasura.Eventing.ScheduledTrigger
   , generateScheduleTimes
   , insertScheduledEvents
   , ScheduledEventDb(..)
+  , ScheduledEventOneOff(..)
   ) where
 
 import           Control.Arrow.Extended            (dup)
@@ -183,15 +184,16 @@ data ScheduledEventFull
   -- case, 'sefName' will be @Nothing@
   , sefScheduledTime :: !UTCTime
   , sefTries         :: !Int
-  , sefWebhook       :: !T.Text
+  , sefWebhook       :: !Text
   , sefPayload       :: !J.Value
   , sefRetryConf     :: !STRetryConf
   , sefHeaders       :: ![EventHeaderInfo]
+  , sefComment       :: !(Maybe Text)
   } deriving (Show, Eq)
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventFull)
 
-data ScheduledEventOneOff
+data ScheduledEventOneOff -- refactor this to scheduledTriggerOneOff
   = ScheduledEventOneOff
   { seoId            :: !Text
   , seoScheduledTime :: !UTCTime
@@ -200,6 +202,8 @@ data ScheduledEventOneOff
   , seoPayload       :: !(Maybe J.Value)
   , seoRetryConf     :: !STRetryConf
   , seoHeaderConf    :: ![HeaderConf]
+  , seoComment       :: !(Maybe Text)
+  , seoStatus        :: !ScheduledEventStatus
   } deriving (Show, Eq)
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventOneOff)
@@ -359,6 +363,7 @@ processScheduledQueue logger logEnv httpMgr pgpool getSC =
                                          payload'
                                          stiRetryConf
                                          stiHeaders
+                                         stiComment
               finally <- runExceptT $
                 runReaderT (processScheduledEvent logEnv pgpool scheduledEvent Templated) (logger, httpMgr)
               either logInternalError pure finally
@@ -387,7 +392,9 @@ processOneOffScheduledQueue logger logEnv httpMgr pgpool =
                                                              webhookConf
                                                              payload
                                                              retryConf
-                                                             headerConf )
+                                                             headerConf
+                                                             comment
+                                                             _ )
           -> do
           webhookInfo <- runExceptT $ getWebhookInfoFromConf webhookConf
           headerInfo <- runExceptT $ getHeaderInfosFromConf headerConf
@@ -406,6 +413,7 @@ processOneOffScheduledQueue logger logEnv httpMgr pgpool =
                                                           payload'
                                                           retryConf
                                                           headerInfo'
+                                                          comment
                   finally <- runExceptT $
                     runReaderT (processScheduledEvent logEnv pgpool scheduledEvent StandAlone) (logger, httpMgr)
                   either logInternalError pure finally
@@ -663,8 +671,8 @@ getOneOffScheduledEvents = do
                           )
                     FOR UPDATE SKIP LOCKED
                     )
-      RETURNING id, webhook_conf, scheduled_time, retry_conf, payload, header_conf, tries
-      |] () True
+      RETURNING id, webhook_conf, scheduled_time, retry_conf, payload, header_conf, tries, status, comment
+      |] () False
   where
     uncurryOneOffEvent ( eventId
                        , webhookConf
@@ -672,7 +680,9 @@ getOneOffScheduledEvents = do
                        , retryConf
                        , payload
                        , headerConf
-                       , tries) =
+                       , tries
+                       , eventStatus
+                       , comment ) =
       ScheduledEventOneOff eventId
                            scheduledTime
                            tries
@@ -680,6 +690,8 @@ getOneOffScheduledEvents = do
                            (Q.getAltJ payload)
                            (Q.getAltJ retryConf)
                            (Q.getAltJ headerConf)
+                           comment
+                           eventStatus
 
 liftExceptTIO :: (MonadError e m, MonadIO m) => ExceptT e IO a -> m a
 liftExceptTIO m = liftEither =<< liftIO (runExceptT m)

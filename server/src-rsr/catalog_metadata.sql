@@ -226,7 +226,8 @@ from
             'schedule_conf', schedule_conf :: json,
             'payload', payload :: json,
             'retry_conf', retry_conf :: json,
-            'header_conf', header_conf :: json
+            'header_conf', header_conf :: json,
+            'comment', comment
           )
         ),
         '[]'

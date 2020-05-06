@@ -172,6 +172,7 @@ data CatalogScheduledTrigger
   , _cstPayload        :: !(Maybe Value)
   , _cstRetryConf      :: !(Maybe STRetryConf)
   , _cstHeaderConf     :: !(Maybe [HeaderConf])
+  , _cstComment        :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 instance NFData CatalogScheduledTrigger
 instance Cacheable CatalogScheduledTrigger
