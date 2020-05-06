@@ -204,6 +204,8 @@ data ScheduledEventOneOff
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventOneOff)
 
+data ScheduledEventType = Templated | StandAlone deriving (Eq, Show)
+
 -- | runScheduledEventsGenerator makes sure that all the scheduled triggers
 --   have an adequate buffer of scheduled events.
 runScheduledEventsGenerator ::
@@ -341,7 +343,7 @@ processScheduledQueue logger logEnv httpMgr pgpool getSC =
                                          stiRetryConf
                                          stiHeaders
               finally <- runExceptT $
-                runReaderT (processScheduledEvent logEnv pgpool scheduledEvent) (logger, httpMgr)
+                runReaderT (processScheduledEvent logEnv pgpool scheduledEvent Templated) (logger, httpMgr)
               either logInternalError pure finally
       Left err -> logInternalError err
     sleep (minutes 1)
@@ -357,19 +359,18 @@ processOneOffScheduledQueue
   -> IO void
 processOneOffScheduledQueue logger logEnv httpMgr pgpool =
   forever $ do
-    scheduledEventsE <-
+    oneOffScheduledEvents <-
       runExceptT $
       Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getOneOffScheduledEvents
-    case scheduledEventsE of
-      Right partialEvents ->
-        for_ partialEvents $ \(ScheduledEventOneOff id'
-                                                    scheduledTime
-                                                    tries'
-                                                    webhookConf
-                                                    payload'
-                                                    retryConf
-                                                    headerConf
-                                                    )
+    case oneOffScheduledEvents of
+      Right events ->
+        for_ events $ \(ScheduledEventOneOff id'
+                                             scheduledTime
+                                             tries'
+                                             webhookConf
+                                             payload'
+                                             retryConf
+                                             headerConf )
           -> do
           webhookInfo <- runExceptT $ getWebhookInfoFromConf webhookConf
           headerInfo <- runExceptT $ getHeaderInfosFromConf headerConf
@@ -389,7 +390,7 @@ processOneOffScheduledQueue logger logEnv httpMgr pgpool =
                                                           retryConf
                                                           headerInfo'
                   finally <- runExceptT $
-                    runReaderT (processScheduledEvent logEnv pgpool scheduledEvent) (logger, httpMgr)
+                    runReaderT (processScheduledEvent logEnv pgpool scheduledEvent StandAlone) (logger, httpMgr)
                   either logInternalError pure finally
 
                 Left err'' -> logInternalError err''
@@ -412,13 +413,14 @@ processScheduledEvent ::
   => LogEnvHeaders
   -> Q.PGPool
   -> ScheduledEventFull
+  -> ScheduledEventType
   -> m ()
 processScheduledEvent
-  logEnv pgpool se@ScheduledEventFull {..} = do
+  logEnv pgpool se@ScheduledEventFull {..} type' = do
   currentTime <- liftIO getCurrentTime
   if convertDuration (diffUTCTime currentTime sefScheduledTime)
     > unNonNegativeDiffTime (strcToleranceSeconds sefRetryConf)
-    then processDead pgpool se
+    then processDead pgpool se type'
     else do
       let timeoutSeconds = round $ unNonNegativeDiffTime
                              $ strcTimeoutSeconds sefRetryConf
@@ -429,14 +431,14 @@ processScheduledEvent
       logHTTPForST res extraLogCtx
       let decodedHeaders = map (decodeHeader logEnv sefHeaders) headers
       either
-        (processError pgpool se decodedHeaders)
-        (processSuccess pgpool se decodedHeaders)
+        (processError pgpool se decodedHeaders type')
+        (processSuccess pgpool se decodedHeaders type')
         res
 
 processError
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> HTTPErr a -> m ()
-processError pgpool se decodedHeaders err = do
+  => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> ScheduledEventType -> HTTPErr a  -> m ()
+processError pgpool se decodedHeaders type' err = do
   let invocation = case err of
         HClient excp -> do
           let errMsg = TBS.fromLBS $ J.encode $ show excp
@@ -454,18 +456,18 @@ processError pgpool se decodedHeaders err = do
           mkInvocation se 500 decodedHeaders errMsg []
   liftExceptTIO $
     Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
-    insertInvocation invocation
-    retryOrMarkError se err
+    insertInvocation invocation type'
+    retryOrMarkError se err type'
 
-retryOrMarkError :: ScheduledEventFull -> HTTPErr a -> Q.TxE QErr ()
-retryOrMarkError se@ScheduledEventFull {..} err = do
+retryOrMarkError :: ScheduledEventFull -> HTTPErr a -> ScheduledEventType -> Q.TxE QErr ()
+retryOrMarkError se@ScheduledEventFull {..} err type' = do
   let mRetryHeader = getRetryAfterHeaderFromHTTPErr err
       mRetryHeaderSeconds = parseRetryHeaderValue =<< mRetryHeader
       triesExhausted = sefTries >= strcNumRetries sefRetryConf
       noRetryHeader = isNothing mRetryHeaderSeconds
   if triesExhausted && noRetryHeader
     then do
-      setScheduledEventStatus sefId SESError
+      setScheduledEventStatus sefId SESError type'
     else do
       currentTime <- liftIO getCurrentTime
       let delay = fromMaybe (round $ unNonNegativeDiffTime
@@ -509,22 +511,22 @@ cancelled, marked as error or in the dead state to process.
 
 processSuccess
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> HTTPResp a -> m ()
-processSuccess pgpool se decodedHeaders resp = do
+  => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> ScheduledEventType -> HTTPResp a -> m ()
+processSuccess pgpool se decodedHeaders type' resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
       invocation = mkInvocation se respStatus decodedHeaders respBody respHeaders
   liftExceptTIO $
     Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
-    insertInvocation invocation
-    setScheduledEventStatus (sefId se) SESDelivered
+    insertInvocation invocation type'
+    setScheduledEventStatus (sefId se) SESDelivered type'
 
-processDead :: (MonadIO m, MonadError QErr m) => Q.PGPool -> ScheduledEventFull -> m ()
-processDead pgpool se =
+processDead :: (MonadIO m, MonadError QErr m) => Q.PGPool -> ScheduledEventFull -> ScheduledEventType -> m ()
+processDead pgpool se type' =
   liftExceptTIO $
   Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $
-    setScheduledEventStatus (sefId se) SESDead
+    setScheduledEventStatus (sefId se) SESDead type'
 
 setRetry :: ScheduledEventFull -> UTCTime -> Q.TxE QErr ()
 setRetry se time =
@@ -549,30 +551,57 @@ mkInvocation se status reqHeaders respBody respHeaders
       (mkWebhookReq (J.toJSON se) reqHeaders invocationVersionST)
       resp
 
-insertInvocation :: (Invocation 'ScheduledType) -> Q.TxE QErr ()
-insertInvocation invo = do
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-          INSERT INTO hdb_catalog.hdb_scheduled_event_invocation_logs
-          (event_id, status, request, response)
-          VALUES ($1, $2, $3, $4)
-          |] ( iEventId invo
+insertInvocation :: (Invocation 'ScheduledType) -> ScheduledEventType ->  Q.TxE QErr ()
+insertInvocation invo type' = do
+  case type' of
+    Templated -> do
+      Q.unitQE defaultTxErrorHandler
+        [Q.sql|
+         INSERT INTO hdb_catalog.hdb_scheduled_event_invocation_logs
+         (event_id, status, request, response)
+         VALUES ($1, $2, $3, $4)
+        |] ( iEventId invo
              , fromIntegral $ iStatus invo :: Int64
              , Q.AltJ $ J.toJSON $ iRequest invo
              , Q.AltJ $ J.toJSON $ iResponse invo) True
-  Q.unitQE defaultTxErrorHandler [Q.sql|
+      Q.unitQE defaultTxErrorHandler [Q.sql|
           UPDATE hdb_catalog.hdb_scheduled_events
           SET tries = tries + 1
           WHERE id = $1
           |] (Identity $ iEventId invo) True
+    StandAlone -> do
+      Q.unitQE defaultTxErrorHandler
+        [Q.sql|
+         INSERT INTO hdb_catalog.hdb_one_off_scheduled_event_invocation_logs
+         (event_id, status, request, response)
+         VALUES ($1, $2, $3, $4)
+        |] ( iEventId invo
+             , fromIntegral $ iStatus invo :: Int64
+             , Q.AltJ $ J.toJSON $ iRequest invo
+             , Q.AltJ $ J.toJSON $ iResponse invo) True
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.hdb_one_off_scheduled_events
+          SET tries = tries + 1
+          WHERE id = $1
+          |] (Identity $ iEventId invo) True
 
-setScheduledEventStatus :: Text -> ScheduledEventStatus -> Q.TxE QErr ()
-setScheduledEventStatus scheduledEventId status = do
-  Q.unitQE defaultTxErrorHandler
-   [Q.sql|
-    UPDATE hdb_catalog.hdb_scheduled_events
-    SET status = $2
-    where id = $1
-    |] (scheduledEventId, status) True
+setScheduledEventStatus :: Text -> ScheduledEventStatus -> ScheduledEventType -> Q.TxE QErr ()
+setScheduledEventStatus scheduledEventId status type' =
+  case type' of
+    Templated -> do
+      Q.unitQE defaultTxErrorHandler
+       [Q.sql|
+        UPDATE hdb_catalog.hdb_scheduled_events
+        SET status = $2
+        WHERE id = $1
+       |] (scheduledEventId, status) True
+    StandAlone -> do
+      Q.unitQE defaultTxErrorHandler
+       [Q.sql|
+        UPDATE hdb_catalog.hdb_one_off_scheduled_events
+        SET status = $2
+        WHERE id = $1
+       |] (scheduledEventId, status) True
 
 getScheduledEvents :: Q.TxE QErr [ScheduledEventPartial]
 getScheduledEvents = do

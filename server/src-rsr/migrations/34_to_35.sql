@@ -65,8 +65,22 @@ CREATE TABLE hdb_catalog.hdb_one_off_scheduled_events
   status TEXT NOT NULL DEFAULT 'scheduled',
   tries INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
+  next_retry_at TIMESTAMPTZ,
+  comment TEXT,
 
   CONSTRAINT valid_status CHECK (status IN ('scheduled','locked','delivered','error','dead'))
 );
 
 CREATE INDEX hdb_hdb_one_off_scheduled_event_status ON hdb_catalog.hdb_one_off_scheduled_events (status);
+
+CREATE TABLE hdb_catalog.hdb_one_off_scheduled_event_invocation_logs
+(
+id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+event_id TEXT,
+status INTEGER,
+request JSON,
+response JSON,
+created_at TIMESTAMP DEFAULT NOW(),
+
+FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_one_off_scheduled_events (id) ON DELETE CASCADE
+);
