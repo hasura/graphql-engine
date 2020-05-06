@@ -64,7 +64,7 @@ module Hasura.Eventing.ScheduledTrigger
   , generateScheduleTimes
   , insertScheduledEvents
   , ScheduledEventDb(..)
-  , ScheduledEventOneOff(..)
+  , ScheduledTriggerOneOff(..)
   ) where
 
 import           Control.Arrow.Extended            (dup)
@@ -193,8 +193,8 @@ data ScheduledEventFull
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventFull)
 
-data ScheduledEventOneOff -- refactor this to scheduledTriggerOneOff
-  = ScheduledEventOneOff
+data ScheduledTriggerOneOff
+  = ScheduledTriggerOneOff
   { seoId            :: !Text
   , seoScheduledTime :: !UTCTime
   , seoTries         :: !Int
@@ -206,7 +206,7 @@ data ScheduledEventOneOff -- refactor this to scheduledTriggerOneOff
   , seoStatus        :: !ScheduledEventStatus
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventOneOff)
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledTriggerOneOff)
 
 -- | The 'ScheduledEventType' data type is needed to differentiate
 --   between a 'Templated' and 'StandAlone' event because they
@@ -386,15 +386,15 @@ processOneOffScheduledQueue logger logEnv httpMgr pgpool =
       Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getOneOffScheduledEvents
     case oneOffScheduledEvents of
       Right oneOffScheduledEvents' ->
-        for_ oneOffScheduledEvents' $ \(ScheduledEventOneOff id'
-                                                             scheduledTime
-                                                             tries
-                                                             webhookConf
-                                                             payload
-                                                             retryConf
-                                                             headerConf
-                                                             comment
-                                                             _ )
+        for_ oneOffScheduledEvents' $ \(ScheduledTriggerOneOff id'
+                                                               scheduledTime
+                                                               tries
+                                                               webhookConf
+                                                               payload
+                                                               retryConf
+                                                               headerConf
+                                                               comment
+                                                               _ )
           -> do
           webhookInfo <- runExceptT $ getWebhookInfoFromConf webhookConf
           headerInfo <- runExceptT $ getHeaderInfosFromConf headerConf
@@ -656,7 +656,7 @@ getScheduledEvents = do
       |] () True
   where uncurryEvent (i, n, st, p, tries) = ScheduledEventPartial i n st (Q.getAltJ <$> p) tries
 
-getOneOffScheduledEvents :: Q.TxE QErr [ScheduledEventOneOff]
+getOneOffScheduledEvents :: Q.TxE QErr [ScheduledTriggerOneOff]
 getOneOffScheduledEvents = do
   map uncurryOneOffEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.hdb_one_off_scheduled_events
@@ -683,15 +683,15 @@ getOneOffScheduledEvents = do
                        , tries
                        , eventStatus
                        , comment ) =
-      ScheduledEventOneOff eventId
-                           scheduledTime
-                           tries
-                           (Q.getAltJ webhookConf)
-                           (Q.getAltJ payload)
-                           (Q.getAltJ retryConf)
-                           (Q.getAltJ headerConf)
-                           comment
-                           eventStatus
+      ScheduledTriggerOneOff eventId
+                             scheduledTime
+                             tries
+                             (Q.getAltJ webhookConf)
+                             (Q.getAltJ payload)
+                             (Q.getAltJ retryConf)
+                             (Q.getAltJ headerConf)
+                             comment
+                             eventStatus
 
 liftExceptTIO :: (MonadError e m, MonadIO m) => ExceptT e IO a -> m a
 liftExceptTIO m = liftEither =<< liftIO (runExceptT m)

@@ -36,7 +36,7 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''FetchEventsResponse)
 
 data FetchOneOffScheduledTriggersResponse
   = FetchOneOffScheduledTriggersResponse
-  { fostrOneOffScheduledTriggers :: ![ScheduledEventOneOff]
+  { fostrOneOffScheduledTriggers :: ![ScheduledTriggerOneOff]
   } deriving (Eq, Show)
 
 $(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''FetchOneOffScheduledTriggersResponse)
@@ -218,15 +218,15 @@ runFetchOneOffScheduledTriggers (FetchOneOffScheduledTriggers stOffset stLimit) 
                             , status
                             , tries
                             , comment) =
-      ScheduledEventOneOff id'
-                           scheduledTime
-                           tries
-                           (Q.getAltJ webhookConf)
-                           (Q.getAltJ <$> payload)
-                           (Q.getAltJ retryConf)
-                           (Q.getAltJ headerConf)
-                           comment
-                           status
+      ScheduledTriggerOneOff id'
+                             scheduledTime
+                             tries
+                             (Q.getAltJ webhookConf)
+                             (Q.getAltJ <$> payload)
+                             (Q.getAltJ retryConf)
+                             (Q.getAltJ headerConf)
+                             comment
+                             status
 
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do
