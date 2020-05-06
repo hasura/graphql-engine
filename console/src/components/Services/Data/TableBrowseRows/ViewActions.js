@@ -97,7 +97,7 @@ const vMakeRowsRequest = () => {
             dispatch({
               type: V_REQUEST_SUCCESS,
               data: data[0],
-              estimatedCount: data[1].result[1],
+              estimatedCount: parseInt(data[1].result[1][0], 10),
             }),
             dispatch({ type: V_REQUEST_PROGRESS, data: false }),
           ]);
@@ -160,8 +160,7 @@ const vMakeCountRequest = () => {
 
 const vMakeTableRequests = () => (dispatch, getState) => {
   dispatch(vMakeRowsRequest()).then(() => {
-    const estimatedCountResult = getState().tables.view.estimatedCount[0];
-    const estimatedCount = parseInt(estimatedCountResult, 10);
+    const { estimatedCount } = getState().tables.view;
     if (estimatedCount > COUNT_LIMIT) {
       dispatch({
         type: V_COUNT_REQUEST_SUCCESS,
