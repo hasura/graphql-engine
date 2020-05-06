@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
@@ -86,6 +86,9 @@ const ViewRows = ({
   readOnlyMode,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
+  useEffect(() => {
+    setSelectedRows([]);
+  }, [curTableName, currentSchema]);
 
   const NO_PRIMARY_KEY_MSG = 'No primary key to identify row';
 
