@@ -297,7 +297,7 @@ instance Arbitrary ActionPermissionMetadata where
 instance Arbitrary ActionMetadata where
   arbitrary = genericArbitrary
 
-instance Arbitrary CreateScheduledTrigger where
+instance Arbitrary ScheduledTriggerMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary WebhookConf where

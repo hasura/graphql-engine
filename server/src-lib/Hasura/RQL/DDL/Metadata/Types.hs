@@ -172,7 +172,7 @@ data ReplaceMetadata
   , aqAllowlist         :: ![Collection.CollectionReq]
   , aqCustomTypes       :: !CustomTypes
   , aqActions           :: ![ActionMetadata]
-  , aqScheduledTriggers :: ![CreateScheduledTrigger]
+  , aqScheduledTriggers :: ![ScheduledTriggerMetadata]
   } deriving (Show, Eq)
 
 instance FromJSON ReplaceMetadata where
@@ -428,9 +428,9 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                   , ("definition", AO.toOrdered definition)
                   ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
-    scheduledTriggerQToOrdJSON :: CreateScheduledTrigger -> AO.Value
+    scheduledTriggerQToOrdJSON :: ScheduledTriggerMetadata -> AO.Value
     scheduledTriggerQToOrdJSON
-      (CreateScheduledTrigger name webhook schedule payload retryConf headers includeInMetadata comment) =
+      (ScheduledTriggerMetadata name webhook schedule payload retryConf headers includeInMetadata comment) =
       AO.object $
             [ ("name", AO.toOrdered name)
             , ("webhook", AO.toOrdered webhook)

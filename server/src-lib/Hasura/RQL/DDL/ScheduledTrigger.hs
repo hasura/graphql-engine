@@ -43,14 +43,14 @@ $(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''FetchOneOffScheduledTriggersRespo
 
 runCreateScheduledTriggerCron :: (CacheRWM m, MonadTx m) => CreateScheduledTriggerCron ->  m EncJSON
 runCreateScheduledTriggerCron CreateScheduledTriggerCron {..} = do
-  let q = (CreateScheduledTrigger stcName
-                                  stcWebhook
-                                  (Cron stcCronSchedule)
-                                  stcPayload
-                                  stcRetryConf
-                                  stcHeaders
-                                  stcIncludeInMetadata
-                                  stcComment)
+  let q = (ScheduledTriggerMetadata stcName
+                                    stcWebhook
+                                    (Cron stcCronSchedule)
+                                    stcPayload
+                                    stcRetryConf
+                                    stcHeaders
+                                    stcIncludeInMetadata
+                                    stcComment)
   stMap <- scScheduledTriggers <$> askSchemaCache
   case Map.lookup (stName q) stMap of
     Nothing -> pure ()
@@ -61,8 +61,8 @@ runCreateScheduledTriggerCron CreateScheduledTriggerCron {..} = do
   buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
 
-addScheduledTriggerToCatalog :: (MonadTx m) => CreateScheduledTrigger ->  m ()
-addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
+addScheduledTriggerToCatalog :: (MonadTx m) => ScheduledTriggerMetadata ->  m ()
+addScheduledTriggerToCatalog ScheduledTriggerMetadata {..} = liftTx $ do
   Q.unitQE defaultTxErrorHandler
     [Q.sql|
       INSERT into hdb_catalog.hdb_scheduled_trigger
@@ -99,21 +99,21 @@ resolveScheduledTrigger CatalogScheduledTrigger {..} = do
 
 runUpdateScheduledTriggerCron :: (CacheRWM m, MonadTx m) => CreateScheduledTriggerCron -> m EncJSON
 runUpdateScheduledTriggerCron CreateScheduledTriggerCron {..} = do
-  let q = (CreateScheduledTrigger stcName
-                                  stcWebhook
-                                  (Cron stcCronSchedule)
-                                  stcPayload
-                                  stcRetryConf
-                                  stcHeaders
-                                  stcIncludeInMetadata
-                                  stcComment)
+  let q = (ScheduledTriggerMetadata stcName
+                                    stcWebhook
+                                    (Cron stcCronSchedule)
+                                    stcPayload
+                                    stcRetryConf
+                                    stcHeaders
+                                    stcIncludeInMetadata
+                                    stcComment)
   checkExists stcName
   updateScheduledTriggerInCatalog q
   buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
 
-updateScheduledTriggerInCatalog :: (MonadTx m) => CreateScheduledTrigger -> m ()
-updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
+updateScheduledTriggerInCatalog :: (MonadTx m) => ScheduledTriggerMetadata -> m ()
+updateScheduledTriggerInCatalog ScheduledTriggerMetadata {..} = liftTx $ do
   Q.unitQE defaultTxErrorHandler
    [Q.sql|
     UPDATE hdb_catalog.hdb_scheduled_trigger

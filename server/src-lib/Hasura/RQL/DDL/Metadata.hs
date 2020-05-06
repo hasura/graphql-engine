@@ -389,7 +389,8 @@ fetchMetadata = do
                           )
 
     fetchScheduledTriggers =
-      map uncurrySchedule <$> Q.listQE defaultTxErrorHandler
+      map uncurryScheduledTrigger
+              <$> Q.listQE defaultTxErrorHandler
       [Q.sql|
        SELECT st.name, st.webhook_conf, st.schedule_conf, st.payload,
              st.retry_conf, st.header_conf, st.include_in_metadata, st.comment
@@ -397,8 +398,9 @@ fetchMetadata = do
         WHERE include_in_metadata
       |] () False
       where
-        uncurrySchedule (name, webhook, schedule, payload, retryConfig, headerConfig, includeMetadata, comment) =
-          CreateScheduledTrigger
+        uncurryScheduledTrigger
+          (name, webhook, schedule, payload, retryConfig, headerConfig, includeMetadata, comment) =
+          ScheduledTriggerMetadata
           { stName = name,
             stWebhook = Q.getAltJ webhook,
             stSchedule = Q.getAltJ schedule,
