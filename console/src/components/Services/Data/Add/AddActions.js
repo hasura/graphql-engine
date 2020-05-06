@@ -155,20 +155,20 @@ const createTableSql = () => {
     const state = getState().addTable.table;
     const currentSchema = getState().tables.currentSchema;
 
-    const { foreignKeys, uniqueKeys, checkConstraints } = state;
-    const tableName = state.tableName.trim();
+    const {
+      foreignKeys,
+      uniqueKeys,
+      checkConstraints,
+      tableName,
+      columns,
+    } = state;
 
     // validations
     if (tableName === '') {
       alert('Table name cannot be empty');
     }
 
-    const currentCols = state.columns
-      .map(c => ({
-        ...c,
-        name: c.name.trim(),
-      }))
-      .filter(c => c.name !== '');
+    const currentCols = columns.filter(c => c.name !== '');
 
     const pKeys = state.primaryKeys
       .filter(p => p !== '')

@@ -111,6 +111,13 @@ class AddTable extends Component {
     dispatch(setTableName(e.target.value));
   };
 
+  trimTableName = tableName => {
+    const trimmedName = tableName != null ? tableName.trim() : tableName;
+    const { dispatch } = this.props;
+    dispatch(setTableName(trimmedName));
+    return trimmedName;
+  };
+
   onTableCommentChange = e => {
     const { dispatch } = this.props;
     dispatch(setTableComment(e.target.value));
@@ -226,6 +233,20 @@ class AddTable extends Component {
       c = c.slice(0, c.length - 1);
     }
     return c;
+  }
+
+  trimColumnNames(columns) {
+    const trimmedColumns = columns.map((column, index) => {
+      const trimmedColumn = column.name.trim();
+      this.props.dispatch(
+        setColName(trimmedColumn, index, column.isNullableChecked)
+      );
+      return {
+        ...column,
+        name: trimmedColumn,
+      };
+    });
+    return trimmedColumns;
   }
 
   validateEnoughColumns(cols) {
@@ -359,16 +380,10 @@ class AddTable extends Component {
     this.props.dispatch(resetValidation());
     const validColumns = this.trimEmptyColumns(this.props.columns);
     // trim white spaces on table name.
-    const tableNameTrimmed =
-      this.props.tableName != null
-        ? this.props.tableName.trim()
-        : this.props.tableName;
+    const tableNameTrimmed = this.trimTableName(this.props.tableName);
 
     // trim all validColumns names
-    const trimmedColumns = validColumns.map(col => ({
-      ...col,
-      name: col.name.trim(),
-    }));
+    const trimmedColumns = this.trimColumnNames(validColumns);
 
     if (
       this.checkAndNotify(
