@@ -256,9 +256,7 @@ const AddRelationship = ({
       </div>
       <div className={tableStyles.tableContainer}>
         <table
-          className={`${
-            tableStyles.table
-          } table table-bordered table-striped table-hover`}
+          className={`${tableStyles.table} table table-bordered table-striped table-hover`}
         >
           <thead>
             <tr>
@@ -367,9 +365,7 @@ class Relationships extends Component {
       addedRelationshipsView = (
         <div className={tableStyles.tableContainer}>
           <table
-            className={`${
-              tableStyles.table
-            } table table-bordered table-striped table-hover`}
+            className={`${tableStyles.table} table table-bordered table-striped table-hover`}
           >
             <thead>
               <tr>

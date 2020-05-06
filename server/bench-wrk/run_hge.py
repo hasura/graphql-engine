@@ -56,7 +56,9 @@ class HGE:
     @classmethod
     def do_stack_build(cls):
         print(Fore.YELLOW  + "Performing Stack build first" + Style.RESET_ALL)
-        subprocess.check_call(['stack','build'])
+        # 'stack run' below will also build, but we want to make sure that's a
+        # noop so the server starts right away
+        subprocess.check_call( ['cabal', 'new-build', 'exe:graphql-engine'])
 
     def get_hge_env(self):
         hge_env = {
@@ -75,7 +77,7 @@ class HGE:
         if self.docker_image:
             self.run_with_docker()
         else:
-            self.run_with_stack()
+            self.run_with_cabal()
 
     def run_with_docker(self):
         if self.url:
@@ -102,14 +104,14 @@ class HGE:
         self.wait_for_start()
 
 
-    def run_with_stack(self):
+    def run_with_cabal(self):
         if self.url:
             return
         self.port = self.port_allocator.allocate_port(8080)
         rm_file_if_exists(self.tix_file)
         hge_env = self.get_hge_env()
-        process_args = ['stack', 'exec', 'graphql-engine', '--', 'serve', *self.args]
-        print("Running GraphQL with stack exec: (port:{})".format(self.port))
+        process_args = ['cabal', 'new-run', '--', 'exe:graphql-engine', 'serve', *self.args]
+        print("Running GraphQL with 'cabal run': (port:{})".format(self.port))
         print(process_args)
         self.log_fp = open(self.log_file, 'w')
         self.proc = subprocess.Popen(
@@ -117,6 +119,7 @@ class HGE:
             env=hge_env,
             shell=False,
             bufsize=-1,
+            start_new_session=True,
             stdout=self.log_fp,
             stderr=subprocess.STDOUT
         )
@@ -170,8 +173,13 @@ class HGE:
             self.cleanup_docker()
 
     def cleanup_process(self):
+        # TODO hangs
             print(Fore.YELLOW + "Stopping graphql engine at port:", self.port, Style.RESET_ALL)
-            self.proc.send_signal(signal.SIGINT)
+
+            pgrp = os.getpgid(self.proc.pid)
+            os.killpg(pgrp, signal.SIGTERM) 
+            # NOTE this doesn't seem to work, although a SIGINT from terminal does ...
+            # self.proc.send_signal(signal.SIGINT)
             self.proc.wait()
             self.proc = None
 

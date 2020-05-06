@@ -27,11 +27,30 @@ args:
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
         published_on TIMESTAMP
-      )
+      );
+
+      CREATE FUNCTION fetch_articles(search text, author_row author)
+      RETURNS SETOF article AS $$
+        SELECT *
+        FROM article
+        WHERE
+          ( title ilike ('%' || search || '%')
+            OR content ilike ('%' || search || '%')
+          ) AND author_id = author_row.id
+      $$ LANGUAGE sql STABLE;
+
 - type: track_table
   args:
     schema: public
     name: article
+
+- type: add_computed_field
+  args:
+    table: author
+    name: get_articles
+    definition:
+      function: fetch_articles
+      table_argument: author_row
 
 #Create resident table
 - type: run_sql
@@ -444,3 +463,33 @@ args:
           _where:
             id: X-Hasura-User-Id
             is_admin: true
+
+- type: create_insert_permission
+  args:
+    table: user
+    role: backend_user
+    permission:
+      check: {}
+      columns: '*'
+      backend_only: true
+      set:
+        is_admin: true
+
+- type: create_select_permission
+  args:
+    table: user
+    role: backend_user
+    permission:
+      columns: '*'
+      filter: {}
+
+- type: create_insert_permission
+  args:
+    table: user
+    role: user
+    permission:
+      check: {}
+      columns: '*'
+      backend_only: false
+      set:
+        is_admin: false

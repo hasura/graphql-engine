@@ -1,14 +1,14 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE AllowAmbiguousTypes  #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Control.Monad.Stateless
   ( MonadStateless(..)
   ) where
 
-import Prelude
+import           Prelude
 
-import Control.Monad.Trans.Control
-import Data.Type.Equality
+import           Control.Monad.Trans.Control
+import           Data.Type.Equality
 
 class (MonadBaseControl b m, forall a. StatelessProof m a) => MonadStateless b m | m -> b where
   liftWithStateless :: ((forall a. m a -> b a) -> b c) -> m c

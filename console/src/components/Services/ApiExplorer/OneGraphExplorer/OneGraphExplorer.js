@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { getIntrospectionQuery, buildClientSchema } from 'graphql';
 import GraphiQLExplorer from 'graphiql-explorer';
 
@@ -36,10 +35,11 @@ class OneGraphExplorer extends React.Component {
   }
 
   componentDidUpdate() {
-    if (!this.props.headerFocus && !this.state.loading) {
+    const { headerFocus, headers } = this.props;
+    const { loading, previousIntrospectionHeaders } = this.state;
+    if (!headerFocus && !loading) {
       if (
-        JSON.stringify(this.props.headers) !==
-        JSON.stringify(this.state.previousIntrospectionHeaders)
+        JSON.stringify(headers) !== JSON.stringify(previousIntrospectionHeaders)
       ) {
         this.introspect();
       }
@@ -78,11 +78,11 @@ class OneGraphExplorer extends React.Component {
   }
 
   introspect() {
-    const { endpoint, headersInitialised } = this.props;
+    const { endpoint, headersInitialised, headers: headers_ } = this.props;
     if (!headersInitialised) {
       return;
     }
-    const headers = JSON.parse(JSON.stringify(this.props.headers));
+    const headers = JSON.parse(JSON.stringify(headers_));
     this.setState({ loading: true });
     fetch(endpoint, {
       method: 'POST',

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import pytest
 import ruamel.yaml as yaml
 from ruamel.yaml.compat import ordereddict, StringIO
 from ruamel.yaml.comments import CommentedMap
@@ -9,11 +8,9 @@ import copy
 import graphql
 import os
 import base64
-import json
 import jsondiff
 import jwt
 import random
-import time
 import warnings
 
 from context import GQLWsClient, PytestConf
@@ -125,10 +122,27 @@ def test_forbidden_webhook(hge_ctx, conf):
         'request id': resp_hdrs.get('x-request-id')
     })
 
+def mk_claims_with_namespace_path(claims,hasura_claims,namespace_path):
+    if namespace_path is None:
+        claims['https://hasura.io/jwt/claims'] = hasura_claims
+    elif namespace_path == "$":
+        claims.update(hasura_claims)
+    elif namespace_path == "$.hasura_claims":
+        claims['hasura_claims'] = hasura_claims
+    elif namespace_path == "$.hasura['claims%']":
+        claims['hasura'] = {}
+        claims['hasura']['claims%'] = hasura_claims
+    else:
+        raise Exception(
+                '''claims_namespace_path should not be anything
+                other than $.hasura_claims, $.hasura['claims%'] or $ for testing. The
+                value of claims_namespace_path was {}'''.format(namespace_path))
+    return claims
 
 # Returns the response received and a bool indicating whether the test passed
 # or not (this will always be True unless we are `--accepting`)
-def check_query(hge_ctx, conf, transport='http', add_auth=True):
+def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace_path=None):
+    hge_ctx.tests_passed = True
     headers = {}
     if 'headers' in conf:
         headers = conf['headers']
@@ -152,8 +166,8 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
             claim = {
                 "sub": "foo",
                 "name": "bar",
-                "https://hasura.io/jwt/claims": hClaims
             }
+            claim = mk_claims_with_namespace_path(claim,hClaims,claims_namespace_path)
             headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm='RS512').decode(
                 'UTF-8')
 
@@ -231,7 +245,7 @@ def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retr
     resp_done = next(query_resp)
     assert resp_done['type'] == 'complete'
 
-    return assert_graphql_resp_expected(resp['payload'], exp_http_response, query)
+    return assert_graphql_resp_expected(resp['payload'], exp_http_response, query, skip_if_err_msg=hge_ctx.avoid_err_msg_checks)
 
 
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
@@ -240,7 +254,7 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
     assert code == exp_code, resp
     print('http resp: ', resp)
     if exp_response:
-        return assert_graphql_resp_expected(resp, exp_response, query, resp_hdrs)
+        return assert_graphql_resp_expected(resp, exp_response, query, resp_hdrs, hge_ctx.avoid_err_msg_checks)
     else:
         return resp, True
 
@@ -250,7 +264,7 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
 #
 # Returns 'resp' and a bool indicating whether the test passed or not (this
 # will always be True unless we are `--accepting`)
-def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}):
+def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}, skip_if_err_msg=False):
     # Prepare actual and respected responses so comparison takes into
     # consideration only the ordering that we care about:
     resp         = collapse_order_not_selset(resp_orig,         query)
@@ -270,12 +284,30 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
             'diff':
               (lambda diff:
                  "(results differ only in their order of keys)" if diff == {} else diff)
-              (stringify_keys(jsondiff.diff(exp_response, resp)))
+              (stringify_keys(jsondiff.diff(exp_response, resp))),
+              'query': query
         }
         if 'x-request-id' in resp_hdrs:
             test_output['request id'] = resp_hdrs['x-request-id']
         yml.dump(test_output, stream=dump_str)
-        assert matched, '\n' + dump_str.getvalue()
+        if not skip_if_err_msg:
+            assert matched, '\n' + dump_str.getvalue()
+        elif matched:
+            return resp, matched
+        else:
+            def is_err_msg(msg):
+                return any(msg.get(x) for x in ['error','errors'])
+            def as_list(x):
+                return x if isinstance(x, list) else [x]
+            # If it is a batch GraphQL query, compare each individual response separately
+            for (exp, out) in zip(as_list(exp_response), as_list(resp)):
+                matched_ = equal_CommentedMap(exp, out)
+                if is_err_msg(exp):
+                    if not matched_:
+                        warnings.warn("Response does not have the expected error message\n" + dump_str.getvalue())
+                        return resp, matched
+                else:
+                    assert matched_, '\n' + dump_str.getvalue()
     return resp, matched  # matched always True unless --accept
 
 # This really sucks; newer ruamel made __eq__ ignore ordering:
@@ -292,12 +324,17 @@ def equal_CommentedMap(m1, m2):
         else:
             m1_l = sorted(list(m1.items()))
             m2_l = sorted(list(m2.items()))
-        return (len(m1_l) == len(m2_l) and 
-                all(k1 == k2 and equal_CommentedMap(v1,v2) 
+        return (len(m1_l) == len(m2_l) and
+                all(k1 == k2 and equal_CommentedMap(v1,v2)
                     for (k1,v1),(k2,v2) in zip(m1_l,m2_l)))
     # else this is a scalar:
     else:
         return m1 == m2
+
+# Parse test case YAML file
+def get_conf_f(f):
+    with open(f, 'r+') as c:
+        return yaml.YAML().load(c)
 
 def check_query_f(hge_ctx, f, transport='http', add_auth=True):
     print("Test file: " + f)
@@ -338,7 +375,7 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
                 "\n   NOTE: if this case was marked 'xfail' this won't be correct!"
             )
             c.seek(0)
-            c.write(yml.dump(conf))
+            yml.dump(conf, stream=c)
             c.truncate()
 
 
@@ -390,26 +427,15 @@ def collapse_order_not_selset(result_inp, query):
 
 # Use this since jsondiff seems to produce object/dict structures that can't
 # always be serialized to json.
-# Copy-pasta from: https://stackoverflow.com/q/12734517/176841 
 def stringify_keys(d):
- """Convert a dict's keys to strings if they are not."""
- if isinstance(d, dict):
-   for key in d.keys():
-     # check inner dict
-     if isinstance(d[key], dict):
-         value = stringify_keys(d[key])
-     else:
-         value = d[key]
-     # convert nonstring to string if needed
-     if not isinstance(key, str):
-         try:
-             d[key.decode("utf-8")] = value
-         except Exception:
-             try:
-                 d[repr(key)] = value
-             except Exception:
-                 raise
+    """Recursively convert a dict's keys to strings."""
+    if not isinstance(d, dict): return d
 
-         # delete old key
-         del d[key]
- return d
+    def decode(k):
+        if isinstance(k, str): return k
+        try:
+            return k.decode("utf-8")
+        except Exception:
+            return repr(k)
+
+    return { decode(k): stringify_keys(v) for k, v in d.items() }

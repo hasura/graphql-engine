@@ -1,3 +1,7 @@
+.. meta::
+   :description: Model one-to-one relationships in Hasura
+   :keywords: hasura, docs, schema, relationship, one-to-one, 1-1
+
 .. _one_to_one_modelling:
 
 Modelling one-to-one table relationships
@@ -47,7 +51,7 @@ the ``author`` table and there will be only one row with a particular ``owner_id
 Set up GraphQL relationships
 ----------------------------
 
-To access the nested objects via the GraphQL API, :doc:`create the following relationships <../create>`:
+To access the nested objects via the GraphQL API, :ref:`create the following relationships <create_relationships>`:
 
 - Object relationship, ``passport_info`` from the ``author`` table using  ``id -> passport_info :: owner_id``
 - Object relationship, ``owner`` from the ``passport_info`` table using ``owner_id -> author :: id``

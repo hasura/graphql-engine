@@ -9,10 +9,18 @@ module Hasura.Server.Migrate.Version
 
 import           Hasura.Prelude
 
-import qualified Data.Text      as T
+import qualified Data.Text                  as T
+import qualified Language.Haskell.TH.Syntax as TH
 
+import           Data.FileEmbed             (embedStringFile)
+
+-- | The current catalog schema version. We store this in a file
+-- because we want to append the current verson to the catalog_versions file
+-- when tagging a new release, in @tag-release.sh@. 
 latestCatalogVersion :: Integer
-latestCatalogVersion = 28
+latestCatalogVersion = 
+  $(do let s = $(embedStringFile "src-rsr/catalog_version.txt")
+       TH.lift (read s :: Integer)) 
 
 latestCatalogVersionString :: T.Text
 latestCatalogVersionString = T.pack $ show latestCatalogVersion

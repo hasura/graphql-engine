@@ -1,6 +1,6 @@
 # Hasura GraphQL Engine
 
-[![Dokumenti](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
+[![Dokumenti](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://hasura.io/docs)
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
@@ -12,7 +12,7 @@ Hasura GraphQL Engine je nevjerovatno brzi GraphQL server koji vam nudi **trenut
 
 Hasura vam pomaže da napravite GraphQL aplikacije podržane Postgres-om ili postepeno pređite na GraphQL za postojeće aplikacije pomoću Postgres-a.
 
-Pročitajte više na [hasura.io](https://hasura.io) i [dokumentima](https://docs.hasura.io).
+Pročitajte više na [hasura.io](https://hasura.io) i [dokumentima](https://hasura.io/docs).
 
 ------------------
 
@@ -36,7 +36,7 @@ Pročitajte više na [hasura.io](https://hasura.io) i [dokumentima](https://docs
 * **Administratorsko sučelje & Migracije**: Administratorska ploča & Rails-inspirisana migracija šeme
 * **Postgres** ❤️: Podržava Postgres tipove (PostGIS/geo-location, i sl.), pretvara poglede u *grafikone*, pokreće pohranjene funkcije ili procedure s mutacijama
 
-Pročitaj više na [hasura.io](https://hasura.io) i [dokumentima](https://docs.hasura.io).
+Pročitaj više na [hasura.io](https://hasura.io) i [dokumentima](https://hasura.io/docs).
 
 ## Tabela sadržaja
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
@@ -77,7 +77,7 @@ Najbrži način da isprobate Hasura je putem Heroku-a.
 
 3. Napravi prvi GraphQL upit
 
-   Kreiraj tabelu i odmah isprobaj svoj prvi upit. Prati ovaj [jednostavni vodič](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Kreiraj tabelu i odmah isprobaj svoj prvi upit. Prati ovaj [jednostavni vodič](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
 ### Ostale metode implementacije jednim klikom
 
@@ -85,12 +85,12 @@ Pogledaj instrukcije za ostale mogućnosti implementacije jednim klikom:
 
 | **Infra provajder** | **Veza** | **Dodatne informacije** |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
-| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
 
 ### Ostale metode implementacije
 
-Za Docker-baziranu implementaciju i napredne konfiguracije, pogledajte [implementacijski vodič](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) ili
+Za Docker-baziranu implementaciju i napredne konfiguracije, pogledajte [implementacijski vodič](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) ili
 [instalirajte manifest](../install-manifests).
 
 ## Arhitektura
@@ -121,7 +121,7 @@ obradu - [pročitaj više](../event-triggers.md).
 
 ### Izvedeni podaci ili transformacije podataka
 
-Pretvorite podatke u Postgres ili pokrenite poslovnu logiku na njemu da biste dobili drugi skup podataka koji se može zatražiti koristeći GraphQL Engine - [pročitaj više](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
+Pretvorite podatke u Postgres ili pokrenite poslovnu logiku na njemu da biste dobili drugi skup podataka koji se može zatražiti koristeći GraphQL Engine - [pročitaj više](https://hasura.io/docs/1.0/graphql/manual/queries/derived-data.html).
 
 ## Demo
 

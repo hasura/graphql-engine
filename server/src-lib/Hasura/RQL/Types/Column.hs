@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Column
   , parsePGScalarValue
   , parsePGScalarValues
   , unsafePGColumnToRepresentation
+  , parseTxtEncodedPGValue
 
   , PGColumnInfo(..)
   , PGRawColumnInfo(..)
@@ -35,6 +36,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax    (Lift)
 
+import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
@@ -42,12 +44,12 @@ import           Hasura.SQL.Value
 
 newtype EnumValue
   = EnumValue { getEnumValue :: T.Text }
-  deriving (Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey)
+  deriving (Show, Eq, Lift, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey, Cacheable)
 
 newtype EnumValueInfo
   = EnumValueInfo
   { evComment :: Maybe T.Text
-  } deriving (Show, Eq, Lift, Hashable)
+  } deriving (Show, Eq, Lift, NFData, Hashable, Cacheable)
 $(deriveJSON (aesonDrop 2 snakeCase) ''EnumValueInfo)
 
 type EnumValues = M.HashMap EnumValue EnumValueInfo
@@ -59,7 +61,9 @@ data EnumReference
   { erTable  :: !QualifiedTable
   , erValues :: !EnumValues
   } deriving (Show, Eq, Generic, Lift)
+instance NFData EnumReference
 instance Hashable EnumReference
+instance Cacheable EnumReference
 $(deriveJSON (aesonDrop 2 snakeCase) ''EnumReference)
 
 -- | The type we use for columns, which are currently always “scalars” (though see the note about
@@ -74,7 +78,9 @@ data PGColumnType
   -- /completely/ differently in the GraphQL schema.
   | PGColumnEnumReference !EnumReference
   deriving (Show, Eq, Generic)
+instance NFData PGColumnType
 instance Hashable PGColumnType
+instance Cacheable PGColumnType
 $(deriveToJSON defaultOptions{constructorTagModifier = drop 8} ''PGColumnType)
 $(makePrisms ''PGColumnType)
 
@@ -120,32 +126,47 @@ parsePGScalarValues columnType values = do
   scalarValues <- indexedMapM (fmap pstValue . parsePGScalarValue columnType) values
   pure $ WithScalarType (unsafePGColumnToRepresentation columnType) scalarValues
 
+parseTxtEncodedPGValue
+  :: (MonadError QErr m)
+  => PGColumnType -> TxtEncodedPGVal -> m (WithScalarType PGScalarValue)
+parseTxtEncodedPGValue colTy val =
+  parsePGScalarValue colTy $ case val of
+    TENull  -> Null
+    TELit t -> String t
+
+
 -- | “Raw” column info, as stored in the catalog (but not in the schema cache). Instead of
 -- containing a 'PGColumnType', it only contains a 'PGScalarType', which is combined with the
 -- 'pcirReferences' field and other table data to eventually resolve the type to a 'PGColumnType'.
 data PGRawColumnInfo
   = PGRawColumnInfo
   { prciName        :: !PGCol
+  , prciPosition    :: !Int
+  -- ^ The “ordinal position” of the column according to Postgres. Numbering starts at 1 and
+  -- increases. Dropping a column does /not/ cause the columns to be renumbered, so a column can be
+  -- consistently identified by its position.
   , prciType        :: !PGScalarType
   , prciIsNullable  :: !Bool
-  , prciReferences  :: ![QualifiedTable]
-  -- ^ only stores single-column references to primary key of foreign tables (used for detecting
-  -- references to enum tables)
   , prciDescription :: !(Maybe PGDescription)
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData PGRawColumnInfo
+instance Cacheable PGRawColumnInfo
 $(deriveJSON (aesonDrop 4 snakeCase) ''PGRawColumnInfo)
 
--- | “Resolved” column info, produced from a 'PGRawColumnInfo' value that has been combined with other
--- schema information to produce a 'PGColumnType'.
+-- | “Resolved” column info, produced from a 'PGRawColumnInfo' value that has been combined with
+-- other schema information to produce a 'PGColumnType'.
 data PGColumnInfo
   = PGColumnInfo
   { pgiColumn      :: !PGCol
   , pgiName        :: !G.Name
   -- ^ field name exposed in GraphQL interface
+  , pgiPosition    :: !Int
   , pgiType        :: !PGColumnType
   , pgiIsNullable  :: !Bool
   , pgiDescription :: !(Maybe PGDescription)
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData PGColumnInfo
+instance Cacheable PGColumnInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColumnInfo)
 
 onlyIntCols :: [PGColumnInfo] -> [PGColumnInfo]

@@ -4,6 +4,8 @@ module Hasura.GraphQL.Schema.Mutation.Update
   , mkUpdJSONOpInp
   , mkUpdSetTy
   , mkUpdMutFld
+  , mkPKeyColumnsInpObj
+  , mkUpdateByPkMutationField
   ) where
 
 import qualified Language.GraphQL.Draft.Syntax         as G
@@ -56,13 +58,13 @@ mkUpdIncInp
   :: QualifiedTable -> Maybe [PGColumnInfo] -> Maybe InpObjTyInfo
 mkUpdIncInp tn = maybe Nothing mkType
   where
-    mkType cols = let intCols = onlyIntCols cols
+    mkType cols = let numCols = onlyNumCols cols
                       incObjTy =
                         mkHsraInpTyInfo (Just desc) (mkUpdIncTy tn) $
-                          fromInpValL $ map mkPGColInp intCols
-                  in bool (Just incObjTy) Nothing $ null intCols
+                          fromInpValL $ map mkPGColInp numCols
+                  in bool (Just incObjTy) Nothing $ null numCols
     desc = G.Description $
-      "input type for incrementing integer columne in table " <>> tn
+      "input type for incrementing integer column in table " <>> tn
 
 -- table_<json-op>_input
 mkJSONOpTy :: QualifiedTable -> G.Name -> G.NamedType
@@ -192,9 +194,9 @@ update_table(
 -}
 
 mkIncInpVal :: QualifiedTable -> [PGColumnInfo] -> Maybe InpValInfo
-mkIncInpVal tn cols = bool (Just incArg) Nothing $ null intCols
+mkIncInpVal tn cols = bool (Just incArg) Nothing $ null numCols
   where
-    intCols = onlyIntCols cols
+    numCols = onlyNumCols cols
     incArgDesc = "increments the integer columns with given value of the filtered values"
     incArg =
       InpValInfo (Just incArgDesc) "_inc" Nothing $ G.toGT $ mkUpdIncTy tn
@@ -223,13 +225,21 @@ mkJSONOpInpVals tn cols = bool jsonbOpArgs [] $ null jsonbCols
       InpValInfo (Just deleteAtPathDesc) deleteAtPathOp Nothing $
       G.toGT $ mkJSONOpTy tn deleteAtPathOp
 
+mkUpdateOpInputs :: QualifiedTable -> [PGColumnInfo] -> [InpValInfo]
+mkUpdateOpInputs qt cols =
+  catMaybes [Just setInp , mkIncInpVal qt cols] <> mkJSONOpInpVals qt cols
+  where
+    setArgDesc = "sets the columns of the filtered rows to the given values"
+    setInp =
+      InpValInfo (Just setArgDesc) "_set" Nothing $ G.toGT $ mkUpdSetTy qt
+
+
 mkUpdMutFld :: Maybe G.Name -> QualifiedTable -> [PGColumnInfo] -> ObjFldInfo
 mkUpdMutFld mCustomName tn cols =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputValues) $
     G.toGT $ mkMutRespTy tn
   where
-    inputValues = [filterArg, setArg] <> incArg
-                  <> mkJSONOpInpVals tn cols
+    inputValues = [filterArg] <> mkUpdateOpInputs tn cols
     desc = G.Description $ "update data of the table: " <>> tn
 
     defFldName = "update_" <> qualObjectToName tn
@@ -240,8 +250,52 @@ mkUpdMutFld mCustomName tn cols =
       InpValInfo (Just filterArgDesc) "where" Nothing $ G.toGT $
       G.toNT $ mkBoolExpTy tn
 
-    setArgDesc = "sets the columns of the filtered rows to the given values"
-    setArg =
-      InpValInfo (Just setArgDesc) "_set" Nothing $ G.toGT $ mkUpdSetTy tn
+{-
 
-    incArg = maybeToList $ mkIncInpVal tn cols
+update_table_by_pk(
+  columns: table_pk_columns_input!
+  _set  : table_set_input
+  _inc  : table_inc_input
+  _concat: table_concat_input
+  _delete_key: table_delete_key_input
+  _delete_elem: table_delete_elem_input
+  _delete_path_at: table_delete_path_at_input
+)
+-}
+
+{-
+input table_pk_columns_input {
+  col1: col-ty1!
+  col2: col-ty2!
+}
+
+where col1, col2 are primary key columns
+-}
+
+mkPKeyColumnsInpTy :: QualifiedTable -> G.NamedType
+mkPKeyColumnsInpTy qt =
+  G.NamedType $ qualObjectToName qt <> "_pk_columns_input"
+
+mkPKeyColumnsInpObj :: QualifiedTable -> PrimaryKey PGColumnInfo -> InpObjTyInfo
+mkPKeyColumnsInpObj qt primaryKey =
+  mkHsraInpTyInfo (Just description) (mkPKeyColumnsInpTy qt) $
+  fromInpValL $ map mkColumnInputVal $ toList $ _pkColumns primaryKey
+  where
+    description = G.Description $ "primary key columns input for table: " <>> qt
+
+mkUpdateByPkMutationField
+  :: Maybe G.Name
+  -> QualifiedTable
+  -> [PGColumnInfo]
+  -> PrimaryKey PGColumnInfo
+  -> ObjFldInfo
+mkUpdateByPkMutationField mCustomName qt cols _ =
+  mkHsraObjFldInfo (Just description) fieldName (fromInpValL inputArgs) $
+  G.toGT $ mkTableTy qt
+  where
+    description = G.Description $ "update single row of the table: " <>> qt
+    fieldName = flip fromMaybe mCustomName $ "update_" <> qualObjectToName qt <> "_by_pk"
+
+    inputArgs = pure primaryKeyColumnsInp <> mkUpdateOpInputs qt cols
+    primaryKeyColumnsInp =
+      InpValInfo Nothing "pk_columns" Nothing $ G.toGT $ G.toNT $ mkPKeyColumnsInpTy qt

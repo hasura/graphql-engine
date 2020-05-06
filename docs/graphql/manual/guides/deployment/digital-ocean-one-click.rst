@@ -1,3 +1,9 @@
+.. meta::
+   :description: Deploy Hasura GraphQL engine One-click App on DigitalOcean Marketplace
+   :keywords: hasura, docs, guide, deployment, digital ocean, marketplace
+
+.. _deploy_do_marketplace:
+
 Hasura GraphQL engine One-click App on DigitalOcean Marketplace
 ===============================================================
 
@@ -297,7 +303,7 @@ database.
 .. note::
 
   If you're using Hasura with a restricted database user, make sure you go
-  through :doc:`Postgres permissions <../../deployment/postgres-permissions>`
+  through :ref:`Postgres permissions <postgres_permissions>`
   to configure all required permissions (not applicable with the default
   connection string with DO Managed Postgres).
 

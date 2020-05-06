@@ -12,7 +12,6 @@ import           Wrk.Server
 main :: IO ()
 main = do
   void checkIfWrksPresent
-  -- TODO test graphQLUrl
   lock <- TMVar.newEmptyTMVarIO
   print "Running wrk websocket server or port 9160"
   WS.runServer "127.0.0.1" 9160 $ benchWsApp lock

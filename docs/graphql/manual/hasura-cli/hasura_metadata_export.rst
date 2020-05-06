@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura metadata export to export Hasura metadata from the database with the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura metadata export
+
 .. _hasura_metadata_export:
 
 Hasura CLI: hasura metadata export
@@ -27,24 +31,30 @@ Examples
     # Export metadata and save it in migrations/metadata.yaml file:
     hasura metadata export
 
+    # Use with admin secret:
+    hasura metadata export --admin-secret "<admin-secret>"
+
+    # Export metadata to another instance specified by the flag:
+    hasura metadata export --endpoint "<endpoint>"
+
 Options
 ~~~~~~~
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL engine
-  -h, --help                  help for export
+  -h, --help   help for export
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --no-color            do not colorize output (default: false)
-      --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   Skip automatic update check on command execution
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
+      --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color              do not colorize output (default: false)
+      --project string        directory where commands are executed (default: current dir)
+      --skip-update-check     skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

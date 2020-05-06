@@ -1,1 +1,8 @@
+
 shared: True
+
+
+package wrk-websocket-server
+  optimization: 0
+  documentation: false
+  ghc-options: -j

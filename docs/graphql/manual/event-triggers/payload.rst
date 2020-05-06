@@ -1,3 +1,9 @@
+.. meta::
+   :description: Event trigger payload in Hasura
+   :keywords: hasura, docs, event trigger, payload
+
+.. _trigger_payload:
+
 Event trigger payload
 =====================
 

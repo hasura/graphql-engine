@@ -8,7 +8,7 @@ RUN apk add zlib zlib-dev
 RUN apk add git
 RUN apk add postgresql postgresql-dev
 RUN apk add binutils-gold
-COPY wrk-websocket-server.cabal cabal.project.local cabal.project.freeze /root/wrk-websocket-dir/
+COPY wrk-websocket-server.cabal cabal.project.local cabal.project cabal.project.freeze /root/wrk-websocket-dir/
 WORKDIR /root/wrk-websocket-dir
 RUN cabal new-update
 RUN cabal new-build --only-dependencies

@@ -9,7 +9,7 @@ const defaultState = {
   loginInProgress: false,
   loginError: false,
   serverVersion: null,
-  latestServerVersion: null,
+  latestStableServerVersion: null,
   telemetryEnabled: true,
   serverConfig: {
     data: {

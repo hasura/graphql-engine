@@ -64,7 +64,6 @@ data Wrk2BenchArgs = Wrk2BenchArgs
 
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields = True} ''Wrk2BenchArgs)
 
-
 -- If the JSON output is a dictionary of pairs (k,v), convert it into set of arguments of the form --k v
 toArgsList :: (J.ToJSON a) => (T.Text -> Bool) -> a -> [String]
 toArgsList keysFilter a = concatMap toArg $ filter (keysFilter . fst) $ J.toJSON a ^@.. J.members
@@ -180,7 +179,7 @@ $(J.deriveJSON  J.defaultOptions {J.sumEncoding = J.UntaggedValue}
   ''BenchResult)
 
 data BenchMessage
-  = BMRunBench
+  = BMRunBenchmark
       { bmConfiguration :: !BenchConf }
   | BMStart
       { bmConfiguration :: !BenchConf }
@@ -193,7 +192,7 @@ data BenchMessage
   | BMError
       { bmMessage :: ErrorMessage }
   deriving (Show, Eq)
--- TODO Correct the structure of the message
+
 $(J.deriveJSON J.defaultOptions
   { J.sumEncoding = J.ObjectWithSingleField
   , J.constructorTagModifier = J.snakeCase . drop 2

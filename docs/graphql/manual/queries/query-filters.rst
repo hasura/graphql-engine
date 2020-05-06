@@ -1,3 +1,9 @@
+.. meta::
+   :description: Filter query results and search queries in Hasura
+   :keywords: hasura, docs, query, filter, search
+
+.. _filter_queries:
+
 Filter query results / search queries
 =====================================
 
@@ -62,6 +68,8 @@ Equality operators (_eq, _neq)
 The ``_eq`` (equal to) or the ``_neq`` (not equal to) operators are compatible with any Postgres type other than
 ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``,
 ``Date``/``Time``/``Timestamp``, etc.).
+
+For more details on equality operators and Postgres equivalents, refer to the :ref:`API reference <generic_operators>`.
 
 The following are examples of using the equality operators on different types.
 
@@ -200,6 +208,8 @@ The ``_gt`` (greater than), ``_lt`` (less than), ``_gte`` (greater than or equal
 ``_lte`` (less than or equal to) operators are compatible with any Postgres type other than ``json`` or ``jsonB``
 (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
+For more details on greater than or less than operators and Postgres equivalents, refer to the :ref:`API reference <generic_operators>`.
+
 The following are examples of using these operators on different types:
 
 
@@ -325,6 +335,8 @@ The ``_in`` (in a list) and ``_nin`` (not in list) operators are used to compare
 They are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``,
 ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
+For more details on list based search operators and Postgres equivalents, refer to the :ref:`API reference <generic_operators>`.
+
 The following are examples of using these operators on different types:
 
 **Example: Integer (works with Double, Float, etc.)**
@@ -416,7 +428,7 @@ Text search or pattern matching operators (_like, _similar, etc.)
 The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar`` operators are used for
 pattern matching on string/text fields.
 
-These operators behave exactly like their `SQL counterparts <https://www.postgresql.org/docs/current/static/functions-matching.html>`__
+For more details on text search operators and Postgres equivalents, refer to the :ref:`API reference <text_operators>`.
 
 **Example: _like**
 
@@ -502,10 +514,10 @@ Fetch a list of authors whose names begin with A or C:
 JSONB operators (_contains, _has_key, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``_contains``, ``_contained_in``, ``_has_key``, ``_has_key_any`` and ``_has_key_all`` operators are used to filter
+The ``_contains``, ``_contained_in``, ``_has_key``, ``_has_keys_any`` and ``_has_keys_all`` operators are used to filter
 based on ``JSONB`` columns.
 
-For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.
+For more details on JSONB operators and Postgres equivalents, refer to the :ref:`API reference <jsonb_operators>`.
 
 **Example: _contains**
 
@@ -596,8 +608,7 @@ The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st
 
 ``_st_d_within`` and ``_st_intersects`` can be used on ``geography`` columns also.
 
-For more details on what these operators do, refer to
-`PostGIS spatial relationship docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`_.
+For more details on spatial relationship operators and Postgres equivalents, refer to the :ref:`API reference <geometry_operators>`.
 
 Use JSON representation (see `GeoJSON <https://tools.ietf.org/html/rfc7946>`_) of ``geometry`` and ``geography`` values in
 ``variables`` as shown in the following examples:
@@ -706,6 +717,8 @@ Filter or check for null values (_is_null)
 
 Checking for null values can be achieved using the ``_is_null`` operator.
 
+For more details on the ``_is_null`` operator and Postgres equivalent, refer to the :ref:`API reference <null_expression>`.
+
 **Example: Filter null values in a field**
 
 Fetch a list of articles that have a value in the ``published_on`` field:
@@ -754,8 +767,9 @@ Intersect operators on RASTER columns (_st_intersects_rast, etc)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Intersect operators on columns with ``raster`` type are supported.
-Refer to `Postgis docs <https://postgis.net/docs/RT_ST_Intersects.html>`__ to know more about intersect functions on ``raster`` columns.
-Please submit a feature request via `github <https://github.com/hasura/graphql-engine>`__ if you want support for more functions.
+Please submit a feature request via `GitHub <https://github.com/hasura/graphql-engine>`__ if you want support for more functions.
+
+For more details on intersect operators on raster columns and Postgres equivalents, refer to the :ref:`API reference <intersect_operators>`.
 
 **Example: _st_intersects_rast**
 
@@ -969,7 +983,6 @@ Using multiple filters in the same query (_and, _or)
 You can group multiple parameters in the same ``where`` argument using the ``_and`` or the ``_or`` operators to filter
 results based on more than one criteria.
 
-
 .. note::
   You can use the ``_or`` and ``_and`` operators along with the ``_not`` operator to create arbitrarily complex boolean
   expressions involving multiple filtering criteria.
@@ -1026,7 +1039,8 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
 
 .. note::
 
-  It is possible to simplify the ``_and`` expression. See the :ref:`API reference <AndExp>` for more details.
+  Certain ``_and`` expressions can be expressed in a simpler format using some syntactic sugar. See the
+  :ref:`API reference <AndExp>` for more details.
 
 **Example:  _or**
 
@@ -1085,8 +1099,8 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
 
 .. note::
 
-  The ``_or`` operator expects an array of expressions as input. See the :ref:`API reference <OrExp>` for details on
-  the behaviour if an object is passed as input.
+  The ``_or`` operator expects an array of expressions as input. If an object is passed as input it will behave like
+  the ``_and`` operator as explained in the :ref:`API reference <OrExp>`
 
 .. _nested_filter:
 

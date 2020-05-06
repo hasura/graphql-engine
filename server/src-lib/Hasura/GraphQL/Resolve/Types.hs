@@ -13,12 +13,15 @@ import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.DDL.Headers         (HeaderConf)
+import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
+import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.Permission
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -30,12 +33,18 @@ data QueryCtx
   | QCSelectAgg !SelOpCtx
   | QCFuncQuery !FuncQOpCtx
   | QCFuncAggQuery !FuncQOpCtx
+  | QCAsyncActionFetch !ActionSelectOpContext
+  | QCAction !ActionExecutionContext
   deriving (Show, Eq)
 
 data MutationCtx
   = MCInsert !InsOpCtx
+  | MCInsertOne !InsOpCtx
   | MCUpdate !UpdOpCtx
+  | MCUpdateByPk !UpdOpCtx
   | MCDelete !DelOpCtx
+  | MCDeleteByPk !DelOpCtx
+  | MCAction !ActionMutationExecutionContext
   deriving (Show, Eq)
 
 type OpCtxMap a = Map.HashMap G.Name a
@@ -83,6 +92,7 @@ data UpdOpCtx
   , _uocHeaders    :: ![T.Text]
   , _uocAllCols    :: !PGColGNameMap
   , _uocFilter     :: !AnnBoolExpPartialSQL
+  , _uocCheck      :: !(Maybe AnnBoolExpPartialSQL)
   , _uocPresetCols :: !PreSetColsPartial
   } deriving (Show, Eq)
 
@@ -90,20 +100,31 @@ data DelOpCtx
   = DelOpCtx
   { _docTable   :: !QualifiedTable
   , _docHeaders :: ![T.Text]
+  , _docAllCols :: !PGColGNameMap
   , _docFilter  :: !AnnBoolExpPartialSQL
-  , _docAllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
-data OpCtx
-  = OCSelect !SelOpCtx
-  | OCSelectPkey !SelPkOpCtx
-  | OCSelectAgg !SelOpCtx
-  | OCFuncQuery !FuncQOpCtx
-  | OCFuncAggQuery !FuncQOpCtx
-  | OCInsert !InsOpCtx
-  | OCUpdate !UpdOpCtx
-  | OCDelete !DelOpCtx
+data ActionExecutionContext
+  = ActionExecutionContext
+  { _saecName                 :: !ActionName
+  , _saecOutputType           :: !GraphQLType
+  , _saecOutputFields         :: !ActionOutputFields
+  , _saecDefinitionList       :: ![(PGCol, PGScalarType)]
+  , _saecWebhook              :: !ResolvedWebhook
+  , _saecHeaders              :: ![HeaderConf]
+  , _saecForwardClientHeaders :: !Bool
+  } deriving (Show, Eq)
+
+data ActionMutationExecutionContext
+  = ActionMutationSyncWebhook !ActionExecutionContext
+  | ActionMutationAsync
   deriving (Show, Eq)
+
+data ActionSelectOpContext
+  = ActionSelectOpContext
+  { _asocOutputType     :: !GraphQLType
+  , _asocDefinitionList :: ![(PGCol, PGScalarType)]
+  } deriving (Show, Eq)
 
 -- (custom name | generated name) -> PG column info
 -- used in resolvers
@@ -173,14 +194,15 @@ type RelationInfoMap = Map.HashMap RelName RelInfo
 data UpdPermForIns
   = UpdPermForIns
   { upfiCols   :: ![PGCol]
+  , upfiCheck  :: !(Maybe AnnBoolExpPartialSQL)
   , upfiFilter :: !AnnBoolExpPartialSQL
   , upfiSet    :: !PreSetColsPartial
   } deriving (Show, Eq)
 
 data InsCtx
   = InsCtx
-  { icView      :: !QualifiedTable
-  , icAllCols   :: !PGColGNameMap
+  { icAllCols   :: !PGColGNameMap
+  , icCheck     :: !AnnBoolExpPartialSQL
   , icSet       :: !PreSetColsPartial
   , icRelations :: !RelationInfoMap
   , icUpdPerm   :: !(Maybe UpdPermForIns)
@@ -209,7 +231,7 @@ partialSQLExpToUnresolvedVal = \case
 data UnresolvedVal
   -- | an entire session variables JSON object
   = UVSession
-  | UVSessVar !(PGType PGScalarType) !SessVar
+  | UVSessVar !(PGType PGScalarType) !SessionVariable
   -- | a SQL value literal that can be parameterized over
   | UVPG !AnnPGVal
   -- | an arbitrary SQL expression, which /cannot/ be parameterized over
@@ -218,11 +240,13 @@ data UnresolvedVal
 
 type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
 
--- template haskell related
-$(makePrisms ''ResolveField)
-
 data InputFunctionArgument
   = IFAKnown !FunctionArgName !UnresolvedVal -- ^ Known value
   | IFAUnknown !FunctionArgItem -- ^ Unknown value, need to be parsed
   deriving (Show, Eq)
+
+-- template haskell related
+$(makePrisms ''ResolveField)
+$(makeLenses ''ComputedField)
+$(makePrisms ''ComputedFieldType)
 $(makePrisms ''InputFunctionArgument)

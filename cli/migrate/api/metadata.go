@@ -1,13 +1,11 @@
 package api
 
 import (
-	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli/migrate"
-	v2yaml "gopkg.in/yaml.v2"
 )
 
 func MetadataAPI(c *gin.Context) {
@@ -20,24 +18,13 @@ func MetadataAPI(c *gin.Context) {
 	// Convert to url.URL
 	t := migratePtr.(*migrate.Migrate)
 
-	metadataFilePtr, ok := c.Get("metadataFile")
-	if !ok {
-		return
-	}
-	metadataFile := metadataFilePtr.(string)
-
 	// Switch on request method
 	switch c.Request.Method {
 	case "GET":
-		metaData, err := t.ExportMetadata()
+		files, err := t.ExportMetadata()
 		if err != nil {
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})
-				return
-			}
-
-			if err == migrate.ErrMigrationMode {
-				c.JSON(http.StatusBadRequest, &Response{Code: "migration_mode_enabled", Message: err.Error()})
 				return
 			}
 
@@ -48,19 +35,13 @@ func MetadataAPI(c *gin.Context) {
 		queryValues := c.Request.URL.Query()
 		export := queryValues.Get("export")
 		if export == "true" {
-			data, err := v2yaml.Marshal(metaData)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-				return
-			}
-
-			err = ioutil.WriteFile(metadataFile, data, 0644)
+			err := t.WriteMetadata(files)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 				return
 			}
 		}
-		c.JSON(http.StatusOK, &gin.H{"metadata": metaData})
+		c.JSON(http.StatusOK, &gin.H{"metadata": "Success"})
 	case "POST":
 		var request Request
 
@@ -86,7 +67,7 @@ func MetadataAPI(c *gin.Context) {
 			return
 		}
 
-		metaData, err := t.ExportMetadata()
+		files, err := t.ExportMetadata()
 		if err != nil {
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})
@@ -95,15 +76,12 @@ func MetadataAPI(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
 		}
-
-		data, err := v2yaml.Marshal(metaData)
+		err = t.WriteMetadata(files)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-			return
-		}
-
-		err = ioutil.WriteFile(metadataFile, data, 0644)
-		if err != nil {
+			if strings.HasPrefix(err.Error(), DataAPIError) {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})
+				return
+			}
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
 		}

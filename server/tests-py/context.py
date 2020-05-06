@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 from http import HTTPStatus
+from socketserver import ThreadingMixIn
 from urllib.parse import urlparse
-from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml 
+from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml
 import threading
 import http.server
 import json
@@ -13,6 +14,7 @@ import time
 import string
 import random
 import os
+import re
 
 import ruamel.yaml as yaml
 import requests
@@ -158,6 +160,192 @@ class GQLWsClient():
             self._ws.close()
         self.wst.join()
 
+
+class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        self.send_response(HTTPStatus.OK)
+        self.end_headers()
+
+    def do_POST(self):
+        content_len = self.headers.get('Content-Length')
+        req_body = self.rfile.read(int(content_len)).decode("utf-8")
+        self.req_json = json.loads(req_body)
+        req_headers = self.headers
+        req_path = self.path
+        self.log_message(json.dumps(self.req_json))
+
+        if req_path == "/create-user":
+            resp, status = self.create_user()
+            self._send_response(status, resp)
+
+        elif req_path == "/create-users":
+            resp, status = self.create_users()
+            self._send_response(status, resp)
+
+        elif req_path == "/invalid-response":
+            self._send_response(HTTPStatus.OK, "some-string")
+
+        elif req_path == "/mirror-action":
+            resp, status = self.mirror_action()
+            self._send_response(status, resp)
+
+        elif req_path == "/get-user-by-email":
+            resp, status = self.get_users_by_email(True)
+            self._send_response(status, resp)
+
+        elif req_path == "/get-users-by-email":
+            resp, status = self.get_users_by_email(False)
+            self._send_response(status, resp)
+
+        else:
+            self.send_response(HTTPStatus.NO_CONTENT)
+            self.end_headers()
+
+    def create_user(self):
+        email_address = self.req_json['input']['email']
+        name = self.req_json['input']['name']
+
+        if not self.check_email(email_address):
+            response = {
+                'message': 'Given email address is not valid',
+                'code': 'invalid-email'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+
+        gql_query = '''
+        mutation ($email: String! $name: String!) {
+          insert_user_one(object: {email: $email, name: $name}){
+            id
+          }
+        }
+        '''
+        query = {
+            'query': gql_query,
+            'variables': {
+                'email': email_address,
+                'name': name
+            }
+        }
+        code, resp = self.execute_query(query)
+        if code != 200 or 'data' not in resp:
+            response = {
+                'message': 'GraphQL query execution failed',
+                'code': 'unexpected'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+
+        response = resp['data']['insert_user_one']
+        return response, HTTPStatus.OK
+
+    def create_users(self):
+        inputs = self.req_json['input']['users']
+        for input in inputs:
+            email_address = input['email']
+            if not self.check_email(email_address):
+                response = {
+                    'message': 'Email address is not valid: ' + email_address,
+                    'code': 'invalid-email'
+                }
+                return response, HTTPStatus.BAD_REQUEST
+
+        gql_query = '''
+        mutation ($insert_inputs: [user_insert_input!]!){
+          insert_user(objects: $insert_inputs){
+            returning{
+              id
+            }
+          }
+        }
+        '''
+        query = {
+            'query': gql_query,
+            'variables': {
+                'insert_inputs': inputs
+            }
+        }
+        code, resp = self.execute_query(query)
+        if code != 200 or 'data' not in resp:
+            response = {
+                'message': 'GraphQL query execution failed',
+                'code': 'unexpected'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+
+        response = resp['data']['insert_user']['returning']
+        return response, HTTPStatus.OK
+
+    def mirror_action(self):
+        response = self.req_json['input']['arg']
+        return response, HTTPStatus.OK
+
+    def get_users_by_email(self, singleUser = False):
+        email = self.req_json['input']['email']
+        if not self.check_email(email):
+            response = {
+                'message': 'Given email address is not valid',
+                'code': 'invalid-email'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+        gql_query = '''
+        query get_user($email:String!) {
+           user(where:{email:{_eq:$email}},order_by: {id: asc}) {
+            id
+        }
+        }
+        '''
+        query = {
+            'query': gql_query,
+            'variables':{
+                'email':email
+            }
+        }
+        code,resp = self.execute_query(query)
+        if code != 200 or 'data' not in resp:
+            response = {
+                'message': 'GraphQL query execution failed',
+                'code': 'unexpected'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+        if singleUser:
+            return resp['data']['user'][0], HTTPStatus.OK
+        else:
+            return resp['data']['user'], HTTPStatus.OK
+
+
+
+    def check_email(self, email):
+        regex = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
+        return re.search(regex,email)
+
+    def execute_query(self, query):
+        headers = {}
+        admin_secret = self.hge_ctx.hge_key
+        if admin_secret is not None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+        code, resp, _ = self.hge_ctx.anyq('/v1/graphql', query, headers)
+        self.log_message(json.dumps(resp))
+        return code, resp
+
+    def _send_response(self, status, body):
+        self.log_request(status)
+        self.send_response_only(status)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Set-Cookie', 'abcd')
+        self.end_headers()
+        self.wfile.write(json.dumps(body).encode("utf-8"))
+
+
+class ActionsWebhookServer(http.server.HTTPServer):
+    def __init__(self, hge_ctx, server_address):
+        handler = ActionsWebhookHandler
+        handler.hge_ctx = hge_ctx
+        super().__init__(server_address, handler)
+
+    def server_bind(self):
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(self.server_address)
+
 class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(HTTPStatus.OK)
@@ -197,7 +385,14 @@ class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
                                         "body": req_json,
                                         "headers": req_headers})
 
-class EvtsWebhookServer(http.server.HTTPServer):
+# A very slightly more sane/performant http server.
+# See: https://stackoverflow.com/a/14089457/176841
+#
+# TODO use this elsewhere, or better yet: use e.g. bottle + waitress
+class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):
+    """Handle requests in a separate thread."""
+
+class EvtsWebhookServer(ThreadedHTTPServer):
     def __init__(self, server_address):
         self.resp_queue = queue.Queue(maxsize=1)
         self.error_queue = queue.Queue()
@@ -225,58 +420,78 @@ class EvtsWebhookServer(http.server.HTTPServer):
         self.evt_trggr_web_server.join()
 
 class HGECtxGQLServer:
-    def __init__(self, hge_urls):
+    def __init__(self, hge_urls, port=5000):
         # start the graphql server
-        self.graphql_server = graphql_server.create_server('127.0.0.1', 5000)
-        self.hge_urls = graphql_server.set_hge_urls(hge_urls)
-        self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
-        self.gql_srvr_thread.start()
+        self.port = port
+        self._hge_urls = hge_urls
+        self.is_running = False
+        self.start_server()
+
+    def start_server(self):
+        if not self.is_running:
+            self.graphql_server = graphql_server.create_server('127.0.0.1', self.port)
+            self.hge_urls = graphql_server.set_hge_urls(self._hge_urls)
+            self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
+            self.gql_srvr_thread.start()
+        self.is_running = True
 
     def teardown(self):
-        graphql_server.stop_server(self.graphql_server)
-        self.gql_srvr_thread.join()
+        self.stop_server()
 
+    def stop_server(self):
+        if self.is_running:
+            graphql_server.stop_server(self.graphql_server)
+            self.gql_srvr_thread.join()
+        self.is_running = False
 
 class HGECtx:
 
-    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure,
-                 hge_jwt_key_file, hge_jwt_conf, metadata_disabled,
-                 ws_read_cookie, hge_scale_url):
+    def __init__(self, hge_url, pg_url, config):
 
         self.http = requests.Session()
-        self.hge_key = hge_key
+        self.hge_key = config.getoption('--hge-key')
         self.hge_url = hge_url
         self.pg_url = pg_url
-        self.hge_webhook = hge_webhook
+        self.hge_webhook = config.getoption('--hge-webhook')
+        hge_jwt_key_file = config.getoption('--hge-jwt-key-file')
         if hge_jwt_key_file is None:
             self.hge_jwt_key = None
         else:
             with open(hge_jwt_key_file) as f:
                 self.hge_jwt_key = f.read()
-        self.hge_jwt_conf = hge_jwt_conf
-        self.webhook_insecure = webhook_insecure
-        self.metadata_disabled = metadata_disabled
+        self.hge_jwt_conf = config.getoption('--hge-jwt-conf')
+        if self.hge_jwt_conf is not None:
+            self.hge_jwt_conf_dict = json.loads(self.hge_jwt_conf)
+        self.webhook_insecure = config.getoption('--test-webhook-insecure')
+        self.metadata_disabled = config.getoption('--test-metadata-disabled')
         self.may_skip_test_teardown = False
 
         self.engine = create_engine(self.pg_url)
         self.meta = MetaData()
 
-        self.ws_read_cookie = ws_read_cookie
+        self.ws_read_cookie = config.getoption('--test-ws-init-cookie')
 
-        self.hge_scale_url = hge_scale_url
+        self.hge_scale_url = config.getoption('--test-hge-scale-url')
+        self.avoid_err_msg_checks = config.getoption('--avoid-error-message-checks')
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
 
+        # HGE version
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         env_version = os.getenv('VERSION')
         self.version = env_version if env_version else result.stdout.decode('utf-8').strip()
-        if not self.metadata_disabled:
+        if not self.metadata_disabled and not config.getoption('--skip-schema-setup'):
           try:
               st_code, resp = self.v1q_f('queries/clear_db.yaml')
           except requests.exceptions.RequestException as e:
               self.teardown()
               raise HGECtxError(repr(e))
           assert st_code == 200, resp
+
+        # Postgres version
+        pg_version_text = self.sql('show server_version_num').fetchone()['server_version_num']
+        self.pg_version = int(pg_version_text)
+
 
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)

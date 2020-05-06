@@ -7,28 +7,30 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hasura/graphql-engine/cli/migrate"
+
 	"github.com/aryann/difflib"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/metadata"
 	"github.com/mgutz/ansi"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	v2yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
-type metadataDiffOptions struct {
+type MetadataDiffOptions struct {
 	EC     *cli.ExecutionContext
-	output io.Writer
+	Output io.Writer
+	Args   []string
 
-	// two metadata to diff, 2nd is server if it's empty
-	metadata [2]string
+	// two Metadata to diff, 2nd is server if it's empty
+	Metadata [2]string
 }
 
 func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
-	v := viper.New()
-	opts := &metadataDiffOptions{
+	opts := &MetadataDiffOptions{
 		EC:     ec,
-		output: os.Stdout,
+		Output: os.Stdout,
 	}
 
 	metadataDiffCmd := &cobra.Command{
@@ -53,90 +55,158 @@ By default, shows changes between exported metadata file and server metadata.`,
   # Diff metadata on a different Hasura instance:
   hasura metadata diff --endpoint "<endpoint>"`,
 		Args: cobra.MaximumNArgs(2),
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			ec.Viper = v
-			return ec.Validate()
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			messageFormat := "Showing diff between %s and %s..."
-			message := ""
-
-			switch len(args) {
-			case 0:
-				// no args, diff exported metadata and metadata on server
-				filename, err := ec.GetExistingMetadataFile()
-				if err != nil {
-					return errors.Wrap(err, "failed getting metadata file")
-				}
-				opts.metadata[0] = filename
-				message = fmt.Sprintf(messageFormat, filename, "the server")
-			case 1:
-				// 1 arg, diff given filename and the metadata on server
-				opts.metadata[0] = args[0]
-				message = fmt.Sprintf(messageFormat, args[0], "the server")
-			case 2:
-				// 2 args, diff given filenames
-				opts.metadata[0] = args[0]
-				opts.metadata[1] = args[1]
-				message = fmt.Sprintf(messageFormat, args[0], args[1])
-			}
-
-			opts.EC.Logger.Info(message)
-			err := opts.run()
-			if err != nil {
-				return errors.Wrap(err, "failed to show metadata diff")
-			}
-			return nil
+			opts.Args = args
+			return opts.Run()
 		},
 	}
-
-	f := metadataDiffCmd.Flags()
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
-
-	// need to create a new viper because https://github.com/spf13/viper/issues/233
-	v.BindPFlag("endpoint", f.Lookup("endpoint"))
-	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
-	v.BindPFlag("access_key", f.Lookup("access-key"))
 
 	return metadataDiffCmd
 }
 
-func (o *metadataDiffOptions) run() error {
+func (o *MetadataDiffOptions) runv2(args []string) error {
+	messageFormat := "Showing diff between %s and %s..."
+	message := ""
+
+	switch len(args) {
+	case 0:
+		o.Metadata[0] = o.EC.MetadataDir
+		message = fmt.Sprintf(messageFormat, o.Metadata[0], "the server")
+	case 1:
+		// 1 arg, diff given directory and the metadata on server
+		err := checkDir(args[0])
+		if err != nil {
+			return err
+		}
+		o.Metadata[0] = args[0]
+		message = fmt.Sprintf(messageFormat, o.Metadata[0], "the server")
+	case 2:
+		err := checkDir(args[0])
+		if err != nil {
+			return err
+		}
+		o.Metadata[0] = args[0]
+		err = checkDir(args[1])
+		if err != nil {
+			return err
+		}
+		o.Metadata[1] = args[1]
+		message = fmt.Sprintf(messageFormat, o.Metadata[0], o.Metadata[1])
+	}
+	o.EC.Logger.Info(message)
 	var oldYaml, newYaml []byte
-	var err error
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	if err != nil {
+		return err
+	}
+	if o.Metadata[1] == "" {
+		tmpDir, err := ioutil.TempDir("", "*")
+		if err != nil {
+			return err
+		}
+		defer os.RemoveAll(tmpDir)
+		migrate.SetMetadataPluginsWithDir(o.EC, migrateDrv, tmpDir)
+		files, err := migrateDrv.ExportMetadata()
+		if err != nil {
+			return err
+		}
+		err = migrateDrv.WriteMetadata(files)
+		if err != nil {
+			return err
+		}
+	} else {
+		migrate.SetMetadataPluginsWithDir(o.EC, migrateDrv, o.Metadata[1])
+	}
+
+	// build server metadata
+	serverMeta, err := migrateDrv.BuildMetadata()
+	if err != nil {
+		return err
+	}
+	newYaml, err = yaml.Marshal(serverMeta)
+	if err != nil {
+		return errors.Wrap(err, "cannot unmarshall server metadata")
+	}
+
+	// build local metadata
+	migrate.SetMetadataPluginsWithDir(o.EC, migrateDrv, o.Metadata[0])
+	localMeta, err := migrateDrv.BuildMetadata()
+	if err != nil {
+		return err
+	}
+	oldYaml, err = yaml.Marshal(localMeta)
+	if err != nil {
+		return errors.Wrap(err, "cannot unmarshal local metadata")
+	}
+
+	printDiff(string(oldYaml), string(newYaml), o.Output)
+	return nil
+}
+
+func (o *MetadataDiffOptions) runv1(args []string) error {
+	messageFormat := "Showing diff between %s and %s..."
+	message := ""
+
+	switch len(args) {
+	case 0:
+		// no args, diff exported metadata and metadata on server
+		m := metadata.New(o.EC, o.EC.MigrationDir)
+		filename, err := m.GetExistingMetadataFile()
+		if err != nil {
+			return errors.Wrap(err, "failed getting metadata file")
+		}
+		o.Metadata[0] = filename
+		message = fmt.Sprintf(messageFormat, filename, "the server")
+	case 1:
+		// 1 arg, diff given filename and the metadata on server
+		o.Metadata[0] = args[0]
+		message = fmt.Sprintf(messageFormat, args[0], "the server")
+	case 2:
+		// 2 args, diff given filenames
+		o.Metadata[0] = args[0]
+		o.Metadata[1] = args[1]
+		message = fmt.Sprintf(messageFormat, args[0], args[1])
+	}
+
+	o.EC.Logger.Info(message)
+	var oldYaml, newYaml []byte
+	migrateDrv, err := migrate.NewMigrate(o.EC, true)
 	if err != nil {
 		return err
 	}
 
-	if o.metadata[1] == "" {
+	if o.Metadata[1] == "" {
 		// get metadata from server
-		m, err := migrateDrv.ExportMetadata()
+		files, err := migrateDrv.ExportMetadata()
 		if err != nil {
 			return errors.Wrap(err, "cannot fetch metadata from server")
 		}
 
-		newYaml, err = v2yaml.Marshal(m)
-		if err != nil {
-			return errors.Wrap(err, "cannot convert metadata from server to yaml")
+		// export metadata will always return single file for metadata.yaml
+		for _, content := range files {
+			newYaml = content
 		}
 	} else {
-		newYaml, err = ioutil.ReadFile(o.metadata[1])
+		newYaml, err = ioutil.ReadFile(o.Metadata[1])
 		if err != nil {
 			return errors.Wrap(err, "cannot read file")
 		}
 	}
 
-	oldYaml, err = ioutil.ReadFile(o.metadata[0])
+	oldYaml, err = ioutil.ReadFile(o.Metadata[0])
 	if err != nil {
 		return errors.Wrap(err, "cannot read file")
 	}
 
-	printDiff(string(oldYaml), string(newYaml), o.output)
+	printDiff(string(oldYaml), string(newYaml), o.Output)
 	return nil
+}
+
+func (o *MetadataDiffOptions) Run() error {
+	if o.EC.Config.Version == cli.V2 && o.EC.MetadataDir != "" {
+		return o.runv2(o.Args)
+	}
+	return o.runv1(o.Args)
 }
 
 func printDiff(before, after string, to io.Writer) {
@@ -154,4 +224,15 @@ func printDiff(before, after string, to io.Writer) {
 			fmt.Fprintf(to, "%s\n", text)
 		}
 	}
+}
+
+func checkDir(path string) error {
+	file, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	if !file.IsDir() {
+		return fmt.Errorf("metadata diff only works with folder but got file %s", path)
+	}
+	return nil
 }

@@ -104,6 +104,13 @@ without losing any visible quality.
 - Use bold in headings in place of string literals for aesthetics (i.e. ** in place of ``)
 - While adding code blocks ensure the right language type is set. Sometimes adding placeholders breaks the language's
 syntax in which case you'll have to set the language type to `none` to avoid warnings during builds.
+- Use `:ref:` instead of `:doc:` to link to pages to avoid having to set the relative path and chances of broken links
+while moving pages
+
+### Reference links
+
+- For external links, add a double `_` in the end to avoid `Duplicate explicit target name` warnings  , e.g. \``Google <https://www.google.com/>__`\`
+- If you link to an external resource, make sure to link to the most current version of the same, e.g. `https://www.postgresql.org/docs/current/intro-whatis.html` rather than `https://www.postgresql.org/docs/9.6/intro-whatis.html`
 
 ### Pre-commit checks
 - Just before committing your changes, delete your local `_build` folder completely and then build docs again. Scan 

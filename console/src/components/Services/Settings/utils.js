@@ -92,6 +92,16 @@ const filterInconsistentMetadataObject = (
       }
 
       return remoteSchemas;
+    case 'actions':
+      const actions = objects;
+
+      if (inconsistentObject.type === 'action') {
+        return actions.filter(
+          t => t.name !== inconsistentObject.definition.name
+        );
+      }
+
+      return actions;
     default:
       return objects;
   }

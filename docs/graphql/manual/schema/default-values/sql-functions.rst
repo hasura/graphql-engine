@@ -1,3 +1,9 @@
+.. meta::
+   :description: Set default field values using SQL functions
+   :keywords: hasura, docs, schema, default value, sql function, stored procedure
+
+.. _sql_functions_as_default:
+
 Setting values of fields using SQL functions/stored procedures
 ==============================================================
 
@@ -34,6 +40,7 @@ Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 Open the console and head to ``Data -> sql_function_table -> Modify``:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/modify-sql-fn-table.png
+   :alt: Modify the table
 
 Step 2: Create a trigger
 ------------------------
@@ -56,6 +63,7 @@ the ``output`` field whenever an insert or update is made to the ``sql_function_
 Head to ``Data -> SQL`` and run the above SQL:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/create-trigger.png
+   :alt: Create a trigger with SQL
 
 Step 3: Run an insert mutation
 ------------------------------
@@ -95,5 +103,5 @@ value (output="YABBA DABBA DOO!") will be set automatically.
 Also see
 --------
 
-- :doc:`postgres-defaults`
-- :doc:`column-presets`
+- :ref:`postgres_defaults`
+- :ref:`column_presets`

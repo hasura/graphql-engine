@@ -33,6 +33,7 @@ import {
   getAdminSecret,
   getPersistedAdminSecretHeaderWasAdded,
   persistAdminSecretHeaderWasAdded,
+  removePersistedAdminSecretHeaderWasAdded,
 } from './utils';
 
 import styles from '../ApiExplorer.scss';
@@ -90,6 +91,7 @@ class ApiRequest extends Component {
       if (adminSecret && !adminSecretHeaderWasAdded) {
         const headerKeys = graphiqlHeaders.map(h => h.key);
 
+        // add admin secret header if not present
         if (!headerKeys.includes(ADMIN_SECRET_HEADER_KEY)) {
           graphiqlHeaders.push({
             key: ADMIN_SECRET_HEADER_KEY,
@@ -102,6 +104,22 @@ class ApiRequest extends Component {
 
         // set in local storage that admin secret header has been automatically added
         persistAdminSecretHeaderWasAdded();
+      }
+
+      // if admin secret is not set and admin secret header was ever added to headers, remove admin secret header if present
+      if (!adminSecret && adminSecretHeaderWasAdded) {
+        const headerKeys = graphiqlHeaders.map(h => h.key);
+
+        // remove admin secret header if present
+        const adminSecretHeaderIndex = headerKeys.indexOf(
+          ADMIN_SECRET_HEADER_KEY
+        );
+        if (adminSecretHeaderIndex >= 0) {
+          graphiqlHeaders.splice(adminSecretHeaderIndex, 1);
+        }
+
+        // remove from local storage that admin secret header has been automatically added
+        removePersistedAdminSecretHeaderWasAdded();
       }
 
       // add an empty placeholder header
@@ -508,7 +526,11 @@ class ApiRequest extends Component {
           useDefaultTitleStyle
         >
           <div className={styles.responseTable + ' ' + styles.remove_all_pad}>
-            <table className={'table ' + styles.tableBorder}>
+            <table
+              className={
+                'table ' + styles.tableBorder + ' ' + styles.remove_margin
+              }
+            >
               <thead>
                 <tr>
                   <th className={styles.wd4 + ' ' + styles.headerHeading} />
@@ -540,7 +562,7 @@ class ApiRequest extends Component {
       switch (this.props.bodyType) {
         case 'graphql':
           return (
-            <div className={styles.add_mar_top}>
+            <div className={styles.apiRequestBody}>
               <GraphiQLWrapper
                 data={this.props}
                 numberOfTables={this.props.numberOfTables}
@@ -643,8 +665,8 @@ class ApiRequest extends Component {
             claimData =
               claimFormat === 'stringified_json'
                 ? generateValidNameSpaceData(
-                  JSON.parse(payload[claimNameSpace])
-                )
+                    JSON.parse(payload[claimNameSpace])
+                  )
                 : generateValidNameSpaceData(payload[claimNameSpace]);
           } catch (e) {
             console.error(e);
@@ -728,7 +750,9 @@ class ApiRequest extends Component {
     };
 
     return (
-      <div className={styles.apiRequestWrapper}>
+      <div
+        className={`${styles.apiRequestWrapper} ${styles.height100} ${styles.flexColumn}`}
+      >
         {getGraphQLEndpointBar()}
         {getHeaderTable()}
         {getRequestBody()}

@@ -1,15 +1,20 @@
 package api
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/migrate/cmd"
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,8 +32,14 @@ type Response struct {
 
 type Request struct {
 	Name string        `json:"name"`
-	Up   []interface{} `json:"up"`
-	Down []interface{} `json:"down"`
+	Up   []requestType `json:"up"`
+	Down []requestType `json:"down"`
+}
+
+type requestType struct {
+	Version int         `json:"version,omitempty"`
+	Type    string      `json:"type"`
+	Args    interface{} `json:"args"`
 }
 
 func MigrateAPI(c *gin.Context) {
@@ -47,6 +58,9 @@ func MigrateAPI(c *gin.Context) {
 	if !ok {
 		return
 	}
+
+	// Get version
+	version := c.GetInt("version")
 
 	// Convert to url.URL
 	t := migratePtr.(*migrate.Migrate)
@@ -70,10 +84,11 @@ func MigrateAPI(c *gin.Context) {
 		c.JSON(http.StatusOK, status)
 	case "POST":
 		var request Request
+		var err error
 
 		// Bind Request body to Request struct
-		if c.BindJSON(&request) != nil {
-			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "Something went wrong"})
+		if err = c.BindJSON(&request); err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
 			return
 		}
 
@@ -81,26 +96,91 @@ func MigrateAPI(c *gin.Context) {
 		timestamp := startTime.UnixNano() / int64(time.Millisecond)
 
 		createOptions := cmd.New(timestamp, request.Name, sourceURL.Path)
-		err := createOptions.SetMetaUp(request.Up)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
-			return
-		}
-		err = createOptions.SetMetaDown(request.Down)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
-			return
-		}
+		if version != int(cli.V1) {
+			sqlUp := &bytes.Buffer{}
+			sqlDown := &bytes.Buffer{}
+			for _, arg := range request.Up {
+				if arg.Type == hasuradb.RunSQL {
+					argByt, err := json.Marshal(arg.Args)
+					if err != nil {
+						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
+						return
+					}
+					var to hasuradb.RunSQLInput
+					err = json.Unmarshal(argByt, &to)
+					if err != nil {
+						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
+						return
+					}
+					sqlUp.WriteString(to.SQL)
+					sqlUp.WriteString("\n")
+				}
+			}
 
-		err = createOptions.Create()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
-			return
+			for _, arg := range request.Down {
+				if arg.Type == hasuradb.RunSQL {
+					argByt, err := json.Marshal(arg.Args)
+					if err != nil {
+						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
+						return
+					}
+					var to hasuradb.RunSQLInput
+					err = json.Unmarshal(argByt, &to)
+					if err != nil {
+						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
+						return
+					}
+					sqlDown.WriteString(to.SQL)
+					sqlDown.WriteString("\n")
+				}
+			}
+
+			if sqlUp.String() != "" {
+				err = createOptions.SetSQLUp(sqlUp.String())
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+					return
+				}
+			}
+			if sqlDown.String() != "" {
+				err = createOptions.SetSQLDown(sqlDown.String())
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+					return
+				}
+			}
+
+			if sqlUp.String() != "" || sqlDown.String() != "" {
+				err = createOptions.Create()
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+					return
+				}
+			} else {
+				timestamp = 0
+			}
+		} else {
+			err = createOptions.SetMetaUp(request.Up)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+				return
+			}
+			err = createOptions.SetMetaDown(request.Down)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+				return
+			}
+
+			err = createOptions.Create()
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+				return
+			}
 		}
 
 		defer func() {
-			if err != nil {
-				err = createOptions.Delete()
+			if err != nil && timestamp != 0 {
+				err := createOptions.Delete()
 				if err != nil {
 					logger.Debug(err)
 				}
@@ -114,7 +194,13 @@ func MigrateAPI(c *gin.Context) {
 			return
 		}
 
-		if err = t.Migrate(uint64(timestamp), "up"); err != nil {
+		upByt, err := json.Marshal(request.Up)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+			return
+		}
+
+		if err = t.QueryWithVersion(uint64(timestamp), ioutil.NopCloser(bytes.NewReader(upByt))); err != nil {
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(http.StatusBadRequest, &Response{Code: "data_api_error", Message: strings.TrimPrefix(err.Error(), DataAPIError)})
 				return
@@ -128,6 +214,18 @@ func MigrateAPI(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
 		}
+		defer func() {
+			files, err := t.ExportMetadata()
+			if err != nil {
+				logger.Debug(err)
+				return
+			}
+			err = t.WriteMetadata(files)
+			if err != nil {
+				logger.Debug(err)
+				return
+			}
+		}()
 		c.JSON(http.StatusOK, &Response{Name: fmt.Sprintf("%d_%s", timestamp, request.Name)})
 	default:
 		c.JSON(http.StatusMethodNotAllowed, &gin.H{"message": "Method not allowed"})

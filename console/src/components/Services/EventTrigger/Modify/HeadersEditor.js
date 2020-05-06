@@ -79,9 +79,7 @@ class HeadersEditor extends React.Component {
             <div className={styles.modifyHeadersCollapsedContent} key={i}>
               <input
                 type="text"
-                className={`${styles.input} form-control ${
-                  styles.add_mar_right
-                } ${styles.modifyHeadersTextbox}`}
+                className={`${styles.input} form-control ${styles.add_mar_right} ${styles.modifyHeadersTextbox}`}
                 value={h.key}
                 onChange={e => {
                   dispatch(setHeaderKey(e.target.value, i));

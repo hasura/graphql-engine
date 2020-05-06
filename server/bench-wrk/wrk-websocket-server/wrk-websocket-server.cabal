@@ -8,7 +8,7 @@ version:             0.1.0.0
 -- synopsis:
 -- description:
 -- bug-reports:
--- license:
+license:             Apache-2.0
 author:              Nizar Malangadan
 maintainer:          nizar-m@users.noreply.github.com
 -- copyright:

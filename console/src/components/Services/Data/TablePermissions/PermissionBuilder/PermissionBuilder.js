@@ -42,6 +42,7 @@ import {
   isJsonString,
   getAllJsonPaths,
   isObject,
+  isArray,
 } from '../../../../Common/utils/jsUtils';
 
 class PermissionBuilder extends React.Component {
@@ -101,9 +102,13 @@ class PermissionBuilder extends React.Component {
         _missingSchemas = findMissingSchemas(newPath, currTable);
       } else if (isExistOperator(operator)) {
         const existTableDef = getQualifiedTableDef(value[TABLE_KEY]);
-        const existTableSchema = existTableDef.schema;
 
-        const existWhere = value[WHERE_KEY];
+        let existTableSchema;
+        if (existTableDef) {
+          existTableSchema = existTableDef.schema;
+        }
+
+        const existWhere = value[WHERE_KEY] || '';
 
         if (existTableSchema) {
           const { allTableSchemas } = this.props;
@@ -384,7 +389,7 @@ class PermissionBuilder extends React.Component {
     };
 
     const _dispatchFunc = data => {
-      const { dispatch, filter, dispatchFuncSetFilter, tableDef } = this.props;
+      const { filter, dispatchFuncSetFilter, tableDef } = this.props;
 
       const newFilter = getFilter(
         tableDef.schema,
@@ -393,8 +398,8 @@ class PermissionBuilder extends React.Component {
         data.value
       );
 
-      // dispatch(dispatchFuncSetFilter(JSON.stringify(newFilter, null, 4)));
-      dispatch(dispatchFuncSetFilter(JSON.stringify(newFilter)));
+      // dispatchFuncSetFilter(JSON.stringify(newFilter, null, 4));
+      dispatchFuncSetFilter(JSON.stringify(newFilter));
     };
 
     /********************************/
@@ -443,12 +448,12 @@ class PermissionBuilder extends React.Component {
         );
       });
 
-      const selectedValue = addToPrefix(prefix, value);
+      const selectedValue = addToPrefix(prefix, value || '--');
 
       return (
         <select
           value={selectedValue}
-          name={value}
+          name={prefix}
           onChange={dispatchSelect}
           className={styles.qb_select}
           data-test="qb-select"
@@ -521,7 +526,7 @@ class PermissionBuilder extends React.Component {
             val.substr(-1) !== '.'
           ) {
             _val = Number(val);
-          } else if (PGTypes.json.includes(valueType) && isJsonString(val)) {
+          } else if (PGTypes.jsonb.includes(valueType) && isJsonString(val)) {
             _val = JSON.parse(val);
           }
         }
@@ -546,7 +551,7 @@ class PermissionBuilder extends React.Component {
 
       if (PGTypes.boolean.includes(valueType)) {
         input = renderBoolSelect(dispatchInput, value);
-      } else if (PGTypes.json.includes(valueType)) {
+      } else if (PGTypes.jsonb.includes(valueType)) {
         input = inputBox();
         suggestion = jsonSuggestion();
       } else if (valueType === 'column') {
@@ -720,7 +725,9 @@ class PermissionBuilder extends React.Component {
         let columnType = '';
         if (tableSchema && columnName) {
           const column = getTableColumn(tableSchema, columnName);
-          columnType = getColumnType(column);
+          if (column) {
+            columnType = getColumnType(column);
+          }
         }
 
         _columnExp = renderOperatorExp(
@@ -818,7 +825,7 @@ class PermissionBuilder extends React.Component {
       };
 
       const unselectedElements = [];
-      if (!existsOpTable.name) {
+      if (!existsOpTable || !existsOpTable.name) {
         unselectedElements.push(WHERE_KEY);
       }
 
@@ -839,6 +846,8 @@ class PermissionBuilder extends React.Component {
       prefix
     ) => {
       const _boolExpArray = [];
+
+      expressions = isArray(expressions) ? expressions : [];
 
       expressions.concat([{}]).forEach((expression, i) => {
         const _boolExp = renderBoolExp(
@@ -983,7 +992,7 @@ class PermissionBuilder extends React.Component {
     return (
       <div className="container-fluid">
         <div className="row">
-          <div className={styles.qb_container}>
+          <div className={styles.qb_container} data-test="qb_container">
             <div className={styles.remove_margin_bottom + ' well'}>
               {showPermissionBuilder()}
             </div>

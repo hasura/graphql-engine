@@ -1,11 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
-
-import Toggle from 'react-toggle';
-import 'react-toggle/style.css';
-import '../../../Common/ReactToggle/ReactToggleOverrides.css';
-
+import Toggle from '../../../Common/Toggle/Toggle';
 import { updateMigrationModeStatus } from '../../../Main/Actions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
@@ -30,7 +26,7 @@ const Migrations = ({ dispatch, migrationMode }) => {
         <li>
           Read more about managing migrations with Hasura at the{' '}
           <a
-            href="https://docs.hasura.io/1.0/graphql/manual/migrations/index.html"
+            href="https://hasura.io/docs/1.0/graphql/manual/migrations/index.html"
             target="_blank"
             rel="noopener noreferrer"
           >

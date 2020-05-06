@@ -1,3 +1,7 @@
+.. meta::
+   :description: Model one-to-many relationships in Hasura
+   :keywords: hasura, docs, schema, relationship, one-to-many, 1-n
+
 .. _one_to_many_modelling:
 
 Modelling one-to-many table relationships
@@ -45,7 +49,7 @@ the ``author`` table.
 Set up GraphQL relationships
 ----------------------------
 
-To access the nested objects via the GraphQL API, :doc:`create the following relationships <../create>`:
+To access the nested objects via the GraphQL API, :ref:`create the following relationships <create_relationships>`:
 
 - Array relationship, ``articles`` from ``author`` table using  ``article :: author_id  ->  id``
 - Object relationship, ``author`` from ``article`` table using ``author_id -> author :: id``

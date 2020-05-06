@@ -275,3 +275,14 @@ args:
           _where:
             id: X-Hasura-User-Id
             is_admin: true
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE table_with_sql_identifier
+        ( id serial PRIMARY KEY
+        , sql_id information_schema.sql_identifier );
+      INSERT INTO table_with_sql_identifier (sql_id)
+        VALUES ('one'), ('one'), ('two'), ('three'), ('four'), ('one'), ('two');
+- type: track_table
+  args: table_with_sql_identifier

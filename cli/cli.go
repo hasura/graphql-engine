@@ -8,24 +8,34 @@
 package cli
 
 import (
-	"encoding/json"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
+	"reflect"
+	"strconv"
+	"strings"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/telemetry"
-	"github.com/hasura/graphql-engine/cli/util"
-
+	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
+	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
+	"github.com/hasura/graphql-engine/cli/plugins"
+	"github.com/hasura/graphql-engine/cli/telemetry"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
-	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/subosito/gotenv"
 	"golang.org/x/crypto/ssh/terminal"
+	"gopkg.in/yaml.v2"
 )
 
 // Other constants used in the package
@@ -37,85 +47,198 @@ const (
 
 	// Name of the file to store last update check time
 	LastUpdateCheckFileName = "last_update_check_at"
+
+	// Name of the cli extension plugin
+	CLIExtPluginName = "cli-ext"
+)
+
+const (
+	XHasuraAdminSecret = "X-Hasura-Admin-Secret"
+	XHasuraAccessKey   = "X-Hasura-Access-Key"
 )
 
 // String constants
 const (
 	StrTelemetryNotice = `Help us improve Hasura! The cli collects anonymized usage stats which
 allow us to keep improving Hasura at warp speed. To opt-out or read more,
-visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html
+visit https://hasura.io/docs/1.0/graphql/manual/guides/telemetry.html
 `
 )
 
-// ServerConfig has the config values required to contact the server.
+// ConfigVersion defines the version of the Config.
+type ConfigVersion int
+
+const (
+	// V1 represents config version 1
+	V1 ConfigVersion = iota + 1
+	// V2 represents config version 2
+	V2
+)
+
+// ServerAPIPaths has the custom paths defined for server api
+type ServerAPIPaths struct {
+	Query   string `yaml:"query,omitempty"`
+	GraphQL string `yaml:"graphql,omitempty"`
+	Config  string `yaml:"config,omitempty"`
+	PGDump  string `yaml:"pg_dump,omitempty"`
+	Version string `yaml:"version,omitempty"`
+}
+
+// GetQueryParams - encodes the values in url
+func (s ServerAPIPaths) GetQueryParams() url.Values {
+	vals := url.Values{}
+	t := reflect.TypeOf(s)
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		tag := field.Tag.Get("yaml")
+		splitTag := strings.Split(tag, ",")
+		if len(splitTag) == 0 {
+			continue
+		}
+		name := splitTag[0]
+		if name == "-" {
+			continue
+		}
+		v := reflect.ValueOf(s).Field(i)
+		vals.Add(name, v.String())
+	}
+	return vals
+}
+
+// ErrInvalidConfigVersion - if the config version is not valid
+var ErrInvalidConfigVersion error = fmt.Errorf("invalid config version")
+
+// NewConfigVersionValue returns ConfigVersion set with default value
+func NewConfigVersionValue(val ConfigVersion, p *ConfigVersion) *ConfigVersion {
+	*p = val
+	return p
+}
+
+// Set sets the value of the named command-line flag.
+func (c *ConfigVersion) Set(s string) error {
+	v, err := strconv.ParseInt(s, 0, 64)
+	*c = ConfigVersion(v)
+	if err != nil {
+		return err
+	}
+	if !c.IsValid() {
+		return ErrInvalidConfigVersion
+	}
+	return nil
+}
+
+// Type returns a string that uniquely represents this flag's type.
+func (c *ConfigVersion) Type() string {
+	return "int"
+}
+
+func (c *ConfigVersion) String() string {
+	return strconv.Itoa(int(*c))
+}
+
+// IsValid returns if its a valid config version
+func (c ConfigVersion) IsValid() bool {
+	return c != 0 && c <= V2
+}
+
+// ServerConfig has the config values required to contact the server
 type ServerConfig struct {
 	// Endpoint for the GraphQL Engine
-	Endpoint string
-	// AdminSecret (optional) required to query the endpoint
-	AdminSecret string
-
-	ParsedEndpoint *url.URL
-}
-
-type rawServerConfig struct {
-	// Endpoint for the GraphQL Engine
-	Endpoint string `json:"endpoint"`
+	Endpoint string `yaml:"endpoint"`
 	// AccessKey (deprecated) (optional) Admin secret key required to query the endpoint
-	AccessKey string `json:"access_key,omitempty"`
+	AccessKey string `yaml:"access_key,omitempty"`
 	// AdminSecret (optional) Admin secret required to query the endpoint
-	AdminSecret string `json:"admin_secret,omitempty"`
+	AdminSecret string `yaml:"admin_secret,omitempty"`
+	// APIPaths (optional) API paths for server
+	APIPaths *ServerAPIPaths `yaml:"api_paths,omitempty"`
+	// InsecureSkipTLSVerify - indicates if TLS verification is disabled or not.
+	InsecureSkipTLSVerify bool `yaml:"insecure_skip_tls_verify,omitempty"`
+	// CAPath - Path to a cert file for the certificate authority
+	CAPath string `yaml:"certificate_authority,omitempty"`
 
-	ParsedEndpoint *url.URL `json:"-"`
+	ParsedEndpoint *url.URL `yaml:"-"`
+
+	TLSConfig *tls.Config `yaml:"-"`
+
+	HTTPClient *http.Client `yaml:"-"`
 }
 
-func (r rawServerConfig) toServerConfig() ServerConfig {
-	s := r.AdminSecret
-	if s == "" {
-		s = r.AccessKey
-	}
-	return ServerConfig{
-		Endpoint:       r.Endpoint,
-		AdminSecret:    s,
-		ParsedEndpoint: r.ParsedEndpoint,
-	}
+// GetVersionEndpoint provides the url to contact the version API
+func (s *ServerConfig) GetVersionEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.Version)
+	return nurl.String()
 }
 
-func (s ServerConfig) toRawServerConfig() rawServerConfig {
-	return rawServerConfig{
-		Endpoint:       s.Endpoint,
-		AccessKey:      "",
-		AdminSecret:    s.AdminSecret,
-		ParsedEndpoint: s.ParsedEndpoint,
-	}
-}
-
-// MarshalJSON converts s to JSON
-func (s ServerConfig) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.toRawServerConfig())
-}
-
-// UnmarshalJSON converts b to struct s
-func (s ServerConfig) UnmarshalJSON(b []byte) error {
-	var r rawServerConfig
-	err := json.Unmarshal(b, &r)
-	if err != nil {
-		return errors.Wrap(err, "unmarshal error")
-	}
-	sc := r.toServerConfig()
-	s.Endpoint = sc.Endpoint
-	s.AdminSecret = sc.AdminSecret
-	s.ParsedEndpoint = sc.ParsedEndpoint
-	return nil
+// GetQueryEndpoint provides the url to contact the query API
+func (s *ServerConfig) GetQueryEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.Query)
+	return nurl.String()
 }
 
 // ParseEndpoint ensures the endpoint is valid.
 func (s *ServerConfig) ParseEndpoint() error {
-	nurl, err := url.Parse(s.Endpoint)
+	nurl, err := url.ParseRequestURI(s.Endpoint)
 	if err != nil {
 		return err
 	}
 	s.ParsedEndpoint = nurl
 	return nil
+}
+
+// SetTLSConfig - sets the TLS config
+func (s *ServerConfig) SetTLSConfig() error {
+	if s.InsecureSkipTLSVerify {
+		s.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+	if s.CAPath != "" {
+		// Get the SystemCertPool, continue with an empty pool on error
+		rootCAs, _ := x509.SystemCertPool()
+		if rootCAs == nil {
+			rootCAs = x509.NewCertPool()
+		}
+		// read cert
+		certPath, _ := filepath.Abs(s.CAPath)
+		cert, err := ioutil.ReadFile(certPath)
+		if err != nil {
+			return errors.Errorf("error reading CA %s", s.CAPath)
+		}
+		if ok := rootCAs.AppendCertsFromPEM(cert); !ok {
+			return errors.Errorf("Unable to append given CA cert.")
+		}
+		s.TLSConfig = &tls.Config{
+			RootCAs:            rootCAs,
+			InsecureSkipVerify: s.InsecureSkipTLSVerify,
+		}
+	}
+	return nil
+}
+
+// SetHTTPClient - sets the http client
+func (s *ServerConfig) SetHTTPClient() error {
+	s.HTTPClient = &http.Client{Transport: http.DefaultTransport}
+	if s.TLSConfig != nil {
+		tr := &http.Transport{TLSClientConfig: s.TLSConfig}
+		s.HTTPClient.Transport = tr
+	}
+	return nil
+}
+
+// Config represents configuration required for the CLI to function
+type Config struct {
+	// Version of the config.
+	Version ConfigVersion `yaml:"version,omitempty"`
+
+	// ServerConfig to be used by CLI to contact server.
+	ServerConfig `yaml:",inline"`
+
+	// MetadataDirectory defines the directory where the metadata files were stored.
+	MetadataDirectory string `yaml:"metadata_directory,omitempty"`
+	// MigrationsDirectory defines the directory where the migration files were stored.
+	MigrationsDirectory string `yaml:"migrations_directory,omitempty"`
+	// ActionConfig defines the config required to create or generate codegen for an action.
+	ActionConfig *types.ActionExecutionConfig `yaml:"actions,omitempty"`
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -140,16 +263,20 @@ type ExecutionContext struct {
 
 	// ExecutionDirectory is the directory in which command is being executed.
 	ExecutionDirectory string
+	// Envfile is the .env file to load ENV vars from
+	Envfile string
 	// MigrationDir is the name of directory where migrations are stored.
 	MigrationDir string
+	// MetadataDir is the name of directory where metadata files are stored.
+	MetadataDir string
 	// ConfigFile is the file where endpoint etc. are stored.
 	ConfigFile string
-	// MetadataFile (optional) is a yaml|json file where Hasura metadata is stored.
-	MetadataFile []string
+	// HGE Headers, are the custom headers which can be passed to HGE API
+	HGEHeaders map[string]string
 
-	// ServerConfig is the configuration object storing the endpoint and admin secret
+	// Config is the configuration object storing the endpoint and admin secret
 	// information after reading from config file or env var.
-	ServerConfig *ServerConfig
+	Config *Config
 
 	// GlobalConfigDir is the ~/.hasura-graphql directory to store configuration
 	// globally.
@@ -183,6 +310,15 @@ type ExecutionContext struct {
 
 	// SkipUpdateCheck will skip the auto update check if set to true
 	SkipUpdateCheck bool
+
+	// PluginsConfig defines the config for plugins
+	PluginsConfig *plugins.Config
+
+	// CodegenAssetsRepo defines the config to handle codegen-assets repo
+	CodegenAssetsRepo *util.GitUtil
+
+	// InitTemplatesRepo defines the config to handle init-templates repo
+	InitTemplatesRepo *util.GitUtil
 
 	// IsTerminal indicates whether the current session is a terminal or not
 	IsTerminal bool
@@ -224,11 +360,27 @@ func (ec *ExecutionContext) Prepare() error {
 		return errors.Wrap(err, "setting up global config failed")
 	}
 
+	// setup plugins path
+	err = ec.setupPlugins()
+	if err != nil {
+		return errors.Wrap(err, "setting up plugins path failed")
+	}
+
+	err = ec.setupCodegenAssetsRepo()
+	if err != nil {
+		return errors.Wrap(err, "setting up codegen-assets repo failed")
+	}
+
+	err = ec.setupInitTemplatesRepo()
+	if err != nil {
+		return errors.Wrap(err, "setting up init-templates repo failed")
+	}
+
 	ec.LastUpdateCheckFile = filepath.Join(ec.GlobalConfigDir, LastUpdateCheckFileName)
 
 	// initialize a blank server config
-	if ec.ServerConfig == nil {
-		ec.ServerConfig = &ServerConfig{}
+	if ec.Config == nil {
+		ec.Config = &Config{}
 	}
 
 	// generate an execution id
@@ -248,22 +400,85 @@ func (ec *ExecutionContext) Prepare() error {
 	return nil
 }
 
+// setupPlugins create and returns the inferred paths for hasura. By default, it assumes
+// $HOME/.hasura as the base path
+func (ec *ExecutionContext) setupPlugins() error {
+	base := filepath.Join(ec.GlobalConfigDir, "plugins")
+	base, err := filepath.Abs(base)
+	if err != nil {
+		return errors.Wrap(err, "cannot get absolute path")
+	}
+	ec.PluginsConfig = plugins.New(base)
+	ec.PluginsConfig.Logger = ec.Logger
+	ec.PluginsConfig.Repo.Logger = ec.Logger
+	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
+		ec.PluginsConfig.Repo.DisableCloneOrUpdate = true
+	}
+	return ec.PluginsConfig.Prepare()
+}
+
+func (ec *ExecutionContext) setupCodegenAssetsRepo() error {
+	base := filepath.Join(ec.GlobalConfigDir, util.ActionsCodegenDirName)
+	base, err := filepath.Abs(base)
+	if err != nil {
+		return errors.Wrap(err, "cannot get absolute path")
+	}
+	ec.CodegenAssetsRepo = util.NewGitUtil(util.ActionsCodegenRepoURI, base, "")
+	ec.CodegenAssetsRepo.Logger = ec.Logger
+	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
+		ec.CodegenAssetsRepo.DisableCloneOrUpdate = true
+	}
+	return nil
+}
+
+func (ec *ExecutionContext) setupInitTemplatesRepo() error {
+	base := filepath.Join(ec.GlobalConfigDir, util.InitTemplatesDirName)
+	base, err := filepath.Abs(base)
+	if err != nil {
+		return errors.Wrap(err, "cannot get absolute path")
+	}
+	ec.InitTemplatesRepo = util.NewGitUtil(util.InitTemplatesRepoURI, base, "")
+	ec.InitTemplatesRepo.Logger = ec.Logger
+	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
+		ec.InitTemplatesRepo.DisableCloneOrUpdate = true
+	}
+	return nil
+}
+
+func (ec *ExecutionContext) SetHGEHeaders(headers map[string]string) {
+	ec.HGEHeaders = headers
+}
+
 // Validate prepares the ExecutionContext ec and then validates the
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
 func (ec *ExecutionContext) Validate() error {
+	// ensure plugins index exists
+	err := ec.PluginsConfig.Repo.EnsureCloned()
+	if err != nil {
+		return errors.Wrap(err, "ensuring plugins index failed")
+	}
+
+	// ensure codegen-assets repo exists
+	err = ec.CodegenAssetsRepo.EnsureCloned()
+	if err != nil {
+		return errors.Wrap(err, "ensuring codegen-assets repo failed")
+	}
 
 	// validate execution directory
-	err := ec.validateDirectory()
+	err = ec.validateDirectory()
 	if err != nil {
 		return errors.Wrap(err, "validating current directory failed")
 	}
 
-	// set names of files and directories
-	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, "migrations")
+	// load .env file
+	err = ec.loadEnvfile()
+	if err != nil {
+		return errors.Wrap(err, "loading .env file failed")
+	}
+
+	// set names of config file
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
-	ec.MetadataFile = append(ec.MetadataFile, filepath.Join(ec.MigrationDir, "metadata.yaml"))
-	ec.MetadataFile = append(ec.MetadataFile, filepath.Join(ec.MigrationDir, "metadata.json"))
 
 	// read config and parse the values into Config
 	err = ec.readConfig()
@@ -271,8 +486,28 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "cannot read config")
 	}
 
-	ec.Logger.Debug("graphql engine endpoint: ", ec.ServerConfig.Endpoint)
-	ec.Logger.Debug("graphql engine admin_secret: ", ec.ServerConfig.AdminSecret)
+	// set name of migration directory
+	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MigrationsDirectory)
+	if _, err := os.Stat(ec.MigrationDir); os.IsNotExist(err) {
+		err = os.MkdirAll(ec.MigrationDir, os.ModePerm)
+		if err != nil {
+			return errors.Wrap(err, "cannot create migrations directory")
+		}
+	}
+
+	if ec.Config.Version == V2 && ec.Config.MetadataDirectory != "" {
+		// set name of metadata directory
+		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
+		if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) {
+			err = os.MkdirAll(ec.MetadataDir, os.ModePerm)
+			if err != nil {
+				return errors.Wrap(err, "cannot create metadata directory")
+			}
+		}
+	}
+
+	ec.Logger.Debug("graphql engine endpoint: ", ec.Config.ServerConfig.Endpoint)
+	ec.Logger.Debug("graphql engine admin_secret: ", ec.Config.ServerConfig.AdminSecret)
 
 	// get version from the server and match with the cli version
 	err = ec.checkServerVersion()
@@ -280,16 +515,28 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "version check")
 	}
 
-	state := util.GetServerState(ec.ServerConfig.Endpoint, ec.ServerConfig.AdminSecret, ec.Version.ServerSemver, ec.Logger)
+	// get the server feature flags
+	err = ec.Version.GetServerFeatureFlags()
+	if err != nil {
+		return errors.Wrap(err, "error in getting server feature flags")
+	}
+
+	state := util.GetServerState(ec.Config.ServerConfig.GetQueryEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.Config.ServerConfig.TLSConfig, ec.Version.ServerSemver, ec.Logger)
 	ec.ServerUUID = state.UUID
 	ec.Telemetry.ServerUUID = ec.ServerUUID
 	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
-
+	// Set headers required for communicating with HGE
+	if ec.Config.AdminSecret != "" {
+		headers := map[string]string{
+			GetAdminSecretHeaderName(ec.Version): ec.Config.AdminSecret,
+		}
+		ec.SetHGEHeaders(headers)
+	}
 	return nil
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	v, err := version.FetchServerVersion(ec.ServerConfig.Endpoint)
+	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint(), ec.Config.ServerConfig.HTTPClient)
 	if err != nil {
 		return errors.Wrap(err, "failed to get version from server")
 	}
@@ -299,9 +546,24 @@ func (ec *ExecutionContext) checkServerVersion() error {
 	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())
 	ec.Logger.Debugf("compatibility check: [%v] %v", isCompatible, reason)
 	if !isCompatible {
-		return errors.Errorf("[cli: %s] [server: %s] versions incompatible: %s", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion(), reason)
+		ec.Logger.Warnf("[cli: %s] [server: %s] version mismatch: %s", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion(), reason)
 	}
 	return nil
+}
+
+// WriteConfig writes the configuration from ec.Config or input config
+func (ec *ExecutionContext) WriteConfig(config *Config) error {
+	var cfg *Config
+	if config != nil {
+		cfg = config
+	} else {
+		cfg = ec.Config
+	}
+	y, err := yaml.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(ec.ConfigFile, y, 0644)
 }
 
 // readConfig reads the configuration from config file, flags and env vars,
@@ -309,12 +571,26 @@ func (ec *ExecutionContext) checkServerVersion() error {
 func (ec *ExecutionContext) readConfig() error {
 	// need to get existing viper because https://github.com/spf13/viper/issues/233
 	v := ec.Viper
-	v.SetEnvPrefix("HASURA_GRAPHQL")
+	v.SetEnvPrefix(util.ViperEnvPrefix)
+	v.SetEnvKeyReplacer(util.ViperEnvReplacer)
 	v.AutomaticEnv()
 	v.SetConfigName("config")
+	v.SetDefault("version", "1")
 	v.SetDefault("endpoint", "http://localhost:8080")
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
+	v.SetDefault("api_paths.query", "v1/query")
+	v.SetDefault("api_paths.graphql", "v1/graphql")
+	v.SetDefault("api_paths.config", "v1alpha1/config")
+	v.SetDefault("api_paths.pg_dump", "v1alpha1/pg_dump")
+	v.SetDefault("api_paths.version", "v1/version")
+	v.SetDefault("metadata_directory", "")
+	v.SetDefault("migrations_directory", "migrations")
+	v.SetDefault("actions.kind", "synchronous")
+	v.SetDefault("actions.handler_webhook_baseurl", "http://localhost:3000")
+	v.SetDefault("actions.codegen.framework", "")
+	v.SetDefault("actions.codegen.output_dir", "")
+	v.SetDefault("actions.codegen.uri", "")
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
@@ -324,11 +600,45 @@ func (ec *ExecutionContext) readConfig() error {
 	if adminSecret == "" {
 		adminSecret = v.GetString("access_key")
 	}
-	ec.ServerConfig = &ServerConfig{
-		Endpoint:    v.GetString("endpoint"),
-		AdminSecret: adminSecret,
+	ec.Config = &Config{
+		Version: ConfigVersion(v.GetInt("version")),
+		ServerConfig: ServerConfig{
+			Endpoint:    v.GetString("endpoint"),
+			AdminSecret: adminSecret,
+			APIPaths: &ServerAPIPaths{
+				Query:   v.GetString("api_paths.query"),
+				GraphQL: v.GetString("api_paths.graphql"),
+				Config:  v.GetString("api_paths.config"),
+				PGDump:  v.GetString("api_paths.pg_dump"),
+				Version: v.GetString("api_paths.version"),
+			},
+			InsecureSkipTLSVerify: v.GetBool("insecure_skip_tls_verify"),
+			CAPath:                v.GetString("certificate_authority"),
+		},
+		MetadataDirectory:   v.GetString("metadata_directory"),
+		MigrationsDirectory: v.GetString("migrations_directory"),
+		ActionConfig: &types.ActionExecutionConfig{
+			Kind:                  v.GetString("actions.kind"),
+			HandlerWebhookBaseURL: v.GetString("actions.handler_webhook_baseurl"),
+			Codegen: &types.CodegenExecutionConfig{
+				Framework: v.GetString("actions.codegen.framework"),
+				OutputDir: v.GetString("actions.codegen.output_dir"),
+				URI:       v.GetString("actions.codegen.uri"),
+			},
+		},
 	}
-	return ec.ServerConfig.ParseEndpoint()
+	if !ec.Config.Version.IsValid() {
+		return ErrInvalidConfigVersion
+	}
+	err = ec.Config.ServerConfig.ParseEndpoint()
+	if err != nil {
+		return errors.Wrap(err, "unable to parse server endpoint")
+	}
+	err = ec.Config.ServerConfig.SetTLSConfig()
+	if err != nil {
+		return errors.Wrap(err, "setting up TLS config failed")
+	}
+	return ec.Config.ServerConfig.SetHTTPClient()
 }
 
 // setupSpinner creates a default spinner if the context does not already have
@@ -352,29 +662,29 @@ func (ec *ExecutionContext) Spin(message string) {
 	}
 }
 
+// loadEnvfile loads .env file
+func (ec *ExecutionContext) loadEnvfile() error {
+	envfile := filepath.Join(ec.ExecutionDirectory, ec.Envfile)
+	err := gotenv.Load(envfile)
+	if err != nil {
+		// return error if user provided envfile name
+		if ec.Envfile != ".env" {
+			return err
+		}
+		if !os.IsNotExist(err) {
+			ec.Logger.Warn(err)
+		}
+	}
+	if err == nil {
+		ec.Logger.Debug("ENV vars read from: ", envfile)
+	}
+	return nil
+}
+
 // setupLogger creates a default logger if context does not have one set.
 func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
-
-		if ec.IsTerminal {
-			if ec.NoColor {
-				logger.Formatter = &logrus.TextFormatter{
-					DisableColors:    true,
-					DisableTimestamp: true,
-				}
-			} else {
-				logger.Formatter = &logrus.TextFormatter{
-					ForceColors:      true,
-					DisableTimestamp: true,
-				}
-			}
-		} else {
-			logger.Formatter = &logrus.JSONFormatter{
-				PrettyPrint: false,
-			}
-		}
-		logger.Out = colorable.NewColorableStdout()
 		ec.Logger = logger
 	}
 
@@ -386,6 +696,9 @@ func (ec *ExecutionContext) setupLogger() {
 		}
 		ec.Logger.SetLevel(level)
 	}
+
+	ec.Logger.Hooks = make(logrus.LevelHooks)
+	ec.Logger.AddHook(newSpinnerHandlerHook(ec.Logger, ec.Spinner, ec.IsTerminal, ec.NoColor))
 
 	// set the logger for telemetry
 	if ec.Telemetry.Logger == nil {
@@ -401,34 +714,49 @@ func (ec *ExecutionContext) setVersion() {
 	}
 }
 
-// GetMetadataFilePath returns the file path based on the format.
-func (ec *ExecutionContext) GetMetadataFilePath(format string) (string, error) {
-	ext := fmt.Sprintf(".%s", format)
-	for _, filePath := range ec.MetadataFile {
-		switch p := filepath.Ext(filePath); p {
-		case ext:
-			return filePath, nil
+// InstallPlugin installs a plugin depending on forceCLIVersion.
+// If forceCLIVersion is set, it uses ec.Version.CLISemver version for the plugin to be installed.
+// Else, it installs the latest version of the plugin
+func (ec ExecutionContext) InstallPlugin(name string, forceCLIVersion bool) error {
+	var version *semver.Version
+	if forceCLIVersion {
+		err := ec.PluginsConfig.Repo.EnsureUpdated()
+		if err != nil {
+			ec.Logger.Debugf("cannot update plugin index %v", err)
 		}
+		version = ec.Version.CLISemver
 	}
-	return "", errors.New("unsupported file type")
+	plugin, err := ec.PluginsConfig.GetPlugin(name, plugins.FetchOpts{
+		Version: version,
+	})
+	if err != nil {
+		if err != plugins.ErrIsAlreadyInstalled {
+			return errors.Wrapf(err, "cannot fetch plugin manfiest %s", name)
+		}
+		return nil
+	}
+	if ec.Spinner.Active() {
+		prevPrefix := ec.Spinner.Prefix
+		defer ec.Spin(prevPrefix)
+	}
+	ec.Spin(fmt.Sprintf("Installing plugin %s...", name))
+	defer ec.Spinner.Stop()
+	err = ec.PluginsConfig.Install(plugin)
+	if err != nil {
+		msg := fmt.Sprintf(`unable to install %s plugin. execute the following commands to continue:
+
+  hasura plugins install %s
+`, name, name)
+		ec.Logger.Info(msg)
+		return errors.Wrapf(err, "cannot install plugin %s", name)
+	}
+	ec.Logger.WithField("name", name).Infoln("plugin installed")
+	return nil
 }
 
-// GetExistingMetadataFile returns the path to the default metadata file that
-// also exists, json or yaml
-func (ec *ExecutionContext) GetExistingMetadataFile() (string, error) {
-	filename := ""
-	for _, format := range []string{"yaml", "json"} {
-		f, err := ec.GetMetadataFilePath(format)
-		if err != nil {
-			return "", errors.Wrap(err, "cannot get metadata file")
-		}
-
-		filename = f
-		if _, err := os.Stat(filename); os.IsNotExist(err) {
-			continue
-		}
-		break
+func GetAdminSecretHeaderName(v *version.Version) string {
+	if v.ServerFeatureFlags.HasAccessKey {
+		return XHasuraAccessKey
 	}
-
-	return filename, nil
+	return XHasuraAdminSecret
 }

@@ -9,7 +9,8 @@ module Hasura.RQL.DDL.Schema.Enum (
   , EnumValueInfo(..)
   , EnumValue(..)
 
-  -- * Loading enum values
+  -- * Loading table info
+  , resolveEnumReferences
   , fetchAndValidateEnumValues
   ) where
 
@@ -26,11 +27,32 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.Db
 import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils           (makeReasonMessage)
 import           Hasura.SQL.Types
 
 import qualified Hasura.SQL.DML                as S
+
+-- | Given a map of enum tables, computes all enum references implied by the given set of foreign
+-- keys. A foreign key constitutes an enum reference iff the following conditions hold:
+--
+--   1. The key only includes a single column.
+--   2. The referenced column is the table’s primary key.
+--   3. The referenced table is, in fact, an enum table.
+resolveEnumReferences
+  :: HashMap QualifiedTable (PrimaryKey PGCol, EnumValues)
+  -> HashSet ForeignKey
+  -> HashMap PGCol (NonEmpty EnumReference)
+resolveEnumReferences enumTables =
+  M.fromListWith (<>) . map (fmap (:|[])) . mapMaybe resolveEnumReference . toList
+  where
+    resolveEnumReference :: ForeignKey -> Maybe (PGCol, EnumReference)
+    resolveEnumReference foreignKey = do
+      [(localColumn, foreignColumn)] <- pure $ M.toList (_fkColumnMapping foreignKey)
+      (primaryKey, enumValues) <- M.lookup (_fkForeignTable foreignKey) enumTables
+      guard (_pkColumns primaryKey == foreignColumn:|[])
+      pure (localColumn, EnumReference (_fkForeignTable foreignKey) enumValues)
 
 data EnumTableIntegrityError
   = EnumTableMissingPrimaryKey
@@ -45,26 +67,27 @@ data EnumTableIntegrityError
 fetchAndValidateEnumValues
   :: (MonadTx m)
   => QualifiedTable
-  -> [PGRawColumnInfo]
+  -> Maybe (PrimaryKey PGRawColumnInfo)
   -> [PGRawColumnInfo]
   -> m EnumValues
-fetchAndValidateEnumValues tableName primaryKeyColumns columnInfos =
+fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
   either (throw400 ConstraintViolation . showErrors) pure =<< runValidateT fetchAndValidate
   where
     fetchAndValidate :: (MonadTx m, MonadValidate [EnumTableIntegrityError] m) => m EnumValues
     fetchAndValidate = do
-      maybePrimaryKey <- tolerate validatePrimaryKey
-      maybeCommentColumn <- validateColumns maybePrimaryKey
-      enumValues <- maybe (refute mempty) (fetchEnumValues maybeCommentColumn) maybePrimaryKey
+      primaryKeyColumn <- tolerate validatePrimaryKey
+      maybeCommentColumn <- validateColumns primaryKeyColumn
+      enumValues <- maybe (refute mempty) (fetchEnumValues maybeCommentColumn) primaryKeyColumn
       validateEnumValues enumValues
       pure enumValues
       where
-        validatePrimaryKey = case primaryKeyColumns of
-          [] -> refute [EnumTableMissingPrimaryKey]
-          [column] -> case prciType column of
-            PGText -> pure column
-            _      -> refute [EnumTableNonTextualPrimaryKey column]
-          _ -> refute [EnumTableMultiColumnPrimaryKey $ map prciName primaryKeyColumns]
+        validatePrimaryKey = case maybePrimaryKey of
+          Nothing -> refute [EnumTableMissingPrimaryKey]
+          Just primaryKey -> case _pkColumns primaryKey of
+            column :| [] -> case prciType column of
+              PGText -> pure column
+              _      -> refute [EnumTableNonTextualPrimaryKey column]
+            columns -> refute [EnumTableMultiColumnPrimaryKey $ map prciName (toList columns)]
 
         validateColumns primaryKeyColumn = do
           let nonPrimaryKeyColumns = maybe columnInfos (`delete` columnInfos) primaryKeyColumn
@@ -72,7 +95,7 @@ fetchAndValidateEnumValues tableName primaryKeyColumns columnInfos =
             [] -> pure Nothing
             [column] -> case prciType column of
               PGText -> pure $ Just column
-              _ -> dispute [EnumTableNonTextualCommentColumn column] $> Nothing
+              _      -> dispute [EnumTableNonTextualCommentColumn column] $> Nothing
             columns -> dispute [EnumTableTooManyColumns $ map prciName columns] $> Nothing
 
         fetchEnumValues maybeCommentColumn primaryKeyColumn = do

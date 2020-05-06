@@ -1,0 +1,81 @@
+- description: Update actions webhook to another route which retuns non-object/array
+    response
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: create_user
+      definition:
+        kind: synchronous
+        arguments:
+        - name: email
+          type: String!
+        - name: name
+          type: String!
+        output_type: UserId
+        handler: http://127.0.0.1:5593/invalid-response
+
+- description: Run create_user sync action
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        create_user(email: "clarke@gmail.com", name: "Clarke"){
+          id
+          user {
+            name
+            email
+            is_admin
+          }
+        }
+      }
+
+  response:
+    errors:
+    - extensions:
+        internal:
+          error: unexpected response
+          response:
+            status: 200
+            body: some-string
+            headers:
+            - value: application/json
+              name: Content-Type
+            - value: abcd
+              name: Set-Cookie
+          request:
+            body:
+              session_variables:
+                x-hasura-role: admin
+              input:
+                email: clarke@gmail.com
+                name: Clarke
+              action:
+                name: create_user
+            url: http://127.0.0.1:5593/invalid-response
+            headers: []
+        path: $
+        code: parse-failed
+      message: expecting object or array of objects for action webhook response
+- description: Revert action wehbook
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: create_user
+      definition:
+        kind: synchronous
+        arguments:
+        - name: email
+          type: String!
+        - name: name
+          type: String!
+        output_type: UserId
+        handler: http://127.0.0.1:5593/create-user

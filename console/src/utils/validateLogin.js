@@ -37,6 +37,8 @@ const validateLogin = ({ dispatch }) => {
         dispatch,
       });
     } else {
+      clearAdminSecretState();
+
       cb();
     }
   };

@@ -11,7 +11,6 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Context             as GC
 import qualified Hasura.RQL.DDL.ComputedField       as ComputedField
 import qualified Hasura.RQL.DDL.Permission          as Permission
 import qualified Hasura.RQL.DDL.Permission.Internal as Permission
@@ -21,6 +20,7 @@ import qualified Hasura.RQL.DDL.Schema              as Schema
 
 import qualified Data.Aeson                         as J
 import qualified Data.HashMap.Strict                as HM
+import qualified Data.List.NonEmpty                 as NEList
 import qualified Data.Text                          as T
 import qualified Data.Vector                        as V
 import qualified Language.GraphQL.Draft.Parser      as G
@@ -39,6 +39,8 @@ genReplaceMetadata = do
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
   where
     genFunctionsMetadata :: MetadataVersion -> Gen FunctionsMetadata
     genFunctionsMetadata = \case
@@ -54,31 +56,25 @@ instance Arbitrary G.Name where
 instance Arbitrary MetadataVersion where
   arbitrary = genericArbitrary
 
-instance Arbitrary GC.TableCustomRootFields where
+instance Arbitrary TableCustomRootFields where
   arbitrary = uniqueRootFields
     where
       uniqueRootFields = do
-        (a, b, c, d, e, f) <- arbitrary
-        if null $ duplicates [a, b, c, d, e, f] then
-          pure $ GC.TableCustomRootFields a b c d e f
+        (a, b, c, d, e, f, g, h, i) <- arbitrary
+        if null $ duplicates [a, b, c, d, e, f, g, h, i] then
+          pure $ TableCustomRootFields a b c d e f g h i
         else uniqueRootFields
 
 instance Arbitrary TableConfig where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a, Arbitrary b) => Arbitrary (Relationship.RelUsing a b) where
+instance (Arbitrary a) => Arbitrary (Relationship.RelUsing a) where
   arbitrary = genericArbitrary
 
 instance (Arbitrary a) => Arbitrary (Relationship.RelDef a) where
   arbitrary = genericArbitrary
 
 instance Arbitrary Relationship.RelManualConfig where
-  arbitrary = genericArbitrary
-
-instance Arbitrary Relationship.ObjRelManualConfig where
-  arbitrary = genericArbitrary
-
-instance Arbitrary Relationship.ArrRelManualConfig where
   arbitrary = genericArbitrary
 
 instance Arbitrary Relationship.ArrRelUsingFKeyOn where
@@ -200,4 +196,103 @@ instance Arbitrary Collection.CreateCollection where
   arbitrary = genericArbitrary
 
 instance Arbitrary Collection.CollectionReq where
+  arbitrary = genericArbitrary
+
+instance (Arbitrary a) => Arbitrary (NEList.NonEmpty a) where
+  arbitrary = NEList.fromList <$> listOf1 arbitrary
+
+instance Arbitrary G.NamedType where
+  arbitrary = G.NamedType <$> arbitrary
+
+instance Arbitrary G.Description where
+  arbitrary = G.Description <$> arbitrary
+
+instance Arbitrary G.Nullability where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.ListType where
+  arbitrary = G.ListType <$> arbitrary
+
+instance Arbitrary G.GType where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.EnumValue where
+  arbitrary = G.EnumValue <$> arbitrary
+
+instance Arbitrary InputObjectTypeName where
+  arbitrary = genericArbitrary
+
+instance Arbitrary InputObjectFieldName where
+  arbitrary = genericArbitrary
+
+instance Arbitrary GraphQLType where
+  arbitrary = genericArbitrary
+
+instance Arbitrary InputObjectFieldDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary InputObjectTypeDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RelType where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RelationshipName where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ObjectFieldName where
+  arbitrary = genericArbitrary
+
+instance Arbitrary TypeRelationshipDefinition  where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ObjectTypeName where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ObjectFieldDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ObjectTypeDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ScalarTypeDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary EnumTypeName where
+  arbitrary = genericArbitrary
+
+instance Arbitrary EnumValueDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary EnumTypeDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary CustomTypes where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ArgumentName where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ArgumentDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ActionMutationKind where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ActionType where
+  arbitrary = genericArbitrary
+
+instance (Arbitrary a) => Arbitrary (ActionDefinition a) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ActionName where
+  arbitrary = genericArbitrary
+
+instance Arbitrary InputWebhook where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ActionPermissionMetadata where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ActionMetadata where
   arbitrary = genericArbitrary
