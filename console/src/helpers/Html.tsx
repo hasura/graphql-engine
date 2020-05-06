@@ -1,5 +1,4 @@
 import React from 'react';
-import Helmet from 'react-helmet';
 import { env } from './localDev';
 /**
  * Wrapper component containing HTML metadata and boilerplate tags.
@@ -11,21 +10,16 @@ import { env } from './localDev';
  * by the server.js file.
  */
 
-type IAssets = {
-  [key in 'styles' | 'javascript']: {
-    [key: string]: string;
-  };
-};
+type Assets = Record<'styles' | 'javascript', Record<string, string>>;
 
 type HtmlProps = {
-  assets: IAssets;
+  assets: Assets;
   component: React.ReactNode;
   baseDomain: string;
 };
 
-export default function Html(props: HtmlProps) {
+const Html: React.FC<HtmlProps> = props => {
   const { assets } = props;
-  const head = Helmet.rewind();
   return (
     <html lang="en-US">
       <head>
@@ -33,7 +27,6 @@ export default function Html(props: HtmlProps) {
         {Object.keys(assets.styles).map((style, key) => (
           <link
             href={assets.styles[style]}
-            // eslint-disable-next-line react/no-array-index-key
             key={key}
             media="screen, projection"
             rel="stylesheet"
@@ -95,4 +88,6 @@ export default function Html(props: HtmlProps) {
       </body>
     </html>
   );
-}
+};
+
+export default Html;

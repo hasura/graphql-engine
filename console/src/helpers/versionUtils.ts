@@ -10,10 +10,10 @@ const featureLaunchVersions = {
   [READ_ONLY_RUN_SQL_QUERIES]: 'v1.1.0',
 };
 
-type IFeature = keyof typeof featureLaunchVersions;
+type Feature = keyof typeof featureLaunchVersions;
 
-type IFeaturesCompatibility = {
-  [key in IFeature]?: boolean;
+type FeaturesCompatibility = {
+  [key in Feature]?: boolean;
 };
 
 export const checkValidServerVersion = (version: string) => {
@@ -21,12 +21,12 @@ export const checkValidServerVersion = (version: string) => {
 };
 
 export const getFeaturesCompatibility = (serverVersion: string) => {
-  const featuresCompatibility: IFeaturesCompatibility = {};
+  const featuresCompatibility: FeaturesCompatibility = {};
 
   const isValidServerVersion = checkValidServerVersion(serverVersion);
 
   Object.keys(featureLaunchVersions).forEach(_feature => {
-    const feature = _feature as IFeature;
+    const feature = _feature as Feature;
     featuresCompatibility[feature] = isValidServerVersion
       ? semver.satisfies(serverVersion, `>= ${featureLaunchVersions[feature]}`)
       : true;
@@ -55,7 +55,7 @@ export const checkStableVersion = (version: string) => {
   }
 };
 
-export const checkFeatureSupport = (feature: IFeature) => {
+export const checkFeatureSupport = (feature: Feature) => {
   return (
     globals.featuresCompatibility && globals.featuresCompatibility[feature]
   );

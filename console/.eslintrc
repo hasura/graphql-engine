@@ -161,7 +161,8 @@
         "no-unused-expressions": "off",
         "no-console": "off",
         "prefer-destructuring": "off",
-        "react/no-danger": "off"
+        "react/no-danger": "off",
+        "react/no-array-index-key": "off"
       }
     }
   ]
