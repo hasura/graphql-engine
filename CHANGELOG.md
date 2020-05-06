@@ -38,6 +38,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 - console: avoid count queries for large tables (#4681)
 - console: add read replica support section to pro popup (#4118)
+- console: optimise count fetch in data browser (#4692)
 - cli: list all avialable commands in root command help (fix #4623)
 
 ## `v1.2.0`
