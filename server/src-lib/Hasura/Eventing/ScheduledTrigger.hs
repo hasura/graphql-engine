@@ -475,7 +475,7 @@ retryOrMarkError se@ScheduledEventFull {..} err type' = do
                     $ mRetryHeaderSeconds
           diff = fromIntegral delay
           retryTime = addUTCTime diff currentTime
-      setRetry se retryTime
+      setRetry se retryTime type'
 
 {- Note [Scheduled event lifecycle]
 
@@ -528,14 +528,23 @@ processDead pgpool se type' =
   Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $
     setScheduledEventStatus (sefId se) SESDead type'
 
-setRetry :: ScheduledEventFull -> UTCTime -> Q.TxE QErr ()
-setRetry se time =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-          UPDATE hdb_catalog.hdb_scheduled_events
-          SET next_retry_at = $1,
-          status = 'locked'
-          WHERE id = $2
-          |] (time, sefId se) True
+setRetry :: ScheduledEventFull -> UTCTime -> ScheduledEventType ->  Q.TxE QErr ()
+setRetry se time type' =
+  case type' of
+    Templated ->
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+        UPDATE hdb_catalog.hdb_scheduled_events
+        SET next_retry_at = $1,
+        STATUS = 'scheduled'
+        WHERE id = $2
+        |] (time, sefId se) True
+    StandAlone ->
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+        UPDATE hdb_catalog.hdb_one_off_scheduled_events
+        SET next_retry_at = $1,
+        STATUS = 'scheduled'
+        WHERE id = $2
+        |] (time, sefId se) True
 
 mkInvocation
   :: ScheduledEventFull -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
