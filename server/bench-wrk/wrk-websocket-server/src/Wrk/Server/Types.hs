@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE TemplateHaskell            #-}
 module Wrk.Server.Types
 where
@@ -41,16 +42,32 @@ data ServerConf
   { scGraphQLUrl :: !GraphQLURL
   }
 
+data AuthHeader
+  = AuthHeader
+  { ahKey   :: !T.Text
+  , ahValue :: !T.Text
+  }
+  deriving (Show, Eq)
+
+instance J.ToJSON AuthHeader where
+  toJSON AuthHeader{..} = J.object [(ahKey, J.String ahValue)]
+
+instance J.FromJSON AuthHeader where
+  parseJSON = J.withObject "AuthHeader key value" $ \o -> case HM.toList o of
+    [(k,J.String v)] -> return $ AuthHeader k v
+    _                -> fail "Expecting only a single (key: value) pair as authentication header"
+
 data WrkBenchArgs = WrkBenchArgs
   { wbaDuration    :: !(Maybe Duration)
   , wbaThreads     :: !(Maybe Threads)
   , wbaConnections :: !(Maybe Connections)
   , wbaQuery       :: !Query
   , wbaGraphqlUrl  :: !GraphQLURL
+  , wbaAuth        :: !(Maybe AuthHeader)
   }
   deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields = True} ''WrkBenchArgs)
+$(J.deriveJSON (J.aesonDrop 3 J.trainCase){J.omitNothingFields = True} ''WrkBenchArgs)
 
 data Wrk2BenchArgs = Wrk2BenchArgs
   { w2baDuration    :: !(Maybe Duration)
@@ -59,25 +76,28 @@ data Wrk2BenchArgs = Wrk2BenchArgs
   , w2baQuery       :: !Query
   , w2baRate        :: !Rate
   , w2baGraphqlUrl  :: !GraphQLURL
+  , w2baAuth        :: !(Maybe AuthHeader)
   }
-  deriving  (Show, Eq)
+  deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields = True} ''Wrk2BenchArgs)
+$(J.deriveJSON (J.aesonDrop 4 J.trainCase){J.omitNothingFields = True} ''Wrk2BenchArgs)
 
--- If the JSON output is a dictionary of pairs (k,v), convert it into set of arguments of the form --k v
+-- If the JSON output is a dictionary of pairs (k,v), and v is neither an object nor a list, convert it into set of arguments of the form --k v
 toArgsList :: (J.ToJSON a) => (T.Text -> Bool) -> a -> [String]
 toArgsList keysFilter a = concatMap toArg $ filter (keysFilter . fst) $ J.toJSON a ^@.. J.members
   where
-    toArg (k,v) = ["--" <> T.unpack k, BLC.unpack (J.encode v)]
+    toArg (_, J.Object _) = []
+    toArg (_, J.Array _)  = []
+    toArg (k, v)          = ["--" <> T.unpack k, BLC.unpack $ J.encode v]
 
 data BenchConf
   = BCWrk WrkBenchArgs
   | BCWrk2 Wrk2BenchArgs
   deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 2 J.camelCase)
+$(J.deriveJSON (J.aesonDrop 2 J.trainCase)
   { J.sumEncoding = J.TaggedObject "framework" "arguments"
-  ,  J.constructorTagModifier= J.snakeCase . drop 2
+  ,  J.constructorTagModifier= J.trainCase . drop 2
   }
   ''BenchConf)
 
@@ -195,8 +215,8 @@ data BenchMessage
 
 $(J.deriveJSON J.defaultOptions
   { J.sumEncoding = J.ObjectWithSingleField
-  , J.constructorTagModifier = J.snakeCase . drop 2
-  , J.fieldLabelModifier = J.snakeCase.  drop 2
+  , J.constructorTagModifier = J.trainCase . drop 2
+  , J.fieldLabelModifier = J.trainCase.  drop 2
   }
   ''BenchMessage
  )

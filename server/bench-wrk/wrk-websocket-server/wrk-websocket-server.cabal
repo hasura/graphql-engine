@@ -43,5 +43,6 @@ executable wrk-websocket-server
                      , wreq
                      , optparse-applicative
                      , filepath
+                     , case-insensitive
   -- hs-source-dirs:
   default-language:    Haskell2010

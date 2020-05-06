@@ -11,12 +11,11 @@ local req_body = ""
 local results_dir = nil
 
 function init(args)
-  req_body = gqbench.init(args)
-  results_dir = args[2]
+  req_body, results_dir, auth_header_key, auth_header_value = gqbench.init(args)
 end
 
 function request()
-  return gqbench.request(wrk, req_body)
+  return gqbench.request(wrk, req_body, auth_header_key, auth_header_value)
 end
 
 function done(s, l, r)

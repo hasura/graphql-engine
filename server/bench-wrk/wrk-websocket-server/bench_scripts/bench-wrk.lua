@@ -8,11 +8,11 @@ local gqbench = require "bench-lib-wrk"
 
 local req_body = ""
 function init(args)
-  req_body = gqbench.init(args)
+  req_body, auth_header_key, auth_header_value = gqbench.init(args)
 end
 
 function request()
-  return gqbench.request(wrk, req_body)
+  return gqbench.request(wrk, req_body, auth_header_key, auth_header_value)
 end
 
 function done(s, l, r)

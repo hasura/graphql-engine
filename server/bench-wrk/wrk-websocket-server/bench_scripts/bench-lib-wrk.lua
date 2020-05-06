@@ -7,12 +7,15 @@ local os = require "os"
 
 function _M.init(args)
   local query = args[1]
-  return json.encode({query=query})
+  return json.encode({query=query}), args[2], args[3]
 end
 
-function _M.request(wrk, req_body)
+function _M.request(wrk, req_body, auth_header_key, auth_header_value)
   wrk.method = "POST"
   wrk.headers["Content-Type"] = "application/json"
+  if auth_header_key ~= nil and auth_header_value ~= nil then
+     wrk.headers[auth_header_key] = auth_header_value
+  end
   wrk.body = req_body
   return wrk.format()
 end

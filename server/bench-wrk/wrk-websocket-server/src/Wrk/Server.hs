@@ -8,10 +8,11 @@ import           Wrk.Server.Types
 
 import           Control.Applicative          (liftA2, many, (<|>))
 import           Control.Concurrent           (forkIO)
-import           Control.Lens                 ((^.), (^?))
+import           Control.Lens                 ((&), (^.), (^?), (.~))
 import           Control.Monad                (forever, unless, void, when)
 import           Control.Monad.Except         (MonadError, runExceptT, throwError)
 import           Control.Monad.IO.Class       (MonadIO, liftIO)
+import           Data.Text.Encoding           (encodeUtf8)
 import           System.Environment           (lookupEnv, setEnv)
 import           System.FilePath.Posix        (takeDirectory)
 
@@ -23,6 +24,7 @@ import qualified Data.Aeson.Lens              as J
 import qualified Data.Attoparsec.Text         as AT
 import qualified Data.ByteString.Lazy         as BL
 import qualified Data.ByteString.Lazy.Char8   as BLC
+import qualified Data.CaseInsensitive         as CI
 import qualified Data.Default                 as Def
 import qualified Data.Text                    as T
 import qualified Data.Text.IO                 as T
@@ -93,7 +95,7 @@ runBench conn conf= do
 runWrkBench :: (MonadIO m, MonadError ErrorMessage m)
  => WrkBenchArgs -> m WrkResultOut
 runWrkBench args@WrkBenchArgs{..} = do
-   _ <- liftIO runQueryOnce -- run the GraphQL query once to ensure there are no errors
+   _ <- liftIO $ runQueryOnce -- run the GraphQL query once to ensure there are no errors
    script <- liftIO wrkScript
    liftIO $ setLuaEnv $ show script
    (exitCode, _, stderr) <- liftIO $ Proc.readProcessWithExitCode "wrk" (wrkArgs script) ""
@@ -102,11 +104,12 @@ runWrkBench args@WrkBenchArgs{..} = do
       SE.ExitSuccess   -> wrkResult stderr
       SE.ExitFailure _ -> throwError $ ErrorMessage $ J.toJSON $ "Failed with error " <> stderr
    where
-     runQueryOnce = runQuery wbaGraphqlUrl wbaQuery
+     runQueryOnce = runQuery wbaGraphqlUrl wbaQuery wbaAuth
      wrkResult stderr = jsonDecode $ BLC.pack stderr
-     wrkArgs script = toArgsList (`notElem` ["query","graphql_url"]) args <> luaScriptArgs script
-     luaScriptArgs script = ["-s", show script, wbaGraphqlUrl, T.unpack $ getQuery wbaQuery]
+     wrkArgs script = toArgsList (`notElem` ["query","graphql-url"]) args <> luaScriptArgs script
+     luaScriptArgs script = ["-s", show script, wbaGraphqlUrl, T.unpack $ getQuery wbaQuery] <> authHeader
      wrkScript = maybe Def.def WrkScript <$> lookupEnv "HASURA_BENCH_WRK_LUA_SCRIPT"
+     authHeader = maybe [] (\AuthHeader{..} -> map T.unpack [ahKey, ahValue]) wbaAuth
 
 setLuaEnv :: FilePath -> IO ()
 setLuaEnv wrkScript = do
@@ -123,14 +126,13 @@ runWrk2Bench args@Wrk2BenchArgs{..} = do
   script <- liftIO wrk2Script
   liftIO $ setLuaEnv $ show script
   (exitCode, stdout, stderr) <- liftIO $ Proc.readProcessWithExitCode "wrk2" (wrk2Args script) ""
-  --liftIO $ putStr stderr
   liftIO $ putStr stdout
   case exitCode of
     SE.ExitSuccess   -> wrk2Result stdout
     SE.ExitFailure e -> throwError $ ErrorMessage $ J.toJSON $
       "wrk2 exited with ExitCode" <> show e <> "\nError: " <> stderr
    where
-     runQueryOnce = runQuery w2baGraphqlUrl w2baQuery
+     runQueryOnce = runQuery w2baGraphqlUrl w2baQuery w2baAuth
      wrk2Result stdout = do
        resultStr <- liftIO $ BLC.readFile summaryFile
        -- Read summary from summary file
@@ -148,18 +150,21 @@ runWrk2Bench args@Wrk2BenchArgs{..} = do
        Wrk2ResultOut summ reqSumm $ LatencyResultOut latVals hist latSumm
 
      wrk2Args script = toArgsList (`notElem` ["query","graphql_url"]) args <> ["--latency"] <> luaScriptArgs script
-     luaScriptArgs script = ["-s", show script] <> [ w2baGraphqlUrl, query, resultsDir ]
+     luaScriptArgs script = ["-s", show script] <> [ w2baGraphqlUrl, query, resultsDir] <> authHeaderArgs
      query = T.unpack $ getQuery w2baQuery
      resultsDir = "/tmp/results"
      latenciesFile = resultsDir <> "/latencies"
      summaryFile = resultsDir <> "/summary.json"
+     authHeaderArgs = maybe [] (\AuthHeader{..} -> map T.unpack [ahKey, ahValue]) w2baAuth
      wrk2Script = maybe Def.def Wrk2Script <$> lookupEnv "HASURA_BENCH_WRK2_LUA_SCRIPT"
 
-runQuery :: GraphQLURL -> Query -> IO BLC.ByteString
-runQuery url query = do
-  resp <- NW.post url $ J.object [ "query" J..= getQuery query ]
+runQuery :: GraphQLURL -> Query -> Maybe AuthHeader -> IO BLC.ByteString
+runQuery url query authHeaders = do
+  resp <- NW.postWith queryHeaders url $ J.object [ "query" J..= getQuery query ]
   let err = foldl1 (<|>) $ map (\x -> resp ^? NW.responseBody . J.key x) ["errors", "error"]
   maybe (return $ resp ^. NW.responseBody) (fail . BLC.unpack . J.encode ) err
+  where
+    queryHeaders = maybe NW.defaults (\AuthHeader{..} -> NW.defaults & NW.header (CI.mk $ encodeUtf8 ahKey) .~ [encodeUtf8 ahValue] ) authHeaders
 
 simpleIntrospectQuery :: Query
 simpleIntrospectQuery = Query "\
