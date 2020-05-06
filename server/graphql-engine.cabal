@@ -304,7 +304,7 @@ library
                      -- , Hasura.RQL.DDL.QueryCollection
                      -- , Hasura.RQL.DDL.Action
                      -- , Hasura.RQL.DDL.CustomTypes
-                     -- , Hasura.RQL.DML.Delete
+                     , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      -- , Hasura.RQL.DML.Insert
                      , Hasura.RQL.DML.Mutation
