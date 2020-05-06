@@ -5,8 +5,8 @@ arguments:
   threads: 2
   graphql_url: http://127.0.0.1:8181/v1/graphql
   query: |
-    query remote_50_rows {
-      remote_hge_events(limit: 50){
+    query rows_50_nesting_level_1 {
+      hge_events(limit: 50){
         event_status
         last_update
         affiliations_events_by_event_id(limit: 2) {

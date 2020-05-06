@@ -106,7 +106,7 @@ runWrkBench args@WrkBenchArgs{..} = do
      wrkResult stderr = jsonDecode $ BLC.pack stderr
      wrkArgs script = toArgsList (`notElem` ["query","graphql_url"]) args <> luaScriptArgs script
      luaScriptArgs script = ["-s", show script, wbaGraphqlUrl, T.unpack $ getQuery wbaQuery]
-     wrkScript = maybe Def.def WrkScript <$> lookupEnv "HASURA_GRAPHQL_WRK_LUA_SCRIPT"
+     wrkScript = maybe Def.def WrkScript <$> lookupEnv "HASURA_BENCH_WRK_LUA_SCRIPT"
 
 setLuaEnv :: FilePath -> IO ()
 setLuaEnv wrkScript = do
@@ -153,7 +153,7 @@ runWrk2Bench args@Wrk2BenchArgs{..} = do
      resultsDir = "/tmp/results"
      latenciesFile = resultsDir <> "/latencies"
      summaryFile = resultsDir <> "/summary.json"
-     wrk2Script = maybe Def.def Wrk2Script <$> lookupEnv "HASURA_GRAPHQL_WRK_LUA_SCRIPT"
+     wrk2Script = maybe Def.def Wrk2Script <$> lookupEnv "HASURA_BENCH_WRK2_LUA_SCRIPT"
 
 runQuery :: GraphQLURL -> Query -> IO BLC.ByteString
 runQuery url query = do

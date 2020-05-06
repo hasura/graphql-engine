@@ -208,7 +208,7 @@ instance Show WrkScriptsDir where
   show (WrkScriptsDir d) = d
 
 instance Default WrkScriptsDir where
-  def = WrkScriptsDir "../bench_scripts"
+  def = WrkScriptsDir "bench_scripts"
 
 newtype WrkScript = WrkScript { getWrkScript :: FilePath }
   deriving (Eq)
