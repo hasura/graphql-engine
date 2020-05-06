@@ -109,7 +109,7 @@ export const TypedInput = ({
 
     case BOOLEAN:
       return (
-        <select {...standardInputProps} defaultValue={placeHolder}>
+        <select {...standardInputProps}>
           <option value="" disabled>
             -- bool --
           </option>
