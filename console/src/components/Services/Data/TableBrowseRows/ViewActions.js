@@ -623,6 +623,7 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
         count: null,
         isCountEstimated: false,
       };
+
     case V_EXPAND_ROW:
       return {
         ...viewState,
