@@ -204,7 +204,24 @@ data ScheduledEventOneOff
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventOneOff)
 
-data ScheduledEventType = Templated | StandAlone deriving (Eq, Show)
+-- | The 'ScheduledEventType' data type is needed to differentiate
+--   between a 'Templated' and 'StandAlone' event because they
+--   both have different configurations and they live in different
+--   tables.
+data ScheduledEventType =
+    Templated
+  -- ^ Templated scheduled events are those which have a template
+  -- defined which will contain the webhook, headers and a retry
+  -- configuration and a payload. The payload is a default payload
+  -- which is used if creating a new scheduled event doesn't contain
+  -- a payload of it's own. Every scheduled event derived using a
+  -- template will use the above mentioned configurations. In case of
+  -- a 'Templated' Event the configurations are stored in the schema
+  -- cache and hence we don't need them while fetching the events.
+  | StandAlone
+  -- ^ A standalone event will have all the required configurations
+  -- with it.
+    deriving (Eq, Show)
 
 -- | runScheduledEventsGenerator makes sure that all the scheduled triggers
 --   have an adequate buffer of scheduled events.
