@@ -1,6 +1,6 @@
 import React from 'react';
-import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import { Link } from 'react-router-dom';
+import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
 import globals from '../../../Globals';
@@ -9,14 +9,14 @@ import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
 
 import styles from '../../Common/TableCommon/Table.scss';
 
-type SidebarProps = {
-  location: Location;
-  metadata: Metadata;
-}
-
 interface Metadata {
   inconsistentObjects: object[];
 }
+
+type SidebarProps = {
+  location: Location;
+  metadata: Metadata;
+};
 
 type SectionDataKey = 'actions' | 'status' | 'allowed-queries' | 'logout';
 
@@ -32,16 +32,17 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 
   sectionsData.push({
     key: 'actions',
-    link: '/settings/metadata-actions',
+    link: `/settings/metadata-actions`,
     dataTestVal: 'metadata-actions-link',
     title: 'Metadata Actions',
   });
 
-  const consistentIcon = metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
+  const consistentIcon =
+    metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
 
   sectionsData.push({
     key: 'status',
-    link: '/settings/metadata-status',
+    link: `/settings/metadata-status`,
     dataTestVal: 'metadata-status-link',
     title: (
       <div className={styles.display_flex}>
@@ -53,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 
   sectionsData.push({
     key: 'allowed-queries',
-    link: '/settings/allowed-queries',
+    link: `/settings/allowed-queries`,
     dataTestVal: 'allowed-queries-link',
     title: 'Allowed Queries',
   });
@@ -63,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
   if (adminSecret && globals.consoleMode !== CLI_CONSOLE_MODE) {
     sectionsData.push({
       key: 'logout',
-      link: '/settings/logout',
+      link: `/settings/logout`,
       dataTestVal: 'logout-page-link',
       title: 'Logout (clear admin-secret)',
     });
@@ -71,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 
   const currentLocation = location.pathname;
 
-  const sections: any[] = [];
+  const sections: JSX.Element[] = [];
 
   sectionsData.forEach(section => {
     sections.push(
