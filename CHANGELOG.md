@@ -36,6 +36,8 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- console: add read replica support section to pro popup (#4118)
+- cli: list all avialable commands in root command help (fix #4623)
 
 ## `v1.2.0`
 

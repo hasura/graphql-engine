@@ -23,7 +23,7 @@ session variables. Other session variables can be passed by your auth service as
 
 **For example:**
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/hasura-perms.png
+.. thumbnail:: /img/graphql/manual/auth/hasura-perms.png
    :width: 80 %
    :alt: Create a permission rule
 
