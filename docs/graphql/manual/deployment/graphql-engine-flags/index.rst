@@ -17,7 +17,7 @@ Hasura supports various flags and options for customising how you are running th
 Server flags
 ------------
 
-See the :doc:`server flag reference <reference>` for all the available flags.
+See the :ref:`server flag reference <server_flag_reference>` for all the available flags.
 
 Use cases
 ---------
@@ -28,6 +28,7 @@ The following are a few configuration use cases:
 - :ref:`cli-with-admin-secret`
 - :ref:`configure-cors`
 - :ref:`console-assets-on-server`
+- :ref:`errors-debugging`
 
 .. toctree::
    :hidden:

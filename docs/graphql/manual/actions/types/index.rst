@@ -1,3 +1,9 @@
+.. meta::
+   :description: Custom GraphQL types for Hasura actions
+   :keywords: hasura, docs, actions, custom types
+
+.. _custom_types:
+
 Custom GraphQL types
 ====================
 
@@ -44,11 +50,46 @@ This is an object type called ``UserInfo`` that has two fields:
   Hasura does not allow a field of an object type to be another object type,
   i.e. the fields of an object type can only be ``scalars`` and ``enums``.
 
+  For a more complicated structure, the object types can be connected to the rest
+  of the graph via :ref:`relationships <custom_object_type_relationships>`.
+
+.. _custom_object_type_relationships:
+
+Relationships
+*************
+
+Custom object types can be connected to the rest of the graph by setting up
+:ref:`relationships <relationships>` with tables/views.
+
+**For example**, given the object type:
+
+.. code-block:: graphql
+
+  type UserInfo {
+    accessToken: String!
+    userId: Int!
+  }
+
+We can create an **object relationship** called ``createdUser`` between the
+``UserInfo`` object type and the ``user`` table via the
+``UserInfo::userId -> user::id`` fields.
+
+The object type will now be modified as:
+
+.. code-block:: graphql
+  :emphasize-lines: 4
+
+  type UserInfo {
+    accessToken: String!
+    userId: Int!
+    createdUser: user
+  }
+
 Input types
 -----------
 
-You can pass complex objects as arguments to a mutation. This is particularly
-valuable in the case of mutations where you might want to pass in a whole
+You can pass complex objects as arguments to queries and mutations. This is particularly
+valuable in cases where you might want to pass in a whole
 object to be created. In the GraphQL SDL, input types look exactly the same as
 regular object types, but with the keyword input instead of type:
 
@@ -97,8 +138,24 @@ a scalar called ``Date``, you can define it like.
 
     scalar Date
 
-These scalars can be used as arguments of the mutation or as fields of object
+These scalars can be used as arguments of queries and mutations or as fields of object
 types and input types.
+
+.. admonition:: Postgres scalars
+
+   Postgres base types are implicitly made available as GraphQL scalars; there
+   is no need to declare them separately. For example, in the definition
+
+   .. code-block:: graphql
+
+       type User {
+         id: uuid!
+         name: String!
+         location: geography
+       }
+
+   the ``uuid`` and ``geography`` types are assumed to refer to Postgres
+   scalars (assuming no other definition for them is provided).
 
 Enum types
 ----------
@@ -124,4 +181,3 @@ This means that wherever we use the type ``Color`` in our schema, we expect it
 to be exactly one of RED, GREEN, or BLUE.
 
 `See reference <https://graphql.org/learn/schema/#enumeration-types>`__
-

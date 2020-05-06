@@ -122,10 +122,26 @@ def test_forbidden_webhook(hge_ctx, conf):
         'request id': resp_hdrs.get('x-request-id')
     })
 
+def mk_claims_with_namespace_path(claims,hasura_claims,namespace_path):
+    if namespace_path is None:
+        claims['https://hasura.io/jwt/claims'] = hasura_claims
+    elif namespace_path == "$":
+        claims.update(hasura_claims)
+    elif namespace_path == "$.hasura_claims":
+        claims['hasura_claims'] = hasura_claims
+    elif namespace_path == "$.hasura['claims%']":
+        claims['hasura'] = {}
+        claims['hasura']['claims%'] = hasura_claims
+    else:
+        raise Exception(
+                '''claims_namespace_path should not be anything
+                other than $.hasura_claims, $.hasura['claims%'] or $ for testing. The
+                value of claims_namespace_path was {}'''.format(namespace_path))
+    return claims
 
 # Returns the response received and a bool indicating whether the test passed
 # or not (this will always be True unless we are `--accepting`)
-def check_query(hge_ctx, conf, transport='http', add_auth=True):
+def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace_path=None):
     hge_ctx.tests_passed = True
     headers = {}
     if 'headers' in conf:
@@ -150,8 +166,8 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
             claim = {
                 "sub": "foo",
                 "name": "bar",
-                "https://hasura.io/jwt/claims": hClaims
             }
+            claim = mk_claims_with_namespace_path(claim,hClaims,claims_namespace_path)
             headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm='RS512').decode(
                 'UTF-8')
 
@@ -315,6 +331,11 @@ def equal_CommentedMap(m1, m2):
     else:
         return m1 == m2
 
+# Parse test case YAML file
+def get_conf_f(f):
+    with open(f, 'r+') as c:
+        return yaml.YAML().load(c)
+
 def check_query_f(hge_ctx, f, transport='http', add_auth=True):
     print("Test file: " + f)
     hge_ctx.may_skip_test_teardown = False
@@ -406,26 +427,15 @@ def collapse_order_not_selset(result_inp, query):
 
 # Use this since jsondiff seems to produce object/dict structures that can't
 # always be serialized to json.
-# Copy-pasta from: https://stackoverflow.com/q/12734517/176841
 def stringify_keys(d):
- """Convert a dict's keys to strings if they are not."""
- if isinstance(d, dict):
-   for key in d.keys():
-     # check inner dict
-     if isinstance(d[key], dict):
-         value = stringify_keys(d[key])
-     else:
-         value = d[key]
-     # convert nonstring to string if needed
-     if not isinstance(key, str):
-         try:
-             d[key.decode("utf-8")] = value
-         except Exception:
-             try:
-                 d[repr(key)] = value
-             except Exception:
-                 raise
+    """Recursively convert a dict's keys to strings."""
+    if not isinstance(d, dict): return d
 
-         # delete old key
-         del d[key]
- return d
+    def decode(k):
+        if isinstance(k, str): return k
+        try:
+            return k.decode("utf-8")
+        except Exception:
+            return repr(k)
+
+    return { decode(k): stringify_keys(v) for k, v in d.items() }

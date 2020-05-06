@@ -2,6 +2,8 @@
    :description: Hasura GraphQL engine server flags reference
    :keywords: hasura, docs, deployment, server, flags
 
+.. _server_flag_reference:
+
 GraphQL engine server flags reference
 =====================================
 
@@ -132,7 +134,8 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - N/A
      - ``HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL``
-     - Postgres events polling interval
+     - Interval in milliseconds to sleep before trying to fetch events again after a fetch
+       returned no events from postgres
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``
@@ -141,8 +144,8 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - ``-c, --connections <NO_OF_CONNS>``
      - ``HASURA_GRAPHQL_PG_CONNECTIONS``
-     - Maximum number of Postgres connections that can be opened per stripe (default: 50). 
-       When the maximum is reached we will block until a new connection becomes available, 
+     - Maximum number of Postgres connections that can be opened per stripe (default: 50).
+       When the maximum is reached we will block until a new connection becomes available,
        even if there is capacity in other stripes.
 
    * - ``--timeout <SECONDS>``
@@ -197,6 +200,14 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - ``HASURA_GRAPHQL_LOG_LEVEL``
      - Set the logging level. Default: ``info``. Options: ``debug``, ``info``,
        ``warn``, ``error``.
+
+   * - ``--dev-mode``
+     - ``HASURA_GRAPHQL_DEV_MODE``
+     - Set dev mode for GraphQL requests; include the ``internal`` key in the errors extensions of the response (if required).
+
+   * - ``--admin-internal-errors``
+     - ``HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS``
+     - Include the ``internal`` key in the errors extensions of the response for GraphQL requests with the admin role (if required).
 
 .. note::
 

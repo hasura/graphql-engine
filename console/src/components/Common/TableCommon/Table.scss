@@ -1,4 +1,4 @@
-@import "../Common.scss";
+@import '../Common.scss';
 
 .container {
   padding: 0;
@@ -50,7 +50,7 @@
   label.radioLabel {
     padding-top: 0;
 
-    input[type="radio"] {
+    input[type='radio'] {
       margin-top: 10px;
     }
   }
@@ -64,7 +64,7 @@
   width: auto;
 
   tr:nth-child(even) {
-    background: #f4f4f4
+    background: #f4f4f4;
   }
 
   th {
@@ -182,4 +182,21 @@ a.expanded {
 
 .tableCellExpanded {
   white-space: pre-wrap;
+}
+
+.tableCenterContent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.bulkDeleteButton {
+  margin: 10px;
+  font-size: 16px;
+  padding: 0 6px;
+}
+
+.headerInputCheckbox {
+  height: 16px;
+  margin-bottom: 2px;
 }

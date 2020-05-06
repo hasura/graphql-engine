@@ -9,7 +9,7 @@ import {
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 
-import { isPostgresFunction } from '../utils';
+import { isColTypeString, isPostgresFunction } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
@@ -36,11 +36,20 @@ const REQUEST_SUCCESS = 'AddTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddTable/REQUEST_ERROR';
 const VALIDATION_ERROR = 'AddTable/VALIDATION_ERROR';
 const RESET_VALIDATION_ERROR = 'AddTable/RESET_VALIDATION_ERROR';
-
+const SET_CHECK_CONSTRAINTS = 'AddTable/SET_CHECK_CONSTRAINTS';
+const REMOVE_CHECK_CONSTRAINT = 'AddTable/REMOVE_CHECK_CONSTRAINT';
 /*
  * For any action dispatched, the ability to notify the renderer that something is happening
  * */
 
+const setCheckConstraints = constraints => ({
+  type: SET_CHECK_CONSTRAINTS,
+  constraints,
+});
+const removeCheckConstraint = index => ({
+  type: REMOVE_CHECK_CONSTRAINT,
+  index,
+});
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const setTableName = value => ({ type: SET_TABLENAME, value });
 const setTableComment = value => ({ type: SET_TABLECOMMENT, value });
@@ -146,7 +155,7 @@ const createTableSql = () => {
     const state = getState().addTable.table;
     const currentSchema = getState().tables.currentSchema;
 
-    const { foreignKeys, uniqueKeys } = state;
+    const { foreignKeys, uniqueKeys, checkConstraints } = state;
     const tableName = state.tableName.trim();
 
     // validations
@@ -179,7 +188,7 @@ const createTableSql = () => {
         currentCols[i].default.value !== ''
       ) {
         if (
-          currentCols[i].type === 'text' &&
+          isColTypeString(currentCols[i].type) &&
           !isPostgresFunction(currentCols[i].default.value)
         ) {
           // if a column type is text and if it has a non-func default value, add a single quote by default
@@ -269,6 +278,17 @@ const createTableSql = () => {
 
         const uniqueColumns = uk.map(c => `"${state.columns[c].name}"`);
         tableDefSql += `, UNIQUE (${uniqueColumns.join(', ')})`;
+      });
+    }
+
+    // add check constraints
+    if (checkConstraints.length > 0) {
+      checkConstraints.forEach(constraint => {
+        if (!constraint.name || !constraint.check) {
+          return;
+        }
+
+        tableDefSql += `, CONSTRAINT "${constraint.name}" CHECK (${constraint.check})`;
       });
     }
 
@@ -543,6 +563,18 @@ const addTableReducerCore = (state = defaultState, action) => {
         ...state,
         columns: action.columns,
       };
+    case SET_CHECK_CONSTRAINTS:
+      return {
+        ...state,
+        checkConstraints: action.constraints,
+      };
+    case REMOVE_CHECK_CONSTRAINT:
+      return {
+        ...state,
+        checkConstraints: state.checkConstraints.filter(
+          (_, idx) => idx !== action.index
+        ),
+      };
     default:
       return state;
   }
@@ -596,5 +628,7 @@ export {
   toggleFk,
   clearFkToggle,
   setFreqUsedColumn,
+  setCheckConstraints,
+  removeCheckConstraint,
 };
 export { resetValidation, validationError };

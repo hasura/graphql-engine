@@ -22,6 +22,7 @@ import {
 import {
   injectTypeRelationship,
   removeTypeRelationship,
+  validateRelTypename,
 } from './Relationships/utils';
 import { getConfirmation } from '../../Common/utils/jsUtils';
 import {
@@ -30,7 +31,11 @@ import {
   getOverlappingTypeConfirmation,
 } from './Common/utils';
 import { showErrorNotification } from '../Common/Notification';
-import { removePersistedDerivedMutation } from './lsUtils';
+import {
+  removePersistedDerivedAction,
+  persistDerivedAction,
+  updatePersistedDerivation,
+} from './lsUtils';
 import { appPrefix } from './constants';
 import { push } from 'react-router-redux';
 import {
@@ -114,6 +119,7 @@ export const createAction = () => (dispatch, getState) => {
     outputType,
     error: actionDefError,
     comment: actionDescription,
+    type: actionType,
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
   if (actionDefError) {
     return dispatch(
@@ -124,6 +130,7 @@ export const createAction = () => (dispatch, getState) => {
   const { types, error: typeDefError } = getTypesFromSdl(
     rawState.typeDefinition.sdl
   );
+
   if (typeDefError) {
     return dispatch(
       showErrorNotification('Invalid Types Definition', typeDefError)
@@ -134,6 +141,7 @@ export const createAction = () => (dispatch, getState) => {
     handler: rawState.handler,
     kind: rawState.kind,
     types,
+    actionType,
     name: actionName,
     arguments: args,
     outputType,
@@ -193,6 +201,9 @@ export const createAction = () => (dispatch, getState) => {
   const successMsg = 'Created action successfully';
   const errorMsg = 'Creating action failed';
   const customOnSuccess = () => {
+    if (rawState.derive.operation) {
+      persistDerivedAction(state.name, rawState.derive.operation);
+    }
     dispatch(fetchActions()).then(() => {
       dispatch(createActionRequestComplete());
       dispatch(
@@ -226,6 +237,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     name: actionName,
     arguments: args,
     outputType,
+    type: actionType,
     error: actionDefError,
     comment: actionDescription,
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
@@ -249,6 +261,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     handler: rawState.handler,
     kind: rawState.kind,
     types,
+    actionType,
     name: actionName,
     arguments: args,
     outputType,
@@ -336,6 +349,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
   const customOnSuccess = () => {
     dispatch(modifyActionRequestComplete());
     if (isActionNameChange) {
+      updatePersistedDerivation(currentAction.action_name, state.name);
       const newHref = window.location.href.replace(
         `/manage/${currentAction.action_name}/modify`,
         `/manage/${state.name}/modify`
@@ -385,7 +399,7 @@ export const deleteAction = currentAction => (dispatch, getState) => {
     dispatch(modifyActionRequestComplete());
     dispatch(push(`${globals.urlPrefix}${appPrefix}/manage`));
     dispatch(fetchActions());
-    removePersistedDerivedMutation(currentAction.action_name);
+    removePersistedDerivedAction(currentAction.action_name);
   };
   const customOnError = () => {
     dispatch(modifyActionRequestComplete());
@@ -406,11 +420,52 @@ export const deleteAction = currentAction => (dispatch, getState) => {
   );
 };
 
-export const addActionRel = (relConfig, successCb) => (dispatch, getState) => {
+export const addActionRel = (relConfig, successCb, existingRelConfig) => (
+  dispatch,
+  getState
+) => {
   const { types: existingTypes } = getState().types;
 
-  const typesWithRels = injectTypeRelationship(
-    existingTypes,
+  let typesWithRels = [...existingTypes];
+
+  let validationError;
+
+  if (existingRelConfig) {
+    // modifying existing relationship
+    // if the relationship is being renamed
+    if (existingRelConfig.name !== relConfig.name) {
+      // validate the new name
+      validationError = validateRelTypename(
+        existingTypes,
+        relConfig.typename,
+        relConfig.name
+      );
+      // remove old relationship from types
+      typesWithRels = removeTypeRelationship(
+        existingTypes,
+        relConfig.typename,
+        existingRelConfig.name
+      );
+    }
+  } else {
+    // creating a new relationship
+
+    // validate the relationship name
+    validationError = validateRelTypename(
+      existingTypes,
+      relConfig.typename,
+      relConfig.name
+    );
+  }
+
+  const errorMsg = 'Saving relationship failed';
+  if (validationError) {
+    return dispatch(showErrorNotification(errorMsg, validationError));
+  }
+
+  // add modified relationship to types
+  typesWithRels = injectTypeRelationship(
+    typesWithRels,
     relConfig.typename,
     relConfig
   );
@@ -426,10 +481,9 @@ export const addActionRel = (relConfig, successCb) => (dispatch, getState) => {
   const upQueries = [customTypesQueryUp];
   const downQueries = [customTypesQueryDown];
 
-  const migrationName = 'add_action_rel'; // TODO: better migration name
-  const requestMsg = 'Adding relationship...';
-  const successMsg = 'Relationship added successfully';
-  const errorMsg = 'Adding relationship failed';
+  const migrationName = `save_rel_${relConfig.name}_on_${relConfig.typename}`;
+  const requestMsg = 'Saving relationship...';
+  const successMsg = 'Relationship saved successfully';
   const customOnSuccess = () => {
     // dispatch(createActionRequestComplete());
     dispatch(fetchCustomTypes());

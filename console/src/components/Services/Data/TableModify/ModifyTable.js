@@ -24,7 +24,7 @@ import PrimaryKeyEditor from './PrimaryKeyEditor';
 import TableCommentEditor from './TableCommentEditor';
 import EnumsSection, {
   EnumTableModifyWarning,
-} from '../Common/ReusableComponents/EnumsSection';
+} from '../Common/Components/EnumsSection';
 import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';
@@ -44,6 +44,13 @@ import {
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import ComputedFieldsEditor from './ComputedFieldsEditor';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import {
+  foreignKeyDescription,
+  primaryKeyDescription,
+  uniqueKeyDescription,
+  checkConstraintsDescription,
+} from '../Common/TooltipMessages';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -221,7 +228,7 @@ class ModifyTable extends React.Component {
             <TableCommentEditor
               tableComment={tableComment}
               tableCommentEdit={tableCommentEdit}
-              isTable
+              tableType="TABLE"
               dispatch={dispatch}
             />
             <EnumTableModifyWarning isEnum={table.is_enum} />
@@ -247,7 +254,10 @@ class ModifyTable extends React.Component {
             />
             <hr />
             {getComputedFieldsSection()}
-            <h4 className={styles.subheading_text}>Primary Key</h4>
+            <h4 className={styles.subheading_text}>
+              Primary Key &nbsp; &nbsp;
+              <ToolTip message={primaryKeyDescription} />
+            </h4>
             <PrimaryKeyEditor
               tableSchema={table}
               pkModify={pkModify}
@@ -255,7 +265,10 @@ class ModifyTable extends React.Component {
               currentSchema={currentSchema}
             />
             <hr />
-            <h4 className={styles.subheading_text}>Foreign Keys</h4>
+            <h4 className={styles.subheading_text}>
+              Foreign Keys &nbsp; &nbsp;
+              <ToolTip message={foreignKeyDescription} />
+            </h4>
             <ForeignKeyEditor
               tableSchema={table}
               currentSchema={currentSchema}
@@ -265,7 +278,10 @@ class ModifyTable extends React.Component {
               fkModify={fkModify}
             />
             <hr />
-            <h4 className={styles.subheading_text}>Unique Keys</h4>
+            <h4 className={styles.subheading_text}>
+              Unique Keys &nbsp; &nbsp;
+              <ToolTip message={uniqueKeyDescription} />
+            </h4>
             <UniqueKeyEditor
               tableSchema={table}
               currentSchema={currentSchema}
@@ -278,7 +294,10 @@ class ModifyTable extends React.Component {
             <h4 className={styles.subheading_text}>Triggers</h4>
             <TriggerEditorList tableSchema={table} dispatch={dispatch} />
             <hr />
-            <h4 className={styles.subheading_text}>Check Constraints</h4>
+            <h4 className={styles.subheading_text}>
+              Check Constraints &nbsp; &nbsp;
+              <ToolTip message={checkConstraintsDescription} />
+            </h4>
             <CheckConstraints
               constraints={getTableCheckConstraints(table)}
               checkConstraintsModify={checkConstraintsModify}

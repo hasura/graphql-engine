@@ -1,11 +1,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.Prelude
   ( module M
+  , alphabet
   , alphaNumerics
   , onNothing
   , onJust
   , onLeft
   , choice
+  , afold
   , bsToTxt
   , txtToBs
   , spanMaybeM
@@ -27,7 +29,8 @@ import           Control.Monad.Fail                as M (MonadFail)
 import           Control.Monad.Identity            as M
 import           Control.Monad.Reader              as M
 import           Control.Monad.State.Strict        as M
-import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..))
+import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..),
+                                                         execWriterT, runWriterT)
 import           Data.Align                        as M (Align (align, alignWith))
 import           Data.Align.Key                    as M (AlignWithKey (..))
 import           Data.Bool                         as M (bool)
@@ -42,9 +45,10 @@ import           Data.HashSet                      as M (HashSet)
 import           Data.List                         as M (find, findIndex, foldl', group,
                                                          intercalate, intersect, lookup, sort,
                                                          sortBy, sortOn, union, unionBy, (\\))
-import           Data.List.NonEmpty                as M (NonEmpty(..))
+import           Data.List.NonEmpty                as M (NonEmpty (..))
 import           Data.Maybe                        as M (catMaybes, fromMaybe, isJust, isNothing,
                                                          listToMaybe, mapMaybe, maybeToList)
+import           Data.Monoid                       as M (getAlt)
 import           Data.Ord                          as M (comparing)
 import           Data.Semigroup                    as M (Semigroup (..))
 import           Data.Sequence                     as M (Seq)
@@ -52,13 +56,13 @@ import           Data.String                       as M (IsString)
 import           Data.Text                         as M (Text)
 import           Data.These                        as M (These (..), fromThese, mergeThese,
                                                          mergeTheseWith, these)
+import           Data.Time.Clock.Units
 import           Data.Traversable                  as M (for)
 import           Data.Word                         as M (Word64)
 import           GHC.Generics                      as M (Generic)
 import           Prelude                           as M hiding (fail, init, lookup)
 import           Test.QuickCheck.Arbitrary.Generic as M
 import           Text.Read                         as M (readEither, readMaybe)
-import           Data.Time.Clock.Units
 
 import qualified Data.ByteString                   as B
 import qualified Data.HashMap.Strict               as Map
@@ -68,8 +72,11 @@ import qualified Data.Text.Encoding.Error          as TE
 import qualified GHC.Clock                         as Clock
 import qualified Test.QuickCheck                   as QC
 
+alphabet :: String
+alphabet = ['a'..'z'] ++ ['A'..'Z']
+
 alphaNumerics :: String
-alphaNumerics = ['a'..'z'] ++ ['A'..'Z'] ++ "0123456789 "
+alphaNumerics = alphabet ++ "0123456789"
 
 instance Arbitrary Text where
   arbitrary = T.pack <$> QC.listOf (QC.elements alphaNumerics)
@@ -85,6 +92,9 @@ onLeft e f = either f return e
 
 choice :: (Alternative f) => [f a] -> f a
 choice = asum
+
+afold :: (Foldable t, Alternative f) => t a -> f a
+afold = getAlt . foldMap pure
 
 bsToTxt :: B.ByteString -> Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
@@ -140,5 +150,3 @@ startTimer = do
   return $ do
     aft <- liftIO Clock.getMonotonicTimeNSec
     return $ nanoseconds $ fromIntegral (aft - bef)
-
-

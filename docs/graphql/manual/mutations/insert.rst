@@ -2,6 +2,8 @@
    :description: Insert an object into the database using a mutation
    :keywords: hasura, docs, mutation, insert
 
+.. _insert:
+
 Insert mutation
 ===============
 
@@ -39,7 +41,7 @@ Auto-generated insert mutation schema
 As you can see from the schema:
 
 - ``objects`` argument is necessary and you can pass multiple ``objects`` to the mutation.
-- You can pass an ``on_conflict`` argument to convert the mutation to an :doc:`upsert mutation <upsert>`.
+- You can pass an ``on_conflict`` argument to convert the mutation to an :ref:`upsert mutation <upsert>`.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
 - You can use the single object insert to get the inserted object directly as the mutation response.
 
@@ -618,7 +620,7 @@ Set a field to its default value during insert
 ----------------------------------------------
 
 To set a field to its ``default`` value, just omit it from the input object, irrespective of the
-:doc:`default value configuration <../schema/default-values/index>` i.e. via Postgres defaults or using column presets.
+:ref:`default value configuration <postgres_defaults>` i.e. via Postgres defaults or using column presets.
 
 **Example:** If the default value of ``id`` is set to auto-incrementing integer, there's no need to pass the ``id`` field to the input object:
 

@@ -2,6 +2,8 @@
    :description: Hasura GraphQL API queries and subscriptions API reference
    :keywords: hasura, docs, GraphQL API, API reference, query, subscription
 
+.. _graphql_api_query:
+
 API Reference - Query / Subscription
 ====================================
 
@@ -65,7 +67,7 @@ Query / subscription syntax
 
 .. note::
 
-    For more examples and details of usage, please see :doc:`this <../../queries/index>`.
+    For more examples and details of usage, please see :ref:`this <queries>`.
 
 Syntax definitions
 ------------------
@@ -117,9 +119,12 @@ E.g.
       name  # scalar text field
 
       address(path: "$.city") # scalar JSON field -> property
+      address(path: "$.city.altitude") # scalar JSON field -> property -> property
       address(path: "city") # scalar JSON field -> property; '$.' prefix is optional
       contacts(path: "[0]") # scalar JSON field -> array_item
       contacts(path: "[0].phone") # scalar JSON field -> array_item_property
+      contacts(path: "['Hello world!']") # scalar JSON field -> property; used for special characters key
+      contacts(path: "[\"Hello world!\"]") # same as above; the syntax is ugly, but still works
 
       article {  # nested object
         title
@@ -417,33 +422,88 @@ ColumnExp
 
 Operator
 ########
+
+.. _generic_operators:
+
 **Generic operators (all column types except json, jsonb):**
 
-- ``_eq``
-- ``_neq``
-- ``_in``
-- ``_nin``
-- ``_gt``
-- ``_lt``
-- ``_gte``
-- ``_lte``
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_eq``
+     - ``=``
+   * - ``_neq``
+     - ``<>``
+   * - ``_gt``
+     - ``>``
+   * - ``_lt``
+     - ``<`` 
+   * - ``_gte``
+     - ``>=``
+   * - ``_lte``
+     - ``<=``  
+   * - ``_in``
+     - ``IN``
+   * - ``_nin``
+     - ``NOT IN``  
+
+(For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/current/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/current/functions-comparisons.html>`_.)
+
+.. _text_operators:
 
 **Text related operators:**
 
-- ``_like``
-- ``_nlike``
-- ``_ilike``
-- ``_nilike``
-- ``_similar``
-- ``_nsimilar``
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_like``
+     - ``LIKE``
+   * - ``_nlike``
+     - ``NOT LIKE``
+   * - ``_ilike``
+     - ``ILIKE``
+   * - ``_nilike``
+     - ``NOT ILIKE``
+   * - ``_similar``
+     - ``SIMILAR TO``
+   * - ``_nsimilar``
+     - ``NOT SIMILAR TO``
+
+(For more details on text related operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-matching.html>`__.)
+
+.. _null_expression:
 
 **Checking for NULL values:**
 
-- ``_is_null`` (takes true/false as values)
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_is_null`` (takes true/false as values)
+     - ``IS NULL``
+
+(For more details on the ``IS NULL`` expression, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-comparison.html>`__.)
+
+.. _type_casting:
 
 **Type casting:**
 
-- ``_cast`` (takes a CastExp_ as a value)
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_cast`` (takes a CastExp_ as a value)
+     - ``::``
+
+(For more details on type casting, refer to the `Postgres docs <https://www.postgresql.org/docs/current/sql-createcast.html>`__.)
+
+.. _jsonb_operators:
 
 **JSONB operators:**
 
@@ -459,11 +519,13 @@ Operator
    * - ``_has_key``
      - ``?``
    * - ``_has_keys_any``
-     - ``?|``
+     - ``?!``
    * - ``_has_keys_all``
      - ``?&``
 
-(For more details on what these operators do, refer to the `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__).
+(For more details on JSONB operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
+
+.. _geometry_operators:
 
 **PostGIS related operators on GEOMETRY columns:**
 
@@ -473,23 +535,23 @@ Operator
    * - Operator
      - PostGIS equivalent
    * - ``_st_contains``
-     - ``ST_Contains``
+     - ``ST_Contains(column, input)``
    * - ``_st_crosses``
-     - ``ST_Crosses``
+     - ``ST_Crosses(column, input)``
    * - ``_st_equals``
-     - ``ST_Equals``
+     - ``ST_Equals(column, input)``
    * - ``_st_intersects``
-     - ``ST_Intersects``
+     - ``ST_Intersects(column, input)``
    * - ``_st_overlaps``
-     - ``ST_Overlaps``
+     - ``ST_Overlaps(column, input)``
    * - ``_st_touches``
-     - ``ST_Touches``
+     - ``ST_Touches(column, input)``
    * - ``_st_within``
-     - ``ST_Within``
+     - ``ST_Within(column, input)``
    * - ``_st_d_within``
-     - ``ST_DWithin``
+     - ``ST_DWithin(column, input)``
 
-(For more details on what these operators do, refer to the `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__).
+(For more details on spatial relationship operators, refer to the `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
 
 .. note::
 
@@ -502,39 +564,27 @@ Operator
          field-name : {_st_d_within: {distance: Float, from: Value} }
        }
 
+.. _intersect_operators:
+
 **Intersect Operators on RASTER columns:**
 
-- ``_st_intersects_rast``
+.. list-table::
+   :header-rows: 1
 
-Executes ``boolean ST_Intersects( raster <raster-column> , raster <input-raster> )``
+   * - Operator
+     - PostgreSQL equivalent
+     - Input object
+   * - ``_st_intersects_rast``
+     - ``ST_Intersects(column, value)``
+     - ``{ _st_intersects_rast: raster }``
+   * - ``_st_intersects_nband_geom``
+     - ``ST_Intersects(column, nband, geommin)``
+     - ``{ _st_intersects_nband_geom: {nband: Integer! geommin: geometry!}``
+   * - ``_st_intersects_geom_nband``
+     - ``ST_Intersects(column, geommin, nband)``
+     - ``{ _st_intersects_geom_nband: {geommin: geometry! nband: Integer }``
 
-.. parsed-literal ::
-
-   { _st_intersects_rast: raster }
-
-
-- ``_st_intersects_nband_geom``
-
-Executes ``boolean ST_Intersects( raster <raster-column> , integer nband , geometry geommin )``
-
-This accepts ``st_intersects_nband_geom_input`` input object
-
-.. parsed-literal ::
-
-   { _st_intersects_nband_geom: {nband: Integer! geommin: geometry!}
-
-
-
-- ``_st_intersects_geom_nband``
-
-Executes ``boolean ST_Intersects( raster <raster-column> , geometry geommin , integer nband = NULL )``
-
-This accepts ``st_intersects_geom_nband_input`` input object
-
-.. parsed-literal ::
-
-   { _st_intersects_geom_nband: {geommin: geometry! nband: Integer }
-
+(For more details on intersect operators on ``raster`` columns refer to the `PostGIS docs <https://postgis.net/docs/RT_ST_Intersects.html>`__.)
 
 .. _CastExp:
 

@@ -1,5 +1,41 @@
+-- | Types and functions related to the server initialisation
 {-# LANGUAGE CPP #-}
-module Hasura.Server.Init where
+module Hasura.Server.Init
+  ( DbUid(..)
+  , getDbId
+
+  , PGVersion(..)
+  , getPgVersion
+
+  , InstanceId(..)
+  , generateInstanceId
+
+  , StartupTimeInfo(..)
+
+  -- * Server command related
+  , parseRawConnInfo
+  , mkRawConnInfo
+  , mkHGEOptions
+  , mkConnInfo
+  , serveOptionsParser
+
+  -- * Downgrade command related
+  , downgradeShortcuts
+  , downgradeOptionsParser
+
+  -- * Help footers
+  , mainCmdFooter
+  , serveCmdFooter
+
+  -- * Startup logs
+  , mkGenericStrLog
+  , mkGenericLog
+  , inconsistentMetadataLog
+  , serveOptsToLog
+  , connInfoToLog
+
+  , module Hasura.Server.Init.Config
+  ) where
 
 import qualified Data.Aeson                       as J
 import qualified Data.Aeson.Casing                as J
@@ -12,9 +48,7 @@ import qualified Database.PG.Query                as Q
 import qualified Language.Haskell.TH.Syntax       as TH
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
-import           Data.Char                        (toLower)
 import           Data.FileEmbed                   (embedStringFile)
-import           Data.Time.Clock.Units            (milliseconds)
 import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
 
@@ -25,17 +59,20 @@ import qualified Hasura.Logging                   as L
 
 import           Hasura.Db
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (QErr, RoleName (..), SchemaCache (..),
-                                                   mkNonEmptyText)
+import           Hasura.RQL.Types                 (QErr, SchemaCache (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
+import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
+import           Hasura.Session
 import           Network.URI                      (parseURI)
 
 newtype DbUid
   = DbUid { getDbUid :: Text }
   deriving (Show, Eq, J.ToJSON, J.FromJSON)
+
+newtype PGVersion = PGVersion { unPGVersion :: Int } deriving (Show, Eq, J.ToJSON)
 
 getDbId :: Q.TxE QErr Text
 getDbId =
@@ -45,6 +82,8 @@ getDbId =
     SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
   |] () False
 
+getPgVersion :: Q.TxE QErr PGVersion
+getPgVersion = PGVersion <$> Q.serverVersion
 
 newtype InstanceId
   = InstanceId { getInstanceId :: Text }
@@ -59,199 +98,6 @@ data StartupTimeInfo
   , _stiTimeTaken :: !Double
   }
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''StartupTimeInfo)
-
-data RawConnParams
-  = RawConnParams
-  { rcpStripes      :: !(Maybe Int)
-  , rcpConns        :: !(Maybe Int)
-  , rcpIdleTime     :: !(Maybe Int)
-  , rcpAllowPrepare :: !(Maybe Bool)
-  } deriving (Show, Eq)
-
-type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
-
-data RawServeOptions impl
-  = RawServeOptions
-  { rsoPort             :: !(Maybe Int)
-  , rsoHost             :: !(Maybe HostPreference)
-  , rsoConnParams       :: !RawConnParams
-  , rsoTxIso            :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret      :: !(Maybe AdminSecret)
-  , rsoAuthHook         :: !RawAuthHook
-  , rsoJwtSecret        :: !(Maybe JWTConfig)
-  , rsoUnAuthRole       :: !(Maybe RoleName)
-  , rsoCorsConfig       :: !(Maybe CorsConfig)
-  , rsoEnableConsole    :: !Bool
-  , rsoConsoleAssetsDir :: !(Maybe Text)
-  , rsoEnableTelemetry  :: !(Maybe Bool)
-  , rsoWsReadCookie     :: !Bool
-  , rsoStringifyNum     :: !Bool
-  , rsoEnabledAPIs      :: !(Maybe [API])
-  , rsoMxRefetchInt     :: !(Maybe LQ.RefetchInterval)
-  , rsoMxBatchSize      :: !(Maybe LQ.BatchSize)
-  , rsoEnableAllowlist  :: !Bool
-  , rsoEnabledLogTypes  :: !(Maybe [L.EngineLogType impl])
-  , rsoLogLevel         :: !(Maybe L.LogLevel)
-  , rsoPlanCacheSize    :: !(Maybe Cache.CacheSize)
-  }
-
-data ServeOptions impl
-  = ServeOptions
-  { soPort             :: !Int
-  , soHost             :: !HostPreference
-  , soConnParams       :: !Q.ConnParams
-  , soTxIso            :: !Q.TxIsolation
-  , soAdminSecret      :: !(Maybe AdminSecret)
-  , soAuthHook         :: !(Maybe AuthHook)
-  , soJwtSecret        :: !(Maybe JWTConfig)
-  , soUnAuthRole       :: !(Maybe RoleName)
-  , soCorsConfig       :: !CorsConfig
-  , soEnableConsole    :: !Bool
-  , soConsoleAssetsDir :: !(Maybe Text)
-  , soEnableTelemetry  :: !Bool
-  , soStringifyNum     :: !Bool
-  , soEnabledAPIs      :: !(Set.HashSet API)
-  , soLiveQueryOpts    :: !LQ.LiveQueriesOptions
-  , soEnableAllowlist  :: !Bool
-  , soEnabledLogTypes  :: !(Set.HashSet (L.EngineLogType impl))
-  , soLogLevel         :: !L.LogLevel
-  , soPlanCacheOptions :: !E.PlanCacheOptions
-  }
-
-data DowngradeOptions
-  = DowngradeOptions
-  { dgoTargetVersion :: !T.Text
-  , dgoDryRun        :: !Bool
-  } deriving (Show, Eq)
-
-data RawConnInfo =
-  RawConnInfo
-  { connHost     :: !(Maybe String)
-  , connPort     :: !(Maybe Int)
-  , connUser     :: !(Maybe String)
-  , connPassword :: !String
-  , connUrl      :: !(Maybe String)
-  , connDatabase :: !(Maybe String)
-  , connOptions  :: !(Maybe String)
-  , connRetries  :: !(Maybe Int)
-  } deriving (Eq, Read, Show)
-
-data HGECommandG a
-  = HCServe !a
-  | HCExport
-  | HCClean
-  | HCExecute
-  | HCVersion
-  | HCDowngrade !DowngradeOptions
-  deriving (Show, Eq)
-
-data API
-  = METADATA
-  | GRAPHQL
-  | PGDUMP
-  | DEVELOPER
-  | CONFIG
-  deriving (Show, Eq, Read, Generic)
-$(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
-  ''API)
-
-instance Hashable API
-
-type HGECommand impl = HGECommandG (ServeOptions impl)
-type RawHGECommand impl = HGECommandG (RawServeOptions impl)
-
-data HGEOptionsG a
-  = HGEOptionsG
-  { hoConnInfo :: !RawConnInfo
-  , hoCommand  :: !(HGECommandG a)
-  } deriving (Show, Eq)
-
-type RawHGEOptions impl = HGEOptionsG (RawServeOptions impl)
-type HGEOptions impl = HGEOptionsG (ServeOptions impl)
-
-type Env = [(String, String)]
-
-class FromEnv a where
-  fromEnv :: String -> Either String a
-
-instance FromEnv String where
-  fromEnv = Right
-
-instance FromEnv HostPreference where
-  fromEnv = Right . DataString.fromString
-
-instance FromEnv Text where
-  fromEnv = Right . T.pack
-
-instance FromEnv AuthHookType where
-  fromEnv = readHookType
-
-instance FromEnv Int where
-  fromEnv = maybe (Left "Expecting Int value") Right . readMaybe
-
-instance FromEnv AdminSecret where
-  fromEnv = Right . AdminSecret . T.pack
-
-instance FromEnv RoleName where
-  fromEnv string = case mkNonEmptyText (T.pack string) of
-    Nothing     -> Left "empty string not allowed"
-    Just neText -> Right $ RoleName neText
-
-instance FromEnv Bool where
-  fromEnv = parseStrAsBool
-
-instance FromEnv Q.TxIsolation where
-  fromEnv = readIsoLevel
-
-instance FromEnv CorsConfig where
-  fromEnv = readCorsDomains
-
-instance FromEnv [API] where
-  fromEnv = readAPIs
-
-instance FromEnv LQ.BatchSize where
-  fromEnv = fmap LQ.BatchSize . readEither
-
-instance FromEnv LQ.RefetchInterval where
-  fromEnv = fmap (LQ.RefetchInterval . milliseconds . fromInteger) . readEither
-
-instance FromEnv JWTConfig where
-  fromEnv = readJson
-
-instance L.EnabledLogTypes impl => FromEnv [L.EngineLogType impl] where
-  fromEnv = L.parseEnabledLogTypes
-
-instance FromEnv L.LogLevel where
-  fromEnv = readLogLevel
-
-instance FromEnv Cache.CacheSize where
-  fromEnv = Cache.mkCacheSize
-
-parseStrAsBool :: String -> Either String Bool
-parseStrAsBool t
-  | map toLower t `elem` truthVals = Right True
-  | map toLower t `elem` falseVals = Right False
-  | otherwise = Left errMsg
-  where
-    truthVals = ["true", "t", "yes", "y"]
-    falseVals = ["false", "f", "no", "n"]
-
-    errMsg = " Not a valid boolean text. " ++ "True values are "
-             ++ show truthVals ++ " and  False values are " ++ show falseVals
-             ++ ". All values are case insensitive"
-
-readIsoLevel :: String -> Either String Q.TxIsolation
-readIsoLevel isoS =
-  case isoS of
-    "read-committed"  -> return Q.ReadCommitted
-    "repeatable-read" -> return Q.RepeatableRead
-    "serializable"    -> return Q.Serializable
-    _                 -> Left "Only expecting read-committed / repeatable-read / serializable"
-
-type WithEnv a = ReaderT Env (ExceptT String Identity) a
-
-runWithEnv :: Env -> WithEnv a -> Either String a
-runWithEnv env m = runIdentity $ runExceptT $ runReaderT m env
 
 returnJust :: Monad m => a -> m (Maybe a)
 returnJust = return . Just
@@ -341,10 +187,19 @@ mkServeOptions rso = do
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
   planCacheOptions <- E.mkPlanCacheOptions <$> withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
+  devMode <- withEnvBool (rsoDevMode rso) $ fst devModeEnv
+  adminInternalErrors <- fromMaybe True <$> -- Default to `true` to enable backwards compatibility
+                                withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
+  let internalErrorsConfig =
+        if | devMode             -> InternalErrorsAllRequests
+           | adminInternalErrors -> InternalErrorsAdminOnly
+           | otherwise           -> InternalErrorsDisabled
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
+                        internalErrorsConfig
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -470,6 +325,9 @@ serveCmdFooter =
       , [ "# Start GraphQL Engine with HTTP compression enabled for '/v1/query' and '/v1/graphql' endpoints"
         , "graphql-engine --database-url <database-url> serve --enable-compression"
         ]
+      , [ "# Start GraphQL Engine with enable/disable including 'internal' information in an error response for the request made by an 'admin'"
+        , "graphql-engine --database-url <database-url> serve --admin-internal-errors true|false"
+        ]
       ]
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
@@ -479,7 +337,8 @@ serveCmdFooter =
       , adminSecretEnv , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, corsDisableEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
-      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv
+      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv, devModeEnv
+      , adminInternalErrorsEnv
       ]
 
     eventEnvs =
@@ -487,7 +346,8 @@ serveCmdFooter =
         , "Max event threads"
         )
       , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Postgres events polling interval in milliseconds"
+        , "Interval in milliseconds to sleep before trying to fetch events again after a "
+          <> "fetch returned no events from postgres."
         )
       ]
 
@@ -648,6 +508,18 @@ logLevelEnv =
   , "Server log level (default: info) (all: error, warn, info, debug)"
   )
 
+devModeEnv :: (String, String)
+devModeEnv =
+  ( "HASURA_GRAPHQL_DEV_MODE"
+  , "Set dev mode for GraphQL requests; include 'internal' key in the errors extensions (if required) of the response"
+  )
+
+adminInternalErrorsEnv :: (String, String)
+adminInternalErrorsEnv =
+  ( "HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS"
+  , "Enables including 'internal' information in an error response for requests made by an 'admin' (default: true)"
+  )
+
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
@@ -696,9 +568,6 @@ parseRawConnInfo =
                     metavar "NO OF RETRIES" <>
                     help (snd retriesNumEnv)
                   )
-
-connInfoErrModifier :: String -> String
-connInfoErrModifier s = "Fatal Error : " ++ s
 
 mkConnInfo :: RawConnInfo -> Either String Q.ConnInfo
 mkConnInfo (RawConnInfo mHost mPort mUser password mURL mDB opts mRetries) =
@@ -753,7 +622,7 @@ parseConnParams =
                 help (snd pgTimeoutEnv)
               )
     allowPrepare = optional $
-      option (eitherReader parseStrAsBool)
+      option (eitherReader parseStringAsBool)
               ( long "use-prepared-statements" <>
                 metavar "<true|false>" <>
                 help (snd pgUsePrepareEnv)
@@ -789,36 +658,6 @@ parseAdminSecret =
                 help (snd adminSecretEnv)
               )
 
-readHookType :: String -> Either String AuthHookType
-readHookType tyS =
-  case tyS of
-    "GET"  -> Right AHTGet
-    "POST" -> Right AHTPost
-    _      -> Left "Only expecting GET / POST"
-
-readAPIs :: String -> Either String [API]
-readAPIs = mapM readAPI . T.splitOn "," . T.pack
-  where readAPI si = case T.toUpper $ T.strip si of
-          "METADATA"  -> Right METADATA
-          "GRAPHQL"   -> Right GRAPHQL
-          "PGDUMP"    -> Right PGDUMP
-          "DEVELOPER" -> Right DEVELOPER
-          "CONFIG"    -> Right CONFIG
-          _            -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer,config"
-
-readLogLevel :: String -> Either String L.LogLevel
-readLogLevel s = case T.toLower $ T.strip $ T.pack s of
-  "debug" -> Right L.LevelDebug
-  "info"  -> Right L.LevelInfo
-  "warn"  -> Right L.LevelWarn
-  "error" -> Right L.LevelError
-  _       -> Left "Valid log levels: debug, info, warn or error"
-
-
-readJson :: (J.FromJSON a) => String -> Either String a
-readJson = J.eitherDecodeStrict . txtToBs . T.pack
-
-
 parseWebHook :: Parser RawAuthHook
 parseWebHook =
   AuthHookG <$> url <*> urlType
@@ -850,13 +689,13 @@ jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
               <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`"
 
 parseUnAuthRole :: Parser (Maybe RoleName)
-parseUnAuthRole = fmap mkRoleName $ optional $
+parseUnAuthRole = fmap mkRoleName' $ optional $
   strOption ( long "unauthorized-role" <>
               metavar "<ROLE>" <>
               help (snd unAuthRoleEnv)
             )
   where
-    mkRoleName mText = mText >>= (fmap RoleName . mkNonEmptyText)
+    mkRoleName' mText = mText >>= mkRoleName
 
 parseCorsConfig :: Parser (Maybe CorsConfig)
 parseCorsConfig = mapCC <$> disableCors <*> corsDomain
@@ -891,7 +730,7 @@ parseConsoleAssetsDir = optional $
 
 parseEnableTelemetry :: Parser (Maybe Bool)
 parseEnableTelemetry = optional $
-  option (eitherReader parseStrAsBool)
+  option (eitherReader parseStringAsBool)
          ( long "enable-telemetry" <>
            help (snd enableTelemetryEnv)
          )
@@ -937,6 +776,19 @@ parseEnableAllowlist :: Parser Bool
 parseEnableAllowlist =
   switch ( long "enable-allowlist" <>
            help (snd enableAllowlistEnv)
+         )
+
+parseGraphqlDevMode :: Parser Bool
+parseGraphqlDevMode =
+  switch ( long "dev-mode" <>
+           help (snd devModeEnv)
+         )
+
+parseGraphqlAdminInternalErrors :: Parser (Maybe Bool)
+parseGraphqlAdminInternalErrors = optional $
+  option (eitherReader parseStrAsBool)
+         ( long "admin-internal-errors" <>
+           help (snd adminInternalErrorsEnv)
          )
 
 mxRefetchDelayEnv :: (String, String)
@@ -1081,21 +933,23 @@ serveOptionsParser =
   <*> parseEnabledLogs
   <*> parseLogLevel
   <*> parsePlanCacheSize
+  <*> parseGraphqlDevMode
+  <*> parseGraphqlAdminInternalErrors
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
 downgradeShortcuts :: [(String, String)]
-downgradeShortcuts = 
+downgradeShortcuts =
   $(do let s = $(embedStringFile "src-rsr/catalog_versions.txt")
-          
+
            parseVersions = map (parseVersion . words) . lines
-     
+
            parseVersion [tag, version] = (tag, version)
-           parseVersion other = error ("unrecognized tag/catalog mapping " ++ show other)
-       TH.lift (parseVersions s))     
+           parseVersion other          = error ("unrecognized tag/catalog mapping " ++ show other)
+       TH.lift (parseVersions s))
 
 downgradeOptionsParser :: Parser DowngradeOptions
-downgradeOptionsParser = 
+downgradeOptionsParser =
     DowngradeOptions
     <$> choice
         (strOption
@@ -1110,7 +964,7 @@ downgradeOptionsParser =
           help "Don't run any migrations, just print out the SQL."
         )
   where
-    shortcut v catalogVersion = 
+    shortcut v catalogVersion =
       flag' (DataString.fromString catalogVersion)
         ( long ("to-" <> v) <>
           help ("Downgrade to graphql-engine version " <> v <> " (equivalent to --to-catalog-version " <> catalogVersion <> ")")

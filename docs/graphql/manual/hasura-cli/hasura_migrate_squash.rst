@@ -38,7 +38,7 @@ Options
 ::
 
       --delete-source   delete the source files after squashing without any confirmation
-      --from uint       start squashing form this version
+      --from uint       start squashing from this version
   -h, --help            help for squash
       --name string     name for the new squashed migration (default "squashed")
 

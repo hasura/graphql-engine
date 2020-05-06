@@ -2,6 +2,8 @@
    :description: Create a seed data migration in Hasura
    :keywords: hasura, docs, migration, seed data
 
+.. _seed_data_migration:
+
 Creating a seed data migration
 ==============================
 
@@ -10,23 +12,30 @@ Creating a seed data migration
   :depth: 1
   :local:
 
-It can be convenient to add data into tables as part of the DB init process. This section gives instructions as to how to achieve that.
+Use case
+^^^^^^^^
+
+It can be convenient to add some seed data into tables as part of the DB init
+process.
 
 Step 1: Run the console via the Hasura CLI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In order to make sure that the migrations get created, the console needs to be run via the Hasura CLI.
+In order to make sure that the migrations get created, the console needs to be
+run via the Hasura CLI.
 
 Step 2: Navigate to the SQL section
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-On the Hasura console, click on the ``Data`` tab and then on the ``SQL`` link on the left hand side.
+On the Hasura console, click on the ``Data`` tab and then on the ``SQL`` link on
+the left hand side.
 
 
 Step 3: Write an insert statement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The next step is to write an insert statement that populates the database with seed data, like this:
+The next step is to write an insert statement that populates the database with
+seed data, like this:
 
 .. code-block:: SQL
 

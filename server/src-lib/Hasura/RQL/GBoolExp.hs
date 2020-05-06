@@ -337,7 +337,7 @@ convColRhs tableQual = \case
     curVarNum <- get
     put $ curVarNum + 1
     let newIden  = Iden $ "_be_" <> T.pack (show curVarNum) <> "_"
-                   <> snakeCaseTable relTN
+                   <> snakeCaseQualObject relTN
         newIdenQ = S.QualIden newIden Nothing
     annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
     let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $

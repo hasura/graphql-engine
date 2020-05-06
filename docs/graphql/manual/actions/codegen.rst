@@ -1,3 +1,9 @@
+.. meta::
+   :description: Codegen for Hasura actions
+   :keywords: hasura, docs, actions, codegen
+
+.. _actions_codegen:
+
 Actions codegen
 ===============
 
@@ -35,7 +41,7 @@ Generating handler code for your action
     You can select the framework of your choice to get the corresponding
     handler boilerplate code.
 
-    .. thumbnail:: ../../../img/graphql/manual/actions/console-codegen-tab.png
+    .. thumbnail:: /img/graphql/manual/actions/console-codegen-tab.png
        :alt: Console codegen tab
 
 
@@ -53,17 +59,17 @@ Generating handler code for your action
 
     1. Choose which framework you want to codegen for:
 
-       .. thumbnail:: ../../../img/graphql/manual/actions/cli-framework-prompt.png
+       .. thumbnail:: /img/graphql/manual/actions/cli-framework-prompt.png
           :alt: CLI Framework Prompt
 
     2. Choose if you also wish to clone a starter kit for the chosen framework:
 
-       .. thumbnail:: ../../../img/graphql/manual/actions/cli-starter-kit-prompt.png
+       .. thumbnail:: /img/graphql/manual/actions/cli-starter-kit-prompt.png
           :alt: CLI Starter Kit Prompt
 
     3. Choose a path where you want to output the auto-generated code files
 
-       .. thumbnail:: ../../../img/graphql/manual/actions/cli-output-dir-prompt.png
+       .. thumbnail:: /img/graphql/manual/actions/cli-output-dir-prompt.png
           :alt: CLI Starter Kit Prompt
 
 

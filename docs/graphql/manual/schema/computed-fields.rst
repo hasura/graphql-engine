@@ -2,6 +2,8 @@
    :description: Use computed fields in Hasura
    :keywords: hasura, docs, schema, computed field
 
+.. _computed_fields:
+
 Computed fields
 ===============
 
@@ -14,8 +16,8 @@ What are computed fields?
 -------------------------
 
 Computed fields are virtual values or objects that are dynamically computed and can be queried along with a table's
-columns. Computed fields are computed when requested for via SQL functions using other columns of the table and other
-custom inputs if needed.
+columns. Computed fields are computed when requested for via `custom SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
+using other columns of the table and other custom inputs if needed.
 
 .. note::
 
@@ -100,7 +102,7 @@ The return table must be tracked to define such a computed field.
 
 **Example:**
 
-In a simple ``author <-> article`` schema, we can define a :doc:`relationship <../schema/relationships/index>` on the ``author``
+In a simple ``author <-> article`` schema, we can define a :ref:`relationship <relationships>` on the ``author``
 table to fetch authors along with their articles.
 
 We can make use of computed fields to fetch the author's articles with a search parameter.
@@ -171,7 +173,7 @@ Adding a computed field to a table
      Head to the ``Modify`` tab of the table and click on the ``Add`` button in the ``Computed fields``
      section:
 
-     .. thumbnail:: ../../../img/graphql/manual/schema/computed-field-create.png
+     .. thumbnail:: /img/graphql/manual/schema/computed-field-create.png
 
      .. admonition:: Supported from
 
@@ -179,19 +181,102 @@ Adding a computed field to a table
 
   .. tab:: API
 
-     A computed field can be added to a table using the :doc:`add_computed_field <../api-reference/schema-metadata-api/computed-field>`
+     A computed field can be added to a table using the :ref:`add_computed_field <api_computed_field>`
      metadata API
 
 Computed fields permissions
 ---------------------------
 
-:doc:`Access control <../auth/authorization/index>` to computed fields depends on the type of computed field.
+:ref:`Access control <authorization>` to computed fields depends on the type of computed field.
 
 - For **scalar computed fields**, permissions are managed similar to the :ref:`columns permissions <col-level-permissions>`
   of the table.
 
 - For **table computed fields**, the permissions set on the return table are respected.
 
+..
+  Accessing Hasura session variables in computed fields
+  -----------------------------------------------------
+
+  It can be useful to have access to the session variable from the SQL function defining a computed field.
+  For instance, suppose we want to record which users have liked which articles. We can do so using a table
+  ``article_likes`` that specifies a many-to-many relationship between ``article`` and ``user``. In such a
+  case it can be useful to know if the current user has liked a specific article, and this information can be
+  exposed as a *Boolean* computed field on ``article``.
+
+  Create a function with an argument for session variables and add it with the :ref:`add_computed_field` API with the
+  ``session_argument`` key set. The session argument is a JSON object where keys are session variable names
+  (in lower case) and values are strings.  Use the ``->>`` JSON operator to fetch the value of a session variable
+  as shown in the following example.
+
+  .. code-block:: plpgsql
+
+        -- 'hasura_session' will be the session argument
+        CREATE OR REPLACE FUNCTION article_liked_by_user(article_row article, hasura_session json)
+        RETURNS boolean AS $$
+        SELECT EXISTS (
+            SELECT 1
+            FROM article_likes A
+            WHERE A.user_id = hasura_session ->> 'x-hasura-user-id' AND A.article_id = article_row.id
+        );
+        $$ LANGUAGE sql STABLE;
+
+  .. code-block:: http
+
+     POST /v1/query HTTP/1.1
+     Content-Type: application/json
+     X-Hasura-Role: admin
+
+     {
+         "type":"add_computed_field",
+         "args":{
+             "table":{
+                 "name":"article",
+                 "schema":"public"
+             },
+             "name":"liked_by_user",
+             "definition":{
+                 "function":{
+                     "name":"article_liked_by_user",
+                     "schema":"public"
+                 },
+                 "table_argument":"article_row",
+                 "session_argument":"hasura_session"
+             }
+         }
+     }
+
+  .. graphiql::
+    :view_only:
+    :query:
+       query {
+         article(where: {id: {_eq: 3}}) {
+           id
+           liked_by_user
+         }
+       }
+    :response:
+      {
+        "data": {
+          "article": [
+            {
+              "id": "3",
+              "liked_by_user": true
+            }
+          ]
+        }
+      }
+
+  .. note::
+
+     The specified session argument is not included in the argument options of the computed
+     field in the GraphQL schema.
+
+  .. admonition:: Supported from
+
+     This feature will be available in ``v1.3.0-beta.1`` and above
+
+     .. This feature is available in ``v1.3.0`` and above
 
 Computed fields vs. Postgres generated columns
 ----------------------------------------------

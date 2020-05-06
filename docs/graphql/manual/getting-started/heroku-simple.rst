@@ -2,6 +2,8 @@
    :description: Get started with Hasura using Heroku
    :keywords: hasura, docs, start, heroku
 
+.. _heroku_simple:
+
 Quickstart with Heroku
 ======================
 
@@ -14,7 +16,7 @@ This guide will help you get the Hasura GraphQL engine and Postgres running on `
 It is the easiest and fastest way of trying out Hasura.
 
 If you'd like to link this to an existing database, please head to this guide instead:
-:doc:`Using an existing database on Heroku <../deployment/heroku/using-existing-heroku-database>`.
+:ref:`Using an existing database on Heroku <heroku_existing_db>`.
 
 Deploy to Heroku
 ----------------
@@ -31,7 +33,7 @@ Click the button below to deploy to Heroku:
    If you don't have an account on Heroku, you need to sign up on Heroku. You won't need a credit card, and once you
    sign up you'll be redirected to your Heroku app creation page automatically.
 
-.. thumbnail:: ../../../img/graphql/manual/getting-started/heroku-app.png
+.. thumbnail:: /img/graphql/manual/getting-started/heroku-app.png
    :alt: Deploy to Heroku 
 
 Note that **Heroku's free Postgres add-on** is also automatically provisioned!
@@ -42,20 +44,20 @@ Open the Hasura console
 That's it!  Head to ``https://<YOUR_HEROKU_APP>.herokuapp.com`` and open your app.
 You should see the Hasura console.
 
-.. thumbnail:: ../../../img/graphql/manual/getting-started/heroku-app-deployed.png
+.. thumbnail:: /img/graphql/manual/getting-started/heroku-app-deployed.png
    :alt: Open the Hasura console
 
 Hello World (GraphQL or event triggers)
 ---------------------------------------
 
-Make your :doc:`first graphql query <first-graphql-query>`
+Make your :ref:`first graphql query <first_graphql_query>`
 
 OR
 
-Set up your :doc:`first event trigger <first-event-trigger>`
+Set up your :ref:`first event trigger <first_event_trigger>`
 
 Advanced
 --------
 
 This was a quickstart guide to get the Hasura GraphQL engine up and running quickly. For more detailed instructions
-on deploying using Heroku, check out :doc:`../deployment/heroku/index`.
+on deploying using Heroku, check out :ref:`deploy_heroku`.

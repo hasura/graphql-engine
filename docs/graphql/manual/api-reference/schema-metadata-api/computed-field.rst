@@ -2,6 +2,8 @@
    :description: Manage computed fields with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, computed field
 
+.. _api_computed_field:
+
 Schema/Metadata API Reference: Computed Fields
 ==============================================
 
@@ -103,6 +105,12 @@ ComputedFieldDefinition
      - String
      - Name of the argument which accepts a table row type. If omitted, the first
        argument is considered a table argument
+   * - session_argument
+     - false
+     - String
+     - Name of the argument which accepts the Hasura session object as
+       a JSON/JSONB value. If omitted, the Hasura session object is
+       not passed to the function
 
 .. _drop_computed_field:
 

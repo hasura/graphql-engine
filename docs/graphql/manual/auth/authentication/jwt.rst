@@ -2,6 +2,8 @@
    :description: Use authenticaton with JWT in Hasura
    :keywords: hasura, docs, authentication, auth, JWT
 
+.. _auth_jwt:
+
 Authentication using JWT
 ========================
 
@@ -19,7 +21,7 @@ The idea is that your auth server will return JWT tokens, which are decoded and
 verified by the GraphQL engine, to authorize and get metadata about the request
 (``x-hasura-*`` values).
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/jwt-auth.png
+.. thumbnail:: /img/graphql/manual/auth/jwt-auth.png
    :alt: Authentication using JWT
 
 The JWT is decoded, the signature is verified, then it is asserted that the
@@ -30,7 +32,7 @@ are used for the permissions system.
 
 .. admonition:: Prerequisite
 
-   It is mandatory to first :doc:`secure your GraphQL endpoint <../../deployment/securing-graphql-endpoint>` for the JWT mode to take effect.
+   It is mandatory to first :ref:`secure your GraphQL endpoint <securing_graphql_endpoint>` for the JWT mode to take effect.
 
 
 In JWT mode, on a secured endpoint:
@@ -90,7 +92,8 @@ etc.) JWT claims, as well as Hasura specific claims inside a custom namespace
 (or key) i.e. ``https://hasura.io/jwt/claims``.
 
 The ``https://hasura.io/jwt/claims`` is the custom namespace where all Hasura
-specific claims have to be present. This value can be configured in the JWT
+specific claims have to be present. This value can be configured using
+``claims_namespace`` or ``claims_namespace_path`` in the JWT
 config while starting the server.
 
 **Note**: ``x-hasura-default-role`` and ``x-hasura-allowed-roles`` are
@@ -123,16 +126,17 @@ JSON object:
 .. code-block:: none
 
    {
-     "type": "<standard-JWT-algorithms>",
+     "type": "<optional-type-of-key>",
      "key": "<optional-key-as-string>",
      "jwk_url": "<optional-url-to-refresh-jwks>",
      "claims_namespace": "<optional-key-name-in-claims>",
+     "claims_namespace_path":"<optional-json-path-to-the-claims>",
      "claims_format": "json|stringified_json",
      "audience": <optional-string-or-list-of-strings-to-verify-audience>,
      "issuer": "<optional-string-to-verify-issuer>"
    }
 
-``key`` or ``jwk_url``, **one of them has to be present**.
+(``type``, ``key``) pair or ``jwk_url``, **one of them has to be present**.
 
 ``type``
 ^^^^^^^^
@@ -143,6 +147,8 @@ Valid values are : ``HS256``, ``HS384``, ``HS512``, ``RS256``,
 example, if your auth server is using HMAC-SHA256 for signing the JWTs, then
 use ``HS256``. If it is using RSA with 512-bit keys, then use ``RS512``. EC
 public keys are not yet supported.
+
+This is an optional field. This is required only if you are using ``key`` in the config.
 
 ``key``
 ^^^^^^^
@@ -162,7 +168,7 @@ JWTs). The URL **must** publish the JWKs in the standard format as described in
 https://tools.ietf.org/html/rfc7517.
 
 This is an optional field. You can also provide the key (certificate, PEM
-encoded public key) as a string - under the ``key`` field.
+encoded public key) as a string - in the ``key`` field along with the ``type``.
 
 Rotating JWKs
 +++++++++++++
@@ -216,6 +222,38 @@ inside which the Hasura specific claims will be present, e.g. ``https://mydomain
 
 **Default value** is: ``https://hasura.io/jwt/claims``.
 
+``claims_namespace_path``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+An optional JSON path value to the Hasura claims in the JWT token.
+
+Example values are ``$.hasura.claims`` or ``$`` (i.e. root of the payload)
+
+The JWT token should be in this format if the ``claims_namespace_path`` is
+set to ``$.hasura.claims``:
+
+.. code-block:: json
+
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "hasura": {
+       "claims": {
+          "x-hasura-allowed-roles": ["editor","user", "mod"],
+          "x-hasura-default-role": "user",
+          "x-hasura-user-id": "1234567890",
+          "x-hasura-org-id": "123",
+          "x-hasura-custom": "custom-value"
+       }
+     }
+  }
+
+.. note::
+
+   The JWT config can only have one of ``claims_namespace`` or ``claims_namespace_path``
+   values set. If neither keys are set, then the default value of
+   ``claims_namespace`` i.e. https://hasura.io/jwt/claims will be used.
 
 ``claims_format``
 ^^^^^^^^^^^^^^^^^
@@ -282,7 +320,6 @@ Examples:
 .. code-block:: json
 
    {
-     "type": "RS512",
      "jwk_url": "https://......",
      "audience": "myapp-1234"
    }
@@ -292,7 +329,6 @@ or
 .. code-block:: json
 
    {
-     "type": "RS512",
      "jwk_url": "https://......",
      "audience": ["myapp-1234", "myapp-6789"]
    }
@@ -325,7 +361,6 @@ Examples:
 .. code-block:: json
 
    {
-     "type": "RS512",
      "jwk_url": "https://......",
      "issuer": "https://my-auth-server.com"
    }
@@ -382,7 +417,6 @@ the JWT config only needs to have the public key.
 .. code-block:: json
 
     {
-      "type":"RS512",
       "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
     }
 
@@ -444,7 +478,6 @@ If you are using Firebase and Hasura, use this config:
 .. code-block:: json
 
    {
-     "type":"RS256",
      "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
      "audience": "<firebase-project-id>",
      "issuer": "https://securetoken.google.com/<firebase-project-id>"
@@ -456,7 +489,7 @@ If you are using Firebase and Hasura, use this config:
 Auth0
 ^^^^^
 
-Refer the :doc:`Auth0 JWT Integration guide <../../guides/integrations/auth0-jwt>` for a full integration guide
+Refer the :ref:`Auth0 JWT Integration guide <guides_auth0_jwt>` for a full integration guide
 with Auth0.
 
 Auth0 publishes their JWK under:
@@ -510,7 +543,7 @@ https://hasura.io/jwt-config.
 The config generated from this page can be directly pasted in yaml files and command line arguments as it takes
 care of escaping new lines.
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
+.. thumbnail:: /img/graphql/manual/auth/jwt-config-generated.png
    :width: 75%
    :alt: Generating JWT config
 

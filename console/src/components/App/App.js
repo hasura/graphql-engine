@@ -4,12 +4,16 @@ import { connect } from 'react-redux';
 import ProgressBar from 'react-progress-bar-plus';
 import Notifications from 'react-notification-system-redux';
 import { hot } from 'react-hot-loader';
+import { ThemeProvider } from 'styled-components';
+
 import ErrorBoundary from '../Error/ErrorBoundary';
 import {
   loadConsoleOpts,
   telemetryNotificationShown,
 } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
+
+import { theme } from '../UIKit/theme';
 
 class App extends Component {
   componentDidMount() {
@@ -71,21 +75,23 @@ class App extends Component {
     }
 
     return (
-      <ErrorBoundary metadata={metadata} dispatch={dispatch}>
-        <div>
-          {connectionFailMsg}
-          {ongoingRequest && (
-            <ProgressBar
-              percent={percent}
-              autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
-              intervalTime={intervalTime}
-              spinner={false}
-            />
-          )}
-          <div>{children}</div>
-          <Notifications notifications={notifications} />
-        </div>
-      </ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <ErrorBoundary metadata={metadata} dispatch={dispatch}>
+          <div>
+            {connectionFailMsg}
+            {ongoingRequest && (
+              <ProgressBar
+                percent={percent}
+                autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
+                intervalTime={intervalTime}
+                spinner={false}
+              />
+            )}
+            <div>{children}</div>
+            <Notifications notifications={notifications} />
+          </div>
+        </ErrorBoundary>
+      </ThemeProvider>
     );
   }
 }

@@ -2,6 +2,8 @@
    :description: Sample apps and boilerplates using Hasura
    :keywords: hasura, docs, sample app, boilerplate
 
+.. _sample_apps:
+
 Sample apps & boilerplates
 ==========================
 

@@ -2,6 +2,8 @@
    :description: Set default field values using Postgres defaults
    :keywords: hasura, docs, schema, default value, Postgres default
 
+.. _postgres_defaults:
+
 Setting default values for fields using Postgres defaults
 =========================================================
 
@@ -28,7 +30,7 @@ Edit the ``created_at`` field and set its default value as the SQL function ``no
 
 Open the console and head to ``Data -> article -> Modify``:
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/add-default-value.png
+.. thumbnail:: /img/graphql/manual/schema/add-default-value.png
    :alt: Modify the table in the console
 
 .. admonition:: To set an auto-incrementing default value
@@ -90,5 +92,5 @@ value will be set automatically by Postgres.
 Also see
 --------
 
-- :doc:`sql-functions`
-- :doc:`column-presets`
+- :ref:`sql_functions_as_default`
+- :ref:`column_presets`

@@ -2,6 +2,8 @@
    :description: Troubleshoot Hasura GraphQL engine errors
    :keywords: hasura, docs, error, troubleshooting
 
+.. _troubleshooting:
+
 Troubleshooting Hasura GraphQL engine errors
 ============================================
 
@@ -15,7 +17,7 @@ the GraphQL engine are altered using ``psql`` or any other PostgreSQL client.
 
 The Hasura GraphQL engine creates and maintains an **internal state** based on the database it is configured to use.
 This internal state will comprise information about the tables/views, relationships and access control rules
-defined on them using the Hasura GraphQL engine. See :doc:`Hasura GraphQL metadata schema <../how-it-works/metadata-schema>`
+defined on them using the Hasura GraphQL engine. See :ref:`Hasura GraphQL metadata schema <hasura_metadata_schema>`
 for information on how this internal state is maintained. It is highly recommended doing any modifications to the
 database schema only through the Hasura console to avoid corrupting the GraphQL engine's state.
 
@@ -65,7 +67,7 @@ which is used while fetching nested objects using GraphQL.
 
 Let's say we have tables called ``article`` and ``author`` as follows:
 
-.. thumbnail:: ../../../img/graphql/manual/troubleshooting/author_article.jpg
+.. thumbnail:: /img/graphql/manual/troubleshooting/author_article.jpg
   :alt: article author schema 
 
 Using the console if you have created a relationship named ``author`` from the ``article`` table to
