@@ -59,8 +59,10 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               )}"`;
             } else if (ico.type === 'remote_schema') {
               name = ico.definition.name;
-              let url = `"${ico.definition.definition.url ||
-                ico.definition.definition.url_from_env}"`;
+              let url = `"${
+                ico.definition.definition.url ||
+                ico.definition.definition.url_from_env
+              }"`;
               if (ico.definition.definition.url_from_env) {
                 url = `the url from the value of env var ${url}`;
               }

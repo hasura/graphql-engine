@@ -64,9 +64,9 @@ class CollapsibleToggle extends React.Component {
         >
           <span className={styles.collapsibleIndicatorWrapper}>
             <i
-              className={`fa fa-chevron-right ${
-                styles.collapsibleIndicator
-              } ${isOpen && styles.collapsibleIndicatorOpen}`}
+              className={`fa fa-chevron-right ${styles.collapsibleIndicator} ${
+                isOpen && styles.collapsibleIndicatorOpen
+              }`}
             />
           </span>
 
