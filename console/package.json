@@ -28,12 +28,10 @@
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
-      "eslint --fix",
-      "git add"
+      "eslint --fix"
     ],
     "*.{js,json,ts,tsx,css,md}": [
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ]
   },
   "betterScripts": {
