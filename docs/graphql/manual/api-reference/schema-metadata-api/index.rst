@@ -239,12 +239,12 @@ The various types of queries are listed in the following table:
    * - :ref:`delete_cron_trigger`
      - :ref:`delete_cron_trigger_args <delete_cron_trigger_syntax>`
      - 1
-     - Delete an existing cron scheduled trigger
+     - Delete an existing cron trigger
 
    * - :ref:`fetch_cron_trigger_invocations`
      - :ref:`fetch_cron_trigger_invocations_args <fetch_cron_trigger_invocations_syntax>`
      - 1
-     - Fetch invocations of an existing cron scheduled trigger
+     - Fetch invocations of an existing cron trigger
 
    * - :ref:`create_one_off_trigger`
      - :ref:`create_one_off_trigger_args <create_one_off_trigger_syntax>`
