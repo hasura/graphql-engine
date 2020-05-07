@@ -36,15 +36,19 @@ class HGEWrkBench(HGETestSetup):
     rps_steps = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
 
     def __init__(
-            self, pg_urls, pg_docker_image, hge_docker_image=None,
+            self, pg_url, remote_pg_url, pg_docker_image, hge_url=None,
+            remote_hge_url=None, hge_docker_image=None,
             hge_args=[], skip_stack_build=False,
             graphql_queries_file='queries.graphql', connections=50,
             duration=300, results_hge_url = None, results_hge_admin_secret = None
     ):
         self.load_queries(graphql_queries_file)
         super().__init__(
-            pg_urls = pg_urls,
+            pg_url = pg_url,
+            remote_pg_url = remote_pg_url,
             pg_docker_image = pg_docker_image,
+            hge_url = hge_url,
+            remote_hge_url = remote_hge_url,
             hge_docker_image = hge_docker_image,
             hge_args = hge_args,
             skip_stack_build = skip_stack_build
@@ -217,7 +221,7 @@ class HGEWrkBench(HGETestSetup):
 
     def get_scripts_vol(self):
         return {
-            os.path.join(fileLoc, 'bench_scripts'): {
+            os.path.join(fileLoc, 'wrk-websocket-server', 'bench_scripts'): {
                 'bind' : self.lua_dir,
                 'mode' : 'ro'
             }
@@ -227,7 +231,7 @@ class HGEWrkBench(HGETestSetup):
         query_str = graphql.print_ast(query)
         print(Fore.GREEN + "(Compute maximum Request per second) Running wrk benchmark for query\n", query_str + Style.RESET_ALL)
         self.hge.graphql_q(query_str) # Test query once for errors
-        bench_script = os.path.join(self.lua_dir + '/bench.lua')
+        bench_script = os.path.join(self.lua_dir + '/bench-wrk.lua')
         graphql_url = self.hge.url + '/v1/graphql'
         params = self.get_wrk2_params()
         duration = 30
@@ -444,7 +448,7 @@ mutation insertMaxRps($result: hge_bench_query_max_rps_insert_input!) {
                 max_rps = self.max_rps_test(query)
                 # The tests should definitely not be running very close to or higher than maximum requests per second
                 rps_steps = [ r for r in self.rps_steps if r < 0.6*max_rps]
-                print("Benchmarking queries with wrk2 for the following requests/sec", ", ".join(rps_steps))
+                print("Benchmarking queries with wrk2 for the following requests/sec", rps_steps)
                 for rps in rps_steps:
                     if rps < int(0.6*max_rps):
                         self.wrk2_test(query, rps)
@@ -526,8 +530,11 @@ class HGEWrkBenchWithArgs(HGEWrkBenchArgs, HGEWrkBench):
         HGEWrkBenchArgs.__init__(self)
         HGEWrkBench.__init__(
             self,
-            pg_urls = self.pg_urls,
+            pg_url = self.pg_url,
+            remote_pg_url = self.remote_pg_url,
             pg_docker_image = self.pg_docker_image,
+            hge_url = self.hge_url,
+            remote_hge_url = self.remote_hge_url,
             hge_docker_image = self.hge_docker_image,
             hge_args = self.hge_args,
             skip_stack_build = self.skip_stack_build,

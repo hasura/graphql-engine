@@ -34,7 +34,8 @@ class HGE:
     def __init__(self, pg, port_allocator, docker_image=None, log_file='hge.log', url=None, args=[]):
         self.pg = pg
         self.log_file = log_file
-        self.tix_file = self.log_file[:-4] + '.tix'
+        if self.log_file:
+            self.tix_file = self.log_file[:-4] + '.tix'
         self.docker_image = docker_image
         self.introspection = None
         self.obj_fk_rels = set()
