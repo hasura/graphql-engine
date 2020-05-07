@@ -50,11 +50,9 @@ In order to make a query re-usable, it can be made dynamic by using variables.
       "author_id": 1
     }
 
-Variables and performance
-^^^^^^^^^^^^^^^^^^^^^^^^^
+.. admonition:: Variables and performance
 
-To optimise for performance, use non-nullable variables by adding a ``!`` at the end of the variable type (like in the example above).
-Refer to :ref:`this page<query_performance>` to learn more about Hasura's query plan caching and about optimizing with variables.
+  Variables have an impact on query performance. Refer to :ref:`this page<query_performance>` to learn more about Hasura's query plan caching and about optimizing when using variables.
 
 Using aliases
 -------------
