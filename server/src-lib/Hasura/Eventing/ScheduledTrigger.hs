@@ -57,8 +57,7 @@ During the startup, two threads are started:
 -}
 module Hasura.Eventing.ScheduledTrigger
   ( runScheduledEventsGenerator
-  , processScheduledQueue
-  , processOneOffScheduledQueue
+  , processScheduledTriggers
 
   , ScheduledEventSeed(..)
   , generateScheduleTimes
@@ -338,94 +337,104 @@ processScheduledQueue
   -> HTTP.Manager
   -> Q.PGPool
   -> IO SchemaCache
-  -> IO void
-processScheduledQueue logger logEnv httpMgr pgpool getSC =
-  forever $ do
-    scheduledTriggersInfo <- scScheduledTriggers <$> getSC
-    scheduledEventsE <-
-      runExceptT $
-      Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getScheduledEvents
-    case scheduledEventsE of
-      Right partialEvents ->
-        for_ partialEvents $ \(ScheduledEventPartial id' name st payload tries)-> do
-          case Map.lookup name scheduledTriggersInfo of
-            Nothing ->  logInternalError $
-              err500 Unexpected "could not find scheduled trigger in cache"
-            Just ScheduledTriggerInfo{..} -> do
-              let webhook = wciCachedValue stiWebhookInfo
-                  payload' = fromMaybe (fromMaybe J.Null stiPayload) payload -- override if neccessary
-                  scheduledEvent =
-                      ScheduledEventFull id'
-                                         (Just name)
-                                         st
-                                         tries
-                                         webhook
-                                         payload'
-                                         stiRetryConf
-                                         stiHeaders
-                                         stiComment
-              finally <- runExceptT $
-                runReaderT (processScheduledEvent logEnv pgpool scheduledEvent Templated) (logger, httpMgr)
-              either logInternalError pure finally
-      Left err -> logInternalError err
-    sleep (minutes 1)
-    where
-      logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
+  -> IO ()
+processScheduledQueue logger logEnv httpMgr pgpool getSC = do
+  scheduledTriggersInfo <- scScheduledTriggers <$> getSC
+  scheduledEventsE <-
+    runExceptT $
+    Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getScheduledEvents
+  case scheduledEventsE of
+    Right partialEvents ->
+      for_ partialEvents $ \(ScheduledEventPartial id' name st payload tries)-> do
+        case Map.lookup name scheduledTriggersInfo of
+          Nothing ->  logInternalError $
+            err500 Unexpected "could not find scheduled trigger in cache"
+          Just ScheduledTriggerInfo{..} -> do
+            let webhook = wciCachedValue stiWebhookInfo
+                payload' = fromMaybe (fromMaybe J.Null stiPayload) payload -- override if neccessary
+                scheduledEvent =
+                    ScheduledEventFull id'
+                                       (Just name)
+                                       st
+                                       tries
+                                       webhook
+                                       payload'
+                                       stiRetryConf
+                                       stiHeaders
+                                       stiComment
+            finally <- runExceptT $
+              runReaderT (processScheduledEvent logEnv pgpool scheduledEvent Templated) (logger, httpMgr)
+            either logInternalError pure finally
+    Left err -> logInternalError err
+  where
+    logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
 
-processOneOffScheduledQueue
+processOneOffScheduledTriggers
   :: HasVersion
   => L.Logger L.Hasura
   -> LogEnvHeaders
   -> HTTP.Manager
   -> Q.PGPool
-  -> IO void
-processOneOffScheduledQueue logger logEnv httpMgr pgpool =
-  forever $ do
-    oneOffScheduledEvents <-
-      runExceptT $
+  -> IO ()
+processOneOffScheduledTriggers logger logEnv httpMgr pgpool = do
+  oneOffScheduledEvents <-
+    runExceptT $
       Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getOneOffScheduledEvents
-    case oneOffScheduledEvents of
-      Right oneOffScheduledEvents' ->
-        for_ oneOffScheduledEvents' $ \(ScheduledTriggerOneOff id'
-                                                               scheduledTime
-                                                               tries
-                                                               webhookConf
-                                                               payload
-                                                               retryConf
-                                                               headerConf
-                                                               comment
-                                                               _ )
-          -> do
-          webhookInfo <- runExceptT $ getWebhookInfoFromConf webhookConf
-          headerInfo <- runExceptT $ getHeaderInfosFromConf headerConf
+  case oneOffScheduledEvents of
+    Right oneOffScheduledEvents' ->
+      for_ oneOffScheduledEvents' $ \(ScheduledTriggerOneOff id'
+                                                             scheduledTime
+                                                             tries
+                                                             webhookConf
+                                                             payload
+                                                             retryConf
+                                                             headerConf
+                                                             comment
+                                                             _ )
+        -> do
+        webhookInfo <- runExceptT $ getWebhookInfoFromConf webhookConf
+        headerInfo <- runExceptT $ getHeaderInfosFromConf headerConf
 
-          case webhookInfo of
-            Right webhookInfo' -> do
-              case headerInfo of
-                Right headerInfo' -> do
-                  let webhook = wciCachedValue webhookInfo'
-                      payload' = fromMaybe J.Null payload
-                      scheduledEvent = ScheduledEventFull id'
-                                                          Nothing
-                                                          scheduledTime
-                                                          tries
-                                                          webhook
-                                                          payload'
-                                                          retryConf
-                                                          headerInfo'
-                                                          comment
-                  finally <- runExceptT $
-                    runReaderT (processScheduledEvent logEnv pgpool scheduledEvent StandAlone) (logger, httpMgr)
-                  either logInternalError pure finally
+        case webhookInfo of
+          Right webhookInfo' -> do
+            case headerInfo of
+              Right headerInfo' -> do
+                let webhook = wciCachedValue webhookInfo'
+                    payload' = fromMaybe J.Null payload
+                    scheduledEvent = ScheduledEventFull id'
+                                                        Nothing
+                                                        scheduledTime
+                                                        tries
+                                                        webhook
+                                                        payload'
+                                                        retryConf
+                                                        headerInfo'
+                                                        comment
+                finally <- runExceptT $
+                  runReaderT (processScheduledEvent logEnv pgpool scheduledEvent StandAlone) (logger, httpMgr)
+                either logInternalError pure finally
 
-                Left headerInfoErr -> logInternalError headerInfoErr
+              Left headerInfoErr -> logInternalError headerInfoErr
 
-            Left webhookInfoErr -> logInternalError webhookInfoErr
+          Left webhookInfoErr -> logInternalError webhookInfoErr
 
-      Left oneOffScheduledEventsErr -> logInternalError oneOffScheduledEventsErr
+    Left oneOffScheduledEventsErr -> logInternalError oneOffScheduledEventsErr
+  where
+    logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
+
+processScheduledTriggers
+  :: HasVersion
+  => L.Logger L.Hasura
+  -> LogEnvHeaders
+  -> HTTP.Manager
+  -> Q.PGPool
+  -> IO SchemaCache
+  -> IO void
+processScheduledTriggers logger logEnv httpMgr pgpool getSC=
+  forever $ do
+    processScheduledQueue logger logEnv httpMgr pgpool getSC
+    processOneOffScheduledTriggers logger logEnv httpMgr pgpool
     sleep (minutes 1)
-    where
-      logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
 
 processScheduledEvent ::
   ( MonadReader r m
