@@ -1,4 +1,5 @@
 import styled, { css } from 'styled-components';
+import { Box, BoxProps } from '../Box';
 
 const checkedStyles = css`
   background-color: #1fd6e5;
@@ -9,7 +10,7 @@ const checkedStyles = css`
   }
 `;
 
-export const StyledSwitchButton = styled.div`
+export const StyledSwitchButton = styled(Box)`
   label {
     position: relative;
     display: inline-block;
@@ -69,3 +70,5 @@ export const StyledSlider = styled.span<StyledSliderProps>`
 
   ${({ checked }) => (checked ? checkedStyles : ' ')}
 `;
+
+export interface StyledSwitchButtonProps extends BoxProps {}
