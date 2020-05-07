@@ -228,11 +228,11 @@ Update by pk syntax
       update_article_by_pk (
         pk_columns: {
           id: 1
-          id: 2
         }
         _set: { is_published: true }
       ) {
-        affected_rows
+        id
+        title
       }
     }
 
