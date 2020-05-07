@@ -169,7 +169,7 @@ Update by pk syntax
         [pk-columns-argument!],
         [set-argument!]
       )
-      [mutation-response!]
+      <object-fields>
     }
 
 .. list-table::
@@ -219,10 +219,6 @@ Update by pk syntax
      - false
      - deleteAtPathArgExp_
      - Element at path to be deleted in the value of JSONB columns in the table
-   * - mutation-response
-     - true
-     - MutationResponse_
-     - Object to be returned after mutation succeeds
 
 **E.g. UPDATE BY PK**:
 
@@ -332,7 +328,7 @@ Delete by pk syntax
         column1: value1
         column2: value2
       )
-      <mutation-response>
+      <object-fields>
     }
 
 .. list-table::
@@ -350,10 +346,6 @@ Delete by pk syntax
      - true
      - Value
      - Name of the auto-generated delete mutation field, e.g. *delete_author_by_pk*
-   * - mutation-response
-     - true
-     - MutationResponse_
-     - Object to be returned after mutation succeeds
 
 **E.g. DELETE BY PK**:
 
@@ -569,8 +561,8 @@ E.g.:
 **pk_columns** argument
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``pk_columns`` argument is used to identify one or several objects by their primary key. 
-This argument can be used in *update* mutations to identify the object(s) that are to be updated.
+The ``pk_columns`` argument is used to identify an object by its primary key columns. 
+This argument can be used in *update* mutations to identify the object that is to be updated.
 
 .. code-block:: none
 
@@ -585,7 +577,7 @@ E.g.:
 
     pk_columns: {
       id: 1
-      id: 2
+      name: "Harry"
     }
 
 .. _whereArgExp:
