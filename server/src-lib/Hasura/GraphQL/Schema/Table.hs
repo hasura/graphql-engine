@@ -1,8 +1,11 @@
 module Hasura.GraphQL.Schema.Table
   ( tableColumnsEnum
   , tableSelectPermissions
+  , tableUpdatePermissions
+  , tableDeletePermissions
   , tableSelectFields
   , tableSelectColumns
+  , tableUpdateColumns
   ) where
 
 import           Hasura.Prelude
@@ -51,14 +54,33 @@ tableColumnsEnum table selectPermissions = do
       P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
 
 
+tablePermissions
+  :: forall m n. (MonadSchema n m)
+  => QualifiedTable
+  -> m (Maybe RolePermInfo)
+tablePermissions table = do
+  roleName  <- askRoleName
+  tableInfo <- _tiRolePermInfoMap <$> askTableInfo table
+  pure $ Map.lookup roleName tableInfo
+
 tableSelectPermissions
   :: forall m n. (MonadSchema n m)
   => QualifiedTable
   -> m (Maybe SelPermInfo)
-tableSelectPermissions table = do
-  roleName  <- askRoleName
-  tableInfo <- _tiRolePermInfoMap <$> askTableInfo table
-  pure $ _permSel =<< Map.lookup roleName tableInfo
+tableSelectPermissions table = (_permSel =<<) <$> tablePermissions table
+
+tableUpdatePermissions
+  :: forall m n. (MonadSchema n m)
+  => QualifiedTable
+  -> m (Maybe UpdPermInfo)
+tableUpdatePermissions table = (_permUpd =<<) <$> tablePermissions table
+
+tableDeletePermissions
+  :: forall m n. (MonadSchema n m)
+  => QualifiedTable
+  -> m (Maybe DelPermInfo)
+tableDeletePermissions table = (_permDel =<<) <$> tablePermissions table
+
 
 tableSelectFields
   :: forall m n. (MonadSchema n m)
@@ -91,3 +113,19 @@ tableSelectColumns table permissions =
   where
     columnInfo (FIColumn ci) = Just ci
     columnInfo _             = Nothing
+
+tableUpdateColumns
+  :: forall m n. (MonadSchema n m)
+  => QualifiedTable
+  -> UpdPermInfo
+  -> m [PGColumnInfo]
+tableUpdateColumns table permissions = do
+  -- TODO: memoize this?
+  tableFields <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
+  pure $ mapMaybe isUpdatable $ Map.elems tableFields
+  where
+    isUpdatable (FIColumn columnInfo) =
+      if Set.member (pgiColumn columnInfo) (upiCols permissions)
+      then Just columnInfo
+      else Nothing
+    isUpdatable _ = Nothing

@@ -312,7 +312,7 @@ library
                      , Hasura.RQL.DML.Select.Internal
                      , Hasura.RQL.DML.Select.Types
                      , Hasura.RQL.DML.Select
-                     -- , Hasura.RQL.DML.Update
+                     , Hasura.RQL.DML.Update
                      -- , Hasura.RQL.DML.Count
                      , Hasura.RQL.GBoolExp
 

@@ -1,12 +1,4 @@
-module Hasura.RQL.DML.Update
-  ( validateUpdateQueryWith
-  , validateUpdateQuery
-  , AnnUpdG(..)
-  , traverseAnnUpd
-  , AnnUpd
-  , updateQueryToTx
-  , runUpdate
-  ) where
+module Hasura.RQL.DML.Update where
 
 import           Data.Aeson.Types
 import           Instances.TH.Lift        ()
@@ -31,15 +23,32 @@ import qualified Hasura.SQL.DML           as S
 data AnnUpdG v
   = AnnUpd
   { uqp1Table   :: !QualifiedTable
-  , uqp1SetExps :: ![(PGCol, v)]
+  , uqp1OpExps  :: ![(PGColumnInfo, UpdOpExpG v)]
   , uqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
-  , upq1Check   :: !(AnnBoolExp v)
+  , uqp1Check   :: !(AnnBoolExp v)
   -- we don't prepare the arguments for returning
   -- however the session variable can still be
   -- converted as desired
   , uqp1Output  :: !(MutationOutputG v)
   , uqp1AllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
+
+
+data UpdOpExpG v = UpdSet !v
+                 | UpdInc !v
+                 | UpdAppend !v
+                 | UpdPrepend !v
+                 | UpdDeleteKey !v
+                 | UpdDeleteElem !v
+                 | UpdDeleteAtPath !v
+                 deriving (Eq, Show, Functor, Foldable, Traversable, Generic, Data)
+
+
+{-
+
+WIP NOTE: commented out for now, will fix / remove after deciding if
+we want to keep UpdOpExpG.
+
 
 traverseAnnUpd
   :: (Applicative f)
@@ -236,3 +245,5 @@ runUpdate
 runUpdate q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
   validateUpdateQuery q >>= liftTx . updateQueryToTx strfyNum
+
+-}
