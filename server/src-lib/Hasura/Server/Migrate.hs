@@ -77,7 +77,7 @@ instance ToEngineLog MigrationResult Hasura where
     }
 
 -- A migration and (hopefully) also its inverse if we have it.
--- Polymorphic because `m` can be any `MonadTx`, `MonadIO` when 
+-- Polymorphic because `m` can be any `MonadTx`, `MonadIO` when
 -- used in the `migrations` function below.
 data MigrationPair m = MigrationPair
   { mpMigrate :: m ()
@@ -159,12 +159,12 @@ migrateCatalog migrationTime = do
           pure (MRMigrated previousVersion, schemaCache)
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
-        
+
     buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
     buildCacheAndRecreateSystemMetadata = do
       schemaCache <- buildRebuildableSchemaCache
       view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
-      
+
     updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
     doesSchemaExist schemaName =
@@ -197,29 +197,29 @@ downgradeCatalog opts time = do
     downgradeFrom previousVersion
         | previousVersion == dgoTargetVersion opts = do
             pure MRNothingToDo
-        | otherwise = 
+        | otherwise =
             case neededDownMigrations (dgoTargetVersion opts) of
-              Left reason -> 
+              Left reason ->
                 throw400 NotSupported $
                   "This downgrade path (from "
-                    <> previousVersion <> " to " 
-                    <> dgoTargetVersion opts <> 
+                    <> previousVersion <> " to "
+                    <> dgoTargetVersion opts <>
                     ") is not supported, because "
                     <> reason
               Right path -> do
-                sequence_ path 
+                sequence_ path
                 unless (dgoDryRun opts) do
                   setCatalogVersion (dgoTargetVersion opts) time
                 pure (MRMigrated previousVersion)
-      
+
       where
-        neededDownMigrations newVersion = 
-          downgrade previousVersion newVersion 
+        neededDownMigrations newVersion =
+          downgrade previousVersion newVersion
             (reverse (migrations (dgoDryRun opts)))
 
-        downgrade 
+        downgrade
           :: T.Text
-          -> T.Text 
+          -> T.Text
           -> [(T.Text, MigrationPair m)]
           -> Either T.Text [m ()]
         downgrade lower upper = skipFutureDowngrades where
@@ -237,7 +237,7 @@ downgradeCatalog opts time = do
             | otherwise = skipFutureDowngrades xs
 
           dropOlderDowngrades [] = Left "the target version is unrecognized."
-          dropOlderDowngrades ((x, MigrationPair{ mpDown = Nothing }):_) = 
+          dropOlderDowngrades ((x, MigrationPair{ mpDown = Nothing }):_) =
             Left $ "there is no available migration back to version " <> x <> "."
           dropOlderDowngrades ((x, MigrationPair{ mpDown = Just y }):xs)
             | x == upper = Right [y]
@@ -271,7 +271,7 @@ migrations dryRun =
             if exists
               then [| Just (runTxOrPrint $(Q.sqlFromFile path)) |]
               else [| Nothing |]
-                 
+
           migrationsFromFile = map $ \(to :: Integer) ->
             let from = to - 1
             in [| ( $(TH.lift $ T.pack (show from))
@@ -288,7 +288,7 @@ migrations dryRun =
   where
     runTxOrPrint :: Q.Query -> m ()
     runTxOrPrint
-      | dryRun = 
+      | dryRun =
           liftIO . TIO.putStrLn . Q.getQueryText
       | otherwise = runTx
 
@@ -379,7 +379,12 @@ recreateSystemMetadata = do
         , arrayRel $$(nonEmptyText "check_constraints") $
           manualConfig "hdb_catalog" "hdb_check_constraint" tableNameMapping
         , arrayRel $$(nonEmptyText "unique_constraints") $
-          manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping ]
+          manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping
+        , arrayRel $$(nonEmptyText "event_triggers") $
+          manualConfig "hdb_catalog" "event_triggers"
+          [ ("table_schema","schema_name")
+          , ("table_name","table_name")]
+        ]
       , table "hdb_catalog" "hdb_primary_key" []
       , table "hdb_catalog" "hdb_foreign_key_constraint" []
       , table "hdb_catalog" "hdb_relationship" []
