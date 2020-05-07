@@ -31,7 +31,7 @@ new managed PostgreSQL database wired up to your Hasura instance.
 
 You will see the Hasura web service and PostgreSQL instance to be created:
 
-.. thumbnail:: ../../../../img/graphql/manual/deployment/deploy-to-render-hasura-iac.png
+.. thumbnail:: /img/graphql/manual/deployment/deploy-to-render-hasura-iac.png
    :alt: Deploy To Render Hasura Page
 
 That's it! Read on to configure your Hasura instance.
@@ -41,7 +41,7 @@ Access your Hasura Console
 
 Once **Deploy to Render** succeeds, you can click through to your Hasura service page on Render's dashboard.
 
-.. thumbnail:: ../../../../img/graphql/manual/deployment/deploy-to-render-hasura-header.png
+.. thumbnail:: /img/graphql/manual/deployment/deploy-to-render-hasura-header.png
    :alt: Render Hasura Header
 
 You can monitor the deployment of the Hasura web service from the **Logs** tab. Once the service is up, use the link on the service page to access your Hasura console:

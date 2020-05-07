@@ -15,7 +15,7 @@ Event Triggers
 Hasura can be used to create event triggers on tables in the Postgres database. Event triggers reliably capture
 events on specified tables and invoke webhooks to carry out any custom logic.
 
-.. thumbnail:: ../../../img/graphql/manual/event-triggers/database-event-triggers.png
+.. thumbnail:: /img/graphql/manual/event-triggers/database-event-triggers.png
    :class: no-shadow
    :width: 80%
    :alt: Hasura event trigger architecture
