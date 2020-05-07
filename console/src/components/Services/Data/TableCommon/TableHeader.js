@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 import { changeTableName } from '../TableModify/ModifyActions';
-import { capitalize } from '../../../Common/utils/jsUtils';
+import { capitalize, exists } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
@@ -26,6 +26,7 @@ import { getReadableNumber } from '../../../Common/utils/jsUtils';
 const TableHeader = ({
   tabName,
   count,
+  isCountEstimated,
   table,
   migrationMode,
   readOnlyMode,
@@ -38,8 +39,11 @@ const TableHeader = ({
   const isTable = checkIfTable(table);
 
   let countDisplay = '';
-  if (!(count === null || count === undefined)) {
-    countDisplay = '(' + getReadableNumber(count) + ')';
+  // if (exists(count)) {
+  //   countDisplay = `(${isCountEstimated ? '~' : '' }${getReadableNumber(count)})`;
+  // }
+  if (exists(count) && !isCountEstimated) {
+    countDisplay = `(${getReadableNumber(count)})`;
   }
   const activeTab = tabNameMap[tabName];
 
