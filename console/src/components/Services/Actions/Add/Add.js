@@ -64,7 +64,6 @@ const AddAction = ({
   };
 
   const toggleForwardClientHeaders = () => {
-    // e.preventDefault();
     dispatch(toggleFCH());
   };
 
