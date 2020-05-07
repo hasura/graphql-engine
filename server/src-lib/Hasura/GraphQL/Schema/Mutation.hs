@@ -127,8 +127,8 @@ updateOperators table updatePermissions = do
         (G.Description "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array")
     , updateOperator tableName $$(G.litName "_delete_path_at")
         textParser RQL.UpdDeleteAtPath jsonCols
-        (G.Description "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array")
-        (G.Description "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array")
+        (G.Description "delete the field or element with specified path (for JSON arrays, negative integers count from the end)")
+        (G.Description "delete the field or element with specified path (for JSON arrays, negative integers count from the end)")
     ]
   where
     columnParser columnInfo = fmap P.mkParameter <$> P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
