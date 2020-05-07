@@ -29,7 +29,7 @@ class ViewTable extends Component {
     this.getInitialData(this.props.tableName);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.tableName !== this.props.tableName) {
       this.getInitialData(nextProps.tableName);
     }
