@@ -17,16 +17,30 @@ Introduction
 
 If you are looking to migrate your Graph.cool project to Hasura, these are the steps that you will need to roughly follow.
 
-Step 1: Export data
--------------------
+.. note::
+
+   This guide is not comprehensive and some steps require manual intervention.
+
+Step 1: Export data from Graph.cool
+-----------------------------------
 
 Export your Graph.cool data using their `export tool <https://export.graph.cool>`__. This will give a MySQL binary dump of your current data.
 
 .. thumbnail:: ../../../../img/graphql/manual/guides/graphcool-export.png
    :alt: Graph.cool Export
 
-Step 2: Start MySQL with Docker
--------------------------------
+Step 2: Set up an intermediary MySQL server
+-------------------------------------------
+
+We need to set up a MySQL server as an intermediary step in order to migrate data from Graph.cool to Postgres.
+
+.. contents::
+  :backlinks: none
+  :depth: 1
+  :local:
+
+Step 2.1: Start MySQL with Docker
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
@@ -34,8 +48,8 @@ Step 2: Start MySQL with Docker
 
 Replace the password as required.
 
-Step 3: Connect to MySQL via mysql CLI
---------------------------------------
+Step 2.2: Connect to MySQL via mysql CLI
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
@@ -43,15 +57,15 @@ Step 3: Connect to MySQL via mysql CLI
 
 Replace the host and password as required.
 
-Step 4: Create a database in MySQL
-----------------------------------
+Step 2.3: Create a database in MySQL
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
    create database public;
 
-Step 5: Import data
--------------------
+Step 2.4: Import data
+^^^^^^^^^^^^^^^^^^^^^
 
 Import Graph.cool's MySQL export into your local MySQL instance:
 
@@ -59,14 +73,25 @@ Import Graph.cool's MySQL export into your local MySQL instance:
 
    mysql --user=root --password=my-secret-pw --host=<host> public --binary-mode=1 < <pathtomysqlexport>
 
-Replace host and pathtomysqlexport as required. This step should have migrated the schema with the data.
+Replace host and pathtomysqlexport as required. Your data should now be present in the MySQL database.
 
-Step 6: Start Hasura and Postgres using docker-compose
-------------------------------------------------------
+Step 3: Migrate data to Hasura
+------------------------------
 
-Since MySQL is now set up with all the data from Graph.cool, we need to create a Hasura and Postgres instance to proceed.
+Since MySQL is now set up with all the data from Graph.cool, we need to create a Hasura and Postgres instance, and to import the data to the same.
+
+.. contents::
+  :backlinks: none
+  :depth: 1
+  :local:
+
+Step 3.1: Set up Hasura
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Refer to the :ref:`Getting started <docker_simple>` guide to set up Hasura using ``docker-compose``.
+
+Step 3.2: Import data into Postgres
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We will use ``pgloader`` to migrate from MySQL to Postgres. Refer to their `installation guide <https://github.com/dimitri/pgloader>`__ for setting this up.
 
@@ -78,33 +103,45 @@ Once you have installed, execute the following command:
 
 Replace ``<host>`` as required.
 
-This step should have migrated the data from MySQL to Postgres.
+Your data should now be present in the Postgres database.
 
-Step 7: Connect Hasura to Postgres
-----------------------------------
+Step 3.3: Connect Hasura to Postgres
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once the dataset is migrated to Postgres, Hasura should be able to track tables and relationships. 
 
-You might also want to look at how to :ref:`configure enums <enums_graphql_engine>` in case you have them in your Graph.cool project. 
+.. note::
 
-Step 8: Restructure connection tables
----------------------------------------
+   If you have enums in your Graph.cool project, check out :ref:`this page <enums_graphql_engine>`, since they're handled differently in Hasura. 
 
-Now you can rename tables/columns to match your client-side queries as required. 
+Step 4: Migrate structure & functionality
+-----------------------------------------
+
+After migrating the data to Hasura, there is some manual work involved in migrating the structure and functionality of your Graph.cool project.
+
+.. contents::
+  :backlinks: none
+  :depth: 1
+  :local:
+
+Step 4.1: Restructure connection tables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can rename tables/columns to match your client-side queries as required. 
 Do note that, for every one-to-one relationship, Graph.cool would have created a connection table to link them. This would require a bit of manual work to restructure. 
 Currently, there is no automation available for this step. Carefully review the connection tables and make the necessary changes.
 
-Step 9: Migrate functions
----------------------------
+Step 4.2: Migrate functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In case you have functions in Graph.cool, Hasura has an equivalent feature called :ref:`event triggers <event_triggers>`. Migrating this involves taking your code and deploying it on a different platform (preferably serverless functions).
 
 Do note that for event triggers, the payload that Hasura sends might be different, and you might have to change the way the request body parameters are handled in your function code.
 
-Step 10: Migrate auth
------------------------
+Step 4.3: Migrate auth
+^^^^^^^^^^^^^^^^^^^^^^
 
-There are two ways to authenticate users in Graph.cool.
+There are two ways of authenticating users in Graph.cool:
 
 1. Using Auth0
 2. Using email-password auth.
@@ -117,16 +154,11 @@ In case you are using email-password auth, Graph.cool generates mutations for
 - login ``signinUser(email: { email, password })``. 
 
 You will need to implement these custom mutations using :ref:`Hasura actions <actions>`. 
-
 Refer to this example for a `custom signup mutation <https://github.com/hasura/hasura-actions-examples/tree/master/auth>`__.
 
-Step 11: Migrate permissions
-------------------------------
+Step 4.4: Migrate permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The CRUD permissions in Graph.cool can be manually migrated to Hasura's permission system. You can define roles in Hasura and configure permissions declaratively for all the CRUD operations. 
 Refer to :ref:`this page <authorization>` for configuring Hasura permissions.
-
-.. note::
-
-   This guide is not comprehensive and some steps require manual intervention.
 
