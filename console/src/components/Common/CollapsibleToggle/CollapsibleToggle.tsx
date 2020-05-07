@@ -9,8 +9,25 @@ import React from 'react';
  *    `children, react-element`: The content which needs to be toggled
  */
 
-class CollapsibleToggle extends React.Component {
-  constructor(props) {
+interface CollapsibleToggleProps {
+  title: string;
+  isOpen: boolean;
+  toggleHandler?: () => void;
+  testId: string;
+  children: React.ReactNode;
+  useDefaultTitleStyle?: boolean;
+}
+
+interface CollapsibleToggleState {
+  isOpen: boolean;
+  toggleHandler: () => void;
+}
+
+class CollapsibleToggle extends React.Component<
+  CollapsibleToggleProps,
+  CollapsibleToggleState
+> {
+  constructor(props: CollapsibleToggleProps) {
     super(props);
 
     this.state = {
@@ -24,7 +41,7 @@ class CollapsibleToggle extends React.Component {
     this.setState({ isOpen: !this.state.isOpen });
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps: CollapsibleToggleProps) {
     const { isOpen, toggleHandler } = nextProps;
 
     if (toggleHandler) {
