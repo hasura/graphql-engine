@@ -503,35 +503,34 @@ retryOrMarkError se@ScheduledEventFull {..} err type' = do
       setRetry se retryTime type'
 
 {- Note [Scheduled event lifecycle]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Scheduled events move between six different states over the course of their
+lifetime, as represented by the following flowchart:
+  ┌───────────┐      ┌────────┐      ┌───────────┐
+  │ scheduled │─(a)─→│ locked │─(b)─→│ delivered │
+  └───────────┘      └────────┘      └───────────┘
+          ↑              │           ┌───────┐
+          └────(c)───────┼─────(d)──→│ error │
+                         │           └───────┘
+                         │           ┌──────┐
+                         └─────(e)──→│ dead │
+                                     └──────┘
 
-A scheduled event can be in one of the five following states at any time:
-
-1. Delivered
-2. Cancelled
-3. Error
-4. Locked
-5. Dead
-
-A scheduled event is marked as delivered when the scheduled event is processed
-successfully.
-
-A scheduled event is marked as error when while processing the scheduled event
-the webhook returns an error and the retries have exhausted (user configurable)
-it's marked as error.
-
-A scheduled event will be in the locked state when the graphql-engine fetches it
-from the database to process it. After processing the event, the graphql-engine
-will unlock it. This state is used to prevent multiple graphql-engine instances
-running on the same database to process the same event concurrently.
-
-A scheduled event will be marked as dead, when the difference between the
-current time and the scheduled time is greater than the tolerance of the event.
-
-A scheduled event will be in the cancelled state, if the `cancel_scheduled_event`
-API is called against a particular scheduled event.
-
-The graphql-engine will not consider those events which have been delivered,
-cancelled, marked as error or in the dead state to process.
+When a scheduled event is first created, it starts in the 'scheduled' state,
+and it can transition to other states in the following ways:
+  a. When graphql-engine fetches a scheduled event from the database to process
+     it, it sets its state to 'locked'. This prevents multiple graphql-engine
+     instances running on the same database from processing the same
+     scheduled event concurrently.
+  b. When a scheduled event is processed successfully, it is marked 'delivered'.
+  c. If a scheduled event fails to be processed, but it hasn’t yet reached
+     its maximum retry limit, its retry counter is incremented and
+     it is returned to the 'scheduled' state.
+  d. If a scheduled event fails to be processed and *has* reached its
+     retry limit, its state is set to 'error'.
+  e. If for whatever reason the difference between the current time and the
+     scheduled time is greater than the tolerance of the scheduled event, it
+     will not be processed and its state will be set to 'dead'.
 -}
 
 processSuccess
