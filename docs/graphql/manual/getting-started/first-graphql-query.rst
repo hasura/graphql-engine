@@ -23,7 +23,7 @@ the following columns:
 .. code-block:: sql
 
   profile (
-    id INT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name TEXT
   )
 

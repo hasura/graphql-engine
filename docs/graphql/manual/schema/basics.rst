@@ -23,12 +23,12 @@ Let's say we want to create two simple tables for an article/author schema:
 .. code-block:: sql
 
   author (
-    id INT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name TEXT
   )
 
   article (
-    id INT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     title TEXT,
     content TEXT,
     rating INT,
