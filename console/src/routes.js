@@ -40,7 +40,7 @@ import { CLI_CONSOLE_MODE } from './constants';
 import UIKit from './components/UIKit/';
 import { Heading } from './components/UIKit/atoms';
 
-const routes = store => {
+const routes = (store) => {
   // load hasuractl migration status
   const requireMigrationStatus = (nextState, replaceState, cb) => {
     const { dispatch } = store;
@@ -50,7 +50,7 @@ const routes = store => {
         () => {
           cb();
         },
-        r => {
+        (r) => {
           if (r.code === 'data_api_error') {
             dispatch(showErrorNotification('Error', null, r));
           } else {
