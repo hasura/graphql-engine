@@ -174,3 +174,7 @@ Here are a couple of examples:
         }
       }
     }
+
+.. note::
+
+  IDs in example schemas are assumed to be auto generated which is why they are not passed when inserting an object.
