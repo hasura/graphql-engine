@@ -561,8 +561,7 @@ E.g.:
 **pk_columns** argument
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``pk_columns`` argument is used to identify an object by its primary key columns. 
-This argument can be used in *update* mutations to identify the object that is to be updated.
+The ``pk_columns`` argument is used to identify an object by its primary key columns in *update* mutations. 
 
 .. code-block:: none
 

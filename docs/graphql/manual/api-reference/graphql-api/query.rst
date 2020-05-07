@@ -102,7 +102,7 @@ Query / subscription by pk syntax
 
 .. code-block:: graphql
 
-    query  {
+    query {
       article_by_pk(id: 1) {
         id
         title
