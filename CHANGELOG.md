@@ -38,6 +38,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 - console: add read replica support section to pro popup (#4118)
 - cli: list all avialable commands in root command help (fix #4623)
+- docs: fix wrong info about excluding scheme in CORS config
 
 ## `v1.2.0`
 
@@ -63,7 +64,6 @@ using this flag is insecure since verification is not carried out.
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
 - docs: update migrations docs with config v2 (#4586)
 - docs: update actions docs (#4586)
-- docs: fix wrong info about excluding scheme in CORS config
 
 ## `v1.2.0-beta.5`
 
