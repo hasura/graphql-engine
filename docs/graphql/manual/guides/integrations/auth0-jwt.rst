@@ -22,7 +22,7 @@ Create an Auth0 Application
 - In the ``Create Application`` window, set a name for your application and select ``Single Page Web Applications``
   (assuming your application is React/Angular/Vue etc).
 
-.. thumbnail:: ../../../../img/graphql/manual/guides/create-client-popup.png
+.. thumbnail:: /img/graphql/manual/guides/create-client-popup.png
    :alt: Create an Auth0 application
 
 Configure Auth0 Rules & Callback URLs
@@ -189,7 +189,7 @@ The generated config can be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt
 The config generated from this page can be directly pasted in ``yaml`` files and command line arguments as it takes care of
 escaping new lines.
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
+.. thumbnail:: /img/graphql/manual/auth/jwt-config-generated.png
    :width: 75%
    :alt: Generated JWT config
 

@@ -96,7 +96,7 @@ in the GraphQL schema.
      Go to the ``Actions`` tab on the console and click on ``Create``. This will
      take you to a page like this:
 
-     .. thumbnail:: ../../../img/graphql/manual/actions/mutation-action-create.png
+     .. thumbnail:: /img/graphql/manual/actions/mutation-action-create.png
         :alt: Console action create
         :width: 70%
 
@@ -270,7 +270,7 @@ the GraphQL schema.
      Go to the ``Actions`` tab on the console and click on ``Create``. This will
      take you to a page like this:
 
-     .. thumbnail:: ../../../img/graphql/manual/actions/query-action-create.png
+     .. thumbnail:: /img/graphql/manual/actions/query-action-create.png
         :alt: Console action create
         :width: 70%
 
