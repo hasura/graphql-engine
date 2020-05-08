@@ -9,13 +9,13 @@ import time
 
 # The create and delete tests should ideally go in setup and teardown YAML files,
 # We can't use that here because, the payload is dynamic i.e. in case of adhoc Scheduled Triggers
-# the value is the current timestamp and in case of cron Scheduled Triggers, the cron schedule is
+# the value is the current timestamp and in case of cron  Triggers, the cron schedule is
 # derived based on the current timestamp
 
 def stringify_datetime(dt):
     return dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-class TestOneOffScheduledTrigger(object):
+class TestScheduledEvent(object):
 
     webhook_payload = {"foo":"baz"}
 
@@ -31,9 +31,9 @@ class TestOneOffScheduledTrigger(object):
     webhook_domain = "http://127.0.0.1:5594"
 
 
-    def test_create_valid_one_off_scheduled_trigger(self,hge_ctx):
+    def test_create_scheduled_event(self,hge_ctx):
         query = {
-            "type":"create_scheduled_trigger_one_off",
+            "type":"create_scheduled_event",
             "args":{
                 "webhook":self.webhook_domain + '/test',
                 "schedule_at":stringify_datetime(datetime.utcnow()),
@@ -44,9 +44,9 @@ class TestOneOffScheduledTrigger(object):
         st, resp = hge_ctx.v1q(query)
         assert st == 200,resp
 
-    def test_create_trigger_with_very_old_scheduled_time(self,hge_ctx):
+    def test_create_scheduled_event_with_very_old_scheduled_time(self,hge_ctx):
         query = {
-            "type":"create_scheduled_trigger_one_off",
+            "type":"create_scheduled_event",
             "args":{
                 "webhook":{"from_env":"SCHEDULED_TRIGGERS_WEBHOOK"},
                 "schedule_at": "2020-01-01T00:00:00Z",
@@ -59,7 +59,7 @@ class TestOneOffScheduledTrigger(object):
 
     def test_create_trigger_with_error_returning_webhook(self,hge_ctx):
         query = {
-            "type":"create_scheduled_trigger_one_off",
+            "type":"create_scheduled_event",
             "args":{
                 "webhook":self.webhook_domain + '/fail',
                 "schedule_at": stringify_datetime(datetime.utcnow()),
@@ -88,7 +88,7 @@ class TestOneOffScheduledTrigger(object):
         query = {
             "type":"run_sql",
             "args":{
-                "sql":"select status,tries from hdb_catalog.hdb_one_off_scheduled_events"
+                "sql":"select status,tries from hdb_catalog.hdb_scheduled_events"
             }
         }
         st, resp = hge_ctx.v1q(query)
@@ -102,28 +102,28 @@ class TestOneOffScheduledTrigger(object):
         assert "delivered" in scheduled_event_statuses
         assert int(scheduled_event_statuses['error']) == 2 # num_retries + 1
 
-    def test_teardown_one_off_scheduled_events(self,hge_ctx):
+    def test_teardown_scheduled_events(self,hge_ctx):
         query = {
             "type":"run_sql",
             "args": {
-                "sql":"delete from hdb_catalog.hdb_one_off_scheduled_events"
+                "sql":"delete from hdb_catalog.hdb_scheduled_events"
             }
         }
         st, resp = hge_ctx.v1q(query)
         assert st == 200,resp
 
-class TestScheduledTriggerCron(object):
+class TestCronTrigger(object):
 
-    cron_trigger_name = "cron_scheduled_trigger"
+    cron_trigger_name = "cron_trigger"
 
     def test_create_cron_schedule_triggers(self,hge_ctx):
         # setting the test to be after 30 mins, to make sure that
         # any of the events are not delivered.
         min_after_30_mins = (datetime.utcnow() + timedelta(minutes=30)).minute
-        TestScheduledTriggerCron.cron_schedule = "{} * * * *".format(min_after_30_mins)
+        TestCronTrigger.cron_schedule = "{} * * * *".format(min_after_30_mins)
 
         cron_st_api_query = {
-            "type":"create_scheduled_trigger_cron",
+            "type":"create_cron_trigger",
             "args":{
                 "name":self.cron_trigger_name,
                 "webhook":"http://127.0.0.1:5594" + "/foo",
@@ -138,7 +138,7 @@ class TestScheduledTriggerCron(object):
             }
         }
         cron_st_code,cron_st_resp = hge_ctx.v1q(cron_st_api_query)
-        TestScheduledTriggerCron.init_time = datetime.utcnow()
+        TestCronTrigger.init_time = datetime.utcnow()
         # the cron events will be generated based on the current time, they
         # will not be exactly the same though(the server now and now here)
         assert cron_st_code == 200
@@ -153,7 +153,7 @@ class TestScheduledTriggerCron(object):
         # the croniter generated timestamps
         sql = '''
         select timezone('utc',scheduled_time) as scheduled_time
-        from hdb_catalog.hdb_scheduled_events where
+        from hdb_catalog.hdb_cron_events where
         name = '{}' order by scheduled_time asc;'''
         q = {
             "type":"run_sql",
@@ -162,7 +162,7 @@ class TestScheduledTriggerCron(object):
             }
         }
         st,resp = hge_ctx.v1q(q)
-        assert st == 200
+        assert st == 200,resp
         ts_resp = resp['result'][1:]
         assert len(ts_resp) == 100
         # 100 scheduled events are generated in a single batch when the
@@ -175,7 +175,7 @@ class TestScheduledTriggerCron(object):
 
     def test_delete_cron_scheduled_trigger(self,hge_ctx):
         q = {
-            "type":"delete_scheduled_trigger_cron",
+            "type":"delete_cron_trigger",
             "args":{
                 "name":self.cron_trigger_name
             }
