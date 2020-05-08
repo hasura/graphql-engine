@@ -105,6 +105,7 @@ data CreateCronTrigger
   , cctHeaders           :: ![ET.HeaderConf]
   , cctIncludeInMetadata :: !Bool
   , cctComment           :: !(Maybe Text)
+  , cctReplace           :: !Bool
   } deriving (Show, Eq, Generic)
 
 instance NFData CreateCronTrigger
@@ -122,6 +123,7 @@ instance FromJSON CreateCronTrigger where
       cctIncludeInMetadata <-
           o .:? "include_in_metadata" .!= False
       cctComment <- o .:? "comment"
+      cctReplace <- o .:? "replace" .!= False
       pure CreateCronTrigger {..}
 
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateCronTrigger)

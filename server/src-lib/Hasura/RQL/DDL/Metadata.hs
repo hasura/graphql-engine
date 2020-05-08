@@ -392,9 +392,9 @@ fetchMetadata = do
       map uncurryCronTrigger
               <$> Q.listQE defaultTxErrorHandler
       [Q.sql|
-       SELECT st.name, st.webhook_conf, st.cron_schedule, st.payload,
-             st.retry_conf, st.header_conf, st.include_in_metadata, st.comment
-        FROM hdb_catalog.hdb_cron_trigger st
+       SELECT ct.name, ct.webhook_conf, ct.cron_schedule, ct.payload,
+             ct.retry_conf, ct.header_conf, ct.include_in_metadata, ct.comment
+        FROM hdb_catalog.hdb_cron_triggers ct
         WHERE include_in_metadata
       |] () False
       where

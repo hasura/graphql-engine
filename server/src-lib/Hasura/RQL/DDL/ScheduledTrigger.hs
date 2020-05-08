@@ -1,6 +1,5 @@
 module Hasura.RQL.DDL.ScheduledTrigger
   ( runCreateCronTrigger
-  , runUpdateCronTrigger
   , runDeleteCronTrigger
   , addCronTriggerToCatalog
   , deleteCronTriggerFromCatalog
@@ -21,6 +20,9 @@ import qualified Database.PG.Query     as Q
 import qualified Data.Time.Clock       as C
 import qualified Data.HashMap.Strict   as Map
 
+-- | runCreateCronTrigger will update a existing cron trigger when the 'replace'
+--   value is set to @true@ and when replace is @false@ a new cron trigger will
+--   be created
 runCreateCronTrigger :: (CacheRWM m, MonadTx m) => CreateCronTrigger ->  m EncJSON
 runCreateCronTrigger CreateCronTrigger {..} = do
   let q = (CronTriggerMetadata cctName
@@ -31,15 +33,20 @@ runCreateCronTrigger CreateCronTrigger {..} = do
                                cctHeaders
                                cctIncludeInMetadata
                                cctComment)
-  cronTriggersMap <- scCronTriggers <$> askSchemaCache
-  case Map.lookup (stName q) cronTriggersMap of
-    Nothing -> pure ()
-    Just _ -> throw400 AlreadyExists $
-      "cron trigger with name: " <> (triggerNameToTxt $ stName q) <> " already exists"
+  case cctReplace of
+    True -> updateCronTrigger q
+    False -> do
+        cronTriggersMap <- scCronTriggers <$> askSchemaCache
+        case Map.lookup (stName q) cronTriggersMap of
+          Nothing -> pure ()
+          Just _ -> throw400 AlreadyExists $
+                    "cron trigger with name: "
+                    <> (triggerNameToTxt $ stName q)
+                    <> " already exists"
 
-  addCronTriggerToCatalog q
-  buildSchemaCacheFor $ MOCronTrigger $ stName q
-  return successMsg
+        addCronTriggerToCatalog q
+        buildSchemaCacheFor $ MOCronTrigger $ stName q
+        return successMsg
 
 addCronTriggerToCatalog :: (MonadTx m) => CronTriggerMetadata ->  m ()
 addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
@@ -74,23 +81,15 @@ resolveCronTrigger CatalogCronTrigger {..} = do
 
     headers = fromMaybe [] _cctHeaderConf
 
-runUpdateCronTrigger :: (CacheRWM m, MonadTx m) => CreateCronTrigger -> m EncJSON
-runUpdateCronTrigger CreateCronTrigger {..} = do
-  let q = (CronTriggerMetadata cctName
-                                    cctWebhook
-                                    cctCronSchedule
-                                    cctPayload
-                                    cctRetryConf
-                                    cctHeaders
-                                    cctIncludeInMetadata
-                                    cctComment)
-  checkExists cctName
-  updateScheduledTriggerInCatalog q
-  buildSchemaCacheFor $ MOCronTrigger $ stName q
+updateCronTrigger :: (CacheRWM m, MonadTx m) => CronTriggerMetadata -> m EncJSON
+updateCronTrigger cronTriggerMetadata = do
+  checkExists $ stName cronTriggerMetadata
+  updateCronTriggerInCatalog cronTriggerMetadata
+  buildSchemaCacheFor $ MOCronTrigger $ stName cronTriggerMetadata
   return successMsg
 
-updateScheduledTriggerInCatalog :: (MonadTx m) => CronTriggerMetadata -> m ()
-updateScheduledTriggerInCatalog CronTriggerMetadata {..} = liftTx $ do
+updateCronTriggerInCatalog :: (MonadTx m) => CronTriggerMetadata -> m ()
+updateCronTriggerInCatalog CronTriggerMetadata {..} = liftTx $ do
   Q.unitQE defaultTxErrorHandler
    [Q.sql|
     UPDATE hdb_catalog.hdb_cron_triggers
