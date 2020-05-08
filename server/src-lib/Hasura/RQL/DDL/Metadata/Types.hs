@@ -172,7 +172,7 @@ data ReplaceMetadata
   , aqAllowlist         :: ![Collection.CollectionReq]
   , aqCustomTypes       :: !CustomTypes
   , aqActions           :: ![ActionMetadata]
-  , aqScheduledTriggers :: ![ScheduledTriggerMetadata]
+  , aqCronTriggers      :: ![CronTriggerMetadata]
   } deriving (Show, Eq)
 
 instance FromJSON ReplaceMetadata where
@@ -186,7 +186,7 @@ instance FromJSON ReplaceMetadata where
       <*> o .:? "allow_list" .!= []
       <*> o .:? "custom_types" .!= emptyCustomTypes
       <*> o .:? "actions" .!= []
-      <*> o .:? "scheduled_triggers" .!= []
+      <*> o .:? "cron_triggers" .!= []
     where
       parseFunctions version maybeValue =
         case version of
@@ -254,7 +254,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                allowlist
                                customTypes
                                actions
-                               scheduledTriggers
+                               cronTriggers
                              ) = AO.object $ [versionPair, tablesPair] <>
                                  catMaybes [ functionsPair
                                            , remoteSchemasPair
@@ -262,7 +262,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                            , allowlistPair
                                            , actionsPair
                                            , customTypesPair
-                                           , scheduledTriggersPair
+                                           , cronTriggersPair
                                            ]
   where
     versionPair = ("version", AO.toOrdered version)
@@ -278,7 +278,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                       else Just ("custom_types", customTypesToOrdJSON customTypes)
     actionsPair = listToMaybeOrdPair "actions" actionMetadataToOrdJSON actions
 
-    scheduledTriggersPair = listToMaybeOrdPair "scheduled_triggers" scheduledTriggerQToOrdJSON scheduledTriggers
+    cronTriggersPair = listToMaybeOrdPair "cron_triggers" crontriggerQToOrdJSON cronTriggers
 
     tableMetaToOrdJSON :: TableMeta -> AO.Value
     tableMetaToOrdJSON ( TableMeta
@@ -428,9 +428,9 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                   , ("definition", AO.toOrdered definition)
                   ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
-    scheduledTriggerQToOrdJSON :: ScheduledTriggerMetadata -> AO.Value
-    scheduledTriggerQToOrdJSON
-      (ScheduledTriggerMetadata name webhook schedule payload retryConf headers includeInMetadata comment) =
+    crontriggerQToOrdJSON :: CronTriggerMetadata -> AO.Value
+    crontriggerQToOrdJSON
+      (CronTriggerMetadata name webhook schedule payload retryConf headers includeInMetadata comment) =
       AO.object $
             [ ("name", AO.toOrdered name)
             , ("webhook", AO.toOrdered webhook)

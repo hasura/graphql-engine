@@ -126,7 +126,7 @@ deleteMetadataObject objectId = case objectId of
   MOTable        name -> boTables        %~ M.delete name
   MOFunction     name -> boFunctions     %~ M.delete name
   MORemoteSchema name -> boRemoteSchemas %~ M.delete name
-  MOScheduledTrigger name -> boScheduledTriggers %~ M.delete name
+  MOCronTrigger name  -> boCronTriggers %~ M.delete name
   MOTableObj tableName tableObjectId -> boTables.ix tableName %~ case tableObjectId of
     MTORel           name _ -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
     MTOComputedField name   -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)

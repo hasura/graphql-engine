@@ -115,7 +115,7 @@ module Hasura.RQL.Types.SchemaCache
   , getFuncsOfTable
   , askFunctionInfo
 
-  , ScheduledTriggerInfo(..)
+  , CronTriggerInfo(..)
   ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -139,9 +139,11 @@ import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Types
 
+
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           System.Cron.Types
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
@@ -178,10 +180,10 @@ type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
-data ScheduledTriggerInfo
- = ScheduledTriggerInfo
-   { stiName        :: !TriggerName
-   , stiSchedule    :: !ScheduleType
+data CronTriggerInfo
+ = CronTriggerInfo
+   { stiName        :: !TriggerName  -- refactor the sti's to cti's
+   , stiSchedule    :: !CronSchedule
    , stiPayload     :: !(Maybe Value)
    , stiRetryConf   :: !STRetryConf
    , stiWebhookInfo :: !WebhookConfInfo
@@ -189,7 +191,7 @@ data ScheduledTriggerInfo
    , stiComment     :: !(Maybe Text)
    } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 3 snakeCase) ''ScheduledTriggerInfo)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''CronTriggerInfo)
 
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
@@ -217,7 +219,7 @@ data SchemaCache
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
   , scInconsistentObjs  :: ![InconsistentMetadata]
-  , scScheduledTriggers :: !(M.HashMap TriggerName ScheduledTriggerInfo)
+  , scCronTriggers      :: !(M.HashMap TriggerName CronTriggerInfo)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 

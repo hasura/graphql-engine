@@ -392,7 +392,7 @@ runQueryM rq = withPathK "args" $ case rq of
 
       RQCreateCronTrigger q      -> runCreateCronTrigger q
       RQUpdateCronTrigger q      -> runUpdateCronTrigger q
-      RQDeleteCronTrigger q      -> runDeleteScheduledTrigger q
+      RQDeleteCronTrigger q      -> runDeleteCronTrigger q
 
       RQCreateScheduledTriggerOneOff q -> runCreateScheduledTriggerOneOff q
 

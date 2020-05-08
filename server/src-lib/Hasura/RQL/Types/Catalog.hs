@@ -12,7 +12,7 @@ module Hasura.RQL.Types.Catalog
   , CatalogPermission(..)
   , CatalogEventTrigger(..)
   , CatalogFunction(..)
-  , CatalogScheduledTrigger(..)
+  , CatalogCronTrigger(..)
   , CatalogCustomTypes(..)
   ) where
 
@@ -39,6 +39,8 @@ import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.Session
 import           Hasura.SQL.Types
+
+import           System.Cron.Types                    (CronSchedule(..))
 
 newtype CatalogForeignKey
   = CatalogForeignKey
@@ -164,19 +166,19 @@ $(deriveFromJSON (aesonDrop 4 snakeCase) ''CatalogCustomTypes)
 
 type CatalogAction = ActionMetadata
 
-data CatalogScheduledTrigger
-  = CatalogScheduledTrigger
-  { _cstName           :: !TriggerName
-  , _cstWebhookConf    :: !WebhookConf
-  , _cstScheduleConf   :: !ScheduleType
-  , _cstPayload        :: !(Maybe Value)
-  , _cstRetryConf      :: !(Maybe STRetryConf)
-  , _cstHeaderConf     :: !(Maybe [HeaderConf])
-  , _cstComment        :: !(Maybe Text)
+data CatalogCronTrigger
+  = CatalogCronTrigger
+  { _cctName           :: !TriggerName
+  , _cctWebhookConf    :: !WebhookConf
+  , _cctCronSchedule   :: !CronSchedule
+  , _cctPayload        :: !(Maybe Value)
+  , _cctRetryConf      :: !(Maybe STRetryConf)
+  , _cctHeaderConf     :: !(Maybe [HeaderConf])
+  , _cctComment        :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
-instance NFData CatalogScheduledTrigger
-instance Cacheable CatalogScheduledTrigger
-$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogScheduledTrigger)
+instance NFData CatalogCronTrigger
+instance Cacheable CatalogCronTrigger
+$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogCronTrigger)
 
 data CatalogMetadata
   = CatalogMetadata
@@ -190,7 +192,7 @@ data CatalogMetadata
   , _cmComputedFields       :: ![CatalogComputedField]
   , _cmCustomTypes          :: !CatalogCustomTypes
   , _cmActions              :: ![CatalogAction]
-  , _cmScheduledTriggers    :: ![CatalogScheduledTrigger]
+  , _cmCronTriggers         :: ![CatalogCronTrigger]
   } deriving (Show, Eq, Generic)
 instance NFData CatalogMetadata
 instance Cacheable CatalogMetadata
