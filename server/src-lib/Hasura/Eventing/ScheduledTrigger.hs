@@ -3,13 +3,16 @@
 
 This module implements the functionality of invoking webhooks during specified
 time events aka scheduled events. The scheduled events are the events generated
-by the graphql-engine using the scheduled-triggers. Scheduled events are modeled
-using rows in Postgres with a @timestamp@ column.
+by the graphql-engine using the cron triggers or/and a scheduled event can
+be created by the user at a specified time with the payload, webhook, headers
+and the retry configuration. Scheduled events are modeled using rows in Postgres
+with a @timestamp@ column.
 
-This module implements scheduling and delivery of scheduled events:
+This module implements scheduling and delivery of scheduled
+events:
 
-1. Scheduling a scheduled event involves creating new scheduled events. New
-scheduled events are created based on the cron schedule and the number of
+1. Scheduling a cron event involves creating new cron events. New
+cron events are created based on the cron schedule and the number of
 scheduled events that are already present in the scheduled events buffer.
 The graphql-engine computes the new scheduled events and writes them to
 the database.(Generator)
@@ -51,17 +54,17 @@ During the startup, two threads are started:
     This effectively corresponds to doing an INSERT with values containing
     specific timestamp.
 
-2. Processor: Fetches the undelivered events from the database and which have
-   the scheduled timestamp lesser than the current timestamp and then
-   process them.
+2. Processor: Fetches the undelivered cron events and the scheduled events
+   from the database and which have timestamp lesser than the
+   current timestamp and then process them.
 -}
 module Hasura.Eventing.ScheduledTrigger
   ( runScheduledEventsGenerator
   , processScheduledTriggers
 
-  , ScheduledEventSeed(..)
+  , CronEventSeed(..)
   , generateScheduleTimes
-  , insertScheduledEvents
+  , insertCronEvents
   , ScheduledTriggerOneOff(..)
   ) where
 
@@ -145,10 +148,10 @@ data CronTriggerStats
   , ctsMaxScheduledTime    :: !UTCTime
   } deriving (Show, Eq)
 
-data ScheduledEventSeed -- refactor this to CronEventSeed
-  = ScheduledEventSeed
-  { sesName          :: !TriggerName
-  , sesScheduledTime :: !UTCTime
+data CronEventSeed
+  = CronEventSeed
+  { cesName          :: !TriggerName
+  , cesScheduledTime :: !UTCTime
   } deriving (Show, Eq)
 
 data CronEventPartial
@@ -283,12 +286,12 @@ insertCronEventsFor cronTriggersWithStats = do
               }
       Q.unitQE defaultTxErrorHandler (Q.fromText insertCronEventsSql) () False
   where
-    toArr (ScheduledEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
+    toArr (CronEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
     toTupleExp = TupleExp . map SELit
 
-insertScheduledEvents :: [ScheduledEventSeed] -> Q.TxE QErr ()
-insertScheduledEvents events = do
-  let insertScheduledEventsSql = TB.run $ toSQL
+insertCronEvents :: [CronEventSeed] -> Q.TxE QErr ()
+insertCronEvents events = do
+  let insertCronEventsSql = TB.run $ toSQL
         SQLInsert
           { siTable    = cronEventsTable
           , siCols     = map unsafePGCol ["name", "scheduled_time"]
@@ -296,14 +299,14 @@ insertScheduledEvents events = do
           , siConflict = Just $ DoNothing Nothing
           , siRet      = Nothing
           }
-  Q.unitQE defaultTxErrorHandler (Q.fromText insertScheduledEventsSql) () False
+  Q.unitQE defaultTxErrorHandler (Q.fromText insertCronEventsSql) () False
   where
-    toArr (ScheduledEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
+    toArr (CronEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
     toTupleExp = TupleExp . map SELit
 
-generateCronEventsFrom :: UTCTime -> CronTriggerInfo-> [ScheduledEventSeed]
+generateCronEventsFrom :: UTCTime -> CronTriggerInfo-> [CronEventSeed]
 generateCronEventsFrom startTime CronTriggerInfo{..} =
-  map (ScheduledEventSeed stiName) $
+  map (CronEventSeed stiName) $
       generateScheduleTimes startTime 100 stiSchedule -- generate next 100 events
 
 -- | Generates next @n events starting @from according to 'CronSchedule'

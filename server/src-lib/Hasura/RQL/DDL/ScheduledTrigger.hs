@@ -59,8 +59,7 @@ addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
        ,Q.AltJ stHeaders, stIncludeInMetadata, stComment) False
   currentTime <- liftIO C.getCurrentTime
   let scheduleTimes = generateScheduleTimes currentTime 100 stSchedule -- generate next 100 events
-      events = map (ScheduledEventSeed stName) scheduleTimes
-  insertScheduledEvents events
+  insertCronEvents $ map (CronEventSeed stName) scheduleTimes
 
 resolveCronTrigger
   :: (QErrM m, MonadIO m)
