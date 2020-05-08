@@ -226,60 +226,20 @@ The various types of queries are listed in the following table:
      - 1
      - Invoke a trigger with custom payload
 
-   * - :ref:`create_scheduled_trigger_cron`
-     - :ref:`create_scheduled_trigger_cron_args <create_scheduled_trigger_cron_syntax>`
+   * - :ref:`create_cron_trigger`
+     - :ref:`create_cron_trigger_args <create_cron_trigger_syntax>`
      - 1
-     - Create a cron scheduled trigger
+     - Create a cron trigger
 
-   * - :ref:`update_scheduled_trigger_cron`
-     - :ref:`update_scheduled_trigger_cron_args <update_scheduled_trigger_cron_syntax>`
+   * - :ref:`delete_cron_trigger`
+     - :ref:`delete_cron_trigger_args <delete_cron_trigger_syntax>`
      - 1
-     - Update an existing cron scheduled trigger
+     - Delete an existing cron trigger
 
-   * - :ref:`delete_scheduled_trigger_cron`
-     - :ref:`delete_scheduled_trigger_cron_args <delete_scheduled_trigger_cron_syntax>`
+   * - :ref:`create_scheduled_event`
+     - :ref:`create_scheduled_event_args <create_scheduled_event_syntax>`
      - 1
-     - Delete an existing cron scheduled trigger
-
-   * - :ref:`fetch_scheduled_trigger_cron_events`
-     - :ref:`fetch_scheduled_trigger_cron_events_args <fetch_scheduled_trigger_cron_events_syntax>`
-     - 1
-     - Fetch events of an existing cron scheduled trigger
-
-   * - :ref:`create_scheduled_trigger_one_off`
-     - :ref:`create_scheduled_trigger_one_off_args <create_scheduled_trigger_one_off_syntax>`
-     - 1
-     - Create a one-off scheduled trigger
-
-   * - :ref:`fetch_scheduled_trigger_one_off`
-     - :ref:`fetch_scheduled_trigger_one_off_args <fetch_scheduled_trigger_one_off_syntax>`
-     - 1
-     - Fetch the one-off scheduled triggers
-
-   * - :ref:`create_scheduled_trigger_one_off_template`
-     - :ref:`create_scheduled_trigger_one_off_template_args <create_scheduled_trigger_one_off_template_syntax>`
-     - 1
-     - Create a one_off scheduled trigger template
-
-   * - :ref:`update_scheduled_trigger_one_off_template`
-     - :ref:`update_scheduled_trigger_one_off_template_args <update_scheduled_trigger_one_off_template_syntax>`
-     - 1
-     - Update an existing one_off scheduled trigger template
-
-   * - :ref:`invoke_scheduled_trigger_one_off_template`
-     - :ref:`invoke_scheduled_trigger_one_off_template_args <invoke_scheduled_trigger_one_off_template_syntax>`
-     - 1
-     - Invoke an existing scheduled trigger one-off template
-
-   * - :ref:`delete_scheduled_trigger_one_off_template`
-     - :ref:`delete_scheduled_trigger_one_off_template_args <delete_scheduled_trigger_one_off_template_syntax>`
-     - 1
-     - Delete an existing one_off template scheduled trigger template
-
-   * - :ref:`fetch_scheduled_trigger_one_off_template_events`
-     - :ref:`fetch_scheduled_trigger_one_off_template_events_args <fetch_scheduled_trigger_one_off_template_events_syntax>`
-     - 1
-     - Fetch events of an one_off_template scheduled trigger template
+     - Create a new scheduled event
 
    * - :ref:`add_remote_schema`
      - :ref:`add_remote_schema_args <add_remote_schema_syntax>`
