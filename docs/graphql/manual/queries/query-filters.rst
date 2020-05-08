@@ -1547,29 +1547,11 @@ Fetch all authors which have at least one article written by them:
             }
           },
           {
-            "id": 2,
-            "name": "Beltran",
-            "articles_aggregate": {
-              "aggregate": {
-                "count": 2
-              }
-            }
-          },
-          {
-            "id": 3,
-            "name": "Sidney",
-            "articles_aggregate": {
-              "aggregate": {
-                "count": 3
-              }
-            }
-          },
-          {
             "id": 4,
             "name": "Anjela",
             "articles_aggregate": {
               "aggregate": {
-                "count": 2
+                "count": 1
               }
             }
           }
@@ -1605,15 +1587,6 @@ Fetch all authors which have not written any articles:
     {
       "data": {
         "author": [
-          {
-            "id": 1,
-            "name": "Justin",
-            "articles_aggregate": {
-              "aggregate": {
-                "count": 0
-              }
-            }
-          },
           {
             "id": 2,
             "name": "Beltran",
