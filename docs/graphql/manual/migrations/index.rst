@@ -9,68 +9,80 @@ Migrations & Metadata
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Introduction
 ------------
 
-It is typical for developers to use some kind of "migration" tool to track
-changes to the Postgres schema. Usually the SQL statements used to create the
-tables, views etc. are stored as a single file or multiple files. Certain tools
-also let you add an "up" and a "down" step so that you can roll back the
-changes.
+It is a typical requirement to export an existing Hasura "setup" so that you can
+apply it on another instance to reproduce the same setup. For example, to achieve
+a dev -> staging -> production environment promotion scenario.
 
-When you connect Hasura to a Postgres database and use the console to "track" a
-table, a piece of information is added to the Hasura "metadata" (configuration)
-indicating this table in Postgres should be exposed via GraphQL. Similarly,
-most of the actions on the console update the Hasura metadata.
+.. note::
 
-In the development phase, you'll be using the Hasura console to create and track
-tables, create relationships, add permissions etc. When you need to move to a
-new environment, it will become quite hard to re-do all these operations using
-the console again on a fresh database. You might be looking for a way to export
-the Hasura metadata so that you can apply it on another instance from a CI/CD
-setup to reproduce the same setup. You might also be looking for a way to do a
-dev --> staging --> production environment promotion scenario.
+  This documentation is for Hasura migrations ``config v2``, supported from
+  ``v1.2.0``. (See :ref:`upgrade guide <migrations_upgrade_v2>`).
 
-Well, you've come to the right place to address all these scenarios. Hasura is
-bundled with a schema/metadata migration system which can be used to
-declaratively track and version control all the changes happening to the
-database.
+  For ``config v1``, see :ref:`migrations_v1`.
 
-Simple use cases
-----------------
+How is Hasura state managed?
+----------------------------
 
-We will split the use cases into two:
+Hasura needs 2 pieces of information to recreate your GraphQL API, the underlying
+PG database schema and the Hasura metadata which is used to describe the exposed
+GraphQL API.
 
-1. :ref:`You're already using a migration tool for the Postgres schema
-   <manage_hasura_metadata>`. (like knex, TypeORM, Sequelize, Rails/Django
-   migrations. In this case you only need to manage the Hasura metadata)
-2. :ref:`You're not using any migration tool for the Postgres schema
-   <postgres_schema_metadata>`. (Hasura will take care of the
-   Postgres schema also)
+The :ref:`Hasura CLI <hasuracli-manual>` lets you manage these pieces of
+information as you build your project via:
+
+Database migration files
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The state of your PG database is managed via incremental SQL migration files.
+These migration files can be applied one after the other to achieve the final
+DB schema.
+
+DB migration files can be generated incrementally and can by applied in parts to
+reach particular checkpoints. They can be used to roll-back the DB schema as well.
+
+Hasura metadata files
+^^^^^^^^^^^^^^^^^^^^^
+
+The state of Hasura metadata is managed via snapshots of the metadata. These
+snapshots can be applied as a whole to configure Hasura to a state represented
+in the snapshot.
+
+Hasura metadata can be exported and imported as a whole.
+
+Setting up migrations
+---------------------
+
+See :ref:`migrations_basics`.
+
 
 Advanced use cases
 ------------------
 
-
 - :ref:`auto_apply_migrations`
 - :ref:`manual_migrations`
 - :ref:`roll_back_migrations`
+- :ref:`seed_data_migration`
 
 Reference documentation
 -----------------------
 
 - :ref:`migrations_how_it_works`
-- :ref:`migration_file_format`
-- :ref:`metadata_file_format`
+- :ref:`Migration file format <migration_file_format_v2>`
+- :ref:`Metadata format <metadata_format_v2>`
 
 .. toctree::
   :maxdepth: 1
   :hidden:
 
-  Manage Metadata <manage-metadata>
-  Manage Migrations (Metadata + Postgres Schema) <manage-migrations>
+  Basics <basics>
+  Manage metadata <manage-metadata>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>
+  Upgrading to config v2 <upgrade-v2>
+  Config v1 <config-v1/index>
