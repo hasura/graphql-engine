@@ -102,9 +102,9 @@ notBuiltinFld f =
 
 getImplTypes :: (MonadReader t m, Has TypeMap t) => AsObjType -> m [ObjTyInfo]
 getImplTypes aot = do
-   tyInfo :: TypeMap <- asks getter
+   tyInfo <- asks getter
    return $ sortOn _otiName $
-     Map.elems $ getPossibleObjTypes' tyInfo aot
+     Map.elems $ getPossibleObjTypes tyInfo aot
 
 -- 4.5.2.3
 unionR
@@ -140,7 +140,7 @@ ifaceR'
   => IFaceTyInfo
   -> Field
   -> m J.Object
-ifaceR' i@(IFaceTyInfo descM n flds) fld =
+ifaceR' i@(IFaceTyInfo descM n flds implementations) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"    -> retJT "__Type"

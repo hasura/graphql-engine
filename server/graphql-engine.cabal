@@ -196,6 +196,7 @@ library
                      , ghc-heap-view == 0.6.0
 
                      , directory
+                     , semigroups >= 0.19.1
 
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
@@ -338,10 +339,11 @@ library
                      , Hasura.GraphQL.Schema.Mutation.Delete
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Utils
+                     , Hasura.GraphQL.NormalForm
                      , Hasura.GraphQL.Validate
                      , Hasura.GraphQL.Validate.Types
                      , Hasura.GraphQL.Validate.Context
-                     , Hasura.GraphQL.Validate.Field
+                     , Hasura.GraphQL.Validate.SelectionSet
                      , Hasura.GraphQL.Validate.InputValue
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute

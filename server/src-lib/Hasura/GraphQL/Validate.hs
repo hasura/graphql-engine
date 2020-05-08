@@ -137,10 +137,8 @@ validateFrag
 validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
   unless (null dirs) $ throwVE
     "unexpected directives at fragment definition"
-  tyInfo <- getTyInfoVE onTy
-  objTyInfo <- onNothing (getObjTyM tyInfo) $ throwVE
-    "fragments can only be defined on object types"
-  return $ FragDef n objTyInfo selSet
+  fragmentTypeInfo <- getFragmentTyInfo onTy
+  return $ FragDef n fragmentTypeInfo selSet
 
 data RootSelSet
   = RQuery !SelSet
@@ -165,7 +163,7 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   -- build a validation ctx
   let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs
 
-  selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
+  selSet <- flip runReaderT valCtx $ denormalizeSelectionSet [] opRoot $
             G._todSelectionSet opDef
 
   case G._todType opDef of
