@@ -158,19 +158,13 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   -- build a validation ctx
   let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs
 
-  selSet <- flip runReaderT valCtx $ denormalizeObjectSelectionSet valCtx opRoot $
+  selSet <- flip runReaderT valCtx $ parseObjectSelectionSet valCtx opRoot $
             G._todSelectionSet opDef
 
   case G._todType opDef of
     G.OperationTypeQuery -> return $ RQuery selSet
     G.OperationTypeMutation -> return $ RMutation selSet
     G.OperationTypeSubscription -> do
-      -- case Seq.viewl selSet of
-      --   Seq.EmptyL     -> throw500 "empty selset for subscription"
-      --   fld Seq.:< rst -> do
-      --     unless (null rst) $
-      --       throwVE "subscription must select only one top level field"
-          -- return $ RSubscription fld
       case OMap.toList $ unAliasedFields $ unObjectSelectionSet selSet of
         []     -> throw500 "empty selset for subscription"
         [(alias, field)] -> return $ RSubscription alias field

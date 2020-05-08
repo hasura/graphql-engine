@@ -2,9 +2,9 @@
 {-# LANGUAGE RecordWildCards #-}
 module Hasura.GraphQL.NormalForm
   ( Selection(..)
-  , DenormalizedSelection
-  , DenormalizedSelectionSet
-  , DenormalizedField
+  , NormalizedSelection
+  , NormalizedSelectionSet
+  , NormalizedField
   , SelectionSet(..)
   , RootSelectionSet(..)
   , toGraphQLOperation
@@ -59,13 +59,13 @@ data Selection f s
   deriving (Show, Eq)
 
 -- | What a processed G.SelectionSet should look like
-type family DenormalizedSelectionSet a = s | s -> a
+type family NormalizedSelectionSet a = s | s -> a
 
 -- | What a processed G.Field should look like
-type family DenormalizedField a
+type family NormalizedField a
 
-type DenormalizedSelection a
-  = Selection (DenormalizedField a) (DenormalizedSelectionSet a)
+type NormalizedSelection a
+  = Selection (NormalizedField a) (NormalizedSelectionSet a)
 
 -- | Ordered fields
 newtype AliasedFields f

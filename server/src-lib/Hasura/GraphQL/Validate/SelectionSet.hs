@@ -10,8 +10,7 @@ module Hasura.GraphQL.Validate.SelectionSet
   , InterfaceSelectionSet
   , UnionSelectionSet
   , RootSelectionSet(..)
-  -- , denormalizeSelectionSet
-  , denormalizeObjectSelectionSet
+  , parseObjectSelectionSet
   , asObjectSelectionSet
   ) where
 
@@ -37,7 +36,10 @@ class HasSelectionSet a where
   getTypename :: a -> G.NamedType
   getMemberTypes :: a -> Set.HashSet G.NamedType
 
-  denormalizeField_
+  fieldToSelectionSet
+    :: G.Alias -> NormalizedField a -> NormalizedSelectionSet a
+
+  parseField_
     :: ( MonadReader ValidationCtx m
        , MonadError QErr m
        , MonadReusability m
@@ -45,15 +47,15 @@ class HasSelectionSet a where
        )
     => a
     -> G.Field
-    -> m (Maybe (DenormalizedField a))
+    -> m (Maybe (NormalizedField a))
 
-  mergeSelections
+  mergeNormalizedSelectionSets
     :: ( MonadReader ValidationCtx m
        , MonadError QErr m
        , MonadReusability m
        )
-    => [Selection (DenormalizedField a) (DenormalizedSelectionSet a)]
-    -> m (DenormalizedSelectionSet a)
+    => [NormalizedSelectionSet a]
+    -> m (NormalizedSelectionSet a)
 
   fromObjectSelectionSet
     :: G.NamedType
@@ -61,8 +63,9 @@ class HasSelectionSet a where
     -> G.NamedType
     -- ^ fragment typename
     -> Set.HashSet G.NamedType
-    -> DenormalizedSelectionSet ObjTyInfo
-    -> DenormalizedSelectionSet a
+    -- ^ common types
+    -> NormalizedSelectionSet ObjTyInfo
+    -> NormalizedSelectionSet a
 
   fromInterfaceSelectionSet
     :: G.NamedType
@@ -70,8 +73,8 @@ class HasSelectionSet a where
     -> G.NamedType
     -- ^ fragment typename
     -> Set.HashSet G.NamedType
-    -> DenormalizedSelectionSet IFaceTyInfo
-    -> DenormalizedSelectionSet a
+    -> NormalizedSelectionSet IFaceTyInfo
+    -> NormalizedSelectionSet a
 
   fromUnionSelectionSet
     :: G.NamedType
@@ -79,10 +82,11 @@ class HasSelectionSet a where
     -> G.NamedType
     -- ^ fragment typename
     -> Set.HashSet G.NamedType
-    -> DenormalizedSelectionSet UnionTyInfo
-    -> DenormalizedSelectionSet a
+    -- ^ common types
+    -> NormalizedSelectionSet UnionTyInfo
+    -> NormalizedSelectionSet a
 
-denormalizeObjectSelectionSet
+parseObjectSelectionSet
   :: ( MonadError QErr m
      , MonadReusability m
      )
@@ -90,11 +94,19 @@ denormalizeObjectSelectionSet
   -> ObjTyInfo
   -> G.SelectionSet
   -> m ObjectSelectionSet
-denormalizeObjectSelectionSet validationCtx objectTypeInfo selectionSet =
+parseObjectSelectionSet validationCtx objectTypeInfo selectionSet =
   flip evalStateT [] $ flip runReaderT validationCtx $
-    denormalizeSelectionSet objectTypeInfo selectionSet
+    parseSelectionSet objectTypeInfo selectionSet
 
-denormalizeSelectionSet
+selectionToSelectionSet
+  :: HasSelectionSet a
+  => NormalizedSelection a -> NormalizedSelectionSet a
+selectionToSelectionSet = \case
+  SelectionField alias fld -> fieldToSelectionSet alias fld
+  SelectionInlineFragmentSpread selectionSet -> selectionSet
+  SelectionFragmentSpread _ selectionSet -> selectionSet
+
+parseSelectionSet
   :: ( MonadReader ValidationCtx m
      , MonadError QErr m
      , MonadReusability m
@@ -103,16 +115,17 @@ denormalizeSelectionSet
      )
   => a
   -> G.SelectionSet
-  -> m (DenormalizedSelectionSet a)
-denormalizeSelectionSet fieldTypeInfo selectionSet =
+  -> m (NormalizedSelectionSet a)
+parseSelectionSet fieldTypeInfo selectionSet =
   withPathK "selectionSet" $ do
-    resolvedSelections <- catMaybes <$>
-      mapM (denormalizeSelection fieldTypeInfo) selectionSet
-    mergeSelections resolvedSelections
+    normalizedSelections <- catMaybes <$> mapM (parseSelection fieldTypeInfo) selectionSet
+    mergeNormalizedSelections normalizedSelections
+  where
+    mergeNormalizedSelections = mergeNormalizedSelectionSets . map selectionToSelectionSet
 
 -- | While interfaces and objects have fields, unions do not, so
 -- this is a specialized function for every Object type
-denormalizeSelection
+parseSelection
   :: ( MonadReader ValidationCtx m
      , MonadError QErr m
      , MonadReusability m
@@ -121,24 +134,24 @@ denormalizeSelection
      )
   => a -- parent type info
   -> G.Selection
-  -> m (Maybe (DenormalizedSelection a))
-denormalizeSelection parentTypeInfo = \case
+  -> m (Maybe (NormalizedSelection a))
+parseSelection parentTypeInfo = \case
   G.SelectionField fld -> withPathK (G.unName $ G._fName fld) $ do
     let fieldName = G._fName fld
         fieldAlias = fromMaybe (G.Alias fieldName) $ G._fAlias fld
-    fmap (SelectionField fieldAlias) <$> denormalizeField_ parentTypeInfo fld
+    fmap (SelectionField fieldAlias) <$> parseField_ parentTypeInfo fld
   G.SelectionFragmentSpread (G.FragmentSpread name directives) -> do
     FragDef _ fragmentTyInfo fragmentSelectionSet <- getFragmentInfo name
     withPathK (G.unName name) $
       fmap (SelectionFragmentSpread name) <$>
-      denormalizeFragment parentTypeInfo fragmentTyInfo directives fragmentSelectionSet
+      parseFragment parentTypeInfo fragmentTyInfo directives fragmentSelectionSet
   G.SelectionInlineFragment (G.InlineFragment {..}) -> do
     let fragmentType = fromMaybe (getTypename parentTypeInfo) _ifTypeCondition
     fragmentTyInfo <- getFragmentTyInfo fragmentType
     withPathK "inlineFragment" $ fmap SelectionInlineFragmentSpread <$>
-      denormalizeFragment parentTypeInfo fragmentTyInfo _ifDirectives _ifSelectionSet
+      parseFragment parentTypeInfo fragmentTyInfo _ifDirectives _ifSelectionSet
 
-denormalizeFragment
+parseFragment
   :: ( MonadReader ValidationCtx m
      , MonadError QErr m
      , MonadReusability m
@@ -149,22 +162,22 @@ denormalizeFragment
   -> FragmentTypeInfo
   -> [G.Directive]
   -> G.SelectionSet
-  -> m (Maybe (DenormalizedSelectionSet a))
-denormalizeFragment parentTyInfo fragmentTyInfo directives fragmentSelectionSet = do
+  -> m (Maybe (NormalizedSelectionSet a))
+parseFragment parentTyInfo fragmentTyInfo directives fragmentSelectionSet = do
   commonTypes <- validateSpread
   case fragmentTyInfo of
     FragmentTyObject objTyInfo ->
       withDirectives directives $
       fmap (fromObjectSelectionSet parentType fragmentType commonTypes) $
-      denormalizeSelectionSet objTyInfo fragmentSelectionSet
+      parseSelectionSet objTyInfo fragmentSelectionSet
     FragmentTyInterface interfaceTyInfo ->
       withDirectives directives $
       fmap (fromInterfaceSelectionSet parentType fragmentType commonTypes) $
-      denormalizeSelectionSet interfaceTyInfo fragmentSelectionSet
+      parseSelectionSet interfaceTyInfo fragmentSelectionSet
     FragmentTyUnion unionTyInfo ->
       withDirectives directives $
       fmap (fromUnionSelectionSet parentType fragmentType commonTypes) $
-      denormalizeSelectionSet unionTyInfo fragmentSelectionSet
+      parseSelectionSet unionTyInfo fragmentSelectionSet
   where
     validateSpread = do
       let commonTypes = parentTypeMembers `Set.intersection` fragmentTypeMembers
@@ -256,9 +269,21 @@ mergeFields
 mergeFields flds =
   AliasedFields <$> OMap.traverseWithKey checkFieldMergeability groups
   where
-    -- groups :: OMap.InsOrdHashMap G.Alias (NE.NESeq f)
     groups = foldr (OMap.unionWith (<>)) mempty $
              map (fmap NE.init . unAliasedFields) flds
+
+appendSelectionSets
+  :: (MonadError QErr m) => SelectionSet -> SelectionSet -> m SelectionSet
+appendSelectionSets = curry \case
+  (SelectionSetObject s1, SelectionSetObject s2) ->
+    SelectionSetObject <$> mergeObjectSelectionSets [s1, s2]
+  (SelectionSetInterface s1, SelectionSetInterface s2) ->
+    SelectionSetInterface <$> appendScopedSelectionSet s1 s2
+  (SelectionSetUnion s1, SelectionSetUnion s2) ->
+    SelectionSetUnion <$> appendScopedSelectionSet s1 s2
+  (SelectionSetNone, SelectionSetNone) -> pure SelectionSetNone
+  (_, _) -> throw500 $ "mergeSelectionSets: 'same kind' assertion failed"
+
 
 -- query q {
 --    author {
@@ -276,29 +301,7 @@ mergeSelectionSets
   :: (MonadError QErr m) => NE.NESeq SelectionSet -> m SelectionSet
 -- mergeSelectionSets = curry $ \case
 mergeSelectionSets selectionSets =
-  case NE.head selectionSets of
-    SelectionSetObject s ->
-      SelectionSetObject <$>
-      assertingSimilar s getObjectSelectionSet mergeObjectSelectionSets
-    SelectionSetUnion s ->
-      SelectionSetUnion <$>
-      assertingSimilar s getUnionSelectionSet mergeUnionSelectionSets
-    SelectionSetInterface s ->
-      SelectionSetInterface <$>
-      assertingSimilar s getInterfaceSelectionSet mergeInterfaceSelectionSets
-    SelectionSetNone ->
-      if all (== SelectionSetNone) $ NE.tail selectionSets
-         then pure SelectionSetNone
-         else throw500 $ "mergeSelectionSets: 'same kind' assertion failed"
-  where
-    assertingSimilar
-      :: MonadError QErr m
-      => s -> (SelectionSet -> Maybe s) -> ([s] -> m s) -> m s
-    assertingSimilar s l f = do
-      let sameSelectionSets = mapMaybe l $ toList $ NE.tail selectionSets
-      if length sameSelectionSets == length (NE.tail selectionSets)
-         then f (s:sameSelectionSets)
-         else throw500 $ "mergeSelectionSets: 'same kind' assertion failed"
+  foldM appendSelectionSets (NE.head selectionSets) $ NE.tail selectionSets
 
 mergeObjectSelectionSets
   :: (MonadError QErr m) => [ObjectSelectionSet] -> m ObjectSelectionSet
@@ -337,14 +340,6 @@ mergeScopedSelectionSets
 mergeScopedSelectionSets selectionSets =
   foldM appendScopedSelectionSet emptyScopedSelectionSet selectionSets
 
-mergeInterfaceSelectionSets
-  :: (MonadError QErr m) => [InterfaceSelectionSet] -> m InterfaceSelectionSet
-mergeInterfaceSelectionSets = mergeScopedSelectionSets
-
-mergeUnionSelectionSets
-  :: (MonadError QErr m) => [UnionSelectionSet] -> m UnionSelectionSet
-mergeUnionSelectionSets = mergeScopedSelectionSets
-
 withDirectives
   :: ( MonadReader ValidationCtx m
      , MonadError QErr m
@@ -353,18 +348,19 @@ withDirectives
   => [G.Directive]
   -> m a
   -> m (Maybe a)
-withDirectives dirs act = withPathK "directives" $ do
-  dirDefs <- onLeft (mkMapWith G._dName dirs) $ \dups ->
-    throwVE $ "the following directives are used more than once: " <>
-    showNames dups
+withDirectives dirs act = do
+  procDirs <- withPathK "directives" $ do
+    dirDefs <- onLeft (mkMapWith G._dName dirs) $ \dups ->
+      throwVE $ "the following directives are used more than once: " <>
+      showNames dups
 
-  procDirs <- flip Map.traverseWithKey dirDefs $ \name dir ->
-    withPathK (G.unName name) $ do
-      dirInfo <- onNothing (Map.lookup (G._dName dir) defDirectivesMap) $
-                 throwVE $ "unexpected directive: " <> showName name
-      procArgs <- withPathK "args" $ parseArguments (_diParams dirInfo)
-                  (G._dArguments dir)
-      getIfArg procArgs
+    flip Map.traverseWithKey dirDefs $ \name dir ->
+      withPathK (G.unName name) $ do
+        dirInfo <- onNothing (Map.lookup (G._dName dir) defDirectivesMap) $
+                   throwVE $ "unexpected directive: " <> showName name
+        procArgs <- withPathK "args" $ parseArguments (_diParams dirInfo)
+                    (G._dArguments dir)
+        getIfArg procArgs
 
   let shouldSkip    = fromMaybe False $ Map.lookup "skip" procDirs
       shouldInclude = fromMaybe True $ Map.lookup "include" procDirs
@@ -423,21 +419,21 @@ denormalizeField fldInfo (G.Field _ name args dirs selSet) = do
       <> G.showGT fldTy <> " must have a selection of subfields"
 
     (TIObj objTyInfo, _) ->
-      SelectionSetObject <$> denormalizeSelectionSet objTyInfo selSet
+      SelectionSetObject <$> parseSelectionSet objTyInfo selSet
 
     (TIIFace _, [])  ->
       throwVE $ "field " <> showName name <> " of type "
       <> G.showGT fldTy <> " must have a selection of subfields"
 
     (TIIFace interfaceTyInfo, _) ->
-      SelectionSetInterface <$> denormalizeSelectionSet interfaceTyInfo selSet
+      SelectionSetInterface <$> parseSelectionSet interfaceTyInfo selSet
 
     (TIUnion _, [])  ->
       throwVE $ "field " <> showName name <> " of type "
       <> G.showGT fldTy <> " must have a selection of subfields"
 
     (TIUnion unionTyInfo, _) ->
-      SelectionSetUnion <$> denormalizeSelectionSet unionTyInfo selSet
+      SelectionSetUnion <$> parseSelectionSet unionTyInfo selSet
 
     (TIScalar _, []) -> return SelectionSetNone
     -- when scalar/enum and no empty set
@@ -471,29 +467,26 @@ denormalizeField fldInfo (G.Field _ name args dirs selSet) = do
 --   when (fldTy /= fragmentType) $
 --     throwVE $ "inline fragment is expected on type " <>
 --     showNamedTy fldTy <> " but found " <> showNamedTy fragmentType
---   withDirectives directives $ denormalizeObjectSelectionSet fldTyInfo selSet
+--   withDirectives directives $ parseObjectSelectionSet fldTyInfo selSet
 --   where
 --     G.InlineFragment tyM directives selSet = inlnFrag
 
-type instance DenormalizedSelectionSet ObjTyInfo = ObjectSelectionSet
-type instance DenormalizedField ObjTyInfo = Field
+type instance NormalizedSelectionSet ObjTyInfo = ObjectSelectionSet
+type instance NormalizedField ObjTyInfo = Field
+
 instance HasSelectionSet ObjTyInfo where
 
   getTypename = _otiName
   getMemberTypes = Set.singleton . _otiName
 
-  denormalizeField_ objTyInfo field = do
+  parseField_ objTyInfo field = do
     fieldInfo <- getFieldInfo (_otiName objTyInfo) (_otiFields objTyInfo) $ G._fName field
     denormalizeField fieldInfo field
 
-  mergeSelections selections =
-    mergeObjectSelectionSets $ map toObjectSelectionSet selections
-    where
-      toObjectSelectionSet = \case
-        SelectionField alias fld ->
-          ObjectSelectionSet $ AliasedFields $ OMap.singleton alias fld
-        SelectionInlineFragmentSpread selectionSet -> selectionSet
-        SelectionFragmentSpread _ selectionSet -> selectionSet
+  fieldToSelectionSet alias fld =
+    ObjectSelectionSet $ AliasedFields $ OMap.singleton alias fld
+
+  mergeNormalizedSelectionSets = mergeObjectSelectionSets
 
   fromObjectSelectionSet _ _ _ objectSelectionSet =
     objectSelectionSet
@@ -504,8 +497,8 @@ instance HasSelectionSet ObjTyInfo where
   fromUnionSelectionSet parentType _ _ unionSelectionSet =
       getMemberSelectionSet parentType unionSelectionSet
 
-type instance DenormalizedSelectionSet IFaceTyInfo = InterfaceSelectionSet
-type instance DenormalizedField IFaceTyInfo = Field
+type instance NormalizedSelectionSet IFaceTyInfo = InterfaceSelectionSet
+type instance NormalizedField IFaceTyInfo = Field
 
 instance HasSelectionSet IFaceTyInfo where
 
@@ -513,19 +506,15 @@ instance HasSelectionSet IFaceTyInfo where
   -- TODO
   getMemberTypes = _ifMemberTypes
 
-  denormalizeField_ interfaceTyInfo field = do
+  parseField_ interfaceTyInfo field = do
     fieldInfo <- getFieldInfo (_ifName interfaceTyInfo) (_ifFields interfaceTyInfo)
                  $ G._fName field
     denormalizeField fieldInfo field
 
-  mergeSelections selections =
-    mergeInterfaceSelectionSets $ map toInterfaceSelectionSet selections
-    where
-      toInterfaceSelectionSet = \case
-        SelectionField alias fld ->
-          ScopedSelectionSet (AliasedFields $ OMap.singleton alias fld) mempty
-        SelectionInlineFragmentSpread selectionSet -> selectionSet
-        SelectionFragmentSpread _ selectionSet -> selectionSet
+  fieldToSelectionSet alias field =
+    ScopedSelectionSet (AliasedFields $ OMap.singleton alias field) mempty
+
+  mergeNormalizedSelectionSets = mergeScopedSelectionSets
 
   fromObjectSelectionSet _ fragmentType _ objectSelectionSet =
     ScopedSelectionSet (AliasedFields mempty) $
@@ -541,27 +530,23 @@ instance HasSelectionSet IFaceTyInfo where
       Map.fromList $ flip map (toList commonTypes) $
       \commonType -> (commonType, getMemberSelectionSet commonType unionSelectionSet)
 
-type instance DenormalizedSelectionSet UnionTyInfo = UnionSelectionSet
-type instance DenormalizedField UnionTyInfo = Typename
+type instance NormalizedSelectionSet UnionTyInfo = UnionSelectionSet
+type instance NormalizedField UnionTyInfo = Typename
 
 instance HasSelectionSet UnionTyInfo where
 
   getTypename = _utiName
   getMemberTypes = _utiMemberTypes
 
-  denormalizeField_ unionTyInfo field = do
+  parseField_ unionTyInfo field = do
     let fieldMap = Map.singleton (_fiName typenameFld) typenameFld
     fieldInfo <- getFieldInfo (_utiName unionTyInfo) fieldMap $ G._fName field
     fmap (const Typename) <$> denormalizeField fieldInfo field
 
-  mergeSelections selections =
-    mergeUnionSelectionSets $ map toUnionSelectionSet selections
-    where
-      toUnionSelectionSet = \case
-        SelectionField alias fld ->
-          ScopedSelectionSet (AliasedFields $ OMap.singleton alias fld) mempty
-        SelectionInlineFragmentSpread selectionSet -> selectionSet
-        SelectionFragmentSpread _ selectionSet -> selectionSet
+  fieldToSelectionSet alias field =
+    ScopedSelectionSet (AliasedFields $ OMap.singleton alias field) mempty
+
+  mergeNormalizedSelectionSets = mergeScopedSelectionSets
 
   fromObjectSelectionSet _ fragmentType _ objectSelectionSet =
     ScopedSelectionSet (AliasedFields mempty) $
