@@ -92,15 +92,12 @@ data RQLQueryV1
   | RQRedeliverEvent     !RedeliverEventQuery
   | RQInvokeEventTrigger !InvokeEventTriggerQuery
 
-  | RQCreateScheduledTriggerCron      !CreateScheduledTriggerCron
-  | RQUpdateScheduledTriggerCron      !CreateScheduledTriggerCron
-  | RQDeleteScheduledTriggerCron      !ScheduledTriggerName
-  | RQFetchScheduledTriggerCronEvents !FetchEventsScheduledTrigger
+  -- scheduled triggers
+  | RQCreateCronTrigger !CreateCronTrigger
+  | RQUpdateCronTrigger !CreateCronTrigger
+  | RQDeleteCronTrigger !ScheduledTriggerName
 
-  | RQCreateScheduledEvent     !CreateScheduledEvent
-
-  | RQCreateScheduledTriggerOneOff !CreateScheduledTriggerOneOff
-  | RQFetchScheduledTriggerOneOff  !FetchOneOffScheduledTriggers
+  | RQCreateScheduledTriggerOneOff !CreateScheduledTriggerOneOff -- refactor this to CreateScheduledEvent
 
   -- query collections, allow list related
   | RQCreateQueryCollection !CreateCollection
@@ -265,14 +262,11 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQRedeliverEvent _                  -> False
   RQInvokeEventTrigger _              -> False
 
-  RQCreateScheduledTriggerCron _      -> True
-  RQUpdateScheduledTriggerCron _      -> True
-  RQDeleteScheduledTriggerCron _      -> True
-  RQFetchScheduledTriggerCronEvents _ -> False
-  RQCreateScheduledEvent _            -> False
+  RQCreateCronTrigger _               -> True
+  RQUpdateCronTrigger _               -> True
+  RQDeleteCronTrigger _               -> True
 
   RQCreateScheduledTriggerOneOff _    -> False
-  RQFetchScheduledTriggerOneOff _     -> False
 
   RQCreateQueryCollection _           -> True
   RQDropQueryCollection _             -> True
@@ -396,15 +390,11 @@ runQueryM rq = withPathK "args" $ case rq of
       RQRedeliverEvent q           -> runRedeliverEvent q
       RQInvokeEventTrigger q       -> runInvokeEventTrigger q
 
-      RQCreateScheduledTriggerCron q      -> runCreateScheduledTriggerCron q
-      RQUpdateScheduledTriggerCron q      -> runUpdateScheduledTriggerCron q
-      RQDeleteScheduledTriggerCron q      -> runDeleteScheduledTrigger q
-      RQFetchScheduledTriggerCronEvents q -> runFetchEventsOfScheduledTrigger q
-
-      RQCreateScheduledEvent q         -> runCreateScheduledEvent q
+      RQCreateCronTrigger q      -> runCreateCronTrigger q
+      RQUpdateCronTrigger q      -> runUpdateCronTrigger q
+      RQDeleteCronTrigger q      -> runDeleteScheduledTrigger q
 
       RQCreateScheduledTriggerOneOff q -> runCreateScheduledTriggerOneOff q
-      RQFetchScheduledTriggerOneOff q -> runFetchOneOffScheduledTriggers q
 
       RQCreateQueryCollection q        -> runCreateCollection q
       RQDropQueryCollection q          -> runDropCollection q
@@ -487,15 +477,11 @@ requiresAdmin = \case
     RQRedeliverEvent _                  -> True
     RQInvokeEventTrigger _              -> True
 
-    RQCreateScheduledTriggerCron _      -> True
-    RQUpdateScheduledTriggerCron _      -> True
-    RQDeleteScheduledTriggerCron _      -> True
-    RQFetchScheduledTriggerCronEvents _ -> False
-
-    RQCreateScheduledEvent _            -> True
+    RQCreateCronTrigger _               -> True
+    RQUpdateCronTrigger _               -> True
+    RQDeleteCronTrigger _               -> True
 
     RQCreateScheduledTriggerOneOff _    -> True
-    RQFetchScheduledTriggerOneOff _     -> False
 
     RQCreateQueryCollection _           -> True
     RQDropQueryCollection _             -> True

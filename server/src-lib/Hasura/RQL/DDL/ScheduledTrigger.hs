@@ -1,14 +1,11 @@
 module Hasura.RQL.DDL.ScheduledTrigger
-  ( runCreateScheduledTriggerCron
-  , runUpdateScheduledTriggerCron
+  ( runCreateCronTrigger
+  , runUpdateCronTrigger
   , runDeleteScheduledTrigger
-  , runCreateScheduledEvent
   , addScheduledTriggerToCatalog
   , deleteScheduledTriggerFromCatalog
   , resolveScheduledTrigger
-  , runFetchEventsOfScheduledTrigger
   , runCreateScheduledTriggerOneOff
-  , runFetchOneOffScheduledTriggers
   ) where
 
 import           Hasura.Db
@@ -23,26 +20,9 @@ import           Hasura.Eventing.ScheduledTrigger
 import qualified Database.PG.Query     as Q
 import qualified Data.Time.Clock       as C
 import qualified Data.HashMap.Strict   as Map
-import qualified Data.Aeson            as J
-import qualified Data.Aeson.Casing     as J
-import qualified Data.Aeson.TH         as J
 
-data FetchEventsResponse
-  = FetchEventsResponse
-  { feerScheduledEvents :: ![ScheduledEventDb]
-  } deriving (Eq, Show)
-
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''FetchEventsResponse)
-
-data FetchOneOffScheduledTriggersResponse
-  = FetchOneOffScheduledTriggersResponse
-  { fostrOneOffScheduledTriggers :: ![ScheduledTriggerOneOff]
-  } deriving (Eq, Show)
-
-$(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''FetchOneOffScheduledTriggersResponse)
-
-runCreateScheduledTriggerCron :: (CacheRWM m, MonadTx m) => CreateScheduledTriggerCron ->  m EncJSON
-runCreateScheduledTriggerCron CreateScheduledTriggerCron {..} = do
+runCreateCronTrigger :: (CacheRWM m, MonadTx m) => CreateCronTrigger ->  m EncJSON
+runCreateCronTrigger CreateCronTrigger {..} = do
   let q = (ScheduledTriggerMetadata stcName
                                     stcWebhook
                                     (Cron stcCronSchedule)
@@ -97,8 +77,8 @@ resolveScheduledTrigger CatalogScheduledTrigger {..} = do
 
     headers = fromMaybe [] _cstHeaderConf
 
-runUpdateScheduledTriggerCron :: (CacheRWM m, MonadTx m) => CreateScheduledTriggerCron -> m EncJSON
-runUpdateScheduledTriggerCron CreateScheduledTriggerCron {..} = do
+runUpdateCronTrigger :: (CacheRWM m, MonadTx m) => CreateCronTrigger -> m EncJSON
+runUpdateCronTrigger CreateCronTrigger {..} = do
   let q = (ScheduledTriggerMetadata stcName
                                     stcWebhook
                                     (Cron stcCronSchedule)
@@ -148,35 +128,6 @@ deleteScheduledTriggerFromCatalog stName = liftTx $ do
     WHERE name = $1
    |] (Identity stName) False
 
-runCreateScheduledEvent :: (CacheRM m, MonadTx m) => CreateScheduledEvent -> m EncJSON
-runCreateScheduledEvent CreateScheduledEvent{..} = do
-  checkExists steName
-  liftTx $ Q.unitQE defaultTxErrorHandler
-    [Q.sql|
-      INSERT into hdb_catalog.hdb_scheduled_events
-        (name, scheduled_time, additional_payload)
-       VALUES ($1, $2, $3)
-    |] (steName, steTimestamp, Q.AltJ <$> stePayload) False
-  pure successMsg
-
-runFetchEventsOfScheduledTrigger
-    :: (CacheRM m, MonadTx m) => FetchEventsScheduledTrigger -> m EncJSON
-runFetchEventsOfScheduledTrigger (FetchEventsScheduledTrigger stName stOffset stLimit) = do
-  checkExists stName
-  events <- liftTx $ map uncurryScheduledEvent <$> Q.listQE defaultTxErrorHandler
-    [Q.sql|
-      SELECT id,name,scheduled_time,additional_payload,status,tries
-      FROM hdb_catalog.hdb_scheduled_events
-      WHERE name = $1
-      ORDER BY scheduled_time
-      OFFSET $2
-      LIMIT $3
-     |] (stName,stOffset,stLimit) True
-  pure $ encJFromJValue $ J.toJSON $ FetchEventsResponse events
-  where
-    uncurryScheduledEvent (seId,name,scheduledTime,payload,status,tries) =
-      ScheduledEventDb seId name scheduledTime (Q.getAltJ <$> payload) status tries
-
 runCreateScheduledTriggerOneOff :: (MonadTx m) => CreateScheduledTriggerOneOff -> m EncJSON
 runCreateScheduledTriggerOneOff CreateScheduledTriggerOneOff {..} = do
   liftTx $ Q.unitQE defaultTxErrorHandler
@@ -193,40 +144,6 @@ runCreateScheduledTriggerOneOff CreateScheduledTriggerOneOff {..} = do
         , cstoComment)
         False
   pure successMsg
-
-runFetchOneOffScheduledTriggers
-    :: (MonadTx m) => FetchOneOffScheduledTriggers -> m EncJSON
-runFetchOneOffScheduledTriggers (FetchOneOffScheduledTriggers stOffset stLimit) = do
-  oneOffScheduledTriggers <- liftTx $ map uncurryScheduledTrigger
-                             <$> Q.listQE defaultTxErrorHandler
-    [Q.sql|
-      SELECT id,webhook_conf,scheduled_time,retry_conf,payload,header_conf,status,tries,comment
-      FROM hdb_catalog.hdb_one_off_scheduled_events
-      ORDER BY scheduled_time
-      OFFSET $1
-      LIMIT $2
-     |] (stOffset,stLimit) True
-  pure $ encJFromJValue $ J.toJSON $
-       FetchOneOffScheduledTriggersResponse oneOffScheduledTriggers
-  where
-    uncurryScheduledTrigger ( id'
-                            , webhookConf
-                            , scheduledTime
-                            , retryConf
-                            , payload
-                            , headerConf
-                            , status
-                            , tries
-                            , comment) =
-      ScheduledTriggerOneOff id'
-                             scheduledTime
-                             tries
-                             (Q.getAltJ webhookConf)
-                             (Q.getAltJ <$> payload)
-                             (Q.getAltJ retryConf)
-                             (Q.getAltJ headerConf)
-                             comment
-                             status
 
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do

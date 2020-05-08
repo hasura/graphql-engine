@@ -4,7 +4,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , ScheduledTriggerName(..)
   , ScheduledEventId(..)
   , ScheduledTriggerMetadata(..)
-  , CreateScheduledTriggerCron(..)
+  , CreateCronTrigger(..)
   , CreateScheduledEvent(..)
   , STRetryConf(..)
   , FetchEventsScheduledTrigger(..)
@@ -120,8 +120,8 @@ instance FromJSON ScheduledTriggerMetadata where
 
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ScheduledTriggerMetadata)
 
-data CreateScheduledTriggerCron
-  = CreateScheduledTriggerCron
+data CreateCronTrigger
+  = CreateCronTrigger
   { stcName              :: !ET.TriggerName
   , stcWebhook           :: !ET.WebhookConf
   , stcCronSchedule      :: !CronSchedule
@@ -132,12 +132,12 @@ data CreateScheduledTriggerCron
   , stcComment           :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 
-instance NFData CreateScheduledTriggerCron
-instance Cacheable CreateScheduledTriggerCron
+instance NFData CreateCronTrigger
+instance Cacheable CreateCronTrigger
 
-instance FromJSON CreateScheduledTriggerCron where
+instance FromJSON CreateCronTrigger where
   parseJSON =
-    withObject "CreateScheduledTriggerCron" $ \o -> do
+    withObject "CreateCronTrigger" $ \o -> do
       stcName <- o .: "name"
       stcWebhook <- o .: "webhook"
       stcPayload <- o .:? "payload"
@@ -147,9 +147,9 @@ instance FromJSON CreateScheduledTriggerCron where
       stcIncludeInMetadata <-
           o .:? "include_in_metadata" .!= False
       stcComment <- o .:? "comment"
-      pure CreateScheduledTriggerCron {..}
+      pure CreateCronTrigger {..}
 
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateScheduledTriggerCron)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateCronTrigger)
 
 data CreateScheduledEvent
   = CreateScheduledEvent
