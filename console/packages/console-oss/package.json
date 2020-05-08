@@ -1,6 +1,6 @@
 {
   "name": "@vksci123/console-oss",
-  "version": "0.0.6-1.2.0-2",
+  "version": "0.0.6-1.2.0-4",
   "description": "Contains modules from open-source console",
   "main": "index.js",
   "scripts": {
