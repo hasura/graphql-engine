@@ -4,7 +4,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , CronTriggerMetadata(..)
   , CreateCronTrigger(..)
   , STRetryConf(..)
-  , CreateScheduledTriggerOneOff(..)
+  , CreateScheduledEvent(..)
   , formatTime'
   , defaultSTRetryConf
   ) where
@@ -135,8 +135,8 @@ $(deriveJSON (aesonDrop 2 snakeCase) ''ScheduledTriggerName)
 formatTime' :: UTCTime -> T.Text
 formatTime'= T.pack . iso8601Show
 
-data CreateScheduledTriggerOneOff
-  = CreateScheduledTriggerOneOff
+data CreateScheduledEvent
+  = CreateScheduledEvent
   { cstoWebhook           :: !ET.WebhookConf
   , cstoScheduleAt        :: !UTCTime
     -- ^ The timestamp should be in the
@@ -148,14 +148,14 @@ data CreateScheduledTriggerOneOff
   , cstoComment           :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 
-instance FromJSON CreateScheduledTriggerOneOff where
+instance FromJSON CreateScheduledEvent where
   parseJSON =
-    withObject "CreateScheduledTriggerOneOff" $ \o ->
-      CreateScheduledTriggerOneOff <$> o .: "webhook"
+    withObject "CreateScheduledEvent" $ \o ->
+      CreateScheduledEvent <$> o .: "webhook"
                                    <*> o .: "schedule_at"
                                    <*> o .:? "payload"
                                    <*> o .:? "headers" .!= []
                                    <*> o .:? "retry_conf" .!= defaultSTRetryConf
                                    <*> o .:? "comment"
 
-$(deriveToJSON (aesonDrop 4 snakeCase) ''CreateScheduledTriggerOneOff)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''CreateScheduledEvent)

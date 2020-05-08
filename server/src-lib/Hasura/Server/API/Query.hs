@@ -97,7 +97,7 @@ data RQLQueryV1
   | RQUpdateCronTrigger !CreateCronTrigger
   | RQDeleteCronTrigger !ScheduledTriggerName
 
-  | RQCreateScheduledTriggerOneOff !CreateScheduledTriggerOneOff -- refactor this to CreateScheduledEvent
+  | RQCreateScheduledEvent !CreateScheduledEvent
 
   -- query collections, allow list related
   | RQCreateQueryCollection !CreateCollection
@@ -266,7 +266,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQUpdateCronTrigger _               -> True
   RQDeleteCronTrigger _               -> True
 
-  RQCreateScheduledTriggerOneOff _    -> False
+  RQCreateScheduledEvent _            -> False
 
   RQCreateQueryCollection _           -> True
   RQDropQueryCollection _             -> True
@@ -394,7 +394,7 @@ runQueryM rq = withPathK "args" $ case rq of
       RQUpdateCronTrigger q      -> runUpdateCronTrigger q
       RQDeleteCronTrigger q      -> runDeleteCronTrigger q
 
-      RQCreateScheduledTriggerOneOff q -> runCreateScheduledTriggerOneOff q
+      RQCreateScheduledEvent q   -> runCreateScheduledEvent q
 
       RQCreateQueryCollection q        -> runCreateCollection q
       RQDropQueryCollection q          -> runDropCollection q
@@ -481,7 +481,7 @@ requiresAdmin = \case
     RQUpdateCronTrigger _               -> True
     RQDeleteCronTrigger _               -> True
 
-    RQCreateScheduledTriggerOneOff _    -> True
+    RQCreateScheduledEvent _            -> True
 
     RQCreateQueryCollection _           -> True
     RQDropQueryCollection _             -> True

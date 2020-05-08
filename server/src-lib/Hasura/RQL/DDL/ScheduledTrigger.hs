@@ -5,7 +5,7 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , addCronTriggerToCatalog
   , deleteCronTriggerFromCatalog
   , resolveCronTrigger
-  , runCreateScheduledTriggerOneOff
+  , runCreateScheduledEvent
   ) where
 
 import           Hasura.Db
@@ -118,15 +118,15 @@ runDeleteCronTrigger (ScheduledTriggerName stName) = do
   return successMsg
 
 deleteCronTriggerFromCatalog :: (MonadTx m) => TriggerName -> m ()
-deleteCronTriggerFromCatalog stName = liftTx $ do
+deleteCronTriggerFromCatalog triggerName = liftTx $ do
   Q.unitQE defaultTxErrorHandler
    [Q.sql|
-    DELETE FROM hdb_catalog.hdb_cron_trigger
+    DELETE FROM hdb_catalog.hdb_cron_triggers
     WHERE name = $1
-   |] (Identity stName) False
+   |] (Identity triggerName) False
 
-runCreateScheduledTriggerOneOff :: (MonadTx m) => CreateScheduledTriggerOneOff -> m EncJSON
-runCreateScheduledTriggerOneOff CreateScheduledTriggerOneOff {..} = do
+runCreateScheduledEvent :: (MonadTx m) => CreateScheduledEvent -> m EncJSON
+runCreateScheduledEvent CreateScheduledEvent {..} = do
   liftTx $ Q.unitQE defaultTxErrorHandler
      [Q.sql|
       INSERT INTO hdb_catalog.hdb_scheduled_events
