@@ -4,8 +4,8 @@
 
 .. _actions:
 
-Actions (beta)
-==============
+Actions
+=======
 
 .. contents:: Table of contents
   :backlinks: none
@@ -20,17 +20,13 @@ logic using custom queries and mutations. Actions can be
 added to Hasura to handle various use cases such as data validation, data
 enrichment from external sources and any other complex business logic.
 
-.. thumbnail:: ../../../img/graphql/manual/actions/actions-hl-arch.png
+.. thumbnail:: /img/graphql/manual/actions/actions-arch.png
    :class: no-shadow
    :alt: Actions high level architecture
 
-.. admonition:: Supported from
+.. admonition:: Support
 
-   Actions are currently available in beta in the pre-release versions of ``v1.2.0``.
-
-   .. Actions are supported in versions ``v.1.2.0`` and above.
-
-.. admonition:: Postgres support
+   Actions are supported in Hasura GraphQL engine versions ``v.1.2.0`` and above.
 
    Actions are supported for ``Postgres versions 10 or higher``.
 
@@ -42,20 +38,22 @@ An action consists of the following parts:
 1. ``Type``: The type of the action (``query`` or ``mutation``)
 2. ``Definition``: The definition of the query or mutation
 3. ``Handler``: The logic to be run when the query or mutation is executed
-4. ``Kind``: Sync or async
-
-.. note::
-
-      In case of a query action, there is no ``Kind`` associated with the action.
-      A query action works like a ``Synchronous`` mutation action.
+4. ``Kind``: Sync or async. In case of a query action, there is no ``Kind``
+   associated with it. A query action is always sync
 
 Type
 ****
 
 Actions can be of two types:
 
-- **Query action**: An action of type ``query`` extends the query root of the Hasura schema. This means that you can execute this action through a GraphQL query. Query actions must be used where you want to fetch data from a data source without changing anything on the data source.
-- **Mutation action**: An action of type ``mutation`` extends the mutation root of the Hasura schema. This means that you can execute this action through a GraphQL mutation. Mutation actions must be used when you want to mutate the state of a data source and fetch some data.
+- **Query action**: An action of type ``query`` extends the query root of the
+  Hasura schema. This means that you can execute this action through a GraphQL query.
+  Query actions must be used where you want to fetch data from a data source without
+  changing anything on the data source.
+- **Mutation action**: An action of type ``mutation`` extends the mutation root of
+  the Hasura schema. This means that you can execute this action through a GraphQL
+  mutation. Mutation actions must be used when you want to mutate the state of a data
+  source and fetch some data.
 
 Definition
 **********
@@ -112,16 +110,16 @@ Learn more about :ref:`writing an action handler<action_handlers>`.
 Kind
 ****
 
-Mutation actions are of two kinds:
+**Mutation actions** are of two kinds:
 
-* **Synchronous actions**: Sync actions return a response to the client after
+* **Synchronous**: Sync actions return a response to the client after
   receiving a response from the handler.
-* **Asynchronous actions**: :ref:`Async actions <async_actions>` return an
+* **Asynchronous**: :ref:`Async actions <async_actions>` return an
   ``action id`` as response to the client before receiving a response from the
   handler and allow the client to subscribe to the actual response using the
   ``action id``.
 
-Query actions don't have a kind, they always behave like ``Synchronous mutation actions``.
+**Query actions** don't have a kind, they always behave like sync mutation actions.
 
 How it works?
 -------------
@@ -148,5 +146,6 @@ Learn more
   async-actions
   Codegen <codegen>
   derive
+  action-permissions
   action-connect
   debugging

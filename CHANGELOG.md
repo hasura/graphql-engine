@@ -34,9 +34,36 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 ### Bug fixes and improvements
 
-- console: make GraphiQL Explorer taking the whole viewport
-- cli: remove irrelevant flags from init command (close #4508) (#4549)
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- console: avoid count queries for large tables (#4692)
+- console: add read replica support section to pro popup (#4118)
+- cli: list all avialable commands in root command help (fix #4623)
+
+## `v1.2.0`
+
+Include the changelog from **v1.2.0-beta.1**, **v1.2.0-beta.2**, **v1.2.0-beta.3**, **v1.2.0-beta.4**, **v1.2.0-beta.5**
+
+Additional changelog:
+
+### CLI: Support servers with self-signed certificates (close #4564) (#4582)
+
+A new flag `--certificate-authority` is added so that the CA certificate can be
+provided to trust the Hasura Endpoint with a self-signed SSL certificate.
+
+Another flag `--insecure-skip-tls-verification` is added to skip verifying the certificate
+in case you don't have access to the CA certificate. As the name suggests,
+using this flag is insecure since verification is not carried out.
+
+### Bug fixes and improvements
+
 - console: update graphiql explorer to support operation transform (#4567)
+- console: make GraphiQL Explorer taking the whole viewport (#4553)
+- console: fix table columns type comparision during column edit (close #4125) (#4393)
+- cli: allow initialising project in current directory (fix #4560) #4566
+- cli: remove irrelevant flags from init command (close #4508) (#4549)
+- docs: update migrations docs with config v2 (#4586)
+- docs: update actions docs (#4586)
 
 ## `v1.2.0-beta.5`
 
@@ -200,7 +227,6 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - console: make nullable and unique labels for columns clickable in insert and modify (#4433)
 - console: fix row delete for relationships in data browser (#4433)
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
-- console: fix table columns type comparision during column edit (close #4125) (#4393)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
@@ -275,9 +301,12 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 
 A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
 
+See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-v2.html).
+
 (close #3969) (#4145)
 
 ### Bug fixes and improvements
+
 - server: improve performance of replace_metadata tracking many tables (fix #3802)
 - server: option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
 - server: fix various space leaks to avoid excessive memory consumption
@@ -361,3 +390,4 @@ Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
 - console: show pre-release update notifications with opt out option (#3888)
 - console: handle invalid keys in permission builder (close #3848) (#3863)
+- docs: add page on data validation to docs (close #4085) (#4260)
