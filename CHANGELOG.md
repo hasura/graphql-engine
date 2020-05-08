@@ -38,7 +38,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 - console: add read replica support section to pro popup (#4118)
 - cli: list all avialable commands in root command help (fix #4623)
-- console: modify default value for PK (fix #4075) (#4679)
+- console: allow modifying default value for PK (fix #4075) (#4679)
 
 ## `v1.2.0`
 
