@@ -122,14 +122,14 @@ $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ScheduledTrigge
 
 data CreateCronTrigger
   = CreateCronTrigger
-  { stcName              :: !ET.TriggerName
-  , stcWebhook           :: !ET.WebhookConf
-  , stcCronSchedule      :: !CronSchedule
-  , stcPayload           :: !(Maybe J.Value)
-  , stcRetryConf         :: !STRetryConf
-  , stcHeaders           :: ![ET.HeaderConf]
-  , stcIncludeInMetadata :: !Bool
-  , stcComment           :: !(Maybe Text)
+  { cctName              :: !ET.TriggerName
+  , cctWebhook           :: !ET.WebhookConf
+  , cctCronSchedule      :: !CronSchedule
+  , cctPayload           :: !(Maybe J.Value)
+  , cctRetryConf         :: !STRetryConf
+  , cctHeaders           :: ![ET.HeaderConf]
+  , cctIncludeInMetadata :: !Bool
+  , cctComment           :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 
 instance NFData CreateCronTrigger
@@ -138,15 +138,15 @@ instance Cacheable CreateCronTrigger
 instance FromJSON CreateCronTrigger where
   parseJSON =
     withObject "CreateCronTrigger" $ \o -> do
-      stcName <- o .: "name"
-      stcWebhook <- o .: "webhook"
-      stcPayload <- o .:? "payload"
-      stcCronSchedule <- o .: "schedule"
-      stcRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
-      stcHeaders <- o .:? "headers" .!= []
-      stcIncludeInMetadata <-
+      cctName <- o .: "name"
+      cctWebhook <- o .: "webhook"
+      cctPayload <- o .:? "payload"
+      cctCronSchedule <- o .: "schedule"
+      cctRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
+      cctHeaders <- o .:? "headers" .!= []
+      cctIncludeInMetadata <-
           o .:? "include_in_metadata" .!= False
-      stcComment <- o .:? "comment"
+      cctComment <- o .:? "comment"
       pure CreateCronTrigger {..}
 
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateCronTrigger)

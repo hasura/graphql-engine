@@ -23,14 +23,14 @@ import qualified Data.HashMap.Strict   as Map
 
 runCreateCronTrigger :: (CacheRWM m, MonadTx m) => CreateCronTrigger ->  m EncJSON
 runCreateCronTrigger CreateCronTrigger {..} = do
-  let q = (ScheduledTriggerMetadata stcName
-                                    stcWebhook
-                                    (Cron stcCronSchedule)
-                                    stcPayload
-                                    stcRetryConf
-                                    stcHeaders
-                                    stcIncludeInMetadata
-                                    stcComment)
+  let q = (ScheduledTriggerMetadata cctName
+                                    cctWebhook
+                                    (Cron cctCronSchedule)
+                                    cctPayload
+                                    cctRetryConf
+                                    cctHeaders
+                                    cctIncludeInMetadata
+                                    cctComment)
   stMap <- scScheduledTriggers <$> askSchemaCache
   case Map.lookup (stName q) stMap of
     Nothing -> pure ()
@@ -79,15 +79,15 @@ resolveScheduledTrigger CatalogScheduledTrigger {..} = do
 
 runUpdateCronTrigger :: (CacheRWM m, MonadTx m) => CreateCronTrigger -> m EncJSON
 runUpdateCronTrigger CreateCronTrigger {..} = do
-  let q = (ScheduledTriggerMetadata stcName
-                                    stcWebhook
-                                    (Cron stcCronSchedule)
-                                    stcPayload
-                                    stcRetryConf
-                                    stcHeaders
-                                    stcIncludeInMetadata
-                                    stcComment)
-  checkExists stcName
+  let q = (ScheduledTriggerMetadata cctName
+                                    cctWebhook
+                                    (Cron cctCronSchedule)
+                                    cctPayload
+                                    cctRetryConf
+                                    cctHeaders
+                                    cctIncludeInMetadata
+                                    cctComment)
+  checkExists cctName
   updateScheduledTriggerInCatalog q
   buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
