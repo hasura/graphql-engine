@@ -42,7 +42,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
-import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers            (HeaderConf, makeHeadersFromConf, toHeadersConf)
@@ -166,9 +166,10 @@ resolveActionMutationSync field executionContext sessionVariables = do
                                forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
+  selSet <- asObjectSelectionSet $ _fSelSet field
   selectAstUnresolved <-
     processOutputSelectionSet webhookResponseExpression outputType definitionList
-    (_fType field) $ _fSelSet field
+    (_fType field) selSet
   astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
   let jsonAggType = mkJsonAggSelect outputType
   return $ (,respHeaders) $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
@@ -218,9 +219,10 @@ resolveActionQuery field executionContext sessionVariables httpManager reqHeader
                                forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
+  selSet <- asObjectSelectionSet $ _fSelSet field
   selectAstUnresolved <-
     processOutputSelectionSet webhookResponseExpression outputType definitionList
-    (_fType field) $ _fSelSet field
+    (_fType field) selSet
   return selectAstUnresolved
   where
     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
@@ -293,7 +295,9 @@ resolveAsyncActionQuery userInfo selectOpCtx field = do
   actionId <- withArg (_fArguments field) "id" parseActionId
   stringifyNumerics <- stringifyNum <$> asks getter
 
-  annotatedFields <- fmap (map (first FieldName)) $ withSelSet (_fSelSet field) $ \fld ->
+  selSet <- asObjectSelectionSet $ _fSelSet field
+
+  annotatedFields <- fmap (map (first FieldName)) $ traverseObjectSelectionSet selSet $ \fld ->
     case _fName fld of
       "__typename" -> return $ RS.FExp $ G.unName $ G.unNamedType $ _fType field
       "output"     -> do
@@ -301,9 +305,10 @@ resolveAsyncActionQuery userInfo selectOpCtx field = do
         let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
             ActionSelectOpContext outputType definitionList = selectOpCtx
             jsonAggSelect = mkJsonAggSelect outputType
+        fldSelSet <- asObjectSelectionSet $ _fSelSet fld
         (RS.FComputedField . RS.CFSTable jsonAggSelect)
           <$> processOutputSelectionSet inputTableArgument outputType
-              definitionList (_fType fld) (_fSelSet fld)
+              definitionList (_fType fld) fldSelSet
 
       -- The metadata columns
       "id"         -> return $ mkAnnFldFromPGCol "id" PGUUID
@@ -561,7 +566,7 @@ processOutputSelectionSet
   => RS.ArgumentExp UnresolvedVal
   -> GraphQLType
   -> [(PGCol, PGScalarType)]
-  -> G.NamedType -> SelSet -> m GRS.AnnSimpleSelect
+  -> G.NamedType -> ObjectSelectionSet -> m GRS.AnnSimpleSelect
 processOutputSelectionSet tableRowInput actionOutputType definitionList fldTy flds = do
   stringifyNumerics <- stringifyNum <$> asks getter
   annotatedFields <- processTableSelectionSet fldTy flds

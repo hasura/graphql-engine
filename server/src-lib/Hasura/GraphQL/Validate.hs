@@ -1,8 +1,8 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
   , showVars
-  , RootSelSet(..)
-  , SelSet
+  , RootSelectionSet(..)
+  , SelectionSet(..)
   , Field(..)
   , getTypedOp
   , QueryParts(..)
@@ -20,14 +20,14 @@ import           Hasura.Prelude
 import           Data.Has
 
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd.Extended    as OMap
 import qualified Data.HashSet                           as HS
-import qualified Data.Sequence                          as Seq
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Validate.Context
-import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -140,14 +140,9 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
   fragmentTypeInfo <- getFragmentTyInfo onTy
   return $ FragDef n fragmentTypeInfo selSet
 
-data RootSelSet
-  = RQuery !SelSet
-  | RMutation !SelSet
-  | RSubscription !Field
-  deriving (Show, Eq)
-
 validateGQ
-  :: (MonadError QErr m, MonadReader GCtx m, MonadReusability m) => QueryParts -> m RootSelSet
+  :: (MonadError QErr m, MonadReader GCtx m, MonadReusability m)
+  => QueryParts -> m RootSelectionSet
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   ctx <- ask
 
@@ -163,19 +158,23 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   -- build a validation ctx
   let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs
 
-  selSet <- flip runReaderT valCtx $ denormalizeSelectionSet [] opRoot $
+  selSet <- flip runReaderT valCtx $ denormalizeObjectSelectionSet valCtx opRoot $
             G._todSelectionSet opDef
 
   case G._todType opDef of
     G.OperationTypeQuery -> return $ RQuery selSet
     G.OperationTypeMutation -> return $ RMutation selSet
-    G.OperationTypeSubscription ->
-      case Seq.viewl selSet of
-        Seq.EmptyL     -> throw500 "empty selset for subscription"
-        fld Seq.:< rst -> do
-          unless (null rst) $
-            throwVE "subscription must select only one top level field"
-          return $ RSubscription fld
+    G.OperationTypeSubscription -> do
+      -- case Seq.viewl selSet of
+      --   Seq.EmptyL     -> throw500 "empty selset for subscription"
+      --   fld Seq.:< rst -> do
+      --     unless (null rst) $
+      --       throwVE "subscription must select only one top level field"
+          -- return $ RSubscription fld
+      case OMap.toList $ unAliasedFields $ unObjectSelectionSet selSet of
+        []     -> throw500 "empty selset for subscription"
+        [(alias, field)] -> return $ RSubscription alias field
+        _ -> throwVE "subscription must select only one top level field"
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery

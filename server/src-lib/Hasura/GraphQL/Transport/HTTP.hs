@@ -8,6 +8,7 @@ import qualified Network.HTTP.Types                     as N
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.NormalForm
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.Prelude
@@ -23,6 +24,7 @@ import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
+import qualified Language.GraphQL.Draft.Printer.Text    as GP
 
 runGQ
   :: ( HasVersion
@@ -46,10 +48,17 @@ runGQ reqId userInfo reqHdrs req = do
       E.GExPHasura resolvedOp -> do
         (telemTimeIO, telemQueryType, respHdrs, resp) <- runHasuraGQ reqId req userInfo resolvedOp
         return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
-      E.GExPRemote rsi opDef  -> do
+      E.GExPRemote rsi opDef rootSelSet -> do
         let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
-                            | otherwise = Telem.Query
-        (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi opDef
+                           | otherwise = Telem.Query
+            rewrittenQuery =
+              GQLReq { _grQuery = GQLQueryText $ GP.renderExecutableDoc $
+                                  G.ExecutableDocument $ pure $
+                                  toGraphQLOperation rootSelSet
+                     , _grVariables = Nothing
+                     , _grOperationName = Nothing
+                     }
+        (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs rewrittenQuery rsi opDef
         return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
   let telemTimeIO = fromUnits telemTimeIO_DT
       telemTimeTot = fromUnits telemTimeTot_DT

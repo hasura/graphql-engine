@@ -28,7 +28,7 @@ import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Schema             (isAggFld)
-import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal           (onlyPositiveInt)
 import           Hasura.RQL.Types
@@ -97,12 +97,11 @@ processTableSelectionSet
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => G.NamedType -> SelSet -> m AnnFlds
+  => G.NamedType -> ObjectSelectionSet -> m AnnFlds
 processTableSelectionSet fldTy flds =
-  forM (toList flds) $ \fld -> do
+  fmap (map (\(a, b) -> (FieldName a, b))) $ traverseObjectSelectionSet flds $ \fld -> do
     let fldName = _fName fld
-    let rqlFldName = FieldName $ G.unName $ G.unAlias $ _fAlias fld
-    (rqlFldName,) <$> case fldName of
+    case fldName of
       "__typename" -> return $ RS.FExp $ G.unName $ G.unNamedType fldTy
       _ -> do
         fldInfo <- getFldInfo fldTy fldName
@@ -131,15 +130,18 @@ fromAggSelSet
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => PGColGNameMap -> G.NamedType -> SelSet -> m TableAggFlds
+  => PGColGNameMap -> G.NamedType -> ObjectSelectionSet -> m TableAggFlds
 fromAggSelSet colGNameMap fldTy selSet = fmap toFields $
-  withSelSet selSet $ \f -> do
+  traverseObjectSelectionSet selSet $ \f -> do
     let fTy = _fType f
-        fSelSet = _fSelSet f
     case _fName f of
       "__typename" -> return $ RS.TAFExp $ G.unName $ G.unNamedType fldTy
-      "aggregate"  -> RS.TAFAgg <$> convertAggFld colGNameMap fTy fSelSet
-      "nodes"      -> RS.TAFNodes <$> processTableSelectionSet fTy fSelSet
+      "aggregate"  -> do
+        objSelSet <-  asObjectSelectionSet $ _fSelSet f
+        RS.TAFAgg <$> convertAggFld colGNameMap fTy objSelSet
+      "nodes"      -> do
+        objSelSet <-  asObjectSelectionSet $ _fSelSet f
+        RS.TAFNodes <$> processTableSelectionSet fTy objSelSet
       G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 type TableArgs = RS.TableArgsG UnresolvedVal
@@ -187,7 +189,8 @@ fromField
   -> Field -> m AnnSimpleSelect
 fromField selFrom colGNameMap permFilter permLimitM fld = fieldAsPath fld $ do
   tableArgs <- parseTableArgs colGNameMap args
-  annFlds   <- processTableSelectionSet (_fType fld) $ _fSelSet fld
+  selSet <- asObjectSelectionSet $ _fSelSet fld
+  annFlds   <- processTableSelectionSet (_fType fld) selSet
   let unresolvedPermFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal permFilter
   let tabPerm = RS.TablePerm unresolvedPermFltr permLimitM
   strfyNum <- stringifyNum <$> asks getter
@@ -322,7 +325,8 @@ fromFieldByPKey
   -> AnnBoolExpPartialSQL -> Field -> m AnnSimpleSel
 fromFieldByPKey tn colArgMap permFilter fld = fieldAsPath fld $ do
   boolExp <- pgColValToBoolExp colArgMap $ _fArguments fld
-  annFlds <- processTableSelectionSet fldTy $ _fSelSet fld
+  selSet <- asObjectSelectionSet $ _fSelSet fld
+  annFlds <- processTableSelectionSet fldTy selSet
   let tabFrom = RS.FromTable tn
       unresolvedPermFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal
                            permFilter
@@ -384,24 +388,24 @@ toFields = map (first FieldName)
 
 convertColFlds
   :: (MonadError QErr m)
-  => PGColGNameMap -> G.NamedType -> SelSet -> m RS.ColFlds
+  => PGColGNameMap -> G.NamedType -> ObjectSelectionSet -> m RS.ColFlds
 convertColFlds colGNameMap ty selSet = fmap toFields $
-  withSelSet selSet $ \fld ->
+  traverseObjectSelectionSet selSet $ \fld ->
     case _fName fld of
       "__typename" -> return $ RS.PCFExp $ G.unName $ G.unNamedType ty
       n            -> (RS.PCFCol . pgiColumn) <$> resolvePGCol colGNameMap n
 
 convertAggFld
   :: (MonadReusability m, MonadError QErr m)
-  => PGColGNameMap -> G.NamedType -> SelSet -> m RS.AggFlds
+  => PGColGNameMap -> G.NamedType -> ObjectSelectionSet -> m RS.AggFlds
 convertAggFld colGNameMap ty selSet = fmap toFields $
-  withSelSet selSet $ \fld -> do
+  traverseObjectSelectionSet selSet $ \fld -> do
     let fType = _fType fld
-        fSelSet = _fSelSet fld
     case _fName fld of
       "__typename" -> return $ RS.AFExp $ G.unName $ G.unNamedType ty
       "count"      -> RS.AFCount <$> convertCount colGNameMap (_fArguments fld)
       n            -> do
+        fSelSet <- asObjectSelectionSet $ _fSelSet fld
         colFlds <- convertColFlds colGNameMap fType fSelSet
         unless (isAggFld n) $ throwInvalidFld n
         return $ RS.AFOp $ RS.AggOp (G.unName n) colFlds
@@ -422,7 +426,8 @@ fromAggField
   -> Field -> m AnnAggSel
 fromAggField selectFrom colGNameMap permFilter permLimit fld = fieldAsPath fld $ do
   tableArgs   <- parseTableArgs colGNameMap args
-  aggSelFlds  <- fromAggSelSet colGNameMap (_fType fld) (_fSelSet fld)
+  selSet <- asObjectSelectionSet $ _fSelSet fld
+  aggSelFlds  <- fromAggSelSet colGNameMap (_fType fld) selSet
   let unresolvedPermFltr =
         fmapAnnBoolExp partialSQLExpToUnresolvedVal permFilter
   let tabPerm = RS.TablePerm unresolvedPermFltr permLimit

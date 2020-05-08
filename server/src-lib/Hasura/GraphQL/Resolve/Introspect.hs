@@ -16,7 +16,7 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Context
-import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -36,14 +36,15 @@ instance J.ToJSON TypeKind where
   toJSON = J.toJSON . T.pack . drop 2 . show
 
 withSubFields
-  :: (Monad m)
-  => SelSet
+  :: (MonadError QErr m)
+  => SelectionSet
   -> (Field -> m J.Value)
   -> m J.Object
-withSubFields selSet fn =
-  fmap Map.fromList $ forM (toList selSet) $ \fld -> do
-  val <- fn fld
-  return (G.unName $ G.unAlias $ _fAlias fld, val)
+withSubFields selSet fn = do
+  objectSelectionSet <- asObjectSelectionSet selSet
+  fmap Map.fromList $ traverseObjectSelectionSet objectSelectionSet fn
+  -- val <- fn fld
+  -- return (G.unName $ G.unAlias $ _fAlias fld, val)
 
 namedTyToTxt :: G.NamedType -> Text
 namedTyToTxt = G.unName . G.unNamedType
@@ -56,7 +57,7 @@ retJT = pure . J.toJSON
 
 -- 4.5.2.1
 scalarR
-  :: (Monad m)
+  :: (MonadError QErr m)
   => ScalarTyInfo
   -> Field
   -> m J.Object
@@ -156,7 +157,7 @@ ifaceR' i@(IFaceTyInfo descM n flds implementations) fld =
 
 -- 4.5.2.5
 enumTypeR
-  :: ( Monad m )
+  :: (MonadError QErr m)
   => EnumTyInfo
   -> Field
   -> m J.Object
@@ -277,7 +278,7 @@ inputValueR fld (InpValInfo descM n defM ty) =
 
 -- 4.5.5
 enumValueR
-  :: (Monad m)
+  :: (MonadError QErr m)
   => Field -> EnumValInfo -> m J.Object
 enumValueR fld (EnumValInfo descM enumVal isDeprecated) =
   withSubFields (_fSelSet fld) $ \subFld ->

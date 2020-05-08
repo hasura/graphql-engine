@@ -9,6 +9,7 @@ module Hasura.GraphQL.Validate.SelectionSet
   , traverseObjectSelectionSet
   , InterfaceSelectionSet
   , UnionSelectionSet
+  , RootSelectionSet(..)
   -- , denormalizeSelectionSet
   , denormalizeObjectSelectionSet
   , asObjectSelectionSet

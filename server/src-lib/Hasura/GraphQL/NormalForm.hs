@@ -6,6 +6,8 @@ module Hasura.GraphQL.NormalForm
   , DenormalizedSelectionSet
   , DenormalizedField
   , SelectionSet(..)
+  , RootSelectionSet(..)
+  , toGraphQLOperation
   , ArgsMap
   , Field(..)
   , Typename(..)
@@ -31,6 +33,9 @@ module Hasura.GraphQL.NormalForm
   , AnnGEnumValue(..)
   , hasNullVal
   , getAnnInpValKind
+
+  , toGraphQLField
+  , toGraphQLSelectionSet
   ) where
 
 import           Hasura.Prelude
@@ -91,6 +96,8 @@ data ScopedSelectionSet f
   -- ^ SelectionSets of individual member types
   } deriving (Show, Eq, Generic)
 
+
+
 emptyScopedSelectionSet :: ScopedSelectionSet f
 emptyScopedSelectionSet =
   ScopedSelectionSet (AliasedFields mempty) mempty
@@ -98,6 +105,36 @@ emptyScopedSelectionSet =
 type InterfaceSelectionSet = ScopedSelectionSet Field
 
 type UnionSelectionSet = ScopedSelectionSet Typename
+
+data RootSelectionSet
+  = RQuery !ObjectSelectionSet
+  | RMutation !ObjectSelectionSet
+  | RSubscription !G.Alias !Field
+  deriving (Show, Eq)
+
+toGraphQLOperation :: RootSelectionSet -> G.ExecutableDefinition
+toGraphQLOperation = \case
+  RQuery selectionSet ->
+    mkExecutableDefinition G.OperationTypeQuery $
+    toGraphQLSelectionSet $ SelectionSetObject selectionSet
+  RMutation selectionSet ->
+    mkExecutableDefinition G.OperationTypeQuery $
+    toGraphQLSelectionSet $ SelectionSetObject selectionSet
+  RSubscription alias field ->
+    mkExecutableDefinition G.OperationTypeSubscription $
+    toGraphQLSelectionSet $ SelectionSetObject $ ObjectSelectionSet $
+      AliasedFields $ OMap.singleton alias field
+  where
+    mkExecutableDefinition operationType selectionSet =
+      G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped $
+      G.TypedOperationDefinition
+        { G._todName = Nothing -- TODO, store the name too?
+        , G._todDirectives = []
+        , G._todType = operationType
+        , G._todVariableDefinitions = []
+        , G._todSelectionSet = selectionSet
+        }
+
 
 data SelectionSet
   = SelectionSetObject !ObjectSelectionSet
@@ -137,6 +174,35 @@ data Field
   , _fArguments :: !ArgsMap
   , _fSelSet    :: !SelectionSet
   } deriving (Eq, Show)
+
+toGraphQLField :: G.Alias -> Field -> G.Field
+toGraphQLField alias Field{..} =
+  G.Field
+    { G._fName = _fName
+    , G._fArguments = [] -- TODO
+    , G._fDirectives = []
+    , G._fAlias = Just alias
+    , G._fSelectionSet =  toGraphQLSelectionSet _fSelSet
+    }
+
+toGraphQLSelectionSet :: SelectionSet -> G.SelectionSet
+toGraphQLSelectionSet = \case
+  SelectionSetObject selectionSet -> fromSelectionSet selectionSet
+  SelectionSetInterface selectionSet -> fromScopedSelectionSet selectionSet
+  SelectionSetUnion selectionSet -> fromScopedSelectionSet selectionSet
+  SelectionSetNone -> mempty
+  where
+    fromAliasedFields :: (IsField f) => AliasedFields f -> G.SelectionSet
+    fromAliasedFields =
+      map (G.SelectionField . uncurry toGraphQLField) .
+      OMap.toList . fmap toField . unAliasedFields
+    fromSelectionSet =
+      fromAliasedFields . unObjectSelectionSet
+    toInlineSelection typeName =
+      G.SelectionInlineFragment . G.InlineFragment (Just typeName) mempty .
+      fromSelectionSet
+    fromScopedSelectionSet (ScopedSelectionSet base specific) =
+      map (uncurry toInlineSelection) (Map.toList specific) <> fromAliasedFields base
 
 -- $(J.deriveToJSON (J.aesonDrop 2 J.camelCase){J.omitNothingFields=True}
 --   ''Field
