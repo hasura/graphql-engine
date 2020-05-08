@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
@@ -32,7 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 
   sectionsData.push({
     key: 'actions',
-    link: `/settings/metadata-actions`,
+    link: '/settings/metadata-actions',
     dataTestVal: 'metadata-actions-link',
     title: 'Metadata Actions',
   });
@@ -42,7 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 
   sectionsData.push({
     key: 'status',
-    link: `/settings/metadata-status`,
+    link: '/settings/metadata-status',
     dataTestVal: 'metadata-status-link',
     title: (
       <div className={styles.display_flex}>
@@ -54,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 
   sectionsData.push({
     key: 'allowed-queries',
-    link: `/settings/allowed-queries`,
+    link: '/settings/allowed-queries',
     dataTestVal: 'allowed-queries-link',
     title: 'Allowed Queries',
   });
@@ -64,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
   if (adminSecret && globals.consoleMode !== CLI_CONSOLE_MODE) {
     sectionsData.push({
       key: 'logout',
-      link: `/settings/logout`,
+      link: '/settings/logout',
       dataTestVal: 'logout-page-link',
       title: 'Logout (clear admin-secret)',
     });
