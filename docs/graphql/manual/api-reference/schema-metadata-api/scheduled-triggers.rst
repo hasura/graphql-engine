@@ -85,88 +85,19 @@ Args syntax
      - false
      - Text
      - Custom comment.
-
-.. _update_cron_trigger:
-
-update_cron_trigger
--------------------
-
-``update_cron_trigger`` is used to update an existing cron trigger.
-
-.. code-block:: http
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
-
-   {
-       "type" : "update_cron_trigger",
-       "args" : {
-           "name": "sample_cron",
-           "webhook": "https://httpbin.org/post",
-           "schedule":"* * * *",
-           "payload": {
-               "key1": "value1",
-               "key2": "value2"
-           }
-       }
-
-   }
-
-.. _update_cron_trigger_syntax:
-
-Args syntax
-^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - name
-     - true
-     - TriggerName_
-     - Name of the cron trigger
-   * - webhook
-     - true
-     - Text | UrlFromEnv_
-     - URL of webhook or environment variable which has the URL
-   * - schedule
-     - true
-     - Cron Expression
-     - Cron expression at which the trigger should be invoked.
-   * - payload
+   * - replace
      - false
-     - JSON
-     - Any JSON payload which will be sent with the scheduled invocation
-   * - headers
-     - false
-     - [ HeaderFromValue_ | HeaderFromEnv_ ]
-     - List of headers to be sent with the webhook
-   * - retry_conf
-     - false
-     - RetryConfST_
-     - Retry configuration if scheduled invocation delivery fails
-   * - include_in_metadata
-     - false
-     - Boolean
-     - Flag to indicate whether a trigger should be included in the metadata. When a trigger is included in the metadata, the user will be able to export it when the metadata of the graphql-engine is
-       exported.
-   * - comment
-     - false
-     - Text
-     - Custom comment.
-
+     - Bool
+     - When replace is set to ``true``, the cron trigger will be updated(if exists) and when it's ``false`` or the
+       field is omitted, then a new cron trigger will be created.
 
 .. _delete_cron_trigger:
 
 delete_cron_trigger
 -------------------
 
-``delete_cron_trigger`` is used to delete an existing cron trigger.
-The scheduled invocations associated with the cron trigger will also be deleted.
+``delete_cron_trigger`` is used to delete an existing cron trigger.The scheduled events associated with the cron trigger will also be deleted.
+
 
 .. code-block:: http
 
@@ -198,59 +129,12 @@ Args syntax
      - TriggerName_
      - Name of the cron trigger
 
-.. _fetch_cron_trigger_invocations:
+.. _create_scheduled_event:
 
-fetch_cron_trigger_invocations
-------------------------------
-
-``fetch_cron_trigger_invocations`` is used to fetch scheduled invocations of an existing cron trigger.
-
-.. code-block:: http
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
-
-   {
-       "type" : "fetch_cron_trigger_invocations",
-       "args" : {
-           "name": "sample_cron",
-           "limit": 100,
-           "offset": 10,
-       }
-   }
-
-.. _fetch_cron_trigger_invocations_syntax:
-
-Args syntax
-^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - name
-     - true
-     - TriggerName_
-     - Name of the trigger
-   * - limit
-     - false
-     - Integer
-     - Maximum number of invocations to be returned.
-   * - offset
-     - false
-     - Integer
-     - The starting offset of the scheduled invocations to be returned in the API call to be returned.
-
-.. _create_one_off_trigger:
-
-create_one_off_trigger
+create_scheduled_event
 ----------------------
 
-``create_scheduled_trigger_cron_one_off`` is used to create an one-off trigger.
+``create_scheduled_event`` is used to create a scheduled event.
 
 .. code-block:: http
 
@@ -259,7 +143,7 @@ create_one_off_trigger
    X-Hasura-Role: admin
 
    {
-       "type" : "create_one_off_trigger",
+       "type" : "create_scheduled_event",
        "args" : {
            "webhook": "https://httpbin.org/post",
            "schedule_at": "2019-09-09T22:00:00Z",
@@ -271,11 +155,11 @@ create_one_off_trigger
                "name":"header-key",
                "value":"header-value"
            },
-           "comment":"sample one-off trigger commment"
+           "comment":"sample scheduled event comment"
        }
    }
 
-.. _create_one_off_trigger_syntax:
+.. _create_scheduled_event_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -311,48 +195,6 @@ Args syntax
      - false
      - Text
      - Custom comment.
-
-.. _fetch_one_off_trigger_invocations:
-
-fetch_one_off_trigger_invocations
----------------------------------
-
-``fetch_one_off_trigger_invocations`` is used to fetch the one-off triggers with their invocations.
-
-.. code-block:: http
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
-
-   {
-       "type" : "fetch_one_off_trigger_invocations",
-       "args" : {
-           "limit": 100,
-           "offset": 10
-       }
-   }
-
-.. _fetch_one_off_trigger_invocations_syntax:
-
-Args syntax
-^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - limit
-     - false
-     - Integer
-     - Maximum number of one-off triggers to be returned.
-   * - offset
-     - false
-     - Integer
-     - The starting offset of the scheduled one-off triggers to be returned.
 
 .. _TriggerName:
 

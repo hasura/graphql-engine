@@ -9,115 +9,125 @@ import time
 
 # The create and delete tests should ideally go in setup and teardown YAML files,
 # We can't use that here because, the payload is dynamic i.e. in case of adhoc Scheduled Triggers
-# the value is the current timestamp and in case of cron Scheduled Triggers, the cron schedule is
+# the value is the current timestamp and in case of cron  Triggers, the cron schedule is
 # derived based on the current timestamp
 
 def stringify_datetime(dt):
     return dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-class TestScheduledTriggerAdhoc(object):
+class TestScheduledEvent(object):
 
-    adhoc_trigger_name = "adhoc_scheduled_trigger"
-    webhook_path = "/hello"
     webhook_payload = {"foo":"baz"}
+
+    header_conf = [
+        {
+            "name":"header-key",
+            "value":"header-value"
+        }
+    ]
+
     url = "/v1/query"
 
-    def get_events_count_of_trigger(self,hge_ctx,trigger_name):
-        events_count_sql = '''
-        select count(*) from hdb_catalog.hdb_scheduled_events where name = '{}'
-        '''.format(trigger_name)
-        q = {
-            "type":"run_sql",
-            "args":{
-                "sql":events_count_sql
-            }
-        }
-        return hge_ctx.v1q(q)
+    webhook_domain = "http://127.0.0.1:5594"
 
-    def test_create_adhoc_scheduled_trigger(self,hge_ctx,scheduled_triggers_evts_webhook):
-        current_time = datetime.utcnow()
-        current_time_str =  stringify_datetime(current_time)
-        adhoc_st_api_query = {
-            "type":"create_scheduled_trigger",
-            "args":{
-                "name":self.adhoc_trigger_name,
-                "webhook":"http://127.0.0.1:5594" + self.webhook_path,
-                "schedule":{
-                    "type":"adhoc",
-                    "value":current_time_str
-                },
-                "payload":self.webhook_payload,
-                "headers":[
-                    {
-                        "name":"header-1",
-                        "value":"header-1-value"
-                    }
-                ]
-            }
-        }
-        adhoc_st_code,adhoc_st_resp = hge_ctx.v1q(adhoc_st_api_query)
-        assert adhoc_st_resp['message'] == 'success'
-        assert adhoc_st_code == 200
 
-    def test_check_adhoc_generated_events_count(self,hge_ctx,scheduled_triggers_evts_webhook):
-        adhoc_event_st,adhoc_event_resp = self.get_events_count_of_trigger(hge_ctx,self.adhoc_trigger_name)
-        assert int(adhoc_event_resp['result'][1][0]) == 1 # An adhoc Scheduled Trigger should create exactly one schedule event
-
-    def test_create_scheduled_events_with_valid_timestamps(self,hge_ctx,scheduled_triggers_evts_webhook):
-        event_timestamps = ['2020-01-01 15:44 Z',
-                            '2020-01-01T15:45 Z',
-                            '2020-01-01T15:46Z',
-                            '2020-01-01T15:47:00+0000',
-                            '2020-01-01T15:48:00-05:30']
-        scheduled_event_query = {
+    def test_create_scheduled_event(self,hge_ctx):
+        query = {
             "type":"create_scheduled_event",
-            "args": {
-                "name": self.adhoc_trigger_name
-            }
-        }
-        for timestamp in event_timestamps:
-            scheduled_event_query['args']['timestamp'] = timestamp
-            st,resp = hge_ctx.v1q(scheduled_event_query)
-            assert st == 200,resp
-            assert resp['message'] == 'success'
-
-    def test_check_adhoc_webhook_event(self,hge_ctx,scheduled_triggers_evts_webhook):
-        ev_full = scheduled_triggers_evts_webhook.get_event(65)
-        # 60 seconds will be the worst case, adding 5 seconds just so the test is not flaky
-        validate_event_webhook(ev_full['path'],'/hello')
-        validate_event_headers(ev_full['headers'],{"header-1":"header-1-value"})
-        assert ev_full['body'] == self.webhook_payload
-        assert scheduled_triggers_evts_webhook.is_queue_empty()
-
-    def test_delete_adhoc_scheduled_trigger(self,hge_ctx,scheduled_triggers_evts_webhook):
-        q = {
-            "type":"delete_scheduled_trigger",
             "args":{
-                "name":self.adhoc_trigger_name
+                "webhook":self.webhook_domain + '/test',
+                "schedule_at":stringify_datetime(datetime.utcnow()),
+                "payload":self.webhook_payload,
+                "headers":self.header_conf
             }
         }
-        st,resp = hge_ctx.v1q(q)
+        st, resp = hge_ctx.v1q(query)
         assert st == 200,resp
 
-class TestScheduledTriggerCron(object):
+    def test_create_scheduled_event_with_very_old_scheduled_time(self,hge_ctx):
+        query = {
+            "type":"create_scheduled_event",
+            "args":{
+                "webhook":{"from_env":"SCHEDULED_TRIGGERS_WEBHOOK"},
+                "schedule_at": "2020-01-01T00:00:00Z",
+                "payload":self.webhook_payload,
+                "headers":self.header_conf
+            }
+        }
+        st, resp = hge_ctx.v1q(query)
+        assert st == 200,resp
 
-    cron_trigger_name = "cron_scheduled_trigger"
+    def test_create_trigger_with_error_returning_webhook(self,hge_ctx):
+        query = {
+            "type":"create_scheduled_event",
+            "args":{
+                "webhook":self.webhook_domain + '/fail',
+                "schedule_at": stringify_datetime(datetime.utcnow()),
+                "payload":self.webhook_payload,
+                "headers":self.header_conf,
+                "retry_conf":{
+                    "num_retries":1,
+                    "retry_interval_seconds":1,
+                    "timeout_seconds":1,
+                    "tolerance_seconds": 21600
+                }
+            }
+        }
+        st, resp = hge_ctx.v1q(query)
+        assert st == 200, resp
+
+    def test_check_fired_webhook_event(self,hge_ctx,scheduled_triggers_evts_webhook):
+        event = scheduled_triggers_evts_webhook.get_event(65)
+        validate_event_webhook(event['path'],'/test')
+        validate_event_headers(event['headers'],{"header-key":"header-value"})
+        assert event['body'] == self.webhook_payload
+        assert scheduled_triggers_evts_webhook.is_queue_empty()
+
+    def test_check_events_statuses(self,hge_ctx):
+        time.sleep(65) # need to sleep here for atleast a minute for the failed event to be retried
+        query = {
+            "type":"run_sql",
+            "args":{
+                "sql":"select status,tries from hdb_catalog.hdb_scheduled_events"
+            }
+        }
+        st, resp = hge_ctx.v1q(query)
+        assert st == 200, resp
+        scheduled_event_statuses = dict(resp['result'])
+        # 3 one-off scheduled triggers have been created
+        # one should be dead because the timestamp was past the tolerance limit
+        # one should be delivered because all the parameters were reasonable
+        # one should be error because the webhook returns an error state
+        assert "dead" in scheduled_event_statuses
+        assert "delivered" in scheduled_event_statuses
+        assert int(scheduled_event_statuses['error']) == 2 # num_retries + 1
+
+    def test_teardown_scheduled_events(self,hge_ctx):
+        query = {
+            "type":"run_sql",
+            "args": {
+                "sql":"delete from hdb_catalog.hdb_scheduled_events"
+            }
+        }
+        st, resp = hge_ctx.v1q(query)
+        assert st == 200,resp
+
+class TestCronTrigger(object):
+
+    cron_trigger_name = "cron_trigger"
 
     def test_create_cron_schedule_triggers(self,hge_ctx):
         # setting the test to be after 30 mins, to make sure that
         # any of the events are not delivered.
         min_after_30_mins = (datetime.utcnow() + timedelta(minutes=30)).minute
-        TestScheduledTriggerCron.cron_schedule = "{} * * * *".format(min_after_30_mins)
+        TestCronTrigger.cron_schedule = "{} * * * *".format(min_after_30_mins)
 
         cron_st_api_query = {
-            "type":"create_scheduled_trigger",
+            "type":"create_cron_trigger",
             "args":{
                 "name":self.cron_trigger_name,
                 "webhook":"http://127.0.0.1:5594" + "/foo",
-                "schedule":{
-                    "type":"cron",
-                    "value":self.cron_schedule
-                },
+                "schedule":self.cron_schedule,
                 "headers":[
                     {
                         "name":"foo",
@@ -128,7 +138,7 @@ class TestScheduledTriggerCron(object):
             }
         }
         cron_st_code,cron_st_resp = hge_ctx.v1q(cron_st_api_query)
-        TestScheduledTriggerCron.init_time = datetime.utcnow()
+        TestCronTrigger.init_time = datetime.utcnow()
         # the cron events will be generated based on the current time, they
         # will not be exactly the same though(the server now and now here)
         assert cron_st_code == 200
@@ -143,7 +153,7 @@ class TestScheduledTriggerCron(object):
         # the croniter generated timestamps
         sql = '''
         select timezone('utc',scheduled_time) as scheduled_time
-        from hdb_catalog.hdb_scheduled_events where
+        from hdb_catalog.hdb_cron_events where
         name = '{}' order by scheduled_time asc;'''
         q = {
             "type":"run_sql",
@@ -152,7 +162,7 @@ class TestScheduledTriggerCron(object):
             }
         }
         st,resp = hge_ctx.v1q(q)
-        assert st == 200
+        assert st == 200,resp
         ts_resp = resp['result'][1:]
         assert len(ts_resp) == 100
         # 100 scheduled events are generated in a single batch when the
@@ -165,7 +175,7 @@ class TestScheduledTriggerCron(object):
 
     def test_delete_cron_scheduled_trigger(self,hge_ctx):
         q = {
-            "type":"delete_scheduled_trigger",
+            "type":"delete_cron_trigger",
             "args":{
                 "name":self.cron_trigger_name
             }

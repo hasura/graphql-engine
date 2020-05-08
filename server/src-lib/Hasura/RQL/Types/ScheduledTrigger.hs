@@ -1,12 +1,10 @@
 -- | These are types for Scheduled Trigger definition; see "Hasura.Eventing.ScheduledTrigger"
 module Hasura.RQL.Types.ScheduledTrigger
-  ( ScheduleType(..)
-  , ScheduledTriggerName(..)
-  , ScheduledEventId(..)
-  , CreateScheduledTrigger(..)
-  , CreateScheduledEvent(..)
+  ( ScheduledTriggerName(..)
+  , CronTriggerMetadata(..)
+  , CreateCronTrigger(..)
   , STRetryConf(..)
-  , FetchEventsScheduledTrigger(..)
+  , CreateScheduledEvent(..)
   , formatTime'
   , defaultSTRetryConf
   ) where
@@ -20,7 +18,6 @@ import           Data.Time.Format.ISO8601
 import           Hasura.Incremental
 import           Hasura.RQL.Types.Common     (NonNegativeDiffTime(..))
 import           Hasura.Prelude
-import           Data.Int                    (Int64)
 import           System.Cron.Types
 
 import qualified Data.Aeson                    as J
@@ -67,62 +64,69 @@ defaultSTRetryConf =
   , strcToleranceSeconds = NonNegativeDiffTime $ hours 6
   }
 
-data ScheduleType = Cron CronSchedule | AdHoc (Maybe UTCTime)
-  deriving (Show, Eq, Generic)
-
-instance NFData ScheduleType
-instance Cacheable ScheduleType
-
-instance FromJSON ScheduleType where
-  parseJSON =
-    withObject "ScheduleType" $ \o -> do
-      type' <- o .: "type"
-      case type' of
-        String "cron"  -> Cron <$> o .: "value"
-        String "adhoc" -> AdHoc <$> o .:? "value"
-        _              -> fail "expected type to be cron or adhoc"
-
-instance ToJSON ScheduleType where
-  toJSON (Cron cs)         = object ["type" .= String "cron", "value" .= toJSON cs]
-  toJSON (AdHoc (Just ts)) = object ["type" .= String "adhoc", "value" .= toJSON ts]
-  toJSON (AdHoc Nothing)   = object ["type" .= String "adhoc"]
-
-data CreateScheduledTrigger
-  = CreateScheduledTrigger
-  { stName      :: !ET.TriggerName
-  , stWebhook   :: !ET.WebhookConf
-  , stSchedule  :: !ScheduleType
-  , stPayload   :: !(Maybe J.Value)
-  , stRetryConf :: !STRetryConf
-  , stHeaders   :: ![ET.HeaderConf]
+data CronTriggerMetadata
+  = CronTriggerMetadata
+  { stName              :: !ET.TriggerName
+  , stWebhook           :: !ET.WebhookConf
+  , stSchedule          :: !CronSchedule
+  , stPayload           :: !(Maybe J.Value)
+  , stRetryConf         :: !STRetryConf
+  , stHeaders           :: ![ET.HeaderConf]
+  , stIncludeInMetadata :: !Bool
+  , stComment           :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 
-instance NFData CreateScheduledTrigger
-instance Cacheable CreateScheduledTrigger
+instance NFData CronTriggerMetadata
+instance Cacheable CronTriggerMetadata
 
-instance FromJSON CreateScheduledTrigger where
+instance FromJSON CronTriggerMetadata where
   parseJSON =
-    withObject "CreateScheduledTrigger" $ \o -> do
+    withObject "ScheduledTriggerMetadata" $ \o -> do
       stName <- o .: "name"
       stWebhook <- o .: "webhook"
       stPayload <- o .:? "payload"
       stSchedule <- o .: "schedule"
       stRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
       stHeaders <- o .:? "headers" .!= []
-      pure CreateScheduledTrigger {..}
+      stIncludeInMetadata <-
+          o .:? "include_in_metadata" .!= False
+      stComment <- o .:? "comment"
+      pure CronTriggerMetadata {..}
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CronTriggerMetadata)
 
-data CreateScheduledEvent
-  = CreateScheduledEvent
-  { steName      :: !ET.TriggerName
-  , steTimestamp :: !UTCTime
-  -- ^ The timestamp should be in the <ISO 8601 https://en.wikipedia.org/wiki/ISO_8601>
-  -- format (which is what @aeson@ expects by default for 'UTCTime').
-  , stePayload   :: !(Maybe J.Value)
+data CreateCronTrigger
+  = CreateCronTrigger
+  { cctName              :: !ET.TriggerName
+  , cctWebhook           :: !ET.WebhookConf
+  , cctCronSchedule      :: !CronSchedule
+  , cctPayload           :: !(Maybe J.Value)
+  , cctRetryConf         :: !STRetryConf
+  , cctHeaders           :: ![ET.HeaderConf]
+  , cctIncludeInMetadata :: !Bool
+  , cctComment           :: !(Maybe Text)
+  , cctReplace           :: !Bool
   } deriving (Show, Eq, Generic)
 
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateScheduledEvent)
+instance NFData CreateCronTrigger
+instance Cacheable CreateCronTrigger
+
+instance FromJSON CreateCronTrigger where
+  parseJSON =
+    withObject "CreateCronTrigger" $ \o -> do
+      cctName <- o .: "name"
+      cctWebhook <- o .: "webhook"
+      cctPayload <- o .:? "payload"
+      cctCronSchedule <- o .: "schedule"
+      cctRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
+      cctHeaders <- o .:? "headers" .!= []
+      cctIncludeInMetadata <-
+          o .:? "include_in_metadata" .!= False
+      cctComment <- o .:? "comment"
+      cctReplace <- o .:? "replace" .!= False
+      pure CreateCronTrigger {..}
+
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateCronTrigger)
 
 newtype ScheduledTriggerName
   = ScheduledTriggerName { unName :: ET.TriggerName }
@@ -130,27 +134,30 @@ newtype ScheduledTriggerName
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''ScheduledTriggerName)
 
-newtype ScheduledEventId
-  = ScheduledEventId{ unEventId:: ET.EventId}
-  deriving (Show, Eq)
-
-$(deriveJSON (aesonDrop 2 snakeCase) ''ScheduledEventId)
-
 formatTime' :: UTCTime -> T.Text
 formatTime'= T.pack . iso8601Show
 
-data FetchEventsScheduledTrigger
-  = FetchEventsScheduledTrigger
-  { festName   :: !ET.TriggerName
-  , festOffset :: !Int64
-  , festLimit  :: !(Maybe Int64)
+data CreateScheduledEvent
+  = CreateScheduledEvent
+  { cstoWebhook           :: !ET.WebhookConf
+  , cstoScheduleAt        :: !UTCTime
+    -- ^ The timestamp should be in the
+    -- <ISO 8601 https://en.wikipedia.org/wiki/ISO_8601>
+    -- format (which is what @aeson@ expects by default for 'UTCTime').
+  , cstoPayload           :: !(Maybe J.Value)
+  , cstoHeaders           :: ![ET.HeaderConf]
+  , cstoRetryConf         :: !STRetryConf
+  , cstoComment           :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 
-$(deriveToJSON (aesonDrop 4 snakeCase) ''FetchEventsScheduledTrigger)
-
-instance FromJSON FetchEventsScheduledTrigger where
+instance FromJSON CreateScheduledEvent where
   parseJSON =
-    withObject "FetchEventsScheduledTrigger" $ \o ->
-      FetchEventsScheduledTrigger <$> o .: "name"
-                                  <*> o .:? "offset" .!= 0
-                                  <*> o .:? "limit" .!= Nothing
+    withObject "CreateScheduledEvent" $ \o ->
+      CreateScheduledEvent <$> o .: "webhook"
+                                   <*> o .: "schedule_at"
+                                   <*> o .:? "payload"
+                                   <*> o .:? "headers" .!= []
+                                   <*> o .:? "retry_conf" .!= defaultSTRetryConf
+                                   <*> o .:? "comment"
+
+$(deriveToJSON (aesonDrop 4 snakeCase) ''CreateScheduledEvent)

@@ -189,7 +189,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     , scDepMap = resolvedDependencies
     , scInconsistentObjs =
         inconsistentObjects <> dependencyInconsistentObjects <> toList gqlSchemaInconsistentObjects
-    , scScheduledTriggers = _boScheduledTriggers resolvedOutputs
+    , scCronTriggers = _boCronTriggers resolvedOutputs
     }
   where
     buildAndCollectInfo
@@ -200,7 +200,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     buildAndCollectInfo = proc (catalogMetadata, invalidationKeys) -> do
       let CatalogMetadata tables relationships permissions
             eventTriggers remoteSchemas functions allowlistDefs
-            computedFields catalogCustomTypes actions scheduledTriggers = catalogMetadata
+            computedFields catalogCustomTypes actions cronTriggers = catalogMetadata
 
       -- tables
       tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
@@ -275,7 +275,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
                                    , "custom types are inconsistent" )
           returnA -< M.empty
 
-      scheduledTriggersMap <- buildScheduledTriggers -< ((),scheduledTriggers)
+      cronTriggersMap <- buildCronTriggers -< ((),cronTriggers)
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
@@ -290,7 +290,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
         -- If 'maybeResolvedCustomTypes' is 'Nothing', then custom types are inconsinstent.
         -- In such case, use empty resolved value of custom types.
         , _boCustomTypes = fromMaybe (NonObjectTypeMap mempty, mempty) maybeResolvedCustomTypes
-        , _boScheduledTriggers = scheduledTriggersMap
+        , _boCronTriggers = cronTriggersMap
         }
 
     mkEventTriggerMetadataObject (CatalogEventTrigger qt trn configuration) =
@@ -298,10 +298,9 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
           definition = object ["table" .= qt, "configuration" .= configuration]
       in MetadataObject objectId definition
 
-    mkScheduledTriggerMetadataObject catalogScheduledTrigger =
-      let q = catalogToCreateScheduledTrigger catalogScheduledTrigger
-          definition = toJSON q
-      in MetadataObject (MOScheduledTrigger (_cstName catalogScheduledTrigger))
+    mkCronTriggerMetadataObject catalogCronTrigger =
+      let definition = toJSON catalogCronTrigger
+      in MetadataObject (MOCronTrigger (_cctName catalogCronTrigger))
                         definition
 
     mkActionMetadataObject (ActionMetadata name comment defn _) =
@@ -365,34 +364,24 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
               liftTx $ delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
               mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
 
-    buildScheduledTriggers
+    buildCronTriggers
       :: ( ArrowChoice arr
          , Inc.ArrowDistribute arr
          , ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr
          , MonadIO m
          , MonadTx m)
-      => ((),[CatalogScheduledTrigger])
-         `arr` HashMap TriggerName ScheduledTriggerInfo
-    buildScheduledTriggers = buildInfoMap _cstName mkScheduledTriggerMetadataObject buildScheduledTrigger
+      => ((),[CatalogCronTrigger])
+         `arr` HashMap TriggerName CronTriggerInfo
+    buildCronTriggers = buildInfoMap _cctName mkCronTriggerMetadataObject buildCronTrigger
       where
-        buildScheduledTrigger = proc (_,scheduledTrigger) -> do
-          let q = catalogToCreateScheduledTrigger scheduledTrigger
-              triggerName = triggerNameToTxt $ _cstName scheduledTrigger
-              addScheduledTriggerContext e = "in scheduled trigger " <> triggerName <> ": " <> e
+        buildCronTrigger = proc (_,cronTrigger) -> do
+          let triggerName = triggerNameToTxt $ _cctName cronTrigger
+              addCronTriggerContext e = "in cron trigger " <> triggerName <> ": " <> e
           (| withRecordInconsistency (
-            (| modifyErrA (bindErrorA -< resolveScheduledTrigger q)
-             |) addScheduledTriggerContext)
-           |) (mkScheduledTriggerMetadataObject scheduledTrigger)
-
-    catalogToCreateScheduledTrigger :: CatalogScheduledTrigger -> CreateScheduledTrigger
-    catalogToCreateScheduledTrigger CatalogScheduledTrigger {..} =
-      CreateScheduledTrigger _cstName
-                             _cstWebhookConf
-                             _cstScheduleConf
-                             _cstPayload
-                             (fromMaybe defaultSTRetryConf _cstRetryConf)
-                             (fromMaybe [] _cstHeaderConf)
+            (| modifyErrA (bindErrorA -< resolveCronTrigger cronTrigger)
+             |) addCronTriggerContext)
+           |) (mkCronTriggerMetadataObject cronTrigger)
 
     buildActions
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr

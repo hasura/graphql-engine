@@ -10,7 +10,7 @@ select
     'computed_fields', computed_field.items,
     'custom_types', custom_types.item,
     'actions', actions.items,
-    'scheduled_triggers', scheduled_triggers.items
+    'cron_triggers', cron_triggers.items
   )
 from
   (
@@ -223,14 +223,15 @@ from
           json_build_object(
             'name', name,
             'webhook_conf', webhook_conf :: json,
-            'schedule_conf', schedule_conf :: json,
+            'cron_schedule', cron_schedule,
             'payload', payload :: json,
             'retry_conf', retry_conf :: json,
-            'header_conf', header_conf :: json
+            'header_conf', header_conf :: json,
+            'comment', comment
           )
         ),
         '[]'
       ) as items
       from
-          hdb_catalog.hdb_scheduled_trigger
-  ) as scheduled_triggers
+          hdb_catalog.hdb_cron_triggers
+  ) as cron_triggers

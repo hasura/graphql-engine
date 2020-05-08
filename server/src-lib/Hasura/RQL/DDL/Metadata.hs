@@ -29,9 +29,8 @@ import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
 import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaToCatalog, fetchRemoteSchemas,
                                                      removeRemoteSchemaFromCatalog)
-import           Hasura.RQL.DDL.ScheduledTrigger    (addScheduledTriggerToCatalog,
-                                                     deleteScheduledTriggerFromCatalog,
-                                                     trackScheduledTriggerInCatalog)
+import           Hasura.RQL.DDL.ScheduledTrigger    (addCronTriggerToCatalog,
+                                                     deleteCronTriggerFromCatalog)
 import           Hasura.RQL.DDL.Schema.Catalog      (saveTableToCatalog)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -60,7 +59,7 @@ clearUserMetadata = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_custom_types" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_action_permission" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_action WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.hdb_scheduled_trigger WHERE include_in_metadata" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_cron_triggers WHERE include_in_metadata" () False
 
 runClearMetadata
   :: (MonadTx m, CacheRWM m)
@@ -74,7 +73,7 @@ applyQP1
   :: (QErrM m)
   => ReplaceMetadata -> m ()
 applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
-          allowlist _ actions scheduledTriggers) = do
+          allowlist _ actions cronTriggers) = do
   withPathK "tables" $ do
 
     checkMultipleDecls "tables" $ map _tmTable tables
@@ -118,8 +117,8 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
   withPathK "actions" $
     checkMultipleDecls "actions" $ map _amName actions
 
-  withPathK "scheduled_triggers" $
-    checkMultipleDecls "scheduled triggers" $ map stName scheduledTriggers
+  withPathK "cron_triggers" $
+    checkMultipleDecls "cron triggers" $ map stName cronTriggers
 
   where
     withTableName qt = withPathK (qualObjectToText qt)
@@ -199,11 +198,10 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
   withPathK "custom_types" $
     CustomTypes.persistCustomTypes customTypes
 
-  -- scheduled triggers
-  withPathK "scheduled_triggers" $
+  -- cron triggers
+  withPathK "cron_triggers" $
     indexedForM_ scheduledTriggers $ \st -> liftTx $ do
-    addScheduledTriggerToCatalog st
-    trackScheduledTriggerInCatalog (stName st)
+    addCronTriggerToCatalog st
 
   -- actions
   withPathK "actions" $
@@ -288,13 +286,13 @@ fetchMetadata = do
   -- fetch actions
   actions <- fetchActions
 
-  scheduledTriggers <- fetchScheduledTriggers
+  cronTriggers <- fetchCronTriggers
 
   return $ ReplaceMetadata currentMetadataVersion (HMIns.elems postRelMap) functions
                            remoteSchemas collections allowlist
                            customTypes
                            actions
-                           scheduledTriggers
+                           cronTriggers
 
   where
 
@@ -390,22 +388,27 @@ fetchMetadata = do
                           , ComputedFieldMeta name definition comment
                           )
 
-    fetchScheduledTriggers =
-      map uncurrySchedule <$> Q.listQE defaultTxErrorHandler
+    fetchCronTriggers =
+      map uncurryCronTrigger
+              <$> Q.listQE defaultTxErrorHandler
       [Q.sql|
-       SELECT st.name, st.webhook_conf, st.schedule_conf, st.payload, st.retry_conf, st.header_conf
-        FROM hdb_catalog.hdb_scheduled_trigger st
+       SELECT ct.name, ct.webhook_conf, ct.cron_schedule, ct.payload,
+             ct.retry_conf, ct.header_conf, ct.include_in_metadata, ct.comment
+        FROM hdb_catalog.hdb_cron_triggers ct
         WHERE include_in_metadata
       |] () False
       where
-        uncurrySchedule (n, wc, sc, p, rc, hc) =
-          CreateScheduledTrigger
-          { stName = n,
-            stWebhook = Q.getAltJ wc,
-            stSchedule = Q.getAltJ sc,
-            stPayload = Q.getAltJ <$> p,
-            stRetryConf = Q.getAltJ rc,
-            stHeaders = Q.getAltJ hc
+        uncurryCronTrigger
+          (name, webhook, schedule, payload, retryConfig, headerConfig, includeMetadata, comment) =
+          CronTriggerMetadata
+          { stName = name,
+            stWebhook = Q.getAltJ webhook,
+            stSchedule = schedule,
+            stPayload = Q.getAltJ <$> payload,
+            stRetryConf = Q.getAltJ retryConfig,
+            stHeaders = Q.getAltJ headerConfig,
+            stIncludeInMetadata = includeMetadata,
+            stComment = comment
           }
 
     fetchCustomTypes :: Q.TxE QErr CustomTypes
@@ -508,4 +511,4 @@ purgeMetadataObj = liftTx . \case
   MOCustomTypes                         -> CustomTypes.clearCustomTypes
   MOAction action                       -> Action.deleteActionFromCatalog action Nothing
   MOActionPermission action role        -> Action.deleteActionPermissionFromCatalog action role
-  MOScheduledTrigger stName             -> deleteScheduledTriggerFromCatalog stName
+  MOCronTrigger ctName                  -> deleteCronTriggerFromCatalog ctName

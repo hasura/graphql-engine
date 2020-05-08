@@ -4,7 +4,7 @@
 
 .. _migrations_v1:
 
-Migrations & Metadata (v1 config)
+Migrations & Metadata (config v1)
 =================================
 
 .. contents:: Table of contents

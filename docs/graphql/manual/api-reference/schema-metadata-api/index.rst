@@ -231,30 +231,15 @@ The various types of queries are listed in the following table:
      - 1
      - Create a cron trigger
 
-   * - :ref:`update_cron_trigger`
-     - :ref:`update_cron_trigger_args <update_cron_trigger_syntax>`
-     - 1
-     - Update an existing cron trigger
-
    * - :ref:`delete_cron_trigger`
      - :ref:`delete_cron_trigger_args <delete_cron_trigger_syntax>`
      - 1
      - Delete an existing cron trigger
 
-   * - :ref:`fetch_cron_trigger_invocations`
-     - :ref:`fetch_cron_trigger_invocations_args <fetch_cron_trigger_invocations_syntax>`
+   * - :ref:`create_scheduled_event`
+     - :ref:`create_scheduled_event_args <create_scheduled_event_syntax>`
      - 1
-     - Fetch invocations of an existing cron trigger
-
-   * - :ref:`create_one_off_trigger`
-     - :ref:`create_one_off_trigger_args <create_one_off_trigger_syntax>`
-     - 1
-     - Create a one-off trigger
-
-   * - :ref:`fetch_one_off_trigger_invocations`
-     - :ref:`fetch_one_off_trigger_invocations_args <fetch_one_off_trigger_invocations_syntax>`
-     - 1
-     - Fetch the one-off triggers
+     - Create a new scheduled event
 
    * - :ref:`add_remote_schema`
      - :ref:`add_remote_schema_args <add_remote_schema_syntax>`

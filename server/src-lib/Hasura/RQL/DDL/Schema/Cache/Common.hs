@@ -61,7 +61,7 @@ data BuildOutputs
   -- generation (because of field conflicts).
   , _boAllowlist         :: !(HS.HashSet GQLQuery)
   , _boCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
-  , _boScheduledTriggers :: !(M.HashMap TriggerName ScheduledTriggerInfo)
+  , _boCronTriggers      :: !(M.HashMap TriggerName CronTriggerInfo)
   } deriving (Show, Eq)
 $(makeLenses ''BuildOutputs)
 

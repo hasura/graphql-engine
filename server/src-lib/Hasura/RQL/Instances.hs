@@ -12,12 +12,14 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
 import qualified Text.Regex.TDFA               as TDFA
 import qualified Text.Regex.TDFA.Pattern       as TDFA
+import qualified Database.PG.Query             as Q
 
 import           Data.Functor.Product
 import           Data.GADT.Compare
 import           Instances.TH.Lift             ()
 import           System.Cron.Parser
 import           System.Cron.Types
+import           Data.Text
 
 instance NFData G.Argument
 instance NFData G.Directive
@@ -102,3 +104,15 @@ instance J.FromJSON CronSchedule where
 
 instance J.ToJSON CronSchedule where
   toJSON = J.String . serializeCronSchedule
+
+instance Q.ToPrepArg CronSchedule where
+  toPrepVal = Q.toPrepVal . serializeCronSchedule
+
+instance Q.FromCol CronSchedule where
+  fromCol bs =
+    case Q.fromCol bs of
+      Left err -> fail $ unpack err
+      Right dbCron ->
+        case parseCronSchedule dbCron of
+          Left err' -> fail $ "invalid cron schedule " <> err'
+          Right cron -> Right cron
