@@ -197,22 +197,20 @@ data ScheduledTriggerOneOff
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledTriggerOneOff)
 
 -- | The 'ScheduledEventType' data type is needed to differentiate
---   between a 'Templated' and 'StandAlone' event because they
---   both have different configurations and they live in different
---   tables.
+--   between a 'CronScheduledEvent' and 'StandAloneEvent' scheduled
+--   event because they both have different configurations
+--   and they live in different tables.
 data ScheduledEventType =
-    Templated
-  -- ^ Templated scheduled events are those which have a template
-  -- defined which will contain the webhook, headers and a retry
-  -- configuration and a payload. The payload is a default payload
-  -- which is used if creating a new scheduled event doesn't contain
-  -- a payload of it's own. Every scheduled event derived using a
-  -- template will use the above mentioned configurations. In case of
-  -- a 'Templated' Event the configurations are stored in the schema
-  -- cache and hence we don't need them while fetching the events.
-  | StandAlone
-  -- ^ A standalone event will have all the required configurations
-  -- with it.
+    CronScheduledEvent
+  -- ^ A Cron scheduled event has a template defined which will
+  -- contain the webhook, header configuration, retry
+  -- configuration and a payload. Every cron event created
+  -- uses the above mentioned configurations defined in the template.
+  -- The configuration defined with the cron trigger is cached
+  -- and hence it's not fetched along the cron scheduled events.
+  | StandAloneEvent
+  -- ^ A standalone scheduled event doesn't have any template defined
+  -- so all the configuration is fetched along the scheduled events.
     deriving (Eq, Show)
 
 -- | runScheduledEventsGenerator makes sure that all the scheduled triggers
@@ -348,7 +346,7 @@ processScheduledQueue logger logEnv httpMgr pgpool getSC = do
                                        stiHeaders
                                        stiComment
             finally <- runExceptT $
-              runReaderT (processScheduledEvent logEnv pgpool scheduledEvent Templated) (logger, httpMgr)
+              runReaderT (processScheduledEvent logEnv pgpool scheduledEvent CronScheduledEvent) (logger, httpMgr)
             either logInternalError pure finally
     Left err -> logInternalError err
   where
@@ -396,7 +394,8 @@ processOneOffScheduledTriggers logger logEnv httpMgr pgpool = do
                                                         headerInfo'
                                                         comment
                 finally <- runExceptT $
-                  runReaderT (processScheduledEvent logEnv pgpool scheduledEvent StandAlone) (logger, httpMgr)
+                  runReaderT (processScheduledEvent logEnv pgpool scheduledEvent StandAloneEvent) $
+                                 (logger, httpMgr)
                 either logInternalError pure finally
 
               Left headerInfoErr -> logInternalError headerInfoErr
@@ -549,14 +548,14 @@ processDead pgpool se type' =
 setRetry :: ScheduledEventFull -> UTCTime -> ScheduledEventType ->  Q.TxE QErr ()
 setRetry se time type' =
   case type' of
-    Templated ->
+    CronScheduledEvent ->
       Q.unitQE defaultTxErrorHandler [Q.sql|
         UPDATE hdb_catalog.hdb_cron_events
         SET next_retry_at = $1,
         STATUS = 'scheduled'
         WHERE id = $2
         |] (time, sefId se) True
-    StandAlone ->
+    StandAloneEvent ->
       Q.unitQE defaultTxErrorHandler [Q.sql|
         UPDATE hdb_catalog.hdb_scheduled_events
         SET next_retry_at = $1,
@@ -581,7 +580,7 @@ mkInvocation se status reqHeaders respBody respHeaders
 insertInvocation :: (Invocation 'ScheduledType) -> ScheduledEventType ->  Q.TxE QErr ()
 insertInvocation invo type' = do
   case type' of
-    Templated -> do
+    CronScheduledEvent -> do
       Q.unitQE defaultTxErrorHandler
         [Q.sql|
          INSERT INTO hdb_catalog.hdb_cron_event_invocation_logs
@@ -596,7 +595,7 @@ insertInvocation invo type' = do
           SET tries = tries + 1
           WHERE id = $1
           |] (Identity $ iEventId invo) True
-    StandAlone -> do
+    StandAloneEvent -> do
       Q.unitQE defaultTxErrorHandler
         [Q.sql|
          INSERT INTO hdb_catalog.hdb_scheduled_event_invocation_logs
@@ -615,14 +614,14 @@ insertInvocation invo type' = do
 setScheduledEventStatus :: Text -> ScheduledEventStatus -> ScheduledEventType -> Q.TxE QErr ()
 setScheduledEventStatus scheduledEventId status type' =
   case type' of
-    Templated -> do
+    CronScheduledEvent -> do
       Q.unitQE defaultTxErrorHandler
        [Q.sql|
         UPDATE hdb_catalog.hdb_cron_events
         SET status = $2
         WHERE id = $1
        |] (scheduledEventId, status) True
-    StandAlone -> do
+    StandAloneEvent -> do
       Q.unitQE defaultTxErrorHandler
        [Q.sql|
         UPDATE hdb_catalog.hdb_scheduled_events
