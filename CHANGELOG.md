@@ -38,8 +38,8 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
-- cli: list all avialable commands in root command help (fix #4623)
-- docs: add disabling dev mode to production checklist
+- cli: list all avialable commands in root command help (fix #4623) (#4628)
+- docs: add disabling dev mode to production checklist (#4715)
 
 ## `v1.2.0`
 
