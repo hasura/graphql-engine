@@ -25,12 +25,24 @@ query {
     content
     likedByMe
   }
-}     
+}
 ```
 
 Support for this is now added through the `add_computed_field` API.
 
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
+
+### Scheduled Triggers (fix #1914)
+
+A scheduled trigger can be useful to execute custom business logic either periodically (using a cron trigger) or
+at a particular timestamp (using a scheduled event).
+
+A cron trigger will be useful when something needs to be done periodically. For example, A new cron trigger
+can be configured to run everyday to generate the sales report of the previous day.
+
+Creating a scheduled event will be useful on an ad hoc basis. For example, A new scheduled event can be
+created when users signs up in an app, the scheduled event can be scheduled at 2 weeks from the signup time
+to send them an email asking about their experience using the app.
 
 ### Bug fixes and improvements
 
@@ -347,7 +359,6 @@ See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-
 - cli: fix flags in actions, migrate and metadata cmd (fix #3982) (#3991)
 - cli: preserve action definition in metadata apply (fix… (#3993)
 - cli: bug fixes related to actions (#3951)
-- server: add support for query actions (#4032)
 
 ## `v1.2.0-beta.1`
 
