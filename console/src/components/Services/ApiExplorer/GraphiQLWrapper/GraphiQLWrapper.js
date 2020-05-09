@@ -6,7 +6,10 @@ import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
 import AnalyzeButton from '../Analyzer/AnalyzeButton';
 import CodeExporter from 'graphiql-code-exporter';
-import snippets from 'graphiql-code-exporter/lib/snippets';
+import {
+  getCodeExporterIsOpen,
+  setCodeExporterOpen,
+} from '../OneGraphExplorer/utils';
 
 import {
   clearCodeMirrorHints,
@@ -28,13 +31,11 @@ import {
   setTypeDefinition,
   setDerivedActionParentOperation,
 } from '../../Actions/Add/reducer';
+import snippets from '../snippets';
 
 import 'graphiql/graphiql.css';
 import './GraphiQL.css';
-import {
-  getCodeExporterIsOpen,
-  setCodeExporterOpen,
-} from '../OneGraphExplorer/utils';
+import 'graphiql-code-exporter/CodeExporter.css';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
