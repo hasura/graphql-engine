@@ -20,7 +20,7 @@ logic using custom queries and mutations. Actions can be
 added to Hasura to handle various use cases such as data validation, data
 enrichment from external sources and any other complex business logic.
 
-.. thumbnail:: ../../../img/graphql/manual/actions/actions-arch.png
+.. thumbnail:: /img/graphql/manual/actions/actions-arch.png
    :class: no-shadow
    :alt: Actions high level architecture
 

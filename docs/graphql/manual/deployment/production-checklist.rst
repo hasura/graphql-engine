@@ -46,7 +46,7 @@ Review the authorization/permission rules set on tables. You can make use of the
 permissions set across all tables and roles. Pay extra attention to roles like
 "anonymous" which allow unauthenticated access.
 
-.. thumbnail:: ../../../img/graphql/manual/deployment/schema_permissions_summary.png
+.. thumbnail:: /img/graphql/manual/deployment/schema_permissions_summary.png
    :alt: Hasura console - Schema permissions summary
    :width: 75%
 
