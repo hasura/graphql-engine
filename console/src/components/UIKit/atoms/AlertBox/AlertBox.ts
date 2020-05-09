@@ -7,9 +7,18 @@ import {
   layout,
   space,
   shadow,
+  FlexboxProps,
+  ColorProps,
+  BorderProps,
+  TypographyProps,
+  LayoutProps,
+  SpaceProps,
+  ShadowProps
 } from 'styled-system';
 
-export const StyledAlertBox = styled.div`
+import { AlertBoxProps } from './index';
+
+export const StyledAlertBox = styled.div<AlertBoxProps & FlexboxProps & ColorProps & BorderProps & TypographyProps & LayoutProps & SpaceProps & ShadowProps>`
   ${flexbox};
   ${color}
   ${border}

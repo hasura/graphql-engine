@@ -112,8 +112,8 @@ const iconReferenceMap = {
 };
 
 export type IconProps = {
-  pointer: boolean;
-  size: number;
+  pointer?: boolean;
+  size?: number;
   type: keyof Theme['icon'];
 };
 

@@ -1,13 +1,19 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 import { theme } from '../../theme';
-import { Icon } from '../Icon';
+import { Icon, IconProps } from '../Icon';
 import { StyledAlertBox } from './AlertBox';
 import { Text } from '../Typography';
 
-const alertBoxWidth = 866;
+const alertBoxWidth = "866";
 
-export const AlertBox = props => {
+export interface AlertBoxProps extends IconProps {
+  type: 'success' | 'info' | 'warning' | 'error' | 'default' ;
+  children?: ReactNode;
+}
+
+
+export const AlertBox: React.FC<AlertBoxProps> = props => {
   const { children, type } = props;
 
   const backgroundColorValue = theme.alertBox[type]
@@ -46,7 +52,7 @@ export const AlertBox = props => {
     >
       <Icon type={type} />
       {type && (
-        <Text as="span" pl="md" fontWeight="medium">
+        <Text pl="md" fontWeight="medium">
           {type}
         </Text>
       )}
