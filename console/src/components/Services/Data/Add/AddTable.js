@@ -112,9 +112,11 @@ class AddTable extends Component {
   };
 
   trimTableName = tableName => {
-    const trimmedName = tableName != null ? tableName.trim() : tableName;
+    const trimmedName = tableName ? tableName.trim() : tableName;
     const { dispatch } = this.props;
-    dispatch(setTableName(trimmedName));
+    if (tableName !== trimmedName) {
+      dispatch(setTableName(trimmedName));
+    }
     return trimmedName;
   };
 
@@ -238,7 +240,9 @@ class AddTable extends Component {
   trimColumnNames(columns) {
     const trimmedColumns = columns.map((column, index) => {
       const trimmedColumn = column.name.trim();
-      this.props.dispatch(setColName(trimmedColumn, index, column.nullable));
+      if (trimmedColumn !== column.name) {
+        this.props.dispatch(setColName(trimmedColumn, index, column.nullable));
+      }
       return {
         ...column,
         name: trimmedColumn,
