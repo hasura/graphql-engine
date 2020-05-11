@@ -94,7 +94,7 @@ class TestScheduledEvent(object):
         st, resp = hge_ctx.v1q(query)
         assert st == 200, resp
         scheduled_event_statuses = dict(resp['result'])
-        # 3 one-off scheduled triggers have been created
+        # 3 scheduled events have been created
         # one should be dead because the timestamp was past the tolerance limit
         # one should be delivered because all the parameters were reasonable
         # one should be error because the webhook returns an error state

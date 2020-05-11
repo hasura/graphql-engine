@@ -156,19 +156,18 @@ data CronEventSeed
 
 data CronEventPartial
   = CronEventPartial
-  { sepId            :: !Text
-  , sepName          :: !TriggerName
-  , sepScheduledTime :: !UTCTime
-  , sepTries         :: !Int
+  { cepId            :: !Text
+  , cepName          :: !TriggerName
+  , cepScheduledTime :: !UTCTime
+  , cepTries         :: !Int
   } deriving (Show, Eq)
 
 data ScheduledEventFull
   = ScheduledEventFull
   { sefId            :: !Text
   , sefName          :: !(Maybe TriggerName)
-  -- ^ sefName is the name of the scheduled trigger, it's being
-  -- used by both cron scheduled events and one-off scheduled events.
-  -- A one-off scheduled event is not associated with a name, so in that
+  -- ^ sefName is the name of the cron trigger.
+  -- A standalone scheduled event is not associated with a name, so in that
   -- case, 'sefName' will be @Nothing@
   , sefScheduledTime :: !UTCTime
   , sefTries         :: !Int
@@ -183,17 +182,17 @@ $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''Sche
 
 data StandAloneScheduledEvent
   = StandAloneScheduledEvent
-  { seoId            :: !Text
-  , seoScheduledTime :: !UTCTime
-  , seoTries         :: !Int
-  , seoWebhook       :: !InputWebhook
-  , seoPayload       :: !(Maybe J.Value)
-  , seoRetryConf     :: !STRetryConf
-  , seoHeaderConf    :: ![HeaderConf]
-  , seoComment       :: !(Maybe Text)
+  { saseId            :: !Text
+  , saseScheduledTime :: !UTCTime
+  , saseTries         :: !Int
+  , saseWebhook       :: !InputWebhook
+  , sasePayload       :: !(Maybe J.Value)
+  , saseRetryConf     :: !STRetryConf
+  , saseHeaderConf    :: ![HeaderConf]
+  , saseComment       :: !(Maybe Text)
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''StandAloneScheduledEvent)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''StandAloneScheduledEvent)
 
 -- | The 'ScheduledEventType' data type is needed to differentiate
 --   between a 'CronScheduledEvent' and 'StandAloneEvent' scheduled
