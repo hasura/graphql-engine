@@ -1,5 +1,6 @@
 import pytest
-from validate import check_query_f
+from validate import check_query_f, check_query, get_conf_f
+
 
 # Marking all tests in this module that server upgrade tests can be run
 # Few of them cannot be run, which will be marked skip_server_upgrade_test
@@ -173,9 +174,34 @@ class TestGraphqlInsertPermission:
     def test_user_insert_account_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_insert_account_fail.yaml")
 
+    def test_backend_user_insert_fail(self, hge_ctx):
+        check_query_admin_secret(hge_ctx, self.dir() + "/backend_user_insert_fail.yaml")
+
+    def test_backend_user_insert_pass(self, hge_ctx):
+        check_query_admin_secret(hge_ctx, self.dir() + "/backend_user_insert_pass.yaml")
+
+    def test_backend_user_insert_invalid_bool(self, hge_ctx):
+        check_query_admin_secret(hge_ctx, self.dir() + "/backend_user_insert_invalid_bool.yaml")
+
+    def test_user_with_no_backend_privilege(self, hge_ctx):
+        check_query_admin_secret(hge_ctx, self.dir() + "/user_with_no_backend_privilege.yaml")
+
+    def test_backend_user_no_admin_secret_fail(self, hge_ctx):
+        if hge_ctx.hge_key and (hge_ctx.hge_jwt_key or hge_ctx.hge_webhook):
+            check_query_f(hge_ctx, self.dir() + "/backend_user_no_admin_secret_fail.yaml")
+        else:
+            pytest.skip("authorization not configured, skipping the test")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/permissions"
+
+def check_query_admin_secret(hge_ctx, f, transport='http'):
+    conf = get_conf_f(f)
+    admin_secret = hge_ctx.hge_key
+    if admin_secret:
+        conf['headers']['x-hasura-admin-secret'] = admin_secret
+    check_query(hge_ctx, conf, transport, False)
 
 
 @usefixtures('per_class_tests_db_state')

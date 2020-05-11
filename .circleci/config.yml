@@ -531,6 +531,8 @@ jobs:
     - run:
         name: test console
         command: .circleci/test-console.sh
+    - store_artifacts:
+        path: /build/_console_output/server.log
 
   # test server upgrade from last version to current build
   test_server_upgrade:
@@ -651,6 +653,7 @@ workflows:
     - test_and_build_cli_migrations:
         <<: *filter_only_vtags
         requires:
+        - build_image
         - test_and_build_cli
     - test_console:
         <<: *filter_only_vtags
