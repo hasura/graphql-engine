@@ -4,7 +4,17 @@ import {
   Button as BootstrapModalButton,
 } from 'react-bootstrap';
 
-const Modal = ({
+export interface ModalProps {
+  show?: boolean;
+  title: React.ReactElement;
+  onClose?(): void;
+  onSubmit?(): void;
+  onCancel?(): void;
+  customClass?: string;
+  submitText?: string;
+  submitTestId?: string;
+}
+const Modal: React.FC<ModalProps> = ({
   show = true,
   title,
   onClose,
@@ -14,16 +24,6 @@ const Modal = ({
   submitText = '',
   submitTestId = '',
   children,
-}: {
-  show?: boolean;
-  title?: string;
-  onClose?: Function;
-  customClass?: string;
-  onSubmit?: () => void;
-  onCancel?: () => void;
-  submitText?: string;
-  submitTestId?: string;
-  children?: any;
 }) => {
   const getHeader = () => {
     return (
