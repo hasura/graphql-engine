@@ -9,7 +9,7 @@ Actions codegen
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Introduction
@@ -117,6 +117,7 @@ Hasura provides codegen for the following frameworks:
   Nodejs <nodejs>
   Java <java>
   .net <dotnet>
+  Python <python/index>
 
 If you wish to build a code generator for your framework
 `read the contrib guide <https://github.com/hasura/codegen-builder-contrib/>`_.
