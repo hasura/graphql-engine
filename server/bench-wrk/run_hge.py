@@ -100,7 +100,7 @@ class HGE:
             network_mode='host',
             volumes={}
         )
-        self.url = 'http://localhost:' + str(self.port)
+        self.url = 'http://127.0.0.1:' + str(self.port)
         print("Waiting for GraphQL Engine to be running.", end='')
         self.wait_for_start()
 
@@ -124,7 +124,7 @@ class HGE:
             stdout=self.log_fp,
             stderr=subprocess.STDOUT
         )
-        self.url = 'http://localhost:' + str(self.port)
+        self.url = 'http://127.0.0.1:' + str(self.port)
         print("Waiting for GraphQL Engine to be running.", end='')
         self.wait_for_start()
 
