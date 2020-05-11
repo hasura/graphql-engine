@@ -15,11 +15,11 @@ Securing actions
 Introduction
 ------------
 
-You will want to make sure that an action can only get called by your own Hasura instance.
+You will want to make sure that an action can only get called by your own Hasura instance and not by third parties.
 You can do so by adding a header to the action that is automatically sent with each request to the webhook.
 
-Step 1: Add an action secret
-----------------------------
+Add an action secret
+--------------------
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -44,33 +44,41 @@ Step 1: Add an action secret
      Update the definition of the ``insertAuthor`` action as:
 
      .. code-block:: yaml
-       :emphasize-lines: 4
+       :emphasize-lines: 7-9
 
          - actions
-           - name: insertAuthor
+           - name: actionName
              definition:
-               kind: synchronous
-               handler: '{{ACTIONS_BASE_URL}}/insertAuthor'
+                kind: synchronous
+                handler: http://localhost:3000
+                forward_client_headers: true
+                headers:
+                  - value: ACTION_SECRET
+                    name: mysecret
 
      Save the changes and run ``hasura metadata apply`` to set the
-     permissions.
+     headers.
 
 
 This secret is only known by Hasura and is passed to your endpoint with every call, 
 thus making sure only Hasura can successfully authenticate with the action handler.
 
-Step 2: Configure production instance
--------------------------------------
+.. note::
 
-In your Hasura production instance, add the action secret as an environment variable.
+    The name for the action secret is not defined by Hasura and can be chosen freely.
 
-Step 3: Verify secret in action handler
----------------------------------------
+Configure production instance
+-----------------------------
+
+In your Hasura production instance, add the ``ACTION_SECRET`` as an environment variable.
+
+Verify secret in action handler
+-------------------------------
 
 First, load the ``ACTION_SECRET`` as an environment variable in your action handler by adding it to your ``.env`` file 
 (this file might be a different one depending on your framework).
 
-In your :ref:`action handler <action_handlers>`, write some code to check that the action secret passed as a header equals to the one you stored as an environment variable.
+In your :ref:`action handler <action_handlers>`, you need to write some code to check that the action secret passed as a header equals to the one you stored as an environment variable.
 The following is an example of a simple authorization middleware with Express:
 
 .. code-block:: javascript
