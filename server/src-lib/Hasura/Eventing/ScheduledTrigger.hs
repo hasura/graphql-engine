@@ -59,7 +59,7 @@ During the startup, two threads are started:
    current timestamp and then process them.
 -}
 module Hasura.Eventing.ScheduledTrigger
-  ( runScheduledEventsGenerator
+  ( runCronEventsGenerator
   , processScheduledTriggers
 
   , CronEventSeed(..)
@@ -211,14 +211,14 @@ data ScheduledEventType =
   -- so all the configuration is fetched along the scheduled events.
     deriving (Eq, Show)
 
--- | runScheduledEventsGenerator makes sure that all the scheduled triggers
---   have an adequate buffer of scheduled events.
-runScheduledEventsGenerator ::
+-- | runCronEventsGenerator makes sure that all the cron triggers
+--   have an adequate buffer of cron events.
+runCronEventsGenerator ::
      L.Logger L.Hasura
   -> Q.PGPool
   -> IO SchemaCache
   -> IO void
-runScheduledEventsGenerator logger pgpool getSC = do
+runCronEventsGenerator logger pgpool getSC = do
   forever $ do
     sc <- getSC
     -- get cron triggers from cache
