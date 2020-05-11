@@ -42,6 +42,35 @@ This script uses [wrk](https://github.com/wg/wrk) to benchmark Hasura GraphQL
 Engine against a list of queries defined in `queries.graphql`. The results are
 then stored through a results Hasura GraphQL Engine.
 
+You can configure the build and runtime parameters for the graphql-engine's
+under test by modifying your local `cabal.project.local` file.
+
+### Interpreting the plots
+
+For each query under test we first run `wrk` to try to determine the maximum
+throughput we can sustain for that query. This result is plotted under the `max
+throughput` graph. This can be considered the point after which graphql-engine
+will start to fall over.
+
+Then for each query we measure latency under several different loads (but
+making sure not to approach max throughput) using `wrk2` which measures latency
+in a principled way. Latency can be viewed as a continuous histogram or as a
+violin plot that also plots each latency sample. The latter provides the most
+visual information and can be useful for observing clustering or other
+patterns, or validating the benchmark run.
+
+### Cleaning up test runs
+
+Data will be stored locally in the work directory (`test_output` by default).
+This entire directory can be deleted safely. 
+
+If you are using the default results graphql-engine and want to just remove old
+benchmark runs but avoid rebuilding the sportsdb data, you can do:
+
+```
+$ sudo rm -r test_output/{benchmark_runs,sportsdb_data}
+```
+
 ### Arguments ###
 - For the list of arguments supported, do
 ```sh
@@ -60,11 +89,15 @@ $ python3 hge_wrk_bench.py --help
   - Number of open connections can be set using argument `--connections CONNECTIONS`, or environmental variable `HASURA_BENCH_CONNECTIONS`
   - Duration of tests can be controlled using argument `--duration DURATION`, or environmental variable `HASURA_BENCH_CONNECTIONS`
   - If plots should not have to be shown at the end of benchmarks, use argument `--skip-plots`
-  - The Hasura GraphQL Engine to which resuls should be pushed can be specified using argument `--results-hge-url HGE_URL`, or environmental variable `HASURA_BENCH_RESULTS_HGE_URL`. The admin secret for this GraphQL engine can be specified using environmental variable `HASURA_BENCH_RESULTS_HGE_ADMIN_SECRET`.
+  - The Hasura GraphQL Engine to which resuls should be pushed can be specified using argument 
+    `--results-hge-url HGE_URL`, or environmental variable `HASURA_BENCH_RESULTS_HGE_URL`. By 
+    default the launched (non-"remote") graphql-engine will be used, and its data stored in 
+    `test_output/sportsdb_data`. The admin secret for this GraphQL engine can be specified 
+    using environmental variable `HASURA_BENCH_RESULTS_HGE_ADMIN_SECRET`.
 
 ### Work directory ###
 - The files used by Postgres docker containers, logs of Hasura GraphQL engines run with `cabal run`, and other stuff are stored in the work directory.
-- Storing data volumes of Postgres docker containers in the work directory helps in avoiding database setup time for benchmarks after the first time setup.
+- Storing data volumes of Postgres docker containers in the work directory (`test_output` by default) helps in avoiding database setup time for benchmarks after the first time setup.
 - The logs of Hasura GraphQL engines (when they are run using `cabal run`) are stored in files *hge.log* and *remote\_hge.log*
 
 ### Default settings ###

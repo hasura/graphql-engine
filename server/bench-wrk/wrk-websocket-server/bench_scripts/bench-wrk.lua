@@ -4,10 +4,7 @@
 -- This expects that the url specified confirms to
 -- the graphql url POST spec.
 
--- TODO this seems to hang:
-print('BEFORE')
 local gqbench = require "bench-lib-wrk"
-print('AFTER')
 
 local req_body = ""
 function init(args)

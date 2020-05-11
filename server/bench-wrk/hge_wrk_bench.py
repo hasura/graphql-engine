@@ -59,6 +59,10 @@ class HGEWrkBench(HGETestSetup):
         self.results_hge_url = results_hge_url
         self.results_hge_admin_secret = results_hge_admin_secret
         self.extract_cpu_info()
+        # NOTE: we generally want to do this just once; otherwise if we happen
+        # to be editing the tree while this script is running the shasum will
+        # keep changing:
+        self.server_shasum = self.get_server_shasum()
 
     def load_queries(self, graphql_queries_file):
         self.graphql_queries_file = graphql_queries_file
@@ -339,7 +343,7 @@ query results {
             insert_var["docker_image"] = self.hge_docker_image
         else:
             insert_var["version"] = self.get_version()
-            insert_var["server_shasum"] = self.get_server_shasum()
+            insert_var["server_shasum"] = self.server_shasum
 
         insert_var['postgres_version'] = self.pg.get_server_version()
         if self.scenario_name:
@@ -443,7 +447,8 @@ mutation insertMaxRps($result: hge_bench_query_max_rps_insert_input!) {
             else:
                 ver_info = self.get_version()
             query_name = query.name.value
-            results_root_dir = os.path.abspath(self.work_dir)
+            # Store versioned runs under e.g. test_output/benchmark_runs/<hge_version>/
+            results_root_dir = os.path.abspath(os.path.join(self.work_dir, 'benchmark_runs'))
             return os.path.join(results_root_dir, ver_info, query_name)
 
         for query in self.queries:

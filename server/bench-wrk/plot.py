@@ -53,7 +53,7 @@ def throughput_data(max_rps_results, scenarios):
             data.append({
                 'version': ver_info,
                 'query name': snro['query_name'],
-                'throughput': float(req_results[0]['max_rps'])
+                'max throughput': float(req_results[0]['max_rps'])
             })
     return pd.DataFrame(data)
 
@@ -62,15 +62,15 @@ def throughput_figure(df):
     fig, ax = plt.subplots(figsize=(14,6))
     uniq_versions = set(df['version'])
     if len(uniq_versions) >1:
-        sns.lineplot(x='version', y='throughput', hue='query name', data=df, ax=ax)
+        sns.lineplot(x='version', y='max throughput', hue='query name', data=df, ax=ax)
     else:
-        sns.barplot(x='version', y='throughput', hue='query name', data=df, ax=ax)
+        sns.barplot(x='version', y='max throughput', hue='query name', data=df, ax=ax)
     ax.grid()
     ax.set(
         xlabel='Version/Docker image',
         ylabel='Throughput (req/s)'
     )
-    ymax = round(max(df['throughput'])*1.05)
+    ymax = round(max(df['max throughput'])*1.05)
     plt.ylim(0, ymax)
     out_fig = gen_plot_figure_data(plt)
     plt.close()
@@ -259,7 +259,7 @@ def run_dash_server(bench_results):
 
 
     rows = []
-    plot_types = ['histogram','violin plot', 'throughput']
+    plot_types = ['latency histogram','latency violins', 'max throughput']
     plots_filters_1 = [
         dbc.Col([
             html.Label('Plot type'),
@@ -325,7 +325,7 @@ def run_dash_server(bench_results):
         relvnt_q = [
             x for x in latency_results
             if x['query_name'] in query_names and
-            (x['requests_per_sec'] in rps_list or plot_type == 'throughput')
+            (x['requests_per_sec'] in rps_list or plot_type == 'max throughput')
         ]
         uniq_vers = list(set([
             (x['version'], x['docker_image'])
@@ -384,7 +384,7 @@ def run_dash_server(bench_results):
         [ Input('plot-type', 'value') ],
     )
     def query_dropdown_multi(plot_type):
-        return plot_type == 'throughput'
+        return plot_type == 'max throughput'
 
     @app.callback(
         Output('query-name', 'value'),
@@ -392,7 +392,7 @@ def run_dash_server(bench_results):
         [ State('query-name', 'value') ]
     )
     def updateQueryValue(plot_type, options, multi, query_names):
-        if plot_type == 'throughput':
+        if plot_type == 'max throughput':
             return updateMultiValue(options, query_names, 4)
         else:
             return updateSingleValue(options, query_names)
@@ -418,7 +418,7 @@ def run_dash_server(bench_results):
         [ State('rps', 'value') ]
     )
     def updateRPSValue(plot_type, options, rps):
-        if plot_type == 'histogram':
+        if plot_type == 'latency histogram':
             return updateSingleValue(options, rps)
         else:
             rps = as_list(rps)
@@ -430,7 +430,7 @@ def run_dash_server(bench_results):
         [ Input('plot-type', 'value') ],
     )
     def rps_dropdown_multi(plot_type):
-        return plot_type == 'violin plot'
+        return plot_type == 'latency violins'
 
     # Hide RPS dropdown if plot type is throughput
     @app.callback(
@@ -438,7 +438,7 @@ def run_dash_server(bench_results):
         [ Input('plot-type', 'value') ],
     )
     def rps_dropdown_style(plot_type):
-        if plot_type == 'throughput':
+        if plot_type == 'max throughput':
             return { 'display': 'none' }
         else:
             return {'display': 'block'}
@@ -485,17 +485,17 @@ def run_dash_server(bench_results):
                 for v in set(vers)
                 for qname in as_list(query_name)
             ]
-        if plot_type == 'throughput':
+        if plot_type == 'max throughput':
             scenarios = throughput_scenarios()
         else:
             scenarios = latency_scenarios()
 
 
-        if plot_type == 'histogram':
+        if plot_type == 'latency histogram':
             return get_hdrhistogram_figure(scenarios)
-        elif plot_type == 'violin plot':
+        elif plot_type == 'latency violins':
             return get_violin_figure(scenarios)
-        elif plot_type == 'throughput':
+        elif plot_type == 'max throughput':
             return get_throughput_figure(scenarios)
 
     app.run_server(host="127.0.0.1", debug=False)
