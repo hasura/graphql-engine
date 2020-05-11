@@ -58,6 +58,7 @@ Options inherited from parent commands
       --no-color                       do not colorize output (default: false)
       --project string                 directory where commands are executed (default: current dir)
       --skip-update-check              skip automatic update check on command execution
+
 SEE ALSO
 ~~~~~~~~
 

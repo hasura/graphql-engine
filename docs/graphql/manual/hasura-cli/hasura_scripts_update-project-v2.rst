@@ -14,6 +14,7 @@ Synopsis
 
 
 Update the Hasura Project from v1 to v2 by executing the following actions:
+
 1. Installs a plugin system for CLI
 2. Installs CLI Extensions plugins (primarily for actions)
 3. Takes a back up of migrations directory
