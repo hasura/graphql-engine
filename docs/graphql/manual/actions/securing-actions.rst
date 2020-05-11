@@ -39,7 +39,22 @@ Step 1: Add an action secret
 
   .. tab:: CLI
 
-     TODO
+     Go to ``metadata/actions.yaml`` in the Hasura project directory.
+
+     Update the definition of the ``insertAuthor`` action as:
+
+     .. code-block:: yaml
+       :emphasize-lines: 4
+
+         - actions
+           - name: insertAuthor
+             definition:
+               kind: synchronous
+               handler: '{{ACTIONS_BASE_URL}}/insertAuthor'
+
+     Save the changes and run ``hasura metadata apply`` to set the
+     permissions.
+
 
 This secret is only known by Hasura and is passed to your endpoint with every call, 
 thus making sure only Hasura can successfully authenticate with the action handler.
@@ -47,9 +62,31 @@ thus making sure only Hasura can successfully authenticate with the action handl
 Step 2: Configure production instance
 -------------------------------------
 
-In your Hasura instance, add the action secret as an environment variable.
+In your Hasura production instance, add the action secret as an environment variable.
 
-Step 3: Verify secret
----------------------
+Step 3: Verify secret in action handler
+---------------------------------------
+
+First, load the ``ACTION_SECRET`` as an environment variable in your action handler by adding it to your ``.env`` file 
+(this file might be a different one depending on your framework).
 
 In your :ref:`action handler <action_handlers>`, write some code to check that the action secret passed as a header equals to the one you stored as an environment variable.
+The following is an example of a simple authorization middleware with Express:
+
+.. code-block:: javascript
+
+    // activate authorization for all routes
+    app.use(authorizationMiddleware);
+
+    // autorize action call
+    function authorizationMiddleware(req, res, next){
+        if (correctSecretProvided(req)) next();
+        else res.sendStatus(403);
+    }
+
+    // check if the secret sent in the header equals to the secret stored as an env variable
+    function correctSecretProvided(req) {
+        const requiredSecret = process.env.ACTION_SECRET;
+        const providedSecret = req.headers['ACTION_SECRET'];
+        return requiredSecret == providedSecret;
+    }
