@@ -146,6 +146,7 @@ Learn more
   async-actions
   Codegen <codegen>
   derive
-  action-permissions
   action-connect
+  action-permissions
+  securing-actions
   debugging
