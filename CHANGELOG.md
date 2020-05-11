@@ -39,6 +39,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
 - cli: list all avialable commands in root command help (fix #4623)
+- docs: add section on actions vs. remote schemas to actions documentation (#4284)
 
 ## `v1.2.0`
 
