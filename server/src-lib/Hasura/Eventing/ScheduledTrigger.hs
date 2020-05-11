@@ -186,7 +186,7 @@ data StandAloneScheduledEvent
   { seoId            :: !Text
   , seoScheduledTime :: !UTCTime
   , seoTries         :: !Int
-  , seoWebhook       :: !WebhookConf
+  , seoWebhook       :: !InputWebhook
   , seoPayload       :: !(Maybe J.Value)
   , seoRetryConf     :: !STRetryConf
   , seoHeaderConf    :: ![HeaderConf]
@@ -374,14 +374,14 @@ processStandAloneEvents logger logEnv httpMgr pgpool = do
                                         headerConf
                                         comment  )
         -> do
-        webhookInfo <- runExceptT $ getWebhookInfoFromConf webhookConf
+        webhookInfo <- runExceptT $ resolveWebhook webhookConf
         headerInfo <- runExceptT $ getHeaderInfosFromConf headerConf
 
         case webhookInfo of
           Right webhookInfo' -> do
             case headerInfo of
               Right headerInfo' -> do
-                let webhook = wciCachedValue webhookInfo'
+                let webhook = unResolvedWebhook webhookInfo'
                     payload' = fromMaybe J.Null payload
                     scheduledEvent = ScheduledEventFull id'
                                                         Nothing
