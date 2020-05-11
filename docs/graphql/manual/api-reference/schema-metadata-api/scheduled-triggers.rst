@@ -58,8 +58,8 @@ Args syntax
      - Name of the cron trigger
    * - webhook
      - true
-     - Text | UrlFromEnv_
-     - URL of webhook or environment variable which has the URL
+     - :ref:`WebhookURL <WebhookURL>`
+     - URL of the webhook
    * - schedule
      - true
      - Cron Expression
@@ -173,8 +173,8 @@ Args syntax
      - Description
    * - webhook
      - true
-     - Text | UrlFromEnv_
-     - URL of webhook or environment variable which has the URL
+     - :ref:`WebhookURL <WebhookURL>`
+     - URL of the webhook
    * - schedule_at
      - true
      - Timestamp (ISO8601 format)
