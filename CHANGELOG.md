@@ -41,6 +41,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: allow modifying default value for PK (fix #4075) (#4679)
 - cli: list all avialable commands in root command help (fix #4623)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
+- docs: fix wrong info about excluding scheme in CORS config
 
 ## `v1.2.0`
 
