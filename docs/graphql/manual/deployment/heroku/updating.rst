@@ -73,12 +73,12 @@ at https://github.com/hasura/graphql-engine/releases.
 .. code-block:: Dockerfile
    :emphasize-lines: 1
 
-   FROM hasura/graphql-engine:v1.0.0-alpha01
+   FROM hasura/graphql-engine:v1.0.0
 
    ...
    ...
 
-Change ``v1.0.0-alpha01`` to the required version.
+Change ``v1.0.0`` to the required version, for example ``v1.1.0``,
 - ``git add Dockerfile``
 - ``git commit -m "update hasura version"``
 - ``git push heroku master``
