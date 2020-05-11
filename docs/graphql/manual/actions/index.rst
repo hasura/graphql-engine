@@ -123,17 +123,17 @@ Actions vs. remote schemas
 --------------------------
 
 Both actions and remote schemas can be used to extend Hasura with business logic.
-However, they have different use cases.
+However, they have slightly different use cases.
 
 **Actions**
 
-Actions are used when there is a REST endpoint that we want to call from Hasura.
-They are especially useful when working with serverless functions.
+Actions can be used when we want to call a REST endpoint from Hasura as a resolver for some custom types.
+They are especially useful for setting up serverless functions as resolvers.
 
 **Remote schemas**
 
 If you have an existing GraphQL API or if you're comfortable building a GraphQL server yourself,
-you can use :ref:`remote schemas <remote_schemas>`.
+you can use :ref:`remote schemas <remote_schemas>` to add custom types and resolvers.
 
 Learn more
 ----------
