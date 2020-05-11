@@ -32,6 +32,7 @@ Options
 
 ::
 
+      --envfile string      .env filename to load ENV vars from (default ".env")
   -h, --help                help for hasura
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color            do not colorize output (default: false)
