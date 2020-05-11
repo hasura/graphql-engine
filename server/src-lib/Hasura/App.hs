@@ -258,8 +258,9 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   _asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $ liftIO $
     asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
 
-  -- start a background thread to create new scheduled events
-  void $ liftIO $ C.forkImmortal "runScheduledEventsGenerator" logger $ runScheduledEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
+  -- start a background thread to create new cron events
+  void $ liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
+    runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
 
   -- start a background thread to deliver the scheduled events
   void $ liftIO $ C.forkImmortal "processScheduledTriggers" logger  $ processScheduledTriggers logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef)

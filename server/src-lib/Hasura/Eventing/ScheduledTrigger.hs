@@ -59,7 +59,7 @@ During the startup, two threads are started:
    current timestamp and then process them.
 -}
 module Hasura.Eventing.ScheduledTrigger
-  ( runScheduledEventsGenerator
+  ( runCronEventsGenerator
   , processScheduledTriggers
 
   , CronEventSeed(..)
@@ -80,7 +80,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Version             (HasVersion)
-import           Hasura.RQL.DDL.EventTrigger       (getHeaderInfosFromConf,getWebhookInfoFromConf)
+import           Hasura.RQL.DDL.EventTrigger       (getHeaderInfosFromConf)
 import           Hasura.SQL.DML
 import           Hasura.SQL.Types
 import           System.Cron
@@ -156,19 +156,18 @@ data CronEventSeed
 
 data CronEventPartial
   = CronEventPartial
-  { sepId            :: !Text
-  , sepName          :: !TriggerName
-  , sepScheduledTime :: !UTCTime
-  , sepTries         :: !Int
+  { cepId            :: !Text
+  , cepName          :: !TriggerName
+  , cepScheduledTime :: !UTCTime
+  , cepTries         :: !Int
   } deriving (Show, Eq)
 
 data ScheduledEventFull
   = ScheduledEventFull
   { sefId            :: !Text
   , sefName          :: !(Maybe TriggerName)
-  -- ^ sefName is the name of the scheduled trigger, it's being
-  -- used by both cron scheduled events and one-off scheduled events.
-  -- A one-off scheduled event is not associated with a name, so in that
+  -- ^ sefName is the name of the cron trigger.
+  -- A standalone scheduled event is not associated with a name, so in that
   -- case, 'sefName' will be @Nothing@
   , sefScheduledTime :: !UTCTime
   , sefTries         :: !Int
@@ -183,17 +182,17 @@ $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''Sche
 
 data StandAloneScheduledEvent
   = StandAloneScheduledEvent
-  { seoId            :: !Text
-  , seoScheduledTime :: !UTCTime
-  , seoTries         :: !Int
-  , seoWebhook       :: !WebhookConf
-  , seoPayload       :: !(Maybe J.Value)
-  , seoRetryConf     :: !STRetryConf
-  , seoHeaderConf    :: ![HeaderConf]
-  , seoComment       :: !(Maybe Text)
+  { saseId            :: !Text
+  , saseScheduledTime :: !UTCTime
+  , saseTries         :: !Int
+  , saseWebhook       :: !InputWebhook
+  , sasePayload       :: !(Maybe J.Value)
+  , saseRetryConf     :: !STRetryConf
+  , saseHeaderConf    :: ![HeaderConf]
+  , saseComment       :: !(Maybe Text)
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''StandAloneScheduledEvent)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''StandAloneScheduledEvent)
 
 -- | The 'ScheduledEventType' data type is needed to differentiate
 --   between a 'CronScheduledEvent' and 'StandAloneEvent' scheduled
@@ -212,14 +211,14 @@ data ScheduledEventType =
   -- so all the configuration is fetched along the scheduled events.
     deriving (Eq, Show)
 
--- | runScheduledEventsGenerator makes sure that all the scheduled triggers
---   have an adequate buffer of scheduled events.
-runScheduledEventsGenerator ::
+-- | runCronEventsGenerator makes sure that all the cron triggers
+--   have an adequate buffer of cron events.
+runCronEventsGenerator ::
      L.Logger L.Hasura
   -> Q.PGPool
   -> IO SchemaCache
   -> IO void
-runScheduledEventsGenerator logger pgpool getSC = do
+runCronEventsGenerator logger pgpool getSC = do
   forever $ do
     sc <- getSC
     -- get cron triggers from cache
@@ -332,7 +331,7 @@ processCronEvents logger logEnv httpMgr pgpool getSC = do
           Nothing ->  logInternalError $
             err500 Unexpected "could not find cron trigger in cache"
           Just CronTriggerInfo{..} -> do
-            let webhook = wciCachedValue stiWebhookInfo
+            let webhook = unResolvedWebhook stiWebhookInfo
                 payload' = fromMaybe J.Null stiPayload
                 scheduledEvent =
                     ScheduledEventFull id'
@@ -374,14 +373,14 @@ processStandAloneEvents logger logEnv httpMgr pgpool = do
                                         headerConf
                                         comment  )
         -> do
-        webhookInfo <- runExceptT $ getWebhookInfoFromConf webhookConf
+        webhookInfo <- runExceptT $ resolveWebhook webhookConf
         headerInfo <- runExceptT $ getHeaderInfosFromConf headerConf
 
         case webhookInfo of
           Right webhookInfo' -> do
             case headerInfo of
               Right headerInfo' -> do
-                let webhook = wciCachedValue webhookInfo'
+                let webhook = unResolvedWebhook webhookInfo'
                     payload' = fromMaybe J.Null payload
                     scheduledEvent = ScheduledEventFull id'
                                                         Nothing

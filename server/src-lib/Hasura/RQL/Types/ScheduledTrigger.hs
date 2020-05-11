@@ -17,6 +17,7 @@ import           Data.Time.Clock.Units
 import           Data.Time.Format.ISO8601
 import           Hasura.Incremental
 import           Hasura.RQL.Types.Common     (NonNegativeDiffTime(..))
+import           Hasura.RQL.Types.Action     (InputWebhook(..))
 import           Hasura.Prelude
 import           System.Cron.Types
 
@@ -67,7 +68,7 @@ defaultSTRetryConf =
 data CronTriggerMetadata
   = CronTriggerMetadata
   { stName              :: !ET.TriggerName
-  , stWebhook           :: !ET.WebhookConf
+  , stWebhook           :: !InputWebhook
   , stSchedule          :: !CronSchedule
   , stPayload           :: !(Maybe J.Value)
   , stRetryConf         :: !STRetryConf
@@ -98,7 +99,7 @@ $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CronTriggerMeta
 data CreateCronTrigger
   = CreateCronTrigger
   { cctName              :: !ET.TriggerName
-  , cctWebhook           :: !ET.WebhookConf
+  , cctWebhook           :: !InputWebhook
   , cctCronSchedule      :: !CronSchedule
   , cctPayload           :: !(Maybe J.Value)
   , cctRetryConf         :: !STRetryConf
