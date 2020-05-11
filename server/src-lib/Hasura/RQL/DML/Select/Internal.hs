@@ -191,6 +191,7 @@ fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
       S.FunctionArgs positional named
     toSQLExp (AETableRow Nothing)    = S.SERowIden $ mkBaseTableAls pfx
     toSQLExp (AETableRow (Just acc)) = S.mkQIdenExp (mkBaseTableAls pfx) acc
+    toSQLExp (AESession s)           = s
     toSQLExp (AEInput s)             = s
 
 -- posttgres ignores anything beyond 63 chars for an iden

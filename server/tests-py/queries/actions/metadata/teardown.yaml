@@ -1,0 +1,7 @@
+type: bulk
+args:
+- type: drop_action
+  args:
+    name: create_user
+- type: set_custom_types
+  args: {}

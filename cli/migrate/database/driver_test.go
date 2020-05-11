@@ -1,6 +1,7 @@
 package database
 
 import (
+	"crypto/tls"
 	"io"
 	"testing"
 
@@ -13,7 +14,7 @@ type mockDriver struct {
 	url string
 }
 
-func (m *mockDriver) Open(url string, isCmd bool, logger *logrus.Logger) (Driver, error) {
+func (m *mockDriver) Open(url string, isCmd bool, tlsConfig *tls.Config, logger *logrus.Logger) (Driver, error) {
 	return &mockDriver{
 		url: url,
 	}, nil
@@ -97,6 +98,9 @@ func (m *mockDriver) Squash(list *CustomList, ret chan<- interface{}) {
 
 func (m *mockDriver) SetMetadataPlugins(plugins types.MetadataPlugins) {
 	return
+}
+
+func (m *mockDriver) EnableCheckMetadataConsistency(enabled bool) {
 }
 
 func (m *mockDriver) GetInconsistentMetadata() (bool, []InconsistentMetadataInterface, error) {
@@ -183,7 +187,7 @@ func TestOpen(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.url, func(t *testing.T) {
-			d, err := Open(c.url, false, nil)
+			d, err := Open(c.url, false, nil, nil)
 
 			if err == nil {
 				if c.err {
