@@ -12,10 +12,20 @@ Writing migrations manually
   :depth: 1
   :local:
 
-While the Hasura Console can auto generate migrations for every action,
+Introduction
+------------
+
+While the Hasura console can auto generate migrations for every action,
 sometimes you might want to write the migrations yourself, by hand. Using the
 Hasura CLI, you can bootstrap these migration files and write the SQL for the
-Postgres schema and YAML for Hasura metadata actions.
+Postgres schema.
+
+.. note::
+
+  For ``config v1``, see :ref:`manual_migrations_v1`.
+
+Create migration manually
+-------------------------
 
 #. Set up the migration files:
 
@@ -23,16 +33,20 @@ Postgres schema and YAML for Hasura metadata actions.
 
       hasura migrate create <name-of-migration>
 
-   This command will create up and down migration yaml files in the
+   This command will create up and down migration SQL files in the
    ``migrations`` directory.
 
 #. Edit the file and add your migration actions. For the file format and
    instructions on what actions can be added, refer to
-   :ref:`migration_file_format`.
+   :ref:`migration file format <migration_file_format_v2>`.
 
-#. Apply the migration:
+#. The corresponding Hasura metadata changes, if any, can be made directly in
+   the appropriate metadata file in the ``/metadata`` directory, refer to
+   :ref:`metadata format <metadata_format_v2>`.
+
+#. Apply the migration and metadata:
 
    .. code-block:: bash
 
       hasura migrate apply
-
+      hasura metadata apply

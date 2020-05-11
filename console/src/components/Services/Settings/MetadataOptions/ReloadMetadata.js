@@ -66,18 +66,14 @@ class ReloadMetadata extends Component {
         </Button>
         <label
           onChange={this.toggleShouldReloadRemoteSchemas}
-          className={`${metaDataStyles.cursorPointer} ${
-            metaDataStyles.add_mar_right_small
-          }`}
+          className={`${metaDataStyles.cursorPointer} ${metaDataStyles.add_mar_right_small}`}
           disabled={this.state.isReloading}
         >
           <input
             type="checkbox"
             checked={shouldReloadRemoteSchemas}
             readOnly
-            className={`${metaDataStyles.add_mar_right_small} ${
-              metaDataStyles.cursorPointer
-            }`}
+            className={`${metaDataStyles.add_mar_right_small} ${metaDataStyles.cursorPointer}`}
           />
           Reload all remote schemas
         </label>
