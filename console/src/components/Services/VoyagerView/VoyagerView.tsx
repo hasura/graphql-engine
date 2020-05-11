@@ -1,12 +1,31 @@
 import React, { Component } from 'react';
+import { Connect } from 'react-redux';
 import { GraphQLVoyager } from 'graphql-voyager';
 import fetch from 'isomorphic-fetch';
 import Endpoints from '../../../Endpoints';
 import '../../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
 
-class VoyagerView extends Component {
-  introspectionProvider(query) {
+
+interface VoyagerViewProps {
+  headers: Headers;
+}
+
+interface StateProps {
+  headers: Headers;
+}
+
+// TODO: replace by redux State when it's defined
+interface State {
+  tables: {
+    dataHeaders: Headers;
+  }
+}
+
+type Props = VoyagerViewProps & StateProps
+
+class VoyagerView extends Component<Props, State> {
+  introspectionProvider = (query: string) => {
     return fetch(Endpoints.graphQLUrl, {
       method: 'POST',
       headers: this.props.headers,
@@ -18,7 +37,7 @@ class VoyagerView extends Component {
     return (
       <div>
         <GraphQLVoyager
-          introspection={this.introspectionProvider.bind(this)}
+          introspection={this.introspectionProvider}
           workerURI={
             'https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.27/dist/voyager.worker.min.js'
           }
@@ -28,8 +47,8 @@ class VoyagerView extends Component {
   }
 }
 
-const generatedVoyagerConnector = connect => {
-  const mapStateToProps = state => {
+const generatedVoyagerConnector = (connect: Connect) => {
+  const mapStateToProps = (state: State) => {
     return {
       headers: state.tables.dataHeaders,
     };
