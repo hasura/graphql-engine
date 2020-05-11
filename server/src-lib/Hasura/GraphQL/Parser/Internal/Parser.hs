@@ -170,6 +170,7 @@ list parser = gcastWith (inputParserInput @k) Parser
   , pParser = peelVariable >=> \case
       VList values -> for (zip [0..] values) \(index, value) ->
         withPath (Index index :) $ pParser parser value
+      -- TODO: handle input list coercion
       other -> parseError $ "expected a list, but found " <> describeValue other
   }
 

@@ -14,6 +14,7 @@ import           Data.Int                      (Int32)
 
 import qualified Data.HashSet                  as Set
 import qualified Data.List                     as L
+import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -36,6 +37,51 @@ import           Hasura.SQL.Types
 
 
 
+-- insert
+
+conflictConstraint
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable
+  -> m (Parser 'Both n ConstraintName)
+conflictConstraint table = do
+  tableName <- qualifiedObjectToName table
+  let enumName  = tableName <> $$(G.litName "_constraint")
+      enumDesc  = G.Description $ "unique or primary key constraints on table " <> G.unName tableName <> "\""
+      idKeyName = tableName <> $$(G.litName "_id_key")
+      idKeyDesc = "unique or primary key constraint"
+      pKeyName  = tableName <> $$(G.litName "_pkey")
+      pKeyDesc  = "unique or primary key constraint"
+  pure $ P.enum enumName (Just enumDesc) $ NE.fromList
+    [ (define idKeyName idKeyDesc, ConstraintName $ G.unName idKeyName)
+    , (define pKeyName  pKeyDesc,  ConstraintName $ G.unName pKeyName)
+    ]
+  where
+    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
+
+conflictObject
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable
+  -> SelPermInfo
+  -> m (Maybe (Parser 'Input n ConstraintName {- FIXME -}))
+conflictObject table selectPerms = runMaybeT $ do
+  tableName        <- lift $ qualifiedObjectToName table
+  columnsEnum      <- MaybeT $ tableColumnsEnum table selectPerms
+  constraintParser <- lift $ conflictConstraint table
+  whereExpParser   <- lift $ boolExp table selectPerms
+  let objectName = tableName <> $$(G.litName "_on_conflict")
+      objectDesc = G.Description $ "on conflict condition type for table \"" <> G.unName tableName <> "\""
+      constraintName = $$(G.litName "constraint")
+      columnsName    = $$(G.litName "update_columnns")
+      whereExpName   = $$(G.litName "where")
+      fieldsParser = do
+        constraint <- P.fieldOptional constraintName Nothing constraintParser
+        columns    <- P.fieldOptional columnsName    Nothing $ P.list columnsEnum
+        whereExp   <- P.fieldOptional whereExpName   Nothing whereExpParser
+        pure $ undefined constraint columns whereExp
+  pure $ P.object objectName (Just objectDesc) fieldsParser
+
+
+
 -- update
 
 updateTable
@@ -49,7 +95,7 @@ updateTable
   -> m (Maybe (FieldsParser 'Output n (Maybe (RQL.AnnUpdG UnpreparedValue))))
 updateTable table fieldName description selectPerms updatePerms stringifyNum = runMaybeT $ do
   let whereName = $$(G.litName "where")
-      whereDesc = G.Description "filter the rows which have to be updated"
+      whereDesc = "filter the rows which have to be updated"
   opArgs    <- MaybeT $ updateOperators table updatePerms
   columns   <- lift $ tableSelectColumns table selectPerms
   whereArg  <- lift $ P.field whereName (Just whereDesc) <$> boolExp table selectPerms
@@ -117,12 +163,12 @@ updateOperators table updatePermissions = do
   parsers <- catMaybes <$> sequenceA
     [ updateOperator tableName $$(G.litName "_set")
         columnParser RQL.UpdSet columns
-        (G.Description "sets the columns of the filtered rows to the given values")
+        ("sets the columns of the filtered rows to the given values")
         (G.Description $ "input type for updating data in table \"" <> G.unName tableName <> "\"")
     , updateOperator tableName $$(G.litName "_inc")
         intParser RQL.UpdInc intCols
-        (G.Description "increments the integer columns with given value of the filtered values")
-        (G.Description $ "input type for incrementing integer columns in table \"" <> G.unName tableName <> "\"")
+        ("increments the integer columns with given value of the filtered values")
+        (G.Description $"input type for incrementing integer columns in table \"" <> G.unName tableName <> "\"")
 
     -- WIP NOTE
     -- all json operators use the same description for the input type and the field
@@ -131,24 +177,24 @@ updateOperators table updatePermissions = do
     -- i am guessing that's what prepend and append are for?
     , updateOperator tableName $$(G.litName "_prepend")
         textParser RQL.UpdPrepend jsonCols
-        (G.Description "prepend existing jsonb value of filtered columns with new jsonb value")
-        (G.Description "prepend existing jsonb value of filtered columns with new jsonb value")
+        "prepend existing jsonb value of filtered columns with new jsonb value"
+        "prepend existing jsonb value of filtered columns with new jsonb value"
     , updateOperator tableName $$(G.litName "_append")
         textParser RQL.UpdAppend jsonCols
-        (G.Description "append existing jsonb value of filtered columns with new jsonb value")
-        (G.Description "append existing jsonb value of filtered columns with new jsonb value")
+        "append existing jsonb value of filtered columns with new jsonb value"
+        "append existing jsonb value of filtered columns with new jsonb value"
     , updateOperator tableName $$(G.litName "_delete_key")
         textParser RQL.UpdDeleteKey jsonCols
-        (G.Description "delete key/value pair or string element. key/value pairs are matched based on their key value")
-        (G.Description "delete key/value pair or string element. key/value pairs are matched based on their key value")
+        "delete key/value pair or string element. key/value pairs are matched based on their key value"
+        "delete key/value pair or string element. key/value pairs are matched based on their key value"
     , updateOperator tableName $$(G.litName "_delete_elem")
         intParser RQL.UpdDeleteElem jsonCols
-        (G.Description "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array")
-        (G.Description "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array")
+        "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array"
+        "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array"
     , updateOperator tableName $$(G.litName "_delete_path_at")
         textParser RQL.UpdDeleteAtPath jsonCols
-        (G.Description "delete the field or element with specified path (for JSON arrays, negative integers count from the end)")
-        (G.Description "delete the field or element with specified path (for JSON arrays, negative integers count from the end)")
+        "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
+        "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
     ]
   whenMaybe (not $ null parsers) do
     let allowedOperators = fst <$> parsers
@@ -208,7 +254,7 @@ deleteFromTable
   -> m (FieldsParser 'Output n (Maybe (RQL.AnnDelG UnpreparedValue)))
 deleteFromTable table fieldName description selectPerms deletePerms stringifyNum = do
   let whereName = $$(G.litName "where")
-      whereDesc = G.Description "filter the rows which have to be deleted"
+      whereDesc = "filter the rows which have to be deleted"
   whereArg  <- P.field whereName (Just whereDesc) <$> boolExp table selectPerms
   selection <- mutationSelectionSet table selectPerms stringifyNum
   columns   <- tableSelectColumns table selectPerms
@@ -264,11 +310,11 @@ mutationSelectionSet table selectPerms stringifyNum = do
   tableName <- qualifiedObjectToName table
   tableSet  <- tableFields table selectPerms stringifyNum
   let affectedRowsName = $$(G.litName "affected_rows")
-      affectedRowsDesc = G.Description "number of rows affected by the mutation"
+      affectedRowsDesc = "number of rows affected by the mutation"
       selectionName    = tableName <> $$(G.litName "_mutation_response")
       selectionDesc    = G.Description $ "response of any mutation on the table \"" <> G.unName tableName <> "\""
       returningName    = $$(G.litName "returning")
-      returningDesc    = G.Description "data from the rows affected by the mutation"
+      returningDesc    = "data from the rows affected by the mutation"
       typenameRepr     = (FieldName "__typename", RQL.MExp $ G.unName selectionName)
       dummyIntParser   = undefined :: Parser 'Output n Int32
       selectionFields  = catMaybes <$> sequenceA
