@@ -1,29 +1,19 @@
 import React from 'react';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
-import {
-  FilterState,
-  SetFilterState,
-  RunQuery,
-} from '../../../../Common/FilterQuery/utils';
+import { FilterTableProps } from './Types';
 import CheckIcon from '../../../../Common/Icons/Check';
 import CrossIcon from '../../../../Common/Icons/Cross';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import InvocationLogDetails from './InvocationLogDetails';
 import { sanitiseRow } from '../../utils';
+import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
+import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 
-type Props = {
-  rows: any[];
-  count?: number;
-  filterState: FilterState;
-  setFilterState: SetFilterState;
-  runQuery: RunQuery;
-  columns: string[];
-  triggerName: string;
-};
+type Props = FilterTableProps;
 
-const EventsTable = (props: Props) => {
+const EventsTable: React.FC<Props> = props => {
   const {
     rows,
     count,
@@ -45,19 +35,9 @@ const EventsTable = (props: Props) => {
   const sortByColumn = (col: string) => {
     const existingColSort = filterState.sorts.find(s => s.column === col);
     if (existingColSort && existingColSort.type === 'asc') {
-      setFilterState.sorts([
-        {
-          column: col,
-          type: 'desc',
-        },
-      ]);
+      setFilterState.sorts([makeOrderBy(col, 'desc')]);
     } else {
-      setFilterState.sorts([
-        {
-          column: col,
-          type: 'asc',
-        },
-      ]);
+      setFilterState.sorts([makeOrderBy(col, 'asc')]);
     }
     runQuery();
   };
@@ -97,8 +77,16 @@ const EventsTable = (props: Props) => {
       ) : (
         <CrossIcon className="" />
       ),
+      scheduled_at: r.scheduled_time
+        ? convertDateTimeToLocale(r.scheduled_time, false)
+        : undefined,
+      created_at: r.created_at
+        ? convertDateTimeToLocale(r.created_at, true)
+        : undefined,
     };
   });
+
+  console.log(rowsFormatted);
 
   return (
     <ReactTable

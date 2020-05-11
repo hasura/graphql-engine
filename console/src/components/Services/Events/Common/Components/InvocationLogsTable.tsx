@@ -1,27 +1,16 @@
 import React from 'react';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
-import {
-  FilterState,
-  SetFilterState,
-  RunQuery,
-} from '../../../../Common/FilterQuery/utils';
+import { FilterTableProps } from './Types';
 // import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
+import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import InvocationLogDetails from './InvocationLogDetails';
 
-type Props = {
-  rows: any[];
-  count?: number;
-  filterState: FilterState;
-  setFilterState: SetFilterState;
-  runQuery: RunQuery;
-  columns: string[];
-  triggerName: string;
-};
+type Props = FilterTableProps;
 
-const InvocationLogsTable = (props: Props) => {
+const InvocationLogsTable: React.FC<Props> = props => {
   const { rows, filterState, setFilterState, runQuery, columns, count } = props;
 
   if (rows.length === 0) {
@@ -37,21 +26,10 @@ const InvocationLogsTable = (props: Props) => {
 
     const existingColSort = filterState.sorts.find(s => s.column === col);
     if (existingColSort && existingColSort.type === 'asc') {
-      setFilterState.sorts([
-        {
-          column: col,
-          type: 'desc',
-        },
-      ]);
+      setFilterState.sorts([makeOrderBy(col, 'desc')]);
     } else {
-      setFilterState.sorts([
-        {
-          column: col,
-          type: 'asc',
-        },
-      ]);
+      setFilterState.sorts([makeOrderBy(col, 'asc')]);
     }
-
     runQuery();
   };
 

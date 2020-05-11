@@ -11,6 +11,7 @@ import {
   getCreateScheduledEventQuery,
 } from '../../Common/utils/v1QueryUtils';
 import globals from '../../../Globals';
+import { GetReduxState } from '../../../Types';
 import { makeMigrationCall } from '../Data/DataActions';
 import requestAction from '../../../utils/requestAction';
 import {
@@ -20,21 +21,17 @@ import {
 import { transformHeaders } from '../../Common/Headers/utils';
 import { Table } from '../../Common/utils/pgUtils';
 import { getConfirmation, isValidURL } from '../../Common/utils/jsUtils';
+import { Nullable } from '../../Common/utils/tsUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import dataHeaders from '../Data/Common/Headers';
-import {
-  TriggerKind,
-  SCHEDULED_TRIGGER_IDENTIFIER,
-  ScheduledTrigger,
-  EventTrigger,
-} from './Types';
+import { TriggerKind, ScheduledTrigger, EventTrigger } from './Types';
 import { setScheduledTriggers, setEventTriggers, setTriggers } from './reducer';
 import { LocalScheduledTriggerState } from './ScheduledTriggers/state';
 import {
   LocalEventTriggerState,
   parseServerETDefinition,
 } from './EventTriggers/state';
-import { validateAddETState } from './EventTriggers/utils';
+import { validateETState } from './EventTriggers/utils';
 import {
   validateAddState,
   parseServerScheduledTrigger,
@@ -43,14 +40,14 @@ import { showErrorNotification } from '../Common/Notification';
 import { appPrefix } from './constants';
 import { EventTriggerProperty } from './EventTriggers/Modify/utils';
 
-export const fetchTriggers = (kind?: TriggerKind) => (
+export const fetchTriggers = (kind: Nullable<TriggerKind>) => (
   dispatch: any,
-  getState: any
+  getState: GetReduxState
 ) => {
   const bulkQueryArgs = [];
   if (kind) {
     bulkQueryArgs.push(
-      kind === SCHEDULED_TRIGGER_IDENTIFIER
+      kind === 'scheduled'
         ? fetchScheduledTriggersQuery
         : fetchEventTriggersQuery
     );
@@ -68,7 +65,7 @@ export const fetchTriggers = (kind?: TriggerKind) => (
   ).then(
     (data: Array<ScheduledTrigger[] | EventTrigger[]>) => {
       if (kind) {
-        if (kind === SCHEDULED_TRIGGER_IDENTIFIER) {
+        if (kind === 'scheduled') {
           dispatch(setScheduledTriggers(data[0] as ScheduledTrigger[]));
         } else {
           dispatch(setEventTriggers(data[0] as EventTrigger[]));
@@ -94,7 +91,7 @@ export const addScheduledTrigger = (
   state: LocalScheduledTriggerState,
   successCb?: () => void,
   errorCb?: () => void
-) => (dispatch: any, getState: any) => {
+) => (dispatch: any, getState: GetReduxState) => {
   const validationError = validateAddState(state);
 
   const errorMsg = 'Creating scheduled trigger failed';
@@ -114,7 +111,7 @@ export const addScheduledTrigger = (
   const successMsg = 'Created scheduled trigger successfully';
 
   const customOnSuccess = () => {
-    dispatch(fetchTriggers(SCHEDULED_TRIGGER_IDENTIFIER))
+    dispatch(fetchTriggers('scheduled'))
       .then(() => {
         if (successCb) {
           successCb();
@@ -157,7 +154,7 @@ export const saveScheduledTrigger = (
   existingTrigger: ScheduledTrigger,
   successCb?: () => void,
   errorCb?: () => void
-) => (dispatch: any, getState: any) => {
+) => (dispatch: any, getState: GetReduxState) => {
   const validationError = validateAddState(state);
 
   const errorMsg = 'Updating scheduled trigger failed';
@@ -198,7 +195,7 @@ export const saveScheduledTrigger = (
       );
       return window.location.replace(newHref);
     }
-    return dispatch(fetchTriggers(SCHEDULED_TRIGGER_IDENTIFIER))
+    return dispatch(fetchTriggers('scheduled'))
       .then(() => {
         if (successCb) {
           successCb();
@@ -235,7 +232,7 @@ export const deleteScheduledTrigger = (
   trigger: ScheduledTrigger,
   successCb?: () => void,
   errorCb?: () => void
-) => (dispatch: any, getState: any) => {
+) => (dispatch: any, getState: GetReduxState) => {
   const upQuery = getDropScheduledTriggerQuery(trigger.name);
   const downQuery = generateCreateScheduledTriggerQuery(
     parseServerScheduledTrigger(trigger)
@@ -251,7 +248,7 @@ export const deleteScheduledTrigger = (
       successCb();
     }
     dispatch(push(`${globals.urlPrefix}${appPrefix}/scheduled/manage`));
-    dispatch(fetchTriggers(SCHEDULED_TRIGGER_IDENTIFIER))
+    dispatch(fetchTriggers('scheduled'))
       .then(() => {
         dispatch(push(`${globals.urlPrefix}${appPrefix}/scheduled/manage`));
       })
@@ -287,8 +284,8 @@ export const createEventTrigger = (
   successCb?: () => null,
   errorCb?: () => null
 ) => {
-  return (dispatch: any, getState: any) => {
-    const validationError = validateAddETState(state);
+  return (dispatch: any, getState: GetReduxState) => {
+    const validationError = validateETState(state);
     if (validationError) {
       dispatch(
         showErrorNotification('Creating event trigger failed', validationError)
@@ -341,7 +338,7 @@ export const modifyEventTrigger = (
   table?: Table,
   successCb?: () => void,
   errorCb?: () => void
-) => (dispatch: any, getState: any) => {
+) => (dispatch: any, getState: GetReduxState) => {
   const downQuery = generateCreateEventTriggerQuery(
     parseServerETDefinition(trigger, table),
     true
@@ -433,7 +430,7 @@ export const deleteEventTrigger = (
   trigger: EventTrigger,
   successCb?: () => void,
   errorCb?: () => void
-) => (dispatch: any, getState: any) => {
+) => (dispatch: any, getState: GetReduxState) => {
   const isOk = getConfirmation(
     `This will permanently delete the event trigger and the associated metadata`,
     true,
@@ -522,7 +519,7 @@ export const redeliverDataEvent = (
   eventId: string,
   successCb?: CallableFunction,
   errorCb?: CallableFunction
-) => (dispatch: any, getState: any) => {
+) => (dispatch: any, getState: GetReduxState) => {
   const url = Endpoints.getSchema;
   const options = {
     method: 'POST',

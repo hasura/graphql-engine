@@ -1,7 +1,7 @@
 import React from 'react';
 import STContainer from '../../Containers/ScheduledTriggerContainer';
 import { Triggers } from '../../Types';
-import { ReduxState } from '../../../../../Types';
+import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
 import ProcessedEvents from './ProcessedEvents';
 
 type Props = {
@@ -13,12 +13,8 @@ type Props = {
   readOnlyMode: boolean;
 };
 
-const ProcessedEventsContainer = ({
-  dispatch,
-  allTriggers,
-  params,
-  readOnlyMode,
-}: Props) => {
+const ProcessedEventsContainer: React.FC<Props> = props => {
+  const { dispatch, allTriggers, params } = props;
   const triggerName = params ? params.triggerName : '';
   return (
     <STContainer
@@ -27,17 +23,19 @@ const ProcessedEventsContainer = ({
       triggerName={triggerName}
       allTriggers={allTriggers}
     >
-      <ProcessedEvents dispatch={dispatch} readOnlyMode={readOnlyMode} />
+      <ProcessedEvents dispatch={dispatch} />
     </STContainer>
   );
 };
 
-const mapStateToProps = (state: ReduxState) => {
+const mapStateToProps: MapReduxToProps = state => {
   return {
     allTriggers: state.events.triggers,
     readOnlyMode: state.main.readOnlyMode,
   };
 };
 
-export default (connect: any) =>
+const connector: ComponentReduxConnector = (connect: any) =>
   connect(mapStateToProps)(ProcessedEventsContainer);
+
+export default connector;

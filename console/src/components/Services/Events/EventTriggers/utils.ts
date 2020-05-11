@@ -66,7 +66,7 @@ export const parseRowData = (row: any, dataType: any) => {
   }
 };
 
-export const validateAddETState = (state: LocalEventTriggerState) => {
+export const validateETState = (state: LocalEventTriggerState) => {
   if (!state.name) {
     return 'Trigger name cannot be empty';
   }

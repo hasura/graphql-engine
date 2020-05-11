@@ -1,7 +1,7 @@
 import React from 'react';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Helmet from 'react-helmet';
-import { ReduxState } from '../../../../../Types';
+import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
 import {
   Schema,
   Table,
@@ -349,13 +349,14 @@ const Add = (props: AddProps) => {
   );
 };
 
-const mapStateToProps = (state: ReduxState) => {
+const mapStateToProps: MapReduxToProps = state => {
   return {
     schemaList: state.tables.schemaList,
     allSchemas: state.tables.allSchemas,
   };
 };
 
-const addTriggerConnector = (connect: any) => connect(mapStateToProps)(Add);
+const addTriggerConnector: ComponentReduxConnector = connect =>
+  connect(mapStateToProps)(Add);
 
 export default addTriggerConnector;

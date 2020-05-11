@@ -1,30 +1,4 @@
-import { OrderBy } from '../utils/v1QueryUtils';
-
-// TODO rethink design
-
-export type Operator =
-  | '$eq'
-  | '$ne'
-  | '$in'
-  | '$nin'
-  | '$gt'
-  | '$lt'
-  | '$gte'
-  | '$lte'
-  | '$like'
-  | '$nlike'
-  | '$ilike'
-  | '$nilike'
-  | '$similar'
-  | '$nsimilar'
-  | '';
-
-export type OperatorDef = {
-  alias: string;
-  operator: Operator;
-  name: string;
-  default?: string;
-};
+import { Operator, OperatorDef, Filter } from './Types';
 
 export const allOperators: OperatorDef[] = [
   { name: 'equals', operator: '$eq', alias: '_eq' },
@@ -63,33 +37,16 @@ export const getOperatorDefaultValue = (op: Operator) => {
   return operator ? operator.default : '';
 };
 
-export type ValueFilter = {
-  kind: 'value';
-  key: string;
-  operator: Operator;
-  value: string;
-};
-export type RelationshipFilter = {
-  kind: 'relationship';
-  key: string;
-  value: Filter;
-};
-export type OperatorFilter = {
-  kind: 'operator';
-  key: '$or' | '$and' | '$not';
-  value: Filter[];
-};
-
-export type Filter = ValueFilter | RelationshipFilter | OperatorFilter;
-
 export const parseFilter = (f: Filter): any => {
   switch (f.kind) {
     case 'value':
-      return {
-        [f.key]: {
-          [f.operator]: f.value,
-        },
-      };
+      return f.operator
+        ? {
+            [f.key]: {
+              [f.operator]: f.value,
+            },
+          }
+        : {};
       break;
 
     case 'relationship':
@@ -107,28 +64,3 @@ export const parseFilter = (f: Filter): any => {
       break;
   }
 };
-
-export type FilterState = {
-  filters: ValueFilter[];
-  sorts: OrderBy[];
-  limit: number;
-  offset: number;
-};
-
-export type SetSorts = (s: OrderBy[]) => void;
-export type SetFilters = (s: ValueFilter[]) => void;
-export type SetFilterState = {
-  sorts: SetSorts;
-  filters: SetFilters;
-  offset: (o: number) => void;
-  limit: (l: number) => void;
-};
-export type RunQuery = (offset?: number, limit?: number) => void;
-
-export type FilterRenderProp = (
-  rows: any[],
-  count: number | undefined,
-  state: FilterState,
-  setState: SetFilterState,
-  runQuery: RunQuery
-) => JSX.Element;

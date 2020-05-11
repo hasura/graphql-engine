@@ -6,15 +6,13 @@ import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import Headers, { Header } from '../../../../Common/Headers/Headers';
 import { parseServerHeaders } from '../../../../Common/Headers/utils';
 
-import { EventTrigger } from '../../Types';
-
-type Callback = () => void;
+import { EventTrigger, VoidCallback } from '../../Types';
 
 type HeaderEditorProps = {
   currentTrigger: EventTrigger;
   headers: Header[];
   setHeaders: (h: Header[]) => void;
-  save: (success: Callback, error: Callback) => void;
+  save: (success: VoidCallback, error: VoidCallback) => void;
   styles: Record<string, string>;
 };
 

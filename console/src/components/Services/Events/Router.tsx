@@ -4,6 +4,7 @@ import rightContainerConnector from '../../Common/Layout/RightContainer/RightCon
 import Container from './Containers/Main';
 import { fetchTriggers } from './ServerIO';
 import globals from '../../../Globals';
+import { ReduxState } from '../../../Types';
 import {
   AddScheduledTrigger,
   ScheduledTriggerLogs,
@@ -22,8 +23,8 @@ import {
 } from './EventTriggers';
 
 const triggersInit = ({ dispatch }: { dispatch: any }) => {
-  return (nextState: any, replaceState: any, cb: any) => {
-    Promise.all([dispatch(fetchTriggers())]).then(
+  return (nextState: ReduxState, replaceState: any, cb: VoidFunction) => {
+    Promise.all([dispatch(fetchTriggers(null))]).then(
       () => {
         cb();
       },
@@ -45,7 +46,6 @@ const getTriggersRouter = (
       path="events"
       component={Container(connect)}
       onEnter={composeOnEnterHooks([triggersInit(store)])}
-      onChange={triggersInit(store)}
     >
       <IndexRedirect to="data" />
       <Route path="data" component={rightContainerConnector(connect)}>

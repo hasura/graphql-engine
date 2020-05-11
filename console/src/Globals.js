@@ -44,7 +44,6 @@ const globals = {
     : null,
   isProduction,
 };
-
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (isProduction) {
     const consolePath = window.__env.consolePath;

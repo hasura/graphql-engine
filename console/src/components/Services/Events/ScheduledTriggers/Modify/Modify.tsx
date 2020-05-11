@@ -13,12 +13,12 @@ import {
   deleteScheduledTrigger,
 } from '../../ServerIO';
 
-type ModifyProps = {
+type Props = {
   dispatch: any;
   currentTrigger?: ScheduledTrigger;
 };
 
-const Modify = (props: ModifyProps) => {
+const Modify: React.FC<Props> = props => {
   const [invokeButtonText, setInvokeButtonText] = React.useState('Invoke');
   const { dispatch, currentTrigger } = props;
   const { state, setState } = useScheduledTrigger();

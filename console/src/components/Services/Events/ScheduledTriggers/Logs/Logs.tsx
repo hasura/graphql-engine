@@ -13,12 +13,12 @@ import {
 } from '../../Common/Hooks/useInvocationLogs';
 import { getFetchInvocationLogsQuery } from '../../../../Common/utils/v1QueryUtils';
 
-type LogsProps = {
+type Props = {
   dispatch: any;
   currentTrigger?: ScheduledTrigger;
 };
 
-const Logs = (props: LogsProps) => {
+const Logs: React.FC<Props> = props => {
   const { dispatch, currentTrigger } = props;
 
   const {

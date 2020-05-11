@@ -3,20 +3,31 @@ import { LocalScheduledTriggerState } from '../../Services/Events/ScheduledTrigg
 import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
 import { transformHeaders } from '../Headers/utils';
 import { generateTableDef } from './pgUtils';
+import { Nullable } from './tsUtils';
 
 // TODO add type for the where clause
 
 // TODO extend all queries with v1 query type
 
-export type WhereClause = any;
-
 export type OrderByType = 'asc' | 'desc';
+export type OrderByNulls = 'first' | 'last';
 
 export type OrderBy = {
   column: string;
   type: OrderByType;
-  nulls?: 'last' | 'first';
+  nulls: Nullable<OrderByNulls>;
 };
+export const makeOrderBy = (
+  column: string,
+  type: OrderByType,
+  nulls: Nullable<OrderByNulls> = 'last'
+): OrderBy => ({
+  column,
+  type,
+  nulls,
+});
+
+export type WhereClause = any;
 
 export type TableDefinition = {
   name: string;
@@ -586,10 +597,10 @@ export const getSelectQuery = (
   type: 'select' | 'count',
   table: TableDefinition,
   columns: SelectColumn[],
-  where?: WhereClause,
-  offset?: number,
-  limit?: number,
-  order_by?: OrderBy[]
+  where: Nullable<WhereClause>,
+  offset: Nullable<number>,
+  limit: Nullable<number>,
+  order_by: Nullable<OrderBy[]>
 ) => {
   return {
     type,
@@ -605,17 +616,17 @@ export const getSelectQuery = (
 };
 
 export const getFetchInvocationLogsQuery = (
-  where?: WhereClause,
-  offset?: number,
-  order_by?: OrderBy[],
-  limit?: number
+  where: Nullable<WhereClause>,
+  offset: Nullable<number>,
+  order_by: Nullable<OrderBy[]>,
+  limit: Nullable<number>
 ) => {
   return getSelectQuery(
     'select',
     generateTableDef('hdb_scheduled_event_invocation_logs', 'hdb_catalog'),
     ['*'],
     where,
-    undefined,
+    offset,
     limit,
     order_by
   );

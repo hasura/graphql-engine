@@ -5,14 +5,15 @@ import styles from '../ScheduledTriggers.scss';
 import Button from '../../../../Common/Button/Button';
 import ScheduledTriggerForm from '../../Common/Components/ScheduledTriggerForm';
 import { addScheduledTrigger } from '../../ServerIO';
-import { ReduxState } from '../../../../../Types';
+import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
 
-type AddScheduledTriggerProps = {
+type Props = {
   dispatch: any;
   initState?: LocalScheduledTriggerState;
 };
 
-const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
+const Main: React.FC<Props> = props => {
+  const { dispatch, initState } = props;
   const { state, setState } = useScheduledTrigger(initState);
 
   const getSaveButton = () => {
@@ -46,10 +47,13 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
   );
 };
 
-const mapStateToProps = (state: ReduxState) => {
+const mapStateToProps: MapReduxToProps = state => {
   return {
     ...state.events,
   };
 };
 
-export default (connect: any) => connect(mapStateToProps)(Main);
+const connector: ComponentReduxConnector = (connect: any) =>
+  connect(mapStateToProps)(Main);
+
+export default connector;

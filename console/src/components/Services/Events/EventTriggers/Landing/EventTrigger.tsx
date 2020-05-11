@@ -11,7 +11,11 @@ import { getAddETRoute } from '../../../../Common/utils/routesUtils';
 import TryItOut from '../../../Common/Landing/TryItOut';
 import styles from '../../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 
-const EventTrigger = (props: { dispatch: any }) => {
+type Props = {
+  dispatch: any;
+};
+
+const EventTrigger: React.FC<Props> = props => {
   const { dispatch } = props;
 
   const queryDefinition = `mutation {

@@ -5,6 +5,7 @@ import {
   EventTrigger,
   EventTriggerOperation,
   ETOperationColumn,
+  VoidCallback,
 } from '../../Types';
 import { TableColumn } from '../../../../Common/utils/pgUtils';
 import {
@@ -14,8 +15,6 @@ import {
 
 import Operations from '../Common/Operations';
 
-type Callback = () => void;
-
 type OperationEditorProps = {
   currentTrigger: EventTrigger;
   allTableColumns: TableColumn[];
@@ -24,7 +23,7 @@ type OperationEditorProps = {
   operationColumns: ETOperationColumn[];
   setOperationColumns: (operationColumns: ETOperationColumn[]) => void;
   styles: Record<string, string>;
-  save: (success: Callback, error: Callback) => void;
+  save: (success: VoidCallback, error: VoidCallback) => void;
 };
 
 const OperationEditor = (props: OperationEditorProps) => {

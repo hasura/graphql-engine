@@ -1,18 +1,23 @@
 import React from 'react';
 import FilterQuery from '../../../../Common/FilterQuery/FilterQuery';
-import { FilterRenderProp } from '../../../../Common/FilterQuery/utils';
+import {
+  FilterRenderProp,
+  makeValueFilter,
+  makeOperationFilter,
+} from '../../../../Common/FilterQuery/Types';
 import { etEventsTable } from '../utils';
-import { ReduxState } from '../../../../../Types';
+import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
 import TableHeader from '../TableCommon/TableHeader';
 import EventsTable from '../../Common/Components/EventsTable';
+import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 
-type ProcessedEventsProps = {
+type Props = {
   dispatch: any;
   triggerName: string;
   readOnlyMode: boolean;
 };
 
-const ProcessedEvents = (props: ProcessedEventsProps) => {
+const ProcessedEvents: React.FC<Props> = props => {
   const { dispatch, triggerName, readOnlyMode } = props;
 
   const renderRows: FilterRenderProp = (
@@ -48,21 +53,12 @@ const ProcessedEvents = (props: ProcessedEventsProps) => {
         render={renderRows}
         presets={{
           filters: [
-            {
-              kind: 'operator',
-              key: '$or',
-              value: [
-                {
-                  kind: 'value',
-                  key: 'delivered',
-                  operator: '$eq',
-                  value: 'true',
-                },
-                { kind: 'value', key: 'error', operator: '$eq', value: 'true' },
-              ],
-            },
+            makeOperationFilter('$or', [
+              makeValueFilter('delivered', '$eq', 'true'),
+              makeValueFilter('error', '$eq', 'true'),
+            ]),
           ],
-          sorts: [{ column: 'created_at', type: 'desc' }],
+          sorts: [makeOrderBy('created_at', 'desc')],
         }}
         relationships={['logs']}
       />
@@ -70,14 +66,14 @@ const ProcessedEvents = (props: ProcessedEventsProps) => {
   );
 };
 
-const mapStateToProps = (state: ReduxState, ownProps: any) => {
+const mapStateToProps: MapReduxToProps = (state, ownProps) => {
   return {
     triggerName: ownProps.params.triggerName,
     readOnlyMode: state.main.readOnlyMode,
   };
 };
 
-const processedEventsConnector = (connect: any) =>
+const connector: ComponentReduxConnector = (connect: any) =>
   connect(mapStateToProps)(ProcessedEvents);
 
-export default processedEventsConnector;
+export default connector;

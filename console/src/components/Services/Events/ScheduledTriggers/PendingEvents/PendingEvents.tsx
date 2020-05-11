@@ -1,17 +1,20 @@
 import React from 'react';
 import FilterQuery from '../../../../Common/FilterQuery/FilterQuery';
-import { FilterRenderProp } from '../../../../Common/FilterQuery/utils';
+import {
+  FilterRenderProp,
+  makeValueFilter,
+} from '../../../../Common/FilterQuery/Types';
 import { stEventsTable } from '../utils';
 import { ScheduledTrigger } from '../../Types';
 import EventsTable from '../../Common/Components/EventsTable';
+import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 
-type PendingEventsProps = {
-  dispatch: any;
+type Props = {
   currentTrigger?: ScheduledTrigger;
-  readOnlyMode: boolean;
+  dispatch: any;
 };
 
-const PendingEvents = (props: PendingEventsProps) => {
+const PendingEvents: React.FC<Props> = props => {
   const { dispatch, currentTrigger } = props;
 
   const renderRows: FilterRenderProp = (
@@ -27,7 +30,7 @@ const PendingEvents = (props: PendingEventsProps) => {
       filterState={filterState}
       setFilterState={setFilterState}
       runQuery={runQuery}
-      columns={['id', 'delivered', 'created_at']}
+      columns={['id', 'scheduled_at', 'created_at']}
       triggerName={currentTrigger ? currentTrigger.name : ''}
     />
   );
@@ -40,16 +43,11 @@ const PendingEvents = (props: PendingEventsProps) => {
         render={renderRows}
         presets={{
           filters: [
-            { kind: 'value', key: 'archived', operator: '$eq', value: 'false' },
-            {
-              kind: 'value',
-              key: 'delivered',
-              operator: '$eq',
-              value: 'false',
-            },
-            { kind: 'value', key: 'error', operator: '$eq', value: 'false' },
+            makeValueFilter('scheduled_time', '$gt', 'now()'),
+            makeValueFilter('delivered', '$eq', 'false'),
+            makeValueFilter('error', '$eq', 'false'),
           ],
-          sorts: [{ column: 'created_at', type: 'desc' }],
+          sorts: [makeOrderBy('created_at', 'desc')],
         }}
         relationships={['logs']}
       />

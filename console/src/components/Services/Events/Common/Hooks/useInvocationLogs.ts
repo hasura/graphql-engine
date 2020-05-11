@@ -1,7 +1,10 @@
 import React from 'react';
 import requestAction from '../../../../../utils/requestAction';
 import Endpoints from '../../../../../Endpoints';
-import { SelectQueryGenerator } from '../../../../Common/utils/v1QueryUtils';
+import {
+  SelectQueryGenerator,
+  makeOrderBy,
+} from '../../../../Common/utils/v1QueryUtils';
 import { useInterval } from '../../../../Common/utils/reactUtils';
 
 export const invocationLogsColumns = [
@@ -97,12 +100,7 @@ export const useInvocationLogs = (
         $and: whereClauses,
       },
       undefined,
-      [
-        {
-          column: 'created_at',
-          type: 'desc',
-        },
-      ],
+      [makeOrderBy('created_at', 'desc')],
       limit
     );
   };
@@ -154,7 +152,7 @@ export const useInvocationLogs = (
         },
       },
       undefined,
-      [{ column: 'created_at', type: 'desc' }],
+      [makeOrderBy('created_at', 'desc')],
       1
     );
 

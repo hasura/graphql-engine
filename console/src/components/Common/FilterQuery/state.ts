@@ -1,35 +1,28 @@
 import React from 'react';
 import {
-  OrderBy,
   TableDefinition,
   getSelectQuery,
+  OrderBy,
+  makeOrderBy,
 } from '../utils/v1QueryUtils';
 import requestAction from '../../../utils/requestAction';
 import endpoints from '../../../Endpoints';
 import {
-  FilterState,
+  makeFilterState,
+  SetFilterState,
   ValueFilter,
+  makeValueFilter,
   Filter,
-  parseFilter,
   RunQuery,
-} from './utils';
+} from './Types';
 
-const defaultFilter: ValueFilter = {
-  kind: 'value',
-  key: '',
-  value: '',
-  operator: '$eq',
-};
-const defaultSort: OrderBy = {
-  column: '',
-  type: 'asc',
-};
-const defaultState: FilterState = {
-  filters: [defaultFilter],
-  sorts: [defaultSort],
-  limit: 10,
-  offset: 0,
-};
+import { Nullable } from '../utils/tsUtils';
+import { parseFilter } from './utils';
+
+const defaultFilter = makeValueFilter('', null, '');
+const defaultSort = makeOrderBy('', 'asc');
+
+const defaultState = makeFilterState([defaultFilter], [defaultSort], 10, 0);
 
 export const useFilterQuery = (
   table: TableDefinition,
@@ -38,7 +31,7 @@ export const useFilterQuery = (
     filters: Filter[];
     sorts: OrderBy[];
   },
-  relationships?: string[]
+  relationships: Nullable<string[]>
 ) => {
   const [state, setState] = React.useState(defaultState);
   const [rows, setRows] = React.useState<any[]>([]);
@@ -47,9 +40,6 @@ export const useFilterQuery = (
   const [error, setError] = React.useState(false);
 
   const runQuery: RunQuery = (offset, limit) => {
-    console.log('Making query with');
-    console.log(offset === undefined ? state.offset : offset);
-    console.log(limit === undefined ? state.limit : limit);
     setLoading(true);
     setError(false);
 
@@ -124,6 +114,45 @@ export const useFilterQuery = (
     runQuery();
   }, []);
 
+  const setter: SetFilterState = {
+    sorts: (sorts: OrderBy[]) => {
+      const newSorts = [...sorts];
+      if (!sorts.length || sorts[sorts.length - 1].column) {
+        newSorts.push(defaultSort);
+      }
+      setState(s => ({
+        ...s,
+        sorts: newSorts,
+      }));
+    },
+    filters: (filters: ValueFilter[]) => {
+      const newFilters = [...filters];
+      if (
+        !filters.length ||
+        filters[filters.length - 1].value ||
+        filters[filters.length - 1].key
+      ) {
+        newFilters.push(defaultFilter);
+      }
+      setState(s => ({
+        ...s,
+        filters: newFilters,
+      }));
+    },
+    offset: (o: number) => {
+      setState(s => ({
+        ...s,
+        offset: o,
+      }));
+    },
+    limit: (l: number) => {
+      setState(s => ({
+        ...s,
+        limit: l,
+      }));
+    },
+  };
+
   return {
     rows,
     loading,
@@ -131,43 +160,6 @@ export const useFilterQuery = (
     runQuery,
     state,
     count,
-    setState: {
-      sorts: (sorts: OrderBy[]) => {
-        const newSorts = [...sorts];
-        if (!sorts.length || sorts[sorts.length - 1].column) {
-          newSorts.push(defaultSort);
-        }
-        setState(s => ({
-          ...s,
-          sorts: newSorts,
-        }));
-      },
-      filters: (filters: ValueFilter[]) => {
-        const newFilters = [...filters];
-        if (
-          !filters.length ||
-          filters[filters.length - 1].value ||
-          filters[filters.length - 1].key
-        ) {
-          newFilters.push(defaultFilter);
-        }
-        setState(s => ({
-          ...s,
-          filters: newFilters,
-        }));
-      },
-      offset: (o: number) => {
-        setState(s => ({
-          ...s,
-          offset: o,
-        }));
-      },
-      limit: (l: number) => {
-        setState(s => ({
-          ...s,
-          limit: l,
-        }));
-      },
-    },
+    setState: setter,
   };
 };
