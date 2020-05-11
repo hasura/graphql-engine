@@ -160,6 +160,7 @@
     "@types/react-dom": "16.9.5",
     "@types/react-helmet": "5.0.15",
     "@types/react-hot-loader": "4.1.1",
+    "@types/react-notification-system-redux": "^1.1.6",
     "@types/react-redux": "7.1.7",
     "@types/react-router": "5.1.4",
     "@types/react-router-redux": "5.0.18",

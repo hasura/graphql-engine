@@ -1,3 +1,4 @@
+import { Dispatch } from 'redux';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import requestAction from '../utils/requestAction';
 import dataHeaders from '../components/Services/Data/Common/Headers';
@@ -12,7 +13,15 @@ const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
 const SET_HASURA_UUID = 'Telemetry/SET_HASURA_UUID';
 
-const setConsoleOptsInDB = (opts, successCb, errorCb) => (
+type Opts = {
+  telemetryNotificationShown: boolean;
+  disablePreReleaseUpdateNotifications: boolean;
+};
+type SuccessCb = (arg: object) => void;
+type ErrorCb = (arg: Error) => void;
+type SetConsoleOptsInDB = (opts: Partial<Opts>, successCb: SuccessCb, errorCb: ErrorCb) => (dispatch: Dispatch<any>, getState: any) => void
+
+const setConsoleOptsInDB: SetConsoleOptsInDB = (opts, successCb, errorCb) => (
   dispatch,
   getState
 ) => {
@@ -38,13 +47,13 @@ const setConsoleOptsInDB = (opts, successCb, errorCb) => (
     ),
   };
 
-  return dispatch(requestAction(url, options)).then(
-    data => {
+  return (dispatch(requestAction(url, options)) as any).then(
+    (data: object) => {
       if (successCb) {
         successCb(data);
       }
     },
-    error => {
+    (error: Error) => {
       if (errorCb) {
         errorCb(error);
       }
@@ -52,32 +61,32 @@ const setConsoleOptsInDB = (opts, successCb, errorCb) => (
   );
 };
 
-const telemetryNotificationShown = () => dispatch => {
+const telemetryNotificationShown = () => (dispatch: (arg: Partial<SetNotificationShowAction>) => void) => {
   dispatch({ type: SET_NOTIFICATION_SHOWN });
 };
 
 const setTelemetryNotificationShownInDB = () => {
-  const successCb = data => {
+  const successCb: SuccessCb = (data: object) => {
     console.log(
       'Updated telemetry notification status in db' + JSON.stringify(data)
     );
   };
 
-  const errorCb = error => {
+  const errorCb: ErrorCb = (error: Error) => {
     console.error(
       'Failed to update telemetry notification status in db' +
         JSON.stringify(error)
     );
   };
 
-  const opts = {
+  const opts: Partial<Opts> = {
     telemetryNotificationShown: true,
   };
 
   return setConsoleOptsInDB(opts, successCb, errorCb);
 };
 
-const setPreReleaseNotificationOptOutInDB = () => dispatch => {
+const setPreReleaseNotificationOptOutInDB = () => (dispatch: (arg: unknown) => void) => {
   const successCb = () => {
     dispatch(
       showSuccessNotification(
@@ -87,19 +96,21 @@ const setPreReleaseNotificationOptOutInDB = () => dispatch => {
     );
   };
 
-  const errorCb = error => {
+  const errorCb = (error: Error) => {
     dispatch(showErrorNotification('Failed to opt out', null, error));
   };
 
-  const opts = {
+  const opts: Partial<Opts> = {
     disablePreReleaseUpdateNotifications: true,
   };
 
   return dispatch(setConsoleOptsInDB(opts, successCb, errorCb));
 };
 
+
+
 const loadConsoleOpts = () => {
-  return (dispatch, getState) => {
+  return (dispatch: Dispatch<any>, getState: any) => {
     const url = Endpoints.getSchema;
     const options = {
       credentials: globalCookiePolicy,
@@ -117,8 +128,8 @@ const loadConsoleOpts = () => {
       }),
     };
 
-    return dispatch(requestAction(url, options)).then(
-      data => {
+    return dispatch(requestAction(url, options) as any).then(
+      (data: {[key: string]: string}[]) => {
         if (data.length !== 0) {
           dispatch({
             type: SET_HASURA_UUID,
@@ -130,7 +141,7 @@ const loadConsoleOpts = () => {
           });
         }
       },
-      error => {
+      (error: Error) => {
         console.error(
           'Failed to load console options: ' + JSON.stringify(error)
         );
@@ -139,7 +150,24 @@ const loadConsoleOpts = () => {
   };
 };
 
-const telemetryReducer = (state = defaultTelemetryState, action) => {
+interface SetConsoleOptsAction {
+  type: typeof SET_CONSOLE_OPTS;
+  data: object;
+}
+
+interface SetNotificationShowAction {
+  type: typeof SET_NOTIFICATION_SHOWN;
+  data: object;
+}
+
+interface SetHasuraUuid {
+  type: typeof SET_HASURA_UUID;
+  data: object;
+}
+
+type TelemetryActionTypes = SetConsoleOptsAction | SetNotificationShowAction | SetHasuraUuid
+
+const telemetryReducer = (state = defaultTelemetryState, action: TelemetryActionTypes) => {
   switch (action.type) {
     case SET_CONSOLE_OPTS:
       return {
