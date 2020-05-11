@@ -302,8 +302,8 @@ insertCronEvents events = do
 
 generateCronEventsFrom :: UTCTime -> CronTriggerInfo-> [CronEventSeed]
 generateCronEventsFrom startTime CronTriggerInfo{..} =
-  map (CronEventSeed stiName) $
-      generateScheduleTimes startTime 100 stiSchedule -- generate next 100 events
+  map (CronEventSeed ctiName) $
+      generateScheduleTimes startTime 100 ctiSchedule -- generate next 100 events
 
 -- | Generates next @n events starting @from according to 'CronSchedule'
 generateScheduleTimes :: UTCTime -> Int -> CronSchedule -> [UTCTime]
@@ -331,8 +331,8 @@ processCronEvents logger logEnv httpMgr pgpool getSC = do
           Nothing ->  logInternalError $
             err500 Unexpected "could not find cron trigger in cache"
           Just CronTriggerInfo{..} -> do
-            let webhook = unResolvedWebhook stiWebhookInfo
-                payload' = fromMaybe J.Null stiPayload
+            let webhook = unResolvedWebhook ctiWebhookInfo
+                payload' = fromMaybe J.Null ctiPayload
                 scheduledEvent =
                     ScheduledEventFull id'
                                        (Just name)
@@ -340,9 +340,9 @@ processCronEvents logger logEnv httpMgr pgpool getSC = do
                                        tries
                                        webhook
                                        payload'
-                                       stiRetryConf
-                                       stiHeaders
-                                       stiComment
+                                       ctiRetryConf
+                                       ctiHeaders
+                                       ctiComment
             finally <- runExceptT $
               runReaderT (processScheduledEvent logEnv pgpool scheduledEvent CronScheduledEvent) (logger, httpMgr)
             either logInternalError pure finally

@@ -140,15 +140,15 @@ formatTime'= T.pack . iso8601Show
 
 data CreateScheduledEvent
   = CreateScheduledEvent
-  { cstoWebhook           :: !ET.WebhookConf
-  , cstoScheduleAt        :: !UTCTime
+  { cseWebhook           :: !InputWebhook
+  , cseScheduleAt        :: !UTCTime
     -- ^ The timestamp should be in the
     -- <ISO 8601 https://en.wikipedia.org/wiki/ISO_8601>
     -- format (which is what @aeson@ expects by default for 'UTCTime').
-  , cstoPayload           :: !(Maybe J.Value)
-  , cstoHeaders           :: ![ET.HeaderConf]
-  , cstoRetryConf         :: !STRetryConf
-  , cstoComment           :: !(Maybe Text)
+  , csePayload           :: !(Maybe J.Value)
+  , cseHeaders           :: ![ET.HeaderConf]
+  , cseRetryConf         :: !STRetryConf
+  , cseComment           :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 
 instance FromJSON CreateScheduledEvent where
@@ -161,4 +161,4 @@ instance FromJSON CreateScheduledEvent where
                                    <*> o .:? "retry_conf" .!= defaultSTRetryConf
                                    <*> o .:? "comment"
 
-$(deriveToJSON (aesonDrop 4 snakeCase) ''CreateScheduledEvent)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''CreateScheduledEvent)

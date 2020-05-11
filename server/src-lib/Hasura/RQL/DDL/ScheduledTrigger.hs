@@ -130,12 +130,12 @@ runCreateScheduledEvent CreateScheduledEvent {..} = do
       (webhook_conf,scheduled_time,payload,retry_conf,header_conf,comment)
       VALUES
       ($1, $2, $3, $4, $5, $6)
-     |] ( Q.AltJ cstoWebhook
-        , cstoScheduleAt
-        , Q.AltJ cstoPayload
-        , Q.AltJ cstoRetryConf
-        , Q.AltJ cstoHeaders
-        , cstoComment)
+     |] ( Q.AltJ cseWebhook
+        , cseScheduleAt
+        , Q.AltJ csePayload
+        , Q.AltJ cseRetryConf
+        , Q.AltJ cseHeaders
+        , cseComment)
         False
   pure successMsg
 

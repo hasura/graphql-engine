@@ -182,13 +182,13 @@ type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
 data CronTriggerInfo
  = CronTriggerInfo
-   { stiName        :: !TriggerName  -- refactor the sti's to cti's
-   , stiSchedule    :: !CronSchedule
-   , stiPayload     :: !(Maybe Value)
-   , stiRetryConf   :: !STRetryConf
-   , stiWebhookInfo :: !ResolvedWebhook
-   , stiHeaders     :: ![EventHeaderInfo]
-   , stiComment     :: !(Maybe Text)
+   { ctiName        :: !TriggerName
+   , ctiSchedule    :: !CronSchedule
+   , ctiPayload     :: !(Maybe Value)
+   , ctiRetryConf   :: !STRetryConf
+   , ctiWebhookInfo :: !ResolvedWebhook
+   , ctiHeaders     :: ![EventHeaderInfo]
+   , ctiComment     :: !(Maybe Text)
    } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''CronTriggerInfo)
