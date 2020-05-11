@@ -25,6 +25,10 @@ func init() {
 }
 
 func TestCommands(t *testing.T) {
+	var cliExtManifestFilePath string
+	if os.Getenv("HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH") == "" {
+		cliExtManifestFilePath = "testdata/manifest-dev.yaml"
+	}
 	// Run tests only for config version v1
 	t.Run("config=v1", func(t *testing.T) {
 		// Initialize ec
@@ -95,7 +99,7 @@ func TestCommands(t *testing.T) {
 			installOpts := &commands.PluginInstallOptions{
 				EC:           ec,
 				Name:         cli.CLIExtPluginName,
-				ManifestFile: "/build/_cli_ext_output/manifest-dev.yaml",
+				ManifestFile: cliExtManifestFilePath,
 			}
 			err := installOpts.Run()
 			if err != nil {
