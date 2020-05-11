@@ -10,8 +10,7 @@ module Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.EventTrigger ( getWebhookInfoFromConf
-                                             , getHeaderInfosFromConf)
+import           Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog    (CatalogCronTrigger(..))
 import           Hasura.Eventing.ScheduledTrigger
@@ -65,7 +64,7 @@ resolveCronTrigger
   :: (QErrM m, MonadIO m)
   => CatalogCronTrigger -> m CronTriggerInfo
 resolveCronTrigger CatalogCronTrigger {..} = do
-  webhookInfo <- getWebhookInfoFromConf _cctWebhookConf
+  webhookInfo <- resolveWebhook _cctWebhookConf
   headerInfo <- getHeaderInfosFromConf headers
   pure $
     CronTriggerInfo _cctName

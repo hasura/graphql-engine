@@ -169,7 +169,7 @@ type CatalogAction = ActionMetadata
 data CatalogCronTrigger
   = CatalogCronTrigger
   { _cctName           :: !TriggerName
-  , _cctWebhookConf    :: !WebhookConf
+  , _cctWebhookConf    :: !InputWebhook
   , _cctCronSchedule   :: !CronSchedule
   , _cctPayload        :: !(Maybe Value)
   , _cctRetryConf      :: !(Maybe STRetryConf)

@@ -332,7 +332,7 @@ processCronEvents logger logEnv httpMgr pgpool getSC = do
           Nothing ->  logInternalError $
             err500 Unexpected "could not find cron trigger in cache"
           Just CronTriggerInfo{..} -> do
-            let webhook = wciCachedValue stiWebhookInfo
+            let webhook = unResolvedWebhook stiWebhookInfo
                 payload' = fromMaybe J.Null stiPayload
                 scheduledEvent =
                     ScheduledEventFull id'

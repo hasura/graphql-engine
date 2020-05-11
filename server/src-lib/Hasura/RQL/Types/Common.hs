@@ -36,17 +36,24 @@ module Hasura.RQL.Types.Common
 
        , successMsg
        , NonNegativeDiffTime(..)
+       , InputWebhook(..)
+       , ResolvedWebhook(..)
+       , resolveWebhook
        ) where
 
 import           Hasura.EncJSON
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
+import           Hasura.RQL.Types.Error
+import           Hasura.RQL.DDL.Headers        ()
+
 
 import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.URL.Template
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Q, TExp, Lift)
 
@@ -251,3 +258,28 @@ instance FromJSON NonNegativeDiffTime where
     case (t > 0) of
       True -> return $ NonNegativeDiffTime . realToFrac $ t
       False -> fail "negative value not allowed"
+
+newtype ResolvedWebhook
+  = ResolvedWebhook { unResolvedWebhook :: Text}
+  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, DQuote, Lift)
+
+newtype InputWebhook
+  = InputWebhook {unInputWebhook :: URLTemplate}
+  deriving (Show, Eq, Lift, Generic)
+instance NFData InputWebhook
+instance Cacheable InputWebhook
+
+instance ToJSON InputWebhook where
+  toJSON =  String . printURLTemplate . unInputWebhook
+
+instance FromJSON InputWebhook where
+  parseJSON = withText "String" $ \t ->
+    case parseURLTemplate t of
+      Left e  -> fail $ "Parsing URL template failed: " ++ e
+      Right v -> pure $ InputWebhook v
+
+resolveWebhook :: (QErrM m,MonadIO m) => InputWebhook -> m ResolvedWebhook
+resolveWebhook (InputWebhook urlTemplate) = do
+  eitherRenderedTemplate <- renderURLTemplate urlTemplate
+  either (throw400 Unexpected . T.pack)
+    (pure . ResolvedWebhook) eitherRenderedTemplate

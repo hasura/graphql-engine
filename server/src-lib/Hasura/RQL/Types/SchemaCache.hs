@@ -186,7 +186,7 @@ data CronTriggerInfo
    , stiSchedule    :: !CronSchedule
    , stiPayload     :: !(Maybe Value)
    , stiRetryConf   :: !STRetryConf
-   , stiWebhookInfo :: !WebhookConfInfo
+   , stiWebhookInfo :: !ResolvedWebhook
    , stiHeaders     :: ![EventHeaderInfo]
    , stiComment     :: !(Maybe Text)
    } deriving (Show, Eq)
