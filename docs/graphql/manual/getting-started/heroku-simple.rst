@@ -33,7 +33,7 @@ Click the button below to deploy to Heroku:
    If you don't have an account on Heroku, you need to sign up on Heroku. You won't need a credit card, and once you
    sign up you'll be redirected to your Heroku app creation page automatically.
 
-.. thumbnail:: ../../../img/graphql/manual/getting-started/heroku-app.png
+.. thumbnail:: /img/graphql/manual/getting-started/heroku-app.png
    :alt: Deploy to Heroku 
 
 Note that **Heroku's free Postgres add-on** is also automatically provisioned!
@@ -44,7 +44,7 @@ Open the Hasura console
 That's it!  Head to ``https://<YOUR_HEROKU_APP>.herokuapp.com`` and open your app.
 You should see the Hasura console.
 
-.. thumbnail:: ../../../img/graphql/manual/getting-started/heroku-app-deployed.png
+.. thumbnail:: /img/graphql/manual/getting-started/heroku-app-deployed.png
    :alt: Open the Hasura console
 
 Hello World (GraphQL or event triggers)
