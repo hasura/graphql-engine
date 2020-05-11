@@ -80,7 +80,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Version             (HasVersion)
-import           Hasura.RQL.DDL.EventTrigger       (getHeaderInfosFromConf,getWebhookInfoFromConf)
+import           Hasura.RQL.DDL.EventTrigger       (getHeaderInfosFromConf)
 import           Hasura.SQL.DML
 import           Hasura.SQL.Types
 import           System.Cron

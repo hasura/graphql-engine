@@ -35,7 +35,7 @@ class TestScheduledEvent(object):
         query = {
             "type":"create_scheduled_event",
             "args":{
-                "webhook":self.webhook_domain + '/test',
+                "webhook":'{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}/test',
                 "schedule_at":stringify_datetime(datetime.utcnow()),
                 "payload":self.webhook_payload,
                 "headers":self.header_conf
@@ -48,7 +48,7 @@ class TestScheduledEvent(object):
         query = {
             "type":"create_scheduled_event",
             "args":{
-                "webhook":{"from_env":"SCHEDULED_TRIGGERS_WEBHOOK"},
+                "webhook":"{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}/",
                 "schedule_at": "2020-01-01T00:00:00Z",
                 "payload":self.webhook_payload,
                 "headers":self.header_conf
@@ -126,7 +126,7 @@ class TestCronTrigger(object):
             "type":"create_cron_trigger",
             "args":{
                 "name":self.cron_trigger_name,
-                "webhook":"http://127.0.0.1:5594" + "/foo",
+                "webhook":"{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}" + "/foo",
                 "schedule":self.cron_schedule,
                 "headers":[
                     {
