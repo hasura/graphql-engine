@@ -182,7 +182,8 @@ parseFragment parentTyInfo fragmentTyInfo directives fragmentSelectionSet = do
     validateSpread = do
       let commonTypes = parentTypeMembers `Set.intersection` fragmentTypeMembers
       if null commonTypes then
-          -- TODO: fragment source
+          -- TODO: better error location by capturing the fragment source -
+          -- named or otherwise
           -- throwVE $ "cannot spread fragment " <> showName name <> " defined on " <>
           throwVE $ "cannot spread fragment  defined on " <> showNamedTy fragmentType
           <> " when selecting fields of type " <> showNamedTy parentType
@@ -452,25 +453,6 @@ denormalizeField fldInfo (G.Field _ name args dirs selSet) = do
 
   withDirectives dirs $ pure $ Field  name fldBaseTy argMap fields
 
--- inlineFragmentInObjectScope
---   :: ( MonadReader ValidationCtx m
---      , MonadError QErr m
---      , MonadReusability m
---      , MonadState [G.Name] m
---      )
---   => ObjTyInfo -- type information of the field
---   -> G.InlineFragment
---   -> m (Maybe ObjectSelectionSet)
--- inlineFragmentInObjectScope fldTyInfo inlnFrag = do
---   let fldTy  = _otiName fldTyInfo
---   let fragmentType = fromMaybe fldTy tyM
---   when (fldTy /= fragmentType) $
---     throwVE $ "inline fragment is expected on type " <>
---     showNamedTy fldTy <> " but found " <> showNamedTy fragmentType
---   withDirectives directives $ parseObjectSelectionSet fldTyInfo selSet
---   where
---     G.InlineFragment tyM directives selSet = inlnFrag
-
 type instance NormalizedSelectionSet ObjTyInfo = ObjectSelectionSet
 type instance NormalizedField ObjTyInfo = Field
 
@@ -503,7 +485,6 @@ type instance NormalizedField IFaceTyInfo = Field
 instance HasSelectionSet IFaceTyInfo where
 
   getTypename = _ifName
-  -- TODO
   getMemberTypes = _ifMemberTypes
 
   parseField_ interfaceTyInfo field = do
