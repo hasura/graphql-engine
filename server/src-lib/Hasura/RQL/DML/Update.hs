@@ -43,6 +43,16 @@ data UpdOpExpG v = UpdSet !v
                  | UpdDeleteAtPath !v
                  deriving (Eq, Show, Functor, Foldable, Traversable, Generic, Data)
 
+-- FIXME: avoid this?
+updateOperatorText :: UpdOpExpG a -> Text
+updateOperatorText (UpdSet          _) = "_set"
+updateOperatorText (UpdInc          _) = "_inc"
+updateOperatorText (UpdAppend       _) = "_append"
+updateOperatorText (UpdPrepend      _) = "_prepend"
+updateOperatorText (UpdDeleteKey    _) = "_delete_key"
+updateOperatorText (UpdDeleteElem   _) = "_delete_elem"
+updateOperatorText (UpdDeleteAtPath _) = "_delete_path_at"
+
 
 {-
 

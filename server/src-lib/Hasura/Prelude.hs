@@ -5,6 +5,7 @@ module Hasura.Prelude
   , onNothing
   , onJust
   , onLeft
+  , whenMaybe
   , choice
   , bsToTxt
   , txtToBs
@@ -84,6 +85,11 @@ onJust m action = maybe (return ()) action m
 
 onLeft :: (Monad m) => Either e a -> (e -> m a) -> m a
 onLeft e f = either f return e
+
+whenMaybe :: Applicative m => Bool -> m a -> m (Maybe a)
+whenMaybe True  = fmap Just
+whenMaybe False = const $ pure Nothing
+
 
 choice :: (Alternative f) => [f a] -> f a
 choice = asum

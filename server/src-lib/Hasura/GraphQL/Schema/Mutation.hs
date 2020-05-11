@@ -1,7 +1,8 @@
 {-# LANGUAGE ViewPatterns #-}
 
 module Hasura.GraphQL.Schema.Mutation
-  ( deleteFromTable
+  ( updateTable
+  , deleteFromTable
   , deleteFromTableByPk
   ) where
 
@@ -11,6 +12,8 @@ import           Hasura.Prelude
 import           Data.Int                      (Int32)
 
 import qualified Data.HashSet                  as Set
+import qualified Data.List                     as L
+import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Hasura.GraphQL.Parser         as P
@@ -42,7 +45,7 @@ updateTable
   -> SelPermInfo          -- ^ select permissions of the table
   -> UpdPermInfo          -- ^ update permissions of the table
   -> Bool
-  -> m (FieldsParser 'Output n (Maybe (RQL.AnnUpdG UnpreparedValue)))
+  -> m (Maybe (FieldsParser 'Output n (Maybe (RQL.AnnUpdG UnpreparedValue))))
 updateTable table fieldName description selectPerms updatePerms stringifyNum = do
   let whereName = $$(G.litName "where")
       whereDesc = G.Description "filter the rows which have to be updated"
@@ -50,23 +53,33 @@ updateTable table fieldName description selectPerms updatePerms stringifyNum = d
   opArgs    <- updateOperators table updatePerms
   selection <- mutationSelectionSet table selectPerms stringifyNum
   columns   <- tableSelectColumns table selectPerms
-  let argsParser = liftA2 (,) opArgs whereArg
-  pure $ P.selection fieldName description argsParser (RQL.MOutMultirowFields <$> selection)
-    `P.bindFields` traverse \(name, (opExps, whereExp), mutationOutput) ->
-      -- FIXME: do all validation here
-      -- this includes
-      -- - parsing JSON elements
-      -- - ensuring no column appears twice
-      pure $ RQL.AnnUpd { RQL.uqp1Table   = table
-                        , RQL.uqp1OpExps  = opExps
-                        , RQL.uqp1Where   = (permissionFilter, whereExp)
-                        , RQL.uqp1Check   = checkExp
-                        , RQL.uqp1Output  = mutationOutput
-                        -- TODO: is this correct?
-                        -- I'm only passing the columns that the user has SELECT access to
-                        -- while the code suggests that this should be *ALL* columns
-                        , RQL.uqp1AllCols = columns
-                        }
+  whenMaybe (not $ null columns) do
+    let argsParser = liftA2 (,) opArgs whereArg
+    pure $ P.selection fieldName description argsParser
+      (RQL.MOutMultirowFields <$> selection)
+      `P.bindFields` traverse \(_, (opExps, whereExp), mutationOutput) -> do
+        -- there needs to be at least one column in the update
+        when (null opExps) $ parseError $
+          "at lease one of " <> (T.intercalate ", " allOperators) <> " is expected"
+
+        -- no column should appear twice
+        let groupedExps   = L.groupBy ((==) `on` fst) $ sortOn (pgiName . fst) opExps
+            erroneousExps = concat $ filter ((> 1) . length) groupedExps
+        when (not $ null erroneousExps) $ parseError $ "column found in multiple operators; "
+          <> (T.intercalate ", " $ flip map erroneousExps \(columnInfo, opExp) ->
+                 G.unName (pgiName columnInfo) <> " in " <> RQL.updateOperatorText opExp)
+
+        -- FIXME: validate JSON parsing here?
+        pure $ RQL.AnnUpd { RQL.uqp1Table   = table
+                          , RQL.uqp1OpExps  = opExps
+                          , RQL.uqp1Where   = (permissionFilter, whereExp)
+                          , RQL.uqp1Check   = checkExp
+                          , RQL.uqp1Output  = mutationOutput
+                          -- TODO: is this correct?
+                          -- I'm only passing the columns that the user has SELECT access to
+                          -- while the code suggests that this should be *ALL* columns
+                          , RQL.uqp1AllCols = columns
+                          }
   where
     permissionFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ upiFilter updatePerms
     checkExp = maybe annBoolExpTrue (fmapAnnBoolExp partialSQLExpToUnpreparedValue) $ upiCheck updatePerms
@@ -83,6 +96,18 @@ updateTableByPk
   -> m (FieldsParser 'Output n (Maybe (RQL.AnnUpdG UnpreparedValue)))
 updateTableByPk = undefined
 
+
+-- FIXME: should this be somewhere else? Should it be merged with the
+-- second list below?
+allOperators :: [Text]
+allOperators = [ "_set"
+               , "_inc"
+               , "_prepend"
+               , "_append"
+               , "_delete_key"
+               , "_delete_elem"
+               , "_delete_path_at"
+               ]
 
 updateOperators
   :: forall m n. (MonadSchema n m, MonadError QErr m)
