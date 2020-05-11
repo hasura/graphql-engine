@@ -51,6 +51,8 @@ to send them an email asking about their experience using the app.
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
 - cli: list all avialable commands in root command help (fix #4623)
+- docs: add section on actions vs. remote schemas to actions documentation (#4284)
+- docs: fix wrong info about excluding scheme in CORS config
 
 ## `v1.2.0`
 
