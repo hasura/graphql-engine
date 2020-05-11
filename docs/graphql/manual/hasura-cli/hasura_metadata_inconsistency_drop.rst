@@ -31,12 +31,15 @@ Options inherited from parent commands
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL engine
-      --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --no-color              do not colorize output (default: false)
-      --project string        directory where commands are executed (default: current dir)
-      --skip-update-check     skip automatic update check on command execution
+      --admin-secret string            admin secret for Hasura GraphQL engine
+      --certificate-authority string   path to a cert file for the certificate authority
+      --endpoint string                http(s) endpoint for Hasura GraphQL engine
+      --envfile string                 .env filename to load ENV vars from (default ".env")
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false)
+      --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color                       do not colorize output (default: false)
+      --project string                 directory where commands are executed (default: current dir)
+      --skip-update-check              Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

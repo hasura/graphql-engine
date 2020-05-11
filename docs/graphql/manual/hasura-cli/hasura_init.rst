@@ -42,17 +42,18 @@ Options
 
 ::
 
-      --admin-secret string                     admin secret for Hasura GraphQL engine
-      --endpoint string                         http(s) endpoint for Hasura GraphQL engine
-  -h, --help                                    help for init
-      --install-manifest string                 install manifest to be cloned
-      --version string                          config version to be used (default "2")
+      --admin-secret string       admin secret for Hasura GraphQL engine
+      --endpoint string           http(s) endpoint for Hasura GraphQL engine
+  -h, --help                      help for init
+      --install-manifest string   install manifest to be cloned
+      --version int               config version to be used (default 2)
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
+      --envfile string      .env filename to load ENV vars from (default ".env")
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
