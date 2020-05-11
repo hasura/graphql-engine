@@ -5,7 +5,7 @@ import { PlainRoute, EnterHook } from 'react-router';
 // the store is initialised. This only happens when doing the first
 // client render of a route that has an onEnter hook
 
-function makeHooksSafe(routes: PlainRoute[] | PlainRoute, store: any): any {
+function makeHooksSafe(routes: PlainRoute[] | PlainRoute, store: unknown): unknown {
   if (Array.isArray(routes)) {
     return routes.map(route => makeHooksSafe(route, store));
   }
