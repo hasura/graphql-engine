@@ -23,7 +23,7 @@ the following columns:
 .. code-block:: sql
 
   profile (
-    id SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY, -- serial -> auto-incrementing integer
     name TEXT
   )
 
