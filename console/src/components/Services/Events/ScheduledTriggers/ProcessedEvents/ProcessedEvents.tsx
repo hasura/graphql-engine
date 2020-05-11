@@ -1,17 +1,21 @@
 import React from 'react';
 import FilterQuery from '../../../../Common/FilterQuery/FilterQuery';
-import { FilterRenderProp } from '../../../../Common/FilterQuery/utils';
+import {
+  FilterRenderProp,
+  makeValueFilter,
+  makeOperationFilter,
+} from '../../../../Common/FilterQuery/Types';
 import { stEventsTable } from '../utils';
 import { ScheduledTrigger } from '../../Types';
 import EventsTable from '../../Common/Components/EventsTable';
+import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 
-type ProcessedEventsProps = {
+type Props = {
   dispatch: any;
-  readOnlyMode: boolean;
   currentTrigger?: ScheduledTrigger;
 };
 
-const ProcessedEvents = (props: ProcessedEventsProps) => {
+const ProcessedEvents: React.FC<Props> = props => {
   const { dispatch, currentTrigger } = props;
 
   const renderRows: FilterRenderProp = (
@@ -40,21 +44,12 @@ const ProcessedEvents = (props: ProcessedEventsProps) => {
         render={renderRows}
         presets={{
           filters: [
-            {
-              kind: 'operator',
-              key: '$or',
-              value: [
-                {
-                  kind: 'value',
-                  key: 'delivered',
-                  operator: '$eq',
-                  value: 'true',
-                },
-                { kind: 'value', key: 'error', operator: '$eq', value: 'true' },
-              ],
-            },
+            makeOperationFilter('$or', [
+              makeValueFilter('delivered', '$eq', 'true'),
+              makeValueFilter('error', '$eq', 'true'),
+            ]),
           ],
-          sorts: [{ column: 'created_at', type: 'desc' }],
+          sorts: [makeOrderBy('created_at', 'desc')],
         }}
         relationships={['logs']}
       />

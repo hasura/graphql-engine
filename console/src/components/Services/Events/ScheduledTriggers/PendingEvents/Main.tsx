@@ -1,7 +1,7 @@
 import React from 'react';
 import STContainer from '../../Containers/ScheduledTriggerContainer';
 import { Triggers } from '../../Types';
-import { ReduxState } from '../../../../../Types';
+import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
 import PendingEvents from './PendingEvents';
 
 type Props = {
@@ -13,12 +13,8 @@ type Props = {
   readOnlyMode: boolean;
 };
 
-const PendingEventsContainer = ({
-  dispatch,
-  allTriggers,
-  params,
-  readOnlyMode,
-}: Props) => {
+const PendingEventsContainer: React.FC<Props> = props => {
+  const { dispatch, allTriggers, params } = props;
   const triggerName = params ? params.triggerName : '';
   return (
     <STContainer
@@ -27,17 +23,19 @@ const PendingEventsContainer = ({
       triggerName={triggerName}
       allTriggers={allTriggers}
     >
-      <PendingEvents dispatch={dispatch} readOnlyMode={readOnlyMode} />
+      <PendingEvents dispatch={dispatch} />
     </STContainer>
   );
 };
 
-const mapStateToProps = (state: ReduxState) => {
+const mapStateToProps: MapReduxToProps = state => {
   return {
     allTriggers: state.events.triggers,
     readOnlyMode: state.main.readOnlyMode,
   };
 };
 
-export default (connect: any) =>
+const connector: ComponentReduxConnector = connect =>
   connect(mapStateToProps)(PendingEventsContainer);
+
+export default connector;

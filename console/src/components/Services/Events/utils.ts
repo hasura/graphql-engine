@@ -12,11 +12,12 @@ import {
   Table,
   generateTableDef,
 } from '../../Common/utils/pgUtils';
-import { convertDateTimeToReadable } from '../../Common/utils/jsUtils';
+import { convertDateTimeToLocale } from '../../Common/utils/jsUtils';
+import { Nullable } from '../../Common/utils/tsUtils';
 
 export const parseServerWebhook = (
-  webhook?: string,
-  webhookFromEnv?: string
+  webhook: Nullable<string>,
+  webhookFromEnv?: Nullable<string>
 ): URLConf => {
   return {
     value: webhook || webhookFromEnv || '',
@@ -66,7 +67,10 @@ export const findScheduledTrigger = (
 
 export const sanitiseRow = (column: string, row: Record<string, string>) => {
   if (column === 'created_at') {
-    return convertDateTimeToReadable(row.created_at);
+    return convertDateTimeToLocale(row[column], true);
+  }
+  if (column === 'scheduled_time') {
+    return convertDateTimeToLocale(row[column]);
   }
   const content =
     row[column] === undefined || row[column] === null

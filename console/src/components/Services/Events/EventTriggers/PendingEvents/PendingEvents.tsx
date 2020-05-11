@@ -1,18 +1,22 @@
 import React from 'react';
 import FilterQuery from '../../../../Common/FilterQuery/FilterQuery';
-import { FilterRenderProp } from '../../../../Common/FilterQuery/utils';
+import {
+  FilterRenderProp,
+  makeValueFilter,
+} from '../../../../Common/FilterQuery/Types';
 import { etEventsTable } from '../utils';
-import { ReduxState } from '../../../../../Types';
+import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
+import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import TableHeader from '../TableCommon/TableHeader';
 import EventsTable from '../../Common/Components/EventsTable';
 
-type PendingEventsProps = {
+type Props = {
   dispatch: any;
   triggerName: string;
   readOnlyMode: boolean;
 };
 
-const PendingEvents = (props: PendingEventsProps) => {
+const PendingEvents: React.FC<Props> = props => {
   const { dispatch, triggerName, readOnlyMode } = props;
 
   const renderRows: FilterRenderProp = (
@@ -48,16 +52,11 @@ const PendingEvents = (props: PendingEventsProps) => {
         render={renderRows}
         presets={{
           filters: [
-            { kind: 'value', key: 'archived', operator: '$eq', value: 'false' },
-            {
-              kind: 'value',
-              key: 'delivered',
-              operator: '$eq',
-              value: 'false',
-            },
-            { kind: 'value', key: 'error', operator: '$eq', value: 'false' },
+            makeValueFilter('archived', '$eq', 'false'),
+            makeValueFilter('delivered', '$eq', 'false'),
+            makeValueFilter('error', '$eq', 'false'),
           ],
-          sorts: [{ column: 'created_at', type: 'desc' }],
+          sorts: [makeOrderBy('created_at', 'desc')],
         }}
         relationships={['logs']}
       />
@@ -65,14 +64,14 @@ const PendingEvents = (props: PendingEventsProps) => {
   );
 };
 
-const mapStateToProps = (state: ReduxState, ownProps: any) => {
+const mapStateToProps: MapReduxToProps = (state, ownProps) => {
   return {
     triggerName: ownProps.params.triggerName,
     readOnlyMode: state.main.readOnlyMode,
   };
 };
 
-const pendingEventsConnector = (connect: any) =>
+const pendingEventsConnector: ComponentReduxConnector = connect =>
   connect(mapStateToProps)(PendingEvents);
 
 export default pendingEventsConnector;

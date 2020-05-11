@@ -16,7 +16,7 @@ import RetryConf from './RetryConfEditor';
 
 type Props = ReturnType<typeof useScheduledTrigger>;
 
-const Form = (props: Props) => {
+const Form: React.FC<Props> = props => {
   const { state, setState } = props;
 
   const { name, webhook, schedule, payload, headers } = state;

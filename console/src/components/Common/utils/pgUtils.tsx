@@ -1,5 +1,6 @@
 import React from 'react';
 import { isEqual, isString } from './jsUtils';
+import { Nullable } from './tsUtils';
 import { TableDefinition, FunctionDefinition } from './v1QueryUtils';
 
 /** * Table/View utils ** */
@@ -89,15 +90,15 @@ export interface Table extends BaseTable {
       [column: string]: string;
     };
     custom_root_fields: {
-      select?: string;
-      select_by_pk?: string;
-      select_aggregate?: string;
-      insert?: string;
-      insert_one?: string;
-      update?: string;
-      update_by_pk?: string;
-      delete?: string;
-      delete_by_pk?: string;
+      select: Nullable<string>;
+      select_by_pk: Nullable<string>;
+      select_aggregate?: Nullable<string>;
+      insert?: Nullable<string>;
+      insert_one?: Nullable<string>;
+      update?: Nullable<string>;
+      update_by_pk?: Nullable<string>;
+      delete?: Nullable<string>;
+      delete_by_pk?: Nullable<string>;
     };
   };
   computed_fields: ComputedField[];
@@ -138,8 +139,8 @@ export const getTableType = (table: Table) => {
 // tableName and tableNameWithSchema are either/or arguments
 export const generateTableDef = (
   tableName: string,
-  tableSchema = 'public',
-  tableNameWithSchema: string | null = null
+  tableSchema: Nullable<string> = 'public',
+  tableNameWithSchema: Nullable<string> = null
 ) => {
   if (tableNameWithSchema) {
     return {
@@ -148,7 +149,7 @@ export const generateTableDef = (
     };
   }
   return {
-    schema: tableSchema,
+    schema: tableSchema || 'public',
     name: tableName,
   };
 };
@@ -251,7 +252,7 @@ export const getTableSupportedQueries = (table: Table) => {
 
 /** * Table/View column utils ** */
 
-export const getTableColumns = (table?: Table) => {
+export const getTableColumns = (table: Nullable<Table>) => {
   return table ? table.columns : [];
 };
 

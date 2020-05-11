@@ -20,14 +20,14 @@ import { modifyEventTrigger, deleteEventTrigger } from '../../ServerIO';
 
 import { NotFoundError } from '../../../../Error/PageNotFound';
 
-type ModifyProps = {
+type Props = {
   currentTrigger: EventTrigger;
   allSchemas: Table[];
   readOnlyMode: boolean;
   dispatch: any;
 };
 
-const Modify = (props: ModifyProps) => {
+const Modify: React.FC<Props> = props => {
   const { currentTrigger, allSchemas, readOnlyMode, dispatch } = props;
 
   const { state, setState } = useEventTriggerModify(currentTrigger, allSchemas);

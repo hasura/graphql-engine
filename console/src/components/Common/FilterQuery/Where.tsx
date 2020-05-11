@@ -1,7 +1,9 @@
 import React from 'react';
-import { ValueFilter, Operator, allOperators } from './utils';
+import { ValueFilter, Operator } from './Types';
+import { allOperators } from './utils';
 
 import { BaseTable } from '../utils/pgUtils';
+import { isNull } from '../utils/jsUtils';
 import styles from './FilterQuery.scss';
 
 type WhereProps = {
@@ -84,10 +86,10 @@ const Where = (props: WhereProps) => {
               <select
                 className="form-control"
                 onChange={setOperator}
-                value={filter.operator}
+                value={filter.operator || ''}
                 data-test={`filter-op-${i}`}
               >
-                {filter.operator === '' ? (
+                {isNull(filter.operator) ? (
                   <option disabled value="">
                     -- op --
                   </option>

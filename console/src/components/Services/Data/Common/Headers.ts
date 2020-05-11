@@ -1,5 +1,7 @@
-const dataHeaders = (currentState: any) => {
-  return currentState().tables.dataHeaders;
+import { GetReduxState } from '../../../../Types';
+
+const dataHeaders = (getState: GetReduxState) => {
+  return getState().tables.dataHeaders;
 };
 
 export default dataHeaders;

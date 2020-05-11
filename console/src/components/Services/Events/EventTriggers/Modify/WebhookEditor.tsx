@@ -1,17 +1,15 @@
 import React from 'react';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import DropdownButton from '../../../../Common/DropdownButton/DropdownButton';
-import { EventTrigger, URLConf } from '../../Types';
+import { EventTrigger, URLConf, VoidCallback } from '../../Types';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import { parseServerWebhook } from '../../utils';
-
-type Callback = () => void;
 
 type WebhookEditorProps = {
   currentTrigger: EventTrigger;
   webhook: URLConf;
   setWebhook: (w: URLConf) => void;
-  save: (success: Callback, error: Callback) => void;
+  save: (success: VoidCallback, error: VoidCallback) => void;
   styles: Record<string, string>;
 };
 

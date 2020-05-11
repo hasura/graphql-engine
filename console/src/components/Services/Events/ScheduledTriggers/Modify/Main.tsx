@@ -1,10 +1,10 @@
 import React from 'react';
 import STContainer from '../../Containers/ScheduledTriggerContainer';
 import { Triggers } from '../../Types';
-import { ReduxState } from '../../../../../Types';
+import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
 import Modify from './Modify';
 
-type ModifyProps = {
+type Props = {
   allTriggers: Triggers;
   params?: {
     triggerName: string;
@@ -13,12 +13,8 @@ type ModifyProps = {
   readOnlyMode: boolean;
 };
 
-const ModifyContainer = ({
-  dispatch,
-  allTriggers,
-  params,
-  readOnlyMode,
-}: ModifyProps) => {
+const ModifyContainer: React.FC<Props> = props => {
+  const { dispatch, allTriggers, params, readOnlyMode } = props;
   const triggerName = params ? params.triggerName : '';
   return (
     <STContainer
@@ -36,11 +32,14 @@ const ModifyContainer = ({
   );
 };
 
-const mapStateToProps = (state: ReduxState) => {
+const mapStateToProps: MapReduxToProps = state => {
   return {
     allTriggers: state.events.triggers,
     readOnlyMode: state.main.readOnlyMode,
   };
 };
 
-export default (connect: any) => connect(mapStateToProps)(ModifyContainer);
+const connector: ComponentReduxConnector = (connect: any) =>
+  connect(mapStateToProps)(ModifyContainer);
+
+export default connector;

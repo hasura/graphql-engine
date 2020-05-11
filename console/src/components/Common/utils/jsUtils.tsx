@@ -1,5 +1,6 @@
 // TODO: make functions from this file available without imports
 import React from 'react';
+import { Nullable } from './tsUtils';
 
 /* TYPE utils */
 
@@ -7,6 +8,9 @@ export const isNotDefined = (value: any) => {
   return value === null || value === undefined;
 };
 
+/*
+ * Deprecated: Use "isNull" instead
+ */
 export const exists = (value: any) => {
   return value !== null && value !== undefined;
 };
@@ -25,6 +29,10 @@ export const isString = (value: any) => {
 
 export const isNumber = (value: any) => {
   return typeof value === 'number';
+};
+
+export const isNull = (value: Nullable<unknown>) => {
+  return value === undefined || value === null;
 };
 
 export const isPromise = (value: any) => {
@@ -345,7 +353,10 @@ export const getEventTargetValue = (e: React.BaseSyntheticEvent) => {
   return e.target.value;
 };
 
-export const convertDateTimeToLocale = (dateTime: string) => {
+export const convertDateTimeToLocale = (
+  dateTime: string,
+  addTimezone = false
+) => {
   const options = {
     hourCycle: 'h24',
     day: 'numeric',
@@ -358,9 +369,15 @@ export const convertDateTimeToLocale = (dateTime: string) => {
     year: 'numeric',
   };
 
-  return new Date(`${dateTime}Z`).toLocaleString('en-US', options);
+  return new Date(`${dateTime}${addTimezone ? 'Z' : ''}`).toLocaleString(
+    'en-US',
+    options
+  );
 };
 
-export const convertDateTimeToReadable = (dateTime: string) => {
-  return new Date(`${dateTime}Z`).toTimeString();
+export const convertDateTimeToReadable = (
+  dateTime: string,
+  addTimezone = false
+) => {
+  return new Date(`${dateTime}${addTimezone ? 'Z' : ''}`).toString();
 };

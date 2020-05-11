@@ -1,17 +1,15 @@
 import React from 'react';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
-import { EventTrigger, RetryConf } from '../../Types';
+import { EventTrigger, RetryConf, VoidCallback } from '../../Types';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import CommonRetryConf from '../../Common/Components/RetryConfEditor';
-
-type Callback = () => void;
 
 type RetryConfEditorProps = {
   currentTrigger: EventTrigger;
   conf: RetryConf;
   setRetryConf: (r: RetryConf) => void;
   styles: Record<string, string>;
-  save: (success: Callback, error: Callback) => void;
+  save: (success: VoidCallback, error: VoidCallback) => void;
 };
 
 const RetryConfEditor = (props: RetryConfEditorProps) => {

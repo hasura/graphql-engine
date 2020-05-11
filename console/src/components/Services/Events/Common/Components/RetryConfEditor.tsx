@@ -7,7 +7,7 @@ type Props = {
   retryConf: RetryConf;
 };
 
-const RetryConfEditor = (props: Props) => {
+const RetryConfEditor: React.FC<Props> = props => {
   const { retryConf, setRetryConf } = props;
 
   const handleRetryConfChange = (e: React.BaseSyntheticEvent) => {
@@ -78,7 +78,7 @@ const RetryConfEditor = (props: Props) => {
           />
         </div>
       </div>
-      {retryConf.tolerance_sec !== undefined ? (
+      {retryConf.tolerance_sec !== null ? (
         <div
           className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}
         >

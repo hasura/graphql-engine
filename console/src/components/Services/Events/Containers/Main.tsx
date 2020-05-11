@@ -14,7 +14,7 @@ import {
 } from '../../../Common/utils/routesUtils';
 import { findEventTrigger, findScheduledTrigger } from '../utils';
 
-import { ReduxState } from '../../../../Types';
+import { MapReduxToProps, ComponentReduxConnector } from '../../../../Types';
 
 interface TriggersContainerProps extends React.ComponentProps<'div'> {
   triggers: Triggers;
@@ -94,10 +94,13 @@ const Container: React.FC<TriggersContainerProps> = props => {
   );
 };
 
-const mapStateToProps = (state: ReduxState) => {
+const mapStateToProps: MapReduxToProps = state => {
   return {
     ...state.events,
   };
 };
 
-export default (connect: any) => connect(mapStateToProps)(Container);
+const connector: ComponentReduxConnector = (connect: any) =>
+  connect(mapStateToProps)(Container);
+
+export default connector;

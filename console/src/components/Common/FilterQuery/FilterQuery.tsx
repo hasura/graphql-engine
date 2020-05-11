@@ -4,14 +4,15 @@ import { BaseTable, generateTableDef } from '../utils/pgUtils';
 import Where from './Where';
 import Sorts from './Sorts';
 import { useFilterQuery } from './state';
-import { Filter, FilterRenderProp } from './utils';
+import { Filter, FilterRenderProp } from './Types';
 import ReloadEnumValuesButton from '../../Services/Data/Common/Components/ReloadEnumValuesButton';
 import Button from '../Button/Button';
+import { Nullable } from '../utils/tsUtils';
 import styles from './FilterQuery.scss';
 
-type FilterQueryProps = {
+type Props = {
   table: BaseTable;
-  relationships?: string[]; // TODO better
+  relationships: Nullable<string[]>; // TODO better
   render: FilterRenderProp;
   dispatch: any;
   presets: {
@@ -20,7 +21,12 @@ type FilterQueryProps = {
   };
 };
 
-const FilterQuery = (props: FilterQueryProps) => {
+/*
+ * Where clause and sorts builder
+ * Accepts a render prop to render the results of filter/sort query
+ */
+
+const FilterQuery: React.FC<Props> = props => {
   const { table, dispatch, presets, render, relationships } = props;
 
   const { rows, count, runQuery, state, setState } = useFilterQuery(

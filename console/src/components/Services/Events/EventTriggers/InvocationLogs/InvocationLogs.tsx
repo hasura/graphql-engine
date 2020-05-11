@@ -1,18 +1,23 @@
 import React from 'react';
 import FilterQuery from '../../../../Common/FilterQuery/FilterQuery';
-import { FilterRenderProp } from '../../../../Common/FilterQuery/utils';
+import {
+  FilterRenderProp,
+  makeValueFilter,
+  makeRelationshipFilter,
+} from '../../../../Common/FilterQuery/Types';
 import { etInvocationLogsTable } from '../utils';
-import { ReduxState } from '../../../../../Types';
+import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
+import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import TableHeader from '../TableCommon/TableHeader';
 import InvocationLogsTable from '../../Common/Components/InvocationLogsTable';
 
-type InvocationLogsProps = {
+type Props = {
   dispatch: any;
   triggerName: string;
   readOnlyMode: boolean;
 };
 
-const InvocationLogs = (props: InvocationLogsProps) => {
+const InvocationLogs: React.FC<Props> = props => {
   const { dispatch, triggerName, readOnlyMode } = props;
 
   const renderRows: FilterRenderProp = (
@@ -53,19 +58,14 @@ const InvocationLogs = (props: InvocationLogsProps) => {
         table={etInvocationLogsTable}
         dispatch={dispatch}
         render={renderRows}
+        relationships={['event']}
         presets={{
-          sorts: [{ column: 'created_at', type: 'desc' }],
+          sorts: [makeOrderBy('created_at', 'desc')],
           filters: [
-            {
-              kind: 'relationship',
-              key: 'event',
-              value: {
-                kind: 'value',
-                key: 'trigger_name',
-                operator: '$eq',
-                value: triggerName,
-              },
-            },
+            makeRelationshipFilter(
+              'event',
+              makeValueFilter('trigger_name', '$eq', triggerName)
+            ),
           ],
         }}
       />
@@ -73,14 +73,14 @@ const InvocationLogs = (props: InvocationLogsProps) => {
   );
 };
 
-const mapStateToProps = (state: ReduxState, ownProps: any) => {
+const mapStateToProps: MapReduxToProps = (state, ownProps) => {
   return {
     triggerName: ownProps.params.triggerName,
     readOnlyMode: state.main.readOnlyMode,
   };
 };
 
-const invocationLogsConnector = (connect: any) =>
+const invocationLogsConnector: ComponentReduxConnector = connect =>
   connect(mapStateToProps)(InvocationLogs);
 
 export default invocationLogsConnector;

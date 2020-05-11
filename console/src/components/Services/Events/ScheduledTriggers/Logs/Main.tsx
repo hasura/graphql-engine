@@ -1,7 +1,7 @@
 import React from 'react';
 import STContainer from '../../Containers/ScheduledTriggerContainer';
 import { Triggers } from '../../Types';
-import { ReduxState } from '../../../../../Types';
+import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
 import Logs from './Logs';
 
 type LogsProps = {
@@ -26,10 +26,12 @@ const LogsContainer = ({ dispatch, allTriggers, params }: LogsProps) => {
   );
 };
 
-const mapStateToProps = (state: ReduxState) => {
+const mapStateToProps: MapReduxToProps = state => {
   return {
     allTriggers: state.events.triggers,
   };
 };
 
-export default (connect: any) => connect(mapStateToProps)(LogsContainer);
+const connector: ComponentReduxConnector = (connect: any) =>
+  connect(mapStateToProps)(LogsContainer);
+export default connector;

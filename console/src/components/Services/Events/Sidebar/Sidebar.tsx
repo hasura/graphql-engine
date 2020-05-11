@@ -9,17 +9,14 @@ import {
   getETModifyRoute,
 } from '../../../Common/utils/routesUtils';
 
-interface LeftSidebarProps extends React.ComponentProps<'div'> {
+interface Props extends React.ComponentProps<'div'> {
   triggers: ScheduledTrigger[] | EventTrigger[];
   currentTrigger?: ScheduledTrigger | EventTrigger;
   service: string;
 }
 
-const LeftSidebar: React.FC<LeftSidebarProps> = ({
-  triggers,
-  currentTrigger,
-  service,
-}) => {
+const LeftSidebar: React.FC<Props> = props => {
+  const { triggers, currentTrigger, service } = props;
   const {
     getChildList: getTriggersList,
     getSearchInput,
