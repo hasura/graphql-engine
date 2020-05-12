@@ -17,8 +17,9 @@ Use case
 
 Actions are a way to extend your GraphQL schema with custom queries or mutations. It
 is a typical use case that the custom actions' response is actually related to
-existing objects in the schema. e.g. a custom ``insertAuthor`` action will be
-related to the ``author`` object in the schema. Hence, we would want to be able
+existing objects in the schema, thus allowing for Hasura types to be "reused" in actions. 
+For example, a custom ``insertAuthor`` action will be related to the ``author`` object in the schema. 
+Hence, we would want to be able
 to get information about the ``author`` from the graph as a response of the
 ``insertAuthor`` mutation.
 
