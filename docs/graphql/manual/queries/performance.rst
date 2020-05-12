@@ -234,5 +234,5 @@ We can also see that the ``cost`` of the query is now lower than the one before 
 
 .. note::
 
-   In some cases, e.g. if the result returns a high percentage of the rows in the table, sequential scans can still be faster than index scans.
-   Postgres will take the call on what kind of scan is faster.
+   In some cases sequential scans can still be faster than index scans, e.g. if the result returns a high percentage of the rows in the table.
+   Postgres comes up with multiple query plans and takes the call on what kind of scan would be faster.
