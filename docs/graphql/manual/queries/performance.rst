@@ -164,7 +164,7 @@ Using GraphQL variables
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 In order to leverage Hasura's query plan caching (as explained in the :ref:`previous section <query_plan_caching>`) to the full extent, GraphQL queries should be defined with
-variables whose types are **non-nullable** whenever possible.
+variables whose types are **non-nullable scalars** whenever possible.
 
 To make variables non-nullable, add a ``!`` at the end of the type, like here:
 
