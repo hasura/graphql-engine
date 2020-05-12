@@ -134,7 +134,8 @@ class TestCronTrigger(object):
                         "value":"baz"
                     }
                 ],
-                "payload":{"foo":"baz"}
+                "payload":{"foo":"baz"},
+                "include_in_metadata":False
             }
         }
         cron_st_code,cron_st_resp = hge_ctx.v1q(cron_st_api_query)
