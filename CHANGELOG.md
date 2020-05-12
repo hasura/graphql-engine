@@ -40,7 +40,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
 - console: allow modifying default value for PK (fix #4075) (#4679)
-- console: fix checkbox for actions headerconfeditor (#4595)
+- console: fix checkbox for forwarding client headers in actions (#4595)
 - cli: list all avialable commands in root command help (fix #4623)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config
