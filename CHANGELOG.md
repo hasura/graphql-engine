@@ -45,6 +45,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - cli: list all available commands in root command help (fix #4623)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
+- docs: add single object mutations docs (close #4622) (#4625)
 
 ## `v1.2.0`
 
