@@ -435,15 +435,13 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
             [ ("name", AO.toOrdered name)
             , ("webhook", AO.toOrdered webhook)
             , ("schedule", AO.toOrdered schedule)
+            , ("include_in_metadata", AO.toOrdered includeInMetadata)
             ]
             <> catMaybes
             [ maybeAnyToMaybeOrdPair "payload" AO.toOrdered payload
             , maybeAnyToMaybeOrdPair "retry_conf" AO.toOrdered (maybeRetryConfiguration retryConf)
             , maybeAnyToMaybeOrdPair "headers" AO.toOrdered (maybeHeader headers)
             , maybeAnyToMaybeOrdPair "comment" AO.toOrdered comment]
-            <> if includeInMetadata
-               then [("include_in_metadata", AO.toOrdered includeInMetadata)]
-               else []
       where
         maybeRetryConfiguration retryConfig
           | retryConfig == defaultSTRetryConf = Nothing

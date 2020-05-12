@@ -141,7 +141,7 @@ applyQP2 replaceMetadata = do
 
 saveMetadata :: (MonadTx m, HasSystemDefined m) => ReplaceMetadata -> m ()
 saveMetadata (ReplaceMetadata _ tables functionsMeta
-              schemas collections allowlist customTypes actions scheduledTriggers) = do
+              schemas collections allowlist customTypes actions cronTriggers) = do
 
   withPathK "tables" $ do
     indexedForM_ tables $ \TableMeta{..} -> do
@@ -200,8 +200,8 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
 
   -- cron triggers
   withPathK "cron_triggers" $
-    indexedForM_ scheduledTriggers $ \st -> liftTx $ do
-    addCronTriggerToCatalog st
+    indexedForM_ cronTriggers $ \ct -> liftTx $ do
+    addCronTriggerToCatalog ct
 
   -- actions
   withPathK "actions" $
