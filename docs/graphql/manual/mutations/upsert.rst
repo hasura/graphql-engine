@@ -66,8 +66,11 @@ If not all required columns are present, an error like ``NULL value unexpected f
 
 Update selected columns on conflict
 -----------------------------------
-Insert a new object in the ``article`` table or, if the unique constraint ``article_title_key`` is violated, update
-the columns specified in ``update_columns``:
+
+The ``update_columns`` field can be used to specify which columns to update in case a conflict occurs.
+
+**Example**: Insert a new object in the ``article`` table or, if the unique constraint ``article_title_key`` is 
+violated, update the ``content`` column of the existing article:
 
 .. graphiql::
   :view_only:
