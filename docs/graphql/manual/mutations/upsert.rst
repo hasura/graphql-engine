@@ -110,7 +110,7 @@ the columns specified in ``update_columns``:
       }
     }
 
-Not that the ``published_on`` column is left unchanged as it wasn't present in ``update_columns``.
+Note that the ``published_on`` column is left unchanged as it wasn't present in ``update_columns``.
 
 Update selected columns on conflict using a filter
 --------------------------------------------------
