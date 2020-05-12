@@ -110,7 +110,6 @@ const ColumnEditor = ({
         value={selectedProperties[colName].default || ''}
         onChange={updateColumnDefault}
         type="text"
-        disabled={columnProperties.pkConstraint}
         data-test="edit-col-default"
         theme={theme}
       />

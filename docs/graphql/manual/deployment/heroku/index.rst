@@ -113,7 +113,7 @@ Advanced
 - :ref:`heroku_existing_db`
 - :ref:`GraphQL engine server logs <heroku_logs>`
 - :ref:`Updating GraphQL engine <heroku_update>`
-- :ref:`Setting up migrations <auth>`
+- :ref:`Setting up migrations <migrations>`
 
 .. toctree::
    :titlesonly:
