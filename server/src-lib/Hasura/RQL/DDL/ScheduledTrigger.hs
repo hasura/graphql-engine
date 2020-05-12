@@ -36,15 +36,15 @@ runCreateCronTrigger CreateCronTrigger {..} = do
     True -> updateCronTrigger q
     False -> do
         cronTriggersMap <- scCronTriggers <$> askSchemaCache
-        case Map.lookup (stName q) cronTriggersMap of
+        case Map.lookup (ctName q) cronTriggersMap of
           Nothing -> pure ()
           Just _ -> throw400 AlreadyExists $
                     "cron trigger with name: "
-                    <> (triggerNameToTxt $ stName q)
+                    <> (triggerNameToTxt $ ctName q)
                     <> " already exists"
 
         addCronTriggerToCatalog q
-        buildSchemaCacheFor $ MOCronTrigger $ stName q
+        buildSchemaCacheFor $ MOCronTrigger $ ctName q
         return successMsg
 
 addCronTriggerToCatalog :: (MonadTx m) => CronTriggerMetadata ->  m ()
@@ -54,11 +54,11 @@ addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
       INSERT into hdb_catalog.hdb_cron_triggers
         (name, webhook_conf, cron_schedule, payload, retry_conf, header_conf, include_in_metadata, comment)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    |] (stName, Q.AltJ stWebhook, stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
-       ,Q.AltJ stHeaders, stIncludeInMetadata, stComment) False
+    |] (ctName, Q.AltJ ctWebhook, ctSchedule, Q.AltJ <$> ctPayload, Q.AltJ ctRetryConf
+       ,Q.AltJ ctHeaders, ctIncludeInMetadata, ctComment) False
   currentTime <- liftIO C.getCurrentTime
-  let scheduleTimes = generateScheduleTimes currentTime 100 stSchedule -- generate next 100 events
-  insertCronEvents $ map (CronEventSeed stName) scheduleTimes
+  let scheduleTimes = generateScheduleTimes currentTime 100 ctSchedule -- generate next 100 events
+  insertCronEvents $ map (CronEventSeed ctName) scheduleTimes
 
 resolveCronTrigger
   :: (QErrM m, MonadIO m)
@@ -81,9 +81,9 @@ resolveCronTrigger CatalogCronTrigger {..} = do
 
 updateCronTrigger :: (CacheRWM m, MonadTx m) => CronTriggerMetadata -> m EncJSON
 updateCronTrigger cronTriggerMetadata = do
-  checkExists $ stName cronTriggerMetadata
+  checkExists $ ctName cronTriggerMetadata
   updateCronTriggerInCatalog cronTriggerMetadata
-  buildSchemaCacheFor $ MOCronTrigger $ stName cronTriggerMetadata
+  buildSchemaCacheFor $ MOCronTrigger $ ctName cronTriggerMetadata
   return successMsg
 
 updateCronTriggerInCatalog :: (MonadTx m) => CronTriggerMetadata -> m ()
@@ -98,14 +98,14 @@ updateCronTriggerInCatalog CronTriggerMetadata {..} = liftTx $ do
         include_in_metadata = $6,
         comment = $7
     WHERE name = $1
-   |] (stName, Q.AltJ stWebhook, stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
-      , stIncludeInMetadata, stComment) False
+   |] (ctName, Q.AltJ ctWebhook, ctSchedule, Q.AltJ <$> ctPayload, Q.AltJ ctRetryConf
+      , ctIncludeInMetadata, ctComment) False
   -- since the cron trigger is updated, clear all its future events which are not retries
   Q.unitQE defaultTxErrorHandler
    [Q.sql|
     DELETE FROM hdb_catalog.hdb_cron_events
     WHERE name = $1 AND scheduled_time > now() AND tries = 0
-   |] (Identity stName) False
+   |] (Identity ctName) False
 
 runDeleteCronTrigger :: (CacheRWM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
 runDeleteCronTrigger (ScheduledTriggerName stName) = do

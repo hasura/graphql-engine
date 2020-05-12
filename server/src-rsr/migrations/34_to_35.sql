@@ -13,7 +13,7 @@ CREATE TABLE hdb_catalog.hdb_cron_triggers
 CREATE TABLE hdb_catalog.hdb_cron_events
 (
   id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT,
+  trigger_name TEXT NOT NULL,
   scheduled_time TIMESTAMPTZ NOT NULL,
   additional_payload JSON,
   status TEXT NOT NULL DEFAULT 'scheduled',
@@ -21,7 +21,7 @@ CREATE TABLE hdb_catalog.hdb_cron_events
   created_at TIMESTAMP DEFAULT NOW(),
   next_retry_at TIMESTAMPTZ,
 
-  FOREIGN KEY (name) REFERENCES hdb_catalog.hdb_cron_triggers(name)
+  FOREIGN KEY (trigger_name) REFERENCES hdb_catalog.hdb_cron_triggers(name)
     ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT valid_status CHECK (status IN ('scheduled','locked','delivered','error','dead'))
 );
@@ -47,12 +47,12 @@ CREATE VIEW hdb_catalog.hdb_cron_events_stats AS
          COALESCE(ce.max_scheduled_time, now()) as max_scheduled_time
   FROM hdb_catalog.hdb_cron_triggers ct
   LEFT JOIN
-  ( SELECT name, count(*) as upcoming_events_count, max(scheduled_time) as max_scheduled_time
+  ( SELECT trigger_name, count(*) as upcoming_events_count, max(scheduled_time) as max_scheduled_time
     FROM hdb_catalog.hdb_cron_events
-    WHERE tries = 0
-    GROUP BY name
+    WHERE tries = 0 AND status = 'scheduled'
+    GROUP BY trigger_name
   ) ce
-  ON ct.name = ce.name;
+  ON ct.name = ce.trigger_name;
 
 CREATE TABLE hdb_catalog.hdb_scheduled_events
 (

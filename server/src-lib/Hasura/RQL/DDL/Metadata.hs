@@ -118,7 +118,7 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
     checkMultipleDecls "actions" $ map _amName actions
 
   withPathK "cron_triggers" $
-    checkMultipleDecls "cron triggers" $ map stName cronTriggers
+    checkMultipleDecls "cron triggers" $ map ctName cronTriggers
 
   where
     withTableName qt = withPathK (qualObjectToText qt)
@@ -401,14 +401,14 @@ fetchMetadata = do
         uncurryCronTrigger
           (name, webhook, schedule, payload, retryConfig, headerConfig, includeMetadata, comment) =
           CronTriggerMetadata
-          { stName = name,
-            stWebhook = Q.getAltJ webhook,
-            stSchedule = schedule,
-            stPayload = Q.getAltJ <$> payload,
-            stRetryConf = Q.getAltJ retryConfig,
-            stHeaders = Q.getAltJ headerConfig,
-            stIncludeInMetadata = includeMetadata,
-            stComment = comment
+          { ctName = name,
+            ctWebhook = Q.getAltJ webhook,
+            ctSchedule = schedule,
+            ctPayload = Q.getAltJ <$> payload,
+            ctRetryConf = Q.getAltJ retryConfig,
+            ctHeaders = Q.getAltJ headerConfig,
+            ctIncludeInMetadata = includeMetadata,
+            ctComment = comment
           }
 
     fetchCustomTypes :: Q.TxE QErr CustomTypes

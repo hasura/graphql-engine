@@ -67,14 +67,14 @@ defaultSTRetryConf =
 
 data CronTriggerMetadata
   = CronTriggerMetadata
-  { stName              :: !ET.TriggerName
-  , stWebhook           :: !InputWebhook
-  , stSchedule          :: !CronSchedule
-  , stPayload           :: !(Maybe J.Value)
-  , stRetryConf         :: !STRetryConf
-  , stHeaders           :: ![ET.HeaderConf]
-  , stIncludeInMetadata :: !Bool
-  , stComment           :: !(Maybe Text)
+  { ctName              :: !ET.TriggerName
+  , ctWebhook           :: !InputWebhook
+  , ctSchedule          :: !CronSchedule
+  , ctPayload           :: !(Maybe J.Value)
+  , ctRetryConf         :: !STRetryConf
+  , ctHeaders           :: ![ET.HeaderConf]
+  , ctIncludeInMetadata :: !Bool
+  , ctComment           :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 
 instance NFData CronTriggerMetadata
@@ -82,16 +82,15 @@ instance Cacheable CronTriggerMetadata
 
 instance FromJSON CronTriggerMetadata where
   parseJSON =
-    withObject "ScheduledTriggerMetadata" $ \o -> do
-      stName <- o .: "name"
-      stWebhook <- o .: "webhook"
-      stPayload <- o .:? "payload"
-      stSchedule <- o .: "schedule"
-      stRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
-      stHeaders <- o .:? "headers" .!= []
-      stIncludeInMetadata <-
-          o .:? "include_in_metadata" .!= False
-      stComment <- o .:? "comment"
+    withObject "CronTriggerMetadata" $ \o -> do
+      ctName <- o .: "name"
+      ctWebhook <- o .: "webhook"
+      ctPayload <- o .:? "payload"
+      ctSchedule <- o .: "schedule"
+      ctRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
+      ctHeaders <- o .:? "headers" .!= []
+      ctIncludeInMetadata <- o .: "include_in_metadata"
+      ctComment <- o .:? "comment"
       pure CronTriggerMetadata {..}
 
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CronTriggerMetadata)
@@ -121,8 +120,7 @@ instance FromJSON CreateCronTrigger where
       cctCronSchedule <- o .: "schedule"
       cctRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
       cctHeaders <- o .:? "headers" .!= []
-      cctIncludeInMetadata <-
-          o .:? "include_in_metadata" .!= False
+      cctIncludeInMetadata <- o .: "include_in_metadata"
       cctComment <- o .:? "comment"
       cctReplace <- o .:? "replace" .!= False
       pure CreateCronTrigger {..}

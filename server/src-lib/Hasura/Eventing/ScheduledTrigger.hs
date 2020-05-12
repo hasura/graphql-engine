@@ -275,7 +275,7 @@ insertCronEventsFor cronTriggersWithStats = do
       let insertCronEventsSql = TB.run $ toSQL
             SQLInsert
               { siTable    = cronEventsTable
-              , siCols     = map unsafePGCol ["name", "scheduled_time"]
+              , siCols     = map unsafePGCol ["trigger_name", "scheduled_time"]
               , siValues   = ValuesExp $ map (toTupleExp . toArr) events
               , siConflict = Just $ DoNothing Nothing
               , siRet      = Nothing
@@ -290,7 +290,7 @@ insertCronEvents events = do
   let insertCronEventsSql = TB.run $ toSQL
         SQLInsert
           { siTable    = cronEventsTable
-          , siCols     = map unsafePGCol ["name", "scheduled_time"]
+          , siCols     = map unsafePGCol ["trigger_name", "scheduled_time"]
           , siValues   = ValuesExp $ map (toTupleExp . toArr) events
           , siConflict = Just $ DoNothing Nothing
           , siRet      = Nothing
@@ -642,7 +642,7 @@ getPartialCronEvents = do
                           )
                     FOR UPDATE SKIP LOCKED
                     )
-      RETURNING id, name, scheduled_time, tries
+      RETURNING id, trigger_name, scheduled_time, tries
       |] () True
   where uncurryEvent (i, n, st, tries) = CronEventPartial i n st tries
 

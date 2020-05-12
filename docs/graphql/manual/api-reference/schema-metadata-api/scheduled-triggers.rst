@@ -77,10 +77,11 @@ Args syntax
      - RetryConfST_
      - Retry configuration if scheduled invocation delivery fails
    * - include_in_metadata
-     - false
+     - true
      - Boolean
-     - Flag to indicate whether a trigger should be included in the metadata. When a trigger is included in the metadata, the user will be able to export it when the metadata of the graphql-engine is
-       exported.
+     - Flag to indicate whether a trigger should be included in the metadata. When a cron
+       trigger is included in the metadata, the user will be able to export it when the
+       metadata of the graphql-engine is exported.
    * - comment
      - false
      - Text
