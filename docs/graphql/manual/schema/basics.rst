@@ -174,7 +174,5 @@ Here are a couple of examples:
         }
       }
     }
-
-.. note::
-
-  IDs in example schemas are assumed to be auto generated which is why they are not passed when inserting an object.
+    
+Note that the author's ``id`` does not need to passed as an input as it is of type ``serial`` (auto incrementing integer).
