@@ -173,7 +173,7 @@ Adding a computed field to a table
      Head to the ``Modify`` tab of the table and click on the ``Add`` button in the ``Computed fields``
      section:
 
-     .. thumbnail:: ../../../img/graphql/manual/schema/computed-field-create.png
+     .. thumbnail:: /img/graphql/manual/schema/computed-field-create.png
 
      .. admonition:: Supported from
 

@@ -38,6 +38,8 @@ export const Integers = [
   'bigint',
 ];
 
+export const COUNT_LIMIT = 100000;
+
 export const Reals = ['float4', 'float8', 'numeric'];
 
 export const Numerics = [...Integers, ...Reals];

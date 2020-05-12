@@ -20,7 +20,7 @@ logic using custom queries and mutations. Actions can be
 added to Hasura to handle various use cases such as data validation, data
 enrichment from external sources and any other complex business logic.
 
-.. thumbnail:: ../../../img/graphql/manual/actions/actions-arch.png
+.. thumbnail:: /img/graphql/manual/actions/actions-arch.png
    :class: no-shadow
    :alt: Actions high level architecture
 
@@ -132,6 +132,22 @@ How it works?
   and again persisted to the event store.
 * The action response is returned to the client synchronously or asynchronously
   based on the kind.
+
+Actions vs. remote schemas
+--------------------------
+
+Both actions and remote schemas can be used to extend Hasura with business logic.
+However, they have slightly different use cases.
+
+**Actions**
+
+Actions can be used when we want to call a REST endpoint from Hasura as a resolver for some custom types.
+They are especially useful for setting up serverless functions as resolvers.
+
+**Remote schemas**
+
+If you have an existing GraphQL API or if you're comfortable building a GraphQL server yourself,
+you can use :ref:`remote schemas <remote_schemas>` to add custom types and resolvers.
 
 Learn more
 ----------

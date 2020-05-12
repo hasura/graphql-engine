@@ -74,8 +74,7 @@ const ActionEditor = ({
     dispatch(dispatchNewHeaders(hs));
   };
 
-  const toggleForwardClientHeaders = e => {
-    e.preventDefault();
+  const toggleForwardClientHeaders = () => {
     dispatch(toggleFCH());
   };
 

@@ -16,6 +16,7 @@ RETURNS boolean AS $$
   );
 $$ LANGUAGE sql STABLE;
 ```
+
 and make a query like:
 
 ```
@@ -25,7 +26,7 @@ query {
     content
     likedByMe
   }
-}     
+}
 ```
 
 Support for this is now added through the `add_computed_field` API.
@@ -36,6 +37,14 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- console: avoid count queries for large tables (#4692)
+- console: add read replica support section to pro popup (#4118)
+- console: allow modifying default value for PK (fix #4075) (#4679)
+- console: fix checkbox for forwarding client headers in actions (#4595)
+- console: re-enable foreign tables to be listed as views (fix #4714) (#4742)
+- cli: list all available commands in root command help (fix #4623)
+- docs: add section on actions vs. remote schemas to actions documentation (#4284)
+- docs: fix wrong info about excluding scheme in CORS config (#4685)
 
 ## `v1.2.0`
 
@@ -101,6 +110,7 @@ The `internal` field for action errors is improved with more debug information. 
 `response` and `error` fields instead of just `webhook_response` field.
 
 Before:
+
 ```json
 {
   "errors": [
@@ -121,7 +131,9 @@ Before:
   ]
 }
 ```
+
 After:
+
 ```json
 {
   "errors": [
@@ -185,6 +197,7 @@ ENV vars can now be read from .env file present at the project root directory. A
 ```
 hasura console --envfile production.env
 ```
+
 The above command will read ENV vars from `production.env` file present at the project root directory.
 
 (close #4129) (#4454)
