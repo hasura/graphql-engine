@@ -114,8 +114,9 @@ export const saveRemoteRelationship = (
       ).remote_relationships[index];
       const downQueryArgs = getRemoteRelPayload(
         parseRemoteRelationship({
-          remote_schema: existingRelationship.configuration.remote_schema,
-          remote_field: existingRelationship.configuration.remote_field,
+          remote_schema: existingRelationship.definition.remote_schema,
+          remote_field: existingRelationship.definition.remote_field,
+          name: existingRelationship.remote_relationship_name,
         }),
         table
       );
@@ -126,9 +127,7 @@ export const saveRemoteRelationship = (
     }
 
     // Apply migrations
-    const migrationName = `table_${table.name}_create_remote_relationship_${
-      state.name
-    }`;
+    const migrationName = `table_${table.name}_create_remote_relationship_${state.name}`;
 
     const requestMsg = `${
       isNew ? 'Creating' : 'Updating'
@@ -197,9 +196,7 @@ export const dropRemoteRelationship = (
     ];
 
     // Apply migrations
-    const migrationName = `table_${table.name}_drop_remote_relationship_${
-      state.name
-    }`;
+    const migrationName = `table_${table.name}_drop_remote_relationship_${state.name}`;
 
     const requestMsg = 'Deleting remote relationship...';
     const successMsg = 'Successfully deleted remote relationship';

@@ -13,11 +13,11 @@ const RemoteRelationships = ({
 }) => {
   // restructure existing relationships to the state structure
   const existingRemoteRelationships = tableSchema.remote_relationships.map(
-    rr => {
+    ({ definition = {}, remote_relationship_name }) => {
       return parseRemoteRelationship({
-        remote_schema: rr.configuration.remote_schema,
-        remote_field: rr.configuration.remote_field,
-        name: rr.configuration.name,
+        remote_schema: definition.remote_schema,
+        remote_field: definition.remote_field,
+        name: remote_relationship_name,
       });
     }
   );
