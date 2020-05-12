@@ -41,10 +41,10 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: add read replica support section to pro popup (#4118)
 - console: allow modifying default value for PK (fix #4075) (#4679)
 - console: fix checkbox for forwarding client headers in actions (#4595)
-- console: re-enable foreign tables to be listed as views in console
-- cli: list all avialable commands in root command help (fix #4623)
+- console: re-enable foreign tables to be listed as views in console (fix #4714) (#4742)
+- cli: list all available commands in root command help (fix #4623)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
-- docs: fix wrong info about excluding scheme in CORS config
+- docs: fix wrong info about excluding scheme in CORS config (#4685)
 
 ## `v1.2.0`
 
