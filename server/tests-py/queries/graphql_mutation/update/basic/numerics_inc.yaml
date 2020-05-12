@@ -3,42 +3,68 @@ description: Updated numerics data using _inc operator
 url: /v1/graphql
 status: 200
 query:
-  query: |
-    mutation {
-      update_numerics(
-        where: {id: {_eq: 1}},
-        _inc: {
-           num_smallint: -1
-           num_integer: -1
-           num_bigint: -1
-           num_real: -1.1
-           num_double: -1.1
-           num_money: -1.1
-           num_numeric: -1.1
-        }
-      ){
-        affected_rows
-        returning {
-          id
-          num_smallint
-          num_integer
-          num_bigint
-          num_double
-          num_money
-          num_numeric
+  - query: |
+      mutation {
+        update_numerics(
+          where: {id: {_eq: 1}},
+          _inc: {
+             num_smallint: -1
+             num_integer: -1
+             num_bigint: -1
+             num_real: -1.1
+             num_double: -1.1
+             num_money: -1.1
+             num_numeric: -1.1
+          }
+        ){
+          affected_rows
+          returning {
+            id
+            num_smallint
+            num_integer
+            num_bigint
+            num_double
+            num_money
+            num_numeric
+          }
         }
       }
-    }
-
+  - query: |
+      mutation {
+        update_numerics(
+          where: {id: {_eq: 1}},
+          _inc: {
+             num_double: -1E-8
+             num_money: -2E-2
+             num_numeric: -1E-30
+          }
+        ){
+          affected_rows
+          returning {
+            id
+            num_double
+            num_money
+            num_numeric
+          }
+        }
+      }
 response:
-  data:
-    update_numerics:
-      affected_rows: 1
-      returning:
-      - id: 1
-        num_smallint: 12344
-        num_integer: 12344
-        num_bigint: '12344'
-        num_double: '12344.57'
-        num_money: $12,344.57
-        num_numeric: '12344.5700'
+  - data:
+      update_numerics:
+        affected_rows: 1
+        returning:
+        - id: 1
+          num_smallint: 12344
+          num_integer: 12344
+          num_bigint: '12344'
+          num_double: '12344.57'
+          num_money: $12,344.57
+          num_numeric: '12344.5700'
+  - data:
+      update_numerics:
+        affected_rows: 1
+        returning:
+        - id: 1
+          num_double: '12344.56999999'
+          num_money: $12,344.55
+          num_numeric: '12344.5699999999999999999999999999990'
