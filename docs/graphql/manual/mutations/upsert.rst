@@ -11,6 +11,9 @@ Upsert mutation
   :backlinks: none
   :depth: 1
   :local:
+  
+Introduction
+------------
 
 An upsert query will insert an object into the database in case there is no conflict with another row in the table. In
 case there is a conflict with one or more rows, it will either update the fields of the conflicted rows or ignore
@@ -63,7 +66,7 @@ If not all required columns are present, an error like ``NULL value unexpected f
 
 Update selected columns on conflict
 -----------------------------------
-Insert a new object in the ``article`` table or, if the primary key constraint ``article_title_key`` is violated, update
+Insert a new object in the ``article`` table or, if the unique constraint ``article_title_key`` is violated, update
 the columns specified in ``update_columns``:
 
 .. graphiql::
@@ -100,20 +103,24 @@ the columns specified in ``update_columns``:
               "id": 1,
               "title": "Article 1",
               "content": "Article 1 content",
-              "published_on": "2018-10-12"
+              "published_on": "2018-06-15"
             }
           ]
         }
       }
     }
 
-The ``published_on`` column is left unchanged as it wasn't present in ``update_columns``.
+Not that the ``published_on`` column is left unchanged as it wasn't present in ``update_columns``.
 
 Update selected columns on conflict using a filter
 --------------------------------------------------
-Insert a new object in the ``article`` table, or if the primary key constraint ``article_title_key`` is violated, update
-the columns specified in ``update_columns`` only if the provided ``where`` condition is met:
 
+A ``where`` condition can be added to the ``on_conflict`` clause to check a condition before making the update in case a 
+conflict occurs
+
+**Example**: Insert a new object in the ``article`` table, or if the unique key constraint ``article_title_key`` is
+violated, update the ``published_on`` columns specified in ``update_columns`` only if the previous ``published_on`` 
+value is lesser than the new value:
 
 .. graphiql::
   :view_only:
@@ -136,6 +143,7 @@ the columns specified in ``update_columns`` only if the provided ``where`` condi
       ) {
         returning {
           id
+          title
           published_on
         }
       }
@@ -147,6 +155,7 @@ the columns specified in ``update_columns`` only if the provided ``where`` condi
           "returning": [
             {
               "id": 2,
+              "title": "Article 2",
               "published_on": "2018-10-12"
             }
           ]
@@ -154,12 +163,12 @@ the columns specified in ``update_columns`` only if the provided ``where`` condi
       }
     }
 
-The ``published_on`` column is updated only if the new value is greater than the old value.
-
 Ignore request on conflict
 --------------------------
-If ``update_columns`` is an **empty array** then the GraphQL engine ignores changes on conflict. Insert a new object into
-the author table or, if the unique constraint ``author_name_key`` is violated, ignore the request.
+If ``update_columns`` is an **empty array** then on conflict the changes are ignored. 
+
+**Example**: Insert a new object into the author table or, if the unique constraint ``author_name_key`` is violated, 
+ignore the request.
 
 .. graphiql::
   :view_only:
@@ -192,6 +201,8 @@ In this case, the insert mutation is ignored because there is a conflict and ``u
 Upsert in nested mutations
 --------------------------
 You can specify the ``on_conflict`` clause while inserting nested objects:
+
+**Example**: 
 
 .. graphiql::
   :view_only:
