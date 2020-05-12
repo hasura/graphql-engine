@@ -46,5 +46,5 @@ query allTables stringifyNum = do
         ]
   let queryFieldsParser = fmap catMaybes $ sequenceA $ concat $ catMaybes selectExpParsers
       typenameRepr = ($$(G.litName "__typename"), QRFExp "query_root")
-  pure $ M.fromList <$> P.selectionSet $$(G.litName "Query") Nothing typenameRepr queryFieldsParser
+  pure $ M.fromList <$> P.selectionSet $$(G.litName "query_root") Nothing typenameRepr queryFieldsParser
   where toQrf = fmap . fmap . fmap . fmap . fmap
