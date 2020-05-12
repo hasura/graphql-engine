@@ -257,7 +257,7 @@ export const loadInconsistentObjects = (reloadConfig, successCb, failureCb) => {
         if (successCb) {
           successCb();
         }
-        if (shouldReloadCache) {
+        if (shouldReloadRemoteSchemas) {
           clearIntrospectionSchemaCache();
         }
       },
