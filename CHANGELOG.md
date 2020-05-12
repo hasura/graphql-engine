@@ -85,6 +85,7 @@ The `internal` field for action errors is improved with more debug information. 
 `response` and `error` fields instead of just `webhook_response` field.
 
 Before:
+
 ```json
 {
   "errors": [
@@ -105,7 +106,9 @@ Before:
   ]
 }
 ```
+
 After:
+
 ```json
 {
   "errors": [
@@ -169,6 +172,7 @@ ENV vars can now be read from .env file present at the project root directory. A
 ```
 hasura console --envfile production.env
 ```
+
 The above command will read ENV vars from `production.env` file present at the project root directory.
 
 (close #4129) (#4454)

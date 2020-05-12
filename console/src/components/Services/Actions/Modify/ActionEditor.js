@@ -51,8 +51,8 @@ const ActionEditor = ({
   };
   React.useEffect(init, [currentAction]);
 
-  const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
-  const kindOnChange = k => dispatch(setActionKind(k));
+  const handlerOnChange = (e) => dispatch(setActionHandler(e.target.value));
+  const kindOnChange = (k) => dispatch(setActionKind(k));
 
   const actionDefinitionOnChange = (value, error, timer, ast) => {
     dispatch(setActionDefinition(value, error, timer, ast));
@@ -70,12 +70,11 @@ const ActionEditor = ({
     dispatch(deleteAction(currentAction));
   };
 
-  const setHeaders = hs => {
+  const setHeaders = (hs) => {
     dispatch(dispatchNewHeaders(hs));
   };
 
-  const toggleForwardClientHeaders = e => {
-    e.preventDefault();
+  const toggleForwardClientHeaders = () => {
     dispatch(toggleFCH());
   };
 
