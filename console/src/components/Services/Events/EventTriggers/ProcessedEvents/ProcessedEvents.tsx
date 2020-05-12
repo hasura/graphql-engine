@@ -53,6 +53,7 @@ const ProcessedEvents: React.FC<Props> = props => {
         render={renderRows}
         presets={{
           filters: [
+            makeValueFilter('trigger_name', '$eq', triggerName),
             makeOperationFilter('$or', [
               makeValueFilter('delivered', '$eq', 'true'),
               makeValueFilter('error', '$eq', 'true'),

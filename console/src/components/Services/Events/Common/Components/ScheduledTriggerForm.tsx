@@ -204,12 +204,14 @@ const Form: React.FC<Props> = props => {
         </h2>
         <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>
           {getScheduleInputText(false, styles.add_mar_right_mid)}
-          {/* <a
-            onClick={setState.toggleScheduleModal}
+          <a
             className={styles.cursorPointer}
+            href="https://crontab.guru/#*_*_*_*_*"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             Build a cron expression
-          </a> */}
+          </a>
         </div>
       </React.Fragment>
     );

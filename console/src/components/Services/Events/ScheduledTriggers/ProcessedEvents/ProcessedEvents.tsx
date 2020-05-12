@@ -18,6 +18,8 @@ type Props = {
 const ProcessedEvents: React.FC<Props> = props => {
   const { dispatch, currentTrigger } = props;
 
+  const triggerName = currentTrigger ? currentTrigger.name : '';
+
   const renderRows: FilterRenderProp = (
     rows,
     count,
@@ -32,7 +34,7 @@ const ProcessedEvents: React.FC<Props> = props => {
       setFilterState={setFilterState}
       runQuery={runQuery}
       columns={['id', 'delivered', 'created_at']}
-      triggerName={currentTrigger ? currentTrigger.name : ''}
+      triggerName={triggerName}
     />
   );
 
@@ -44,6 +46,7 @@ const ProcessedEvents: React.FC<Props> = props => {
         render={renderRows}
         presets={{
           filters: [
+            makeValueFilter('name', '$eq', triggerName),
             makeOperationFilter('$or', [
               makeValueFilter('delivered', '$eq', 'true'),
               makeValueFilter('error', '$eq', 'true'),
