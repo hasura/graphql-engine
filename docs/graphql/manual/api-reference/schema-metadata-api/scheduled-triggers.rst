@@ -96,7 +96,7 @@ Args syntax
 delete_cron_trigger
 -------------------
 
-``delete_cron_trigger`` is used to delete an existing cron trigger.The scheduled events associated with the cron trigger will also be deleted.
+``delete_cron_trigger`` is used to delete an existing cron trigger. The scheduled events associated with the cron trigger will also be deleted.
 
 
 .. code-block:: http
