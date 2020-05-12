@@ -190,17 +190,17 @@ const RelationshipEditor = ({
           disabled={!name}
         >
           {// default unselected option
-            refSchema === '' && (
-              <option value={''} disabled>
-                {'-- reference schema --'}
-              </option>
-            )}
+          refSchema === '' && (
+            <option value={''} disabled>
+              {'-- reference schema --'}
+            </option>
+          )}
           {// all reference schema options
-            orderedSchemaList.map((rs, j) => (
-              <option key={j} value={rs}>
-                {rs}
-              </option>
-            ))}
+          orderedSchemaList.map((rs, j) => (
+            <option key={j} value={rs}>
+              {rs}
+            </option>
+          ))}
         </select>
       </div>
     );
@@ -300,16 +300,12 @@ const RelationshipEditor = ({
 
           return (
             <div
-              className={`row ${styles.add_mar_bottom_mid} ${
-                styles.display_flex
-              }`}
+              className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
               key={`fk-col-${i}`}
             >
               <div className={`col-sm-4 ${styles.add_mar_right}`}>
                 <select
-                  className={`form-control ${styles.select} ${
-                    styles.wd100Percent
-                  }`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={field}
                   onChange={setField}
                   data-test={`manual-relationship-lcol-${i}`}
@@ -332,9 +328,7 @@ const RelationshipEditor = ({
               </div>
               <div className={'col-sm-4'}>
                 <select
-                  className={`form-control ${styles.select} ${
-                    styles.wd100Percent
-                  }`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={refColumn}
                   onChange={setColumn}
                   disabled={!refTable}

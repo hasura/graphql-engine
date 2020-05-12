@@ -342,9 +342,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     downQueries = [actionQueryDown, customFieldsQueryDown, oldActionQueryUp];
   }
 
-  const migrationName = `modify_action_${currentAction.action_name}_to_${
-    state.name
-  }`;
+  const migrationName = `modify_action_${currentAction.action_name}_to_${state.name}`;
   const requestMsg = 'Saving action...';
   const successMsg = 'Action saved successfully';
   const errorMsg = 'Saving action failed';
@@ -381,9 +379,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
 };
 
 export const deleteAction = currentAction => (dispatch, getState) => {
-  const confirmMessage = `This will permanently delete the action "${
-    currentAction.action_name
-  }" from this table`;
+  const confirmMessage = `This will permanently delete the action "${currentAction.action_name}" from this table`;
   const isOk = getConfirmation(confirmMessage, true, currentAction.action_name);
   if (!isOk) {
     return;
