@@ -64,7 +64,7 @@ using this flag is insecure since verification is not carried out.
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
 - docs: update migrations docs with config v2 (#4586)
 - docs: update actions docs (#4586)
-- docs: add page on how to secure actions
+- docs: add page on how to secure actions (#4743)
 
 ## `v1.2.0-beta.5`
 
