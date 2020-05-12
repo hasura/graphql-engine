@@ -188,7 +188,8 @@ tableFields table selectPermissions stringifyNum =
       $ traverse (\fieldInfo -> fieldSelection fieldInfo selectPermissions stringifyNum)
       =<< tableSelectFields table selectPermissions
     let typenameRepr = (FieldName "__typename", RQL.FExp $ G.unName tableName)
-    pure $ P.selectionSet tableName (_tciDescription tableInfo) typenameRepr
+        description = G.Description . getPGDescription <$> _tciDescription tableInfo
+    pure $ P.selectionSet tableName description typenameRepr
          $ fmap catMaybes
          $ sequenceA fields
 
@@ -509,7 +510,7 @@ computedField ComputedFieldInfo{..} selectPermissions stringifyNum = do
     defaultDescription = "A computed field, executes function " <>> _cffName _cfiFunction
     fieldDescription = Just $ G.Description $ case _cffDescription _cfiFunction of
       Nothing                   -> defaultDescription
-      Just (G.Description desc) -> T.unlines [desc, "", "", defaultDescription]
+      Just (PGDescription desc) -> T.unlines [desc, "", "", defaultDescription]
       -- WIP note: the original code contained one "\n" (^ here) instead
       -- I kept that behaviour but made it explicit
       -- I feel it's an error and should be only one ""?

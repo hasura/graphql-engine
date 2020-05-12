@@ -31,7 +31,7 @@ import qualified Text.Mustache.Compile                as M
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Events.Lib
-import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
+-- import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
@@ -233,7 +233,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   liftIO $ logInconsObjs logger inconsObjs
 
   -- start background threads for schema sync
-  (_schemaSyncListenerThread, _schemaSyncProcessorThread) <- 
+  (_schemaSyncListenerThread, _schemaSyncProcessorThread) <-
     startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
                            cacheRef _icInstanceId cacheInitTime
 
@@ -256,18 +256,18 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     processEventQueue logger logEnvHeaders
     _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx
 
-  -- start a backgroud thread to handle async actions
-  _asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $ liftIO $
-    asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
+  -- -- start a backgroud thread to handle async actions
+  -- _asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $ liftIO $
+  --   asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
 
   -- start a background thread to check for updates
-  _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $ 
+  _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
     checkForUpdates loggerCtx _icHttpManager
 
   -- start a background thread for telemetry
   when soEnableTelemetry $ do
     unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
-    void $ C.forkImmortal "runTelemetry" logger $ liftIO $ 
+    void $ C.forkImmortal "runTelemetry" logger $ liftIO $
       runTelemetry logger _icHttpManager (getSCFromRef cacheRef) _icDbUid _icInstanceId
 
   finishTime <- liftIO Clock.getCurrentTime

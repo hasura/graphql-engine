@@ -23,8 +23,6 @@ import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-import           Language.GraphQL.Draft.Instances ()
-
 import qualified Data.Aeson                       as J
 import qualified Data.Aeson.Casing                as J
 import qualified Data.Aeson.TH                    as J
@@ -34,7 +32,7 @@ import qualified Language.GraphQL.Draft.Parser    as G
 import qualified Language.GraphQL.Draft.Syntax    as G
 
 newtype GQLExecDoc
-  = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition] }
+  = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition G.Name] }
   deriving (Ord, Show, Eq, Hashable)
 
 instance J.FromJSON GQLExecDoc where
@@ -48,9 +46,9 @@ newtype OperationName
   deriving (Ord, Show, Eq, Hashable, J.ToJSON)
 
 instance J.FromJSON OperationName where
-  parseJSON v = OperationName . G.Name <$> J.parseJSON v
+  parseJSON v = OperationName <$> J.parseJSON v
 
-type VariableValues = Map.HashMap G.Variable J.Value
+type VariableValues = Map.HashMap G.Name J.Value
 
 data GQLReq a
   = GQLReq
@@ -74,7 +72,7 @@ data GQLBatchedReqs a
   = GQLSingleRequest (GQLReq a)
   | GQLBatchedReqs [GQLReq a]
   deriving (Show, Eq, Generic)
-  
+
 instance J.ToJSON a => J.ToJSON (GQLBatchedReqs a) where
   toJSON (GQLSingleRequest q) = J.toJSON q
   toJSON (GQLBatchedReqs qs) = J.toJSON qs
@@ -93,7 +91,7 @@ type GQLReqParsed = GQLReq GQLExecDoc
 
 toParsed :: (MonadError QErr m ) => GQLReqUnparsed -> m GQLReqParsed
 toParsed req = case G.parseExecutableDoc gqlText of
-  Left _  -> withPathK "query" $ throwVE "not a valid graphql query"
+  Left _  -> withPathK "query" $ throw400 ValidationFailed "not a valid graphql query"
   Right a -> return $ req { _grQuery = GQLExecDoc $ G.getExecutableDefinitions a }
   where
     gqlText = _unGQLQueryText $ _grQuery req

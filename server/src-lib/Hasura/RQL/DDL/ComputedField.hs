@@ -121,13 +121,13 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
                          (rfiReturnTypeName rawFunctionInfo)
                          (rfiReturnTypeType rawFunctionInfo)
 
-    computedFieldGraphQLName = G.Name $ computedFieldNameToText computedField
+    computedFieldGraphQLName = G.mkName $ computedFieldNameToText computedField
 
     mkComputedFieldInfo :: (MV.MonadValidate [ComputedFieldValidateError] m)
                           => m ComputedFieldInfo
     mkComputedFieldInfo = do
       -- Check if computed field name is a valid GraphQL name
-      unless (G.isValidName computedFieldGraphQLName) $
+      unless (isJust computedFieldGraphQLName) $
         MV.dispute $ pure $ CFVENotValidGraphQLName computedField
 
       -- Check if function is VOLATILE

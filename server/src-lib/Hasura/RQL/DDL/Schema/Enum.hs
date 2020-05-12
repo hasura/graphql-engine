@@ -110,16 +110,16 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
           (EnumValue key, EnumValueInfo comment)
 
         validateEnumValues enumValues = do
-          let enumValueNames = map (G.Name . getEnumValue) (M.keys enumValues)
-          when (null enumValueNames) $
+          when (M.null enumValues) $
             refute [EnumTableNoEnumValues]
-          let badNames = map G.unName $ filter (not . isValidEnumName) enumValueNames
+          let enumNames = map getEnumValue $ M.keys enumValues
+              badNames = filter (not . isValidEnumName) enumNames
           for_ (NE.nonEmpty badNames) $ \someBadNames ->
             refute [EnumTableInvalidEnumValueNames someBadNames]
 
         -- https://graphql.github.io/graphql-spec/June2018/#EnumValue
         isValidEnumName name =
-          G.isValidName name && name `notElem` ["true", "false", "null"]
+          isJust (G.mkName name) && name `notElem` ["true", "false", "null"]
 
     showErrors :: [EnumTableIntegrityError] -> T.Text
     showErrors allErrors =

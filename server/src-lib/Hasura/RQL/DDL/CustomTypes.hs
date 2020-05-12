@@ -19,8 +19,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import           Hasura.GraphQL.Schema.CustomTypes (buildCustomTypesSchemaPartial)
-
 validateCustomTypeDefinitions
   :: (MonadValidate [CustomTypeValidationError] m)
   => TableCache -> CustomTypes -> m ()
@@ -49,7 +47,11 @@ validateCustomTypeDefinitions tableCache customTypes = do
       Set.fromList $ map (unEnumTypeName . _etdName) enumDefinitions
 
     -- TODO, clean it up maybe?
-    defaultScalars = map G.NamedType ["Int", "Float", "String", "Boolean"]
+    defaultScalars =
+      [ $$(G.litName "Int")
+      , $$(G.litName "Float")
+      , $$(G.litName "String")
+      , $$(G.litName "Boolean") ]
 
     validateEnum
       :: (MonadValidate [CustomTypeValidationError] m)
@@ -162,22 +164,22 @@ validateCustomTypeDefinitions tableCache customTypes = do
           return ()
 
 data CustomTypeValidationError
-  = DuplicateTypeNames !(Set.HashSet G.NamedType)
+  = DuplicateTypeNames !(Set.HashSet G.Name)
   -- ^ type names have to be unique across all types
   | InputObjectFieldTypeDoesNotExist
-    !InputObjectTypeName !InputObjectFieldName !G.NamedType
+    !InputObjectTypeName !InputObjectFieldName !G.Name
   -- ^ field name and the field's base type
   | InputObjectDuplicateFields
     !InputObjectTypeName !(Set.HashSet InputObjectFieldName)
   -- ^ duplicate field declaration in input objects
   | ObjectFieldTypeDoesNotExist
-    !ObjectTypeName !ObjectFieldName !G.NamedType
+    !ObjectTypeName !ObjectFieldName !G.Name
   -- ^ field name and the field's base type
   | ObjectDuplicateFields !ObjectTypeName !(Set.HashSet G.Name)
   -- ^ duplicate field declaration in objects
   | ObjectFieldArgumentsNotAllowed !ObjectTypeName !ObjectFieldName
   -- ^ object fields can't have arguments
-  | ObjectFieldObjectBaseType !ObjectTypeName !ObjectFieldName !G.NamedType
+  | ObjectFieldObjectBaseType !ObjectTypeName !ObjectFieldName !G.Name
   -- ^ object fields can't have object types as base types
   | ObjectRelationshipTableDoesNotExist
     !ObjectTypeName !RelationshipName !QualifiedTable
@@ -270,7 +272,7 @@ resolveCustomTypes
 resolveCustomTypes tableCache customTypes = do
   either (throw400 ConstraintViolation . showErrors) pure
     =<< runValidateT (validateCustomTypeDefinitions tableCache customTypes)
-  buildCustomTypesSchemaPartial tableCache customTypes
+  _buildCustomTypesSchemaPartial tableCache customTypes
   where
     showErrors :: [CustomTypeValidationError] -> T.Text
     showErrors allErrors =

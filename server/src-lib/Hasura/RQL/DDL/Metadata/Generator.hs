@@ -3,7 +3,6 @@ module Hasura.RQL.DDL.Metadata.Generator
   (genReplaceMetadata)
 where
 
-import           Hasura.GraphQL.Utils               (simpleGraphQLQuery)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Metadata.Types
@@ -37,10 +36,10 @@ genReplaceMetadata = do
     <$> arbitrary
     <*> genFunctionsMetadata version
     <*> arbitrary
+    -- <*> arbitrary
     <*> arbitrary
-    <*> arbitrary
-    <*> arbitrary
-    <*> arbitrary
+    -- <*> arbitrary
+    -- <*> arbitrary
   where
     genFunctionsMetadata :: MetadataVersion -> Gen FunctionsMetadata
     genFunctionsMetadata = \case
@@ -51,7 +50,7 @@ instance (Eq k, Hashable k, Arbitrary k, Arbitrary v) => Arbitrary (HM.HashMap k
   arbitrary = HM.fromList <$> arbitrary
 
 instance Arbitrary G.Name where
-  arbitrary = G.Name . T.pack <$> listOf1 (elements ['a'..'z'])
+  arbitrary = G.unsafeMkName . T.pack <$> listOf1 (elements ['a'..'z'])
 
 instance Arbitrary MetadataVersion where
   arbitrary = genericArbitrary
@@ -180,11 +179,11 @@ instance Arbitrary AddRemoteSchemaQuery where
 -- FIXME:- The GraphQL AST has 'Gen' by Hedgehog testing package which lacks the
 -- 'Arbitrary' class implementation. For time being, a single query is generated every time.
 instance Arbitrary Collection.GQLQueryWithText where
-  arbitrary = pure $ Collection.GQLQueryWithText ( simpleGraphQLQuery
+  arbitrary = pure $ Collection.GQLQueryWithText ( "query {author {id name}}"
                                                  , Collection.GQLQuery simpleQuery
                                                  )
     where
-      simpleQuery = $(either (fail . T.unpack) TH.lift $ G.parseExecutableDoc simpleGraphQLQuery)
+      simpleQuery = $(either (fail . T.unpack) TH.lift $ G.parseExecutableDoc "query {author {id name}}")
 
 instance Arbitrary Collection.ListedQuery where
   arbitrary = genericArbitrary
@@ -201,17 +200,11 @@ instance Arbitrary Collection.CollectionReq where
 instance (Arbitrary a) => Arbitrary (NEList.NonEmpty a) where
   arbitrary = NEList.fromList <$> listOf1 arbitrary
 
-instance Arbitrary G.NamedType where
-  arbitrary = G.NamedType <$> arbitrary
-
 instance Arbitrary G.Description where
   arbitrary = G.Description <$> arbitrary
 
 instance Arbitrary G.Nullability where
   arbitrary = genericArbitrary
-
-instance Arbitrary G.ListType where
-  arbitrary = G.ListType <$> arbitrary
 
 instance Arbitrary G.GType where
   arbitrary = genericArbitrary

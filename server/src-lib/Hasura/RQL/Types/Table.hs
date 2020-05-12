@@ -385,7 +385,7 @@ instance FromJSON TableConfig where
 data TableCoreInfoG field primaryKeyColumn
   = TableCoreInfo
   { _tciName              :: !QualifiedTable
-  , _tciDescription       :: !(Maybe G.Description)
+  , _tciDescription       :: !(Maybe PGDescription)
   , _tciSystemDefined     :: !SystemDefined
   , _tciFieldInfoMap      :: !(FieldInfoMap field)
   , _tciPrimaryKey        :: !(Maybe (PrimaryKey primaryKeyColumn))

@@ -62,7 +62,7 @@ data ComputedFieldFunction
   { _cffName          :: !QualifiedFunction
   , _cffInputArgs     :: !(Seq.Seq FunctionArg)
   , _cffTableArgument :: !FunctionTableArgument
-  , _cffDescription   :: !(Maybe G.Description)
+  , _cffDescription   :: !(Maybe PGDescription)
   } deriving (Show, Eq, Generic)
 instance Cacheable ComputedFieldFunction
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldFunction)

@@ -1,13 +1,9 @@
 module Hasura.GraphQL.Utils
   ( showName
-  , showNamedTy
-  , throwVE
-  , getBaseTy
   , groupTuples
   , groupListWith
   , mkMapWith
   , showNames
-  , simpleGraphQLQuery
   ) where
 
 import           Hasura.Prelude
@@ -20,20 +16,6 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 showName :: G.Name -> Text
 showName name = "\"" <> G.unName name <> "\""
-
-throwVE :: (MonadError QErr m) => Text -> m a
-throwVE = throw400 ValidationFailed
-
-showNamedTy :: G.NamedType -> Text
-showNamedTy nt =
-  "'" <> G.showNT nt <> "'"
-
-getBaseTy :: G.GType -> G.NamedType
-getBaseTy = \case
-  G.TypeNamed _ n     -> n
-  G.TypeList _ lt     -> getBaseTyL lt
-  where
-    getBaseTyL = getBaseTy . G.unListType
 
 groupListWith
   :: (Eq k, Hashable k, Foldable t, Functor t)
@@ -66,7 +48,3 @@ mkMapWith f l =
 showNames :: (Foldable t) => t G.Name -> Text
 showNames names =
   T.intercalate ", " $ map G.unName $ toList names
-
--- A simple graphql query to be used in generators
-simpleGraphQLQuery :: Text
-simpleGraphQLQuery = "query {author {id name}}"

@@ -26,16 +26,16 @@ import           Hasura.RQL.DDL.ComputedField       (dropComputedFieldFromCatalo
 import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog, subTableP2)
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
-import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2, fetchRemoteSchemas,
-                                                     removeRemoteSchemaFromCatalog)
+-- import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2, fetchRemoteSchemas,
+--                                                      removeRemoteSchemaFromCatalog)
 import           Hasura.RQL.Types
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
-import qualified Hasura.RQL.DDL.Action              as Action
+-- import qualified Hasura.RQL.DDL.Action              as Action
 import qualified Hasura.RQL.DDL.ComputedField       as ComputedField
-import qualified Hasura.RQL.DDL.CustomTypes         as CustomTypes
+-- import qualified Hasura.RQL.DDL.CustomTypes         as CustomTypes
 import qualified Hasura.RQL.DDL.Permission          as Permission
 import qualified Hasura.RQL.DDL.QueryCollection     as Collection
 import qualified Hasura.RQL.DDL.Relationship        as Relationship
@@ -67,8 +67,7 @@ runClearMetadata _ = do
 applyQP1
   :: (QErrM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
-          allowlist _ actions) = do
+applyQP1 (ReplaceMetadata _ tables functionsMeta collections allowlist) = do
   withPathK "tables" $ do
 
     checkMultipleDecls "tables" $ map _tmTable tables
@@ -100,8 +99,8 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
       FMVersion2 functionsV2 ->
         checkMultipleDecls "functions" $ map Schema._tfv2Function functionsV2
 
-  withPathK "remote_schemas" $
-    checkMultipleDecls "remote schemas" $ map _arsqName schemas
+  -- withPathK "remote_schemas" $
+  --   checkMultipleDecls "remote schemas" $ map _arsqName schemas
 
   withPathK "query_collections" $
     checkMultipleDecls "query collections" $ map Collection._ccName collections
@@ -109,8 +108,8 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
   withPathK "allowlist" $
     checkMultipleDecls "allow list" $ map Collection._crCollection allowlist
 
-  withPathK "actions" $
-    checkMultipleDecls "actions" $ map _amName actions
+  -- withPathK "actions" $
+  --   checkMultipleDecls "actions" $ map _amName actions
 
   where
     withTableName qt = withPathK (qualObjectToText qt)
@@ -134,8 +133,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata _ tables functionsMeta
-          schemas collections allowlist customTypes actions) = do
+applyQP2 (ReplaceMetadata _ tables functionsMeta collections allowlist) = do
 
   liftTx clearMetadata
   buildSchemaCacheStrict
@@ -198,20 +196,20 @@ applyQP2 (ReplaceMetadata _ tables functionsMeta
     indexedForM_ allowlist $ \(Collection.CollectionReq name) ->
       liftTx $ Collection.addCollectionToAllowlistCatalog name
 
-  -- remote schemas
-  withPathK "remote_schemas" $
-    indexedMapM_ (void . addRemoteSchemaP2) schemas
+  -- -- remote schemas
+  -- withPathK "remote_schemas" $
+  --   indexedMapM_ (void . addRemoteSchemaP2) schemas
 
-  CustomTypes.persistCustomTypes customTypes
+  -- CustomTypes.persistCustomTypes customTypes
 
-  for_ actions $ \action -> do
-    let createAction =
-          CreateAction (_amName action) (_amDefinition action) (_amComment action)
-    Action.persistCreateAction createAction
-    for_ (_amPermissions action) $ \permission -> do
-      let createActionPermission = CreateActionPermission (_amName action)
-                                   (_apmRole permission) Nothing (_apmComment permission)
-      Action.persistCreateActionPermission createActionPermission
+  -- for_ actions $ \action -> do
+  --   let createAction =
+  --         CreateAction (_amName action) (_amDefinition action) (_amComment action)
+  --   Action.persistCreateAction createAction
+  --   for_ (_amPermissions action) $ \permission -> do
+  --     let createActionPermission = CreateActionPermission (_amName action)
+  --                                  (_apmRole permission) Nothing (_apmComment permission)
+  --     Action.persistCreateActionPermission createActionPermission
 
   buildSchemaCacheStrict
   return successMsg
@@ -276,8 +274,8 @@ fetchMetadata = do
   -- fetch all functions
   functions <- FMVersion2 <$> Q.catchE defaultTxErrorHandler fetchFunctions
 
-  -- fetch all custom resolvers
-  remoteSchemas <- fetchRemoteSchemas
+  -- -- fetch all custom resolvers
+  -- remoteSchemas <- fetchRemoteSchemas
 
   -- fetch all collections
   collections <- fetchCollections
@@ -285,15 +283,13 @@ fetchMetadata = do
   -- fetch allow list
   allowlist <- map Collection.CollectionReq <$> fetchAllowlists
 
-  customTypes <- fetchCustomTypes
+  -- customTypes <- fetchCustomTypes
 
-  -- fetch actions
-  actions <- fetchActions
+  -- -- fetch actions
+  -- actions <- fetchActions
 
   return $ ReplaceMetadata currentMetadataVersion (HMIns.elems postRelMap) functions
-                           remoteSchemas collections allowlist
-                           customTypes
-                           actions
+                           collections allowlist
 
   where
 
@@ -389,45 +385,45 @@ fetchMetadata = do
                           , ComputedFieldMeta name definition comment
                           )
 
-    fetchCustomTypes :: Q.TxE QErr CustomTypes
-    fetchCustomTypes =
-      Q.getAltJ . runIdentity . Q.getRow <$>
-      Q.rawQE defaultTxErrorHandler [Q.sql|
-         select coalesce((select custom_types::json from hdb_catalog.hdb_custom_types), '{}'::json)
-         |] [] False
-    fetchActions =
-      Q.getAltJ . runIdentity . Q.getRow <$> Q.rawQE defaultTxErrorHandler [Q.sql|
-        select
-          coalesce(
-            json_agg(
-              json_build_object(
-                'name', a.action_name,
-                'definition', a.action_defn,
-                'comment', a.comment,
-                'permissions', ap.permissions
-              ) order by a.action_name asc
-            ),
-            '[]'
-          )
-        from
-          hdb_catalog.hdb_action as a
-          left outer join lateral (
-            select
-              coalesce(
-                json_agg(
-                  json_build_object(
-                    'role', ap.role_name,
-                    'comment', ap.comment
-                  ) order by ap.role_name asc
-                ),
-                '[]'
-              ) as permissions
-            from
-              hdb_catalog.hdb_action_permission ap
-            where
-              ap.action_name = a.action_name
-          ) ap on true;
-                            |] [] False
+    -- fetchCustomTypes :: Q.TxE QErr CustomTypes
+    -- fetchCustomTypes =
+    --   Q.getAltJ . runIdentity . Q.getRow <$>
+    --   Q.rawQE defaultTxErrorHandler [Q.sql|
+    --      select coalesce((select custom_types::json from hdb_catalog.hdb_custom_types), '{}'::json)
+    --      |] [] False
+    -- fetchActions =
+    --   Q.getAltJ . runIdentity . Q.getRow <$> Q.rawQE defaultTxErrorHandler [Q.sql|
+    --     select
+    --       coalesce(
+    --         json_agg(
+    --           json_build_object(
+    --             'name', a.action_name,
+    --             'definition', a.action_defn,
+    --             'comment', a.comment,
+    --             'permissions', ap.permissions
+    --           ) order by a.action_name asc
+    --         ),
+    --         '[]'
+    --       )
+    --     from
+    --       hdb_catalog.hdb_action as a
+    --       left outer join lateral (
+    --         select
+    --           coalesce(
+    --             json_agg(
+    --               json_build_object(
+    --                 'role', ap.role_name,
+    --                 'comment', ap.comment
+    --               ) order by ap.role_name asc
+    --             ),
+    --             '[]'
+    --           ) as permissions
+    --         from
+    --           hdb_catalog.hdb_action_permission ap
+    --         where
+    --           ap.action_name = a.action_name
+    --       ) ap on true;
+    --                         |] [] False
 
 runExportMetadata
   :: (QErrM m, MonadTx m)
@@ -475,11 +471,11 @@ purgeMetadataObj :: MonadTx m => MetadataObjId -> m ()
 purgeMetadataObj = liftTx . \case
   MOTable qt                            -> Schema.deleteTableFromCatalog qt
   MOFunction qf                         -> Schema.delFunctionFromCatalog qf
-  MORemoteSchema rsn                    -> removeRemoteSchemaFromCatalog rsn
+  -- MORemoteSchema rsn                    -> removeRemoteSchemaFromCatalog rsn
   MOTableObj qt (MTORel rn _)           -> Relationship.delRelFromCatalog qt rn
   MOTableObj qt (MTOPerm rn pt)         -> dropPermFromCatalog qt rn pt
   MOTableObj _ (MTOTrigger trn)         -> delEventTriggerFromCatalog trn
   MOTableObj qt (MTOComputedField ccn)  -> dropComputedFieldFromCatalog qt ccn
-  MOCustomTypes                         -> CustomTypes.clearCustomTypes
-  MOAction action                       -> Action.deleteActionFromCatalog action Nothing
-  MOActionPermission action role        -> Action.deleteActionPermissionFromCatalog action role
+  -- MOCustomTypes                         -> CustomTypes.clearCustomTypes
+  -- MOAction action                       -> Action.deleteActionFromCatalog action Nothing
+  -- MOActionPermission action role        -> Action.deleteActionPermissionFromCatalog action role

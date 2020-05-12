@@ -167,11 +167,11 @@ data ReplaceMetadata
   { aqVersion          :: !MetadataVersion
   , aqTables           :: ![TableMeta]
   , aqFunctions        :: !FunctionsMetadata
-  , aqRemoteSchemas    :: ![AddRemoteSchemaQuery]
+  -- , aqRemoteSchemas    :: ![AddRemoteSchemaQuery]
   , aqQueryCollections :: ![Collection.CreateCollection]
   , aqAllowlist        :: ![Collection.CollectionReq]
-  , aqCustomTypes      :: !CustomTypes
-  , aqActions          :: ![ActionMetadata]
+  -- , aqCustomTypes      :: !CustomTypes
+  -- , aqActions          :: ![ActionMetadata]
   } deriving (Show, Eq, Lift)
 
 instance FromJSON ReplaceMetadata where
@@ -180,11 +180,11 @@ instance FromJSON ReplaceMetadata where
     ReplaceMetadata version
       <$> o .: "tables"
       <*> (o .:? "functions" >>= parseFunctions version)
-      <*> o .:? "remote_schemas" .!= []
+      -- <*> o .:? "remote_schemas" .!= []
       <*> o .:? "query_collections" .!= []
       <*> o .:? "allow_list" .!= []
-      <*> o .:? "custom_types" .!= emptyCustomTypes
-      <*> o .:? "actions" .!= []
+      -- <*> o .:? "custom_types" .!= emptyCustomTypes
+      -- <*> o .:? "actions" .!= []
     where
       parseFunctions version maybeValue =
         case version of
@@ -244,32 +244,32 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                version
                                tables
                                functions
-                               remoteSchemas
+                               -- remoteSchemas
                                queryCollections
                                allowlist
-                               customTypes
-                               actions
+                               -- customTypes
+                               -- actions
                              ) = AO.object $ [versionPair, tablesPair] <>
                                  catMaybes [ functionsPair
-                                           , remoteSchemasPair
+                                           -- , remoteSchemasPair
                                            , queryCollectionsPair
                                            , allowlistPair
-                                           , actionsPair
-                                           , customTypesPair
+                                           -- , actionsPair
+                                           -- , customTypesPair
                                            ]
   where
     versionPair = ("version", AO.toOrdered version)
     tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON tables)
     functionsPair = ("functions",) <$> functionsMetadataToOrdJSON functions
 
-    remoteSchemasPair = listToMaybeOrdPair "remote_schemas" remoteSchemaQToOrdJSON remoteSchemas
+    -- remoteSchemasPair = listToMaybeOrdPair "remote_schemas" remoteSchemaQToOrdJSON remoteSchemas
 
     queryCollectionsPair = listToMaybeOrdPair "query_collections" createCollectionToOrdJSON queryCollections
 
     allowlistPair = listToMaybeOrdPair "allowlist" AO.toOrdered allowlist
-    customTypesPair = if customTypes == emptyCustomTypes then Nothing
-                      else Just ("custom_types", customTypesToOrdJSON customTypes)
-    actionsPair = listToMaybeOrdPair "actions" actionMetadataToOrdJSON actions
+    -- customTypesPair = if customTypes == emptyCustomTypes then Nothing
+    --                   else Just ("custom_types", customTypesToOrdJSON customTypes)
+    -- actionsPair = listToMaybeOrdPair "actions" actionMetadataToOrdJSON actions
 
     tableMetaToOrdJSON :: TableMeta -> AO.Value
     tableMetaToOrdJSON ( TableMeta

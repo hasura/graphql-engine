@@ -65,7 +65,7 @@ import           Hasura.RQL.Types
 
 data Subscriber
   = Subscriber
-  { _sRootAlias        :: !G.Alias
+  { _sRootAlias        :: !G.Name
   , _sOnChangeCallback :: !OnChange
   }
 
@@ -145,7 +145,7 @@ mkRespHash = ResponseHash . CH.hash
 -- 'CohortId'; the latter is a completely synthetic key used only to identify the cohort in the
 -- generated SQL query.
 type CohortKey = CohortVariables
--- | This has the invariant, maintained in 'removeLiveQuery', that it contains no 'Cohort' with 
+-- | This has the invariant, maintained in 'removeLiveQuery', that it contains no 'Cohort' with
 -- zero total (existing + new) subscribers.
 type CohortMap = TMap.TMap CohortKey Cohort
 
@@ -181,7 +181,7 @@ data CohortSnapshot
 
 pushResultToCohort
   :: GQResult EncJSON
-  -- ^ a response that still needs to be wrapped with each 'Subscriber'’s root 'G.Alias'
+  -- ^ a response that still needs to be wrapped with each 'Subscriber'’s root 'G.Name'
   -> Maybe ResponseHash
   -> LiveQueryMetadata
   -> CohortSnapshot
@@ -200,7 +200,7 @@ pushResultToCohort result respHashM (LiveQueryMetadata dTime) cohortSnapshot = d
   where
     CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
     pushResultToSubscribers = A.mapConcurrently_ $ \(Subscriber alias action) ->
-      let aliasText = G.unName $ G.unAlias alias
+      let aliasText = G.unName alias
           wrapWithAlias response = LiveQueryResponse
             { _lqrPayload = encJToLBS $ encJFromAssocList [(aliasText, response)]
             , _lqrExecutionTime = dTime
@@ -232,7 +232,7 @@ data Poller
 data PollerIOState
   = PollerIOState
   { _pThread  :: !(Immortal.Thread)
-  -- ^ a handle on the poller’s worker thread that can be used to 'Immortal.stop' it if all its 
+  -- ^ a handle on the poller’s worker thread that can be used to 'Immortal.stop' it if all its
   -- cohorts stop listening
   , _pMetrics :: !RefetchMetrics
   }
@@ -328,7 +328,7 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
       return (cohortSnapshotMap, queryVarsBatches)
 
     flip A.mapConcurrently_ queryVarsBatches $ \queryVars -> do
-      (dt, mxRes) <- timing _rmQuery $ 
+      (dt, mxRes) <- timing _rmQuery $
         runExceptT $ runLazyTx' pgExecCtx $ executeMultiplexedQuery pgQuery queryVars
       let lqMeta = LiveQueryMetadata $ fromUnits dt
           operations = getCohortOperations cohortSnapshotMap lqMeta mxRes

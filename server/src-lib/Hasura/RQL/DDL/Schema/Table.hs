@@ -35,6 +35,7 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
+import Hasura.GraphQL.Schema.Common (textToName)
 
 import qualified Database.PG.Query                  as Q
 import qualified Hasura.GraphQL.Schema              as GS
@@ -104,8 +105,9 @@ trackExistingTableOrViewP2
   => QualifiedTable -> Bool -> TableConfig -> m EncJSON
 trackExistingTableOrViewP2 tableName isEnum config = do
   sc <- askSchemaCache
-  let defGCtx = scDefaultRemoteGCtx sc
-  GS.checkConflictingNode defGCtx $ GS.qualObjectToName tableName
+  -- FIXME
+  -- let defGCtx = scDefaultRemoteGCtx sc
+  -- GS.checkConflictingNode defGCtx $ GS.qualObjectToName tableName
   saveTableToCatalog tableName isEnum config
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
@@ -211,10 +213,10 @@ processTableChanges ti tableDiff = do
         procAlteredCols sc tn
 
       withNewTabName newTN = do
-        let tnGQL = GS.qualObjectToName newTN
-            defGCtx = scDefaultRemoteGCtx sc
+        let tnGQL = _qualObjectToName newTN
+            defGCtx = _scDefaultRemoteGCtx sc
         -- check for GraphQL schema conflicts on new name
-        GS.checkConflictingNode defGCtx tnGQL
+        _checkConflictingNode defGCtx tnGQL
         procAlteredCols sc tn
         -- update new table in catalog
         renameTableInCatalog newTN tn
@@ -389,7 +391,7 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
     alignCustomColumnNames columns customNames = do
       let customNamesByFieldName = M.fromList $ map (first fromPGCol) $ M.toList customNames
       flip M.traverseWithKey (align columns customNamesByFieldName) \columnName -> \case
-        This column -> pure (column, G.Name $ getFieldNameTxt columnName)
+        This column -> (column,) <$> textToName (getFieldNameTxt columnName)
         These column customName -> pure (column, customName)
         That customName -> throw400 NotExists $ "the custom field name " <> customName
           <<> " was given for the column " <> columnName <<> ", but no such column exists"

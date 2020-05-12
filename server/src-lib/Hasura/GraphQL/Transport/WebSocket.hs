@@ -62,7 +62,7 @@ import qualified Hasura.Server.Telemetry.Counters            as Telem
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
 -- log.
 --
--- NOTE!: This must be kept consistent with the global 'LiveQueryState', in 'onClose' 
+-- NOTE!: This must be kept consistent with the global 'LiveQueryState', in 'onClose'
 -- and 'onStart'.
 type OperationMap
   = STMMap.Map OperationId (LQ.LiveQueryId, Maybe OperationName)
@@ -358,7 +358,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     runRemoteGQ :: ExceptT () IO DiffTime
                 -> Telem.CacheHit -> E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
-                -> G.TypedOperationDefinition -> RemoteSchemaInfo
+                -> G.TypedOperationDefinition G.Name -> RemoteSchemaInfo
                 -> ExceptT () IO ()
     runRemoteGQ timerTot telemCacheHit execCtx reqId userInfo reqHdrs opDef rsi = do
       let telemLocality = Telem.Remote

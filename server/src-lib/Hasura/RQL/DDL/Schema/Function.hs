@@ -9,9 +9,11 @@ import           Hasura.GraphQL.Utils          (showNames)
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils           (makeReasonMessage)
+import           Hasura.Server.Utils           (makeReasonMessage, englishList)
 import           Hasura.SQL.Types
+import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 
+import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -62,12 +64,13 @@ mkFunctionArgs defArgsNo tys argNames =
 
 validateFuncArgs :: MonadError QErr m => [FunctionArg] -> m ()
 validateFuncArgs args =
-  unless (null invalidArgs) $ throw400 NotSupported $
-    "arguments: " <> showNames invalidArgs
-    <> " are not in compliance with GraphQL spec"
+  for_ (nonEmpty invalidArgs) \someInvalidArgs ->
+    throw400 NotSupported $
+      "arguments: " <> englishList "and" someInvalidArgs
+      <> " are not in compliance with GraphQL spec"
   where
     funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
-    invalidArgs = filter (not . G.isValidName) $ map G.Name funcArgsText
+    invalidArgs = filter (not . isJust . G.mkName) funcArgsText
 
 data FunctionIntegrityError
   = FunctionNameNotGQLCompliant
@@ -101,7 +104,8 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
     throwValidateError = MV.dispute . pure
 
     validateFunction = do
-      unless (G.isValidName $ GS.qualObjectToName qf) $ throwValidateError FunctionNameNotGQLCompliant
+      unless (has _Right $ qualifiedObjectToName qf) $
+        throwValidateError FunctionNameNotGQLCompliant
       when hasVariadic $ throwValidateError FunctionVariadic
       when (retTyTyp /= PGKindComposite) $ throwValidateError FunctionReturnNotCompositeType
       unless retSet $ throwValidateError FunctionReturnNotSetof
@@ -121,7 +125,7 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
 
     validateFunctionArgNames = do
       let argNames = mapMaybe faName functionArgs
-          invalidArgs = filter (not . G.isValidName . G.Name . getFuncArgNameTxt) argNames
+          invalidArgs = filter (not . isJust . G.mkName . getFuncArgNameTxt) argNames
       when (not $ null invalidArgs) $
         throwValidateError $ FunctionInvalidArgumentNames invalidArgs
 

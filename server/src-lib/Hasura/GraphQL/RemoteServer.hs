@@ -22,9 +22,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Utils           (httpExceptToJSON)
 import           Hasura.Server.Version         (HasVersion)
 
-import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
-import qualified Hasura.GraphQL.Validate.Types as VT
 
 introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")

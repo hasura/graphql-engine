@@ -1,7 +1,40 @@
 {-# LANGUAGE StrictData #-}
 
 -- | Types for representing a GraphQL schema.
-module Hasura.GraphQL.Parser.Schema where
+module Hasura.GraphQL.Parser.Schema (
+  -- * Kinds
+    Kind(..)
+  , (:<:)(..)
+  , type (<:)(..)
+
+  -- * Types
+  , Type(..)
+  , NonNullableType(..)
+  , TypeInfo(..)
+  , SomeTypeInfo(..)
+  , eqType
+  , eqNonNullableType
+  , eqTypeInfo
+  , discardNullability
+
+  , EnumValueInfo(..)
+  , FieldInfo(..)
+
+  -- * Definitions
+  , Definition(..)
+  , mkDefinition
+  , addDefinitionUnique
+  , HasDefinition(..)
+
+  -- * Schemas
+  , Schema(..)
+  , ConflictingDefinitions(..)
+  , collectTypeDefinitions
+
+  -- * Miscellany
+  , HasName(..)
+  , Variable(..)
+  ) where
 
 import           Hasura.Prelude
 
@@ -134,6 +167,11 @@ eqTypeInfo (TIInputObject fields1) (TIInputObject fields2) = fields1 == fields2
 eqTypeInfo (TIObject fields1)      (TIObject fields2)      = fields1 == fields2
 eqTypeInfo _                       _                       = False
 
+data SomeTypeInfo = forall k. SomeTypeInfo (TypeInfo k)
+
+instance Eq SomeTypeInfo where
+  SomeTypeInfo a == SomeTypeInfo b = eqTypeInfo a b
+
 data Definition a = Definition
   { dName        :: Name
   , dUnique      :: Maybe Unique
@@ -234,11 +272,6 @@ data Schema = Schema
   , sMutationType     :: Definition (TypeInfo 'Output)
   , sSubscriptionType :: Definition (TypeInfo 'Output)
   }
-
-data SomeTypeInfo = forall k. SomeTypeInfo (TypeInfo k)
-
-instance Eq SomeTypeInfo where
-  SomeTypeInfo a == SomeTypeInfo b = eqTypeInfo a b
 
 -- | Recursively collects all type definitions accessible from the given value.
 collectTypeDefinitions
