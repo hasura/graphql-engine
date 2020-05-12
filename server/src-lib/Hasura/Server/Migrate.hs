@@ -17,7 +17,7 @@
 module Hasura.Server.Migrate
   ( MigrationResult(..)
   , migrateCatalog
-  , latestCatalogVersion
+  , isCatalogMigrateRequired
   , recreateSystemMetadata
   , dropCatalog
   , downgradeCatalog
@@ -83,6 +83,46 @@ data MigrationPair m = MigrationPair
   { mpMigrate :: m ()
   , mpDown :: Maybe (m ())
   }
+
+doesSchemaExist :: (MonadTx m) => SchemaName -> m Bool
+doesSchemaExist schemaName =
+  liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+    SELECT EXISTS
+    ( SELECT 1 FROM information_schema.schemata
+      WHERE schema_name = $1
+    ) |] (Identity schemaName) False
+
+
+doesTableExist :: (MonadTx m) => SchemaName -> TableName -> m Bool
+doesTableExist schemaName tableName =
+  liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+    SELECT EXISTS
+    ( SELECT 1 FROM pg_tables
+      WHERE schemaname = $1 AND tablename = $2
+    ) |] (schemaName, tableName) False
+
+isExtensionAvailable :: (MonadTx m) => SchemaName -> m Bool
+isExtensionAvailable schemaName =
+  liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
+    SELECT EXISTS
+    ( SELECT 1 FROM pg_catalog.pg_available_extensions
+      WHERE name = $1
+    ) |] (Identity schemaName) False
+
+isCatalogMigrateRequired
+  :: forall m
+   . ( MonadIO m
+     , MonadTx m
+     )
+  => m Bool
+isCatalogMigrateRequired = do
+  doesSchemaExist (SchemaName "hdb_catalog") >>= \case
+    False -> pure True
+    True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
+      False -> pure True
+      True  -> do
+        dbCatalogVersion <- liftTx getCatalogVersion
+        pure $ dbCatalogVersion /= latestCatalogVersionString
 
 migrateCatalog
   :: forall m
@@ -159,34 +199,14 @@ migrateCatalog migrationTime = do
           pure (MRMigrated previousVersion, schemaCache)
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
-        
+
     buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
     buildCacheAndRecreateSystemMetadata = do
       schemaCache <- buildRebuildableSchemaCache
       view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
-      
+
     updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
-    doesSchemaExist schemaName =
-      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
-        SELECT EXISTS
-        ( SELECT 1 FROM information_schema.schemata
-          WHERE schema_name = $1
-        ) |] (Identity schemaName) False
-
-    doesTableExist schemaName tableName =
-      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
-        SELECT EXISTS
-        ( SELECT 1 FROM pg_tables
-          WHERE schemaname = $1 AND tablename = $2
-        ) |] (schemaName, tableName) False
-
-    isExtensionAvailable schemaName =
-      liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
-        SELECT EXISTS
-        ( SELECT 1 FROM pg_catalog.pg_available_extensions
-          WHERE name = $1
-        ) |] (Identity schemaName) False
 
 downgradeCatalog :: forall m. (MonadIO m, MonadTx m) => DowngradeOptions -> UTCTime -> m MigrationResult
 downgradeCatalog opts time = do

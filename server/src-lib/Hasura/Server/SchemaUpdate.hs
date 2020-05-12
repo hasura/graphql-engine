@@ -151,7 +151,7 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
     notifyHandler = \case
       PG.PNEOnStart -> do
         eRes <- runExceptT $ PG.runTx pool
-          (PG.Serializable, Nothing) fetchLastUpdate
+          (PG.ReadCommitted, Nothing) fetchLastUpdate
         case eRes of
           Left e         -> onError e
           Right mLastUpd -> refreshCache mLastUpd
@@ -228,7 +228,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
   runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
-  pgCtx = PGExecCtx pool PG.Serializable
+  pgCtx = PGExecCtx pool PG.ReadCommitted
 
 logInfo :: Logger Hasura -> ThreadType -> Value -> IO ()
 logInfo logger threadType val = unLogger logger $

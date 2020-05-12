@@ -51,7 +51,7 @@ import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware               (corsMiddleware)
-import           Hasura.Server.Migrate                  (migrateCatalog)
+import           Hasura.Server.Migrate
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
@@ -524,11 +524,24 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
 
     migrateAndInitialiseSchemaCache :: m (E.PlanCache, SchemaCacheRef, Maybe UTCTime)
     migrateAndInitialiseSchemaCache = do
-      let pgExecCtx = PGExecCtx pool Q.Serializable
+      let pgExecSerCtx = PGExecCtx pool Q.Serializable
+          pgExecCtx = PGExecCtx pool Q.RepeatableRead
           adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
       currentTime <- liftIO getCurrentTime
-      initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite do
-        (,) <$> migrateCatalog currentTime <*> liftTx fetchLastUpdate
+      migrateRequiredResult' <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadOnly checkMigrateRequired
+      migrateRequiredResult <- onLeft migrateRequiredResult' $ \err -> do
+        L.unLogger logger StartupLog
+          { slLogLevel = L.LevelError
+          , slKind = "db_migrate"
+          , slInfo = toJSON err
+          }
+        liftIO exitFailure
+
+      initialiseResult <- case migrateRequiredResult of
+        Left (schemaCache', lastUpdateEvent') ->
+          pure $ pure ((MRNothingToDo, schemaCache'), lastUpdateEvent')
+        Right _ -> runExceptT $ peelRun adminRunCtx pgExecSerCtx Q.ReadWrite do
+          (,) <$> migrateCatalog currentTime <*> liftTx fetchLastUpdate
 
       ((migrationResult, schemaCache), lastUpdateEvent) <-
         initialiseResult `onLeft` \err -> do
@@ -546,6 +559,14 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
       let cacheRef = SchemaCacheRef cacheLock cacheCell (E.clearPlanCache planCache)
 
       pure (planCache, cacheRef, view _2 <$> lastUpdateEvent)
+      where
+        checkMigrateRequired = do
+          migrateRequired <- isCatalogMigrateRequired
+          if migrateRequired
+            then
+            pure $ Right ()
+            else
+            Left <$> ((,) <$> buildRebuildableSchemaCache <*> liftTx fetchLastUpdate)
 
 httpApp
   :: (HasVersion, MonadIO m, MonadBaseControl IO m, ConsoleRenderer m, HttpLog m, UserAuthentication m, MetadataApiAuthorization m)
