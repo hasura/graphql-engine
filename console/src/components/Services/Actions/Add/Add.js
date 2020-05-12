@@ -18,6 +18,7 @@ import {
   resetDerivedActionParentOperation,
 } from './reducer';
 import { createAction } from '../ServerIO';
+import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 
 const AddAction = ({
   handler,
@@ -62,8 +63,7 @@ const AddAction = ({
     dispatch(dispatchNewHeaders(hs));
   };
 
-  const toggleForwardClientHeaders = e => {
-    e.preventDefault();
+  const toggleForwardClientHeaders = () => {
     dispatch(toggleFCH());
   };
 
@@ -81,6 +81,17 @@ const AddAction = ({
     !actionDefinitionError &&
     !actionParseTimer &&
     !typedefParseTimer;
+
+  let actionType;
+  if (!actionDefinitionError) {
+    // TODO optimise
+    if (!actionParseTimer) {
+      const { type, error } = getActionDefinitionFromSdl(actionDefinitionSdl);
+      if (!error) {
+        actionType = type;
+      }
+    }
+  }
 
   return (
     <div>
@@ -110,12 +121,16 @@ const AddAction = ({
         service="create-action"
       />
       <hr />
-      <KindEditor
-        value={kind}
-        onChange={kindOnChange}
-        className={styles.add_mar_bottom_mid}
-      />
-      <hr />
+      {actionType === 'query' ? null : (
+        <React.Fragment>
+          <KindEditor
+            value={kind}
+            onChange={kindOnChange}
+            className={styles.add_mar_bottom_mid}
+          />
+          <hr />
+        </React.Fragment>
+      )}
       <HeadersConfEditor
         forwardClientHeaders={forwardClientHeaders}
         toggleForwardClientHeaders={toggleForwardClientHeaders}

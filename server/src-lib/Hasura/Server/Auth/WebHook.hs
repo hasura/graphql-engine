@@ -28,6 +28,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
+import           Hasura.Session
 
 
 data AuthHookType
@@ -87,7 +88,7 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
       unLogger logger $
         WebHookLog LevelError Nothing (ahUrl hook) (hookMethod hook)
         (Just $ HttpException err) Nothing Nothing
-      throw500 $ "webhook authentication request failed"
+      throw500 "webhook authentication request failed"
 
 
 mkUserInfoFromResp
@@ -115,15 +116,12 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody
     throw500 "Invalid response from authorization hook"
   where
     getUserInfoFromHdrs rawHeaders = do
-      let usrVars = mkUserVars $ Map.toList rawHeaders
-      case roleFromVars usrVars of
-        Nothing -> do
-          logError
-          throw500 "missing x-hasura-role key in webhook response"
-        Just rn -> do
-          logWebHookResp LevelInfo Nothing Nothing
-          expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
-          return (mkUserInfo rn usrVars, expiration)
+      userInfo <- mkUserInfo UAdminSecretNotSent
+                  (mkSessionVariablesText $ Map.toList rawHeaders)
+                  Nothing
+      logWebHookResp LevelInfo Nothing Nothing
+      expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
+      pure (userInfo, expiration)
 
     logWebHookResp :: MonadIO m => LogLevel -> Maybe BL.ByteString -> Maybe T.Text -> m ()
     logWebHookResp logLevel mResp message =

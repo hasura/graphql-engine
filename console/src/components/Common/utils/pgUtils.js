@@ -11,6 +11,10 @@ export const getTableSchema = table => {
   return table.table_schema;
 };
 
+export const getTableType = table => {
+  return table.table_type;
+};
+
 // TODO: figure out better pattern for overloading fns
 // tableName and tableNameWithSchema are either/or arguments
 export const generateTableDef = (
@@ -51,7 +55,7 @@ export const getTableNameWithSchema = (tableDef, wrapDoubleQuotes = false) => {
 };
 
 export const checkIfTable = table => {
-  return table.table_type === 'BASE TABLE';
+  return table.table_type === 'TABLE';
 };
 
 export const displayTableName = table => {
@@ -79,6 +83,48 @@ export const getOnlyTables = tablesOrViews => {
 
 export const getOnlyViews = tablesOrViews => {
   return tablesOrViews.filter(t => !checkIfTable(t));
+};
+
+export const QUERY_TYPES = ['insert', 'select', 'update', 'delete'];
+
+export const getTableSupportedQueries = table => {
+  let supportedQueryTypes;
+
+  if (checkIfTable(table)) {
+    supportedQueryTypes = QUERY_TYPES;
+  } else {
+    // is View
+    supportedQueryTypes = [];
+
+    // Add insert/update permission if it is insertable/updatable as returned by pg
+    if (table.view_info) {
+      if (
+        table.view_info.is_insertable_into === 'YES' ||
+        table.view_info.is_trigger_insertable_into === 'YES'
+      ) {
+        supportedQueryTypes.push('insert');
+      }
+
+      supportedQueryTypes.push('select'); // to maintain order
+
+      if (table.view_info.is_updatable === 'YES') {
+        supportedQueryTypes.push('update');
+        supportedQueryTypes.push('delete');
+      } else {
+        if (table.view_info.is_trigger_updatable === 'YES') {
+          supportedQueryTypes.push('update');
+        }
+
+        if (table.view_info.is_trigger_deletable === 'YES') {
+          supportedQueryTypes.push('delete');
+        }
+      }
+    } else {
+      supportedQueryTypes.push('select');
+    }
+  }
+
+  return supportedQueryTypes;
 };
 
 /*** Table/View column utils ***/
@@ -219,7 +265,7 @@ export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
         allSchemas,
         generateTableDef(ref_table, ref_table_table_schema)
       );
-      if (!refTableSchema.is_enum) return;
+      if (!refTableSchema || !refTableSchema.is_enum) return;
 
       const keys = Object.keys(column_mapping);
       if (!keys.length) return;

@@ -10,6 +10,8 @@ source: https://github.com/kubernetes-sigs/krew/blob/master/cmd/krew/cmd/install
 import (
 	"fmt"
 
+	"github.com/hasura/graphql-engine/cli/util"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/pkg/errors"
@@ -59,6 +61,7 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := pluginsInstallCmd.Flags()
 
+	f.Var(&opts.Version, "version", "version to be installed")
 	f.StringVar(&opts.ManifestFile, "manifest-file", "", "(dev) speficy local manifest file")
 	f.MarkHidden("manifest-file")
 
@@ -70,8 +73,16 @@ type PluginInstallOptions struct {
 
 	Name         string
 	ManifestFile string
+	Version      util.VersionFlag
 }
 
 func (o *PluginInstallOptions) Run() error {
-	return o.EC.PluginsConfig.Install(o.Name, o.ManifestFile)
+	plugin, err := ec.PluginsConfig.GetPlugin(o.Name, plugins.FetchOpts{
+		ManifestFile: o.ManifestFile,
+		Version:      o.Version.Version,
+	})
+	if err != nil {
+		return err
+	}
+	return o.EC.PluginsConfig.Install(plugin)
 }

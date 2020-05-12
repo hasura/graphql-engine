@@ -33,6 +33,12 @@ Examples
     # Setup migration files from an instance mentioned by the flag:
     hasura migrate create init --from-server --endpoint "<endpoint>"
 
+    # Take pg_dump of schema and hasura metadata from server while specifying the schemas to include
+    hasura migrate create init --from-server --schema myschema1,myschema2
+
+    # Take pg_dump from server and save it as a migration and specify the schemas to include
+    hasura migrate create init --sql-from-server --schema myschema1,myschema2
+
 Options
 ~~~~~~~
 
@@ -42,7 +48,7 @@ Options
   -h, --help                        help for create
       --metadata-from-file string   path to a hasura metadata file to be used for up actions
       --metadata-from-server        take metadata from the server and write it as an up migration file
-      --schema stringArray          name of Postgres schema to export as a migration (default [public])
+      --schema strings              name of Postgres schema to export as a migration. provide multiple schemas with a comma separated list e.g. --schema public,user (default [public])
       --sql-from-file string        path to an SQL file which contains the SQL statements
       --sql-from-server             take pg_dump from the server and save it as a migration
 
@@ -51,12 +57,15 @@ Options inherited from parent commands
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL engine
-      --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --no-color              do not colorize output (default: false)
-      --project string        directory where commands are executed (default: current dir)
-      --skip-update-check     skip automatic update check on command execution
+      --admin-secret string            admin secret for Hasura GraphQL engine
+      --certificate-authority string   path to a cert file for the certificate authority
+      --endpoint string                http(s) endpoint for Hasura GraphQL engine
+      --envfile string                 .env filename to load ENV vars from (default ".env")
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false)
+      --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color                       do not colorize output (default: false)
+      --project string                 directory where commands are executed (default: current dir)
+      --skip-update-check              Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

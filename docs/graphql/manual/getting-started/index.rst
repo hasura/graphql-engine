@@ -18,7 +18,7 @@ To use the Hasura GraphQL engine, you need to:
 #. Use the Hasura console (an admin UI) that connects to the Hasura GraphQL engine to help you build your schema and
    run GraphQL queries
 
-.. thumbnail:: ../../../img/graphql/manual/getting-started/running-hasura.png
+.. thumbnail:: /img/graphql/manual/getting-started/running-hasura.png
    :width: 75%
    :class: no-shadow
    :alt: Running Hasura
