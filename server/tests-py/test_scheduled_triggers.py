@@ -142,7 +142,7 @@ class TestCronTrigger(object):
         TestCronTrigger.init_time = datetime.utcnow()
         # the cron events will be generated based on the current time, they
         # will not be exactly the same though(the server now and now here)
-        assert cron_st_code == 200
+        assert cron_st_code == 200,resp
         assert cron_st_resp['message'] == 'success'
 
     def test_check_generated_cron_scheduled_events(self,hge_ctx):
@@ -155,7 +155,7 @@ class TestCronTrigger(object):
         sql = '''
         select timezone('utc',scheduled_time) as scheduled_time
         from hdb_catalog.hdb_cron_events where
-        name = '{}' order by scheduled_time asc;'''
+        trigger_name = '{}' order by scheduled_time asc;'''
         q = {
             "type":"run_sql",
             "args":{
