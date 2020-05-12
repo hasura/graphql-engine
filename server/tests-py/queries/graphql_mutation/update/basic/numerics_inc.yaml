@@ -34,7 +34,7 @@ query:
         update_numerics(
           where: {id: {_eq: 1}},
           _inc: {
-             num_double: -1E-8
+             num_double: -3E-4
              num_money: -2E-2
              num_numeric: -1E-30
           }
@@ -65,6 +65,6 @@ response:
         affected_rows: 1
         returning:
         - id: 1
-          num_double: '12344.56999999'
+          num_double: '12344.5697'
           num_money: $12,344.55
           num_numeric: '12344.5699999999999999999999999999990'
