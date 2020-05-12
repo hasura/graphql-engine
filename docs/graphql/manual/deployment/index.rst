@@ -40,6 +40,11 @@ to configure the Hasura GraphQL engine for your production environment:
 - :ref:`postgres_permissions`
 - :ref:`GraphQL engine server configuration <hge_flags>`
 
+Networking
+----------
+
+- :ref:`networking`
+
 Logs
 ----
 
@@ -57,6 +62,7 @@ For access to Hasura GraphQL engine logs, check the below page for details:
    Using Docker <docker/index>
    Using Kubernetes <kubernetes/index>
    Server configuration <graphql-engine-flags/index>
+   Networking <networking>
    postgres-permissions
    securing-graphql-endpoint
    Server logs <logging>
