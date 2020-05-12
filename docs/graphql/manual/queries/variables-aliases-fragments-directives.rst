@@ -52,7 +52,7 @@ In order to make a query re-usable, it can be made dynamic by using variables.
 
 .. admonition:: Variables and performance
 
-  Variables have an impact on query performance. Refer to :ref:`this page<query_performance>` to learn more about Hasura's query plan caching and about optimizing when using variables.
+  Variables have an impact on query performance. Refer to :ref:`query performance <query_performance>` to learn more about Hasura's query plan caching and about optimizing when using variables.
 
 Using aliases
 -------------
