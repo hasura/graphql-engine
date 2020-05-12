@@ -52,6 +52,7 @@ const PendingEvents: React.FC<Props> = props => {
         render={renderRows}
         presets={{
           filters: [
+            makeValueFilter('trigger_name', '$eq', triggerName),
             makeValueFilter('archived', '$eq', 'false'),
             makeValueFilter('delivered', '$eq', 'false'),
             makeValueFilter('error', '$eq', 'false'),
