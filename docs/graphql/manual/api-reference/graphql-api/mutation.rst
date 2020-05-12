@@ -14,8 +14,8 @@ API Reference - Mutation
  
 .. _insert_upsert_syntax:
 
-Insert / upsert syntax
-----------------------
+**insert** (upsert) syntax
+--------------------------
 
 .. code-block:: none
 
@@ -99,8 +99,8 @@ Insert / upsert syntax
 
 .. _insert_upsert_one_syntax:
 
-Insert / upsert one syntax
---------------------------
+**insert_one** syntax
+---------------------
 
 .. code-block:: none
 
@@ -159,8 +159,8 @@ Insert / upsert one syntax
 
 .. _update_by_pk_syntax:
 
-Update by pk syntax
--------------------
+**update_by_pk** syntax
+-----------------------
 
 .. code-block:: none
 
@@ -238,8 +238,8 @@ Update by pk syntax
 
 .. _update_syntax:
 
-Update syntax
--------------
+**update** syntax
+-----------------
 
 .. code-block:: none
 
@@ -318,8 +318,8 @@ Update syntax
 
 .. _delete_by_pk_syntax:
 
-Delete by pk syntax
--------------------
+**delete_by_pk** syntax
+-----------------------
 
 .. code-block:: none
 
@@ -362,8 +362,8 @@ Delete by pk syntax
 
 .. _delete_syntax:
 
-Delete syntax
--------------
+**delete** syntax
+-----------------
 
 .. code-block:: none
 

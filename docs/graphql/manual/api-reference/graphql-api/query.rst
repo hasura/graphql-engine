@@ -12,8 +12,8 @@ API Reference - Query / Subscription
   :depth: 3
   :local:
 
-Query / subscription syntax
----------------------------
+**query** / **subscription** syntax
+-----------------------------------
 
 .. code-block:: none
 
@@ -69,8 +69,8 @@ Query / subscription syntax
 
     For more examples and details of usage, please see :ref:`this <queries>`.
 
-Query / subscription by pk syntax
----------------------------------
+**query_by_pk** / **subscription_by_pk** syntax
+-----------------------------------------------
 
 .. code-block:: none
 
