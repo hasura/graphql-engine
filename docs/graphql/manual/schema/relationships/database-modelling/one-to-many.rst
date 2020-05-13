@@ -19,12 +19,12 @@ Say we have the following two tables in our database schema:
 .. code-block:: sql
 
   author (
-    id INT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name TEXT
   )
 
   article (
-    id INT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     author_id INT
     title TEXT
     ...
