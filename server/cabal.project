@@ -14,6 +14,11 @@
 -- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
 packages: .
 
+constraints:
+  -- We build with cabal-install 2.4 in CI, so ensure we don’t end up with a
+  -- freeze file that forces an incompatible version for Setup.hs scripts.
+  setup.Cabal <2.6
+
 package *
   optimization: 2
 

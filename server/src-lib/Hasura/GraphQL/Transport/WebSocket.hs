@@ -224,7 +224,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
           CSInitialised _ expTimeM _ ->
             maybe STM.retry return expTimeM
       currTime <- TC.getCurrentTime
-      sleep $ fromUnits $ TC.diffUTCTime expTime currTime
+      sleep $ convertDuration $ TC.diffUTCTime expTime currTime
 
     accept hdrs errType = do
       logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing Nothing) EAccepted
@@ -356,7 +356,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               -- Telemetry. NOTE: don't time network IO:
               telemTimeTot <- Seconds <$> timerTot
               sendSuccResp encJson $ LQ.LiveQueryMetadata telemTimeIO_DT
-              let telemTimeIO = fromUnits telemTimeIO_DT
+              let telemTimeIO = convertDuration telemTimeIO_DT
               Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
           sendCompleted (Just reqId)
@@ -382,7 +382,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             -- Telemetry. NOTE: don't time network IO:
             telemTimeTot <- Seconds <$> timerTot
             sendRemoteResp reqId (_hrBody val) $ LQ.LiveQueryMetadata telemTimeIO_DT
-            let telemTimeIO = fromUnits telemTimeIO_DT
+            let telemTimeIO = convertDuration telemTimeIO_DT
             Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
       sendCompleted (Just reqId)
