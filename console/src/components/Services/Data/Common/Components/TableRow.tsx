@@ -86,7 +86,6 @@ export const TableRow: React.FC<TableRowProps> = ({
             setRef('insertRadioNode', node);
           }}
           name={`${colName}-value`}
-          value="option1"
           defaultChecked={!!prevValue || (!hasDefault && !isNullable)}
           disabled={isDisabled}
         />
@@ -111,9 +110,8 @@ export const TableRow: React.FC<TableRowProps> = ({
             setRef('nullNode', node);
           }}
           disabled={!isNullable || isGenerated}
-          defaultChecked={prevValue ? prevValue === null : isNullable}
+          defaultChecked={prevValue === null || isNullable}
           name={`${colName}-value`}
-          value="NULL"
           data-test={`nullable-radio-${index}`}
         />
         <span className={styles.radioSpan}>NULL</span>
@@ -125,10 +123,11 @@ export const TableRow: React.FC<TableRowProps> = ({
             setRef('defaultNode', node);
           }}
           name={`${colName}-value`}
-          value="option3"
           disabled={isDisabled || (!hasDefault && !isIdentity)}
           defaultChecked={
-            prevValue ? false : isGenerated || isIdentity || hasDefault
+            prevValue !== undefined
+              ? false
+              : isGenerated || isIdentity || hasDefault
           }
           data-test={`typed-input-default-${index}`}
         />
