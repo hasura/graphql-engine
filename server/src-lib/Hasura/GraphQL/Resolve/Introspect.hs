@@ -11,6 +11,8 @@ import qualified Data.HashMap.Strict                as Map
 import qualified Data.HashSet                       as Set
 import qualified Data.Text                          as T
 import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Hasura.SQL.Value                   as S
+import qualified Hasura.SQL.Types                   as S
 
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
@@ -156,7 +158,7 @@ ifaceR' i@(IFaceTyInfo descM n flds) fld =
 
 -- 4.5.2.5
 enumTypeR
-  :: ( Monad m )
+  :: ( Monad m, MonadReusability m, MonadError QErr m )
   => EnumTyInfo
   -> Field
   -> m J.Object
@@ -167,9 +169,20 @@ enumTypeR (EnumTyInfo descM n vals _) fld =
     "kind"        -> retJ TKENUM
     "name"        -> retJ $ namedTyToTxt n
     "description" -> retJ $ fmap G.unDescription descM
-    "enumValues"  -> fmap J.toJSON $ mapM (enumValueR subFld) $
-                     sortOn _eviVal $ Map.elems (normalizeEnumValues vals)
+    "enumValues"  -> do
+      includeDeprecated <- readIncludeDeprecated subFld
+      fmap J.toJSON $ mapM (enumValueR subFld) $
+        filter (\val -> includeDeprecated || _eviIsDeprecated val) $
+        sortOn _eviVal $ Map.elems (normalizeEnumValues vals)
     _             -> return J.Null
+  where
+    readIncludeDeprecated subFld = do
+      let argM = Map.lookup "includeDeprecated" (_fArguments subFld)
+      case argM of
+        Nothing -> pure False
+        Just arg -> asScalarVal arg S.PGBoolean >>= \case
+          S.PGValBoolean b -> pure b
+          _ -> throw500 "unexpected non-Boolean argument for includeDeprecated"
 
 -- 4.5.2.6
 inputObjR
