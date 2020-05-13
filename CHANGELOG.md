@@ -43,7 +43,7 @@ can be configured to run everyday to generate the sales report of the previous d
 Creating a scheduled event will be useful on an ad hoc basis. For example, A new scheduled event can be
 created when users signs up in an app, the scheduled event can be scheduled at 2 weeks from the signup time
 to send them an email asking about their experience using the app.
-
+(close #1914)
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
