@@ -211,6 +211,7 @@ library
                      , Hasura.App
                      , Hasura.Db
                      -- Exposed for benchmark:
+                     , Hasura.Cache.Types
                      , Hasura.Cache.Bounded
                      , Hasura.Cache.Unbounded
                      , Hasura.Cache
