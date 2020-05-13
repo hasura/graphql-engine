@@ -451,8 +451,7 @@ FROM (
       CASE WHEN c.relkind = 'r' OR
                      (c.relkind IN ('v', 'f') AND
                       pg_column_is_updatable(c.oid, a.attnum, false))
-           THEN 'YES' ELSE 'NO' END AS is_updatable,
-      CASE WHEN a.attgenerated = 's' THEN 'YES' ELSE 'NO' END AS is_generated
+           THEN 'YES' ELSE 'NO' END AS is_updatable
     FROM (pg_attribute a LEFT JOIN pg_attrdef ad ON attrelid = adrelid AND attnum = adnum)
       JOIN (pg_class c JOIN pg_namespace nc ON (c.relnamespace = nc.oid)) ON a.attrelid = c.oid
       JOIN (pg_type t JOIN pg_namespace nt ON (t.typnamespace = nt.oid)) ON a.atttypid = t.oid
@@ -738,3 +737,20 @@ WHERE
 
 export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
+
+export const getGeneratedColumnsInfo = (schemaName, tableName) => {
+  return {
+    type: 'run_sql',
+    args: {
+      sql: `
+SELECT
+	column_name,
+	is_generated
+FROM
+	INFORMATION_SCHEMA.COLUMNS
+WHERE
+	table_name = '${tableName}' AND table_schema = '${schemaName}';
+  `,
+    },
+  };
+};

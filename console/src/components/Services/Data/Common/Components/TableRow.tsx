@@ -5,7 +5,7 @@ import styles from '../../../../Common/TableCommon/Table.scss';
 import { TypedInput } from './TypedInput';
 
 type Column = {
-  column_name?: string;
+  column_name: string;
   is_generated?: string;
   is_nullable?: string;
   is_identity?: string;
@@ -24,6 +24,7 @@ export interface TableRowProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>, val: unknown) => void;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   prevValue?: unknown;
+  generatedColumns: string[];
 }
 
 export const TableRow: React.FC<TableRowProps> = ({
@@ -35,19 +36,20 @@ export const TableRow: React.FC<TableRowProps> = ({
   index,
   clone,
   prevValue,
+  generatedColumns = [],
 }) => {
   const {
     column_name: colName,
-    is_generated,
     is_nullable,
     is_identity,
     column_default,
   } = column;
   const hasDefault = column_default ? column_default.trim() !== '' : false;
-  const isNullable = is_nullable ? is_nullable !== 'NO' : false;
   const isIdentity = is_identity ? is_identity !== 'NO' : false;
   const isAutoIncrement = isColumnAutoIncrement(column);
-  const isGenerated = is_generated ? is_generated !== 'NO' : false;
+  const isGenerated =
+    generatedColumns.length > 0 && generatedColumns.includes(colName);
+  const isNullable = is_nullable ? is_nullable !== 'NO' && !isGenerated : false;
   const isDisabled = isAutoIncrement || isGenerated;
 
   const handleChange = (
@@ -86,7 +88,7 @@ export const TableRow: React.FC<TableRowProps> = ({
             setRef('insertRadioNode', node);
           }}
           name={`${colName}-value`}
-          defaultChecked={!!prevValue || (!hasDefault && !isNullable)}
+          defaultChecked={prevValue ? true : !hasDefault && !isNullable}
           disabled={isDisabled}
         />
         <TypedInput
@@ -110,7 +112,7 @@ export const TableRow: React.FC<TableRowProps> = ({
             setRef('nullNode', node);
           }}
           disabled={!isNullable || isGenerated}
-          defaultChecked={prevValue === null || isNullable}
+          defaultChecked={prevValue ? prevValue === null : isNullable}
           name={`${colName}-value`}
           data-test={`nullable-radio-${index}`}
         />

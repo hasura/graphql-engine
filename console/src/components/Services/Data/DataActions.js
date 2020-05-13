@@ -27,6 +27,7 @@ import {
   fetchTableListQuery,
   fetchTrackedTableListQuery,
   mergeLoadSchemaData,
+  getGeneratedColumnsInfo,
 } from './utils';
 
 import _push from './push';
@@ -60,6 +61,8 @@ const RESET_COLUMN_TYPE_INFO = 'Data/RESET_COLUMN_TYPE_INFO';
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
+
+const SET_GENERATED_COLUMNS_INFO = 'Data/SET_GENERATED_COLUMNS_INFO';
 
 export const SET_ALL_ROLES = 'Data/SET_ALL_ROLES';
 export const setAllRoles = roles => ({
@@ -650,6 +653,35 @@ export const fetchRoleList = () => (dispatch, getState) => {
   );
 };
 
+const fetchGeneratedColumnsInfo = (tableName, schemaName) => (
+  dispatch,
+  getState
+) => {
+  const query = getGeneratedColumnsInfo(schemaName, tableName);
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(query),
+  };
+
+  return dispatch(requestAction(Endpoints.query, options)).then(
+    ({ result }) => {
+      if (result && result.length > 1) {
+        dispatch({
+          type: SET_GENERATED_COLUMNS_INFO,
+          data: result
+            .filter(([, isGenerated]) => isGenerated === 'ALWAYS')
+            .map(info => info[0]),
+        });
+      }
+    },
+    error => {
+      console.error('Failed to load roles ' + JSON.stringify(error));
+    }
+  );
+};
+
 /* ******************************************************* */
 const dataReducer = (state = defaultState, action) => {
   // eslint-disable-line no-unused-vars
@@ -785,6 +817,11 @@ const dataReducer = (state = defaultState, action) => {
         ...state,
         allRoles: action.roles,
       };
+    case SET_GENERATED_COLUMNS_INFO:
+      return {
+        ...state,
+        generatedColumns: action.data,
+      };
     default:
       return state;
   }
@@ -816,4 +853,6 @@ export {
   fetchColumnTypeInfo,
   RESET_COLUMN_TYPE_INFO,
   setUntrackedRelations,
+  SET_GENERATED_COLUMNS_INFO,
+  fetchGeneratedColumnsInfo,
 };
