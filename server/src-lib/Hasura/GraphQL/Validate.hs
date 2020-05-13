@@ -29,6 +29,7 @@ import qualified Data.Text                              as T
 import qualified Data.UUID                              as UUID
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.Sequence                          as Seq
 
 import           Hasura.GraphQL.NormalForm
 import           Hasura.GraphQL.Resolve.InputValue      (annInpValueToJson)
@@ -69,8 +70,7 @@ getTypedOp opNameM selSets opDefs =
       throwVE $ "operationName cannot be used when " <>
       "an anonymous operation exists in the document"
     (Nothing, [selSet], []) ->
-      return $ G.TypedOperationDefinition
-      G.OperationTypeQuery Nothing [] [] selSet
+      return $ G.TypedOperationDefinition G.OperationTypeQuery Nothing [] [] selSet
     (Nothing, [], [opDef])  ->
       return opDef
     (Nothing, _, _) ->

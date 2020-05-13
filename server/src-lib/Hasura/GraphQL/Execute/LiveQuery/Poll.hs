@@ -44,6 +44,7 @@ import qualified Data.Time.Clock                          as Clock
 import qualified Data.UUID                                as UUID
 import qualified Data.UUID.V4                             as UUID
 --import qualified Language.GraphQL.Draft.Syntax            as G
+
 import qualified ListT
 import qualified StmContainers.Map                        as STMMap
 import qualified System.Metrics.Distribution              as Metrics
@@ -63,12 +64,7 @@ import           Hasura.Session
 -- -------------------------------------------------------------------------------------------------
 -- Subscribers
 
-data Subscriber
-  = Subscriber
-  { --  _sRootAlias        :: !G.Name
-  -- ,
-    _sOnChangeCallback :: !OnChange
-  }
+newtype Subscriber = Subscriber { _sOnChangeCallback :: OnChange }
 
 -- | live query onChange metadata, used for adding more extra analytics data
 data LiveQueryMetadata
@@ -84,7 +80,6 @@ data LiveQueryResponse
   }
 
 type LGQResponse = GQResult LiveQueryResponse
-
 type OnChange = LGQResponse -> IO ()
 
 newtype SubscriberId = SubscriberId { _unSinkId :: UUID.UUID }
@@ -201,13 +196,8 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = 
   pushResultToSubscribers sinks
   where
     CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
-    pushResultToSubscribers = A.mapConcurrently_ $ \(Subscriber action) ->
-      let -- aliasText = G.unName alias
-          wrapWithAlias response = LiveQueryResponse
-            { _lqrPayload = encJToBS response
-            , _lqrExecutionTime = dTime
-            }
-      in action (wrapWithAlias <$> result)
+    response = result <&> \payload -> LiveQueryResponse (encJToBS payload) dTime
+    pushResultToSubscribers = A.mapConcurrently_ $ \(Subscriber action) -> action response
 
 -- -------------------------------------------------------------------------------------------------
 -- Pollers

@@ -346,17 +346,3 @@ Date:   Wed May 13 18:03:16 2020 +0530
     Co-authored-by: Marion Schleifer <marion@hasura.io>
     Co-authored-by: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
     Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>
-
-commit 4d10a610f4ade66db758d459e3ddf02a43996e45
-Author: Auke Booij <auke@hasura.io>
-Date:   Wed May 13 10:09:44 2020 +0200
-
-    server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239) (#4551)
-
-    * Add support for multiple top-level fields in a subscription to improve testability of subscriptions
-
-    * Add an internal flag to enable multiple subscriptions
-
-    * Add missing call to withConstructorFn in live queries (fix #3239)
-
-    Co-authored-by: Alexis King <lexi.lambda@gmail.com>

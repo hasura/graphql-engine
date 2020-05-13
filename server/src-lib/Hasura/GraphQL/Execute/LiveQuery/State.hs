@@ -111,8 +111,7 @@ addLiveQuery logger lqState plan onResultAction = do
 
     handlerId = PollerKey role query
 
-    !subscriber = -- Subscriber alias onResultAction
-      Subscriber onResultAction
+    !subscriber = Subscriber onResultAction
     addToCohort sinkId handlerC =
       TMap.insert (Subscriber onResultAction) sinkId $ _cNewSubscribers handlerC
 

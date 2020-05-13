@@ -62,6 +62,7 @@ import           Hasura.Session
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Server.Version             (HasVersion)
 
 -- -------------------------------------------------------------------------------------------------
 -- Multiplexed queries
@@ -332,7 +333,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
       cohortVariables = CohortVariables (_uiSession userInfo) validatedQueryVars validatedSyntheticVars
 
       plan = LiveQueryPlan parameterizedPlan cohortVariables
-      -- varTypes = finalReusability ^? GV._Reusable
+      -- varTypes = finalReusability ^? GV._Reusable -- TODO(PDV): Depends on query plan caching
       reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars <$> _varTypes
   pure (plan, reusablePlan)
 
