@@ -389,7 +389,7 @@ class TestGraphQLQueryBoolExpJsonB:
     def dir(cls):
         return 'queries/graphql_query/boolexp/jsonb'
 
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpPostGIS:
 
