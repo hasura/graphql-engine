@@ -184,9 +184,6 @@ instance FromJSON ReplaceMetadata where
       <*> o .:? "remote_schemas" .!= []
       <*> o .:? "query_collections" .!= []
       <*> o .:? "allowlist" .!= []
-      -- ideally it should be `allow_list` but while exporting the metadata the
-      -- key is `allowlist`. Changing the key in the ToJSON instance might
-      -- introduce a breaking change.
       <*> o .:? "custom_types" .!= emptyCustomTypes
       <*> o .:? "actions" .!= []
       <*> o .:? "cron_triggers" .!= []
