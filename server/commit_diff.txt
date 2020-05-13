@@ -327,9 +327,3 @@ Date:   Mon May 18 14:27:56 2020 +0200
     planning.
 
     Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
-commit 69f24d47b3fe06e5dce5dbb36300f4d0f68d2301
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Wed May 13 17:38:16 2020 -0400
-
-    dev.sh: bump version due to addition of croniter python dependency
