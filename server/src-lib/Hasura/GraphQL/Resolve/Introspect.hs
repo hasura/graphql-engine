@@ -171,18 +171,24 @@ enumTypeR (EnumTyInfo descM n vals _) fld =
     "description" -> retJ $ fmap G.unDescription descM
     "enumValues"  -> do
       includeDeprecated <- readIncludeDeprecated subFld
-      fmap J.toJSON $ mapM (enumValueR subFld) $
-        filter (\val -> includeDeprecated || _eviIsDeprecated val) $
-        sortOn _eviVal $ Map.elems (normalizeEnumValues vals)
+      fmap J.toJSON $
+        mapM (enumValueR subFld) $
+        filter (\val -> includeDeprecated || not (_eviIsDeprecated val)) $
+        sortOn _eviVal $
+        Map.elems (normalizeEnumValues vals)
     _             -> return J.Null
-  where
-    readIncludeDeprecated subFld = do
-      let argM = Map.lookup "includeDeprecated" (_fArguments subFld)
-      case argM of
-        Nothing -> pure False
-        Just arg -> asScalarVal arg S.PGBoolean >>= \case
-          S.PGValBoolean b -> pure b
-          _ -> throw500 "unexpected non-Boolean argument for includeDeprecated"
+
+readIncludeDeprecated
+  :: ( Monad m, MonadReusability m, MonadError QErr m )
+  => Field
+  -> m Bool
+readIncludeDeprecated subFld = do
+  let argM = Map.lookup "includeDeprecated" (_fArguments subFld)
+  case argM of
+    Nothing -> pure False
+    Just arg -> asScalarVal arg S.PGBoolean >>= \case
+      S.PGValBoolean b -> pure b
+      _ -> throw500 "unexpected non-Boolean argument for includeDeprecated"
 
 -- 4.5.2.6
 inputObjR
@@ -255,7 +261,7 @@ namedTypeR' fld tyInfo = do
     case _fName subFld of
       "fields"     -> readIncludeDeprecated subFld
       "enumValues" -> readIncludeDeprecated subFld
-      _            -> return ()
+      _            -> return False
   -- Now fetch the required type information from the corresponding
   -- information generator
   case tyInfo of
@@ -265,12 +271,6 @@ namedTypeR' fld tyInfo = do
     TIInpObj inpObjTyInfo -> inputObjR inpObjTyInfo fld
     TIIFace iFaceTyInfo   -> ifaceR' iFaceTyInfo fld
     TIUnion unionTyInfo   -> unionR unionTyInfo fld
-  where
-    readIncludeDeprecated subFld = do
-      let argM = Map.lookup "includeDeprecated" (_fArguments subFld)
-      case argM of
-        Nothing -> return ()
-        Just arg -> void $ openOpaqueValue =<< asPGColumnValue arg
 
 -- 4.5.3
 fieldR
