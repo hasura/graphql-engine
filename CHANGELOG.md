@@ -6,6 +6,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: avoid loss of precision when passing values in scientific notation (fix #4733)
 - server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
 
 ## `v1.2.0`
