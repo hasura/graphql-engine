@@ -1,4 +1,40 @@
-module Hasura.GraphQL.Context where
+{-# LANGUAGE StrictData #-}
+
+module Hasura.GraphQL.Context
+  ( GQLContext(..)
+  , ParserFn
+  , QueryRootField(..)
+  ) where
+
+import           Hasura.Prelude
+
+import qualified Data.Aeson                    as J
+import qualified Language.GraphQL.Draft.Syntax as G
+
+import qualified Hasura.RQL.DML.Select.Types   as RQL
+
+import           Hasura.GraphQL.Parser
+
+data GQLContext = GQLContext
+  { gqlQueryParser :: ParserFn (HashMap G.Name QueryRootField)
+  }
+
+instance J.ToJSON GQLContext where
+  toJSON GQLContext{} = J.object [] -- FIXME
+
+type ParserFn a
+  =  G.SelectionSet Variable
+  -> Either (NESeq ParseError) (a, QueryReusability)
+
+-- FIXME: taken from Resolve.hs
+-- do we want to keep it the same?
+data QueryRootField
+  = QRFSimple      (RQL.AnnSimpleSelG UnpreparedValue)
+  | QRFPrimaryKey  (RQL.AnnSimpleSelG UnpreparedValue)
+  | QRFAggregation (RQL.AnnAggSelG    UnpreparedValue)
+  | QRFExp         Text
+
+{-
 
 import           Hasura.Prelude
 
@@ -74,3 +110,5 @@ emptyGCtx =
       allTys    = mkTyInfoMap $ TIObj queryRoot:defaultTypes
   -- for now subscription root is query root
   in GCtx allTys mempty queryRoot Nothing Nothing mempty mempty mempty mempty
+
+-}

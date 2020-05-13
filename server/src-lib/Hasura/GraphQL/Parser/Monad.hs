@@ -6,6 +6,7 @@ module Hasura.GraphQL.Parser.Monad
   , runSchemaT
 
   , ParseT
+  , runParseT
   , ParseError(..)
   ) where
 
@@ -13,23 +14,25 @@ import           Hasura.Prelude
 
 import qualified Data.Dependent.Map                    as DM
 import qualified Data.HashMap.Strict                   as M
+import qualified Data.Sequence.NonEmpty                as NE
 import qualified Language.Haskell.TH                   as TH
 
-import           Control.Monad.Primitive               (PrimMonad, stToPrim)
-import           Control.Monad.ST.Unsafe               (unsafeInterleaveST)
 import           Control.Monad.Unique
 import           Control.Monad.Validate
 import           Data.Dependent.Map                    (DMap)
 import           Data.GADT.Compare.Extended
+import           Data.IORef
 import           Data.Parser.JSONPath
-import           Data.Primitive.MutVar
 import           Data.Proxy                            (Proxy (..))
+import           System.IO.Unsafe                      (unsafeInterleaveIO)
 import           Type.Reflection                       (Typeable, typeRep)
 
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.Permission           (RoleName)
+import           Hasura.RQL.Types.Table                (TableCache)
 import           Hasura.SQL.Types
 
 -- -------------------------------------------------------------------------------------------------
@@ -37,14 +40,15 @@ import           Hasura.SQL.Types
 
 newtype SchemaT n m a = SchemaT
   { unSchemaT :: ReaderT (RoleName, TableCache) (StateT (DMap ParserId (ParserById n)) m) a
-  } deriving (Functor, Applicative, Monad)
+  } deriving (Functor, Applicative, Monad, MonadError e)
 
 runSchemaT :: Monad m => RoleName -> TableCache -> SchemaT n m a -> m a
 runSchemaT roleName tableCache = unSchemaT
   >>> flip runReaderT (roleName, tableCache)
   >>> flip evalStateT mempty
 
-instance (PrimMonad m, MonadUnique m, MonadError QErr m, MonadParse n)
+-- | see Note [SchemaT requires MonadIO]
+instance (MonadIO m, MonadUnique m, MonadError QErr m, MonadParse n)
       => MonadSchema n (SchemaT n m) where
   askRoleName = SchemaT $ asks fst
 
@@ -72,17 +76,17 @@ instance (PrimMonad m, MonadUnique m, MonadError QErr m, MonadParse n)
         --
         --   3. We can provide more useful error reporting if things go wrong.
         --      Most usefully, we can include a HasCallStack source location.
-        cell <- newMutVar Nothing
+        cell <- liftIO $ newIORef Nothing
 
-        -- We use unsafeInterleaveST here, which sounds scary, but
-        -- unsafeInterleaveIO/ST is actually far more safe than unsafePerformIO.
-        -- unsafeInterleave just defers the execution of the action until its
+        -- We use unsafeInterleaveIO here, which sounds scary, but
+        -- unsafeInterleaveIO is actually far more safe than unsafePerformIO.
+        -- unsafeInterleaveIO just defers the execution of the action until its
         -- result is needed, adding some laziness.
         --
         -- That laziness can be dangerous if the action has side-effects, since
         -- the point at which the effect is performed can be unpredictable. But
         -- this action just reads, never writes, so that isn’t a concern.
-        parserById <- stToPrim $ unsafeInterleaveST $ readMutVar cell >>= \case
+        parserById <- liftIO $ unsafeInterleaveIO $ readIORef cell >>= \case
           Just parser -> pure $ ParserById parser
           Nothing -> error $ unlines
             [ "memoize: parser was forced before being fully constructed"
@@ -91,8 +95,32 @@ instance (PrimMonad m, MonadUnique m, MonadError QErr m, MonadParse n)
 
         unique <- newUnique
         parser <- addDefinitionUnique unique <$> unSchemaT buildParser
-        writeMutVar cell (Just parser)
+        liftIO $ writeIORef cell (Just parser)
         pure parser
+
+{- Note [SchemaT requires MonadIO]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The MonadSchema instance for SchemaT requires MonadIO, which is unsatisfying.
+The only reason the constraint is needed is to implement knot-tying via IORefs
+(see Note [Tying the knot] in Hasura.GraphQL.Parser.Class), which really only
+requires the power of ST. Using ST would be much nicer, since we could discharge
+the burden locally, but unfortunately we also want to use MonadUnique, which
+is handled by IO in the end.
+
+This means that we need IO at the base of our monad, so to use STRefs, we’d need
+a hypothetical STT transformer (i.e. a monad transformer version of ST). But
+such a thing isn’t safe in general, since reentrant monads like ListT or ContT
+would incorrectly share state between the different threads of execution.
+
+In theory, this can be resolved by using something like Vault (from the vault
+package) to create “splittable” sets of variable references. That would allow
+you to create a transformer with an STRef-like interface that works over any
+arbitrary monad. However, while the interface would be safe, the implementation
+of such an abstraction requires unsafe primitives, and to the best of my
+knowledge no such transformer exists in any existing libraries.
+
+So we decide it isn’t worth the trouble and just use MonadIO. If `eff` ever pans
+out, it should be able to support this more naturally, so we can fix it then. -}
 
 -- | A key used to distinguish calls to 'memoize'd functions. The 'TH.Name'
 -- distinguishes calls to completely different parsers, and the @a@ value
@@ -138,8 +166,17 @@ newtype instance ParserById m '(k, a) = ParserById (Parser k m a)
 -- query parsing
 
 newtype ParseT m a = ParseT
-  { unParseT :: ReaderT JSONPath (StateT QueryReusability (ValidateT [ParseError] m)) a
+  { unParseT :: ReaderT JSONPath (StateT QueryReusability (ValidateT (NESeq ParseError) m)) a
   } deriving (Functor, Applicative, Monad)
+
+runParseT
+  :: Functor m
+  => ParseT m a
+  -> m (Either (NESeq ParseError) (a, QueryReusability))
+runParseT = unParseT
+  >>> flip runReaderT []
+  >>> flip runStateT mempty
+  >>> runValidateT
 
 instance MonadTrans ParseT where
   lift = ParseT . lift . lift . lift
@@ -148,7 +185,7 @@ instance Monad m => MonadParse (ParseT m) where
   withPath f x = ParseT $ withReaderT f $ unParseT x
   parseError text = ParseT $ do
     path <- ask
-    lift $ refute [ParseError { pePath = path , peMessage = text }]
+    lift $ refute $ NE.singleton ParseError{ pePath = path, peMessage = text }
   markNotReusable = ParseT $ lift $ put NotReusable
 
 data ParseError = ParseError

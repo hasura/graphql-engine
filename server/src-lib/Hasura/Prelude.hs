@@ -51,6 +51,7 @@ import           Data.Maybe                        as M (catMaybes, fromMaybe, i
 import           Data.Ord                          as M (comparing)
 import           Data.Semigroup                    as M (Semigroup (..))
 import           Data.Sequence                     as M (Seq)
+import           Data.Sequence.NonEmpty            as M (NESeq)
 import           Data.String                       as M (IsString)
 import           Data.Text                         as M (Text)
 import           Data.These                        as M (These (..), fromThese, mergeThese,

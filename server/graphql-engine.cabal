@@ -349,7 +349,7 @@ library
                      -- , Hasura.GraphQL.Resolve.Mutation
                      -- , Hasura.GraphQL.Resolve.Select
                      -- , Hasura.GraphQL.RemoteServer
-                     -- , Hasura.GraphQL.Context
+                     , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Logging
 
                      , Hasura.GraphQL.Parser

@@ -32,19 +32,20 @@ import           Data.Aeson
 import           Data.List                                (nub)
 
 import qualified Hasura.GraphQL.Schema                    as GS
-import qualified Language.GraphQL.Draft.Syntax      as G
 import qualified Hasura.Incremental                       as Inc
+import qualified Language.GraphQL.Draft.Syntax            as G
 
 import           Hasura.Db
 -- import           Hasura.GraphQL.RemoteServer
 -- import           Hasura.GraphQL.Schema.CustomTypes
-import           Hasura.GraphQL.Utils               (showNames)
+import           Hasura.GraphQL.Utils                     (showNames)
 -- import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 -- import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 -- import           Hasura.RQL.DDL.RemoteSchema
+import           Hasura.GraphQL.Schema                    (buildGQLContext)
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Cache.Dependencies
 import           Hasura.RQL.DDL.Schema.Cache.Fields
@@ -150,7 +151,8 @@ buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
   -- what we want!
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-     , MonadIO m, MonadTx m, MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
+     , MonadIO m, MonadUnique m, MonadTx m
+     , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
   => (CatalogMetadata, InvalidationKeys) `arr` SchemaCache
 buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
@@ -165,21 +167,23 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     resolveDependencies -< (outputs, unresolvedDependencies)
 
   -- Step 3: Build the GraphQL schema.
-  (remoteSchemaMap, gqlSchema, remoteGQLSchema)
-    <- _buildGQLSchema -< ( _boTables resolvedOutputs
-                                    , _boFunctions resolvedOutputs
-                                    , _boRemoteSchemas resolvedOutputs
-                                    , _boCustomTypes resolvedOutputs
-                                    , _boActions resolvedOutputs
-                                    )
+  gqlContext <- bindA -< buildGQLContext (_boTables resolvedOutputs)
+  -- (remoteSchemaMap, gqlSchema, remoteGQLSchema)
+  --   <- _buildGQLSchema -< ( _boTables resolvedOutputs
+  --                                   , _boFunctions resolvedOutputs
+  --                                   , _boRemoteSchemas resolvedOutputs
+  --                                   , _boCustomTypes resolvedOutputs
+  --                                   , _boActions resolvedOutputs
+  --                                   )
 
   returnA -< SchemaCache
     { scTables = _boTables resolvedOutputs
     , scActions = _boActions resolvedOutputs
     , scFunctions = _boFunctions resolvedOutputs
-    , scRemoteSchemas = remoteSchemaMap
+    , scRemoteSchemas = mempty -- remoteSchemaMap
     , scAllowlist = _boAllowlist resolvedOutputs
     -- , scCustomTypes = _boCustomTypes resolvedOutputs
+    , scGQLContext = gqlContext
     -- , scGCtxMap = gqlSchema
     -- , scDefaultRemoteGCtx = remoteGQLSchema
     , scDepMap = resolvedDependencies

@@ -11,7 +11,8 @@ import           GHC.Stack                             (HasCallStack)
 import           Type.Reflection                       (Typeable)
 
 import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Permission           (RoleName)
+import           Hasura.RQL.Types.Table                (TableInfo)
 import           Hasura.SQL.Types
 
 {- Note [Tying the knot]

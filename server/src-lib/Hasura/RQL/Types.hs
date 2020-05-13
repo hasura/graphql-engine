@@ -71,7 +71,7 @@ data QCtx
   { qcUserInfo    :: !UserInfo
   , qcSchemaCache :: !SchemaCache
   , qcSQLCtx      :: !SQLGenCtx
-  } deriving (Show, Eq)
+  }
 
 class HasQCtx a where
   getQCtx :: a -> QCtx

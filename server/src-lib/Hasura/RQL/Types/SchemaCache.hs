@@ -115,9 +115,8 @@ module Hasura.RQL.Types.SchemaCache
   , askFunctionInfo
   ) where
 
--- import qualified Hasura.GraphQL.Context            as GC
-
 import           Hasura.Db
+import           Hasura.GraphQL.Context            (GQLContext)
 import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
@@ -128,6 +127,7 @@ import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
+import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
@@ -194,12 +194,13 @@ data SchemaCache
   , scFunctions        :: !FunctionCache
   , scRemoteSchemas    :: !RemoteSchemaMap
   , scAllowlist        :: !(HS.HashSet GQLQuery)
+  , scGQLContext       :: !(HashMap RoleName GQLContext)
   -- , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
   -- , scGCtxMap           :: !GC.GCtxMap
   -- , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap           :: !DepMap
   , scInconsistentObjs :: ![InconsistentMetadata]
-  } deriving (Show, Eq)
+  }
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 
 getFuncsOfTable :: QualifiedTable -> FunctionCache -> [FunctionInfo]
