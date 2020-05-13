@@ -12,6 +12,7 @@ import           Hasura.Prelude
 
 import           Data.Int                      (Int32)
 
+import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Data.List                     as L
 import qualified Data.List.NonEmpty            as NE
@@ -39,6 +40,150 @@ import           Hasura.SQL.Types
 
 -- insert
 
+-- WIP NOTE
+-- Unlike update or delete, it is possible to perform an insert
+-- without any select rights, as there's no mandatory "where"
+-- argument. Not having select or update rights means however that
+-- there cannot be a "on_conflict" field: select rights are required
+-- for the "where" arguments, and update rights are required for the
+-- user to be allowed to upsert the table.
+
+insertIntoTable
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable       -- ^ qualified name of the table
+  -> G.Name               -- ^ field display name
+  -> Maybe G.Description  -- ^ field description, if any
+  -> InsPermInfo          -- ^ insert permissions of the table
+  -> Maybe SelPermInfo    -- ^ select permissions of the table (if any)
+  -> Maybe UpdPermInfo    -- ^ update permissions of the table (if any)
+  -> Bool
+  -> m (FieldsParser 'Output n (Maybe () {- FIXME -}))
+insertIntoTable table fieldName description insertPerms selectPerms updatePerms stringifyNum = do
+  selection <- mutationSelectionSet table selectPerms stringifyNum
+  objects   <- P.list <$> tableFieldsInput table insertPerms
+  conflict  <- fmap join $ sequenceA $ liftA2 (conflictObject table) selectPerms updatePerms
+  let conflictName  = $$(G.litName "on_conflict")
+      conflictDesc  = "on conflict condition"
+      objectsName   = $$(G.litName "objects")
+      objectsDesc   = "the rows to be inserted"
+      argsParser    = do
+        onConflict <- maybe
+          (pure Nothing)
+          (P.fieldOptional conflictName (Just conflictDesc))
+          conflict
+        objects    <- P.field objectsName (Just objectsDesc) objects
+        pure (onConflict, objects)
+  pure $ P.selection fieldName description argsParser selection
+    `mapField` undefined
+
+
+tableFieldsInput
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable       -- ^ qualified name of the table
+  -> InsPermInfo          -- ^ insert permissions of the table
+  -> m (Parser 'Input n () {- FIXME -})
+tableFieldsInput table insertPerms = do -- TODO: memoize this!
+  tableName    <- qualifiedObjectToName table
+  allFields    <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
+  objectFields <- catMaybes <$> for (Map.elems allFields) \case
+    FIComputedField _ -> pure Nothing
+    FIColumn columnInfo ->
+      whenMaybe (Set.member (pgiColumn columnInfo) (ipiCols insertPerms)) do
+        let columnName = pgiName columnInfo
+            columnDesc = pgiDescription columnInfo
+        fieldParser <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+        pure $ P.fieldOptional columnName columnDesc fieldParser `mapField` P.mkParameter
+    FIRelationship relationshipInfo -> runMaybeT $ do
+      let otherTable = riRTable  relationshipInfo
+          relName    = riName    relationshipInfo
+      permissions  <- MaybeT $ tablePermissions otherTable
+      relFieldName <- lift $ textToName $ relNameToTxt relName
+      insPerms     <- MaybeT $ pure $ _permIns permissions
+      let selPerms = _permSel permissions
+          updPerms = _permUpd permissions
+      lift $ case riType relationshipInfo of
+        ObjRel -> do
+          parser <- objectRelationshipInput otherTable insPerms selPerms updPerms
+          pure $ P.fieldOptional relFieldName Nothing parser `mapField` undefined
+        ArrRel -> do
+          parser <- arrayRelationshipInput otherTable insPerms selPerms updPerms
+          pure $ P.fieldOptional relFieldName Nothing parser `mapField` undefined
+  let objectName = tableName <> $$(G.litName "_insert_input")
+      objectDesc = G.Description $ "input type for inserting data into table \"" <> G.unName tableName <> "\""
+  pure $ P.object objectName (Just objectDesc) $ catMaybes <$> sequenceA objectFields
+    <&> undefined
+
+objectRelationshipInput
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable
+  -> InsPermInfo
+  -> Maybe SelPermInfo
+  -> Maybe UpdPermInfo
+  -> m (Parser 'Input n () {- FIXME -})
+objectRelationshipInput table insertPerms selectPerms updatePerms = do
+  tableName      <- qualifiedObjectToName table
+  objectParser   <- tableFieldsInput table insertPerms
+  conflictParser <- fmap join $ sequenceA $ liftA2 (conflictObject table) selectPerms updatePerms
+  let conflictName = $$(G.litName "on_conflict")
+      objectName   = $$(G.litName "data")
+      inputName    = tableName <> $$(G.litName "_obj_rel_insert_input")
+      inputDesc    = G.Description $ "input type for inserting object relation for remote table \"" <> G.unName tableName <> "\""
+      inputParser = do
+        conflict <- maybe
+          (pure Nothing)
+          (P.fieldOptional conflictName Nothing)
+          conflictParser
+        object   <- P.field objectName Nothing objectParser
+        pure (conflict, object) -- FIXME
+  pure $ P.object inputName (Just inputDesc) inputParser <&> undefined
+
+arrayRelationshipInput
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable
+  -> InsPermInfo
+  -> Maybe SelPermInfo
+  -> Maybe UpdPermInfo
+  -> m (Parser 'Input n () {- FIXME -})
+arrayRelationshipInput table insertPerms selectPerms updatePerms = do
+  tableName      <- qualifiedObjectToName table
+  objectParser   <- tableFieldsInput table insertPerms
+  conflictParser <- fmap join $ sequenceA $ liftA2 (conflictObject table) selectPerms updatePerms
+  let conflictName = $$(G.litName "on_conflict")
+      objectsName  = $$(G.litName "data")
+      inputName    = tableName <> $$(G.litName "_arr_rel_insert_input")
+      inputDesc    = G.Description $ "input type for inserting array relation for remote table \"" <> G.unName tableName <> "\""
+      inputParser = do
+        conflict <- maybe
+          (pure Nothing)
+          (P.fieldOptional conflictName Nothing)
+          conflictParser
+        objects  <- P.field objectsName Nothing $ P.list objectParser
+        pure (conflict, objects) -- FIXME
+  pure $ P.object inputName (Just inputDesc) inputParser <&> undefined
+
+conflictObject
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable
+  -> SelPermInfo
+  -> UpdPermInfo
+  -> m (Maybe (Parser 'Input n () {- FIXME -}))
+conflictObject table selectPerms updatePerms = runMaybeT $ do
+  tableName        <- lift $ qualifiedObjectToName table
+  columnsEnum      <- MaybeT $ tableUpdateColumnsEnum table updatePerms
+  constraintParser <- lift $ conflictConstraint table
+  whereExpParser   <- lift $ boolExp table selectPerms
+  let objectName = tableName <> $$(G.litName "_on_conflict")
+      objectDesc = G.Description $ "on conflict condition type for table \"" <> G.unName tableName <> "\""
+      constraintName = $$(G.litName "constraint")
+      columnsName    = $$(G.litName "update_columnns")
+      whereExpName   = $$(G.litName "where")
+      fieldsParser = do
+        constraint <- P.fieldOptional constraintName Nothing constraintParser
+        columns    <- P.fieldOptional columnsName    Nothing $ P.list columnsEnum
+        whereExp   <- P.fieldOptional whereExpName   Nothing whereExpParser
+        pure $ undefined constraint columns whereExp
+  pure $ P.object objectName (Just objectDesc) fieldsParser
+
 conflictConstraint
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
@@ -58,48 +203,30 @@ conflictConstraint table = do
   where
     define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
 
-conflictObject
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => QualifiedTable
-  -> SelPermInfo
-  -> m (Maybe (Parser 'Input n ConstraintName {- FIXME -}))
-conflictObject table selectPerms = runMaybeT $ do
-  tableName        <- lift $ qualifiedObjectToName table
-  columnsEnum      <- MaybeT $ tableColumnsEnum table selectPerms
-  constraintParser <- lift $ conflictConstraint table
-  whereExpParser   <- lift $ boolExp table selectPerms
-  let objectName = tableName <> $$(G.litName "_on_conflict")
-      objectDesc = G.Description $ "on conflict condition type for table \"" <> G.unName tableName <> "\""
-      constraintName = $$(G.litName "constraint")
-      columnsName    = $$(G.litName "update_columnns")
-      whereExpName   = $$(G.litName "where")
-      fieldsParser = do
-        constraint <- P.fieldOptional constraintName Nothing constraintParser
-        columns    <- P.fieldOptional columnsName    Nothing $ P.list columnsEnum
-        whereExp   <- P.fieldOptional whereExpName   Nothing whereExpParser
-        pure $ undefined constraint columns whereExp
-  pure $ P.object objectName (Just objectDesc) fieldsParser
-
 
 
 -- update
+
+-- WIP NOTE
+-- same comment as for delete (see below): it is impossible to craft a
+-- valid update mutation without select rights.
 
 updateTable
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
-  -> SelPermInfo          -- ^ select permissions of the table
   -> UpdPermInfo          -- ^ update permissions of the table
+  -> SelPermInfo          -- ^ select permissions of the table
   -> Bool
   -> m (Maybe (FieldsParser 'Output n (Maybe (RQL.AnnUpdG UnpreparedValue))))
-updateTable table fieldName description selectPerms updatePerms stringifyNum = runMaybeT $ do
+updateTable table fieldName description updatePerms selectPerms stringifyNum = runMaybeT $ do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be updated"
   opArgs    <- MaybeT $ updateOperators table updatePerms
   columns   <- lift $ tableSelectColumns table selectPerms
   whereArg  <- lift $ P.field whereName (Just whereDesc) <$> boolExp table selectPerms
-  selection <- lift $ mutationSelectionSet table selectPerms stringifyNum
+  selection <- lift $ mutationSelectionSet table (Just selectPerms) stringifyNum
   let argsParser = liftA2 (,) opArgs whereArg
   pure $ P.selection fieldName description argsParser selection
     `mapField` (mkUpdateObject table columns updatePerms . third RQL.MOutMultirowFields)
@@ -109,11 +236,11 @@ updateTableByPk
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
-  -> SelPermInfo          -- ^ select permissions of the table
   -> UpdPermInfo          -- ^ update permissions of the table
+  -> SelPermInfo          -- ^ select permissions of the table
   -> Bool
   -> m (Maybe (FieldsParser 'Output n (Maybe (RQL.AnnUpdG UnpreparedValue))))
-updateTableByPk table fieldName description selectPerms updatePerms stringifyNum = runMaybeT $ do
+updateTableByPk table fieldName description updatePerms selectPerms stringifyNum = runMaybeT $ do
   columns   <- lift   $ tableSelectColumns table selectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
   opArgs    <- MaybeT $ updateOperators table updatePerms
@@ -152,8 +279,8 @@ mkUpdateObject table columns updatePerms (_, (opExps, whereExp), mutationOutput)
 
 updateOperators
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => QualifiedTable       -- ^ qualified name of the table
-  -> UpdPermInfo          -- ^ update permissions of the table
+  => QualifiedTable -- ^ qualified name of the table
+  -> UpdPermInfo    -- ^ update permissions of the table
   -> m (Maybe (FieldsParser 'Input n [(PGColumnInfo, RQL.UpdOpExpG UnpreparedValue)]))
 updateOperators table updatePermissions = do
   tableName <- qualifiedObjectToName table
@@ -243,20 +370,29 @@ updateOperators table updatePermissions = do
 
 -- delete
 
+-- WIP NOTE
+-- It is impossible to delete from a table without having *some*
+-- select permissions: the "where" clause is mandatory, but it is
+-- impossible to write a valid "where" condition without being able to
+-- select fields.
+-- Note that this doesn't entirely prevent exposing an impossible
+-- query to the user: if the user has some select permissions, but
+-- isn't allowed to select any column, then the same issue will occur.
+
 deleteFromTable
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
-  -> SelPermInfo          -- ^ select permissions of the table
   -> DelPermInfo          -- ^ delete permissions of the table
+  -> SelPermInfo          -- ^ select permissions of the table
   -> Bool
   -> m (FieldsParser 'Output n (Maybe (RQL.AnnDelG UnpreparedValue)))
-deleteFromTable table fieldName description selectPerms deletePerms stringifyNum = do
+deleteFromTable table fieldName description deletePerms selectPerms stringifyNum = do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be deleted"
   whereArg  <- P.field whereName (Just whereDesc) <$> boolExp table selectPerms
-  selection <- mutationSelectionSet table selectPerms stringifyNum
+  selection <- mutationSelectionSet table (Just selectPerms) stringifyNum
   columns   <- tableSelectColumns table selectPerms
   pure $ P.selection fieldName description whereArg selection
     `mapField` (mkDeleteObject table columns deletePerms . third RQL.MOutMultirowFields)
@@ -266,11 +402,11 @@ deleteFromTableByPk
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
-  -> SelPermInfo          -- ^ select permissions of the table
   -> DelPermInfo          -- ^ delete permissions of the table
+  -> SelPermInfo          -- ^ select permissions of the table
   -> Bool
   -> m (Maybe (FieldsParser 'Output n (Maybe (RQL.AnnDelG UnpreparedValue))))
-deleteFromTableByPk table fieldName description selectPerms deletePerms stringifyNum = runMaybeT $ do
+deleteFromTableByPk table fieldName description deletePerms selectPerms stringifyNum = runMaybeT $ do
   columns   <- lift   $ tableSelectColumns table selectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
   selection <- lift   $ tableFields table selectPerms stringifyNum
@@ -303,25 +439,38 @@ mkDeleteObject table columns deletePerms (_, whereExp, mutationOutput) =
 mutationSelectionSet
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
-  -> SelPermInfo
+  -> Maybe SelPermInfo
   -> Bool
   -> m (Parser 'Output n (RQL.MutFldsG UnpreparedValue))
 mutationSelectionSet table selectPerms stringifyNum = do
   tableName <- qualifiedObjectToName table
-  tableSet  <- tableFields table selectPerms stringifyNum
+  -- WIP NOTE
+  -- It could be argued that "returning" should still be present
+  -- even if the user cannot select any field from the table
+  -- because even in that case the user is still allowed to
+  -- select '__typename'.
+  -- However, I choose to interpret that a lack of select permissions
+  -- conveys the idea that a user should not be allowed to do ANY
+  -- select on the table, while select permissions with no column
+  -- mean the user is only allowed to select __typename.
+  -- It is a subtle distinction; I should probably write a note.
+  returning <- for selectPerms \permissions -> do
+      tableSet <- tableFields table permissions stringifyNum
+      let returningName = $$(G.litName "returning")
+          returningDesc = "data from the rows affected by the mutation"
+      pure $ P.selection_ returningName  (Just returningDesc) tableSet
+          `mapField` (FieldName . G.unName *** RQL.MRet)
   let affectedRowsName = $$(G.litName "affected_rows")
       affectedRowsDesc = "number of rows affected by the mutation"
       selectionName    = tableName <> $$(G.litName "_mutation_response")
       selectionDesc    = G.Description $ "response of any mutation on the table \"" <> G.unName tableName <> "\""
-      returningName    = $$(G.litName "returning")
-      returningDesc    = "data from the rows affected by the mutation"
       typenameRepr     = (FieldName "__typename", RQL.MExp $ G.unName selectionName)
       dummyIntParser   = undefined :: Parser 'Output n Int32
-      selectionFields  = catMaybes <$> sequenceA
-        [ P.selection_ affectedRowsName (Just affectedRowsDesc) dummyIntParser
-          `mapField` (FieldName . G.unName *** const RQL.MCount)
-        , P.selection_ returningName  (Just returningDesc) tableSet
-          `mapField` (FieldName . G.unName *** RQL.MRet)
+
+      selectionFields  = fmap catMaybes $ sequenceA $ catMaybes
+        [ Just $ P.selection_ affectedRowsName (Just affectedRowsDesc) dummyIntParser
+            `mapField` (FieldName . G.unName *** const RQL.MCount)
+        , returning
         ]
   pure $ P.selectionSet selectionName (Just selectionDesc) typenameRepr selectionFields
 

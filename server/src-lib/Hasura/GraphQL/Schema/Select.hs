@@ -78,7 +78,7 @@ selectTable table fieldName description selectPermissions stringifyNum = do
       , RQL.AnnSelG
         { RQL._asnFields   = fields
         , RQL._asnFrom     = RQL.FromTable table
-        , RQL._asnPerm     = tablePermissions selectPermissions
+        , RQL._asnPerm     = tablePermissionsInfo selectPermissions
         , RQL._asnArgs     = args
         , RQL._asnStrfyNum = stringifyNum
         }
@@ -112,7 +112,7 @@ selectTableByPk table fieldName description selectPermissions stringifyNum = do
       selectionSetParser <- tableFields table selectPermissions stringifyNum
       pure $ Just $ P.selection fieldName description argsParser selectionSetParser
         `mapField` \(aliasName, boolExpr, fields) ->
-          let defaultPerms = tablePermissions selectPermissions
+          let defaultPerms = tablePermissionsInfo selectPermissions
               whereExpr    = Just $ BoolAnd $ toList boolExpr
           in ( aliasName
              , RQL.AnnSelG
@@ -163,7 +163,7 @@ selectTableAggregate table fieldName description selectPermissions stringifyNum
           , RQL.AnnSelG
             { RQL._asnFields   = map (first aliasToName) fields
             , RQL._asnFrom     = RQL.FromTable table
-            , RQL._asnPerm     = tablePermissions selectPermissions
+            , RQL._asnPerm     = tablePermissionsInfo selectPermissions
             , RQL._asnArgs     = args
             , RQL._asnStrfyNum = stringifyNum
             }
@@ -214,7 +214,7 @@ tableArgs
 tableArgs table selectPermissions = do
   boolExpParser <- boolExp table selectPermissions
   orderByParser <- orderByExp table selectPermissions
-  columnsEnum   <- tableColumnsEnum table selectPermissions
+  columnsEnum   <- tableSelectColumnsEnum table selectPermissions
   pure $ do
     whereF   <- P.fieldOptional whereName   whereDesc   boolExpParser
     orderBy  <- P.fieldOptional orderByName orderByDesc orderByParser
@@ -275,7 +275,7 @@ tableAggregationFields table selectPermissions = do
   aggFields  <- fmap (fmap (catMaybes . concat) . sequenceA) $ sequenceA $ catMaybes
     [ -- count
       Just $ do
-        columnsEnum <- tableColumnsEnum table selectPermissions
+        columnsEnum <- tableSelectColumnsEnum table selectPermissions
         let columnsName  = $$(G.litName "columns")
             distinctName = $$(G.litName "distinct")
             args = do
@@ -501,7 +501,7 @@ computedField ComputedFieldInfo{..} selectPermissions stringifyNum = do
             , RQL.FComputedField $ RQL.CFSTable RQL.JASMultipleRows $ RQL.AnnSelG
               { RQL._asnFields   = fields
               , RQL._asnFrom     = RQL.FromFunction (_cffName _cfiFunction) functionArgs Nothing
-              , RQL._asnPerm     = tablePermissions remotePerms
+              , RQL._asnPerm     = tablePermissionsInfo remotePerms
               , RQL._asnArgs     = args
               , RQL._asnStrfyNum = stringifyNum
               }
@@ -520,8 +520,8 @@ computedField ComputedFieldInfo{..} selectPermissions stringifyNum = do
 -- 3. local helpers
 -- TODO: move to common?
 
-tablePermissions :: SelPermInfo -> TablePerms
-tablePermissions selectPermissions = RQL.TablePerm
+tablePermissionsInfo :: SelPermInfo -> TablePerms
+tablePermissionsInfo selectPermissions = RQL.TablePerm
   { RQL._tpFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter selectPermissions
   , RQL._tpLimit  = spiLimit selectPermissions
   }

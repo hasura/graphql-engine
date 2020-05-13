@@ -1,5 +1,7 @@
 module Hasura.GraphQL.Schema.Table
-  ( tableColumnsEnum
+  ( tableSelectColumnsEnum
+  , tableUpdateColumnsEnum
+  , tablePermissions
   , tableSelectPermissions
   , tableUpdatePermissions
   , tableDeletePermissions
@@ -25,24 +27,54 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 
--- | Table columns enum
+-- | Table select columns enum
 --
 -- Parser for an enum type that matches the columns of the given
 -- table. Used as a parameter for "distinct", among others. Maps to
--- the table_select_columns object.
+-- the table_select_column object.
 --
--- Return Nothing if there's no column the current user has access to.
-tableColumnsEnum
+-- Return Nothing if there's no column the current user has "select"
+-- permissions for.
+tableSelectColumnsEnum
   :: (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
   -> SelPermInfo
   -> m (Maybe (Parser 'Both n PGCol))
-tableColumnsEnum table selectPermissions = do
+tableSelectColumnsEnum table selectPermissions = do
   tableName <- qualifiedObjectToName table
   columns   <- tableSelectColumns table selectPermissions
-  let enumName    = tableName <> $$(G.litName "_select_columns")
+  let enumName    = tableName <> $$(G.litName "_select_column")
       description = Just $ G.Description $
         "select columns of table \"" <> G.unName tableName <> "\""
+  pure $ P.enum enumName description <$> nonEmpty
+    [ ( define $ pgiName column
+      , pgiColumn column
+      )
+    | column <- columns
+    ]
+  where
+    define name =
+      P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
+
+-- | Table update columns enum
+--
+-- Parser for an enum type that matches the columns of the given
+-- table. Used for conflict resolution in "insert" mutations, among
+-- others. Maps to the table_update_column object.
+--
+-- Return Nothing if there's no column the current user has "update"
+-- permissions for.
+tableUpdateColumnsEnum
+  :: (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable
+  -> UpdPermInfo
+  -> m (Maybe (Parser 'Both n PGCol))
+tableUpdateColumnsEnum table updatePermissions = do
+  tableName <- qualifiedObjectToName table
+  columns   <- tableUpdateColumns table updatePermissions
+  let enumName    = tableName <> $$(G.litName "_update_column")
+      description = Just $ G.Description $
+        "update columns of table \"" <> G.unName tableName <> "\""
   pure $ P.enum enumName description <$> nonEmpty
     [ ( define $ pgiName column
       , pgiColumn column
