@@ -9,6 +9,9 @@ import {
   generateCreateEventTriggerQuery,
   getDropEventTriggerQuery,
   getCreateScheduledEventQuery,
+  getRedeliverDataEventQuery,
+  getSelectQuery,
+  makeOrderBy,
 } from '../../Common/utils/v1QueryUtils';
 import globals from '../../../Globals';
 import { GetReduxState } from '../../../Types';
@@ -25,7 +28,13 @@ import { getConfirmation, isValidURL } from '../../Common/utils/jsUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import dataHeaders from '../Data/Common/Headers';
-import { TriggerKind, ScheduledTrigger, EventTrigger } from './Types';
+import {
+  TriggerKind,
+  ScheduledTrigger,
+  EventTrigger,
+  EventKind,
+  InvocationLog,
+} from './Types';
 import { setScheduledTriggers, setEventTriggers, setTriggers } from './reducer';
 import { LocalScheduledTriggerState } from './ScheduledTriggers/state';
 import { LocalAdhocEventState } from './AdhocEvents/Add/state';
@@ -45,6 +54,7 @@ import {
 } from '../Common/Notification';
 import { appPrefix } from './constants';
 import { EventTriggerProperty } from './EventTriggers/Modify/utils';
+import { getLogsTableDef } from './utils';
 
 export const fetchTriggers = (kind: Nullable<TriggerKind>) => (
   dispatch: any,
@@ -536,12 +546,7 @@ export const redeliverDataEvent = (
   const options = {
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'redeliver_event',
-      args: {
-        event_id: eventId,
-      },
-    }),
+    body: JSON.stringify(getRedeliverDataEventQuery(eventId)),
   };
   return dispatch(
     requestAction(url, options, undefined, undefined, true, true)
@@ -564,4 +569,43 @@ export const redeliverDataEvent = (
       );
     }
   );
+};
+
+export const getEventLogs = (
+  eventId: string,
+  eventKind: EventKind,
+  successCallback: (logs: InvocationLog[]) => void,
+  errorCallback: (error: any) => void
+) => (dispatch: any) => {
+  const logTableDef = getLogsTableDef(eventKind);
+
+  const query = getSelectQuery(
+    'select',
+    logTableDef,
+    ['*'],
+    {
+      event_id: {
+        $eq: eventId,
+      },
+    },
+    0,
+    null,
+    [makeOrderBy('created_at', 'desc')]
+  );
+
+  dispatch(
+    requestAction(
+      Endpoints.query,
+      {
+        method: 'POST',
+        body: JSON.stringify(query),
+      },
+      undefined,
+      undefined,
+      true,
+      true
+    )
+  ).then((data: InvocationLog[]) => {
+    successCallback(data);
+  }, errorCallback);
 };

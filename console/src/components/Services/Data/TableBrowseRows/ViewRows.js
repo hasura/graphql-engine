@@ -7,7 +7,7 @@ import DragFoldTable, {
 
 import Dropdown from '../../../Common/Dropdown/Dropdown';
 
-import InvokeManualTrigger from '../../Events/InvokeManualTrigger/InvokeManualTrigger';
+import InvokeManualTrigger from '../../Events/EventTriggers/InvokeManualTrigger/InvokeManualTrigger';
 
 import {
   vExpandRel,

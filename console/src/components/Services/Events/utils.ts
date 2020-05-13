@@ -5,6 +5,7 @@ import {
   ETOperationColumn,
   EventTrigger,
   ScheduledTrigger,
+  EventKind,
 } from './Types';
 import {
   TableColumn,
@@ -12,6 +13,7 @@ import {
   Table,
   generateTableDef,
 } from '../../Common/utils/pgUtils';
+import { TableDefinition } from '../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../Common/utils/jsUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
 
@@ -77,4 +79,23 @@ export const sanitiseRow = (column: string, row: Record<string, string>) => {
       ? 'NULL'
       : row[column].toString();
   return content;
+};
+
+export const getLogsTableDef = (kind: EventKind): TableDefinition => {
+  let tableName: string;
+  switch (kind) {
+    case 'data':
+      tableName = 'event_invocation_logs';
+      break;
+    case 'cron':
+      tableName = 'hdb_cron_event_invocation_logs';
+      break;
+    case 'scheduled':
+      tableName = 'hdb_scheduled_event_invocation_logs';
+      break;
+    default:
+      tableName = 'hdb_scheduled_event_invocation_logs';
+      break;
+  }
+  return generateTableDef(tableName, 'hdb_catalog');
 };

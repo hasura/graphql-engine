@@ -631,3 +631,10 @@ export const getFetchManualTriggersQuery = (tableDef: TableDefinition) =>
       },
     ]
   );
+
+export const getRedeliverDataEventQuery = (eventId: string) => ({
+  type: 'redeliver_event',
+  args: {
+    event_id: eventId,
+  },
+});

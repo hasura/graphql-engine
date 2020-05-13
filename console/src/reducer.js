@@ -5,7 +5,7 @@ import { remoteSchemaReducer } from './components/Services/RemoteSchema';
 import { actionsReducer } from './components/Services/Actions';
 import { typesReducer } from './components/Services/Types';
 import { eventsReducer } from './components/Services/Events';
-import invokeEventTriggerReducer from './components/Services/Events/InvokeManualTrigger/InvokeManualTriggerAction';
+import invokeEventTriggerReducer from './components/Services/Events/EventTriggers/InvokeManualTrigger/InvokeManualTriggerAction';
 import mainReducer from './components/Main/Actions';
 import apiExplorerReducer from 'components/Services/ApiExplorer/Actions';
 import progressBarReducer from 'components/App/Actions';

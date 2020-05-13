@@ -34,6 +34,7 @@ const InvocationLogs: React.FC<Props> = props => {
       runQuery={runQuery}
       columns={['id', 'status', 'event_id', 'created_at']}
       identifier={triggerName}
+      dispatch={dispatch}
     />
   );
 

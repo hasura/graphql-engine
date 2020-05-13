@@ -2,16 +2,16 @@ import React from 'react';
 import BootstrapModal from 'react-bootstrap/lib/Modal';
 import BootstrapModalButton from 'react-bootstrap/lib/Button';
 
-interface ModalProps  {
-  show?: boolean,
-  title: string,
-  onClose: () => void,
-  customClass?: string,
-  onSubmit?: (() => void) | null,
-  onCancel?: (() => void) | null,
-  submitText?: string | null,
-  submitTestId?: string | null,
-  children: JSX.Element[] | JSX.Element
+interface ModalProps {
+  show?: boolean;
+  title: JSX.Element;
+  onClose: () => void;
+  customClass?: string;
+  onSubmit?: (() => void) | null;
+  onCancel?: (() => void) | null;
+  submitText?: string | null;
+  submitTestId?: string | null;
+  children: JSX.Element[] | JSX.Element;
 }
 
 const Modal = ({
@@ -39,7 +39,7 @@ const Modal = ({
 
   const getFooter = () => {
     if (!onSubmit) {
-      return;
+      return null;
     }
 
     return (

@@ -1,7 +1,7 @@
 /* */
-import Endpoints from '../../../../Endpoints';
-import requestAction from '../../../../utils/requestAction';
-import dataHeaders from '../../Data/Common/Headers';
+import Endpoints from '../../../../../Endpoints';
+import requestAction from '../../../../../utils/requestAction';
+import dataHeaders from '../../../Data/Common/Headers';
 import defaultState from './State';
 /* */
 

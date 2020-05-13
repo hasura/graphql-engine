@@ -15,6 +15,8 @@ export const LOAD_PENDING_DATA_EVENTS = 'Events/LOAD_PENDING_DATA_EVENTS';
  * Common types for events service
  */
 
+export type EventKind = 'data' | 'cron' | 'scheduled';
+
 export type URLType = 'static' | 'env';
 
 export type URLConf = {
@@ -40,6 +42,15 @@ export type TriggerEventsProps = {
 };
 
 export type VoidCallback = () => void;
+
+export type InvocationLog = {
+  event_id: string;
+  id: string;
+  status: number;
+  created_at: string;
+  request: string;
+  response: string;
+};
 
 /*
  * Types related to Event Triggers

@@ -7,11 +7,64 @@ import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import InvocationLogDetails from './InvocationLogDetails';
+import { redeliverDataEvent } from '../../ServerIO';
+import ReloadIcon from '../../../../Common/Icons/Reload';
+import CheckIcon from '../../../../Common/Icons/Check';
+import CrossIcon from '../../../../Common/Icons/Cross';
+import Modal from '../../../../Common/Modal/Modal';
+import RedeliverEvent from './RedeliverEvent';
+import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
+import { Nullable } from '../../../../Common/utils/tsUtils';
 
-type Props = FilterTableProps;
+type Props = FilterTableProps & {
+  dispatch: any;
+};
 
 const InvocationLogsTable: React.FC<Props> = props => {
-  const { rows, filterState, setFilterState, runQuery, columns, count } = props;
+  const {
+    rows,
+    filterState,
+    setFilterState,
+    runQuery,
+    columns,
+    count,
+    dispatch,
+  } = props;
+  const [redeliveredEventId, setRedeliveredEventId] = React.useState<
+    Nullable<string>
+  >(null);
+  const [isRedelivering, setIsRedelivering] = React.useState(false);
+
+  const redeliverHandler = (eventId: string) => {
+    setIsRedelivering(true);
+    dispatch(
+      redeliverDataEvent(
+        eventId,
+        () => {
+          setRedeliveredEventId(eventId);
+          setIsRedelivering(false);
+        },
+        () => {
+          setIsRedelivering(true);
+        }
+      )
+    );
+  };
+
+  const redeliverModal = (eventId: string) => {
+    if (!redeliveredEventId) return null;
+    return (
+      <Modal
+        title={<div>Redeliver Event</div>}
+        show={eventId === redeliveredEventId}
+        onClose={() => setRedeliveredEventId(null)}
+        onCancel={() => setRedeliveredEventId(null)}
+        customClass={styles.redeliverModal}
+      >
+        <RedeliverEvent eventId={redeliveredEventId} dispatch={dispatch} />
+      </Modal>
+    );
+  };
 
   if (rows.length === 0) {
     return <div className={styles.add_mar_top}>No data available</div>;
@@ -52,9 +105,53 @@ const InvocationLogsTable: React.FC<Props> = props => {
     };
   });
 
+  const rowsFormatted = rows.map(r => {
+    let formattedRow: any = {};
+    Object.keys(r).forEach((col: string) => {
+      formattedRow[col] = <div>{r[col]}</div>;
+    });
+    formattedRow = {
+      ...formattedRow,
+      status: (
+        <div>
+          {r.status < 300 ? (
+            <CheckIcon className="" />
+          ) : (
+            <CrossIcon className="" />
+          )}
+        </div>
+      ),
+      created_at: r.created_at && (
+        <div>{convertDateTimeToLocale(r.created_at, true)}</div>
+      ),
+      id: (
+        <div>
+          {r.id}
+          {columns.includes('redeliver') ? redeliverModal(r.event_id) : null}
+        </div>
+      ),
+    };
+    if (columns.includes('redeliver')) {
+      formattedRow.redeliver = (
+        <div
+          onClick={() => {
+            if (isRedelivering) {
+              return;
+            }
+            redeliverHandler(r.event_id);
+          }}
+          className={styles.cursorPointer}
+        >
+          <ReloadIcon className="" />
+        </div>
+      );
+    }
+    return formattedRow;
+  });
+
   return (
     <ReactTable
-      data={rows}
+      data={rowsFormatted}
       columns={gridHeadings}
       minRows={0}
       resizable

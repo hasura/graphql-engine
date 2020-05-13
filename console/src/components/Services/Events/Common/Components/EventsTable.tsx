@@ -72,8 +72,14 @@ const EventsTable: React.FC<Props> = props => {
     };
   });
   const rowsFormatted = rows.map(r => {
+    const formattedRow = Object.keys(r).reduce((fr, col) => {
+      return {
+        ...fr,
+        [col]: <div>{r[col]}</div>,
+      };
+    }, {});
     return {
-      ...r,
+      ...formattedRow,
       delivered: r.delivered ? (
         <CheckIcon className="" />
       ) : (
@@ -87,12 +93,20 @@ const EventsTable: React.FC<Props> = props => {
         ) : (
           <CheckIcon className="" />
         ),
-      scheduled_at: r.scheduled_time
-        ? convertDateTimeToLocale(r.scheduled_time, false)
-        : undefined,
-      created_at: r.created_at
-        ? convertDateTimeToLocale(r.created_at, true)
-        : undefined,
+      scheduled_at: (
+        <div>
+          {r.scheduled_time
+            ? convertDateTimeToLocale(r.scheduled_time, false)
+            : undefined}
+        </div>
+      ),
+      created_at: (
+        <div>
+          {r.created_at
+            ? convertDateTimeToLocale(r.created_at, true)
+            : undefined}
+        </div>
+      ),
     };
   });
 
