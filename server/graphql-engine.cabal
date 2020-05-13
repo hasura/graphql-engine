@@ -331,6 +331,7 @@ library
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Query
+                     , Hasura.GraphQL.Execute.Resolve
                      , Hasura.GraphQL.Execute.LiveQuery
                      , Hasura.GraphQL.Execute.LiveQuery.Options
                      , Hasura.GraphQL.Execute.LiveQuery.Plan

@@ -37,7 +37,7 @@ import           Hasura.SQL.Value
 -- -------------------------------------------------------------------------------------------------
 
 data Opaque a = Opaque
-  { _opVariable :: Maybe (Definition (FieldInfo 'Input))
+  { _opVariable :: Maybe VariableInfo
   -- ^ The variable this value came from, if any.
   , _opValue    :: a
   } -- Note: we intentionally don’t derive any instances here, since that would
@@ -50,7 +50,7 @@ openOpaque (Opaque (Just _) value) = markNotReusable $> value
 data UnpreparedValue
   -- | A SQL value that can be parameterized over.
   = UVParameter PGColumnValue
-                (Maybe (Definition (FieldInfo 'Input)))
+                (Maybe VariableInfo)
                 -- ^ The GraphQL variable this value came from, if any.
   -- | A literal SQL expression that /cannot/ be parameterized over.
   | UVLiteral SQLExp
@@ -113,8 +113,8 @@ column columnType (Nullability isNullable) =
     opaque :: Functor m => Parser 'Both m a -> Parser 'Both m (Opaque a)
     opaque parser = parser
       { pParser = \case
-          VVariable (Variable { vDefinition, vValue }) ->
-            Opaque (Just vDefinition) <$> pParser parser (literal vValue)
+          VVariable Variable{ vInfo, vValue } ->
+            Opaque (Just vInfo) <$> pParser parser (literal vValue)
           value -> Opaque Nothing <$> pParser parser value
       }
 

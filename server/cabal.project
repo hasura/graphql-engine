@@ -34,7 +34,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/lexi-lambda/graphql-parser-hs.git
-  tag: 4c6f784e377783b704a791e2ece03c775bd95f97
+  tag: 10dbe817f0bf8ad47f27bdd6d07e4ca159182ccd
 
 source-repository-package
   type: git

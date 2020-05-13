@@ -34,6 +34,7 @@ module Hasura.GraphQL.Parser.Schema (
   -- * Miscellany
   , HasName(..)
   , Variable(..)
+  , VariableInfo(..)
   ) where
 
 import           Hasura.Prelude
@@ -231,7 +232,7 @@ data instance FieldInfo 'Input
   -- value. If a default value is provided, it should be a valid value for the
   -- type.
   --
-  -- Note that a default value of 'TNull' is subtly different from having no
+  -- Note that a default value of 'VNull' is subtly different from having no
   -- default value at all. If no default value is provided, the GraphQL
   -- specification allows distinguishing provided @null@ values from values left
   -- completely absent; see <http://spec.graphql.org/June2018/#CoerceArgumentValues()>.
@@ -251,14 +252,24 @@ instance Eq (FieldInfo 'Output) where
   FieldInfo args1 t1 == FieldInfo args2 t2 = args1 == args2 && eqType t1 t2
 
 data Variable = Variable
-  { vDefinition :: Definition (FieldInfo 'Input)
-  , vValue      :: Value Void
+  { vInfo  :: VariableInfo
+  , vValue :: Value Void
   -- ^ Note: if the variable was null or was not provided and the field has a
   -- non-null default value, this field contains the default value, not 'VNull'.
   }
 
+data VariableInfo
+  = VIRequired Name
+  -- | Unlike fields (see 'IFOptional'), nullable variables with no default
+  -- value are indistinguishable from variables with a default value of null, so
+  -- we don’t distinguish those cases here.
+  | VIOptional Name (Value Void)
+
 instance HasName Variable where
-  getName = getName . vDefinition
+  getName = getName . vInfo
+instance HasName VariableInfo where
+  getName (VIRequired name)   = name
+  getName (VIOptional name _) = name
 
 -- -----------------------------------------------------------------------------
 -- support for introspection queries

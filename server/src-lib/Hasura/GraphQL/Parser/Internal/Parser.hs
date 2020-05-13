@@ -230,17 +230,41 @@ fieldWithDefault name description defaultValue parser = FieldsParser
   }
   where
     parseValue = \value -> case value of
-      VVariable (Variable { vValue, vDefinition }) ->
+      VVariable (Variable { vInfo, vValue }) ->
         -- This case is tricky: if we get a nullable variable, we have to
         -- pessimistically mark the query non-reusable, regardless of its
-        -- contents. Theoretically, we could be smarter: we could create a sort
-        -- of “derived variable” with its own default value and pass that to the
-        -- downstream parser. But that would be more complicated, so for now we
-        -- don’t do that.
-        -- FIXME: Clarify this explanation.
-        case dInfo vDefinition of
-          IFRequired _   -> parseValue value
-          IFOptional _ _ -> markNotReusable *> parseValue (literal vValue)
+        -- contents. Why? Well, suppose we have a type like
+        --
+        --     type Foo {
+        --       bar(arg: Int = 42): String
+        --     }
+        --
+        -- and suppose we receive the following query:
+        --
+        --     query blah($var: Int) {
+        --       foo {
+        --         bar(arg: $var)
+        --       }
+        --     }
+        --
+        -- Suppose no value is provided for $var, so it defaults to null. When
+        -- we parse the arg field, we see it has a default value, so we
+        -- substitute 42 for null and carry on. But now we’ve discarded the
+        -- information that this value came from a variable at all, so if we
+        -- cache the query plan, changes to the variable will be ignored, since
+        -- we’ll always use 42!
+        --
+        -- Note that the problem doesn’t go away even if $var has a non-null
+        -- value. In that case, we’d simply have flipped the problem around: now
+        -- our cached query plan will do the wrong thing if $var *is* null,
+        -- since we won’t know to substitute 42.
+        --
+        -- Theoretically, we could be smarter here: we could record a sort of
+        -- “derived variable reference” that includes a new default value. But
+        -- that would be more complicated, so for now we don’t do that.
+        case vInfo of
+          VIRequired _   -> parseValue value
+          VIOptional _ _ -> markNotReusable *> parseValue (literal vValue)
       VNull -> pInputParser parser $ literal defaultValue
       other -> pInputParser parser other
 
