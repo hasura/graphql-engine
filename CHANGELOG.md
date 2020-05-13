@@ -4,12 +4,11 @@
 
 ### Scheduled Triggers
 
-A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron-based or timestamp based.
+A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron based or timestamp based.
 
 A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to  generate an end-of-day sales report every weekday at 9pm.
 
-You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be
-created for 2 weeks from when a user signs up to send them an email about their experience. 
+You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience. 
 
 <Add docs links>
 
