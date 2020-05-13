@@ -8,6 +8,8 @@ import {
 } from '../../ScheduledTriggers/state';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import { getEventTargetValue } from '../../../../Common/utils/jsUtils';
+import Toggle from '../../../../Common/Toggle/Toggle';
+import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 import styles from '../../Events.scss';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import Headers from '../../../../Common/Headers/Headers';
@@ -18,7 +20,15 @@ type Props = ReturnType<typeof useScheduledTrigger>;
 const Form: React.FC<Props> = props => {
   const { state, setState } = props;
 
-  const { name, webhook, schedule, payload, headers, comment } = state;
+  const {
+    name,
+    webhook,
+    schedule,
+    payload,
+    headers,
+    comment,
+    includeInMetadata,
+  } = state;
 
   const setName = (e: React.BaseSyntheticEvent) =>
     setState.name(getEventTargetValue(e));
@@ -156,25 +166,6 @@ const Form: React.FC<Props> = props => {
       </React.Fragment>
     );
 
-  const getRetryConfInput = () => {
-    return sectionize(
-      <div className={styles.add_mar_bottom}>
-        <h2 className={`${styles.subheading_text}`}>
-          Retry configuration
-          <Tooltip
-            id="trigger-headers"
-            message="Retry configuration if the call to the webhook fails"
-            className={styles.add_mar_left_mid}
-          />
-        </h2>
-        <RetryConf
-          retryConf={state.retryConf}
-          setRetryConf={setState.retryConf}
-        />
-      </div>
-    );
-  };
-
   const getCommentInput = () => {
     return sectionize(
       <div className={styles.add_mar_bottom}>
@@ -197,15 +188,68 @@ const Form: React.FC<Props> = props => {
     );
   };
 
+  const getMetadataIncludeCheckbox = () => {
+    return sectionize(
+      <div className={styles.add_mar_bottom}>
+        <h2 className={`${styles.subheading_text}`}>
+          Include in Metadata
+          <Tooltip
+            id="trigger-comment"
+            message="If enabled, this cron trigger will be included in the metadata of GraphqL Engine"
+            className={styles.add_mar_left_mid}
+          />
+        </h2>
+        <div className={`${styles.display_flex} ${styles.add_mar_right_mid}`}>
+          <Toggle
+            checked={includeInMetadata}
+            onChange={setState.toggleIncludeInMetadata}
+            className={styles.add_mar_right_mid}
+            icons={false}
+          />
+          <span>Include this trigger in Hasura Metadata</span>
+        </div>
+      </div>
+    );
+  };
+
+  const getRetryConfInput = () => {
+    return sectionize(
+      <div className={styles.add_mar_bottom}>
+        <h2 className={`${styles.subheading_text}`}>
+          Retry configuration
+          <Tooltip
+            id="trigger-headers"
+            message="Retry configuration if the call to the webhook fails"
+            className={styles.add_mar_left_mid}
+          />
+        </h2>
+        <RetryConf
+          retryConf={state.retryConf}
+          setRetryConf={setState.retryConf}
+        />
+      </div>
+    );
+  };
+
+  const getAdvancedSection = () => {
+    const label = <h2 className={styles.subheading_text}>Advanced</h2>;
+    return sectionize(
+      <CollapsibleToggle title={label}>
+        {getHeadersInput()}
+        {getRetryConfInput()}
+        {getMetadataIncludeCheckbox()}
+        {getCommentInput()}
+      </CollapsibleToggle>
+    );
+  };
+
   return (
     <React.Fragment>
       {getNameInput()}
       {getWebhookInput()}
       {getScheduleInput()}
       {getPayloadInput()}
-      {getHeadersInput()}
-      {getRetryConfInput()}
-      {getCommentInput()}
+      {getAdvancedSection()}
     </React.Fragment>
   );
 };

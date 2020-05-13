@@ -82,10 +82,10 @@ export const useScheduledTrigger = (initState?: LocalScheduledTriggerState) => {
           comment,
         }));
       },
-      includeInMetadata: (include: boolean) => {
+      toggleIncludeInMetadata: () => {
         setState(s => ({
           ...s,
-          includeInMetadata: include,
+          includeInMetadata: !s.includeInMetadata,
         }));
       },
       bulk: setState,

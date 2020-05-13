@@ -494,7 +494,7 @@ export const createScheduledEvent = (
   const validationError = validateAdhocEventState(state);
   const errorMessage = 'Failed scheduling the event';
   if (validationError) {
-    dispatch(showErrorNotification(errorMessage, validationError));
+    return dispatch(showErrorNotification(errorMessage, validationError));
   }
 
   const query = getCreateScheduledEventQuery(state);

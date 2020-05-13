@@ -72,31 +72,6 @@ const EventsTable: React.FC<Props> = props => {
     };
   });
   const rowsFormatted = rows.map(r => {
-    console.log('====================');
-    console.log(r);
-    console.log({
-      ...r,
-      delivered: r.delivered ? (
-        <CheckIcon className="" />
-      ) : (
-        <CrossIcon className="" />
-      ),
-      status:
-        r.status === 'scheduled' ? (
-          <ClockIcon className="" />
-        ) : r.status === 'dead' ? (
-          <SkullIcon className="" />
-        ) : (
-          <CheckIcon className="" />
-        ),
-      scheduled_at: r.scheduled_time
-        ? convertDateTimeToLocale(r.scheduled_time, false)
-        : undefined,
-      created_at: r.created_at
-        ? convertDateTimeToLocale(r.created_at, true)
-        : undefined,
-    });
-    console.log('====================');
     return {
       ...r,
       delivered: r.delivered ? (
