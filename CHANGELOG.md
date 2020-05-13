@@ -2,6 +2,20 @@
 
 ## Next release
 
+### Scheduled Triggers
+
+A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron-based or timestamp based.
+
+A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to  generate an end-of-day sales report every weekday at 9pm.
+
+You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be
+created for 2 weeks from when a user signs up to send them an email about their experience. 
+
+<Add docs links>
+
+(close #1914)
+
+
 ### Allow access to session variables by computed fields (fix #3846)
 
 Sometimes it is useful for computed fields to have access to the Hasura session variables directly. For example, suppose you want to fetch some articles but also get related user info, say `likedByMe`. Now, you can define a function like:
@@ -32,18 +46,6 @@ Support for this is now added through the `add_computed_field` API.
 
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
-### Scheduled Triggers (fix #1914)
-
-A scheduled trigger can be useful to execute custom business logic either periodically (using a cron trigger) or
-at a particular timestamp (using a scheduled event).
-
-A cron trigger will be useful when something needs to be done periodically. For example, A new cron trigger
-can be configured to run everyday to generate the sales report of the previous day.
-
-Creating a scheduled event will be useful on an ad hoc basis. For example, A new scheduled event can be
-created when users signs up in an app, the scheduled event can be scheduled at 2 weeks from the signup time
-to send them an email asking about their experience using the app.
-(close #1914)
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
