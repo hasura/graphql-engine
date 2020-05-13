@@ -125,7 +125,7 @@ func (o *InitOptions) Run() error {
 			return errors.Wrap(err, "can't initialise hasura project in filesystem root")
 		}
 		// check if the current directory is already a hasura project
-		if err := cli.ValidateDirectory(cwdir); err == nil {
+		if err := cli.ValidateDirectory(cwdir, cli.ConfigFile); err == nil {
 			return errors.Errorf("current working directory is already a hasura project directory")
 		}
 		o.EC.ExecutionDirectory = cwdir

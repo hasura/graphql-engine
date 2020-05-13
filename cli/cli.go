@@ -465,10 +465,10 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "ensuring codegen-assets repo failed")
 	}
 
-	// validate execution directory
-	err = ec.validateDirectory()
+	// set execution directory and config file
+	err = ec.setExecutionDirectory()
 	if err != nil {
-		return errors.Wrap(err, "validating current directory failed")
+		return errors.Wrap(err, "validating execution directory failed")
 	}
 
 	// load .env file
@@ -477,13 +477,16 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "loading .env file failed")
 	}
 
-	// set names of config file
-	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
-
 	// read config and parse the values into Config
 	err = ec.readConfig()
 	if err != nil {
 		return errors.Wrap(err, "cannot read config")
+	}
+
+	// check config version and strictly validate directory if V1
+	err = ec.validateV1Directory()
+	if err != nil {
+		return errors.Wrap(err, "validating config V1 directory failed")
 	}
 
 	// set name of migration directory
@@ -574,8 +577,7 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetEnvPrefix(util.ViperEnvPrefix)
 	v.SetEnvKeyReplacer(util.ViperEnvReplacer)
 	v.AutomaticEnv()
-	v.SetConfigName("config")
-	v.SetDefault("version", "1")
+	v.SetDefault("version", "2")
 	v.SetDefault("endpoint", "http://localhost:8080")
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
@@ -584,17 +586,22 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("api_paths.config", "v1alpha1/config")
 	v.SetDefault("api_paths.pg_dump", "v1alpha1/pg_dump")
 	v.SetDefault("api_paths.version", "v1/version")
-	v.SetDefault("metadata_directory", "")
+	v.SetDefault("metadata_directory", "metadata")
 	v.SetDefault("migrations_directory", "migrations")
 	v.SetDefault("actions.kind", "synchronous")
 	v.SetDefault("actions.handler_webhook_baseurl", "http://localhost:3000")
 	v.SetDefault("actions.codegen.framework", "")
 	v.SetDefault("actions.codegen.output_dir", "")
 	v.SetDefault("actions.codegen.uri", "")
-	v.AddConfigPath(ec.ExecutionDirectory)
-	err := v.ReadInConfig()
-	if err != nil {
-		return errors.Wrap(err, "cannot read config from file/env")
+	if ec.ConfigFile != "" {
+		v.SetDefault("version", "1")
+		v.SetDefault("metadata_directory", "")
+		v.SetConfigName("config")
+		v.AddConfigPath(ec.ExecutionDirectory)
+		err := v.ReadInConfig()
+		if err != nil {
+			return errors.Wrap(err, "cannot read config from config file")
+		}
 	}
 	adminSecret := v.GetString("admin_secret")
 	if adminSecret == "" {
@@ -630,7 +637,7 @@ func (ec *ExecutionContext) readConfig() error {
 	if !ec.Config.Version.IsValid() {
 		return ErrInvalidConfigVersion
 	}
-	err = ec.Config.ServerConfig.ParseEndpoint()
+	err := ec.Config.ServerConfig.ParseEndpoint()
 	if err != nil {
 		return errors.Wrap(err, "unable to parse server endpoint")
 	}
