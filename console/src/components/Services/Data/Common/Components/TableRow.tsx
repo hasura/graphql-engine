@@ -6,7 +6,6 @@ import { TypedInput } from './TypedInput';
 
 type Column = {
   column_name?: string;
-  colName?: string;
   is_generated?: string;
   is_nullable?: string;
   is_identity?: string;
