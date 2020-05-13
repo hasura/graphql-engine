@@ -254,7 +254,7 @@ instance FromEnv L.LogLevel where
   fromEnv = readLogLevel
 
 instance FromEnv Cache.CacheSize where
-  fromEnv = Cache.mkCacheSize
+  fromEnv = Cache.parseCacheSize
 
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 

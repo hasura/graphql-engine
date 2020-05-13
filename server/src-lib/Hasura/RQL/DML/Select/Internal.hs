@@ -191,6 +191,7 @@ fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
       S.FunctionArgs positional named
     toSQLExp (AETableRow Nothing)    = S.SERowIden $ mkBaseTableAls pfx
     toSQLExp (AETableRow (Just acc)) = S.mkQIdenExp (mkBaseTableAls pfx) acc
+    toSQLExp (AESession s)           = s
     toSQLExp (AEInput s)             = s
 
 -- posttgres ignores anything beyond 63 chars for an iden
@@ -715,7 +716,7 @@ baseNodeToSel joinCond baseNode =
       , S.selWhere = Just $ injectJoinCond joinCond whr
       }
     baseSelAls = S.Alias $ mkBaseTableAls pfx
-    baseFromItem = S.FISelect (S.Lateral False) baseSel baseSelAls
+    baseFromItem = S.mkSelFromItem baseSel baseSelAls
 
     -- function to create a joined from item from two from items
     leftOuterJoin current new =

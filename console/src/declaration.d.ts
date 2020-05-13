@@ -30,3 +30,11 @@ declare namespace SvgPanZoom {
 }
 
 declare module 'react-bootstrap/lib/Tooltip';
+declare module 'react-bootstrap/lib/Tabs';
+declare module 'react-bootstrap/lib/OverlayTrigger';
+declare module 'react-bootstrap/lib/Button';
+declare module 'react-bootstrap/lib/InputGroup';
+declare module 'react-bootstrap/lib/DropdownButton';
+declare module 'react-bootstrap/lib/MenuItem';
+declare module 'react-bootstrap/lib/Tab';
+declare module 'react-bootstrap/lib/Modal';

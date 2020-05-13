@@ -2,29 +2,36 @@
    :description: Haura GarphQL CLI configuration reference 
    :keywords: hasura, docs, CLI, CLI reference, config 
 
-.. _cli_reference:
+.. _cli_config_reference:
 
-Configuration reference 
-=======================
+Hasura CLI Configuration Reference 
+==================================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
-Hasura CLI commands get key values from flags, ENV variables, ``.env`` file and configuration file ``config.yaml``. 
+Introduction
+------------
+
+Hasura CLI commands can get key values from flags, ENV variables, a ``.env`` file
+or the configuration file ``config.yaml``.
 
 Configuration file
-^^^^^^^^^^^^^^^^^^
+------------------
  
-In order for the Hasura CLI to work, the ``config.yaml`` file is required (created automatically via the :ref:`hasura init<hasura_init>` command).
+In order for the Hasura CLI to work, the ``config.yaml`` file is required
+(created automatically via the :ref:`hasura init<hasura_init>` command).
 The configuration file can be configured with the following config keys:
 
-.. code-block:: none
+.. code-block:: yaml
 
   version: 
   endpoint: 
   admin_secret:
+  insecure_skip_tls_verify:
+  certificate_authority:
   access_key: #deprecated
   api_paths:
     query: 
@@ -65,6 +72,14 @@ The configuration file can be configured with the following config keys:
      - false
      - 1 (Deprecated)
      - 
+   * - insecure_skip_tls_verify
+     - false
+     - 1 (added in ``v1.2.0``)
+     - false
+   * - certificate_authority
+     - false
+     - 1 (added in ``v1.2.0``)
+     -
    * - api_paths
      - false
      - 1
@@ -126,18 +141,26 @@ The configuration file can be configured with the following config keys:
      - 2
      -
 
+.. note::
+
+  The above structure is for ``config v2`` file which is supported since ``v1.2.0``
+
+  A ``config v1`` file of your Hasura project would look like:
+
+  .. code-block:: yaml
+
+      endpoint: http://localhost:8080
 
 Environment variables
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 The configuration can also be set in the form of environment variables:
 
 .. list-table::
    :header-rows: 1
-   :widths: 25 20 30
 
    * - ENV variable
-     - Configuration file key
+     - Config file key
      - Description
    
    * - ``HASURA_GRAPHQL_VERSION``
@@ -156,6 +179,16 @@ The configuration can also be set in the form of environment variables:
      - ``access_key``
      - Access key for Hasura GraphQL engine. Note: Deprecated. Use admin 
        secret instead. 
+
+   * - ``HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY``
+     - ``insecure_skip_tls_verify``
+     - Skip verifying SSL certificate for the Hasura endpoint. Useful if you have
+       a self-singed certificate and don't have access to the CA cert.
+
+   * - ``HASURA_GRAPHQL_CERTIFICATE_AUTHORITY``
+     - ``certificate_authority``
+     - Path to the CA certificate for validating the self-signed certificate for
+       the Hasura endpoint.
 
    * - ``HASURA_GRAPHQL_API_PATHS_QUERY``
      - ``api_paths.query``
@@ -206,14 +239,14 @@ The configuration can also be set in the form of environment variables:
      - URI to codegen for actions.
 
 CLI flags
-^^^^^^^^^
+---------
 
 The above keys can be set using command-line flags as well. The corresponding flag, 
 for the ENV vars or the configuration keys, can be found in the respective commands 
 reference manual. 
 
 .env file
-^^^^^^^^^
+---------
 
 Alternatively, environment variables can also be read from the ``.env`` file, created manually 
 by the user, at the project root directory. A global flag, ``--envfile``, is available to 
@@ -230,6 +263,10 @@ Example:
 
 The above command will read ENV vars from the ``production.env`` file present at the 
 project root directory. 
+
+.. admonition:: Supported from
+
+   ``.env`` file is supported in versions ``v.1.2.0`` and above.
 
 .. note::
 

@@ -26,7 +26,7 @@ Refer to :ref:`install_hasura_cli`.
 Configuration
 -------------
 
-Refer to :ref:`cli_reference`.
+Refer to :ref:`cli_config_reference`.
 
 Commands
 --------
@@ -60,7 +60,7 @@ Commands
 - :ref:`hasura plugins uninstall <hasura_plugins_uninstall>`
 - :ref:`hasura plugins upgrade <hasura_plugins_upgrade>`
 - :ref:`hasura scripts <hasura_scripts>`
-- :ref:`hasura scripts update-config-v2 <hasura_scripts_update-config-v2>`
+- :ref:`hasura scripts update-project-v2 <hasura_scripts_update-project-v2>`
 - :ref:`hasura update-cli <hasura_update-cli>`
 - :ref:`hasura version <hasura_version>`
 
@@ -75,7 +75,7 @@ Refer to :ref:`uninstall_hasura_cli`.
    :hidden:
 
    install-hasura-cli
-   reference
+   Configuration reference <config-reference>
    hasura <hasura>
    hasura actions <hasura_actions>
    hasura actions codegen <hasura_actions_codegen>
@@ -105,7 +105,7 @@ Refer to :ref:`uninstall_hasura_cli`.
    hasura plugins uninstall <hasura_plugins_uninstall>
    hasura plugins upgrade <hasura_plugins_upgrade>
    hasura scripts <hasura_scripts>
-   hasura scripts update-config-v2 <hasura_scripts_update-config-v2>
+   hasura scripts update-project-v2 <hasura_scripts_update-project-v2>
    hasura update-cli <hasura_update-cli>
    hasura version <hasura_version>
    uninstall-hasura-cli

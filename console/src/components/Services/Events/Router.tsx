@@ -140,7 +140,7 @@ const getTriggersRouter = (
         path={adhocEventsPrefix}
         component={rightContainerConnector(connect)}
       >
-        <IndexRedirect to={getAdhocPendingEventsRoute('relative')} />
+        <IndexRedirect to={getAddAdhocEventRoute('relative')} />
         <Route
           path={getAddAdhocEventRoute('relative')}
           component={AddAdhocEvent(connect)}
