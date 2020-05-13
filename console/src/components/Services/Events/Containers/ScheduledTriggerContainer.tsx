@@ -6,10 +6,11 @@ import {
   getScheduledEventsLandingRoute,
   getSTRoute,
 } from '../../../Common/utils/routesUtils';
+import { getReactHelmetTitle } from '../../../Common/utils/reactUtils';
 import tabInfo, { STTab } from './scheduledTriggerTabs';
 import { findScheduledTrigger } from '../ScheduledTriggers/utils';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { appPrefix } from '../constants';
+import { appPrefix, EVENTS_SERVICE_HEADING } from '../constants';
 import { setCurrentTrigger } from '../reducer';
 import { Triggers } from '../Types';
 import styles from '../Events.scss';
@@ -72,7 +73,10 @@ const STContainer = ({
       className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper}`}
     >
       <Helmet
-        title={`${triggerName} | Scheduled Triggers | ${tabInfo[tabName].display_text}`}
+        title={getReactHelmetTitle(
+          `${tabInfo[tabName].display_text} - ${triggerName}`,
+          EVENTS_SERVICE_HEADING
+        )}
       />
       <CommonTabLayout
         appPrefix={appPrefix}

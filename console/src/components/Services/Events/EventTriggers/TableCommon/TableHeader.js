@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
-import { capitalize } from '../../../../Common/utils/jsUtils';
+import { getReactHelmetTitle } from '../../../../Common/utils/reactUtils';
 import BreadCrumb from '../../../../Common/Layout/BreadCrumb/BreadCrumb';
 import {
   getETModifyRoute,
@@ -10,6 +10,7 @@ import {
   getETProcessedEventsRoute,
   getDataEventsLandingRoute,
 } from '../../../../Common/utils/routesUtils';
+import { EVENTS_SERVICE_HEADING } from '../../constants';
 
 const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
   const styles = require('./EventTable.scss');
@@ -25,7 +26,7 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
   } else if (tabName === 'modify') {
     activeTab = 'Modify';
   } else if (tabName === 'logs') {
-    activeTab = 'Logs';
+    activeTab = 'Invocation Logs';
   }
 
   const getBreadCrumbs = () => {
@@ -56,12 +57,10 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
   return (
     <div>
       <Helmet
-        title={
-          capitalize(tabName) +
-          ' - ' +
-          triggerName +
-          ' - Event Triggers | Hasura'
-        }
+        title={getReactHelmetTitle(
+          `${activeTab} - ${triggerName}`,
+          EVENTS_SERVICE_HEADING
+        )}
       />
       <div className={styles.subHeader}>
         <BreadCrumb breadCrumbs={getBreadCrumbs()} />

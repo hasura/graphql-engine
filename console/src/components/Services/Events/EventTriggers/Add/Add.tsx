@@ -20,6 +20,7 @@ import { createEventTrigger } from '../../ServerIO';
 import Operations from '../Common/Operations';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';
 import * as tooltip from '../Common/Tooltips';
+import { EVENTS_SERVICE_HEADING } from '../../constants';
 
 type AddProps = {
   allSchemas: Table[];
@@ -168,7 +169,9 @@ const Add = (props: AddProps) => {
     <div
       className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
     >
-      <Helmet title="Create Trigger - Events | Hasura" />
+      <Helmet
+        title={`Add Event Trigger | ${EVENTS_SERVICE_HEADING} - Hasura`}
+      />
       <div className={styles.subHeader}>
         <h2 className={styles.heading_text}>Create a new event trigger</h2>
         <div className="clearfix" />

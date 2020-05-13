@@ -6,8 +6,13 @@ import {
   getDataEventsLandingRoute,
 } from '../../../Common/utils/routesUtils';
 import { stripTrailingSlash } from '../../../Common/utils/urlUtils';
+import { getReactHelmetTitle } from '../../../Common/utils/reactUtils';
 import tabInfo, { AdhocEventsTab } from './adhocEventsTabs';
-import { appPrefix, ADHOC_EVENTS_HEADING } from '../constants';
+import {
+  appPrefix,
+  ADHOC_EVENTS_HEADING,
+  EVENTS_SERVICE_HEADING,
+} from '../constants';
 import styles from '../Events.scss';
 
 interface ScheduledTriggerProps extends React.ComponentProps<'div'> {
@@ -36,7 +41,10 @@ const STContainer = ({ children, tabName }: ScheduledTriggerProps) => {
       className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper}`}
     >
       <Helmet
-        title={`${ADHOC_EVENTS_HEADING} | ${tabInfo[tabName].display_text}`}
+        title={getReactHelmetTitle(
+          `${tabInfo[tabName].display_text} - ${ADHOC_EVENTS_HEADING}`,
+          EVENTS_SERVICE_HEADING
+        )}
       />
       <CommonTabLayout
         appPrefix={appPrefix}

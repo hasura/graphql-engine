@@ -8,8 +8,10 @@ import globals from '../../../../../Globals';
 import Button from '../../../../Common/Button/Button';
 import TopicDescription from '../../../Common/Landing/TopicDescription';
 import { getAddETRoute } from '../../../../Common/utils/routesUtils';
+import { getReactHelmetTitle } from '../../../../Common/utils/reactUtils';
 import TryItOut from '../../../Common/Landing/TryItOut';
 import styles from '../../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import { EVENTS_SERVICE_HEADING, EVENT_TRIGGER } from '../../constants';
 
 type Props = {
   dispatch: any;
@@ -68,10 +70,12 @@ insert_user(objects: [{name: "testuser"}] ){
       className={`${styles.padd_left_remove} container-fluid ${styles.padd_top}`}
     >
       <div className={styles.padd_left}>
-        <Helmet title="Event Triggers | Hasura" />
+        <Helmet
+          title={getReactHelmetTitle(EVENT_TRIGGER, EVENTS_SERVICE_HEADING)}
+        />
         <div className={styles.display_flex}>
           <h2 className={`${styles.headerText} ${styles.inline_block}`}>
-            Event Triggers
+            {EVENT_TRIGGER}s
           </h2>
           {getAddBtn()}
         </div>

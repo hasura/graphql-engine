@@ -79,21 +79,6 @@ export type EventTrigger = {
  * Types related to Scheduled Triggers
  */
 
-export type AdhocTriggerConf = {
-  type: 'adhoc';
-  value: Date;
-};
-export type CronTriggerConf = {
-  type: 'cron';
-  value: string;
-};
-
-export type ScheduleTriggerType =
-  | AdhocTriggerConf['type']
-  | CronTriggerConf['type'];
-
-export type ScheduleConf = AdhocTriggerConf | CronTriggerConf;
-
 export type ScheduledTrigger = {
   name: string;
   header_conf: ServerHeader[];

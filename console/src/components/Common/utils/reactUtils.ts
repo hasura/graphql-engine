@@ -22,3 +22,7 @@ export const useInterval = (callback: VoidFunction, delay: number) => {
     return () => {};
   }, [delay]);
 };
+
+export const getReactHelmetTitle = (feature: string, service: string) => {
+  return `${feature} - ${service} | Hasura`;
+};

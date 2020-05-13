@@ -4,7 +4,9 @@ import { useScheduledTrigger, LocalScheduledTriggerState } from '../state';
 import styles from '../ScheduledTriggers.scss';
 import Button from '../../../../Common/Button/Button';
 import ScheduledTriggerForm from '../../Common/Components/ScheduledTriggerForm';
+import { getReactHelmetTitle } from '../../../../Common/utils/reactUtils';
 import { addScheduledTrigger } from '../../ServerIO';
+import { EVENTS_SERVICE_HEADING, CRON_TRIGGER } from '../../constants';
 import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
 
 type Props = {
@@ -25,7 +27,15 @@ const Main: React.FC<Props> = props => {
 
   return (
     <div className={styles.add_mar_bottom}>
-      <Helmet title="Scheduled Triggers | Add" />
+      <Helmet
+        title={getReactHelmetTitle(
+          `Create ${CRON_TRIGGER}`,
+          EVENTS_SERVICE_HEADING
+        )}
+      />
+      <div className={`${styles.heading_text} ${styles.add_mar_bottom}`}>
+        Create a cron trigger
+      </div>
       <ScheduledTriggerForm state={state} setState={setState} />
       <Button
         onClick={onSave}

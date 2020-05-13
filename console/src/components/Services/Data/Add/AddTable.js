@@ -429,7 +429,7 @@ class AddTable extends Component {
       <div
         className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
       >
-        <Helmet title="Add Table - Data | Hasura" />
+        <Helmet title={`Add Table - Data | Hasura`} />
         <div className={styles.subHeader}>
           <h2 className={styles.heading_text}>Add a new table</h2>
           <div className="clearfix" />

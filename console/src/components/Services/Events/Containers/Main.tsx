@@ -61,11 +61,13 @@ const Container: React.FC<TriggersContainerProps> = props => {
         <Link className={styles.linkBorder} to={getDataEventsLandingRoute()}>
           Event Triggers
         </Link>
-        <LeftSidebar
-          triggers={triggers.event}
-          service="event triggers"
-          currentTrigger={currentEventTrigger}
-        />
+        {isDataEventsRoute(currentLocation) ? (
+          <LeftSidebar
+            triggers={triggers.event}
+            service="event triggers"
+            currentTrigger={currentEventTrigger}
+          />
+        ) : null}
       </li>
       <li
         role="presentation"
@@ -77,11 +79,13 @@ const Container: React.FC<TriggersContainerProps> = props => {
         >
           Scheduled Triggers
         </Link>
-        <LeftSidebar
-          triggers={triggers.scheduled}
-          service="scheduled triggers"
-          currentTrigger={currentScheduledTrigger}
-        />
+        {isScheduledEventsRoute(currentLocation) ? (
+          <LeftSidebar
+            triggers={triggers.scheduled}
+            service="scheduled triggers"
+            currentTrigger={currentScheduledTrigger}
+          />
+        ) : null}
       </li>
       <li
         role="presentation"
