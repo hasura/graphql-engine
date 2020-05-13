@@ -1,5 +1,13 @@
 # Hasura GraphQL Engine Changelog
 
+## Next release
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
+
 ## `v1.2.0`
 
 Include the changelog from **v1.2.0-beta.1**, **v1.2.0-beta.2**, **v1.2.0-beta.3**, **v1.2.0-beta.4**, **v1.2.0-beta.5**
