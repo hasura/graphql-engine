@@ -7,7 +7,7 @@ const editorLabel = 'Kind';
 const docsRef =
   'https://docs.hasura.io/1.0/graphql/manual/actions/async-actions.html';
 
-const HandlerEditor = ({ value, onChange, className }) => {
+const KindEditor = ({ value, onChange, className, disabled = false }) => {
   const setAsynchronous = () => {
     onChange('asynchronous');
   };
@@ -37,6 +37,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
             checked={value === 'synchronous'}
             readOnly
             className={styles.add_mar_right_small}
+            disabled={disabled}
           />
           Synchronous
         </label>
@@ -49,6 +50,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
             readOnly
             checked={value === 'asynchronous'}
             className={styles.add_mar_right_small}
+            disabled={disabled}
           />
           Asynchronous
         </label>
@@ -57,4 +59,4 @@ const HandlerEditor = ({ value, onChange, className }) => {
   );
 };
 
-export default HandlerEditor;
+export default KindEditor;

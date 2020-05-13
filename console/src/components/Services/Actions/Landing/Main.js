@@ -13,6 +13,9 @@ const actionsArchDiagram = `${globals.assetsPath}/common/img/actions.png`;
 class Landing extends React.Component {
   render() {
     const styles = require('../Actions.scss');
+    const { readOnlyMode } = this.props;
+
+    const showActionBtns = !readOnlyMode;
 
     const { dispatch } = this.props;
     const getIntroSection = () => {
@@ -36,7 +39,7 @@ class Landing extends React.Component {
         dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
       };
 
-      const addBtn = (
+      const addBtn = showActionBtns && (
         <Button
           data-test="data-create-actions"
           color="yellow"

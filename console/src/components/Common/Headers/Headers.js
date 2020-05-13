@@ -3,7 +3,7 @@ import styles from './Headers.scss';
 import DropdownButton from '../DropdownButton/DropdownButton';
 import { addPlaceholderHeader } from './utils';
 
-const Headers = ({ headers, setHeaders }) => {
+const Headers = ({ headers, setHeaders, disabled = false }) => {
   return headers.map(({ name, value, type }, i) => {
     const setHeaderType = e => {
       const newHeaders = JSON.parse(JSON.stringify(headers));
@@ -36,6 +36,7 @@ const Headers = ({ headers, setHeaders }) => {
         <input
           value={name}
           onChange={setHeaderKey}
+          disabled={disabled}
           placeholder="key"
           className={`form-control ${styles.add_mar_right} ${styles.headerInputWidth}`}
         />
@@ -55,6 +56,7 @@ const Headers = ({ headers, setHeaders }) => {
             onButtonChange={setHeaderType}
             onInputChange={setHeaderValue}
             required
+            disabled={disabled}
             bsClass={styles.dropdown_button}
             inputVal={value}
             id={`header-value-${i}`}

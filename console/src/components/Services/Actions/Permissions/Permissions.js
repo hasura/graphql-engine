@@ -19,6 +19,7 @@ const Permissions = ({
   permissionEdit,
   isEditing,
   isFetching,
+  readOnlyMode = false,
 }) => {
   React.useEffect(() => {
     dispatch(fetchRoleList());
@@ -119,7 +120,7 @@ const Permissions = ({
             permType: queryType,
             className,
             editIcon: editIcon,
-            onClick,
+            onClick: !readOnlyMode && onClick,
             dataTest: `${role}-${queryType}`,
             access: getRoleQueryPermission(),
           };
@@ -169,12 +170,14 @@ const Permissions = ({
       />
       {getPermissionsTable()}
       <div className={`${styles.add_mar_bottom}`}>
-        <PermissionEditor
-          permissionEdit={permissionEdit}
-          dispatch={dispatch}
-          isFetching={isFetching}
-          isEditing={isEditing}
-        />
+        {!readOnlyMode && (
+          <PermissionEditor
+            permissionEdit={permissionEdit}
+            dispatch={dispatch}
+            isFetching={isFetching}
+            isEditing={isEditing}
+          />
+        )}
       </div>
     </div>
   );

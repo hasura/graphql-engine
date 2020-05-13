@@ -16,6 +16,7 @@ const ActionDefinitionEditor = ({
   placeholder,
   error,
   timer,
+  readOnlyMode,
 }) => {
   const onChangeWithError = v => {
     if (timer) {
@@ -81,6 +82,7 @@ const ActionDefinitionEditor = ({
           markers={markers}
           height="200px"
           width="600px"
+          readOnly={readOnlyMode}
         />
       </div>
     </div>
