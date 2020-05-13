@@ -716,7 +716,7 @@ baseNodeToSel joinCond baseNode =
       , S.selWhere = Just $ injectJoinCond joinCond whr
       }
     baseSelAls = S.Alias $ mkBaseTableAls pfx
-    baseFromItem = S.FISelect (S.Lateral False) baseSel baseSelAls
+    baseFromItem = S.mkSelFromItem baseSel baseSelAls
 
     -- function to create a joined from item from two from items
     leftOuterJoin current new =
