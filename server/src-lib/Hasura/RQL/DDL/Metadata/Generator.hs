@@ -35,7 +35,6 @@ import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-
 genReplaceMetadata :: Gen ReplaceMetadata
 genReplaceMetadata = do
   version <- arbitrary

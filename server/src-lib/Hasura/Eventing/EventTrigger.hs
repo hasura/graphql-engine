@@ -56,6 +56,7 @@ import           Data.Time.Clock
 import           Data.Word
 import           Hasura.Eventing.HTTP
 import           Hasura.Eventing.Common
+
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
@@ -72,6 +73,7 @@ import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Client           as HTTP
 import qualified Database.PG.Query.PTI         as PTI
 import qualified PostgreSQL.Binary.Encoding    as PE
+import qualified Data.Set                      as Set
 
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }

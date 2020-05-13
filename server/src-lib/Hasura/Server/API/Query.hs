@@ -283,7 +283,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQAddCollectionToAllowlist _        -> True
   RQDropCollectionFromAllowlist _     -> True
 
-  RQRunSql q                      -> isSchemaCacheBuildRequiredRunSQL q
+  RQRunSql q                          -> isSchemaCacheBuildRequiredRunSQL q
 
   RQReplaceMetadata _                 -> True
   RQExportMetadata _                  -> False

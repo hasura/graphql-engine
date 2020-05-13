@@ -90,6 +90,7 @@ import           Hasura.RQL.DDL.EventTrigger       (getHeaderInfosFromConf)
 import           Hasura.SQL.DML
 import           Hasura.SQL.Types
 import           Hasura.Eventing.Common
+
 import           System.Cron
 
 import qualified Data.Aeson                        as J

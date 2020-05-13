@@ -71,6 +71,12 @@ common common-all
     TypeFamilyDependencies
     TypeOperators
 
+    -- ApplicativeDo BangPatterns BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable
+    -- DeriveFoldable DeriveFunctor DeriveGeneric DeriveLift DeriveTraversable DerivingVia EmptyCase
+    -- FlexibleContexts FlexibleInstances FunctionalDependencies GeneralizedNewtypeDeriving
+    -- InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns NoImplicitPrelude
+    -- OverloadedStrings QuantifiedConstraints QuasiQuotes RankNTypes RecordWildCards ScopedTypeVariables
+    -- StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeOperators
 
 common common-exe
   ghc-options:
@@ -115,7 +121,7 @@ library
                      , http-types
                      , attoparsec
                      , attoparsec-iso8601 >= 1.0
-                     , time
+                     , time >= 1.9
                      , scientific
                      , Spock-core
                      , split
@@ -242,6 +248,9 @@ library
 
                      , directory
                      , semigroups >= 0.19.1
+
+                     -- scheduled triggers
+                     , cron >= 0.6.2
 
                      -- scheduled triggers
                      , cron >= 0.6.2

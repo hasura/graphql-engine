@@ -206,6 +206,11 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
   withPathK "custom_types" $
     CustomTypes.persistCustomTypes customTypes
 
+  -- cron triggers
+  withPathK "cron_triggers" $
+    indexedForM_ cronTriggers $ \ct -> liftTx $ do
+    addCronTriggerToCatalog ct
+
   -- actions
   withPathK "actions" $
     indexedForM_ actions $ \action -> do
@@ -217,6 +222,7 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
           let createActionPermission = CreateActionPermission (_amName action)
                                        (_apmRole permission) Nothing (_apmComment permission)
           Action.persistCreateActionPermission createActionPermission
+
   where
     processPerms tableName perms = indexedForM_ perms $ Permission.addPermP2 tableName
 

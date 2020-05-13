@@ -292,6 +292,7 @@ def gql_server(request, hge_ctx):
     yield server
     server.teardown()
 
+
 @pytest.fixture(scope='class')
 def ws_client(request, hge_ctx):
     """

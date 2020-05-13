@@ -27,6 +27,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Data.URL.Template
 import           Hasura.Session
 import           Hasura.SQL.Types
 
@@ -35,10 +36,10 @@ import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
+
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Data.URL.Template             (renderURLTemplate)
 import           Language.Haskell.TH.Syntax    (Lift)
 
 getActionInfo

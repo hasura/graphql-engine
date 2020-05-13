@@ -333,16 +333,3 @@ Author: Brandon Simmons <brandon.m.simmons@gmail.com>
 Date:   Wed May 13 17:38:16 2020 -0400
 
     dev.sh: bump version due to addition of croniter python dependency
-
-commit cc8e2ccc78bf154c5da90fea0967bd5ac2ca8b4b
-Author: Tirumarai Selvan <tiru@hasura.io>
-Date:   Wed May 13 18:03:16 2020 +0530
-
-    Scheduled triggers (close #1914) (#3553)
-
-    server: add scheduled triggers
-
-    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
-    Co-authored-by: Marion Schleifer <marion@hasura.io>
-    Co-authored-by: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-    Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>

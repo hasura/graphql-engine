@@ -32,7 +32,6 @@ import           Data.Aeson
 import           Data.List                                (nub)
 
 import qualified Hasura.Incremental                       as Inc
-import qualified Language.GraphQL.Draft.Syntax            as G
 
 import           Hasura.Db
 import           Hasura.GraphQL.Execute.Types
@@ -262,8 +261,6 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
           recordInconsistencies -< ( map mkActionMetadataObject actions
                                    , "custom types are inconsistent" )
           returnA -< (M.empty, emptyAnnotatedCustomTypes)
-
-      -- remote schemas
 
       cronTriggersMap <- buildCronTriggers -< ((),cronTriggers)
 

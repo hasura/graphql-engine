@@ -131,11 +131,14 @@ import           Hasura.RQL.Types.Metadata
 --import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
+--import           Hasura.RQL.Types.EventTrigger
+
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
 import           Hasura.Session
 import           Hasura.SQL.Types
+
 
 import           Data.Aeson
 import           Data.Aeson.Casing

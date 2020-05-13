@@ -49,6 +49,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
+import           Hasura.RQL.DDL.Headers        ()
+
 
 
 import           Control.Lens                  (makeLenses)
