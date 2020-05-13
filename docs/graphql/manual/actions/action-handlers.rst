@@ -31,7 +31,9 @@ The request payload is of the format:
 .. code-block:: json
 
     {
-      "action": "<action-name>",
+      "action": {
+        "name": "<action-name>"
+      },
       "input": {
         "arg1": "<value>",
         "arg2": "<value>"
@@ -83,7 +85,7 @@ For example, consider the following mutation.
 
 Let's say, the following mutation is executed:
 
-.. code-block:: graphql 
+.. code-block:: graphql
 
     mutation {
       UserLogin (username: "jake", password: "secretpassword") {
@@ -98,7 +100,9 @@ Hasura will call the handler with the following payload:
 .. code-block:: json
 
     {
-      "action": "UserLogin",
+      "action": {
+        "name": "UserLogin"
+      },  
       "input": {
         "username": "jake",
         "password": "secretpassword"

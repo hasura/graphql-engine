@@ -77,8 +77,6 @@ module Hasura.RQL.Types.Table
 
        ) where
 
--- import qualified Hasura.GraphQL.Context            as GC
-
 import           Hasura.GraphQL.Utils           (showNames)
 import           Hasura.Incremental             (Cacheable)
 import           Hasura.Prelude
@@ -90,6 +88,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.Server.Utils            (duplicates)
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 import           Control.Lens
@@ -213,6 +212,7 @@ data InsPermInfo
   { ipiCols            :: !(HS.HashSet PGCol)
   , ipiCheck           :: !AnnBoolExpPartialSQL
   , ipiSet             :: !PreSetColsPartial
+  , ipiBackendOnly     :: !Bool
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq, Generic)
 instance NFData InsPermInfo
@@ -279,12 +279,12 @@ data EventTriggerInfo
    , etiOpsDef      :: !TriggerOpsDef
    , etiRetryConf   :: !RetryConf
    , etiWebhookInfo :: !WebhookConfInfo
-   -- ^ The HTTP(s) URL which will be called with the event payload on configured operation. 
-   -- Must be a POST handler. This URL can be entered manually or can be picked up from an 
-   -- environment variable (the environment variable needs to be set before using it for 
-   -- this configuration). 
+   -- ^ The HTTP(s) URL which will be called with the event payload on configured operation.
+   -- Must be a POST handler. This URL can be entered manually or can be picked up from an
+   -- environment variable (the environment variable needs to be set before using it for
+   -- this configuration).
    , etiHeaders     :: ![EventHeaderInfo]
-   -- ^ Custom headers can be added to an event trigger. Each webhook request will have these 
+   -- ^ Custom headers can be added to an event trigger. Each webhook request will have these
    -- headers added.
    } deriving (Show, Eq, Generic)
 instance NFData EventTriggerInfo

@@ -31,8 +31,7 @@ import           Control.Monad.Reader              as M
 import           Control.Monad.State.Strict        as M
 import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..),
                                                          execWriterT, runWriterT)
-import           Data.Align                        as M (Align (align, alignWith))
-import           Data.Align.Key                    as M (AlignWithKey (..))
+import           Data.Align                        as M (Semialign (align, alignWith))
 import           Data.Bool                         as M (bool)
 import           Data.Data                         as M (Data (..))
 import           Data.Either                       as M (lefts, partitionEithers, rights)
