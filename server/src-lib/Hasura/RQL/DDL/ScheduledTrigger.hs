@@ -104,7 +104,7 @@ updateCronTriggerInCatalog CronTriggerMetadata {..} = liftTx $ do
   Q.unitQE defaultTxErrorHandler
    [Q.sql|
     DELETE FROM hdb_catalog.hdb_cron_events
-    WHERE name = $1 AND scheduled_time > now() AND tries = 0
+    WHERE trigger_name = $1 AND scheduled_time > now() AND tries = 0
    |] (Identity ctName) False
 
 runDeleteCronTrigger :: (CacheRWM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
