@@ -138,7 +138,7 @@ func (c *ConfigVersion) String() string {
 
 // IsValid returns if its a valid config version
 func (c ConfigVersion) IsValid() bool {
-	return c != 0 && c <= V2
+	return c == V1 || c == V2
 }
 
 // ServerConfig has the config values required to contact the server
