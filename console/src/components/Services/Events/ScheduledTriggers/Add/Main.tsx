@@ -16,16 +16,19 @@ const Main: React.FC<Props> = props => {
   const { dispatch, initState } = props;
   const { state, setState } = useScheduledTrigger(initState);
 
-  const getSaveButton = () => {
-    const callback = () => setState.loading(false);
-    const onClick = (e: React.SyntheticEvent) => {
-      e.preventDefault();
-      setState.loading(true);
-      dispatch(addScheduledTrigger(state, callback, callback));
-    };
-    return (
+  const callback = () => setState.loading(false);
+  const onSave = (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    setState.loading(true);
+    dispatch(addScheduledTrigger(state, callback, callback));
+  };
+
+  return (
+    <div className={styles.add_mar_bottom}>
+      <Helmet title="Scheduled Triggers | Add" />
+      <ScheduledTriggerForm state={state} setState={setState} />
       <Button
-        onClick={onClick}
+        onClick={onSave}
         color="yellow"
         size="sm"
         disabled={state.loading}
@@ -33,16 +36,6 @@ const Main: React.FC<Props> = props => {
       >
         {state.loading ? 'Creating...' : 'Create'}
       </Button>
-    );
-  };
-
-  return (
-    <div>
-      <Helmet title="Scheduled Triggers | Add" />
-      <div className={styles.heading_text}>Add a new scheduled trigger</div>
-      <ScheduledTriggerForm state={state} setState={setState} />
-      <hr />
-      {getSaveButton()}
     </div>
   );
 };

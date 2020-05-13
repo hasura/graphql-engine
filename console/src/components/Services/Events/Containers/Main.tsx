@@ -6,11 +6,14 @@ import PageContainer from '../../../Common/Layout/PageContainer/PageContainer';
 import LeftSidebar from '../Sidebar/Sidebar';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { Triggers } from '../Types';
+import { ADHOC_EVENTS_HEADING } from '../constants';
 import {
   getScheduledEventsLandingRoute,
   getDataEventsLandingRoute,
   isScheduledEventsRoute,
   isDataEventsRoute,
+  isAdhocScheduledEventRoute,
+  getAdhocEventsRoute,
 } from '../../../Common/utils/routesUtils';
 import { findEventTrigger, findScheduledTrigger } from '../utils';
 
@@ -79,6 +82,19 @@ const Container: React.FC<TriggersContainerProps> = props => {
           service="scheduled triggers"
           currentTrigger={currentScheduledTrigger}
         />
+      </li>
+      <li
+        role="presentation"
+        className={
+          isAdhocScheduledEventRoute(currentLocation) ? styles.active : ''
+        }
+      >
+        <Link
+          className={styles.linkBorder}
+          to={getAdhocEventsRoute('absolute', '')}
+        >
+          {ADHOC_EVENTS_HEADING}
+        </Link>
       </li>
     </ul>
   );

@@ -1,40 +1,37 @@
 import React from 'react';
 import { Header, defaultHeader } from '../../../Common/Headers/Headers';
-import { ScheduleConf, URLType, URLConf, RetryConf } from '../Types';
+import { RetryConf } from '../Types';
+import { Nullable } from '../../../Common/utils/tsUtils';
 
 export const defaultCronExpr = '* * * * *';
 
 export type LocalScheduledTriggerState = {
   name: string;
-  webhook: URLConf;
-  schedule: ScheduleConf;
+  webhook: string;
+  schedule: string;
   payload: string;
   headers: Array<Header>;
   loading: boolean;
   retryConf: RetryConf;
-  showScheduleModal?: boolean;
+  includeInMetadata: boolean;
+  comment: Nullable<string>;
 };
 
 const defaultState: LocalScheduledTriggerState = {
   name: '',
-  webhook: {
-    type: 'static',
-    value: '',
-  },
-  schedule: {
-    type: 'cron',
-    value: defaultCronExpr,
-  },
+  webhook: '',
+  schedule: '',
   payload: '',
   headers: [defaultHeader],
   loading: false,
-  showScheduleModal: false,
   retryConf: {
     timeout_sec: 60,
     num_retries: 0,
     interval_sec: 10,
     tolerance_sec: 21600,
   },
+  includeInMetadata: true,
+  comment: null,
 };
 
 export const useScheduledTrigger = (initState?: LocalScheduledTriggerState) => {
@@ -46,16 +43,13 @@ export const useScheduledTrigger = (initState?: LocalScheduledTriggerState) => {
       name: (name: string) => {
         setState(s => ({ ...s, name }));
       },
-      setWebhookType: (type: URLType) => {
-        setState(s => ({ ...s, webhook: { type, value: '' } }));
+      webhook: (webhook: string) => {
+        setState(s => ({ ...s, webhook }));
       },
-      setWebhookValue: (value: string) => {
-        setState(s => ({ ...s, webhook: { ...s.webhook, value } }));
-      },
-      schedule: (conf: ScheduleConf) => {
+      schedule: (schedule: string) => {
         setState(s => ({
           ...s,
-          schedule: conf,
+          schedule,
         }));
       },
       payload: (jsonString: string) => {
@@ -76,16 +70,22 @@ export const useScheduledTrigger = (initState?: LocalScheduledTriggerState) => {
           loading: isLoading,
         }));
       },
-      toggleScheduleModal: () => {
-        setState(s => ({
-          ...s,
-          showScheduleModal: !s.showScheduleModal,
-        }));
-      },
       retryConf: (r: RetryConf) => {
         setState(s => ({
           ...s,
           retryConf: r,
+        }));
+      },
+      comment: (comment: string) => {
+        setState(s => ({
+          ...s,
+          comment,
+        }));
+      },
+      includeInMetadata: (include: boolean) => {
+        setState(s => ({
+          ...s,
+          includeInMetadata: include,
         }));
       },
       bulk: setState,

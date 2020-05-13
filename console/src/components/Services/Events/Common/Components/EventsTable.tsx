@@ -4,6 +4,8 @@ import 'react-table/react-table.css';
 import { FilterTableProps } from './Types';
 import CheckIcon from '../../../../Common/Icons/Check';
 import CrossIcon from '../../../../Common/Icons/Cross';
+import ClockIcon from '../../../../Common/Icons/Clock';
+import SkullIcon from '../../../../Common/Icons/Skull';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import InvocationLogDetails from './InvocationLogDetails';
@@ -21,7 +23,7 @@ const EventsTable: React.FC<Props> = props => {
     setFilterState,
     runQuery,
     columns,
-    triggerName,
+    identifier,
   } = props;
 
   if (rows.length === 0) {
@@ -70,6 +72,31 @@ const EventsTable: React.FC<Props> = props => {
     };
   });
   const rowsFormatted = rows.map(r => {
+    console.log('====================');
+    console.log(r);
+    console.log({
+      ...r,
+      delivered: r.delivered ? (
+        <CheckIcon className="" />
+      ) : (
+        <CrossIcon className="" />
+      ),
+      status:
+        r.status === 'scheduled' ? (
+          <ClockIcon className="" />
+        ) : r.status === 'dead' ? (
+          <SkullIcon className="" />
+        ) : (
+          <CheckIcon className="" />
+        ),
+      scheduled_at: r.scheduled_time
+        ? convertDateTimeToLocale(r.scheduled_time, false)
+        : undefined,
+      created_at: r.created_at
+        ? convertDateTimeToLocale(r.created_at, true)
+        : undefined,
+    });
+    console.log('====================');
     return {
       ...r,
       delivered: r.delivered ? (
@@ -77,6 +104,14 @@ const EventsTable: React.FC<Props> = props => {
       ) : (
         <CrossIcon className="" />
       ),
+      status:
+        r.status === 'scheduled' ? (
+          <ClockIcon className="" />
+        ) : r.status === 'dead' ? (
+          <SkullIcon className="" />
+        ) : (
+          <CheckIcon className="" />
+        ),
       scheduled_at: r.scheduled_time
         ? convertDateTimeToLocale(r.scheduled_time, false)
         : undefined,
@@ -85,8 +120,6 @@ const EventsTable: React.FC<Props> = props => {
         : undefined,
     };
   });
-
-  console.log(rowsFormatted);
 
   return (
     <ReactTable
@@ -123,14 +156,19 @@ const EventsTable: React.FC<Props> = props => {
       defaultPageSize={10}
       SubComponent={row => {
         const currentRow = rows[row.index];
-        const invocationRows = currentRow.logs.map((r: any) => {
+        const logs =
+          currentRow.cron_event_logs ||
+          currentRow.scheduled_event_logs ||
+          currentRow.logs ||
+          [];
+        const invocationRows = logs.map((r: any) => {
           const newRow: Record<string, JSX.Element> = {};
           // Insert cells corresponding to all rows
           invocationColumns.forEach(col => {
             newRow[col] = (
               <div
                 className={styles.tableCellCenterAlignedOverflow}
-                key={`${triggerName}-${col}-${row.index}`}
+                key={`${identifier}-${col}-${row.index}`}
               >
                 {sanitiseRow(col, r)}
               </div>
@@ -146,11 +184,11 @@ const EventsTable: React.FC<Props> = props => {
                 <ReactTable
                   data={invocationRows}
                   columns={invocationGridHeadings}
-                  defaultPageSize={currentRow.logs.length}
+                  defaultPageSize={invocationRows.length}
                   minRows={0}
                   showPagination={false}
                   SubComponent={logRow => {
-                    const invocationLog = currentRow.logs[logRow.index];
+                    const invocationLog = logs[logRow.index];
                     const currentPayload = JSON.stringify(
                       invocationLog.request,
                       null,

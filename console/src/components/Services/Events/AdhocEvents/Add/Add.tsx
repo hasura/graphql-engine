@@ -1,31 +1,39 @@
 import React from 'react';
-// import DateTimePicker from 'react-datetime';
-// import { Moment } from 'moment';
-import './ReactDateTime.css';
-import {
-  useScheduledTrigger,
-  defaultCronExpr,
-} from '../../ScheduledTriggers/state';
-import AceEditor from '../../../../Common/AceEditor/BaseEditor';
-import { getEventTargetValue } from '../../../../Common/utils/jsUtils';
+import DateTimePicker from 'react-datetime';
+import { Moment } from 'moment';
+import { useAdhocEventAdd } from './state';
 import styles from '../../Events.scss';
-import Tooltip from '../../../../Common/Tooltip/Tooltip';
+import Button from '../../../../Common/Button/Button';
+import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import Headers from '../../../../Common/Headers/Headers';
-import RetryConf from './RetryConfEditor';
+import RetryConfEditor from '../../Common/Components/RetryConfEditor';
+import { getEventTargetValue } from '../../../../Common/utils/jsUtils';
+import Tooltip from '../../../../Common/Tooltip/Tooltip';
+import { createScheduledEvent } from '../../ServerIO';
 
-type Props = ReturnType<typeof useScheduledTrigger>;
+type Props = {
+  dispatch: any;
+};
 
-const Form: React.FC<Props> = props => {
-  const { state, setState } = props;
+const Add: React.FC<Props> = ({ dispatch }) => {
+  const { state, setState } = useAdhocEventAdd();
+  const {
+    webhook,
+    time,
+    payload,
+    headers,
+    retryConf,
+    comment,
+    loading,
+  } = state;
 
-  const { name, webhook, schedule, payload, headers, comment } = state;
-
-  const setName = (e: React.BaseSyntheticEvent) =>
-    setState.name(getEventTargetValue(e));
   const setWebhookValue = (e: React.BaseSyntheticEvent) =>
     setState.webhook(getEventTargetValue(e));
-  const setScheduleValue = (e: React.BaseSyntheticEvent) =>
-    setState.schedule(getEventTargetValue(e));
+  const setTimeValue = (e: Moment | string) => {
+    if (typeof e !== 'string') {
+      setState.time(e.toDate());
+    }
+  };
   const setComment = (e: React.BaseSyntheticEvent) =>
     setState.comment(getEventTargetValue(e));
 
@@ -35,29 +43,6 @@ const Form: React.FC<Props> = props => {
       <hr />
     </div>
   );
-
-  const getNameInput = () =>
-    sectionize(
-      <React.Fragment>
-        <h2
-          className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
-        >
-          Name
-          <Tooltip
-            id="trigger-name"
-            message="Name of the trigger"
-            className={styles.add_mar_left_mid}
-          />
-        </h2>
-        <input
-          type="text"
-          placeholder="name"
-          className={`form-control ${styles.inputWidthLarge}`}
-          value={name}
-          onChange={setName}
-        />
-      </React.Fragment>
-    );
 
   const getWebhookInput = () =>
     sectionize(
@@ -82,35 +67,27 @@ const Form: React.FC<Props> = props => {
       </React.Fragment>
     );
 
-  const getScheduleInput = () => {
+  const getTimeInput = () => {
     return sectionize(
       <React.Fragment>
         <h2
           className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
         >
-          Cron schedule
+          Time
           <Tooltip
             id="trigger-schedule"
-            message="Schedule for your cron"
+            message="The time that this event must be delivered"
             className={styles.add_mar_left_mid}
           />
         </h2>
         <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>
-          <input
-            type="text"
-            placeholder={defaultCronExpr}
-            className={`form-control ${styles.inputWidthLarge} ${styles.add_mar_right_mid}`}
-            value={schedule}
-            onChange={setScheduleValue}
+          <DateTimePicker
+            value={time}
+            onChange={setTimeValue}
+            inputProps={{
+              className: `form-control ${styles.inputWidthLarge}`,
+            }}
           />
-          <a
-            className={styles.cursorPointer}
-            href="https://crontab.guru/#*_*_*_*_*"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Build a cron expression
-          </a>
         </div>
       </React.Fragment>
     );
@@ -167,8 +144,8 @@ const Form: React.FC<Props> = props => {
             className={styles.add_mar_left_mid}
           />
         </h2>
-        <RetryConf
-          retryConf={state.retryConf}
+        <RetryConfEditor
+          retryConf={retryConf}
           setRetryConf={setState.retryConf}
         />
       </div>
@@ -182,7 +159,7 @@ const Form: React.FC<Props> = props => {
           Comment
           <Tooltip
             id="trigger-comment"
-            message="Description of your cron trigger"
+            message="Description of this event"
             className={styles.add_mar_left_mid}
           />
         </h2>
@@ -197,17 +174,26 @@ const Form: React.FC<Props> = props => {
     );
   };
 
+  const save = () => {
+    setState.loading(true);
+    const succesCallback = () => setState.bulk();
+    const errorCallback = () => setState.loading(false);
+    dispatch(createScheduledEvent(state, succesCallback, errorCallback));
+  };
+
   return (
-    <React.Fragment>
-      {getNameInput()}
+    <div className={styles.add_mar_bottom}>
       {getWebhookInput()}
-      {getScheduleInput()}
+      {getTimeInput()}
       {getPayloadInput()}
       {getHeadersInput()}
       {getRetryConfInput()}
       {getCommentInput()}
-    </React.Fragment>
+      <Button size="s" color="yellow" onClick={save} disabled={loading}>
+        {loading ? 'Creating...' : 'Create scheduled event'}
+      </Button>
+    </div>
   );
 };
 
-export default Form;
+export default Add;

@@ -1,6 +1,12 @@
 import React from 'react';
+import Helmet from 'react-helmet';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
-import tabInfo from './scheduledTriggerTabs';
+import {
+  getDataEventsLandingRoute,
+  getScheduledEventsLandingRoute,
+  getSTRoute,
+} from '../../../Common/utils/routesUtils';
+import tabInfo, { STTab } from './scheduledTriggerTabs';
 import { findScheduledTrigger } from '../ScheduledTriggers/utils';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
@@ -11,11 +17,11 @@ import styles from '../Events.scss';
 interface ScheduledTriggerProps extends React.ComponentProps<'div'> {
   triggerName: string;
   allTriggers: Triggers;
-  tabName: string;
+  tabName: STTab;
   dispatch: any;
 }
 
-const ActionContainer = ({
+const STContainer = ({
   triggerName,
   children,
   allTriggers,
@@ -38,16 +44,16 @@ const ActionContainer = ({
 
   const breadCrumbs = [
     {
-      title: 'Triggers',
-      url: appPrefix,
+      title: 'Events',
+      url: getDataEventsLandingRoute(),
     },
     {
-      title: 'Manage',
-      url: `${appPrefix}/scheduled/manage`,
+      title: 'Scheduled',
+      url: getScheduledEventsLandingRoute(),
     },
     {
       title: triggerName,
-      url: `${appPrefix}/scheduled/${triggerName}/${tabName}`,
+      url: tabInfo[tabName].getRoute(triggerName),
     },
     {
       title: tabName,
@@ -63,15 +69,18 @@ const ActionContainer = ({
 
   return (
     <div
-      className={styles.view_stitch_schema_wrapper + ' ' + styles.addWrapper}
+      className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper}`}
     >
+      <Helmet
+        title={`${triggerName} | Scheduled Triggers | ${tabInfo[tabName].display_text}`}
+      />
       <CommonTabLayout
         appPrefix={appPrefix}
         currentTab={tabName}
         heading={triggerName}
         tabsInfo={tabInfo}
         breadCrumbs={breadCrumbs}
-        baseUrl={`${appPrefix}/scheduled/${triggerName}`}
+        baseUrl={getSTRoute('absolute', triggerName)}
         showLoader={false}
         testPrefix={`${triggerName}-container-tabs`}
       />
@@ -80,4 +89,4 @@ const ActionContainer = ({
   );
 };
 
-export default ActionContainer;
+export default STContainer;

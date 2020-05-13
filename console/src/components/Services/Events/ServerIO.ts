@@ -17,6 +17,7 @@ import requestAction from '../../../utils/requestAction';
 import {
   getETModifyRoute,
   getDataEventsLandingRoute,
+  getAdhocPendingEventsRoute,
 } from '../../Common/utils/routesUtils';
 import { transformHeaders } from '../../Common/Headers/utils';
 import { Table } from '../../Common/utils/pgUtils';
@@ -27,16 +28,21 @@ import dataHeaders from '../Data/Common/Headers';
 import { TriggerKind, ScheduledTrigger, EventTrigger } from './Types';
 import { setScheduledTriggers, setEventTriggers, setTriggers } from './reducer';
 import { LocalScheduledTriggerState } from './ScheduledTriggers/state';
+import { LocalAdhocEventState } from './AdhocEvents/Add/state';
 import {
   LocalEventTriggerState,
   parseServerETDefinition,
 } from './EventTriggers/state';
+import { validateAddState as validateAdhocEventState } from './AdhocEvents/utils';
 import { validateETState } from './EventTriggers/utils';
 import {
   validateAddState,
   parseServerScheduledTrigger,
 } from './ScheduledTriggers/utils';
-import { showErrorNotification } from '../Common/Notification';
+import {
+  showErrorNotification,
+  showSuccessNotification,
+} from '../Common/Notification';
 import { appPrefix } from './constants';
 import { EventTriggerProperty } from './EventTriggers/Modify/utils';
 
@@ -480,12 +486,18 @@ export const deleteEventTrigger = (
   );
 };
 
-export const invokeScheduledTrigger = (
-  triggerName: string,
+export const createScheduledEvent = (
+  state: LocalAdhocEventState,
   successCb?: () => void,
   errorCb?: () => void
 ) => (dispatch: any) => {
-  const query = getCreateScheduledEventQuery(triggerName);
+  const validationError = validateAdhocEventState(state);
+  const errorMessage = 'Failed scheduling the event';
+  if (validationError) {
+    dispatch(showErrorNotification(errorMessage, validationError));
+  }
+
+  const query = getCreateScheduledEventQuery(state);
   return dispatch(
     requestAction(
       Endpoints.query,
@@ -503,11 +515,11 @@ export const invokeScheduledTrigger = (
       if (successCb) {
         successCb();
       }
+      dispatch(showSuccessNotification('Event scheduled successfully'));
+      dispatch(push(getAdhocPendingEventsRoute('absolute')));
     },
     (error: any) => {
-      dispatch(
-        showErrorNotification('Unable to invoke trigger', error.message || '')
-      );
+      dispatch(showErrorNotification(errorMessage, error.message || '', error));
       if (errorCb) {
         errorCb();
       }
@@ -546,7 +558,8 @@ export const redeliverDataEvent = (
       dispatch(
         showErrorNotification(
           'Failed to redeliver event',
-          error.message || 'unexpected'
+          error.message || 'unexpected',
+          error
         )
       );
     }

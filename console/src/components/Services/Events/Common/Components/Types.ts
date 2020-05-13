@@ -11,5 +11,5 @@ export type FilterTableProps = {
   setFilterState: SetFilterState;
   runQuery: RunQuery;
   columns: string[];
-  triggerName: string;
+  identifier: string;
 };

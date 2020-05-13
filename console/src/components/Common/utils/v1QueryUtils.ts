@@ -1,5 +1,6 @@
 import { terminateSql } from './sqlUtils';
 import { LocalScheduledTriggerState } from '../../Services/Events/ScheduledTriggers/state';
+import { LocalAdhocEventState } from '../../Services/Events/AdhocEvents/Add/state';
 import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
 import { transformHeaders } from '../Headers/utils';
 import { generateTableDef } from './pgUtils';
@@ -447,7 +448,7 @@ export const fetchEventTriggersQuery = {
       name: 'event_triggers',
       schema: 'hdb_catalog',
     },
-    columns: ['*.*'],
+    columns: ['*'],
     order_by: [{ column: 'name', type: 'asc' }],
   },
 };
@@ -456,10 +457,10 @@ export const fetchScheduledTriggersQuery = {
   type: 'select',
   args: {
     table: {
-      name: 'hdb_scheduled_trigger',
+      name: 'hdb_cron_triggers',
       schema: 'hdb_catalog',
     },
-    columns: ['*.*'],
+    columns: ['*'],
     order_by: [{ column: 'name', type: 'asc' }],
   },
 };
@@ -516,22 +517,14 @@ export const getDropEventTriggerQuery = (name: string) => ({
 });
 
 export const generateCreateScheduledTriggerQuery = (
-  state: LocalScheduledTriggerState
+  state: LocalScheduledTriggerState,
+  replace = false
 ) => ({
-  type: 'create_scheduled_trigger',
+  type: 'create_cron_trigger',
   args: {
     name: state.name.trim(),
-    webhook:
-      state.webhook.type === 'env'
-        ? { from_env: state.webhook.value.trim() }
-        : state.webhook.value.trim(),
-    schedule: {
-      type: state.schedule.type,
-      value:
-        state.schedule.type === 'cron'
-          ? state.schedule.value
-          : state.schedule.value.toISOString(),
-    },
+    webhook: state.webhook,
+    schedule: state.schedule,
     payload: JSON.parse(state.payload),
     headers: transformHeaders(state.headers),
     retry_conf: {
@@ -540,53 +533,38 @@ export const generateCreateScheduledTriggerQuery = (
       timeout_seconds: state.retryConf.timeout_sec,
       tolerance_seconds: state.retryConf.tolerance_sec,
     },
+    comment: state.comment,
+    include_in_metadata: state.includeInMetadata,
+    replace,
   },
 });
 
 export const generateUpdateScheduledTriggerQuery = (
   state: LocalScheduledTriggerState
-) => ({
-  type: 'update_scheduled_trigger',
-  args: {
-    name: state.name.trim(),
-    webhook:
-      state.webhook.type === 'env'
-        ? { from_env: state.webhook.value.trim() }
-        : state.webhook.value.trim(),
-    schedule: {
-      type: state.schedule.type,
-      value:
-        state.schedule.type === 'cron'
-          ? state.schedule.value
-          : state.schedule.value.toISOString(),
-    },
-    payload: JSON.parse(state.payload),
-    headers: transformHeaders(state.headers),
-    retry_conf: {
-      num_retries: state.retryConf.num_retries,
-      retry_interval_seconds: state.retryConf.interval_sec,
-      timeout_seconds: state.retryConf.timeout_sec,
-      tolerance_seconds: state.retryConf.tolerance_sec,
-    },
-  },
-});
+) => generateCreateScheduledTriggerQuery(state, true);
 
 export const getDropScheduledTriggerQuery = (name: string) => ({
-  type: 'delete_scheduled_trigger',
+  type: 'delete_cron_trigger',
   args: {
     name: name.trim(),
   },
 });
 
-export const getCreateScheduledEventQuery = (triggerName: string) => {
-  const time = new Date();
-  time.setSeconds(time.getSeconds());
+export const getCreateScheduledEventQuery = (state: LocalAdhocEventState) => {
   return {
     type: 'create_scheduled_event',
     args: {
-      name: triggerName,
-      timestamp: time.toISOString(),
-      payload: { k: 'v' },
+      webhook: state.webhook,
+      schedule_at: state.time.toISOString(),
+      headers: transformHeaders(state.headers),
+      retry_conf: {
+        num_retries: state.retryConf.num_retries,
+        retry_interval_seconds: state.retryConf.interval_sec,
+        timeout_seconds: state.retryConf.timeout_sec,
+        tolerance_seconds: state.retryConf.tolerance_sec,
+      },
+      payload: state.payload,
+      comment: state.comment,
     },
   };
 };

@@ -41,7 +41,7 @@ const InvocationLogs: React.FC<Props> = props => {
         // 'operation',
         'created_at',
       ]}
-      triggerName={triggerName}
+      identifier={triggerName}
     />
   );
 

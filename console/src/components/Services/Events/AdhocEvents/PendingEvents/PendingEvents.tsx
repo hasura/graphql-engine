@@ -4,19 +4,16 @@ import {
   FilterRenderProp,
   makeValueFilter,
 } from '../../../../Common/FilterQuery/Types';
-import { stEventsTable } from '../utils';
-import { ScheduledTrigger } from '../../Types';
+import { adhocEventsTable } from '../utils';
 import EventsTable from '../../Common/Components/EventsTable';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 
 type Props = {
-  currentTrigger?: ScheduledTrigger;
   dispatch: any;
 };
 
 const PendingEvents: React.FC<Props> = props => {
-  const { dispatch, currentTrigger } = props;
-  const triggerName = currentTrigger ? currentTrigger.name : '';
+  const { dispatch } = props;
 
   const renderRows: FilterRenderProp = (
     rows,
@@ -39,24 +36,21 @@ const PendingEvents: React.FC<Props> = props => {
         'tries',
         'next_retry_at',
       ]}
-      identifier={triggerName}
+      identifier="adhoc-events-processed"
     />
   );
 
   return (
     <div>
       <FilterQuery
-        table={stEventsTable}
+        table={adhocEventsTable}
         dispatch={dispatch}
         render={renderRows}
         presets={{
-          filters: [
-            makeValueFilter('trigger_name', '$eq', triggerName),
-            makeValueFilter('status', '$eq', 'scheduled'),
-          ],
+          filters: [makeValueFilter('status', '$eq', 'scheduled')],
           sorts: [makeOrderBy('scheduled_time', 'desc')],
         }}
-        relationships={['cron_event_logs']}
+        relationships={['scheduled_event_logs']}
       />
     </div>
   );

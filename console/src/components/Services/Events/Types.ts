@@ -98,14 +98,16 @@ export type ScheduledTrigger = {
   name: string;
   header_conf: ServerHeader[];
   payload: any;
-  webhook_conf: ServerWebhookConf;
-  schedule_conf: ScheduleConf;
+  webhook_conf: string;
+  cron_schedule: string;
   retry_conf: {
     num_retries: number;
     retry_interval_seconds: number;
     timeout_seconds: number;
     tolerance_seconds: number;
   };
+  include_in_metadata: boolean;
+  comment: Nullable<string>;
 };
 
 /*

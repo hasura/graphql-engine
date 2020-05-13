@@ -6,7 +6,7 @@ import styles from './CommonTabLayout.scss';
 
 type TabLayoutProps = {
   breadCrumbs: BreadCrumbItem[];
-  heading: string;
+  heading: string | JSX.Element;
   appPrefix: string;
   currentTab: string;
   tabsInfo: TabsType;
@@ -30,7 +30,7 @@ const CommonTabLayout = (props: TabLayoutProps) => {
   return (
     <div className={styles.subHeader}>
       <BreadCrumb breadCrumbs={breadCrumbs} />
-      <h2 className={styles.heading_text + ' ' + styles.set_line_height}>
+      <h2 className={`${styles.heading_text} ${styles.set_line_height}`}>
         {heading || ''}
       </h2>
       <Tabs

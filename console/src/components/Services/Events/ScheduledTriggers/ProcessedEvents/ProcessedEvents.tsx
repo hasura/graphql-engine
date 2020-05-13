@@ -3,7 +3,6 @@ import FilterQuery from '../../../../Common/FilterQuery/FilterQuery';
 import {
   FilterRenderProp,
   makeValueFilter,
-  makeOperationFilter,
 } from '../../../../Common/FilterQuery/Types';
 import { stEventsTable } from '../utils';
 import { ScheduledTrigger } from '../../Types';
@@ -33,8 +32,8 @@ const ProcessedEvents: React.FC<Props> = props => {
       filterState={filterState}
       setFilterState={setFilterState}
       runQuery={runQuery}
-      columns={['id', 'delivered', 'created_at']}
-      triggerName={triggerName}
+      columns={['id', 'status', 'scheduled_time', 'created_at', 'tries']}
+      identifier={triggerName}
     />
   );
 
@@ -46,15 +45,12 @@ const ProcessedEvents: React.FC<Props> = props => {
         render={renderRows}
         presets={{
           filters: [
-            makeValueFilter('name', '$eq', triggerName),
-            makeOperationFilter('$or', [
-              makeValueFilter('delivered', '$eq', 'true'),
-              makeValueFilter('error', '$eq', 'true'),
-            ]),
+            makeValueFilter('trigger_name', '$eq', triggerName),
+            makeValueFilter('status', '$ne', 'scheduled'),
           ],
           sorts: [makeOrderBy('created_at', 'desc')],
         }}
-        relationships={['logs']}
+        relationships={['cron_event_logs']}
       />
     </div>
   );

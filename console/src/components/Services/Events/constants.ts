@@ -9,3 +9,5 @@ export const EVENT_TRIGGER_OPERATIONS: EventTriggerOperation[] = [
   'delete',
   'enable_manual',
 ];
+
+export const ADHOC_EVENTS_HEADING = 'Independently Scheduled Events';

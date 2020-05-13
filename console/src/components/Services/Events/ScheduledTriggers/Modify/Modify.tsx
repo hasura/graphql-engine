@@ -1,5 +1,4 @@
 import React from 'react';
-import Helmet from 'react-helmet';
 import Button from '../../../../Common/Button/Button';
 import { useScheduledTrigger } from '../state';
 import { ScheduledTrigger } from '../../Types';
@@ -7,11 +6,7 @@ import { getConfirmation } from '../../../../Common/utils/jsUtils';
 import { parseServerScheduledTrigger } from '../utils';
 import styles from '../../Events.scss';
 import ScheduledTriggerForm from '../../Common/Components/ScheduledTriggerForm';
-import {
-  saveScheduledTrigger,
-  invokeScheduledTrigger,
-  deleteScheduledTrigger,
-} from '../../ServerIO';
+import { saveScheduledTrigger, deleteScheduledTrigger } from '../../ServerIO';
 
 type Props = {
   dispatch: any;
@@ -19,7 +14,6 @@ type Props = {
 };
 
 const Modify: React.FC<Props> = props => {
-  const [invokeButtonText, setInvokeButtonText] = React.useState('Invoke');
   const { dispatch, currentTrigger } = props;
   const { state, setState } = useScheduledTrigger();
 
@@ -34,44 +28,32 @@ const Modify: React.FC<Props> = props => {
     return null;
   }
 
+  const requestCallback = () => setState.loading(false);
   const deleteFunc = () => {
     const isOk = getConfirmation('Are you sure?');
     if (!isOk) return;
-    dispatch(deleteScheduledTrigger(currentTrigger));
+    setState.loading(true);
+    dispatch(
+      deleteScheduledTrigger(currentTrigger, requestCallback, requestCallback)
+    );
   };
 
-  const getActionButtons = () => {
-    const callback = () => setState.loading(false);
-    const onSave = (e: React.SyntheticEvent) => {
-      e.preventDefault();
-      setState.loading(true);
-      dispatch(saveScheduledTrigger(state, currentTrigger, callback, callback));
-    };
+  const onSave = (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    setState.loading(true);
+    dispatch(
+      saveScheduledTrigger(
+        state,
+        currentTrigger,
+        requestCallback,
+        requestCallback
+      )
+    );
+  };
 
-    const invoke = () => {
-      setInvokeButtonText('Invoking...');
-      const successCallback = () => {
-        setInvokeButtonText('Done');
-        setTimeout(() => {
-          setInvokeButtonText('Invoke');
-        }, 1000);
-      };
-      const errorCallback = () => {
-        setInvokeButtonText('Error');
-        setTimeout(() => {
-          setInvokeButtonText('Invoke');
-        }, 1000);
-      };
-      dispatch(
-        invokeScheduledTrigger(
-          currentTrigger.name,
-          successCallback,
-          errorCallback
-        )
-      );
-    };
-
-    return (
+  return (
+    <div className={styles.add_mar_bottom}>
+      <ScheduledTriggerForm state={state} setState={setState} />
       <div>
         <Button
           onClick={onSave}
@@ -82,17 +64,6 @@ const Modify: React.FC<Props> = props => {
         >
           {state.loading ? 'Saving...' : 'Save'}
         </Button>
-        {currentTrigger.schedule_conf.type === 'adhoc' && (
-          <Button
-            onClick={invoke}
-            color="white"
-            size="sm"
-            disabled={state.loading}
-            className={`${styles.add_mar_right}`}
-          >
-            {invokeButtonText}
-          </Button>
-        )}
         <Button
           onClick={deleteFunc}
           color="red"
@@ -103,15 +74,6 @@ const Modify: React.FC<Props> = props => {
           Delete
         </Button>
       </div>
-    );
-  };
-
-  return (
-    <div>
-      <Helmet title={`${currentTrigger.name} | Scheduled Triggers | Modify`} />
-      <ScheduledTriggerForm state={state} setState={setState} />
-      <hr />
-      {getActionButtons()}
     </div>
   );
 };

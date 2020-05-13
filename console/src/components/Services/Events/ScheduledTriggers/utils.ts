@@ -1,5 +1,9 @@
 import { LocalScheduledTriggerState } from './state';
-import { isObject, isValidDate } from '../../../Common/utils/jsUtils';
+import {
+  isObject,
+  isValidURL,
+  isValidTemplateLiteral,
+} from '../../../Common/utils/jsUtils';
 import { makeBaseTable } from '../../../Common/utils/pgUtils';
 import { Triggers, ScheduledTrigger } from '../Types';
 import { parseServerHeaders } from '../../../Common/Headers/utils';
@@ -8,26 +12,12 @@ export const validateAddState = (state: LocalScheduledTriggerState) => {
   if (!state.name) {
     return 'name cannot be empty';
   }
-  if (!state.webhook) {
-    return 'webhook cannot be empty';
-  }
-  if (state.webhook.type === 'static') {
-    try {
-      new URL(state.webhook.value);
-    } catch (_) {
-      return 'webhook must be a valid URL';
-    }
-  }
-  if (state.schedule.type === 'cron') {
-    if (!state.schedule.value) {
-      return 'cron schedule cannot be empty';
-    }
+  if (!isValidURL(state.webhook) && !isValidTemplateLiteral(state.webhook)) {
+    return 'webhook must either be a valid URL or a valid template literal';
   }
 
-  if (state.schedule.type === 'adhoc') {
-    if (!isValidDate(state.schedule.value)) {
-      return 'time of the adhoc trigger must be a valid date';
-    }
+  if (!state.schedule) {
+    return 'cron schedule is mandatory';
   }
 
   try {
@@ -54,28 +44,8 @@ export const parseServerScheduledTrigger = (
 ): LocalScheduledTriggerState => {
   return {
     name: trigger.name,
-    webhook: {
-      type:
-        typeof trigger.webhook_conf === 'string'
-          ? 'static'
-          : ('env' as 'static' | 'env'),
-      value:
-        typeof trigger.webhook_conf === 'string'
-          ? trigger.webhook_conf
-          : trigger.webhook_conf.from_env,
-    },
-    schedule:
-      trigger.schedule_conf.type === 'adhoc'
-        ? {
-            type: 'adhoc',
-            value: trigger.schedule_conf.value
-              ? new Date(trigger.schedule_conf.value)
-              : new Date(),
-          }
-        : {
-            type: 'cron',
-            value: trigger.schedule_conf.value,
-          },
+    webhook: trigger.webhook_conf,
+    schedule: trigger.cron_schedule,
     payload: JSON.stringify(trigger.payload),
     headers: parseServerHeaders(trigger.header_conf),
     loading: false,
@@ -85,29 +55,23 @@ export const parseServerScheduledTrigger = (
       num_retries: trigger.retry_conf.num_retries,
       tolerance_sec: trigger.retry_conf.tolerance_seconds,
     },
+    comment: trigger.comment,
+    includeInMetadata: trigger.include_in_metadata,
   };
 };
 
-export const stEventsTable = makeBaseTable(
-  'hdb_scheduled_events',
-  'hdb_catalog',
-  [
-    { column_name: 'id', data_type: 'uuid' },
-    { column_name: 'name', data_type: 'text' },
-    { column_name: 'scheduled_time', data_type: 'timestamptz' },
-    { column_name: 'cancelled', data_type: 'boolean' },
-    { column_name: 'delivered', data_type: 'boolean' },
-    { column_name: 'error', data_type: 'boolean' },
-    { column_name: 'tries', data_type: 'int' },
-    { column_name: 'created_at', data_type: 'timestamptz' },
-    { column_name: 'locked', data_type: 'text' },
-    { column_name: 'next_retry_at', data_type: 'timestamptz' },
-    { column_name: 'dead', data_type: 'boolean' },
-  ]
-);
+export const stEventsTable = makeBaseTable('hdb_cron_events', 'hdb_catalog', [
+  { column_name: 'id', data_type: 'uuid' },
+  { column_name: 'name', data_type: 'text' },
+  { column_name: 'scheduled_time', data_type: 'timestamptz' },
+  { column_name: 'status', data_type: 'boolean' },
+  { column_name: 'tries', data_type: 'int' },
+  { column_name: 'created_at', data_type: 'timestamptz' },
+  { column_name: 'next_retry_at', data_type: 'timestamptz' },
+]);
 
 export const stInvocationLogsTable = makeBaseTable(
-  'event_invocation_logs',
+  'hdb_cron_event_invocation_logs',
   'hdb_catalog',
   [
     { column_name: 'id', data_type: 'uuid' },

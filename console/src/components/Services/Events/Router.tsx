@@ -6,6 +6,28 @@ import { fetchTriggers } from './ServerIO';
 import globals from '../../../Globals';
 import { ReduxState } from '../../../Types';
 import {
+  getDataEventsLandingRoute,
+  getScheduledEventsLandingRoute,
+  getAddSTRoute,
+  getSTModifyRoute,
+  getSTProcessedEventsRoute,
+  getSTPendingEventsRoute,
+  getSTInvocationLogsRoute,
+  getAddETRoute,
+  getETModifyRoute,
+  getETProcessedEventsRoute,
+  getETPendingEventsRoute,
+  getETInvocationLogsRoute,
+  eventsPrefix,
+  scheduledEventsPrefix,
+  dataEventsPrefix,
+  adhocEventsPrefix,
+  getAddAdhocEventRoute,
+  getAdhocEventsLogsRoute,
+  getAdhocPendingEventsRoute,
+  getAdhocProcessedEventsRoute,
+} from '../../Common/utils/routesUtils';
+import {
   AddScheduledTrigger,
   ScheduledTriggerLogs,
   ScheduledTriggeModify,
@@ -21,6 +43,12 @@ import {
   ETProcessedEvents,
   ETInvocationLogs,
 } from './EventTriggers';
+import {
+  AdhocEventPendingEvents,
+  AdhocEventProcessedEvents,
+  AddAdhocEvent,
+  AdhocEventLogs,
+} from './AdhocEvents';
 
 const triggersInit = ({ dispatch }: { dispatch: any }) => {
   return (nextState: ReduxState, replaceState: any, cb: VoidFunction) => {
@@ -43,49 +71,91 @@ const getTriggersRouter = (
 ) => {
   return (
     <Route
-      path="events"
+      path={eventsPrefix}
       component={Container(connect)}
       onEnter={composeOnEnterHooks([triggersInit(store)])}
     >
-      <IndexRedirect to="data" />
-      <Route path="data" component={rightContainerConnector(connect)}>
-        <IndexRedirect to="manage" />
-        <Route path="add" component={AddEventTrigger(connect)} />
+      <IndexRedirect to={dataEventsPrefix} />
+      <Route
+        path={dataEventsPrefix}
+        component={rightContainerConnector(connect)}
+      >
+        <IndexRedirect to={getDataEventsLandingRoute('relative')} />
         <Route
-          path=":triggerName/modify"
+          path={getAddETRoute('relative')}
+          component={AddEventTrigger(connect)}
+        />
+        <Route
+          path={getETModifyRoute(':triggerName', 'relative')}
           component={ModifyEventTrigger(connect)}
         />
         <Route
-          path=":triggerName/pending"
+          path={getETPendingEventsRoute(':triggerName', 'relative')}
           component={ETPendingEvents(connect)}
         />
         <Route
-          path=":triggerName/processed"
+          path={getETProcessedEventsRoute(':triggerName', 'relative')}
           component={ETProcessedEvents(connect)}
         />
-        <Route path=":triggerName/logs" component={ETInvocationLogs(connect)} />
-
-        <Route path="manage" component={EventTriggerLanding(connect)} />
-      </Route>
-      <Route path="scheduled" component={rightContainerConnector(connect)}>
-        <IndexRedirect to="manage" />
-        <Route path="add" component={AddScheduledTrigger(connect)} />
-        <Route path="manage" component={ScheduledTriggerLanding(connect)} />
         <Route
-          path=":triggerName/logs"
+          path={getETInvocationLogsRoute(':triggerName', 'relative')}
+          component={ETInvocationLogs(connect)}
+        />
+        <Route
+          path={getDataEventsLandingRoute('relative')}
+          component={EventTriggerLanding(connect)}
+        />
+      </Route>
+      <Route
+        path={scheduledEventsPrefix}
+        component={rightContainerConnector(connect)}
+      >
+        <IndexRedirect to={getScheduledEventsLandingRoute('relative')} />
+        <Route
+          path={getAddSTRoute('relative')}
+          component={AddScheduledTrigger(connect)}
+        />
+        <Route
+          path={getScheduledEventsLandingRoute('relative')}
+          component={ScheduledTriggerLanding(connect)}
+        />
+        <Route
+          path={getSTInvocationLogsRoute(':triggerName', 'relative')}
           component={ScheduledTriggerLogs(connect)}
         />
         <Route
-          path=":triggerName/pending"
+          path={getSTPendingEventsRoute(':triggerName', 'relative')}
           component={STPendingEvents(connect)}
         />
         <Route
-          path=":triggerName/processed"
+          path={getSTProcessedEventsRoute(':triggerName', 'relative')}
           component={STProcessedEvents(connect)}
         />
         <Route
-          path=":triggerName/modify"
+          path={getSTModifyRoute(':triggerName', 'relative')}
           component={ScheduledTriggeModify(connect)}
+        />
+      </Route>
+      <Route
+        path={adhocEventsPrefix}
+        component={rightContainerConnector(connect)}
+      >
+        <IndexRedirect to={getAdhocPendingEventsRoute('relative')} />
+        <Route
+          path={getAddAdhocEventRoute('relative')}
+          component={AddAdhocEvent(connect)}
+        />
+        <Route
+          path={getAdhocEventsLogsRoute('relative')}
+          component={AdhocEventLogs(connect)}
+        />
+        <Route
+          path={getAdhocPendingEventsRoute('relative')}
+          component={AdhocEventPendingEvents(connect)}
+        />
+        <Route
+          path={getAdhocProcessedEventsRoute('relative')}
+          component={AdhocEventProcessedEvents(connect)}
         />
       </Route>
     </Route>
