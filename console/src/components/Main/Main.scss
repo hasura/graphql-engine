@@ -890,6 +890,7 @@
   // background-color: #22283b;
   padding: 15px;
   position: relative;
+  height: 50px;
 
   .selected {
     bottom: 0;
@@ -903,8 +904,6 @@
 }
 
 .settingsIcon {
-  // background: #5668a4;
-
   a {
     text-decoration: none;
   }
