@@ -535,6 +535,10 @@ class TestMetadataOrder:
         }
         replace_code, replace_resp, _ = hge_ctx.anyq(url, replace_query, headers)
         assert replace_code == 200, replace_resp
+        # The export_resp and export_resp_1 should be the same
+        export_code_1, export_resp_1, _ = hge_ctx.anyq(url, export_query, headers)
+        assert export_code_1 == 200
+        assert export_resp == export_resp_1
 
 @usefixtures('per_method_tests_db_state')
 class TestRunSQL:
