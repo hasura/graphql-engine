@@ -1,20 +1,50 @@
+{-|
+= Event Triggers
+
+Event triggers are like ordinary SQL triggers, except instead of calling a SQL
+procedure, they call a webhook. The event delivery mechanism involves coordination
+between both the database and graphql-engine: only the SQL database knows
+when the events should fire, but only graphql-engine know how to actually
+deliver them.
+
+Therefore, event triggers are implemented in two parts:
+
+1. Every event trigger is backed by a bona fide SQL trigger. When the SQL trigger
+   fires, it creates a new record in the hdb_catalog.event_log table.
+
+2. Concurrently, a thread in graphql-engine monitors the hdb_catalog.event_log
+   table for new events. When new event(s) are found, it uses the information
+   (URL,payload and headers) stored in the event to deliver the event
+   to the webhook.
+
+The creation and deletion of SQL trigger itself is managed by the metadata DDL
+APIs (see Hasura.RQL.DDL.EventTrigger), so this module focuses on event delivery.
+
+Most of the subtleties involve guaranteeing reliable delivery of events:
+we guarantee that every event will be delivered at least once,
+even if graphql-engine crashes. This means we have to record the state
+of each event in the database, and we have to retry
+failed requests at a regular (user-configurable) interval.
+
+-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE StrictData      #-}
-module Hasura.Events.Lib
+module Hasura.Eventing.EventTrigger
   ( initEventEngineCtx
   , processEventQueue
   , unlockAllEvents
   , defaultMaxEventThreads
-  , defaultFetchIntervalMilliSec
+  , defaultFetchInterval
   , Event(..)
   , unlockEvents
   , EventEngineCtx(..)
   ) where
 
-import           Control.Concurrent.Async    (async, link, wait, withAsync)
+
+import           Control.Concurrent.Async    (wait, withAsync)
 import           Control.Concurrent.Extended (sleep)
 import           Control.Concurrent.STM.TVar
-import           Control.Exception.Lifted    (finally, mask_, try)
+import           Control.Monad.Catch         (MonadMask, bracket_)
 import           Control.Monad.STM
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -24,7 +54,7 @@ import           Data.Int                    (Int64)
 import           Data.String
 import           Data.Time.Clock
 import           Data.Word
-import           Hasura.Events.HTTP
+import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
@@ -32,29 +62,22 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Version       (HasVersion)
 import           Hasura.SQL.Types
 
--- remove these when array encoding is merged
-import qualified Database.PG.Query.PTI       as PTI
-import qualified PostgreSQL.Binary.Encoding  as PE
+import qualified Data.HashMap.Strict           as M
+import qualified Data.TByteString              as TBS
+import qualified Data.Text                     as T
+import qualified Data.Time.Clock               as Time
+import qualified Database.PG.Query             as Q
+import qualified Hasura.Logging                as L
+import qualified Network.HTTP.Client           as HTTP
+import qualified Database.PG.Query.PTI         as PTI
+import qualified PostgreSQL.Binary.Encoding    as PE
+import qualified Data.Set                      as Set
 
-import qualified Data.ByteString             as BS
-import qualified Data.CaseInsensitive        as CI
-import qualified Data.HashMap.Strict         as M
-import qualified Data.Set                    as Set
-import qualified Data.TByteString            as TBS
-import qualified Data.Text                   as T
-import qualified Data.Text.Encoding          as T
-import qualified Data.Time.Clock             as Time
-import qualified Database.PG.Query           as Q
-import qualified Hasura.Logging              as L
-import qualified Network.HTTP.Client         as HTTP
-import qualified Network.HTTP.Types          as HTTP
+data TriggerMetadata
+  = TriggerMetadata { tmName :: TriggerName }
+  deriving (Show, Eq)
 
-type Version = T.Text
-
-invocationVersion :: Version
-invocationVersion = "2"
-
-type LogEnvHeaders = Bool
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMetadata)
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -63,11 +86,27 @@ newtype EventInternalErr
 instance L.ToEngineLog EventInternalErr L.Hasura where
   toEngineLog (EventInternalErr qerr) = (L.LevelError, L.eventTriggerLogType, toJSON qerr)
 
-data TriggerMeta
-  = TriggerMeta { tmName :: TriggerName }
-  deriving (Show, Eq)
+-- | Change data for a particular row
+--
+-- https://docs.hasura.io/1.0/graphql/manual/event-triggers/payload.html
+data Event
+  = Event
+  { eId        :: EventId
+  , eTable     :: QualifiedTable
+  , eTrigger   :: TriggerMetadata
+  , eEvent     :: Value
+  , eTries     :: Int
+  , eCreatedAt :: Time.UTCTime
+  } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMeta)
+$(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
+
+data EventEngineCtx
+  = EventEngineCtx
+  { _eeCtxEventThreadsCapacity :: TVar Int
+  , _eeCtxFetchInterval        :: DiffTime
+  , _eeCtxLockedEvents         :: TVar (Set.Set EventId)
+  }
 
 data DeliveryInfo
   = DeliveryInfo
@@ -76,21 +115,6 @@ data DeliveryInfo
   } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeliveryInfo)
-
--- | Change data for a particular row
---
--- https://docs.hasura.io/1.0/graphql/manual/event-triggers/payload.html
-data Event
-  = Event
-  { eId        :: EventId
-  , eTable     :: QualifiedTable
-  , eTrigger   :: TriggerMeta
-  , eEvent     :: Value
-  , eTries     :: Int
-  , eCreatedAt :: Time.UTCTime
-  } deriving (Show, Eq)
-
-$(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
 
 newtype QualifiedTableStrict = QualifiedTableStrict
   { getQualifiedTable :: QualifiedTable
@@ -102,12 +126,11 @@ instance ToJSON QualifiedTableStrict where
             , "name"  .= tn
            ]
 
--- | See 'Event'.
 data EventPayload
   = EventPayload
   { epId           :: EventId
   , epTable        :: QualifiedTableStrict
-  , epTrigger      :: TriggerMeta
+  , epTrigger      :: TriggerMetadata
   , epEvent        :: Value
   , epDeliveryInfo :: DeliveryInfo
   , epCreatedAt    :: Time.UTCTime
@@ -115,62 +138,11 @@ data EventPayload
 
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
 
-data WebhookRequest
-  = WebhookRequest
-  { _rqPayload :: Value
-  , _rqHeaders :: Maybe [HeaderConf]
-  , _rqVersion :: T.Text
-  }
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookRequest)
-
-data WebhookResponse
-  = WebhookResponse
-  { _wrsBody    :: TBS.TByteString
-  , _wrsHeaders :: Maybe [HeaderConf]
-  , _wrsStatus  :: Int
-  }
-$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''WebhookResponse)
-
-data ClientError =  ClientError { _ceMessage :: TBS.TByteString}
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ClientError)
-
-data Response = ResponseType1 WebhookResponse | ResponseType2 ClientError
-
-instance ToJSON Response where
-  toJSON (ResponseType1 resp) = object
-    [ "type" .= String "webhook_response"
-    , "data" .= toJSON resp
-    , "version" .= invocationVersion
-    ]
-  toJSON (ResponseType2 err)  = object
-    [ "type" .= String "client_error"
-    , "data" .= toJSON err
-    , "version" .= invocationVersion
-    ]
-
-data Invocation
-  = Invocation
-  { iEventId  :: EventId
-  , iStatus   :: Int
-  , iRequest  :: WebhookRequest
-  , iResponse :: Response
-  }
-
-data EventEngineCtx
-  = EventEngineCtx
-  { _eeCtxEventThreadsCapacity :: TVar Int
-  , _eeCtxFetchInterval        :: DiffTime
-  , _eeCtxLockedEvents         :: TVar (Set.Set EventId)
-  }
-
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
 
-defaultFetchIntervalMilliSec :: Milliseconds
-defaultFetchIntervalMilliSec = 1000
-
-retryAfterHeader :: CI.CI T.Text
-retryAfterHeader = "Retry-After"
+defaultFetchInterval :: DiffTime
+defaultFetchInterval = seconds 1
 
 initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval = do
@@ -191,7 +163,7 @@ processEventQueue
   :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
   -> IO SchemaCache -> EventEngineCtx
   -> IO void
-processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} = do
+processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx{..} = do
   events0 <- popEventsBatch
   go events0 0 False
   where
@@ -231,24 +203,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} =
       eventsNext <- withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
         forM_ events $ \event ->
-          mask_ $ do
-            atomically $ do  -- block until < HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE threads:
-              capacity <- readTVar _eeCtxEventThreadsCapacity
-              check $ capacity > 0
-              writeTVar _eeCtxEventThreadsCapacity $! (capacity - 1)
-            -- since there is some capacity in our worker threads, we can launch another:
-            let restoreCapacity evt =
-                    liftIO $ atomically $
-                           do
-                             modifyTVar' _eeCtxEventThreadsCapacity (+ 1)
-                             -- After the event has been processed, remove it from the
-                             -- locked events cache
-                             modifyTVar' _eeCtxLockedEvents (Set.delete (eId evt))
-            t <- async $ flip runReaderT (logger, httpMgr) $
-                    processEvent event `finally` (restoreCapacity event)
-            link t
-
-        -- return when next batch ready; some 'processEvent' threads may be running.
+             runReaderT (withEventEngineCtx eeCtx $ (processEvent event)) (logger, httpMgr)
         wait eventsNextA
 
       let lenEvents = length events
@@ -302,12 +257,31 @@ processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} =
               etHeaders = map encodeHeader headerInfos
               headers = addDefaultHeaders etHeaders
               ep = createEventPayload retryConf e
-          res <- runExceptT $ tryWebhook headers responseTimeout ep webhook
+              extraLogCtx = ExtraLogContext Nothing (epId ep) -- avoiding getting current time here to avoid another IO call with each event call
+          res <- runExceptT $ tryWebhook headers responseTimeout (toJSON ep) webhook
+          logHTTPForET res extraLogCtx
           let decodedHeaders = map (decodeHeader logenv headerInfos) headers
           either
             (processError pool e retryConf decodedHeaders ep)
             (processSuccess pool e decodedHeaders ep) res
             >>= flip onLeft logQErr
+
+withEventEngineCtx ::
+    ( MonadIO m
+    , MonadMask m
+    )
+    => EventEngineCtx -> m () -> m ()
+withEventEngineCtx eeCtx = bracket_ (decrementThreadCount eeCtx) (incrementThreadCount eeCtx)
+
+incrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
+incrementThreadCount (EventEngineCtx c _ _) = liftIO $ atomically $ modifyTVar' c (+1)
+
+decrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
+decrementThreadCount (EventEngineCtx c _ _) = liftIO $ atomically $ do
+  countThreads <- readTVar c
+  if countThreads > 0
+     then modifyTVar' c (\v -> v - 1)
+     else retry
 
 createEventPayload :: RetryConf -> Event ->  EventPayload
 createEventPayload retryConf e = EventPayload
@@ -324,46 +298,42 @@ createEventPayload retryConf e = EventPayload
 
 processSuccess
   :: ( MonadIO m )
-  => Q.PGPool -> Event -> [HeaderConf] -> EventPayload -> HTTPResp
+  => Q.PGPool -> Event -> [HeaderConf] -> EventPayload -> HTTPResp a
   -> m (Either QErr ())
 processSuccess pool e decodedHeaders ep resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
-      invocation = mkInvo ep respStatus decodedHeaders respBody respHeaders
+      invocation = mkInvocation ep respStatus decodedHeaders respBody respHeaders
   liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
     insertInvocation invocation
     setSuccess e
 
 processError
-  :: ( MonadIO m
-     , MonadReader r m
-     , Has (L.Logger L.Hasura) r
-     )
-  => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr
+  :: ( MonadIO m )
+  => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr a
   -> m (Either QErr ())
 processError pool e retryConf decodedHeaders ep err = do
-  logHTTPErr err
   let invocation = case err of
         HClient excp -> do
           let errMsg = TBS.fromLBS $ encode $ show excp
-          mkInvo ep 1000 decodedHeaders errMsg []
+          mkInvocation ep 1000 decodedHeaders errMsg []
         HParse _ detail -> do
           let errMsg = TBS.fromLBS $ encode detail
-          mkInvo ep 1001 decodedHeaders errMsg []
+          mkInvocation ep 1001 decodedHeaders errMsg []
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp
               respStatus = hrsStatus errResp
-          mkInvo ep respStatus decodedHeaders respPayload respHeaders
+          mkInvocation ep respStatus decodedHeaders respPayload respHeaders
         HOther detail -> do
           let errMsg = (TBS.fromLBS $ encode detail)
-          mkInvo ep 500 decodedHeaders errMsg []
+          mkInvocation ep 500 decodedHeaders errMsg []
   liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
     insertInvocation invocation
     retryOrSetError e retryConf err
 
-retryOrSetError :: Event -> RetryConf -> HTTPErr -> Q.TxE QErr ()
+retryOrSetError :: Event -> RetryConf -> HTTPErr a -> Q.TxE QErr ()
 retryOrSetError e retryConf err = do
   let mretryHeader = getRetryAfterHeaderFromError err
       tries = eTries e
@@ -384,40 +354,12 @@ retryOrSetError e retryConf err = do
     getRetryAfterHeaderFromError (HStatus resp) = getRetryAfterHeaderFromResp resp
     getRetryAfterHeaderFromError _              = Nothing
 
-    getRetryAfterHeaderFromResp resp
-      = let mHeader = find (\(HeaderConf name _)
-                            -> CI.mk name == retryAfterHeader) (hrsHeaders resp)
-        in case mHeader of
-             Just (HeaderConf _ (HVValue value)) -> Just value
-             _                                   -> Nothing
-
     parseRetryHeader = mfilter (> 0) . readMaybe . T.unpack
 
-encodeHeader :: EventHeaderInfo -> HTTP.Header
-encodeHeader (EventHeaderInfo hconf cache) =
-  let (HeaderConf name _) = hconf
-      ciname = CI.mk $ T.encodeUtf8 name
-      value = T.encodeUtf8 cache
-  in  (ciname, value)
-
-decodeHeader
-  :: LogEnvHeaders -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString)
-  -> HeaderConf
-decodeHeader logenv headerInfos (hdrName, hdrVal)
-  = let name = bsToTxt $ CI.original hdrName
-        getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
-                      in name'
-        mehi = find (\hi -> getName hi == name) headerInfos
-    in case mehi of
-         Nothing -> HeaderConf name (HVValue (bsToTxt hdrVal))
-         Just ehi -> if logenv
-                     then HeaderConf name (HVValue (ehiCachedValue ehi))
-                     else ehiHeaderConf ehi
-
-mkInvo
+mkInvocation
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
-  -> Invocation
-mkInvo ep status reqHeaders respBody respHeaders
+  -> (Invocation 'EventType)
+mkInvocation ep status reqHeaders respBody respHeaders
   = let resp = if isClientError status
           then mkClientErr respBody
           else mkResp status respBody respHeaders
@@ -425,69 +367,13 @@ mkInvo ep status reqHeaders respBody respHeaders
       Invocation
       (epId ep)
       status
-      (mkWebhookReq (toJSON ep) reqHeaders)
+      (mkWebhookReq (toJSON ep) reqHeaders invocationVersionET)
       resp
-
-mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response
-mkResp status payload headers =
-  let wr = WebhookResponse payload (mkMaybe headers) status
-  in ResponseType1 wr
-
-mkClientErr :: TBS.TByteString -> Response
-mkClientErr message =
-  let cerr = ClientError message
-  in ResponseType2 cerr
-
-mkWebhookReq :: Value -> [HeaderConf] -> WebhookRequest
-mkWebhookReq payload headers = WebhookRequest payload (mkMaybe headers) invocationVersion
-
-isClientError :: Int -> Bool
-isClientError status = status >= 1000
-
-mkMaybe :: [a] -> Maybe [a]
-mkMaybe [] = Nothing
-mkMaybe x  = Just x
 
 logQErr :: ( MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
 logQErr err = do
   logger :: L.Logger L.Hasura <- asks getter
   L.unLogger logger $ EventInternalErr err
-
-logHTTPErr
-  :: ( MonadReader r m
-     , Has (L.Logger L.Hasura) r
-     , MonadIO m
-     )
-  => HTTPErr -> m ()
-logHTTPErr err = do
-  logger :: L.Logger L.Hasura <- asks getter
-  L.unLogger logger $ err
-
--- These run concurrently on their respective EventPayloads
-tryWebhook
-  :: ( Has (L.Logger L.Hasura) r
-     , Has HTTP.Manager r
-     , MonadReader r m
-     , MonadIO m
-     , MonadError HTTPErr m
-     )
-  => [HTTP.Header] -> HTTP.ResponseTimeout -> EventPayload -> String
-  -> m HTTPResp
-tryWebhook headers responseTimeout ep webhook = do
-  let context = ExtraContext (epCreatedAt ep) (epId ep)
-  initReqE <- liftIO $ try $ HTTP.parseRequest webhook
-  case initReqE of
-    Left excp -> throwError $ HClient excp
-    Right initReq -> do
-      let req = initReq
-                { HTTP.method = "POST"
-                , HTTP.requestHeaders = headers
-                , HTTP.requestBody = HTTP.RequestBodyLBS (encode ep)
-                , HTTP.responseTimeout = responseTimeout
-                }
-
-      eitherResp <- runHTTP req (Just context)
-      onLeft eitherResp throwError
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = let table = eTable e
@@ -522,20 +408,20 @@ fetchEvents limitI =
           Event
           { eId        = id'
           , eTable     = QualifiedObject sn tn
-          , eTrigger   = TriggerMeta trn
+          , eTrigger   = TriggerMetadata trn
           , eEvent     = payload
           , eTries     = tries
           , eCreatedAt = created
           }
         limit = fromIntegral limitI :: Word64
 
-insertInvocation :: Invocation -> Q.TxE QErr ()
+insertInvocation :: Invocation 'EventType -> Q.TxE QErr ()
 insertInvocation invo = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
           INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, request, response)
           VALUES ($1, $2, $3, $4)
           |] ( iEventId invo
-             , toInt64 $ iStatus invo
+             , toInt64 $ iStatus invo :: Int64
              , Q.AltJ $ toJSON $ iRequest invo
              , Q.AltJ $ toJSON $ iResponse invo) True
   Q.unitQE defaultTxErrorHandler [Q.sql|
