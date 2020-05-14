@@ -39,7 +39,7 @@ export const useFilterQuery = (
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(false);
 
-  const runQuery: RunQuery = (offset, limit) => {
+  const runQuery: RunQuery = (offset, limit, newSorts) => {
     setLoading(true);
     setError(false);
 
@@ -49,7 +49,10 @@ export const useFilterQuery = (
         .map(f => parseFilter(f)),
     };
 
-    const orderBy = [...state.sorts.filter(f => !!f.column), ...presets.sorts];
+    const orderBy = newSorts || [
+      ...state.sorts.filter(f => !!f.column),
+      ...presets.sorts,
+    ];
 
     const query = getSelectQuery(
       'select',
@@ -86,6 +89,12 @@ export const useFilterQuery = (
         }
         if (limit !== undefined) {
           setState(s => ({ ...s, limit }));
+        }
+        if (newSorts) {
+          setState(s => ({
+            ...s,
+            sorts: newSorts,
+          }));
         }
         dispatch(
           requestAction(

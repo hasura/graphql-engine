@@ -125,7 +125,11 @@ export type SetFilterState = {
   limit: (l: number) => void;
 };
 
-export type RunQuery = (offset?: number, limit?: number) => void;
+export type RunQuery = (
+  offset?: number,
+  limit?: number,
+  sorts?: OrderBy[]
+) => void;
 
 export type FilterRenderProp = (
   rows: any[],

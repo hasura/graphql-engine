@@ -48,7 +48,11 @@ export const parseServerScheduledTrigger = (
     schedule: trigger.cron_schedule,
     payload: JSON.stringify(trigger.payload),
     headers: parseServerHeaders(trigger.header_conf),
-    loading: false,
+    loading: {
+      modify: false,
+      delete: false,
+      add: false,
+    },
     retryConf: {
       timeout_sec: trigger.retry_conf.timeout_seconds,
       interval_sec: trigger.retry_conf.retry_interval_seconds,

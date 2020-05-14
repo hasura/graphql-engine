@@ -2,7 +2,6 @@ import React from 'react';
 import Button from '../../../../Common/Button/Button';
 import { useScheduledTrigger } from '../state';
 import { ScheduledTrigger } from '../../types';
-import { getConfirmation } from '../../../../Common/utils/jsUtils';
 import { Dispatch } from '../../../../../types';
 import { parseServerScheduledTrigger } from '../utils';
 import styles from '../../Events.scss';
@@ -29,11 +28,11 @@ const Modify: React.FC<Props> = props => {
     return null;
   }
 
-  const requestCallback = () => setState.loading(false);
   const deleteFunc = () => {
-    const isOk = getConfirmation('Are you sure?');
-    if (!isOk) return;
-    setState.loading(true);
+    const requestCallback = () => {
+      setState.loading('delete', false);
+    };
+    setState.loading('delete', true);
     dispatch(
       deleteScheduledTrigger(currentTrigger, requestCallback, requestCallback)
     );
@@ -41,7 +40,10 @@ const Modify: React.FC<Props> = props => {
 
   const onSave = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    setState.loading(true);
+    const requestCallback = () => {
+      setState.loading('modify', false);
+    };
+    setState.loading('modify', true);
     dispatch(
       saveScheduledTrigger(
         state,
@@ -60,19 +62,19 @@ const Modify: React.FC<Props> = props => {
           onClick={onSave}
           color="yellow"
           size="sm"
-          disabled={state.loading}
+          disabled={state.loading.modify}
           className={`${styles.add_mar_right}`}
         >
-          {state.loading ? 'Saving...' : 'Save'}
+          {state.loading.modify ? 'Saving...' : 'Save'}
         </Button>
         <Button
           onClick={deleteFunc}
           color="red"
           size="sm"
-          disabled={state.loading}
+          disabled={state.loading.delete}
           className={`${styles.add_mar_right}`}
         >
-          Delete
+          {state.loading.delete ? 'Deleting...' : 'Delete'}
         </Button>
       </div>
     </div>
