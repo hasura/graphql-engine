@@ -400,6 +400,7 @@ FROM (
     pgc.relname as table_name,
     case
       when pgc.relkind = 'r' then 'TABLE'
+      when pgc.relkind = 'f' then 'FOREIGN TABLE'
       when pgc.relkind = 'v' then 'VIEW'
       when pgc.relkind = 'm' then 'MATERIALIZED VIEW'
     end as table_type,
@@ -459,7 +460,7 @@ FROM (
       LEFT JOIN (pg_collation co JOIN pg_namespace nco ON (co.collnamespace = nco.oid))
         ON a.attcollation = co.oid AND (nco.nspname, co.collname) <> ('pg_catalog', 'default')
     WHERE (NOT pg_is_other_temp_schema(nc.oid))
-      AND a.attnum > 0 AND NOT a.attisdropped AND c.relkind in ('r', 'v', 'm')
+      AND a.attnum > 0 AND NOT a.attisdropped AND c.relkind in ('r', 'v', 'm', 'f')
       AND (pg_has_role(c.relowner, 'USAGE')
            OR has_column_privilege(c.oid, a.attnum,
                                    'SELECT, INSERT, UPDATE, REFERENCES'))
@@ -508,7 +509,7 @@ FROM (
     AND isv.table_name   = pgc.relname
 
   WHERE
-    pgc.relkind IN ('r', 'v', 'm')
+    pgc.relkind IN ('r', 'v', 'f', 'm')
     ${whereQuery}
   GROUP BY pgc.oid, pgn.nspname, pgc.relname, table_type, isv.*
 ) AS info;

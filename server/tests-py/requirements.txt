@@ -5,6 +5,7 @@ attrs==19.3.0
 certifi==2019.9.11
 cffi==1.13.2
 chardet==3.0.4
+croniter==0.3.31
 cryptography==2.8
 execnet==1.7.1
 graphene==2.1.8
