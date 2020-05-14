@@ -50,6 +50,8 @@ import           Hasura.Server.Version                  (HasVersion)
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Query           as EQ
+import qualified Hasura.GraphQL.Context                 as C
+import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 
@@ -109,54 +111,110 @@ getTopLevelNodes opDef =
 --           mr = VT._otiFields <$> _gMutRoot gCtx
 --       in maybe qr (Map.union qr) mr
 
--- -- This is for when the graphql query is validated
--- type ExecPlanPartial = GQExecPlan (GCtx, VQ.RootSelSet)
+-- This is for when the graphql query is validated
+type ExecPlanPartial = GQExecPlan (C.GQLContext, G.TypedOperationDefinition G.Name)
 
--- getExecPlanPartial
---   :: (MonadReusability m, MonadError QErr m)
---   => UserInfo
---   -> SchemaCache
---   -> Bool
---   -> GQLReqParsed
---   -> m ExecPlanPartial
--- getExecPlanPartial userInfo sc enableAL req = do
---
---   -- check if query is in allowlist
---   when enableAL checkQueryInAllowlist
---
---   gCtx <- flip runCacheRT sc $ getGCtx role gCtxRoleMap
---   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
---
---   let opDef = VQ.qpOpDef queryParts
---       topLevelNodes = getTopLevelNodes opDef
---       -- gather TypeLoc of topLevelNodes
---       typeLocs = gatherTypeLocs gCtx topLevelNodes
---
---   -- see if they are all the same
---   typeLoc <- assertSameLocationNodes typeLocs
---
---   case typeLoc of
---     VT.TLHasuraType -> do
---       rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
---       return $ GExPHasura (gCtx, rootSelSet)
---     VT.TLRemoteType _ rsi ->
---       return $ GExPRemote rsi opDef
---     VT.TLCustom ->
---       throw500 "unexpected custom type for top level field"
---   where
---     role = userRole userInfo
---     gCtxRoleMap = scGCtxMap sc
---
---     checkQueryInAllowlist =
---       -- only for non-admin roles
---       when (role /= adminRole) $ do
---         let notInAllowlist =
---               not $ _isQueryInAllowlist (_grQuery req) (scAllowlist sc)
---         when notInAllowlist $ modifyQErr modErr $ throwVE "query is not allowed"
---
---     modErr e =
---       let msg = "query is not in any of the allowlists"
---       in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
+getTypedOp
+  :: (MonadError QErr m)
+  => Maybe OperationName
+  -> [G.SelectionSet G.Name]
+  -> [G.TypedOperationDefinition G.Name]
+  -> m (G.TypedOperationDefinition G.Name)
+getTypedOp opNameM selSets opDefs =
+  case (opNameM, selSets, opDefs) of
+    (Just opName, [], _) -> do
+      let n = _unOperationName opName
+          opDefM = find (\opDef -> G._todName opDef == Just n) opDefs
+      onNothing opDefM $ _throwVE $
+        "no such operation found in the document: " <> _showName n
+    (Just _, _, _)  ->
+      _throwVE $ "operationName cannot be used when " <>
+      "an anonymous operation exists in the document"
+    (Nothing, [selSet], []) ->
+      return $ G.TypedOperationDefinition
+      G.OperationTypeQuery Nothing [] [] selSet
+    (Nothing, [], [opDef])  ->
+      return opDef
+    (Nothing, _, _) ->
+      _throwVE $ "exactly one operation has to be present " <>
+      "in the document when operationName is not specified"
+
+data QueryParts
+  = QueryParts
+  { qpOpDef     :: !(G.TypedOperationDefinition G.Name)
+--  , qpOpRoot    :: !ObjTyInfo
+--  , qpFragDefsL :: ![G.FragmentDefinition]
+  , qpVarValsM  :: !(Maybe VariableValues)
+  }
+
+getQueryParts
+  :: ( MonadError QErr m, MonadReader C.GQLContext m)
+  => GQLReqParsed
+  -> m QueryParts
+getQueryParts (GQLReq opNameM q varValsM) = do
+  -- get the operation that needs to be evaluated
+  opDef <- getTypedOp opNameM selSets opDefs
+  ctx <- ask
+
+  -- get the operation root
+  opRoot <- case G._todType opDef of
+    G.OperationTypeQuery        -> return $ _gQueryRoot ctx
+    G.OperationTypeMutation     ->
+      onNothing (_gMutRoot ctx) $ _throwVE "no mutations exist"
+    G.OperationTypeSubscription ->
+      onNothing (_gSubRoot ctx) $ _throwVE "no subscriptions exist"
+  return $ QueryParts opDef {-opRoot fragDefsL-} varValsM
+  where
+    (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGQLExecDoc q
+
+getGCtx :: SchemaCache -> RoleName -> C.GQLContext
+getGCtx sc rn =
+  fromMaybe (_scDefaultRemoteGCtx sc) $ Map.lookup rn (scGQLContext sc)
+
+getExecPlanPartial
+  :: (MonadError QErr m)
+  => UserInfo
+  -> SchemaCache
+  -> Bool
+  -> GQLReqParsed
+  -> m ExecPlanPartial
+getExecPlanPartial userInfo sc enableAL req = do
+
+  -- check if query is in allowlist
+  when enableAL checkQueryInAllowlist
+
+  let gCtx = getGCtx sc role
+  QueryParts tod _ <- flip runReaderT gCtx $ getQueryParts req
+
+  let topLevelNodes = getTopLevelNodes tod
+      -- -- gather TypeLoc of topLevelNodes
+      -- typeLocs = gatherTypeLocs gCtx topLevelNodes
+
+  -- -- see if they are all the same
+  -- typeLoc <- assertSameLocationNodes typeLocs
+
+  return $ GExPHasura (gCtx , tod)
+  -- case typeLoc of
+  --   VT.TLHasuraType -> do
+  --     rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
+  --     return $ GExPHasura (gCtx, rootSelSet)
+  --   VT.TLRemoteType _ rsi ->
+  --     _ -- return $ GExPRemote rsi opDef
+  --   VT.TLCustom ->
+  --     throw500 "unexpected custom type for top level field"
+  where
+    role = userRole userInfo
+
+    checkQueryInAllowlist =
+      -- only for non-admin roles
+      when (role /= adminRole) $ do
+        let notInAllowlist =
+              not $ _isQueryInAllowlist (_grQuery req) (scAllowlist sc)
+        when notInAllowlist $ modifyQErr modErr $ _throwVE "query is not allowed"
+
+    modErr e =
+      let msg = "query is not in any of the allowlists"
+      in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
 
 
 -- An execution operation, in case of
@@ -172,7 +230,7 @@ type ExecPlanResolved
   = GQExecPlan ExecOp
 
 getResolvedExecPlan
-  :: (HasVersion, MonadError QErr m, MonadIO m)
+  :: forall m . (HasVersion, MonadError QErr m, MonadIO m)
   => PGExecCtx
   -> EP.PlanCache
   -> UserInfo
@@ -197,28 +255,34 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
         return $ ExOpQuery tx (Just genSql)
       EP.RPSubs subsPlan ->
         ExOpSubs <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
-    Nothing -> (Telem.Miss,) <$> _noExistingPlan
+    Nothing -> (Telem.Miss,) <$> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     -- addPlanToCache plan =
     --   liftIO $ EP.addPlan scVer (userRole userInfo)
     --   opNameM queryStr plan planCache
-    -- noExistingPlan = do
-    --   req <- toParsed reqUnparsed
-    --   (partialExecPlan, queryReusability) <- runReusabilityT $
-    --     getExecPlanPartial userInfo sc enableAL req
-    --   forM partialExecPlan $ \(gCtx, rootSelSet) ->
-    --     case rootSelSet of
-    --       VQ.RMutation selSet ->
-    --         ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
-    --       VQ.RQuery selSet -> do
-    --         (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability selSet
-    --         traverse_ (addPlanToCache . EP.RPQuery) plan
-    --         return $ ExOpQuery queryTx (Just genSql)
-    --       VQ.RSubscription fld -> do
-    --         (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld
-    --         traverse_ (addPlanToCache . EP.RPSubs) plan
-    --         return $ ExOpSubs lqOp
+    noExistingPlan :: m ExecPlanResolved
+    noExistingPlan = do
+      req <- toParsed reqUnparsed
+      planPartial <- getExecPlanPartial userInfo sc enableAL req
+      case planPartial of
+        GExPHasura (gCtx, G.TypedOperationDefinition G.OperationTypeQuery _ _ _ selSet) -> do
+          (queryTx, plan, genSql) <- getQueryOp sqlGenCtx userInfo selSet
+          -- traverse_ (addPlanToCache . EP.RPQuery) plan
+          return $ GExPHasura $ ExOpQuery queryTx (Just genSql)
+        _ -> _
+      -- forM partialExecPlan $ \(gCtx, rootSelSet) ->
+      --   case rootSelSet of
+      --     VQ.RMutation selSet ->
+      --       ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
+      --     VQ.RQuery selSet -> do
+      --       (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability selSet
+      --       traverse_ (addPlanToCache . EP.RPQuery) plan
+      --       return $ ExOpQuery queryTx (Just genSql)
+      --     VQ.RSubscription fld -> do
+      --       (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld
+      --       traverse_ (addPlanToCache . EP.RPSubs) plan
+      --       return $ ExOpSubs lqOp
 
 -- Monad for resolving a hasura query/mutation
 type E m =
@@ -323,7 +387,7 @@ mutationRootName = "mutation_root"
 -- getSubsOpM pgExecCtx fld =
 --   case VQ._fName fld of
 --     "__typename" ->
---       throwVE "you cannot create a subscription on '__typename' field"
+--       _throwVE "you cannot create a subscription on '__typename' field"
 --     _            -> do
 --       (astUnresolved, finalReusability) <- runReusabilityTWith initialReusability $
 --         GR.queryFldToPGAST fld
