@@ -178,7 +178,8 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
 
   returnA -< SchemaCache
     { scTables = _boTables resolvedOutputs
-    , scActions = _boActions resolvedOutputs
+    -- TODO this is empty now so that things run.  Of course we should cache the right map of Actions.
+    , scActions = M.empty -- _boActions resolvedOutputs
     , scFunctions = _boFunctions resolvedOutputs
     , scRemoteSchemas = mempty -- remoteSchemaMap
     , scAllowlist = _boAllowlist resolvedOutputs
