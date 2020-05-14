@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
@@ -49,11 +49,14 @@ import {
 } from '../../../Common/utils/pgUtils';
 import { updateSchemaInfo } from '../DataActions';
 import {
-  handleCollapseChange,
-  getCollapsedColumns,
-  handleOrderChange,
-  getColumnsOrder,
+  persistColumnCollapseChange,
+  getPersistedCollapsedColumns,
+  persistColumnOrderChange,
+  getPersistedColumnsOrder,
+  persistPageSizeChange,
 } from './localStorageUtils';
+import { compareRows, isTableWithPK } from './utils';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 const ViewRows = ({
   curTableName,
@@ -83,8 +86,9 @@ const ViewRows = ({
   readOnlyMode,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
-
-  const styles = require('../../../Common/TableCommon/Table.scss');
+  useEffect(() => {
+    setSelectedRows([]);
+  }, [curTableName, currentSchema]);
 
   const NO_PRIMARY_KEY_MSG = 'No primary key to identify row';
 
@@ -131,12 +135,6 @@ const ViewRows = ({
     return _isSingleRow;
   };
 
-  const checkIfHasPrimaryKey = _tableSchema => {
-    return (
-      _tableSchema.primary_key && _tableSchema.primary_key.columns.length > 0
-    );
-  };
-
   const getGridHeadings = (_columns, _relationships, _disableBulkSelect) => {
     const _gridHeadings = [];
 
@@ -159,6 +157,7 @@ const ViewRows = ({
             title={_disableBulkSelect ? 'No primary key to identify row' : ''}
             type="checkbox"
             onChange={handleAllCheckboxChange}
+            data-test="select-all-rows"
           />
         </div>
       ),
@@ -213,30 +212,12 @@ const ViewRows = ({
     return _gridHeadings;
   };
 
-  const compareRows = (row1, row2, _tableSchema, _hasPrimaryKey) => {
-    let same = true;
-    if (!isView && _hasPrimaryKey) {
-      _tableSchema.primary_key.columns.map(pk => {
-        if (row1[pk] !== row2[pk]) {
-          same = false;
-        }
-      });
-      return same;
-    }
-    _tableSchema.columns.map(k => {
-      if (row1[k.column_name] !== row2[k.column_name]) {
-        return false;
-      }
-    });
-    return same;
-  };
-
-  const handleCheckboxChange = (row, e, ...rest) => {
+  const handleCheckboxChange = (row, e, tableSchema) => {
     if (e.target.checked) {
       setSelectedRows(prev => [...prev, row]);
     } else {
       setSelectedRows(prev =>
-        prev.filter(prevRow => !compareRows(prevRow, row, ...rest))
+        prev.filter(prevRow => !compareRows(prevRow, row, tableSchema, isView))
       );
     }
   };
@@ -359,7 +340,10 @@ const ViewRows = ({
           const deleteIcon = <i className="fa fa-trash" />;
 
           const handleDeleteClick = () => {
-            dispatch(deleteItem(pkClause));
+            setSelectedRows(prev =>
+              prev.filter(r => !compareRows(r, pkClause, _tableSchema, isView))
+            );
+            dispatch(deleteItem(pkClause, curTableName, currentSchema));
           };
 
           const deleteTitle = 'Delete row';
@@ -494,11 +478,10 @@ const ViewRows = ({
             disabled={_disableBulkSelect}
             title={_disableBulkSelect ? NO_PRIMARY_KEY_MSG : ''}
             checked={selectedRows.some(selectedRow =>
-              compareRows(selectedRow, row, _tableSchema, _hasPrimaryKey)
+              compareRows(selectedRow, row, _tableSchema, isView)
             )}
-            onChange={e =>
-              handleCheckboxChange(row, e, _tableSchema, _hasPrimaryKey)
-            }
+            onChange={e => handleCheckboxChange(row, e, _tableSchema, isView)}
+            data-test={`row-checkbox-${rowIndex}`}
           />
         </div>
       );
@@ -640,7 +623,7 @@ const ViewRows = ({
   const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort);
   const tableRelationships = tableSchema.relationships;
 
-  const hasPrimaryKey = checkIfHasPrimaryKey(tableSchema);
+  const hasPrimaryKey = isTableWithPK(tableSchema);
 
   const isSingleRow = checkIfSingleRow(curRelName);
 
@@ -675,7 +658,7 @@ const ViewRows = ({
         if ('order_by' in curFilter) {
           orderBy = [...curFilter.order_by];
         }
-        const limit = 'limit' in curFilter ? curFilter.limit : 10;
+
         const offset = 'offset' in curFilter ? curFilter.offset : 0;
 
         _filterQuery = (
@@ -684,7 +667,6 @@ const ViewRows = ({
             whereAnd={wheres}
             tableSchema={tableSchema}
             orderBy={orderBy}
-            limit={limit}
             dispatch={dispatch}
             count={count}
             tableName={curTableName}
@@ -703,7 +685,7 @@ const ViewRows = ({
       const pkClauses = selectedRows.map(row =>
         getPKClause(row, hasPrimaryKey, tableSchema)
       );
-      dispatch(deleteItems(pkClauses));
+      dispatch(deleteItems(pkClauses, curTableName, currentSchema));
       setSelectedRows([]);
     };
 
@@ -718,6 +700,7 @@ const ViewRows = ({
             className={`${styles.add_mar_right_small} btn btn-xs btn-default ${styles.bulkDeleteButton}`}
             title="Delete selected rows"
             onClick={handleDeleteItems}
+            data-test="bulk-delete"
           >
             <i className="fa fa-trash" />
           </button>
@@ -821,8 +804,11 @@ const ViewRows = ({
       );
     }
 
-    const collapsedColumns = getCollapsedColumns(curTableName, currentSchema);
-    const columnsOrder = getColumnsOrder(curTableName, currentSchema);
+    const collapsedColumns = getPersistedCollapsedColumns(
+      curTableName,
+      currentSchema
+    );
+    const columnsOrder = getPersistedColumnsOrder(curTableName, currentSchema);
 
     let disableSortColumn = false;
 
@@ -923,6 +909,7 @@ const ViewRows = ({
         dispatch(setOffset(0));
         dispatch(runQuery(tableSchema));
         setSelectedRows([]);
+        persistPageSizeChange(size);
       }
     };
 
@@ -945,11 +932,15 @@ const ViewRows = ({
         onPageSizeChange={handlePageSizeChange}
         page={Math.floor(curFilter.offset / curFilter.limit)}
         onCollapseChange={collapsedData =>
-          handleCollapseChange(curTableName, currentSchema, collapsedData)
+          persistColumnCollapseChange(
+            curTableName,
+            currentSchema,
+            collapsedData
+          )
         }
         defaultCollapsed={collapsedColumns}
         onOrderChange={reorderData =>
-          handleOrderChange(curTableName, currentSchema, reorderData)
+          persistColumnOrderChange(curTableName, currentSchema, reorderData)
         }
         defaultReorders={columnsOrder}
       />

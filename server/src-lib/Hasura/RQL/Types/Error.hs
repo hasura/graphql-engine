@@ -5,6 +5,7 @@ module Hasura.RQL.Types.Error
        , QErr(..)
        , encodeQErr
        , encodeGQLErr
+       , encodeJSONPath
        , noInternalQErrEnc
        , err400
        , err404
@@ -44,15 +45,15 @@ module Hasura.RQL.Types.Error
        , indexedTraverseA_
        ) where
 
+import           Hasura.Prelude
+
 import           Control.Arrow.Extended
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Aeson.Types
-import qualified Database.PG.Query      as Q
-import           Hasura.Prelude
-import           Text.Show              (Show (..))
 
 import qualified Data.Text              as T
+import qualified Database.PG.Query      as Q
 import qualified Network.HTTP.Types     as N
 
 data Code
@@ -194,11 +195,17 @@ encodeJSONPath = format "$"
   where
     format pfx []                = pfx
     format pfx (Index idx:parts) = format (pfx ++ "[" ++ show idx ++ "]") parts
-    format pfx (Key key:parts)   = format (pfx ++ "." ++ formatKey key) parts
+    format pfx (Key key:parts)   = format (pfx ++ formatKey key) parts
 
     formatKey key
-      | T.any (=='.') key = "['" ++ T.unpack key ++ "']"
-      | otherwise         = T.unpack key
+      | specialChars sKey = "['" ++ sKey ++ "']"
+      | otherwise         = "." ++ sKey
+      where
+        sKey = T.unpack key
+        specialChars []     = True
+        -- first char must not be number
+        specialChars (c:xs) = notElem c (alphabet ++ "_") ||
+          any (flip notElem (alphaNumerics ++ "_-")) xs
 
 instance Q.FromPGConnErr QErr where
   fromPGConnErr c =

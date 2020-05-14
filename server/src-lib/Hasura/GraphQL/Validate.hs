@@ -21,8 +21,8 @@ import           Data.Has
 
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as HS
-import qualified Data.Sequence                          as Seq
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.Sequence                          as Seq
 
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -31,7 +31,6 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.QueryCollection
 
 data QueryParts
   = QueryParts
@@ -58,8 +57,7 @@ getTypedOp opNameM selSets opDefs =
       throwVE $ "operationName cannot be used when " <>
       "an anonymous operation exists in the document"
     (Nothing, [selSet], []) ->
-      return $ G.TypedOperationDefinition
-      G.OperationTypeQuery Nothing [] [] selSet
+      return $ G.TypedOperationDefinition G.OperationTypeQuery Nothing [] [] selSet
     (Nothing, [], [opDef])  ->
       return opDef
     (Nothing, _, _) ->
@@ -145,7 +143,7 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
 data RootSelSet
   = RQuery !SelSet
   | RMutation !SelSet
-  | RSubscription !Field
+  | RSubscription !SelSet
   deriving (Show, Eq)
 
 validateGQ
@@ -172,12 +170,15 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
     G.OperationTypeQuery -> return $ RQuery selSet
     G.OperationTypeMutation -> return $ RMutation selSet
     G.OperationTypeSubscription ->
-      case Seq.viewl selSet of
-        Seq.EmptyL     -> throw500 "empty selset for subscription"
-        fld Seq.:< rst -> do
-          unless (null rst) $
-            throwVE "subscription must select only one top level field"
-          return $ RSubscription fld
+      case selSet of
+        Seq.Empty       -> throw500 "empty selset for subscription"
+        (_ Seq.:<| rst) -> do
+          -- As an internal testing feature, we support subscribing to multiple
+          -- selection sets.  First check if the corresponding directive is set.
+          let multipleAllowed = elem (G.Directive "_multiple_top_level_fields" []) (G._todDirectives opDef)
+          unless (multipleAllowed || null rst) $
+            throwVE "subscriptions must select one top level field"
+          return $ RSubscription selSet
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery

@@ -5,18 +5,15 @@ from multiple threads is unlikely.
 -}
 module Hasura.Cache.Bounded
   ( BoundedCache
-  , CacheSize
-  , mkCacheSize
+  , CacheSize(..)
+  , parseCacheSize
 
   , initialise
-  , clear
-  , insert
   , insertAllStripes
-  , lookup
-  , getEntries
   ) where
 
 import           Hasura.Prelude     hiding (lookup)
+import           Hasura.Cache.Types
 
 import           Control.Concurrent (getNumCapabilities, myThreadId, threadCapability)
 import           Data.Word          (Word16)
@@ -31,12 +28,12 @@ newtype CacheSize
   = CacheSize { unCacheSize :: Word16 }
   deriving (Show, Read, Eq, Ord, Bounded, Num, Enum, J.ToJSON, J.FromJSON)
 
-mkCacheSize :: String -> Either String CacheSize
-mkCacheSize v =
+parseCacheSize :: String -> Either String CacheSize
+parseCacheSize v =
   -- NOTE: naively using readMaybe Word16 will silently wrap
   case readMaybe v :: Maybe Natural of
     Just n | n <= max16 && n > 0 -> return (CacheSize $ fromIntegral n)
-    _ -> fail "cache size must be given as a number between 1 and 65535"
+    _ -> throwError "cache size must be given as a number between 1 and 65535"
   where
     max16 = fromIntegral (maxBound :: Word16) :: Natural
 
@@ -140,11 +137,17 @@ insertLocal (LocalCacheRef ref) k v =
 -- accessed in parallel.
 newtype BoundedCache k v = BoundedCache (V.Vector (LocalCacheRef k v))
 
-getEntries
-  :: (Hashable k, Ord k)
-  => BoundedCache k v -> IO [[(k, v)]]
-getEntries (BoundedCache localCaches) =
-  mapM getLocalEntries $ V.toList localCaches
+instance (Hashable k, Ord k) => CacheObj (BoundedCache k v) k v where
+  clear (BoundedCache caches) =
+    V.mapM_ clearLocal caches
+  insert k v striped = do
+    localHandle <- getLocal striped
+    insertLocal localHandle k v
+  lookup k striped = do
+    localHandle <- getLocal striped
+    lookupLocal localHandle k
+  getEntries (BoundedCache localCaches) =
+    mapM getLocalEntries $ V.toList localCaches
 
 -- | Creates a new BoundedCache of the specified size,
 -- with one stripe per capability
@@ -153,9 +156,6 @@ initialise capacity = do
   capabilities <- getNumCapabilities
   BoundedCache <$> V.replicateM capabilities (initLocalCache capacity)
 
-clear :: BoundedCache k v -> IO ()
-clear (BoundedCache caches) =
-  V.mapM_ clearLocal caches
 
 {-# INLINE getLocal #-}
 getLocal :: BoundedCache k v -> IO (LocalCacheRef k v)
@@ -169,21 +169,9 @@ getLocal (BoundedCache handles) = do
 
   return $ handles V.! j
 
--- | Insert into our thread's local cache stripe.
-insert
-  :: (Hashable k, Ord k) => k -> v -> BoundedCache k v -> IO ()
-insert k v striped = do
-  localHandle <- getLocal striped
-  insertLocal localHandle k v
-
 -- | Insert into all stripes (non-atomically).
 insertAllStripes
   :: (Hashable k, Ord k) =>  k -> v -> BoundedCache k v ->IO ()
 insertAllStripes k v (BoundedCache handles) = do
   forM_ handles $ \localHandle->
     insertLocal localHandle k v
-
-lookup :: (Hashable k, Ord k) => k -> BoundedCache k v -> IO (Maybe v)
-lookup k striped = do
-  localHandle <- getLocal striped
-  lookupLocal localHandle k
