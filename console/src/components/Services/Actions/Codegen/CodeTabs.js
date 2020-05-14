@@ -1,7 +1,7 @@
 import React from 'react';
 import Spinner from '../../../Common/Spinner/Spinner';
-import JSEditor from '../../../Common/AceEditor/JavaScriptEditor';
-import TSEditor from '../../../Common/AceEditor/TypescriptEditor';
+import AceEditor from '../../../Common/AceEditor/BaseEditor';
+import { getLanguageModeFromExtension } from '../../../Common/AceEditor/utils';
 import { getFrameworkCodegen } from './utils';
 import { getFileExtensionFromFilename } from '../../../Common/utils/jsUtils';
 import { Tabs, Tab } from 'react-bootstrap';
@@ -54,27 +54,18 @@ const CodeTabs = ({
     );
   }
 
-  const files = codegenFiles.map(({ name, content }, i) => {
-    const getFileTab = (component, filename) => {
-      return (
-        <Tab eventKey={filename} title={filename} key={i}>
-          {component}
-        </Tab>
-      );
-    };
-
+  const files = codegenFiles.map(({ name, content }) => {
     const editorProps = {
       width: '600px',
       value: content.trim(),
       readOnly: true,
+      mode: getLanguageModeFromExtension(getFileExtensionFromFilename(name)),
     };
-
-    switch (getFileExtensionFromFilename(name)) {
-      case 'ts':
-        return getFileTab(<TSEditor {...editorProps} />, name);
-      default:
-        return getFileTab(<JSEditor {...editorProps} />, name);
-    }
+    return (
+      <Tab eventKey={name} title={name} key={name}>
+        <AceEditor {...editorProps} />
+      </Tab>
+    );
   });
 
   return <Tabs id="codegen-files-tabs">{files} </Tabs>;

@@ -125,7 +125,7 @@ mkJwtCtx JWTConfig{..} httpManager logger = do
         Nothing   -> return ref
         Just time -> do
           void $ liftIO $ forkImmortal "jwkRefreshCtrl" logger $
-            jwkRefreshCtrl logger httpManager url ref (fromUnits time)
+            jwkRefreshCtrl logger httpManager url ref (convertDuration time)
           return ref
 
     withJwkError act = do
