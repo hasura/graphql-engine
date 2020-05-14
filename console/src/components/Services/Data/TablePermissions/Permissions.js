@@ -368,9 +368,16 @@ class Permissions extends Component {
 
           const getEditIcon = () => {
             return (
-              <span className={styles.editPermsIcon}>
-                <Icon type="pencil" size={12} mb="-2px" />
-              </span>
+              <Icon
+                type="pencil"
+                size={16}
+                position="absolute"
+                pointer
+                right="10px"
+                pt="4px"
+                color="#337ab7"
+                className={styles.editPermsIcon}
+              />
             );
           };
 
