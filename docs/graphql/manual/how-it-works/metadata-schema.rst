@@ -40,7 +40,7 @@ the metadata API.
 Schema
 """"""
 
-.. thumbnail:: ../../../img/graphql/manual/engine-internals/hdb_table.jpg
+.. thumbnail:: /img/graphql/manual/engine-internals/hdb_table.jpg
   :width: 30%
   :alt: hdb_table schema
 
@@ -66,7 +66,7 @@ the metadata API.
 Schema
 """"""
 
-.. thumbnail:: ../../../img/graphql/manual/engine-internals/hdb_relationship.jpg
+.. thumbnail:: /img/graphql/manual/engine-internals/hdb_relationship.jpg
   :width: 30%
   :alt: hdb_relationship schema
 
@@ -110,7 +110,7 @@ the metadata API.
 Schema
 """"""
 
-.. thumbnail:: ../../../img/graphql/manual/engine-internals/hdb_permission.jpg
+.. thumbnail:: /img/graphql/manual/engine-internals/hdb_permission.jpg
   :width: 30%
   :alt: hdb_permission schema
 

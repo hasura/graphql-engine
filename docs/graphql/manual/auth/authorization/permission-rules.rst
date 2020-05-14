@@ -18,7 +18,7 @@ Introduction
 Access control rules in Hasura are defined at a role, table and action (*insert, update, select, delete*)
 level granularity:
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/permission-rule-granularity.png
+.. thumbnail:: /img/graphql/manual/auth/permission-rule-granularity.png
    :alt: Access control rules in Hasura
 
 Requests to Hasura should contain the reserved session variable ``X-Hasura-Role`` to indicate the requesting
@@ -108,11 +108,11 @@ See the :ref:`API reference <MetadataOperator>` for a list of all supported colu
 types:
 
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/operators-for-integer-types.png
+.. thumbnail:: /img/graphql/manual/auth/operators-for-integer-types.png
    :width: 40%
    :alt: Column operators for integer types
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/operators-for-text-types.png
+.. thumbnail:: /img/graphql/manual/auth/operators-for-text-types.png
    :width: 40%
    :alt: Column operators for text types
 
@@ -122,19 +122,19 @@ Using boolean expressions
 The following is an example of a simple boolean expression to restrict access for ``select`` to rows where
 the value in the ``id`` column is greater than 10:
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/simple-boolean-expression.png
+.. thumbnail:: /img/graphql/manual/auth/simple-boolean-expression.png
    :alt: Using boolean expressions to build rules
 
 You can construct more complex boolean expressions using the ``_and``, ``_or`` and ``not`` operators:
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/boolean-operators.png
+.. thumbnail:: /img/graphql/manual/auth/boolean-operators.png
    :alt: Using more complex boolean expressions to build rules
 
 **For example**, using the ``_and`` operator, you can construct a rule to restrict access for ``select`` to rows where
 the value in the ``id`` column is greater than 10 **and** the value in the ``name`` column starts with "a"
 or "A":
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/composite-boolean-expression.png
+.. thumbnail:: /img/graphql/manual/auth/composite-boolean-expression.png
    :alt: Example of a rule with the _and operator
 
 Using session variables
@@ -148,7 +148,7 @@ to construct a rule to restrict access for ``select`` to rows in the ``articles`
 ``id`` column is equal to the value in the session variable (*assuming this variable is being used to indicate
 the author's ID*):
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/session-variables-in-permissions-simple-example.png
+.. thumbnail:: /img/graphql/manual/auth/session-variables-in-permissions-simple-example.png
    :alt: Using session variables to build rules
 
 .. _relationships-in-permissions:
@@ -164,7 +164,7 @@ called ``agent`` (*an author can have an agent*) and we want to allow users with
 the details of the authors who they manage in ``authors`` table. We can define the following permission rule
 that uses the aforementioned object relationship:
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/nested-object-permission-simple-example.png
+.. thumbnail:: /img/graphql/manual/auth/nested-object-permission-simple-example.png
    :alt: Using a nested object to build rules
 
 This permission rule reads as "*if the author's agent's*  ``id``  *is the same as the requesting user's*
@@ -191,7 +191,7 @@ our table.
 column in the ``users`` table is set to ``true``. Let's assume the user's id is passed in the ``X-Hasura-User-ID``
 session variable.
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/exists-permission-example.png
+.. thumbnail:: /img/graphql/manual/auth/exists-permission-example.png
    :alt: Use an unrelated table to build rules
 
 This permission rule reads as "*if there exists a row in the table* ``users`` *whose*  ``id``  *is the same as the requesting user's*
@@ -204,7 +204,7 @@ Column-level permissions
 Column-level permissions determine access to columns in the rows that are accessible based on row-level
 permissions. These permissions are simple selections:
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/column-level-permissions.png
+.. thumbnail:: /img/graphql/manual/auth/column-level-permissions.png
    :alt: Column level permissions
 
 In this example, the role ``author`` has only partial access to columns of the accessible rows for
@@ -218,7 +218,7 @@ Row fetch limit
 In the case of ``select`` operations, the number of rows to be returned in the response can be limited
 using this configuration:
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/limit-rows-for-select.png
+.. thumbnail:: /img/graphql/manual/auth/limit-rows-for-select.png
    :alt: Row fetch limit
 
 In the above example, this configuration  restricts the number of accessible rows (*based on the rule*:
@@ -232,7 +232,7 @@ Aggregation queries permissions
 In the case of ``select`` operations, access to :ref:`aggregation queries <aggregation_queries>`
 can be restricted for a given role using this configuration.
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/aggregation-query-permissions.png
+.. thumbnail:: /img/graphql/manual/auth/aggregation-query-permissions.png
    :alt: Aggregation queries permissions
 
 In the above example, the role ``user`` is allowed to make aggregation queries.

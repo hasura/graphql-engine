@@ -1,16 +1,28 @@
 import React from 'react';
-import BootstrapModal from 'react-bootstrap/lib/Modal';
-import BootstrapModalButton from 'react-bootstrap/lib/Button';
+import {
+  Modal as BootstrapModal,
+  Button as BootstrapModalButton,
+} from 'react-bootstrap';
 
-const Modal = ({
+export interface ModalProps {
+  show?: boolean;
+  title: React.ReactElement;
+  onClose?(): void;
+  onSubmit?(): void;
+  onCancel?(): void;
+  customClass?: string;
+  submitText?: string;
+  submitTestId?: string;
+}
+const Modal: React.FC<ModalProps> = ({
   show = true,
   title,
   onClose,
   customClass = '',
-  onSubmit = null,
-  onCancel = null,
-  submitText = null,
-  submitTestId = null,
+  onSubmit,
+  onCancel,
+  submitText = '',
+  submitTestId = '',
   children,
 }) => {
   const getHeader = () => {
@@ -25,14 +37,22 @@ const Modal = ({
     return <BootstrapModal.Body>{children}</BootstrapModal.Body>;
   };
 
+  const triggerOnClose = () => {
+    if (onCancel) {
+      onCancel();
+    } else if (onClose) {
+      onClose();
+    }
+  };
+
   const getFooter = () => {
     if (!onSubmit) {
-      return;
+      return null;
     }
 
     return (
       <BootstrapModal.Footer>
-        <BootstrapModalButton onClick={onCancel || onClose}>
+        <BootstrapModalButton onClick={triggerOnClose}>
           Cancel
         </BootstrapModalButton>
         <BootstrapModalButton
@@ -46,8 +66,18 @@ const Modal = ({
     );
   };
 
+  const bootstrapModalProps: BootstrapModal.ModalProps = {
+    show,
+    dialogClassName: customClass,
+    onHide() {},
+  };
+
+  if (onClose) {
+    bootstrapModalProps.onHide = onClose;
+  }
+
   return (
-    <BootstrapModal show={show} onHide={onClose} dialogClassName={customClass}>
+    <BootstrapModal {...bootstrapModalProps}>
       {getHeader()}
       {getBody()}
       {getFooter()}
