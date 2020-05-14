@@ -49,6 +49,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
+- server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
 
 - server: avoid loss of precision when passing values in scientific notation (fix #4733)
 - server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
@@ -57,6 +58,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: allow modifying default value for PK (fix #4075) (#4679)
 - console: fix checkbox for forwarding client headers in actions (#4595)
 - console: re-enable foreign tables to be listed as views (fix #4714) (#4742)
+- console: display rows limit in permissions editor if set to zero (fix #4559)
 - cli: list all available commands in root command help (fix #4623)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
