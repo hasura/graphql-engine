@@ -4,8 +4,8 @@
 
 .. _networking:
 
-Networking
-==========
+Network config
+==============
 
 .. contents:: Table of contents
   :backlinks: none
@@ -18,35 +18,28 @@ Introduction
 Sometimes we need to connect from Hasura to an external API or vice versa. 
 This page gives an overview of how you can do so.
 
-Connecting to APIs from / to Hasura
------------------------------------
+Networking from / to Hasura
+---------------------------
 
-.. list-table:: Networking with Hasura
+.. list-table:: 
    :stub-columns: 1
    :header-rows: 1
 
    * - 
-     - OS
-     - External API 
-     - Hasura to API 
-     - API to Hasura 
-   * - OS
-     - 
-     - 
-     - 
-     - 
-   * - External API
-     - 
-     - 
-     - 
-     - 
-   * - Hasura to API 
-     - 
-     - 
-     - 
-     - 
-   * - API to Hasura
-     - 
-     - 
-     - 
-     - 
+     - Mac
+     - Windows
+     - Linux
+   * - **Hasura to API**
+     - ``host.docker.internal``
+     - ``docker.for.win.localhost``
+     - Add the ``--net=host`` flag 
+   * - **API to Hasura** (with ``docker-compose``)
+     - host name (*)
+     - host name (*)
+     - host name (*)
+
+`*` You can run ``docker.inspect`` to get the IP address (host name). 
+
+.. note::
+
+  Learn more about container networking in the `Docker documentation <https://docs.docker.com/network/>`__.
