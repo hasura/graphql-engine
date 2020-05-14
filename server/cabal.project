@@ -15,12 +15,14 @@
 packages: .
 
 constraints:
-  -- We build with cabal-install 2.4 in CI, so ensure we don’t end up with a
-  -- freeze file that forces an incompatible version for Setup.hs scripts.
-  setup.Cabal <2.6
+  -- ensure we don’t end up with a freeze file that forces an incompatible 
+  -- version in CI for Setup.hs scripts.
+  setup.Cabal <3.4
 
 package *
   optimization: 2
+  -- For tooling, e.g. 'weeder', and IDE-like stuff:
+  ghc-options: -fwrite-ide-info
 
   haddock-html: true
   haddock-hoogle: true
