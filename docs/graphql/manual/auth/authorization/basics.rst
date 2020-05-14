@@ -18,7 +18,7 @@ Introduction
 
 To understand the basics of access control in Hasura, let's take a look at this analogy to a SQL query: 
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/permissions-rule-analogy.png
+.. thumbnail:: /img/graphql/manual/auth/permissions-rule-analogy.png
   :width: 70%
   :alt: Understanding access control in Hasura
 
@@ -80,7 +80,7 @@ Head to the ``GraphiQL`` tab in your console and try out the below query:
 You'll see that this results in a response that contains all the authors because by default the GraphQL
 query is accepted with **admin** permissions.
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/fetch-authors.png
+.. thumbnail:: /img/graphql/manual/auth/fetch-authors.png
    :alt: Run a query without access control
 
 Define access control rules
@@ -90,7 +90,7 @@ Now let's define an access control rule for the ``author`` table for a role ``us
 **Permissions** section of the table (``Data`` --> <table> --> ``Permissions`` tab) and define permissions
 as shown below:
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/permission-basics-simple-example.png
+.. thumbnail:: /img/graphql/manual/auth/permission-basics-simple-example.png
    :alt: Define access control rules
 
 This permission rule reads as: "*For the role* ``user`` *, table* ``author`` *and operation* ``select``/``query``,
@@ -103,7 +103,7 @@ Let's run the same query as above but now with the ``X-Hasura-Role`` and ``X-Has
 variables also included to indicate role and user information. These session variables are passed in
 the ``Request Headers`` section of ``GraphiQL`` as highlighted below:
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/permission-basics-query-with-access-control.png
+.. thumbnail:: /img/graphql/manual/auth/permission-basics-query-with-access-control.png
    :alt: Run a query with access control
 
 As you can see, the results are now filtered based on the access control rule for the role ``user``

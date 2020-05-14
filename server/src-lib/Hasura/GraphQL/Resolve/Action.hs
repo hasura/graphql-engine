@@ -45,7 +45,7 @@ import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
-import           Hasura.RQL.DDL.Headers            (HeaderConf, makeHeadersFromConf, toHeadersConf)
+import           Hasura.RQL.DDL.Headers            (makeHeadersFromConf, toHeadersConf)
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
@@ -171,7 +171,7 @@ resolveActionMutationSync field executionContext sessionVariables = do
     (_fType field) $ _fSelSet field
   astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
   let jsonAggType = mkJsonAggSelect outputType
-  return $ (,respHeaders) $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
+  return $ (,respHeaders) $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
   where
     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext

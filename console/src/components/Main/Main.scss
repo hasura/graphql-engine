@@ -1233,6 +1233,10 @@
         display: flex;
         .featuresImg {
           padding-right: 14px;
+          img {
+            max-width: 24px;
+            min-width: 24px;
+          }
         }
         .featuresList {
           .featuresTitle {
@@ -1281,6 +1285,10 @@
     .proNameClicked {
       font-size: 12px;
     }
+  }
+
+  .helpSection {
+    font-size: 12px;
   }
 }
 

@@ -26,6 +26,7 @@ import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import { getPersistedPageSize } from './localStorageUtils';
+import { isEmpty } from '../../../Common/utils/jsUtils';
 import { Icon } from '../../../UIKit/atoms';
 import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 
@@ -212,7 +213,7 @@ class FilterQuery extends Component {
   componentDidMount() {
     const { dispatch, tableSchema, curQuery } = this.props;
     const limit = getPersistedPageSize();
-    if (!this.props.urlQuery) {
+    if (isEmpty(this.props.urlQuery)) {
       dispatch(setDefaultQuery({ ...curQuery, limit }));
       return;
     }

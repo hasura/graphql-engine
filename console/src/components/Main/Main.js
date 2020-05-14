@@ -220,7 +220,9 @@ class Main extends React.Component {
     const rate = require('./images/rate.svg');
     const regression = require('./images/regression.svg');
     const management = require('./images/management.svg');
-    const allow = require('./images/allow.svg');
+    const allow = require('./images/allow-listing.svg');
+    const read = require('./images/read-replica.svg');
+
     const arrowForwardRed = require('./images/arrow_forward-red.svg');
     const currentLocation = location.pathname;
     const currentActiveBlock = getPathRoot(currentLocation);
@@ -606,6 +608,18 @@ class Main extends React.Component {
                   <div className={styles.featuresDescription}>
                     Setup allow lists across dev, staging and production
                     environments with easy workflows.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={read} alt={'read'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>Read Replicas</div>
+                  <div className={styles.featuresDescription}>
+                    Native Read Replica support for enhanced performance and
+                    scalability
                   </div>
                 </div>
               </div>

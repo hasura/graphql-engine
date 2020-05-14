@@ -12,23 +12,29 @@ Rolling back applied migrations
   :depth: 1
   :local:
 
-If there are any issues with the migrations that are applied, you can
-roll back the database and Hasura metadata to a desired version using the
-``down`` migrations.
+Introduction
+------------
+
+If there are any issues with changes made to the DB schema and Hasura metadata it
+is possible to roll back their state to a previous stable version.
 
 .. note::
 
-   Rollbacks will only work if there are ``down`` migrations defined. The console
-   will not generate ``down`` migrations for SQL statements executed from the
-   ``SQL`` tab, even though you can add them as an ``up`` migration.
+  For ``config v1``, see :ref:`roll_back_migrations_v1`.
 
-Rollback also means applying down migrations. Here are some example scenarios:
+Rolling back database schema
+----------------------------
 
-To roll back all the applied migrations, execute:
+Database schema rollbacks can be achieved via the ``down`` migrations generated
+every time a schema change is made.
+
+Here are some example scenarios:
+
+To roll back a particular migration version:
 
 .. code-block:: bash
 
-   hasura migrate apply --down all
+   hasura migrate apply --version 1550925483858 --type down
 
 To roll back the last 2 migration versions:
 
@@ -36,9 +42,26 @@ To roll back the last 2 migration versions:
 
    hasura migrate apply --down 2
 
-To roll back a particular migration version:
+.. note::
+
+   Rollbacks will only work if there are ``down`` migrations defined for a
+   schema change.
+
+   e.g. The console will not generate ``down`` migrations for SQL statements
+   executed from the ``SQL`` tab.
+
+Rolling back Hasura metadata
+----------------------------
+
+As Hasura metadata is managed via snapshots of the metadata, to roll back
+Hasura metadata to a particular state you need the metadata snapshot at that
+point. This is typically achieved by marking stable checkpoints of a project in
+version control via commits.
 
 .. code-block:: bash
 
-   hasura migrate apply --version 1550925483858 --type down
+   git checkout <stable-feature-commit>
+
+   hasura metadata apply
+
 
