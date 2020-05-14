@@ -220,12 +220,12 @@
   <!-- Local storage -->
   <script type="text/javascript">
     $(document).ready( function() {
-      const bannerStripeConsent = window.localStorage.getItem("bannerStripeConsent")
+      const bannerStripeConsent = window.localStorage.getItem("hasuraCon2020BannerStripeConsent")
       if (bannerStripeConsent !== "yes") {
         $('#banner').removeClass("hideClass");
       }
       $('#banner-close').click(function(e){
-        window.localStorage.setItem('bannerStripeConsent', 'yes');
+        window.localStorage.setItem('hasuraCon2020BannerStripeConsent', 'yes');
         $('#banner').hide();
       });
     });
