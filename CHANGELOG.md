@@ -2,6 +2,19 @@
 
 ## Next release
 
+### Scheduled Triggers
+
+A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron based or timestamp based.
+
+A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to  generate an end-of-day sales report every weekday at 9pm.
+
+You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience. 
+
+<Add docs links>
+
+(close #1914)
+
+
 ### Allow access to session variables by computed fields (fix #3846)
 
 Sometimes it is useful for computed fields to have access to the Hasura session variables directly. For example, suppose you want to fetch some articles but also get related user info, say `likedByMe`. Now, you can define a function like:
@@ -36,7 +49,10 @@ Read more about the session argument for computed fields in the [docs](https://h
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
+- server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
 
+- server: avoid loss of precision when passing values in scientific notation (fix #4733)
+- server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
 - console: allow modifying default value for PK (fix #4075) (#4679)
