@@ -8,7 +8,10 @@ import { isObject, isString } from '../../Common/utils/jsUtils';
 
 const styles = require('./Notification/Notification.scss');
 
-const getNotificationDetails = (detailsJson: any, children = null) => {
+const getNotificationDetails = (
+  detailsJson: any,
+  children: React.ReactNode
+) => {
   return (
     <div className="notification-details">
       <AceEditor
@@ -183,7 +186,7 @@ const showWarningNotification = (
 ) => {
   const children: JSX.Element[] = [];
   if (dataObj) {
-    children.push(getNotificationDetails(dataObj));
+    children.push(getNotificationDetails(dataObj, null));
   }
 
   return (dispatch: any) => {
