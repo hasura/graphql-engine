@@ -58,18 +58,19 @@ retJT = pure . J.toJSON
 
 -- 4.5.2.1
 scalarR
-  :: (Monad m)
+  :: (MonadReusability m, MonadError QErr m)
   => ScalarTyInfo
   -> Field
   -> m J.Object
-scalarR (ScalarTyInfo descM name _ _) fld =
+scalarR (ScalarTyInfo descM name _ _) fld = do
+  dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
-  case _fName subFld of
-    "__typename"  -> retJT "__Type"
-    "kind"        -> retJ TKSCALAR
-    "description" -> retJ $ fmap G.unDescription descM
-    "name"        -> retJ name
-    _             -> return J.Null
+    case _fName subFld of
+      "__typename"  -> retJT "__Type"
+      "kind"        -> retJ TKSCALAR
+      "description" -> retJ $ fmap G.unDescription descM
+      "name"        -> retJ name
+      _             -> return J.Null
 
 -- 4.5.2.2
 objectTypeR
@@ -78,18 +79,19 @@ objectTypeR
   => ObjTyInfo
   -> Field
   -> m J.Object
-objectTypeR objectType fld =
+objectTypeR objectType fld = do
+  dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
-  case _fName subFld of
-    "__typename"  -> retJT "__Type"
-    "kind"        -> retJ TKOBJECT
-    "name"        -> retJ $ namedTyToTxt n
-    "description" -> retJ $ fmap G.unDescription descM
-    "interfaces"  -> fmap J.toJSON $ mapM (`ifaceR` subFld) $ Set.toList iFaces
-    "fields"      -> fmap J.toJSON $ mapM (`fieldR` subFld) $
-                     sortOn _fiName $
-                     filter notBuiltinFld $ Map.elems flds
-    _             -> return J.Null
+    case _fName subFld of
+      "__typename"  -> retJT "__Type"
+      "kind"        -> retJ TKOBJECT
+      "name"        -> retJ $ namedTyToTxt n
+      "description" -> retJ $ fmap G.unDescription descM
+      "interfaces"  -> fmap J.toJSON $ mapM (`ifaceR` subFld) $ Set.toList iFaces
+      "fields"      -> fmap J.toJSON $ mapM (`fieldR` subFld) $
+                       sortOn _fiName $
+                       filter notBuiltinFld $ Map.elems flds
+      _             -> return J.Null
   where
     descM = _otiDesc objectType
     n = _otiName objectType
@@ -112,16 +114,17 @@ getImplTypes aot = do
 unionR
   :: (MonadReader t m, MonadError QErr m, Has TypeMap t, MonadReusability m)
   => UnionTyInfo -> Field -> m J.Object
-unionR u@(UnionTyInfo descM n _) fld =
+unionR u@(UnionTyInfo descM n _) fld = do
+  dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
-  case _fName subFld of
-    "__typename"    -> retJT "__Field"
-    "kind"          -> retJ TKUNION
-    "name"          -> retJ $ namedTyToTxt n
-    "description"   -> retJ $ fmap G.unDescription descM
-    "possibleTypes" -> fmap J.toJSON $
-                       mapM (`objectTypeR` subFld) =<< getImplTypes (AOTUnion u)
-    _               -> return J.Null
+    case _fName subFld of
+      "__typename"    -> retJT "__Field"
+      "kind"          -> retJ TKUNION
+      "name"          -> retJ $ namedTyToTxt n
+      "description"   -> retJ $ fmap G.unDescription descM
+      "possibleTypes" -> fmap J.toJSON $
+                         mapM (`objectTypeR` subFld) =<< getImplTypes (AOTUnion u)
+      _               -> return J.Null
 
 -- 4.5.2.4
 ifaceR
@@ -142,19 +145,20 @@ ifaceR'
   => IFaceTyInfo
   -> Field
   -> m J.Object
-ifaceR' i@(IFaceTyInfo descM n flds) fld =
+ifaceR' i@(IFaceTyInfo descM n flds) fld = do
+  dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
-  case _fName subFld of
-    "__typename"    -> retJT "__Type"
-    "kind"          -> retJ TKINTERFACE
-    "name"          -> retJ $ namedTyToTxt n
-    "description"   -> retJ $ fmap G.unDescription descM
-    "fields"        -> fmap J.toJSON $ mapM (`fieldR` subFld) $
-                      sortOn _fiName $
-                      filter notBuiltinFld $ Map.elems flds
-    "possibleTypes" -> fmap J.toJSON $ mapM (`objectTypeR` subFld)
-                       =<< getImplTypes (AOTIFace i)
-    _               -> return J.Null
+    case _fName subFld of
+      "__typename"    -> retJT "__Type"
+      "kind"          -> retJ TKINTERFACE
+      "name"          -> retJ $ namedTyToTxt n
+      "description"   -> retJ $ fmap G.unDescription descM
+      "fields"        -> fmap J.toJSON $ mapM (`fieldR` subFld) $
+                        sortOn _fiName $
+                        filter notBuiltinFld $ Map.elems flds
+      "possibleTypes" -> fmap J.toJSON $ mapM (`objectTypeR` subFld)
+                         =<< getImplTypes (AOTIFace i)
+      _               -> return J.Null
 
 -- 4.5.2.5
 enumTypeR
@@ -162,21 +166,22 @@ enumTypeR
   => EnumTyInfo
   -> Field
   -> m J.Object
-enumTypeR (EnumTyInfo descM n vals _) fld =
+enumTypeR (EnumTyInfo descM n vals _) fld = do
+  dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
-  case _fName subFld of
-    "__typename"  -> retJT "__Type"
-    "kind"        -> retJ TKENUM
-    "name"        -> retJ $ namedTyToTxt n
-    "description" -> retJ $ fmap G.unDescription descM
-    "enumValues"  -> do
-      includeDeprecated <- readIncludeDeprecated subFld
-      fmap J.toJSON $
-        mapM (enumValueR subFld) $
-        filter (\val -> includeDeprecated || not (_eviIsDeprecated val)) $
-        sortOn _eviVal $
-        Map.elems (normalizeEnumValues vals)
-    _             -> return J.Null
+    case _fName subFld of
+      "__typename"  -> retJT "__Type"
+      "kind"        -> retJ TKENUM
+      "name"        -> retJ $ namedTyToTxt n
+      "description" -> retJ $ fmap G.unDescription descM
+      "enumValues"  -> do
+        includeDeprecated <- readIncludeDeprecated subFld
+        fmap J.toJSON $
+          mapM (enumValueR subFld) $
+          filter (\val -> includeDeprecated || not (_eviIsDeprecated val)) $
+          sortOn _eviVal $
+          Map.elems (normalizeEnumValues vals)
+      _             -> return J.Null
 
 readIncludeDeprecated
   :: ( Monad m, MonadReusability m, MonadError QErr m )
@@ -190,6 +195,21 @@ readIncludeDeprecated subFld = do
       S.PGValBoolean b -> pure b
       _ -> throw500 "unexpected non-Boolean argument for includeDeprecated"
 
+dummyReadIncludeDeprecated
+  :: ( Monad m, MonadReusability m, MonadError QErr m )
+  => Field
+  -> m ()
+dummyReadIncludeDeprecated fld =
+  -- Here we make sure to read the 'includeDeprecated' argument to the
+  -- 'fields' and 'enumValues' fields, to ensure that the query is
+  -- marked unreusable if necessary (fix #4547).
+  void $ forM (toList (_fSelSet fld)) $ \subFld ->
+    case _fName subFld of
+      "fields"     -> readIncludeDeprecated subFld
+      "enumValues" -> readIncludeDeprecated subFld
+      _            -> return False
+
+
 -- 4.5.2.6
 inputObjR
   :: ( MonadReader r m, Has TypeMap r
@@ -197,16 +217,17 @@ inputObjR
   => InpObjTyInfo
   -> Field
   -> m J.Object
-inputObjR (InpObjTyInfo descM nt flds _) fld =
+inputObjR (InpObjTyInfo descM nt flds _) fld = do
+  dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
-  case _fName subFld of
-    "__typename"  -> retJT "__Type"
-    "kind"        -> retJ TKINPUT_OBJECT
-    "name"        -> retJ $ namedTyToTxt nt
-    "description" -> retJ $ fmap G.unDescription descM
-    "inputFields" -> fmap J.toJSON $ mapM (inputValueR subFld) $
-                     sortOn _iviName $ Map.elems flds
-    _             -> return J.Null
+    case _fName subFld of
+      "__typename"  -> retJT "__Type"
+      "kind"        -> retJ TKINPUT_OBJECT
+      "name"        -> retJ $ namedTyToTxt nt
+      "description" -> retJ $ fmap G.unDescription descM
+      "inputFields" -> fmap J.toJSON $ mapM (inputValueR subFld) $
+                       sortOn _iviName $ Map.elems flds
+      _             -> return J.Null
 
 -- 4.5.2.7
 listTypeR
@@ -254,14 +275,6 @@ namedTypeR'
   -> TypeInfo
   -> m J.Object
 namedTypeR' fld tyInfo = do
-  -- Here we make sure to read the 'includeDeprecated' argument to the
-  -- 'fields' and 'enumValues' fields, to ensure that the query is
-  -- marked unreusable if necessary (fix #4547).
-  _ <- forM (toList (_fSelSet fld)) $ \subFld ->
-    case _fName subFld of
-      "fields"     -> readIncludeDeprecated subFld
-      "enumValues" -> readIncludeDeprecated subFld
-      _            -> return False
   -- Now fetch the required type information from the corresponding
   -- information generator
   case tyInfo of
