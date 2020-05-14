@@ -3,7 +3,7 @@ import { ValueFilter, Operator } from './types';
 import { allOperators } from './utils';
 
 import { BaseTable } from '../utils/pgUtils';
-import { isNull } from '../utils/jsUtils';
+import { isNotDefined } from '../utils/jsUtils';
 import styles from './FilterQuery.scss';
 
 type Props = {
@@ -90,7 +90,7 @@ const Where: React.FC<Props> = props => {
                 value={filter.operator || ''}
                 data-test={`filter-op-${i}`}
               >
-                {isNull(filter.operator) ? (
+                {isNotDefined(filter.operator) ? (
                   <option disabled value="">
                     -- op --
                   </option>

@@ -1,6 +1,4 @@
 // TODO: make functions from this file available without imports
-import { Nullable } from './tsUtils';
-
 /* TYPE utils */
 
 export const isNotDefined = (value: any) => {
@@ -28,10 +26,6 @@ export const isString = (value: any) => {
 
 export const isNumber = (value: any) => {
   return typeof value === 'number';
-};
-
-export const isNull = (value: Nullable<unknown>) => {
-  return value === undefined || value === null;
 };
 
 export const isPromise = (value: any) => {

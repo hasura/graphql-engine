@@ -2,11 +2,7 @@ import React from 'react';
 import { Link } from 'react-router';
 import styles from './ReusableTabs.scss';
 
-export type Tabs = {
-  [tabName: string]: {
-    display_text: string;
-  };
-};
+export type Tabs = Record<string, { display_text: string }>;
 
 type Props = {
   appPrefix: string;

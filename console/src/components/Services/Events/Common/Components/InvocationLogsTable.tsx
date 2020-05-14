@@ -17,9 +17,9 @@ import RedeliverEvent from './RedeliverEvent';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { Nullable } from '../../../../Common/utils/tsUtils';
 
-type Props = FilterTableProps & {
+interface Props extends FilterTableProps {
   dispatch: Dispatch;
-};
+}
 
 const InvocationLogsTable: React.FC<Props> = props => {
   const {

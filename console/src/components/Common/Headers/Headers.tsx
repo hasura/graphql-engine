@@ -50,19 +50,17 @@ const Headers: React.FC<HeadersListProps> = ({ headers, setHeaders }) => {
           setHeaders([...newHeaders.slice(0, i), ...newHeaders.slice(i + 1)]);
         };
 
-        const getHeaderNameInput = () => {
-          return (
+        return (
+          <div
+            className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
+            key={i.toString()}
+          >
             <input
               value={name}
               onChange={setHeaderKey}
               placeholder="key"
               className={`form-control ${styles.add_mar_right} ${styles.headerInputWidth}`}
             />
-          );
-        };
-
-        const getHeaderValueInput = () => {
-          return (
             <div className={styles.headerInputWidth}>
               <DropdownButton
                 dropdownOptions={[
@@ -81,27 +79,12 @@ const Headers: React.FC<HeadersListProps> = ({ headers, setHeaders }) => {
                 testId={`header-value-${i}`}
               />
             </div>
-          );
-        };
-
-        const getRemoveButton = () => {
-          if (i === headers.length - 1) return null;
-          return (
-            <i
-              className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
-              onClick={removeHeader}
-            />
-          );
-        };
-
-        return (
-          <div
-            className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
-            key={i.toString()}
-          >
-            {getHeaderNameInput()}
-            {getHeaderValueInput()}
-            {getRemoveButton()}
+            {i < headers.length - 1 ? (
+              <i
+                className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+                onClick={removeHeader}
+              />
+            ) : null}
           </div>
         );
       })}

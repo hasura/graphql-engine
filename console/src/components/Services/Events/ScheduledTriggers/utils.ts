@@ -21,7 +21,7 @@ export const validateAddState = (state: LocalScheduledTriggerState) => {
   }
 
   try {
-    const maybeObj: any = JSON.parse(state.payload);
+    const maybeObj = JSON.parse(state.payload);
     if (!isObject(maybeObj)) {
       throw new Error();
     }
