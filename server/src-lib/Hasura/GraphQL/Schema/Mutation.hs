@@ -211,12 +211,12 @@ updateTable table fieldName description updatePerms selectPerms stringifyNum = r
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be updated"
   opArgs    <- MaybeT $ updateOperators table updatePerms
-  -- columns   <- lift $ tableSelectColumns table selectPerms
+  columns   <- lift $ tableColumns table
   whereArg  <- lift $ P.field whereName (Just whereDesc) <$> boolExp table selectPerms
   selection <- lift $ mutationSelectionSet table selectPerms stringifyNum
   let argsParser = liftA2 (,) opArgs whereArg
   pure $ P.selection fieldName description argsParser selection
-    `mapField` (mkUpdateObject table [] updatePerms . third RQL.MOutMultirowFields)
+    `mapField` (mkUpdateObject table columns updatePerms . third RQL.MOutMultirowFields)
 
 updateTableByPk
   :: forall m n. (MonadSchema n m, MonadError QErr m)
@@ -253,10 +253,6 @@ mkUpdateObject table columns updatePerms (_, (opExps, whereExp), mutationOutput)
              , RQL.uqp1Where   = (permissionFilter, whereExp)
              , RQL.uqp1Check   = checkExp
              , RQL.uqp1Output  = mutationOutput
-             -- TODO: is this correct?
-             -- I'm only passing the columns that the user has SELECT access to
-             -- while the code suggests that this should be *ALL* columns.
-             -- Is it ok for that list to be empty?
              , RQL.uqp1AllCols = columns
              }
   where
@@ -371,9 +367,9 @@ deleteFromTable table fieldName description deletePerms selectPerms stringifyNum
       whereDesc = "filter the rows which have to be deleted"
   whereArg  <- P.field whereName (Just whereDesc) <$> boolExp table selectPerms
   selection <- mutationSelectionSet table selectPerms stringifyNum
-  -- columns   <- tableSelectColumns table selectPerms
+  columns   <- tableColumns table
   pure $ P.selection fieldName description whereArg selection
-    `mapField` (mkDeleteObject table [] deletePerms . third RQL.MOutMultirowFields)
+    `mapField` (mkDeleteObject table columns deletePerms . third RQL.MOutMultirowFields)
 
 deleteFromTableByPk
   :: forall m n. (MonadSchema n m, MonadError QErr m)
@@ -401,10 +397,6 @@ mkDeleteObject table columns deletePerms (_, whereExp, mutationOutput) =
   RQL.AnnDel { RQL.dqp1Table   = table
              , RQL.dqp1Where   = (permissionFilter, whereExp)
              , RQL.dqp1Output  = mutationOutput
-             -- TODO: is this correct?
-             -- I'm only passing the columns that the user has SELECT access to
-             -- while the code suggests that this should be *ALL* columns.
-             -- Is it ok for that list to be empty?
              , RQL.dqp1AllCols = columns
              }
   where

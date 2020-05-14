@@ -6,6 +6,7 @@ module Hasura.GraphQL.Schema.Table
   , tableUpdatePermissions
   , tableDeletePermissions
   , tableSelectFields
+  , tableColumns
   , tableSelectColumns
   , tableUpdateColumns
   ) where
@@ -134,6 +135,16 @@ tableSelectFields table permissions = do
           pure $ Set.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
         CFRSetofTable tableName ->
           isJust <$> tableSelectPermissions tableName
+
+tableColumns
+  :: forall m n. (MonadSchema n m)
+  => QualifiedTable
+  -> m [PGColumnInfo]
+tableColumns table =
+  mapMaybe columnInfo . Map.elems . _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
+  where
+    columnInfo (FIColumn ci) = Just ci
+    columnInfo _             = Nothing
 
 tableSelectColumns
   :: forall m n. (MonadSchema n m)
