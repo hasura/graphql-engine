@@ -98,7 +98,9 @@ validateVariables varDefsL inpVals = withPathK "variableValues" $ do
       annInpValM <- withPathK (G.unName $ G.unVariable var) $
                     mapM (validateInputValue jsonParser ty) inpValM
       let varValM = case annInpValM of
-            Nothing -> annDefM
+            Nothing -> case annDefM of
+              Nothing -> Nothing
+              Just dv -> Just $ dv { _aivDefault = Just $ _aivValue dv }
             Just iv -> case annDefM of
               Nothing -> Just iv
               Just dv -> Just $ iv { _aivDefault = Just $ _aivValue dv }

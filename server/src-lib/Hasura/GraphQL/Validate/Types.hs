@@ -840,7 +840,7 @@ instance (MonadReusability m) => MonadReusability (ReaderT r m) where
   recordVariableUse a b c = lift $ recordVariableUse a b c
   markNotReusable = lift markNotReusable
 instance (MonadReusability m) => MonadReusability (StateT s m) where
-  recordVariableUse a b = lift $ recordVariableUse a b
+  recordVariableUse a b c = lift $ recordVariableUse a b c
   markNotReusable = lift markNotReusable
 
 newtype ReusabilityT m a = ReusabilityT { unReusabilityT :: StateT QueryReusability m a }
