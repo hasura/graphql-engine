@@ -4,7 +4,7 @@ import { StyledRadioButton } from './RadioButton';
 
 export type RadioButtonProps = {
   name: string;
-}
+};
 
 export const RadioButton: React.FC<RadioButtonProps> = props => {
   const { children, name } = props;

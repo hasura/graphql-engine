@@ -12,7 +12,6 @@ module Hasura.Server.Telemetry
 
 import           Control.Exception                (try)
 import           Control.Lens
-import           Data.List
 import           Data.Text.Conversions            (UTF8 (..), decodeText)
 
 import           Hasura.HTTP
@@ -31,6 +30,7 @@ import qualified Data.Aeson.Casing                as A
 import qualified Data.Aeson.TH                    as A
 import qualified Data.ByteString.Lazy             as BL
 import qualified Data.HashMap.Strict              as Map
+import qualified Data.List                        as L
 import qualified Data.Text                        as T
 import qualified Language.GraphQL.Draft.Syntax    as G
 import qualified Network.HTTP.Client              as HTTP
@@ -152,10 +152,10 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
       _mtViews = countUserTables (isJust . _tciViewInfo . _tiCoreInfo)
       _mtEnumTables = countUserTables (isJust . _tciEnumValues . _tiCoreInfo)
       allRels = join $ Map.elems $ Map.map (getRels . _tciFieldInfoMap . _tiCoreInfo) userTables
-      (manualRels, autoRels) = partition riIsManual allRels
+      (manualRels, autoRels) = L.partition riIsManual allRels
       _mtRelationships = RelationshipMetric (length manualRels) (length autoRels)
       rolePerms = join $ Map.elems $ Map.map permsOfTbl userTables
-      _pmRoles = length $ nub $ fst <$> rolePerms
+      _pmRoles = length $ L.nub $ fst <$> rolePerms
       allPerms = snd <$> rolePerms
       _pmInsert = calcPerms _permIns allPerms
       _pmSelect = calcPerms _permSel allPerms
@@ -189,11 +189,11 @@ computeActionsMetrics ac ao =
         asyncActionsLen  = length . filter ((==(ActionMutation ActionAsynchronous)) . _adType . _aiDefinition) $ actions
         queryActionsLen = length . filter ((==ActionQuery) . _adType . _aiDefinition) $ actions
 
-        outputTypesLen = length . nub . (map (_adOutputType . _aiDefinition)) $ actions
-        inputTypesLen = length . nub . concat . (map ((map _argType) . _adArguments . _aiDefinition)) $ actions
+        outputTypesLen = length . L.nub . (map (_adOutputType . _aiDefinition)) $ actions
+        inputTypesLen = length . L.nub . concat . (map ((map _argType) . _adArguments . _aiDefinition)) $ actions
         customTypesLen = inputTypesLen + outputTypesLen
 
-        typeRelationships = length . nub . concat . map ((getActionTypeRelationshipNames ao) . _aiDefinition) $ actions
+        typeRelationships = length . L.nub . concat . map ((getActionTypeRelationshipNames ao) . _aiDefinition) $ actions
 
         -- gives the count of relationships associated with an action
         getActionTypeRelationshipNames :: AnnotatedObjects -> ResolvedActionDefinition -> [RelationshipName]

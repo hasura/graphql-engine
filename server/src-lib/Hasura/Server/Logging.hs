@@ -23,7 +23,6 @@ import           Data.Aeson.TH
 import           Data.Bits                 (shift, (.&.))
 import           Data.ByteString.Char8     (ByteString)
 import           Data.Int                  (Int64)
-import           Data.List                 (find)
 import           Data.Word                 (Word32)
 import           Network.Socket            (SockAddr (..))
 import           System.ByteOrder          (ByteOrder (..), byteOrder)
