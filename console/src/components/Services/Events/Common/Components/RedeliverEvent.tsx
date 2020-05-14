@@ -38,15 +38,11 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
           }
         )
       );
-    }, 5000);
+    }, 2000);
     return () => {
       clearInterval(intervalId);
     };
   }, []);
-
-  if (loading) {
-    return <Spinner />;
-  }
 
   const gridHeadings = ['status', 'id', 'created_at'].map(column => {
     return {
@@ -56,6 +52,10 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
   });
 
   const latestLog = logs[0];
+
+  if (!logs.length && loading) {
+    return <Spinner />;
+  }
 
   return (
     <div className="content-fluid">

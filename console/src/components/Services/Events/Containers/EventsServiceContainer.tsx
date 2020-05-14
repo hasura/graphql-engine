@@ -6,7 +6,11 @@ import PageContainer from '../../../Common/Layout/PageContainer/PageContainer';
 import LeftSidebar from '../Sidebar/Sidebar';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { Triggers } from '../types';
-import { ADHOC_EVENTS_HEADING } from '../constants';
+import {
+  ADHOC_EVENTS_HEADING,
+  DATA_EVENTS_HEADING,
+  CRON_EVENTS_HEADING,
+} from '../constants';
 import {
   getScheduledEventsLandingRoute,
   getDataEventsLandingRoute,
@@ -59,7 +63,7 @@ const Container: React.FC<TriggersContainerProps> = props => {
         className={isDataEventsRoute(currentLocation) ? styles.active : ''}
       >
         <Link className={styles.linkBorder} to={getDataEventsLandingRoute()}>
-          Event Triggers
+          {DATA_EVENTS_HEADING}
         </Link>
         {isDataEventsRoute(currentLocation) ? (
           <LeftSidebar
@@ -77,7 +81,7 @@ const Container: React.FC<TriggersContainerProps> = props => {
           className={styles.linkBorder}
           to={getScheduledEventsLandingRoute()}
         >
-          Scheduled Triggers
+          {CRON_EVENTS_HEADING}
         </Link>
         {isScheduledEventsRoute(currentLocation) ? (
           <LeftSidebar

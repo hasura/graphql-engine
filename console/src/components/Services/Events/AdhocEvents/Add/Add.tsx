@@ -9,6 +9,7 @@ import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import Headers from '../../../../Common/Headers/Headers';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
+import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 import { createScheduledEvent } from '../../ServerIO';
 
 type Props = {
@@ -174,6 +175,18 @@ const Add: React.FC<Props> = ({ dispatch }) => {
     );
   };
 
+  const getAdvancedSection = () => {
+    return (
+      <CollapsibleToggle
+        title={<h2 className={styles.subheading_text}>Advanced</h2>}
+      >
+        {getHeadersInput()}
+        {getRetryConfInput()}
+        {getCommentInput()}
+      </CollapsibleToggle>
+    );
+  };
+
   const save = () => {
     setState.loading(true);
     const succesCallback = () => setState.bulk();
@@ -186,9 +199,7 @@ const Add: React.FC<Props> = ({ dispatch }) => {
       {getWebhookInput()}
       {getTimeInput()}
       {getPayloadInput()}
-      {getHeadersInput()}
-      {getRetryConfInput()}
-      {getCommentInput()}
+      {getAdvancedSection()}
       <Button size="s" color="yellow" onClick={save} disabled={loading}>
         {loading ? 'Creating...' : 'Create scheduled event'}
       </Button>
