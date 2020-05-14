@@ -3,9 +3,10 @@ import { push } from 'react-router-redux';
 import Button from '../../../Common/Button/Button';
 import styles from '../Events.scss';
 import { getAddSTRoute } from '../../../Common/utils/routesUtils';
+import { Dispatch } from '../../../../types';
 
 type Props = {
-  dispatch: any;
+  dispatch: Dispatch;
 };
 
 const Landing: React.FC<Props> = props => {

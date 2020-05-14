@@ -24,7 +24,7 @@ const getLeftSidebarSection = ({
   const [searchText, setSearchText] = React.useState('');
 
   const getSearchInput = () => {
-    const handleSearch = (e: React.BaseSyntheticEvent) =>
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) =>
       setSearchText(e.target.value);
     return (
       <input

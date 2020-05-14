@@ -7,7 +7,7 @@ import {
   ETOperationColumn,
   EventTrigger,
   RetryConf,
-} from '../Types';
+} from '../types';
 import { Header, defaultHeader } from '../../../Common/Headers/Headers';
 import {
   parseServerWebhook,
@@ -136,7 +136,7 @@ export const useEventTrigger = (initState?: LocalEventTriggerState) => {
           retryConf: r,
         }));
       },
-      headers: (headers: Array<Header>) => {
+      headers: (headers: Header[]) => {
         setState(s => ({
           ...s,
           headers,

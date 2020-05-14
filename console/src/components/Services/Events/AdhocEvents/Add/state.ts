@@ -1,6 +1,6 @@
 import React from 'react';
 import { Header, defaultHeader } from '../../../../Common/Headers/Headers';
-import { RetryConf } from '../../Types';
+import { RetryConf } from '../../types';
 import { Nullable } from '../../../../Common/utils/tsUtils';
 
 export type LocalAdhocEventState = {
@@ -8,7 +8,7 @@ export type LocalAdhocEventState = {
   webhook: string;
   time: Date;
   payload: string;
-  headers: Array<Header>;
+  headers: Header[];
   retryConf: RetryConf;
   comment: Nullable<string>;
   loading: boolean;
@@ -37,7 +37,7 @@ export const useAdhocEventAdd = () => {
       webhook: (webhook: string) => setState(s => ({ ...s, webhook })),
       time: (time: Date) => setState(s => ({ ...s, time })),
       payload: (payload: string) => setState(s => ({ ...s, payload })),
-      headers: (headers: Array<Header>) => setState(s => ({ ...s, headers })),
+      headers: (headers: Header[]) => setState(s => ({ ...s, headers })),
       retryConf: (retryConf: RetryConf) => setState(s => ({ ...s, retryConf })),
       comment: (comment: string) => setState(s => ({ ...s, comment })),
       loading: (isLoading: boolean) =>

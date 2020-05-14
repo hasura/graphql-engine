@@ -1,15 +1,16 @@
 import React from 'react';
 import Button from '../../../../Common/Button/Button';
 import { useScheduledTrigger } from '../state';
-import { ScheduledTrigger } from '../../Types';
+import { ScheduledTrigger } from '../../types';
 import { getConfirmation } from '../../../../Common/utils/jsUtils';
+import { Dispatch } from '../../../../../types';
 import { parseServerScheduledTrigger } from '../utils';
 import styles from '../../Events.scss';
 import ScheduledTriggerForm from '../../Common/Components/ScheduledTriggerForm';
 import { saveScheduledTrigger, deleteScheduledTrigger } from '../../ServerIO';
 
 type Props = {
-  dispatch: any;
+  dispatch: Dispatch;
   currentTrigger?: ScheduledTrigger;
 };
 

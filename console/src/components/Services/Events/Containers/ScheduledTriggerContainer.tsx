@@ -12,14 +12,15 @@ import { findScheduledTrigger } from '../ScheduledTriggers/utils';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix, EVENTS_SERVICE_HEADING } from '../constants';
 import { setCurrentTrigger } from '../reducer';
-import { Triggers } from '../Types';
+import { Triggers } from '../types';
+import { Dispatch } from '../../../../types';
 import styles from '../Events.scss';
 
 interface ScheduledTriggerProps extends React.ComponentProps<'div'> {
   triggerName: string;
   allTriggers: Triggers;
   tabName: STTab;
-  dispatch: any;
+  dispatch: Dispatch;
 }
 
 const STContainer = ({

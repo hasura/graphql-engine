@@ -3,14 +3,15 @@ import FilterQuery from '../../../../Common/FilterQuery/FilterQuery';
 import {
   FilterRenderProp,
   makeValueFilter,
-} from '../../../../Common/FilterQuery/Types';
+} from '../../../../Common/FilterQuery/types';
 import { stEventsTable } from '../utils';
-import { ScheduledTrigger } from '../../Types';
+import { ScheduledTrigger } from '../../types';
 import EventsTable from '../../Common/Components/EventsTable';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
+import { Dispatch } from '../../../../../types';
 
 type Props = {
-  dispatch: any;
+  dispatch: Dispatch;
   currentTrigger?: ScheduledTrigger;
 };
 

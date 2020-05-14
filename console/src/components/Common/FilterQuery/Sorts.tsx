@@ -4,13 +4,13 @@ import { OrderBy } from '../utils/v1QueryUtils';
 import { BaseTable } from '../utils/pgUtils';
 import styles from './FilterQuery.scss';
 
-type SortsProps = {
+type Props = {
   sorts: OrderBy[];
   setSorts: (o: OrderBy[]) => void;
   table: BaseTable;
 };
 
-const Sorts = (props: SortsProps) => {
+const Sorts: React.FC<Props> = props => {
   const { sorts, setSorts, table } = props;
 
   return (
@@ -20,7 +20,7 @@ const Sorts = (props: SortsProps) => {
           setSorts([...sorts.slice(0, i), ...sorts.slice(i + 1)]);
         };
 
-        const setColumn = (e: React.BaseSyntheticEvent) => {
+        const setColumn = (e: React.ChangeEvent<HTMLSelectElement>) => {
           const col = e.target.value;
           setSorts([
             ...sorts.slice(0, i),

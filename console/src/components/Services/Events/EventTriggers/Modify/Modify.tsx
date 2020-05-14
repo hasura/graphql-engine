@@ -11,8 +11,8 @@ import WebhookEditor from './WebhookEditor';
 import OperationEditor from './OperationEditor';
 import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
-import { ReduxState } from '../../../../../Types';
-import { EventTrigger } from '../../Types';
+import { ReduxState, Dispatch } from '../../../../../types';
+import { EventTrigger } from '../../types';
 import { findETTable } from '../../utils';
 import { EventTriggerProperty } from './utils';
 
@@ -24,7 +24,7 @@ type Props = {
   currentTrigger: EventTrigger;
   allSchemas: Table[];
   readOnlyMode: boolean;
-  dispatch: any;
+  dispatch: Dispatch;
 };
 
 const Modify: React.FC<Props> = props => {

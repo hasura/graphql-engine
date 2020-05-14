@@ -1,18 +1,18 @@
 import React from 'react';
-import { ValueFilter, Operator } from './Types';
+import { ValueFilter, Operator } from './types';
 import { allOperators } from './utils';
 
 import { BaseTable } from '../utils/pgUtils';
 import { isNull } from '../utils/jsUtils';
 import styles from './FilterQuery.scss';
 
-type WhereProps = {
+type Props = {
   filters: ValueFilter[];
   setFilters: (f: ValueFilter[]) => void;
   table: BaseTable;
 };
 
-const Where = (props: WhereProps) => {
+const Where: React.FC<Props> = props => {
   const { filters, setFilters, table } = props;
 
   return (
@@ -22,7 +22,7 @@ const Where = (props: WhereProps) => {
           setFilters([...filters.slice(0, i), ...filters.slice(i + 1)]);
         };
 
-        const setKey = (e: React.BaseSyntheticEvent) => {
+        const setKey = (e: React.ChangeEvent<HTMLSelectElement>) => {
           const col = e.target.value;
           setFilters([
             ...filters.slice(0, i),
@@ -32,6 +32,7 @@ const Where = (props: WhereProps) => {
         };
 
         const setOperator = (e: React.BaseSyntheticEvent) => {
+          // TODO synthetic event with enums
           const op: Operator = e.target.value;
           setFilters([
             ...filters.slice(0, i),
@@ -40,7 +41,7 @@ const Where = (props: WhereProps) => {
           ]);
         };
 
-        const setValue = (e: React.BaseSyntheticEvent) => {
+        const setValue = (e: React.ChangeEvent<HTMLInputElement>) => {
           const value = e.target.value;
           setFilters([
             ...filters.slice(0, i),

@@ -14,7 +14,7 @@ import {
   makeOrderBy,
 } from '../../Common/utils/v1QueryUtils';
 import globals from '../../../Globals';
-import { GetReduxState } from '../../../Types';
+import { GetReduxState, Dispatch, Thunk } from '../../../types';
 import { makeMigrationCall } from '../Data/DataActions';
 import requestAction from '../../../utils/requestAction';
 import {
@@ -34,7 +34,7 @@ import {
   EventTrigger,
   EventKind,
   InvocationLog,
-} from './Types';
+} from './types';
 import { setScheduledTriggers, setEventTriggers, setTriggers } from './reducer';
 import { LocalScheduledTriggerState } from './ScheduledTriggers/state';
 import { LocalAdhocEventState } from './AdhocEvents/Add/state';
@@ -57,9 +57,9 @@ import { EventTriggerProperty } from './EventTriggers/Modify/utils';
 import { getLogsTableDef } from './utils';
 
 export const fetchTriggers = (kind: Nullable<TriggerKind>) => (
-  dispatch: any,
+  dispatch: Dispatch,
   getState: GetReduxState
-) => {
+): Thunk => {
   const bulkQueryArgs = [];
   if (kind) {
     bulkQueryArgs.push(
@@ -79,7 +79,7 @@ export const fetchTriggers = (kind: Nullable<TriggerKind>) => (
       body: JSON.stringify(getBulkQuery(bulkQueryArgs)),
     })
   ).then(
-    (data: Array<ScheduledTrigger[] | EventTrigger[]>) => {
+    (data: (ScheduledTrigger[] | EventTrigger[])[]) => {
       if (kind) {
         if (kind === 'scheduled') {
           dispatch(setScheduledTriggers(data[0] as ScheduledTrigger[]));
@@ -107,7 +107,7 @@ export const addScheduledTrigger = (
   state: LocalScheduledTriggerState,
   successCb?: () => void,
   errorCb?: () => void
-) => (dispatch: any, getState: GetReduxState) => {
+): Thunk => (dispatch: Dispatch, getState: GetReduxState) => {
   const validationError = validateAddState(state);
 
   const errorMsg = 'Creating scheduled trigger failed';
@@ -170,7 +170,7 @@ export const saveScheduledTrigger = (
   existingTrigger: ScheduledTrigger,
   successCb?: () => void,
   errorCb?: () => void
-) => (dispatch: any, getState: GetReduxState) => {
+): Thunk => (dispatch: Dispatch, getState: GetReduxState) => {
   const validationError = validateAddState(state);
 
   const errorMsg = 'Updating scheduled trigger failed';
@@ -248,7 +248,7 @@ export const deleteScheduledTrigger = (
   trigger: ScheduledTrigger,
   successCb?: () => void,
   errorCb?: () => void
-) => (dispatch: any, getState: GetReduxState) => {
+): Thunk => (dispatch: Dispatch, getState: GetReduxState) => {
   const upQuery = getDropScheduledTriggerQuery(trigger.name);
   const downQuery = generateCreateScheduledTriggerQuery(
     parseServerScheduledTrigger(trigger)
@@ -299,8 +299,8 @@ export const createEventTrigger = (
   state: LocalEventTriggerState,
   successCb?: () => null,
   errorCb?: () => null
-) => {
-  return (dispatch: any, getState: GetReduxState) => {
+): Thunk => {
+  return (dispatch: Dispatch, getState: GetReduxState) => {
     const validationError = validateETState(state);
     if (validationError) {
       dispatch(
@@ -354,7 +354,7 @@ export const modifyEventTrigger = (
   table?: Table,
   successCb?: () => void,
   errorCb?: () => void
-) => (dispatch: any, getState: GetReduxState) => {
+): Thunk => (dispatch: Dispatch, getState: GetReduxState) => {
   const downQuery = generateCreateEventTriggerQuery(
     parseServerETDefinition(trigger, table),
     true
@@ -446,7 +446,7 @@ export const deleteEventTrigger = (
   trigger: EventTrigger,
   successCb?: () => void,
   errorCb?: () => void
-) => (dispatch: any, getState: GetReduxState) => {
+): Thunk => (dispatch: Dispatch, getState: GetReduxState) => {
   const isOk = getConfirmation(
     `This will permanently delete the event trigger and the associated metadata`,
     true,
@@ -500,7 +500,7 @@ export const createScheduledEvent = (
   state: LocalAdhocEventState,
   successCb?: () => void,
   errorCb?: () => void
-) => (dispatch: any) => {
+): Thunk => (dispatch: Dispatch) => {
   const validationError = validateAdhocEventState(state);
   const errorMessage = 'Failed scheduling the event';
   if (validationError) {
@@ -541,7 +541,7 @@ export const redeliverDataEvent = (
   eventId: string,
   successCb?: CallableFunction,
   errorCb?: CallableFunction
-) => (dispatch: any, getState: GetReduxState) => {
+): Thunk => (dispatch: Dispatch, getState: GetReduxState) => {
   const url = Endpoints.getSchema;
   const options = {
     method: 'POST',
@@ -576,7 +576,7 @@ export const getEventLogs = (
   eventKind: EventKind,
   successCallback: (logs: InvocationLog[]) => void,
   errorCallback: (error: any) => void
-) => (dispatch: any) => {
+): Thunk => (dispatch: Dispatch) => {
   const logTableDef = getLogsTableDef(eventKind);
 
   const query = getSelectQuery(

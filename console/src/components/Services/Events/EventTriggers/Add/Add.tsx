@@ -1,7 +1,11 @@
 import React from 'react';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Helmet from 'react-helmet';
-import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
+import {
+  MapReduxToProps,
+  ComponentReduxConnector,
+  Dispatch,
+} from '../../../../../types';
 import {
   Schema,
   Table,
@@ -25,7 +29,7 @@ import { EVENTS_SERVICE_HEADING } from '../../constants';
 type AddProps = {
   allSchemas: Table[];
   schemaList: Schema[];
-  dispatch: any;
+  dispatch: Dispatch;
 };
 
 const Add = (props: AddProps) => {
@@ -63,22 +67,22 @@ const Add = (props: AddProps) => {
 
   const createBtnText = 'Create Event Trigger';
 
-  const submit = (e: React.BaseSyntheticEvent) => {
+  const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     dispatch(createEventTrigger(state));
   };
 
-  const handleTriggerNameChange = (e: React.BaseSyntheticEvent) => {
+  const handleTriggerNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const triggerName = e.target.value;
     setState.name(triggerName);
   };
 
-  const handleSchemaChange = (e: React.BaseSyntheticEvent) => {
+  const handleSchemaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedSchemaName = e.target.value;
     setState.table(undefined, selectedSchemaName);
   };
 
-  const handleTableChange = (e: React.BaseSyntheticEvent) => {
+  const handleTableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedTableName = e.target.value;
     setState.table(selectedTableName);
   };
@@ -91,7 +95,7 @@ const Add = (props: AddProps) => {
     });
   };
 
-  const handleWebhookValueChange = (e: React.BaseSyntheticEvent) => {
+  const handleWebhookValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setState.webhook({
       type: webhook.type,
@@ -105,12 +109,11 @@ const Add = (props: AddProps) => {
     }
 
     return operationColumns.map(opCol => {
-      const handleToggleColumn = (e: React.BaseSyntheticEvent) => {
-        const columnEnabled = e.target.checked;
+      const handleToggleColumn = () => {
         const newCols = operationColumns.map(o => {
           return {
             ...o,
-            enabled: o.name === opCol.name ? columnEnabled : o.enabled,
+            enabled: o.name === opCol.name ? !o.enabled : o.enabled,
           };
         });
         setState.operationColumns(newCols);

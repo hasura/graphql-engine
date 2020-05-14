@@ -1,33 +1,29 @@
 import React from 'react';
 import STContainer from '../../Containers/ScheduledTriggerContainer';
-import { Triggers } from '../../Types';
-import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
-import Modify from './Modify';
+import { Triggers } from '../../types';
+import { MapReduxToProps, ComponentReduxConnector, Dispatch } from '../../../../../types';
+import PendingEvents from './PendingEvents';
 
 type Props = {
   allTriggers: Triggers;
   params?: {
     triggerName: string;
   };
-  dispatch: any;
+  dispatch: Dispatch;
   readOnlyMode: boolean;
 };
 
-const ModifyContainer: React.FC<Props> = props => {
-  const { dispatch, allTriggers, params, readOnlyMode } = props;
+const PendingEventsContainer: React.FC<Props> = props => {
+  const { dispatch, allTriggers, params } = props;
   const triggerName = params ? params.triggerName : '';
   return (
     <STContainer
-      tabName="modify"
+      tabName="pending"
       dispatch={dispatch}
       triggerName={triggerName}
       allTriggers={allTriggers}
     >
-      {readOnlyMode ? (
-        'Cannot modify in read-only mode'
-      ) : (
-        <Modify dispatch={dispatch} />
-      )}
+      <PendingEvents dispatch={dispatch} />
     </STContainer>
   );
 };
@@ -39,7 +35,7 @@ const mapStateToProps: MapReduxToProps = state => {
   };
 };
 
-const connector: ComponentReduxConnector = (connect: any) =>
-  connect(mapStateToProps)(ModifyContainer);
+const connector: ComponentReduxConnector = connect =>
+  connect(mapStateToProps)(PendingEventsContainer);
 
 export default connector;

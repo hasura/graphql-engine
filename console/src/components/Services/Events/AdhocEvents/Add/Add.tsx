@@ -4,15 +4,15 @@ import { Moment } from 'moment';
 import { useAdhocEventAdd } from './state';
 import styles from '../../Events.scss';
 import Button from '../../../../Common/Button/Button';
+import { Dispatch } from '../../../../../types';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import Headers from '../../../../Common/Headers/Headers';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';
-import { getEventTargetValue } from '../../../../Common/utils/jsUtils';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import { createScheduledEvent } from '../../ServerIO';
 
 type Props = {
-  dispatch: any;
+  dispatch: Dispatch;
 };
 
 const Add: React.FC<Props> = ({ dispatch }) => {
@@ -27,15 +27,15 @@ const Add: React.FC<Props> = ({ dispatch }) => {
     loading,
   } = state;
 
-  const setWebhookValue = (e: React.BaseSyntheticEvent) =>
-    setState.webhook(getEventTargetValue(e));
+  const setWebhookValue = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setState.webhook(e.target.value);
   const setTimeValue = (e: Moment | string) => {
     if (typeof e !== 'string') {
       setState.time(e.toDate());
     }
   };
-  const setComment = (e: React.BaseSyntheticEvent) =>
-    setState.comment(getEventTargetValue(e));
+  const setComment = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setState.comment(e.target.value);
 
   const sectionize = (section: JSX.Element) => (
     <div className={styles.add_mar_bottom}>

@@ -4,15 +4,16 @@ import {
   FilterRenderProp,
   makeValueFilter,
   makeRelationshipFilter,
-} from '../../../../Common/FilterQuery/Types';
+} from '../../../../Common/FilterQuery/types';
 import { stInvocationLogsTable } from '../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
+import { Dispatch } from '../../../../../types';
 import InvocationLogsTable from '../../Common/Components/InvocationLogsTable';
-import { ScheduledTrigger } from '../../Types';
+import { ScheduledTrigger } from '../../types';
 
 type Props = {
   currentTrigger?: ScheduledTrigger;
-  dispatch: any;
+  dispatch: Dispatch;
 };
 
 const InvocationLogs: React.FC<Props> = props => {

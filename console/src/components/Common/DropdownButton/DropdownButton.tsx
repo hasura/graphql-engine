@@ -11,8 +11,8 @@ type DropDownButtonProps = {
   }[];
   dataKey: string;
   dataIndex?: string;
-  onButtonChange: (e: React.BaseSyntheticEvent) => void;
-  onInputChange: (e: React.BaseSyntheticEvent) => void;
+  onButtonChange: (e: React.MouseEvent) => void;
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   value?: string;
   inputVal: string;
   required: boolean;
@@ -47,7 +47,7 @@ const DDButton: React.FC<DropDownButtonProps> = props => {
         componentClass={InputGroup.Button}
         disabled={disabled}
         id={id}
-        data-test={testId + '-' + 'dropdown-button'}
+        data-test={`${testId}-dropdown-button`}
       >
         {dropdownOptions.map((d, i) => (
           <MenuItem
@@ -56,7 +56,7 @@ const DDButton: React.FC<DropDownButtonProps> = props => {
             onClick={onButtonChange}
             eventKey={i + 1}
             key={i}
-            data-test={testId + '-' + 'dropdown-item' + '-' + (i + 1)}
+            data-test={`${testId}-dropdown-item-${i + 1}`}
           >
             {d.display_text}
           </MenuItem>
@@ -66,13 +66,13 @@ const DDButton: React.FC<DropDownButtonProps> = props => {
         type="text"
         data-key={dataKey}
         data-index-id={dataIndex}
-        className={'form-control'}
+        className="form-control"
         required={required}
         onChange={onInputChange}
         disabled={disabled}
         value={inputVal || ''}
         placeholder={inputPlaceHolder}
-        data-test={testId + '-' + 'input'}
+        data-test={`${testId}-input`}
       />
     </InputGroup>
   );

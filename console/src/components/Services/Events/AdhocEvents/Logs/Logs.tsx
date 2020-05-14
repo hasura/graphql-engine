@@ -1,12 +1,13 @@
 import React from 'react';
 import FilterQuery from '../../../../Common/FilterQuery/FilterQuery';
-import { FilterRenderProp } from '../../../../Common/FilterQuery/Types';
+import { FilterRenderProp } from '../../../../Common/FilterQuery/types';
 import { stInvocationLogsTable } from '../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
+import { Dispatch } from '../../../../../types';
 import InvocationLogsTable from '../../Common/Components/InvocationLogsTable';
 
 type Props = {
-  dispatch: any;
+  dispatch: Dispatch;
 };
 
 const InvocationLogs: React.FC<Props> = props => {

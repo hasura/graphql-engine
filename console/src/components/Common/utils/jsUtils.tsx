@@ -1,5 +1,4 @@
 // TODO: make functions from this file available without imports
-import React from 'react';
 import { Nullable } from './tsUtils';
 
 /* TYPE utils */
@@ -347,10 +346,6 @@ export const getCurrTimeForFileName = () => {
     .padStart(3, '0');
 
   return [year, month, day, hours, minutes, seconds, milliSeconds].join('_');
-};
-
-export const getEventTargetValue = (e: React.BaseSyntheticEvent) => {
-  return e.target.value;
 };
 
 export const convertDateTimeToLocale = (

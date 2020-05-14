@@ -1,7 +1,11 @@
 import React from 'react';
 import styles from './Spinner.scss';
 
-const Spinner = ({ className = '' }) => {
+type Props = {
+  className?: string;
+};
+
+const Spinner: React.FC<Props> = ({ className = '' }) => {
   return (
     <div className={`${styles.sk_circle} ${className}`}>
       <div className={`${styles.sk_circle1} ${styles.sk_child}`} />

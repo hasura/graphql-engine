@@ -6,7 +6,7 @@ import {
   EventTrigger,
   ScheduledTrigger,
   EventKind,
-} from './Types';
+} from './types';
 import {
   TableColumn,
   findTable,

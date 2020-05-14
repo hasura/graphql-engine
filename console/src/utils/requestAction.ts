@@ -1,5 +1,6 @@
 import { push } from 'react-router-redux';
 import globals from '../Globals';
+import { Thunk } from '../types';
 import dataHeaders from '../components/Services/Data/Common/Headers';
 
 import {
@@ -17,7 +18,7 @@ const requestAction = (
   ERROR?: string,
   includeCredentials = true,
   includeAdminHeaders = false
-) => {
+): Thunk => {
   return (dispatch: any, getState: any) => {
     const requestOptions = { ...options };
 

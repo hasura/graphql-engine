@@ -2,7 +2,7 @@ import React from 'react';
 import BootstrapModal from 'react-bootstrap/lib/Modal';
 import BootstrapModalButton from 'react-bootstrap/lib/Button';
 
-interface ModalProps {
+interface Props {
   show?: boolean;
   title: JSX.Element;
   onClose: () => void;
@@ -14,7 +14,7 @@ interface ModalProps {
   children: JSX.Element[] | JSX.Element;
 }
 
-const Modal = ({
+const Modal: React.FC<Props> = ({
   show = true,
   title,
   onClose,
@@ -24,7 +24,7 @@ const Modal = ({
   submitText = null,
   submitTestId = null,
   children,
-}: ModalProps) => {
+}) => {
   const getHeader = () => {
     return (
       <BootstrapModal.Header closeButton>

@@ -6,7 +6,7 @@ import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import Headers, { Header } from '../../../../Common/Headers/Headers';
 import { parseServerHeaders } from '../../../../Common/Headers/utils';
 
-import { EventTrigger, VoidCallback } from '../../Types';
+import { EventTrigger, VoidCallback } from '../../types';
 
 type HeaderEditorProps = {
   currentTrigger: EventTrigger;

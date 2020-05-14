@@ -1,34 +1,31 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import * as tooltip from './Tooltips';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import { capitalize } from '../../../../Common/utils/jsUtils';
 import styles from '../TableCommon/EventTable.scss';
 import { EVENT_TRIGGER_OPERATIONS } from '../../constants';
-import { EventTriggerOperation  } from '../../Types';
+import { EventTriggerOperation } from '../../types';
 
 type OperationProps = {
-  selectedOperations: Record <EventTriggerOperation, boolean>,
-  setOperations: (o: Record <EventTriggerOperation, boolean>) => void,
-  readOnly: boolean
-}
+  selectedOperations: Record<EventTriggerOperation, boolean>;
+  setOperations: (o: Record<EventTriggerOperation, boolean>) => void;
+  readOnly: boolean;
+};
 
 const Operations = ({
   selectedOperations,
   setOperations,
-  readOnly
+  readOnly,
 }: OperationProps) => {
-
   const setOperation = (e: React.BaseSyntheticEvent) => {
     const label: EventTriggerOperation = e.target.name;
-    const checked = e.target.checked;
     setOperations({
       ...selectedOperations,
-      [label]: checked
-    })
-  }
- 
+      [label]: !selectedOperations[label],
+    });
+  };
+
   const allOperations = EVENT_TRIGGER_OPERATIONS.map(o => ({
     name: o,
     testIdentifier: `${o}-operation`,
@@ -54,9 +51,9 @@ const Operations = ({
   }));
 
   const getOperationsList = () => {
-    return allOperations.map((o, i) => (
+    return allOperations.map(o => (
       <div
-        key={i}
+        key={o.name}
         className={`${styles.display_inline} ${styles.add_mar_right}`}
       >
         <label>
@@ -75,9 +72,7 @@ const Operations = ({
     ));
   };
 
-  return (
-    <div className={styles.add_mar_left_small}>{getOperationsList()}</div>
-  );
+  return <div className={styles.add_mar_left_small}>{getOperationsList()}</div>;
 };
 
 export default Operations;

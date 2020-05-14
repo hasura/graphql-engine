@@ -4,15 +4,19 @@ import {
   FilterRenderProp,
   makeValueFilter,
   makeRelationshipFilter,
-} from '../../../../Common/FilterQuery/Types';
+} from '../../../../Common/FilterQuery/types';
 import { etInvocationLogsTable } from '../utils';
-import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
+import {
+  MapReduxToProps,
+  ComponentReduxConnector,
+  Dispatch,
+} from '../../../../../types';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import TableHeader from '../TableCommon/TableHeader';
 import InvocationLogsTable from '../../Common/Components/InvocationLogsTable';
 
 type Props = {
-  dispatch: any;
+  dispatch: Dispatch;
   triggerName: string;
   readOnlyMode: boolean;
 };

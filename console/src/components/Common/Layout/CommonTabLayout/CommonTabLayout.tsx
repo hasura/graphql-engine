@@ -1,10 +1,12 @@
 import React from 'react';
 
-import BreadCrumb, { BreadCrumbItem } from '../BreadCrumb/BreadCrumb';
+import BreadCrumb, {
+  BreadCrumb as BreadCrumbItem,
+} from '../BreadCrumb/BreadCrumb';
 import Tabs, { Tabs as TabsType } from '../ReusableTabs/ReusableTabs';
 import styles from './CommonTabLayout.scss';
 
-type TabLayoutProps = {
+type Props = {
   breadCrumbs: BreadCrumbItem[];
   heading: string | JSX.Element;
   appPrefix: string;
@@ -15,7 +17,7 @@ type TabLayoutProps = {
   testPrefix: string;
 };
 
-const CommonTabLayout = (props: TabLayoutProps) => {
+const CommonTabLayout: React.FC<Props> = props => {
   const {
     breadCrumbs,
     heading,

@@ -2,7 +2,7 @@ import {
   FilterState,
   SetFilterState,
   RunQuery,
-} from '../../../../Common/FilterQuery/Types';
+} from '../../../../Common/FilterQuery/types';
 
 export type FilterTableProps = {
   rows: any[];

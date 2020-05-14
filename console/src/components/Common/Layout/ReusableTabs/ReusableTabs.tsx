@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
+import styles from './ReusableTabs.scss';
 
 export type Tabs = {
   [tabName: string]: {
@@ -7,7 +8,7 @@ export type Tabs = {
   };
 };
 
-type TabsProps = {
+type Props = {
   appPrefix: string;
   tabsInfo: Tabs;
   tabName: string;
@@ -17,7 +18,7 @@ type TabsProps = {
   testPrefix: string;
 };
 
-const Tabs = ({
+const Tabs: React.FC<Props> = ({
   appPrefix,
   tabsInfo,
   tabName,
@@ -25,12 +26,11 @@ const Tabs = ({
   baseUrl,
   showLoader,
   testPrefix,
-}: TabsProps) => {
+}) => {
   let showCount = '';
   if (!(count === null || count === undefined)) {
-    showCount = '(' + count + ')';
+    showCount = `(${count})`;
   }
-  const styles = require('./ReusableTabs.scss');
   const dataLoader = () => {
     return (
       <span className={styles.loader_ml}>
@@ -40,18 +40,18 @@ const Tabs = ({
   };
   return (
     <React.Fragment>
-      <div className={styles.common_nav} key={'reusable-tabs-1'}>
+      <div className={styles.common_nav} key="reusable-tabs-1">
         <ul className="nav nav-pills">
-          {Object.keys(tabsInfo).map((t: string, i) => (
+          {Object.keys(tabsInfo).map((t: string) => (
             <li
               role="presentation"
               className={tabName === t ? styles.active : ''}
-              key={i}
+              key={t}
             >
               <Link
                 to={`${baseUrl}/${t}`}
                 data-test={`${
-                  testPrefix ? testPrefix + '-' : ''
+                  testPrefix ? `${testPrefix}-` : ''
                 }${appPrefix.slice(1)}-${t}`}
               >
                 {tabsInfo[t].display_text} {tabName === t ? showCount : null}
@@ -61,7 +61,7 @@ const Tabs = ({
           ))}
         </ul>
       </div>
-      <div className="clearfix" key={'reusable-tabs-2'} />
+      <div className="clearfix" key="reusable-tabs-2" />
     </React.Fragment>
   );
 };

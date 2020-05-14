@@ -1,24 +1,31 @@
 import React from 'react';
 import { Link } from 'react-router';
+import styles from '../../TableCommon/Table.scss';
 
-export type BreadCrumbItem = {
+export type BreadCrumb = {
   url: string;
   title: string;
 };
 
-const BreadCrumb = ({ breadCrumbs }: { breadCrumbs: BreadCrumbItem[] }) => {
-  const styles = require('../../TableCommon/Table.scss');
+type Props = {
+  breadCrumbs: BreadCrumb[];
+};
 
+const BreadCrumb: React.FC<Props> = ({ breadCrumbs }) => {
   let bC = null;
 
   if (breadCrumbs && breadCrumbs.length > 0) {
-    bC = breadCrumbs.map((b: BreadCrumbItem, i: number) => {
+    bC = breadCrumbs.map((b: BreadCrumb, i: number) => {
       let bCElem;
 
       const addArrow = () => (
         <React.Fragment>
           &nbsp;
-          <i key={'l' + i} className="fa fa-angle-right" aria-hidden="true" />
+          <i
+            key={`${b.title}-arrow`}
+            className="fa fa-angle-right"
+            aria-hidden="true"
+          />
           &nbsp;
         </React.Fragment>
       );
@@ -27,7 +34,7 @@ const BreadCrumb = ({ breadCrumbs }: { breadCrumbs: BreadCrumbItem[] }) => {
 
       if (!isLastElem) {
         bCElem = [
-          <Link key={'l' + i} to={`${b.url}`}>
+          <Link key={`bc-title-${b.title}`} to={`${b.url}`}>
             {b.title}
           </Link>,
           addArrow(),

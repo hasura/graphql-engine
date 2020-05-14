@@ -1,9 +1,9 @@
-import AddScheduledTrigger from './Add/Main';
-import ScheduledTriggerLogs from './Logs/Main';
-import ScheduledTriggeModify from './Modify/Main';
+import AddScheduledTrigger from './Add';
+import ScheduledTriggerLogs from './Logs';
+import ScheduledTriggeModify from './Modify';
 import ScheduledTriggerLanding from './Landing';
-import STPendingEvents from './PendingEvents/Main';
-import STProcessedEvents from './ProcessedEvents/Main';
+import STPendingEvents from './PendingEvents';
+import STProcessedEvents from './ProcessedEvents';
 
 export {
   AddScheduledTrigger,

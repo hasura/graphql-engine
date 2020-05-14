@@ -1,7 +1,7 @@
 import React from 'react';
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import getLeftSidebarSection from '../../../Common/Layout/LeftSubSidebar/LeftSidebarSection';
-import { ScheduledTrigger, EventTrigger } from '../Types';
+import { ScheduledTrigger, EventTrigger } from '../types';
 import {
   getAddETRoute,
   getAddSTRoute,

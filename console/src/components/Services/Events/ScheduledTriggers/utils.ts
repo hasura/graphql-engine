@@ -5,7 +5,7 @@ import {
   isValidTemplateLiteral,
 } from '../../../Common/utils/jsUtils';
 import { makeBaseTable } from '../../../Common/utils/pgUtils';
-import { Triggers, ScheduledTrigger } from '../Types';
+import { Triggers, ScheduledTrigger } from '../types';
 import { parseServerHeaders } from '../../../Common/Headers/utils';
 
 export const validateAddState = (state: LocalScheduledTriggerState) => {

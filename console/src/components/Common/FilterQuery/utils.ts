@@ -1,4 +1,4 @@
-import { Operator, OperatorDef, Filter } from './Types';
+import { Operator, OperatorDef, Filter } from './types';
 
 export const allOperators: OperatorDef[] = [
   { name: 'equals', operator: '$eq', alias: '_eq' },

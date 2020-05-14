@@ -14,7 +14,7 @@ import {
   makeValueFilter,
   Filter,
   RunQuery,
-} from './Types';
+} from './types';
 
 import { Nullable } from '../utils/tsUtils';
 import { parseFilter } from './utils';

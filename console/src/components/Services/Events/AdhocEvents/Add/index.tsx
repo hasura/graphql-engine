@@ -1,10 +1,10 @@
 import React from 'react';
 import AdhocEventsContainer from '../../Containers/AdhocEventsContainer';
-import { ComponentReduxConnector } from '../../../../../Types';
+import { ComponentReduxConnector, MapReduxToProps, Dispatch } from '../../../../../types';
 import Add from './Add';
 
 type Props = {
-  dispatch: any;
+  dispatch: Dispatch;
 };
 
 const AddContainer = ({ dispatch }: Props) => {
@@ -15,5 +15,7 @@ const AddContainer = ({ dispatch }: Props) => {
   );
 };
 
-const connector: ComponentReduxConnector = connect => connect()(AddContainer);
+const mapStateToProps: MapReduxToProps = () => ({})
+
+const connector: ComponentReduxConnector = connect => connect(mapStateToProps)(AddContainer);
 export default connector;

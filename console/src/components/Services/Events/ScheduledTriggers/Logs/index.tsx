@@ -1,7 +1,7 @@
 import React from 'react';
 import STContainer from '../../Containers/ScheduledTriggerContainer';
-import { Triggers } from '../../Types';
-import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
+import { Triggers } from '../../types';
+import { MapReduxToProps, ComponentReduxConnector, Dispatch } from '../../../../../types';
 import Logs from './Logs';
 
 type LogsProps = {
@@ -9,7 +9,7 @@ type LogsProps = {
   params?: {
     triggerName: string;
   };
-  dispatch: any;
+  dispatch: Dispatch;
 };
 
 const LogsContainer = ({ dispatch, allTriggers, params }: LogsProps) => {

@@ -1,5 +1,6 @@
 import { Header as ServerHeader } from '../../Common/utils/v1QueryUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
+import { Dispatch } from '../../../types'
 
 export const LOADING_TRIGGERS = 'Events/LOADING_TRIGGERS';
 export const LOADED_TRIGGERS = 'Events/LOADED_TRIGGERS';
@@ -14,6 +15,8 @@ export const LOAD_PENDING_DATA_EVENTS = 'Events/LOAD_PENDING_DATA_EVENTS';
 /*
  * Common types for events service
  */
+
+export type TriggerKind = 'event' | 'scheduled';
 
 export type EventKind = 'data' | 'cron' | 'scheduled';
 
@@ -37,7 +40,7 @@ export type RetryConf = {
 };
 
 export type TriggerEventsProps = {
-  dispatch: any;
+  dispatch: Dispatch;
   currentTrigger?: ScheduledTrigger;
 };
 
@@ -138,9 +141,7 @@ export type RASetCurrentTrigger = {
   name: string;
 };
 
-export type TriggerKind = 'event' | 'scheduled';
-
-export type RATriggers =
+export type RAEvents =
   | RASetAllTriggers
   | RASetScheduledTriggers
   | RASetEventTriggers

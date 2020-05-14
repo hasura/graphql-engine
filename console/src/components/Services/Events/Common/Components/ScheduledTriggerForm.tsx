@@ -7,7 +7,6 @@ import {
   defaultCronExpr,
 } from '../../ScheduledTriggers/state';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
-import { getEventTargetValue } from '../../../../Common/utils/jsUtils';
 import Toggle from '../../../../Common/Toggle/Toggle';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 import styles from '../../Events.scss';
@@ -30,14 +29,14 @@ const Form: React.FC<Props> = props => {
     includeInMetadata,
   } = state;
 
-  const setName = (e: React.BaseSyntheticEvent) =>
-    setState.name(getEventTargetValue(e));
-  const setWebhookValue = (e: React.BaseSyntheticEvent) =>
-    setState.webhook(getEventTargetValue(e));
-  const setScheduleValue = (e: React.BaseSyntheticEvent) =>
-    setState.schedule(getEventTargetValue(e));
-  const setComment = (e: React.BaseSyntheticEvent) =>
-    setState.comment(getEventTargetValue(e));
+  const setName = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setState.name(e.target.value);
+  const setWebhookValue = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setState.webhook(e.target.value);
+  const setScheduleValue = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setState.schedule(e.target.value);
+  const setComment = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setState.comment(e.target.value);
 
   const sectionize = (section: JSX.Element) => (
     <div className={styles.add_mar_bottom}>

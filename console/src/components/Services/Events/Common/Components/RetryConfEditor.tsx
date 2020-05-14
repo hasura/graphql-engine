@@ -1,5 +1,5 @@
 import React from 'react';
-import { RetryConf } from '../../Types';
+import { RetryConf } from '../../types';
 import styles from '../../Events.scss';
 
 type Props = {
@@ -10,7 +10,7 @@ type Props = {
 const RetryConfEditor: React.FC<Props> = props => {
   const { retryConf, setRetryConf } = props;
 
-  const handleRetryConfChange = (e: React.BaseSyntheticEvent) => {
+  const handleRetryConfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const label = e.target.name;
     const value = e.target.value;
     setRetryConf({

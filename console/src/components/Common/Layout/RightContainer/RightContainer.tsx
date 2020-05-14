@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './RightContainer.scss';
-import { MapReduxToProps, ComponentReduxConnector } from '../../../../Types';
+import { MapReduxToProps, ComponentReduxConnector } from '../../../../types';
 
 const RightContainer: React.FC<React.ComponentProps<'div'>> = ({
   children,

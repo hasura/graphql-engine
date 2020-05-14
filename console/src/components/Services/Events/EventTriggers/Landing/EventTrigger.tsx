@@ -5,6 +5,7 @@ import React from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import globals from '../../../../../Globals';
+import { Dispatch } from '../../../../../types';
 import Button from '../../../../Common/Button/Button';
 import TopicDescription from '../../../Common/Landing/TopicDescription';
 import { getAddETRoute } from '../../../../Common/utils/routesUtils';
@@ -14,7 +15,7 @@ import styles from '../../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss
 import { EVENTS_SERVICE_HEADING, EVENT_TRIGGER } from '../../constants';
 
 type Props = {
-  dispatch: any;
+  dispatch: Dispatch;
 };
 
 const EventTrigger: React.FC<Props> = props => {
@@ -40,7 +41,7 @@ insert_user(objects: [{name: "testuser"}] ){
   };
 
   const getAddBtn = () => {
-    const handleClick = (e: React.BaseSyntheticEvent) => {
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
       dispatch(push(getAddETRoute()));
     };
@@ -50,6 +51,7 @@ insert_user(objects: [{name: "testuser"}] ){
         data-test="data-create-trigger"
         color="yellow"
         size="sm"
+        type="submit"
         className={styles.add_mar_left}
         onClick={handleClick}
       >

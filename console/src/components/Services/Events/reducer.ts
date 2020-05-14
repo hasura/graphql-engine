@@ -7,27 +7,35 @@ import {
   LOADED_SCHEDULED_TRIGGERS,
   LOADED_TRIGGERS,
   SET_CURRENT_TRIGGER,
-  RATriggers,
-} from './Types';
+  RAEvents,
+  RASetAllTriggers,
+  RASetCurrentTrigger,
+  RASetEventTriggers,
+  RASetScheduledTriggers,
+} from './types';
 
-export const setTriggers = (data: Triggers) => ({
+export const setTriggers = (data: Triggers): RASetAllTriggers => ({
   type: LOADED_TRIGGERS,
   data,
 });
-export const setScheduledTriggers = (data: ScheduledTrigger[]) => ({
+export const setScheduledTriggers = (
+  data: ScheduledTrigger[]
+): RASetScheduledTriggers => ({
   type: LOADED_SCHEDULED_TRIGGERS,
   data,
 });
-export const setEventTriggers = (data: EventTrigger[]) => ({
+export const setEventTriggers = (data: EventTrigger[]): RASetEventTriggers => ({
   type: LOADED_EVENT_TRIGGERS,
   data,
 });
-export const setCurrentTrigger = (triggerName: string) => ({
+export const setCurrentTrigger = (
+  triggerName: string
+): RASetCurrentTrigger => ({
   type: SET_CURRENT_TRIGGER,
   name: triggerName,
 });
 
-const reducer = (state = defaultState, action: RATriggers) => {
+const reducer = (state = defaultState, action: RAEvents) => {
   switch (action.type) {
     case LOADED_TRIGGERS:
       return {

@@ -14,10 +14,11 @@ import {
   EVENTS_SERVICE_HEADING,
 } from '../constants';
 import styles from '../Events.scss';
+import { Dispatch } from '../../../../types';
 
 interface ScheduledTriggerProps extends React.ComponentProps<'div'> {
   tabName: AdhocEventsTab;
-  dispatch: any;
+  dispatch: Dispatch;
 }
 
 const STContainer = ({ children, tabName }: ScheduledTriggerProps) => {

@@ -16,11 +16,11 @@ export const defaultHeader: Header = {
 };
 
 interface HeadersListProps extends React.ComponentProps<'div'> {
-  headers: Array<Header>;
+  headers: Header[];
   setHeaders: (h: Header[]) => void;
 }
 
-const Headers = ({ headers, setHeaders }: HeadersListProps) => {
+const Headers: React.FC<HeadersListProps> = ({ headers, setHeaders }) => {
   return (
     <React.Fragment>
       {headers.map(({ name, value, type }, i) => {
@@ -31,14 +31,14 @@ const Headers = ({ headers, setHeaders }: HeadersListProps) => {
           setHeaders(newHeaders);
         };
 
-        const setHeaderKey = (e: React.BaseSyntheticEvent) => {
+        const setHeaderKey = (e: React.ChangeEvent<HTMLInputElement>) => {
           const newHeaders = JSON.parse(JSON.stringify(headers));
           newHeaders[i].name = e.target.value;
           addPlaceholderHeader(newHeaders);
           setHeaders(newHeaders);
         };
 
-        const setHeaderValue = (e: React.BaseSyntheticEvent) => {
+        const setHeaderValue = (e: React.ChangeEvent<HTMLInputElement>) => {
           const newHeaders = JSON.parse(JSON.stringify(headers));
           newHeaders[i].value = e.target.value;
           addPlaceholderHeader(newHeaders);

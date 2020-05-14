@@ -4,7 +4,7 @@ import { BaseTable, generateTableDef } from '../utils/pgUtils';
 import Where from './Where';
 import Sorts from './Sorts';
 import { useFilterQuery } from './state';
-import { Filter, FilterRenderProp } from './Types';
+import { Filter, FilterRenderProp } from './types';
 import ReloadEnumValuesButton from '../../Services/Data/Common/Components/ReloadEnumValuesButton';
 import Button from '../Button/Button';
 import { Nullable } from '../utils/tsUtils';

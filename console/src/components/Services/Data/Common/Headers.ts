@@ -1,4 +1,4 @@
-import { GetReduxState } from '../../../../Types';
+import { GetReduxState } from '../../../../types';
 
 const dataHeaders = (getState: GetReduxState) => {
   return getState().tables.dataHeaders;

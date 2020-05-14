@@ -5,7 +5,7 @@ import LeftContainer from '../../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../../Common/Layout/PageContainer/PageContainer';
 import LeftSidebar from '../Sidebar/Sidebar';
 import styles from '../../../Common/TableCommon/Table.scss';
-import { Triggers } from '../Types';
+import { Triggers } from '../types';
 import { ADHOC_EVENTS_HEADING } from '../constants';
 import {
   getScheduledEventsLandingRoute,
@@ -17,7 +17,7 @@ import {
 } from '../../../Common/utils/routesUtils';
 import { findEventTrigger, findScheduledTrigger } from '../utils';
 
-import { MapReduxToProps, ComponentReduxConnector } from '../../../../Types';
+import { MapReduxToProps, ComponentReduxConnector } from '../../../../types';
 
 interface TriggersContainerProps extends React.ComponentProps<'div'> {
   triggers: Triggers;

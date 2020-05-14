@@ -1,7 +1,8 @@
 import React from 'react';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
-import { FilterTableProps } from './Types';
+import { FilterTableProps } from './types';
+import { Dispatch } from '../../../../../types';
 // import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { ordinalColSort } from '../../../Data/utils';
@@ -17,7 +18,7 @@ import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { Nullable } from '../../../../Common/utils/tsUtils';
 
 type Props = FilterTableProps & {
-  dispatch: any;
+  dispatch: Dispatch;
 };
 
 const InvocationLogsTable: React.FC<Props> = props => {

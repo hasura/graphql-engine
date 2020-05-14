@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
-import { FilterTableProps } from './Types';
+import { FilterTableProps } from './types';
 import CheckIcon from '../../../../Common/Icons/Check';
 import CrossIcon from '../../../../Common/Icons/Cross';
 import ClockIcon from '../../../../Common/Icons/Clock';

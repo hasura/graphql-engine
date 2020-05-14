@@ -1,10 +1,10 @@
 import React from 'react';
 import { Route, IndexRedirect } from 'react-router';
 import rightContainerConnector from '../../Common/Layout/RightContainer/RightContainer';
-import Container from './Containers/Main';
+import Container from './Containers/EventsServiceContainer';
 import { fetchTriggers } from './ServerIO';
 import globals from '../../../Globals';
-import { ReduxState } from '../../../Types';
+import { ReduxState, Dispatch } from '../../../types';
 import {
   getDataEventsLandingRoute,
   getScheduledEventsLandingRoute,
@@ -50,7 +50,7 @@ import {
   AdhocEventLogs,
 } from './AdhocEvents';
 
-const triggersInit = ({ dispatch }: { dispatch: any }) => {
+const triggersInit = ({ dispatch }: { dispatch: Dispatch }) => {
   return (nextState: ReduxState, replaceState: any, cb: VoidFunction) => {
     Promise.all([dispatch(fetchTriggers(null))]).then(
       () => {

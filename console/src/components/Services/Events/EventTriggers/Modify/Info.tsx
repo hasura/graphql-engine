@@ -1,13 +1,13 @@
 import React from 'react';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
-import { EventTrigger } from '../../Types'
+import { EventTrigger } from '../../types';
 
 type ETInfoProps = {
-  currentTrigger: EventTrigger
-  styles: Record<string, any>
+  currentTrigger: EventTrigger;
+  styles: Record<string, any>;
 };
 
-const Info = ({currentTrigger, styles}: ETInfoProps) => (
+const Info = ({ currentTrigger, styles }: ETInfoProps) => (
   <div className={`${styles.container} ${styles.borderBottom}`}>
     <div className={styles.modifySection}>
       <h4 className={styles.modifySectionHeading}>

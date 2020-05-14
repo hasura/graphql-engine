@@ -1,6 +1,6 @@
 import React from 'react';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
-import { EventTrigger, RetryConf, VoidCallback } from '../../Types';
+import { EventTrigger, RetryConf, VoidCallback } from '../../types';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import CommonRetryConf from '../../Common/Components/RetryConfEditor';
 

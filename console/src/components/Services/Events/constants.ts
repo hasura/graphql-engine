@@ -1,4 +1,4 @@
-import { EventTriggerOperation } from './Types';
+import { EventTriggerOperation } from './types';
 
 export const appPrefix = '/events';
 export const pageTitle = 'Events';

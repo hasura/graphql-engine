@@ -1,7 +1,7 @@
 import React from 'react';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import DropdownButton from '../../../../Common/DropdownButton/DropdownButton';
-import { EventTrigger, URLConf, VoidCallback } from '../../Types';
+import { EventTrigger, URLConf, VoidCallback } from '../../types';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import { parseServerWebhook } from '../../utils';
 
@@ -33,7 +33,7 @@ const WebhookEditor = (props: WebhookEditorProps) => {
     });
   };
 
-  const handleWebhookValueChange = (e: React.BaseSyntheticEvent) => {
+  const handleWebhookValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setWebhook({
       type: webhook.type,

@@ -6,7 +6,7 @@ import {
   EventTriggerOperation,
   ETOperationColumn,
   VoidCallback,
-} from '../../Types';
+} from '../../types';
 import { TableColumn } from '../../../../Common/utils/pgUtils';
 import {
   parseEventTriggerOperations,
@@ -72,12 +72,11 @@ const OperationEditor = (props: OperationEditorProps) => {
         <div className={`col-md-12 ${styles.padd_remove}`}>
           {ops.update ? (
             opCols.map(col => {
-              const toggle = (e: React.BaseSyntheticEvent) => {
+              const toggle = () => {
                 const newCols = opCols.map(oc => {
                   return {
                     ...oc,
-                    enabled:
-                      col.name === oc.name ? e.target.checked : oc.enabled,
+                    enabled: col.name === oc.name ? !oc.enabled : oc.enabled,
                   };
                 });
                 setOperationColumns(newCols);

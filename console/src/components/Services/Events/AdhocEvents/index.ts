@@ -1,7 +1,7 @@
-import AddAdhocEvent from './Add/Main';
-import AdhocEventLogs from './Logs/Main';
-import AdhocEventPendingEvents from './PendingEvents/Main';
-import AdhocEventProcessedEvents from './ProcessedEvents/Main';
+import AddAdhocEvent from './Add';
+import AdhocEventLogs from './Logs';
+import AdhocEventPendingEvents from './PendingEvents';
+import AdhocEventProcessedEvents from './ProcessedEvents';
 
 export {
   AddAdhocEvent,

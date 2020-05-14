@@ -1,7 +1,7 @@
 import { Header as HeaderClient, defaultHeader } from './Headers';
 import { Header as HeaderServer } from '../utils/v1QueryUtils';
 
-export const transformHeaders = (headers_?: Array<HeaderClient>) => {
+export const transformHeaders = (headers_?: HeaderClient[]) => {
   const headers = headers_ || [];
   return headers
     .map(h => {
@@ -18,7 +18,7 @@ export const transformHeaders = (headers_?: Array<HeaderClient>) => {
     .filter(h => !!h.name && (!!h.value || !!h.value_from_env));
 };
 
-export const addPlaceholderHeader = (newHeaders: Array<HeaderClient>) => {
+export const addPlaceholderHeader = (newHeaders: HeaderClient[]) => {
   if (newHeaders.length) {
     const lastHeader = newHeaders[newHeaders.length - 1];
     if (lastHeader.name && lastHeader.value) {
@@ -30,13 +30,13 @@ export const addPlaceholderHeader = (newHeaders: Array<HeaderClient>) => {
   return newHeaders;
 };
 
-export const parseServerHeaders = (headers_: Array<HeaderServer>) => {
+export const parseServerHeaders = (headers_: HeaderServer[]) => {
   const headers = headers_ || [];
   return addPlaceholderHeader(
     headers.map(h => {
       const parsedHeader: HeaderClient = {
         name: h.name,
-        value: h.value || "",
+        value: h.value || '',
         type: 'static',
       };
       if (h.value_from_env) {

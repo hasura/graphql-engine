@@ -1,6 +1,6 @@
 import React from 'react';
 import { Header, defaultHeader } from '../../../Common/Headers/Headers';
-import { RetryConf } from '../Types';
+import { RetryConf } from '../types';
 import { Nullable } from '../../../Common/utils/tsUtils';
 
 export const defaultCronExpr = '* * * * *';
@@ -10,7 +10,7 @@ export type LocalScheduledTriggerState = {
   webhook: string;
   schedule: string;
   payload: string;
-  headers: Array<Header>;
+  headers: Header[];
   loading: boolean;
   retryConf: RetryConf;
   includeInMetadata: boolean;
@@ -58,7 +58,7 @@ export const useScheduledTrigger = (initState?: LocalScheduledTriggerState) => {
           payload: jsonString,
         }));
       },
-      headers: (headers: Array<Header>) => {
+      headers: (headers: Header[]) => {
         setState(s => ({
           ...s,
           headers,

@@ -1,10 +1,10 @@
 import React from 'react';
 import AdhocEventContainer from '../../Containers/AdhocEventsContainer';
-import { ComponentReduxConnector } from '../../../../../Types';
+import { ComponentReduxConnector, MapReduxToProps, Dispatch } from '../../../../../types';
 import PendingEvents from './PendingEvents';
 
 type Props = {
-  dispatch: any;
+  dispatch: Dispatch;
 };
 
 const PendingEventsContainer: React.FC<Props> = props => {
@@ -16,7 +16,10 @@ const PendingEventsContainer: React.FC<Props> = props => {
   );
 };
 
+
+const mapStateToProps: MapReduxToProps = () => ({})
+
 const connector: ComponentReduxConnector = connect =>
-  connect()(PendingEventsContainer);
+  connect(mapStateToProps)(PendingEventsContainer);
 
 export default connector;

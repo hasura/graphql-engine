@@ -1,12 +1,12 @@
 import React from 'react';
 import AceEditor, { IAceEditorProps } from 'react-ace';
-import { ACE_EDITOR_THEME, ACE_EDITOR_FONT_SIZE } from './utils';
 import 'ace-builds/src-noconflict/ext-searchbox';
 import 'ace-builds/src-noconflict/ext-language_tools';
 import 'ace-builds/src-noconflict/ext-error_marker';
 import 'ace-builds/src-noconflict/ext-beautify';
+import { ACE_EDITOR_THEME, ACE_EDITOR_FONT_SIZE } from './utils';
 
-const Editor = ({ mode, ...props }: IAceEditorProps) => {
+const Editor: React.FC<IAceEditorProps> = ({ mode, ...props }) => {
   return (
     <AceEditor
       mode={mode}

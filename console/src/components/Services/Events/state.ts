@@ -1,4 +1,4 @@
-import { Triggers } from './Types';
+import { Triggers } from './types';
 
 export type EventsState = {
   triggers: Triggers;

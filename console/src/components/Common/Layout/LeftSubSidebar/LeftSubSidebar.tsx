@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import Button from '../../Button/Button';
 import styles from './LeftSubSidebar.scss';
 
-interface LeftSubSidebarProps extends React.ComponentProps<'div'> {
+interface Props extends React.ComponentProps<'div'> {
   showAddBtn: boolean;
   searchInput: JSX.Element;
   heading: string;
@@ -14,7 +14,7 @@ interface LeftSubSidebarProps extends React.ComponentProps<'div'> {
   childListTestString: string;
 }
 
-const LeftSubSidebar = (props: LeftSubSidebarProps) => {
+const LeftSubSidebar: React.FC<Props> = props => {
   const {
     showAddBtn,
     searchInput,
@@ -32,12 +32,7 @@ const LeftSubSidebar = (props: LeftSubSidebarProps) => {
     if (showAddBtn) {
       addButton = (
         <div
-          className={
-            'col-xs-4 text-center ' +
-            styles.padd_left_remove +
-            ' ' +
-            styles.sidebarCreateTable
-          }
+          className={`col-xs-4 text-center ${styles.padd_left_remove} ${styles.sidebarCreateTable}`}
         >
           <Link className={styles.padd_remove_full} to={addLink}>
             <Button size="xs" color="white" data-test={addTestString}>
@@ -53,11 +48,9 @@ const LeftSubSidebar = (props: LeftSubSidebarProps) => {
 
   return (
     <div className={styles.subSidebarList}>
-      <div className={styles.display_flex + ' ' + styles.padd_top_medium}>
+      <div className={`${styles.display_flex} ${styles.padd_top_medium}`}>
         <div
-          className={
-            styles.sidebarSearch + ' form-group col-xs-12 ' + styles.padd_remove
-          }
+          className={`${styles.sidebarSearch} form-group col-xs-12 ${styles.padd_remove}`}
         >
           <i className="fa fa-search" aria-hidden="true" />
           {searchInput}
@@ -66,12 +59,7 @@ const LeftSubSidebar = (props: LeftSubSidebarProps) => {
       <div>
         <div className={styles.sidebarHeadingWrapper}>
           <div
-            className={
-              'col-xs-8 ' +
-              styles.sidebarHeading +
-              ' ' +
-              styles.padd_left_remove
-            }
+            className={`col-xs-8 ${styles.sidebarHeading} ${styles.padd_left_remove}`}
           >
             {heading}
           </div>

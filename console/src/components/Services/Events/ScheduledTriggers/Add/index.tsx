@@ -7,10 +7,10 @@ import ScheduledTriggerForm from '../../Common/Components/ScheduledTriggerForm';
 import { getReactHelmetTitle } from '../../../../Common/utils/reactUtils';
 import { addScheduledTrigger } from '../../ServerIO';
 import { EVENTS_SERVICE_HEADING, CRON_TRIGGER } from '../../constants';
-import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
+import { MapReduxToProps, ComponentReduxConnector, Dispatch } from '../../../../../types';
 
 type Props = {
-  dispatch: any;
+  dispatch: Dispatch;
   initState?: LocalScheduledTriggerState;
 };
 

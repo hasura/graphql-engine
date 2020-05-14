@@ -4,13 +4,14 @@ import Spinner from '../../../../Common/Spinner/Spinner';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import InvocationLogDetails from '../../Common/Components/InvocationLogDetails';
 import { getEventLogs } from '../../ServerIO';
-import { InvocationLog } from '../../Types';
+import { InvocationLog } from '../../types';
 import styles from '../../Events.scss';
 import { useInterval } from '../../../../Common/utils/reactUtils';
+import { Dispatch } from '../../../../../types';
 
 type Props = {
   eventId: string;
-  dispatch: any;
+  dispatch: Dispatch;
 };
 
 const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {

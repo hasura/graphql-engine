@@ -1,10 +1,10 @@
 import React from 'react';
 import AdhocEventsContainer from '../../Containers/AdhocEventsContainer';
-import { ComponentReduxConnector } from '../../../../../Types';
+import { ComponentReduxConnector, MapReduxToProps, Dispatch } from '../../../../../types';
 import Logs from './Logs';
 
 type LogsProps = {
-  dispatch: any;
+  dispatch: Dispatch;
 };
 
 const LogsContainer = ({ dispatch }: LogsProps) => {
@@ -15,5 +15,7 @@ const LogsContainer = ({ dispatch }: LogsProps) => {
   );
 };
 
-const connector: ComponentReduxConnector = connect => connect()(LogsContainer);
+const mapStateToProps: MapReduxToProps = () => ({})
+
+const connector: ComponentReduxConnector = connect => connect(mapStateToProps)(LogsContainer);
 export default connector;

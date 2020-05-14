@@ -3,15 +3,19 @@ import FilterQuery from '../../../../Common/FilterQuery/FilterQuery';
 import {
   FilterRenderProp,
   makeValueFilter,
-} from '../../../../Common/FilterQuery/Types';
+} from '../../../../Common/FilterQuery/types';
 import { etEventsTable } from '../utils';
-import { MapReduxToProps, ComponentReduxConnector } from '../../../../../Types';
+import {
+  MapReduxToProps,
+  ComponentReduxConnector,
+  Dispatch,
+} from '../../../../../types';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import TableHeader from '../TableCommon/TableHeader';
 import EventsTable from '../../Common/Components/EventsTable';
 
 type Props = {
-  dispatch: any;
+  dispatch: Dispatch;
   triggerName: string;
   readOnlyMode: boolean;
 };
