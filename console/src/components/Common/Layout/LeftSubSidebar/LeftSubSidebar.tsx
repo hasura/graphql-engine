@@ -6,7 +6,7 @@ import styles from './LeftSubSidebar.scss';
 
 interface Props extends React.ComponentProps<'div'> {
   showAddBtn: boolean;
-  searchInput: JSX.Element;
+  searchInput: React.ReactNode;
   heading: string;
   addLink: string;
   addLabel: string;

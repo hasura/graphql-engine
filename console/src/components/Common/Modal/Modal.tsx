@@ -4,7 +4,7 @@ import BootstrapModalButton from 'react-bootstrap/lib/Button';
 
 interface Props {
   show?: boolean;
-  title: JSX.Element;
+  title: React.ReactNode;
   onClose: () => void;
   customClass?: string;
   onSubmit?: (() => void) | null;

@@ -8,8 +8,8 @@ import { Dispatch } from '../../../../../types';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import Headers from '../../../../Common/Headers/Headers';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';
-import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
+import FormSection from '../../Common/Components/FormSection';
 import { createScheduledEvent } from '../../ServerIO';
 
 type Props = {
@@ -38,155 +38,6 @@ const Add: React.FC<Props> = ({ dispatch }) => {
   const setComment = (e: React.ChangeEvent<HTMLInputElement>) =>
     setState.comment(e.target.value);
 
-  const sectionize = (section: JSX.Element) => (
-    <div className={styles.add_mar_bottom}>
-      {section}
-      <hr />
-    </div>
-  );
-
-  const getWebhookInput = () =>
-    sectionize(
-      <React.Fragment>
-        <h2
-          className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
-        >
-          Webhook
-          <Tooltip
-            id="trigger-webhook"
-            message="The HTTP endpoint that must be triggered"
-            className={styles.add_mar_left_mid}
-          />
-        </h2>
-        <input
-          type="text"
-          placeholder="http://httpbin.org/post"
-          className={`form-control ${styles.inputWidthLarge}`}
-          value={webhook}
-          onChange={setWebhookValue}
-        />
-      </React.Fragment>
-    );
-
-  const getTimeInput = () => {
-    return sectionize(
-      <React.Fragment>
-        <h2
-          className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
-        >
-          Time
-          <Tooltip
-            id="trigger-schedule"
-            message="The time that this event must be delivered"
-            className={styles.add_mar_left_mid}
-          />
-        </h2>
-        <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>
-          <DateTimePicker
-            value={time}
-            onChange={setTimeValue}
-            inputProps={{
-              className: `form-control ${styles.inputWidthLarge}`,
-            }}
-          />
-        </div>
-      </React.Fragment>
-    );
-  };
-
-  // TODO make JSONEditor component
-  const getPayloadInput = () =>
-    sectionize(
-      <React.Fragment>
-        <h2
-          className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
-        >
-          Payload
-          <Tooltip
-            id="trigger-payload"
-            message="The request payload for the HTTP trigger"
-            className={styles.add_mar_left_mid}
-          />
-        </h2>
-        <AceEditor
-          mode="json"
-          value={payload}
-          onChange={setState.payload}
-          height="200px"
-        />
-      </React.Fragment>
-    );
-
-  const getHeadersInput = () =>
-    sectionize(
-      <React.Fragment>
-        <h2
-          className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
-        >
-          Headers
-          <Tooltip
-            id="trigger-headers"
-            message="Configure headers for the request to the webhook"
-            className={styles.add_mar_left_mid}
-          />
-        </h2>
-        <Headers headers={headers} setHeaders={setState.headers} />
-      </React.Fragment>
-    );
-
-  const getRetryConfInput = () => {
-    return sectionize(
-      <div className={styles.add_mar_bottom}>
-        <h2 className={`${styles.subheading_text}`}>
-          Retry configuration
-          <Tooltip
-            id="trigger-headers"
-            message="Retry configuration if the call to the webhook fails"
-            className={styles.add_mar_left_mid}
-          />
-        </h2>
-        <RetryConfEditor
-          retryConf={retryConf}
-          setRetryConf={setState.retryConf}
-        />
-      </div>
-    );
-  };
-
-  const getCommentInput = () => {
-    return sectionize(
-      <div className={styles.add_mar_bottom}>
-        <h2 className={`${styles.subheading_text}`}>
-          Comment
-          <Tooltip
-            id="trigger-comment"
-            message="Description of this event"
-            className={styles.add_mar_left_mid}
-          />
-        </h2>
-        <input
-          type="text"
-          placeholder="comment"
-          className={`form-control ${styles.inputWidthLarge} ${styles.add_mar_right_mid}`}
-          value={comment || ''}
-          onChange={setComment}
-        />
-      </div>
-    );
-  };
-
-  const getAdvancedSection = () => {
-    return (
-      <CollapsibleToggle
-        title={<h2 className={styles.subheading_text}>Advanced</h2>}
-      >
-        {getHeadersInput()}
-        {getRetryConfInput()}
-        {getCommentInput()}
-      </CollapsibleToggle>
-    );
-  };
-
   const save = () => {
     setState.loading(true);
     const succesCallback = () => setState.bulk();
@@ -196,10 +47,80 @@ const Add: React.FC<Props> = ({ dispatch }) => {
 
   return (
     <div className={styles.add_mar_bottom}>
-      {getWebhookInput()}
-      {getTimeInput()}
-      {getPayloadInput()}
-      {getAdvancedSection()}
+      <FormSection
+        id="event-webhook"
+        tooltip="The HTTP endpoint that must be triggered"
+        heading="Webhook"
+      >
+        <input
+          type="text"
+          placeholder="http://httpbin.org/post"
+          className={`form-control ${styles.inputWidthLarge}`}
+          value={webhook}
+          onChange={setWebhookValue}
+        />
+      </FormSection>
+      <FormSection
+        heading="Time"
+        tooltip="The time that this event must be delivered"
+        id="event-time"
+      >
+        <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>
+          <DateTimePicker
+            value={time}
+            onChange={setTimeValue}
+            inputProps={{
+              className: `form-control ${styles.inputWidthLarge}`,
+            }}
+          />
+        </div>
+      </FormSection>
+      <FormSection
+        heading="Payload"
+        tooltip="The request payload for the HTTP trigger"
+        id="event-payload"
+      >
+        <AceEditor
+          mode="json"
+          value={payload}
+          onChange={setState.payload}
+          height="200px"
+        />
+      </FormSection>
+      <CollapsibleToggle
+        title={<h2 className={styles.subheading_text}>Advanced</h2>}
+      >
+        <FormSection
+          heading="Headers"
+          tooltip="Configure headers for the request to the webhook"
+          id="event-headers"
+        >
+          <Headers headers={headers} setHeaders={setState.headers} />
+        </FormSection>
+        <FormSection
+          heading="Retry configuration"
+          tooltip="Retry configuration if the call to the webhook fails"
+          id="event-retry-conf"
+        >
+          <RetryConfEditor
+            retryConf={retryConf}
+            setRetryConf={setState.retryConf}
+          />
+        </FormSection>
+        <FormSection
+          heading="Comment"
+          tooltip="Description of this event"
+          id="event-retry-conf"
+        >
+          <input
+            type="text"
+            placeholder="comment"
+            className={`form-control ${styles.inputWidthLarge} ${styles.add_mar_right_mid}`}
+            value={comment || ''}
+            onChange={setComment}
+          />
+        </FormSection>
+      </CollapsibleToggle>
       <Button size="s" color="yellow" onClick={save} disabled={loading}>
         {loading ? 'Creating...' : 'Create scheduled event'}
       </Button>

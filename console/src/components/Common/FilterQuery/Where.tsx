@@ -50,15 +50,6 @@ const Where: React.FC<Props> = props => {
           ]);
         };
 
-        const removeIcon =
-          filters.length === i + 1 ? null : (
-            <i
-              className="fa fa-times"
-              onClick={removeFilter}
-              data-test={`clear-filter-${i}`}
-            />
-          );
-
         return (
           <div
             key={i} // eslint-disable-line react/no-array-index-key
@@ -111,7 +102,15 @@ const Where: React.FC<Props> = props => {
                 data-test={`filter-value-${i}`}
               />
             </div>
-            <div className="text-center col-xs-1">{removeIcon}</div>
+            <div className="text-center col-xs-1">
+              {filters.length === i + 1 ? null : (
+                <i
+                  className="fa fa-times"
+                  onClick={removeFilter}
+                  data-test={`clear-filter-${i}`}
+                />
+              )}
+            </div>
           </div>
         );
       })}

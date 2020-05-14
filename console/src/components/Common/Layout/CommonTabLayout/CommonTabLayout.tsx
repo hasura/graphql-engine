@@ -1,14 +1,14 @@
 import React from 'react';
 
 import BreadCrumb, {
-  BreadCrumb as BreadCrumbItem,
+  BreadCrumb as BreadCrumbType,
 } from '../BreadCrumb/BreadCrumb';
 import Tabs, { Tabs as TabsType } from '../ReusableTabs/ReusableTabs';
 import styles from './CommonTabLayout.scss';
 
 type Props = {
-  breadCrumbs: BreadCrumbItem[];
-  heading: string | JSX.Element;
+  breadCrumbs: BreadCrumbType[];
+  heading: React.ReactNode;
   appPrefix: string;
   currentTab: string;
   tabsInfo: TabsType;

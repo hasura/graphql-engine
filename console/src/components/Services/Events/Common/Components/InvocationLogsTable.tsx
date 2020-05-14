@@ -1,5 +1,8 @@
 import React from 'react';
-import ReactTable from 'react-table';
+import ReactTable, {
+  ComponentPropsGetterC,
+  ComponentPropsGetter0,
+} from 'react-table';
 import 'react-table/react-table.css';
 import { FilterTableProps } from './types';
 import { Dispatch } from '../../../../../types';
@@ -150,6 +153,36 @@ const InvocationLogsTable: React.FC<Props> = props => {
     return formattedRow;
   });
 
+  const getTheadThProps: ComponentPropsGetterC = (
+    finalState,
+    some,
+    column
+  ) => ({
+    onClick: () => {
+      if (
+        column &&
+        column.Header &&
+        shouldSortColumn &&
+        column.Header !== 'Actions'
+      ) {
+        sortByColumn(column.Header as string);
+      }
+      shouldSortColumn = true;
+    },
+  });
+
+  const getResizerProps: ComponentPropsGetter0 = (
+    finalState,
+    none,
+    column,
+    ctx
+  ) => ({
+    onMouseDown: (e: React.MouseEvent) => {
+      shouldSortColumn = false;
+      ctx.resizeColumnStart(e, column, false);
+    },
+  });
+
   return (
     <ReactTable
       data={rowsFormatted}
@@ -157,25 +190,8 @@ const InvocationLogsTable: React.FC<Props> = props => {
       minRows={0}
       resizable
       manual
-      getTheadThProps={(finalState, some, column) => ({
-        onClick: () => {
-          if (
-            column &&
-            column.Header &&
-            shouldSortColumn &&
-            column.Header !== 'Actions'
-          ) {
-            sortByColumn(column.Header as string);
-          }
-          shouldSortColumn = true;
-        },
-      })}
-      getResizerProps={(finalState, none, column, ctx) => ({
-        onMouseDown: (e: React.MouseEvent) => {
-          shouldSortColumn = false;
-          ctx.resizeColumnStart(e, column, false);
-        },
-      })}
+      getTheadThProps={getTheadThProps}
+      getResizerProps={getResizerProps}
       onPageChange={changePage}
       pages={count ? Math.ceil(count / filterState.limit) : 1}
       showPagination={count ? count > 10 : false}

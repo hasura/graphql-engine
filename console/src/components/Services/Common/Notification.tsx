@@ -10,7 +10,7 @@ const styles = require('./Notification/Notification.scss');
 
 const getNotificationDetails = (detailsJson: any, children = null) => {
   return (
-    <div className={'notification-details'}>
+    <div className="notification-details">
       <AceEditor
         readOnly
         showPrintMargin={false}
@@ -41,10 +41,9 @@ const showErrorNotification = (title: string, message: string, error?: any) => {
           error.message.error === 'query execution failed')
       ) {
         if (error.message.internal) {
-          notificationMessage =
-            error.message.code + ': ' + error.message.internal.error.message;
+          notificationMessage = `${error.message.code}: ${error.message.internal.error.message}`;
         } else {
-          notificationMessage = error.code + ': ' + error.message.error;
+          notificationMessage = `${error.code}: ${error.message.error}`;
         }
       } else if ('info' in error) {
         notificationMessage = error.info;
@@ -58,12 +57,12 @@ const showErrorNotification = (title: string, message: string, error?: any) => {
         } else if (error.message && isString(error.message)) {
           notificationMessage = error.message;
         } else if (error.message && 'code' in error.message) {
-          notificationMessage = error.message.code + ' : ' + message;
+          notificationMessage = `${error.message.code} : ${message}`;
         } else {
           notificationMessage = error.code;
         }
       } else if ('internal' in error && 'error' in error.internal) {
-        notificationMessage = error.code + ' : ' + error.internal.error.message;
+        notificationMessage = `${error.code} : ${error.internal.error.message}`;
       } else if ('custom' in error) {
         notificationMessage = error.custom;
       } else if ('code' in error && 'error' in error && 'path' in error) {
@@ -78,9 +77,8 @@ const showErrorNotification = (title: string, message: string, error?: any) => {
   };
 
   const getRefreshBtn = () => {
-    let refreshBtn: JSX.Element | null;
     if (error && 'action' in error) {
-      refreshBtn = (
+      return (
         <Button
           className={styles.add_mar_top_small}
           color="yellow"
@@ -94,7 +92,6 @@ const showErrorNotification = (title: string, message: string, error?: any) => {
         </Button>
       );
     }
-
     return null;
   };
 
@@ -162,7 +159,7 @@ const showSuccessNotification = (title: string, message?: string) => {
       showNotification({
         level: 'success',
         title,
-        message: message ? message : null,
+        message: message || null,
       })
     );
   };
@@ -179,7 +176,11 @@ const showInfoNotification = (title: string) => {
   };
 };
 
-const showWarningNotification = (title: string, message: string, dataObj: any) => {
+const showWarningNotification = (
+  title: string,
+  message: string,
+  dataObj: any
+) => {
   const children: JSX.Element[] = [];
   if (dataObj) {
     children.push(getNotificationDetails(dataObj));

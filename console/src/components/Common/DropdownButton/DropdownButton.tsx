@@ -39,7 +39,7 @@ const DDButton: React.FC<DropDownButtonProps> = props => {
     inputPlaceHolder,
     id,
     testId,
-  }: DropDownButtonProps = props;
+  } = props;
   return (
     <InputGroup className={bsClass}>
       <DropdownButton

@@ -1,5 +1,8 @@
 import React from 'react';
-import ReactTable from 'react-table';
+import ReactTable, {
+  ComponentPropsGetterC,
+  ComponentPropsGetter0,
+} from 'react-table';
 import 'react-table/react-table.css';
 import { FilterTableProps } from './types';
 import CheckIcon from '../../../../Common/Icons/Check';
@@ -110,6 +113,36 @@ const EventsTable: React.FC<Props> = props => {
     };
   });
 
+  const getTheadThProps: ComponentPropsGetterC = (
+    finalState: any,
+    some: any,
+    column
+  ) => ({
+    onClick: () => {
+      if (
+        column &&
+        column.Header &&
+        shouldSortColumn &&
+        column.Header !== 'Actions'
+      ) {
+        sortByColumn(column.Header as string);
+      }
+      shouldSortColumn = true;
+    },
+  });
+
+  const getResizerProps: ComponentPropsGetter0 = (
+    finalState,
+    none,
+    column,
+    ctx
+  ) => ({
+    onMouseDown: (e: React.MouseEvent) => {
+      shouldSortColumn = false;
+      ctx.resizeColumnStart(e, column, false);
+    },
+  });
+
   return (
     <ReactTable
       className="-highlight"
@@ -123,25 +156,8 @@ const EventsTable: React.FC<Props> = props => {
       onPageSizeChange={changePageSize}
       sortable={false}
       minRows={0}
-      getTheadThProps={(finalState, some, column) => ({
-        onClick: () => {
-          if (
-            column &&
-            column.Header &&
-            shouldSortColumn &&
-            column.Header !== 'Actions'
-          ) {
-            sortByColumn(column.Header as string);
-          }
-          shouldSortColumn = true;
-        },
-      })}
-      getResizerProps={(finalState, none, column, ctx) => ({
-        onMouseDown: (e: React.MouseEvent) => {
-          shouldSortColumn = false;
-          ctx.resizeColumnStart(e, column, false);
-        },
-      })}
+      getTheadThProps={getTheadThProps}
+      getResizerProps={getResizerProps}
       defaultPageSize={10}
       SubComponent={row => {
         const currentRow = rows[row.index];
@@ -166,7 +182,7 @@ const EventsTable: React.FC<Props> = props => {
           return newRow;
         });
         return (
-          <div className={styles.add_padding}>
+          <div className={styles.add_padding20}>
             <em>Recent Invocations</em>
             <div className={`${styles.invocationsSection} invocationsSection`}>
               {invocationRows.length ? (

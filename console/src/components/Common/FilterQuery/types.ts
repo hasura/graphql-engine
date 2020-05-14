@@ -133,4 +133,4 @@ export type FilterRenderProp = (
   state: FilterState,
   setState: SetFilterState,
   runQuery: RunQuery
-) => JSX.Element;
+) => React.ReactNode;

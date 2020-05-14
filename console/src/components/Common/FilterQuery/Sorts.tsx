@@ -38,15 +38,6 @@ const Sorts: React.FC<Props> = props => {
           ]);
         };
 
-        const removeIcon =
-          sorts.length === i + 1 ? null : (
-            <i
-              className="fa fa-times"
-              onClick={removeSort}
-              data-test={`clear-filter-${i}`}
-            />
-          );
-
         return (
           <div
             key={i} // eslint-disable-line react/no-array-index-key
@@ -86,7 +77,15 @@ const Sorts: React.FC<Props> = props => {
                 </option>
               </select>
             </div>
-            <div className="text-center col-xs-1">{removeIcon}</div>
+            <div className="text-center col-xs-1">
+              {sorts.length === i + 1 ? null : (
+                <i
+                  className="fa fa-times"
+                  onClick={removeSort}
+                  data-test={`clear-filter-${i}`}
+                />
+              )}
+            </div>
           </div>
         );
       })}
