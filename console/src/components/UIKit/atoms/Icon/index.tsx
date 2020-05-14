@@ -44,7 +44,6 @@ import {
   FaRegCaretSquareRight,
   FaRegCopy,
   FaExternalLinkAlt,
-  FaTable,
   FaFilter,
   FaWrench,
   FaRegPaperPlane,
@@ -54,6 +53,7 @@ import {
 } from 'react-icons/fa';
 
 import { Theme } from '../../theme';
+import { TableIcon } from './Table';
 import { StyledIcon } from './Icon';
 
 const iconReferenceMap = {
@@ -102,7 +102,7 @@ const iconReferenceMap = {
   clone: FaRegClone,
   copy: FaRegCopy,
   link: FaExternalLinkAlt,
-  table: FaTable,
+  table: TableIcon,
   filter: FaFilter,
   wrench: FaWrench,
   send: FaRegPaperPlane,
