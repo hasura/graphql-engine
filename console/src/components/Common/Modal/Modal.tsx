@@ -11,7 +11,7 @@ interface Props {
   onCancel?: (() => void) | null;
   submitText?: string | null;
   submitTestId?: string | null;
-  children: JSX.Element[] | JSX.Element;
+  children: React.ReactNode;
 }
 
 const Modal: React.FC<Props> = ({

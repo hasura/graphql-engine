@@ -30,8 +30,7 @@ export const addPlaceholderHeader = (newHeaders: HeaderClient[]) => {
   return newHeaders;
 };
 
-export const parseServerHeaders = (headers_: HeaderServer[]) => {
-  const headers = headers_ || [];
+export const parseServerHeaders = (headers: HeaderServer[] = []) => {
   return addPlaceholderHeader(
     headers.map(h => {
       const parsedHeader: HeaderClient = {

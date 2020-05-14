@@ -166,7 +166,7 @@ const EventsTable: React.FC<Props> = props => {
           return newRow;
         });
         return (
-          <div style={{ padding: '20px' }}>
+          <div className={styles.add_padding}>
             <em>Recent Invocations</em>
             <div className={`${styles.invocationsSection} invocationsSection`}>
               {invocationRows.length ? (
