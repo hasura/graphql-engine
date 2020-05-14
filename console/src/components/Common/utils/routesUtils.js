@@ -72,8 +72,8 @@ export const getActionsCreateRoute = () => {
 // Events route utils
 
 export const eventsPrefix = 'events';
-export const scheduledEventsPrefix = 'scheduled';
-export const adhocEventsPrefix = 'independently-scheduled-events';
+export const scheduledEventsPrefix = 'cron';
+export const adhocEventsPrefix = 'independent-scheduled-events';
 export const dataEventsPrefix = 'data';
 export const routeType = 'absolute' | 'relative';
 

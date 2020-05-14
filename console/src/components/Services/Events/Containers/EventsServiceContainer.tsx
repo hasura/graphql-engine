@@ -68,7 +68,7 @@ const Container: React.FC<TriggersContainerProps> = props => {
         {isDataEventsRoute(currentLocation) ? (
           <LeftSidebar
             triggers={triggers.event}
-            service="event triggers"
+            service="data"
             currentTrigger={currentEventTrigger}
           />
         ) : null}
@@ -86,7 +86,7 @@ const Container: React.FC<TriggersContainerProps> = props => {
         {isScheduledEventsRoute(currentLocation) ? (
           <LeftSidebar
             triggers={triggers.scheduled}
-            service="scheduled triggers"
+            service="cron"
             currentTrigger={currentScheduledTrigger}
           />
         ) : null}

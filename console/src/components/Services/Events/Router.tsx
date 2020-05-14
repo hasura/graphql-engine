@@ -34,7 +34,7 @@ import {
   ScheduledTriggerLanding,
   STPendingEvents,
   STProcessedEvents,
-} from './ScheduledTriggers';
+} from './CronTriggers';
 import {
   AddEventTrigger,
   ModifyEventTrigger,

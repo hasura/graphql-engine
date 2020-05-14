@@ -8,7 +8,7 @@ import {
 } from '../../../Common/utils/routesUtils';
 import { getReactHelmetTitle } from '../../../Common/utils/reactUtils';
 import tabInfo, { STTab } from './scheduledTriggerTabs';
-import { findScheduledTrigger } from '../ScheduledTriggers/utils';
+import { findScheduledTrigger } from '../CronTriggers/utils';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix, EVENTS_SERVICE_HEADING } from '../constants';
 import { setCurrentTrigger } from '../reducer';

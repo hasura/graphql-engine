@@ -36,7 +36,7 @@ import {
   InvocationLog,
 } from './types';
 import { setScheduledTriggers, setEventTriggers, setTriggers } from './reducer';
-import { LocalScheduledTriggerState } from './ScheduledTriggers/state';
+import { LocalScheduledTriggerState } from './CronTriggers/state';
 import { LocalAdhocEventState } from './AdhocEvents/Add/state';
 import {
   LocalEventTriggerState,
@@ -47,7 +47,7 @@ import { validateETState } from './EventTriggers/utils';
 import {
   validateAddState,
   parseServerScheduledTrigger,
-} from './ScheduledTriggers/utils';
+} from './CronTriggers/utils';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -63,9 +63,7 @@ export const fetchTriggers = (kind: Nullable<TriggerKind>) => (
   const bulkQueryArgs = [];
   if (kind) {
     bulkQueryArgs.push(
-      kind === 'scheduled'
-        ? fetchScheduledTriggersQuery
-        : fetchEventTriggersQuery
+      kind === 'cron' ? fetchScheduledTriggersQuery : fetchEventTriggersQuery
     );
   } else {
     bulkQueryArgs.push(fetchEventTriggersQuery, fetchScheduledTriggersQuery);
@@ -81,7 +79,7 @@ export const fetchTriggers = (kind: Nullable<TriggerKind>) => (
   ).then(
     (data: (ScheduledTrigger[] | EventTrigger[])[]) => {
       if (kind) {
-        if (kind === 'scheduled') {
+        if (kind === 'cron') {
           dispatch(setScheduledTriggers(data[0] as ScheduledTrigger[]));
         } else {
           dispatch(setEventTriggers(data[0] as EventTrigger[]));
@@ -127,7 +125,7 @@ export const addScheduledTrigger = (
   const successMsg = 'Created scheduled trigger successfully';
 
   const customOnSuccess = () => {
-    dispatch(fetchTriggers('scheduled'))
+    dispatch(fetchTriggers('cron'))
       .then(() => {
         if (successCb) {
           successCb();
@@ -211,7 +209,7 @@ export const saveScheduledTrigger = (
       );
       return window.location.replace(newHref);
     }
-    return dispatch(fetchTriggers('scheduled'))
+    return dispatch(fetchTriggers('cron'))
       .then(() => {
         if (successCb) {
           successCb();
@@ -264,7 +262,7 @@ export const deleteScheduledTrigger = (
       successCb();
     }
     dispatch(push(`${globals.urlPrefix}${appPrefix}/scheduled/manage`));
-    dispatch(fetchTriggers('scheduled'))
+    dispatch(fetchTriggers('cron'))
       .then(() => {
         dispatch(push(`${globals.urlPrefix}${appPrefix}/scheduled/manage`));
       })

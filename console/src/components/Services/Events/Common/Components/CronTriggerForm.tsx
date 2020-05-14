@@ -5,7 +5,7 @@ import './ReactDateTime.css';
 import {
   useScheduledTrigger,
   defaultCronExpr,
-} from '../../ScheduledTriggers/state';
+} from '../../CronTriggers/state';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import Toggle from '../../../../Common/Toggle/Toggle';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';

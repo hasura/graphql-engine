@@ -3,7 +3,7 @@ import Helmet from 'react-helmet';
 import { useScheduledTrigger, LocalScheduledTriggerState } from '../state';
 import styles from '../ScheduledTriggers.scss';
 import Button from '../../../../Common/Button/Button';
-import ScheduledTriggerForm from '../../Common/Components/ScheduledTriggerForm';
+import CronTriggerFrom from '../../Common/Components/CronTriggerForm';
 import { getReactHelmetTitle } from '../../../../Common/utils/reactUtils';
 import { addScheduledTrigger } from '../../ServerIO';
 import { EVENTS_SERVICE_HEADING, CRON_TRIGGER } from '../../constants';
@@ -36,7 +36,7 @@ const Main: React.FC<Props> = props => {
       <div className={`${styles.heading_text} ${styles.add_mar_bottom}`}>
         Create a cron trigger
       </div>
-      <ScheduledTriggerForm state={state} setState={setState} />
+      <CronTriggerFrom state={state} setState={setState} />
       <Button
         onClick={onSave}
         color="yellow"

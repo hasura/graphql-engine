@@ -6,7 +6,7 @@ import { getConfirmation } from '../../../../Common/utils/jsUtils';
 import { Dispatch } from '../../../../../types';
 import { parseServerScheduledTrigger } from '../utils';
 import styles from '../../Events.scss';
-import ScheduledTriggerForm from '../../Common/Components/ScheduledTriggerForm';
+import CronTriggerFrom from '../../Common/Components/CronTriggerForm';
 import { saveScheduledTrigger, deleteScheduledTrigger } from '../../ServerIO';
 
 type Props = {
@@ -54,7 +54,7 @@ const Modify: React.FC<Props> = props => {
 
   return (
     <div className={styles.add_mar_bottom}>
-      <ScheduledTriggerForm state={state} setState={setState} />
+      <CronTriggerFrom state={state} setState={setState} />
       <div>
         <Button
           onClick={onSave}

@@ -1,5 +1,5 @@
 import { terminateSql } from './sqlUtils';
-import { LocalScheduledTriggerState } from '../../Services/Events/ScheduledTriggers/state';
+import { LocalScheduledTriggerState } from '../../Services/Events/CronTriggers/state';
 import { LocalAdhocEventState } from '../../Services/Events/AdhocEvents/Add/state';
 import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
 import { transformHeaders } from '../Headers/utils';

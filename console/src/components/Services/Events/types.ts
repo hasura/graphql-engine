@@ -15,7 +15,7 @@ export const LOAD_PENDING_DATA_EVENTS = 'Events/LOAD_PENDING_DATA_EVENTS';
 /*
  * Common types for events service
  */
-export type TriggerKind = 'event' | 'scheduled';
+export type TriggerKind = 'event' | 'cron';
 
 export type EventKind = 'data' | 'cron' | 'scheduled';
 

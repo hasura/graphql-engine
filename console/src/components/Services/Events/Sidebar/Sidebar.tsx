@@ -1,7 +1,8 @@
 import React from 'react';
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import getLeftSidebarSection from '../../../Common/Layout/LeftSubSidebar/LeftSidebarSection';
-import { ScheduledTrigger, EventTrigger } from '../types';
+import { ScheduledTrigger, EventTrigger, EventKind } from '../types';
+import { getSubserviceHeadings } from '../constants';
 import {
   getAddETRoute,
   getAddSTRoute,
@@ -12,7 +13,7 @@ import {
 interface Props extends React.ComponentProps<'div'> {
   triggers: ScheduledTrigger[] | EventTrigger[];
   currentTrigger?: ScheduledTrigger | EventTrigger;
-  service: string;
+  service: Exclude<EventKind, 'scheduled'>;
 }
 
 const LeftSidebar: React.FC<Props> = props => {
@@ -23,10 +24,17 @@ const LeftSidebar: React.FC<Props> = props => {
     count,
   } = getLeftSidebarSection({
     getServiceEntityLink: entityName => {
-      if (service.includes('scheduled')) {
-        return getSTModifyRoute(entityName);
+      switch (service) {
+        case 'data':
+          return getETModifyRoute(entityName);
+          break;
+        case 'cron':
+          return getSTModifyRoute(entityName);
+          break;
+        default:
+          return getSTModifyRoute(entityName);
+          break;
       }
-      return getETModifyRoute(entityName);
     },
     items: triggers,
     currentItem: currentTrigger,
@@ -34,10 +42,10 @@ const LeftSidebar: React.FC<Props> = props => {
   });
 
   // TODO, move to common utils
-  const heading = service[0].toUpperCase() + service.substr(1, service.length);
+  const heading = `${getSubserviceHeadings(service).triggerHeading}s`;
 
-  const isScheduledTrigger = service.includes('scheduled');
-  const addLink = isScheduledTrigger ? getAddSTRoute() : getAddETRoute();
+  const isCronTrigger = service === 'cron';
+  const addLink = isCronTrigger ? getAddSTRoute() : getAddETRoute();
 
   return (
     <LeftSubSidebar
@@ -46,8 +54,8 @@ const LeftSidebar: React.FC<Props> = props => {
       heading={`${heading} (${count})`}
       addLink={addLink}
       addLabel="Create"
-      addTestString={`${isScheduledTrigger ? 'st' : 'et'}-sidebar-add`}
-      childListTestString={`${isScheduledTrigger ? 'st' : 'et'}-links`}
+      addTestString={`${service}-sidebar-add`}
+      childListTestString={`${service}-links`}
     >
       {getTriggersList()}
     </LeftSubSidebar>
