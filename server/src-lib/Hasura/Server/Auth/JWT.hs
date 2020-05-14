@@ -14,10 +14,8 @@ module Hasura.Server.Auth.JWT
 
 import           Control.Exception               (try)
 import           Control.Lens
-import           Control.Monad                   (when)
 import           Control.Monad.Trans.Maybe
 import           Data.IORef                      (IORef, readIORef, writeIORef)
-import           Data.List                       (find)
 import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
                                                   getCurrentTime)
 import           GHC.AssertNF
@@ -30,7 +28,6 @@ import           Hasura.HTTP
 import           Hasura.Logging                  (Hasura, LogLevel (..), Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Error          (encodeJSONPath)
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
 import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,

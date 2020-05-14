@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.RQL.Instances where
@@ -69,9 +70,15 @@ instance NFData CronSchedule
 
 instance (TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
   lift m = [| M.fromList $(TH.lift $ M.toList m) |]
+#if MIN_VERSION_template_haskell(2,16,0)
+  liftTyped = TH.unsafeTExpCoerce . TH.lift
+#endif
 
 instance TH.Lift a => TH.Lift (S.HashSet a) where
   lift s = [| S.fromList $(TH.lift $ S.toList s) |]
+#if MIN_VERSION_template_haskell(2,16,0)
+  liftTyped = TH.unsafeTExpCoerce . TH.lift
+#endif
 
 deriving instance TH.Lift TDFA.CompOption
 deriving instance TH.Lift TDFA.DoPa
@@ -111,8 +118,8 @@ instance Q.ToPrepArg CronSchedule where
 instance Q.FromCol CronSchedule where
   fromCol bs =
     case Q.fromCol bs of
-      Left err -> fail $ unpack err
+      Left err -> Left err
       Right dbCron ->
         case parseCronSchedule dbCron of
-          Left err' -> fail $ "invalid cron schedule " <> err'
+          Left err' -> Left $ "invalid cron schedule " <> pack err'
           Right cron -> Right cron
