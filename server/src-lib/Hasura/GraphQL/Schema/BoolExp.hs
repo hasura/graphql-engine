@@ -32,7 +32,7 @@ type ComparisonExp = OpExpG UnpreparedValue
 boolExp
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
-  -> SelPermInfo
+  -> Maybe SelPermInfo
   -> m (Parser 'Input n (AnnBoolExp UnpreparedValue))
 boolExp table selectPermissions = memoizeOn 'boolExp table $ do
   name <- qualifiedObjectToName table <&> (<> $$(G.litName "_bool_exp"))
@@ -40,7 +40,10 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
         "Boolean expression to filter rows from the table " <> table <<>
         ". All fields are combined with a logical 'AND'."
 
-  tableFieldParsers <- fmap catMaybes $ traverse mkField =<< tableSelectFields table selectPermissions
+  tableFieldParsers <- fmap catMaybes $ maybe
+    (pure [])
+    (traverse mkField <=< tableSelectFields table)
+    selectPermissions
   recur <- boolExp table selectPermissions
   -- Bafflingly, ApplicativeDo doesn’t work if we inline this definition (I
   -- think the TH splices throw it off), so we have to define it separately.
@@ -67,7 +70,7 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
           let remoteTable = riRTable relationshipInfo
-          remotePermissions <- MaybeT $ tableSelectPermissions remoteTable
+          remotePermissions <- lift $ tableSelectPermissions remoteTable
           lift $ fmap (AVRel relationshipInfo) <$> boolExp remoteTable remotePermissions
 
         -- Using computed fields in boolean expressions is not currently supported.
