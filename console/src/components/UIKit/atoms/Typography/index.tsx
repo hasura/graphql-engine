@@ -65,6 +65,7 @@ Text.defaultProps = {
   mt: 'zero',
   mr: 'zero',
   ml: 'zero',
+  pl: 'zero',
   fontWeight: 'normal',
   fontSize: 'p',
 };
