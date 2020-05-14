@@ -312,14 +312,14 @@
     cursor: pointer;
     padding-right: 8px;
     font-size: 16px;
-    float: left;
+    float: right;
     display: inline-block;
   }
 
   .showInspectorLoading {
     cursor: pointer;
     font-size: 16px;
-    float: left;
+    float: right;
     display: inline-block;
   }
 
@@ -631,7 +631,7 @@
           border-top: 0;
           // padding: 5px;
           padding: 0px 5px;
-          min-width: 50px;
+          min-width: 25px;
           vertical-align: middle;
           .responseTableInput {
             background-color: transparent;

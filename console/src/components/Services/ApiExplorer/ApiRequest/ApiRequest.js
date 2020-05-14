@@ -380,12 +380,7 @@ class ApiRequest extends Component {
           const getHeaderValue = () => {
             let className = '';
             if (header.isNewHeader) {
-              className =
-                styles.borderTop +
-                ' ' +
-                styles.tableEnterKey +
-                ' ' +
-                styles.tableLastTd;
+              className = styles.border_right + ' ' + styles.borderTop;
             }
 
             let type = 'text';
@@ -471,6 +466,51 @@ class ApiRequest extends Component {
             return inspectorIcon;
           };
 
+          const getHeaderActions = () => {
+            let headerActions = null;
+
+            if (!header.isNewHeader) {
+              headerActions = (
+                <td className={styles.border_right}>
+                  {getHeaderAdminVal()}
+                  {getJWTInspectorIcon()}
+                </td>
+              );
+            }
+
+            return headerActions;
+          };
+
+          const getHeaderNote = () => {
+            let className = '';
+            if (header.isNewHeader) {
+              className =
+                styles.borderTop +
+                ' ' +
+                styles.tableEnterKey +
+                ' ' +
+                styles.tableLastTd;
+            }
+
+            return (
+              <td colSpan={getColSpan()} className={className}>
+                <input
+                  className={'form-control ' + styles.responseTableInput}
+                  value={header.note || ''}
+                  disabled={header.isDisabled === true}
+                  data-header-id={i}
+                  placeholder="Enter Note"
+                  data-element-name="note"
+                  onChange={onHeaderValueChanged}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                  data-test={`header-note-${i}`}
+                  type="text"
+                />
+              </td>
+            );
+          };
+
           const getHeaderRemoveBtn = () => {
             return (
               <i
@@ -482,20 +522,14 @@ class ApiRequest extends Component {
             );
           };
 
-          const getHeaderActions = () => {
-            let headerActions = null;
+          const getHeaderRemoveRow = () => {
+            let headerRemoveRow = null;
 
             if (!header.isNewHeader) {
-              headerActions = (
-                <td>
-                  {getHeaderAdminVal()}
-                  {getJWTInspectorIcon()}
-                  {getHeaderRemoveBtn()}
-                </td>
-              );
+              headerRemoveRow = <td>{getHeaderRemoveBtn()}</td>;
             }
 
-            return headerActions;
+            return headerRemoveRow;
           };
 
           return (
@@ -504,6 +538,8 @@ class ApiRequest extends Component {
               {getHeaderKey()}
               {getHeaderValue()}
               {getHeaderActions()}
+              {getHeaderNote()}
+              {getHeaderRemoveRow()}
             </tr>
           );
         });
@@ -536,7 +572,7 @@ class ApiRequest extends Component {
                   <th className={styles.wd4 + ' ' + styles.headerHeading} />
                   <th
                     className={
-                      styles.wd48 +
+                      styles.wd24 +
                       ' ' +
                       styles.border_right +
                       ' ' +
@@ -547,6 +583,18 @@ class ApiRequest extends Component {
                   </th>
                   <th className={styles.wd48 + ' ' + styles.headerHeading}>
                     Value
+                  </th>
+                  <th
+                    className={
+                      styles.wd4 +
+                      ' ' +
+                      styles.headerHeading +
+                      ' ' +
+                      styles.border_right
+                    }
+                  />
+                  <th className={styles.wd24 + ' ' + styles.headerHeading}>
+                    Note
                   </th>
                   <th className={styles.wd4 + ' ' + styles.headerHeading} />
                 </tr>
