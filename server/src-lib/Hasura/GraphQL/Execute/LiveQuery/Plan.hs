@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
--- | Construction of multiplexed live query plans; see "Hasura.GraphQL.Execute.LiveQuery" for
--- details.
+-- | Construction of multiplexed live query plans; see
+-- "Hasura.GraphQL.Execute.LiveQuery" for details.
 module Hasura.GraphQL.Execute.LiveQuery.Plan
   ( MultiplexedQuery
   , mkMultiplexedQuery
@@ -28,6 +28,7 @@ import           Hasura.Session
 
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.Extended                    as J
+import qualified Data.HashSet                           as Set
 import qualified Data.Aeson.TH                          as J
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Text                              as T
@@ -42,6 +43,7 @@ import qualified PostgreSQL.Binary.Encoding             as PE
 import           Control.Lens
 import           Data.Has
 import           Data.UUID                              (UUID)
+import           Data.Semigroup.Generic
 
 import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Resolve.Action          as RA
@@ -100,35 +102,6 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
     mkQualIden prefix = S.SEQIden . S.QIden (S.QualIden prefix Nothing) -- TODO fix this Nothing of course
     aliasToIden = Iden . G.unName . G.unAlias
 
--- | Resolves an 'GR.UnresolvedVal' by converting 'GR.UVPG' values to SQL expressions that refer to
--- the @result_vars@ input object, collecting variable values along the way.
-resolveMultiplexedValue
-  :: (MonadState (GV.ReusableVariableValues, Seq (WithScalarType PGScalarValue)) m)
-  => GR.UnresolvedVal -> m S.SQLExp
-resolveMultiplexedValue = \case
-  GR.UVPG annPGVal -> do
-    let GR.AnnPGVal varM _ colVal = annPGVal
-    varJsonPath <- case varM of
-      Just varName -> do
-        modifying _1 $ Map.insert varName colVal
-        pure ["query", G.unName $ G.unVariable varName]
-      Nothing -> do
-        syntheticVarIndex <- gets (length . snd)
-        modifying _2 (|> colVal)
-        pure ["synthetic", T.pack $ show syntheticVarIndex]
-    pure $ fromResVars (PGTypeScalar $ pstType colVal) varJsonPath
-  GR.UVSessVar ty sessVar -> pure $ fromResVars ty ["session", sessionVariableToText sessVar]
-  GR.UVSQL sqlExp -> pure sqlExp
-  GR.UVSession -> pure $ fromResVars (PGTypeScalar PGJSON) ["session"]
-  where
-    fromResVars pgType jPath = addTypeAnnotation pgType $ S.SEOpApp (S.SQLOp "#>>")
-      [ S.SEQIden $ S.QIden (S.QualIden (Iden "_subs") Nothing) (Iden "result_vars")
-      , S.SEArray $ map S.SELit jPath
-      ]
-    addTypeAnnotation pgType = flip S.SETyAnn (S.mkTypeAnn pgType) . case pgType of
-      PGTypeScalar scalarType -> withConstructorFn scalarType
-      PGTypeArray _           -> id
-
 newtype CohortId = CohortId { unCohortId :: UUID }
   deriving (Show, Eq, Hashable, J.ToJSON, Q.FromCol)
 
@@ -138,11 +111,35 @@ newCohortId = CohortId <$> liftIO UUID.nextRandom
 data CohortVariables
   = CohortVariables
   { _cvSessionVariables   :: !SessionVariables
+-- ^ A set of session variables, pruned to the minimal set actually used by
+-- this query. To illustrate the need for this pruning, suppose we have the
+-- following query:
+--
+-- > query {
+-- >   articles {
+-- >     id
+-- >     title
+-- >   }
+-- > }
+--
+-- If the select permission on @articles@ is just @{"is_public": true}@, we
+-- just generate the SQL query
+--
+-- > SELECT id, title FROM articles WHERE is_public = true
+--
+-- which doesn’t use any session variables at all. Therefore, we ought to be
+-- able to multiplex all queries of this shape into a single cohort, for quite
+-- good performance! But if we don’t prune the session variables, we’ll
+-- needlessly split subscribers into several cohorts simply because they have
+-- different values for, say, @X-Hasura-User-Id@.
+--
+-- The 'mkCohortVariables' smart constructor handles pruning the session
+-- variables to a minimal set, avoiding this pessimization.
   , _cvQueryVariables     :: !ValidatedQueryVariables
   , _cvSyntheticVariables :: !ValidatedSyntheticVariables
-  -- ^ To allow more queries to be multiplexed together, we introduce “synthetic” variables for
-  -- /all/ SQL literals in a query, even if they don’t correspond to any GraphQL variable. For
-  -- example, the query
+  -- ^ To allow more queries to be multiplexed together, we introduce “synthetic”
+  -- variables for /all/ SQL literals in a query, even if they don’t correspond to
+  -- any GraphQL variable. For example, the query
   --
   -- > subscription latest_tracks($condition: tracks_bool_exp!) {
   -- >   tracks(where: $tracks_bool_exp) {
@@ -151,30 +148,50 @@ data CohortVariables
   -- >   }
   -- > }
   --
-  -- might be executed with similar values for @$condition@, such as @{"album_id": {"_eq": "1"}}@
-  -- and @{"album_id": {"_eq": "2"}}@.
+  -- might be executed with similar values for @$condition@, such as @{"album_id":
+  -- {"_eq": "1"}}@ and @{"album_id": {"_eq": "2"}}@.
   --
-  -- Normally, we wouldn’t bother parameterizing over the @1@ and @2@ literals in the resulting
-  -- query because we can’t cache that query plan (since different @$condition@ values could lead to
-  -- different SQL). However, for live queries, we can still take advantage of the similarity
-  -- between the two queries by multiplexing them together, so we replace them with references to
-  -- synthetic variables.
+  -- Normally, we wouldn’t bother parameterizing over the @1@ and @2@ literals in the
+  -- resulting query because we can’t cache that query plan (since different
+  -- @$condition@ values could lead to different SQL). However, for live queries, we
+  -- can still take advantage of the similarity between the two queries by
+  -- multiplexing them together, so we replace them with references to synthetic
+  -- variables.
   } deriving (Show, Eq, Generic)
 instance Hashable CohortVariables
 
+-- | Builds a cohort's variables by only using the session variables that
+-- are required for the subscription
+mkCohortVariables
+  :: Set.HashSet SessionVariable
+  -> SessionVariables
+  -> ValidatedQueryVariables
+  -> ValidatedSyntheticVariables
+  -> CohortVariables
+mkCohortVariables requiredSessionVariables sessionVariableValues =
+  CohortVariables $ filterSessionVariables (\k _ -> Set.member k requiredSessionVariables)
+  sessionVariableValues
+
 instance J.ToJSON CohortVariables where
   toJSON (CohortVariables sessionVars queryVars syntheticVars) =
-    J.object ["session" J..= sessionVars, "query" J..= queryVars, "synthetic" J..= syntheticVars]
+    J.object [ "session" J..= sessionVars
+             , "query" J..= queryVars
+             , "synthetic" J..= syntheticVars
+             ]
 
 -- These types exist only to use the Postgres array encoding.
 newtype CohortIdArray = CohortIdArray { unCohortIdArray :: [CohortId] }
   deriving (Show, Eq)
+
 instance Q.ToPrepArg CohortIdArray where
   toPrepVal (CohortIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ map unCohortId l
     where
       encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)
-newtype CohortVariablesArray = CohortVariablesArray { unCohortVariablesArray :: [CohortVariables] }
+
+newtype CohortVariablesArray
+  = CohortVariablesArray { unCohortVariablesArray :: [CohortVariables] }
   deriving (Show, Eq)
+
 instance Q.ToPrepArg CohortVariablesArray where
   toPrepVal (CohortVariablesArray l) =
     Q.toPrepValHelper PTI.unknown encoder (map J.toJSON l)
@@ -182,23 +199,26 @@ instance Q.ToPrepArg CohortVariablesArray where
       encoder = PE.array 114 . PE.dimensionArray foldl' (PE.encodingArray . PE.json_ast)
 
 executeMultiplexedQuery
-  :: (MonadTx m) => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, EncJSON)]
+  :: (MonadTx m)
+  => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, EncJSON)]
 executeMultiplexedQuery (MultiplexedQuery query) = executeQuery query
 
 -- | Internal; used by both 'executeMultiplexedQuery' and 'explainLiveQueryPlan'.
-executeQuery :: (MonadTx m, Q.FromRow a) => Q.Query -> [(CohortId, CohortVariables)] -> m [a]
+executeQuery
+  :: (MonadTx m, Q.FromRow a)
+  => Q.Query -> [(CohortId, CohortVariables)] -> m [a]
 executeQuery query cohorts =
   let (cohortIds, cohortVars) = unzip cohorts
       preparedArgs = (CohortIdArray cohortIds, CohortVariablesArray cohortVars)
   in liftTx $ Q.listQE defaultTxErrorHandler query preparedArgs True
 
--- -------------------------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 -- Variable validation
 
--- | When running multiplexed queries, we have to be especially careful about user input, since
--- invalid values will cause the query to fail, causing collateral damage for anyone else
--- multiplexed into the same query. Therefore, we pre-validate variables against Postgres by
--- executing a no-op query of the shape
+-- | When running multiplexed queries, we have to be especially careful about user
+-- input, since invalid values will cause the query to fail, causing collateral
+-- damage for anyone else multiplexed into the same query.  Therefore, we
+-- pre-validate variables against Postgres by executing a no-op query of the shape
 --
 -- > SELECT 'v1'::t1, 'v2'::t2, ..., 'vn'::tn
 --
@@ -213,7 +233,7 @@ type ValidatedQueryVariables = ValidatedVariables (Map.HashMap G.Variable)
 type ValidatedSyntheticVariables = ValidatedVariables []
 
 -- | Checks if the provided arguments are valid values for their corresponding types.
--- Generates SQL of the format "select 'v1'::t1, 'v2'::t2 ..."
+-- | Generates SQL of the format "select 'v1'::t1, 'v2'::t2 ..."
 validateVariables
   :: (Traversable f, MonadError QErr m, MonadIO m)
   => PGExecCtx
@@ -232,15 +252,63 @@ validateVariables pgExecCtx variableValues = do
       res <- liftIO $ runExceptT (runLazyTx' pgExecCtx tx)
       liftEither res
 
-    -- Explicitly look for the class of errors raised when the format of a value provided
-    -- for a type is incorrect.
+    -- Explicitly look for the class of errors raised when the format of a value
+    -- provided for a type is incorrect.
     dataExnErrHandler = mkTxErrorHandler (has _PGDataException)
 
--- -------------------------------------------------------------------------------------------------
+-- | Internal: Used to collect information about various parameters
+-- of a subscription field's AST as we resolve them to SQL expressions.
+data QueryParametersInfo
+  = QueryParametersInfo
+  { _qpiReusableVariableValues     :: !GV.ReusableVariableValues
+  , _qpiSyntheticVariableValues    :: !(Seq (WithScalarType PGScalarValue))
+  , _qpiReferencedSessionVariables :: !(Set.HashSet SessionVariable)
+  -- ^ The session variables that are referenced in the query root fld's AST.
+  -- This information is used to determine a cohort's required session
+  -- variables
+  } deriving (Generic)
+    deriving (Semigroup, Monoid) via (GenericSemigroupMonoid QueryParametersInfo)
+
+makeLenses ''QueryParametersInfo
+
+-- | Resolves an 'GR.UnresolvedVal' by converting 'GR.UVPG' values to SQL
+-- expressions that refer to the @result_vars@ input object, collecting information
+-- about various parameters of the query along the way.
+resolveMultiplexedValue
+  :: (MonadState QueryParametersInfo m)
+  => GR.UnresolvedVal -> m S.SQLExp
+resolveMultiplexedValue = \case
+  GR.UVPG annPGVal -> do
+    let GR.AnnPGVal varM _ colVal = annPGVal
+    varJsonPath <- case varM of
+      Just varName -> do
+        modifying qpiReusableVariableValues $ Map.insert varName colVal
+        pure ["query", G.unName $ G.unVariable varName]
+      Nothing -> do
+        syntheticVarIndex <- use (qpiSyntheticVariableValues . to length)
+        modifying qpiSyntheticVariableValues (|> colVal)
+        pure ["synthetic", T.pack $ show syntheticVarIndex]
+    pure $ fromResVars (PGTypeScalar $ pstType colVal) varJsonPath
+  GR.UVSessVar ty sessVar -> do
+    modifying qpiReferencedSessionVariables (Set.insert sessVar)
+    pure $ fromResVars ty ["session", sessionVariableToText sessVar]
+  GR.UVSQL sqlExp -> pure sqlExp
+  GR.UVSession -> pure $ fromResVars (PGTypeScalar PGJSON) ["session"]
+  where
+    fromResVars pgType jPath = addTypeAnnotation pgType $ S.SEOpApp (S.SQLOp "#>>")
+      [ S.SEQIden $ S.QIden (S.QualIden (Iden "_subs") Nothing) (Iden "result_vars")
+      , S.SEArray $ map S.SELit jPath
+      ]
+    addTypeAnnotation pgType = flip S.SETyAnn (S.mkTypeAnn pgType) . case pgType of
+      PGTypeScalar scalarType -> withConstructorFn scalarType
+      PGTypeArray _           -> id
+
+-- -----------------------------------------------------------------------------------
 -- Live query plans
 
--- | A self-contained, ready-to-execute live query plan. Contains enough information to find an
--- existing poller that this can be added to /or/ to create a new poller if necessary.
+-- | A self-contained, ready-to-execute live query plan. Contains enough information
+-- to find an existing poller that this can be added to /or/ to create a new poller
+-- if necessary.
 data LiveQueryPlan
   = LiveQueryPlan
   { _lqpParameterizedPlan :: !ParameterizedLiveQueryPlan
@@ -256,14 +324,15 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ParameterizedLiveQueryPlan)
 
 data ReusableLiveQueryPlan
   = ReusableLiveQueryPlan
-  { _rlqpParameterizedPlan       :: !ParameterizedLiveQueryPlan
-  , _rlqpSyntheticVariableValues :: !ValidatedSyntheticVariables
-  , _rlqpQueryVariableTypes      :: !GV.ReusableVariableTypes
+  { _rlqpParameterizedPlan        :: !ParameterizedLiveQueryPlan
+  , _rlqpRequiredSessionVariables :: !(Set.HashSet SessionVariable)
+  , _rlqpSyntheticVariableValues  :: !ValidatedSyntheticVariables
+  , _rlqpQueryVariableTypes       :: !GV.ReusableVariableTypes
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 
--- | Constructs a new execution plan for a live query and returns a reusable version of the plan if
--- possible.
+-- | Constructs a new execution plan for a live query and returns a reusable version
+-- of the plan if possible.
 buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadReader r m
@@ -281,7 +350,7 @@ buildLiveQueryPlan
   -> GV.SelSet
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
 buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
-  ((resolvedASTs, (queryVariableValues, syntheticVariableValues)), finalReusability) <-
+  ((resolvedASTs, QueryParametersInfo{..}), finalReusability) <-
     GV.runReusabilityTWith initialReusability . flip runStateT mempty $
       fmap Map.fromList . for (toList fields) $ \field -> case GV._fName field of
         "__typename" -> throwVE "you cannot create a subscription on '__typename' field"
@@ -289,21 +358,23 @@ buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
           unresolvedAST <- GR.queryFldToPGAST field actionExecutioner
           resolvedAST <- GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
           pure (GV._fAlias field, resolvedAST)
-
   userInfo <- asks getter
   let multiplexedQuery = mkMultiplexedQuery resolvedASTs
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery
 
-  -- We need to ensure that the values provided for variables are correct according to Postgres.
-  -- Without this check an invalid value for a variable for one instance of the subscription will
-  -- take down the entire multiplexed query.
-  validatedQueryVars <- validateVariables pgExecCtx queryVariableValues
-  validatedSyntheticVars <- validateVariables pgExecCtx (toList syntheticVariableValues)
-  let cohortVariables = CohortVariables (_uiSession userInfo) validatedQueryVars validatedSyntheticVars
+  -- We need to ensure that the values provided for variables are correct according
+  -- to Postgres. Without this check an invalid value for a variable for one instance
+  -- of the subscription will take down the entire multiplexed query
+  validatedQueryVars <- validateVariables pgExecCtx _qpiReusableVariableValues
+  validatedSyntheticVars <- validateVariables pgExecCtx $
+                            toList _qpiSyntheticVariableValues
+  let cohortVariables = mkCohortVariables _qpiReferencedSessionVariables
+                        (_uiSession userInfo) validatedQueryVars validatedSyntheticVars
       plan = LiveQueryPlan parameterizedPlan cohortVariables
       varTypes = finalReusability ^? GV._Reusable
-      reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars <$> varTypes
+      reusablePlan = ReusableLiveQueryPlan parameterizedPlan _qpiReferencedSessionVariables
+                     validatedSyntheticVars <$> varTypes
   pure (plan, reusablePlan)
 
 reuseLiveQueryPlan
@@ -313,24 +384,29 @@ reuseLiveQueryPlan
   -> Maybe GH.VariableValues
   -> ReusableLiveQueryPlan
   -> m LiveQueryPlan
-reuseLiveQueryPlan pgExecCtx sessionVars queryVars reusablePlan = do
-  let ReusableLiveQueryPlan parameterizedPlan syntheticVars queryVarTypes = reusablePlan
-  annVarVals <- GV.validateVariablesForReuse queryVarTypes queryVars
+reuseLiveQueryPlan pgExecCtx sessionVars queryVars ReusableLiveQueryPlan{..} = do
+  annVarVals <- GV.validateVariablesForReuse _rlqpQueryVariableTypes queryVars
   validatedVars <- validateVariables pgExecCtx annVarVals
-  pure $ LiveQueryPlan parameterizedPlan (CohortVariables sessionVars validatedVars syntheticVars)
+  pure $ LiveQueryPlan _rlqpParameterizedPlan $
+         mkCohortVariables _rlqpRequiredSessionVariables
+         sessionVars validatedVars _rlqpSyntheticVariableValues
 
 data LiveQueryPlanExplanation
   = LiveQueryPlanExplanation
-  { _lqpeSql  :: !Text
-  , _lqpePlan :: ![Text]
+  { _lqpeSql       :: !Text
+  , _lqpePlan      :: ![Text]
+  , _lqpeVariables :: !CohortVariables
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''LiveQueryPlanExplanation)
 
-explainLiveQueryPlan :: (MonadTx m, MonadIO m) => LiveQueryPlan -> m LiveQueryPlanExplanation
+explainLiveQueryPlan
+  :: (MonadTx m, MonadIO m)
+  => LiveQueryPlan -> m LiveQueryPlanExplanation
 explainLiveQueryPlan plan = do
   let parameterizedPlan = _lqpParameterizedPlan plan
       queryText = Q.getQueryText . unMultiplexedQuery $ _plqpQuery parameterizedPlan
       explainQuery = Q.fromText $ "EXPLAIN (FORMAT TEXT) " <> queryText
   cohortId <- newCohortId
-  explanationLines <- map runIdentity <$> executeQuery explainQuery [(cohortId, _lqpVariables plan)]
-  pure $ LiveQueryPlanExplanation queryText explanationLines
+  explanationLines <- map runIdentity <$> executeQuery explainQuery
+                      [(cohortId, _lqpVariables plan)]
+  pure $ LiveQueryPlanExplanation queryText explanationLines $ _lqpVariables plan

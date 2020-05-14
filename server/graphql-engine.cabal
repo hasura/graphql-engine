@@ -34,7 +34,7 @@ common common-all
     DeriveFoldable DeriveFunctor DeriveGeneric DeriveLift DeriveTraversable DerivingVia EmptyCase
     FlexibleContexts FlexibleInstances FunctionalDependencies GeneralizedNewtypeDeriving
     InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns NoImplicitPrelude
-    OverloadedStrings QuantifiedConstraints QuasiQuotes RankNTypes ScopedTypeVariables
+    OverloadedStrings QuantifiedConstraints QuasiQuotes RankNTypes RecordWildCards ScopedTypeVariables
     StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeOperators
 
 common common-exe
@@ -194,6 +194,9 @@ library
                      , ghc-heap-view
 
                      , directory
+
+                     -- needed for deriving via
+                     , semigroups >= 0.19
 
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
