@@ -516,6 +516,8 @@ class TestMetadataOrder:
         check_query_f(hge_ctx, self.dir() + '/export_metadata.yaml')
 
     def test_clear_export_metadata(self, hge_ctx):
+        # In the 'clear_export_metadata.yaml' the metadata is added
+        # using the metadata APIs
         check_query_f(hge_ctx, self.dir() + '/clear_export_metadata.yaml')
 
     def test_export_replace(self, hge_ctx):
@@ -527,15 +529,23 @@ class TestMetadataOrder:
         headers = {}
         if hge_ctx.hge_key is not None:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        # we are exporting the metadata here after creating it though
+        # the metadata APIs
         export_code, export_resp, _ = hge_ctx.anyq(url, export_query, headers)
         assert export_code == 200, export_resp
         replace_query = {
             'type': 'replace_metadata',
             'args': export_resp
         }
+        # we are replacing the metadata with the exported metadata from the
+        # `export_metadata` response.
         replace_code, replace_resp, _ = hge_ctx.anyq(url, replace_query, headers)
         assert replace_code == 200, replace_resp
-        # The export_resp and export_resp_1 should be the same
+        # we are again exporting the metadata to assert that the metadata exported
+        # after creating the metadata through the metadata APIs and the metadata
+        # exported after importing the metdata using the `replace_metadata` to be
+        # the same. Doing this check, ensures that the metadata has been properly
+        # imported by the graphql-engine.
         export_code_1, export_resp_1, _ = hge_ctx.anyq(url, export_query, headers)
         assert export_code_1 == 200
         assert export_resp == export_resp_1
