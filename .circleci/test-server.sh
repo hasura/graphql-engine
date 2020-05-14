@@ -193,6 +193,7 @@ curl -sL https://deb.nodesource.com/setup_8.x | bash -
 apt-get install -y nodejs
 npm_config_loglevel=error npm install $PYTEST_ROOT/remote_schemas/nodejs/
 
+npm install apollo-server graphql
 
 mkdir -p "$OUTPUT_FOLDER/hpc"
 
