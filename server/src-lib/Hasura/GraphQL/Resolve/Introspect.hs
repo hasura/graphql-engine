@@ -195,14 +195,31 @@ readIncludeDeprecated subFld = do
       S.PGValBoolean b -> pure b
       _ -> throw500 "unexpected non-Boolean argument for includeDeprecated"
 
+{- Note [Reusability of introspection queries with variables]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Introspection queries can have variables, too, in particular to influence one of
+two arguments: the @name@ argument of the @__type@ field, and the
+@includeDeprecated@ argument of the @fields@ and @enumValues@ fields.  The
+current code does not cache all introspection queries with variables correctly.
+As a workaround to this, whenever a variable is passed to an @includeDeprecated@
+argument, we mark the query as unreusable.  This is the purpose of
+'dummyReadIncludeDeprecated'.
+
+Now @fields@ and @enumValues@ are intended to be used when introspecting,
+respectively [object and interface types] and enum types.  However, it does not
+suffice to only call 'dummyReadIncludeDeprecated' for such types, since @fields@
+and @enumValues@ are valid GraphQL fields regardless of what type we are looking
+at.  So precisely because @__Type@ is a union, we need to call
+'dummyReadIncludeDeprecated' in all cases.
+
+See also issue #4547.
+-}
+
 dummyReadIncludeDeprecated
   :: ( Monad m, MonadReusability m, MonadError QErr m )
   => Field
   -> m ()
 dummyReadIncludeDeprecated fld =
-  -- Here we make sure to read the 'includeDeprecated' argument to the
-  -- 'fields' and 'enumValues' fields, to ensure that the query is
-  -- marked unreusable if necessary (fix #4547).
   void $ forM (toList (_fSelSet fld)) $ \subFld ->
     case _fName subFld of
       "fields"     -> readIncludeDeprecated subFld
