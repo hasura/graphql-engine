@@ -94,7 +94,7 @@ You can create relationships for custom output types by:
 
      Set the output type relationship as shown below:
 
-     .. thumbnail:: ../../../img/graphql/manual/actions/actions-relationship.png
+     .. thumbnail:: /img/graphql/manual/actions/actions-relationship.png
         :alt: Console action relationship
 
      Hit ``Save`` to create the relationship.

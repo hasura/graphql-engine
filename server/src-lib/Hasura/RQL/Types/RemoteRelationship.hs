@@ -26,9 +26,6 @@ import           Hasura.SQL.Types
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.HashMap.Strict           (HashMap)
-import           Data.HashSet                  (HashSet)
-import           Data.List.NonEmpty            (NonEmpty (..))
 import           Data.Scientific
 import           Data.Set                      (Set)
 import           Language.Haskell.TH.Syntax    (Lift)

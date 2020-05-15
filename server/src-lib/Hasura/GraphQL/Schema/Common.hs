@@ -32,7 +32,6 @@ import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Control.Lens
-import           Control.Lens.TH               (makePrisms)
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types

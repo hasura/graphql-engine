@@ -4,7 +4,6 @@ module Hasura.GraphQL.Resolve.Insert
   )
 where
 
-import           Control.Arrow                     ((>>>))
 import           Data.Has
 import           Hasura.EncJSON
 import           Hasura.Prelude

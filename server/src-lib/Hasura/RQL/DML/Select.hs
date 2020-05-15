@@ -273,13 +273,6 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   convSelectQ fieldInfo selPermInfo
     extSelQ sessVarBldr prepArgBuilder
 
-selectP2 :: JsonAggSelect -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
-selectP2 jsonAggSelect (sel, p) =
-  encJFromBS . runIdentity . Q.getRow
-  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
-  where
-    selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel
-
 selectQuerySQL :: JsonAggSelect -> AnnSimpleSel -> Q.Query
 selectQuerySQL jsonAggSelect sel =
   Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
@@ -287,6 +280,13 @@ selectQuerySQL jsonAggSelect sel =
 selectAggQuerySQL :: AnnAggSel -> Q.Query
 selectAggQuerySQL =
   Q.fromBuilder . toSQL . mkAggSelect
+
+selectP2 :: JsonAggSelect -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
+selectP2 jsonAggSelect (sel, p) =
+  encJFromBS . runIdentity . Q.getRow
+  <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
+  where
+    selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel
 
 asSingleRowJsonResp :: Q.Query -> [Q.PrepArg] -> Q.TxE QErr EncJSON
 asSingleRowJsonResp query args =

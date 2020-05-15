@@ -114,7 +114,7 @@ module Hasura.RQL.Types.SchemaCache
   , FunctionCache
   , getFuncsOfTable
   , askFunctionInfo
-
+  , CronTriggerInfo(..)
   , mergeRemoteTypesWithGCtx
   ) where
 
@@ -131,13 +131,17 @@ import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Types
 
+
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           System.Cron.Types
 
 import qualified Hasura.GraphQL.Validate.Types     as VT
 import qualified Hasura.GraphQL.Context            as GC
@@ -176,6 +180,19 @@ type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
+data CronTriggerInfo
+ = CronTriggerInfo
+   { ctiName        :: !TriggerName
+   , ctiSchedule    :: !CronSchedule
+   , ctiPayload     :: !(Maybe Value)
+   , ctiRetryConf   :: !STRetryConf
+   , ctiWebhookInfo :: !ResolvedWebhook
+   , ctiHeaders     :: ![EventHeaderInfo]
+   , ctiComment     :: !(Maybe Text)
+   } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 3 snakeCase) ''CronTriggerInfo)
+
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
   deriving (Show, Eq, Ord, Hashable, ToJSON, FromJSON)
@@ -192,16 +209,17 @@ type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
 
 data SchemaCache
   = SchemaCache
-  { scTables              :: !TableCache
-  , scActions             :: !ActionCache
-  , scFunctions           :: !FunctionCache
-  , scRemoteSchemas       :: !RemoteSchemaMap
-  , scAllowlist           :: !(HS.HashSet GQLQuery)
-  , scCustomTypes         :: !(NonObjectTypeMap, AnnotatedObjects)
-  , scGCtxMap             :: !GC.GCtxMap
-  , scDefaultRemoteGCtx   :: !GC.GCtx
-  , scDepMap              :: !DepMap
-  , scInconsistentObjs    :: ![InconsistentMetadata]
+  { scTables            :: !TableCache
+  , scActions           :: !ActionCache
+  , scFunctions         :: !FunctionCache
+  , scRemoteSchemas     :: !RemoteSchemaMap
+  , scAllowlist         :: !(HS.HashSet GQLQuery)
+  , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
+  , scGCtxMap           :: !GC.GCtxMap
+  , scDefaultRemoteGCtx :: !GC.GCtx
+  , scDepMap            :: !DepMap
+  , scInconsistentObjs  :: ![InconsistentMetadata]
+  , scCronTriggers      :: !(M.HashMap TriggerName CronTriggerInfo)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 

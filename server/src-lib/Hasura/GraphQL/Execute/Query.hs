@@ -241,7 +241,6 @@ queryOpFromPlan manager reqHdrs userInfo varValsM (ReusableQueryPlan varTypes fl
 
   return (mkLazyRespTx manager reqHdrs userInfo resolved, mkGeneratedSqlMap resolved)
 
-
 data PreparedSql
   = PreparedSql
   { _psQuery       :: !Q.Query
@@ -283,7 +282,8 @@ mkLazyRespTx manager reqHdrs userInfo resolved =
         let prepArgs = map fst args
         case maybeRemoteJoins of
           Nothing -> liftTx $ asSingleRowJsonResp q prepArgs
-          Just remoteJoins -> executeQueryWithRemoteJoins manager reqHdrs userInfo q prepArgs remoteJoins
+          Just remoteJoins ->
+            executeQueryWithRemoteJoins manager reqHdrs userInfo q prepArgs remoteJoins
     return (G.unName $ G.unAlias alias, resp)
 
 mkGeneratedSqlMap :: [(G.Alias, ResolvedQuery)] -> GeneratedSqlMap

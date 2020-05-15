@@ -423,6 +423,25 @@ recreateSystemMetadata = do
         [ arrayRel $$(nonEmptyText "remote_relationships") $
           manualConfig "hdb_catalog" "hdb_remote_relationship" tableNameMapping
         ]
+      , table "hdb_catalog" "hdb_cron_triggers"
+        [ arrayRel $$(nonEmptyText "cron_events") $ RUFKeyOn $
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_events") "trigger_name"
+        ]
+      , table "hdb_catalog" "hdb_cron_events"
+        [ objectRel $$(nonEmptyText "cron_trigger") $ RUFKeyOn "trigger_name"
+        , arrayRel $$(nonEmptyText "cron_event_logs") $ RUFKeyOn $
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_event_invocation_logs") "event_id"
+        ]
+      , table "hdb_catalog" "hdb_cron_event_invocation_logs"
+        [ objectRel $$(nonEmptyText "cron_event") $ RUFKeyOn "event_id"
+        ]
+      , table "hdb_catalog" "hdb_scheduled_events"
+        [ arrayRel $$(nonEmptyText "scheduled_event_logs") $ RUFKeyOn $
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_scheduled_event_invocation_logs") "event_id"
+        ]
+      , table "hdb_catalog" "hdb_scheduled_event_invocation_logs"
+        [ objectRel $$(nonEmptyText "scheduled_event")  $ RUFKeyOn "event_id"
+        ]
       ]
 
     tableNameMapping =

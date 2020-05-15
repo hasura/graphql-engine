@@ -177,15 +177,16 @@ instance FromJSON ClearMetadata where
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqVersion          :: !MetadataVersion
-  , aqTables           :: ![TableMeta]
-  , aqFunctions        :: !FunctionsMetadata
-  , aqRemoteSchemas    :: ![AddRemoteSchemaQuery]
-  , aqQueryCollections :: ![Collection.CreateCollection]
-  , aqAllowlist        :: ![Collection.CollectionReq]
-  , aqCustomTypes      :: !CustomTypes
-  , aqActions          :: ![ActionMetadata]
-  } deriving (Show, Eq, Lift)
+  { aqVersion           :: !MetadataVersion
+  , aqTables            :: ![TableMeta]
+  , aqFunctions         :: !FunctionsMetadata
+  , aqRemoteSchemas     :: ![AddRemoteSchemaQuery]
+  , aqQueryCollections  :: ![Collection.CreateCollection]
+  , aqAllowlist         :: ![Collection.CollectionReq]
+  , aqCustomTypes       :: !CustomTypes
+  , aqActions           :: ![ActionMetadata]
+  , aqCronTriggers      :: ![CronTriggerMetadata]
+  } deriving (Show, Eq)
 
 instance FromJSON ReplaceMetadata where
   parseJSON = withObject "Object" $ \o -> do
@@ -198,6 +199,7 @@ instance FromJSON ReplaceMetadata where
       <*> o .:? "allow_list" .!= []
       <*> o .:? "custom_types" .!= emptyCustomTypes
       <*> o .:? "actions" .!= []
+      <*> o .:? "cron_triggers" .!= []
     where
       parseFunctions version maybeValue =
         case version of
@@ -265,6 +267,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                allowlist
                                customTypes
                                actions
+                               cronTriggers
                              ) = AO.object $ [versionPair, tablesPair] <>
                                  catMaybes [ functionsPair
                                            , remoteSchemasPair
@@ -272,6 +275,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                            , allowlistPair
                                            , actionsPair
                                            , customTypesPair
+                                           , cronTriggersPair
                                            ]
   where
     versionPair = ("version", AO.toOrdered version)
@@ -286,6 +290,8 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
     customTypesPair = if customTypes == emptyCustomTypes then Nothing
                       else Just ("custom_types", customTypesToOrdJSON customTypes)
     actionsPair = listToMaybeOrdPair "actions" actionMetadataToOrdJSON actions
+
+    cronTriggersPair = listToMaybeOrdPair "cron_triggers" crontriggerQToOrdJSON cronTriggers
 
     tableMetaToOrdJSON :: TableMeta -> AO.Value
     tableMetaToOrdJSON ( TableMeta
@@ -438,6 +444,29 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
       AO.object $ [ ("name", AO.toOrdered name)
                   , ("definition", AO.toOrdered definition)
                   ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
+
+    crontriggerQToOrdJSON :: CronTriggerMetadata -> AO.Value
+    crontriggerQToOrdJSON
+      (CronTriggerMetadata name webhook schedule payload retryConf headers includeInMetadata comment) =
+      AO.object $
+            [ ("name", AO.toOrdered name)
+            , ("webhook", AO.toOrdered webhook)
+            , ("schedule", AO.toOrdered schedule)
+            , ("include_in_metadata", AO.toOrdered includeInMetadata)
+            ]
+            <> catMaybes
+            [ maybeAnyToMaybeOrdPair "payload" AO.toOrdered payload
+            , maybeAnyToMaybeOrdPair "retry_conf" AO.toOrdered (maybeRetryConfiguration retryConf)
+            , maybeAnyToMaybeOrdPair "headers" AO.toOrdered (maybeHeader headers)
+            , maybeAnyToMaybeOrdPair "comment" AO.toOrdered comment]
+      where
+        maybeRetryConfiguration retryConfig
+          | retryConfig == defaultSTRetryConf = Nothing
+          | otherwise = Just retryConfig
+
+        maybeHeader headerConfig
+          | headerConfig == [] = Nothing
+          | otherwise = Just headerConfig
 
     customTypesToOrdJSON :: CustomTypes -> AO.Value
     customTypesToOrdJSON (CustomTypes inpObjs objs scalars enums) =

@@ -47,6 +47,7 @@ import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
+import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Cache.Dependencies
@@ -59,7 +60,6 @@ import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.RQL.Types.QueryCollection
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
@@ -190,6 +190,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     , scDepMap = resolvedDependencies
     , scInconsistentObjs =
         inconsistentObjects <> dependencyInconsistentObjects <> toList gqlSchemaInconsistentObjects
+    , scCronTriggers = _boCronTriggers resolvedOutputs
     }
   where
     buildAndCollectInfo
@@ -200,14 +201,16 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     buildAndCollectInfo = proc (catalogMetadata, invalidationKeys) -> do
       let CatalogMetadata tables relationships permissions
             eventTriggers remoteSchemas functions allowlistDefs
-            computedFields catalogCustomTypes actions remoteRelationships = catalogMetadata
+
+            computedFields catalogCustomTypes actions remoteRelationships
+            cronTriggers = catalogMetadata
+
+      -- tables
+      tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
       remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, remoteSchemas)
-
-      -- tables
-      tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
 
       -- relationships and computed fields
       let relationshipsByTable = M.groupOn _crTable relationships
@@ -284,6 +287,8 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
                                    , "custom types are inconsistent" )
           returnA -< M.empty
 
+      cronTriggersMap <- buildCronTriggers -< ((),cronTriggers)
+
       returnA -< BuildOutputs
         { _boTables = tableCache
         , _boActions = actionCache
@@ -294,12 +299,18 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
         -- In such case, use empty resolved value of custom types.
         , _boCustomTypes = fromMaybe (NonObjectTypeMap mempty, mempty) maybeResolvedCustomTypes
         , _boRemoteRelationshipTypes = remoteRelationshipTypes
+        , _boCronTriggers = cronTriggersMap
         }
 
     mkEventTriggerMetadataObject (CatalogEventTrigger qt trn configuration) =
       let objectId = MOTableObj qt $ MTOTrigger trn
           definition = object ["table" .= qt, "configuration" .= configuration]
       in MetadataObject objectId definition
+
+    mkCronTriggerMetadataObject catalogCronTrigger =
+      let definition = toJSON catalogCronTrigger
+      in MetadataObject (MOCronTrigger (_cctName catalogCronTrigger))
+                        definition
 
     mkActionMetadataObject (ActionMetadata name comment defn _) =
       MetadataObject (MOAction name) (toJSON $ CreateAction name defn comment)
@@ -361,6 +372,25 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
             when (buildReason == CatalogUpdate) $ do
               liftTx $ delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
               mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
+
+    buildCronTriggers
+      :: ( ArrowChoice arr
+         , Inc.ArrowDistribute arr
+         , ArrowWriter (Seq CollectedInfo) arr
+         , Inc.ArrowCache m arr
+         , MonadIO m
+         , MonadTx m)
+      => ((),[CatalogCronTrigger])
+         `arr` HashMap TriggerName CronTriggerInfo
+    buildCronTriggers = buildInfoMap _cctName mkCronTriggerMetadataObject buildCronTrigger
+      where
+        buildCronTrigger = proc (_,cronTrigger) -> do
+          let triggerName = triggerNameToTxt $ _cctName cronTrigger
+              addCronTriggerContext e = "in cron trigger " <> triggerName <> ": " <> e
+          (| withRecordInconsistency (
+            (| modifyErrA (bindErrorA -< resolveCronTrigger cronTrigger)
+             |) addCronTriggerContext)
+           |) (mkCronTriggerMetadataObject cronTrigger)
 
     buildActions
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr

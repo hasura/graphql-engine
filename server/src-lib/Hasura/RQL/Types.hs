@@ -2,7 +2,6 @@ module Hasura.RQL.Types
   ( MonadTx(..)
 
   , UserInfoM(..)
-  , successMsg
 
   , HasHttpManager (..)
   , HasGCtxMap (..)
@@ -39,7 +38,6 @@ module Hasura.RQL.Types
   , module R
   ) where
 
-import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.Session
 import           Hasura.SQL.Types
@@ -58,6 +56,8 @@ import           Hasura.RQL.Types.Function           as R
 import           Hasura.RQL.Types.Metadata           as R
 import           Hasura.RQL.Types.Permission         as R
 import           Hasura.RQL.Types.RemoteRelationship as R
+import           Hasura.RQL.Types.QueryCollection    as R
+import           Hasura.RQL.Types.ScheduledTrigger   as R
 import           Hasura.RQL.Types.RemoteSchema       as R
 import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
@@ -303,8 +303,5 @@ askRemoteRel fieldInfoMap relName = do
 
 askCurRole :: (UserInfoM m) => m RoleName
 askCurRole = _uiRole <$> askUserInfo
-
-successMsg :: EncJSON
-successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text

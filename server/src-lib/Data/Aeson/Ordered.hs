@@ -44,7 +44,6 @@ import qualified Data.HashMap.Strict              as Map
 import           Data.HashMap.Strict.InsOrd       (InsOrdHashMap)
 import qualified Data.HashMap.Strict.InsOrd       as OMap
 import           Data.Scientific
-import           Data.Text                        (Text)
 import qualified Data.Text                        as T
 import           Data.Vector                      (Vector)
 import qualified Data.Vector                      as V

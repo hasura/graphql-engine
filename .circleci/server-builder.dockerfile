@@ -1,6 +1,8 @@
 # Don't update this without updating the
 # packager imager of graphql-engine
-FROM haskell:8.6.5
+FROM phadej/ghc:8.10.1-stretch
+# TODO https://github.com/haskell/docker-haskell/issues/17
+#FROM haskell:8.10.1
 
 ARG docker_ver="17.09.0-ce"
 ARG postgres_ver="12"

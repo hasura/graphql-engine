@@ -29,7 +29,7 @@ Set action permissions
      Head to the ``Actions -> [action-name] -> Permissions`` tab in the
      console.
 
-     .. thumbnail:: ../../../img/graphql/manual/actions/actions-permissions.png
+     .. thumbnail:: /img/graphql/manual/actions/actions-permissions.png
         :alt: Console action permission
 
      Hit ``Save`` to give the role permission to access the action.

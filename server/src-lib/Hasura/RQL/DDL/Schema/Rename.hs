@@ -8,7 +8,6 @@ module Hasura.RQL.DDL.Schema.Rename
   )
 where
 
-import           Control.Arrow                      ((***))
 import           Control.Lens.Combinators
 import           Control.Lens.Operators
 import           Hasura.Prelude

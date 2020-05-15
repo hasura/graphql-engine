@@ -12,6 +12,7 @@ module Hasura.GraphQL.Resolve
   , QueryRootFldUnresolved
   , QueryRootFldResolved
   , toPGQuery
+  , toSQLSelect
 
   , RIntro.schemaR
   , RIntro.typeR
@@ -193,3 +194,12 @@ getOpCtx f = do
   opCtxMap <- asks getter
   onNothing (Map.lookup f opCtxMap) $ throw500 $
     "lookup failed: opctx: " <> showName f
+
+toSQLSelect :: QueryRootFldResolved -> S.Select
+toSQLSelect = \case
+  QRFPk s       -> DS.mkSQLSelect DS.JASSingleObject s
+  QRFSimple s   -> DS.mkSQLSelect DS.JASMultipleRows s
+  QRFAgg s      -> DS.mkAggSelect s
+  QRFActionSelect s -> DS.mkSQLSelect DS.JASSingleObject s
+  QRFActionExecuteObject s -> DS.mkSQLSelect DS.JASSingleObject s
+  QRFActionExecuteList s -> DS.mkSQLSelect DS.JASSingleObject s

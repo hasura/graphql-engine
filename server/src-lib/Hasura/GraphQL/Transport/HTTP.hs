@@ -49,11 +49,13 @@ runGQ reqId userInfo reqHdrs req = do
       E.GExPRemote rsi opDef  -> do
         let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
                             | otherwise = Telem.Query
+
         (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi $ G._todType opDef
         pure (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
 
-  let telemTimeIO = fromUnits telemTimeIO_DT
-      telemTimeTot = fromUnits telemTimeTot_DT
+  let telemTimeIO = convertDuration telemTimeIO_DT
+      telemTimeTot = convertDuration telemTimeTot_DT
+
   Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
 

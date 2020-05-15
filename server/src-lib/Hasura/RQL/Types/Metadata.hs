@@ -33,6 +33,7 @@ data MetadataObjId
   | MOCustomTypes
   | MOAction !ActionName
   | MOActionPermission !ActionName !RoleName
+  | MOCronTrigger !TriggerName
   deriving (Show, Eq, Generic)
 $(makePrisms ''MetadataObjId)
 instance Hashable MetadataObjId
@@ -42,6 +43,7 @@ moiTypeName = \case
   MOTable _ -> "table"
   MOFunction _ -> "function"
   MORemoteSchema _ -> "remote_schema"
+  MOCronTrigger _ -> "cron_trigger"
   MOTableObj _ tableObjectId -> case tableObjectId of
     MTORel _ relType   -> relTypeToTxt relType <> "_relation"
     MTOPerm _ permType -> permTypeToCode permType <> "_permission"
@@ -57,6 +59,7 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
   MOTable name -> dquoteTxt name
   MOFunction name -> dquoteTxt name
   MORemoteSchema name -> dquoteTxt name
+  MOCronTrigger name -> dquoteTxt name
   MOTableObj tableName tableObjectId ->
     let tableObjectName = case tableObjectId of
           MTORel name _         -> dquoteTxt name

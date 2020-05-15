@@ -67,6 +67,7 @@ Options inherited from parent commands
 
 ::
 
+      --envfile string      .env filename to load ENV vars from (default ".env")
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)

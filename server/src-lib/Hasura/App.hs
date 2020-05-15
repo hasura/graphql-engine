@@ -33,7 +33,8 @@ import qualified Text.Mustache.Compile                as M
 
 import           Hasura.Db
 import           Hasura.EncJSON
-import           Hasura.Events.Lib
+import           Hasura.Eventing.EventTrigger
+import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
 import           Hasura.Logging
 import           Hasura.Prelude
@@ -241,7 +242,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
 
   maxEvThrds <- liftIO $ getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
   fetchI  <- fmap milliseconds $ liftIO $
-    getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+    getFromEnv (Milliseconds defaultFetchInterval) "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
   logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
 
   -- prepare event triggers data
@@ -255,6 +256,13 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   -- start a backgroud thread to handle async actions
   _asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $ liftIO $
     asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
+
+  -- start a background thread to create new cron events
+  void $ liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
+    runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
+
+  -- start a background thread to deliver the scheduled events
+  void $ liftIO $ C.forkImmortal "processScheduledTriggers" logger  $ processScheduledTriggers logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef)
 
   -- start a background thread to check for updates
   _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $

@@ -9,7 +9,6 @@ module Hasura.RQL.DDL.RemoteRelationship.Validate
 
 import           Data.Bifunctor
 import           Data.Foldable
-import           Data.List.NonEmpty            (NonEmpty (..))
 import           Data.Validation
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude                hiding (first)

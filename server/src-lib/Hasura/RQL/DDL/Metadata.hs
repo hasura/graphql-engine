@@ -29,6 +29,8 @@ import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
 import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaToCatalog, fetchRemoteSchemas,
                                                      removeRemoteSchemaFromCatalog)
+import           Hasura.RQL.DDL.ScheduledTrigger    (addCronTriggerToCatalog,
+                                                     deleteCronTriggerFromCatalog)
 import           Hasura.RQL.DDL.Schema.Catalog      (saveTableToCatalog)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -59,6 +61,7 @@ clearUserMetadata = liftTx $ Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_custom_types" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_action_permission" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_action WHERE is_system_defined <> 'true'" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_cron_triggers WHERE include_in_metadata" () False
 
 runClearMetadata
   :: (MonadTx m, CacheRWM m)
@@ -72,7 +75,7 @@ applyQP1
   :: (QErrM m)
   => ReplaceMetadata -> m ()
 applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
-          allowlist _ actions) = do
+          allowlist _ actions cronTriggers) = do
   withPathK "tables" $ do
 
     checkMultipleDecls "tables" $ map _tmTable tables
@@ -118,6 +121,9 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
   withPathK "actions" $
     checkMultipleDecls "actions" $ map _amName actions
 
+  withPathK "cron_triggers" $
+    checkMultipleDecls "cron triggers" $ map ctName cronTriggers
+
   where
     withTableName qt = withPathK (qualObjectToText qt)
 
@@ -139,7 +145,7 @@ applyQP2 replaceMetadata = do
 
 saveMetadata :: (MonadTx m, HasSystemDefined m) => ReplaceMetadata -> m ()
 saveMetadata (ReplaceMetadata _ tables functionsMeta
-              schemas collections allowlist customTypes actions) = do
+              schemas collections allowlist customTypes actions cronTriggers) = do
 
   withPathK "tables" $ do
     indexedForM_ tables $ \TableMeta{..} -> do
@@ -204,6 +210,11 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
   withPathK "custom_types" $
     CustomTypes.persistCustomTypes customTypes
 
+  -- cron triggers
+  withPathK "cron_triggers" $
+    indexedForM_ cronTriggers $ \ct -> liftTx $ do
+    addCronTriggerToCatalog ct
+
   -- actions
   withPathK "actions" $
     indexedForM_ actions $ \action -> do
@@ -215,6 +226,7 @@ saveMetadata (ReplaceMetadata _ tables functionsMeta
           let createActionPermission = CreateActionPermission (_amName action)
                                        (_apmRole permission) Nothing (_apmComment permission)
           Action.persistCreateActionPermission createActionPermission
+
   where
     processPerms tableName perms = indexedForM_ perms $ Permission.addPermP2 tableName
 
@@ -290,9 +302,17 @@ fetchMetadata = do
   -- fetch actions
   actions <- fetchActions
 
-  return $ ReplaceMetadata currentMetadataVersion (HMIns.elems postRelMap) functions
-                           remoteSchemas collections allowlist
-                           customTypes actions
+  cronTriggers <- fetchCronTriggers
+
+  return $ ReplaceMetadata currentMetadataVersion
+                           (HMIns.elems postRelMap)
+                           functions
+                           remoteSchemas
+                           collections
+                           allowlist
+                           customTypes
+                           actions
+                           cronTriggers
 
   where
 
@@ -387,6 +407,29 @@ fetchMetadata = do
                           ( QualifiedObject schema table
                           , ComputedFieldMeta name definition comment
                           )
+
+    fetchCronTriggers =
+      map uncurryCronTrigger
+              <$> Q.listQE defaultTxErrorHandler
+      [Q.sql|
+       SELECT ct.name, ct.webhook_conf, ct.cron_schedule, ct.payload,
+             ct.retry_conf, ct.header_conf, ct.include_in_metadata, ct.comment
+        FROM hdb_catalog.hdb_cron_triggers ct
+        WHERE include_in_metadata
+      |] () False
+      where
+        uncurryCronTrigger
+          (name, webhook, schedule, payload, retryConfig, headerConfig, includeMetadata, comment) =
+          CronTriggerMetadata
+          { ctName = name,
+            ctWebhook = Q.getAltJ webhook,
+            ctSchedule = schedule,
+            ctPayload = Q.getAltJ <$> payload,
+            ctRetryConf = Q.getAltJ retryConfig,
+            ctHeaders = Q.getAltJ headerConfig,
+            ctIncludeInMetadata = includeMetadata,
+            ctComment = comment
+          }
 
     fetchCustomTypes :: Q.TxE QErr CustomTypes
     fetchCustomTypes =
@@ -500,3 +543,4 @@ purgeMetadataObj = liftTx . \case
   MOCustomTypes                              -> CustomTypes.clearCustomTypes
   MOAction action                            -> Action.deleteActionFromCatalog action Nothing
   MOActionPermission action role             -> Action.deleteActionPermissionFromCatalog action role
+  MOCronTrigger ctName                       -> deleteCronTriggerFromCatalog ctName

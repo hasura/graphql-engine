@@ -9,7 +9,7 @@ import           Prelude
 
 import qualified Data.HashMap.Strict as Map
 import qualified Data.HashSet        as Set
-import           Data.List           as L
+import qualified Data.List           as L
 import qualified Data.List.NonEmpty  as NE
 
 duplicates :: (Eq a, Hashable a) => [a] -> Set.HashSet a
