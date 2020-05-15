@@ -83,11 +83,7 @@ class ErrorBoundary extends React.Component<
     const { hasError, type, error } = this.state;
 
     if (hasError && metadata.ongoingRequest) {
-      return (
-        <div>
-          <Spinner />
-        </div>
-      );
+      return <Spinner />;
     }
 
     if (hasError) {
