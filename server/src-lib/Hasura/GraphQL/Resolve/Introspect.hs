@@ -209,8 +209,8 @@ Now @fields@ and @enumValues@ are intended to be used when introspecting,
 respectively [object and interface types] and enum types.  However, it does not
 suffice to only call 'dummyReadIncludeDeprecated' for such types, since @fields@
 and @enumValues@ are valid GraphQL fields regardless of what type we are looking
-at.  So precisely because @__Type@ is a union, we need to call
-'dummyReadIncludeDeprecated' in all cases.
+at.  So precisely because @__Type@ is _thought of_ as a union, but _not
+actually_ a union, we need to call 'dummyReadIncludeDeprecated' in all cases.
 
 See also issue #4547.
 -}
