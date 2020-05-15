@@ -1,6 +1,5 @@
 module Data.Parser.JSONPathSpec (spec) where
 
-import           Data.Aeson.Internal  (JSONPath, JSONPathElement (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types     (encodeJSONPath)
 

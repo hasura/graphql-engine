@@ -1,6 +1,6 @@
 .. meta::
    :description: Creating Hasura actions
-   :keywords: hasura, docs, actions, create 
+   :keywords: hasura, docs, actions, create
 
 .. _create_actions:
 
