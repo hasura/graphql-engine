@@ -29,6 +29,11 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 import           Hasura.GraphQL.Parser.Column
+import           Hasura.GraphQL.Parser.Monad
+import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Execute.Resolve
+
+import qualified Hasura.RQL.DML.Select             as DS
 
 type PlanVariables = Map.HashMap G.Name Int
 
@@ -176,16 +181,61 @@ prepareWithPlan = \case
 queryRootName :: Text
 queryRootName = "query_root"
 
+toPGQuery :: QueryRootField S.SQLExp -> Q.Query
+toPGQuery = \case
+  QRFSimple s -> DS.selectQuerySQL DS.JASMultipleRows s
+  QRFPrimaryKey s -> _
+  QRFAggregation s -> _
+  QRFExp s ->_
+
+traverseQueryRootField
+  :: (Applicative f)
+  => (a -> f b)
+  -> QueryRootField a
+  -> f (QueryRootField b)
+traverseQueryRootField f = \case
+  QRFPrimaryKey s           -> QRFPrimaryKey <$> DS.traverseAnnSimpleSel f s
+  QRFSimple s       -> QRFSimple <$> DS.traverseAnnSimpleSel f s
+  QRFAggregation s          -> _
+  QRFExp s -> _
 convertQuerySelSet
   :: ( MonadError QErr m
      , MonadReader r m
      , Has SQLGenCtx r
      , Has UserInfo r
      )
-  => G.SelectionSet G.Name
+  => GQLContext
+  -> G.SelectionSet G.Name
   -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
-convertQuerySelSet selectionSet = do
-  _
+convertQuerySelSet gqlContext selectionSet = do
+  let parsers = gqlQueryParser gqlContext
+  usrVars <- asks (userVars . getter)
+  bla <- resolveVariables [] Map.empty selectionSet
+  fldPlans <- case parsers bla of
+    -- TODO return prettier errors
+    Left errs -> throw500 $ T.concat $ map peMessage $ toList errs
+    Right (map, _reus) -> forM (toList selectionSet) $ \case
+      f@(G.SelectionField fld) -> do
+        fldPlan <- case G._fName fld of
+          -- TODO support introspection
+          -- "__type"     -> fldPlanFromJ <$> R.typeR fld
+          -- "__schema"   -> fldPlanFromJ <$> R.schemaR fld
+          -- "__typename" -> pure $ fldPlanFromJ queryRootName
+          root         -> do
+            bla <- resolveVariables [] Map.empty [f]
+            case Map.lookup root map of
+              Just conv -> do
+                (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
+                  traverseQueryRootField prepareWithPlan conv
+                pure . RFPPostgres $ PGPlan (toPGQuery q) vars prepped
+              _ -> _
+        pure (fromMaybe (G._fName fld) (G._fAlias fld), fldPlan)
+      _ -> _
+  {-let varTypes = finalReusability ^? _Reusable
+      reusablePlan = ReusableQueryPlan <$> varTypes <*> pure fldPlans-}
+  (tx, sql) <- mkCurPlanTx usrVars fldPlans
+  pure (tx, Nothing, sql) -- FIXME ReusableQueryPlan
+
   -- usrVars <- asks (userVars . getter)
   -- (fldPlans, finalReusability) <- runReusabilityTWith initialReusability $
   --   forM (toList fields) $ \fld -> do

@@ -169,7 +169,16 @@ getQueryParts (GQLReq opNameM q varValsM) = do
 
 getGCtx :: SchemaCache -> RoleName -> C.GQLContext
 getGCtx sc rn =
-  fromMaybe (_scDefaultRemoteGCtx sc) $ Map.lookup rn (scGQLContext sc)
+  {- TODO TODO FIXME of course this is wrong -}
+  {- TODO TODO FIXME of course this is wrong -}
+  {- TODO TODO FIXME of course this is wrong -}
+  {- TODO TODO FIXME of course this is wrong -}
+  {- TODO TODO FIXME of course this is wrong -}
+  {- TODO TODO FIXME of course this is wrong -}
+  {- TODO TODO FIXME of course this is wrong -}
+  {- TODO TODO FIXME of course this is wrong -}
+  {- TODO TODO FIXME of course this is wrong -}
+  fromMaybe (head $ Map.elems $ scGQLContext sc) $ Map.lookup rn (scGQLContext sc)
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -267,7 +276,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       planPartial <- getExecPlanPartial userInfo sc enableAL req
       case planPartial of
         GExPHasura (gCtx, G.TypedOperationDefinition G.OperationTypeQuery _ _ _ selSet) -> do
-          (queryTx, plan, genSql) <- getQueryOp sqlGenCtx userInfo selSet
+          (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo selSet
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ GExPHasura $ ExOpQuery queryTx (Just genSql)
         _ -> _
@@ -302,12 +311,13 @@ runE sqlGenCtx userInfo action = do
 
 getQueryOp
   :: (MonadError QErr m)
-  => SQLGenCtx
+  => C.GQLContext
+  -> SQLGenCtx
   -> UserInfo
   -> G.SelectionSet G.Name
   -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
-getQueryOp sqlGenCtx userInfo fields =
-  runE sqlGenCtx userInfo $ EQ.convertQuerySelSet fields
+getQueryOp gqlContext sqlGenCtx userInfo fields =
+  runE sqlGenCtx userInfo $ EQ.convertQuerySelSet gqlContext fields
 
 mutationRootName :: Text
 mutationRootName = "mutation_root"

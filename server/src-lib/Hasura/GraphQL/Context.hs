@@ -16,7 +16,7 @@ import qualified Hasura.RQL.DML.Select.Types   as RQL
 import           Hasura.GraphQL.Parser
 
 data GQLContext = GQLContext
-  { gqlQueryParser :: ParserFn (HashMap G.Name QueryRootField)
+  { gqlQueryParser :: ParserFn (HashMap G.Name (QueryRootField UnpreparedValue))
   }
 
 instance J.ToJSON GQLContext where
@@ -28,10 +28,10 @@ type ParserFn a
 
 -- FIXME: taken from Resolve.hs
 -- do we want to keep it the same?
-data QueryRootField
-  = QRFSimple      (RQL.AnnSimpleSelG UnpreparedValue)
-  | QRFPrimaryKey  (RQL.AnnSimpleSelG UnpreparedValue)
-  | QRFAggregation (RQL.AnnAggSelG    UnpreparedValue)
+data QueryRootField v
+  = QRFSimple      (RQL.AnnSimpleSelG v)
+  | QRFPrimaryKey  (RQL.AnnSimpleSelG v)
+  | QRFAggregation (RQL.AnnAggSelG    v)
   | QRFExp         Text
 
 {-

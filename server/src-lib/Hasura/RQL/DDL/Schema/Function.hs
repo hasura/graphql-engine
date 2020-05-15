@@ -19,7 +19,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Hasura.GraphQL.Schema         as GS
+-- import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Control.Monad.Validate        as MV

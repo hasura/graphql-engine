@@ -12,7 +12,7 @@ import           Control.Lens.Extended
 import           Control.Monad.Unique
 
 import qualified Hasura.GraphQL.Parser         as P
-import qualified Hasura.RQL.DML.Select         as RQL
+-- import qualified Hasura.RQL.DML.Select         as RQL
 
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser         (Kind (..), Parser, UnpreparedValue (..))
@@ -34,6 +34,7 @@ buildGQLContext allTables =
   S.toMap allRoles & M.traverseWithKey \roleName () ->
     buildContextForRole roleName
   where
+    allRoles :: HashSet RoleName
     allRoles = allTables ^.. folded.tiRolePermInfoMap.to M.keys.folded
 
     buildContextForRole roleName = do
@@ -48,7 +49,7 @@ query
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => HashSet QualifiedTable
   -> Bool
-  -> m (Parser 'Output n (HashMap G.Name QueryRootField))
+  -> m (Parser 'Output n (HashMap G.Name (QueryRootField UnpreparedValue)))
 query allTables stringifyNum = do
   selectExpParsers <- for (toList allTables) \tableName -> do
     selectPerms <- tableSelectPermissions tableName

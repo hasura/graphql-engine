@@ -80,10 +80,10 @@ queryFldToPGAST
      , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
      , Has QueryCtxMap r
      )
-  => V.Field
+  => G.Field
   -> m QueryRootFldUnresolved
 queryFldToPGAST fld = do
-  opCtx <- getOpCtx $ V._fName fld
+  opCtx <- getOpCtx $ G._fName fld
   userInfo <- asks getter
   case opCtx of
     QCSelect ctx -> do
