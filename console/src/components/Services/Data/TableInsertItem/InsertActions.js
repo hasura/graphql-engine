@@ -40,8 +40,7 @@ const insertItem = (tableName, colValues) => {
       const colSchema = columns.find(x => x.column_name === colName);
       const colType = colSchema.data_type;
       if (Integers.indexOf(colType) > 0) {
-        insertObject[colName] =
-          parseInt(colValues[colName], 10) || colValues[colName];
+        insertObject[colName] = colValues[colName];
       } else if (Reals.indexOf(colType) > 0) {
         insertObject[colName] =
           parseFloat(colValues[colName], 10) || colValues[colName];
