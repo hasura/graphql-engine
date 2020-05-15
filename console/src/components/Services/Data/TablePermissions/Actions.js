@@ -727,13 +727,9 @@ const permChangePermissions = changeType => {
       '_table_' +
       table;
 
-    const requestMsg = capitalize(
-      getIngForm(changeType) + ' permissions...'
-    );
+    const requestMsg = capitalize(getIngForm(changeType) + ' permissions...');
     const successMsg = 'Permissions ' + getEdForm(changeType);
-    const errorMsg = capitalize(
-      getIngForm(changeType) + ' permissions failed'
-    );
+    const errorMsg = capitalize(getIngForm(changeType) + ' permissions failed');
 
     const customOnSuccess = () => {
       if (changeType === permChangeTypes.save) {

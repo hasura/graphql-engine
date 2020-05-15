@@ -15,7 +15,7 @@ GraphQL engine/Postgres, different avenues are recommended for introducing such 
 - **Post-CRUD**: :ref:`event-triggers`
 - :ref:`derived-data`
 
-.. thumbnail:: ../../../img/graphql/manual/business-logic/custom-business-logic.png
+.. thumbnail:: /img/graphql/manual/business-logic/custom-business-logic.png
 
 .. _remote-schemas:
 
@@ -35,7 +35,7 @@ To support these kinds of business logic, a custom GraphQL schema with resolvers
 logic is needed (*see link below for boilerplates*). This remote schema can then be merged with GraphQL engine's
 schema using the console. Here's a reference architecture diagram for such a setup:
 
-.. thumbnail:: ../../../img/graphql/manual/schema/schema-stitching-v1-arch-diagram.png
+.. thumbnail:: /img/graphql/manual/schema/schema-stitching-v1-arch-diagram.png
 
 For more details, links to boilerplates for custom GraphQL servers, etc. please head to :doc:`../remote-schemas/index`.
 
@@ -56,7 +56,7 @@ If your business logic is stateful, it can even store its state back in the Post
 with GraphQL engine, allowing your frontend app to offer a reactive user experience, where the app uses GraphQL
 subscriptions to listen to updates from your webhook via Postgres.
 
-.. thumbnail:: ../../../img/graphql/manual/event-triggers/database-event-triggers.png
+.. thumbnail:: /img/graphql/manual/event-triggers/database-event-triggers.png
 
 Event triggers are ideal for use cases such as the following:
 

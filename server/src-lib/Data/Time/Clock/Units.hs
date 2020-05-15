@@ -3,9 +3,9 @@
 {-# LANGUAGE DerivingVia         #-}
 {-# LANGUAGE TypeOperators       #-}
 
-{-| Types for time intervals of various units. Each newtype wraps 'DiffTime', but they have
-different 'Num' instances. The intent is to use the record selectors to write literals with
-particular units, like this:
+{-| Types for time intervals of various units. Each newtype wraps 'DiffTime',
+but they have different 'Num' instances. The intent is to use the record
+selectors to write literals with particular units, like this:
 
 @
 >>> 'milliseconds' 500
@@ -25,22 +25,23 @@ You can also go the other way using the constructors rather than the selectors:
 0.5
 @
 
-NOTE: the 'Real' and 'Fractional' instances just essentially add or strip the unit label (as 
-above), so you can't use 'realToFrac' to convert between the units types here. Instead try 
-'fromUnits' which is less of a foot-gun.
+NOTE: the 'Real' and 'Fractional' instances just essentially add or strip the
+unit label (as  above), so you can't use 'realToFrac' to convert between the
+units types here. Instead try  'convertDuration' which is less of a foot-gun.
 
-The 'Read' instances for these types mirror the behavior of the 'RealFrac' instance wrt numeric
-literals for convenient serialization (e.g. when working with env vars):
+The 'Read' instances for these types mirror the behavior of the 'RealFrac'
+instance wrt numeric literals for convenient serialization (e.g. when working
+with env vars):
 
 @
->>> read "1.2" :: Milliseconds 
+>>> read "1.2" :: Milliseconds
 Milliseconds {milliseconds = 0.0012s}
 @
 
-Generally, if you need to pass around a duration between functions you should use 'DiffTime'
-directly. However if storing a duration in a type that will be serialized, e.g. one having
-a 'ToJSON' instance, it is better to use one of these explicit wrapper types so that it's 
-obvious what units will be used. -}
+Generally, if you need to pass around a duration between functions you should
+use 'DiffTime' directly. However if storing a duration in a type that will be
+serialized, e.g. one having a 'ToJSON' instance, it is better to use one of
+these explicit wrapper types so that it's  obvious what units will be used. -}
 module Data.Time.Clock.Units
   ( Days(..)
   , Hours(..)
@@ -51,16 +52,16 @@ module Data.Time.Clock.Units
   , Nanoseconds(..)
   -- * Converting between units
   , Duration(..)
-  , fromUnits
+  , convertDuration
   -- * Reexports
   -- | We use 'DiffTime' as the standard type for unit-agnostic duration in our
-  -- code. You'll need to convert to a 'NominalDiffTime'  (with 'fromUnits') in
+  -- code. You'll need to convert to a 'NominalDiffTime'  (with 'convertDuration') in
   -- order to do anything useful with 'UTCTime' with these durations.
   --
   -- NOTE: some care must be taken especially when 'NominalDiffTime' interacts
   -- with 'UTCTime':
   --
-  --  - a 'DiffTime' or 'NominalDiffTime' my be negative
+  --  - a 'DiffTime' or 'NominalDiffTime' may be negative
   --  - 'addUTCTime' and 'diffUTCTime' do not attempt to handle leap seconds
   , DiffTime
   ) where
@@ -74,7 +75,6 @@ import           Data.Proxy
 import           Data.Time.Clock
 import           GHC.TypeLits
 import           Numeric         (readFloat)
-
 
 newtype Seconds = Seconds { seconds :: DiffTime }
   -- NOTE: we want Show to give a pastable data structure string, even
@@ -149,11 +149,11 @@ instance (KnownNat picosPerUnit) => RealFrac (TimeUnit picosPerUnit) where
 
 -- we can ignore unit:
 instance Hashable (TimeUnit a) where
-  hashWithSalt salt (TimeUnit dt) = hashWithSalt salt $ 
+  hashWithSalt salt (TimeUnit dt) = hashWithSalt salt $
     (realToFrac :: DiffTime -> Double) dt
 
 
--- | Duration types isomorphic to 'DiffTime', powering 'fromUnits'.
+-- | Duration types isomorphic to 'DiffTime', powering 'convertDuration'.
 class Duration d where
   fromDiffTime :: DiffTime -> d
   toDiffTime :: d -> DiffTime
@@ -167,5 +167,5 @@ instance Duration NominalDiffTime where
   toDiffTime = realToFrac
 
 -- | Safe conversion between duration units.
-fromUnits :: (Duration x, Duration y)=> x -> y
-fromUnits = fromDiffTime . toDiffTime
+convertDuration :: (Duration x, Duration y) => x -> y
+convertDuration = fromDiffTime . toDiffTime

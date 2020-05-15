@@ -53,7 +53,7 @@ The ``downgrade`` command is not part of the Hasura CLI but rather a command on
 
 .. code-block:: bash
 
-  docker run hasura/graphql-engine:<VERSION> graphql-engine downgrade --to-<NEW-VERSION>
+  docker run -e HASURA_GRAPHQL_DATABASE_URL=$DATABASE_URL hasura/graphql-engine:<VERSION> graphql-engine downgrade --to-<NEW-VERSION>
 
 You need to use a newer version of ``graphql-engine`` to downgrade to an older
 version, since only the newer version knows how to downgrade from that point in
