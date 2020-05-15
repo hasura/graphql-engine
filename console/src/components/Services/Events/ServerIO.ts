@@ -13,12 +13,13 @@ import {
   getSelectQuery,
   makeOrderBy,
 } from '../../Common/utils/v1QueryUtils';
-import globals from '../../../Globals';
 import { GetReduxState, Dispatch, Thunk } from '../../../types';
 import { makeMigrationCall } from '../Data/DataActions';
 import requestAction from '../../../utils/requestAction';
 import {
   getETModifyRoute,
+  getScheduledEventsLandingRoute,
+  getSTModifyRoute,
   getDataEventsLandingRoute,
   getAdhocPendingEventsRoute,
 } from '../../Common/utils/routesUtils';
@@ -52,7 +53,6 @@ import {
   showErrorNotification,
   showSuccessNotification,
 } from '../Common/Notification';
-import { appPrefix } from './constants';
 import { EventTriggerProperty } from './EventTriggers/Modify/utils';
 import { getLogsTableDef } from './utils';
 
@@ -115,7 +115,6 @@ export const addScheduledTrigger = (
     }
     return dispatch(showErrorNotification(errorMsg, validationError));
   }
-  console.log('No validation error');
 
   const upQuery = generateCreateScheduledTriggerQuery(state);
   const downQuery = getDropScheduledTriggerQuery(state.name);
@@ -130,11 +129,7 @@ export const addScheduledTrigger = (
         if (successCb) {
           successCb();
         }
-        dispatch(
-          push(
-            `${globals.urlPrefix}${appPrefix}/scheduled/${state.name}/modify`
-          )
-        );
+        dispatch(push(getSTModifyRoute(state.name, 'absolute')));
       })
       .catch(() => {
         if (errorCb) {
@@ -180,6 +175,19 @@ export const saveScheduledTrigger = (
   }
 
   const isRenamed = state.name !== existingTrigger.name;
+  if (isRenamed) {
+    const isOk = getConfirmation(
+      'Renaming a trigger deletes the current trigger and creates a new trigger with this configuration. All the events of the current trigger will be dropped.',
+      true,
+      'RENAME'
+    );
+    if (!isOk) {
+      if (errorCb) {
+        errorCb();
+      }
+      return null;
+    }
+  }
 
   const replaceQueryUp = generateUpdateScheduledTriggerQuery(state);
   const replaceQueryDown = generateUpdateScheduledTriggerQuery(
@@ -204,8 +212,8 @@ export const saveScheduledTrigger = (
   const customOnSuccess = () => {
     if (isRenamed) {
       const newHref = window.location.href.replace(
-        `${existingTrigger.name}/modify`,
-        `${state.name}/modify`
+        getSTModifyRoute(existingTrigger.name, 'relative'),
+        getSTModifyRoute(state.name, 'relative')
       );
       return window.location.replace(newHref);
     }
@@ -247,6 +255,18 @@ export const deleteScheduledTrigger = (
   successCb?: () => void,
   errorCb?: () => void
 ): Thunk => (dispatch: Dispatch, getState: GetReduxState) => {
+  const isOk = getConfirmation(
+    `This will delete the cron trigger permanently and delete all the associated events.`,
+    true,
+    trigger.name
+  );
+  if (!isOk) {
+    if (errorCb) {
+      errorCb();
+    }
+    return;
+  }
+
   const upQuery = getDropScheduledTriggerQuery(trigger.name);
   const downQuery = generateCreateScheduledTriggerQuery(
     parseServerScheduledTrigger(trigger)
@@ -261,16 +281,8 @@ export const deleteScheduledTrigger = (
     if (successCb) {
       successCb();
     }
-    dispatch(push(`${globals.urlPrefix}${appPrefix}/scheduled/manage`));
-    dispatch(fetchTriggers('cron'))
-      .then(() => {
-        dispatch(push(`${globals.urlPrefix}${appPrefix}/scheduled/manage`));
-      })
-      .catch(() => {
-        if (errorCb) {
-          errorCb();
-        }
-      });
+    dispatch(push(getScheduledEventsLandingRoute('absolute')));
+    dispatch(fetchTriggers('cron'));
   };
   const customOnError = () => {
     if (errorCb) {
@@ -502,6 +514,9 @@ export const createScheduledEvent = (
   const validationError = validateAdhocEventState(state);
   const errorMessage = 'Failed scheduling the event';
   if (validationError) {
+    if (errorCb) {
+      errorCb();
+    }
     return dispatch(showErrorNotification(errorMessage, validationError));
   }
 

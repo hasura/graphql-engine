@@ -25,15 +25,7 @@ interface Props extends FilterTableProps {
 }
 
 const InvocationLogsTable: React.FC<Props> = props => {
-  const {
-    rows,
-    filterState,
-    setFilterState,
-    runQuery,
-    columns,
-    count,
-    dispatch,
-  } = props;
+  const { rows, filterState, runQuery, columns, count, dispatch } = props;
   const [redeliveredEventId, setRedeliveredEventId] = React.useState<
     Nullable<string>
   >(null);
@@ -83,11 +75,10 @@ const InvocationLogsTable: React.FC<Props> = props => {
 
     const existingColSort = filterState.sorts.find(s => s.column === col);
     if (existingColSort && existingColSort.type === 'asc') {
-      setFilterState.sorts([makeOrderBy(col, 'desc')]);
+      runQuery(undefined, undefined, [makeOrderBy(col, 'desc')]);
     } else {
-      setFilterState.sorts([makeOrderBy(col, 'asc')]);
+      runQuery(undefined, undefined, [makeOrderBy(col, 'asc')]);
     }
-    runQuery();
   };
 
   const changePage = (page: number) => {

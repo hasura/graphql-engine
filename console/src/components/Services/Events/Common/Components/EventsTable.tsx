@@ -19,15 +19,7 @@ import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 type Props = FilterTableProps;
 
 const EventsTable: React.FC<Props> = props => {
-  const {
-    rows,
-    count,
-    filterState,
-    setFilterState,
-    runQuery,
-    columns,
-    identifier,
-  } = props;
+  const { rows, count, filterState, runQuery, columns, identifier } = props;
 
   if (rows.length === 0) {
     return <div className={styles.add_mar_top}>No data available</div>;
@@ -38,13 +30,14 @@ const EventsTable: React.FC<Props> = props => {
   let shouldSortColumn = true;
 
   const sortByColumn = (col: string) => {
+    // Remove all the existing order_bys
+
     const existingColSort = filterState.sorts.find(s => s.column === col);
     if (existingColSort && existingColSort.type === 'asc') {
-      setFilterState.sorts([makeOrderBy(col, 'desc')]);
+      runQuery(undefined, undefined, [makeOrderBy(col, 'desc')]);
     } else {
-      setFilterState.sorts([makeOrderBy(col, 'asc')]);
+      runQuery(undefined, undefined, [makeOrderBy(col, 'asc')]);
     }
-    runQuery();
   };
 
   const changePage = (page: number) => {

@@ -11,7 +11,7 @@ export type LocalScheduledTriggerState = {
   schedule: string;
   payload: string;
   headers: Header[];
-  loading: boolean;
+  loading: Record<FormAsyncAction, boolean>;
   retryConf: RetryConf;
   includeInMetadata: boolean;
   comment: Nullable<string>;
@@ -23,7 +23,11 @@ const defaultState: LocalScheduledTriggerState = {
   schedule: '',
   payload: '',
   headers: [defaultHeader],
-  loading: false,
+  loading: {
+    modify: false,
+    delete: false,
+    add: false,
+  },
   retryConf: {
     timeout_sec: 60,
     num_retries: 0,
@@ -33,6 +37,8 @@ const defaultState: LocalScheduledTriggerState = {
   includeInMetadata: true,
   comment: null,
 };
+
+type FormAsyncAction = 'modify' | 'delete' | 'add';
 
 export const useScheduledTrigger = (initState?: LocalScheduledTriggerState) => {
   const [state, setState] = React.useState(initState || defaultState);
@@ -64,10 +70,13 @@ export const useScheduledTrigger = (initState?: LocalScheduledTriggerState) => {
           headers,
         }));
       },
-      loading: (isLoading: boolean) => {
+      loading: (action: FormAsyncAction, isLoading: boolean) => {
         setState(s => ({
           ...s,
-          loading: isLoading,
+          loading: {
+            ...s.loading,
+            [action]: isLoading,
+          },
         }));
       },
       retryConf: (r: RetryConf) => {

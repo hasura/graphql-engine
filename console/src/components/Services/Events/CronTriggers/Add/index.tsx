@@ -7,7 +7,11 @@ import CronTriggerFrom from '../../Common/Components/CronTriggerForm';
 import { getReactHelmetTitle } from '../../../../Common/utils/reactUtils';
 import { addScheduledTrigger } from '../../ServerIO';
 import { EVENTS_SERVICE_HEADING, CRON_TRIGGER } from '../../constants';
-import { MapReduxToProps, ComponentReduxConnector, Dispatch } from '../../../../../types';
+import {
+  MapReduxToProps,
+  ComponentReduxConnector,
+  Dispatch,
+} from '../../../../../types';
 
 type Props = {
   dispatch: Dispatch;
@@ -18,10 +22,10 @@ const Main: React.FC<Props> = props => {
   const { dispatch, initState } = props;
   const { state, setState } = useScheduledTrigger(initState);
 
-  const callback = () => setState.loading(false);
+  const callback = () => setState.loading('add', false);
   const onSave = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    setState.loading(true);
+    setState.loading('add', true);
     dispatch(addScheduledTrigger(state, callback, callback));
   };
 
@@ -41,10 +45,10 @@ const Main: React.FC<Props> = props => {
         onClick={onSave}
         color="yellow"
         size="sm"
-        disabled={state.loading}
+        disabled={state.loading.add}
         className={`${styles.add_mar_right}`}
       >
-        {state.loading ? 'Creating...' : 'Create'}
+        {state.loading.add ? 'Creating...' : 'Create'}
       </Button>
     </div>
   );
