@@ -59,6 +59,8 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix checkbox for forwarding client headers in actions (#4595)
 - console: re-enable foreign tables to be listed as views (fix #4714) (#4742)
 - console: display rows limit in permissions editor if set to zero (fix #4559)
+- console: fix inconsistency between selected rows state and displayed rows (fix #4654) (#4673)
+- console: fix displaying boolean values in `Edit Row` tab (#4682)
 - cli: list all available commands in root command help (fix #4623)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)

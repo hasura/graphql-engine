@@ -1,28 +1,28 @@
 import React from 'react';
-import BootstrapModal from 'react-bootstrap/lib/Modal';
-import BootstrapModalButton from 'react-bootstrap/lib/Button';
+import {
+  Modal as BootstrapModal,
+  Button as BootstrapModalButton,
+} from 'react-bootstrap';
 
-interface Props {
+export interface ModalProps {
   show?: boolean;
-  title: React.ReactNode;
-  onClose: () => void;
+  title: React.ReactElement;
+  onClose?(): void;
+  onSubmit?(): void;
+  onCancel?(): void;
   customClass?: string;
-  onSubmit?: (() => void) | null;
-  onCancel?: (() => void) | null;
-  submitText?: string | null;
-  submitTestId?: string | null;
-  children: React.ReactNode;
+  submitText?: string;
+  submitTestId?: string;
 }
-
-const Modal: React.FC<Props> = ({
+const Modal: React.FC<ModalProps> = ({
   show = true,
   title,
   onClose,
   customClass = '',
-  onSubmit = null,
-  onCancel = null,
-  submitText = null,
-  submitTestId = null,
+  onSubmit,
+  onCancel,
+  submitText = '',
+  submitTestId = '',
   children,
 }) => {
   const getHeader = () => {
@@ -37,6 +37,14 @@ const Modal: React.FC<Props> = ({
     return <BootstrapModal.Body>{children}</BootstrapModal.Body>;
   };
 
+  const triggerOnClose = () => {
+    if (onCancel) {
+      onCancel();
+    } else if (onClose) {
+      onClose();
+    }
+  };
+
   const getFooter = () => {
     if (!onSubmit) {
       return null;
@@ -44,7 +52,7 @@ const Modal: React.FC<Props> = ({
 
     return (
       <BootstrapModal.Footer>
-        <BootstrapModalButton onClick={onCancel || onClose}>
+        <BootstrapModalButton onClick={triggerOnClose}>
           Cancel
         </BootstrapModalButton>
         <BootstrapModalButton
@@ -58,8 +66,18 @@ const Modal: React.FC<Props> = ({
     );
   };
 
+  const bootstrapModalProps: BootstrapModal.ModalProps = {
+    show,
+    dialogClassName: customClass,
+    onHide() {},
+  };
+
+  if (onClose) {
+    bootstrapModalProps.onHide = onClose;
+  }
+
   return (
-    <BootstrapModal show={show} onHide={onClose} dialogClassName={customClass}>
+    <BootstrapModal {...bootstrapModalProps}>
       {getHeader()}
       {getBody()}
       {getFooter()}
