@@ -162,7 +162,7 @@ type ServerConfig struct {
 
 	TLSConfig *tls.Config `yaml:"-"`
 
-	HTTPClient *http.Client `yaml:"-"`
+	HTTPClient                 *http.Client               `yaml:"-"`
 	HasuraServerInternalConfig HasuraServerInternalConfig `yaml:"-"`
 }
 
