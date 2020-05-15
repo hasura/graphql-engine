@@ -79,16 +79,11 @@ openOpaqueValue :: (MonadReusability m) => OpaqueValue a -> m a
 openOpaqueValue (OpaqueValue v isVariable) = when isVariable markNotReusable $> v
 
 asPGColumnTypeAndValueM
-  :: (MonadReusability m, MonadError QErr m)
+  :: forall m . (MonadReusability m, MonadError QErr m)
   => AnnInpVal
   -> m (PGColumnType, WithScalarType (Maybe (OpaqueValue PGScalarValue)))
 asPGColumnTypeAndValueM v = do
-  (columnType, scalarValueM) <- case _aivValue v of
-    AGScalar colTy val -> pure (PGColumnScalar colTy, WithScalarType colTy val)
-    AGEnum _ (AGEReference reference maybeValue) -> do
-      let maybeScalarValue = PGValText . RQL.getEnumValue <$> maybeValue
-      pure (PGColumnEnumReference reference, WithScalarType PGText maybeScalarValue)
-    _ -> tyMismatch "pgvalue" v
+  (columnType, scalarValueM) <- toPG (_aivValue v)
 
   for_ (_aivVariable v) $ \variableName -> if
     -- If the value is a nullable variable, then the caller might make a different decision based on
@@ -99,18 +94,20 @@ asPGColumnTypeAndValueM v = do
         Nothing -> do
           recordVariableUse variableName columnType ReusableNoDefault
         Just dv -> do
-          defValueM <- case dv of
-            AGScalar colTy val -> pure $ WithScalarType colTy val
-            AGEnum _ (AGEReference _ maybeValue) -> do
-              let maybeScalarValue = PGValText . RQL.getEnumValue <$> maybeValue
-              pure $ WithScalarType PGText maybeScalarValue
-            _ -> tyMismatch "pgvalue" v
+          (_ , WithScalarType _ defValueM) <- toPG dv
           let defVal = case defValueM of
-                (WithScalarType _ Nothing   ) -> ReusableNoDefault
-                (WithScalarType _ (Just val)) -> ReusableDefault val
+                Nothing  -> ReusableNoDefault
+                Just val -> ReusableDefault val
           recordVariableUse variableName columnType defVal
   let isVariable = isJust $ _aivVariable v
   pure (columnType, fmap (flip OpaqueValue isVariable) <$> scalarValueM)
+  where
+  toPG :: AnnGValue -> m (PGColumnType, WithScalarType (Maybe PGScalarValue))
+  toPG (AGScalar colTy val) = pure (PGColumnScalar colTy, WithScalarType colTy val)
+  toPG (AGEnum _ (AGEReference reference maybeValue)) =
+    let maybeScalarValue = PGValText . RQL.getEnumValue <$> maybeValue
+    in  pure (PGColumnEnumReference reference, WithScalarType PGText maybeScalarValue)
+  toPG _ = tyMismatch "pgvalue" v
 
 asPGColumnTypeAndAnnValueM
   :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m (PGColumnType, Maybe OpaquePGValue)
