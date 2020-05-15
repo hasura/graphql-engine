@@ -2,6 +2,96 @@
 
 ## Next release
 
+### Scheduled Triggers
+
+A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron based or timestamp based.
+
+A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to  generate an end-of-day sales report every weekday at 9pm.
+
+You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience. 
+
+<Add docs links>
+
+(close #1914)
+
+
+### Allow access to session variables by computed fields (fix #3846)
+
+Sometimes it is useful for computed fields to have access to the Hasura session variables directly. For example, suppose you want to fetch some articles but also get related user info, say `likedByMe`. Now, you can define a function like:
+
+```
+CREATE OR REPLACE FUNCTION article_liked(article_row article, hasura_session json)
+RETURNS boolean AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM liked_article A
+    WHERE A.user_id = hasura_session ->> 'x-hasura-user-id' AND A.article_id = article_row.id
+  );
+$$ LANGUAGE sql STABLE;
+```
+
+and make a query like:
+
+```
+query {
+  articles {
+    title
+    content
+    likedByMe
+  }
+}
+```
+
+Support for this is now added through the `add_computed_field` API.
+
+Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+- server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
+
+- server: avoid loss of precision when passing values in scientific notation (fix #4733)
+- server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
+- console: avoid count queries for large tables (#4692)
+- console: add read replica support section to pro popup (#4118)
+- console: allow modifying default value for PK (fix #4075) (#4679)
+- console: fix checkbox for forwarding client headers in actions (#4595)
+- console: re-enable foreign tables to be listed as views (fix #4714) (#4742)
+- console: display rows limit in permissions editor if set to zero (fix #4559)
+- console: fix inconsistency between selected rows state and displayed rows (fix #4654) (#4673)
+- cli: list all available commands in root command help (fix #4623)
+- docs: add section on actions vs. remote schemas to actions documentation (#4284)
+- docs: fix wrong info about excluding scheme in CORS config (#4685)
+- docs: add docs page on query performance (close #2316) (#3693)
+
+## `v1.2.0`
+
+Include the changelog from **v1.2.0-beta.1**, **v1.2.0-beta.2**, **v1.2.0-beta.3**, **v1.2.0-beta.4**, **v1.2.0-beta.5**
+
+Additional changelog:
+
+### CLI: Support servers with self-signed certificates (close #4564) (#4582)
+
+A new flag `--certificate-authority` is added so that the CA certificate can be
+provided to trust the Hasura Endpoint with a self-signed SSL certificate.
+
+Another flag `--insecure-skip-tls-verification` is added to skip verifying the certificate
+in case you don't have access to the CA certificate. As the name suggests,
+using this flag is insecure since verification is not carried out.
+
+### Bug fixes and improvements
+
+- console: update graphiql explorer to support operation transform (#4567)
+- console: make GraphiQL Explorer taking the whole viewport (#4553)
+- console: fix table columns type comparision during column edit (close #4125) (#4393)
+- cli: allow initialising project in current directory (fix #4560) #4566
+- cli: remove irrelevant flags from init command (close #4508) (#4549)
+- docs: update migrations docs with config v2 (#4586)
+- docs: update actions docs (#4586)
+
+## `v1.2.0-beta.5`
+
 ### server: backend only insert permissions
 
 Introduces optional `backend_only` (default: `false`) configuration in insert permissions
@@ -39,6 +129,7 @@ The `internal` field for action errors is improved with more debug information. 
 `response` and `error` fields instead of just `webhook_response` field.
 
 Before:
+
 ```json
 {
   "errors": [
@@ -59,7 +150,9 @@ Before:
   ]
 }
 ```
+
 After:
+
 ```json
 {
   "errors": [
@@ -123,6 +216,7 @@ ENV vars can now be read from .env file present at the project root directory. A
 ```
 hasura console --envfile production.env
 ```
+
 The above command will read ENV vars from `production.env` file present at the project root directory.
 
 (close #4129) (#4454)
@@ -237,9 +331,12 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 
 A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
 
+See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-v2.html).
+
 (close #3969) (#4145)
 
 ### Bug fixes and improvements
+
 - server: improve performance of replace_metadata tracking many tables (fix #3802)
 - server: option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
 - server: fix various space leaks to avoid excessive memory consumption
@@ -323,3 +420,4 @@ Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
 - console: show pre-release update notifications with opt out option (#3888)
 - console: handle invalid keys in permission builder (close #3848) (#3863)
+- docs: add page on data validation to docs (close #4085) (#4260)

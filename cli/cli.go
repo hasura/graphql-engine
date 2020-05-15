@@ -8,6 +8,8 @@
 package cli
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -151,8 +153,16 @@ type ServerConfig struct {
 	AdminSecret string `yaml:"admin_secret,omitempty"`
 	// APIPaths (optional) API paths for server
 	APIPaths *ServerAPIPaths `yaml:"api_paths,omitempty"`
+	// InsecureSkipTLSVerify - indicates if TLS verification is disabled or not.
+	InsecureSkipTLSVerify bool `yaml:"insecure_skip_tls_verify,omitempty"`
+	// CAPath - Path to a cert file for the certificate authority
+	CAPath string `yaml:"certificate_authority,omitempty"`
 
-	ParsedEndpoint             *url.URL                   `yaml:"-"`
+	ParsedEndpoint *url.URL `yaml:"-"`
+
+	TLSConfig *tls.Config `yaml:"-"`
+
+	HTTPClient *http.Client `yaml:"-"`
 	HasuraServerInternalConfig HasuraServerInternalConfig `yaml:"-"`
 }
 
@@ -206,6 +216,13 @@ func (s *ServerConfig) GetVersionEndpoint() string {
 	return nurl.String()
 }
 
+// GetQueryEndpoint provides the url to contact the query API
+func (s *ServerConfig) GetQueryEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.Query)
+	return nurl.String()
+}
+
 // GetVersionEndpoint provides the url to contact the config API
 func (s *ServerConfig) getConfigEndpoint() string {
 	nurl := *s.ParsedEndpoint
@@ -220,6 +237,44 @@ func (s *ServerConfig) ParseEndpoint() error {
 		return err
 	}
 	s.ParsedEndpoint = nurl
+	return nil
+}
+
+// SetTLSConfig - sets the TLS config
+func (s *ServerConfig) SetTLSConfig() error {
+	if s.InsecureSkipTLSVerify {
+		s.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+	if s.CAPath != "" {
+		// Get the SystemCertPool, continue with an empty pool on error
+		rootCAs, _ := x509.SystemCertPool()
+		if rootCAs == nil {
+			rootCAs = x509.NewCertPool()
+		}
+		// read cert
+		certPath, _ := filepath.Abs(s.CAPath)
+		cert, err := ioutil.ReadFile(certPath)
+		if err != nil {
+			return errors.Errorf("error reading CA %s", s.CAPath)
+		}
+		if ok := rootCAs.AppendCertsFromPEM(cert); !ok {
+			return errors.Errorf("Unable to append given CA cert.")
+		}
+		s.TLSConfig = &tls.Config{
+			RootCAs:            rootCAs,
+			InsecureSkipVerify: s.InsecureSkipTLSVerify,
+		}
+	}
+	return nil
+}
+
+// SetHTTPClient - sets the http client
+func (s *ServerConfig) SetHTTPClient() error {
+	s.HTTPClient = &http.Client{Transport: http.DefaultTransport}
+	if s.TLSConfig != nil {
+		tr := &http.Transport{TLSClientConfig: s.TLSConfig}
+		s.HTTPClient.Transport = tr
+	}
 	return nil
 }
 
@@ -474,6 +529,7 @@ func (ec *ExecutionContext) Validate() error {
 	if err != nil {
 		return errors.Wrap(err, "loading .env file failed")
 	}
+
 	// set names of config file
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
 
@@ -518,11 +574,10 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "error in getting server feature flags")
 	}
 
-	state := util.GetServerState(ec.Config.ServerConfig.Endpoint, ec.Config.ServerConfig.AdminSecret, ec.Version.ServerSemver, ec.Logger)
+	state := util.GetServerState(ec.Config.ServerConfig.GetQueryEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.Config.ServerConfig.TLSConfig, ec.Version.ServerSemver, ec.Logger)
 	ec.ServerUUID = state.UUID
 	ec.Telemetry.ServerUUID = ec.ServerUUID
 	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
-
 	// Set headers required for communicating with HGE
 	if ec.Config.AdminSecret != "" {
 		headers := map[string]string{
@@ -534,7 +589,7 @@ func (ec *ExecutionContext) Validate() error {
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint())
+	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint(), ec.Config.ServerConfig.HTTPClient)
 	if err != nil {
 		return errors.Wrap(err, "failed to get version from server")
 	}
@@ -611,6 +666,8 @@ func (ec *ExecutionContext) readConfig() error {
 				PGDump:  v.GetString("api_paths.pg_dump"),
 				Version: v.GetString("api_paths.version"),
 			},
+			InsecureSkipTLSVerify: v.GetBool("insecure_skip_tls_verify"),
+			CAPath:                v.GetString("certificate_authority"),
 		},
 		MetadataDirectory:   v.GetString("metadata_directory"),
 		MigrationsDirectory: v.GetString("migrations_directory"),
@@ -629,7 +686,7 @@ func (ec *ExecutionContext) readConfig() error {
 	}
 	err = ec.Config.ServerConfig.ParseEndpoint()
 	if err != nil {
-		return errors.Wrap(err, "error parsing endpoint")
+		return errors.Wrap(err, "unable to parse server endpoint")
 	}
 
 	// this populates the ec.Config.ServerConfig.HasuraServerInternalConfig
@@ -639,6 +696,11 @@ func (ec *ExecutionContext) readConfig() error {
 		ec.Logger.Debugf("cannot get config information from server, this might be because config API is not enabled: %v", err)
 	}
 
+	err = ec.Config.ServerConfig.SetTLSConfig()
+	if err != nil {
+		return errors.Wrap(err, "setting up TLS config failed")
+	}
+	return ec.Config.ServerConfig.SetHTTPClient()
 	return nil
 }
 

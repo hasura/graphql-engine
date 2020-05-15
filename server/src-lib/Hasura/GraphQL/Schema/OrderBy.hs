@@ -6,8 +6,6 @@ module Hasura.GraphQL.Schema.OrderBy
   , mkTabAggOpOrdByInpObjs
   ) where
 
-import           Control.Arrow                 ((&&&))
-
 import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Syntax as G
 
