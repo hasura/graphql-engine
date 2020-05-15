@@ -13,4 +13,3 @@ declare namespace React {
   }
 }
 
-declare module 'react-bootstrap/lib/Tooltip';

@@ -6,7 +6,7 @@ module Hasura.RQL.DML.Select.Internal
 where
 
 import           Control.Lens                hiding (op)
-import           Data.List                   (delete, sort)
+import qualified Data.List                   as L
 import           Instances.TH.Lift           ()
 
 import qualified Data.HashMap.Strict         as HM
@@ -442,12 +442,12 @@ mkArrNodeInfo
 mkArrNodeInfo pfx parAls (ArrRelCtx arrFlds obRels) = \case
   ANIField aggFld@(fld, annArrSel) ->
     let (rn, tabArgs) = fetchRNAndTArgs annArrSel
-        similarFlds = getSimilarAggFlds rn tabArgs $ delete aggFld
+        similarFlds = getSimilarAggFlds rn tabArgs $ L.delete aggFld
         similarFldNames = map fst similarFlds
         similarOrdByFound = rn `elem` obRels && tabArgs == noTableArgs
         ordByFldName = mkOrderByFieldName rn
         extraOrdByFlds = bool [] [ordByFldName] similarOrdByFound
-        sortedFlds = sort $ fld : (similarFldNames <> extraOrdByFlds)
+        sortedFlds = L.sort $ fld : (similarFldNames <> extraOrdByFlds)
         alias = S.Alias $ mkUniqArrRelAls parAls sortedFlds
         prefix = mkArrRelTableAls pfx parAls sortedFlds
     in ArrNodeInfo alias prefix $
@@ -455,7 +455,7 @@ mkArrNodeInfo pfx parAls (ArrRelCtx arrFlds obRels) = \case
   ANIAggOrdBy rn ->
     let similarFlds = map fst $ getSimilarAggFlds rn noTableArgs id
         ordByFldName = mkOrderByFieldName rn
-        sortedFlds = sort $ ordByFldName:similarFlds
+        sortedFlds = L.sort $ ordByFldName:similarFlds
         alias = S.Alias $ mkUniqArrRelAls parAls sortedFlds
         prefix = mkArrRelTableAls pfx parAls sortedFlds
     in ArrNodeInfo alias prefix False
@@ -716,7 +716,7 @@ baseNodeToSel joinCond baseNode =
       , S.selWhere = Just $ injectJoinCond joinCond whr
       }
     baseSelAls = S.Alias $ mkBaseTableAls pfx
-    baseFromItem = S.FISelect (S.Lateral False) baseSel baseSelAls
+    baseFromItem = S.mkSelFromItem baseSel baseSelAls
 
     -- function to create a joined from item from two from items
     leftOuterJoin current new =
