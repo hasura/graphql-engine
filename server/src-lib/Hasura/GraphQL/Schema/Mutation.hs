@@ -21,8 +21,10 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Hasura.GraphQL.Parser         as P
 import qualified Hasura.RQL.DML.Delete         as RQL
+import qualified Hasura.RQL.DML.Insert         as RQL
 import qualified Hasura.RQL.DML.Returning      as RQL
 import qualified Hasura.RQL.DML.Update         as RQL
+import qualified Hasura.SQL.DML                as SQL
 
 import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser,
                                                 UnpreparedValue (..), mkParameter)
@@ -39,6 +41,56 @@ import           Hasura.SQL.Types
 
 -- insert
 
+
+-- WIP NOTE
+-- An abstract representation of insert was tricky to pin down.
+-- The following structures are taken from Resolve, and slightly
+-- modified.
+-- What needs to be decided is where those should go and what we
+-- should do with them, really.
+-- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+data AnnIns a v
+  = AnnIns
+  { _aiInsObj         :: !a
+  , _aiConflictClause :: !(Maybe (RQL.ConflictClauseP1 v))
+  , _aiCheckCond      :: !(AnnBoolExp v, Maybe (AnnBoolExp v))
+  , _aiTableCols      :: ![PGColumnInfo]
+  , _aiDefVals        :: !(Map.HashMap PGCol SQL.SQLExp)
+  } deriving (Show, Eq)
+
+type SingleObjIns v = AnnIns (AnnInsObj v) v
+type MultiObjIns  v = AnnIns [AnnInsObj v] v
+
+data RelIns a
+  = RelIns
+  { _riAnnIns  :: !a
+  , _riRelInfo :: !RelInfo
+  } deriving (Show, Eq)
+
+type ObjRelIns v = RelIns (SingleObjIns v)
+type ArrRelIns v = RelIns (MultiObjIns  v)
+
+data AnnInsObj v
+  = AnnInsObj
+  { _aioColumns :: ![(PGCol, v)]
+  , _aioObjRels :: ![ObjRelIns v]
+  , _aioArrRels :: ![ArrRelIns v]
+  } deriving (Show, Eq)
+
+type AnnSingleInsert v = (SingleObjIns v, RQL.MutationOutputG v)
+type AnnMultiInsert  v = (MultiObjIns  v, RQL.MutationOutputG v)
+
+instance Semigroup (AnnInsObj v) where
+  (AnnInsObj col1 obj1 rel1) <> (AnnInsObj col2 obj2 rel2) =
+    AnnInsObj (col1 <> col2) (obj1 <> obj2) (rel1 <> rel2)
+
+instance Monoid (AnnInsObj v) where
+  mempty = AnnInsObj [] [] []
+
+-- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 insertIntoTable
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable       -- ^ qualified name of the table
@@ -48,11 +100,12 @@ insertIntoTable
   -> Maybe SelPermInfo    -- ^ select permissions of the table (if any)
   -> Maybe UpdPermInfo    -- ^ update permissions of the table (if any)
   -> Bool
-  -> m (FieldsParser 'Output n (Maybe () {- FIXME -}))
+  -> m (FieldsParser 'Output n (Maybe (AnnMultiInsert UnpreparedValue)))
 insertIntoTable table fieldName description insertPerms selectPerms updatePerms stringifyNum = do
+  columns         <- tableColumns table
   selectionParser <- mutationSelectionSet table selectPerms stringifyNum
   objectsParser   <- P.list <$> tableFieldsInput table insertPerms
-  conflictParser  <- fmap join $ sequenceA $ liftA2 (conflictObject table) selectPerms updatePerms
+  conflictParser  <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
   let conflictName  = $$(G.litName "on_conflict")
       conflictDesc  = "on conflict condition"
       objectsName   = $$(G.litName "objects")
@@ -65,14 +118,22 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
         objects    <- P.field objectsName (Just objectsDesc) objectsParser
         pure (onConflict, objects)
   pure $ P.selection fieldName description argsParser selectionParser
-    `mapField` undefined
+    `mapField` \(_, (onConflict, objects), output) ->
+       ( AnnIns { _aiInsObj         = objects
+                , _aiConflictClause = onConflict
+                , _aiCheckCond      = undefined -- FIXME
+                , _aiTableCols      = columns
+                , _aiDefVals        = undefined -- FIXME
+                }
+       , RQL.MOutMultirowFields output
+       )
 
 
 tableFieldsInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable -- ^ qualified name of the table
   -> InsPermInfo    -- ^ insert permissions of the table
-  -> m (Parser 'Input n () {- FIXME -})
+  -> m (Parser 'Input n (AnnInsObj UnpreparedValue))
 tableFieldsInput table insertPerms = do -- TODO: memoize this!
   tableName    <- qualifiedObjectToName table
   allFields    <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
@@ -83,7 +144,8 @@ tableFieldsInput table insertPerms = do -- TODO: memoize this!
         let columnName = pgiName columnInfo
             columnDesc = pgiDescription columnInfo
         fieldParser <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
-        pure $ P.fieldOptional columnName columnDesc fieldParser `mapField` P.mkParameter
+        pure $ P.fieldOptional columnName columnDesc fieldParser `mapField`
+          \(mkParameter -> value) -> AnnInsObj [(pgiColumn columnInfo, value)] [] []
     FIRelationship relationshipInfo -> runMaybeT $ do
       let otherTable = riRTable  relationshipInfo
           relName    = riName    relationshipInfo
@@ -95,14 +157,16 @@ tableFieldsInput table insertPerms = do -- TODO: memoize this!
       lift $ case riType relationshipInfo of
         ObjRel -> do
           parser <- objectRelationshipInput otherTable insPerms selPerms updPerms
-          pure $ P.fieldOptional relFieldName Nothing parser `mapField` undefined
+          pure $ P.fieldOptional relFieldName Nothing parser `mapField`
+            \objRelIns -> AnnInsObj [] [RelIns objRelIns relationshipInfo] []
         ArrRel -> do
           parser <- arrayRelationshipInput otherTable insPerms selPerms updPerms
-          pure $ P.fieldOptional relFieldName Nothing parser `mapField` undefined
+          pure $ P.fieldOptional relFieldName Nothing parser `mapField`
+            \arrRelIns -> AnnInsObj [] [] [RelIns arrRelIns relationshipInfo]
   let objectName = tableName <> $$(G.litName "_insert_input")
       objectDesc = G.Description $ "input type for inserting data into table \"" <> G.unName tableName <> "\""
   pure $ P.object objectName (Just objectDesc) $ catMaybes <$> sequenceA objectFields
-    <&> undefined
+    <&> mconcat
 
 objectRelationshipInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)
@@ -110,11 +174,12 @@ objectRelationshipInput
   -> InsPermInfo
   -> Maybe SelPermInfo
   -> Maybe UpdPermInfo
-  -> m (Parser 'Input n () {- FIXME -})
+  -> m (Parser 'Input n (SingleObjIns UnpreparedValue))
 objectRelationshipInput table insertPerms selectPerms updatePerms = do
   tableName      <- qualifiedObjectToName table
+  columns        <- tableColumns table
   objectParser   <- tableFieldsInput table insertPerms
-  conflictParser <- fmap join $ sequenceA $ liftA2 (conflictObject table) selectPerms updatePerms
+  conflictParser <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
   let conflictName = $$(G.litName "on_conflict")
       objectName   = $$(G.litName "data")
       inputName    = tableName <> $$(G.litName "_obj_rel_insert_input")
@@ -125,7 +190,13 @@ objectRelationshipInput table insertPerms selectPerms updatePerms = do
           (P.fieldOptional conflictName Nothing)
           conflictParser
         object   <- P.field objectName Nothing objectParser
-        pure (conflict, object) -- FIXME
+        pure $ AnnIns
+          { _aiInsObj         = object
+          , _aiConflictClause = conflict
+          , _aiCheckCond      = undefined -- FIXME
+          , _aiTableCols      = columns
+          , _aiDefVals        = undefined -- FIXME
+          }
   pure $ P.object inputName (Just inputDesc) inputParser <&> undefined
 
 arrayRelationshipInput
@@ -134,11 +205,12 @@ arrayRelationshipInput
   -> InsPermInfo
   -> Maybe SelPermInfo
   -> Maybe UpdPermInfo
-  -> m (Parser 'Input n () {- FIXME -})
+  -> m (Parser 'Input n (MultiObjIns UnpreparedValue))
 arrayRelationshipInput table insertPerms selectPerms updatePerms = do
   tableName      <- qualifiedObjectToName table
+  columns        <- tableColumns table
   objectParser   <- tableFieldsInput table insertPerms
-  conflictParser <- fmap join $ sequenceA $ liftA2 (conflictObject table) selectPerms updatePerms
+  conflictParser <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
   let conflictName = $$(G.litName "on_conflict")
       objectsName  = $$(G.litName "data")
       inputName    = tableName <> $$(G.litName "_arr_rel_insert_input")
@@ -149,30 +221,38 @@ arrayRelationshipInput table insertPerms selectPerms updatePerms = do
           (P.fieldOptional conflictName Nothing)
           conflictParser
         objects  <- P.field objectsName Nothing $ P.list objectParser
-        pure (conflict, objects) -- FIXME
-  pure $ P.object inputName (Just inputDesc) inputParser <&> undefined
+        pure $ AnnIns
+          { _aiInsObj         = objects
+          , _aiConflictClause = conflict
+          , _aiCheckCond      = undefined -- FIXME
+          , _aiTableCols      = columns
+          , _aiDefVals        = undefined -- FIXME
+          }
+  pure $ P.object inputName (Just inputDesc) inputParser
 
 conflictObject
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
-  -> SelPermInfo
+  -> Maybe SelPermInfo
   -> UpdPermInfo
-  -> m (Maybe (Parser 'Input n () {- FIXME -}))
+  -> m (Maybe (Parser 'Input n (RQL.ConflictClauseP1 UnpreparedValue)))
 conflictObject table selectPerms updatePerms = runMaybeT $ do
   tableName        <- lift $ qualifiedObjectToName table
   columnsEnum      <- MaybeT $ tableUpdateColumnsEnum table updatePerms
   constraintParser <- lift $ conflictConstraint table
-  whereExpParser   <- lift $ boolExp table (Just selectPerms)
+  whereExpParser   <- lift $ boolExp table selectPerms
   let objectName = tableName <> $$(G.litName "_on_conflict")
       objectDesc = G.Description $ "on conflict condition type for table \"" <> G.unName tableName <> "\""
       constraintName = $$(G.litName "constraint")
       columnsName    = $$(G.litName "update_columnns")
       whereExpName   = $$(G.litName "where")
       fieldsParser = do
-        constraint <- P.fieldOptional constraintName Nothing constraintParser
-        columns    <- P.fieldOptional columnsName    Nothing $ P.list columnsEnum
-        whereExp   <- P.fieldOptional whereExpName   Nothing whereExpParser
-        pure $ undefined constraint columns whereExp
+        constraint <- RQL.CTConstraint <$> P.field constraintName Nothing constraintParser
+        columns    <- P.field columnsName Nothing $ P.list columnsEnum
+        whereExp   <- P.fieldOptional whereExpName Nothing whereExpParser
+        pure $ case columns of
+          [] -> RQL.CP1DoNothing $ Just constraint
+          _  -> RQL.CP1Update constraint columns (upiSet updatePerms) whereExp
   pure $ P.object objectName (Just objectDesc) fieldsParser
 
 conflictConstraint

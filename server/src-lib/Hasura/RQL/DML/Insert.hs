@@ -25,10 +25,12 @@ data ConflictTarget
   | CTConstraint !ConstraintName
   deriving (Show, Eq)
 
-data ConflictClauseP1
+data ConflictClauseP1 v
   = CP1DoNothing !(Maybe ConflictTarget)
-  | CP1Update !ConflictTarget ![PGCol] !PreSetCols !S.BoolExp
+  | CP1Update !ConflictTarget ![PGCol] !PreSetColsPartial (Maybe (AnnBoolExp v))
   deriving (Show, Eq)
+
+{-
 
 data InsertQueryP1
   = InsertQueryP1
@@ -338,3 +340,5 @@ runInsert q = do
   res <- convInsQ q
   strfyNum <- stringifyNum <$> askSQLGenCtx
   liftTx $ insertP2 strfyNum res
+
+-}

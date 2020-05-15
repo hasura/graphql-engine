@@ -8,7 +8,7 @@ import qualified Data.Sequence            as DS
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DML.Insert    (insertCheckExpr)
+-- import           Hasura.RQL.DML.Insert    (insertCheckExpr)
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
