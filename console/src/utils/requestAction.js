@@ -9,6 +9,7 @@ import {
   ERROR_REQUEST,
 } from '../components/App/Actions';
 import { globalCookiePolicy } from '../Endpoints';
+import { parseResponseWithBigInt } from '../components/Main/utils';
 
 const requestAction = (
   url,
@@ -27,7 +28,8 @@ const requestAction = (
       fetch(url, options).then(
         response => {
           if (response.ok) {
-            return response.json().then(results => {
+            return response.text().then(res => {
+              const results = parseResponseWithBigInt(res);
               if (SUCCESS) {
                 dispatch({ type: SUCCESS, data: results });
               }

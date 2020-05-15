@@ -49,6 +49,8 @@ Read more about the session argument for computed fields in the [docs](https://h
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
+- console: display big int values in the console (close #3667, #3697, #4548)
+
 - server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
 
 - server: avoid loss of precision when passing values in scientific notation (fix #4733)
