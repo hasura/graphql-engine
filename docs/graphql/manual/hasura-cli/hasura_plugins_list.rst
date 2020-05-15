@@ -29,22 +29,24 @@ Examples
     # List all hasura plugins
     hasura plugins list
    
-    # List all hasura plugins without updating index
-    hasura plugins list --update-index false
+    # The command also updates the plugin index that is cached locally
+    # To avoid updating the index, use the following flag:
+    hasura plugins list --dont-update-index
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help           help for list
-      --update-index   update plugin index (default true)
+      --dont-update-index   don't update the plugin index local cache, only show the list
+  -h, --help                help for list
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
+      --envfile string      .env filename to load ENV vars from (default ".env")
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)

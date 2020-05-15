@@ -18,6 +18,11 @@ args:
         location geography
       );
 
+- type: track_table
+  args:
+    name: user
+    schema: public
+
 - type: set_custom_types
   args:
     objects:
