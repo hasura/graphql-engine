@@ -8,7 +8,7 @@ import 'ace-builds/src-noconflict/ext-searchbox';
 export const ACE_EDITOR_THEME = 'eclipse';
 export const ACE_EDITOR_FONT_SIZE = 14;
 
-export const getLanguageModeFromExtension = extension => {
+export const getLanguageModeFromExtension = (extension: string) => {
   switch (extension) {
     case 'ts':
       return 'typescript';
