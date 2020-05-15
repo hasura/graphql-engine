@@ -21,10 +21,16 @@ export interface ErrorBoundaryProps {
   dispatch: (arg: unknown) => Promise<unknown>; // TODO update when Redux is migrated to TS;
 }
 
-type ErrorBoundaryState = {
+interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
   type: string;
+}
+
+const initialState: ErrorBoundaryState = {
+  hasError: false,
+  error: null,
+  type: '500',
 };
 
 class ErrorBoundary extends React.Component<
@@ -34,7 +40,7 @@ class ErrorBoundary extends React.Component<
   constructor(props: ErrorBoundaryProps) {
     super(props);
 
-    this.state = this.initialState;
+    this.state = initialState;
   }
 
   componentDidCatch(error: Error) {
@@ -68,14 +74,8 @@ class ErrorBoundary extends React.Component<
     );
   }
 
-  initialState = {
-    hasError: false,
-    error: null,
-    type: '500',
-  };
-
   resetState = () => {
-    this.setState({ ...this.initialState });
+    this.setState(initialState);
   };
 
   render() {
