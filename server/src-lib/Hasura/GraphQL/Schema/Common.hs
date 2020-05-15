@@ -13,6 +13,7 @@ module Hasura.GraphQL.Schema.Common
   , mkColumnType
   , mkRelName
   , mkAggRelName
+  , mkConnectionRelName
   , mkComputedFieldName
 
   , mkTableTy
@@ -43,12 +44,13 @@ import           Hasura.SQL.Types
 
 data RelationshipFieldInfo
   = RelationshipFieldInfo
-  { _rfiInfo       :: !RelInfo
-  , _rfiAllowAgg   :: !Bool
-  , _rfiColumns    :: !PGColGNameMap
-  , _rfiPermFilter :: !AnnBoolExpPartialSQL
-  , _rfiPermLimit  :: !(Maybe Int)
-  , _rfiIsNullable :: !Bool
+  { _rfiInfo              :: !RelInfo
+  , _rfiAllowAgg          :: !Bool
+  , _rfiColumns           :: !PGColGNameMap
+  , _rfiPermFilter        :: !AnnBoolExpPartialSQL
+  , _rfiPermLimit         :: !(Maybe Int)
+  , _rfiPrimaryKeyColumns :: !(Maybe (NonEmpty PGColumnInfo))
+  , _rfiIsNullable        :: !Bool
   } deriving (Show, Eq)
 
 data SelField
@@ -81,6 +83,9 @@ mkRelName rn = G.Name $ relNameToTxt rn
 
 mkAggRelName :: RelName -> G.Name
 mkAggRelName rn = G.Name $ relNameToTxt rn <> "_aggregate"
+
+mkConnectionRelName :: RelName -> G.Name
+mkConnectionRelName rn = G.Name $ relNameToTxt rn <> "_connection"
 
 mkComputedFieldName :: ComputedFieldName -> G.Name
 mkComputedFieldName = G.Name . computedFieldNameToText

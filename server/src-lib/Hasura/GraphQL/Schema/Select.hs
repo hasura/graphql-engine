@@ -2,8 +2,8 @@ module Hasura.GraphQL.Schema.Select
   ( mkTableObj
   , mkTableAggObj
   , mkSelColumnTy
-  , mkTableAggFldsObj
-  , mkTableColAggFldsObj
+  , mkTableAggregateFieldsObj
+  , mkTableColAggregateFieldsObj
   , mkTableEdgeObj
   , mkPageInfoObj
   , mkTableConnectionObj
@@ -45,11 +45,11 @@ mkSelColumnInpTy :: QualifiedTable -> G.NamedType
 mkSelColumnInpTy tn =
   G.NamedType $ qualObjectToName tn <> "_select_column"
 
-mkTableAggFldsTy :: QualifiedTable -> G.NamedType
-mkTableAggFldsTy = addTypeSuffix "_aggregate_fields" . mkTableTy
+mkTableAggregateFieldsTy :: QualifiedTable -> G.NamedType
+mkTableAggregateFieldsTy = addTypeSuffix "_aggregate_fields" . mkTableTy
 
-mkTableColAggFldsTy :: G.Name -> QualifiedTable -> G.NamedType
-mkTableColAggFldsTy op tn =
+mkTableColAggregateFieldsTy :: G.Name -> QualifiedTable -> G.NamedType
+mkTableColAggregateFieldsTy op tn =
   G.NamedType $ qualObjectToName tn <> "_" <> op <> "_fields"
 
 mkTableByPkName :: QualifiedTable -> G.Name
@@ -166,10 +166,11 @@ object_relationship: remote_table
 mkRelationshipField
   :: Bool
   -> RelInfo
+  -> Maybe (NonEmpty PGColumnInfo)
   -> Bool
   -> [ObjFldInfo]
-mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
-  ArrRel -> bool [arrRelFld] [arrRelFld, arrConnectionFld, aggArrRelFld] allowAgg
+mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) maybePkCols isNullable = case rTy of
+  ArrRel -> bool [arrRelFld] ([arrRelFld, aggArrRelFld] <> arrConnectionFld) allowAgg
   ObjRel -> [objRelFld]
   where
     objRelFld = mkHsraObjFldInfo (Just "An object relationship")
@@ -183,8 +184,8 @@ mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = cas
       (fromInpValL $ mkSelArgs remTab) $
       G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy remTab
 
-    arrConnectionFld =
-      mkHsraObjFldInfo Nothing (mkRelName rn <> "_connection")
+    arrConnectionFld = if isNothing maybePkCols then [] else pure $
+      mkHsraObjFldInfo Nothing (mkConnectionRelName rn)
       (fromInpValL $ mkConnectionArgs remTab) $
       G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableConnectionTy remTab
 
@@ -208,12 +209,12 @@ mkTableObj
 mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
-    flds = pgColFlds <> relFlds <> computedFlds
-    pgColFlds = map mkPGColFld $ getPGColumnFields allowedFlds
+    flds = pgColumnFields <> relFlds <> computedFlds
+    pgColumnFields = map mkPGColFld $ getPGColumnFields allowedFlds
     relFlds = concatMap mkRelationshipField' $ getRelationshipFields allowedFlds
     computedFlds = map mkComputedFieldFld $ getComputedFields allowedFlds
-    mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ isNullable) =
-      mkRelationshipField allowAgg relInfo isNullable
+    mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ maybePkCols isNullable) =
+      mkRelationshipField allowAgg relInfo maybePkCols isNullable
     desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
 
 {-
@@ -232,7 +233,7 @@ mkTableAggObj tn =
       "aggregated selection of " <>> tn
 
     aggFld = mkHsraObjFldInfo Nothing "aggregate" Map.empty $ G.toGT $
-             mkTableAggFldsTy tn
+             mkTableAggregateFieldsTy tn
     nodesFld = mkHsraObjFldInfo Nothing "nodes" Map.empty $ G.toGT $
                G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
 
@@ -249,13 +250,13 @@ type table_aggregate_fields{
   min: table_min_fields
 }
 -}
-mkTableAggFldsObj
+mkTableAggregateFieldsObj
   :: QualifiedTable
   -> ([PGColumnInfo], [G.Name])
   -> ([PGColumnInfo], [G.Name])
   -> ObjTyInfo
-mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps) =
-  mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) Set.empty $ mapFromL _fiName $
+mkTableAggregateFieldsObj tn (numCols, numAggregateOps) (compCols, compAggregateOps) =
+  mkHsraObjTyInfo (Just desc) (mkTableAggregateFieldsTy tn) Set.empty $ mapFromL _fiName $
   countFld : (numFlds <> compFlds)
   where
     desc = G.Description $
@@ -271,11 +272,11 @@ mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps) =
     distinctInpVal = InpValInfo Nothing "distinct" Nothing $ G.toGT $
                      mkScalarTy PGBoolean
 
-    numFlds = bool (map mkColOpFld numAggOps) [] $ null numCols
-    compFlds = bool (map mkColOpFld compAggOps) [] $ null compCols
+    numFlds = bool (map mkColumnOpFld numAggregateOps) [] $ null numCols
+    compFlds = bool (map mkColumnOpFld compAggregateOps) [] $ null compCols
 
-    mkColOpFld op = mkHsraObjFldInfo Nothing op Map.empty $ G.toGT $
-                    mkTableColAggFldsTy op tn
+    mkColumnOpFld op = mkHsraObjFldInfo Nothing op Map.empty $ G.toGT $
+                    mkTableColAggregateFieldsTy op tn
 
 {-
 type table_<agg-op>_fields{
@@ -284,14 +285,14 @@ type table_<agg-op>_fields{
    .        .
 }
 -}
-mkTableColAggFldsObj
+mkTableColAggregateFieldsObj
   :: QualifiedTable
   -> G.Name
   -> (PGColumnType -> G.NamedType)
   -> [PGColumnInfo]
   -> ObjTyInfo
-mkTableColAggFldsObj tn op f cols =
-  mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $ mapFromL _fiName $
+mkTableColAggregateFieldsObj tn op f cols =
+  mkHsraObjTyInfo (Just desc) (mkTableColAggregateFieldsTy op tn) Set.empty $ mapFromL _fiName $
   map mkColObjFld cols
   where
     desc = G.Description $ "aggregate " <> G.unName op <> " on columns"

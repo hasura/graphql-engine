@@ -5,6 +5,7 @@ import           Hasura.Prelude
 
 import           Control.Lens               ((^..))
 import           Data.Aeson
+import           Data.Aeson.Internal
 import           Data.Char
 import           Data.List                  (find)
 import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
@@ -20,6 +21,7 @@ import qualified Data.Text                  as T
 import qualified Data.Text.IO               as TI
 import qualified Data.UUID                  as UUID
 import qualified Data.UUID.V4               as UUID
+import qualified Data.Vector                as V
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified Network.HTTP.Client        as HC
 import qualified Network.HTTP.Types         as HTTP
@@ -227,3 +229,16 @@ makeReasonMessage errors showError =
     [singleError] -> "because " <> showError singleError
     _ -> "for the following reasons:\n" <> T.unlines
          (map (("  • " <>) . showError) errors)
+
+executeJSONPath :: JSONPath -> Value -> IResult Value
+executeJSONPath jsonPath = iparse (valueParser jsonPath)
+  where
+    valueParser path value = case path of
+      []                      -> pure value
+      (pathElement:remaining) -> parseWithPathElement pathElement value >>=
+                                 ((<?> pathElement) . valueParser remaining)
+      where
+        parseWithPathElement = \case
+                  Key k   -> withObject "Object" (.: k)
+                  Index i -> withArray "Array" $
+                             maybe (fail "Array index out of range") pure . (V.!? i)

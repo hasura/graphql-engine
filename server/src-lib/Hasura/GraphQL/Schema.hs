@@ -8,7 +8,7 @@ module Hasura.GraphQL.Schema
   , InsCtx(..)
   , InsCtxMap
   , RelationInfoMap
-  , isAggFld
+  , isAggregateField
   , qualObjectToName
   , ppGCtx
 
@@ -100,16 +100,16 @@ mkPGColGNameMap :: [PGColumnInfo] -> PGColGNameMap
 mkPGColGNameMap cols = Map.fromList $
   flip map cols $ \ci -> (pgiName ci, ci)
 
-numAggOps :: [G.Name]
-numAggOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
+numAggregateOps :: [G.Name]
+numAggregateOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
             , "variance", "var_samp", "var_pop"
             ]
 
-compAggOps :: [G.Name]
-compAggOps = ["max", "min"]
+compAggregateOps :: [G.Name]
+compAggregateOps = ["max", "min"]
 
-isAggFld :: G.Name -> Bool
-isAggFld = flip elem (numAggOps <> compAggOps)
+isAggregateField :: G.Name -> Bool
+isAggregateField = flip elem (numAggregateOps <> compAggregateOps)
 
 mkComputedFieldFunctionArgSeq :: Seq.Seq FunctionArg -> ComputedFieldFunctionArgSeq
 mkComputedFieldFunctionArgSeq inputArgs =
@@ -225,17 +225,22 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
     mkFld ty = \case
       SFPGColumn ci -> [((ty, pgiName ci), RFPGColumn ci)]
-      SFRelationship (RelationshipFieldInfo relInfo allowAgg cols permFilter permLimit _) ->
+      SFRelationship (RelationshipFieldInfo relInfo allowAgg cols permFilter permLimit maybePkCols _) ->
         let relationshipName = riName relInfo
             relFld = ( (ty, mkRelName relationshipName)
-                     , RFRelationship $ RelationshipField relInfo False cols permFilter permLimit
+                     , RFRelationship $ RelationshipField relInfo RFKSimple cols permFilter permLimit
                      )
             aggRelFld = ( (ty, mkAggRelName relationshipName)
-                        , RFRelationship $ RelationshipField relInfo True cols permFilter permLimit
+                        , RFRelationship $ RelationshipField relInfo RFKAggregate cols permFilter permLimit
                         )
+            maybeConnFld = maybePkCols <&> \pkCols ->
+                           ( (ty, mkConnectionRelName relationshipName)
+                           , RFRelationship $ RelationshipField relInfo
+                             (RFKConnection pkCols) cols permFilter permLimit
+                           )
         in case riType relInfo of
           ObjRel -> [relFld]
-          ArrRel -> bool [relFld] [relFld, aggRelFld] allowAgg
+          ArrRel -> bool [relFld] ([relFld, aggRelFld] <> maybe [] pure maybeConnFld) allowAgg
       SFComputedField cf -> pure
         ( (ty, mkComputedFieldName $ _cfName cf)
         , RFComputedField cf
@@ -269,10 +274,10 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
             numCols = onlyNumCols cols
             compCols = onlyComparableCols cols
             objs = [ mkTableAggObj tn
-                   , mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps)
-                   ] <> mkColAggFldsObjs selFlds
-            ordByInps = mkTabAggOrdByInpObj tn (numCols, numAggOps) (compCols, compAggOps)
-                        : mkTabAggOpOrdByInpObjs tn (numCols, numAggOps) (compCols, compAggOps)
+                   , mkTableAggregateFieldsObj tn (numCols, numAggregateOps) (compCols, compAggregateOps)
+                   ] <> mkColAggregateFieldsObjs selFlds
+            ordByInps = mkTabAggOrdByInpObj tn (numCols, numAggregateOps) (compCols, compAggregateOps)
+                        : mkTabAggregateOpOrdByInpObjs tn (numCols, numAggregateOps) (compCols, compAggregateOps)
         in (objs, ordByInps)
       _ -> ([], [])
 
@@ -283,13 +288,13 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
     mkTypeMaker "sum" = mkColumnType
     mkTypeMaker _     = onlyFloat
 
-    mkColAggFldsObjs flds =
+    mkColAggregateFieldsObjs flds =
       let numCols = getNumericCols flds
           compCols = getComparableCols flds
-          mkNumObjFld n = mkTableColAggFldsObj tn n (mkTypeMaker n) numCols
-          mkCompObjFld n = mkTableColAggFldsObj tn n mkColumnType compCols
-          numFldsObjs = bool (map mkNumObjFld numAggOps) [] $ null numCols
-          compFldsObjs = bool (map mkCompObjFld compAggOps) [] $ null compCols
+          mkNumObjFld n = mkTableColAggregateFieldsObj tn n (mkTypeMaker n) numCols
+          mkCompObjFld n = mkTableColAggregateFieldsObj tn n mkColumnType compCols
+          numFldsObjs = bool (map mkNumObjFld numAggregateOps) [] $ null numCols
+          compFldsObjs = bool (map mkCompObjFld compAggregateOps) [] $ null compCols
       in numFldsObjs <> compFldsObjs
     -- the fields used in table object
     selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
@@ -349,7 +354,7 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
         <> funcAggQueries
         <> catMaybes
           [ getSelDet <$> selM
-          , getSelConnectionDet <$> selM
+          , getSelConnectionDet <$> selM <*> maybePrimaryKeyColumns
           , getSelAggDet selM
           , getPKeySelDet <$> selM <*> primaryKey
           ]
@@ -363,13 +368,14 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
         ]
     }
   where
-    primaryKeyColumn = fmap (fmap pgiColumn . _pkColumns) primaryKey
+    maybePrimaryKeyColumns = fmap _pkColumns primaryKey
     makeFieldMap = mapFromL (_fiName . snd)
     customRootFields = _tcCustomRootFields tableConfig
     colGNameMap = mkPGColGNameMap $ getCols fields
 
     funcQueries = maybe [] getFuncQueryFlds selM
-    funcConnectionQueries = maybe [] getFuncQueryConnectionFlds selM
+    funcConnectionQueries = fromMaybe [] $ getFuncQueryConnectionFlds
+                            <$> selM <*> maybePrimaryKeyColumns
     funcAggQueries = maybe [] getFuncAggQueryFlds selM
 
     mutHelper :: (ViewInfo -> Bool) -> (a -> b) -> Maybe a -> Maybe b
@@ -421,8 +427,9 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
     selCustName = getCustomNameWith _tcrfSelect
     getSelDet (selFltr, pLimit, hdrs, _) =
       selFldHelper QCSelect (mkSelFld selCustName) selFltr pLimit hdrs
-    getSelConnectionDet (selFltr, pLimit, hdrs, _) =
-      selFldHelper (QCSelectConnection primaryKeyColumn) (mkSelFldConnection Nothing) selFltr pLimit hdrs
+    getSelConnectionDet (selFltr, pLimit, hdrs, _) primaryKeyColumns =
+      selFldHelper (QCSelectConnection primaryKeyColumns)
+      (mkSelFldConnection Nothing) selFltr pLimit hdrs
 
     selAggCustName = getCustomNameWith _tcrfSelectAggregate
     getSelAggDet (Just (selFltr, pLimit, hdrs, True)) =
@@ -445,8 +452,8 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
     getFuncQueryFlds (selFltr, pLimit, hdrs, _) =
       funcFldHelper QCFuncQuery mkFuncQueryFld selFltr pLimit hdrs
 
-    getFuncQueryConnectionFlds (selFltr, pLimit, hdrs, _) =
-      funcFldHelper (QCFuncConnection primaryKeyColumn) mkFuncQueryConnectionFld selFltr pLimit hdrs
+    getFuncQueryConnectionFlds (selFltr, pLimit, hdrs, _) primaryKeyColumns =
+      funcFldHelper (QCFuncConnection primaryKeyColumns) mkFuncQueryConnectionFld selFltr pLimit hdrs
 
     getFuncAggQueryFlds (selFltr, pLimit, hdrs, True) =
       funcFldHelper QCFuncAggQuery mkFuncAggQueryFld selFltr pLimit hdrs
@@ -496,6 +503,8 @@ getSelPerm tableCache fields role selPermInfo = do
                              , _rfiColumns    = remTableColGNameMap
                              , _rfiPermFilter = spiFilter rmSelPermM
                              , _rfiPermLimit  = spiLimit rmSelPermM
+                             , _rfiPrimaryKeyColumns = _pkColumns <$>
+                                 _tciPrimaryKey (_tiCoreInfo remTableInfo)
                              , _rfiIsNullable = isRelNullable fields relInfo
                              }
 
@@ -608,6 +617,7 @@ mkAdminSelFlds fields tableCache = do
                    , _rfiColumns    = remoteTableColGNameMap
                    , _rfiPermFilter = noFilter
                    , _rfiPermLimit  = Nothing
+                   , _rfiPrimaryKeyColumns = _pkColumns <$> _tciPrimaryKey remoteTableInfo
                    , _rfiIsNullable = isRelNullable fields relInfo
                    }
 
@@ -658,7 +668,7 @@ mkGCtxRole tableCache tn descM fields primaryKey constraints funcs viM tabConfig
     return (ctx, (permCols, icRelations ctx))
   let insPermM = snd <$> tabInsInfoM
       insCtxM = fst <$> tabInsInfoM
-      updColsM = filterColFlds . upiCols <$> _permUpd permInfo
+      updColsM = filterColumnFields . upiCols <$> _permUpd permInfo
       tyAgg = mkGCtxRole' tn descM insPermM selPermM updColsM
               (void $ _permDel permInfo) primaryKey constraints viM funcs
       rootFlds = getRootFldsRole tn primaryKey constraints fields funcs
@@ -668,7 +678,7 @@ mkGCtxRole tableCache tn descM fields primaryKey constraints funcs viM tabConfig
   where
     allCols = getCols fields
     cols = getValidCols fields
-    filterColFlds allowedSet =
+    filterColumnFields allowedSet =
       filter ((`Set.member` allowedSet) . pgiColumn) cols
 
 getRootFldsRole

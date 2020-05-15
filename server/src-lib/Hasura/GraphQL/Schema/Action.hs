@@ -204,7 +204,7 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
                         (RelName $ mkNonEmptyTextUnsafe $ coerce relationshipName)
                         (_trType relationship)
                         columnMapping remoteTable True)
-                       False mempty
+                       RFKSimple mempty
                        tableFilter
                        tableLimit
                      )

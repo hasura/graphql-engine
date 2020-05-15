@@ -70,7 +70,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     tabFrom = FromIden aliasIden
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
-              \ci -> (fromPGCol $ pgiColumn ci, mkAnnColFieldAsText ci)
+              \ci -> (fromPGCol $ pgiColumn ci, mkAnnColumnFieldAsText ci)
 
     sql = toSQL selectWith
     selectWith = S.SelectWith [(S.Alias aliasIden, cte)] select
@@ -86,7 +86,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
       , S.selFrom = Just $ S.FromExp [S.FIIden aliasIden]
       }
     colSel = S.SESelect $ mkSQLSelect JASMultipleRows $
-             AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
+             AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
 
 -- | Note:- Using sorted columns is necessary to enable casting the rows returned by VALUES expression to table type.
 -- For example, let's consider the table, `CREATE TABLE test (id serial primary key, name text not null, age int)`.

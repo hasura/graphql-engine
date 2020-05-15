@@ -150,6 +150,7 @@ newtype FieldName
   deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
            , FromJSONKey, ToJSONKey, Lift, Data, Generic
            , IsString, Arbitrary, NFData, Cacheable
+           , Semigroup
            )
 
 instance IsIden FieldName where

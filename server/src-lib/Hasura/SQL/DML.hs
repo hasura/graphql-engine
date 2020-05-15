@@ -59,7 +59,7 @@ instance ToSQL OffsetExp where
     "OFFSET" <-> toSQL se
 
 newtype OrderByExp
-  = OrderByExp [OrderByItem]
+  = OrderByExp (NonEmpty OrderByItem)
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 data OrderByItem
@@ -100,7 +100,7 @@ instance ToSQL NullsOrder where
 
 instance ToSQL OrderByExp where
   toSQL (OrderByExp l) =
-    "ORDER BY" <-> (", " <+> l)
+    "ORDER BY" <-> (", " <+> toList l)
 
 newtype GroupByExp
   = GroupByExp [SQLExp]
@@ -306,6 +306,7 @@ data SQLExp
   | SEBool !BoolExp
   | SEExcluded !Iden
   | SEArray ![SQLExp]
+  | SEArrayIndex !SQLExp !SQLExp
   | SETuple !TupleExp
   | SECount !CountType
   | SENamedArg !Iden !SQLExp
@@ -375,6 +376,9 @@ instance ToSQL SQLExp where
                          <> toSQL i
   toSQL (SEArray exps) = "ARRAY" <> TB.char '['
                          <> (", " <+> exps) <> TB.char ']'
+  toSQL (SEArrayIndex arrayExp indexExp) =
+    paren (toSQL arrayExp)
+    <> TB.char '[' <> toSQL indexExp <> TB.char ']'
   toSQL (SETuple tup) = toSQL tup
   toSQL (SECount ty) = "COUNT" <> paren (toSQL ty)
   -- https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html
@@ -516,6 +520,7 @@ data FromItem
   | FIFunc !FunctionExp
   | FIUnnest ![SQLExp] !Alias ![SQLExp]
   | FISelect !Lateral !Select !Alias
+  | FISelectWith !Lateral !(SelectWithG Select) !Alias
   | FIValues !ValuesExp !Alias !(Maybe [PGCol])
   | FIJoin !JoinExpr
   deriving (Show, Eq, Generic, Data)
@@ -544,6 +549,8 @@ instance ToSQL FromItem where
     "UNNEST" <> paren (", " <+> args) <-> toSQL als <> paren (", " <+> cols)
   toSQL (FISelect mla sel al) =
     toSQL mla <-> paren (toSQL sel) <-> toSQL al
+  toSQL (FISelectWith mla selWith al) =
+    toSQL mla <-> paren (toSQL selWith) <-> toSQL al
   toSQL (FIValues valsExp al mCols) =
     paren (toSQL valsExp) <-> toSQL al
     <-> toSQL (toColTupExp <$> mCols)
@@ -892,14 +899,20 @@ instance ToSQL CTE where
     CTEUpdate q -> toSQL q
     CTEDelete q -> toSQL q
 
-data SelectWith
+data SelectWithG v
   = SelectWith
-  { swCTEs   :: [(Alias, CTE)]
+  { swCTEs   :: ![(Alias, v)]
   , swSelect :: !Select
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic, Data)
 
-instance ToSQL SelectWith where
+instance (NFData v) => NFData (SelectWithG v)
+instance (Cacheable v) => Cacheable (SelectWithG v)
+instance (Hashable v) => Hashable (SelectWithG v)
+
+instance (ToSQL v) => ToSQL (SelectWithG v) where
   toSQL (SelectWith ctes sel) =
     "WITH " <> (", " <+> map f ctes) <-> toSQL sel
     where
       f (Alias al, q) = toSQL al <-> "AS" <-> paren (toSQL q)
+
+type SelectWith = SelectWithG CTE

@@ -135,7 +135,7 @@ resolveActionMutationSync field executionContext sessionVariables = do
   selectAstUnresolved <-
     processOutputSelectionSet webhookResponseExpression outputType definitionList
     (_fType field) $ _fSelSet field
-  astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
+  astResolved <- RS.traverseAnnSimpleSelect resolveValTxt selectAstUnresolved
   let jsonAggType = mkJsonAggSelect outputType
   return $ (,respHeaders) $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
   where
@@ -211,35 +211,35 @@ resolveAsyncActionQuery userInfo selectOpCtx field = do
 
   annotatedFields <- fmap (map (first FieldName)) $ withSelSet (_fSelSet field) $ \fld ->
     case _fName fld of
-      "__typename" -> return $ RS.FExp $ G.unName $ G.unNamedType $ _fType field
+      "__typename" -> return $ RS.AFExpression $ G.unName $ G.unNamedType $ _fType field
       "output"     -> do
         -- See Note [Resolving async action query/subscription]
         let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
             ActionSelectOpContext outputType definitionList = selectOpCtx
             jsonAggSelect = mkJsonAggSelect outputType
-        (RS.FComputedField . RS.CFSTable jsonAggSelect)
+        (RS.AFComputedField . RS.CFSTable jsonAggSelect)
           <$> processOutputSelectionSet inputTableArgument outputType
               definitionList (_fType fld) (_fSelSet fld)
 
       -- The metadata columns
-      "id"         -> return $ mkAnnFldFromPGCol "id" PGUUID
-      "created_at" -> return $ mkAnnFldFromPGCol "created_at" PGTimeStampTZ
-      "errors"     -> return $ mkAnnFldFromPGCol "errors" PGJSONB
+      "id"         -> return $ mkAnnFieldFromPGCol "id" PGUUID
+      "created_at" -> return $ mkAnnFieldFromPGCol "created_at" PGTimeStampTZ
+      "errors"     -> return $ mkAnnFieldFromPGCol "errors" PGJSONB
       G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
 
   let tableFromExp = RS.FromTable actionLogTable
-      tableArguments = RS.noTableArgs
-                       { RS._taWhere = Just $ mkTableBoolExpression actionId}
+      tableArguments = RS.noSelectArgs
+                       { RS._saWhere = Just $ mkTableBoolExpression actionId}
       tablePermissions = RS.TablePerm annBoolExpTrue Nothing
-      selectAstUnresolved = RS.AnnSelG annotatedFields tableFromExp tablePermissions
+      selectAstUnresolved = RS.AnnSelectG annotatedFields tableFromExp tablePermissions
                             tableArguments stringifyNumerics
   return selectAstUnresolved
   where
     actionLogTable = QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
 
     -- TODO:- Avoid using PGColumnInfo
-    mkAnnFldFromPGCol column columnType =
-      flip RS.mkAnnColField Nothing $
+    mkAnnFieldFromPGCol column columnType =
+      flip RS.mkAnnColumnField Nothing $
       PGColumnInfo (unsafePGCol column) (G.Name column) 0 (PGColumnScalar columnType) True Nothing
 
     parseActionId annInpValue = mkParameterizablePGValue <$> asPGColumnValue annInpValue
@@ -469,8 +469,8 @@ processOutputSelectionSet
 processOutputSelectionSet tableRowInput actionOutputType definitionList fldTy flds = do
   stringifyNumerics <- stringifyNum <$> asks getter
   annotatedFields <- processTableSelectionSet fldTy flds
-  let annSel = RS.AnnSelG annotatedFields selectFrom
-                  RS.noTablePermissions RS.noTableArgs stringifyNumerics
+  let annSel = RS.AnnSelectG annotatedFields selectFrom
+                  RS.noTablePermissions RS.noSelectArgs stringifyNumerics
   pure annSel
   where
     jsonbToPostgresRecordFunction =

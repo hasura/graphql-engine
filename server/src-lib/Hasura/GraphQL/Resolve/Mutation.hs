@@ -50,7 +50,7 @@ resolveMutationFields ty selSet = fmap (map (first FieldName)) $
     "returning"     -> do
       annFlds <- processTableSelectionSet (_fType fld) $ _fSelSet fld
       annFldsResolved <- traverse
-        (traverse (RS.traverseAnnFld convertPGValueToTextValue)) annFlds
+        (traverse (RS.traverseAnnField convertPGValueToTextValue)) annFlds
       return $ RR.MRet annFldsResolved
     G.Name t        -> throw500 $ "unexpected field in mutation resp : " <> t
   where

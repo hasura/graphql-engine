@@ -29,12 +29,12 @@ import qualified Hasura.SQL.DML                 as S
 
 data QueryCtx
   = QCSelect !SelOpCtx
-  | QCSelectConnection !(Maybe (NonEmpty PGCol)) !SelOpCtx
+  | QCSelectConnection !(NonEmpty PGColumnInfo) !SelOpCtx
   | QCSelectPkey !SelPkOpCtx
   | QCSelectAgg !SelOpCtx
   | QCFuncQuery !FuncQOpCtx
   | QCFuncAggQuery !FuncQOpCtx
-  | QCFuncConnection !(Maybe (NonEmpty PGCol)) !FuncQOpCtx
+  | QCFuncConnection !(NonEmpty PGColumnInfo) !FuncQOpCtx
   | QCActionFetch !ActionSelectOpContext
   deriving (Show, Eq)
 
@@ -131,10 +131,16 @@ data ActionSelectOpContext
 -- used in resolvers
 type PGColGNameMap = Map.HashMap G.Name PGColumnInfo
 
+data RelationshipFieldKind
+  = RFKAggregate
+  | RFKSimple
+  | RFKConnection !(NonEmpty PGColumnInfo)
+  deriving (Show, Eq)
+
 data RelationshipField
   = RelationshipField
   { _rfInfo       :: !RelInfo
-  , _rfIsAgg      :: !Bool
+  , _rfIsAgg      :: !RelationshipFieldKind
   , _rfCols       :: !PGColGNameMap
   , _rfPermFilter :: !AnnBoolExpPartialSQL
   , _rfPermLimit  :: !(Maybe Int)
