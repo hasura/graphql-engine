@@ -185,19 +185,20 @@ tableSelectionSet
   -> SelPermInfo
   -> Bool
   -> m (Maybe (Parser 'Output n AnnotatedFields))
-tableSelectionSet table selectPermissions stringifyNum =
-  {- FIXME!!! memoizeOn 'tableSelectionSet table $ -} do
-    tableInfo <- _tiCoreInfo <$> askTableInfo table
-    tableName <- qualifiedObjectToName table
-    let tableFields = Map.elems  $ _tciFieldInfoMap tableInfo
-    fieldParsers <- fmap concat $ for tableFields \fieldInfo ->
-      fieldSelection fieldInfo selectPermissions stringifyNum
-    whenMaybe (not $ null fieldParsers) do
-      let typenameRepr = (FieldName "__typename", RQL.FExp $ G.unName tableName)
-          description  = G.Description . getPGDescription <$> _tciDescription tableInfo
-      pure $ P.selectionSet tableName description typenameRepr
-           $ fmap catMaybes
-           $ sequenceA fieldParsers
+tableSelectionSet table selectPermissions stringifyNum = do
+  tableInfo <- _tiCoreInfo <$> askTableInfo table
+  tableName <- qualifiedObjectToName table
+  let tableFields = Map.elems  $ _tciFieldInfoMap tableInfo
+  fieldParsers <- fmap concat $ for tableFields \fieldInfo ->
+    fieldSelection fieldInfo selectPermissions stringifyNum
+  whenMaybe (not $ null fieldParsers) do
+    let typenameRepr = (FieldName "__typename", RQL.FExp $ G.unName tableName)
+        description  = G.Description . getPGDescription <$> _tciDescription tableInfo
+    memoizeOn 'tableSelectionSet table
+      $ pure
+      $ P.selectionSet tableName description typenameRepr
+      $ fmap catMaybes
+      $ sequenceA fieldParsers
 
 
 
