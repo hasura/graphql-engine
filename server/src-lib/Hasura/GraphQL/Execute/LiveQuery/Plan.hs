@@ -288,6 +288,7 @@ buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
         _ -> do
           unresolvedAST <- GR.queryFldToPGAST field actionExecutioner
           resolvedAST <- GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
+
           let (_, remoteJoins) = GR.toPGQuery resolvedAST
           -- Reject remote relationships in subscription live query
           when (remoteJoins /= mempty) $
@@ -300,10 +301,9 @@ buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery
 
-  -- We need to ensure that the values provided for variables
-  -- are correct according to Postgres. Without this check
-  -- an invalid value for a variable for one instance of the
-  -- subscription will take down the entire multiplexed query
+  -- We need to ensure that the values provided for variables are correct according to Postgres.
+  -- Without this check an invalid value for a variable for one instance of the subscription will
+  -- take down the entire multiplexed query.
   validatedQueryVars <- validateVariables pgExecCtx queryVariableValues
   validatedSyntheticVars <- validateVariables pgExecCtx (toList syntheticVariableValues)
   let cohortVariables = CohortVariables (_uiSession userInfo) validatedQueryVars validatedSyntheticVars

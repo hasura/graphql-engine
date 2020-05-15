@@ -304,6 +304,7 @@ fetchMetadata = do
 
   cronTriggers <- fetchCronTriggers
 
+
   return $ ReplaceMetadata currentMetadataVersion
                            (HMIns.elems postRelMap)
                            functions

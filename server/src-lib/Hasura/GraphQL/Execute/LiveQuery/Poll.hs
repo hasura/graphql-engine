@@ -196,6 +196,7 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = 
   where
     CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
     response = result <&> \payload -> LiveQueryResponse (encJToLBS payload) dTime
+
     pushResultToSubscribers = A.mapConcurrently_ $ \(Subscriber action) ->
       action response
 -- -------------------------------------------------------------------------------------------------
