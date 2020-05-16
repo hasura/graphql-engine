@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import EventSubSidebar from './EventSubSidebar';
+import { connect } from 'react-redux';
 
 const appPrefix = '/events';
 
@@ -58,7 +59,7 @@ const mapStateToProps = state => {
   };
 };
 
-const eventPageConnector = connect =>
-  connect(mapStateToProps)(EventPageContainer);
-
-export default eventPageConnector;
+const ConnectedEventPageContainer = connect(mapStateToProps)(
+  EventPageContainer
+);
+export default ConnectedEventPageContainer;

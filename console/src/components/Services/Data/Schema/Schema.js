@@ -39,6 +39,7 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import RawSqlButton from '../Common/Components/RawSqlButton';
+import { connect } from 'react-redux';
 
 class Schema extends Component {
   constructor(props) {
@@ -731,6 +732,5 @@ const mapStateToProps = state => ({
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 
-const schemaConnector = connect => connect(mapStateToProps)(Schema);
-
-export default schemaConnector;
+const ConnectedSchema = connect(mapStateToProps)(Schema);
+export default ConnectedSchema;

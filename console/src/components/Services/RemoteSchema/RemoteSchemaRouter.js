@@ -1,62 +1,19 @@
 import React from 'react';
 
 import { Route, IndexRedirect } from 'react-router';
-import { rightContainerConnector } from '../../Common/Layout';
+import { ConnectedRightContainer } from '../../Common/Layout';
 import globals from '../../../Globals';
-import {
-  remoteSchemaPageConnector,
-  landingConnector,
-  addConnector,
-  editConnector,
-  viewConnector,
-} from '.';
-import { fetchRemoteSchemas, FILTER_REMOTE_SCHEMAS } from './Actions';
+import { fetchRemoteSchemas } from './Actions';
+import ConnectedRemoteSchemaPageContainer from './RemoteSchemaPageContainer';
+import ConnectedRemoteSchemaLanding from './Landing/RemoteSchema';
+import ConnectedAdd from './Add/Add';
+import ConnectedView from './Edit/View';
+import ConnectedEdit from './Edit/Edit';
 
 // Objective is to render list of custom remoteSchemas on the
 // left nav bar.
 // Custom remoteSchemas list is fetched from hdb_catalog/custom_remoteSchema
 // Whenever any operation happens like add remoteSchema/delete remoteSchema, this state should update automatically.
-
-import { appPrefix } from './constants';
-
-const filterItem = dispatch => {
-  return (dataList, searchVal) => {
-    // form new schema
-    const matchedTables = dataList.filter(data => {
-      return (
-        data.name
-          .toLowerCase()
-          .indexOf(searchVal ? searchVal.toLowerCase() : '') !== -1
-      );
-    });
-    dispatch({
-      type: FILTER_REMOTE_SCHEMAS,
-      data: {
-        filtered: matchedTables,
-        searchQuery: searchVal,
-      },
-    });
-  };
-};
-
-const leftNavMapStateToProps = state => {
-  return {
-    ...state,
-    dataList: [...state.remoteSchemas.listData.remoteSchemas],
-    isError: state.remoteSchemas.listData.isError,
-    isRequesting: state.remoteSchemas.listData.isRequesting,
-    filtered: [...state.remoteSchemas.listData.filtered],
-    searchQuery: state.remoteSchemas.listData.searchQuery,
-    viewRemoteSchema: state.remoteSchemas.listData.viewRemoteSchema,
-    appPrefix,
-  };
-};
-
-const leftNavMapDispatchToProps = dispatch => {
-  return {
-    filterItem: filterItem(dispatch),
-  };
-};
 
 const fetchInitialData = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
@@ -82,35 +39,24 @@ const fetchInitialData = ({ dispatch }) => {
   };
 };
 
-const getRemoteSchemaRouter = (connect, store, composeOnEnterHooks) => {
+const getRemoteSchemaRouter = (store, composeOnEnterHooks) => {
   return (
     <Route
       path="remote-schemas"
-      component={remoteSchemaPageConnector(
-        connect,
-        leftNavMapStateToProps,
-        leftNavMapDispatchToProps
-      )}
+      component={ConnectedRemoteSchemaPageContainer}
       onEnter={composeOnEnterHooks([fetchInitialData(store)])}
       onChange={fetchInitialData(store)}
     >
       <IndexRedirect to="manage" />
-      <Route path="manage" component={rightContainerConnector(connect)}>
+      <Route path="manage" component={ConnectedRightContainer}>
         <IndexRedirect to="schemas" />
-        <Route path="schemas" component={landingConnector(connect)} />
-        <Route path="add" component={addConnector(connect)} />
-        <Route
-          path=":remoteSchemaName/details"
-          component={viewConnector(connect)}
-        />
-        <Route
-          path=":remoteSchemaName/modify"
-          component={editConnector(connect)}
-        />
+        <Route path="schemas" component={ConnectedRemoteSchemaLanding} />
+        <Route path="add" component={ConnectedAdd} />
+        <Route path=":remoteSchemaName/details" component={ConnectedView} />
+        <Route path=":remoteSchemaName/modify" component={ConnectedEdit} />
       </Route>
     </Route>
   );
 };
 
 export default getRemoteSchemaRouter;
-export { appPrefix };

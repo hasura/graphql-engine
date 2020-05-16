@@ -6,6 +6,7 @@ import {
   setDefaults,
   addExistingTableSql,
 } from './AddExistingTableViewActions';
+import { connect } from 'react-redux';
 
 class AddExistingTableView extends Component {
   constructor(props) {
@@ -110,7 +111,7 @@ const mapStateToProps = state => {
   };
 };
 
-const addExistingTableViewConnector = connect =>
-  connect(mapStateToProps)(AddExistingTableView);
-
-export default addExistingTableViewConnector;
+const ConnectedAddExistingTableView = connect(mapStateToProps)(
+  AddExistingTableView
+);
+export default ConnectedAddExistingTableView;

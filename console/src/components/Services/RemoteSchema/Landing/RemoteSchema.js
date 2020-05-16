@@ -7,6 +7,7 @@ import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 import TryItOut from '../../Common/Landing/TryItOut';
+import { connect } from 'react-redux';
 
 class RemoteSchema extends React.Component {
   render() {
@@ -86,6 +87,5 @@ const mapStateToProps = state => {
   };
 };
 
-const remoteSchemaConnector = connect => connect(mapStateToProps)(RemoteSchema);
-
-export default remoteSchemaConnector;
+const ConnectedRemoteSchemaLanding = connect(mapStateToProps)(RemoteSchema);
+export default ConnectedRemoteSchemaLanding;

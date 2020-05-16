@@ -1,4 +1,5 @@
 import React from 'react';
+import { connect } from 'react-redux';
 
 const RightContainer = ({ children }) => {
   const styles = require('./RightContainer.scss');
@@ -11,9 +12,7 @@ const RightContainer = ({ children }) => {
             styles.main + ' ' + styles.padd_left_remove + ' ' + styles.padd_top
           }
         >
-          <div className={styles.rightBar + ' '}>
-            {children && React.cloneElement(children)}
-          </div>
+          <div className={styles.rightBar + ' '}>{children}</div>
         </div>
       </div>
     </div>
@@ -26,7 +25,5 @@ const mapStateToProps = state => {
   };
 };
 
-const rightContainerConnector = connect =>
-  connect(mapStateToProps)(RightContainer);
-
-export default rightContainerConnector;
+const ConnectedRightContainer = connect(mapStateToProps)(RightContainer);
+export default ConnectedRightContainer;

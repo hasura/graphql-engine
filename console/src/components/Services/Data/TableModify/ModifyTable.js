@@ -51,6 +51,7 @@ import {
   uniqueKeyDescription,
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
+import { connect } from 'react-redux';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -357,6 +358,5 @@ const mapStateToProps = (state, ownProps) => ({
   ...state.tables.modify,
 });
 
-const modifyTableConnector = connect => connect(mapStateToProps)(ModifyTable);
-
-export default modifyTableConnector;
+const ConnectedModifyTable = connect(mapStateToProps)(ModifyTable);
+export default ConnectedModifyTable;

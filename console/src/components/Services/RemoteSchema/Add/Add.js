@@ -6,6 +6,7 @@ import Helmet from 'react-helmet';
 import Button from '../../../Common/Button/Button';
 
 import { pageTitle } from '../constants';
+import { connect } from 'react-redux';
 
 class Add extends React.Component {
   componentWillUnmount() {
@@ -55,4 +56,5 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect => connect(mapStateToProps)(Add);
+const ConnectedAdd = connect(mapStateToProps)(Add);
+export default ConnectedAdd;

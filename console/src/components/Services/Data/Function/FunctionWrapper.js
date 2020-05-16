@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { RESET } from './customFunctionReducer';
 
 import { setTable } from '../DataActions';
+import { connect } from 'react-redux';
 
 class FunctionWrapper extends React.Component {
   componentDidMount() {
@@ -34,7 +35,5 @@ const mapStateToProps = state => {
   };
 };
 
-const functionWrapperConnector = connect =>
-  connect(mapStateToProps)(FunctionWrapper);
-
-export default functionWrapperConnector;
+const ConnectedFunctionWrapper = connect(mapStateToProps)(FunctionWrapper);
+export default ConnectedFunctionWrapper;

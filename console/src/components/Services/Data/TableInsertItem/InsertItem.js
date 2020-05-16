@@ -15,6 +15,7 @@ import {
 } from '../../../Common/utils/pgUtils';
 import { TypedInput } from '../Common/Components/TypedInput';
 import styles from '../../../Common/TableCommon/Table.scss';
+import { connect } from 'react-redux';
 
 class InsertItem extends Component {
   constructor() {
@@ -310,6 +311,5 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const insertItemConnector = connect => connect(mapStateToProps)(InsertItem);
-
-export default insertItemConnector;
+const ConnectedInsertItem = connect(mapStateToProps)(InsertItem);
+export default ConnectedInsertItem;

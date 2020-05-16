@@ -22,6 +22,7 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { connect } from 'react-redux';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -257,4 +258,5 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect => connect(mapStateToProps)(Edit);
+const ConnectedEdit = connect(mapStateToProps)(Edit);
+export default ConnectedEdit;

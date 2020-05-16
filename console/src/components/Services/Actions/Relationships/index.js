@@ -1,4 +1,5 @@
 import Relationships from './Main';
+import { connect } from 'react-redux';
 
 const mapStateToProps = state => {
   return {
@@ -10,5 +11,5 @@ const mapStateToProps = state => {
   };
 };
 
-const connector = connect => connect(mapStateToProps)(Relationships);
-export default connector;
+const ConnectedActionRelationships = connect(mapStateToProps)(Relationships);
+export default ConnectedActionRelationships;

@@ -8,6 +8,7 @@ import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
 import AddManualRelationship from './AddManualRelationship';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
+import { connect } from 'react-redux';
 
 class RelationshipsView extends Component {
   componentDidMount() {
@@ -190,7 +191,5 @@ const mapStateToProps = (state, ownProps) => ({
   ...state.tables.modify,
 });
 
-const relationshipsViewConnector = connect =>
-  connect(mapStateToProps)(RelationshipsView);
-
-export default relationshipsViewConnector;
+const ConnectedRelationshipsView = connect(mapStateToProps)(RelationshipsView);
+export default ConnectedRelationshipsView;

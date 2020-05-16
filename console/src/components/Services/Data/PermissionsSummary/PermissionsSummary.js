@@ -32,6 +32,7 @@ import {
   getTablePermissionsByRoles,
   getPermissionRowAccessSummary,
 } from './utils';
+import { connect } from 'react-redux';
 
 class PermissionsSummary extends Component {
   initState = {
@@ -1054,14 +1055,14 @@ class PermissionsSummary extends Component {
   }
 }
 
-const permissionsSummaryConnector = connect => {
-  const mapStateToProps = state => {
-    return {
-      allSchemas: state.tables.allSchemas,
-      currentSchema: state.tables.currentSchema,
-    };
+const mapStateToProps = state => {
+  return {
+    allSchemas: state.tables.allSchemas,
+    currentSchema: state.tables.currentSchema,
   };
-  return connect(mapStateToProps)(PermissionsSummary);
 };
 
-export default permissionsSummaryConnector;
+const ConnectedPermissionsSummary = connect(mapStateToProps)(
+  PermissionsSummary
+);
+export default ConnectedPermissionsSummary;

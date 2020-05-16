@@ -6,6 +6,7 @@ import globals from '../../Globals';
 import { verifyLogin } from './Actions';
 import { CLI_CONSOLE_MODE } from '../../constants';
 import { getAdminSecret } from '../Services/ApiExplorer/ApiRequest/utils';
+import { connect } from 'react-redux';
 
 const styles = require('./Login.scss');
 const hasuraLogo = require('./blue-logo.svg');
@@ -153,8 +154,6 @@ const Login = ({ dispatch }) => {
   );
 };
 
-const generatedLoginConnector = connect => {
-  return connect()(Login);
-};
+const ConnectedLogin = connect()(Login);
 
-export default generatedLoginConnector;
+export default ConnectedLogin;

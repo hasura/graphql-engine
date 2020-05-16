@@ -29,6 +29,7 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { convertDateTimeToLocale } from '../utils';
 import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
+import { connect } from 'react-redux';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -468,7 +469,5 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const streamingLogsConnector = connect =>
-  connect(mapStateToProps)(StreamingLogs);
-
-export default streamingLogsConnector;
+const ConnectedStreamingLogs = connect(mapStateToProps)(StreamingLogs);
+export default ConnectedStreamingLogs;

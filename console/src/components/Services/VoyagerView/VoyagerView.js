@@ -4,6 +4,7 @@ import fetch from 'isomorphic-fetch';
 import Endpoints from '../../../Endpoints';
 import '../../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
+import { connect } from 'react-redux';
 
 class VoyagerView extends Component {
   introspectionProvider(query) {
@@ -28,13 +29,10 @@ class VoyagerView extends Component {
   }
 }
 
-const generatedVoyagerConnector = connect => {
-  const mapStateToProps = state => {
-    return {
-      headers: state.tables.dataHeaders,
-    };
+const ConnectedVoyagerConnector = connect(state => {
+  return {
+    headers: state.tables.dataHeaders,
   };
-  return connect(mapStateToProps)(VoyagerView);
-};
+})(VoyagerView);
 
-export default generatedVoyagerConnector;
+export default ConnectedVoyagerConnector;

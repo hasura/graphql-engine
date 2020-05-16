@@ -11,6 +11,7 @@ import { updateCurrentSchema } from './DataActions';
 import { NotFoundError } from '../../Error/PageNotFound';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
+import { connect } from 'react-redux';
 
 const DataPageContainer = ({
   currentSchema,
@@ -121,7 +122,5 @@ const mapStateToProps = state => {
   };
 };
 
-const dataPageConnector = connect =>
-  connect(mapStateToProps)(DataPageContainer);
-
-export default dataPageConnector;
+const ConnectedDataPageContainer = connect(mapStateToProps)(DataPageContainer);
+export default ConnectedDataPageContainer;

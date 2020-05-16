@@ -5,6 +5,7 @@ import { setTrigger } from '../EventActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
 import { NotFoundError } from '../../../Error/PageNotFound';
+import { connect } from 'react-redux';
 
 /* Functions are unused
 const genHeadings = headings => {
@@ -220,6 +221,5 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const processedEventsConnector = connect => connect(mapStateToProps)(ViewTable);
-
-export default processedEventsConnector;
+const ConnectedProcessedEventsViewTable = connect(mapStateToProps)(ViewTable);
+export default ConnectedProcessedEventsViewTable;

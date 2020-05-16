@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 
@@ -107,19 +108,17 @@ ApiExplorer.propTypes = {
   location: PropTypes.object.isRequired,
 };
 
-const generatedApiExplorer = connect => {
-  const mapStateToProps = state => {
-    return {
-      ...state.apiexplorer,
-      serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
-      credentials: {},
-      dataApiExplorerData: { ...state.dataApiExplorer },
-      dataHeaders: state.tables.dataHeaders,
-      tables: state.tables.allSchemas,
-      serverConfig: state.main.serverConfig ? state.main.serverConfig.data : {},
-    };
+const mapStateToProps = state => {
+  return {
+    ...state.apiexplorer,
+    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+    credentials: {},
+    dataApiExplorerData: { ...state.dataApiExplorer },
+    dataHeaders: state.tables.dataHeaders,
+    tables: state.tables.allSchemas,
+    serverConfig: state.main.serverConfig ? state.main.serverConfig.data : {},
   };
-  return connect(mapStateToProps)(ApiExplorer);
 };
 
-export default generatedApiExplorer;
+const ConnectedApiExplorer = connect(mapStateToProps)(ApiExplorer);
+export default ConnectedApiExplorer;

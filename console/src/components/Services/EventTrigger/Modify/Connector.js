@@ -1,4 +1,5 @@
 import Modify from './Modify';
+import { connect } from 'react-redux';
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -13,6 +14,5 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const modifyTriggerConnector = connect => connect(mapStateToProps)(Modify);
-
-export default modifyTriggerConnector;
+const ConnectedModifyTrigger = connect(mapStateToProps)(Modify);
+export default ConnectedModifyTrigger;

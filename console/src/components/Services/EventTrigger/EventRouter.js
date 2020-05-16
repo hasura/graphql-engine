@@ -3,75 +3,67 @@ import React from 'react';
 import { Route, IndexRedirect } from 'react-router';
 import globals from '../../../Globals';
 
-import {
-  landingConnector,
-  addTriggerConnector,
-  modifyTriggerConnector,
-  processedEventsConnector,
-  pendingEventsConnector,
-  runningEventsConnector,
-  eventPageConnector,
-  streamingLogsConnector,
-} from '.';
-
-import { rightContainerConnector } from '../../Common/Layout';
+import { ConnectedRightContainer } from '../../Common/Layout';
 
 import {
   loadTriggers,
   loadPendingEvents,
   loadRunningEvents,
 } from '../EventTrigger/EventActions';
+import ConnectedEventPageContainer from './EventPageContainer';
+import ConnectedEventTriggerLanding from './Landing/EventTrigger';
+import ConnectedProcessedEventsViewTable from './ProcessedEvents/ViewTable';
+import ConnectedPendingEventsViewTable from './PendingEvents/ViewTable';
+import ConnectedRunningEventsViewTable from './RunningEvents/ViewTable';
+import ConnectedStreamingLogs from './StreamingLogs/Logs';
+import ConnectedAddTrigger from './Add/AddTrigger';
+import ConnectedModifyTrigger from './Modify/Connector';
 
-const makeEventRouter = (
-  connect,
-  store,
+const makeEventRouter = ({
   composeOnEnterHooks,
   requireSchema,
   requirePendingEvents,
-  requireRunningEvents
-) => {
+  requireRunningEvents,
+}) => {
   return (
     <Route
       path="events"
-      component={eventPageConnector(connect)}
+      component={ConnectedEventPageContainer}
       onEnter={composeOnEnterHooks([requireSchema])}
     >
       <IndexRedirect to="manage" />
-      <Route path="manage" component={rightContainerConnector(connect)}>
+      <Route path="manage" component={ConnectedRightContainer}>
         <IndexRedirect to="triggers" />
-        <Route path="triggers" component={landingConnector(connect)} />
+        <Route path="triggers" component={ConnectedEventTriggerLanding} />
         <Route
           path="triggers/:trigger/processed"
-          component={processedEventsConnector(connect)}
+          component={ConnectedProcessedEventsViewTable}
         />
         <Route
           path="triggers/:trigger/pending"
-          component={pendingEventsConnector(connect)}
+          component={ConnectedPendingEventsViewTable}
           onEnter={composeOnEnterHooks([requirePendingEvents])}
         />
         <Route
           path="triggers/:trigger/running"
-          component={runningEventsConnector(connect)}
+          component={ConnectedRunningEventsViewTable}
           onEnter={composeOnEnterHooks([requireRunningEvents])}
         />
         <Route
           path="triggers/:trigger/logs"
-          component={streamingLogsConnector(connect)}
+          component={ConnectedStreamingLogs}
         />
       </Route>
-      <Route
-        path="manage/triggers/add"
-        component={addTriggerConnector(connect)}
-      />
+      <Route path="manage/triggers/add" component={ConnectedAddTrigger} />
       <Route
         path="manage/triggers/:trigger/modify"
-        component={modifyTriggerConnector(connect)}
+        component={ConnectedModifyTrigger}
       />
     </Route>
   );
 };
 
-const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
+const eventRouterUtils = (store, composeOnEnterHooks) => {
   const requireSchema = (nextState, replaceState, cb) => {
     // check if admin secret is available in localstorage. if so use that.
     // if localstorage admin secret didn't work, redirect to login (meaning value has changed)
@@ -144,14 +136,12 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
   };
 
   return {
-    makeEventRouter: makeEventRouter(
-      connect,
-      store,
+    makeEventRouter: makeEventRouter({
       composeOnEnterHooks,
       requireSchema,
       requirePendingEvents,
-      requireRunningEvents
-    ),
+      requireRunningEvents,
+    }),
     requireSchema,
   };
 };

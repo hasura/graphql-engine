@@ -39,6 +39,7 @@ import {
   getTableName,
   getTrackedTables,
 } from '../../../Common/utils/pgUtils';
+import { connect } from 'react-redux';
 
 class AddTrigger extends Component {
   constructor(props) {
@@ -624,6 +625,5 @@ const mapStateToProps = state => {
   };
 };
 
-const addTriggerConnector = connect => connect(mapStateToProps)(AddTrigger);
-
-export default addTriggerConnector;
+const ConnectedAddTrigger = connect(mapStateToProps)(AddTrigger);
+export default ConnectedAddTrigger;

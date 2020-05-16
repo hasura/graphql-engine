@@ -8,6 +8,7 @@ import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ReloadMetadata from '../MetadataOptions/ReloadMetadata';
+import { connect } from 'react-redux';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
@@ -223,6 +224,5 @@ const mapStateToProps = state => {
   };
 };
 
-const connector = connect => connect(mapStateToProps)(MetadataStatus);
-
-export default connector;
+const ConnectedMetadataStatus = connect(mapStateToProps)(MetadataStatus);
+export default ConnectedMetadataStatus;

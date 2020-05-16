@@ -4,6 +4,7 @@ import Helmet from 'react-helmet';
 import Toggle from '../../../Common/Toggle/Toggle';
 import { updateMigrationModeStatus } from '../../../Main/Actions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { connect } from 'react-redux';
 
 const Migrations = ({ dispatch, migrationMode }) => {
   const styles = require('./Migrations.scss');
@@ -78,6 +79,5 @@ const mapStateToProps = state => ({
   migrationMode: state.main.migrationMode,
 });
 
-const migrationsConnector = connect => connect(mapStateToProps)(Migrations);
-
-export default migrationsConnector;
+const ConnectedMigrations = connect(mapStateToProps)(Migrations);
+export default ConnectedMigrations;

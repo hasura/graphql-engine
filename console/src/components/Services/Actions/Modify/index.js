@@ -1,4 +1,5 @@
 import Modify from './Main';
+import { connect } from 'react-redux';
 
 const mapStateToProps = state => {
   return {
@@ -8,5 +9,5 @@ const mapStateToProps = state => {
   };
 };
 
-const connector = connect => connect(mapStateToProps)(Modify);
-export default connector;
+const ConnectedModify = connect(mapStateToProps)(Modify);
+export default ConnectedModify;

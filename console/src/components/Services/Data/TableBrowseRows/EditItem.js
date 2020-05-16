@@ -13,6 +13,7 @@ import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { TypedInput } from '../Common/Components/TypedInput';
 import { fetchEnumOptions } from './EditActions';
+import { connect } from 'react-redux';
 
 class EditItem extends Component {
   constructor() {
@@ -250,6 +251,5 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const editItemConnector = connect => connect(mapStateToProps)(EditItem);
-
-export default editItemConnector;
+const ConnectedEditItem = connect(mapStateToProps)(EditItem);
+export default ConnectedEditItem;

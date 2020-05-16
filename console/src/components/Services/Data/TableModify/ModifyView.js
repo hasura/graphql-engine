@@ -28,6 +28,7 @@ import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { changeViewRootFields } from '../Common/TooltipMessages';
 import styles from './ModifyTable.scss';
+import { connect } from 'react-redux';
 
 const ModifyView = props => {
   const {
@@ -350,6 +351,5 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const modifyViewConnector = connect => connect(mapStateToProps)(ModifyView);
-
-export default modifyViewConnector;
+const ConnectedModifyView = connect(mapStateToProps)(ModifyView);
+export default ConnectedModifyView;

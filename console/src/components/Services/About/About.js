@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import Helmet from 'react-helmet';
 
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
@@ -164,6 +165,5 @@ const mapStateToProps = state => {
   };
 };
 
-const aboutConnector = connect => connect(mapStateToProps)(About);
-
-export default aboutConnector;
+const ConnectedAbout = connect(mapStateToProps)(About);
+export default ConnectedAbout;

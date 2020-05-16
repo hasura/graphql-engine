@@ -3,6 +3,7 @@ import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
+import { connect } from 'react-redux';
 
 const MetadataOptions = props => {
   const styles = require('../Settings.scss');
@@ -97,7 +98,5 @@ const mapStateToProps = state => {
   };
 };
 
-const metadataOptsConnector = connect =>
-  connect(mapStateToProps)(MetadataOptions);
-
-export default metadataOptsConnector;
+const ConnectedMetadataOptions = connect(mapStateToProps)(MetadataOptions);
+export default ConnectedMetadataOptions;

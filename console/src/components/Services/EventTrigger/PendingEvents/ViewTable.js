@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { vSetDefaults, vMakeRequest, vExpandHeading } from './ViewActions'; // eslint-disable-line no-unused-vars
 import { setTrigger } from '../EventActions';
 import TableHeader from '../TableCommon/TableHeader';
@@ -210,6 +211,5 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const pendingEventsConnector = connect => connect(mapStateToProps)(ViewTable);
-
-export default pendingEventsConnector;
+const ConnectedPendingEventsViewTable = connect(mapStateToProps)(ViewTable);
+export default ConnectedPendingEventsViewTable;

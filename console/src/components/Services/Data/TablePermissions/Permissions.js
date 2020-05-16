@@ -92,6 +92,7 @@ import {
   getDefaultFilterType,
   getUpdateTooltip,
 } from './utils';
+import { connect } from 'react-redux';
 
 class Permissions extends Component {
   constructor() {
@@ -1968,6 +1969,5 @@ const mapStateToProps = (state, ownProps) => ({
   ...state.tables.modify,
 });
 
-const permissionsConnector = connect => connect(mapStateToProps)(Permissions);
-
-export default permissionsConnector;
+const ConnectedPermissions = connect(mapStateToProps)(Permissions);
+export default ConnectedPermissions;

@@ -7,6 +7,7 @@ import AllowedQueriesList from './AllowedQueriesList';
 import styles from './AllowedQueries.scss';
 
 import { loadAllowedQueries } from '../Actions';
+import { connect } from 'react-redux';
 
 class AllowedQueries extends React.Component {
   constructor(props) {
@@ -53,7 +54,5 @@ const mapStateToProps = state => {
   };
 };
 
-const allowedQueriesConnector = connect =>
-  connect(mapStateToProps)(AllowedQueries);
-
-export default allowedQueriesConnector;
+const ConnectedAllowedQueries = connect(mapStateToProps)(AllowedQueries);
+export default ConnectedAllowedQueries;

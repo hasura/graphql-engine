@@ -16,6 +16,7 @@ import ViewRows from './ViewRows';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
 import { getPersistedPageSize } from './localStorageUtils';
+import { connect } from 'react-redux';
 
 class ViewTable extends Component {
   constructor(props) {
@@ -226,6 +227,5 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const viewTableConnector = connect => connect(mapStateToProps)(ViewTable);
-
-export default viewTableConnector;
+const ConnectedViewTable = connect(mapStateToProps)(ViewTable);
+export default ConnectedViewTable;

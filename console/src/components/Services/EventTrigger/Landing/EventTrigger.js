@@ -11,6 +11,7 @@ import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 import TryItOut from '../../Common/Landing/TryItOut';
+import { connect } from 'react-redux';
 
 const appPrefix = globals.urlPrefix + '/events';
 
@@ -120,6 +121,5 @@ const mapStateToProps = state => ({
   readOnlyMode: state.main.readOnlyMode,
 });
 
-const eventTriggerConnector = connect => connect(mapStateToProps)(EventTrigger);
-
-export default eventTriggerConnector;
+const ConnectedEventTriggerLanding = connect(mapStateToProps)(EventTrigger);
+export default ConnectedEventTriggerLanding;

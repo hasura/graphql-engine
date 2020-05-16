@@ -7,6 +7,7 @@ import PageContainer from '../../../Common/Layout/PageContainer/PageContainer';
 import LeftSidebar from '../Sidebar/LeftSidebar';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { appPrefix } from '../constants';
+import { connect } from 'react-redux';
 
 class Container extends React.Component {
   render() {
@@ -62,4 +63,5 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect => connect(mapStateToProps)(Container);
+const ConnectedActionsContainer = connect(mapStateToProps)(Container);
+export default ConnectedActionsContainer;

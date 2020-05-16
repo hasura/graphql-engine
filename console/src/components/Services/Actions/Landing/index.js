@@ -1,4 +1,5 @@
 import Landing from './Main';
+import { connect } from 'react-redux';
 
 const mapStateToProps = state => {
   return {
@@ -6,5 +7,5 @@ const mapStateToProps = state => {
   };
 };
 
-const connector = connect => connect(mapStateToProps)(Landing);
-export default connector;
+const ConnectedLanding = connect(mapStateToProps)(Landing);
+export default ConnectedLanding;

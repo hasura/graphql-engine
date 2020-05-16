@@ -21,19 +21,15 @@ import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 
 import { getActionsRouter } from './components/Services/Actions';
 
-import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
-
-import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
-
-import about from './components/Services/About/About';
-
-import generatedLoginConnector from './components/Login/Login';
-
-import settingsContainer from './components/Services/Settings/Container';
-import metadataOptionsContainer from './components/Services/Settings/MetadataOptions/MetadataOptions';
-import metadataStatusContainer from './components/Services/Settings/MetadataStatus/MetadataStatus';
-import allowedQueriesContainer from './components/Services/Settings/AllowedQueries/AllowedQueries';
-import logoutContainer from './components/Services/Settings/Logout/Logout';
+import ApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
+import VoyagerConnector from './components/Services/VoyagerView/VoyagerView';
+import About from './components/Services/About/About';
+import Login from './components/Login/Login';
+import Settings from './components/Services/Settings/Container';
+import MetadataOptions from './components/Services/Settings/MetadataOptions/MetadataOptions';
+import MetadataStatus from './components/Services/Settings/MetadataStatus/MetadataStatus';
+import AllowedQueries from './components/Services/Settings/AllowedQueries/AllowedQueries';
+import Logout from './components/Services/Settings/Logout/Logout';
 
 import { showErrorNotification } from './components/Services/Common/Notification';
 import { CLI_CONSOLE_MODE } from './constants';
@@ -71,22 +67,14 @@ const routes = store => {
     return;
   };
 
-  const _dataRouterUtils = dataRouterUtils(connect, store, composeOnEnterHooks);
+  const _dataRouterUtils = dataRouterUtils(store, composeOnEnterHooks);
   const requireSchema = _dataRouterUtils.requireSchema;
   const dataRouter = _dataRouterUtils.makeDataRouter;
 
-  const _eventRouterUtils = eventRouterUtils(
-    connect,
-    store,
-    composeOnEnterHooks
-  );
+  const _eventRouterUtils = eventRouterUtils(store, composeOnEnterHooks);
   const eventRouter = _eventRouterUtils.makeEventRouter;
 
-  const remoteSchemaRouter = getRemoteSchemaRouter(
-    connect,
-    store,
-    composeOnEnterHooks
-  );
+  const remoteSchemaRouter = getRemoteSchemaRouter(store, composeOnEnterHooks);
 
   const actionsRouter = getActionsRouter(connect, store, composeOnEnterHooks);
 
@@ -105,38 +93,23 @@ const routes = store => {
 
   return (
     <Route path="/" component={App} onEnter={validateLogin(store)}>
-      <Route path="login" component={generatedLoginConnector(connect)} />
+      <Route path="login" component={Login} />
       <Route
         path=""
         component={Main}
         onEnter={composeOnEnterHooks([requireSchema, requireMigrationStatus])}
       >
         <Route path="">
-          <IndexRoute component={generatedApiExplorer(connect)} />
-          <Route
-            path="api-explorer"
-            component={generatedApiExplorer(connect)}
-          />
-          <Route
-            path="voyager-view"
-            component={generatedVoyagerConnector(connect)}
-          />
-          <Route path="about" component={about(connect)} />
-          <Route path="settings" component={settingsContainer(connect)}>
+          <IndexRoute component={ApiExplorer} />
+          <Route path="api-explorer" component={ApiExplorer} />
+          <Route path="voyager-view" component={VoyagerConnector} />
+          <Route path="about" component={About} />
+          <Route path="settings" component={Settings}>
             <IndexRedirect to="metadata-actions" />
-            <Route
-              path="metadata-actions"
-              component={metadataOptionsContainer(connect)}
-            />
-            <Route
-              path="metadata-status"
-              component={metadataStatusContainer(connect)}
-            />
-            <Route
-              path="allowed-queries"
-              component={allowedQueriesContainer(connect)}
-            />
-            <Route path="logout" component={logoutContainer(connect)} />
+            <Route path="metadata-actions" component={MetadataOptions} />
+            <Route path="metadata-status" component={MetadataStatus} />
+            <Route path="allowed-queries" component={AllowedQueries} />
+            <Route path="logout" component={Logout} />
           </Route>
           {dataRouter}
           {eventRouter}

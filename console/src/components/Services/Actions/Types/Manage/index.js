@@ -1,4 +1,5 @@
 import Manage from './Main';
+import { connect } from 'react-redux';
 
 const mapStateToProps = state => {
   return {
@@ -7,5 +8,5 @@ const mapStateToProps = state => {
   };
 };
 
-const connector = connect => connect(mapStateToProps)(Manage);
-export default connector;
+const ConnectedManage = connect(mapStateToProps)(Manage);
+export default ConnectedManage;

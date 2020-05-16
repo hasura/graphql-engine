@@ -1,4 +1,5 @@
 import AddAction from './Add';
+import { connect } from 'react-redux';
 
 const mapStateToProps = state => {
   return {
@@ -6,5 +7,5 @@ const mapStateToProps = state => {
   };
 };
 
-const connector = connect => connect(mapStateToProps)(AddAction);
-export default connector;
+const ConnectedAddAction = connect(mapStateToProps)(AddAction);
+export default ConnectedAddAction;

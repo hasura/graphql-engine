@@ -1,144 +1,125 @@
 import React from 'react';
-// import {push} fropm 'react-router-redux';
 import { Route, IndexRedirect } from 'react-router';
 import globals from '../../../Globals';
-// import { loadAdminSecretState } from '../../AppState';
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 
-import {
-  schemaConnector,
-  viewTableConnector,
-  insertItemConnector,
-  rawSQLConnector,
-  editItemConnector,
-  addExistingTableViewConnector,
-  addTableConnector,
-  modifyTableConnector,
-  modifyViewConnector,
-  relationshipsConnector,
-  relationshipsViewConnector,
-  permissionsConnector,
-  dataPageConnector,
-  migrationsConnector,
-  functionWrapperConnector,
-  permissionsSummaryConnector,
-  ModifyCustomFunction,
-  PermissionCustomFunction,
-  // metadataConnector,
-} from '.';
-
-import { rightContainerConnector } from '../../Common/Layout';
+import { ModifyCustomFunction, PermissionCustomFunction } from '.';
 
 import {
   fetchDataInit,
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
   updateSchemaInfo,
-  // ADMIN_SECRET_ERROR,
 } from './DataActions';
-
-// import { changeRequestHeader } from '../../ApiExplorer/Actions';
-// import { validateLogin } from '../../Main/Actions';
+import ConnectedDataPageContainer from './DataPageContainer';
+import { ConnectedRightContainer } from '../../Common/Layout';
+import ConnectedSchema from './Schema/Schema';
+import ConnectedFunctionWrapper from './Function/FunctionWrapper';
+import ConnectedViewTable from './TableBrowseRows/ViewTable';
+import ConnectedEditItem from './TableBrowseRows/EditItem';
+import ConnectedInsertItem from './TableInsertItem/InsertItem';
+import ConnectedModifyTable from './TableModify/ModifyTable';
+import ConnectedRelationships from './TableRelationships/Relationships';
+import ConnectedPermissions from './TablePermissions/Permissions';
+import ConnectedModifyView from './TableModify/ModifyView';
+import ConnectedRelationshipsView from './TableRelationships/RelationshipsView';
+import ConnectedPermissionsSummary from './PermissionsSummary/PermissionsSummary';
+import ConnectedAddTable from './Add/AddTable';
+import ConnectedAddExistingTableView from './Add/AddExistingTableView';
+import ConnectedRawSQL from './RawSQL/RawSQL';
+import ConnectedMigrations from './Migrations/Migrations';
 
 const makeDataRouter = (
-  connect,
-  store,
   composeOnEnterHooks,
-  requireSchema,
   migrationRedirects,
   consoleModeRedirects
 ) => {
+  console.log({ composeOnEnterHooks });
   return (
-    <Route path="data" component={dataPageConnector(connect)}>
+    <Route path="data" component={ConnectedDataPageContainer}>
       <IndexRedirect to="schema/public" />
-      <Route path="schema" component={rightContainerConnector(connect)}>
+      <Route path="schema" component={ConnectedRightContainer}>
         <IndexRedirect to="public" />
-        <Route path=":schema" component={schemaConnector(connect)} />
-        <Route path=":schema/tables" component={schemaConnector(connect)} />
-        <Route path=":schema/views" component={schemaConnector(connect)} />
+        <Route path=":schema" component={ConnectedSchema} />
+        <Route path=":schema/tables" component={ConnectedSchema} />
+        <Route path=":schema/views" component={ConnectedSchema} />
         <Route
           path=":schema/functions/:functionName"
-          component={functionWrapperConnector(connect)}
+          component={ConnectedFunctionWrapper}
         >
           <IndexRedirect to="modify" />
           <Route path="modify" component={ModifyCustomFunction} />
           <Route path="permissions" component={PermissionCustomFunction} />
         </Route>
-        <Route
-          path=":schema/tables/:table"
-          component={viewTableConnector(connect)}
-        >
+        <Route path=":schema/tables/:table" component={ConnectedViewTable}>
           <IndexRedirect to="browse" />
-          <Route path="browse" component={viewTableConnector(connect)} />
+          <Route path="browse" component={ConnectedViewTable} />
         </Route>
         <Route
           path=":schema/tables/:table/edit"
-          component={editItemConnector(connect)}
+          component={ConnectedEditItem}
         />
         <Route
           path=":schema/tables/:table/insert"
-          component={insertItemConnector(connect)}
+          component={ConnectedInsertItem}
         />
         <Route
           path=":schema/tables/:table/modify"
           onEnter={migrationRedirects}
-          component={modifyTableConnector(connect)}
+          component={ConnectedModifyTable}
         />
         <Route
           path=":schema/tables/:table/relationships"
-          component={relationshipsConnector(connect)}
+          component={ConnectedRelationships}
         />
         <Route
           path=":schema/tables/:table/permissions"
-          component={permissionsConnector(connect)}
+          component={ConnectedPermissions}
           tableType={'table'}
         />
         <Route
           path=":schema/views/:table/browse"
-          component={viewTableConnector(connect)}
+          component={ConnectedViewTable}
         />
         <Route
           path=":schema/views/:table/modify"
           onEnter={migrationRedirects}
-          component={modifyViewConnector(connect)}
+          component={ConnectedModifyView}
         />
         <Route
           path=":schema/views/:table/relationships"
-          component={relationshipsViewConnector(connect)}
+          component={ConnectedRelationshipsView}
         />
         <Route
           path=":schema/views/:table/permissions"
-          component={permissionsConnector(connect)}
+          component={ConnectedPermissions}
           tableType={'view'}
         />
         <Route
           path=":schema/permissions"
-          component={permissionsSummaryConnector(connect)}
+          component={ConnectedPermissionsSummary}
         />
       </Route>
       <Route
         path="schema/:schema/table/add"
         onEnter={composeOnEnterHooks([migrationRedirects])}
-        component={addTableConnector(connect)}
+        component={ConnectedAddTable}
       />
       <Route
         path="schema/:schema/existing-table-view/add"
-        component={addExistingTableViewConnector(connect)}
+        component={ConnectedAddExistingTableView}
       />
-      <Route path="sql" component={rawSQLConnector(connect)} />
-      {/*
-      <Route path="metadata" component={metadataConnector(connect)} />
-      */}
+      <Route path="sql" component={ConnectedRawSQL} />
       <Route
         path="migrations"
         onEnter={composeOnEnterHooks([consoleModeRedirects])}
-        component={migrationsConnector(connect)}
+        component={ConnectedMigrations}
       />
     </Route>
   );
 };
 
-const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
+const dataRouterUtils = (store, composeOnEnterHooks) => {
   const requireSchema = (nextState, replaceState, cb) => {
     // check if admin secret is available in localstorage. if so use that.
     // if localstorage admin secret didn't work, redirect to login (meaning value has changed)
@@ -202,10 +183,7 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
 
   return {
     makeDataRouter: makeDataRouter(
-      connect,
-      store,
       composeOnEnterHooks,
-      requireSchema,
       migrationRedirects,
       consoleModeRedirects
     ),

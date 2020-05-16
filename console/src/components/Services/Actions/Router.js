@@ -1,17 +1,17 @@
 import React from 'react';
 import { Route, IndexRedirect } from 'react-router';
-import { rightContainerConnector } from '../../Common/Layout';
-import Container from './Containers/Main';
+import RightContainer from '../../Common/Layout';
+import ActionsContainer from './Containers/Main';
 import { fetchActions } from './ServerIO';
 import globals from '../../../Globals';
-import ActionsLandingPage from './Landing';
-import ActionRelationships from './Relationships';
-import ActionPermissions from './Permissions';
-import ActionsCodegen from './Codegen';
-import ModifyAction from './Modify';
-import AddAction from './Add';
-import TypesManage from './Types/Manage';
-import TypesRelationships from './Types/Relationships';
+import ConnectedAddAction from './Add';
+import ConnectedModify from './Modify';
+import ConnectedCodegen from './Codegen';
+import ConnectedManage from './Types/Manage';
+import ConnectedRelationships from './Types/Relationships';
+import ConnectedActionRelationships from './Relationships';
+import ConnectedActionPermissions from './Permissions';
+import ConnectedLanding from './Landing/';
 
 const actionsInit = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
@@ -31,30 +31,30 @@ const getActionsRouter = (connect, store, composeOnEnterHooks) => {
   return (
     <Route
       path="actions"
-      component={Container(connect)}
+      component={ActionsContainer}
       onEnter={composeOnEnterHooks([actionsInit(store)])}
       onChange={actionsInit(store)}
     >
       <IndexRedirect to="manage" />
-      <Route path="manage" component={rightContainerConnector(connect)}>
+      <Route path="manage" component={RightContainer}>
         <IndexRedirect to="actions" />
-        <Route path="actions" component={ActionsLandingPage(connect)} />
-        <Route path="add" component={AddAction(connect)} />
-        <Route path=":actionName/modify" component={ModifyAction(connect)} />
+        <Route path="actions" component={ConnectedLanding} />
+        <Route path="add" component={ConnectedAddAction} />
+        <Route path=":actionName/modify" component={ConnectedModify} />
         <Route
           path=":actionName/relationships"
-          component={ActionRelationships(connect)}
+          component={ConnectedActionRelationships}
         />
-        <Route path=":actionName/codegen" component={ActionsCodegen(connect)} />
+        <Route path=":actionName/codegen" component={ConnectedCodegen} />
         <Route
           path=":actionName/permissions"
-          component={ActionPermissions(connect)}
+          component={ConnectedActionPermissions}
         />
       </Route>
-      <Route path="types" component={rightContainerConnector(connect)}>
+      <Route path="types" component={RightContainer}>
         <IndexRedirect to="manage" />
-        <Route path="manage" component={TypesManage(connect)} />
-        <Route path="relationships" component={TypesRelationships(connect)} />
+        <Route path="manage" component={ConnectedManage} />
+        <Route path="relationships" component={ConnectedRelationships} />
       </Route>
     </Route>
   );

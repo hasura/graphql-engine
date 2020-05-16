@@ -1,6 +1,7 @@
 import React from 'react';
 import Sidebar from './Sidebar';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
+import { connect } from 'react-redux';
 
 const Container = ({ location, children, metadata }) => {
   const helmet = 'Settings | Hasura';
@@ -25,6 +26,5 @@ const mapStateToProps = state => {
   };
 };
 
-const connector = connect => connect(mapStateToProps)(Container);
-
-export default connector;
+const ConnectedSettings = connect(mapStateToProps)(Container);
+export default ConnectedSettings;

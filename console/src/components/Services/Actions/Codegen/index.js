@@ -1,4 +1,5 @@
 import Codegen from './Main';
+import { connect } from 'react-redux';
 
 const mapStateToProps = state => {
   return {
@@ -8,5 +9,5 @@ const mapStateToProps = state => {
   };
 };
 
-const connector = connect => connect(mapStateToProps)(Codegen);
-export default connector;
+const ConnectedCodegen = connect(mapStateToProps)(Codegen);
+export default ConnectedCodegen;

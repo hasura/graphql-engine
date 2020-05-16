@@ -25,6 +25,7 @@ import {
   ACE_EDITOR_FONT_SIZE,
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
+import { connect } from 'react-redux';
 
 const RawSQL = ({
   sql,
@@ -555,6 +556,5 @@ const mapStateToProps = state => ({
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 
-const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);
-
-export default rawSQLConnector;
+const ConnectedRawSQL = connect(mapStateToProps)(RawSQL);
+export default ConnectedRawSQL;

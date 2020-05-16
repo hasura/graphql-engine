@@ -22,6 +22,7 @@ import AddManualRelationship from './AddManualRelationship';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
+import { connect } from 'react-redux';
 
 const addRelationshipCellView = (
   dispatch,
@@ -515,7 +516,5 @@ const mapStateToProps = (state, ownProps) => ({
   ...state.tables.modify,
 });
 
-const relationshipsConnector = connect =>
-  connect(mapStateToProps)(Relationships);
-
-export default relationshipsConnector;
+const ConnectedRelationships = connect(mapStateToProps)(Relationships);
+export default ConnectedRelationships;

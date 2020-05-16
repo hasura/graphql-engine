@@ -5,11 +5,14 @@ import PropTypes from 'prop-types';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import RemoteSchemaSubSidebar from './RemoteSchemaSubSidebar';
+import { appPrefix } from './constants';
+import { filterItem } from './utils';
+import { connect } from 'react-redux';
 
 class RemoteSchemaPageContainer extends React.Component {
   render() {
     const styles = require('../../Common/TableCommon/Table.scss');
-    const { appPrefix, children } = this.props;
+    const { children } = this.props;
 
     const currentLocation = location.pathname;
 
@@ -47,5 +50,27 @@ RemoteSchemaPageContainer.propTypes = {
   appPrefix: PropTypes.string.isRequired,
 };
 
-export default (connect, mapStateToProps, mapDispatchToProps) =>
-  connect(mapStateToProps, mapDispatchToProps)(RemoteSchemaPageContainer);
+const mapStateToProps = state => {
+  return {
+    ...state,
+    dataList: [...state.remoteSchemas.listData.remoteSchemas],
+    isError: state.remoteSchemas.listData.isError,
+    isRequesting: state.remoteSchemas.listData.isRequesting,
+    filtered: [...state.remoteSchemas.listData.filtered],
+    searchQuery: state.remoteSchemas.listData.searchQuery,
+    viewRemoteSchema: state.remoteSchemas.listData.viewRemoteSchema,
+    appPrefix,
+  };
+};
+
+const mapDispatchToProps = dispatch => {
+  return {
+    filterItem: filterItem(dispatch),
+  };
+};
+
+const ConnectedRemoteSchemaPageContainer = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(RemoteSchemaPageContainer);
+export default ConnectedRemoteSchemaPageContainer;

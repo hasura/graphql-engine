@@ -1,5 +1,6 @@
 import React from 'react';
 import ClearAdminSecret from './ClearAdminSecret';
+import { connect } from 'react-redux';
 
 const Logout = props => {
   const styles = require('../Settings.scss');
@@ -39,6 +40,5 @@ const mapStateToProps = state => {
   };
 };
 
-const logoutConnector = connect => connect(mapStateToProps)(Logout);
-
-export default logoutConnector;
+const ConnectedLogout = connect(mapStateToProps)(Logout);
+export default ConnectedLogout;

@@ -1,4 +1,5 @@
 import Permissions from './Main';
+import { connect } from 'react-redux';
 
 const mapStateToProps = state => {
   return {
@@ -8,5 +9,5 @@ const mapStateToProps = state => {
   };
 };
 
-const connector = connect => connect(mapStateToProps)(Permissions);
-export default connector;
+const ConnectedActionPermissions = connect(mapStateToProps)(Permissions);
+export default ConnectedActionPermissions;

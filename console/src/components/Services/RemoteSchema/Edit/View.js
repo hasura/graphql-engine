@@ -20,6 +20,7 @@ import { appPrefix } from '../constants';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
+import { connect } from 'react-redux';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -213,4 +214,5 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect => connect(mapStateToProps)(ViewStitchedSchema);
+const ConnectedView = connect(mapStateToProps)(ViewStitchedSchema);
+export default ConnectedView;

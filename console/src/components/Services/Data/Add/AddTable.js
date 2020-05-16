@@ -55,6 +55,7 @@ import {
   uniqueKeyDescription,
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
+import { connect } from 'react-redux';
 
 /* AddTable is a wrapper which wraps
  *  1) Table Name input
@@ -588,6 +589,5 @@ const mapStateToProps = state => ({
   schemaList: state.tables.schemaList,
 });
 
-const addTableConnector = connect => connect(mapStateToProps)(AddTable);
-
-export default addTableConnector;
+const ConnectedAddTable = connect(mapStateToProps)(AddTable);
+export default ConnectedAddTable;
