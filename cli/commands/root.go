@@ -75,9 +75,10 @@ func init() {
 	f := rootCmd.PersistentFlags()
 	f.StringVar(&ec.LogLevel, "log-level", "INFO", "log level (DEBUG, INFO, WARN, ERROR, FATAL)")
 	f.StringVar(&ec.ExecutionDirectory, "project", "", "directory where commands are executed (default: current dir)")
-	f.BoolVar(&ec.SkipUpdateCheck, "skip-update-check", false, "Skip automatic update check on command execution")
+	f.BoolVar(&ec.SkipUpdateCheck, "skip-update-check", false, "skip automatic update check on command execution")
 	f.BoolVar(&ec.NoColor, "no-color", false, "do not colorize output (default: false)")
 	f.StringVar(&ec.Envfile, "envfile", ".env", ".env filename to load ENV vars from")
+	f.StringVar(&ec.ConfigFile, "config-file", "", "configuration file to use. only supported for config version 2")
 }
 
 // NewDefaultHasuraCommand creates the `hasura` command with default arguments

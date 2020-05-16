@@ -483,12 +483,6 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "cannot read config")
 	}
 
-	// check config version and strictly validate directory if V1
-	err = ec.validateV1Directory()
-	if err != nil {
-		return errors.Wrap(err, "validating config V1 directory failed")
-	}
-
 	// set name of migration directory
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MigrationsDirectory)
 	if _, err := os.Stat(ec.MigrationDir); os.IsNotExist(err) {
@@ -594,10 +588,13 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("actions.codegen.output_dir", "")
 	v.SetDefault("actions.codegen.uri", "")
 	if ec.ConfigFile != "" {
+		configBase := filepath.Base(ec.ConfigFile)
+		configName := strings.TrimSuffix(configBase, filepath.Ext(configBase))
+		configPath := filepath.Dir(ec.ConfigFile)
 		v.SetDefault("version", "1")
 		v.SetDefault("metadata_directory", "")
-		v.SetConfigName("config")
-		v.AddConfigPath(ec.ExecutionDirectory)
+		v.SetConfigName(configName)
+		v.AddConfigPath(configPath)
 		err := v.ReadInConfig()
 		if err != nil {
 			return errors.Wrap(err, "cannot read config from config file")
