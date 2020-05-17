@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { Dispatch } from 'redux';
+import { Connect } from 'react-redux';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
 import Button from '../Common/Button/Button';
@@ -10,10 +12,14 @@ import { getAdminSecret } from '../Services/ApiExplorer/ApiRequest/utils';
 const styles = require('./Login.scss');
 const hasuraLogo = require('./blue-logo.svg');
 
-const Login = ({ dispatch }) => {
+type LoginProps = {
+  dispatch: Dispatch;
+};
+
+const Login: React.FC<LoginProps> = ({ dispatch }) => {
   // request state
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<Error | null>(null);
 
   // should persist admin secret
   const [shouldPersist, setShouldPersist] = useState(true);
@@ -24,7 +30,7 @@ const Login = ({ dispatch }) => {
   const getLoginForm = () => {
     const getLoginButtonText = () => {
       // login button text
-      let loginText = 'Enter';
+      let loginText: React.ReactNode = 'Enter';
       if (loading) {
         loginText = (
           <span>
@@ -41,10 +47,11 @@ const Login = ({ dispatch }) => {
 
     const toggleShouldPersist = () => setShouldPersist(!shouldPersist);
 
-    const onAdminSecretChange = e => setAdminSecretInput(e.target.value);
+    const onAdminSecretChange = (e: ChangeEvent<HTMLInputElement>) =>
+      setAdminSecretInput(e.target.value);
 
     // form submit handler
-    const onSubmit = e => {
+    const onSubmit = (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
 
       const successCallback = () => {
@@ -53,7 +60,7 @@ const Login = ({ dispatch }) => {
         dispatch(push(globals.urlPrefix));
       };
 
-      const errorCallback = err => {
+      const errorCallback = (err: Error) => {
         setAdminSecretInput('');
         setLoading(false);
         setError(err);
@@ -72,13 +79,13 @@ const Login = ({ dispatch }) => {
 
     return (
       <form className="form-horizontal" onSubmit={onSubmit}>
-        <div className={styles.input_addon_group + ' ' + styles.padd_top}>
-          <div className={'input-group ' + styles.input_group}>
+        <div className={`${styles.input_addon_group} ${styles.padd_top}`}>
+          <div className={`input-group ${styles.input_group}`}>
             <input
               onChange={onAdminSecretChange}
-              className={styles.form_input + ' form-control'}
+              className={`${styles.form_input} form-control`}
               type="password"
-              placeholder={'Enter admin-secret'}
+              placeholder="Enter admin-secret"
               name="password"
             />
           </div>
@@ -135,12 +142,12 @@ const Login = ({ dispatch }) => {
   };
 
   return (
-    <div className={styles.mainWrapper + ' container-fluid'}>
-      <div className={styles.container + ' container'} id="login">
+    <div className={`${styles.mainWrapper} container-fluid`}>
+      <div className={`${styles.container} container`} id="login">
         <div className={styles.loginCenter}>
-          <Helmet title={'Login | ' + 'Hasura'} />
+          <Helmet title="Login | Hasura" />
           <div className={styles.hasuraLogo}>
-            <img src={hasuraLogo} />
+            <img src={hasuraLogo} alt="Hasura" />
           </div>
           <div className={styles.loginWrapper}>
             {globals.consoleMode !== CLI_CONSOLE_MODE
@@ -153,7 +160,7 @@ const Login = ({ dispatch }) => {
   );
 };
 
-const generatedLoginConnector = connect => {
+const generatedLoginConnector = (connect: Connect) => {
   return connect()(Login);
 };
 

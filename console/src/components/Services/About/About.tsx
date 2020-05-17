@@ -1,4 +1,7 @@
 import React, { Component } from 'react';
+import { AnyAction } from 'redux';
+import { Connect } from 'react-redux';
+import { ThunkDispatch } from 'redux-thunk';
 import Helmet from 'react-helmet';
 
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
@@ -11,8 +14,24 @@ import { showErrorNotification } from '../Common/Notification';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { versionGT } from '../../../helpers/versionUtils';
 
-class About extends Component {
-  state = {
+type ConnectProps = {
+  dataHeaders: Record<string, string>;
+  serverVersion?: string;
+  latestStableServerVersion?: string;
+};
+
+type AboutProps = {
+  dispatch: ThunkDispatch<{}, {}, AnyAction>;
+};
+
+type AboutState = {
+  consoleAssetVersion?: string;
+  pgVersion: string | null;
+};
+
+class About extends Component<ConnectProps & AboutProps> {
+  // had to add this here as the state type is not being read properly if added above.
+  state: AboutState = {
     consoleAssetVersion: globals.consoleAssetVersion,
     pgVersion: null,
   };
@@ -30,12 +49,12 @@ class About extends Component {
       };
 
       dispatch(requestAction(url, options)).then(
-        data => {
+        (data: Record<'result', Array<unknown[]>>) => {
           this.setState({
-            pgVersion: data.result[1][0],
+            pgVersion: data.result[1][0] as string,
           });
         },
-        error => {
+        (error: unknown) => {
           dispatch(
             showErrorNotification('Failed fetching PG version', null, error)
           );
@@ -74,10 +93,7 @@ class About extends Component {
         updateLinks = (
           <span className={styles.add_mar_left_mid}>
             <a
-              href={
-                'https://github.com/hasura/graphql-engine/releases/tag/' +
-                latestStableServerVersion
-              }
+              href={`https://github.com/hasura/graphql-engine/releases/tag/${latestStableServerVersion}`}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -136,7 +152,7 @@ class About extends Component {
     return (
       <div className={`container-fluid ${styles.full_container}`}>
         <div className={styles.subHeader}>
-          <Helmet title={'About | Hasura'} />
+          <Helmet title="About | Hasura" />
           <h2 className={styles.headerText}>About</h2>
           <div className={styles.wd60}>
             <div className={styles.add_mar_top}>
@@ -156,7 +172,15 @@ class About extends Component {
   }
 }
 
-const mapStateToProps = state => {
+type DerivedState = {
+  tables: Record<'dataHeaders', Record<string, string>>;
+  main: Record<
+    'serverVersion' | 'latestStableServerVersion',
+    string | undefined
+  >;
+};
+
+const mapStateToProps = (state: DerivedState) => {
   return {
     dataHeaders: state.tables.dataHeaders,
     serverVersion: state.main.serverVersion,
@@ -164,6 +188,7 @@ const mapStateToProps = state => {
   };
 };
 
-const aboutConnector = connect => connect(mapStateToProps)(About);
+const aboutConnector = (connect: Connect) =>
+  connect<ConnectProps, {}, {}, DerivedState>(mapStateToProps)(About);
 
 export default aboutConnector;
