@@ -5,16 +5,17 @@ import Sidebar from './Sidebar';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 
 type Metadata = {
-  inconsistentObjects: never[];
+  inconsistentObjects: object[];
   ongoingRequest: boolean;
-  allowedQueries: never[];
+  allowedQueries: object[];
 };
 
-type ContainerProps = {
+type ExternalProps = {
   location: LocationShape;
-  metadata: Metadata;
   children: JSX.Element;
 };
+
+interface ContainerProps extends StateProps, ExternalProps {}
 
 const Container: React.FC<ContainerProps> = ({
   location,
@@ -27,7 +28,8 @@ const Container: React.FC<ContainerProps> = ({
 
   const childrenWithProps = React.Children.map(
     children,
-    (child: React.ReactElement<any>) => React.cloneElement(child, { metadata })
+    (child: React.ReactElement<{ metadata: Metadata }>) =>
+      React.cloneElement(child, { metadata })
   );
   return (
     <PageContainer helmet={helmet} leftContainer={sidebar}>
@@ -36,7 +38,13 @@ const Container: React.FC<ContainerProps> = ({
   );
 };
 
-const mapStateToProps = (state: any) => {
+type DerivedState = {
+  main: Record<string, any>;
+  metadata: Metadata;
+  tables: Record<'dataHeaders', Record<string, string>>;
+};
+
+const mapStateToProps = (state: DerivedState) => {
   return {
     ...state.main,
     metadata: state.metadata,
@@ -44,6 +52,9 @@ const mapStateToProps = (state: any) => {
   };
 };
 
-const connector = (connect: Connect) => connect(mapStateToProps)(Container);
+type StateProps = ReturnType<typeof mapStateToProps>;
+
+const connector = (connect: Connect) =>
+  connect<StateProps, {}, {}, DerivedState>(mapStateToProps)(Container);
 
 export default connector;
