@@ -29,8 +29,8 @@ declare global {
     };
     sqlFormatter: unknown;
     hljs: unknown;
-    CONSOLE_ASSET_VERSION: string;
   }
+  const CONSOLE_ASSET_VERSION: string;
 }
 
 if (
@@ -62,7 +62,7 @@ const globals = {
   telemetryTopic: isProduction ? 'console' : 'console_test',
   assetsPath: window.__env.assetsPath,
   serverVersion: window.__env.serverVersion,
-  consoleAssetVersion: window.CONSOLE_ASSET_VERSION, // set during console build
+  consoleAssetVersion: CONSOLE_ASSET_VERSION, // set during console build
   featuresCompatibility: window.__env.serverVersion
     ? getFeaturesCompatibility(window.__env.serverVersion)
     : null,
