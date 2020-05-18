@@ -107,10 +107,12 @@ class RedeliverEvent extends Component {
           <Icon
             type="check"
             color="green.original"
+            size={12}
+            mt="xs"
             className={styles.tabletdCenter}
           />
         ) : (
-          <Icon type="close" color="red.primary" />
+          <Icon type="close" color="red.primary" size={12} mt="xs" />
         );
 
         // Insert cells corresponding to all rows

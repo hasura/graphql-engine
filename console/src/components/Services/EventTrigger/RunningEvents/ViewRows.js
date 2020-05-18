@@ -7,7 +7,7 @@ import Tab from 'react-bootstrap/lib/Tab';
 import 'react-table/react-table.css';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { deleteItem, vExpandRow, vCollapseRow } from './ViewActions';
+// import { deleteItem, vExpandRow, vCollapseRow } from './ViewActions';
 import FilterQuery from './FilterQuery';
 import {
   setOrderCol,
@@ -268,9 +268,9 @@ const ViewRows = ({
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
             const status = verifySuccessStatus(r.status) ? (
-              <Icon type="check" color="green.original" />
+              <Icon type="check" color="green.original" mt="xs" />
             ) : (
-              <Icon type="close" color="red.original" />
+              <Icon type="close" color="red.original" mt="xs" />
             );
 
             // Insert cells corresponding to all rows

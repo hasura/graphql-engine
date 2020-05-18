@@ -126,9 +126,9 @@ const ViewRows = ({
           }
           if (col === 'delivered') {
             content = row[col] ? (
-              <Icon type="check" color="green.original" />
+              <Icon type="check" color="green.original" mt="xs" />
             ) : (
-              <Icon type="close" color="red.primary" />
+              <Icon type="close" color="red.primary" mt="xs" />
             );
           }
           return <div className={conditionalClassname}>{content}</div>;
@@ -218,9 +218,9 @@ const ViewRows = ({
     }
   };
 
-  const successIcon = <Icon type="check" color="green.original" />;
+  const successIcon = <Icon type="check" color="green.original" mt="xs" />;
 
-  const failureIcon = <Icon type="close" color="red.primary" />;
+  const failureIcon = <Icon type="close" color="red.primary" mt="xs" />;
 
   const renderTableBody = () => {
     if (newCurRows.length === 0) {
