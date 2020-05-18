@@ -11,6 +11,9 @@ Upsert mutation
   :backlinks: none
   :depth: 1
   :local:
+  
+Introduction
+------------
 
 An upsert query will insert an object into the database in case there is no conflict with another row in the table. In
 case there is a conflict with one or more rows, it will either update the fields of the conflicted rows or ignore
@@ -63,8 +66,11 @@ If not all required columns are present, an error like ``NULL value unexpected f
 
 Update selected columns on conflict
 -----------------------------------
-Insert a new object in the ``article`` table or, if the primary key constraint ``article_pkey`` is violated, update
-the columns specified in ``update_columns``:
+
+The ``update_columns`` field can be used to specify which columns to update in case a conflict occurs.
+
+**Example**: Insert a new object in the ``article`` table or, if the unique constraint ``article_title_key`` is 
+violated, update the ``content`` column of the existing article:
 
 .. graphiql::
   :view_only:
@@ -73,15 +79,14 @@ the columns specified in ``update_columns``:
       insert_article (
         objects: [
           {
-            id: 2,
-            title: "ex quis mattis",
-            content: "Pellentesque lobortis quam non leo faucibus efficitur",
+            title: "Article 1",
+            content: "Article 1 content",
             published_on: "2018-10-12"
           }
         ],
         on_conflict: {
-          constraint: article_pkey,
-          update_columns: [title, content]
+          constraint: article_title_key,
+          update_columns: [content]
         }
       ) {
         returning {
@@ -98,23 +103,27 @@ the columns specified in ``update_columns``:
         "insert_article": {
           "returning": [
             {
-              "id": 2,
-              "title": "ex quis mattis",
-              "content": "Pellentesque lobortis quam non leo faucibus efficitur",
-              "published_on": "2018-06-10"
+              "id": 1,
+              "title": "Article 1",
+              "content": "Article 1 content",
+              "published_on": "2018-06-15"
             }
           ]
         }
       }
     }
 
-The ``published_on`` column is left unchanged as it wasn't present in ``update_columns``.
+Note that the ``published_on`` column is left unchanged as it wasn't present in ``update_columns``.
 
 Update selected columns on conflict using a filter
 --------------------------------------------------
-Insert a new object in the ``article`` table, or if the primary key constraint ``article_pkey`` is violated, update
-the columns specified in ``update_columns`` only if the provided ``where`` condition is met:
 
+A ``where`` condition can be added to the ``on_conflict`` clause to check a condition before making the update in case a 
+conflict occurs
+
+**Example**: Insert a new object in the ``article`` table, or if the unique key constraint ``article_title_key`` is
+violated, update the ``published_on`` columns specified in ``update_columns`` only if the previous ``published_on`` 
+value is lesser than the new value:
 
 .. graphiql::
   :view_only:
@@ -123,12 +132,12 @@ the columns specified in ``update_columns`` only if the provided ``where`` condi
       insert_article (
         objects: [
           {
-            id: 2,
+            title: "Article 2",
             published_on: "2018-10-12"
           }
         ],
         on_conflict: {
-          constraint: article_pkey,
+          constraint: article_title_key,
           update_columns: [published_on],
           where: {
             published_on: {_lt: "2018-10-12"}
@@ -137,6 +146,7 @@ the columns specified in ``update_columns`` only if the provided ``where`` condi
       ) {
         returning {
           id
+          title
           published_on
         }
       }
@@ -148,6 +158,7 @@ the columns specified in ``update_columns`` only if the provided ``where`` condi
           "returning": [
             {
               "id": 2,
+              "title": "Article 2",
               "published_on": "2018-10-12"
             }
           ]
@@ -155,12 +166,12 @@ the columns specified in ``update_columns`` only if the provided ``where`` condi
       }
     }
 
-The ``published_on`` column is updated only if the new value is greater than the old value.
-
 Ignore request on conflict
 --------------------------
-If ``update_columns`` is an **empty array** then the GraphQL engine ignores changes on conflict. Insert a new object into
-the author table or, if the unique constraint ``author_name_key`` is violated, ignore the request.
+If ``update_columns`` is an **empty array** then on conflict the changes are ignored. 
+
+**Example**: Insert a new object into the author table or, if the unique constraint ``author_name_key`` is violated, 
+ignore the request.
 
 .. graphiql::
   :view_only:
@@ -168,7 +179,7 @@ the author table or, if the unique constraint ``author_name_key`` is violated, i
     mutation upsert_author {
       insert_author(
         objects: [
-          {name: "John", id: 10}
+          { name: "John" }
         ],
         on_conflict: {
           constraint: author_name_key,
@@ -194,6 +205,8 @@ Upsert in nested mutations
 --------------------------
 You can specify the ``on_conflict`` clause while inserting nested objects:
 
+**Example**: 
+
 .. graphiql::
   :view_only:
   :query:
@@ -201,19 +214,17 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
       insert_author(
         objects: [
           {
-            id: 10,
             name: "John",
             articles: {
               data: [
                 {
-                  id: 1,
-                  title: "Article 1 title",
-                  content: "Article 1 content"
+                  title: "Article 3",
+                  content: "Article 3 content"
                 }
               ],
               on_conflict: {
-                constraint: article_pkey,
-                update_columns: [title, content]
+                constraint: article_title_key,
+                update_columns: [content]
               }
             }
           }

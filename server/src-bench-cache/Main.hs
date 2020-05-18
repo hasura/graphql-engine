@@ -8,7 +8,7 @@ import           Control.Monad                 (foldM)
 import           Criterion.Main
 import           Data.Bits
 import           Data.IORef
-import           Data.List
+import           Data.List                     (sort, foldl', group)
 import           Data.List.Split               (chunksOf)
 import           Data.Ord
 import           Data.Traversable
@@ -44,15 +44,15 @@ main = defaultMain [
         -- evictions in bounded due to long bootstrap batch runs
         bench "unbounded" $
           perRunEnv (U.initialise) $ \cache ->
-            V.mapM_ (\k -> U.insert k k cache) rs
+            V.mapM_ (\k -> Cache.insert k k cache) rs
       , bench "bounded" $
           perRunEnv (B.initialise 4000) $ \cache ->
-            V.mapM_ (\k -> B.insert k k cache) rs
+            V.mapM_ (\k -> Cache.insert k k cache) rs
       -- an eviction on each insert, all LRU counters at zero. Simulates a scan.
       , bench "bounded evicting scan" $
           let preloaded = populate 5000 (B.initialise 5000) B.insertAllStripes
            in perRunEnv (preloaded) $ \(cache, _) ->
-                V.mapM_ (\k -> B.insert k k cache) rs
+                V.mapM_ (\k -> Cache.insert k k cache) rs
       ]
 
   ---- lookup+insert loops on realistic data, with a tunable cost of a cache
@@ -114,13 +114,13 @@ realisticBenches name wrk =
         flip map [2,100] $ \threadsPerHEC ->
           bgroup (show threadsPerHEC <>"xCPUs threads") [
             bench "unbounded" $
-              perRunEnv (Cache.initialise $ Cache.mkCacheOptions Nothing) $ \cache ->
+              perRunEnv (Cache.initialise Nothing) $ \cache ->
                 go threadsPerHEC cache payloads
           , bench "bounded effectively unbounded" $
-              perRunEnv (Cache.initialise $ Cache.mkCacheOptions $ Just 40000) $ \cache ->
+              perRunEnv (Cache.initialise $ Just 40000) $ \cache ->
                 go threadsPerHEC cache payloads
           , bench "bounded 10pct ideal capacity" $
-              perRunEnv (Cache.initialise $ Cache.mkCacheOptions $ Just 2700) $ \cache ->
+              perRunEnv (Cache.initialise $ Just 2700) $ \cache ->
                 go threadsPerHEC cache payloads
           ]
     --  660K uniques, 40% in top 10% , 30% in top 1%, 33% cache hits ideally
@@ -129,14 +129,14 @@ realisticBenches name wrk =
         flip map [2,100] $ \threadsPerHEC ->
           bgroup (show threadsPerHEC <>"xCPUs threads") [
             bench "unbounded" $
-              perRunEnv (Cache.initialise $ Cache.mkCacheOptions Nothing) $ \cache ->
+              perRunEnv (Cache.initialise Nothing) $ \cache ->
                 go threadsPerHEC cache payloads
           , bench "bounded maxBound (10pct ideal capacity)" $
               -- this is our largest possible cache size will necessarily evict
-              perRunEnv (Cache.initialise $ Cache.mkCacheOptions $ Just maxBound) $ \cache ->
+              perRunEnv (Cache.initialise $ Just maxBound) $ \cache ->
                 go threadsPerHEC cache payloads
           , bench "bounded 6000 (1pct ideal capacity)" $
-              perRunEnv (Cache.initialise $ Cache.mkCacheOptions $ Just 6000) $ \cache ->
+              perRunEnv (Cache.initialise $ Just 6000) $ \cache ->
                 go threadsPerHEC cache payloads
           ]
   ]
@@ -210,16 +210,16 @@ readBenches n =
     env (populate n U.initialise U.insertAllStripes) $ \ ~(cache, k)->
       bgroup "unbounded" [
         bench "hit" $
-          nfAppIO (\k' -> U.lookup k' cache) k
+          nfAppIO (\k' -> Cache.lookup k' cache) k
       , bench "miss" $
-          nfAppIO (\k' -> U.lookup k' cache) 0xDEAD
+          nfAppIO (\k' -> Cache.lookup k' cache) 0xDEAD
       ]
   , env (populate n (B.initialise (fromIntegral $ n*2)) B.insertAllStripes) $ \ ~(cache, k)->
       bgroup "bounded" [
         bench "hit" $
-          nfAppIO (\k' -> B.lookup k' cache) k
+          nfAppIO (\k' -> Cache.lookup k' cache) k
       , bench "miss" $
-          nfAppIO (\k' -> B.lookup k' cache) 0xDEAD
+          nfAppIO (\k' -> Cache.lookup k' cache) 0xDEAD
       ]
   ]
 

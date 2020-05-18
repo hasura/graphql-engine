@@ -30,11 +30,11 @@ common common-all
 
   default-language: Haskell2010
   default-extensions:
-    ApplicativeDo BangPatterns BlockArguments ConstraintKinds DefaultSignatures DeriveDataTypeable
+    ApplicativeDo BangPatterns BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable
     DeriveFoldable DeriveFunctor DeriveGeneric DeriveLift DeriveTraversable DerivingVia EmptyCase
     FlexibleContexts FlexibleInstances FunctionalDependencies GeneralizedNewtypeDeriving
     InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns NoImplicitPrelude
-    OverloadedStrings QuantifiedConstraints QuasiQuotes RankNTypes ScopedTypeVariables
+    OverloadedStrings QuantifiedConstraints QuasiQuotes RankNTypes RecordWildCards ScopedTypeVariables
     StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeOperators
 
 common common-exe
@@ -70,7 +70,7 @@ library
                      , http-types
                      , attoparsec
                      , attoparsec-iso8601 >= 1.0
-                     , time
+                     , time >= 1.9
                      , scientific
                      , Spock-core
                      , split
@@ -88,11 +88,9 @@ library
                      , deepseq
                      , dependent-map >=0.2.4 && <0.4
                      , dependent-sum >=0.4 && <0.5
-
-                     -- `these >=1` is split into several different packages, but our current stack
-                     -- resolver has `these <1`; when we upgrade we just need to add an extra
-                     -- dependency on `semialign`
-                     , these >=0.7.1 && <0.8
+                     , exceptions
+                     , these
+                     , semialign
 
                      -- Encoder related
                      , uuid
@@ -191,11 +189,16 @@ library
                      -- testing
                      , QuickCheck
                      , generic-arbitrary
+                     , quickcheck-instances
+
                      -- 0.6.1 is supposedly not okay for ghc 8.6:
                      --   https://github.com/nomeata/ghc-heap-view/issues/27
-                     , ghc-heap-view == 0.6.0
+                     , ghc-heap-view
 
                      , directory
+
+                     -- scheduled triggers
+                     , cron >= 0.6.2
 
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
@@ -211,6 +214,7 @@ library
                      , Hasura.App
                      , Hasura.Db
                      -- Exposed for benchmark:
+                     , Hasura.Cache.Types
                      , Hasura.Cache.Bounded
                      , Hasura.Cache.Unbounded
                      , Hasura.Cache
@@ -280,6 +284,7 @@ library
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.RemoteSchema
+                     , Hasura.RQL.Types.ScheduledTrigger
                      , Hasura.RQL.DDL.ComputedField
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.Types.CustomTypes
@@ -301,6 +306,7 @@ library
                      , Hasura.RQL.DDL.Schema.Table
                      , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.EventTrigger
+                     , Hasura.RQL.DDL.ScheduledTrigger
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DDL.QueryCollection
@@ -367,8 +373,9 @@ library
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Logging
 
-                     , Hasura.Events.Lib
-                     , Hasura.Events.HTTP
+                     , Hasura.Eventing.HTTP
+                     , Hasura.Eventing.EventTrigger
+                     , Hasura.Eventing.ScheduledTrigger
 
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
