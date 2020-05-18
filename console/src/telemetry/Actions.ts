@@ -8,7 +8,7 @@ import {
   showErrorNotification,
   showSuccessNotification,
 } from '../components/Services/Common/Notification';
-import { TelemetryState } from './State';
+import defaultTelemetryState, { TelemetryState } from './State';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
@@ -116,7 +116,7 @@ const setPreReleaseNotificationOptOutInDB = () => (
 
 const loadConsoleOpts = () => {
   return (
-    dispatch: ThunkDispatch<{ telemetry: TelemetryState }, {}, AnyAction>,
+    dispatch: ThunkDispatch<{}, {}, AnyAction>,
     getState: () => { telemetry: TelemetryState }
   ) => {
     const url = Endpoints.getSchema;
