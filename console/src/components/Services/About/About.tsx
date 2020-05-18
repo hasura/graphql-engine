@@ -14,13 +14,7 @@ import { showErrorNotification } from '../Common/Notification';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { versionGT } from '../../../helpers/versionUtils';
 
-type ConnectProps = {
-  dataHeaders: Record<string, string>;
-  serverVersion?: string;
-  latestStableServerVersion?: string;
-};
-
-type AboutProps = {
+type DispatchProps = {
   dispatch: ThunkDispatch<{}, {}, AnyAction>;
 };
 
@@ -29,7 +23,9 @@ type AboutState = {
   pgVersion: string | null;
 };
 
-class About extends Component<ConnectProps & AboutProps> {
+interface AboutProps extends DispatchProps, StateProps {}
+
+class About extends Component<AboutProps> {
   // had to add this here as the state type is not being read properly if added above.
   state: AboutState = {
     consoleAssetVersion: globals.consoleAssetVersion,
@@ -188,7 +184,9 @@ const mapStateToProps = (state: DerivedState) => {
   };
 };
 
+type StateProps = ReturnType<typeof mapStateToProps>;
+
 const aboutConnector = (connect: Connect) =>
-  connect<ConnectProps, {}, {}, DerivedState>(mapStateToProps)(About);
+  connect<StateProps, {}, {}, DerivedState>(mapStateToProps)(About);
 
 export default aboutConnector;
