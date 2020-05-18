@@ -54,9 +54,9 @@ data AnnIns a v
   = AnnIns
   { _aiInsObj         :: !a
   , _aiConflictClause :: !(Maybe (RQL.ConflictClauseP1 v))
-  , _aiCheckCond      :: !(AnnBoolExp v, Maybe (AnnBoolExp v))
+  , _aiCheckCond      :: !(AnnBoolExp v, AnnBoolExpPartialSQL)
   , _aiTableCols      :: ![PGColumnInfo]
-  , _aiDefVals        :: !(Map.HashMap PGCol SQL.SQLExp)
+  , _aiDefVals        :: !(PreSetColsPartial)
   } deriving (Show, Eq)
 
 type SingleObjIns v = AnnIns (AnnInsObj v) v
@@ -121,9 +121,9 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
     `mapField` \(_, (onConflict, objects), output) ->
        ( AnnIns { _aiInsObj         = objects
                 , _aiConflictClause = onConflict
-                , _aiCheckCond      = undefined -- FIXME
+                , _aiCheckCond      = (undefined {- FIXME!!! -}, ipiCheck insertPerms)
                 , _aiTableCols      = columns
-                , _aiDefVals        = undefined -- FIXME
+                , _aiDefVals        = ipiSet insertPerms
                 }
        , RQL.MOutMultirowFields output
        )
@@ -193,9 +193,9 @@ objectRelationshipInput table insertPerms selectPerms updatePerms = do
         pure $ AnnIns
           { _aiInsObj         = object
           , _aiConflictClause = conflict
-          , _aiCheckCond      = undefined -- FIXME
+          , _aiCheckCond      = (undefined {- FIXME!!! -}, ipiCheck insertPerms)
           , _aiTableCols      = columns
-          , _aiDefVals        = undefined -- FIXME
+          , _aiDefVals        = ipiSet insertPerms
           }
   pure $ P.object inputName (Just inputDesc) inputParser <&> undefined
 
@@ -224,9 +224,9 @@ arrayRelationshipInput table insertPerms selectPerms updatePerms = do
         pure $ AnnIns
           { _aiInsObj         = objects
           , _aiConflictClause = conflict
-          , _aiCheckCond      = undefined -- FIXME
+          , _aiCheckCond      = (undefined {- FIXME!!! -}, ipiCheck insertPerms)
           , _aiTableCols      = columns
-          , _aiDefVals        = undefined -- FIXME
+          , _aiDefVals        = ipiSet insertPerms
           }
   pure $ P.object inputName (Just inputDesc) inputParser
 
