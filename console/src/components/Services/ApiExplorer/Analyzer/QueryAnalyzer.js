@@ -45,7 +45,7 @@ export default class QueryAnalyser extends React.Component {
           data-key={i}
           onClick={this.handleAnalyseNodeChange.bind(this)}
         >
-          <Icon type="table" mr="sm" size={13} mb="-1px" />
+          <Icon type="table" mr="sm" size={12} mb="-1px" />
           {analysis.field}
         </li>
       );
