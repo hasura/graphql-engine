@@ -1,8 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
 
-import { Icon } from '../../../UIKit/atoms';
-
 const Tabs = ({
   appPrefix,
   tabsInfo,
@@ -21,7 +19,7 @@ const Tabs = ({
   const dataLoader = () => {
     return (
       <span className={styles.loader_ml}>
-        <Icon type="spinner" />
+        <i className="fa fa-spinner fa-spin" />
       </span>
     );
   };
