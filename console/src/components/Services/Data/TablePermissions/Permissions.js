@@ -366,20 +366,18 @@ class Permissions extends Component {
           //   }
           // };
 
-          const getEditIcon = () => {
-            return (
-              <Icon
-                type="pencil"
-                size={16}
-                position="absolute"
-                pointer
-                right="10px"
-                pt="4px"
-                color="#337ab7"
-                className={styles.editPermsIcon}
-              />
-            );
-          };
+          const getEditIcon = () => (
+            <Icon
+              type="pencil"
+              size={16}
+              position="absolute"
+              pointer
+              right="10px"
+              pt="4px"
+              color="#337ab7"
+              className={styles.editPermsIcon}
+            />
+          );
 
           const getRoleQueryPermission = queryType => {
             let _permission;

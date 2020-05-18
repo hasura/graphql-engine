@@ -55,13 +55,17 @@ const Permissions = ({
         dispatch(permSetRoleName(e.target.value));
       };
 
-      const getEditIcon = () => {
-        return (
-          <span className={styles.editPermsIcon}>
-            <Icon type="edit" />
-          </span>
-        );
-      };
+      const getEditIcon = () => (
+        <Icon
+          type="pencil"
+          size="12px"
+          pointer
+          className={styles.editPermsIcon}
+          position="absolute"
+          right="12px"
+          color="#337ab7"
+        />
+      );
 
       // get root types for a given role
       const getQueryTypes = (role, isNewRole) => {
