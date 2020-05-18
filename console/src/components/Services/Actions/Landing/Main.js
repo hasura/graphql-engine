@@ -15,8 +15,6 @@ class Landing extends React.Component {
     const styles = require('../Actions.scss');
     const { readOnlyMode } = this.props;
 
-    const showActionBtns = !readOnlyMode;
-
     const { dispatch } = this.props;
     const getIntroSection = () => {
       return (
@@ -39,7 +37,7 @@ class Landing extends React.Component {
         dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
       };
 
-      const addBtn = showActionBtns && (
+      const addBtn = !readOnlyMode && (
         <Button
           data-test="data-create-actions"
           color="yellow"

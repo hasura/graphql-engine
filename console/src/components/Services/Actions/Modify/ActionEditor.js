@@ -80,7 +80,6 @@ const ActionEditor = ({
   };
 
   const allowSave =
-    !readOnlyMode &&
     !isFetching &&
     !typesDefinitionError &&
     !actionDefinitionError &&
@@ -147,27 +146,27 @@ const ActionEditor = ({
       <hr />
       <div className={styles.display_flex}>
         {!readOnlyMode && (
-          <Button
-            color="yellow"
-            size="sm"
-            type="submit"
-            onClick={onSave}
-            disabled={!allowSave}
-            className={styles.add_mar_right}
-          >
-            Save
-          </Button>
-        )}
-        {!readOnlyMode && (
-          <Button
-            color="red"
-            size="sm"
-            type="submit"
-            onClick={onDelete}
-            disabled={isFetching}
-          >
-            Delete
-          </Button>
+          <React.Fragment>
+            <Button
+              color="yellow"
+              size="sm"
+              type="submit"
+              onClick={onSave}
+              disabled={!allowSave}
+              className={styles.add_mar_right}
+            >
+              Save
+            </Button>
+            <Button
+              color="red"
+              size="sm"
+              type="submit"
+              onClick={onDelete}
+              disabled={isFetching}
+            >
+              Delete
+            </Button>
+          </React.Fragment>
         )}
       </div>
     </div>
