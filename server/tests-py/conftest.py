@@ -271,10 +271,21 @@ def actions_fixture(hge_ctx):
     web_server.join()
 
 @pytest.fixture(scope='class')
+def scheduled_triggers_evts_webhook(request):
+    webhook_httpd = EvtsWebhookServer(server_address=('127.0.0.1', 5594))
+    web_server = threading.Thread(target=webhook_httpd.serve_forever)
+    web_server.start()
+    yield webhook_httpd
+    webhook_httpd.shutdown()
+    webhook_httpd.server_close()
+    web_server.join()
+
+@pytest.fixture(scope='class')
 def gql_server(request, hge_ctx):
     server = HGECtxGQLServer(request.config.getoption('--pg-urls'), 5991)
     yield server
     server.teardown()
+
 
 @pytest.fixture(scope='class')
 def ws_client(request, hge_ctx):
