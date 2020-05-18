@@ -25,15 +25,21 @@ module Hasura.Logging
   , defaultEnabledEngineLogTypes
   , isEngineLogTypeEnabled
   , readLogTypes
+  , printErrExit
+  , printErrJExit
+  , printJSON
+  , printYaml
   ) where
 
 import           Hasura.Prelude
+import           System.Exit                (exitFailure)
 
 import qualified Control.AutoUpdate         as Auto
 import qualified Data.Aeson                 as J
 import qualified Data.Aeson.Casing          as J
 import qualified Data.Aeson.TH              as J
 import qualified Data.ByteString            as B
+import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.HashSet               as Set
@@ -42,6 +48,7 @@ import qualified Data.Text                  as T
 import qualified Data.Time.Clock            as Time
 import qualified Data.Time.Format           as Format
 import qualified Data.Time.LocalTime        as Time
+import qualified Data.Yaml                  as Y
 import qualified System.Log.FastLogger      as FL
 
 
@@ -273,3 +280,15 @@ eventTriggerLogType = ELTInternal ILTEventTrigger
 
 scheduledTriggerLogType :: EngineLogType Hasura
 scheduledTriggerLogType = ELTInternal ILTScheduledTrigger
+
+printErrExit :: (MonadIO m) => forall a . String -> m a
+printErrExit = liftIO . (>> exitFailure) . putStrLn
+
+printErrJExit :: (J.ToJSON a, MonadIO m) => forall b . a -> m b
+printErrJExit = liftIO . (>> exitFailure) . printJSON
+
+printJSON :: (J.ToJSON a, MonadIO m) => a -> m ()
+printJSON = liftIO . BLC.putStrLn . J.encode
+
+printYaml :: (J.ToJSON a, MonadIO m) => a -> m ()
+printYaml = liftIO . BC.putStrLn . Y.encode

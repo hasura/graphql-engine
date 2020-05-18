@@ -13,17 +13,14 @@ import           Data.Time.Clock                      (UTCTime)
 import           GHC.AssertNF
 import           Options.Applicative
 import           System.Environment                   (getEnvironment, lookupEnv)
-import           System.Exit                          (exitFailure)
 
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
 import qualified Control.Concurrent.Extended          as C
 import qualified Data.Aeson                           as A
-import qualified Data.ByteString.Char8                as BC
 import qualified Data.ByteString.Lazy.Char8           as BLC
 import qualified Data.Set                             as Set
 import qualified Data.Text                            as T
 import qualified Data.Time.Clock                      as Clock
-import qualified Data.Yaml                            as Y
 import qualified Database.PG.Query                    as Q
 import qualified Network.HTTP.Client                  as HTTP
 import qualified Network.HTTP.Client.TLS              as HTTP
@@ -55,12 +52,6 @@ import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
 import           Hasura.Session
 
-
-printErrExit :: (MonadIO m) => forall a . String -> m a
-printErrExit = liftIO . (>> exitFailure) . putStrLn
-
-printErrJExit :: (A.ToJSON a, MonadIO m) => forall b . a -> m b
-printErrJExit = liftIO . (>> exitFailure) . printJSON
 
 parseHGECommand :: EnabledLogTypes impl => Parser (RawHGECommand impl)
 parseHGECommand =
@@ -94,12 +85,6 @@ parseArgs = do
              footerDoc (Just mainCmdFooter)
            )
     hgeOpts = HGEOptionsG <$> parseRawConnInfo <*> parseHGECommand
-
-printJSON :: (A.ToJSON a, MonadIO m) => a -> m ()
-printJSON = liftIO . BLC.putStrLn . A.encode
-
-printYaml :: (A.ToJSON a, MonadIO m) => a -> m ()
-printYaml = liftIO . BC.putStrLn . Y.encode
 
 mkPGLogger :: Logger Hasura -> Q.PGLogger
 mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =

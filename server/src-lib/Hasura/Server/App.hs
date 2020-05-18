@@ -36,9 +36,11 @@ import qualified System.Metrics.Json                    as EKG
 import qualified Text.Mustache                          as M
 import qualified Web.Spock.Core                         as Spock
 
+
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Action
 import           Hasura.HTTP
+import           Hasura.Logging
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
@@ -532,12 +534,11 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
 
       ((migrationResult, schemaCache), lastUpdateEvent) <-
         initialiseResult `onLeft` \err -> do
-          L.unLogger logger StartupLog
+          printErrJExit StartupLog
             { slLogLevel = L.LevelError
             , slKind = "db_migrate"
             , slInfo = toJSON err
             }
-          liftIO exitFailure
       L.unLogger logger migrationResult
 
       cacheLock <- liftIO $ newMVar ()
