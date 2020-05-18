@@ -19,7 +19,6 @@ import {
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
-import './AceEditorFix.css';
 import {
   ACE_EDITOR_THEME,
   ACE_EDITOR_FONT_SIZE,

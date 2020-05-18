@@ -62,10 +62,12 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: display rows limit in permissions editor if set to zero (fix #4559)
 - console: fix inconsistency between selected rows state and displayed rows (fix #4654) (#4673)
 - console: fix displaying boolean values in `Edit Row` tab (#4682)
+- console: fix underscores not being displayed on raw sql page (close #4754) (#4799)
 - cli: list all available commands in root command help (fix #4623)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
 - docs: add docs page on query performance (close #2316) (#3693)
+- docs: add a sample Caddyfile for Caddy 2 in enable-https section (#4710)
 
 ## `v1.2.0`
 
