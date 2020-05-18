@@ -69,7 +69,7 @@ const ActionDefinitionEditor = ({
         >
           {error && (
             <div className={`${styles.display_flex}  ${styles.errorMessage}`}>
-              <Icon type="close" color="red.primary" mr="xs" mb="12px" />
+              <Icon type="close" color="red.primary" mr="xs" mb="2px" />
               <div>{errorMessage}</div>
             </div>
           )}
