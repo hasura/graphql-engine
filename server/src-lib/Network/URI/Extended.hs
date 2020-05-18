@@ -9,10 +9,9 @@ import           Data.Aeson
 import           Data.Aeson.Types
 import           Data.Hashable
 import           Hasura.Prelude
-import           Language.Haskell.TH.Syntax (Lift)
 import           Network.URI
 
-import qualified Data.Text                  as T
+import qualified Data.Text        as T
 
 instance {-# INCOHERENT #-} FromJSON URI where
   parseJSON (String uri) = do
@@ -25,8 +24,6 @@ instance {-# INCOHERENT #-} ToJSON URI where
 
 instance {-# INCOHERENT #-} ToJSONKey URI where
   toJSONKey = toJSONKeyText (T.pack . show)
-
-instance Lift URI
 
 instance Hashable URI where
   hashWithSalt i = hashWithSalt i . (T.pack . show)

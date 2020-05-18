@@ -29,7 +29,6 @@ import           Hasura.SQL.Types
 
 import qualified Database.PG.Query        as Q
 
-import           Control.Arrow            ((&&&))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
