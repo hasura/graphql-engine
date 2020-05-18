@@ -10,6 +10,8 @@ import qualified Data.HashMap.Strict.Extended  as Map
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Data.Aeson as J
 
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+
 import Data.Scientific (toBoundedInteger, toRealFloat)
 
 import Hasura.GraphQL.Parser.Schema
@@ -19,7 +21,7 @@ import Hasura.SQL.Types
 resolveVariables
   :: forall m. MonadError QErr m
   => [G.VariableDefinition]
-  -> J.Object
+  -> GH.VariableValues
   -> G.SelectionSet G.Name
   -> m (G.SelectionSet Variable)
 resolveVariables definitions jsonValues selSet = do
@@ -30,7 +32,7 @@ resolveVariables definitions jsonValues selSet = do
     buildVariable G.VariableDefinition{ G._vdName, G._vdType, G._vdDefaultValue } = do
       let defaultValue = fromMaybe G.VNull _vdDefaultValue
 
-      value <- case Map.lookup (G.unName _vdName) jsonValues of
+      value <- case Map.lookup _vdName jsonValues of
         Just jsonValue -> jsonToGqlValue jsonValue
         Nothing
           | G.isNullable _vdType -> pure defaultValue

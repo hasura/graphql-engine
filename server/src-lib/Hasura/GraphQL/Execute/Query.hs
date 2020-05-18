@@ -30,6 +30,7 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Monad
+import           Hasura.GraphQL.Parser.Schema           (getName)
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Resolve
 
@@ -158,8 +159,8 @@ getNextArgNum = do
 
 prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue -> m S.SQLExp
 prepareWithPlan = \case
-  UVParameter PGColumnValue{ pcvValue = colVal } _ -> do
-    argNum <- case _ of
+  UVParameter PGColumnValue{ pcvValue = colVal } varInfoM -> do
+    argNum <- case fmap getName varInfoM of
       Just var -> getVarArgNum var
       Nothing  -> getNextArgNum
     addPrepArg argNum (toBinaryValue colVal, pstValue colVal)
@@ -206,12 +207,15 @@ convertQuerySelSet
      )
   => GQLContext
   -> G.SelectionSet G.Name
+  -> [G.VariableDefinition]
+  -> Maybe GH.VariableValues
   -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
-convertQuerySelSet gqlContext selectionSet = do
+convertQuerySelSet gqlContext selectionSet varDefs varValsM = do
   let parsers = gqlQueryParser gqlContext
   usrVars <- asks (userVars . getter)
-  bla <- resolveVariables [] Map.empty selectionSet
-  fldPlans <- case parsers bla of
+  let varVals = fromMaybe Map.empty varValsM
+  vals <- resolveVariables varDefs varVals selectionSet
+  fldPlans <- case parsers vals of
     -- TODO return prettier errors
     Left errs -> throw500 $ T.concat $ map peMessage $ toList errs
     Right (map, _reus) -> forM (toList selectionSet) $ \case

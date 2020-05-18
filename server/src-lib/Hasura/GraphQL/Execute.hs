@@ -275,8 +275,8 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       req <- toParsed reqUnparsed
       planPartial <- getExecPlanPartial userInfo sc enableAL req
       case planPartial of
-        GExPHasura (gCtx, G.TypedOperationDefinition G.OperationTypeQuery _ _ _ selSet) -> do
-          (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo selSet
+        GExPHasura (gCtx, G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet) -> do
+          (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo selSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ GExPHasura $ ExOpQuery queryTx (Just genSql)
         _ -> _
@@ -315,9 +315,11 @@ getQueryOp
   -> SQLGenCtx
   -> UserInfo
   -> G.SelectionSet G.Name
+  -> [G.VariableDefinition]
+  -> Maybe VariableValues
   -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
-getQueryOp gqlContext sqlGenCtx userInfo fields =
-  runE sqlGenCtx userInfo $ EQ.convertQuerySelSet gqlContext fields
+getQueryOp gqlContext sqlGenCtx userInfo fields varDefs varValsM =
+  runE sqlGenCtx userInfo $ EQ.convertQuerySelSet gqlContext fields varDefs varValsM
 
 mutationRootName :: Text
 mutationRootName = "mutation_root"
