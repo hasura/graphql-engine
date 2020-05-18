@@ -23,8 +23,6 @@ import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
 
 import           Control.Exception             (try)
-import           Control.Monad.IO.Class        (MonadIO, liftIO)
-import           Control.Monad.Reader          (MonadReader)
 import           Data.Has
 import           Hasura.Logging
 import           Hasura.Prelude

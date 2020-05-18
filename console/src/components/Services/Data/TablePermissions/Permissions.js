@@ -69,6 +69,7 @@ import {
   isEmpty,
   isJsonString,
   isObject,
+  exists,
 } from '../../../Common/utils/jsUtils';
 import {
   findTable,
@@ -82,7 +83,7 @@ import {
   QUERY_TYPES,
 } from '../../../Common/utils/pgUtils';
 import { showErrorNotification } from '../../Common/Notification';
-import KnowMoreLink from "../../../Common/KnowMoreLink/KnowMoreLink";
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
   getFilterQueries,
   replaceLegacyOperators,
@@ -597,12 +598,14 @@ class Permissions extends Component {
         }
 
         let knowMoreHtml;
-        if(knowMoreRef) {
+        if (knowMoreRef) {
           knowMoreHtml = (
-            <span className={`${styles.add_mar_left_small} ${styles.sectionStatus}`}>
-              <KnowMoreLink href={knowMoreRef}/>
+            <span
+              className={`${styles.add_mar_left_small} ${styles.sectionStatus}`}
+            >
+              <KnowMoreLink href={knowMoreRef} />
             </span>
-          )
+          );
         }
 
         return (
@@ -866,7 +869,7 @@ class Permissions extends Component {
 
           if (query === 'select') {
             const limitValue =
-              permissionsState.select && permissionsState.select.limit
+              permissionsState.select && exists(permissionsState.select.limit)
                 ? permissionsState.select.limit
                 : '';
 
@@ -1842,14 +1845,21 @@ class Permissions extends Component {
         const backendStatus = isBackendOnly ? 'enabled' : 'disabled';
         return (
           <CollapsibleToggle
-            title={getSectionHeader('Backend only', tooltip, backendStatus, 'https://docs.hasura.io/1.0/graphql/manual/auth/authorization/permission-rules.html#backend-only-inserts')}
+            title={getSectionHeader(
+              'Backend only',
+              tooltip,
+              backendStatus,
+              'https://docs.hasura.io/1.0/graphql/manual/auth/authorization/permission-rules.html#backend-only-inserts'
+            )}
             useDefaultTitleStyle
             testId={'toggle-backend-only'}
           >
             <div
               className={`${styles.editPermsSection} ${styles.display_flex}`}
             >
-              <div className={`${styles.display_flex} ${styles.add_mar_right_mid}`}>
+              <div
+                className={`${styles.display_flex} ${styles.add_mar_right_mid}`}
+              >
                 <Toggle
                   checked={isBackendOnly}
                   onChange={() => dispatch(permToggleBackendOnly())}
