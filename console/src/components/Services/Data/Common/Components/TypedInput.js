@@ -3,8 +3,8 @@ import React from 'react';
 import { JSONB, JSONDTYPE, TEXT, BOOLEAN, getPlaceholder } from '../../utils';
 import JsonInput from '../../../../Common/CustomInputTypes/JsonInput';
 import TextInput from '../../../../Common/CustomInputTypes/TextInput';
-import styles from '../../../../Common/TableCommon/Table.scss';
 import { isColumnAutoIncrement } from '../../../../Common/utils/pgUtils';
+import styles from '../../../../Common/TableCommon/Table.scss';
 
 export const TypedInput = ({
   enumOptions,
