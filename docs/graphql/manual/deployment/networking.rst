@@ -15,11 +15,11 @@ Network config
 Introduction
 ------------
 
-Sometimes we need to connect from Hasura to an external API or vice versa. 
-This page gives an overview of how you can do so.
+Sometimes, we need to connect Hasura with APIs that are either running outside Docker or within the same Docker configuration.
+Depending on this, the connecting addresses are different. This section lists the connecting addresses for each of these cases.
 
-Networking from / to Hasura
----------------------------
+Networking with Hasura
+----------------------
 
 .. list-table:: 
    :stub-columns: 1
@@ -29,16 +29,37 @@ Networking from / to Hasura
      - Mac
      - Windows
      - Linux
-   * - **Hasura to API**
-     - ``host.docker.internal``
-     - ``docker.for.win.localhost``
-     - Add the ``--net=host`` flag 
-   * - **API to Hasura** (with ``docker-compose``)
-     - host name (*)
-     - host name (*)
-     - host name (*)
-
-`*` You can run ``docker.inspect`` to get the IP address (host name). 
+     - Comment
+   * - **Hasura to API (outside Docker) ***
+     - ``host.docker.internal:3000``
+     - ``docker.for.win.localhost:3000``
+     - ``localhost:3000 --net=host``
+     - Assuming the API is running on port ``3000``
+   * - **API (outside Docker) to Hasura** 
+     - ``localhost:8080``
+     - ``localhost:8080``
+     - ``localhost:8080``
+     - Hasura runs on port ``8080`` by default
+   * - **Hasura to API (both in docker-compose)** 
+     - service name, e.g ``api:3000``
+     - service name, e.g ``api:3000``
+     - service name, e.g ``api:3000``
+     - Assuming the API is running on port ``3000``
+   * - **API to Hasura (both in docker-compose)** 
+     - service name, e.g ``hasura:8080``
+     - service name, e.g ``hasura:8080``
+     - service name, e.g ``hasura:8080``
+     - Hasura runs on port ``8080`` by default
+   * - **Hasura to API (both running with docker run)** 
+     - Docker internal IP address 
+     - Docker internal IP address 
+     - Docker internal IP address 
+     - Can be obtained with ``docker inspect``
+   * - **API to Hasura (both running with docker run)** 
+     - Docker internal IP address 
+     - Docker internal IP address 
+     - Docker internal IP address 
+     - Can be obtained with ``docker inspect``
 
 .. note::
 
