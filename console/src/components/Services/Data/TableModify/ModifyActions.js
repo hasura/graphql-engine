@@ -947,7 +947,7 @@ WHERE c.relname = '${viewName}'
         const finalDef = data.result[1][0];
         // set state and redirect to run_sql
         if (isRedirect) {
-          dispatch(_push('/data/sql'));
+          dispatch(_push('/data/sql?viewName=' + viewName));
         }
 
         const viewType = data.result[1][1];

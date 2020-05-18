@@ -24,7 +24,32 @@ import {
   ACE_EDITOR_FONT_SIZE,
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
+import { isEmpty } from '../../../Common/utils/jsUtils';
+import { fetchViewDefinition } from '../TableModify/ModifyActions';
+import NotesSection from './molecules/NotesSection';
 
+/**
+ * # RawSQL React FC
+ * ## renders raw SQL page on route `/data/sql`
+ * @component
+ *
+ * @param sql,
+ * @param resultType,
+ * @param result,
+ * @param resultHeaders,
+ * @param dispatch,
+ * @param ongoingRequest,
+ * @param lastError,
+ * @param lastSuccess,
+ * @param isModalOpen,
+ * @param isCascadeChecked,
+ * @param isMigrationChecked,
+ * @param isTableTrackChecked,
+ * @param migrationMode,
+ * @param allSchemas,
+ * @param location,
+ * @returns
+ */
 const RawSQL = ({
   sql,
   resultType,
@@ -40,6 +65,7 @@ const RawSQL = ({
   isTableTrackChecked,
   migrationMode,
   allSchemas,
+  location,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
@@ -53,17 +79,20 @@ const RawSQL = ({
 
   // set SQL from localStorage on mount and write back to localStorage on unmount
   useEffect(() => {
-    if (!sql) {
+    // if user directly click `sql` from sidebar there will not be any query params
+    if (isEmpty(location.query)) {
       const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
       if (sqlFromLocalStorage) {
         dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
       }
+      return () => {
+        localStorage.setItem(LS_RAW_SQL_SQL, sqlRef.current);
+      };
+    } else if (!sql && location.query.viewName) {
+      // direct url access will should also work
+      dispatch(fetchViewDefinition(location.query.viewName, false));
     }
-
-    return () => {
-      localStorage.setItem(LS_RAW_SQL_SQL, sqlRef.current);
-    };
-  }, []);
+  }, [location]);
 
   // set SQL to sqlRef
   useEffect(() => {
@@ -96,9 +125,6 @@ const RawSQL = ({
   );
 
   const submitSQL = () => {
-    // set SQL to LS
-    localStorage.setItem(LS_RAW_SQL_SQL, sql);
-
     // check migration mode global
     if (migrationMode) {
       const checkboxElem = document.getElementById('migration-checkbox');
@@ -126,34 +152,6 @@ const RawSQL = ({
       dispatch(executeSQL(false, ''));
     }
   };
-
-  let alert = null;
-
-  if (ongoingRequest) {
-    alert = (
-      <div className={`${styles.padd_left_remove} col-xs-12`}>
-        <div className="hidden alert alert-warning" role="alert">
-          Running...
-        </div>
-      </div>
-    );
-  } else if (lastError) {
-    alert = (
-      <div className={`${styles.padd_left_remove} col-xs-12`}>
-        <div className="hidden alert alert-danger" role="alert">
-          Error: {JSON.stringify(lastError)}
-        </div>
-      </div>
-    );
-  } else if (lastSuccess) {
-    alert = (
-      <div className={`${styles.padd_left_remove} col-xs-12`}>
-        <div className="hidden alert alert-success" role="alert">
-          Executed Query
-        </div>
-      </div>
-    );
-  }
 
   const getMigrationWarningModal = () => {
     const onModalClose = () => {
@@ -256,6 +254,8 @@ const RawSQL = ({
             },
           ]}
           onChange={handleSQLChange}
+          // prevents unwanted frequent event triggers
+          debounceChangePeriod={200}
         />
       </div>
     );
@@ -303,25 +303,6 @@ const RawSQL = ({
     }
 
     return resultTable;
-  };
-
-  const getNotesSection = () => {
-    return (
-      <ul>
-        <li>
-          You can create views, alter tables or just about run any SQL
-          statements directly on the database.
-        </li>
-        <li>
-          Multiple SQL statements can be separated by semicolons, <code>;</code>
-          , however, only the result of the last SQL statement will be returned.
-        </li>
-        <li>
-          Multiple SQL statements will be run as a transaction. i.e. if any
-          statement fails, none of the statements will be applied.
-        </li>
-      </ul>
-    );
   };
 
   const getMetadataCascadeSection = () => {
@@ -426,15 +407,7 @@ const RawSQL = ({
             <div>
               <label className={styles.add_mar_right}>Migration name:</label>
               <input
-                className={
-                  styles.inline_block +
-                  ' ' +
-                  styles.tableNameInput +
-                  ' ' +
-                  styles.add_mar_right_small +
-                  ' ' +
-                  ' form-control'
-                }
+                className={`${styles.inline_block} ${styles.tableNameInput} ${styles.add_mar_right_small} form-control`}
                 placeholder={'run_sql_migration'}
                 id="migration-name"
                 type="text"
@@ -473,21 +446,6 @@ const RawSQL = ({
     return migrationSection;
   };
 
-  const getRunButton = () => {
-    return (
-      <Button
-        type="submit"
-        className={styles.add_mar_top}
-        onClick={submitSQL}
-        color="yellow"
-        size="sm"
-        data-test="run-sql"
-      >
-        Run!
-      </Button>
-    );
-  };
-
   return (
     <div
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
@@ -500,32 +458,87 @@ const RawSQL = ({
         <div className="clearfix" />
       </div>
       <div className={styles.add_mar_top}>
-        <div>
-          <div className={`${styles.padd_left_remove} col-xs-8`}>
-            {getNotesSection()}
-          </div>
-
-          <div className={`${styles.padd_left_remove} col-xs-10`}>
-            {getSQLSection()}
-          </div>
-
-          <div
-            className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
-          >
-            {getTrackThisSection()}
-            {getMetadataCascadeSection()}
-            {getMigrationSection()}
-
-            {getRunButton()}
-          </div>
+        <div className={`${styles.padd_left_remove} col-xs-8`}>
+          <NotesSection />
         </div>
-        <div className="hidden col-xs-4">{alert}</div>
+
+        <div className={`${styles.padd_left_remove} col-xs-10`}>
+          {getSQLSection()}
+        </div>
+
+        <div
+          className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
+        >
+          {getTrackThisSection()}
+          {getMetadataCascadeSection()}
+          {getMigrationSection()}
+
+          <RunButton onClick={submitSQL} className={styles.add_mar_top} />
+        </div>
+        <Alert
+          {...{
+            ongoingRequest,
+            lastError,
+            lastSuccess,
+            className: styles.padd_left_remove,
+          }}
+        />
       </div>
 
       {getMigrationWarningModal()}
 
       <div className={styles.add_mar_bottom}>{getResultTable()}</div>
     </div>
+  );
+};
+
+/**
+ * # Alert
+ * @component
+ *
+ * @param {*} { ongoingRequest, lastError, lastSuccess, className }
+ */
+const Alert = ({ ongoingRequest, lastError, lastSuccess, className }) => (
+  <div className="hidden col-xs-4">
+    <div className={`${className} col-xs-12`}>
+      {ongoingRequest && (
+        <div className="hidden alert alert-warning" role="alert">
+          Running...
+        </div>
+      )}
+      {lastError && (
+        <div className="hidden alert alert-danger" role="alert">
+          Error: {JSON.stringify(lastError)}
+        </div>
+      )}
+      {lastSuccess && (
+        <div className="hidden alert alert-success" role="alert">
+          Executed Query
+        </div>
+      )}
+      ;
+    </div>
+  </div>
+);
+/**
+ * #RunButton
+ * @component
+ *
+ * @param {*} { onClick, className }
+ * @returns
+ */
+const RunButton = ({ onClick, className }) => {
+  return (
+    <Button
+      type="submit"
+      className={className}
+      onClick={onClick}
+      color="yellow"
+      size="sm"
+      data-test="run-sql"
+    >
+      Run!
+    </Button>
   );
 };
 
@@ -552,6 +565,7 @@ const mapStateToProps = state => ({
   currentSchema: state.tables.currentSchema,
   allSchemas: state.tables.allSchemas,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+  location: state.routing.locationBeforeTransitions,
 });
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);
