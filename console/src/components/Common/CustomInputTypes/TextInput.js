@@ -175,6 +175,7 @@ const TextInput = props => {
         ' (Ctrl + Space)'
       }
       className={styles.modeToggleButton}
+      size={12}
     />
   );
 
