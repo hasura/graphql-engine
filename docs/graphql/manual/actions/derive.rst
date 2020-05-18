@@ -16,11 +16,11 @@ Introduction
 ------------
 
 It is a typical requirement to run some custom business logic before actually
-executing a mutation, for example, to perform validations or to enrich some data
-from an external source. Actions can be used to achieve this.
+executing a mutation / query, for example, to perform validations or to enrich
+some data from an external source. Actions can be used to achieve this.
 
 To help with creation of such actions, Hasura lets you derive an action from an
-existing query or a mutation by:
+existing query or mutation by:
 
 - Auto-generating the GraphQL types defining the action
 - Generating the handler code to delegate the action back to the original query or mutation
@@ -75,13 +75,13 @@ derive our action:
 
      Next hit the ``Derive action`` button as shown below:
 
-     .. thumbnail:: ../../../img/graphql/manual/actions/actions-derive-button.png
+     .. thumbnail:: /img/graphql/manual/actions/actions-derive-button.png
         :alt: Console derive action button
 
      This will redirect you to the ``Add a new action`` page with the action
      definition auto filled.
 
-     .. thumbnail:: ../../../img/graphql/manual/actions/actions-derive-types.png
+     .. thumbnail:: /img/graphql/manual/actions/actions-derive-types.png
         :alt: Console derived action types
 
 
@@ -133,7 +133,6 @@ derive our action:
     output type.
 
 
-
 Generate handler code for a derived action
 ------------------------------------------
 
@@ -150,7 +149,7 @@ the action back to the original operation.
     You can select the framework of your choice to get the corresponding
     handler boilerplate code.
 
-    .. thumbnail:: ../../../img/graphql/manual/actions/actions-derive-codegen.png
+    .. thumbnail:: /img/graphql/manual/actions/actions-derive-codegen.png
        :alt: Console derived action codegen
 
     .. note::
@@ -175,3 +174,17 @@ the action back to the original operation.
     .. code-block:: bash
 
         hasura actions codegen <action-name> --derive-from '<query/mutation string>'
+
+Hiding the original mutation in the API
+---------------------------------------
+
+Once a mutation is derived, you might want to hide it from your public
+GraphQL API but still want to use it from your action handler.
+
+To achieve this you can mark the mutation as ``backend_only`` so that it
+can be accessed only via "trusted sources". See :ref:`backend-only-permissions`
+for more details
+
+.. note::
+
+  Setting ``backend-only`` is currently available for insert mutations only.
