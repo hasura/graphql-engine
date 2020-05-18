@@ -73,4 +73,5 @@ based on a typical author/article schema for reference.
   pagination
   Using multiple arguments <multiple-arguments>
   multiple-queries
-  variables-aliases-fragments-directives
+  Using variables / aliases / fragments / directives <variables-aliases-fragments-directives>
+  performance
