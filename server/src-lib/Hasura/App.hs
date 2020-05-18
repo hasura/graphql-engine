@@ -28,6 +28,7 @@ import qualified Database.PG.Query                    as Q
 import qualified Network.HTTP.Client                  as HTTP
 import qualified Network.HTTP.Client.TLS              as HTTP
 import qualified Network.Wai.Handler.Warp             as Warp
+import qualified System.Log.FastLogger                as FL
 import qualified System.Posix.Signals                 as Signals
 import qualified Text.Mustache.Compile                as M
 
@@ -284,7 +285,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler (shutdownHandler logger shutdownApp eventEngineCtx _icPgPool)
+                     . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers shutdownApp eventEngineCtx _icPgPool)
                      $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 
@@ -341,8 +342,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     -- We only catch the SIGTERM signal once, that is, if we catch another SIGTERM signal then the process
     -- is terminated immediately.
     -- If the user hits CTRL-C (SIGINT), then the process is terminated immediately
-    shutdownHandler :: Logger Hasura -> IO () -> EventEngineCtx -> Q.PGPool -> IO () -> IO ()
-    shutdownHandler (Logger logger) shutdownApp eeCtx pool closeSocket =
+    shutdownHandler :: Loggers -> IO () -> EventEngineCtx -> Q.PGPool -> IO () -> IO ()
+    shutdownHandler (Loggers loggerCtx (Logger logger) _) shutdownApp eeCtx pool closeSocket =
       void $ Signals.installHandler
         Signals.sigTERM
         (Signals.CatchOnce shutdownSequence)
@@ -353,7 +354,9 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
         closeSocket
         shutdownApp
         logShutdown
+        flushLogger
 
+      flushLogger = FL.flushLogStr $ _lcLoggerSet loggerCtx
       logShutdown = logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
 
 runAsAdmin
