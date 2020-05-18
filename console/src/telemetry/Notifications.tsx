@@ -1,10 +1,14 @@
 import React from 'react';
-import { Dispatch } from 'redux';
+import { Dispatch, AnyAction } from 'redux';
+import { ThunkDispatch } from 'redux-thunk';
 import Notifications from 'react-notification-system-redux';
 import { setTelemetryNotificationShownInDB } from './Actions';
+import { TelemetryState } from './State';
 
 const onRemove = () => {
-  return (dispatch: Dispatch<any>) => {
+  return (
+    dispatch: ThunkDispatch<{ telemetry: TelemetryState }, {}, AnyAction>
+  ) => {
     dispatch(setTelemetryNotificationShownInDB());
   };
 };
