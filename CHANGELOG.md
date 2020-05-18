@@ -66,6 +66,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
 - docs: add docs page on query performance (close #2316) (#3693)
+- docs: add a sample Caddyfile for Caddy 2 in enable-https section (#4710)
 
 ## `v1.2.0`
 
