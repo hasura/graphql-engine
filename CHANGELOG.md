@@ -8,6 +8,7 @@
 - server: fix explain queries with role permissions (fix #4816)
 - server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
 
+- server: fixes an issue where introspection queries with variables would fail because of caching (fix #4547)
 - server: avoid loss of precision when passing values in scientific notation (fix #4733)
 - server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
 - server: fix importing of allow list query from metadata (fix #4687)
