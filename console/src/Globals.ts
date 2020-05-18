@@ -1,3 +1,4 @@
+/* eslint no-underscore-dangle: 0 */
 import { SERVER_CONSOLE_MODE } from './constants';
 import { getFeaturesCompatibility } from './helpers/versionUtils';
 import { stripTrailingSlash } from './components/Common/utils/urlUtils';
@@ -7,7 +8,8 @@ import { isEmpty } from './components/Common/utils/jsUtils';
 /* set helper tools into window */
 
 import sqlFormatter from './helpers/sql-formatter.min';
-import hljs from 'highlightjs';
+
+const hljs = require('./helpers/highlight.min');
 
 declare global {
   interface Window {
@@ -24,7 +26,7 @@ declare global {
       assetsPath: string;
       serverVersion: string;
       consolePath: string;
-    },
+    };
     sqlFormatter: unknown;
     hljs: unknown;
     CONSOLE_ASSET_VERSION: string;
@@ -32,7 +34,7 @@ declare global {
 }
 
 if (
-  window &&
+  (window as Window) &&
   typeof window === 'object' &&
   !window.sqlFormatter &&
   !window.hljs
@@ -79,11 +81,12 @@ if (globals.consoleMode === SERVER_CONSOLE_MODE) {
         currentUrl.lastIndexOf(consolePath)
       );
 
-      globals.urlPrefix =
-        currentPath.slice(0, currentPath.lastIndexOf(consolePath)) + '/console';
+      globals.urlPrefix = `${currentPath.slice(
+        0,
+        currentPath.lastIndexOf(consolePath)
+      )}/console`;
     } else {
-      const windowHostUrl =
-        window.location.protocol + '//' + window.location.host;
+      const windowHostUrl = `${window.location.protocol}//${window.location.host}`;
 
       globals.dataApiUrl = windowHostUrl;
     }
