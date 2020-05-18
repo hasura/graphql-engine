@@ -40,6 +40,8 @@ class DragFoldTable extends Component {
   }
 
   mountEvents() {
+    if (!this.tableRef.current) return;
+
     const headers = Array.prototype.slice.call(
       this.tableRef.current.querySelectorAll('.draggable-header')
     );

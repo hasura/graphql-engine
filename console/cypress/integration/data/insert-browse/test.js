@@ -20,6 +20,8 @@ import {
   passCloneButton,
   checkViewRelationship,
   passDeleteRow,
+  passBulkDeleteRows,
+  passBulkDeleteAllRows,
 } from './spec';
 
 import { setMetaData } from '../../validators/validators';
@@ -51,6 +53,8 @@ export const runInsertBrowseTests = () => {
     it('Check edit button', passEditButton);
     it('Check for clone clear', passCloneButton);
     it('Delete the row', passDeleteRow);
+    it('Bulk delete rows', passBulkDeleteRows);
+    it('Bulk delete all rows', passBulkDeleteAllRows);
     it('Check view relationship', checkViewRelationship);
     it('Delete test table', deleteBITestTable);
   });
