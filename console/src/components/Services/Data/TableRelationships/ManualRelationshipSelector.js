@@ -207,6 +207,7 @@ const ManualRelationshipSelector = ({
                 pointer
                 size={15}
                 ml="10px"
+                mt="xs"
               />
             );
           }

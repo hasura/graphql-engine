@@ -61,6 +61,7 @@ const UniqueKeySelector = ({
         data-test={`remove-uk-${index}-column-${i}`}
         onClick={removeUniqueCol}
         ml="10px"
+        mt="xs"
         size={15}
         pointer
       />

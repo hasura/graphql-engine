@@ -154,9 +154,9 @@ class StreamingLogs extends Component {
       const status =
         // 2xx is success
         verifySuccessStatus(r.status) ? (
-          <Icon type="check" color="green.original" />
+          <Icon type="check" color="green.original" size={12} mt="xs" />
         ) : (
-          <Icon type="close" color="red.original" />
+          <Icon type="close" color="red.original" size={12} mt="xs" />
         );
 
       requestData.push(parseRowData(r, 'request'));
@@ -212,6 +212,8 @@ class StreamingLogs extends Component {
           return (
             <div className={conditionalClassname}>
               <Icon
+                size={12}
+                mt="xs"
                 type="reload"
                 pointer
                 onClick={this.toggleModal.bind(this, r.event_id)}
@@ -305,9 +307,19 @@ class StreamingLogs extends Component {
                     ? [
                         'Status Code: ',
                         verifySuccessStatus(finalResponse.status_code) ? (
-                          <Icon type="check" color="green.original" />
+                          <Icon
+                            type="check"
+                            color="green.original"
+                            size={12}
+                            mt="xs"
+                          />
                         ) : (
-                          <Icon type="close" color="red.original" />
+                          <Icon
+                            type="close"
+                            color="red.original"
+                            size={12}
+                            mt="xs"
+                          />
                         ),
                         finalResponse.status_code,
                         ' ',

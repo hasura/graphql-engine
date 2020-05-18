@@ -78,7 +78,7 @@ const EventSubSidebar = ({
                 to={appPrefix + '/manage/triggers/' + trigger + '/processed'}
                 data-test={trigger}
               >
-                <Icon type="send" mr="xs" size={12} />
+                <Icon type="send" mr="5px" size={12} />
                 {trigger}
               </Link>
             </li>

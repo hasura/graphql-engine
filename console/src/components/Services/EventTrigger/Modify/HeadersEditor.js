@@ -114,6 +114,7 @@ const HeadersEditor = props => {
               type="close"
               className={styles.removeHeader}
               ml="10px"
+              mt="xs"
               pointer
               onClick={() => {
                 dispatch(removeHeader(i));
