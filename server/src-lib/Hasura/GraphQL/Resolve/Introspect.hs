@@ -58,38 +58,40 @@ retJT = pure . J.toJSON
 
 -- 4.5.2.1
 scalarR
-  :: (Monad m)
+  :: (MonadReusability m, MonadError QErr m)
   => ScalarTyInfo
   -> Field
   -> m J.Object
-scalarR (ScalarTyInfo descM name _ _) fld =
+scalarR (ScalarTyInfo descM name _ _) fld = do
+  dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
-  case _fName subFld of
-    "__typename"  -> retJT "__Type"
-    "kind"        -> retJ TKSCALAR
-    "description" -> retJ $ fmap G.unDescription descM
-    "name"        -> retJ name
-    _             -> return J.Null
+    case _fName subFld of
+      "__typename"  -> retJT "__Type"
+      "kind"        -> retJ TKSCALAR
+      "description" -> retJ $ fmap G.unDescription descM
+      "name"        -> retJ name
+      _             -> return J.Null
 
 -- 4.5.2.2
 objectTypeR
   :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+     , MonadError QErr m, MonadReusability m)
   => ObjTyInfo
   -> Field
   -> m J.Object
-objectTypeR objectType fld =
+objectTypeR objectType fld = do
+  dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
-  case _fName subFld of
-    "__typename"  -> retJT "__Type"
-    "kind"        -> retJ TKOBJECT
-    "name"        -> retJ $ namedTyToTxt n
-    "description" -> retJ $ fmap G.unDescription descM
-    "interfaces"  -> fmap J.toJSON $ mapM (`ifaceR` subFld) $ Set.toList iFaces
-    "fields"      -> fmap J.toJSON $ mapM (`fieldR` subFld) $
-                     sortOn _fiName $
-                     filter notBuiltinFld $ Map.elems flds
-    _             -> return J.Null
+    case _fName subFld of
+      "__typename"  -> retJT "__Type"
+      "kind"        -> retJ TKOBJECT
+      "name"        -> retJ $ namedTyToTxt n
+      "description" -> retJ $ fmap G.unDescription descM
+      "interfaces"  -> fmap J.toJSON $ mapM (`ifaceR` subFld) $ Set.toList iFaces
+      "fields"      -> fmap J.toJSON $ mapM (`fieldR` subFld) $
+                       sortOn _fiName $
+                       filter notBuiltinFld $ Map.elems flds
+      _             -> return J.Null
   where
     descM = _otiDesc objectType
     n = _otiName objectType
@@ -110,23 +112,24 @@ getImplTypes aot = do
 
 -- 4.5.2.3
 unionR
-  :: (MonadReader t m, MonadError QErr m, Has TypeMap t)
+  :: (MonadReader t m, MonadError QErr m, Has TypeMap t, MonadReusability m)
   => UnionTyInfo -> Field -> m J.Object
-unionR u@(UnionTyInfo descM n _) fld =
+unionR u@(UnionTyInfo descM n _) fld = do
+  dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
-  case _fName subFld of
-    "__typename"    -> retJT "__Field"
-    "kind"          -> retJ TKUNION
-    "name"          -> retJ $ namedTyToTxt n
-    "description"   -> retJ $ fmap G.unDescription descM
-    "possibleTypes" -> fmap J.toJSON $
-                       mapM (`objectTypeR` subFld) =<< getImplTypes (AOTUnion u)
-    _               -> return J.Null
+    case _fName subFld of
+      "__typename"    -> retJT "__Field"
+      "kind"          -> retJ TKUNION
+      "name"          -> retJ $ namedTyToTxt n
+      "description"   -> retJ $ fmap G.unDescription descM
+      "possibleTypes" -> fmap J.toJSON $
+                         mapM (`objectTypeR` subFld) =<< getImplTypes (AOTUnion u)
+      _               -> return J.Null
 
 -- 4.5.2.4
 ifaceR
   :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+     , MonadError QErr m, MonadReusability m)
   => G.NamedType
   -> Field
   -> m J.Object
@@ -138,7 +141,7 @@ ifaceR n fld = do
 
 ifaceR'
   :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+     , MonadError QErr m, MonadReusability m)
   => IFaceTyInfo
   -> Field
   -> m J.Object
@@ -163,11 +166,12 @@ ifaceR' ifaceTyInfo fld = do
 
 -- 4.5.2.5
 enumTypeR
-  :: ( Monad m )
+  :: ( Monad m, MonadReusability m, MonadError QErr m )
   => EnumTyInfo
   -> Field
   -> m J.Object
-enumTypeR (EnumTyInfo descM n vals _) fld =
+enumTypeR (EnumTyInfo descM n vals _) fld = do
+  dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
     case _fName subFld of
       "__typename"  -> retJT "__Type"
@@ -231,25 +235,26 @@ dummyReadIncludeDeprecated fld = do
 -- 4.5.2.6
 inputObjR
   :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+     , MonadError QErr m, MonadReusability m)
   => InpObjTyInfo
   -> Field
   -> m J.Object
-inputObjR (InpObjTyInfo descM nt flds _) fld =
+inputObjR (InpObjTyInfo descM nt flds _) fld = do
+  dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
-  case _fName subFld of
-    "__typename"  -> retJT "__Type"
-    "kind"        -> retJ TKINPUT_OBJECT
-    "name"        -> retJ $ namedTyToTxt nt
-    "description" -> retJ $ fmap G.unDescription descM
-    "inputFields" -> fmap J.toJSON $ mapM (inputValueR subFld) $
-                     sortOn _iviName $ Map.elems flds
-    _             -> return J.Null
+    case _fName subFld of
+      "__typename"  -> retJT "__Type"
+      "kind"        -> retJ TKINPUT_OBJECT
+      "name"        -> retJ $ namedTyToTxt nt
+      "description" -> retJ $ fmap G.unDescription descM
+      "inputFields" -> fmap J.toJSON $ mapM (inputValueR subFld) $
+                       sortOn _iviName $ Map.elems flds
+      _             -> return J.Null
 
 -- 4.5.2.7
 listTypeR
   :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+     , MonadError QErr m, MonadReusability m)
   => G.ListType -> Field -> m J.Object
 listTypeR (G.ListType ty) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
@@ -262,7 +267,7 @@ listTypeR (G.ListType ty) fld =
 -- 4.5.2.8
 nonNullR
   :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+     , MonadError QErr m, MonadReusability m)
   => G.GType -> Field -> m J.Object
 nonNullR gTyp fld =
   withSubFields (_fSelSet fld) $ \subFld ->
@@ -277,7 +282,7 @@ nonNullR gTyp fld =
 
 namedTypeR
   :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+     , MonadError QErr m, MonadReusability m)
   => G.NamedType
   -> Field
   -> m J.Object
@@ -287,22 +292,25 @@ namedTypeR nt fld = do
 
 namedTypeR'
   :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+     , MonadError QErr m, MonadReusability m)
   => Field
   -> TypeInfo
   -> m J.Object
-namedTypeR' fld = \case
-  TIScalar colTy        -> scalarR colTy fld
-  TIObj objTyInfo       -> objectTypeR objTyInfo fld
-  TIEnum enumTypeInfo   -> enumTypeR enumTypeInfo fld
-  TIInpObj inpObjTyInfo -> inputObjR inpObjTyInfo fld
-  TIIFace iFaceTyInfo   -> ifaceR' iFaceTyInfo fld
-  TIUnion unionTyInfo   -> unionR unionTyInfo fld
+namedTypeR' fld tyInfo = do
+  -- Now fetch the required type information from the corresponding
+  -- information generator
+  case tyInfo of
+    TIScalar colTy        -> scalarR colTy fld
+    TIObj objTyInfo       -> objectTypeR objTyInfo fld
+    TIEnum enumTypeInfo   -> enumTypeR enumTypeInfo fld
+    TIInpObj inpObjTyInfo -> inputObjR inpObjTyInfo fld
+    TIIFace iFaceTyInfo   -> ifaceR' iFaceTyInfo fld
+    TIUnion unionTyInfo   -> unionR unionTyInfo fld
 
 -- 4.5.3
 fieldR
   :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+     , MonadError QErr m, MonadReusability m)
   => ObjFldInfo -> Field -> m J.Object
 fieldR (ObjFldInfo descM n params ty _) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
@@ -319,7 +327,7 @@ fieldR (ObjFldInfo descM n params ty _) fld =
 -- 4.5.4
 inputValueR
   :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+     , MonadError QErr m, MonadReusability m)
   => Field -> InpValInfo -> m J.Object
 inputValueR fld (InpValInfo descM n defM ty) =
   withSubFields (_fSelSet fld) $ \subFld ->
@@ -348,7 +356,7 @@ enumValueR fld (EnumValInfo descM enumVal isDeprecated) =
 -- 4.5.6
 directiveR
   :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+     , MonadError QErr m, MonadReusability m)
   => Field -> DirectiveInfo -> m J.Object
 directiveR fld (DirectiveInfo descM n args locs) =
   withSubFields (_fSelSet fld) $ \subFld ->
@@ -368,7 +376,7 @@ showDirLoc = \case
 
 gtypeR
   :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+     , MonadError QErr m, MonadReusability m)
   => G.GType -> Field -> m J.Object
 gtypeR ty fld =
   case ty of
@@ -379,7 +387,7 @@ gtypeR ty fld =
 
 schemaR
   :: ( MonadReader r m, Has TypeMap r
-     , MonadError QErr m)
+     , MonadError QErr m, MonadReusability m)
   => Field -> m J.Object
 schemaR fld =
   withSubFields (_fSelSet fld) $ \subFld -> do

@@ -308,6 +308,7 @@ Date:   Thu May 21 13:43:44 2020 +0530
 
     * add changelog
 
+(Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
 Date:   Mon May 18 14:27:56 2020 +0200
