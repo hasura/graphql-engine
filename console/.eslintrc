@@ -142,6 +142,7 @@
         "@typescript-eslint/no-useless-constructor": "error",
         "@typescript-eslint/no-unused-expressions": ["error"],
         "@typescript-eslint/no-empty-function": "off",
+        "@typescript-eslint/no-use-before-define": "off",
         /**
          * Disable things that are checked by Typescript
          */
