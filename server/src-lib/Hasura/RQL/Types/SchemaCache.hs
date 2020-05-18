@@ -198,6 +198,7 @@ data SchemaCache
   , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
+  , scRelayGCtxMap      :: !GC.GCtxMap
   , scDepMap            :: !DepMap
   , scInconsistentObjs  :: ![InconsistentMetadata]
   } deriving (Show, Eq)

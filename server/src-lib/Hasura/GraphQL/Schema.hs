@@ -1,7 +1,7 @@
 module Hasura.GraphQL.Schema
   ( mkGCtxMap
+  , mkGCtx
   , GCtxMap
-  , getGCtx
   , GCtx(..)
   , QueryCtx(..)
   , MutationCtx(..)
@@ -11,6 +11,10 @@ module Hasura.GraphQL.Schema
   , isAggregateField
   , qualObjectToName
   , ppGCtx
+  , getSelPerm
+  , isValidObjectName
+  , mkAdminSelFlds
+  , noFilter
 
   , checkConflictingNode
   , checkSchemaConflicts
@@ -95,18 +99,6 @@ isRelNullable fim ri = isNullable
     allCols = getValidCols fim
     lColInfos = getColInfos lCols allCols
     isNullable = any pgiIsNullable lColInfos
-
-mkPGColGNameMap :: [PGColumnInfo] -> PGColGNameMap
-mkPGColGNameMap cols = Map.fromList $
-  flip map cols $ \ci -> (pgiName ci, ci)
-
-numAggregateOps :: [G.Name]
-numAggregateOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
-            , "variance", "var_samp", "var_pop"
-            ]
-
-compAggregateOps :: [G.Name]
-compAggregateOps = ["max", "min"]
 
 isAggregateField :: G.Name -> Bool
 isAggregateField = flip elem (numAggregateOps <> compAggregateOps)
@@ -225,7 +217,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
     mkFldMap ty = Map.fromList . concatMap (mkFld ty)
     mkFld ty = \case
       SFPGColumn ci -> [((ty, pgiName ci), RFPGColumn ci)]
-      SFRelationship (RelationshipFieldInfo relInfo allowAgg cols permFilter permLimit maybePkCols _) ->
+      SFRelationship (RelationshipFieldInfo relInfo allowAgg cols permFilter permLimit _ _) ->
         let relationshipName = riName relInfo
             relFld = ( (ty, mkRelName relationshipName)
                      , RFRelationship $ RelationshipField relInfo RFKSimple cols permFilter permLimit
@@ -233,14 +225,9 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
             aggRelFld = ( (ty, mkAggRelName relationshipName)
                         , RFRelationship $ RelationshipField relInfo RFKAggregate cols permFilter permLimit
                         )
-            maybeConnFld = maybePkCols <&> \pkCols ->
-                           ( (ty, mkConnectionRelName relationshipName)
-                           , RFRelationship $ RelationshipField relInfo
-                             (RFKConnection pkCols) cols permFilter permLimit
-                           )
         in case riType relInfo of
           ObjRel -> [relFld]
-          ArrRel -> bool [relFld] ([relFld, aggRelFld] <> maybe [] pure maybeConnFld) allowAgg
+          ArrRel -> bool [relFld] [relFld, aggRelFld] allowAgg
       SFComputedField cf -> pure
         ( (ty, mkComputedFieldName $ _cfName cf)
         , RFComputedField cf
@@ -261,9 +248,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
     -- table obj
     selectObjects = case selPermM of
       Just (_, selFlds) ->
-        [ mkTableObj tn descM selFlds
-        , mkTableEdgeObj tn
-        , mkTableConnectionObj tn
+        [ mkTableObj tn False descM selFlds
         ]
       Nothing -> []
 
@@ -350,11 +335,9 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
   RootFields
     { _rootQueryFields = makeFieldMap $
         funcQueries
-        <> funcConnectionQueries
         <> funcAggQueries
         <> catMaybes
           [ getSelDet <$> selM
-          , getSelConnectionDet <$> selM <*> maybePrimaryKeyColumns
           , getSelAggDet selM
           , getPKeySelDet <$> selM <*> primaryKey
           ]
@@ -368,14 +351,11 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
         ]
     }
   where
-    maybePrimaryKeyColumns = fmap _pkColumns primaryKey
     makeFieldMap = mapFromL (_fiName . snd)
     customRootFields = _tcCustomRootFields tableConfig
     colGNameMap = mkPGColGNameMap $ getCols fields
 
     funcQueries = maybe [] getFuncQueryFlds selM
-    funcConnectionQueries = fromMaybe [] $ getFuncQueryConnectionFlds
-                            <$> selM <*> maybePrimaryKeyColumns
     funcAggQueries = maybe [] getFuncAggQueryFlds selM
 
     mutHelper :: (ViewInfo -> Bool) -> (a -> b) -> Maybe a -> Maybe b
@@ -427,9 +407,6 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
     selCustName = getCustomNameWith _tcrfSelect
     getSelDet (selFltr, pLimit, hdrs, _) =
       selFldHelper QCSelect (mkSelFld selCustName) selFltr pLimit hdrs
-    getSelConnectionDet (selFltr, pLimit, hdrs, _) primaryKeyColumns =
-      selFldHelper (QCSelectConnection primaryKeyColumns)
-      (mkSelFldConnection Nothing) selFltr pLimit hdrs
 
     selAggCustName = getCustomNameWith _tcrfSelectAggregate
     getSelAggDet (Just (selFltr, pLimit, hdrs, True)) =
@@ -452,9 +429,6 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
     getFuncQueryFlds (selFltr, pLimit, hdrs, _) =
       funcFldHelper QCFuncQuery mkFuncQueryFld selFltr pLimit hdrs
 
-    getFuncQueryConnectionFlds (selFltr, pLimit, hdrs, _) primaryKeyColumns =
-      funcFldHelper (QCFuncConnection primaryKeyColumns) mkFuncQueryConnectionFld selFltr pLimit hdrs
-
     getFuncAggQueryFlds (selFltr, pLimit, hdrs, True) =
       funcFldHelper QCFuncAggQuery mkFuncAggQueryFld selFltr pLimit hdrs
     getFuncAggQueryFlds _                             = []
@@ -464,17 +438,6 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
       ( f $ FuncQOpCtx (fiName fi) (mkFuncArgItemSeq fi) hdrs colGNameMap pFltr pLimit
       , g fi $ fiDescription fi
       )
-
-    mkFuncArgItemSeq functionInfo =
-      let inputArgs = fiInputArgs functionInfo
-      in Seq.fromList $ procFuncArgs inputArgs nameFn resultFn
-      where
-        nameFn = \case
-          IAUserProvided fa       -> faName fa
-          IASessionVariables name -> Just name
-        resultFn arg gName = flip fmap arg $
-          \fa -> FunctionArgItem (G.Name gName) (faName fa) (faHasDefault fa)
-
 
 getSelPermission :: TableInfo -> RoleName -> Maybe SelPermInfo
 getSelPermission tabInfo role =
@@ -788,11 +751,6 @@ mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
         <> showNames duplicateMutationFields
 
       pure $ mconcat rootFields
-
-getGCtx :: (CacheRM m) => RoleName -> GCtxMap -> m GCtx
-getGCtx rn ctxMap = do
-  sc <- askSchemaCache
-  return $ fromMaybe (scDefaultRemoteGCtx sc) $ Map.lookup rn ctxMap
 
 -- pretty print GCtx
 ppGCtx :: GCtx -> String

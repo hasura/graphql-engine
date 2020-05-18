@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
+  , GraphQLAPIType(..)
 
   , ExecPlanPartial
   , getExecPlanPartial
@@ -39,7 +40,6 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Resolve.Context
-import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
@@ -51,6 +51,7 @@ import           Hasura.Server.Utils                    (RequestId, mkClientHead
                                                          mkSetCookieHeaders)
 import           Hasura.Server.Version                  (HasVersion)
 
+import qualified Hasura.GraphQL.Context                 as GC
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Query           as EQ
@@ -59,6 +60,12 @@ import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
+
+-- The GraphQL API type
+data GraphQLAPIType
+  = GATGeneral
+  | GATRelay
+  deriving (Show, Eq)
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
@@ -123,15 +130,19 @@ getExecPlanPartial
   :: (MonadReusability m, MonadError QErr m)
   => UserInfo
   -> SchemaCache
+  -> GraphQLAPIType
   -> Bool
   -> GQLReqParsed
   -> m ExecPlanPartial
-getExecPlanPartial userInfo sc enableAL req = do
+getExecPlanPartial userInfo sc apiType enableAL req = do
 
   -- check if query is in allowlist
   when enableAL checkQueryInAllowlist
 
-  gCtx <- flip runCacheRT sc $ getGCtx role gCtxRoleMap
+  let gCtx = case apiType of
+        GATGeneral -> Map.lookupDefault defaultRemoteGCtx role gCtxRoleMap
+        GATRelay   -> Map.lookupDefault GC.emptyGCtx role relayGCtxMap
+
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
   let opDef = VQ.qpOpDef queryParts
@@ -153,6 +164,8 @@ getExecPlanPartial userInfo sc enableAL req = do
   where
     role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc
+    defaultRemoteGCtx = scDefaultRemoteGCtx sc
+    relayGCtxMap = scRelayGCtxMap sc
 
     checkQueryInAllowlist =
       -- only for non-admin roles
@@ -186,12 +199,13 @@ getResolvedExecPlan
   -> Bool
   -> SchemaCache
   -> SchemaCacheVer
+  -> GraphQLAPIType
   -> HTTP.Manager
   -> [N.Header]
   -> GQLReqUnparsed
   -> m (Telem.CacheHit, ExecPlanResolved)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  enableAL sc scVer httpManager reqHeaders reqUnparsed = do
+  enableAL sc scVer apiType httpManager reqHeaders reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
            opNameM queryStr planCache
   let usrVars = userVars userInfo
@@ -212,7 +226,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
     noExistingPlan = do
       req <- toParsed reqUnparsed
       (partialExecPlan, queryReusability) <- runReusabilityT $
-        getExecPlanPartial userInfo sc enableAL req
+        getExecPlanPartial userInfo sc apiType enableAL req
       forM partialExecPlan $ \(gCtx, rootSelSet) ->
         case rootSelSet of
           VQ.RMutation selSet -> do

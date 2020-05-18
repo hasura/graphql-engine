@@ -335,6 +335,7 @@ library
                      , Hasura.GraphQL.Schema.Mutation.Update
                      , Hasura.GraphQL.Schema.Mutation.Delete
                      , Hasura.GraphQL.Schema
+                     , Hasura.GraphQL.RelaySchema
                      , Hasura.GraphQL.Utils
                      , Hasura.GraphQL.Validate
                      , Hasura.GraphQL.Validate.Types

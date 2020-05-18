@@ -28,8 +28,9 @@ import qualified Hasura.SQL.DML                         as S
 
 data GQLExplain
   = GQLExplain
-  { _gqeQuery :: !GH.GQLReqParsed
-  , _gqeUser  :: !(Maybe (Map.HashMap Text Text))
+  { _gqeQuery   :: !GH.GQLReqParsed
+  , _gqeUser    :: !(Maybe (Map.HashMap Text Text))
+  , _gqeIsRelay :: !(Maybe Bool)
   } deriving (Show, Eq)
 
 $(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
@@ -114,9 +115,9 @@ explainGQLQuery
   -> Bool
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
+explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw maybeIsRelay) = do
   (execPlan, queryReusability) <- runReusabilityT $
-    E.getExecPlanPartial userInfo sc enableAL query
+    E.getExecPlanPartial userInfo sc apiType enableAL query
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet) ->
       return (gCtx, rootSelSet)
@@ -131,6 +132,7 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
       (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability rootField
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
+    apiType = bool E.GATGeneral E.GATRelay $ fromMaybe False maybeIsRelay
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly

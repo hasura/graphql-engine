@@ -5,12 +5,14 @@ module Hasura.GraphQL.Schema.Function
   , mkFuncQueryConnectionFld
   , mkFuncAggQueryFld
   , mkFuncArgsTy
+  , mkFuncArgItemSeq
   ) where
 
 import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Validate.Types
@@ -135,3 +137,13 @@ mkFuncAggQueryFld funInfo descM =
     ty = G.toGT $ G.toNT $ mkTableAggTy retTable
 
 
+mkFuncArgItemSeq :: FunctionInfo -> Seq (InputArgument FunctionArgItem)
+mkFuncArgItemSeq functionInfo =
+  let inputArgs = fiInputArgs functionInfo
+  in Seq.fromList $ procFuncArgs inputArgs nameFn resultFn
+  where
+    nameFn = \case
+      IAUserProvided fa       -> faName fa
+      IASessionVariables name -> Just name
+    resultFn arg gName = flip fmap arg $
+      \fa -> FunctionArgItem (G.Name gName) (faName fa) (faHasDefault fa)

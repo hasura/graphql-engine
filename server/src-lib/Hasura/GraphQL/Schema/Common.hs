@@ -27,6 +27,11 @@ module Hasura.GraphQL.Schema.Common
   , mkDescriptionWith
 
   , mkFuncArgsTy
+
+  , mkPGColGNameMap
+
+  , numAggregateOps
+  , compAggregateOps
   ) where
 
 import qualified Data.HashMap.Strict           as Map
@@ -73,7 +78,8 @@ qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
 qualObjectToName = G.Name . snakeCaseQualObject
 
 addTypeSuffix :: Text -> G.NamedType -> G.NamedType
-addTypeSuffix suffix baseType = G.NamedType $ G.unNamedType baseType <> G.Name suffix
+addTypeSuffix suffix baseType =
+  G.NamedType $ G.unNamedType baseType <> G.Name suffix
 
 fromInpValL :: [InpValInfo] -> Map.HashMap G.Name InpValInfo
 fromInpValL = mapFromL _iviName
@@ -135,3 +141,15 @@ mkFuncArgsName fn =
 mkFuncArgsTy :: QualifiedFunction -> G.NamedType
 mkFuncArgsTy =
   G.NamedType . mkFuncArgsName
+
+mkPGColGNameMap :: [PGColumnInfo] -> PGColGNameMap
+mkPGColGNameMap cols = Map.fromList $
+  flip map cols $ \ci -> (pgiName ci, ci)
+
+numAggregateOps :: [G.Name]
+numAggregateOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
+            , "variance", "var_samp", "var_pop"
+            ]
+
+compAggregateOps :: [G.Name]
+compAggregateOps = ["max", "min"]

@@ -166,11 +166,12 @@ object_relationship: remote_table
 mkRelationshipField
   :: Bool
   -> RelInfo
+  -> Bool
   -> Maybe (NonEmpty PGColumnInfo)
   -> Bool
   -> [ObjFldInfo]
-mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) maybePkCols isNullable = case rTy of
-  ArrRel -> bool [arrRelFld] ([arrRelFld, aggArrRelFld] <> arrConnectionFld) allowAgg
+mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isRelay maybePkCols isNullable = case rTy of
+  ArrRel -> bool [arrRelFld] ([arrRelFld, aggArrRelFld] <> connFields) allowAgg
   ObjRel -> [objRelFld]
   where
     objRelFld = mkHsraObjFldInfo (Just "An object relationship")
@@ -193,6 +194,8 @@ mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) maybePkCols isNu
       (mkAggRelName rn) (fromInpValL $ mkSelArgs remTab) $
       G.toGT $ G.toNT $ mkTableAggTy remTab
 
+    connFields = bool [] arrConnectionFld isRelay
+
 {-
 type table {
   col1: colty1
@@ -203,10 +206,11 @@ type table {
 -}
 mkTableObj
   :: QualifiedTable
+  -> Bool
   -> Maybe PGDescription
   -> [SelField]
   -> ObjTyInfo
-mkTableObj tn descM allowedFlds =
+mkTableObj tn isRelay descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
     flds = pgColumnFields <> relFlds <> computedFlds
@@ -214,7 +218,7 @@ mkTableObj tn descM allowedFlds =
     relFlds = concatMap mkRelationshipField' $ getRelationshipFields allowedFlds
     computedFlds = map mkComputedFieldFld $ getComputedFields allowedFlds
     mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ maybePkCols isNullable) =
-      mkRelationshipField allowAgg relInfo maybePkCols isNullable
+      mkRelationshipField allowAgg relInfo isRelay maybePkCols isNullable
     desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
 
 {-
@@ -255,7 +259,7 @@ mkTableAggregateFieldsObj
   -> ([PGColumnInfo], [G.Name])
   -> ([PGColumnInfo], [G.Name])
   -> ObjTyInfo
-mkTableAggregateFieldsObj tn (numCols, numAggregateOps) (compCols, compAggregateOps) =
+mkTableAggregateFieldsObj tn (numCols, numericAggregateOps) (compCols, compareAggregateOps) =
   mkHsraObjTyInfo (Just desc) (mkTableAggregateFieldsTy tn) Set.empty $ mapFromL _fiName $
   countFld : (numFlds <> compFlds)
   where
@@ -272,8 +276,8 @@ mkTableAggregateFieldsObj tn (numCols, numAggregateOps) (compCols, compAggregate
     distinctInpVal = InpValInfo Nothing "distinct" Nothing $ G.toGT $
                      mkScalarTy PGBoolean
 
-    numFlds = bool (map mkColumnOpFld numAggregateOps) [] $ null numCols
-    compFlds = bool (map mkColumnOpFld compAggregateOps) [] $ null compCols
+    numFlds = bool (map mkColumnOpFld numericAggregateOps) [] $ null numCols
+    compFlds = bool (map mkColumnOpFld compareAggregateOps) [] $ null compCols
 
     mkColumnOpFld op = mkHsraObjFldInfo Nothing op Map.empty $ G.toGT $
                     mkTableColAggregateFieldsTy op tn
@@ -351,7 +355,7 @@ mkTableConnectionObj tn =
   where
     desc = G.Description $ "A Relay Connection object on " <>> tn
     pageInfoFld = mkHsraObjFldInfo Nothing "pageInfo" Map.empty $
-                  G.toGT $ G.toNT $ pageInfoTy
+                  G.toGT $ G.toNT pageInfoTy
     edgesFld = mkHsraObjFldInfo Nothing "edges" Map.empty $ G.toGT $
                G.toNT $ G.toLT $ G.toNT $ mkTableEdgeTy tn
 
