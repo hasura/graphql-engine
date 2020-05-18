@@ -5,6 +5,7 @@ module Hasura.App where
 
 import           Control.Concurrent.STM.TVar          (readTVarIO)
 import           Control.Monad.Base
+import           Control.Monad.Catch                  (MonadCatch, MonadThrow, onException)
 import           Control.Monad.Stateless
 import           Control.Monad.STM                    (atomically)
 import           Control.Monad.Trans.Control          (MonadBaseControl (..))
@@ -28,6 +29,7 @@ import qualified Database.PG.Query                    as Q
 import qualified Network.HTTP.Client                  as HTTP
 import qualified Network.HTTP.Client.TLS              as HTTP
 import qualified Network.Wai.Handler.Warp             as Warp
+import qualified System.Log.FastLogger                as FL
 import qualified System.Posix.Signals                 as Signals
 import qualified Text.Mustache.Compile                as M
 
@@ -126,7 +128,7 @@ data Loggers
   }
 
 newtype AppM a = AppM { unAppM :: IO a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO, MonadCatch, MonadThrow)
 
 -- | this function initializes the catalog and returns an @InitCtx@, based on the command given
 -- - for serve command it creates a proper PG connection pool
@@ -185,6 +187,7 @@ runTxIO pool isoLevel tx = do
 runHGEServer
   :: ( HasVersion
      , MonadIO m
+     , MonadCatch m
      , MonadStateless IO m
      , UserAuthentication m
      , MetadataApiAuthorization m
@@ -213,7 +216,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
 
-  HasuraApp app cacheRef cacheInitTime shutdownApp <-
+  let flushLogger = liftIO $ FL.flushLogStr $ _lcLoggerSet loggerCtx
+  HasuraApp app cacheRef cacheInitTime shutdownApp <- flip onException flushLogger $
     mkWaiApp soTxIso
              logger
              sqlGenCtx
