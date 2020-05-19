@@ -17,7 +17,6 @@ import qualified Data.Text         as T
 import qualified Data.Vector       as V
 
 import           Control.Monad
-import           Data.Maybe        (maybeToList)
 import           Hasura.Prelude
 
 data Position

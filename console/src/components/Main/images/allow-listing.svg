@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40.25" height="40.25" viewBox="0 0 40.25 40.25">
+    <defs>
+        <style>
+            .prefix__cls-1{fill:none;stroke:#1cd3c6;stroke-linecap:round;stroke-linejoin:round;stroke-width:2.5px}
+        </style>
+    </defs>
+    <g id="prefix__Group_7882" data-name="Group 7882" transform="translate(-792.75 -4045.75)">
+        <g id="prefix__streamline-icon-filter-text_40x40" data-name="streamline-icon-filter-text@40x40" transform="translate(792.75 4045.75)">
+            <path id="prefix__Path_5061" d="M23.745 8.75h12.5a2.5 2.5 0 0 1 2.5 2.5v25a2.5 2.5 0 0 1-2.5 2.5h-22.5a2.5 2.5 0 0 1-2.5-2.5v-10" class="prefix__cls-1" data-name="Path 5061"/>
+            <path id="prefix__Path_5062" d="M21.245 16.25H33.75" class="prefix__cls-1" data-name="Path 5062"/>
+            <path id="prefix__Path_5063" d="M17.5 23.75h16.25" class="prefix__cls-1" data-name="Path 5063"/>
+            <path id="prefix__Path_5064" d="M17.5 31.25h16.25" class="prefix__cls-1" data-name="Path 5064"/>
+            <path id="prefix__Path_5065" d="M13.75 16.25v-5l6.982-6.982a1.768 1.768 0 0 0-1.25-3.018H3.018a1.768 1.768 0 0 0-1.25 3.018L8.75 11.25v10z" class="prefix__cls-1" data-name="Path 5065"/>
+        </g>
+        <path id="prefix__Rectangle_10538" d="M0 0H40V40H0z" data-name="Rectangle 10538" transform="translate(793 4046)" style="fill:none"/>
+    </g>
+</svg>

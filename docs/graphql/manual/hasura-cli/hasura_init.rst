@@ -32,6 +32,9 @@ Examples
     # Create a directory with endpoint and admin secret configured:
     hasura init <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
 
+    # Create a hasura project in the current working directory
+    hasura init .
+
     # See https://hasura.io/docs/1.0/graphql/manual/migrations/index.html for more details
 
 Options
@@ -39,20 +42,18 @@ Options
 
 ::
 
-      --action-handler-webhook-baseurl string   webhook baseurl to be used for an action (default "http://localhost:3000")
-      --action-kind string                      kind to be used for an action (default "synchronous")
-      --admin-secret string                     admin secret for Hasura GraphQL engine
-      --endpoint string                         http(s) endpoint for Hasura GraphQL engine
-  -h, --help                                    help for init
-      --install-manifest string                 install manifest to be cloned
-      --metadata-directory string               name of directory where metadata files will be created (default "metadata")
-      --version string                          config version to be used (default "2")
+      --admin-secret string       admin secret for Hasura GraphQL engine
+      --endpoint string           http(s) endpoint for Hasura GraphQL engine
+  -h, --help                      help for init
+      --install-manifest string   install manifest to be cloned
+      --version int               config version to be used (default 2)
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
+      --envfile string      .env filename to load ENV vars from (default ".env")
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)

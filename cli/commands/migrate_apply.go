@@ -123,7 +123,7 @@ func (o *MigrateApplyOptions) Run() error {
 		return errors.Wrap(err, "error validating flags")
 	}
 
-	migrateDrv, err := newMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true)
 	if err != nil {
 		return err
 	}
