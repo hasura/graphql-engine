@@ -188,7 +188,7 @@
     "babel-plugin-styled-components": "1.10.7",
     "babel-plugin-transform-react-remove-prop-types": "0.4.24",
     "babel-plugin-typecheck": "2.0.1",
-    "better-npm-run": "0.1.1",
+    "better-npm-run": "0.1.0",
     "bootstrap-loader": "2.2.0",
     "bootstrap-sass": "3.4.1",
     "clean-webpack-plugin": "0.1.19",
