@@ -1,14 +1,12 @@
 package cli
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
 )
 
 // validateDirectory sets execution directory and the optional config file.
@@ -50,13 +48,7 @@ func (ec *ExecutionContext) setExecutionDirectory() error {
 			return nil
 		}
 		ec.ExecutionDirectory = dir
-		config := filepath.Join(ec.ExecutionDirectory, "config.yaml")
-		// check config version and strictly validate directory if V1
-		err = ec.validateConfigV1(ec.ExecutionDirectory, config)
-		if err != nil {
-			return errors.Wrap(err, "validating config V1 directory failed")
-		}
-		ec.ConfigFile = config
+		ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
 	}
 
 	ec.Logger.Debug("execution directory: ", ec.ExecutionDirectory)
@@ -82,8 +74,6 @@ var ConfigFile = []string{
 // if config-file flag is not set with an abs path and porject flag is set,
 // join path to set config file path. If project flag not set, set config
 // file relative to cwd.
-// after setting config path, validate config version V2, if not return
-// unsupported flag error
 func (ec *ExecutionContext) validateConfigFile() error {
 	if filepath.IsAbs(ec.ConfigFile) {
 		if len(ec.ExecutionDirectory) == 0 {
@@ -92,12 +82,10 @@ func (ec *ExecutionContext) validateConfigFile() error {
 	} else {
 		if len(ec.ExecutionDirectory) != 0 {
 			ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, ec.ConfigFile)
+		} else {
+			ec.ExecutionDirectory = filepath.Dir(ec.ConfigFile)
 		}
 		ec.ConfigFile, _ = filepath.Abs(ec.ConfigFile)
-	}
-	err := ec.validateConfigV1(ec.ExecutionDirectory, ec.ConfigFile)
-	if err != nil {
-		return err
 	}
 	return nil
 }
@@ -169,31 +157,16 @@ func CheckFilesystemBoundary(dir string) error {
 	return nil
 }
 
-// validateV1Directory checks version of config file. If the
-// version is V1 and --config-file flag is provided, returns
-// unsupporred flag error. If the flag is not set, the execution
+// validateV1Directory checks version of config file. If version is V1, the execution
 // directory is strictly validated.
 // A valid V1 project directory contains the following:
 // 1. migrations directory
 // 2. config.yaml file
 // 3. metadata.yaml (optional)
-func (ec *ExecutionContext) validateConfigV1(dir string, config string) error {
-	// Read the config from config.yaml
-	cfgByt, err := ioutil.ReadFile(config)
-	if err != nil {
-		return errors.Wrap(err, "cannot read config file")
-	}
-	var cfg Config
-	err = yaml.Unmarshal(cfgByt, &cfg)
-	if err != nil {
-		return errors.Wrap(err, "cannot parse config file")
-	}
+func (ec *ExecutionContext) validateConfigV1() error {
 	// Strict directory check for version 1 config.
-	if cfg.Version != V2 {
-		if ec.ConfigFile != "" {
-			return errors.Errorf("invalid config version | flag --config-file only supported from config file V2")
-		}
-		if err := CheckDirectoryForFiles(dir, filesRequiredV1); err != nil {
+	if ec.Config.Version == V1 {
+		if err := CheckDirectoryForFiles(ec.ExecutionDirectory, filesRequiredV1); err != nil {
 			return err
 		}
 	}

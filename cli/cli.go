@@ -483,6 +483,14 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "cannot read config")
 	}
 
+	ec.Logger.Debug("config file version: ", ec.Config.Version)
+
+	// validate execution directory if config is V1
+	err = ec.validateConfigV1()
+	if err != nil {
+		return err
+	}
+
 	// set name of migration directory
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MigrationsDirectory)
 	if _, err := os.Stat(ec.MigrationDir); os.IsNotExist(err) {
