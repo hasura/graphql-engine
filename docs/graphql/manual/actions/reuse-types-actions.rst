@@ -2,7 +2,7 @@
    :description: Reusing existing types with actions
    :keywords: hasura, docs, actions, connect, existing types
 
-.. _reuse_types:
+.. _reuse-types-actions:
 
 Reusing existing types with actions
 ===================================
