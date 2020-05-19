@@ -43,6 +43,8 @@ to configure the Hasura GraphQL engine for your production environment:
 Networking
 ----------
 
+For details on how to connect to and from external APIs, check the following page:
+
 - :ref:`networking`
 
 Logs
