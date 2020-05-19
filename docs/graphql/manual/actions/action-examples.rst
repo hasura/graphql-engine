@@ -20,6 +20,64 @@ This page provides reference examples of typical action use cases.
 Relationships
 -------------
 
+Object relationship from an action
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Let's say we have the following two tables in our schema:
+
+.. code-block:: sql
+
+    author (id int, name text, is_active boolean, rating int, address_id)
+
+    address (id int, street text, zip text, city text)
+
+Now we have an action ``updateAddress`` that looks as follows:
+
+Now we have an action ``updateAddress`` that looks as follows:
+
+.. thumbnail:: /img/graphql/manual/actions/update-address-action-definition.png
+       :alt: Update address action
+       :width: 65%
+
+We can now add an object relationship from the ``updateAddress`` action to the ``author`` table in our schema.
+We call it ``updatedAddressAuthor``.
+
+.. thumbnail:: /img/graphql/manual/actions/action-object-relationship.png
+       :alt: Object relationship from action
+       :width: 65%
+
+It's now possible to return the author from the ``updateAddress`` action through the newly created relationship:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation {
+      updateAddress(address: 
+        {
+          id: 1
+          street: "New York Avenue"
+          zip: "98000"
+          city: "New Orleans"
+        }
+      ) {
+          id
+          updatedAddressAuthor {
+            name
+          }
+        }
+    }
+  :response:
+    {
+      "data": {
+        "updateAddress": {
+          "id": 1,
+          "updatedAddressAuthor": {
+            "name": "J.K. Rowling"
+          }
+        }
+      }
+    }
+
 Array relationship from an action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
