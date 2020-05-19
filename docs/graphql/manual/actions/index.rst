@@ -158,11 +158,10 @@ Learn more
 
   create
   Custom types <types/index>
-  action-handlers
+  Action handlers <handlers/index>
   async-actions
   Codegen <codegen>
   derive
   action-connect
   action-permissions
-  securing-actions
   debugging

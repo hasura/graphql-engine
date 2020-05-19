@@ -132,3 +132,14 @@ setting the status code as ``4xx``.
    {
      "message": "invalid credentials"
    }
+
+Securing your action handler
+----------------------------
+
+In order to secure your action handler, refer to the following page:
+
+.. toctree::
+  :maxdepth: 1
+  :titlesonly:
+
+  Securing action handlers <securing-handler>

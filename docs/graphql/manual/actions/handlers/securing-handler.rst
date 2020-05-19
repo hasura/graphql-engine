@@ -4,8 +4,8 @@
 
 .. _securing_actions:
 
-Securing actions
-================
+Securing action handlers
+========================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -14,12 +14,18 @@ Securing actions
 
 Introduction
 ------------
+ 
+You might want to make sure that an action handler can only get called by your own Hasura instance and not by third parties.
 
-You will want to make sure that an action can only get called by your own Hasura instance and not by third parties.
-You can do so by adding a header to the action that is automatically sent with each request to the webhook, and then check against that in your action handler.
+Adding an action secret
+-----------------------
 
-Add a header to your action
----------------------------
+One possible way of securing an action handler is by adding a header to the action that is automatically sent with each request to the webhook, and then check against that in your action handler.
+
+Step 1: Add a header to your action
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For your action, add a header that will act as an action secret.
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -67,13 +73,13 @@ thus making sure only Hasura can successfully authenticate with the action handl
 
     The name for the action secret is not defined by Hasura and can be chosen freely.
 
-Configure your Hasura instance
-------------------------------
+Step 2: Configure your Hasura instance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In your Hasura instance (on the server side), add the action secret as an environment variable.
 
-Verify the secret in your action handler
-----------------------------------------
+Step 3: Verify the secret in your action handler
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 First, load the action secret as an environment variable in your action handler by adding it to your ``.env`` file 
 (this file might be a different one depending on your framework).
@@ -99,3 +105,9 @@ The following is an example of a simple authorization middleware with Express:
         const providedSecret = req.headers['ACTION_SECRET'];
         return requiredSecret == providedSecret;
     }
+
+Advanced
+--------
+
+Adding an action secret as described above is a simple way of securing an action handler and will suffice in most use cases. 
+However, if you have more profound security requirements, you might want to choose advanced security solutions such as `HMAC <https://en.wikipedia.org/wiki/HMAC>`__.
