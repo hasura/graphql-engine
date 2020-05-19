@@ -24,8 +24,6 @@ import {
   ACE_EDITOR_FONT_SIZE,
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
-import { isEmpty } from '../../../Common/utils/jsUtils';
-import { fetchViewDefinition } from '../TableModify/ModifyActions';
 import NotesSection from './molecules/NotesSection';
 
 /**
@@ -65,7 +63,6 @@ const RawSQL = ({
   isTableTrackChecked,
   migrationMode,
   allSchemas,
-  location,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
@@ -77,23 +74,17 @@ const RawSQL = ({
   // set up sqlRef to use in unmount
   const sqlRef = useRef(sql);
 
-  // set SQL from localStorage on mount and write back to localStorage on unmount
   useEffect(() => {
-    // if user directly click `sql` from sidebar there will not be any query params
-    if (isEmpty(location.query)) {
+    if (!sql) {
       const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
       if (sqlFromLocalStorage) {
         dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
       }
-      return () => {
-        localStorage.setItem(LS_RAW_SQL_SQL, sqlRef.current);
-      };
-    } else if (!sql && location.query.viewName) {
-      // direct url access will should also work
-      dispatch(fetchViewDefinition(location.query.viewName, false));
     }
-  }, [location]);
-
+    return () => {
+      localStorage.setItem(LS_RAW_SQL_SQL, sqlRef.current);
+    };
+  }, []);
   // set SQL to sqlRef
   useEffect(() => {
     sqlRef.current = sql;

@@ -20,6 +20,7 @@ import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
+const SET_VIEW_SQL = 'RawSQL/SET_VIEW_SQL';
 const SET_CASCADE_CHECKED = 'RawSQL/SET_CASCADE_CHECKED';
 const SET_MIGRATION_CHECKED = 'RawSQL/SET_MIGRATION_CHECKED';
 const SET_TRACK_TABLE_CHECKED = 'RawSQL/SET_TRACK_TABLE_CHECKED';
@@ -164,6 +165,8 @@ const rawSQLReducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_SQL:
       return { ...state, sql: action.data };
+    case SET_VIEW_SQL:
+      return { ...state, viewSql: action.data };
     case SET_MIGRATION_CHECKED:
       return { ...state, isMigrationChecked: action.data };
     case SET_CASCADE_CHECKED:
@@ -225,6 +228,7 @@ export default rawSQLReducer;
 export {
   executeSQL,
   SET_SQL,
+  SET_VIEW_SQL,
   SET_CASCADE_CHECKED,
   SET_MIGRATION_CHECKED,
   SET_TRACK_TABLE_CHECKED,

@@ -1,5 +1,6 @@
 const defaultState = {
   sql: '',
+  viewSql: '',
   ongoingRequest: false,
   lastError: null,
   lastSuccess: null,

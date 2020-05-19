@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import AceEditor from 'react-ace';
 import TableHeader from '../TableCommon/TableHeader';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import {
@@ -28,6 +27,7 @@ import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { changeViewRootFields } from '../Common/TooltipMessages';
 import styles from './ModifyTable.scss';
+import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
 
 const ModifyView = props => {
   const {
@@ -100,7 +100,7 @@ const ModifyView = props => {
 
   const modifyViewDefinition = viewName => {
     // fetch the definition
-    dispatch(fetchViewDefinition(viewName, true));
+    dispatch(fetchViewDefinition(viewName, true, true));
     // redirect the user to run_sql page and set state
   };
 
@@ -203,17 +203,6 @@ const ModifyView = props => {
   const modifyViewOnClick = () => {
     modifyViewDefinition(tableName);
   };
-  const modifyBtn = (
-    <Button
-      type="submit"
-      size="xs"
-      className={styles.add_mar_right}
-      onClick={modifyViewOnClick}
-      data-test="modify-view"
-    >
-      Modify
-    </Button>
-  );
 
   const untrackOnclick = () => {
     const confirmMessage = `This will remove the view "${tableName}" from the GraphQL schema`;
@@ -276,21 +265,8 @@ const ModifyView = props => {
           <h4 className={styles.subheading_text}>Columns</h4>
           {getViewColumnsSection()}
           <br />
-          <h4 className={styles.subheading_text}>
-            View Definition:
-            <span className={styles.add_mar_left}>{modifyBtn}</span>
-          </h4>
-          <AceEditor
-            mode="sql"
-            theme="github"
-            value={sql}
-            name="raw_sql"
-            minLines={8}
-            maxLines={100}
-            width="100%"
-            showPrintMargin={false}
-            readOnly
-          />
+          <ViewDefinitions {...{ modifyViewOnClick, sql }} />
+
           <hr />
           {getViewRootFieldsSection()}
           {untrackBtn}
@@ -304,6 +280,30 @@ const ModifyView = props => {
   );
 };
 
+const ViewDefinitions = ({ modifyViewOnClick, sql }) => (
+  <>
+    <h4 className={styles.subheading_text}>
+      View Definition:
+      <span className={styles.add_mar_left}>
+        <Button
+          type="submit"
+          size="xs"
+          className={styles.add_mar_right}
+          onClick={modifyViewOnClick}
+          data-test="modify-view"
+        >
+          Modify
+        </Button>
+      </span>
+    </h4>
+
+    <TextAreaWithCopy
+      copyText={sql}
+      textLanguage={'sql'}
+      id={'copyCustomFunctionSQL'}
+    />
+  </>
+);
 ModifyView.propTypes = {
   sql: PropTypes.string.isRequired,
   tableName: PropTypes.string.isRequired,
@@ -342,7 +342,7 @@ const mapStateToProps = (state, ownProps) => {
     tableType,
     currentSchema: schemaName,
     allSchemas: state.tables.allSchemas,
-    sql: state.rawSQL.sql,
+    sql: state.rawSQL.viewSql,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,

@@ -8,7 +8,7 @@ import {
   LOAD_SCHEMA,
 } from '../DataActions';
 import _push from '../push';
-import { SET_SQL } from '../RawSQL/Actions';
+import { SET_VIEW_SQL, SET_SQL } from '../RawSQL/Actions';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -910,7 +910,7 @@ const untrackTableSql = tableName => {
   };
 };
 
-const fetchViewDefinition = (viewName, isRedirect) => {
+const fetchViewDefinition = (viewName, isRedirect, isModify) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const sqlQuery = `
@@ -947,7 +947,7 @@ WHERE c.relname = '${viewName}'
         const finalDef = data.result[1][0];
         // set state and redirect to run_sql
         if (isRedirect) {
-          dispatch(_push('/data/sql?viewName=' + viewName));
+          dispatch(_push('/data/sql'));
         }
 
         const viewType = data.result[1][1];
@@ -967,7 +967,8 @@ WHERE c.relname = '${viewName}'
             ' AS \n' +
             finalDef;
         }
-        dispatch({ type: SET_SQL, data: runSqlDef });
+        if (isModify) dispatch({ type: SET_SQL, data: runSqlDef });
+        else dispatch({ type: SET_VIEW_SQL, data: runSqlDef });
       },
       err => {
         dispatch(
