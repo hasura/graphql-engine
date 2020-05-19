@@ -1,6 +1,6 @@
 .. meta::
    :description: Docker networking with Hasura
-   :keywords: hasura, docs, deployment, network
+   :keywords: hasura, docs, deployment, network, docker
 
 .. _networking:
 
