@@ -64,6 +64,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix displaying boolean values in `Edit Row` tab (#4682)
 - console: fix underscores not being displayed on raw sql page (close #4754) (#4799)
 - cli: list all available commands in root command help (fix #4623)
+- cli: add dry run flag in hasura migrate apply command (fix #3128) (#3499)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
 - docs: add single object mutations docs (close #4622) (#4625)
