@@ -15,8 +15,8 @@ Network config
 Introduction
 ------------
 
-Sometimes, we need to connect Hasura with APIs that are either running outside Docker or within the same Docker configuration.
-Depending on this, the connecting addresses are different. This section lists the connecting addresses for each of these cases.
+Sometimes, we need to connect Hasura with APIs that are either running outside of Docker or in a different Docker container.
+Depending on the setting, the connecting addresses are different. This section shows how to connect in each of these use cases.
 
 Networking with Hasura
 ----------------------
@@ -30,10 +30,10 @@ Networking with Hasura
      - Windows
      - Linux
      - Comment
-   * - **Hasura to API (outside Docker) ***
+   * - **Hasura to API (outside Docker)**
      - ``host.docker.internal:3000``
      - ``docker.for.win.localhost:3000``
-     - ``localhost:3000 --net=host``
+     - ``localhost:3000`` with (``--net=host``)
      - Assuming the API is running on port ``3000``
    * - **API (outside Docker) to Hasura** 
      - ``localhost:8080``
@@ -41,14 +41,14 @@ Networking with Hasura
      - ``localhost:8080``
      - Hasura runs on port ``8080`` by default
    * - **Hasura to API (both in docker-compose)** 
-     - service name, e.g ``api:3000``
-     - service name, e.g ``api:3000``
-     - service name, e.g ``api:3000``
+     - service name, e.g.: ``api:3000``
+     - service name, e.g.: ``api:3000``
+     - service name, e.g.: ``api:3000``
      - Assuming the API is running on port ``3000``
    * - **API to Hasura (both in docker-compose)** 
-     - service name, e.g ``hasura:8080``
-     - service name, e.g ``hasura:8080``
-     - service name, e.g ``hasura:8080``
+     - service name, e.g.: ``hasura:8080``
+     - service name, e.g.: ``hasura:8080``
+     - service name, e.g.: ``hasura:8080``
      - Hasura runs on port ``8080`` by default
    * - **Hasura to API (both running with docker run)** 
      - Docker internal IP address 
@@ -63,4 +63,4 @@ Networking with Hasura
 
 .. note::
 
-  Learn more about container networking in the `Docker documentation <https://docs.docker.com/network/>`__.
+  Learn more about Docker specific networking in the `Docker documentation <https://runnable.com/docker/basic-docker-networking>`__.
