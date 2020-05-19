@@ -4,11 +4,11 @@
   "description": "A service to generate Hasura action scaffolds",
   "main": "src/server.js",
   "scripts": {
-    "get-shared-modules": "rm -rf src/shared && cp -R ../console/src/shared ./src/shared",
+    "get-shared-modules": "rm -rf src/shared && cp ../console/src/shared ./src/shared -r",
     "pretranspile": "npm run get-shared-modules",
     "transpile": "rm -rf build/* && babel --extensions '.ts,.js' ./src ./tests --out-dir build",
     "prebuild": "npm run transpile",
-    "build": "rm -rf ./bin/* && pkg ./build/command.ts --output ./bin/cli-ext-hasura -t node12-linux-x64,node12-macos-x64,node12-win-x64",
+    "build": "rm -rf ./bin/* && pkg ./build/command.js --output ./bin/cli-ext-hasura -t node12-linux-x64,node12-macos-x64,node12-win-x64",
     "pretest": "npm run transpile && babel ./tests --out-dir _tmptests",
     "posttest": "rm -rf _tmptests",
     "test": "node ./_tmptests/index.js",
