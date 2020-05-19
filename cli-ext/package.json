@@ -6,7 +6,7 @@
   "scripts": {
     "get-shared-modules": "rm -rf src/shared && cp -R ../console/src/shared ./src/shared",
     "pretranspile": "npm run get-shared-modules",
-    "transpile": "rm -rf build/* && babel --extensions '.ts' ./src ./tests --out-dir build",
+    "transpile": "rm -rf build/* && babel --extensions '.ts,.js' ./src ./tests --out-dir build",
     "prebuild": "npm run transpile",
     "build": "rm -rf ./bin/* && pkg ./build/command.ts --output ./bin/cli-ext-hasura -t node12-linux-x64,node12-macos-x64,node12-win-x64",
     "pretest": "npm run transpile && babel ./tests --out-dir _tmptests",
