@@ -36,8 +36,8 @@ Should there be any error coming from the Hasura console UI, they will show up i
 Remote service logs
 ^^^^^^^^^^^^^^^^^^^
 
-It's possible that errors come from a remote service, such as :ref:`remote schemas <remote_schemas>`, :ref:`events <event_triggers>` or :ref:`actions <actions>`. 
-In this case, check the errors of the respective remote service. For actions, check this :ref:`debugging page <debugging_actions>`.
+Errors can come from a remote service, such as :ref:`remote schemas <remote_schemas>`, :ref:`events <event_triggers>` or :ref:`actions <actions>`. 
+In this case, check the errors of the respective remote service. For actions, check out this :ref:`debugging page <debugging_actions>`.
 
 GitHub issues
 -------------
