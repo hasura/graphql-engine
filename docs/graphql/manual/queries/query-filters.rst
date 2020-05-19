@@ -1504,14 +1504,14 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
       }
     }
 
-Fetch if nested object(s) exist
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fetch if nested object(s) exist/do not exist
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can filter results based on if they have nested objects by checking if any nested objects exist. This can be
 achieved by using the expression ``{}`` which evaluates to ``true`` if any object exists.
 
 
-**Example:**
+**Example where nested object(s) exist:**
 
 Fetch all authors which have at least one article written by them:
 
@@ -1547,11 +1547,52 @@ Fetch all authors which have at least one article written by them:
             }
           },
           {
+            "id": 4,
+            "name": "Anjela",
+            "articles_aggregate": {
+              "aggregate": {
+                "count": 1
+              }
+            }
+          }
+        ]
+      }
+    }
+
+**Example where nested object(s) do not exist:**
+
+Fetch all authors which have not written any articles:
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+      author (
+        where: {
+          _not: {
+            articles: {}
+          }
+        }
+      ) {
+        id
+        name
+        articles_aggregate {
+          aggregate {
+            count
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
             "id": 2,
             "name": "Beltran",
             "articles_aggregate": {
               "aggregate": {
-                "count": 2
+                "count": 0
               }
             }
           },
@@ -1560,16 +1601,7 @@ Fetch all authors which have at least one article written by them:
             "name": "Sidney",
             "articles_aggregate": {
               "aggregate": {
-                "count": 3
-              }
-            }
-          },
-          {
-            "id": 4,
-            "name": "Anjela",
-            "articles_aggregate": {
-              "aggregate": {
-                "count": 2
+                "count": 0
               }
             }
           }
@@ -1695,7 +1727,13 @@ The TRUE expression ( **{ }** )
 
 The expression ``{}`` evaluates to ``true`` for all objects.
 
-**For example**, any query with the condition ``{ where: {} }`` will return all objects without applying any filter.
+**For example**:
+
+- any query with the condition ``{ where: {} }`` will return all objects without
+  applying any filter.
+
+- any query with the condition ``{ where: { nested_object: {} } }`` will return all
+  objects for which atleast one ``nested_object`` exists.
 
 .. _null_value_evaluation:
 

@@ -33,8 +33,8 @@ Examples
     # Show changes between server metadata and that in local_metadata.yaml:
     hasura metadata diff local_metadata.yaml
 
-    # Show changes between metadata from metadata.yaml and metadata_v1.yaml:
-    hasura metadata diff metadata.yaml metadata_v1.yaml
+    # Show changes between metadata from metadata.yaml and metadata_old.yaml:
+    hasura metadata diff metadata.yaml metadata_old.yaml
 
     # Apply admin secret for Hasura GraphQL engine:
     hasura metadata diff --admin-secret "<admin-secret>"
@@ -54,12 +54,15 @@ Options inherited from parent commands
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL engine
-      --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --no-color              do not colorize output (default: false)
-      --project string        directory where commands are executed (default: current dir)
-      --skip-update-check     skip automatic update check on command execution
+      --admin-secret string            admin secret for Hasura GraphQL engine
+      --certificate-authority string   path to a cert file for the certificate authority 
+      --endpoint string                http(s) endpoint for Hasura GraphQL engine 
+      --envfile string                 .env filename to load ENV vars from (default ".env")
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) 
+      --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color                       do not colorize output (default: false)
+      --project string                 directory where commands are executed (default: current dir)
+      --skip-update-check              Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~
