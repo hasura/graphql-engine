@@ -87,6 +87,8 @@ explainQueryField userInfo fieldName rootField = do
             QDBAggregation s -> DS.selectAggregateQuerySQL s
             QDBConnection s  -> DS.connectionSelectQuerySQL s
           textSQL = Q.getQueryText querySQL
+          -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+          -- query, maybe resulting in privilege escalation:
           withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
       planLines <- liftTx $ map runIdentity <$>
                    Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
@@ -100,6 +102,7 @@ explainGQLQuery
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pgExecCtx sc enableAL (GQLExplain query userVarsRaw maybeIsRelay) = do
+  -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
   userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
   let takeFragment =
         \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing

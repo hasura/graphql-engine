@@ -63,10 +63,10 @@ class (Monad m) => UserAuthentication m where
 --
 -- Although this exists only in memory we store only a hash of the admin secret
 -- primarily in order to:
---
---     - prevent theoretical timing attacks from a naive `==` check
---     - prevent misuse or inadvertent leaking of the secret
---
+-- --
+-- --     - prevent theoretical timing attacks from a naive `==` check
+-- --     - prevent misuse or inadvertent leaking of the secret
+-- --
 newtype AdminSecretHash = AdminSecretHash (Crypto.Digest Crypto.SHA512)
   deriving (Ord, Eq)
 

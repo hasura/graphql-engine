@@ -206,58 +206,6 @@ Date:   Tue Jun 16 20:53:06 2020 +0530
     Co-authored-by: Vamshi Surabhi <vamshi@hasura.io>
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
 
-commit 4c9362c91b7d5b302e37498d6d5d4971caa630a4
-Merge: cc2878de d862afb4
-Author: Vamshi Surabhi <0x777@users.noreply.github.com>
-Date:   Thu Jun 11 23:11:26 2020 +0530
-
-    Merge pull request #4919 from jberryman/4736-security-testing
-
-    #4736 Improvements to auth testing
-
-commit d862afb4f848b97ba4c645ec2a29a341fbdd275d
-Merge: cf8cf4f5 cc2878de
-Author: Brandon Simmons <brandon@hasura.io>
-Date:   Thu Jun 11 13:21:48 2020 -0400
-
-    Merge branch 'master' into 4736-security-testing
-
-commit cf8cf4f5aa75d99de0f4fd1cd69236b67a2e14df
-Merge: 5e373505 b782986e
-Author: Brandon Simmons <brandon@hasura.io>
-Date:   Tue Jun 9 10:50:35 2020 -0400
-
-    Merge branch 'master' into 4736-security-testing
-
-commit 5e373505618fe76aa2623804af19a27139df2bac
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Thu May 28 12:18:26 2020 -0400
-
-    Refactor and unit test authentication code paths (closes #4736)
-
-    The bulk of changes here is some shifting of code around and a little
-    parameterizing of functions for easier testing.
-
-    Also: comments, some renaming for clarity/less-chance-for-misue.
-
-commit d747bc1148027143a4e606ab3255e873859453b4
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Tue May 19 10:48:49 2020 -0400
-
-    Tighten up handling of admin secret, more docs
-
-    Store the admin secret only as a hash to prevent leaking the secret
-    inadvertently, and to prevent timing attacks on the secret.
-
-    NOTE: best practice for stored user passwords is a function with a
-    tunable cost like bcrypt, but our threat model is quite different (even
-    if we thought we could reasonably protect the secret from an attacker
-    who could read arbitrary regions of memory), and bcrypt is far too slow
-    (by design) to perform on each request. We'd have to rely on our
-    (technically savvy) users to choose high entropy passwords in any case.
-
-    Referencing #4736
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
