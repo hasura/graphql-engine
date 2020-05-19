@@ -27,9 +27,9 @@ Let's say we have the following two tables in our schema:
 
 .. code-block:: sql
 
-    author (id uuid, name text, rating integer)
+    author (id int, name text, is_active boolean, rating int)
 
-    article (id uuid, title text, content text, author_id uuid)
+    article (id int, title text, content text, author_id int)
 
 Now we have an action ``updateAuthor`` that looks as follows:
 
