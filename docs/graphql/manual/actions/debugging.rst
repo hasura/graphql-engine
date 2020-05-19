@@ -16,7 +16,7 @@ While you're developing actions for your application, to debug faster you may
 want to see the exact details of the webhook call for the action
 as well.
 
-To do so, start the server in :ref:`debugging mode <errors-debugging>`.
+To do so, start the server in :ref:`debugging mode <dev-mode>`.
 In the case of errors, the GraphQL response will contain debugging information
 of the webhook calls in the ``extensions.internal`` field.
 
