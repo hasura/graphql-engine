@@ -69,7 +69,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: add single object mutations docs (close #4622) (#4625)
 - docs: add docs page on query performance (close #2316) (#3693)
 - docs: add a sample Caddyfile for Caddy 2 in enable-https section (#4710)
-- docs: add docs page on network config (close #4346) (#4811)
+- docs: add docs page on networking with docker (close #4346) (#4811)
 
 ## `v1.2.0`
 
