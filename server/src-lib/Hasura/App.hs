@@ -28,7 +28,6 @@ import qualified Database.PG.Query                    as Q
 import qualified Network.HTTP.Client                  as HTTP
 import qualified Network.HTTP.Client.TLS              as HTTP
 import qualified Network.Wai.Handler.Warp             as Warp
-import qualified System.Log.FastLogger                as FL
 import qualified System.Posix.Signals                 as Signals
 import qualified Text.Mustache.Compile                as M
 
@@ -354,9 +353,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
         closeSocket
         shutdownApp
         logShutdown
-        flushLogger
+        cleanLoggerCtx loggerCtx
 
-      flushLogger = FL.flushLogStr $ _lcLoggerSet loggerCtx
       logShutdown = logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
 
 runAsAdmin
