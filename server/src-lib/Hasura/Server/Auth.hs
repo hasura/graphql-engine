@@ -4,13 +4,14 @@ module Hasura.Server.Auth
   ( getUserInfo
   , getUserInfoWithExpTime
   , AuthMode (..)
-  , mkAuthMode
-  , AdminSecret (..)
-  -- WebHook related
+  , setupAuthMode
+  , AdminSecretHash
+  , hashAdminSecret
+  -- * WebHook related
   , AuthHookType (..)
   , AuthHookG (..)
   , AuthHook
-  -- JWT related
+  -- * JWT related
   , RawJWT
   , JWTConfig (..)
   , JWTCtx (..)
@@ -25,7 +26,9 @@ import           Data.IORef                  (newIORef)
 import           Data.Time.Clock             (UTCTime)
 import           Hasura.Server.Version       (HasVersion)
 
+import qualified Crypto.Hash                 as Crypto
 import qualified Data.Text                   as T
+import qualified Data.Text.Encoding          as T
 import qualified Network.HTTP.Client         as H
 import qualified Network.HTTP.Types          as N
 
@@ -48,39 +51,64 @@ class (Monad m) => UserAuthentication m where
     -> AuthMode
     -> m (Either QErr (UserInfo, Maybe UTCTime))
 
-newtype AdminSecret
-  = AdminSecret { getAdminSecret :: T.Text }
-  deriving (Show, Eq)
+-- | The hashed admin password. 'hashAdminSecret' is our public interface for
+-- constructing the secret. 
+--
+-- To prevent misuse and leaking we keep this opaque and don't provide
+-- instances that could leak information. Likewise for 'AuthMode'.
+--
+-- Although this exists only in memory we store only a hash of the admin secret
+-- primarily in order to:
+--     
+--     - prevent theoretical timing attacks from a naive `==` 
+--     - prevent misuse or inadvertent leaking of the secret
+--
+-- NOTE: if we could scrub memory of admin secret (from argv and envp) somehow,
+-- this would additionally harden against attacks that could read arbitrary
+-- memory, so long as the secret was strong. I'm not sure that's attainable.
+newtype AdminSecretHash = AdminSecretHash (Crypto.Digest Crypto.SHA512)
+  deriving (Ord, Eq)
 
+hashAdminSecret :: T.Text -> AdminSecretHash
+hashAdminSecret = AdminSecretHash . Crypto.hash . T.encodeUtf8
 
+-- | The methods we'll use to derive roles for authenticating requests.
+--
+-- @Maybe RoleName@ below is the optionally-defined role for the
+-- unauthenticated (anonymous) user. 
+--
+-- See: https://hasura.io/docs/1.0/graphql/manual/auth/authentication/unauthenticated-access.html 
 data AuthMode
   = AMNoAuth
-  | AMAdminSecret !AdminSecret !(Maybe RoleName)
-  | AMAdminSecretAndHook !AdminSecret !AuthHook
-  | AMAdminSecretAndJWT !AdminSecret !JWTCtx !(Maybe RoleName)
-  deriving (Show, Eq)
+  | AMAdminSecret !AdminSecretHash !(Maybe RoleName)
+  | AMAdminSecretAndHook !AdminSecretHash !AuthHook
+  | AMAdminSecretAndJWT !AdminSecretHash !JWTCtx !(Maybe RoleName)
 
-mkAuthMode
+-- | Validate the user's requested authentication configuration, launching any
+-- required maintenance threads for JWT etc.
+--
+-- This must only be run once, on launch.
+setupAuthMode
   :: ( HasVersion
      , MonadIO m
      , MonadError T.Text m
      )
-  => Maybe AdminSecret
+  => Maybe AdminSecretHash
   -> Maybe AuthHook
   -> Maybe JWTConfig
   -> Maybe RoleName
   -> H.Manager
   -> Logger Hasura
   -> m AuthMode
-mkAuthMode mAdminSecret mWebHook mJwtSecret mUnAuthRole httpManager logger =
-  case (mAdminSecret, mWebHook, mJwtSecret) of
+setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logger =
+  case (mAdminSecretHash, mWebHook, mJwtSecret) of
     (Nothing,  Nothing,   Nothing)      -> return AMNoAuth
-    (Just key, Nothing,   Nothing)      -> return $ AMAdminSecret key mUnAuthRole
-    (Just key, Just hook, Nothing)      -> unAuthRoleNotReqForWebHook >>
-                                           return (AMAdminSecretAndHook key hook)
-    (Just key, Nothing,   Just jwtConf) -> do
-      jwtCtx <- mkJwtCtx jwtConf httpManager logger
-      return $ AMAdminSecretAndJWT key jwtCtx mUnAuthRole
+    (Just hash, Nothing,   Nothing)      -> return $ AMAdminSecret hash mUnAuthRole
+    (Just hash, Just hook, Nothing)      -> unAuthRoleNotReqForWebHook >>
+                                           return (AMAdminSecretAndHook hash hook)
+    (Just hash, Nothing,   Just jwtConf) -> do
+      jwtCtx <- mkJwtCtx jwtConf
+      return $ AMAdminSecretAndJWT hash jwtCtx mUnAuthRole
 
     (Nothing, Just _,  Nothing) -> throwError $
       "Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)" <> requiresAdminScrtMsg
@@ -99,45 +127,38 @@ mkAuthMode mAdminSecret mWebHook mJwtSecret mUnAuthRole httpManager logger =
         "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED_ROLE) is not allowed"
         <> " when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
 
--- | Given the 'JWTConfig' (the user input of JWT configuration), create the 'JWTCtx' (the runtime JWT config used)
-mkJwtCtx
-  :: ( HasVersion
-     , MonadIO m
-     , MonadError T.Text m
-     )
-  => JWTConfig
-  -> H.Manager
-  -> Logger Hasura
-  -> m JWTCtx
-mkJwtCtx JWTConfig{..} httpManager logger = do
-  jwkRef <- case jcKeyOrUrl of
-    Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
-    Right url -> getJwkFromUrl url
-  let claimsFmt = fromMaybe JCFJson jcClaimsFormat
-  return $ JWTCtx jwkRef jcClaimNs jcAudience claimsFmt jcIssuer
-  where
-    -- if we can't find any expiry time for the JWK (either in @Expires@ header or @Cache-Control@
-    -- header), do not start a background thread for refreshing the JWK
-    getJwkFromUrl url = do
-      ref <- liftIO $ newIORef $ JWKSet []
-      maybeExpiry <- withJwkError $ updateJwkRef logger httpManager url ref
-      case maybeExpiry of
-        Nothing   -> return ref
-        Just time -> do
-          void $ liftIO $ forkImmortal "jwkRefreshCtrl" logger $
-            jwkRefreshCtrl logger httpManager url ref (convertDuration time)
-          return ref
+    -- | Given the 'JWTConfig' (the user input of JWT configuration), create
+    -- the 'JWTCtx' (the runtime JWT config used)
+    mkJwtCtx :: (HasVersion, MonadIO m, MonadError T.Text m) => JWTConfig -> m JWTCtx
+    mkJwtCtx JWTConfig{..} = do
+      jwkRef <- case jcKeyOrUrl of
+        Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
+        Right url -> getJwkFromUrl url
+      let claimsFmt = fromMaybe JCFJson jcClaimsFormat
+      return $ JWTCtx jwkRef jcClaimNs jcAudience claimsFmt jcIssuer
+      where
+        -- if we can't find any expiry time for the JWK (either in @Expires@ header or @Cache-Control@
+        -- header), do not start a background thread for refreshing the JWK
+        getJwkFromUrl url = do
+          ref <- liftIO $ newIORef $ JWKSet []
+          maybeExpiry <- withJwkError $ updateJwkRef logger httpManager url ref
+          case maybeExpiry of
+            Nothing   -> return ref
+            Just time -> do
+              void $ liftIO $ forkImmortal "jwkRefreshCtrl" logger $
+                jwkRefreshCtrl logger httpManager url ref (convertDuration time)
+              return ref
 
-    withJwkError act = do
-      res <- runExceptT act
-      case res of
-        Right r -> return r
-        Left err  -> case err of
-          -- when fetching JWK initially, except expiry parsing error, all errors are critical
-          JFEHttpException _ msg  -> throwError msg
-          JFEHttpError _ _ _ e    -> throwError e
-          JFEJwkParseError _ e    -> throwError e
-          JFEExpiryParseError _ _ -> return Nothing
+        withJwkError act = do
+          res <- runExceptT act
+          case res of
+            Right r -> return r
+            Left err  -> case err of
+              -- when fetching JWK initially, except expiry parsing error, all errors are critical
+              JFEHttpException _ msg  -> throwError msg
+              JFEHttpError _ _ _ e    -> throwError e
+              JFEJwkParseError _ e    -> throwError e
+              JFEExpiryParseError _ _ -> return Nothing
 
 getUserInfo
   :: (HasVersion, MonadIO m, MonadError QErr m)
@@ -148,6 +169,7 @@ getUserInfo
   -> m UserInfo
 getUserInfo l m r a = fst <$> getUserInfoWithExpTime l m r a
 
+-- | Authenticate the request using the headers and the configured 'AuthMode'.
 getUserInfoWithExpTime
   :: forall m. (HasVersion, MonadIO m, MonadError QErr m)
   => Logger Hasura
@@ -159,8 +181,8 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
 
   AMNoAuth -> withNoExpTime $ mkUserInfoFallbackAdminRole UAuthNotSet
 
-  AMAdminSecret adminSecretSet maybeUnauthRole ->
-    withAuthorization adminSecretSet $ withNoExpTime $
+  AMAdminSecret realAdminSecretHash maybeUnauthRole ->
+    withAuthorization realAdminSecretHash $ withNoExpTime $
       -- Consider unauthorized role, if not found raise admin secret header required exception
       case maybeUnauthRole of
         Nothing -> throw401 $ adminSecretHeader <> "/"
@@ -168,11 +190,11 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
         Just unAuthRole ->
           mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent sessionVariables
 
-  AMAdminSecretAndHook adminSecretSet hook ->
-    withAuthorization adminSecretSet $ userInfoFromAuthHook logger manager hook rawHeaders
+  AMAdminSecretAndHook realAdminSecretHash hook ->
+    withAuthorization realAdminSecretHash $ userInfoFromAuthHook logger manager hook rawHeaders
 
-  AMAdminSecretAndJWT adminSecretSet jwtSecret unAuthRole ->
-    withAuthorization adminSecretSet $ processJwt jwtSecret rawHeaders unAuthRole
+  AMAdminSecretAndJWT realAdminSecretHash jwtSecret unAuthRole ->
+    withAuthorization realAdminSecretHash $ processJwt jwtSecret rawHeaders unAuthRole
 
   where
     mkUserInfoFallbackAdminRole adminSecretState =
@@ -182,8 +204,8 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
     sessionVariables = mkSessionVariables rawHeaders
 
     withAuthorization
-      :: AdminSecret -> m (UserInfo, Maybe UTCTime) -> m (UserInfo, Maybe UTCTime)
-    withAuthorization adminSecretSet actionIfNoAdminSecret = do
+      :: AdminSecretHash -> m (UserInfo, Maybe UTCTime) -> m (UserInfo, Maybe UTCTime)
+    withAuthorization realAdminSecretHash actionIfNoAdminSecret = do
       let maybeRequestAdminSecret =
             foldl1 (<|>) $ map (`getSessionVariableValue` sessionVariables)
             [adminSecretHeader, deprecatedAccessKeyHeader]
@@ -192,7 +214,7 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
       case maybeRequestAdminSecret of
         Nothing                 -> actionIfNoAdminSecret
         Just requestAdminSecret -> do
-          when (requestAdminSecret /= getAdminSecret adminSecretSet) $ throw401 $
+          when (hashAdminSecret requestAdminSecret /= realAdminSecretHash) $ throw401 $
             "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
           withNoExpTime $ mkUserInfoFallbackAdminRole UAdminSecretSent
 

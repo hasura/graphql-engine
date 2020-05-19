@@ -71,6 +71,7 @@ instance J.ToJSON JWTConfigClaims where
   toJSON (ClaimNsPath nsPath) = J.String . T.pack $ encodeJSONPath nsPath
   toJSON (ClaimNs ns)         = J.String ns
 
+-- | The JWT configuration we got from the user.
 data JWTConfig
   = JWTConfig
   { jcKeyOrUrl     :: !(Either Jose.JWK URI)
@@ -80,6 +81,10 @@ data JWTConfig
   , jcIssuer       :: !(Maybe Jose.StringOrURI)
   } deriving (Show, Eq)
 
+-- | The validated runtime JWT configuration returned by 'mkJwtCtx' in 'setupAuthMode'.
+--
+-- This is also evidence that the 'jwkRefreshCtrl' thread is running, if an
+-- expiration schedule could be determined.
 data JWTCtx
   = JWTCtx
   { jcxKey          :: !(IORef Jose.JWKSet)
