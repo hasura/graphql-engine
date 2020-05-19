@@ -4,16 +4,16 @@
   "description": "A service to generate Hasura action scaffolds",
   "main": "src/server.js",
   "scripts": {
-    "get-shared-modules": "rm -rf src/shared && cp ../console/src/shared ./src/shared -r",
+    "get-shared-modules": "rm -rf src/shared && cp -R ../console/src/shared ./src/shared",
     "pretranspile": "npm run get-shared-modules",
-    "transpile": "rm -rf build/* && babel ./src ./tests --out-dir build",
+    "transpile": "rm -rf build/* && babel --extensions '.ts' ./src ./tests --out-dir build",
     "prebuild": "npm run transpile",
-    "build": "rm -rf ./bin/* && pkg ./build/command.js --output ./bin/cli-ext-hasura -t node12-linux-x64,node12-macos-x64,node12-win-x64",
+    "build": "rm -rf ./bin/* && pkg ./build/command.ts --output ./bin/cli-ext-hasura -t node12-linux-x64,node12-macos-x64,node12-win-x64",
     "pretest": "npm run transpile && babel ./tests --out-dir _tmptests",
     "posttest": "rm -rf _tmptests",
     "test": "node ./_tmptests/index.js",
-    "lint": "eslint 'src/**/*.js' --fix",
-    "format": "prettier-eslint $PWD'src/**/*.{js,json}' --write && npm run lint"
+    "lint": "eslint 'src/**/*.{js,ts}' --fix",
+    "format": "prettier-eslint $PWD'src/**/*.{js,ts,json}' --write && npm run lint"
   },
   "lint-staged": {
     "**/*.js": [
@@ -42,12 +42,19 @@
     "@babel/core": "^7.0.0",
     "@babel/plugin-transform-async-to-generator": "^7.7.4",
     "@babel/preset-env": "^7.7.6",
+    "@babel/preset-typescript": "^7.9.0",
+    "@types/graphql": "^14.5.0",
+    "@types/inflection": "^1.5.28",
+    "@types/node-fetch": "^2.5.7",
+    "@typescript-eslint/eslint-plugin": "^2.34.0",
+    "@typescript-eslint/parser": "^2.34.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.1.0",
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-promise": "^4.2.1",
     "husky": "^4.2.5",
     "lint-staged": "^10.1.5",
-    "prettier-eslint-cli": "^5.0.0"
+    "prettier-eslint-cli": "^5.0.0",
+    "typescript": "^3.9.2"
   }
 }
