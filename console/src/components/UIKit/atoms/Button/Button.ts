@@ -16,12 +16,12 @@ import {
 } from 'styled-system';
 import { Theme } from '../../theme';
 
-interface OmittedButtonProps
+interface ButtonProps
   extends Omit<
     React.ComponentPropsWithRef<'button'>,
     'type' | 'color' | 'disabled'
   > {}
-const Button = ('button' as any) as React.FC<OmittedButtonProps>;
+const Button = ('button' as any) as React.FC<ButtonProps>;
 
 interface StyledButtonOwnProps
   extends LayoutProps,
@@ -34,7 +34,7 @@ interface StyledButtonOwnProps
   boxShadowColor: string;
   type: keyof Theme['button'];
   disabled: boolean;
-  opacity: string | undefined;
+  opacity?: string;
 }
 
 const hoverStyles = ({
@@ -68,12 +68,12 @@ const hoverStyles = ({
 
 export const StyledButton = styled(Button)<StyledButtonOwnProps>`
   appearance: button;
-  
+
   cursor: ${({ disabled }) => !disabled && 'pointer'};
   &:disabled {
     cursor: not-allowed;
   }
-  
+
   ${({ type, theme, disabled, boxShadowColor }) =>
     hoverStyles({ type, theme, disabled, boxShadowColor })}
   ${layout}
@@ -84,6 +84,4 @@ export const StyledButton = styled(Button)<StyledButtonOwnProps>`
   ${flexbox}
 `;
 
-export interface StyledButtonProps
-  extends OmittedButtonProps,
-    StyledButtonOwnProps {}
+export interface StyledButtonProps extends ButtonProps, StyledButtonOwnProps {}
