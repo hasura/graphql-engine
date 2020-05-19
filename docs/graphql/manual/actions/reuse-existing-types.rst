@@ -1,11 +1,11 @@
 .. meta::
-   :description: Connecting Hasura actions with the graph
-   :keywords: hasura, docs, actions, connect 
+   :description: Reusing existing types with actions
+   :keywords: hasura, docs, actions, connect, existing types
 
-.. _actions_connect:
+.. _reuse_types:
 
-Connecting actions with the graph
-=================================
+Reusing existing types with actions
+===================================
 
 .. contents:: Table of contents
   :backlinks: none
