@@ -17,6 +17,7 @@ import (
 // no configuration file exists, ExecutionDirectory is set to current working
 // directory (or directory provided in project flag) and ConfigFile is an empty string.
 func (ec *ExecutionContext) setExecutionDirectory() error {
+	// set config file and execution directory if config-file flag is provided
 	if len(ec.ConfigFile) != 0 {
 		err := ec.validateConfigFile()
 		if err != nil {
@@ -63,30 +64,24 @@ var filesRequiredV1 = []string{
 	"migrations",
 }
 
-// ConfigFile are the configuration files to look for inn a project directory
+// ConfigFile are the configuration files to look for in a project directory
 var ConfigFile = []string{
 	"config.yaml",
 }
 
 // validateConfigFile sets config file path and validates it's version.
-// if config-file flag is set with an abs path and project flag is not set,
-// set execution directory to the parent directory of config file.
-// if config-file flag is not set with an abs path and porject flag is set,
-// join path to set config file path. If project flag not set, set config
-// file relative to cwd.
+// if project flag is not set, execution directory is set relative to config.
+// if project flag is set and config file is not an abs path, config path
+// is set relative to project flag.
 func (ec *ExecutionContext) validateConfigFile() error {
-	if filepath.IsAbs(ec.ConfigFile) {
-		if len(ec.ExecutionDirectory) == 0 {
-			ec.ExecutionDirectory = filepath.Dir(ec.ConfigFile)
-		}
+	if len(ec.ExecutionDirectory) == 0 {
+		ec.ExecutionDirectory = filepath.Dir(ec.ConfigFile)
 	} else {
-		if len(ec.ExecutionDirectory) != 0 {
+		if !filepath.IsAbs(ec.ConfigFile) {
 			ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, ec.ConfigFile)
-		} else {
-			ec.ExecutionDirectory = filepath.Dir(ec.ConfigFile)
 		}
-		ec.ConfigFile, _ = filepath.Abs(ec.ConfigFile)
 	}
+	ec.ConfigFile, _ = filepath.Abs(ec.ConfigFile)
 	return nil
 }
 
@@ -164,7 +159,6 @@ func CheckFilesystemBoundary(dir string) error {
 // 2. config.yaml file
 // 3. metadata.yaml (optional)
 func (ec *ExecutionContext) validateConfigV1() error {
-	// Strict directory check for version 1 config.
 	if ec.Config.Version == V1 {
 		if err := CheckDirectoryForFiles(ec.ExecutionDirectory, filesRequiredV1); err != nil {
 			return err
