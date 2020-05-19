@@ -6,7 +6,6 @@ import           Hasura.Prelude
 import           Control.Lens               ((^..))
 import           Data.Aeson
 import           Data.Char
-import           Data.List                  (find)
 import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
 import           System.Environment
 import           System.Exit

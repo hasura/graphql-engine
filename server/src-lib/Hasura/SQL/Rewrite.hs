@@ -60,6 +60,7 @@ uSelect :: S.Select -> Uniq S.Select
 uSelect sel = do
   -- this has to be the first thing to process
   newFromM  <- mapM uFromExp fromM
+  newCTEs <- for ctes $ \(alias, cte) -> (,) <$> addAlias alias <*> uSelect cte
 
   newWhereM <- forM whereM $
                \(S.WhereFrag be) -> S.WhereFrag <$> uBoolExp be
@@ -70,10 +71,10 @@ uSelect sel = do
   newOrdM   <- mapM uOrderBy ordByM
   newDistM  <- mapM uDistinct distM
   newExtrs  <- mapM uExtractor extrs
-  return $ S.Select newDistM newExtrs newFromM newWhereM newGrpM
+  return $ S.Select newCTEs newDistM newExtrs newFromM newWhereM newGrpM
     newHavnM newOrdM limitM offM
   where
-    S.Select distM extrs fromM whereM grpM havnM ordByM limitM offM = sel
+    S.Select ctes distM extrs fromM whereM grpM havnM ordByM limitM offM = sel
     uDistinct = \case
       S.DistinctSimple -> return S.DistinctSimple
       S.DistinctOn l   -> S.DistinctOn <$> mapM uSqlExp l
