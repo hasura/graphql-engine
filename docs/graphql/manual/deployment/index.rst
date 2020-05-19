@@ -40,8 +40,8 @@ to configure the Hasura GraphQL engine for your production environment:
 - :ref:`postgres_permissions`
 - :ref:`GraphQL engine server configuration <hge_flags>`
 
-Networking
-----------
+Docker networking
+-----------------
 
 For details on how to connect to and from external APIs, check the following page:
 
@@ -66,7 +66,7 @@ For access to Hasura GraphQL engine logs, check the below page for details:
    Server configuration <graphql-engine-flags/index>
    postgres-permissions
    securing-graphql-endpoint
-   Network config <networking>
+   Docker networking <networking>
    Server logs <logging>
    Enable HTTPS <enable-https>
    allow-list
