@@ -15,8 +15,8 @@ Network config
 Introduction
 ------------
 
-Sometimes, we need to connect Hasura with APIs that are either running outside of Docker or in a different Docker container.
-Depending on the setting, the connecting addresses are different. This section shows how to connect in each of these use cases.
+Sometimes you might want to connect Hasura with APIs that are either running outside of Docker or in a different Docker container.
+Depending on the setting, the network config different. This section shows how to connect in each of these use cases.
 
 Networking with Hasura
 ----------------------
