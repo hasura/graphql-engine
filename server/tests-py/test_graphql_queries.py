@@ -606,3 +606,6 @@ class TestGraphQLQueryCaching:
 
     def test_include_directive(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/include_directive.yaml', transport)
+
+    def test_introspection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/introspection.yaml', transport)
