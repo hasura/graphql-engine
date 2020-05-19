@@ -1,6 +1,6 @@
 .. meta::
-   :description: Securing Hasura actions
-   :keywords: hasura, docs, actions, secure
+   :description: Securing Hasura action handlers
+   :keywords: hasura, docs, actions, handler, secure
 
 .. _securing_actions:
 
