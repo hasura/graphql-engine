@@ -14,6 +14,8 @@ module Hasura.RQL.DDL.EventTrigger
   , mkAllTriggersQ
   , delTriggerQ
   , getEventTriggerDef
+  , getWebhookInfoFromConf
+  , getHeaderInfosFromConf
   , updateEventTriggerInCatalog
   ) where
 
