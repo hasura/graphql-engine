@@ -30,6 +30,11 @@ Choose from the following guides to deploy the Hasura GraphQL engine and connect
 
 You can also check :ref:`guides_deployment` for more specific examples.
 
+.. note::
+
+  If you need custom Docker images or a binary for GraphQL engine, please see :ref:`this <custom_docker_image>`
+
+
 Configuration
 -------------
 
