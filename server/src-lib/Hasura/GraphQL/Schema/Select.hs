@@ -392,16 +392,7 @@ fieldSelection
 fieldSelection fieldInfo selectPermissions stringifyNum = do
   case fieldInfo of
     FIColumn columnInfo -> maybeToList <$> runMaybeT do
-      -- TODO FIXME TODO FIXME
-      -- TODO FIXME TODO FIXME
-      -- TODO FIXME TODO FIXME
-      -- TODO FIXME TODO FIXME
-      -- TODO FIXME TODO FIXME
-
-      -- This guard should be enabled, but disabling it allows us to run some
-      -- queries until we fix permissions.
-
-      -- guard $ Set.member (pgiColumn columnInfo) (spiCols selectPermissions)
+      guard $ Set.member (pgiColumn columnInfo) (spiCols selectPermissions)
       let fieldName = pgiName columnInfo
           pathArg = jsonPathArg $ pgiType columnInfo
       field <- lift $ P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)

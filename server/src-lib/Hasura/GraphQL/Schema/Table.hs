@@ -26,7 +26,7 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-
+import           Hasura.RQL.DML.Internal
 
 -- | Table select columns enum
 --
@@ -93,8 +93,10 @@ tablePermissions
   -> m (Maybe RolePermInfo)
 tablePermissions table = do
   roleName  <- askRoleName
-  tableInfo <- _tiRolePermInfoMap <$> askTableInfo table
-  pure $ Map.lookup roleName tableInfo
+  tableInfo <- askTableInfo table
+  pure $ if roleName == adminRole
+    then Just $ mkAdminRolePermInfo $ _tiCoreInfo tableInfo
+    else Map.lookup roleName $ _tiRolePermInfoMap tableInfo
 
 tableSelectPermissions
   :: forall m n. (MonadSchema n m)

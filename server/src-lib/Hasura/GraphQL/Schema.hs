@@ -35,7 +35,7 @@ buildGQLContext allTables =
     buildContextForRole roleName
   where
     allRoles :: HashSet RoleName
-    allRoles = allTables ^.. folded.tiRolePermInfoMap.to M.keys.folded
+    allRoles = S.insert adminRole $ allTables ^.. folded.tiRolePermInfoMap.to M.keys.folded
 
     buildContextForRole roleName = do
       SQLGenCtx{ stringifyNum } <- askSQLGenCtx
