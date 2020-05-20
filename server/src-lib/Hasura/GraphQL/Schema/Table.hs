@@ -26,6 +26,7 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+-- TODO move code around so that we don't import an internal module here
 import           Hasura.RQL.DML.Internal
 
 -- | Table select columns enum
@@ -86,7 +87,7 @@ tableUpdateColumnsEnum table updatePermissions = do
     define name =
       P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
 
-
+-- TODO deduplicate with @askPermInfo'@?
 tablePermissions
   :: forall m n. (MonadSchema n m)
   => QualifiedTable
