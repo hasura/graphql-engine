@@ -51,18 +51,27 @@ Read more about the session argument for computed fields in the [docs](https://h
 (Add entries here in the order of: server, console, cli, docs, others)
 - server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
 
+- server: fixes an issue where introspection queries with variables would fail because of caching (fix #4547)
 - server: avoid loss of precision when passing values in scientific notation (fix #4733)
 - server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
 - server: fix importing of allow list query from metadata (fix #4687)
+- server: flush log buffer during shutdown (#4800)
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
 - console: allow modifying default value for PK (fix #4075) (#4679)
 - console: fix checkbox for forwarding client headers in actions (#4595)
 - console: re-enable foreign tables to be listed as views (fix #4714) (#4742)
-- cli: list all available commands in root command help (fix #4623)
+- console: display rows limit in permissions editor if set to zero (fix #4559)
+- console: fix inconsistency between selected rows state and displayed rows (fix #4654) (#4673)
+- console: fix displaying boolean values in `Edit Row` tab (#4682)
+- console: fix underscores not being displayed on raw sql page (close #4754) (#4799)
+- cli: list all available commands in root command help (fix #4623) (#4628)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
+- docs: add single object mutations docs (close #4622) (#4625)
 - docs: add docs page on query performance (close #2316) (#3693)
+- docs: add a sample Caddyfile for Caddy 2 in enable-https section (#4710)
+- docs: add disabling dev mode to production checklist (#4715)
 
 ## `v1.2.0`
 
