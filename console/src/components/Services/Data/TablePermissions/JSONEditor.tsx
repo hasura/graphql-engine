@@ -25,7 +25,7 @@ const JSONEditor: React.FC<JSONEditorProps> = ({
       setAnnotations([]);
     } else {
       setAnnotations([
-        { row: 0, column: 0, text: 'error.message', type: 'error' },
+        { row: 0, column: 0, text: 'Invalid JSON', type: 'error' },
       ]);
     }
     return () => {
