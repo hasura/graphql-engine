@@ -7,4 +7,9 @@ declare namespace SvgPanZoom {
   export interface Instance {}
 }
 
-declare module 'react-bootstrap/lib/Tooltip';
+declare namespace React {
+  interface HTMLAttributes<T> extends DOMAttributes<T> {
+    css?: import('styled-components').CSSProp;
+  }
+}
+

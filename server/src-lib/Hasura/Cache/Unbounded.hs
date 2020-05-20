@@ -4,14 +4,11 @@ per OS thread), but write contention from multiple threads is unlikely. -}
 module Hasura.Cache.Unbounded
   ( UnboundedCache
   , initialise
-  , clear
-  , insert
   , insertAllStripes
-  , lookup
-  , getEntries
   ) where
 
 import           Hasura.Prelude      hiding (lookup)
+import           Hasura.Cache.Types
 
 import           Control.Concurrent  (getNumCapabilities, myThreadId, threadCapability)
 
@@ -47,10 +44,17 @@ insertLocal (LocalCacheRef ref) k v =
 -- accessed in parallel.
 newtype UnboundedCache k v = UnboundedCache (V.Vector (LocalCacheRef k v))
 
-getEntries
-  :: UnboundedCache k v -> IO [[(k, v)]]
-getEntries (UnboundedCache localCaches) =
-  mapM getEntriesLocal $ V.toList localCaches
+instance (Hashable k, Ord k) => CacheObj (UnboundedCache k v) k v where
+  lookup k striped = do
+    localHandle <- getLocal striped
+    lookupLocal localHandle k
+  insert k v striped = do
+    localHandle <- getLocal striped
+    insertLocal localHandle k v
+  clear (UnboundedCache caches) =
+    V.mapM_ clearLocal caches
+  getEntries (UnboundedCache localCaches) =
+    mapM getEntriesLocal $ V.toList localCaches
 
 -- | Create a new 'StripedHandle' with the given number of stripes and
 -- the given capacity for each stripe.
@@ -58,10 +62,6 @@ initialise :: IO (UnboundedCache k v)
 initialise = do
   capabilities <- getNumCapabilities
   UnboundedCache <$> V.replicateM capabilities initialiseLocal
-
-clear :: UnboundedCache k v -> IO ()
-clear (UnboundedCache caches) =
-  V.mapM_ clearLocal caches
 
 {-# INLINE getLocal #-}
 getLocal :: UnboundedCache k v -> IO (LocalCacheRef k v)
@@ -75,21 +75,9 @@ getLocal (UnboundedCache handles) = do
 
   return $ handles V.! j
 
--- | Insert into our thread's local cache stripe.
-insert
-  :: (Hashable k, Eq k) =>  k -> v -> UnboundedCache k v ->IO ()
-insert k v striped = do
-  localHandle <- getLocal striped
-  insertLocal localHandle k v
-
 -- | Insert into all stripes (non-atomically).
 insertAllStripes
   :: (Hashable k, Eq k) =>  k -> v -> UnboundedCache k v ->IO ()
 insertAllStripes k v (UnboundedCache handles) = do
   forM_ handles $ \localHandle->
     insertLocal localHandle k v
-
-lookup :: (Hashable k, Eq k) => k -> UnboundedCache k v ->IO (Maybe v)
-lookup k striped = do
-  localHandle <- getLocal striped
-  lookupLocal localHandle k

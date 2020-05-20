@@ -33,7 +33,8 @@ import qualified Text.Mustache.Compile                as M
 
 import           Hasura.Db
 import           Hasura.EncJSON
-import           Hasura.Events.Lib
+import           Hasura.Eventing.EventTrigger
+import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
 import           Hasura.Logging
 import           Hasura.Prelude
@@ -242,7 +243,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
 
   maxEvThrds <- liftIO $ getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
   fetchI  <- fmap milliseconds $ liftIO $
-    getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+    getFromEnv (Milliseconds defaultFetchInterval) "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
   logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
 
   -- prepare event triggers data
@@ -256,6 +257,13 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   -- start a backgroud thread to handle async actions
   _asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $ liftIO $
     asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
+
+  -- start a background thread to create new cron events
+  void $ liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
+    runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
+
+  -- start a background thread to deliver the scheduled events
+  void $ liftIO $ C.forkImmortal "processScheduledTriggers" logger  $ processScheduledTriggers logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef)
 
   -- start a background thread to check for updates
   _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
@@ -276,7 +284,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler (shutdownHandler logger shutdownApp eventEngineCtx _icPgPool)
+                     . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers shutdownApp eventEngineCtx _icPgPool)
                      $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 
@@ -333,8 +341,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     -- We only catch the SIGTERM signal once, that is, if we catch another SIGTERM signal then the process
     -- is terminated immediately.
     -- If the user hits CTRL-C (SIGINT), then the process is terminated immediately
-    shutdownHandler :: Logger Hasura -> IO () -> EventEngineCtx -> Q.PGPool -> IO () -> IO ()
-    shutdownHandler (Logger logger) shutdownApp eeCtx pool closeSocket =
+    shutdownHandler :: Loggers -> IO () -> EventEngineCtx -> Q.PGPool -> IO () -> IO ()
+    shutdownHandler (Loggers loggerCtx (Logger logger) _) shutdownApp eeCtx pool closeSocket =
       void $ Signals.installHandler
         Signals.sigTERM
         (Signals.CatchOnce shutdownSequence)
@@ -345,6 +353,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
         closeSocket
         shutdownApp
         logShutdown
+        cleanLoggerCtx loggerCtx
 
       logShutdown = logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
 
