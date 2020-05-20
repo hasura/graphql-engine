@@ -9,6 +9,7 @@ import {
   getReactHelmetTitle,
   mapDispatchToPropsEmpty,
 } from '../../../../Common/utils/reactUtils';
+import { MapStateToProps } from '../../../../../types';
 import { addScheduledTrigger } from '../../ServerIO';
 import { EVENTS_SERVICE_HEADING, CRON_TRIGGER } from '../../constants';
 
@@ -17,7 +18,7 @@ interface Props extends InjectedProps {
 }
 
 const Main: React.FC<Props> = props => {
-  const { dispatch, initState } = props;
+  const { dispatch, initState, readOnlyMode } = props;
   const { state, setState } = useScheduledTrigger(initState);
 
   const callback = () => setState.loading('add', false);
@@ -39,20 +40,29 @@ const Main: React.FC<Props> = props => {
         Create a cron trigger
       </div>
       <CronTriggerFrom state={state} setState={setState} />
-      <Button
-        onClick={onSave}
-        color="yellow"
-        size="sm"
-        disabled={state.loading.add}
-        className={`${styles.add_mar_right}`}
-      >
-        {state.loading.add ? 'Creating...' : 'Create'}
-      </Button>
+      {!readOnlyMode && (
+        <Button
+          onClick={onSave}
+          color="yellow"
+          size="sm"
+          disabled={state.loading.add}
+          className={`${styles.add_mar_right}`}
+        >
+          {state.loading.add ? 'Creating...' : 'Create'}
+        </Button>
+      )}
     </div>
   );
 };
 
-const connector = connect(null, mapDispatchToPropsEmpty);
+type PropsFromState = {
+  readOnlyMode: boolean;
+};
+const mapStateToProps: MapStateToProps<PropsFromState> = state => ({
+  readOnlyMode: state.main.readOnlyMode,
+});
+
+const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
 type InjectedProps = ConnectedProps<typeof connector>;
 
 export default connector(Main);

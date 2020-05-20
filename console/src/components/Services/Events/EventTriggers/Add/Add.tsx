@@ -37,7 +37,7 @@ const Add: React.FC<Props> = props => {
     retryConf,
     headers,
   } = state;
-  const { dispatch, allSchemas, schemaList } = props;
+  const { dispatch, allSchemas, schemaList, readOnlyMode } = props;
 
   const selectedTableSchema = findTable(allSchemas, table);
 
@@ -334,14 +334,16 @@ const Add: React.FC<Props> = props => {
               </div>
             </CollapsibleToggle>
             <hr />
-            <Button
-              type="submit"
-              color="yellow"
-              size="sm"
-              data-test="trigger-create"
-            >
-              {createBtnText}
-            </Button>
+            {!readOnlyMode && (
+              <Button
+                type="submit"
+                color="yellow"
+                size="sm"
+                data-test="trigger-create"
+              >
+                {createBtnText}
+              </Button>
+            )}
           </div>
         </form>
       </div>
@@ -352,12 +354,14 @@ const Add: React.FC<Props> = props => {
 type PropsFromState = {
   allSchemas: Table[];
   schemaList: Schema[];
+  readOnlyMode: boolean;
 };
 
 const mapStateToProps: MapStateToProps<PropsFromState> = state => {
   return {
     allSchemas: state.tables.allSchemas,
     schemaList: state.tables.schemaList,
+    readOnlyMode: state.main.readOnlyMode,
   };
 };
 

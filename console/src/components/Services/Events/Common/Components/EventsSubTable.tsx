@@ -56,4 +56,5 @@ const EventsSubTable: React.FC<Props> = ({ rows, rowsFormatted, headings }) => {
     </div>
   );
 };
+
 export default EventsSubTable;

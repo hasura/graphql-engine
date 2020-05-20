@@ -105,16 +105,18 @@ const Modify: React.FC<Props> = props => {
           currentTrigger={currentTrigger}
           save={saveWrapper('headers')}
         />
-        <div className={styles.add_mar_bottom}>
-          <Button
-            color="red"
-            size="sm"
-            data-test="delete-trigger"
-            onClick={deleteWrapper}
-          >
-            Delete
-          </Button>
-        </div>
+        {!readOnlyMode && (
+          <div className={styles.add_mar_bottom}>
+            <Button
+              color="red"
+              size="sm"
+              data-test="delete-trigger"
+              onClick={deleteWrapper}
+            >
+              Delete
+            </Button>
+          </div>
+        )}
       </div>
       <br />
       <br />
