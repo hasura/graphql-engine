@@ -185,9 +185,9 @@ queryRootName = "query_root"
 toPGQuery :: QueryRootField S.SQLExp -> Q.Query
 toPGQuery = \case
   QRFSimple s -> DS.selectQuerySQL DS.JASMultipleRows s
-  QRFPrimaryKey s -> _
-  QRFAggregation s -> _
-  QRFExp s ->_
+  QRFPrimaryKey s -> DS.selectQuerySQL DS.JASSingleObject s
+  QRFAggregation s -> DS.selectAggQuerySQL s
+  QRFExp s -> _
 
 traverseQueryRootField
   :: (Applicative f)
@@ -197,7 +197,7 @@ traverseQueryRootField
 traverseQueryRootField f = \case
   QRFPrimaryKey s           -> QRFPrimaryKey <$> DS.traverseAnnSimpleSel f s
   QRFSimple s       -> QRFSimple <$> DS.traverseAnnSimpleSel f s
-  QRFAggregation s          -> _
+  QRFAggregation s          -> QRFAggregation <$> DS.traverseAnnAggSel f s
   QRFExp s -> _
 convertQuerySelSet
   :: ( MonadError QErr m
@@ -226,7 +226,6 @@ convertQuerySelSet gqlContext selectionSet varDefs varValsM = do
           -- "__schema"   -> fldPlanFromJ <$> R.schemaR fld
           -- "__typename" -> pure $ fldPlanFromJ queryRootName
           root         -> do
-            bla <- resolveVariables [] Map.empty [f]
             case Map.lookup root map of
               Just conv -> do
                 (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
