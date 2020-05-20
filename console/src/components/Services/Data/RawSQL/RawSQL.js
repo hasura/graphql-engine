@@ -25,6 +25,7 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
+import Alert from '../../../UIKit/atoms/Alert';
 
 /**
  * # RawSQL React FC
@@ -463,73 +464,36 @@ const RawSQL = ({
           {getTrackThisSection()}
           {getMetadataCascadeSection()}
           {getMigrationSection()}
-
-          <RunButton onClick={submitSQL} className={styles.add_mar_top} />
+          <Button
+            type="submit"
+            className={styles.add_mar_top}
+            onClick={submitSQL}
+            color="yellow"
+            size="sm"
+            data-test="run-sql"
+          >
+            Run!
+          </Button>
         </div>
-        <Alert
-          {...{
-            ongoingRequest,
-            lastError,
-            lastSuccess,
-            className: styles.padd_left_remove,
-          }}
-        />
+
+        <div className="hidden col-xs-4">
+          <div className={`${styles.padd_left_remove} col-xs-12`}>
+            {ongoingRequest && <Alert type="warning" text="Running..." />}
+            {lastError && (
+              <Alert
+                type="danger"
+                text={`Error: ${JSON.stringify(lastError)}`}
+              />
+            )}
+            {lastSuccess && <Alert type="success" text="Executed Query" />};
+          </div>
+        </div>
       </div>
 
       {getMigrationWarningModal()}
 
       <div className={styles.add_mar_bottom}>{getResultTable()}</div>
     </div>
-  );
-};
-
-/**
- * # Alert
- * @component
- *
- * @param {*} { ongoingRequest, lastError, lastSuccess, className }
- */
-const Alert = ({ ongoingRequest, lastError, lastSuccess, className }) => (
-  <div className="hidden col-xs-4">
-    <div className={`${className} col-xs-12`}>
-      {ongoingRequest && (
-        <div className="hidden alert alert-warning" role="alert">
-          Running...
-        </div>
-      )}
-      {lastError && (
-        <div className="hidden alert alert-danger" role="alert">
-          Error: {JSON.stringify(lastError)}
-        </div>
-      )}
-      {lastSuccess && (
-        <div className="hidden alert alert-success" role="alert">
-          Executed Query
-        </div>
-      )}
-      ;
-    </div>
-  </div>
-);
-/**
- * #RunButton
- * @component
- *
- * @param {*} { onClick, className }
- * @returns
- */
-const RunButton = ({ onClick, className }) => {
-  return (
-    <Button
-      type="submit"
-      className={className}
-      onClick={onClick}
-      color="yellow"
-      size="sm"
-      data-test="run-sql"
-    >
-      Run!
-    </Button>
   );
 };
 
