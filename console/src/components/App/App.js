@@ -5,7 +5,6 @@ import ProgressBar from 'react-progress-bar-plus';
 import Notifications from 'react-notification-system-redux';
 import { hot } from 'react-hot-loader';
 import { ThemeProvider } from 'styled-components';
-
 import ErrorBoundary from '../Error/ErrorBoundary';
 import {
   loadConsoleOpts,

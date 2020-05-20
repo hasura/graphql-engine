@@ -1,13 +1,41 @@
 import React from 'react';
 import AceEditor from 'react-ace';
-import { showNotification } from '../../App/Actions';
+import {
+  removeAll as removeNotifications,
+  show as displayNotification,
+  NotificationLevel,
+} from 'react-notification-system-redux';
+import { Notification } from 'react-notification-system';
 import Button from '../../Common/Button/Button';
-import { Thunk } from '../../../types'
+import { Thunk } from '../../../types';
 
 import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
 
 const styles = require('./Notification/Notification.scss');
+
+const showNotification = (
+  options: Notification,
+  level: NotificationLevel
+): Thunk => {
+  return dispatch => {
+    if (level === 'success') {
+      dispatch(removeNotifications());
+    }
+
+    dispatch(
+      displayNotification(
+        {
+          position: options.position || 'tr',
+          autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
+          dismissible: ['error', 'warning'].includes(level),
+          ...options,
+        },
+        level
+      )
+    );
+  };
+};
 
 const getNotificationDetails = (
   detailsJson: any,
@@ -32,7 +60,11 @@ const getNotificationDetails = (
   );
 };
 
-const showErrorNotification = (title: string, message: string, error?: any): Thunk => {
+const showErrorNotification = (
+  title: string,
+  message: string,
+  error?: any
+): Thunk => {
   const getErrorMessage = () => {
     let notificationMessage;
 
@@ -131,13 +163,15 @@ const showErrorNotification = (title: string, message: string, error?: any): Thu
           label: 'Details',
           callback: () => {
             dispatch(
-              showNotification({
-                level: 'error',
-                position: 'br', // HACK: to avoid expansion of existing notifications
-                title,
-                message: errorMessage,
-                children: errorDetails,
-              })
+              showNotification(
+                {
+                  position: 'br',
+                  title,
+                  message: errorMessage,
+                  children: errorDetails,
+                },
+                'error'
+              )
             );
           },
         };
@@ -147,12 +181,14 @@ const showErrorNotification = (title: string, message: string, error?: any): Thu
     };
 
     dispatch(
-      showNotification({
-        level: 'error',
-        title,
-        message: errorMessage,
-        action: getNotificationAction(),
-      })
+      showNotification(
+        {
+          title,
+          message: errorMessage,
+          action: getNotificationAction(),
+        },
+        'error'
+      )
     );
   };
 };
@@ -160,11 +196,14 @@ const showErrorNotification = (title: string, message: string, error?: any): Thu
 const showSuccessNotification = (title: string, message?: string) => {
   return (dispatch: any) => {
     dispatch(
-      showNotification({
-        level: 'success',
-        title,
-        message: message || null,
-      })
+      showNotification(
+        {
+          level: 'success',
+          title,
+          message,
+        },
+        'success'
+      )
     );
   };
 };
@@ -172,10 +211,13 @@ const showSuccessNotification = (title: string, message?: string) => {
 const showInfoNotification = (title: string) => {
   return (dispatch: any) => {
     dispatch(
-      showNotification({
-        title,
-        autoDismiss: 0,
-      })
+      showNotification(
+        {
+          title,
+          autoDismiss: 0,
+        },
+        'info'
+      )
     );
   };
 };
@@ -192,12 +234,15 @@ const showWarningNotification = (
 
   return (dispatch: any) => {
     dispatch(
-      showNotification({
-        level: 'warning',
-        title,
-        message,
-        children,
-      })
+      showNotification(
+        {
+          level: 'warning',
+          title,
+          message,
+          children,
+        },
+        'warning'
+      )
     );
   };
 };

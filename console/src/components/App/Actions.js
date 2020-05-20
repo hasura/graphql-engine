@@ -83,5 +83,4 @@ export {
   FAILED_REQUEST,
   ERROR_REQUEST,
   CONNECTION_FAILED,
-  showNotification,
 };
