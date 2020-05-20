@@ -9,6 +9,7 @@ import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleT
 import styles from '../../Events.scss';
 import Headers from '../../../../Common/Headers/Headers';
 import RetryConf from './RetryConfEditor';
+import FrequentlyUsedCrons from './FrequentlyUsedCrons';
 import FormSection from './FormSection';
 
 type Props = ReturnType<typeof useScheduledTrigger>;
@@ -85,6 +86,7 @@ const Form: React.FC<Props> = props => {
             Build a cron expression
           </a>
         </div>
+        <FrequentlyUsedCrons setCron={setState.schedule} />
       </FormSection>
       <FormSection
         id="trigger-payload"
