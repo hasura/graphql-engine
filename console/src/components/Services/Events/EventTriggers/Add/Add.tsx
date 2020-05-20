@@ -1,11 +1,8 @@
 import React from 'react';
+import { connect, ConnectedProps } from 'react-redux';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Helmet from 'react-helmet';
-import {
-  MapReduxToProps,
-  ComponentReduxConnector,
-  Dispatch,
-} from '../../../../../types';
+import { MapStateToProps } from '../../../../../types';
 import {
   Schema,
   Table,
@@ -25,14 +22,11 @@ import Operations from '../Common/Operations';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';
 import * as tooltip from '../Common/Tooltips';
 import { EVENTS_SERVICE_HEADING } from '../../constants';
+import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 
-type AddProps = {
-  allSchemas: Table[];
-  schemaList: Schema[];
-  dispatch: Dispatch;
-};
+interface Props extends InjectedProps {}
 
-const Add = (props: AddProps) => {
+const Add: React.FC<Props> = props => {
   const { state, setState } = useEventTrigger();
   const {
     name,
@@ -355,14 +349,20 @@ const Add = (props: AddProps) => {
   );
 };
 
-const mapStateToProps: MapReduxToProps = state => {
+type PropsFromState = {
+  allSchemas: Table[];
+  schemaList: Schema[];
+};
+
+const mapStateToProps: MapStateToProps<PropsFromState> = state => {
   return {
-    schemaList: state.tables.schemaList,
     allSchemas: state.tables.allSchemas,
+    schemaList: state.tables.schemaList,
   };
 };
 
-const addTriggerConnector: ComponentReduxConnector = connect =>
-  connect(mapStateToProps)(Add);
+const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
 
-export default addTriggerConnector;
+type InjectedProps = ConnectedProps<typeof connector>;
+
+export default connector(Add);

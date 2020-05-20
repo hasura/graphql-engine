@@ -3,20 +3,22 @@
 
 import React from 'react';
 import Helmet from 'react-helmet';
+import { connect, ConnectedProps } from 'react-redux';
 import { push } from 'react-router-redux';
 import globals from '../../../../../Globals';
-import { Dispatch } from '../../../../../types';
 import Button from '../../../../Common/Button/Button';
 import TopicDescription from '../../../Common/Landing/TopicDescription';
 import { getAddETRoute } from '../../../../Common/utils/routesUtils';
-import { getReactHelmetTitle } from '../../../../Common/utils/reactUtils';
+import {
+  getReactHelmetTitle,
+  mapDispatchToPropsEmpty,
+} from '../../../../Common/utils/reactUtils';
+
 import TryItOut from '../../../Common/Landing/TryItOut';
 import styles from '../../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 import { EVENTS_SERVICE_HEADING, EVENT_TRIGGER } from '../../constants';
 
-type Props = {
-  dispatch: Dispatch;
-};
+interface Props extends InjectedProps {}
 
 const EventTrigger: React.FC<Props> = props => {
   const { dispatch } = props;
@@ -101,6 +103,7 @@ insert_user(objects: [{name: "testuser"}] ){
   );
 };
 
-const eventTriggerConnector = (connect: any) => connect()(EventTrigger);
+const connector = connect(null, mapDispatchToPropsEmpty);
+type InjectedProps = ConnectedProps<typeof connector>;
 
-export default eventTriggerConnector;
+export default connector(EventTrigger);

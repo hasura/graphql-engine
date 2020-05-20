@@ -1,6 +1,6 @@
 import React from 'react';
+import { Connect } from 'react-redux';
 import styles from './RightContainer.scss';
-import { MapReduxToProps, ComponentReduxConnector } from '../../../../types';
 
 const RightContainer: React.FC = ({ children }) => {
   return (
@@ -16,13 +16,6 @@ const RightContainer: React.FC = ({ children }) => {
   );
 };
 
-const mapStateToProps: MapReduxToProps = state => {
-  return {
-    schema: state.tables.allSchemas,
-  };
-};
-
-const rightContainerConnector: ComponentReduxConnector = connect =>
-  connect(mapStateToProps)(RightContainer);
+const rightContainerConnector = (connect: Connect) => connect()(RightContainer);
 
 export default rightContainerConnector;

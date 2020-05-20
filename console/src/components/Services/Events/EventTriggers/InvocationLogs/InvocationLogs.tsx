@@ -6,20 +6,15 @@ import {
   makeRelationshipFilter,
 } from '../../../../Common/FilterQuery/types';
 import { etInvocationLogsTable } from '../utils';
-import {
-  MapReduxToProps,
-  ComponentReduxConnector,
-  Dispatch,
-} from '../../../../../types';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import TableHeader from '../TableCommon/TableHeader';
 import InvocationLogsTable from '../../Common/Components/InvocationLogsTable';
+import {
+  connector,
+  EventsLogsInjectedProps,
+} from '../Common/eventLogsMapStateToProps';
 
-type Props = {
-  dispatch: Dispatch;
-  triggerName: string;
-  readOnlyMode: boolean;
-};
+interface Props extends EventsLogsInjectedProps {}
 
 const InvocationLogs: React.FC<Props> = props => {
   const { dispatch, triggerName, readOnlyMode } = props;
@@ -78,14 +73,4 @@ const InvocationLogs: React.FC<Props> = props => {
   );
 };
 
-const mapStateToProps: MapReduxToProps = (state, ownProps) => {
-  return {
-    triggerName: ownProps.params.triggerName,
-    readOnlyMode: state.main.readOnlyMode,
-  };
-};
-
-const invocationLogsConnector: ComponentReduxConnector = connect =>
-  connect(mapStateToProps)(InvocationLogs);
-
-export default invocationLogsConnector;
+export default connector(InvocationLogs);

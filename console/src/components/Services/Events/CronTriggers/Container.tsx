@@ -7,29 +7,29 @@ import {
   getSTRoute,
 } from '../../../Common/utils/routesUtils';
 import { getReactHelmetTitle } from '../../../Common/utils/reactUtils';
-import tabInfo, { STTab } from './scheduledTriggerTabs';
+import tabInfo, { STTab } from './tabs';
 import { findScheduledTrigger } from '../CronTriggers/utils';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix, EVENTS_SERVICE_HEADING } from '../constants';
 import { setCurrentTrigger } from '../reducer';
 import { Triggers } from '../types';
-import { Dispatch } from '../../../../types';
+import { ConnectInjectedProps, Dispatch } from '../../../../types';
 import styles from '../Events.scss';
 
-interface ScheduledTriggerProps extends React.ComponentProps<'div'> {
+interface Props {
   triggerName: string;
   allTriggers: Triggers;
   tabName: STTab;
-  dispatch: Dispatch;
+  dispatch: Dispatch
 }
 
-const STContainer = ({
+const STContainer: React.FC<Props> = ({
   triggerName,
   children,
   allTriggers,
   tabName,
   dispatch,
-}: ScheduledTriggerProps) => {
+}) => {
   React.useEffect(() => {
     dispatch(setCurrentTrigger(triggerName));
     return () => {

@@ -1,22 +1,20 @@
 import React from 'react';
 import Helmet from 'react-helmet';
+import { connect, ConnectedProps } from 'react-redux';
 import { useScheduledTrigger, LocalScheduledTriggerState } from '../state';
 import styles from '../ScheduledTriggers.scss';
 import Button from '../../../../Common/Button/Button';
 import CronTriggerFrom from '../../Common/Components/CronTriggerForm';
-import { getReactHelmetTitle } from '../../../../Common/utils/reactUtils';
+import {
+  getReactHelmetTitle,
+  mapDispatchToPropsEmpty,
+} from '../../../../Common/utils/reactUtils';
 import { addScheduledTrigger } from '../../ServerIO';
 import { EVENTS_SERVICE_HEADING, CRON_TRIGGER } from '../../constants';
-import {
-  MapReduxToProps,
-  ComponentReduxConnector,
-  Dispatch,
-} from '../../../../../types';
 
-type Props = {
-  dispatch: Dispatch;
+interface Props extends InjectedProps {
   initState?: LocalScheduledTriggerState;
-};
+}
 
 const Main: React.FC<Props> = props => {
   const { dispatch, initState } = props;
@@ -54,13 +52,7 @@ const Main: React.FC<Props> = props => {
   );
 };
 
-const mapStateToProps: MapReduxToProps = state => {
-  return {
-    ...state.events,
-  };
-};
+const connector = connect(null, mapDispatchToPropsEmpty);
+type InjectedProps = ConnectedProps<typeof connector>;
 
-const connector: ComponentReduxConnector = (connect: any) =>
-  connect(mapStateToProps)(Main);
-
-export default connector;
+export default connector(Main);

@@ -1,16 +1,16 @@
 import React from 'react';
-import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
-import getLeftSidebarSection from '../../../Common/Layout/LeftSubSidebar/LeftSidebarSection';
-import { ScheduledTrigger, EventTrigger, EventKind } from '../types';
-import { getSubserviceHeadings } from '../constants';
+import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
+import getLeftSidebarSection from '../../Common/Layout/LeftSubSidebar/LeftSidebarSection';
+import { ScheduledTrigger, EventTrigger, EventKind } from './types';
+import { getSubserviceHeadings } from './constants';
 import {
   getAddETRoute,
   getAddSTRoute,
   getSTModifyRoute,
   getETModifyRoute,
-} from '../../../Common/utils/routesUtils';
+} from '../../Common/utils/routesUtils';
 
-interface Props extends React.ComponentProps<'div'> {
+interface Props {
   triggers: ScheduledTrigger[] | EventTrigger[];
   currentTrigger?: ScheduledTrigger | EventTrigger;
   service: Exclude<EventKind, 'scheduled'>;

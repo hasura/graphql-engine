@@ -1,16 +1,15 @@
 import React from 'react';
 import { push } from 'react-router-redux';
+import { connect, ConnectedProps } from 'react-redux';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import styles from '../Events.scss';
 import { getAddSTRoute } from '../../../Common/utils/routesUtils';
-import { Dispatch } from '../../../../types';
+import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import { CRON_TRIGGER } from '../constants';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 
-type Props = {
-  dispatch: Dispatch;
-};
+interface Props extends InjectedProps {}
 
 const Landing: React.FC<Props> = props => {
   const { dispatch } = props;
@@ -46,4 +45,8 @@ const Landing: React.FC<Props> = props => {
   );
 };
 
-export default (connect: any) => connect()(Landing);
+const connector = connect(null, mapDispatchToPropsEmpty);
+
+type InjectedProps = ConnectedProps<typeof connector>;
+
+export default connector(Landing);

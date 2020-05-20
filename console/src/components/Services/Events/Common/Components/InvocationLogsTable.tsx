@@ -75,21 +75,29 @@ const InvocationLogsTable: React.FC<Props> = props => {
 
     const existingColSort = filterState.sorts.find(s => s.column === col);
     if (existingColSort && existingColSort.type === 'asc') {
-      runQuery(undefined, undefined, [makeOrderBy(col, 'desc')]);
+      runQuery({
+        sorts: [makeOrderBy(col, 'desc')],
+      });
     } else {
-      runQuery(undefined, undefined, [makeOrderBy(col, 'asc')]);
+      runQuery({
+        sorts: [makeOrderBy(col, 'asc')],
+      });
     }
   };
 
   const changePage = (page: number) => {
     if (filterState.offset !== page * filterState.limit) {
-      runQuery(page * filterState.limit);
+      runQuery({
+        offset: page * filterState.limit,
+      });
     }
   };
 
   const changePageSize = (size: number) => {
     if (filterState.limit !== size) {
-      runQuery(undefined, size);
+      runQuery({
+        limit: size,
+      });
     }
   };
 

@@ -7,21 +7,21 @@ import {
 } from '../../../Common/utils/routesUtils';
 import { stripTrailingSlash } from '../../../Common/utils/urlUtils';
 import { getReactHelmetTitle } from '../../../Common/utils/reactUtils';
-import tabInfo, { AdhocEventsTab } from './adhocEventsTabs';
+import tabInfo, { AdhocEventsTab } from './tabs';
 import {
   appPrefix,
   ADHOC_EVENTS_HEADING,
   EVENTS_SERVICE_HEADING,
 } from '../constants';
 import styles from '../Events.scss';
-import { Dispatch } from '../../../../types';
+import { Dispatch, ConnectInjectedProps } from '../../../../types';
 
-interface ScheduledTriggerProps extends React.ComponentProps<'div'> {
+interface Props {
   tabName: AdhocEventsTab;
-  dispatch: Dispatch;
+  dispatch: Dispatch
 }
 
-const STContainer = ({ children, tabName }: ScheduledTriggerProps) => {
+const STContainer: React.FC<Props> = ({ children, tabName }) => {
   const breadCrumbs = [
     {
       title: 'Events',

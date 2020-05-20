@@ -1,21 +1,15 @@
 import React from 'react';
-import STContainer from '../../Containers/ScheduledTriggerContainer';
-import { Triggers } from '../../types';
-import { MapReduxToProps, ComponentReduxConnector, Dispatch } from '../../../../../types';
+import { connect, ConnectedProps } from 'react-redux';
+import STContainer from '../Container';
+import { Triggers, RouterTriggerProps } from '../../types';
+import { MapStateToProps } from '../../../../../types';
 import Modify from './Modify';
+import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 
-type Props = {
-  allTriggers: Triggers;
-  params?: {
-    triggerName: string;
-  };
-  dispatch: Dispatch;
-  readOnlyMode: boolean;
-};
+interface Props extends InjectedProps {}
 
 const ModifyContainer: React.FC<Props> = props => {
-  const { dispatch, allTriggers, params, readOnlyMode } = props;
-  const triggerName = params ? params.triggerName : '';
+  const { dispatch, allTriggers, triggerName, readOnlyMode } = props;
   return (
     <STContainer
       tabName="modify"
@@ -32,14 +26,25 @@ const ModifyContainer: React.FC<Props> = props => {
   );
 };
 
-const mapStateToProps: MapReduxToProps = state => {
+type PropsFromState = {
+  allTriggers: Triggers;
+  triggerName: string;
+  readOnlyMode: boolean;
+};
+
+const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
+  state,
+  ownProps
+) => {
   return {
     allTriggers: state.events.triggers,
     readOnlyMode: state.main.readOnlyMode,
+    triggerName: ownProps.params.triggerName,
   };
 };
 
-const connector: ComponentReduxConnector = (connect: any) =>
-  connect(mapStateToProps)(ModifyContainer);
+const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
 
-export default connector;
+type InjectedProps = ConnectedProps<typeof connector>;
+
+export default connector(ModifyContainer);

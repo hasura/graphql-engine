@@ -6,6 +6,7 @@ import {
   makeOrderBy,
 } from '../utils/v1QueryUtils';
 import requestAction from '../../../utils/requestAction';
+import { Dispatch } from '../../../types';
 import endpoints from '../../../Endpoints';
 import {
   makeFilterState,
@@ -17,6 +18,7 @@ import {
 } from './types';
 
 import { Nullable } from '../utils/tsUtils';
+import { isNotDefined } from '../utils/jsUtils';
 import { parseFilter } from './utils';
 
 const defaultFilter = makeValueFilter('', null, '');
@@ -26,7 +28,7 @@ const defaultState = makeFilterState([defaultFilter], [defaultSort], 10, 0);
 
 export const useFilterQuery = (
   table: TableDefinition,
-  dispatch: any,
+  dispatch: Dispatch,
   presets: {
     filters: Filter[];
     sorts: OrderBy[];
@@ -39,9 +41,11 @@ export const useFilterQuery = (
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(false);
 
-  const runQuery: RunQuery = (offset, limit, newSorts) => {
+  const runQuery: RunQuery = (runQueryOpts = {}) => {
     setLoading(true);
     setError(false);
+
+    const { offset, limit, sorts: newSorts } = runQueryOpts;
 
     const where = {
       $and: [...state.filters, ...presets.filters]
@@ -59,8 +63,8 @@ export const useFilterQuery = (
       table,
       ['*', ...(relationships || []).map(r => ({ name: r, columns: ['*'] }))],
       where,
-      offset === undefined ? state.offset : offset,
-      limit === undefined ? state.limit : limit,
+      isNotDefined(offset) ? state.offset : offset,
+      isNotDefined(offset) ? state.limit : limit,
       orderBy
     );
     const countQuery = getSelectQuery(
@@ -108,7 +112,7 @@ export const useFilterQuery = (
             true,
             true
           )
-        ).then((countData: any) => {
+        ).then((countData: { count: number }) => {
           setCount(countData.count);
         });
       },

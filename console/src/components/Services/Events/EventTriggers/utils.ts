@@ -4,11 +4,13 @@ import { makeBaseTable } from '../../../Common/utils/pgUtils';
 
 // check 2xx success status codes
 
-const REQUEST = 'request';
-const RESPONSE = 'response';
+const REQUEST = 'request' as const;
+const RESPONSE = 'response' as const;
 const VERSION_TWO = '2';
 
-export const parseRowData = (row: any, dataType: any) => {
+type DataType = typeof REQUEST | typeof RESPONSE;
+
+export const parseRowData = (row: any, dataType: DataType) => {
   switch (dataType) {
     case REQUEST: {
       switch (row.request.version) {

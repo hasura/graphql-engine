@@ -1,19 +1,18 @@
 import React from 'react';
-import STContainer from '../../Containers/ScheduledTriggerContainer';
-import { Triggers } from '../../types';
-import { MapReduxToProps, ComponentReduxConnector, Dispatch } from '../../../../../types';
+import { connect, ConnectedProps } from 'react-redux';
+import STContainer from '../Container';
+import { Triggers, RouterTriggerProps } from '../../types';
+import { MapStateToProps } from '../../../../../types';
 import Logs from './Logs';
+import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 
-type LogsProps = {
-  allTriggers: Triggers;
-  params?: {
-    triggerName: string;
-  };
-  dispatch: Dispatch;
-};
+interface Props extends InjectedProps {}
 
-const LogsContainer = ({ dispatch, allTriggers, params }: LogsProps) => {
-  const triggerName = params ? params.triggerName : '';
+const LogsContainer: React.FC<Props> = ({
+  dispatch,
+  allTriggers,
+  triggerName,
+}) => {
   return (
     <STContainer
       tabName="logs"
@@ -26,12 +25,23 @@ const LogsContainer = ({ dispatch, allTriggers, params }: LogsProps) => {
   );
 };
 
-const mapStateToProps: MapReduxToProps = state => {
+type PropsFromState = {
+  allTriggers: Triggers;
+  triggerName: string;
+};
+
+const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
+  state,
+  ownProps
+) => {
   return {
     allTriggers: state.events.triggers,
+    triggerName: ownProps.params.triggerName,
   };
 };
 
-const connector: ComponentReduxConnector = (connect: any) =>
-  connect(mapStateToProps)(LogsContainer);
-export default connector;
+const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
+
+type InjectedProps = ConnectedProps<typeof connector>;
+
+export default connector(LogsContainer);

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { Dispatch } from '../../../types';
 
 export const useInterval = (callback: VoidFunction, delay: number) => {
   const savedCallback: any = useRef();
@@ -26,3 +27,10 @@ export const useInterval = (callback: VoidFunction, delay: number) => {
 export const getReactHelmetTitle = (feature: string, service: string) => {
   return `${feature} - ${service} | Hasura`;
 };
+
+/*
+ * called "mapDispatchToPropsEmpty" because it just maps
+ * the "dispatch" function and not any custom dispatchers
+ */
+
+export const mapDispatchToPropsEmpty = (dispatch: Dispatch) => ({ dispatch });

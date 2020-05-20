@@ -1,21 +1,15 @@
 import React from 'react';
-import STContainer from '../../Containers/ScheduledTriggerContainer';
-import { Triggers } from '../../types';
-import { MapReduxToProps, ComponentReduxConnector, Dispatch } from '../../../../../types';
+import { connect, ConnectedProps } from 'react-redux';
+import STContainer from '../Container';
+import { Triggers, RouterTriggerProps } from '../../types';
+import { MapStateToProps } from '../../../../../types';
 import PendingEvents from './PendingEvents';
+import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 
-type Props = {
-  allTriggers: Triggers;
-  params?: {
-    triggerName: string;
-  };
-  dispatch: Dispatch;
-  readOnlyMode: boolean;
-};
+interface Props extends InjectedProps {}
 
 const PendingEventsContainer: React.FC<Props> = props => {
-  const { dispatch, allTriggers, params } = props;
-  const triggerName = params ? params.triggerName : '';
+  const { dispatch, allTriggers, triggerName } = props;
   return (
     <STContainer
       tabName="pending"
@@ -28,14 +22,23 @@ const PendingEventsContainer: React.FC<Props> = props => {
   );
 };
 
-const mapStateToProps: MapReduxToProps = state => {
+type PropsFromState = {
+  allTriggers: Triggers;
+  triggerName: string;
+};
+
+const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
+  state,
+  ownProps
+) => {
   return {
     allTriggers: state.events.triggers,
-    readOnlyMode: state.main.readOnlyMode,
+    triggerName: ownProps.params.triggerName,
   };
 };
 
-const connector: ComponentReduxConnector = connect =>
-  connect(mapStateToProps)(PendingEventsContainer);
+const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
 
-export default connector;
+type InjectedProps = ConnectedProps<typeof connector>;
+
+export default connector(PendingEventsContainer);

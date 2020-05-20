@@ -5,20 +5,15 @@ import {
   makeValueFilter,
 } from '../../../../Common/FilterQuery/types';
 import { etEventsTable } from '../utils';
-import {
-  MapReduxToProps,
-  ComponentReduxConnector,
-  Dispatch,
-} from '../../../../../types';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import TableHeader from '../TableCommon/TableHeader';
 import EventsTable from '../../Common/Components/EventsTable';
+import {
+  connector,
+  EventsLogsInjectedProps,
+} from '../Common/eventLogsMapStateToProps';
 
-type Props = {
-  dispatch: Dispatch;
-  triggerName: string;
-  readOnlyMode: boolean;
-};
+interface Props extends EventsLogsInjectedProps {}
 
 const PendingEvents: React.FC<Props> = props => {
   const { dispatch, triggerName, readOnlyMode } = props;
@@ -69,14 +64,4 @@ const PendingEvents: React.FC<Props> = props => {
   );
 };
 
-const mapStateToProps: MapReduxToProps = (state, ownProps) => {
-  return {
-    triggerName: ownProps.params.triggerName,
-    readOnlyMode: state.main.readOnlyMode,
-  };
-};
-
-const pendingEventsConnector: ComponentReduxConnector = connect =>
-  connect(mapStateToProps)(PendingEvents);
-
-export default pendingEventsConnector;
+export default connector(PendingEvents);

@@ -5,6 +5,7 @@ import Where from './Where';
 import Sorts from './Sorts';
 import { useFilterQuery } from './state';
 import { Filter, FilterRenderProp } from './types';
+import { Dispatch } from '../../../types';
 import ReloadEnumValuesButton from '../../Services/Data/Common/Components/ReloadEnumValuesButton';
 import Button from '../Button/Button';
 import { Nullable } from '../utils/tsUtils';
@@ -14,7 +15,7 @@ type Props = {
   table: BaseTable;
   relationships: Nullable<string[]>; // TODO better
   render: FilterRenderProp;
-  dispatch: any;
+  dispatch: Dispatch;
   presets: {
     filters: Filter[];
     sorts: OrderBy[];

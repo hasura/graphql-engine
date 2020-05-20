@@ -1,13 +1,12 @@
 import React from 'react';
-import AdhocEventsContainer from '../../Containers/AdhocEventsContainer';
-import { ComponentReduxConnector, MapReduxToProps, Dispatch } from '../../../../../types';
+import { connect, ConnectedProps } from 'react-redux';
+import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
+import AdhocEventsContainer from '../Container';
 import Add from './Add';
 
-type Props = {
-  dispatch: Dispatch;
-};
+interface Props extends InjectedProps {}
 
-const AddContainer = ({ dispatch }: Props) => {
+const AddContainer: React.FC<Props> = ({ dispatch }) => {
   return (
     <AdhocEventsContainer tabName="add" dispatch={dispatch}>
       <Add dispatch={dispatch} />
@@ -15,7 +14,8 @@ const AddContainer = ({ dispatch }: Props) => {
   );
 };
 
-const mapStateToProps: MapReduxToProps = () => ({})
+const connector = connect(null, mapDispatchToPropsEmpty);
 
-const connector: ComponentReduxConnector = connect => connect(mapStateToProps)(AddContainer);
-export default connector;
+type InjectedProps = ConnectedProps<typeof connector>;
+
+export default connector(AddContainer);

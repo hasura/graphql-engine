@@ -1,4 +1,5 @@
 import React from 'react';
+import { connect, ConnectedProps } from 'react-redux';
 import TableHeader from '../TableCommon/TableHeader';
 import styles from './ModifyEvent.scss';
 import { updateSchemaInfo } from '../../../Data/DataActions';
@@ -11,21 +12,17 @@ import WebhookEditor from './WebhookEditor';
 import OperationEditor from './OperationEditor';
 import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
-import { ReduxState, Dispatch } from '../../../../../types';
-import { EventTrigger } from '../../types';
+import { MapStateToProps } from '../../../../../types';
+import { EventTrigger, RouterTriggerProps } from '../../types';
 import { findETTable } from '../../utils';
 import { EventTriggerProperty } from './utils';
+import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 
 import { modifyEventTrigger, deleteEventTrigger } from '../../ServerIO';
 
 import { NotFoundError } from '../../../../Error/PageNotFound';
 
-type Props = {
-  currentTrigger: EventTrigger;
-  allSchemas: Table[];
-  readOnlyMode: boolean;
-  dispatch: Dispatch;
-};
+interface Props extends InjectedProps {}
 
 const Modify: React.FC<Props> = props => {
   const { currentTrigger, allSchemas, readOnlyMode, dispatch } = props;
@@ -125,7 +122,16 @@ const Modify: React.FC<Props> = props => {
   );
 };
 
-const mapStateToProps = (state: ReduxState, ownProps: { params: any }) => {
+type PropsFromState = {
+  currentTrigger: EventTrigger;
+  allSchemas: Table[];
+  readOnlyMode: boolean;
+};
+
+const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
+  state,
+  ownProps
+) => {
   const triggerList = state.events.triggers.event;
   const modifyTriggerName = ownProps.params.triggerName;
 
@@ -137,14 +143,13 @@ const mapStateToProps = (state: ReduxState, ownProps: { params: any }) => {
   }
 
   return {
-    triggerList,
     currentTrigger,
     allSchemas: state.tables.allSchemas,
     readOnlyMode: state.main.readOnlyMode,
   };
 };
 
-const modifyTriggerConnector = (connect: any) =>
-  connect(mapStateToProps)(Modify);
+const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
+type InjectedProps = ConnectedProps<typeof connector>;
 
-export default modifyTriggerConnector;
+export default connector(Modify);

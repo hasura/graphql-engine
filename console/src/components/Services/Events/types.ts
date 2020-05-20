@@ -1,7 +1,8 @@
+import { Action as ReduxAction } from 'redux';
+import { RouteComponentProps } from 'react-router';
 import { Header as ServerHeader } from '../../Common/utils/v1QueryUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
 import { Dispatch } from '../../../types';
-import { Action as ReduxAction } from 'redux';
 
 export const LOADING_TRIGGERS = 'Events/LOADING_TRIGGERS';
 export const LOADED_TRIGGERS = 'Events/LOADED_TRIGGERS';
@@ -16,6 +17,14 @@ export const LOAD_PENDING_DATA_EVENTS = 'Events/LOAD_PENDING_DATA_EVENTS';
 /*
  * Common types for events service
  */
+
+export type RouterTriggerProps = RouteComponentProps<
+  {
+    triggerName: string;
+  },
+  {}
+>;
+
 export type TriggerKind = 'event' | 'cron';
 
 export type EventKind = 'data' | 'cron' | 'scheduled';
@@ -124,22 +133,22 @@ export type Triggers = {
 export interface RASetAllTriggers extends ReduxAction {
   type: typeof LOADED_TRIGGERS;
   data: Triggers;
-};
+}
 
 export interface RASetScheduledTriggers extends ReduxAction {
   type: typeof LOADED_SCHEDULED_TRIGGERS;
   data: ScheduledTrigger[];
-};
+}
 
 export interface RASetEventTriggers extends ReduxAction {
   type: typeof LOADED_EVENT_TRIGGERS;
   data: EventTrigger[];
-};
+}
 
 export interface RASetCurrentTrigger extends ReduxAction {
   type: typeof SET_CURRENT_TRIGGER;
   name: string;
-};
+}
 
 export type RAEvents =
   | RASetAllTriggers

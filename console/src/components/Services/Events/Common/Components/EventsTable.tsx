@@ -11,7 +11,7 @@ import ClockIcon from '../../../../Common/Icons/Clock';
 import SkullIcon from '../../../../Common/Icons/Skull';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
-import InvocationLogDetails from './InvocationLogDetails';
+import EventsSubTable from './EventsSubTable';
 import { sanitiseRow } from '../../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
@@ -34,21 +34,29 @@ const EventsTable: React.FC<Props> = props => {
 
     const existingColSort = filterState.sorts.find(s => s.column === col);
     if (existingColSort && existingColSort.type === 'asc') {
-      runQuery(undefined, undefined, [makeOrderBy(col, 'desc')]);
+      runQuery({
+        sorts: [makeOrderBy(col, 'desc')],
+      });
     } else {
-      runQuery(undefined, undefined, [makeOrderBy(col, 'asc')]);
+      runQuery({
+        sorts: [makeOrderBy(col, 'asc')],
+      });
     }
   };
 
   const changePage = (page: number) => {
     if (filterState.offset !== page * filterState.limit) {
-      runQuery(page * filterState.limit);
+      runQuery({
+        offset: page * filterState.limit,
+      });
     }
   };
 
   const changePageSize = (size: number) => {
     if (filterState.limit !== size) {
-      runQuery(undefined, size);
+      runQuery({
+        limit: size,
+      });
     }
   };
 
@@ -107,8 +115,8 @@ const EventsTable: React.FC<Props> = props => {
   });
 
   const getTheadThProps: ComponentPropsGetterC = (
-    finalState: any,
-    some: any,
+    finalState,
+    some,
     column
   ) => ({
     onClick: () => {
@@ -175,43 +183,11 @@ const EventsTable: React.FC<Props> = props => {
           return newRow;
         });
         return (
-          <div className={styles.add_padding20}>
-            <em>Recent Invocations</em>
-            <div className={`${styles.invocationsSection} invocationsSection`}>
-              {invocationRows.length ? (
-                <ReactTable
-                  data={invocationRows}
-                  columns={invocationGridHeadings}
-                  defaultPageSize={invocationRows.length}
-                  minRows={0}
-                  showPagination={false}
-                  SubComponent={logRow => {
-                    const invocationLog = logs[logRow.index];
-                    const currentPayload = JSON.stringify(
-                      invocationLog.request,
-                      null,
-                      4
-                    );
-                    const finalResponse = JSON.stringify(
-                      invocationLog.response,
-                      null,
-                      4
-                    );
-                    return (
-                      <InvocationLogDetails
-                        requestPayload={currentPayload}
-                        responsePayload={finalResponse}
-                      />
-                    );
-                  }}
-                />
-              ) : (
-                <div className={styles.add_mar_top}>No data available</div>
-              )}
-            </div>
-            <br />
-            <br />
-          </div>
+          <EventsSubTable
+            rows={logs}
+            rowsFormatted={invocationRows}
+            headings={invocationGridHeadings}
+          />
         );
       }}
     />
