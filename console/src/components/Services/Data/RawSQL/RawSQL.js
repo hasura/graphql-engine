@@ -25,29 +25,29 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
-import Alert from '../../../UIKit/atoms/Alert';
+import Alert from '../../../Common/Alert';
 
 /**
  * # RawSQL React FC
  * ## renders raw SQL page on route `/data/sql`
- * @component
  *
- * @param sql,
- * @param resultType,
- * @param result,
- * @param resultHeaders,
- * @param dispatch,
- * @param ongoingRequest,
- * @param lastError,
- * @param lastSuccess,
- * @param isModalOpen,
- * @param isCascadeChecked,
- * @param isMigrationChecked,
- * @param isTableTrackChecked,
- * @param migrationMode,
- * @param allSchemas,
- * @param location,
- * @returns
+ * @typedef Props
+ * @property {string} sql
+ * @property {string} resultType
+ * @property {array} result
+ * @property {array} resultHeaders
+ * @property {function} dispatch
+ * @property {boolean} ongoingRequest
+ * @property {object} lastError
+ * @property {boolean} lastSuccess
+ * @property {boolean} isModalOpen
+ * @property {boolean} isCascadeChecked
+ * @property {boolean} isMigrationChecked
+ * @property {boolean} isTableTrackChecked
+ * @property {boolean} migrationMode
+ * @property {array} allSchemas
+ *
+ * @param {Props}
  */
 const RawSQL = ({
   sql,
