@@ -1,11 +1,11 @@
 .. meta::
-   :description: Hasura security vulnerability reporting and disclosure
+   :description: Hasura security vulnerability protocol
    :keywords: hasura, docs, security, security disclosure, vulnerability
 
-.. _security_vulnerability:
+.. _security_protocol:
 
-Security vulnerability reporting and disclosure
-===============================================
+Security vulnerabilities protocol
+=================================
 
 .. contents:: Table of contents
   :backlinks: none
