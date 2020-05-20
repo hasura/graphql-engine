@@ -541,11 +541,14 @@ class TestMetadataOrder:
         # `export_metadata` response.
         replace_code, replace_resp, _ = hge_ctx.anyq(url, replace_query, headers)
         assert replace_code == 200, replace_resp
-        # we are again exporting the metadata to assert that the metadata exported
-        # after creating the metadata through the metadata APIs and the metadata
-        # exported after importing the metdata using the `replace_metadata` to be
-        # the same. Doing this check, ensures that the metadata has been properly
-        # imported by the graphql-engine.
+        # This test catches incorrect key names(if any) in the export_metadata serialization,
+        # for example, A new query collection is added to the allow list using the
+        # add_collection_to_allowlist metadata API. When
+        # the metadata is exported it will contain the allowlist. Now, when this
+        # metadata is imported, if the graphql-engine is expecting a different key
+        # like allow_list(instead of allowlist) then the allow list won't be imported.
+        # Now, exporting the metadata won't contain the allowlist key
+        # because it wasn't imported properly and hence the two exports will differ.
         export_code_1, export_resp_1, _ = hge_ctx.anyq(url, export_query, headers)
         assert export_code_1 == 200
         assert export_resp == export_resp_1
