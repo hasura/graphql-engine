@@ -182,7 +182,7 @@ instance FromJSON ReplaceMetadata where
       <*> (o .:? "functions" >>= parseFunctions version)
       <*> o .:? "remote_schemas" .!= []
       <*> o .:? "query_collections" .!= []
-      <*> o .:? "allow_list" .!= []
+      <*> o .:? "allowlist" .!= []
       <*> o .:? "custom_types" .!= emptyCustomTypes
       <*> o .:? "actions" .!= []
     where
