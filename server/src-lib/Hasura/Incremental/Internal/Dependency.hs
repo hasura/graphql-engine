@@ -7,19 +7,22 @@ module Hasura.Incremental.Internal.Dependency where
 import           Hasura.Prelude
 
 import qualified Data.Dependent.Map            as DM
+import qualified Data.URL.Template             as UT
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.URI.Extended          as N
-import qualified Data.URL.Template             as UT
 
 import           Control.Applicative
 import           Data.Aeson                    (Value)
+import           Data.CaseInsensitive          (CI)
 import           Data.Functor.Classes          (Eq1 (..), Eq2 (..))
 import           Data.GADT.Compare
 import           Data.Int
 import           Data.Scientific               (Scientific)
+import           Data.Time.Clock
 import           Data.Vector                   (Vector)
 import           GHC.Generics                  ((:*:) (..), (:+:) (..), Generic (..), K1 (..),
                                                 M1 (..), U1 (..), V1)
+import           System.Cron.Types
 
 import           Hasura.Incremental.Select
 
@@ -161,6 +164,22 @@ instance Cacheable Integer where unchanged _ = (==)
 instance Cacheable Scientific where unchanged _ = (==)
 instance Cacheable Text where unchanged _ = (==)
 instance Cacheable N.URIAuth where unchanged _ = (==)
+instance Cacheable DiffTime where unchanged _ = (==)
+instance Cacheable NominalDiffTime where unchanged _ = (==)
+instance Cacheable UTCTime where unchanged _ = (==)
+
+-- instances for CronSchedule from package `cron`
+instance Cacheable StepField
+instance Cacheable RangeField
+instance Cacheable SpecificField
+instance Cacheable BaseField
+instance Cacheable CronField
+instance Cacheable MonthSpec
+instance Cacheable DayOfMonthSpec
+instance Cacheable DayOfWeekSpec
+instance Cacheable HourSpec
+instance Cacheable MinuteSpec
+instance Cacheable CronSchedule
 
 instance (Cacheable a) => Cacheable (Seq a) where
   unchanged = liftEq . unchanged
@@ -170,6 +189,8 @@ instance (Cacheable k, Cacheable v) => Cacheable (HashMap k v) where
   unchanged accesses = liftEq2 (unchanged accesses) (unchanged accesses)
 instance (Cacheable a) => Cacheable (HashSet a) where
   unchanged = liftEq . unchanged
+instance (Cacheable a) => Cacheable (CI a) where
+  unchanged _ = (==)
 
 instance Cacheable ()
 instance (Cacheable a, Cacheable b) => Cacheable (a, b)

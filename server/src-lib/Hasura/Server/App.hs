@@ -37,22 +37,24 @@ import qualified Text.Mustache                          as M
 import qualified Web.Spock.Core                         as Spock
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Resolve.Action
+import           Hasura.HTTP
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
+import           Hasura.Server.API.Config               (runGetConfig)
+import           Hasura.Server.API.Query
 import           Hasura.Server.Auth                     (AuthMode (..), UserAuthentication (..))
 import           Hasura.Server.Compression
-import           Hasura.Server.Config                   (runGetConfig)
-import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware               (corsMiddleware)
 import           Hasura.Server.Migrate                  (migrateCatalog)
-import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Execute                 as E
@@ -62,7 +64,7 @@ import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
 import qualified Hasura.Logging                         as L
-import qualified Hasura.Server.PGDump                   as PGD
+import qualified Hasura.Server.API.PGDump               as PGD
 
 
 data SchemaCacheRef
@@ -89,19 +91,20 @@ data SchemaCacheRef
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx       :: !PGExecCtx
-  , scConnInfo        :: !Q.ConnInfo
-  , scLogger          :: !(L.Logger L.Hasura)
-  , scCacheRef        :: !SchemaCacheRef
-  , scAuthMode        :: !AuthMode
-  , scManager         :: !HTTP.Manager
-  , scSQLGenCtx       :: !SQLGenCtx
-  , scEnabledAPIs     :: !(S.HashSet API)
-  , scInstanceId      :: !InstanceId
-  , scPlanCache       :: !E.PlanCache
-  , scLQState         :: !EL.LiveQueriesState
-  , scEnableAllowlist :: !Bool
-  , scEkgStore        :: !EKG.Store
+  { scPGExecCtx                    :: !PGExecCtx
+  , scConnInfo                     :: !Q.ConnInfo
+  , scLogger                       :: !(L.Logger L.Hasura)
+  , scCacheRef                     :: !SchemaCacheRef
+  , scAuthMode                     :: !AuthMode
+  , scManager                      :: !HTTP.Manager
+  , scSQLGenCtx                    :: !SQLGenCtx
+  , scEnabledAPIs                  :: !(S.HashSet API)
+  , scInstanceId                   :: !InstanceId
+  , scPlanCache                    :: !E.PlanCache
+  , scLQState                      :: !EL.LiveQueriesState
+  , scEnableAllowlist              :: !Bool
+  , scEkgStore                     :: !EKG.Store
+  , scResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig
   }
 
 data HandlerCtx
@@ -188,8 +191,8 @@ parseBody reqBody =
 
 onlyAdmin :: (Monad m) => Handler m ()
 onlyAdmin = do
-  uRole <- asks (userRole . hcUser)
-  when (uRole /= adminRole) $
+  uRole <- asks (_uiRole . hcUser)
+  when (uRole /= adminRoleName) $
     throw400 AccessDenied "You have to be an admin to access this endpoint"
 
 buildQCtx :: (MonadIO m) => Handler m QCtx
@@ -232,7 +235,8 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
                  return userInfoE
 
     let handlerState = HandlerCtx serverCtx userInfo headers requestId
-        curRole = userRole userInfo
+        includeInternal = shouldIncludeInternal (_uiRole userInfo) $
+                          scResponseInternalErrorsConfig serverCtx
 
     (serviceTime, (result, q)) <- withElapsedTime $ case apiHandler of
       AHGet handler -> do
@@ -240,7 +244,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         return (res, Nothing)
       AHPost handler -> do
         parsedReqE <- runExceptT $ parseBody reqBody
-        parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) (isAdmin curRole) headers . qErrModifier)
+        parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) includeInternal headers . qErrModifier)
                       return parsedReqE
         res <- lift $ runReaderT (runExceptT $ handler parsedReq) handlerState
         return (res, Just parsedReq)
@@ -251,7 +255,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     -- log and return result
     case modResult of
       Left err  -> let jErr = maybe (Left reqBody) (Right . toJSON) q
-                   in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) headers err
+                   in logErrorAndResp (Just userInfo) requestId req jErr includeInternal headers err
       Right res -> logSuccessAndResp (Just userInfo) requestId req (fmap toJSON q) res (Just (ioWaitTime, serviceTime)) headers
 
     where
@@ -328,9 +332,11 @@ v1Alpha1GQHandler apiType query = do
   enableAL  <- scEnableAllowlist . hcServerCtx <$> ask
   logger    <- scLogger . hcServerCtx <$> ask
   requestId <- asks hcRequestId
+  responseErrorsConfig <- scResponseInternalErrorsConfig . hcServerCtx <$> ask
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
                 (lastBuiltSchemaCache sc) scVer manager enableAL
-  flip runReaderT execCtx $ GH.runGQBatched requestId userInfo reqHeaders apiType query
+  flip runReaderT execCtx $
+    GH.runGQBatched requestId responseErrorsConfig userInfo reqHeaders apiType query
 
 v1GQHandler
   :: (HasVersion, MonadIO m)
@@ -340,11 +346,10 @@ v1GQHandler = v1Alpha1GQHandler E.GATGeneral
 
 v1GQRelayHandler
   :: (HasVersion, MonadIO m)
-  => GH.GQLBatchedReqs GH.GQLQueryText
-  -> Handler m (HttpResponse EncJSON)
+  => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1GQRelayHandler = v1Alpha1GQHandler E.GATRelay
 
-gqlExplainHandler :: (MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
+gqlExplainHandler :: (HasVersion, MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
@@ -352,7 +357,7 @@ gqlExplainHandler query = do
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   enableAL <- scEnableAllowlist . hcServerCtx <$> ask
-  res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL query
+  res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (restrictActionExecuter "query actions cannot be explained") query
   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m) => PGD.PGDumpReqBody -> Handler m APIResp
@@ -473,9 +478,10 @@ mkWaiApp
   -> S.HashSet API
   -> EL.LiveQueriesOptions
   -> E.PlanCacheOptions
+  -> ResponseInternalErrorsConfig
   -> m HasuraApp
 mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts planCacheOptions = do
+         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig = do
 
     (planCache, schemaCacheRef, cacheBuiltTime) <- migrateAndInitialiseSchemaCache
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
@@ -502,6 +508,7 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
                     , scLQState         =  lqState
                     , scEnableAllowlist =  enableAL
                     , scEkgStore        =  ekgStore
+                    , scResponseInternalErrorsConfig = responseErrorsConfig
                     }
 
     when (isDeveloperAPIEnabled serverCtx) $ do
@@ -650,7 +657,8 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     spockAction
       :: (FromJSON a, ToJSON a, MonadIO m, UserAuthentication m, HttpLog m)
-      => (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler m a -> Spock.ActionT m ()
+      => (Bool -> QErr -> Value)
+      -> (QErr -> QErr) -> APIHandler m a -> Spock.ActionT m ()
     spockAction = mkSpockAction serverCtx
 
 

@@ -39,7 +39,7 @@ Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 
 Open the console and head to ``Data -> sql_function_table -> Modify``:
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/modify-sql-fn-table.png
+.. thumbnail:: /img/graphql/manual/schema/modify-sql-fn-table.png
    :alt: Modify the table
 
 Step 2: Create a trigger
@@ -62,7 +62,7 @@ the ``output`` field whenever an insert or update is made to the ``sql_function_
 
 Head to ``Data -> SQL`` and run the above SQL:
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/create-trigger.png
+.. thumbnail:: /img/graphql/manual/schema/create-trigger.png
    :alt: Create a trigger with SQL
 
 Step 3: Run an insert mutation

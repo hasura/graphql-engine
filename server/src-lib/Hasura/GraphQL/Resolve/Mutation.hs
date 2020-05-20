@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Hasura.GraphQL.Resolve.Mutation
   ( convertUpdate
   , convertUpdateByPk
@@ -75,6 +77,7 @@ convertRowObj colGNameMap val =
 
 type ApplySQLOp =  (PGCol, S.SQLExp) -> S.SQLExp
 
+-- SET x = x <op> <value>
 rhsExpOp :: S.SQLOp -> S.TypeAnn -> ApplySQLOp
 rhsExpOp op annTy (col, e) =
   S.mkSQLOpExp op (S.SEIden $ toIden col) annExp
@@ -86,6 +89,19 @@ lhsExpOp op annTy (col, e) =
   S.mkSQLOpExp op annExp $ S.SEIden $ toIden col
   where
     annExp = S.SETyAnn e annTy
+
+-- Automatically generate type annotation by looking up the column name
+typedRhsExpOp :: S.SQLOp -> S.TypeAnn -> PGColGNameMap -> ApplySQLOp
+typedRhsExpOp op defaultAnnTy colGNameMap (colName, e) =
+  let annTypeM :: Maybe S.TypeAnn
+      annTypeM = do
+        fieldType <- pgiType <$> Map.lookup (G.Name $ getPGColTxt colName) colGNameMap
+        case fieldType of
+          PGColumnScalar x -> return $ S.mkTypeAnn $ PGTypeScalar x
+          _ -> Nothing
+      annType :: S.TypeAnn
+      annType = fromMaybe defaultAnnTy annTypeM
+  in rhsExpOp op annType (colName, e)
 
 convObjWithOp
   :: (MonadReusability m, MonadError QErr m)
@@ -113,7 +129,7 @@ convDeleteAtPathObj colGNameMap val =
     return (pgCol, UVSQL sqlExp)
 
 convertUpdateP1
-  :: (MonadReusability m, MonadError QErr m)
+  :: forall m . (MonadReusability m, MonadError QErr m)
   => UpdOpCtx -- the update context
   -> (ArgsMap -> m AnnBoolExpUnresolved) -- the bool expression parser
   -> (Field -> m (RR.MutationOutputG UnresolvedVal)) -- the selection set resolver
@@ -126,7 +142,7 @@ convertUpdateP1 opCtx boolExpParser selectionResolver fld = do
   whereExp <- boolExpParser args
   -- increment operator on integer columns
   incExpM <- resolveUpdateOperator "_inc" $
-    convObjWithOp' $ rhsExpOp S.incOp S.intTypeAnn
+    convObjWithOp' $ typedRhsExpOp S.incOp S.numericTypeAnn colGNameMap
   -- append jsonb value
   appendExpM <- resolveUpdateOperator "_append" $
     convObjWithOp' $ rhsExpOp S.jsonbConcatOp S.jsonbTypeAnn
@@ -163,17 +179,24 @@ convertUpdateP1 opCtx boolExpParser selectionResolver fld = do
     resolveUpdateOperator operator resolveAction =
       (operator,) <$> withArgM args operator resolveAction
 
+    combineUpdateExpressions :: [(G.Name, Maybe [(PGCol, UnresolvedVal)])]
+                             -> m [(PGCol, UnresolvedVal)]
     combineUpdateExpressions updateExps = do
       let allOperatorNames = map fst updateExps
+          updateItems :: [(G.Name, [(PGCol, UnresolvedVal)])]
           updateItems = mapMaybe (\(op, itemsM) -> (op,) <$> itemsM) updateExps
       -- Atleast any one of operator is expected or preset expressions shouldn't be empty
       if null updateItems && null resolvedPreSetItems then
-        throwVE $ "atleast any one of " <> showNames allOperatorNames <> " is expected"
+        throwVE $ "at least any one of " <> showNames allOperatorNames <> " is expected"
       else do
-        let itemsWithOps = concatMap (\(op, items) -> map (second (op,)) items) updateItems
+        let itemsWithOps :: [(PGCol, (G.Name, UnresolvedVal))]
+            itemsWithOps = concatMap (\(op, items) -> map (second (op,)) items) updateItems
             validateMultiOps col items = do
               when (length items > 1) $ MV.dispute [(col, map fst $ toList items)]
               pure $ snd $ NESeq.head items
+            eitherResult :: Either
+                              [(PGCol, [G.Name])]
+                              (OMap.InsOrdHashMap PGCol UnresolvedVal)
             eitherResult = MV.runValidate $ OMap.traverseWithKey validateMultiOps $
                            OMap.groupTuples itemsWithOps
         case eitherResult of

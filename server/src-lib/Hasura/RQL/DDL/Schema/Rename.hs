@@ -8,17 +8,18 @@ module Hasura.RQL.DDL.Schema.Rename
   )
 where
 
-import           Control.Arrow                      ((***))
 import           Control.Lens.Combinators
 import           Control.Lens.Operators
 import           Hasura.Prelude
-import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
+
+import qualified Hasura.RQL.DDL.EventTrigger        as DS
 
 import qualified Data.HashMap.Strict                as M
 import qualified Database.PG.Query                  as Q
@@ -199,16 +200,16 @@ updatePermFlds refQT rn pt rename = do
 updateInsPermFlds
   :: (MonadTx m, CacheRM m)
   => QualifiedTable -> Rename -> RoleName -> InsPerm -> m ()
-updateInsPermFlds refQT rename rn (InsPerm chk preset cols) = do
+updateInsPermFlds refQT rename rn (InsPerm chk preset cols mBackendOnly) = do
   updatedPerm <- case rename of
     RTable rt -> do
       let updChk = updateTableInBoolExp rt chk
-      return $ InsPerm updChk preset cols
+      return $ InsPerm updChk preset cols mBackendOnly
     RField rf -> do
       updChk <- updateFieldInBoolExp refQT rf chk
       let updPresetM = updatePreset refQT rf <$> preset
           updColsM = updateCols refQT rf <$> cols
-      return $ InsPerm updChk updPresetM updColsM
+      return $ InsPerm updChk updPresetM updColsM mBackendOnly
   liftTx $ updatePermDefInCatalog PTInsert refQT rn updatedPerm
 
 updateSelPermFlds

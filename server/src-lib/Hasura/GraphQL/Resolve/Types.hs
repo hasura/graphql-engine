@@ -21,7 +21,7 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.Permission
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -35,7 +35,8 @@ data QueryCtx
   | QCFuncQuery !FuncQOpCtx
   | QCFuncAggQuery !FuncQOpCtx
   | QCFuncConnection !(NonEmpty PGColumnInfo) !FuncQOpCtx
-  | QCActionFetch !ActionSelectOpContext
+  | QCAsyncActionFetch !ActionSelectOpContext
+  | QCAction !ActionExecutionContext
   deriving (Show, Eq)
 
 data MutationCtx
@@ -45,7 +46,7 @@ data MutationCtx
   | MCUpdateByPk !UpdOpCtx
   | MCDelete !DelOpCtx
   | MCDeleteByPk !DelOpCtx
-  | MCAction !ActionExecutionContext
+  | MCAction !ActionMutationExecutionContext
   deriving (Show, Eq)
 
 type OpCtxMap a = Map.HashMap G.Name a
@@ -105,8 +106,8 @@ data DelOpCtx
   , _docFilter  :: !AnnBoolExpPartialSQL
   } deriving (Show, Eq)
 
-data SyncActionExecutionContext
-  = SyncActionExecutionContext
+data ActionExecutionContext
+  = ActionExecutionContext
   { _saecName                 :: !ActionName
   , _saecOutputType           :: !GraphQLType
   , _saecOutputFields         :: !ActionOutputFields
@@ -116,9 +117,9 @@ data SyncActionExecutionContext
   , _saecForwardClientHeaders :: !Bool
   } deriving (Show, Eq)
 
-data ActionExecutionContext
-  = ActionExecutionSyncWebhook !SyncActionExecutionContext
-  | ActionExecutionAsync
+data ActionMutationExecutionContext
+  = ActionMutationSyncWebhook !ActionExecutionContext
+  | ActionMutationAsync
   deriving (Show, Eq)
 
 data ActionSelectOpContext
@@ -238,7 +239,7 @@ partialSQLExpToUnresolvedVal = \case
 data UnresolvedVal
   -- | an entire session variables JSON object
   = UVSession
-  | UVSessVar !(PGType PGScalarType) !SessVar
+  | UVSessVar !(PGType PGScalarType) !SessionVariable
   -- | a SQL value literal that can be parameterized over
   | UVPG !AnnPGVal
   -- | an arbitrary SQL expression, which /cannot/ be parameterized over

@@ -114,7 +114,7 @@ parsePGScalarValue columnType value = case columnType of
       parseEnumValue :: Text -> m PGScalarValue
       parseEnumValue textValue = do
         let enumTextValues = map getEnumValue $ M.keys enumValues
-        unless (textValue `elem` enumTextValues) $ fail . T.unpack
+        unless (textValue `elem` enumTextValues) $ throw400 UnexpectedPayload
           $ "expected one of the values " <> T.intercalate ", " (map dquote enumTextValues)
           <> " for type " <> snakeCaseQualObject tableName <<> ", given " <>> textValue
         pure $ PGValText textValue

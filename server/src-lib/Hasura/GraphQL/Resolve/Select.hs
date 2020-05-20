@@ -42,20 +42,23 @@ import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-jsonPathToColExp :: (MonadError QErr m) => T.Text -> m S.SQLExp
+jsonPathToColExp :: (MonadError QErr m) => T.Text -> m (Maybe S.SQLExp)
 jsonPathToColExp t = case parseJSONPath t of
   Left s       -> throw400 ParseFailed $ T.pack $ "parse json path error: " ++ s
-  Right jPaths -> return $ S.SEArray $ map elToColExp jPaths
+  Right []     -> return Nothing
+  Right jPaths -> return $ Just $ S.SEArray $ map elToColExp jPaths
   where
     elToColExp (Key k)   = S.SELit k
     elToColExp (Index i) = S.SELit $ T.pack (show i)
 
 
 argsToColumnOp :: (MonadReusability m, MonadError QErr m) => ArgsMap -> m (Maybe RS.ColumnOp)
-argsToColumnOp args = maybe (return Nothing) toOp $ Map.lookup "path" args
-  where
-    toJsonPathExp = fmap (RS.ColumnOp S.jsonbPathOp) . jsonPathToColExp
-    toOp v = asPGColTextM v >>= traverse toJsonPathExp
+argsToColumnOp args = case Map.lookup "path" args of
+  Nothing -> return Nothing
+  Just txt -> do
+    mColTxt <- asPGColTextM txt
+    mColExps <- maybe (return Nothing) jsonPathToColExp mColTxt
+    pure $ RS.ColumnOp S.jsonbPathOp <$> mColExps
 
 type AnnFields = RS.AnnFieldsG UnresolvedVal
 
@@ -66,7 +69,7 @@ resolveComputedField
   => ComputedField -> Field -> m (RS.ComputedFieldSelect UnresolvedVal)
 resolveComputedField computedField fld = fieldAsPath fld $ do
   funcArgs <- parseFunctionArgs argSeq argFn $ Map.lookup "args" $ _fArguments fld
-  let argsWithTableArgument = withTableArgument funcArgs
+  let argsWithTableArgument = withTableAndSessionArgument funcArgs
   case fieldType of
     CFTScalar scalarTy -> do
       colOpM <- argsToColumnOp $ _fArguments fld
@@ -77,16 +80,25 @@ resolveComputedField computedField fld = fieldAsPath fld $ do
       RS.CFSTable RS.JASMultipleRows <$> fromField functionFrom cols permFilter permLimit fld
   where
     ComputedField _ function argSeq fieldType = computedField
-    ComputedFieldFunction qf _ tableArg _ = function
+    ComputedFieldFunction qf _ tableArg sessionArg _ = function
+    argFn :: FunctionArgItem -> InputFunctionArgument
     argFn = IFAUnknown
-    withTableArgument resolvedArgs =
+    withTableAndSessionArgument :: RS.FunctionArgsExpG        UnresolvedVal
+                                -> RS.FunctionArgsExpTableRow UnresolvedVal
+    withTableAndSessionArgument resolvedArgs =
       let argsExp@(RS.FunctionArgsExp positional named) = RS.AEInput <$> resolvedArgs
           tableRowArg = RS.AETableRow Nothing
-      in case tableArg of
-        FTAFirst      ->
-          RS.FunctionArgsExp (tableRowArg:positional) named
-        FTANamed argName index ->
-          RS.insertFunctionArg argName index tableRowArg argsExp
+          withTable = case tableArg of
+            FTAFirst      ->
+              RS.FunctionArgsExp (tableRowArg:positional) named
+            FTANamed argName index ->
+              RS.insertFunctionArg argName index tableRowArg argsExp
+          sessionArgVal = RS.AESession UVSession
+          alsoWithSession = case sessionArg of
+            Nothing -> withTable
+            Just (FunctionSessionArgument argName index) ->
+              RS.insertFunctionArg argName index sessionArgVal withTable
+      in alsoWithSession
 
 processTableSelectionSet
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r

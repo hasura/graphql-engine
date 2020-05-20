@@ -13,6 +13,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils            (duplicates)
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 import           Hasura.GraphQL.Schema
@@ -32,7 +33,7 @@ mkRelayGCtxMap tableCache functionCache = do
   typesMap <- combineTypes typesMapL
   let gCtxMap  = flip Map.map typesMap $
                  \(ty, flds) -> mkGCtx ty flds mempty
-  return gCtxMap
+  pure $ Map.map (flip RoleContext Nothing) gCtxMap
   where
     tableFltr ti = not (isSystemDefined $ _tciSystemDefined ti) && isValidObjectName (_tciName ti)
 
@@ -76,7 +77,7 @@ mkRelayGCtxMapTable tableCache funcCache tabInfo = do
   adminSelFlds <- mkAdminSelFlds fields tableCache
   let adminCtx = mkRelayGCtxRole' tn descM (Just (True, adminSelFlds))
                  primaryKey tabFuncs
-  return $ Map.insert adminRole (adminCtx, adminRootFlds) m
+  return $ Map.insert adminRoleName (adminCtx, adminRootFlds) m
   where
     TableInfo coreInfo rolePerms _ = tabInfo
     TableCoreInfo tn descM _ fields primaryKey _ _ _ _ _ = coreInfo
@@ -227,7 +228,7 @@ mkRelayGCtxRole' tn descM selPermM pkeyCols funcs =
 
     -- computed fields' function args input objects and scalar types
     mkComputedFieldRequiredTypes computedFieldInfo =
-      let ComputedFieldFunction qf inputArgs _ _ = _cfFunction computedFieldInfo
+      let ComputedFieldFunction qf inputArgs _ _ _ = _cfFunction computedFieldInfo
           scalarArgs = map (_qptName . faType) $ toList inputArgs
       in (, scalarArgs) <$> mkFuncArgsInp qf inputArgs
 

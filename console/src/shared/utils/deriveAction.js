@@ -22,7 +22,7 @@ export const validateOperation = (operationString, clientSchema) => {
   try {
     operationAst = sdlParse(operationString);
   } catch (e) {
-    throw Error('invalid SDL');
+    throw Error('this seems to be an invalid GraphQL query');
   }
 
   const schemaValidationErrors = validate(clientSchema, operationAst);
@@ -69,11 +69,6 @@ export const validateOperation = (operationString, clientSchema) => {
     throw Error('the given operation must ask for at least one root field');
   }
 
-  // throw error if the operation does not have variables
-  if (!operationAst.definitions[0].variableDefinitions.length) {
-    throw Error('only operations using variables can be derived');
-  }
-
   return operationAst;
 };
 
@@ -102,6 +97,10 @@ const deriveAction = (
   const operationDefinition = rootFields[0];
   const operationName = operationDefinition.name.value;
 
+  const selectedFields = operationDefinition.selectionSet.selections.map(s => {
+    return s.name.value;
+  });
+
   // get action name if not provided
   if (!actionName) {
     actionName = operationAst.definitions[0].name
@@ -117,6 +116,10 @@ const deriveAction = (
   const allHasuraTypes = clientSchema._typeMap;
   const operationType = getOperationType(clientSchema, operation);
 
+  const isHasuraScalar = name => {
+    return isScalarType(allHasuraTypes[name]);
+  };
+
   const actionArguments = [];
   const newTypes = {};
 
@@ -128,7 +131,7 @@ const deriveAction = (
     newType.name = typename;
 
     if (isScalarType(type)) {
-      if (!inbuiltTypes[type.name]) {
+      if (!inbuiltTypes[type.name] && !allHasuraTypes[type.name]) {
         newType.kind = 'scalar';
         newTypes[typename] = newType;
       }
@@ -156,7 +159,10 @@ const deriveAction = (
           type: underLyingType,
           wraps: fieldTypeWraps,
         } = getUnderlyingType(tf.type);
-        if (inbuiltTypes[underLyingType.name]) {
+        if (
+          inbuiltTypes[underLyingType.name] ||
+          isHasuraScalar(underLyingType.name)
+        ) {
           _tf.type = wrapTypename(underLyingType.name, fieldTypeWraps);
         } else {
           _tf.type = wrapTypename(
@@ -177,7 +183,10 @@ const deriveAction = (
       name: v.variable.name.value,
     };
     const argTypeMetadata = getAstTypeMetadata(v.type);
-    if (!inbuiltTypes[argTypeMetadata.typename]) {
+    if (
+      !inbuiltTypes[argTypeMetadata.typename] &&
+      !isHasuraScalar(argTypeMetadata.typename)
+    ) {
       const argTypename = prefixTypename(argTypeMetadata.typename);
       generatedArg.type = wrapTypename(argTypename, argTypeMetadata.stack);
       const typeInSchema = allHasuraTypes[argTypeMetadata.typename];
@@ -207,24 +216,23 @@ const deriveAction = (
     Object.values(getTypeFields(refOperationOutputType)).forEach(
       outputTypeField => {
         const fieldTypeMetadata = getUnderlyingType(outputTypeField.type);
-        if (isScalarType(fieldTypeMetadata.type)) {
-          if (inbuiltTypes[fieldTypeMetadata.type.name]) {
-            outputTypeFields[outputTypeField.name] = wrapTypename(
-              fieldTypeMetadata.type.name,
-              fieldTypeMetadata.wraps
-            );
-          } else {
-            const fieldTypename = prefixTypename(fieldTypeMetadata.type.name);
-            outputTypeFields[outputTypeField.name] = wrapTypename(
-              fieldTypename,
-              fieldTypeMetadata.wraps
-            );
-            handleType(fieldTypeMetadata.type, fieldTypename);
-          }
+        if (
+          isScalarType(fieldTypeMetadata.type) &&
+          selectedFields.includes(outputTypeField.name)
+        ) {
+          outputTypeFields[outputTypeField.name] = wrapTypename(
+            fieldTypeMetadata.type.name,
+            fieldTypeMetadata.wraps
+          );
         }
       }
     );
   });
+  if (!Object.keys(outputTypeFields).length) {
+    throw new Error(
+      `no scalar found in the selection set of your operation; only scalar fields of the operation get mapped onto the output type of the derived action`
+    );
+  }
 
   Object.keys(outputTypeFields).forEach(fieldName => {
     actionOutputType.fields.push({
@@ -243,6 +251,7 @@ const deriveAction = (
       arguments: actionArguments,
       output_type: actionOutputTypename,
     },
+    variables,
   };
 };
 

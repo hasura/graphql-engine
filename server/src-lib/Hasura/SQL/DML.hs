@@ -23,7 +23,10 @@ paren t = TB.char '(' <> t <> TB.char ')'
 
 data Select
   = Select
-    { selDistinct :: !(Maybe DistinctExpr)
+    { selCTEs     :: ![(Alias, Select)]
+    -- ^ Unlike 'SelectWith', does not allow data-modifying statements (as those are only allowed at
+    -- the top level of a query).
+    , selDistinct :: !(Maybe DistinctExpr)
     , selExtr     :: ![Extractor]
     , selFrom     :: !(Maybe FromExp)
     , selWhere    :: !(Maybe WhereFrag)
@@ -38,7 +41,7 @@ instance Cacheable Select
 instance Hashable Select
 
 mkSelect :: Select
-mkSelect = Select Nothing [] Nothing
+mkSelect = Select [] Nothing [] Nothing
            Nothing Nothing Nothing
            Nothing Nothing Nothing
 
@@ -167,17 +170,20 @@ instance ToSQL WhereFrag where
     "WHERE" <-> paren (toSQL be)
 
 instance ToSQL Select where
-  toSQL sel =
-    "SELECT"
-    <-> toSQL (selDistinct sel)
-    <-> (", " <+> selExtr sel)
-    <-> toSQL (selFrom sel)
-    <-> toSQL (selWhere sel)
-    <-> toSQL (selGroupBy sel)
-    <-> toSQL (selHaving sel)
-    <-> toSQL (selOrderBy sel)
-    <-> toSQL (selLimit sel)
-    <-> toSQL (selOffset sel)
+  toSQL sel = case selCTEs sel of
+    [] -> "SELECT"
+      <-> toSQL (selDistinct sel)
+      <-> (", " <+> selExtr sel)
+      <-> toSQL (selFrom sel)
+      <-> toSQL (selWhere sel)
+      <-> toSQL (selGroupBy sel)
+      <-> toSQL (selHaving sel)
+      <-> toSQL (selOrderBy sel)
+      <-> toSQL (selLimit sel)
+      <-> toSQL (selOffset sel)
+    -- reuse SelectWith if there are any CTEs, since the generated SQL is the same
+    ctes -> toSQL $ SelectWith (map (CTESelect <$>) ctes) sel { selCTEs = [] }
+
 
 mkSIdenExp :: (IsIden a) => a -> SQLExp
 mkSIdenExp = SEIden . toIden
@@ -250,6 +256,9 @@ mkTypeAnn = TypeAnn . toSQLTxt
 
 intTypeAnn :: TypeAnn
 intTypeAnn = mkTypeAnn $ PGTypeScalar PGInteger
+
+numericTypeAnn :: TypeAnn
+numericTypeAnn = mkTypeAnn $ PGTypeScalar PGNumeric
 
 textTypeAnn :: TypeAnn
 textTypeAnn = mkTypeAnn $ PGTypeScalar PGText

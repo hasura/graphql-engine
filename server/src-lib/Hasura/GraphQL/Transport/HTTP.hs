@@ -9,11 +9,13 @@ import qualified Network.HTTP.Types                     as N
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Context
+import           Hasura.Server.Init.Config
 import           Hasura.Server.Utils                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
 
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
@@ -50,8 +52,8 @@ runGQ reqId userInfo reqHdrs apiType req = do
                             | otherwise = Telem.Query
         (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi opDef
         return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
-  let telemTimeIO = fromUnits telemTimeIO_DT
-      telemTimeTot = fromUnits telemTimeTot_DT
+  let telemTimeIO = convertDuration telemTimeIO_DT
+      telemTimeTot = convertDuration telemTimeTot_DT
   Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
 
@@ -62,12 +64,13 @@ runGQBatched
      , MonadReader E.ExecutionCtx m
      )
   => RequestId
+  -> ResponseInternalErrorsConfig
   -> UserInfo
   -> [N.Header]
   -> E.GraphQLAPIType
   -> GQLBatchedReqs GQLQueryText
   -> m (HttpResponse EncJSON)
-runGQBatched reqId userInfo reqHdrs apiType reqs =
+runGQBatched reqId responseErrorsConfig userInfo reqHdrs apiType reqs =
   case reqs of
     GQLSingleRequest req ->
       runGQ reqId userInfo reqHdrs apiType req
@@ -75,13 +78,13 @@ runGQBatched reqId userInfo reqHdrs apiType reqs =
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
       -- in this case, and don't forward any.
-      let removeHeaders =
+      let includeInternal = shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig
+          removeHeaders =
             flip HttpResponse []
             . encJFromList
-            . map (either (encJFromJValue . encodeGQErr False) _hrBody)
+            . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
           try = flip catchError (pure . Left) . fmap Right
-      fmap removeHeaders $
-        traverse (try . runGQ reqId userInfo reqHdrs apiType) batch
+      removeHeaders <$> traverse (try . runGQ reqId userInfo reqHdrs apiType) batch
 
 runHasuraGQ
   :: ( MonadIO m

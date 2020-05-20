@@ -12,12 +12,14 @@ module Hasura.GraphQL.Resolve
   , QueryRootFldUnresolved
   , QueryRootFldResolved
   , toPGQuery
+  , toSQLFromItem
 
   , RIntro.schemaR
   , RIntro.typeR
   ) where
 
 import           Data.Has
+import           Hasura.Session
 
 import qualified Data.HashMap.Strict               as Map
 import qualified Database.PG.Query                 as Q
@@ -46,6 +48,8 @@ data QueryRootFldAST v
   | QRFAgg !(DS.AnnAggregateSelectG v)
   | QRFConnection !(DS.ConnectionSelect v)
   | QRFActionSelect !(DS.AnnSimpleSelG v)
+  | QRFActionExecuteObject !(DS.AnnSimpleSelG v)
+  | QRFActionExecuteList !(DS.AnnSimpleSelG v)
   deriving (Show, Eq)
 
 type QueryRootFldUnresolved = QueryRootFldAST UnresolvedVal
@@ -57,36 +61,48 @@ traverseQueryRootFldAST
   -> QueryRootFldAST a
   -> f (QueryRootFldAST b)
 traverseQueryRootFldAST f = \case
-  QRFPk s           -> QRFPk <$> DS.traverseAnnSimpleSelect f s
-  QRFSimple s       -> QRFSimple <$> DS.traverseAnnSimpleSelect f s
-  QRFAgg s          -> QRFAgg <$> DS.traverseAnnAggregateSelect f s
+  QRFPk s                  -> QRFPk <$> DS.traverseAnnSimpleSelect f s
+  QRFSimple s              -> QRFSimple <$> DS.traverseAnnSimpleSelect f s
+  QRFAgg s                 -> QRFAgg <$> DS.traverseAnnAggregateSelect f s
+  QRFActionSelect s        -> QRFActionSelect <$> DS.traverseAnnSimpleSelect f s
+  QRFActionExecuteObject s -> QRFActionExecuteObject <$> DS.traverseAnnSimpleSelect f s
+  QRFActionExecuteList s   -> QRFActionExecuteList <$> DS.traverseAnnSimpleSelect f s
   QRFConnection s   -> QRFConnection <$> DS.traverseConnectionSelect f s
-  QRFActionSelect s -> QRFActionSelect <$> DS.traverseAnnSimpleSelect f s
 
 toPGQuery :: QueryRootFldResolved -> Q.Query
 toPGQuery = \case
-  QRFPk s           -> DS.selectQuerySQL DS.JASSingleObject s
-  QRFSimple s       -> DS.selectQuerySQL DS.JASMultipleRows s
-  QRFAgg s          -> DS.selectAggQuerySQL s
-  QRFActionSelect s -> DS.selectQuerySQL DS.JASSingleObject s
+  QRFPk s                  -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASSingleObject s
+  QRFSimple s              -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASMultipleRows s
+  QRFAgg s                 -> Q.fromBuilder $ toSQL $ DS.mkAggregateSelect s
+  QRFActionSelect s        -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASSingleObject s
+  QRFActionExecuteObject s -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASSingleObject s
+  QRFActionExecuteList s   -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASMultipleRows s
   QRFConnection s   -> Q.fromBuilder $ toSQL $ DS.mkConnectionSelect s
 
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
 validateHdrs userInfo hdrs = do
-  let receivedVars = userVars userInfo
+  let receivedVars = _uiSession userInfo
   forM_ hdrs $ \hdr ->
-    unless (isJust $ getVarVal hdr receivedVars) $
+    unless (isJust $ getSessionVariableValue (mkSessionVariable hdr) receivedVars) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
 
 queryFldToPGAST
-  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
+  :: ( MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     , Has UserInfo r
      , Has QueryCtxMap r
+     , HasVersion
+     , MonadIO m
      )
   => V.Field
+  -> RA.QueryActionExecuter
   -> m QueryRootFldUnresolved
-queryFldToPGAST fld = do
+queryFldToPGAST fld actionExecuter = do
   opCtx <- getOpCtx $ V._fName fld
   userInfo <- asks getter
   case opCtx of
@@ -105,8 +121,22 @@ queryFldToPGAST fld = do
     QCFuncAggQuery ctx -> do
       validateHdrs userInfo (_fqocHeaders ctx)
       QRFAgg <$> RS.convertFuncQueryAgg ctx fld
-    QCActionFetch ctx ->
+    QCAsyncActionFetch ctx ->
       QRFActionSelect <$> RA.resolveAsyncActionQuery userInfo ctx fld
+    QCAction ctx -> do
+      -- query actions should not be marked reusable because we aren't
+      -- capturing the variable value in the state as re-usable variables.
+      -- The variables captured in non-action queries are used to generate
+      -- an SQL query, but in case of query actions it's converted into JSON
+      -- and included in the action's webhook payload.
+      markNotReusable
+      let f = case jsonAggType of
+             DS.JASMultipleRows -> QRFActionExecuteList
+             DS.JASSingleObject -> QRFActionExecuteObject
+      f <$> actionExecuter (RA.resolveActionQuery fld ctx (_uiSession userInfo))
+      where
+        outputType = _saecOutputType ctx
+        jsonAggType = RA.mkJsonAggSelect outputType
     QCSelectConnection pk ctx ->
       QRFConnection <$> RS.convertConnectionSelect pk ctx fld
     QCFuncConnection pk ctx ->
@@ -133,13 +163,14 @@ mutFldToTx fld = do
   userInfo <- asks getter
   opCtx <- getOpCtx $ V._fName fld
   let noRespHeaders = fmap (,[])
+      roleName = _uiRole userInfo
   case opCtx of
     MCInsert ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsert (userRole userInfo) (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsert roleName (_iocTable ctx) fld
     MCInsertOne ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsertOne (userRole userInfo) (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsertOne roleName (_iocTable ctx) fld
     MCUpdate ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
       noRespHeaders $ RM.convertUpdate ctx fld
@@ -153,7 +184,7 @@ mutFldToTx fld = do
       validateHdrs userInfo (_docHeaders ctx)
       noRespHeaders $ RM.convertDeleteByPk ctx fld
     MCAction ctx ->
-      RA.resolveActionMutation fld ctx (userVars userInfo)
+      RA.resolveActionMutation fld ctx (_uiSession userInfo)
 
 getOpCtx
   :: ( MonadReusability m
@@ -166,3 +197,16 @@ getOpCtx f = do
   opCtxMap <- asks getter
   onNothing (Map.lookup f opCtxMap) $ throw500 $
     "lookup failed: opctx: " <> showName f
+
+toSQLFromItem :: S.Alias -> QueryRootFldResolved -> S.FromItem
+toSQLFromItem alias = \case
+  QRFPk s                  -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
+  QRFSimple s              -> fromSelect $ DS.mkSQLSelect DS.JASMultipleRows s
+  QRFAgg s                 -> fromSelect $ DS.mkAggregateSelect s
+  QRFActionSelect s        -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
+  QRFActionExecuteObject s -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
+  QRFActionExecuteList s   -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
+  QRFConnection s          -> flip (S.FISelectWith (S.Lateral False)) alias
+                              $ DS.mkConnectionSelect s
+  where
+    fromSelect = flip (S.FISelect (S.Lateral False)) alias

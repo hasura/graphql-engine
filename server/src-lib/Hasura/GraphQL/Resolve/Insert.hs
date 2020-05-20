@@ -4,10 +4,10 @@ module Hasura.GraphQL.Resolve.Insert
   )
 where
 
-import           Control.Arrow                     ((>>>))
 import           Data.Has
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.Session
 
 import qualified Data.Aeson                        as J
 import qualified Data.Aeson.Casing                 as J
@@ -455,7 +455,7 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutOutput errP =
           insertObj strfyNum role tn objIns addCols
 
       let affRows = sum $ map fst insResps
-          columnValues = catMaybes $ map snd insResps
+          columnValues = mapMaybe snd insResps
       cteExp <- mkSelCTEFromColVals tn tableColInfos columnValues
       let sql = toSQL $ RR.mkMutationOutputExp tn tableColInfos (Just affRows) cteExp mutOutput strfyNum
       runIdentity . Q.getRow

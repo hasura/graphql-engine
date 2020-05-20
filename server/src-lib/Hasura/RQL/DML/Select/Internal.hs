@@ -6,9 +6,8 @@ module Hasura.RQL.DML.Select.Internal
   )
 where
 
-import           Control.Lens
+import           Control.Lens                hiding (op)
 import           Control.Monad.Writer.Strict
-import           Instances.TH.Lift           ()
 
 import qualified Data.HashMap.Strict         as HM
 import qualified Data.List.NonEmpty          as NE
@@ -208,6 +207,7 @@ fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
       S.FunctionArgs positional named
     toSQLExp (AETableRow Nothing)    = S.SERowIden $ mkBaseTableAlias pfx
     toSQLExp (AETableRow (Just acc)) = S.mkQIdenExp (mkBaseTableAlias pfx) acc
+    toSQLExp (AESession s)           = s
     toSQLExp (AEInput s)             = s
 
 -- uses row_to_json to build a json object
@@ -833,7 +833,7 @@ generateSQLSelect joinCondition selectSource selectNode =
       , S.selWhere = Just $ injectJoinCond joinCondition whereExp
       }
     baseSelectAlias = S.Alias $ mkBaseTableAlias sourcePrefix
-    baseFromItem = S.FISelect (S.Lateral False) baseSelect baseSelectAlias
+    baseFromItem = S.mkSelFromItem baseSelect baseSelectAlias
 
     -- function to create a joined from item from two from items
     leftOuterJoin current new =

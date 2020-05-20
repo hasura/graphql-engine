@@ -21,6 +21,10 @@ If you mark an action as **asynchronous**, Hasura also generates a
 ``query`` and a ``subscription`` field for the action so that you can
 query/subscribe to its status.
 
+.. admonition:: Note
+
+  Only actions of type ``mutation`` can be async. Actions of type query are always executed synchronously.
+
 For example, let's say ``place_order`` is an asynchronous action
 
 .. code-block:: graphql
