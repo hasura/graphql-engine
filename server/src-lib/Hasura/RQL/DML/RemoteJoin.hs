@@ -319,6 +319,32 @@ fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins = do
   where
     remoteSchemaBatch = Map.groupOnNE _rjfRemoteSchema remoteJoins
 
+    fieldsToRequest :: G.OperationType -> [G.Field] -> GQLReqParsed
+    fieldsToRequest opType gfields =
+      GQLReq
+         { _grOperationName = Nothing
+         , _grQuery =
+             GQLExecDoc
+               [ G.ExecutableDefinitionOperation
+                   (G.OperationDefinitionTyped
+                     ( emptyOperationDefinition
+                         {G._todSelectionSet = map G.SelectionField gfields}
+                     )
+                   )
+               ]
+         , _grVariables = Nothing -- TODO: Put variables in here?
+         }
+        where
+          emptyOperationDefinition =
+            G.TypedOperationDefinition {
+              G._todType = opType
+            , G._todName = Nothing
+            , G._todVariableDefinitions = []
+            , G._todDirectives = []
+            , G._todSelectionSet = [] }
+
+
+
 -- | Replace 'RemoteJoinField' in composite JSON with it's json value from remote server response.
 replaceRemoteFields
   :: MonadError QErr m
@@ -391,30 +417,6 @@ mergeValue lVal rVal = case (lVal, rVal) of
     in G.VObject $ G.ObjectValueG $ map (uncurry G.ObjectFieldG) $ Map.toList $
        Map.unionWith mergeValue (fieldsToMap l) (fieldsToMap r)
   (l, _) -> l -- FIXME:- throw error for merging non-lists and non-objects
-
-fieldsToRequest :: G.OperationType -> [G.Field] -> GQLReqParsed
-fieldsToRequest opType gfields =
-  GQLReq
-     { _grOperationName = Nothing
-     , _grQuery =
-         GQLExecDoc
-           [ G.ExecutableDefinitionOperation
-               (G.OperationDefinitionTyped
-                 ( emptyOperationDefinition
-                     {G._todSelectionSet = map G.SelectionField gfields}
-                 )
-               )
-           ]
-     , _grVariables = Nothing -- TODO: Put variables in here?
-     }
-    where
-      emptyOperationDefinition =
-        G.TypedOperationDefinition {
-          G._todType = opType
-        , G._todName = Nothing
-        , G._todVariableDefinitions = []
-        , G._todDirectives = []
-        , G._todSelectionSet = [] }
 
 -- | Create an argument map using the inputs taken from the hasura database.
 createArguments
