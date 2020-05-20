@@ -72,6 +72,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: add docs page on query performance (close #2316) (#3693)
 - docs: add a sample Caddyfile for Caddy 2 in enable-https section (#4710)
 - docs: add disabling dev mode to production checklist (#4715)
+- docs: add page for procuring custom docker images and binaries (#4828)
 
 ## `v1.2.0`
 
