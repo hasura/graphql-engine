@@ -73,7 +73,7 @@ export const getActionsCreateRoute = () => {
 
 export const eventsPrefix = 'events';
 export const scheduledEventsPrefix = 'cron';
-export const adhocEventsPrefix = 'independent-scheduled-events';
+export const adhocEventsPrefix = 'one-off-scheduled-events';
 export const dataEventsPrefix = 'data';
 export const routeType = 'absolute' | 'relative';
 
@@ -152,4 +152,7 @@ export const getAdhocPendingEventsRoute = type => {
 };
 export const getAdhocProcessedEventsRoute = type => {
   return getAdhocEventsRoute(type, 'processed');
+};
+export const getAdhocEventsInfoRoute = type => {
+  return getAdhocEventsRoute(type, 'info');
 };

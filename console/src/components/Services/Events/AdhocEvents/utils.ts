@@ -6,6 +6,7 @@ import {
   isValidDate,
 } from '../../../Common/utils/jsUtils';
 import { makeBaseTable } from '../../../Common/utils/pgUtils';
+import { getCreateScheduledEventQuery } from '../../../Common/utils/v1QueryUtils';
 
 export const validateAddState = (state: LocalAdhocEventState) => {
   if (!isValidURL(state.webhook) && !isValidTemplateLiteral(state.webhook)) {
@@ -58,3 +59,46 @@ export const stInvocationLogsTable = makeBaseTable(
     { column_name: 'created_at', data_type: 'timestamptz' },
   ]
 );
+
+export const SAMPLE_SCHEDDULE_EVENT_QUERY = JSON.stringify(
+  getCreateScheduledEventQuery({
+    webhook: 'http://httpbin.org/post',
+    time: new Date(),
+    payload: `{
+    "key": "value",
+    "foo": "bar"
+  }`,
+    headers: [
+      {
+        name: 'key1',
+        type: 'static',
+        value: 'value',
+      },
+      {
+        name: 'key2',
+        type: 'env',
+        value: 'HASURA_GRAPHQL_ENV_VAR',
+      },
+    ],
+    retryConf: {
+      num_retries: 0,
+      interval_sec: 60,
+      timeout_sec: 60,
+      tolerance_sec: 21600,
+    },
+    comment: 'This is a sample event',
+    loading: false,
+  }),
+  null,
+  4
+);
+
+export const SCHEDULED_EVENT_PAYLOAD_EDITOR_MAXLINES =
+  Array(SAMPLE_SCHEDDULE_EVENT_QUERY.length)
+    .fill(null)
+    .reduce((count, _, i) => {
+      if (SAMPLE_SCHEDDULE_EVENT_QUERY.charAt(i) === '\n') {
+        return count + 1;
+      }
+      return count;
+    }, 0) + 1;

@@ -11,11 +11,11 @@ export const EVENT_TRIGGER_OPERATIONS: EventTriggerOperation[] = [
 ];
 
 export const EVENTS_SERVICE_HEADING = 'Events';
-export const ADHOC_EVENTS_HEADING = 'Independent Scheduled Events';
-export const CRON_EVENTS_HEADING = 'Cron Events';
+export const ADHOC_EVENTS_HEADING = 'One-off Scheduled Events';
+export const CRON_EVENTS_HEADING = 'Cron Triggers';
 export const CRON_TRIGGER = 'Cron Trigger';
 export const EVENT_TRIGGER = 'Event Trigger';
-export const DATA_EVENTS_HEADING = 'Data Events';
+export const DATA_EVENTS_HEADING = 'Data Triggers';
 export const getSubserviceHeadings = (subservice: EventKind) => {
   switch (subservice) {
     case 'data':

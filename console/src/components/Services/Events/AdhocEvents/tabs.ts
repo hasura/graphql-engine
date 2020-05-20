@@ -3,15 +3,20 @@ import {
   getAdhocPendingEventsRoute,
   getAdhocProcessedEventsRoute,
   getAddAdhocEventRoute,
+  getAdhocEventsInfoRoute,
 } from '../../../Common/utils/routesUtils';
 
-export type AdhocEventsTab = 'add' | 'pending' | 'processed' | 'logs';
+export type AdhocEventsTab = 'add' | 'pending' | 'processed' | 'logs' | 'info';
 type TabInfo = {
   display_text: string;
   getRoute: () => string;
 };
 
 const tabInfo: Record<AdhocEventsTab, TabInfo> = {
+  info: {
+    display_text: 'Info',
+    getRoute: () => getAdhocEventsInfoRoute('absolute'),
+  },
   add: {
     display_text: 'Schedule an event',
     getRoute: () => getAddAdhocEventRoute('absolute'),

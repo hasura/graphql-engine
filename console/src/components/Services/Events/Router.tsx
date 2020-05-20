@@ -27,6 +27,7 @@ import {
   getAdhocEventsLogsRoute,
   getAdhocPendingEventsRoute,
   getAdhocProcessedEventsRoute,
+  getAdhocEventsInfoRoute,
 } from '../../Common/utils/routesUtils';
 import {
   AddScheduledTrigger,
@@ -49,6 +50,7 @@ import {
   AdhocEventProcessedEvents,
   AddAdhocEvent,
   AdhocEventLogs,
+  AdhocEventsInfo,
 } from './AdhocEvents';
 
 const triggersInit = (dispatch: Dispatch): EnterHook => {
@@ -146,7 +148,7 @@ const getTriggersRouter = (
         path={adhocEventsPrefix}
         component={rightContainerConnector(connect)}
       >
-        <IndexRedirect to={getAddAdhocEventRoute('relative')} />
+        <IndexRedirect to={getAdhocEventsInfoRoute('relative')} />
         <Route
           path={getAddAdhocEventRoute('relative')}
           component={AddAdhocEvent}
@@ -162,6 +164,10 @@ const getTriggersRouter = (
         <Route
           path={getAdhocProcessedEventsRoute('relative')}
           component={AdhocEventProcessedEvents}
+        />
+        <Route
+          path={getAdhocEventsInfoRoute('relative')}
+          component={AdhocEventsInfo}
         />
       </Route>
     </Route>
