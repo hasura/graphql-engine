@@ -74,7 +74,7 @@ selectTable
   -> m (Maybe (FieldsParser 'Output n (Maybe (G.Name, SelectExp))))
 selectTable table fieldName description selectPermissions stringifyNum = runMaybeT do
   tableArgsParser    <- lift $ tableArgs table selectPermissions
-  selectionSetParser <- MaybeT $ tableSelectionSet table selectPermissions stringifyNum
+  selectionSetParser <- lift $ tableSelectionSet table selectPermissions stringifyNum
   pure $ P.selection fieldName description tableArgsParser selectionSetParser `mapField`
     \(aliasName, args, fields) ->
       ( aliasName
@@ -113,7 +113,7 @@ selectTableByPk table fieldName description selectPermissions stringifyNum = run
     field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
     pure $ BoolFld . AVCol columnInfo . pure . AEQ True . mkParameter <$>
       P.field (pgiName columnInfo) (pgiDescription columnInfo) field
-  selectionSetParser <- MaybeT $ tableSelectionSet table selectPermissions stringifyNum
+  selectionSetParser <- lift $ tableSelectionSet table selectPermissions stringifyNum
   pure $ P.selection fieldName description argsParser selectionSetParser
     `mapField` \(aliasName, boolExpr, fields) ->
       let defaultPerms = tablePermissionsInfo selectPermissions
@@ -154,7 +154,7 @@ selectTableAggregate table fieldName description selectPermissions stringifyNum 
   tableArgsParser <- lift $ tableArgs table selectPermissions
   aggregateParser <- lift $ tableAggregationFields table selectPermissions
   selectionName   <- lift $ qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
-  nodesParser     <- MaybeT $ tableSelectionSet table selectPermissions stringifyNum
+  nodesParser     <- lift $ tableSelectionSet table selectPermissions stringifyNum
   let typenameRepr = Just ($$(G.litName "__typename"), RQL.TAFExp $ G.unName selectionName)
       aggregationParser =
         fmap catMaybes $ P.selectionSet selectionName Nothing typenameRepr $ sequenceA
@@ -175,6 +175,54 @@ selectTableAggregate table fieldName description selectPermissions stringifyNum 
         }
       )
 
+{- Note [Selectability of tables]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The GraphQL specification requires that if the type of a selected field is an
+interface, union, or object, then its subselection set must not be empty
+(Section 5.3.3).  Since we model database tables by GraphQL objects, this means
+that a table can be selected as a GraphQL field only if it has fields that we
+can select, such as a column.  It is perfectly fine not to allow any selections
+of any columns of the table in the database.  In that case, the table would not
+be selectable as a field in GraphQL.
+
+However, this is not the end of the story.  In addition to scalar fields, we
+support relationships between tables, so that we may have another table B as a
+selected field of this table A.  Then the selectability of A depends on the
+selectability of B: if we permit selection a column of B, then, as a
+consequence, we permit selection of the relationship from A to B, and hence we
+permit selection of A, as there would now be valid GraphQL syntax that selects
+A.  In turn, the selectability of B can depend on the selectability of a further
+table C, through a relationship from B to C.
+
+Now consider the case of a table A, whose columns themselves are not selectable,
+but which has a relationship with itself.  Is A selectable?  In fact, if A has
+no further relationships with other tables, or any computed fields, A is not
+selectable.  But as soon as any leaf field in the transitive closure of tables
+related to A becomes selectable, A itself becomes selectable.
+
+In summary, figuring out the selectability of a table is a mess.  In order to
+avoid doing graph theory, for now, we simply pretend that GraphQL did not have
+the restriction of only allowing selections of fields of type objects when its
+subselection is non-empty.  In practice, this white lie is somewhat unlikely to
+cause errors on the client side, for the following reasons:
+
+- Introspection of the GraphQL schema is normally provided to aid development of
+  valid GraphQL schemas, and so any errors in the exposed schema can be caught
+  at development time: when a developer is building a GraphQL query using schema
+  introspection, they will eventually find out that the selection they aim to do
+  is not valid GraphQL.
+
+- We only support tables that have at least one column (since we require primary
+  keys), so that the admin role can select every table anyway.
+
+However, at the time of writing this note I am not convinced that all we are
+doing is exposing non-existent schema: we should also make sure not to parse
+invalid GraphQL.  So we probably eventually need to figure out the graph theory
+underlying this and fix this, or altenatively convince ourselves that we have
+set up our parsers in such a way that selections of fields of type objects do
+require non-empty subselections.
+-}
 
 -- | Fields of a table
 --
@@ -184,21 +232,25 @@ tableSelectionSet
   => QualifiedTable
   -> SelPermInfo
   -> Bool
-  -> m (Maybe (Parser 'Output n AnnotatedFields))
-tableSelectionSet table selectPermissions stringifyNum = do
+  -> m (Parser 'Output n AnnotatedFields)
+tableSelectionSet table selectPermissions stringifyNum = memoizeOn 'tableSelectionSet table do
   tableInfo <- _tiCoreInfo <$> askTableInfo table
   tableName <- qualifiedObjectToName table
   let tableFields = Map.elems  $ _tciFieldInfoMap tableInfo
   fieldParsers <- fmap concat $ for tableFields \fieldInfo ->
     fieldSelection fieldInfo selectPermissions stringifyNum
-  whenMaybe (not $ null fieldParsers) do
-    let typenameRepr = (FieldName "__typename", RQL.FExp $ G.unName tableName)
-        description  = G.Description . getPGDescription <$> _tciDescription tableInfo
-    memoizeOn 'tableSelectionSet table
-      $ pure
-      $ P.selectionSet tableName description typenameRepr
-      $ fmap catMaybes
-      $ sequenceA fieldParsers
+
+  -- TODO Here we *don't* check if the subselection set is non-empty, even
+  -- though the GraphQL specification requires that it is.  See Note
+  -- [Selectability of tables]
+
+  -- whenMaybe (not $ null fieldParsers) do
+  let typenameRepr = (FieldName "__typename", RQL.FExp $ G.unName tableName)
+      description  = G.Description . getPGDescription <$> _tciDescription tableInfo
+  pure
+    $ P.selectionSet tableName description typenameRepr
+    $ fmap catMaybes
+    $ sequenceA fieldParsers
 
 
 
@@ -498,7 +550,7 @@ computedField ComputedFieldInfo{..} selectPermissions stringifyNum = runMaybeT d
     CFRSetofTable tableName -> do
       remotePerms        <- MaybeT $ tableSelectPermissions tableName
       selectArgsParser   <- lift $ tableArgs tableName remotePerms
-      selectionSetParser <- MaybeT $ tableSelectionSet tableName remotePerms stringifyNum
+      selectionSetParser <- lift $ tableSelectionSet tableName remotePerms stringifyNum
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure $ P.selection fieldName Nothing fieldArgsParser selectionSetParser
         `mapField` \(aliasName, (functionArgs, args), fields) ->

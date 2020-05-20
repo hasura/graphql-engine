@@ -311,7 +311,7 @@ updateTableByPk table fieldName description updatePerms selectPerms stringifyNum
   columns   <- lift   $ tableSelectColumns table selectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
   opArgs    <- MaybeT $ updateOperators table updatePerms
-  selection <- MaybeT $ tableSelectionSet table selectPerms stringifyNum
+  selection <- lift $ tableSelectionSet table selectPerms stringifyNum
   let argsParser = liftA2 (,) opArgs pkArgs
   pure $ P.selection fieldName description argsParser selection
     `mapField` (mkUpdateObject table columns updatePerms . third RQL.MOutSinglerowObject)
@@ -463,7 +463,7 @@ deleteFromTableByPk
 deleteFromTableByPk table fieldName description deletePerms selectPerms stringifyNum = runMaybeT $ do
   columns   <- lift   $ tableSelectColumns table selectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
-  selection <- MaybeT $ tableSelectionSet table selectPerms stringifyNum
+  selection <- lift $ tableSelectionSet table selectPerms stringifyNum
   pure $ P.selection fieldName description pkArgs selection
     `mapField` (mkDeleteObject table columns deletePerms . third RQL.MOutSinglerowObject)
 
@@ -496,7 +496,7 @@ mutationSelectionSet table selectPerms stringifyNum = do
   tableName <- qualifiedObjectToName table
   returning <- runMaybeT do
     permissions <- MaybeT $ pure selectPerms
-    tableSet    <- MaybeT $ tableSelectionSet table permissions stringifyNum
+    tableSet    <- lift $ tableSelectionSet table permissions stringifyNum
     let returningName = $$(G.litName "returning")
         returningDesc = "data from the rows affected by the mutation"
     pure $ P.selection_ returningName  (Just returningDesc) tableSet

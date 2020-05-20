@@ -285,6 +285,8 @@ fieldOptional name description parser = FieldsParser
   , ifParser = M.lookup name >>> withPath (Key (unName name) :) . traverse (pInputParser parser)
   }
 
+-- Should this rather take a non-empty `FieldParser` list?
+-- See also Note [Selectability of tables].
 selectionSet
   :: MonadParse m
   => Name
