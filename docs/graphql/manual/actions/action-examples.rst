@@ -27,11 +27,9 @@ Let's say we have the following two tables in our schema:
 
 .. code-block:: sql
 
-    author (id int, name text, is_active boolean, rating int, address_id)
+    authors (id int, name text, is_active boolean, rating int, address_id)
 
-    address (id int, street text, zip text, city text)
-
-Now we have an action ``updateAddress`` that looks as follows:
+    addresses (id int, street text, zip text, city text)
 
 Now we have an action ``updateAddress`` that looks as follows:
 
@@ -39,7 +37,7 @@ Now we have an action ``updateAddress`` that looks as follows:
        :alt: Update address action
        :width: 65%
 
-We can now add an object relationship from the ``updateAddress`` action to the ``author`` table in our schema.
+We can now add an object relationship from the ``updateAddress`` action to the ``authors`` table in our schema.
 We call it ``updatedAddressAuthor``.
 
 .. thumbnail:: /img/graphql/manual/actions/action-object-relationship.png
@@ -85,9 +83,9 @@ Let's say we have the following two tables in our schema:
 
 .. code-block:: sql
 
-    author (id int, name text, is_active boolean, rating int)
+    authors (id int, name text, is_active boolean, rating int)
 
-    article (id int, title text, content text, author_id int)
+    articles (id int, title text, content text, author_id int)
 
 Now we have an action ``updateAuthor`` that looks as follows:
 
@@ -95,7 +93,7 @@ Now we have an action ``updateAuthor`` that looks as follows:
        :alt: Update author action
        :width: 65%
 
-We can now add an array relationship from the ``updateAuthor`` action to the ``article`` table in our schema.
+We can now add an array relationship from the ``updateAuthor`` action to the ``articles`` table in our schema.
 We call it ``updatedAuthorArticles``.
 
 .. thumbnail:: /img/graphql/manual/actions/action-array-relationship.png
