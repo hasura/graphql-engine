@@ -56,10 +56,10 @@ import {
 import { EventTriggerProperty } from './EventTriggers/Modify/utils';
 import { getLogsTableDef } from './utils';
 
-export const fetchTriggers = (kind: Nullable<TriggerKind>) => (
-  dispatch: Dispatch,
-  getState: GetReduxState
-): Thunk => {
+export const fetchTriggers = (kind: Nullable<TriggerKind>): Thunk<Promise<void>> => (
+  dispatch,
+  getState
+) => {
   const bulkQueryArgs = [];
   if (kind) {
     bulkQueryArgs.push(
@@ -105,7 +105,7 @@ export const addScheduledTrigger = (
   state: LocalScheduledTriggerState,
   successCb?: () => void,
   errorCb?: () => void
-): Thunk => (dispatch: Dispatch, getState: GetReduxState) => {
+): Thunk => (dispatch, getState) => {
   const validationError = validateAddState(state);
 
   const errorMsg = 'Creating scheduled trigger failed';
@@ -163,7 +163,7 @@ export const saveScheduledTrigger = (
   existingTrigger: ScheduledTrigger,
   successCb?: () => void,
   errorCb?: () => void
-): Thunk => (dispatch: Dispatch, getState: GetReduxState) => {
+): Thunk => (dispatch, getState) => {
   const validationError = validateAddState(state);
 
   const errorMsg = 'Updating scheduled trigger failed';
@@ -254,7 +254,7 @@ export const deleteScheduledTrigger = (
   trigger: ScheduledTrigger,
   successCb?: () => void,
   errorCb?: () => void
-): Thunk => (dispatch: Dispatch, getState: GetReduxState) => {
+): Thunk => (dispatch, getState) => {
   const isOk = getConfirmation(
     `This will delete the cron trigger permanently and delete all the associated events.`,
     true,
@@ -310,7 +310,7 @@ export const createEventTrigger = (
   successCb?: () => null,
   errorCb?: () => null
 ): Thunk => {
-  return (dispatch: Dispatch, getState: GetReduxState) => {
+  return (dispatch, getState) => {
     const validationError = validateETState(state);
     if (validationError) {
       dispatch(
@@ -364,7 +364,7 @@ export const modifyEventTrigger = (
   table?: Table,
   successCb?: () => void,
   errorCb?: () => void
-): Thunk => (dispatch: Dispatch, getState: GetReduxState) => {
+): Thunk => (dispatch, getState) => {
   const downQuery = generateCreateEventTriggerQuery(
     parseServerETDefinition(trigger, table),
     true
@@ -456,7 +456,7 @@ export const deleteEventTrigger = (
   trigger: EventTrigger,
   successCb?: () => void,
   errorCb?: () => void
-): Thunk => (dispatch: Dispatch, getState: GetReduxState) => {
+): Thunk => (dispatch, getState) => {
   const isOk = getConfirmation(
     `This will permanently delete the event trigger and the associated metadata`,
     true,
@@ -510,7 +510,7 @@ export const createScheduledEvent = (
   state: LocalAdhocEventState,
   successCb?: () => void,
   errorCb?: () => void
-): Thunk => (dispatch: Dispatch) => {
+): Thunk => (dispatch) => {
   const validationError = validateAdhocEventState(state);
   const errorMessage = 'Failed scheduling the event';
   if (validationError) {
@@ -554,7 +554,7 @@ export const redeliverDataEvent = (
   eventId: string,
   successCb?: CallableFunction,
   errorCb?: CallableFunction
-): Thunk => (dispatch: Dispatch, getState: GetReduxState) => {
+): Thunk => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const options = {
     method: 'POST',
@@ -589,7 +589,7 @@ export const getEventLogs = (
   eventKind: EventKind,
   successCallback: (logs: InvocationLog[]) => void,
   errorCallback: (error: any) => void
-): Thunk => (dispatch: Dispatch) => {
+): Thunk => (dispatch) => {
   const logTableDef = getLogsTableDef(eventKind);
 
   const query = getSelectQuery(

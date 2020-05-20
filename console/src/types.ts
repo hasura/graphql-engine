@@ -1,7 +1,8 @@
 import React from 'react';
 import { ConnectedComponent, Connect } from 'react-redux';
-import { Action } from 'redux'
 import { ThunkAction, ThunkDispatch } from 'redux-thunk'
+import { Dispatch as ReduxDispatch } from 'redux';
+import { RouterAction } from 'react-router-redux';
 import { Table, Schema } from './components/Common/utils/pgUtils';
 import { EventsState } from './components/Services/Events/state';
 import { RAEvents } from './components/Services/Events/types';
@@ -19,11 +20,7 @@ export type ReduxState = {
   };
 };
 
-export type ReduxAction = RAEvents | {
-  type: string;
-  payload: any;
-  data: any;
-};
+export type ReduxAction = RAEvents | RouterAction;
 
 export type MapReduxToProps = (state: ReduxState, ownProps: any) => any;
 
@@ -33,12 +30,12 @@ export type ComponentReduxConnector = (
 
 export type GetReduxState = () => ReduxState;
 
-export type Thunk<ReturnType = void> = ThunkAction<
+export type Thunk<ReturnType=void> = ThunkAction<
   ReturnType,
   ReduxState,
   unknown,
-  Action<string>
+  ReduxAction
 >;
 
 // TODO: proper solution for dispatching "push" actions as they return void
-export type Dispatch = (action: (ReduxAction | Thunk | void)) => any;
+export type Dispatch = ReduxDispatch<ReduxAction>

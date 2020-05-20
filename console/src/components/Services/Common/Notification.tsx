@@ -2,6 +2,7 @@ import React from 'react';
 import AceEditor from 'react-ace';
 import { showNotification } from '../../App/Actions';
 import Button from '../../Common/Button/Button';
+import { Thunk } from '../../../types'
 
 import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
@@ -31,7 +32,7 @@ const getNotificationDetails = (
   );
 };
 
-const showErrorNotification = (title: string, message: string, error?: any) => {
+const showErrorNotification = (title: string, message: string, error?: any): Thunk => {
   const getErrorMessage = () => {
     let notificationMessage;
 
@@ -117,7 +118,7 @@ const showErrorNotification = (title: string, message: string, error?: any) => {
   const errorMessage = getErrorMessage();
   const errorJson = getErrorJson();
 
-  return (dispatch: any) => {
+  return dispatch => {
     const getNotificationAction = () => {
       let action;
 

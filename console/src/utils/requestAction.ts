@@ -18,7 +18,7 @@ const requestAction = (
   ERROR?: string,
   includeCredentials = true,
   includeAdminHeaders = false
-): Thunk => {
+): Thunk<Promise<any>> => {
   return (dispatch: any, getState: any) => {
     const requestOptions = { ...options };
 

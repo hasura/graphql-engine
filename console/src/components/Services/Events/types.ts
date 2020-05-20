@@ -1,6 +1,7 @@
 import { Header as ServerHeader } from '../../Common/utils/v1QueryUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
 import { Dispatch } from '../../../types';
+import { Action as ReduxAction } from 'redux';
 
 export const LOADING_TRIGGERS = 'Events/LOADING_TRIGGERS';
 export const LOADED_TRIGGERS = 'Events/LOADED_TRIGGERS';
@@ -120,22 +121,22 @@ export type Triggers = {
  * Redux Action types
  */
 
-export type RASetAllTriggers = {
+export interface RASetAllTriggers extends ReduxAction {
   type: typeof LOADED_TRIGGERS;
   data: Triggers;
 };
 
-export type RASetScheduledTriggers = {
+export interface RASetScheduledTriggers extends ReduxAction {
   type: typeof LOADED_SCHEDULED_TRIGGERS;
   data: ScheduledTrigger[];
 };
 
-export type RASetEventTriggers = {
+export interface RASetEventTriggers extends ReduxAction {
   type: typeof LOADED_EVENT_TRIGGERS;
   data: EventTrigger[];
 };
 
-export type RASetCurrentTrigger = {
+export interface RASetCurrentTrigger extends ReduxAction {
   type: typeof SET_CURRENT_TRIGGER;
   name: string;
 };

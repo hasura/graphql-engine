@@ -3,10 +3,6 @@ declare module '*.scss' {
   export default content;
 }
 
-declare module 'react-router-redux' {
-  export const push: (path: string) => void;
-}
-
 declare module 'react-helmet' {
   const Helmet: React.FC<{ title: string }>;
   export default Helmet;
