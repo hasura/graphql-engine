@@ -76,6 +76,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: add integration guide for AWS Cognito (#4822)
 - docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
 - docs: add page for procuring custom docker images and binaries (#4828)
+- docs: add constent on how to secure action handlers (#4743)
 
 ## `v1.2.0`
 
@@ -101,8 +102,6 @@ using this flag is insecure since verification is not carried out.
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
 - docs: update migrations docs with config v2 (#4586)
 - docs: update actions docs (#4586)
-- docs: add page on how to secure action handlers (#4743)
-- docs: add page with action examples (#4743)
 
 ## `v1.2.0-beta.5`
 
