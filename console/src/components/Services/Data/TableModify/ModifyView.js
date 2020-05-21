@@ -27,7 +27,7 @@ import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { changeViewRootFields } from '../Common/TooltipMessages';
 import styles from './ModifyTable.scss';
-import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
+import ViewDefinitions from './ViewDefinitions';
 
 const ModifyView = props => {
   const {
@@ -265,7 +265,7 @@ const ModifyView = props => {
           <h4 className={styles.subheading_text}>Columns</h4>
           {getViewColumnsSection()}
           <br />
-          <ViewDefinitions {...{ modifyViewOnClick, sql }} />
+          <ViewDefinitions modifyViewOnClick={modifyViewOnClick} sql={sql} />
 
           <hr />
           {getViewRootFieldsSection()}
@@ -280,30 +280,6 @@ const ModifyView = props => {
   );
 };
 
-const ViewDefinitions = ({ modifyViewOnClick, sql }) => (
-  <>
-    <h4 className={styles.subheading_text}>
-      View Definition:
-      <span className={styles.add_mar_left}>
-        <Button
-          type="submit"
-          size="xs"
-          className={styles.add_mar_right}
-          onClick={modifyViewOnClick}
-          data-test="modify-view"
-        >
-          Modify
-        </Button>
-      </span>
-    </h4>
-
-    <TextAreaWithCopy
-      copyText={sql}
-      textLanguage={'sql'}
-      id={'copyCustomFunctionSQL'}
-    />
-  </>
-);
 ModifyView.propTypes = {
   sql: PropTypes.string.isRequired,
   tableName: PropTypes.string.isRequired,
