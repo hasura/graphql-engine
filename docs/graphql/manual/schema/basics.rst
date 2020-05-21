@@ -1,4 +1,4 @@
-.. meta::
+x.. meta::
    :description: Schema design basics in Hasura
    :keywords: hasura, docs, schema, basics
 

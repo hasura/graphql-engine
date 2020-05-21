@@ -2,7 +2,7 @@
    :description: Reusing existing types with actions
    :keywords: hasura, docs, actions, connect, existing types
 
-.. _reuse-types-actions:
+.. _reuse_types_actions:
 
 Reusing existing types with actions
 ===================================
@@ -16,19 +16,20 @@ Use case
 --------
 
 Actions are a way to extend your GraphQL schema with custom queries or mutations. It
-is a typical use case that the custom actions' response is actually related to
-existing objects in the schema, thus allowing for Hasura types to be "reused" in actions. 
-For example, a custom ``insertAuthor`` action will be related to the ``author`` object in the schema. 
-Hence, we would want to be able
+is quite a typical case that an action's response is actually related to
+existing objects in the schema and the action needs to be connected with the rest of
+the graph.
+
+For example, a custom ``insertAuthor`` action will be
+related to the ``author`` object in the schema. Hence, we would want to be able
 to get information about the ``author`` from the graph as a response of the
 ``insertAuthor`` mutation.
 
-Using custom object types relationships
----------------------------------------
+Using action output type's relationships
+----------------------------------------
 
-Actions can be connected to the rest of the graph by setting up
-:ref:`relationships <custom_object_type_relationships>` on its return output
-type.
+Actions can be connected to the rest of the graph by setting up relationships on
+its return output type.
 
 This allows complex responses to be returned as an action's response traversing
 the graph via the output type's relationships.
@@ -48,9 +49,9 @@ the graph via the output type's relationships.
      author_id : Int!
   }
 
-We can create an **object relationship** called ``updatedAuthor`` between the
-``UpdateAuthorOutput`` object type and the ``author`` table via the
-``UpdateAuthorOutput::author_id -> author::id`` fields.
+We can create an object relationship called ``updatedAuthor`` between the
+``UpdateAuthorOutput`` object type and the ``author`` table using the
+``UpdateAuthorOutput.author_id`` and  ``author.id`` fields.
 
 The object type will now be modified as:
 
@@ -80,8 +81,10 @@ Now we can make a mutation request with a complex response such as:
     }
   }
 
-Creating custom object type relationships
-*****************************************
+See more details at :ref:`custom object type relationships <custom_object_type_relationships>`
+
+Creating relationships for custom object types
+**********************************************
 
 You can create relationships for custom output types by:
 
