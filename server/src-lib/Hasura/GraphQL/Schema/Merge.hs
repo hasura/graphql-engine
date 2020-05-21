@@ -5,8 +5,6 @@ module Hasura.GraphQL.Schema.Merge
   ) where
 
 
-import           Data.Maybe                    (maybeToList)
-
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G

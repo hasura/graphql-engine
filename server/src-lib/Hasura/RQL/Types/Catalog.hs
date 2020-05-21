@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Catalog
   , CatalogPermission(..)
   , CatalogEventTrigger(..)
   , CatalogFunction(..)
+  , CatalogCronTrigger(..)
   , CatalogCustomTypes(..)
   ) where
 
@@ -35,8 +36,11 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
+import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.Session
 import           Hasura.SQL.Types
+
+import           System.Cron.Types                    (CronSchedule(..))
 
 newtype CatalogForeignKey
   = CatalogForeignKey
@@ -162,6 +166,20 @@ $(deriveFromJSON (aesonDrop 4 snakeCase) ''CatalogCustomTypes)
 
 type CatalogAction = ActionMetadata
 
+data CatalogCronTrigger
+  = CatalogCronTrigger
+  { _cctName           :: !TriggerName
+  , _cctWebhookConf    :: !InputWebhook
+  , _cctCronSchedule   :: !CronSchedule
+  , _cctPayload        :: !(Maybe Value)
+  , _cctRetryConf      :: !(Maybe STRetryConf)
+  , _cctHeaderConf     :: !(Maybe [HeaderConf])
+  , _cctComment        :: !(Maybe Text)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogCronTrigger
+instance Cacheable CatalogCronTrigger
+$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogCronTrigger)
+
 data CatalogMetadata
   = CatalogMetadata
   { _cmTables               :: ![CatalogTable]
@@ -174,6 +192,7 @@ data CatalogMetadata
   , _cmComputedFields       :: ![CatalogComputedField]
   , _cmCustomTypes          :: !CatalogCustomTypes
   , _cmActions              :: ![CatalogAction]
+  , _cmCronTriggers         :: ![CatalogCronTrigger]
   } deriving (Show, Eq, Generic)
 instance NFData CatalogMetadata
 instance Cacheable CatalogMetadata
