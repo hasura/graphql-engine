@@ -72,6 +72,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: add docs page on query performance (close #2316) (#3693)
 - docs: add a sample Caddyfile for Caddy 2 in enable-https section (#4710)
 - docs: add disabling dev mode to production checklist (#4715)
+- docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
 
 ## `v1.2.0`
 
@@ -97,7 +98,6 @@ using this flag is insecure since verification is not carried out.
 - cli: remove irrelevant flags from init command (close #4508) (#4549)
 - docs: update migrations docs with config v2 (#4586)
 - docs: update actions docs (#4586)
-- docs: replace incomplete trouble shooting section with reference on debugging errors (close #4052) (#4825)
 
 ## `v1.2.0-beta.5`
 
