@@ -32,7 +32,7 @@ You can also check :ref:`guides_deployment` for more specific examples.
 
 .. admonition:: Custom Docker images or binaries
 
-  If you need a custom Docker image or binary for GraphQL engine, please see :ref:`Custom Docker images or binaries <custom_docker_image>`
+  If you need a custom Docker image or binary for GraphQL engine, please see :ref:`this page <custom_docker_image>`
 
 
 Configuration
