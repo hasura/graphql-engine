@@ -56,6 +56,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
 - server: fix importing of allow list query from metadata (fix #4687)
 - server: flush log buffer during shutdown (#4800)
+- server: fix edge case with printing logs on startup failure (fix #4772)
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
 - console: allow modifying default value for PK (fix #4075) (#4679)
@@ -72,7 +73,9 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: add docs page on query performance (close #2316) (#3693)
 - docs: add a sample Caddyfile for Caddy 2 in enable-https section (#4710)
 - docs: add disabling dev mode to production checklist (#4715)
-- docs: add docs for AWS Cognito (#4822)
+- docs: add integration guide for AWS Cognito (#4822)
+- docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
+- docs: add page for procuring custom docker images and binaries (#4828)
 
 ## `v1.2.0`
 
