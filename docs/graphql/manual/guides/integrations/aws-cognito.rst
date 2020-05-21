@@ -12,24 +12,27 @@ Using AWS Cognito for authentication
   :depth: 1
   :local:
 
+Introduction
+------------
+
 In this guide, we will walk through how to set up AWS Cognito to work with the Hasura GraphQL engine.
 
-Setup User Pools and Hosted Web UI
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Set up user pools and hosted web UI
+-----------------------------------
 
 Follow `these instructions <https://docs.aws.amazon.com/cognito/latest/developerguide/getting-started-with-cognito-user-pools.html>`__ 
-to set up a user pool, add an app and enable the Hosted Web UI in AWS cognito. While enabling Hosted Web UI, you need to select ``Implicit Grant``.
+to set up a user pool, add an app and enable the hosted web UI in AWS cognito. While enabling the hosted web UI, you need to select the checkbox ``Implicit Grant``.
 
 .. thumbnail:: /img/graphql/manual/guides/cognito-app-client-settings.png
    :alt: Cognito App Client Settings
 
 
-Create lambda function to add claims to the JWT 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Create a lambda function to add claims to the JWT 
+-------------------------------------------------
 
-To add custom claims to the JWT, we need to create a lambda function and configure AWS cognito to invoke this lambda before generating a token.
+To add custom claims to the JWT, we need to create a lambda function and configure AWS cognito to invoke this lambda function before generating a token.
 
-- Go to `AWS Lambda home <https://console.aws.amazon.com/lambda/home>`__ and click on the ``Create Function`` Button to create a new lambda function
+- Go to `AWS Lambda home <https://console.aws.amazon.com/lambda/home>`__ and click on the ``Create Function`` button to create a new lambda function
 - Add the following code for the ``Function Code``
 
 .. code-block:: javascript
@@ -54,9 +57,9 @@ To add custom claims to the JWT, we need to create a lambda function and configu
    :alt: Cognito Lambda function to add claims to the JWT
 
 Configure Cognito to trigger the lambda function
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------------
 
-In cognito, select Triggers -> Pre Token Generation and choose the lambda function created above:
+In cognito, select ``Triggers`` -> ``Pre Token Generation`` and choose the lambda function created above:
 
 .. thumbnail:: /img/graphql/manual/guides/cognito-triggers-1.png
    :alt: Select lambda for the trigger
@@ -66,24 +69,24 @@ In cognito, select Triggers -> Pre Token Generation and choose the lambda functi
    :alt: Select lambda for the trigger
 
 
-Test Cognito Login and generate sample JWTs for testing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Test the Cognito login and generate sample JWTs for testing
+-----------------------------------------------------------
 
 You don't need to integrate your UI with Cognito for testing. You can follow the steps below:
 
-1. Launch the Hosted UI from AWS Cognito
+1. Launch the hosted UI from AWS Cognito.
 
 .. thumbnail:: /img/graphql/manual/guides/cognito-launch-hosted-ui.png
    :alt: Launch Cognito Login UI
 
 
-2. You should see the cognito login page where you can login or signup.
+2. You should see the Cognito login page where you can log in or sign up.
 
 .. thumbnail:: /img/graphql/manual/guides/cognito-login.png
    :alt: Cognito Login Page
 
 3. After successfully logging in, you will be redirected to ``https://localhost:3000/cognito-callback#id_token=xxxxxx&yyyyyy``.
-This page may be a 404 if you don't have a UI running on localhost:3000. Extract the ``id_token`` value from this URL
+This page may be a 404 if you don't have a UI running on localhost:3000. Extract the ``id_token`` value from this URL.
 
 .. thumbnail:: /img/graphql/manual/guides/cognito-redirect.png
    :alt: JWT from id_token query param
@@ -93,17 +96,17 @@ This page may be a 404 if you don't have a UI running on localhost:3000. Extract
 .. thumbnail:: /img/graphql/manual/guides/cognito-jwt.png
    :alt: JWT debug on jwt.io
 
-**Save this JWT token value so that we can use it later to test authorization using the Hasura console.**
+**Save this JWT token value so that we can use it later to test the authorization using the Hasura console.**
 
 
-Configure Hasura to use Auth0 Keys
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Configure Hasura to use Auth0 keys
+----------------------------------
 
 Cognito publishes their JWK under:
 
 ``https://cognito-idp.<aws-region>.amazonaws.com/<userPoolId>/.well-known/jwks.json``
 
-While starting Hasura set the environmental variable ``HASURA_GRAPHQL_JWT_SECRET`` or the flag ``--jwt-secret` to the below json:
+While starting Hasura, set the environmental variable ``HASURA_GRAPHQL_JWT_SECRET`` or the flag ``--jwt-secret`` to the below JSON:
 
 .. code-block:: javascript
 
@@ -113,11 +116,11 @@ While starting Hasura set the environmental variable ``HASURA_GRAPHQL_JWT_SECRET
     "claims_format": "stringified_json"
     }
 
-Add Access Control Rules via Hasura Console
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Add access control rules via the Hasura console
+-----------------------------------------------
 
 Cognito is configured and ready to be used in the application. You can now set up access control rules that
-will automatically get applied whenever a client makes a graphql query with the Auth0 token.
+will automatically get applied whenever a client makes a GraphQL query with the Auth0 token.
 
 Refer to :ref:`auth_basics` for more information.
 
@@ -138,10 +141,10 @@ The configured unauthorized role will be used whenever an access token is not pr
 This can be useful for data that you would like anyone to be able to access and can be configured and restricted
 just like any other role.
 
-Sync Users from Cognito
-^^^^^^^^^^^^^^^^^^^^^^^^
+Sync users from Cognito
+-----------------------
 
-Now that you can signup/login using Cognito, you will need a way to sync your users in Postgres as well.
+Now that you can sign up/log in using Cognito, you will need a way to sync your users in Postgres as well.
 All you really need is the Auth0 ``user_id`` in something like a ``users`` table.
 
 This can be done creating a lambda function and configuring it as the ``Post Authentication Trigger``. 
@@ -172,7 +175,7 @@ The parameters available for this trigger are described `here <https://docs.aws.
      });
    }
 
-That’s it! This lambda function will be triggered on every successful signup/login and sync your Auth0 user into your postgres database.
+That’s it! This lambda function will be triggered on every successful sign up/log in and sync your Auth0 user into your postgres database.
 
 .. note::
 
@@ -181,4 +184,4 @@ That’s it! This lambda function will be triggered on every successful signup/l
 
 .. admonition:: Local dev with Auth0 rules
 
-   The sync step will require a reachable endpoint to Hasura and this is not possible in localhost. You can use `ngrok <https://ngrok.com/>`_ or similar services to expose your locally running Hasura with a public endpoint temporarily.
+   The sync step will require a reachable endpoint to Hasura and this is not possible in localhost. You can use `ngrok <https://ngrok.com/>`__ or similar services to expose your locally running Hasura with a public endpoint temporarily.
