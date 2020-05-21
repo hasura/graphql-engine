@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 
-import { StyledSwitchButton, StyledSlider } from './SwitchButton';
+import {
+  StyledSwitchButton,
+  StyledSlider,
+  StyledSwitchButtonProps,
+} from './SwitchButton';
 
-export const SwitchButton = props => {
+interface SwitchButtonProps extends StyledSwitchButtonProps {}
+
+export const SwitchButton: React.FC<SwitchButtonProps> = props => {
   const [isChecked, toggleCheckbox] = useState(false);
   const { children } = props;
 
