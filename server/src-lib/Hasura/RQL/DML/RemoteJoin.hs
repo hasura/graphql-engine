@@ -11,6 +11,7 @@ import           Hasura.Prelude
 
 import           Control.Lens
 import           Data.Validation
+import           Data.List                              (nub)
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
@@ -93,7 +94,7 @@ pathToAlias path counter =
 data RemoteJoin
   = RemoteJoin
   { _rjName          :: !FieldName -- ^ The remote join field name.
-  , _rjArgs          :: ![G.Argument] -- ^ User-provided arguments.
+  , _rjArgs          :: ![RemoteFieldArgument] -- ^ User-provided arguments with variables.
   , _rjSelSet        :: ![G.Field] -- ^ User-provided selection set of remote field.
   , _rjHasuraFields  :: !(HashSet FieldName) -- ^ Table fields.
   , _rjFieldCall     :: !(NonEmpty FieldCall) -- ^ Remote server fields.
@@ -221,7 +222,7 @@ compositeValueToJSON = \case
   CVFromRemote v -> v
 
 -- | A 'RemoteJoinField' carries the minimal GraphQL AST of a remote relationship field.
--- All such 'RemoteJoinField's of a pariticular remote schema are batched together
+-- All such 'RemoteJoinField's of a particular remote schema are batched together
 -- and made GraphQL request to remote server to fetch remote join values.
 data RemoteJoinField
   = RemoteJoinField
@@ -229,6 +230,7 @@ data RemoteJoinField
   , _rjfAlias        :: !G.Alias -- ^ Top level alias of the field
   , _rjfField        :: !G.Field -- ^ The field AST
   , _rjfFieldCall    :: ![G.Name] -- ^ Path to remote join value
+  , _rjfVariables    :: ![(G.VariableDefinition,A.Value)] -- ^ Variables used in the AST
   } deriving (Show, Eq)
 
 -- | Generate composite JSON ('CompositeValue') parameterised over 'RemoteJoinField'
@@ -259,8 +261,12 @@ traverseQueryResponseJSON rjm =
                                  map ((G.Variable . G.Name) *** ordJsonvalueToGValue) siblingFields
               hasuraFieldArgs = flip Map.filterWithKey siblingFieldArgs $ \k _ -> k `elem` hasuraFieldVariables
               fieldAlias = pathToAlias (appendPath fieldName path) counter
-          queryField <- fieldCallsToField inputArgs hasuraFieldArgs selSet fieldAlias fieldCall
-          pure $ RemoteJoinField rsi fieldAlias queryField $ map fcName $ toList $ NE.tail fieldCall
+          queryField <- fieldCallsToField (map _rfaArgument inputArgs) hasuraFieldArgs selSet fieldAlias fieldCall
+          pure $ RemoteJoinField rsi
+                                 fieldAlias
+                                 queryField
+                                 (map fcName $ toList $ NE.tail fieldCall)
+                                 (concat $ mapMaybe _rfaVariable inputArgs)
           where
             ordJsonvalueToGValue = jsonValueToGValue . AO.fromOrdered
 
@@ -296,7 +302,10 @@ fetchRemoteJoinFields
   -> m AO.Object
 fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins = do
   results <- forM (Map.toList remoteSchemaBatch) $ \(rsi, batch) -> do
-    let gqlReq = fieldsToRequest G.OperationTypeQuery $ map _rjfField $ toList batch
+    let batchList = toList batch
+        gqlReq = fieldsToRequest G.OperationTypeQuery
+                                 (map _rjfField $ batchList)
+                                 (concat (map _rjfVariables $ batchList))
         gqlReqUnparsed = (GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc) <$> gqlReq
     -- NOTE: discard remote headers (for now):
     (_, _, respBody) <- execRemoteGQ' manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
@@ -319,29 +328,50 @@ fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins = do
   where
     remoteSchemaBatch = Map.groupOnNE _rjfRemoteSchema remoteJoins
 
-    fieldsToRequest :: G.OperationType -> [G.Field] -> GQLReqParsed
-    fieldsToRequest opType gfields =
-      GQLReq
-         { _grOperationName = Nothing
-         , _grQuery =
-             GQLExecDoc
-               [ G.ExecutableDefinitionOperation
-                   (G.OperationDefinitionTyped
-                     ( emptyOperationDefinition
-                         {G._todSelectionSet = map G.SelectionField gfields}
+    fieldsToRequest :: G.OperationType -> [G.Field] -> [(G.VariableDefinition,A.Value)] -> GQLReqParsed
+    fieldsToRequest opType gfields vars =
+      case vars of
+        [] ->
+          GQLReq
+            { _grOperationName = Nothing
+            , _grQuery =
+               GQLExecDoc
+                 [ G.ExecutableDefinitionOperation
+                     (G.OperationDefinitionTyped
+                       ( emptyOperationDefinition
+                           { G._todSelectionSet = map G.SelectionField gfields
+                           }
+                       )
                      )
-                   )
-               ]
-         , _grVariables = Nothing -- TODO: Put variables in here?
-         }
-        where
-          emptyOperationDefinition =
-            G.TypedOperationDefinition {
-              G._todType = opType
-            , G._todName = Nothing
-            , G._todVariableDefinitions = []
-            , G._todDirectives = []
-            , G._todSelectionSet = [] }
+                  ]
+             , _grVariables = Nothing
+             }
+        vars' ->
+          GQLReq
+            { _grOperationName = Nothing
+            , _grQuery =
+                GQLExecDoc
+                  [ G.ExecutableDefinitionOperation
+                      (G.OperationDefinitionTyped
+                       ( emptyOperationDefinition
+                            { G._todSelectionSet = map G.SelectionField gfields
+                            , G._todVariableDefinitions = nub (map fst vars')
+                            }
+                        )
+                      )
+                  ]
+            , _grVariables = Just $ Map.fromList
+                                      (map (\(varDef, val) -> (G._vdVariable varDef, val)) vars')
+            }
+
+      where
+        emptyOperationDefinition =
+          G.TypedOperationDefinition {
+             G._todType = opType
+           , G._todName = Nothing
+           , G._todVariableDefinitions = []
+           , G._todDirectives = []
+           , G._todSelectionSet = [] }
 
 
 
@@ -416,7 +446,8 @@ mergeValue lVal rVal = case (lVal, rVal) of
     let fieldsToMap = Map.fromList . map (G._ofName &&& G._ofValue)
     in G.VObject $ G.ObjectValueG $ map (uncurry G.ObjectFieldG) $ Map.toList $
        Map.unionWith mergeValue (fieldsToMap l) (fieldsToMap r)
-  (l, _) -> l -- FIXME:- throw error for merging non-lists and non-objects
+  (_, _) -> error $ "can only merge a list with another list or an " <>
+                    "object with another object"
 
 -- | Create an argument map using the inputs taken from the hasura database.
 createArguments

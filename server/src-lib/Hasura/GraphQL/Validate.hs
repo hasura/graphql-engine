@@ -43,6 +43,8 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Time
 import           Hasura.SQL.Value
+import           Hasura.RQL.DML.Select.Types
+import           Hasura.GraphQL.Resolve.InputValue      (annInpValueToJson)
 
 data QueryParts
   = QueryParts
@@ -219,9 +221,13 @@ getQueryParts (GQLReq opNameM q varValsM) = do
     (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGQLExecDoc q
 
 -- | Convert the validated arguments to GraphQL parser AST arguments
-unValidateArgsMap :: ArgsMap -> [G.Argument]
-unValidateArgsMap =
-  map (\(n, inpVal) -> G.Argument n $ unValidateInpVal inpVal) . Map.toList
+unValidateArgsMap :: ArgsMap -> [RemoteFieldArgument]
+unValidateArgsMap argsMap =
+  map (\(n, inpVal) ->
+         let _rfaArgument = G.Argument n $ unValidateInpVal inpVal
+             _rfaVariable = unValidateInpVariable inpVal
+         in RemoteFieldArgument {..})
+  . Map.toList $ argsMap
 
 -- | Convert the validated field to GraphQL parser AST field
 unValidateField :: Field -> G.Field
@@ -231,17 +237,48 @@ unValidateField (Field alias name _ argsMap selSet _) =
       sels = map (G.SelectionField . unValidateField) $ toList selSet
   in G.Field (Just alias) name args [] sels
 
--- | Convert the validated input value to GraphQL value
+-- | Get the variable definition and it's value (if exists)
+unValidateInpVariable :: AnnInpVal -> Maybe [(G.VariableDefinition,A.Value)]
+unValidateInpVariable inputValue =
+  case (_aivValue inputValue) of
+    AGScalar _ _ -> mkVariableDefnValueTuple inputValue
+    AGEnum _ _ -> mkVariableDefnValueTuple inputValue
+    AGObject _ o ->
+      (\obj ->
+         let listObjects = OMap.toList obj
+         in concat $
+         mapMaybe (\(_, inpVal) -> unValidateInpVariable inpVal) listObjects)
+      <$> o
+    AGArray _ _ -> mkVariableDefnValueTuple inputValue
+   where
+     mkVariableDefnValueTuple val = maybe Nothing (\vars -> Just [vars]) $
+                                     variableDefnValueTuple val
+
+     variableDefnValueTuple :: AnnInpVal -> Maybe (G.VariableDefinition,A.Value)
+     variableDefnValueTuple inpVal@AnnInpVal {..} =
+      let varDefn = G.VariableDefinition <$> _aivVariable <*> Just _aivType <*> Just Nothing
+      in (,) <$> varDefn <*> Just (annInpValueToJson inpVal)
+
+-- | Convert the validated input value to GraphQL value, if the input value
+-- is a variable then it will be returned without resolving it, otherwise it
+-- will be resolved
 unValidateInpVal :: AnnInpVal -> G.Value
-unValidateInpVal (AnnInpVal _ _ val) = fromMaybe G.VNull $
-  case val of
-    AGScalar _ v -> pgScalarToGValue <$> v
-    AGEnum _ v -> pgEnumToGEnum v
-    AGObject _ o -> (G.VObject . G.ObjectValueG
-                     . map (uncurry G.ObjectFieldG . (second unValidateInpVal))
-                     . OMap.toList
-                    ) <$> o
-    AGArray _ vs -> (G.VList . G.ListValueG . map unValidateInpVal) <$> vs
+unValidateInpVal (AnnInpVal _ var val) = fromMaybe G.VNull $
+  -- if a variable is found, then directly return that, if not found then
+  -- convert it into a G.Value and return it
+  case var of
+    Just var' -> Just $ G.VVariable var'
+    Nothing ->
+      case val of
+        AGScalar _ v -> pgScalarToGValue <$> v
+        AGEnum _ v -> pgEnumToGEnum v
+        AGObject _ o ->
+          (G.VObject . G.ObjectValueG
+          . map (uncurry G.ObjectFieldG . (second unValidateInpVal))
+          . OMap.toList
+          ) <$> o
+        AGArray _ vs -> (G.VList . G.ListValueG . map unValidateInpVal) <$> vs
+
   where
     pgEnumToGEnum :: AnnGEnumValue -> Maybe G.Value
     pgEnumToGEnum = \case

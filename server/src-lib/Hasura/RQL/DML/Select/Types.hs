@@ -12,6 +12,7 @@ import qualified Data.List.NonEmpty            as NE
 import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.Aeson                    as J
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -160,9 +161,16 @@ data AnnColField
   , _acfOp     :: !(Maybe ColOp)
   } deriving (Show, Eq)
 
+data RemoteFieldArgument
+  = RemoteFieldArgument
+  { _rfaArgument :: !G.Argument
+  , _rfaVariable :: !(Maybe [(G.VariableDefinition,J.Value)])
+  }
+  deriving (Eq,Show)
+
 data RemoteSelect
   = RemoteSelect
-  { _rselArgs          :: ![G.Argument]
+  { _rselArgs          :: ![RemoteFieldArgument]
   , _rselSelection     :: ![G.Field]
   , _rselHasuraColumns :: !(HashSet PGColumnInfo)
   , _rselFieldCall     :: !(NonEmpty FieldCall)
