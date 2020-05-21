@@ -73,6 +73,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: add docs page on query performance (close #2316) (#3693)
 - docs: add a sample Caddyfile for Caddy 2 in enable-https section (#4710)
 - docs: add disabling dev mode to production checklist (#4715)
+- docs: add integration guide for AWS Cognito (#4822)
 - docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
 - docs: add page for procuring custom docker images and binaries (#4828)
 
