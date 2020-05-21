@@ -44,9 +44,16 @@ type Where = {
   $and: Record<string, unknown>[];
 }[];
 
+type TableSchema = {
+  table_name: string;
+  table_schema: string;
+  is_enum: boolean;
+  columns: { column_name: string }[];
+};
+
 type ColumnsProps = {
   colName: string;
-  tableSchema: { columns: { column_name: string }[] };
+  tableSchema: TableSchema;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   usage: 'filter' | 'sort';
   index: number;
@@ -115,7 +122,7 @@ const Options: React.FC<OptionsProps> = ({ opName, onChange, index }) => (
 
 type WhereSectionProps = {
   whereAnd: Where;
-  tableSchema: any;
+  tableSchema: TableSchema;
   dispatch: ThunkDispatch<{}, {}, AnyAction>;
 };
 const WhereSection = ({
@@ -195,7 +202,7 @@ const WhereSection = ({
 
 type SortSectionProps = {
   orderBy: OrderBy;
-  tableSchema: any;
+  tableSchema: TableSchema;
   dispatch: ThunkDispatch<{}, {}, AnyAction>;
 };
 const SortSection = ({ orderBy, tableSchema, dispatch }: SortSectionProps) => {
@@ -301,11 +308,7 @@ const Title = ({ title, summary }: { title: string; summary: string }) => (
 );
 
 export interface FilterQueryProps {
-  tableSchema: {
-    table_name: string;
-    table_schema: string;
-    is_enum: boolean;
-  };
+  tableSchema: TableSchema;
   dispatch: ThunkDispatch<{}, {}, AnyAction>;
   curQuery: {
     limit?: number;
@@ -320,7 +323,7 @@ export interface FilterQueryProps {
   whereAnd: Where;
   orderBy: OrderBy;
   allColumns: string[];
-  columns?: string[];
+  currentColumns?: string[];
 }
 const FilterQuery: React.FC<FilterQueryProps> = ({
   curQuery,
@@ -330,7 +333,7 @@ const FilterQuery: React.FC<FilterQueryProps> = ({
   tableSchema,
   orderBy,
   allColumns,
-  columns,
+  currentColumns,
 }) => {
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [isFiltersPanelOpen, setFiltersPanelOpen] = useState(false);
@@ -345,12 +348,12 @@ const FilterQuery: React.FC<FilterQueryProps> = ({
   }, [tableSchema.table_name]);
 
   useEffect(() => {
-    if (columns && columns.length) {
-      setSelectedColumns(columns);
+    if (currentColumns && currentColumns.length) {
+      setSelectedColumns(currentColumns);
     } else {
       setSelectedColumns(allColumns);
     }
-  }, [allColumns, columns]);
+  }, [allColumns, currentColumns]);
 
   useEffect(() => {
     const limit = getPersistedPageSize();

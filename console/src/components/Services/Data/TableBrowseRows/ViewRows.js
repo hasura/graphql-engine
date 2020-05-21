@@ -673,8 +673,6 @@ const ViewRows = ({
 
         const offset = 'offset' in curFilter ? curFilter.offset : 0;
 
-        console.log({ curFilter });
-
         _filterQuery = (
           <FilterQuery
             curQuery={curQuery}
@@ -687,7 +685,7 @@ const ViewRows = ({
             offset={offset}
             urlQuery={location && location.query}
             allColumns={allColumns}
-            columns={curFilter.columns}
+            currentColumns={curFilter.columns}
           />
         );
       }
