@@ -175,11 +175,11 @@ The parameters available for this trigger are described `here <https://docs.aws.
      });
    }
 
-That’s it! This lambda function will be triggered on every successful sign up/log in and sync your Auth0 user into your postgres database.
+That’s it! This lambda function will be triggered on every successful sign up/log in and sync your Auth0 user into your Postgres database.
 
 .. note::
 
-   We need to use an ``upsert`` operation here because social logins do not distinguish between sign-up and login. Hence, we need to run this rule every time a successful login is made and do nothing if the user already exists.
+   We need to use an ``upsert`` operation here because social logins do not distinguish between sign up and login. Hence, we need to run this rule every time a successful login is made and do nothing if the user already exists.
 
 
 .. admonition:: Local dev with Auth0 rules
