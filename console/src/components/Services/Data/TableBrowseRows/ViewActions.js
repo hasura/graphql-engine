@@ -17,7 +17,6 @@ import {
   getRunSqlQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { generateTableDef } from '../../../Common/utils/pgUtils';
-import { setSelectedColumns } from './utils';
 import { COUNT_LIMIT } from '../constants';
 
 /* ****************** View actions *************/
@@ -33,7 +32,6 @@ const V_COLLAPSE_ROW = 'ViewTable/V_COLLAPSE_ROW';
 
 const V_COUNT_REQUEST_SUCCESS = 'ViewTable/V_COUNT_REQUEST_SUCCESS';
 
-const V_SET_QUERY_COLUMNS = 'ViewTable/V_SET_QUERY_COLUMN';
 const V_RESET_QUERY_COLUMNS = 'ViewTable/V_RESET_QUERY_COLUMN';
 
 const FETCHING_MANUAL_TRIGGER = 'ViewTable/FETCHING_MANUAL_TRIGGER';
@@ -62,13 +60,6 @@ const vCollapseRow = () => ({
 });
 
 const vSetDefaults = limit => ({ type: V_SET_DEFAULTS, limit });
-
-const vSetColumns = (columns, currentTable, tableName) => ({
-  type: V_SET_QUERY_COLUMNS,
-  columns,
-  tableName,
-  currentTable,
-});
 
 const vResetColumns = () => ({
   type: V_RESET_QUERY_COLUMNS,
@@ -492,7 +483,7 @@ const addQueryOptsActivePath = (query, queryStuff, activePath) => {
     curPath = curPath.slice(1);
   }
 
-  ['where', 'order_by', 'limit', 'offset'].map(k => {
+  ['where', 'order_by', 'limit', 'offset', 'columns'].map(k => {
     delete curQuery[k];
   });
 
@@ -545,16 +536,6 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
           viewState.query,
           action.queryStuff,
           viewState.activePath
-        ),
-      };
-    case V_SET_QUERY_COLUMNS:
-      return {
-        ...viewState,
-        query: setSelectedColumns(
-          viewState.query,
-          action.currentTable,
-          action.tableName,
-          action.columns
         ),
       };
     case V_EXPAND_REL:
@@ -672,6 +653,5 @@ export {
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
   vMakeTableRequests,
-  vSetColumns,
   vResetColumns,
 };

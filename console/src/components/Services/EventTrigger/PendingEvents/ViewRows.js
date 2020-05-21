@@ -162,6 +162,7 @@ const ViewRows = ({
           count={count}
           triggerName={curTriggerName}
           offset={offset}
+          columns={curFilter.columns}
         />
       );
     }

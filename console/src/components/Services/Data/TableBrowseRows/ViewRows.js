@@ -17,7 +17,6 @@ import {
   deleteItem,
   vExpandRow,
   vCollapseRow,
-  vSetColumns,
 } from './ViewActions'; // eslint-disable-line no-unused-vars
 
 import {
@@ -56,8 +55,7 @@ import {
   getPersistedColumnsOrder,
   persistPageSizeChange,
 } from './localStorageUtils';
-import { ColumnsSelector } from './ColumnsSelector';
-import { getSelectedColumns, compareRows, isTableWithPK } from './utils';
+import { compareRows, isTableWithPK } from './utils';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 const ViewRows = ({
@@ -86,7 +84,6 @@ const ViewRows = ({
   triggeredFunction,
   location,
   readOnlyMode,
-  currentTable,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
 
@@ -676,6 +673,8 @@ const ViewRows = ({
 
         const offset = 'offset' in curFilter ? curFilter.offset : 0;
 
+        console.log({ curFilter });
+
         _filterQuery = (
           <FilterQuery
             curQuery={curQuery}
@@ -687,6 +686,8 @@ const ViewRows = ({
             tableName={curTableName}
             offset={offset}
             urlQuery={location && location.query}
+            allColumns={allColumns}
+            columns={curFilter.columns}
           />
         );
       }
@@ -929,7 +930,7 @@ const ViewRows = ({
     };
 
     const hiddenColumns = [];
-    const columns = getSelectedColumns(curQuery, currentTable, curTableName);
+    const columns = curFilter.columns || allColumns;
     if (columns && columns.length) {
       allColumns.forEach(col => {
         if (!columns.includes(col)) {
@@ -979,28 +980,10 @@ const ViewRows = ({
     isVisible = true;
   }
 
-  const onSelectedColumnsChange = newSelected => {
-    dispatch(vSetColumns(newSelected, currentTable, curTableName));
-    dispatch(runQuery(tableSchema));
-  };
-
-  const currentSelected = getSelectedColumns(
-    curQuery,
-    currentTable,
-    curTableName
-  );
-
   return (
     <div className={isVisible ? '' : 'hide '}>
       {getFilterQuery()}
       <div className={`row ${styles.add_mar_top}`}>
-        <ColumnsSelector
-          allColumns={allColumns}
-          selectedColumns={
-            currentSelected.length ? currentSelected : allColumns
-          }
-          setSelected={onSelectedColumnsChange}
-        />
         {getSelectedRowsSection()}
         <div className="col-xs-12">
           <div className={styles.tableContainer}>{renderTableBody()}</div>
