@@ -22,16 +22,16 @@ import           Data.Has
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd.Extended    as OMap
 import qualified Data.HashSet                           as HS
+import qualified Data.Sequence                          as Seq
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Validate.Context
-import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.InputValue
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.QueryCollection
 
 data QueryParts
   = QueryParts
@@ -58,8 +58,7 @@ getTypedOp opNameM selSets opDefs =
       throwVE $ "operationName cannot be used when " <>
       "an anonymous operation exists in the document"
     (Nothing, [selSet], []) ->
-      return $ G.TypedOperationDefinition
-      G.OperationTypeQuery Nothing [] [] selSet
+      return $ G.TypedOperationDefinition G.OperationTypeQuery Nothing [] [] selSet
     (Nothing, [], [opDef])  ->
       return opDef
     (Nothing, _, _) ->
@@ -167,8 +166,13 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
     G.OperationTypeSubscription -> do
       case OMap.toList $ unAliasedFields $ unObjectSelectionSet selSet of
         []     -> throw500 "empty selset for subscription"
-        [(alias, field)] -> return $ RSubscription alias field
-        _ -> throwVE "subscription must select only one top level field"
+        ((alias, field):rst) -> do
+          -- As an internal testing feature, we support subscribing to multiple
+          -- selection sets.  First check if the corresponding directive is set.
+          let multipleAllowed = elem (G.Directive "_multiple_top_level_fields" []) (G._todDirectives opDef)
+          unless (multipleAllowed || null rst) $
+            throwVE "subscriptions must select one top level field"
+          return $ RSubscription alias field
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery

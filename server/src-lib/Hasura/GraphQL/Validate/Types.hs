@@ -100,8 +100,8 @@ import           Control.Lens                  (makePrisms)
 
 import qualified Hasura.RQL.Types.Column       as RQL
 
-import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.NormalForm
+import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types

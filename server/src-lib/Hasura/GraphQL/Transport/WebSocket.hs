@@ -45,7 +45,6 @@ import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Error                      (Code (StartFailed))
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
                                                               resolveUserInfo)
 import           Hasura.Server.Cors
@@ -224,7 +223,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
           CSInitialised _ expTimeM _ ->
             maybe STM.retry return expTimeM
       currTime <- TC.getCurrentTime
-      sleep $ fromUnits $ TC.diffUTCTime expTime currTime
+      sleep $ convertDuration $ TC.diffUTCTime expTime currTime
 
     accept hdrs errType = do
       logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing Nothing) EAccepted
@@ -316,7 +315,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   case execPlan of
     E.GExPHasura resolvedOp ->
       runHasuraGQ timerTot telemCacheHit requestId q userInfo resolvedOp
-    E.GExPRemote rsi opDef rootSelectionSet  ->
+    E.GExPRemote rsi opDef _  ->
       runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
   where
     telemTransport = Telem.HTTP
@@ -356,7 +355,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               -- Telemetry. NOTE: don't time network IO:
               telemTimeTot <- Seconds <$> timerTot
               sendSuccResp encJson $ LQ.LiveQueryMetadata telemTimeIO_DT
-              let telemTimeIO = fromUnits telemTimeIO_DT
+              let telemTimeIO = convertDuration telemTimeIO_DT
               Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
           sendCompleted (Just reqId)
@@ -382,7 +381,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             -- Telemetry. NOTE: don't time network IO:
             telemTimeTot <- Seconds <$> timerTot
             sendRemoteResp reqId (_hrBody val) $ LQ.LiveQueryMetadata telemTimeIO_DT
-            let telemTimeIO = fromUnits telemTimeIO_DT
+            let telemTimeIO = convertDuration telemTimeIO_DT
             Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
       sendCompleted (Just reqId)

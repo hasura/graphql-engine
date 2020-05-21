@@ -2,7 +2,7 @@ FROM hasura/haskell-docker-packager:20190731 as packager
 WORKDIR /tmp
 RUN apt-get update && apt-get download libstdc++6
 
-FROM hasura/graphql-engine:v1.2.0-beta.5
+FROM hasura/graphql-engine:v1.2.1
 
 # install libstdc++6 from .deb file
 COPY --from=packager /tmp/libstdc++6* .

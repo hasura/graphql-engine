@@ -11,8 +11,7 @@ module Hasura.GraphQL.Execute
   , getSubsOp
 
   , EP.PlanCache
-  , EP.mkPlanCacheOptions
-  , EP.PlanCacheOptions
+  , EP.PlanCacheOptions(..)
   , EP.initPlanCache
   , EP.clearPlanCache
   , EP.dumpPlanCache
@@ -55,8 +54,8 @@ import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Validate                as VQ
-import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.GraphQL.Validate.SelectionSet   as VQ
+import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 
@@ -291,7 +290,7 @@ resolveMutSelSet
   => VQ.ObjectSelectionSet
   -> m (LazyRespTx, N.ResponseHeaders)
 resolveMutSelSet fields = do
-  aliasedTxs <- traverseObjectSelectionSet fields $ \fld -> do
+  aliasedTxs <- traverseObjectSelectionSet fields $ \fld ->
     case VQ._fName fld of
       "__typename" -> return (return $ encJFromJValue mutationRootNamedType, [])
       _            -> evalReusabilityT $ GR.mutFldToTx fld

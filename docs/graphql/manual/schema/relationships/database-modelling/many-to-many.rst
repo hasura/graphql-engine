@@ -20,13 +20,13 @@ Say we have the following two tables in our database schema:
 .. code-block:: sql
 
   article (
-    id INT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     title TEXT
     ...
   )
 
   tag (
-    id INT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     tag_value TEXT
     ...
   )

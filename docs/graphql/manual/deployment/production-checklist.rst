@@ -46,7 +46,7 @@ Review the authorization/permission rules set on tables. You can make use of the
 permissions set across all tables and roles. Pay extra attention to roles like
 "anonymous" which allow unauthenticated access.
 
-.. thumbnail:: ../../../img/graphql/manual/deployment/schema_permissions_summary.png
+.. thumbnail:: /img/graphql/manual/deployment/schema_permissions_summary.png
    :alt: Hasura console - Schema permissions summary
    :width: 75%
 
@@ -93,9 +93,11 @@ Disable console
 It is recommended that you disable the console on production deployments. Also,
 when you disable the metadata API, console will stop working.
 
+The console is disabled by default.
+
 .. code-block:: bash
 
-   # set the env var to disable console
+   # set the env var to false or do not set it at all to disable console
    HASURA_GRAPHQL_ENABLE_CONSOLE=false
 
    # when using flags, no --enable-console flag implies console is disabled
@@ -105,6 +107,24 @@ when you disable the metadata API, console will stop working.
 
    You can still use the CLI to open a console connected to this instance.
    (Provided ``metadata`` APIs are not disabled).
+
+Disable dev mode
+----------------
+
+It is recommended that you disable the :ref:`dev mode <dev-mode>` on production
+deployments for non-admin roles to avoid leaking internal debugging information
+to the clients in case of API errors.
+
+The dev mode is disabled by default.
+
+.. code-block:: bash
+
+   # set the env var to false or do not set it at all to disable dev mode
+   HASURA_GRAPHQL_DEV_MODE=false
+
+   # when using flags, no --dev-mode flag implies dev mode is disabled
+   graphql-engine --database-url=<database-url> serve
+
 
 Set up an allow-list
 --------------------

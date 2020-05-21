@@ -61,26 +61,39 @@ import           Hasura.SQL.Value
 newtype MultiplexedQuery = MultiplexedQuery { unMultiplexedQuery :: Q.Query }
   deriving (Show, Eq, Hashable, J.ToJSON)
 
-mkMultiplexedQuery :: Q.Query -> MultiplexedQuery
-mkMultiplexedQuery baseQuery =
-  MultiplexedQuery . Q.fromText $ foldMap Q.getQueryText [queryPrefix, baseQuery, querySuffix]
+mkMultiplexedQuery :: Map.HashMap G.Alias GR.QueryRootFldResolved -> MultiplexedQuery
+mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
+  { S.selExtr =
+    -- SELECT _subs.result_id, _fld_resp.root AS result
+    [ S.Extractor (mkQualIden (Iden "_subs") (Iden "result_id")) Nothing
+    , S.Extractor (mkQualIden (Iden "_fld_resp") (Iden "root")) (Just . S.Alias $ Iden "result") ]
+  , S.selFrom = Just $ S.FromExp [S.FIJoin $
+      S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)]
+  }
   where
-    queryPrefix =
-      [Q.sql|
-        select
-          _subs.result_id, _fld_resp.root as result
-          from
-            unnest(
-              $1::uuid[], $2::json[]
-            ) _subs (result_id, result_vars)
-          left outer join lateral
-            (
-        |]
+    -- FROM unnest($1::uuid[], $2::json[]) _subs (result_id, result_vars)
+    subsInputFromItem = S.FIUnnest
+      [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
+      (S.Alias $ Iden "_subs")
+      [S.SEIden $ Iden "result_id", S.SEIden $ Iden "result_vars"]
 
-    querySuffix =
-      [Q.sql|
-            ) _fld_resp ON ('true')
-        |]
+    -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
+    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.Alias $ Iden "_fld_resp")
+    selectRootFields = S.mkSelect
+      { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Iden "root")]
+      , S.selFrom = Just . S.FromExp $
+          flip map (Map.toList rootFields) $ \(fieldAlias, resolvedAST) ->
+            S.mkSelFromItem (GR.toSQLSelect resolvedAST) (S.Alias $ aliasToIden fieldAlias)
+      }
+
+    -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
+    rootFieldsJsonAggregate = S.SEFnApp "json_build_object" rootFieldsJsonPairs Nothing
+    rootFieldsJsonPairs = flip concatMap (Map.keys rootFields) $ \fieldAlias ->
+      [ S.SELit (G.unName $ G.unAlias fieldAlias)
+      , mkQualIden (aliasToIden fieldAlias) (Iden "root") ]
+
+    mkQualIden prefix = S.SEQIden . S.QIden (S.QualIden prefix Nothing) -- TODO fix this Nothing of course
+    aliasToIden = Iden . G.unName . G.unAlias
 
 -- | Resolves an 'GR.UnresolvedVal' by converting 'GR.UVPG' values to SQL expressions that refer to
 -- the @result_vars@ input object, collecting variable values along the way.
@@ -103,11 +116,13 @@ resolveMultiplexedValue = \case
   GR.UVSQL sqlExp -> pure sqlExp
   GR.UVSession -> pure $ fromResVars (PGTypeScalar PGJSON) ["session"]
   where
-    fromResVars ty jPath =
-      flip S.SETyAnn (S.mkTypeAnn ty) $ S.SEOpApp (S.SQLOp "#>>")
+    fromResVars pgType jPath = addTypeAnnotation pgType $ S.SEOpApp (S.SQLOp "#>>")
       [ S.SEQIden $ S.QIden (S.QualIden (Iden "_subs") Nothing) (Iden "result_vars")
       , S.SEArray $ map S.SELit jPath
       ]
+    addTypeAnnotation pgType = flip S.SETyAnn (S.mkTypeAnn pgType) . case pgType of
+      PGTypeScalar scalarType -> withConstructorFn scalarType
+      PGTypeArray _           -> id
 
 newtype CohortId = CohortId { unCohortId :: UUID }
   deriving (Show, Eq, Hashable, J.ToJSON, Q.FromCol)
@@ -230,7 +245,6 @@ data LiveQueryPlan
 data ParameterizedLiveQueryPlan
   = ParameterizedLiveQueryPlan
   { _plqpRole  :: !RoleName
-  , _plqpAlias :: !G.Alias
   , _plqpQuery :: !MultiplexedQuery
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ParameterizedLiveQueryPlan)
@@ -256,19 +270,18 @@ buildLiveQueryPlan
   -> GR.QueryRootFldUnresolved
   -> Maybe GV.ReusableVariableTypes
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
-buildLiveQueryPlan pgExecCtx fieldAlias astUnresolved varTypes = do
+buildLiveQueryPlan pgExecCtx alias unresolvedAST varTypes = do
+  (resolvedAST, (queryVariableValues, syntheticVariableValues)) <-
+    flip runStateT mempty $ GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
+
   userInfo <- asks getter
-
-  (astResolved, (queryVariableValues, syntheticVariableValues)) <- flip runStateT mempty $
-    GR.traverseQueryRootFldAST resolveMultiplexedValue astUnresolved
-  let pgQuery = mkMultiplexedQuery $ GR.toPGQuery astResolved
+  let multiplexedQuery = mkMultiplexedQuery $ Map.singleton alias resolvedAST
       roleName = _uiRole userInfo
-      parameterizedPlan = ParameterizedLiveQueryPlan roleName fieldAlias pgQuery
+      parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery
 
-  -- We need to ensure that the values provided for variables
-  -- are correct according to Postgres. Without this check
-  -- an invalid value for a variable for one instance of the
-  -- subscription will take down the entire multiplexed query
+  -- We need to ensure that the values provided for variables are correct according to Postgres.
+  -- Without this check an invalid value for a variable for one instance of the subscription will
+  -- take down the entire multiplexed query.
   validatedQueryVars <- validateVariables pgExecCtx queryVariableValues
   validatedSyntheticVars <- validateVariables pgExecCtx (toList syntheticVariableValues)
   let cohortVariables = CohortVariables (_uiSession userInfo) validatedQueryVars validatedSyntheticVars

@@ -24,7 +24,7 @@ export type TextProps = {
   mt: keyof Theme['space'];
   mr: keyof Theme['space'];
   ml: keyof Theme['space'];
-}
+};
 
 export const Text: React.FC<TextProps> = props => {
   const { children, type, fontWeight, fontSize } = props;
@@ -69,7 +69,7 @@ Text.defaultProps = {
 type TextLinkProps = {
   underline: boolean;
   color: string;
-}
+};
 
 export const TextLink: React.FC<TextLinkProps> = props => {
   const { children, underline } = props;
