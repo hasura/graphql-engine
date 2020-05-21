@@ -296,18 +296,6 @@ Date:   Thu Jun 4 22:55:21 2020 +0530
 
     Co-authored-by: Anon Ray <rayanon004@gmail.com>
 
-commit 9c55940b6dde79ced4fd202cbd8cb0e6f9dbc01c
-Author: Tirumarai Selvan <tiru@hasura.io>
-Date:   Thu May 21 13:43:44 2020 +0530
-
-    flush log buffer on exception in mkWaiApp ( fix #4772 ) (#4801)
-
-    * flush log buffer on exception in mkWaiApp
-
-    * add comment to explain the introduced change
-
-    * add changelog
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
