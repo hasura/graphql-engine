@@ -1,6 +1,6 @@
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from 'utils/requestAction';
-import { Integers, Reals } from '../constants';
+import { Reals } from '../constants';
 
 import {
   showErrorNotification,
@@ -39,9 +39,7 @@ const insertItem = (tableName, colValues) => {
     Object.keys(colValues).map(colName => {
       const colSchema = columns.find(x => x.column_name === colName);
       const colType = colSchema.data_type;
-      if (Integers.indexOf(colType) > 0) {
-        insertObject[colName] = colValues[colName];
-      } else if (Reals.indexOf(colType) > 0) {
+      if (Reals.indexOf(colType) > 0) {
         insertObject[colName] =
           parseFloat(colValues[colName], 10) || colValues[colName];
       } else if (colType === 'boolean') {
