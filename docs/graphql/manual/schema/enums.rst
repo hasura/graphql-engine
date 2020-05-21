@@ -12,6 +12,9 @@ Enum type fields
   :depth: 2
   :local:
 
+Introduction
+------------
+
 Enum type fields are restricted to a fixed set of allowed values.
 
 Enums in a database
@@ -100,7 +103,7 @@ the following restrictions:
    <https://graphql.github.io/graphql-spec/June2018/#EnumValue>`__.
 2. Optionally, the table may have a second column, also of type ``text``, which will be used as a description of each
    value in the generated GraphQL schema.
-3. The table may not contain any other columns.
+3. The table must not contain any other columns.
 4. The table must contain at least 1 row.
 
 **For example**, to create an enum that represents our user roles, we would create the following table:
