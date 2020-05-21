@@ -76,7 +76,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: add integration guide for AWS Cognito (#4822)
 - docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
 - docs: add page for procuring custom docker images and binaries (#4828)
-- docs: add constent on how to secure action handlers (#4743)
+- docs: add content on how to secure action handlers and other actions docs improvements (#4743)
 
 ## `v1.2.0`
 
