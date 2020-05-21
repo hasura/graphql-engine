@@ -621,11 +621,10 @@ class Main extends React.Component {
                   <img src={read} alt={'read'} />
                 </div>
                 <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>
-                    Read Replicas
-                  </div>
+                  <div className={styles.featuresTitle}>Read Replicas</div>
                   <div className={styles.featuresDescription}>
-                    Native Read Replica support for enhanced performance and scalability
+                    Native Read Replica support for enhanced performance and
+                    scalability
                   </div>
                 </div>
               </div>
