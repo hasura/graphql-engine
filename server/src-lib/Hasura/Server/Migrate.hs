@@ -421,6 +421,7 @@ recreateSystemMetadata = do
         , arrayRel $$(nonEmptyText "permissions") $ manualConfig "hdb_catalog" "hdb_permission_agg"
           [("role_name", "role_name")]
         ]
+      , table "hdb_catalog" "hdb_remote_relationship" []
       , table "hdb_catalog" "hdb_cron_triggers"
         [ arrayRel $$(nonEmptyText "cron_events") $ RUFKeyOn $
           ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_events") "trigger_name"
