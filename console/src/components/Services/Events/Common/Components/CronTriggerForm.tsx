@@ -123,7 +123,7 @@ const Form: React.FC<Props> = props => {
         <FormSection
           id="trigger-include-in-metadata"
           heading="Include in Metadata"
-          tooltip="If enabled, this cron trigger will be included in the metadata of GraphqL Engine"
+          tooltip="If enabled, this cron trigger will be included in the metadata of GraphqL Engine i.e. it will be a part of the metadata that is exported as migrations."
         >
           <div className={`${styles.display_flex} ${styles.add_mar_right_mid}`}>
             <Toggle
