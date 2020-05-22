@@ -5,3 +5,22 @@ import 'ace-builds/src-noconflict/ext-searchbox';
 
 export const ACE_EDITOR_THEME = 'eclipse';
 export const ACE_EDITOR_FONT_SIZE = 14;
+
+export const getLanguageModeFromExtension = extension => {
+  switch (extension) {
+    case 'ts':
+      return 'typescript';
+    case 'go':
+      return 'golang';
+    case 'kt':
+      return 'kotlin';
+    case 'py':
+      return 'python';
+    case 'java':
+      return 'java';
+    case 'ruby':
+      return 'ruby';
+    default:
+      return 'javascript';
+  }
+};
