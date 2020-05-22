@@ -925,6 +925,7 @@
   // background-color: #22283b;
   padding: 15px;
   position: relative;
+  color: #fff;
 
   .selected {
     bottom: 0;
@@ -934,15 +935,6 @@
     height: 4px;
     width: 100%;
     left: 0px;
-  }
-}
-
-.settingsIcon {
-  // background: #5668a4;
-
-  a {
-    text-decoration: none;
-    color: #fff;
   }
 }
 

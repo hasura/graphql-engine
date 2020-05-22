@@ -766,27 +766,22 @@ class Main extends React.Component {
               </div>
               <Link to="/settings">
                 <div className={styles.supportSection}>
-                  <div
-                    className={styles.helpSection + ' ' + styles.settingsIcon}
-                  >
+                  <div className={styles.helpSection}>
                     {getMetadataStatusIcon()}
                     {getSettingsSelectedMarker()}
                   </div>
                 </div>
               </Link>
-              <div className={styles.supportSection}>
-                <div className={styles.helpSection + ' ' + styles.settingsIcon}>
-                  <a
-                    id="help"
-                    href={'https://hasura.io/help'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    HELP
-                  </a>
+              <a
+                id="help"
+                href={'https://hasura.io/help'}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className={styles.supportSection}>
+                  <div className={styles.helpSection}>HELP</div>
                 </div>
-              </div>
-
+              </a>
               {getLoveSection()}
             </div>
           </div>
