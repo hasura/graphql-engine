@@ -64,7 +64,7 @@ const getNotificationDetails = (
 const showErrorNotification = (
   title: string,
   message: string,
-  error?: any
+  error?: Record<string, any>
 ): Thunk => {
   const getErrorMessage = () => {
     let notificationMessage;
