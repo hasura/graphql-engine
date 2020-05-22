@@ -29,6 +29,34 @@
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if not is_landing_page else '' }}{% endblock %}">
     <div class="main_container_wrapper">
       {% include 'pages/loading.html' %}
+      <div id="banner" class="bannerStripWrapper hideClass">
+        <div class='bannerInnerWrapper displayFlex'>
+          <a
+            href="https://hasura.io/events/hasura-con-2020/"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            <div class="bannerStrip">
+              <div class="displayFlex noPadd">
+                <div class="announceIcon">
+                  <img src="{{ pathto('_images/layout/hasura-con.svg', 1) }}" alt="Hasura Con20"/>
+                </div>
+                <div class="bodyTextSmall">
+                  <span class="textColor">
+                    Register for Hasura Con: A free, online conference on pushing the boundaries of GraphQL
+                  </span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <div id="banner-close" class="closeBanner">
+            <img src="{{ pathto('_images/layout/close.svg', 1) }}" alt="Close" />
+          </div>
+        </div>
+        <div class='bannerStripImg'>
+          <img src="{{ pathto('_images/layout/stripe.png', 1) }}" alt='stripe' />
+        </div>
+      </div>
       <div id="" class="content_wrapper">
         {%- if is_landing_page %}
           {% include 'pages/landing.html' %}
@@ -70,7 +98,7 @@
                         </a>
                       </div>
                       <div class="social_icons">
-                        <iframe title="Hasura GraphQL Github Stars" src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true" frameBorder="0" scrolling="0" width="100px" height="25px"></iframe>
+                        <iframe title="Hasura GraphQL Github Stars" src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true" frameBorder="0" scrolling="0" width="120px" height="25px"></iframe>
                       </div>
                       <div class="social_icons">
                         <a href="https://twitter.com/hasurahq/" target="_blank" rel="noopener">
@@ -168,17 +196,6 @@
 {% block sidebar2 %}{% endblock %}
 {% block footer %}
 
-  <!-- GA -->
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-    ga('create', 'UA-59768903-1', 'auto');
-    ga('send', 'pageview');
-  </script>
-
   <!-- intercom -->
   <script>
     window.intercomSettings = {
@@ -200,7 +217,20 @@
       $('.supportBtn').on('click', supportBtnHandler);
     });
   </script>
+  <!-- Local storage -->
+  <script type="text/javascript">
+    $(document).ready( function() {
+      const bannerStripeConsent = window.localStorage.getItem("hasuraCon2020BannerStripeConsent")
+      if (bannerStripeConsent !== "yes") {
+        $('#banner').removeClass("hideClass");
+      }
+      $('#banner-close').click(function(e){
+        window.localStorage.setItem('hasuraCon2020BannerStripeConsent', 'yes');
+        $('#banner').hide();
+      });
+    });
 
+  </script>
   <!-- utils -->
   <script type="text/javascript">
     // load script file
@@ -259,16 +289,14 @@
 
     // Track GA event
     const trackga = function ( category, action, label, value ) {
-      // If ga is available
-      if ( ga ) {
-        ga('send', {
-          hitType: 'event',
-          eventCategory: category,
-          eventAction: action,
-          eventLabel: label,
-          eventValue: value
-        });
-      }
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'Click Events',
+        category: category,
+        action: action,
+        label: label,
+        value: value
+      })
     };
   </script>
 

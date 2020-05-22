@@ -40,6 +40,7 @@ import {
 } from '../Common/utils/localStorageUtils';
 import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
+import { Icon } from '../UIKit/atoms/Icon';
 
 class Main extends React.Component {
   constructor(props) {
@@ -621,11 +622,10 @@ class Main extends React.Component {
                   <img src={read} alt={'read'} />
                 </div>
                 <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>
-                    Read Replicas
-                  </div>
+                  <div className={styles.featuresTitle}>Read Replicas</div>
                   <div className={styles.featuresDescription}>
-                    Native Read Replica support for enhanced performance and scalability
+                    Native Read Replica support for enhanced performance and
+                    scalability
                   </div>
                 </div>
               </div>
@@ -650,6 +650,65 @@ class Main extends React.Component {
         );
       }
       return null;
+    };
+
+    const getVulnerableVersionNotification = () => {
+      let vulnerableVersionNotificationHtml = null;
+
+      // vulnerable version to fixed version mapping
+      const vulnerableVersionsMapping = {
+        'v1.2.0-beta.5': 'v1.2.1',
+        'v1.2.0': 'v1.2.1',
+      };
+
+      if (Object.keys(vulnerableVersionsMapping).includes(serverVersion)) {
+        const fixedVersion = vulnerableVersionsMapping[serverVersion];
+
+        vulnerableVersionNotificationHtml = (
+          <div>
+            <div className={styles.phantom} />{' '}
+            {/* phantom div to prevent overlapping of banner with content. */}
+            <div
+              className={
+                styles.updateBannerWrapper +
+                ' ' +
+                styles.vulnerableVersionBannerWrapper
+              }
+            >
+              <div className={styles.updateBanner}>
+                <span>
+                  <Icon type={'warning'} /> <b>ATTENTION</b>
+                  <span className={styles.middot}> &middot; </span>
+                  This current server version has a security vulnerability.
+                  Please upgrade to <b>{fixedVersion}</b> immediately
+                </span>
+                <span className={styles.middot}> &middot; </span>
+                <a
+                  href={
+                    'https://github.com/hasura/graphql-engine/releases/tag/' +
+                    fixedVersion
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span>View Changelog</span>
+                </a>
+                <span className={styles.middot}> &middot; </span>
+                <a
+                  className={styles.updateLink}
+                  href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span>Update Now</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      return vulnerableVersionNotificationHtml;
     };
 
     return (
@@ -817,6 +876,7 @@ class Main extends React.Component {
           </div>
 
           {getUpdateNotification()}
+          {getVulnerableVersionNotification()}
         </div>
       </div>
     );

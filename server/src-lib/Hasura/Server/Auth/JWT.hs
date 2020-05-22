@@ -14,10 +14,8 @@ module Hasura.Server.Auth.JWT
 
 import           Control.Exception               (try)
 import           Control.Lens
-import           Control.Monad                   (when)
 import           Control.Monad.Trans.Maybe
 import           Data.IORef                      (IORef, readIORef, writeIORef)
-import           Data.List                       (find)
 import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
                                                   getCurrentTime)
 import           GHC.AssertNF
@@ -30,7 +28,6 @@ import           Hasura.HTTP
 import           Hasura.Logging                  (Hasura, LogLevel (..), Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Error          (encodeJSONPath)
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
 import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,
@@ -128,7 +125,7 @@ jwkRefreshCtrl logger manager url ref time = liftIO $ do
       res <- runExceptT $ updateJwkRef logger manager url ref
       mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
-      let delay = maybe (minutes 1) fromUnits mTime
+      let delay = maybe (minutes 1) (convertDuration) mTime
       C.sleep delay
   where
     logNotice = do
@@ -226,7 +223,7 @@ processJwt jwtCtx headers mUnAuthRole =
 
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
-      userInfo <- mkUserInfo UAdminSecretNotSent (mkSessionVariables headers) $ Just unAuthRole
+      userInfo <- mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $ mkSessionVariables headers
       pure (userInfo, Nothing)
 
     missingAuthzHeader =
@@ -274,8 +271,8 @@ processAuthZHeader jwtCtx headers authzHeader = do
 
   -- transform the map of text:aeson-value -> text:text
   metadata <- decodeJSON $ J.Object finalClaims
-  userInfo <- mkUserInfo UAdminSecretNotSent
-              (mkSessionVariablesText $ Map.toList metadata) $ Just roleName
+  userInfo <- mkUserInfo (URBPreDetermined roleName) UAdminSecretNotSent $
+              mkSessionVariablesText $ Map.toList metadata
   pure (userInfo, expTimeM)
   where
     parseAuthzHeader = do
