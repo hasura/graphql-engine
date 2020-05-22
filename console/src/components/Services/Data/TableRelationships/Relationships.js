@@ -303,7 +303,6 @@ const Relationships = ({
   lastSuccess,
   dispatch,
   relAdd,
-  remoteRelationships,
   remoteSchemas,
   manualRelAdd,
   currentSchema,
@@ -412,20 +411,6 @@ const Relationships = ({
     );
   }
 
-  const remoteRelationshipsSection = () => {
-    return (
-      <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-        <h4 className={styles.subheading_text}>Remote Relationships</h4>
-        <RemoteRelationships
-          remoteRelationships={remoteRelationships}
-          dispatch={dispatch}
-          tableSchema={tableSchema}
-          remoteSchemas={remoteSchemas}
-        />
-      </div>
-    );
-  };
-
   const getAddRelSection = () => {
     if (readOnlyMode) {
       return null;
@@ -471,6 +456,8 @@ const Relationships = ({
     return addRelSection;
   };
 
+  const existingRemoteRelationships = tableSchema.remote_relationships;
+
   return (
     <div className={`${styles.container} container-fluid`}>
       <TableHeader
@@ -489,7 +476,15 @@ const Relationships = ({
           <br />
           {getAddRelSection()}
         </div>
-        {remoteRelationshipsSection()}
+        <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
+          <h4 className={styles.subheading_text}>Remote Relationships</h4>
+          <RemoteRelationships
+            relationships={existingRemoteRelationships}
+            reduxDispatch={dispatch}
+            table={tableSchema}
+            remoteSchemas={remoteSchemas}
+          />
+        </div>
       </div>
       <div className={`${styles.fixed} hidden`}>{alert}</div>
     </div>

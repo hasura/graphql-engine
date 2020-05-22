@@ -1,7 +1,7 @@
 import React from 'react';
-import styles from './SchemaExplorer.scss';
+import styles from '../SchemaExplorer.scss';
 
-export const NoRemoteSchemaPlaceholder = () => {
+export const NoRemoteSchemaPlaceholder: React.FC = () => {
   return (
     <div
       className={`${styles.schemaExplorerContainer}`}
@@ -21,11 +21,9 @@ export const LoadingSkeleton = () => {
   );
   return (
     <div className={`${styles.schemaExplorerContainer} ${styles.overflowAuto}`}>
-      {Array(5)
-        .fill()
-        .map((_, i) => (
-          <div key={i}>{skeletonItem}</div>
-        ))}
+      {Array(5).fill(null).map((_, i) => (
+        <div key={i}>{skeletonItem}</div>
+      ))}
     </div>
   );
 };

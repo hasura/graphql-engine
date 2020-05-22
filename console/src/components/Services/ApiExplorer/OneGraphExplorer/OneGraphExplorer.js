@@ -93,6 +93,7 @@ class OneGraphExplorer extends React.Component {
     })
       .then(response => response.json())
       .then(result => {
+        console.log(buildClientSchema(result.data));
         this.setState({
           schema: buildClientSchema(result.data),
           loading: false,

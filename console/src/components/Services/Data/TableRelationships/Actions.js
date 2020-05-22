@@ -3,10 +3,16 @@ import inflection from 'inflection';
 import { makeMigrationCall, updateSchemaInfo } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../../Common/Notification';
-import endpoints from '../../../../Endpoints';
-import requestAction from '../../../../utils/requestAction';
+import {
+  getSaveRemoteRelQuery,
+  getDropRemoteRelQuery,
+} from '../../../Common/utils/v1QueryUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 import suggestedRelationshipsRaw from './autoRelations';
-import { getRemoteRelPayload, parseRemoteRelationship } from './utils';
+import {
+  getRemoteRelPayload,
+  parseRemoteRelationship,
+} from './RemoteRelationships/utils';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
 export const MANUAL_REL_SET_TYPE = 'ModifyTable/MANUAL_REL_SET_TYPE';
@@ -35,44 +41,14 @@ export const defaultRemoteRelationship = {
   remoteField: [],
 };
 
-export const introspectRemoteSchema = (schemaName, introspectionCallback) => {
-  return (dispatch, getState) => {
-    const headers = getState().tables.dataHeaders;
-    dispatch({ type: INTROSPECTING_REMOTE_SCHEMA });
-    return dispatch(
-      requestAction(`${endpoints.query}`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          type: 'introspect_remote_schema',
-          args: {
-            name: schemaName,
-          },
-        }),
-      })
-    ).then(
-      data => {
-        dispatch({ type: INTROSPECTION_SUCCESSFUL });
-        introspectionCallback(data);
-      },
-      error => {
-        console.error(error);
-        dispatch({ type: INTROSPECTION_ERROR });
-      }
-    );
-  };
-};
-
 export const saveRemoteRelationship = (
-  index,
-  isNew,
+  state,
+  existingRel,
   successCallback,
   errorCallback
 ) => {
   return (dispatch, getState) => {
-    const state = getState().tables.modify.remoteRelationships.relationships[
-      index
-    ];
+    const isNew = !existingRel;
     if (!gqlPattern.test(state.name)) {
       return dispatch(
         showErrorNotification(
@@ -91,39 +67,30 @@ export const saveRemoteRelationship = (
       name: getState().tables.currentTable,
     };
 
-    const upQuery = [
-      {
-        type: isNew
-          ? 'create_remote_relationship'
-          : 'update_remote_relationship',
-        args: getRemoteRelPayload(state, table),
-      },
-    ];
+    const errorMsg = `${
+      isNew ? 'Creating' : 'Updating'
+    } remote relationship failed`;
+
+    let remoteRelQueryArgs;
+    try {
+      remoteRelQueryArgs = getRemoteRelPayload(state);
+    } catch (e) {
+      if (errorCallback) {
+        errorCallback();
+      }
+      return dispatch(showErrorNotification(errorMsg, e.message));
+    }
+
+    const upQuery = [getSaveRemoteRelQuery(remoteRelQueryArgs, !existingRel)];
     const downQuery = [];
     if (isNew) {
-      downQuery.push({
-        type: 'delete_remote_relationship',
-        args: {
-          name: state.name,
-          table,
-        },
-      });
+      downQuery.push(getDropRemoteRelQuery(state.name, state.table));
     } else {
-      const existingRelationship = getState().tables.allSchemas.find(
-        s => s.table_name === table.name && s.table_schema === table.schema
-      ).remote_relationships[index];
-      const downQueryArgs = getRemoteRelPayload(
-        parseRemoteRelationship({
-          remote_schema: existingRelationship.definition.remote_schema,
-          remote_field: existingRelationship.definition.remote_field,
-          name: existingRelationship.remote_relationship_name,
-        }),
-        table
+      const downQueryArgs = getSaveRemoteRelQuery(
+        getRemoteRelPayload(parseRemoteRelationship(existingRel)),
+        isNew
       );
-      downQuery.push({
-        type: 'update_remote_relationship',
-        args: downQueryArgs,
-      });
+      downQuery.push(downQueryArgs);
     }
 
     // Apply migrations
@@ -135,9 +102,6 @@ export const saveRemoteRelationship = (
     const successMsg = `Successfully ${
       isNew ? 'created' : 'updated'
     } remote relationship`;
-    const errorMsg = `${
-      isNew ? 'Creating' : 'Updating'
-    } remote relationship failed`;
 
     const customOnSuccess = () => {
       if (successCallback) {
@@ -167,32 +131,31 @@ export const saveRemoteRelationship = (
 };
 
 export const dropRemoteRelationship = (
-  index,
+  state,
+  existingRel,
   successCallback,
   errorCallback
 ) => {
   return (dispatch, getState) => {
-    const state = getState().tables.modify.remoteRelationships.relationships[
-      index
-    ];
-    const table = {
-      schema: getState().tables.currentSchema,
-      name: getState().tables.currentTable,
-    };
+    if (
+      !getConfirmation('This will permanently delete the remote relationship')
+    ) {
+      if (errorCallback) {
+        errorCallback();
+      }
+      return;
+    }
+
     const downQuery = [
-      {
-        type: 'create_remote_relationship',
-        args: getRemoteRelPayload(state, table),
-      },
+      getSaveRemoteRelQuery(
+        getRemoteRelPayload(parseRemoteRelationship(existingRel)),
+        true
+      ),
     ];
+
+    const table = state.table;
     const upQuery = [
-      {
-        type: 'delete_remote_relationship',
-        args: {
-          name: state.name,
-          table,
-        },
-      },
+      getDropRemoteRelQuery(existingRel.remote_relationship_name, table),
     ];
 
     // Apply migrations
