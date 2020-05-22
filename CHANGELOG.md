@@ -78,6 +78,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
 - docs: add page for procuring custom docker images and binaries (#4828)
 - docs: add content on how to secure action handlers and other actions docs improvements (#4743)
+- docs: note the proper directory to run the command in for upgrading migrations from v1 to v2 format (#4853)
 
 ## `v1.2.0`
 

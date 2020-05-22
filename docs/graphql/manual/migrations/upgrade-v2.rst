@@ -63,7 +63,7 @@ Run:
 Step 2: Upgrade hasura project to v2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In your project directory, run:
+In your project's ``migrations`` directory, run:
 
 .. code-block:: bash
 
