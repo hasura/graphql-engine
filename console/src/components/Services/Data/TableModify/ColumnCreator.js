@@ -41,8 +41,11 @@ const useColumnEditor = (dispatch, tableName) => {
   const onSubmit = e => {
     e.preventDefault();
 
+    // auto-trim column name
+    const trimmedColName = colName.trim();
+
     // validate before sending
-    if (!gqlPattern.test(colName)) {
+    if (!gqlPattern.test(trimmedColName)) {
       dispatch(
         showErrorNotification(
           gqlColumnErrorNotif[0],
@@ -50,7 +53,7 @@ const useColumnEditor = (dispatch, tableName) => {
           gqlColumnErrorNotif[2]
         )
       );
-    } else if (colName === '' || colType === '') {
+    } else if (trimmedColName === '' || colType === '') {
       dispatch(
         showErrorNotification(
           'Error creating column!',
@@ -61,7 +64,7 @@ const useColumnEditor = (dispatch, tableName) => {
       dispatch(
         addColSql(
           tableName,
-          colName,
+          trimmedColName,
           colType,
           colNull,
           colUnique,
