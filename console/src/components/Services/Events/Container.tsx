@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
-import { Connect } from 'react-redux'
+import { connect, ConnectedProps } from 'react-redux';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
@@ -22,19 +22,11 @@ import {
 } from '../../Common/utils/routesUtils';
 import { findEventTrigger, findScheduledTrigger } from './utils';
 
-import {
-  ConnectInjectedProps,
-  ReduxState,
-  MapStateToProps
-} from '../../../types';
+import { MapStateToProps } from '../../../types';
 
-type PropsFromState = {
-  triggers: Triggers,
-  pathname: string,
-  triggerName: string
-};
+import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
 
-interface Props extends ConnectInjectedProps,PropsFromState {}
+interface Props extends InjectedProps {}
 
 const Container: React.FC<Props> = props => {
   const {
@@ -123,19 +115,34 @@ const Container: React.FC<Props> = props => {
   );
 };
 
-type ExternalProps = RouteComponentProps<{
-  triggerName: string
-},{}>
+type ExternalProps = RouteComponentProps<
+  {
+    triggerName: string;
+  },
+  {}
+>;
 
-const mapStateToProps: MapStateToProps<PropsFromState, ExternalProps> = (state, ownProps) => {
+const mapStateToProps: MapStateToProps<PropsFromState, ExternalProps> = (
+  state,
+  ownProps
+) => {
   return {
     ...state.events,
     pathname: ownProps.location.pathname,
-    triggerName: ownProps.params.triggerName
+    triggerName: ownProps.params.triggerName,
   };
 };
 
-const connector = (connect: Connect) =>
-  connect<PropsFromState, unknown, ExternalProps, ReduxState>(mapStateToProps)(Container);
+type PropsFromState = {
+  triggers: Triggers;
+  pathname: string;
+  triggerName: string;
+};
 
-export default connector;
+const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
+
+type InjectedProps = ConnectedProps<typeof connector>;
+
+const ContainerConnector = connector(Container);
+
+export default ContainerConnector;

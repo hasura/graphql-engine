@@ -64,4 +64,5 @@ const PendingEvents: React.FC<Props> = props => {
   );
 };
 
-export default connector(PendingEvents);
+const PendingEventConnector = connector(PendingEvents);
+export default PendingEventConnector;

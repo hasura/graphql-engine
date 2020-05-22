@@ -65,4 +65,5 @@ const mapStateToProps: MapStateToProps<PropsFromState> = state => ({
 const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
 type InjectedProps = ConnectedProps<typeof connector>;
 
-export default connector(Main);
+const AddConnector = connector(Main);
+export default AddConnector;

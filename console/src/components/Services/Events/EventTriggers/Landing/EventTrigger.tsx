@@ -106,4 +106,5 @@ insert_user(objects: [{name: "testuser"}] ){
 const connector = connect(null, mapDispatchToPropsEmpty);
 type InjectedProps = ConnectedProps<typeof connector>;
 
-export default connector(EventTrigger);
+const ETConnector = connector(EventTrigger);
+export default ETConnector;

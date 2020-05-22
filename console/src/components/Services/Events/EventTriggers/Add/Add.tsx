@@ -369,4 +369,5 @@ const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
 
 type InjectedProps = ConnectedProps<typeof connector>;
 
-export default connector(Add);
+const AddConnector = connector(Add);
+export default AddConnector;

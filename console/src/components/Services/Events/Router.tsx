@@ -83,7 +83,7 @@ const getTriggersRouter = (
   return (
     <Route
       path={eventsPrefix}
-      component={Container(connect)}
+      component={Container}
       onEnter={composeOnEnterHooks([triggersInit(store.dispatch)])}
     >
       <IndexRedirect to={dataEventsPrefix} />

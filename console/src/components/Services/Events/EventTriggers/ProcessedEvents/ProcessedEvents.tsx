@@ -66,4 +66,6 @@ const ProcessedEvents: React.FC<Props> = props => {
   );
 };
 
-export default connector(ProcessedEvents);
+export const ProcessedEventsConnector = connector(ProcessedEvents);
+
+export default ProcessedEventsConnector;

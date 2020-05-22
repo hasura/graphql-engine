@@ -47,4 +47,5 @@ const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
 
 type InjectedProps = ConnectedProps<typeof connector>;
 
-export default connector(ModifyContainer);
+const ModifyConnector = connector(ModifyContainer);
+export default ModifyConnector;

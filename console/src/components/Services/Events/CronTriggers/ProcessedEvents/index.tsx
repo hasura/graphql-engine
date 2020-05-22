@@ -40,4 +40,5 @@ const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
 
 type InjectedProps = ConnectedProps<typeof connector>;
 
-export default connector(ProcessedEventsContainer);
+const ProcessedEventsConnector = connector(ProcessedEventsContainer);
+export default ProcessedEventsConnector;

@@ -154,4 +154,5 @@ const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
 const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
 type InjectedProps = ConnectedProps<typeof connector>;
 
-export default connector(Modify);
+const ModifyConnector = connector(Modify);
+export default ModifyConnector;

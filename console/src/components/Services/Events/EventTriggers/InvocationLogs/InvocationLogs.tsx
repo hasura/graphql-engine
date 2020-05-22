@@ -72,5 +72,5 @@ const InvocationLogs: React.FC<Props> = props => {
     </React.Fragment>
   );
 };
-
-export default connector(InvocationLogs);
+const InvocationLogsConnector = connector(InvocationLogs);
+export default InvocationLogsConnector;

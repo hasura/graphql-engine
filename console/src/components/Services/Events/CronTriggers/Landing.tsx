@@ -49,4 +49,5 @@ const connector = connect(null, mapDispatchToPropsEmpty);
 
 type InjectedProps = ConnectedProps<typeof connector>;
 
-export default connector(Landing);
+const LandingConnector = connector(Landing);
+export default LandingConnector;

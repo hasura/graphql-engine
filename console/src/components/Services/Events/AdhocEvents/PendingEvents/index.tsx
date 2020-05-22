@@ -19,4 +19,5 @@ const connector = connect(null, mapDispatchToPropsEmpty);
 
 type InjectedProps = ConnectedProps<typeof connector>;
 
-export default connector(PendingEventsContainer);
+const PendingEventsConnector = connector(PendingEventsContainer);
+export default PendingEventsConnector;

@@ -18,4 +18,5 @@ const connector = connect(null, mapDispatchToPropsEmpty);
 
 type InjectedProps = ConnectedProps<typeof connector>;
 
-export default connector(LogsContainer);
+const LogsConnector = connector(LogsContainer);
+export default LogsConnector;

@@ -6,7 +6,7 @@ import Info from './Info';
 
 interface Props extends InjectedProps {}
 
-const AddContainer: React.FC<Props> = ({ dispatch }) => {
+const InfoContainer: React.FC<Props> = ({ dispatch }) => {
   return (
     <AdhocEventsContainer tabName="info" dispatch={dispatch}>
       <Info />
@@ -18,4 +18,6 @@ const connector = connect(null, mapDispatchToPropsEmpty);
 
 type InjectedProps = ConnectedProps<typeof connector>;
 
-export default connector(AddContainer);
+const InfoConnector = connector(InfoContainer);
+
+export default InfoConnector;
