@@ -5,41 +5,44 @@ export const permissionTypes = [
   'delete_permission',
 ];
 
-export type TableDef = {
-  name: string;
-};
-
 export type MetadataObject = {
   name: string;
   function_name: string;
-  type: 'table' | 'array_relation' | 'object_relation' | 'function' | 'event_trigger' | 'remote_schema' | 'action';
+  type:
+    | 'table'
+    | 'array_relation'
+    | 'object_relation'
+    | 'function'
+    | 'event_trigger'
+    | 'remote_schema'
+    | 'action';
   definition: {
     name: string;
     role: string;
     table: {
       name: string;
-    }
+    };
     configuration: {
       name: string;
-    }
+    };
   };
   table_name: string;
   relationships: Array<{ rel_name: string }>;
-  permissions: Array<{ role_name: string }>
+  permissions: Array<{ role_name: string }>;
 };
 
-export const getTableNameFromDef = (def: TableDef|string): string => {
-    if (typeof def === 'string') {
-      return def;
-    }
-    return def.name;
+export const getTableNameFromDef = (def: { name: string } | string) => {
+  if (typeof def === 'string') {
+    return def;
+  }
+  return def.name;
 };
 
 const filterInconsistentMetadataObject = (
   objects: MetadataObject[],
   inconsistentObject: MetadataObject,
   type: string
-): MetadataObject[] => {
+) => {
   switch (type) {
     case 'tables':
       const schemas = objects;

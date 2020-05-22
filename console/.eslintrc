@@ -162,7 +162,8 @@
         "no-console": "off",
         "prefer-destructuring": "off",
         "react/no-danger": "off",
-        "react/no-array-index-key": "off"
+        "react/no-array-index-key": "off",
+        "no-case-declarations": 0
       }
     }
   ]
