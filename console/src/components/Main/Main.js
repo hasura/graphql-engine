@@ -212,7 +212,6 @@ class Main extends React.Component {
     const discord = require('./images/Discord.svg');
     const mail = require('./images/mail.svg');
     const docs = require('./images/docs-logo.svg');
-    const about = require('./images/console-logo.svg');
     const pixHeart = require('./images/pix-heart.svg');
     const close = require('./images/x-circle.svg');
     const monitoring = require('./images/monitoring.svg');
@@ -852,16 +851,6 @@ class Main extends React.Component {
                         />
                         <span>Head to docs</span>
                       </a>
-                    </li>
-                    <li className={'dropdown-item'}>
-                      <Link to="/about">
-                        <img
-                          className={'img-responsive'}
-                          src={about}
-                          alt={'about'}
-                        />
-                        <span>About</span>
-                      </Link>
                     </li>
                   </div>
                 </ul>
