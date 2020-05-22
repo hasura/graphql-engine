@@ -39,21 +39,19 @@ const ProcessedEvents: React.FC<Props> = props => {
   );
 
   return (
-    <div>
-      <FilterQuery
-        table={stEventsTable}
-        dispatch={dispatch}
-        render={renderRows}
-        presets={{
-          filters: [
-            makeValueFilter('trigger_name', '$eq', triggerName),
-            makeValueFilter('status', '$ne', 'scheduled'),
-          ],
-          sorts: [makeOrderBy('created_at', 'desc')],
-        }}
-        relationships={['cron_event_logs']}
-      />
-    </div>
+    <FilterQuery
+      table={stEventsTable}
+      dispatch={dispatch}
+      render={renderRows}
+      presets={{
+        filters: [
+          makeValueFilter('trigger_name', '$eq', triggerName),
+          makeValueFilter('status', '$ne', 'scheduled'),
+        ],
+        sorts: [makeOrderBy('created_at', 'desc')],
+      }}
+      relationships={['cron_event_logs']}
+    />
   );
 };
 

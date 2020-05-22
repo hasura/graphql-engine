@@ -42,18 +42,16 @@ const PendingEvents: React.FC<Props> = props => {
   );
 
   return (
-    <div>
-      <FilterQuery
-        table={adhocEventsTable}
-        dispatch={dispatch}
-        render={renderRows}
-        presets={{
-          filters: [makeValueFilter('status', '$eq', 'scheduled')],
-          sorts: [makeOrderBy('scheduled_time', 'desc')],
-        }}
-        relationships={['scheduled_event_logs']}
-      />
-    </div>
+    <FilterQuery
+      table={adhocEventsTable}
+      dispatch={dispatch}
+      render={renderRows}
+      presets={{
+        filters: [makeValueFilter('status', '$eq', 'scheduled')],
+        sorts: [makeOrderBy('scheduled_time', 'desc')],
+      }}
+      relationships={['scheduled_event_logs']}
+    />
   );
 };
 

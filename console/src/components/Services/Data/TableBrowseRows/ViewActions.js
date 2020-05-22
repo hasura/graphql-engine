@@ -183,7 +183,6 @@ const vMakeTableRequests = () => (dispatch, getState) => {
 
 const fetchManualTriggers = tableName => {
   return (dispatch, getState) => {
-    console.log('Fetching manual triggers');
     const url = Endpoints.getSchema;
     const { currentSchema } = getState().tables;
     const body = getFetchManualTriggersQuery(

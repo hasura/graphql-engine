@@ -6,7 +6,6 @@ import InvocationLogDetails from '../../Common/Components/InvocationLogDetails';
 import { getEventLogs } from '../../ServerIO';
 import { InvocationLog } from '../../types';
 import styles from '../../Events.scss';
-import { useInterval } from '../../../../Common/utils/reactUtils';
 import { Dispatch } from '../../../../../types';
 
 type Props = {
@@ -18,8 +17,6 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<any>(null);
   const [logs, setLogs] = React.useState<InvocationLog[]>([]);
-
-  useInterval(() => {}, 5000);
 
   React.useEffect(() => {
     const intervalId = setInterval(() => {

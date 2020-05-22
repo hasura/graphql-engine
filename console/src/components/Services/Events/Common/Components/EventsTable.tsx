@@ -8,7 +8,6 @@ import { FilterTableProps } from './types';
 import CheckIcon from '../../../../Common/Icons/Check';
 import CrossIcon from '../../../../Common/Icons/Cross';
 import ClockIcon from '../../../../Common/Icons/Clock';
-import SkullIcon from '../../../../Common/Icons/Skull';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import EventsSubTable from './EventsSubTable';
@@ -93,23 +92,19 @@ const EventsTable: React.FC<Props> = props => {
         r.status === 'scheduled' ? (
           <ClockIcon className="" />
         ) : r.status === 'dead' ? (
-          <SkullIcon className="" />
+          <CrossIcon className="" title="This event is dead" />
         ) : (
           <CheckIcon className="" />
         ),
-      scheduled_at: (
-        <div>
-          {r.scheduled_time
-            ? convertDateTimeToLocale(r.scheduled_time, false)
-            : undefined}
-        </div>
+      scheduled_time: r.scheduled_time ? (
+        <div>{convertDateTimeToLocale(r.scheduled_time, false)}</div>
+      ) : (
+        undefined
       ),
-      created_at: (
-        <div>
-          {r.created_at
-            ? convertDateTimeToLocale(r.created_at, true)
-            : undefined}
-        </div>
+      created_at: r.created_at ? (
+        <div>{convertDateTimeToLocale(r.created_at, true)}</div>
+      ) : (
+        undefined
       ),
     };
   });

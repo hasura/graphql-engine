@@ -38,21 +38,19 @@ const PendingEvents: React.FC<Props> = props => {
   );
 
   return (
-    <div>
-      <FilterQuery
-        table={stEventsTable}
-        dispatch={dispatch}
-        render={renderRows}
-        presets={{
-          filters: [
-            makeValueFilter('trigger_name', '$eq', triggerName),
-            makeValueFilter('status', '$eq', 'scheduled'),
-          ],
-          sorts: [makeOrderBy('scheduled_time', 'desc')],
-        }}
-        relationships={['cron_event_logs']}
-      />
-    </div>
+    <FilterQuery
+      table={stEventsTable}
+      dispatch={dispatch}
+      render={renderRows}
+      presets={{
+        filters: [
+          makeValueFilter('trigger_name', '$eq', triggerName),
+          makeValueFilter('status', '$eq', 'scheduled'),
+        ],
+        sorts: [makeOrderBy('scheduled_time', 'desc')],
+      }}
+      relationships={['cron_event_logs']}
+    />
   );
 };
 

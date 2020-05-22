@@ -46,7 +46,7 @@ const InvocationLogs: React.FC<Props> = props => {
   );
 
   return (
-    <div>
+    <React.Fragment>
       <TableHeader
         count={null}
         triggerName={triggerName}
@@ -69,7 +69,7 @@ const InvocationLogs: React.FC<Props> = props => {
           ],
         }}
       />
-    </div>
+    </React.Fragment>
   );
 };
 

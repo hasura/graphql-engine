@@ -27,13 +27,6 @@ const Tabs: React.FC<Props> = ({
   if (!(count === null || count === undefined)) {
     showCount = `(${count})`;
   }
-  const dataLoader = () => {
-    return (
-      <span className={styles.loader_ml}>
-        <i className="fa fa-spinner fa-spin" />
-      </span>
-    );
-  };
   return (
     <React.Fragment>
       <div className={styles.common_nav} key="reusable-tabs-1">
@@ -51,7 +44,11 @@ const Tabs: React.FC<Props> = ({
                 }${appPrefix.slice(1)}-${t}`}
               >
                 {tabsInfo[t].display_text} {tabName === t ? showCount : null}
-                {tabName === t && showLoader ? dataLoader() : null}
+                {tabName === t && showLoader ? (
+                  <span className={styles.loader_ml}>
+                    <i className="fa fa-spinner fa-spin" />
+                  </span>
+                ) : null}
               </Link>
             </li>
           ))}

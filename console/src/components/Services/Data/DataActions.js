@@ -247,8 +247,6 @@ const setUntrackedRelations = () => (dispatch, getState) => {
 
 const loadSchema = configOptions => {
   return (dispatch, getState) => {
-    console.log(configOptions);
-    console.log('Loading schema');
     const url = Endpoints.getSchema;
 
     let allSchemas = getState().tables.allSchemas;
@@ -294,10 +292,6 @@ const loadSchema = configOptions => {
         fetchTrackedTableReferencedFkQuery(configOptions),
       ],
     };
-
-    console.log('======================');
-    console.log(body);
-    console.log('======================');
 
     const options = {
       credentials: globalCookiePolicy,
@@ -346,8 +340,6 @@ const loadSchema = configOptions => {
 };
 
 const updateSchemaInfo = options => dispatch => {
-  console.log(options);
-  console.log('Updating schema info');
   return dispatch(loadSchema(options)).then(() => {
     dispatch(setUntrackedRelations());
   });

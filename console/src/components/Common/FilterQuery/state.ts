@@ -64,7 +64,7 @@ export const useFilterQuery = (
       ['*', ...(relationships || []).map(r => ({ name: r, columns: ['*'] }))],
       where,
       isNotDefined(offset) ? state.offset : offset,
-      isNotDefined(offset) ? state.limit : limit,
+      isNotDefined(limit) ? state.limit : limit,
       orderBy
     );
     const countQuery = getSelectQuery(

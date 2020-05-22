@@ -35,18 +35,16 @@ const ProcessedEvents: React.FC<Props> = props => {
   );
 
   return (
-    <div>
-      <FilterQuery
-        table={adhocEventsTable}
-        dispatch={dispatch}
-        render={renderRows}
-        presets={{
-          filters: [makeValueFilter('status', '$ne', 'scheduled')],
-          sorts: [makeOrderBy('created_at', 'desc')],
-        }}
-        relationships={['scheduled_event_logs']}
-      />
-    </div>
+    <FilterQuery
+      table={adhocEventsTable}
+      dispatch={dispatch}
+      render={renderRows}
+      presets={{
+        filters: [makeValueFilter('status', '$ne', 'scheduled')],
+        sorts: [makeOrderBy('created_at', 'desc')],
+      }}
+      relationships={['scheduled_event_logs']}
+    />
   );
 };
 

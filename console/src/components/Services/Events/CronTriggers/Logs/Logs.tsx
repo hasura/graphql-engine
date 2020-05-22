@@ -40,23 +40,21 @@ const InvocationLogs: React.FC<Props> = props => {
   );
 
   return (
-    <div>
-      <FilterQuery
-        table={stInvocationLogsTable}
-        dispatch={dispatch}
-        render={renderRows}
-        relationships={['cron_event']}
-        presets={{
-          sorts: [makeOrderBy('created_at', 'desc')],
-          filters: [
-            makeRelationshipFilter(
-              'cron_event',
-              makeValueFilter('trigger_name', '$eq', triggerName)
-            ),
-          ],
-        }}
-      />
-    </div>
+    <FilterQuery
+      table={stInvocationLogsTable}
+      dispatch={dispatch}
+      render={renderRows}
+      relationships={['cron_event']}
+      presets={{
+        sorts: [makeOrderBy('created_at', 'desc')],
+        filters: [
+          makeRelationshipFilter(
+            'cron_event',
+            makeValueFilter('trigger_name', '$eq', triggerName)
+          ),
+        ],
+      }}
+    />
   );
 };
 

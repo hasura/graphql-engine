@@ -22,24 +22,20 @@ const Info: React.FC = () => {
           </h2>
         </div>
         <hr />
-        <div>
-          <TopicDescription
-            title="What are Cron Triggers?"
-            imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
-            imgAlt={ADHOC_EVENTS_HEADING}
-            description={`${ADHOC_EVENTS_HEADING} are individual one-off events that can be scheduled at a particular timestamp. You can schedule an event from your backend using by sending the following payload to /v1/query, or through the console in the "Schedule an event" tab.`}
-          />
-          <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#create-scheduled-event" />
-          <hr className={styles.clear_fix} />
-        </div>
-        <div>
-          <AceEditor
-            mode="json"
-            value={SAMPLE_SCHEDDULE_EVENT_QUERY}
-            readOnly
-            maxLines={SCHEDULED_EVENT_PAYLOAD_EDITOR_MAXLINES}
-          />
-        </div>
+        <TopicDescription
+          title="What are Cron Triggers?"
+          imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
+          imgAlt={ADHOC_EVENTS_HEADING}
+          description={`${ADHOC_EVENTS_HEADING} are individual one-off events that can be scheduled at a particular timestamp. You can schedule an event from your backend using by sending the following payload to /v1/query, or through the console in the "Schedule an event" tab.`}
+        />
+        <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#create-scheduled-event" />
+        <hr className={styles.clear_fix} />
+        <AceEditor
+          mode="json"
+          value={SAMPLE_SCHEDDULE_EVENT_QUERY}
+          readOnly
+          maxLines={SCHEDULED_EVENT_PAYLOAD_EDITOR_MAXLINES}
+        />
       </div>
     </div>
   );

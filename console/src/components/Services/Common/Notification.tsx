@@ -8,6 +8,7 @@ import {
 import { Notification } from 'react-notification-system';
 import Button from '../../Common/Button/Button';
 import { Thunk } from '../../../types';
+import { Json } from '../../Common/utils/tsUtils';
 
 import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
@@ -38,7 +39,7 @@ const showNotification = (
 };
 
 const getNotificationDetails = (
-  detailsJson: any,
+  detailsJson: Json,
   children: React.ReactNode
 ) => {
   return (
@@ -193,8 +194,8 @@ const showErrorNotification = (
   };
 };
 
-const showSuccessNotification = (title: string, message?: string) => {
-  return (dispatch: any) => {
+const showSuccessNotification = (title: string, message?: string): Thunk => {
+  return dispatch => {
     dispatch(
       showNotification(
         {
@@ -208,8 +209,8 @@ const showSuccessNotification = (title: string, message?: string) => {
   };
 };
 
-const showInfoNotification = (title: string) => {
-  return (dispatch: any) => {
+const showInfoNotification = (title: string): Thunk => {
+  return dispatch => {
     dispatch(
       showNotification(
         {
@@ -225,14 +226,14 @@ const showInfoNotification = (title: string) => {
 const showWarningNotification = (
   title: string,
   message: string,
-  dataObj: any
-) => {
+  dataObj: Json
+): Thunk => {
   const children: JSX.Element[] = [];
   if (dataObj) {
     children.push(getNotificationDetails(dataObj, null));
   }
 
-  return (dispatch: any) => {
+  return dispatch => {
     dispatch(
       showNotification(
         {

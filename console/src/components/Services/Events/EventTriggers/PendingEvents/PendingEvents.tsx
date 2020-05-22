@@ -37,7 +37,7 @@ const PendingEvents: React.FC<Props> = props => {
   );
 
   return (
-    <div>
+    <React.Fragment>
       <TableHeader
         count={null}
         triggerName={triggerName}
@@ -60,7 +60,7 @@ const PendingEvents: React.FC<Props> = props => {
         }}
         relationships={['logs']}
       />
-    </div>
+    </React.Fragment>
   );
 };
 

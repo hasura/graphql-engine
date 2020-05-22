@@ -34,9 +34,7 @@ const FrequentlyUsedCrons: React.FC<Props> = ({ setCron }) => {
     return {
       content: (
         <div>
-          <div>
-            <b>{cron.name}</b>
-          </div>
+          <b>{cron.name}</b>
           <div>{cron.value}</div>
         </div>
       ),

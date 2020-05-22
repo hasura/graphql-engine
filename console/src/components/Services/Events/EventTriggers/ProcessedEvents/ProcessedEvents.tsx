@@ -38,7 +38,7 @@ const ProcessedEvents: React.FC<Props> = props => {
   );
 
   return (
-    <div>
+    <React.Fragment>
       <TableHeader
         count={null}
         triggerName={triggerName}
@@ -62,7 +62,7 @@ const ProcessedEvents: React.FC<Props> = props => {
         }}
         relationships={['logs']}
       />
-    </div>
+    </React.Fragment>
   );
 };
 
