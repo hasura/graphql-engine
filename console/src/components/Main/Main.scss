@@ -66,6 +66,15 @@
   }
 }
 
+.vulnerableVersionBannerWrapper {
+  background-color: #d9534f;
+  color: #eee;
+
+  .updateBanner a {
+    color: #eee;
+  }
+}
+
 .add_btn {
   margin: 10px 0;
 }
