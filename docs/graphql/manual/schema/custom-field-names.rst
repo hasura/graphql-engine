@@ -28,7 +28,7 @@ Expose columns with a different name in the GraphQL API
 
      Head to the ``Data -> [table-name] -> Modify``
 
-     .. thumbnail:: ../../../img/graphql/manual/schema/custom-field-name-column.png
+     .. thumbnail:: /img/graphql/manual/schema/custom-field-name-column.png
         :alt: Customise GraphQL field name
 
   .. tab:: API
@@ -50,7 +50,7 @@ Expose table root fields with a different name in the GraphQL API
 
      Head to the ``Data -> [table-name] -> Modify``
 
-     .. thumbnail:: ../../../img/graphql/manual/schema/custom-field-name-root-fields.png
+     .. thumbnail:: /img/graphql/manual/schema/custom-field-name-root-fields.png
         :alt: Customise GraphQL root field
 
   .. tab:: API

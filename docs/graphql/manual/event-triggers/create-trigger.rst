@@ -22,7 +22,7 @@ Event triggers can be created using the Hasura console or metadata APIs.
       Open the Hasura console, head to the ``Events`` tab and click on the ``Create`` button to open the
       page below:
 
-      .. thumbnail:: ../../../img/graphql/manual/event-triggers/create-event-trigger.png
+      .. thumbnail:: /img/graphql/manual/event-triggers/create-event-trigger.png
          :alt: Create an event trigger
 
    .. tab:: API
@@ -53,7 +53,7 @@ before using it for this configuration*).
 Advanced Settings
 -----------------
 
-.. thumbnail:: ../../../img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
+.. thumbnail:: /img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
    :alt: Advanced settings for event triggers
 
 Listen columns for update

@@ -18,7 +18,6 @@ import qualified Hasura.Incremental               as Inc
 
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 
@@ -26,7 +25,7 @@ import           Hasura.SQL.Types
 data InvalidationKeys = InvalidationKeys
   { _ikMetadata      :: !Inc.InvalidationKey
   , _ikRemoteSchemas :: !(HashMap RemoteSchemaName Inc.InvalidationKey)
-  } deriving (Eq, Generic)
+  } deriving (Show, Eq, Generic)
 instance Inc.Cacheable InvalidationKeys
 instance Inc.Select InvalidationKeys
 $(makeLenses ''InvalidationKeys)
@@ -53,15 +52,16 @@ data BuildInputs
 -- 'MonadWriter' side channel.
 data BuildOutputs
   = BuildOutputs
-  { _boTables        :: !TableCache
-  , _boActions       :: !ActionCache
-  , _boFunctions     :: !FunctionCache
-  , _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
+  { _boTables            :: !TableCache
+  , _boActions           :: !ActionCache
+  , _boFunctions         :: !FunctionCache
+  , _boRemoteSchemas     :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
   -- ^ We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
   -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
   -- generation (because of field conflicts).
-  , _boAllowlist     :: !(HS.HashSet GQLQuery)
-  , _boCustomTypes   :: !(NonObjectTypeMap, AnnotatedObjects)
+  , _boAllowlist         :: !(HS.HashSet GQLQuery)
+  , _boCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
+  , _boCronTriggers      :: !(M.HashMap TriggerName CronTriggerInfo)
   } deriving (Show, Eq)
 $(makeLenses ''BuildOutputs)
 

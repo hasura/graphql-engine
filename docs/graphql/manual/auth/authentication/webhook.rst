@@ -17,7 +17,7 @@ Introduction
 
 You can configure the GraphQL engine to use a webhook to authenticate all incoming requests to the Hasura GraphQL engine server. 
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/webhook-auth.png
+.. thumbnail:: /img/graphql/manual/auth/webhook-auth.png
    :alt: Authentication using webhooks
 
 .. admonition:: Prerequisite
@@ -109,6 +109,40 @@ You should send the ``X-Hasura-*`` "session variables" to your permission rules 
 
 .. note::
    All values should be ``String``. They will be converted to the right type automatically.
+
+
+There is no default timeout on the resulting connection. You can optionally add one; to do so, you need to return either:
+
+* a ``Cache-Control`` variable, modeled on the `Cache-Control HTTP Header <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control>`__, to specify a **relative** expiration time, in seconds.
+
+.. code-block:: http
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+
+   {
+       "X-Hasura-User-Id": "26",
+       "X-Hasura-Role": "user",
+       "X-Hasura-Is-Owner": "false",
+       "Cache-Control": "max-age=600"
+   }
+
+* an ``Expires`` variable, modeled on the `Expires HTTP Header <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expires>`__, to specify an **absolute** expiration time. The expected format is ``"%a, %d %b %Y %T GMT"``.
+
+.. code-block:: http
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+
+   {
+       "X-Hasura-User-Id": "27",
+       "X-Hasura-Role": "user",
+       "X-Hasura-Is-Owner": "false",
+       "Expires": "Mon, 30 Mar 2020 13:25:18 GMT"
+   }
+
+
+
 
 Failure
 +++++++

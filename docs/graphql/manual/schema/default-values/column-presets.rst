@@ -37,13 +37,13 @@ Step 1: Configure a column preset
     The column preset option is available under the ``Permissions`` tab of a table. Open the console and head to
     ``Data -> article -> Permissions``:
 
-    .. thumbnail:: ../../../../img/graphql/manual/schema/column-presets-option.png
+    .. thumbnail:: /img/graphql/manual/schema/column-presets-option.png
       :alt: Add a column preset in the permissions tab
 
     Enable the column preset option to define presets for one or more columns. For each column, you can pick between
     setting the preset using a static value or from a session variable.
 
-    .. thumbnail:: ../../../../img/graphql/manual/schema/column-presets-value-options.png
+    .. thumbnail:: /img/graphql/manual/schema/column-presets-value-options.png
       :alt: Configure the column preset
 
   .. tab:: API
@@ -71,14 +71,14 @@ to select from the* ``article`` *table*):
 As mentioned earlier, you'll notice when you add the ``X-Hasura-Role`` header that the field, ``user_id``, is no longer
 available as the mutation type's field:
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/column-preset-schema-change-for-role.png
-  :alt: Write an insert mutation
+.. thumbnail:: /img/graphql/manual/schema/column-preset-schema-change-for-role.png
+   :alt: Write an insert mutation
 
 Now, if we run the following insert mutation, we'll see that the ``user_id`` field is indeed being set with the value
 passed in the ``X-Hasura-User-Id`` variable:
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/column-preset-mutation-result.png
-  :alt: Run the insert mutation
+.. thumbnail:: /img/graphql/manual/schema/column-preset-mutation-result.png
+   :alt: Run the insert mutation
 
 .. note::
 

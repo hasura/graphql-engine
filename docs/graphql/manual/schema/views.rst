@@ -4,8 +4,8 @@
 
 .. _custom_views:
 
-Customise schema with views
-===========================
+Extend schema with views
+========================
 
 .. contents:: Table of contents
   :backlinks: none

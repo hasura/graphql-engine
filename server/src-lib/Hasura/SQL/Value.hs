@@ -64,12 +64,14 @@ data PGScalarValue
   | PGValFloat !Float
   | PGValDouble !Double
   | PGValNumeric !Scientific
+  | PGValMoney !Scientific
   | PGValBoolean !Bool
   | PGValChar !Char
   | PGValVarchar !T.Text
   | PGValText !T.Text
   | PGValCitext !T.Text
   | PGValDate !Day
+  | PGValTimeStamp !LocalTime
   | PGValTimeStampTZ !UTCTime
   | PGValTimeTZ !ZonedTimeOfDay
   | PGNull !PGScalarType
@@ -89,12 +91,15 @@ pgScalarValueToJson = \case
   PGValFloat f    -> toJSON f
   PGValDouble d   -> toJSON d
   PGValNumeric sc -> toJSON sc
+  PGValMoney m    -> toJSON m
   PGValBoolean b  -> toJSON b
   PGValChar t     -> toJSON t
   PGValVarchar t  -> toJSON t
   PGValText t     -> toJSON t
   PGValCitext t   -> toJSON t
   PGValDate d     -> toJSON d
+  PGValTimeStamp u ->
+    toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeStampTZ u ->
     toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeTZ (ZonedTimeOfDay tod tz) ->
@@ -127,21 +132,46 @@ parsePGValue ty val = case (ty, val) of
   (_          , String t) -> parseTyped <|> pure (PGValUnknown t)
   (_          , _)        -> parseTyped
   where
+    parseBoundedInt :: forall i. (Integral i, Bounded i) => Value -> AT.Parser i
+    parseBoundedInt val' =
+      withScientific
+        ("Integer expected for input type: " ++ show ty)
+        go
+        val'
+      where
+        go num = case toBoundedInteger num of
+          Just parsed -> return parsed
+          Nothing     -> fail $ "The value " ++ show num ++ " lies outside the "
+                         ++ "bounds or is not an integer.  Maybe it is a "
+                         ++ "float, or is there integer overflow?"
+    parseBoundedFloat :: forall a. (RealFloat a) => Value -> AT.Parser a
+    parseBoundedFloat val' =
+      withScientific
+        ("Float expected for input type: " ++ show ty)
+        go
+        val'
+      where
+        go num = case toBoundedRealFloat num of
+          Left _       -> fail $ "The value " ++ show num ++ " lies outside the "
+                          ++ "bounds.  Is it overflowing the float bounds?"
+          Right parsed -> return parsed
     parseTyped = case ty of
-      PGSmallInt -> PGValSmallInt <$> parseJSON val
-      PGInteger -> PGValInteger <$> parseJSON val
-      PGBigInt -> PGValBigInt <$> parseJSON val
-      PGSerial -> PGValInteger <$> parseJSON val
-      PGBigSerial -> PGValBigInt <$> parseJSON val
-      PGFloat -> PGValFloat <$> parseJSON val
-      PGDouble -> PGValDouble <$> parseJSON val
+      PGSmallInt -> PGValSmallInt <$> parseBoundedInt val
+      PGInteger -> PGValInteger <$> parseBoundedInt val
+      PGBigInt -> PGValBigInt <$> parseBoundedInt val
+      PGSerial -> PGValInteger <$> parseBoundedInt val
+      PGBigSerial -> PGValBigInt <$> parseBoundedInt val
+      PGFloat -> PGValFloat <$> parseBoundedFloat val
+      PGDouble -> PGValDouble <$> parseBoundedFloat val
       PGNumeric -> PGValNumeric <$> parseJSON val
+      PGMoney -> PGValMoney <$> parseJSON val
       PGBoolean -> PGValBoolean <$> parseJSON val
       PGChar -> PGValChar <$> parseJSON val
       PGVarchar -> PGValVarchar <$> parseJSON val
       PGText -> PGValText <$> parseJSON val
       PGCitext -> PGValCitext <$> parseJSON val
       PGDate -> PGValDate <$> parseJSON val
+      PGTimeStamp -> PGValTimeStamp <$> parseJSON val
       PGTimeStampTZ -> PGValTimeStampTZ <$> parseJSON val
       PGTimeTZ -> PGValTimeTZ <$> parseJSON val
       PGJSON -> PGValJSON . Q.JSON <$> parseJSON val
@@ -151,7 +181,7 @@ parsePGValue ty val = case (ty, val) of
       PGRaster -> PGValRaster <$> parseJSON val
       PGUUID -> PGValUUID <$> parseJSON val
       PGUnknown tyName ->
-        fail $ "A string is expected for type : " ++ T.unpack tyName
+        fail $ "A string is expected for type: " ++ T.unpack tyName
 
 data TxtEncodedPGVal
   = TENull
@@ -178,12 +208,17 @@ txtEncodedPGVal colVal = case colVal of
   PGValFloat f    -> TELit $ T.pack $ show f
   PGValDouble d   -> TELit $ T.pack $ show d
   PGValNumeric sc -> TELit $ T.pack $ show sc
+  -- PostgreSQL doesn't like scientific notation for money, so pass it
+  -- with 2 decimal places.
+  PGValMoney m    -> TELit $ T.pack $ formatScientific Fixed (Just 2) m
   PGValBoolean b  -> TELit $ bool "false" "true" b
   PGValChar t     -> TELit $ T.pack $ show t
   PGValVarchar t  -> TELit t
   PGValText t     -> TELit t
   PGValCitext t   -> TELit t
   PGValDate d     -> TELit $ T.pack $ showGregorian d
+  PGValTimeStamp u ->
+    TELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeStampTZ u ->
     TELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeTZ (ZonedTimeOfDay tod tz) ->
@@ -208,12 +243,14 @@ binEncoder colVal = case colVal of
   PGValFloat f                     -> Q.toPrepVal f
   PGValDouble d                    -> Q.toPrepVal d
   PGValNumeric sc                  -> Q.toPrepVal sc
+  PGValMoney m                     -> Q.toPrepVal m
   PGValBoolean b                   -> Q.toPrepVal b
   PGValChar t                      -> Q.toPrepVal t
   PGValVarchar t                   -> Q.toPrepVal t
   PGValText t                      -> Q.toPrepVal t
   PGValCitext t                    -> Q.toPrepVal t
   PGValDate d                      -> Q.toPrepVal d
+  PGValTimeStamp u                 -> Q.toPrepVal u
   PGValTimeStampTZ u               -> Q.toPrepVal u
   PGValTimeTZ (ZonedTimeOfDay t z) -> Q.toPrepValHelper PTI.timetz PE.timetz_int (t, z)
   PGNull ty                        -> (pgTypeOid ty, Nothing)

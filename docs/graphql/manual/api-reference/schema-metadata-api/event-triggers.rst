@@ -82,9 +82,13 @@ Args syntax
      - :ref:`QualifiedTable <QualifiedTable>`
      - Object with table name and schema
    * - webhook
-     - true
+     - false
      - String
-     - Full url of webhook
+     - Full url of webhook (*)
+   * - webhook_from_env
+     - false
+     - String
+     - Environment variable name of webhook (must exist at boot time) (*)
    * - insert
      - false
      - OperationSpec_
@@ -101,10 +105,16 @@ Args syntax
      - false
      - [ :ref:`HeaderFromValue <HeaderFromValue>` | :ref:`HeaderFromEnv <HeaderFromEnv>` ]
      - List of headers to be sent with the webhook
+   * - retry_conf
+     - false
+     - RetryConf_
+     - Retry configuration if event delivery fails
    * - replace
      - false
      - Boolean
      - If set to true, the event trigger is replaced with the new definition
+
+(*) Either ``webhook`` or ``webhook_from_env`` are required.
 
 .. _delete_event_trigger:
 
@@ -143,12 +153,53 @@ Args syntax
      - TriggerName_
      - Name of the event trigger
 
+
+.. _redeliver_event:
+
+redeliver_event
+---------------
+
+``redeliver_event`` is used to redeliver an existing event. For example, if an event is marked as error (
+say it did not succeed after retries), you can redeliver it using this API. Note that this will reset the count of retries so far.
+If the event fails to deliver, it will be retried automatically according to its ``retry_conf``.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "redeliver_event",
+       "args" : {
+           "event_id": "ad4f698f-a14e-4a6d-a01b-38cd252dd8bf"
+       }
+   }
+
+.. _redeliver_event_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - event_id
+     - true
+     - String
+     - UUID of the event
+
+
 .. _invoke_event_trigger:
 
 invoke_event_trigger
 --------------------
 
-``invoke_event_trigger`` is used to invoke an event trigger manually.
+``invoke_event_trigger`` is used to invoke an event trigger with custom payload.
 
 .. code-block:: http
 
@@ -224,3 +275,28 @@ EventTriggerColumns
    :class: haskell-pre
 
    "*" | [:ref:`PGColumn`]
+
+.. _RetryConf:
+
+RetryConf
+&&&&&&&&&
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - num_retries
+     - false
+     - Integer
+     - Number of times to retry delivery. Default: 0
+   * - interval_sec
+     - false
+     - Integer
+     - Number of seconds to wait between each retry. Default: 10
+   * - timeout_sec
+     - false
+     - Integer
+     - Number of seconds to wait for response before timing out. Default: 60

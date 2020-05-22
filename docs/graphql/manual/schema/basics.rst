@@ -23,12 +23,12 @@ Let's say we want to create two simple tables for an article/author schema:
 .. code-block:: sql
 
   author (
-    id INT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name TEXT
   )
 
   article (
-    id INT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     title TEXT,
     content TEXT,
     rating INT,
@@ -50,7 +50,7 @@ Create tables
 
     For example, here is the schema for the ``article`` table in this interface:
 
-    .. thumbnail:: ../../../img/graphql/manual/schema/create-table-graphql.png
+    .. thumbnail:: /img/graphql/manual/schema/create-table-graphql.png
       :alt: Schema for an article table
 
     You can insert some sample data into the tables using the ``Insert Row`` tab of the created tables.
@@ -170,17 +170,29 @@ Here are a couple of examples:
     mutation add_author {
       insert_author(
         objects: [
-          {id: 11, name: "Jane"}
+          { name: "Jane" }
         ]
       ) {
         affected_rows
+        returning {
+          id
+          name
+        }
       }
     }
   :response:
     {
       "data": {
         "insert_author": {
-          "affected_rows": 1
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 11,
+              "name": "Jane"
+            }
+          ]
         }
       }
     }
+    
+Note that the author's ``id`` does not need to passed as an input as it is of type ``serial`` (auto incrementing integer).

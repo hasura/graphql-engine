@@ -52,7 +52,8 @@ const TableRow = ({
             className={styles.cursorPointer}
             checked={bulkSection.checked}
             data-role={bulkSection.role}
-            title="Select for bulk actions"
+            disabled={bulkSection.disableCheckbox}
+            title={bulkSection.title}
             type="checkbox"
           />
           {/*{deleteIcon}*/}

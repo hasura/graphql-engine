@@ -211,15 +211,35 @@ The various types of queries are listed in the following table:
      - 1
      - Create or replace an event trigger
 
-   * - :ref:`invoke_event_trigger`
-     - :ref:`invoke_event_trigger_args <invoke_event_trigger_syntax>`
-     - 1
-     - Invoke a trigger manually
-
    * - :ref:`delete_event_trigger`
      - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
      - 1
      - Delete an existing event trigger
+
+   * - :ref:`redeliver_event`
+     - :ref:`redeliver_event_args <redeliver_event_syntax>`
+     - 1
+     - Redeliver an existing event
+
+   * - :ref:`invoke_event_trigger`
+     - :ref:`invoke_event_trigger_args <invoke_event_trigger_syntax>`
+     - 1
+     - Invoke a trigger with custom payload
+
+   * - :ref:`create_cron_trigger`
+     - :ref:`create_cron_trigger_args <create_cron_trigger_syntax>`
+     - 1
+     - Create a cron trigger
+
+   * - :ref:`delete_cron_trigger`
+     - :ref:`delete_cron_trigger_args <delete_cron_trigger_syntax>`
+     - 1
+     - Delete an existing cron trigger
+
+   * - :ref:`create_scheduled_event`
+     - :ref:`create_scheduled_event_args <create_scheduled_event_syntax>`
+     - 1
+     - Create a new scheduled event
 
    * - :ref:`add_remote_schema`
      - :ref:`add_remote_schema_args <add_remote_schema_syntax>`
@@ -421,6 +441,7 @@ See :ref:`server_flag_reference` for info on setting the above flag/env var.
   Permissions <permission>
   Computed Fields <computed-field>
   Event Triggers <event-triggers>
+  Scheduled Triggers <scheduled-triggers>
   Remote Schemas <remote-schemas>
   Query Collections <query-collections>
   Custom Types <custom-types>

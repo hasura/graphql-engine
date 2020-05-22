@@ -2,8 +2,10 @@ module Hasura.RQL.Types.Metadata where
 
 import qualified Data.HashMap.Strict.Extended   as M
 
+import           Control.Lens                   hiding ((.=))
 import           Data.Aeson
 import           Hasura.Prelude
+import           Hasura.Session
 
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common
@@ -29,7 +31,9 @@ data MetadataObjId
   | MOCustomTypes
   | MOAction !ActionName
   | MOActionPermission !ActionName !RoleName
+  | MOCronTrigger !TriggerName
   deriving (Show, Eq, Generic)
+$(makePrisms ''MetadataObjId)
 instance Hashable MetadataObjId
 
 moiTypeName :: MetadataObjId -> Text
@@ -37,6 +41,7 @@ moiTypeName = \case
   MOTable _ -> "table"
   MOFunction _ -> "function"
   MORemoteSchema _ -> "remote_schema"
+  MOCronTrigger _ -> "cron_trigger"
   MOTableObj _ tableObjectId -> case tableObjectId of
     MTORel _ relType   -> relTypeToTxt relType <> "_relation"
     MTOPerm _ permType -> permTypeToCode permType <> "_permission"
@@ -51,6 +56,7 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
   MOTable name -> dquoteTxt name
   MOFunction name -> dquoteTxt name
   MORemoteSchema name -> dquoteTxt name
+  MOCronTrigger name -> dquoteTxt name
   MOTableObj tableName tableObjectId ->
     let tableObjectName = case tableObjectId of
           MTORel name _         -> dquoteTxt name
@@ -60,19 +66,25 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
     in tableObjectName <> " in " <> moiName (MOTable tableName)
   MOCustomTypes -> "custom_types"
   MOAction name -> dquoteTxt name
-  MOActionPermission name role -> dquoteTxt role <> " permission in " <> dquoteTxt name
+  MOActionPermission name roleName -> dquoteTxt roleName <> " permission in " <> dquoteTxt name
 
 data MetadataObject
   = MetadataObject
   { _moId         :: !MetadataObjId
   , _moDefinition :: !Value
   } deriving (Show, Eq)
+$(makeLenses ''MetadataObject)
 
 data InconsistentMetadata
   = InconsistentObject !Text !MetadataObject
   | ConflictingObjects !Text ![MetadataObject]
   | DuplicateObjects !MetadataObjId ![Value]
   deriving (Show, Eq)
+$(makePrisms ''InconsistentMetadata)
+
+getInconsistentRemoteSchemas :: [InconsistentMetadata] -> [RemoteSchemaName]
+getInconsistentRemoteSchemas =
+  toListOf (traverse._InconsistentObject._2.moId._MORemoteSchema)
 
 imObjectIds :: InconsistentMetadata -> [MetadataObjId]
 imObjectIds = \case

@@ -10,10 +10,9 @@ module Hasura.Server.Telemetry
   )
   where
 
-import           Control.Exception     (try)
+import           Control.Exception                (try)
 import           Control.Lens
-import           Data.List
-import           Data.Text.Conversions (UTF8 (..), decodeText)
+import           Data.Text.Conversions            (UTF8 (..), decodeText)
 
 import           Hasura.HTTP
 import           Hasura.Logging
@@ -22,19 +21,21 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Init
 import           Hasura.Server.Telemetry.Counters
 import           Hasura.Server.Version
+import           Hasura.Session
 
 import qualified CI
-import qualified Control.Concurrent.Extended as C
-import qualified Data.Aeson                  as A
-import qualified Data.Aeson.Casing           as A
-import qualified Data.Aeson.TH               as A
-import qualified Data.ByteString.Lazy        as BL
-import qualified Data.HashMap.Strict         as Map
-import qualified Data.Text                   as T
-import qualified Network.HTTP.Client         as HTTP
-import qualified Network.HTTP.Types          as HTTP
-import qualified Network.Wreq                as Wreq
-
+import qualified Control.Concurrent.Extended      as C
+import qualified Data.Aeson                       as A
+import qualified Data.Aeson.Casing                as A
+import qualified Data.Aeson.TH                    as A
+import qualified Data.ByteString.Lazy             as BL
+import qualified Data.HashMap.Strict              as Map
+import qualified Data.List                        as L
+import qualified Data.Text                        as T
+import qualified Language.GraphQL.Draft.Syntax    as G
+import qualified Network.HTTP.Client              as HTTP
+import qualified Network.HTTP.Types               as HTTP
+import qualified Network.Wreq                     as Wreq
 
 data RelationshipMetric
   = RelationshipMetric
@@ -53,17 +54,29 @@ data PermissionMetric
   } deriving (Show, Eq)
 $(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''PermissionMetric)
 
+data ActionMetric
+    = ActionMetric
+    { _amSynchronous       :: !Int
+    , _amAsynchronous      :: !Int
+    , _amQueryActions      :: !Int
+    , _amTypeRelationships :: !Int
+    , _amCustomTypes       :: !Int
+    } deriving (Show, Eq)
+$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''ActionMetric)
+
 data Metrics
   = Metrics
-  { _mtTables        :: !Int
-  , _mtViews         :: !Int
-  , _mtEnumTables    :: !Int
-  , _mtRelationships :: !RelationshipMetric
-  , _mtPermissions   :: !PermissionMetric
-  , _mtEventTriggers :: !Int
-  , _mtRemoteSchemas :: !Int
-  , _mtFunctions     :: !Int
+  { _mtTables         :: !Int
+  , _mtViews          :: !Int
+  , _mtEnumTables     :: !Int
+  , _mtRelationships  :: !RelationshipMetric
+  , _mtPermissions    :: !PermissionMetric
+  , _mtEventTriggers  :: !Int
+  , _mtRemoteSchemas  :: !Int
+  , _mtFunctions      :: !Int
   , _mtServiceTimings :: !ServiceTimingMetrics
+  , _mtPgVersion      :: !PGVersion
+  , _mtActions        :: !ActionMetric
   } deriving (Show, Eq)
 $(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
 
@@ -99,20 +112,21 @@ mkPayload dbId instanceId version metrics = do
 -- hours. The send time depends on when the server was started and will
 -- naturally drift.
 runTelemetry
-  :: (HasVersion)
+  :: HasVersion
   => Logger Hasura
   -> HTTP.Manager
   -> IO SchemaCache
   -- ^ an action that always returns the latest schema cache
   -> Text
   -> InstanceId
+  -> PGVersion
   -> IO void
-runTelemetry (Logger logger) manager getSchemaCache dbId instanceId = do
+runTelemetry (Logger logger) manager getSchemaCache dbId instanceId pgVersion = do
   let options = wreqOptions manager []
   forever $ do
     schemaCache <- getSchemaCache
     serviceTimings <- dumpServiceTimingMetrics
-    let metrics = computeMetrics schemaCache serviceTimings
+    let metrics = computeMetrics schemaCache serviceTimings pgVersion
     payload <- A.encode <$> mkPayload dbId instanceId currentVersion metrics
     logger $ debugLBS $ "metrics_info: " <> payload
     resp <- try $ Wreq.postWith options (T.unpack telemetryUrl) payload
@@ -132,16 +146,16 @@ runTelemetry (Logger logger) manager getSchemaCache dbId instanceId = do
         let httpErr = Just $ mkHttpError telemetryUrl (Just resp) Nothing
         logger $ mkTelemetryLog "http_error" "failed to post telemetry" httpErr
 
-computeMetrics :: SchemaCache -> ServiceTimingMetrics -> Metrics
-computeMetrics sc _mtServiceTimings =
+computeMetrics :: SchemaCache -> ServiceTimingMetrics -> PGVersion -> Metrics
+computeMetrics sc _mtServiceTimings _mtPgVersion =
   let _mtTables = countUserTables (isNothing . _tciViewInfo . _tiCoreInfo)
       _mtViews = countUserTables (isJust . _tciViewInfo . _tiCoreInfo)
       _mtEnumTables = countUserTables (isJust . _tciEnumValues . _tiCoreInfo)
       allRels = join $ Map.elems $ Map.map (getRels . _tciFieldInfoMap . _tiCoreInfo) userTables
-      (manualRels, autoRels) = partition riIsManual allRels
+      (manualRels, autoRels) = L.partition riIsManual allRels
       _mtRelationships = RelationshipMetric (length manualRels) (length autoRels)
       rolePerms = join $ Map.elems $ Map.map permsOfTbl userTables
-      _pmRoles = length $ nub $ fst <$> rolePerms
+      _pmRoles = length $ L.nub $ fst <$> rolePerms
       allPerms = snd <$> rolePerms
       _pmInsert = calcPerms _permIns allPerms
       _pmSelect = calcPerms _permSel allPerms
@@ -153,6 +167,7 @@ computeMetrics sc _mtServiceTimings =
                     $ Map.map _tiEventTriggerInfoMap userTables
       _mtRemoteSchemas   = Map.size $ scRemoteSchemas sc
       _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) $ scFunctions sc
+      _mtActions = computeActionsMetrics (scActions sc) (snd . scCustomTypes $ sc)
 
   in Metrics{..}
 
@@ -161,11 +176,31 @@ computeMetrics sc _mtServiceTimings =
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
     calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int
-    calcPerms fn perms = length $ catMaybes $ map fn perms
+    calcPerms fn perms = length $ mapMaybe fn perms
 
     permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
+computeActionsMetrics :: ActionCache -> AnnotatedObjects -> ActionMetric
+computeActionsMetrics ac ao =
+  ActionMetric syncActionsLen asyncActionsLen queryActionsLen typeRelationships customTypesLen
+  where actions = Map.elems ac
+        syncActionsLen  = length . filter ((==(ActionMutation ActionSynchronous)) . _adType . _aiDefinition) $ actions
+        asyncActionsLen  = length . filter ((==(ActionMutation ActionAsynchronous)) . _adType . _aiDefinition) $ actions
+        queryActionsLen = length . filter ((==ActionQuery) . _adType . _aiDefinition) $ actions
+
+        outputTypesLen = length . L.nub . (map (_adOutputType . _aiDefinition)) $ actions
+        inputTypesLen = length . L.nub . concat . (map ((map _argType) . _adArguments . _aiDefinition)) $ actions
+        customTypesLen = inputTypesLen + outputTypesLen
+
+        typeRelationships = length . L.nub . concat . map ((getActionTypeRelationshipNames ao) . _aiDefinition) $ actions
+
+        -- gives the count of relationships associated with an action
+        getActionTypeRelationshipNames :: AnnotatedObjects -> ResolvedActionDefinition -> [RelationshipName]
+        getActionTypeRelationshipNames annotatedObjs actionDefn =
+          let typeName = G.getBaseType $ unGraphQLType $ _adOutputType actionDefn
+              annotatedObj = Map.lookup (ObjectTypeName typeName) annotatedObjs
+          in maybe [] (Map.keys . _aotRelationships) annotatedObj
 
 -- | Logging related
 

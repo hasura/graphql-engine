@@ -4,8 +4,8 @@
 
 .. _custom_sql_functions:
 
-Customise schema with SQL functions
-===================================
+Extend schema with SQL functions
+================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -18,15 +18,19 @@ What are custom SQL functions?
 Custom SQL functions are `user-defined SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`_
 that can be used to either encapsulate some custom business logic or extend the built-in SQL functions and operators.
 
-Hasura GraphQL engine lets you expose certain types of custom functions over the GraphQL API to allow querying them
-using both ``queries`` and ``subscriptions``.
+Hasura GraphQL engine lets you expose certain types of custom functions as top level fields in the GraphQL API to allow
+querying them using both ``queries`` and ``subscriptions``.
+
+.. note::
+
+  Custom SQL functions can also be queried as :ref:`computed fields <computed_fields>` of tables.
 
 .. _supported_sql_functions:
 
 Supported SQL functions
------------------------
+***********************
 
-Currently, only functions which satisfy the following constraints can be exposed over the GraphQL API
+Currently, only functions which satisfy the following constraints can be exposed as top level fields in the GraphQL API
 (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
 
 - **Function behaviour**: ONLY ``STABLE`` or ``IMMUTABLE``
@@ -421,9 +425,10 @@ Search nearby landmarks with ``distance_kms`` default value which is 2 kms:
 Accessing Hasura session variables in custom functions
 ******************************************************
 
-Use the v2 :ref:`track_function <track_function_v2>` to add a function by defining a session argument.
-The session argument will be a JSON object where keys are session variable names (in lower case) and values are strings.
-Use the ``->>`` JSON operator to fetch the value of a session variable as shown in the following example.
+Create a function with an argument for session variables and track it with the :ref:`track_function_v2 <track_function_v2>` API with the
+``session_argument`` config set. The session argument will be a JSON object where keys are session variable names (in lower case)
+and values are strings. Use the ``->>`` JSON operator to fetch the value of a session variable as shown in the
+following example.
 
 .. code-block:: plpgsql
 
@@ -444,19 +449,19 @@ Use the ``->>`` JSON operator to fetch the value of a session variable as shown 
   :view_only:
   :query:
      query {
-         get_session_role {
-             result
-         }
+       get_session_role {
+         result
+       }
      }
   :response:
     {
-        "data": {
-            "get_session_role": [
-                {
-                    "result": "admin"
-                }
-             ]
-        }
+      "data": {
+        "get_session_role": [
+          {
+            "result": "admin"
+          }
+        ]
+      }
     }
 
 .. note::

@@ -11,6 +11,7 @@ module Hasura.RQL.Types.SchemaCache
   , incSchemaCacheVer
   , TableConfig(..)
   , emptyTableConfig
+  , getAllRemoteSchemas
 
   , TableCoreCache
   , TableCache
@@ -113,13 +114,14 @@ module Hasura.RQL.Types.SchemaCache
   , FunctionCache
   , getFuncsOfTable
   , askFunctionInfo
+
+  , CronTriggerInfo(..)
   ) where
 
 import qualified Hasura.GraphQL.Context            as GC
 
 import           Hasura.Db
-import           Hasura.Incremental                (Dependency, MonadDepend (..),
-                                                    selectKeyD)
+import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
@@ -131,13 +133,17 @@ import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Types
 
+
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           System.Cron.Types
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
@@ -174,6 +180,19 @@ type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
+data CronTriggerInfo
+ = CronTriggerInfo
+   { ctiName        :: !TriggerName
+   , ctiSchedule    :: !CronSchedule
+   , ctiPayload     :: !(Maybe Value)
+   , ctiRetryConf   :: !STRetryConf
+   , ctiWebhookInfo :: !ResolvedWebhook
+   , ctiHeaders     :: ![EventHeaderInfo]
+   , ctiComment     :: !(Maybe Text)
+   } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 3 snakeCase) ''CronTriggerInfo)
+
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
   deriving (Show, Eq, Ord, Hashable, ToJSON, FromJSON)
@@ -200,6 +219,7 @@ data SchemaCache
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
   , scInconsistentObjs  :: ![InconsistentMetadata]
+  , scCronTriggers      :: !(M.HashMap TriggerName CronTriggerInfo)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 
@@ -207,6 +227,13 @@ getFuncsOfTable :: QualifiedTable -> FunctionCache -> [FunctionInfo]
 getFuncsOfTable qt fc = flip filter allFuncs $ \f -> qt == fiReturnType f
   where
     allFuncs = M.elems fc
+
+getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]
+getAllRemoteSchemas sc =
+  let consistentRemoteSchemas = M.keys $ scRemoteSchemas sc
+      inconsistentRemoteSchemas =
+        getInconsistentRemoteSchemas $ scInconsistentObjs sc
+  in consistentRemoteSchemas <> inconsistentRemoteSchemas
 
 -- | A more limited version of 'CacheRM' that is used when building the schema cache, since the
 -- entire schema cache has not been built yet.
