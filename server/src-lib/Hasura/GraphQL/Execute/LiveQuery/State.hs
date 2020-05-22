@@ -16,6 +16,7 @@ import           Hasura.Prelude
 import qualified Control.Concurrent.STM                   as STM
 import qualified Control.Immortal                         as Immortal
 import qualified Data.Aeson.Extended                      as J
+import qualified Data.UUID.V4                             as UUID
 import qualified StmContainers.Map                        as STMMap
 
 import           Control.Concurrent.Extended              (forkImmortal, sleep)
@@ -62,12 +63,13 @@ data LiveQueryId
 
 addLiveQuery
   :: L.Logger L.Hasura
+  -> UniqueSubscriberId
   -> LiveQueriesState
   -> LiveQueryPlan
   -> OnChange
   -- ^ the action to be executed when result changes
   -> IO LiveQueryId
-addLiveQuery logger lqState plan onResultAction = do
+addLiveQuery logger wsOpId lqState plan onResultAction = do
   -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
   -- disposable UUIDs:
@@ -96,8 +98,9 @@ addLiveQuery logger lqState plan onResultAction = do
   -- the livequery can only be cancelled after putTMVar
   onJust handlerM $ \handler -> do
     metrics <- initRefetchMetrics
-    threadRef <- forkImmortal ("pollQuery."<>show sinkId) logger $ forever $ do
-      pollQuery metrics batchSize pgExecCtx query handler
+    pollerId <- PollerId <$> UUID.nextRandom
+    threadRef <- forkImmortal ("pollQuery." <> show sinkId) logger $ forever $ do
+      pollQuery logger pollerId metrics lqOpts pgExecCtx query handler
       sleep $ unRefetchInterval refetchInterval
     let !pState = PollerIOState threadRef metrics
     $assertNFHere pState  -- so we don't write thunks to mutable vars
@@ -106,12 +109,13 @@ addLiveQuery logger lqState plan onResultAction = do
   pure $ LiveQueryId handlerId cohortKey sinkId
   where
     LiveQueriesState lqOpts pgExecCtx lqMap = lqState
-    LiveQueriesOptions batchSize refetchInterval = lqOpts
+    LiveQueriesOptions _ refetchInterval = lqOpts
     LiveQueryPlan (ParameterizedLiveQueryPlan role query) cohortKey = plan
 
     handlerId = PollerKey role query
 
-    !subscriber = Subscriber onResultAction
+    !subscriber = Subscriber onResultAction wsOpId
+
     addToCohort sinkId handlerC =
       TMap.insert subscriber sinkId $ _cNewSubscribers handlerC
 

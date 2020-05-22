@@ -5,6 +5,7 @@
 module Hasura.GraphQL.Execute.LiveQuery.Plan
   ( MultiplexedQuery
   , mkMultiplexedQuery
+  , unMultiplexedQuery
   , resolveMultiplexedValue
 
   , CohortId
@@ -55,10 +56,10 @@ import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Types
+import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.Server.Version             (HasVersion)
 
 -- -------------------------------------------------------------------------------------------------
 -- Multiplexed queries

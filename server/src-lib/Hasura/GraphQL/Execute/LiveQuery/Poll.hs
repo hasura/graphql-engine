@@ -2,6 +2,7 @@
 module Hasura.GraphQL.Execute.LiveQuery.Poll (
   -- * Pollers
     Poller(..)
+  , PollerId(..)
   , PollerIOState(..)
   , pollQuery
 
@@ -23,6 +24,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   -- * Subscribers
   , Subscriber(..)
   , SubscriberId
+  , UniqueSubscriberId(..)
   , newSinkId
   , SubscriberMap
   , OnChange
@@ -33,25 +35,31 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Async                 as A
-import qualified Control.Concurrent.STM                   as STM
-import qualified Control.Immortal                         as Immortal
-import qualified Crypto.Hash                              as CH
-import qualified Data.Aeson.Extended                      as J
-import qualified Data.ByteString                          as BS
-import qualified Data.ByteString.Lazy                     as BL
-import qualified Data.HashMap.Strict                      as Map
-import qualified Data.Time.Clock                          as Clock
-import qualified Data.UUID                                as UUID
-import qualified Data.UUID.V4                             as UUID
+import qualified Control.Concurrent.Async                    as A
+import qualified Control.Concurrent.STM                      as STM
+import qualified Control.Immortal                            as Immortal
+import qualified Crypto.Hash                                 as CH
+import qualified Data.Aeson.Casing                           as J
+import qualified Data.Aeson.Extended                         as J
+import qualified Data.Aeson.TH                               as J
+import qualified Data.ByteString                             as BS
+import qualified Data.ByteString.Lazy                        as BL
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.Time.Clock                             as Clock
+import qualified Data.UUID                                   as UUID
+import qualified Data.UUID.V4                                as UUID
+import qualified Database.PG.Query                           as Q
 import qualified ListT
-import qualified StmContainers.Map                        as STMMap
-import qualified System.Metrics.Distribution              as Metrics
+import qualified StmContainers.Map                           as STMMap
+import qualified System.Metrics.Distribution                 as Metrics
 
-import           Data.List.Split                          (chunksOf)
+import           Data.List.Split                             (chunksOf)
 import           GHC.AssertNF
 
-import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
+import qualified Hasura.GraphQL.Execute.LiveQuery.TMap       as TMap
+import qualified Hasura.GraphQL.Transport.WebSocket.Protocol as WS
+import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
+import qualified Hasura.Logging                              as L
 
 import           Hasura.Db
 import           Hasura.EncJSON
@@ -64,7 +72,26 @@ import           Hasura.Session
 -- -------------------------------------------------------------------------------------------------
 -- Subscribers
 
-newtype Subscriber = Subscriber { _sOnChangeCallback :: OnChange }
+-- | This is to identify each subscriber based on their (websocket id, operation id) - this is
+-- useful for collecting metrics and then correlating. The current 'SubscriberId' has a UUID which
+-- is internal and not useful for metrics.
+data UniqueSubscriberId
+  = UniqueSubscriberId
+  { _usiWebsocketId :: !WS.WSId
+  , _usiOperationId :: !WS.OperationId
+  } deriving (Show, Eq)
+
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''UniqueSubscriberId)
+
+data Subscriber
+  = Subscriber
+  { _sOnChangeCallback     :: !OnChange
+  , _sWebsocketOperationId :: !UniqueSubscriberId
+  }
+
+instance Show Subscriber where
+  show (Subscriber _ wsOpId) =
+    "Subscriber { _sOnChangeCallback = <fn> , _sWebsocketOperationId =" <> show wsOpId <> " }"
 
 -- | live query onChange metadata, used for adding more extra analytics data
 data LiveQueryMetadata
@@ -196,9 +223,7 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = 
   where
     CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
     response = result <&> \payload -> LiveQueryResponse (encJToLBS payload) dTime
-
-    pushResultToSubscribers = A.mapConcurrently_ $ \(Subscriber action) ->
-      action response
+    pushResultToSubscribers = A.mapConcurrently_ $ \(Subscriber action _) -> action response
 -- -------------------------------------------------------------------------------------------------
 -- Pollers
 
@@ -298,36 +323,130 @@ dumpPollerMap extended lqMap =
       , "max" J..= Metrics.max stats
       ]
 
+
+-- | create an ID to track unique 'Poller's, so that we can gather metrics about each poller
+newtype PollerId = PollerId { unPollerId :: UUID.UUID }
+  deriving (Show, Eq, Generic, J.ToJSON)
+
+data SimpleCohort
+  = SimpleCohort
+  { _scCohortId          :: !CohortId
+  , _scCohortVariables   :: !CohortVariables
+  , _scResponseSizeBytes :: !(Maybe Int)
+  , _scSubscribers       :: ![UniqueSubscriberId]
+  } deriving (Show, Eq)
+
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''SimpleCohort)
+
+data ExecutionBatch
+  = ExecutionBatch
+  { _ebPgExecutionTime :: !Clock.DiffTime
+  -- ^ postgres execution time of each batch
+  , _ebPushCohortsTime :: !Clock.DiffTime
+  -- ^ time to taken to push to all cohorts belonging to this batch
+  , _ebBatchSize       :: !Int
+  -- ^ the number of cohorts belonging to this batch
+  } deriving (Show, Eq)
+
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ExecutionBatch)
+
+data PollerLog
+  = PollerLog
+  { _plPollerId           :: !PollerId
+  -- ^ the unique ID (basically a thread that run as a 'Poller') for the 'Poller'; TODO: is this
+  -- practical? do we need to track, potentially, 1000s of poller threads uniquely?
+  -- , _plSubscribers        :: ![UniqueSubscriberId]
+  -- -- ^ list of (WebsocketConnId, OperationId) to uniquely identify each subscriber
+  -- -- ^ REMOVING this because redundant info and extra network bytes
+  , _plSubscriberCount    :: !Int
+  -- ^ count of the above '_plSubscribers' field; convenient for Lux to perform analytics
+  , _plCohortSize         :: !Int
+  -- ^ how many cohorts (or no of groups of different variables but same query) are there
+  , _plCohorts            :: ![SimpleCohort]
+  -- ^ the different query vars which forms the different cohorts
+  , _plExecutionBatches   :: ![ExecutionBatch]
+  -- ^ list of execution batches and their details
+  , _plExecutionBatchSize :: !Int
+  -- ^ what is the current batch size that is being run. i.e. in how many batches will this query be
+  -- run
+  , _plSnapshotTime       :: !Clock.DiffTime
+  -- ^ the time taken to get a snapshot of cohorts from our 'LiveQueriesState' data structure
+  , _plTotalTime          :: !Clock.DiffTime
+  -- ^ total time spent on running the entire 'Poller' thread (which may run more than one thread in
+  -- batches for one SQL query) and then push results to each client
+  , _plGeneratedSql       :: !Q.Query
+  -- ^ the multiplexed SQL query to be run against Postgres with all the variables together
+  , _plLiveQueryOptions   :: !LiveQueriesOptions
+  } deriving (Show, Eq)
+
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''PollerLog)
+
+instance L.ToEngineLog PollerLog L.Hasura where
+  toEngineLog pl = (L.LevelInfo, L.ELTInternal L.ILTPollerLog, J.toJSON pl)
+
+
 -- | Where the magic happens: the top-level action run periodically by each active 'Poller'.
 --
 -- This needs to be async exception safe.
 pollQuery
-  :: RefetchMetrics
-  -> BatchSize
+  :: L.Logger L.Hasura
+  -> PollerId
+  -> RefetchMetrics
+  -> LiveQueriesOptions
   -> PGExecCtx
   -> MultiplexedQuery
   -> Poller
   -> IO ()
-pollQuery metrics batchSize pgExecCtx pgQuery handler =
-  void $ timing _rmTotal $ do
-    (_, (cohortSnapshotMap, queryVarsBatches)) <- timing _rmSnapshot $ do
+pollQuery logger pollerId metrics lqOpts pgExecCtx pgQuery handler = do
+  (totalTime, (snapshotTime, cohorts, queryVars, queryVarsBatches, subscriberWsOpIds, execRes)) <- timing _rmTotal $ do
+    (snapshotTime, (cohortSnapshotMap, cohorts, queryVarsBatches, queryVars, subscriberWsOpIds)) <- timing _rmSnapshot $ do
       -- get a snapshot of all the cohorts
       -- this need not be done in a transaction
       cohorts <- STM.atomically $ TMap.toList cohortMap
       cohortSnapshotMap <- Map.fromList <$> mapM (STM.atomically . getCohortSnapshot) cohorts
 
-      let queryVarsBatches = chunksOf (unBatchSize batchSize) $ getQueryVars cohortSnapshotMap
-      return (cohortSnapshotMap, queryVarsBatches)
+      -- queryVarsBatches are queryVars broken down into chunks specified by the batch size
+      -- TODO(anon): optimize this to fetch all data at one-shot
+      let queryVars = getQueryVars cohortSnapshotMap
+          queryVarsBatches = chunksOf (unBatchSize batchSize) queryVars
+          subscriberWsOpIds = getSubscribers cohortSnapshotMap
+      return (cohortSnapshotMap, cohorts, queryVarsBatches, queryVars, subscriberWsOpIds)
 
-    flip A.mapConcurrently_ queryVarsBatches $ \queryVars -> do
+    -- run the multiplexed query, in the partitioned batches
+    execRes <- A.forConcurrently queryVarsBatches $ \queryVarsBatch -> do
       (dt, mxRes) <- timing _rmQuery $
         runExceptT $ runLazyTx' pgExecCtx $ executeMultiplexedQuery pgQuery queryVars
       let lqMeta = LiveQueryMetadata $ convertDuration dt
           operations = getCohortOperations cohortSnapshotMap lqMeta mxRes
 
-      void $ timing _rmPush $
+      (pushTime, respSizes) <- timing _rmPush $ do
         -- concurrently push each unique result
-        A.mapConcurrently_ (uncurry4 pushResultToCohort) operations
+        A.forConcurrently operations $ \(res, respSize, respHash, action, snapshot) ->
+          pushResultToCohort res respHash action snapshot >> return respSize
+        -- return various metrics of each opeartion of executing against postgres
+      return $ (ExecutionBatch dt pushTime (length queryVarsBatch), respSizes)
+
+    return (snapshotTime, cohorts, queryVars, queryVarsBatches, subscriberWsOpIds, execRes)
+
+  -- transform data for PollerLog and log it
+  let (execBatches, respSizes') = unzip execRes
+      respSizes = concat respSizes'
+      simpleCohorts = zipWith3 (\(cId, vars) (_, size) (_, subs) -> SimpleCohort cId vars size subs)
+                      queryVars respSizes subscriberWsOpIds
+      allSubscribers = concatMap snd $ subscriberWsOpIds
+      pollerLog = PollerLog
+                { _plPollerId = pollerId
+                , _plSubscriberCount = length allSubscribers
+                , _plCohortSize = length cohorts
+                , _plCohorts = simpleCohorts
+                , _plExecutionBatches = execBatches
+                , _plExecutionBatchSize = length queryVarsBatches
+                , _plSnapshotTime = snapshotTime
+                , _plTotalTime = totalTime
+                , _plGeneratedSql = unMultiplexedQuery pgQuery
+                , _plLiveQueryOptions = lqOpts
+                }
+  L.unLogger logger pollerLog
 
   where
     timing :: (RefetchMetrics -> Metrics.Distribution) -> IO b -> IO (DiffTime, b)
@@ -337,9 +456,7 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
       return (dt, a)
 
     Poller cohortMap _ = handler
-
-    uncurry4 :: (a -> b -> c -> d -> e) -> (a, b, c, d) -> e
-    uncurry4 f (a, b, c, d) = f a b c d
+    LiveQueriesOptions batchSize _ = lqOpts
 
     getCohortSnapshot (cohortVars, handlerC) = do
       let Cohort resId respRef curOpsTV newOpsTV = handlerC
@@ -350,6 +467,12 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
       let cohortSnapshot = CohortSnapshot cohortVars respRef (map snd curOpsL) (map snd newOpsL)
       return (resId, cohortSnapshot)
 
+    getSubscribers :: Map.HashMap CohortId CohortSnapshot -> [(CohortId, [UniqueSubscriberId])]
+    getSubscribers cohortSnapshotMap =
+      let getWsOpId v = map _sWebsocketOperationId $ _csExistingSubscribers v <> _csNewSubscribers v
+      in Map.toList $ Map.map getWsOpId cohortSnapshotMap
+
+    getQueryVars :: Map.HashMap CohortId CohortSnapshot -> [(CohortId, CohortVariables)]
     getQueryVars cohortSnapshotMap =
       Map.toList $ fmap _csVariables cohortSnapshotMap
 
@@ -357,8 +480,8 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
       Left e ->
         -- TODO: this is internal error
         let resp = GQExecError [encodeGQLErr False e]
-        in [ (resp, Nothing, actionMeta, snapshot)
-           | (_, snapshot) <- Map.toList cohortSnapshotMap
+        in [ (resp, (cId, Nothing), Nothing, actionMeta, snapshot)
+           | (cId, snapshot) <- Map.toList cohortSnapshotMap
            ]
       Right responses ->
         flip mapMaybe responses $ \(respId, result) ->
@@ -366,5 +489,8 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
           let -- No reason to use lazy bytestrings here, since (1) we fetch the entire result set
               -- from Postgres strictly and (2) even if we didn’t, hashing will have to force the
               -- whole thing anyway.
-              respHash = mkRespHash (encJToBS result)
-          in (GQSuccess result, Just $! respHash, actionMeta,) <$> Map.lookup respId cohortSnapshotMap
+              respBS = encJToBS result
+              respHash = mkRespHash respBS
+              respSize = BS.length respBS
+          in (GQSuccess result, (respId, Just $! respSize), Just $! respHash, actionMeta,)
+             <$> Map.lookup respId cohortSnapshotMap
