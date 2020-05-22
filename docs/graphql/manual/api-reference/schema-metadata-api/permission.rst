@@ -166,7 +166,23 @@ InsertPermission
 drop_insert_permission
 ----------------------
 
-Drop an existing insert permission for a role on a table.
+A drop insert permission is used to drop an existing insert permission for a role on a table.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "drop_insert_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user"
+       }
+   }
 
 .. _drop_insert_permission_syntax:
 
@@ -302,7 +318,23 @@ SelectPermission
 drop_select_permission
 ----------------------
 
-Drop an existing select permission for a role on a table.
+A drop select permission is used to drop an existing select permission for a role on a table.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "drop_select_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user"
+       }
+   }
 
 .. _drop_select_permission_syntax:
 
@@ -445,7 +477,23 @@ UpdatePermission
 drop_update_permission
 ----------------------
 
-Drop an existing update permission for a role on a table.
+A drop update permission is used to drop an existing update permission for a role on a table.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "drop_update_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user"
+       }
+   }
 
 .. _drop_update_permission_syntax:
 
@@ -552,7 +600,23 @@ DeletePermission
 drop_delete_permission
 ----------------------
 
-Drop an existing delete permission for a role on a table.
+A drop delete permission is used to drop an existing delete permission for a role on a table.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "drop_delete_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user"
+       }
+   }
 
 .. _drop_delete_permission_syntax:
 
