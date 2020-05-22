@@ -33,7 +33,7 @@ This can include `custom_table_type` key which will change the name of the type 
 There are 2 independent things that are required:
 
 1. Namespacing
-2. Customise type and field names (also enables prefixing)
+2. Customise type and field names (also enable prefixing)
 
 #### Namespacing
 
@@ -106,3 +106,34 @@ When adding a remote schema, a custom spec for renaming types and fields can be 
 ```
 
 The main parameters here are `new_type` and `new_field`.
+
+##### Prefixing
+
+Although the above solves the problem of customizing individual types and fields, we can also provide an
+option to add a global prefix to all types and field names. This allows in automatic customization in case 
+the downstream graphql schema are changed.
+
+```
+{
+    "type": "add_remote_schema",
+    "args": {
+        "name": "my remote schema",
+        "definition": {
+            "url": "https://remote-server.com/graphql",
+            "forward_client_headers": false,
+            "custom_prefix": “userservice”
+        }
+    }
+}
+```
+
+
+```
+query {
+  userservice_getUser
+}
+
+mutation {
+  userservice_deleteUser
+}
+```
