@@ -1,3 +1,8 @@
+const { buildSchema, printSchema, parse } = require('graphql');
+const { codegen } = require('@graphql-codegen/core');
+const typescriptPlugin = require('@graphql-codegen/typescript');
+const { camelize } = require('inflection');
+
 const fetch = require('node-fetch');
 const path = require('path');
 const fs = require('fs');
