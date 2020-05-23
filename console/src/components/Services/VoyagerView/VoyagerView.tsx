@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import { Connect } from 'react-redux';
 import { GraphQLVoyager } from 'graphql-voyager';
 import fetch from 'isomorphic-fetch';
-
 import Endpoints from '../../../Endpoints';
+import VoyagerErrBoundary from './../../Error/VoyagerErrBoundary';
 import '../../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
 
@@ -35,10 +35,12 @@ class VoyagerView extends Component<Props, State> {
 
   render() {
     return (
-      <GraphQLVoyager
-        introspection={this.introspectionProvider}
-        workerURI="https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.27/dist/voyager.worker.min.js"
-      />
+      <VoyagerErrBoundary>
+        <GraphQLVoyager
+          introspection={this.introspectionProvider}
+          workerURI="https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.27/dist/voyager.worker.min.js"
+        />
+      </VoyagerErrBoundary>
     );
   }
 }

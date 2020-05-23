@@ -1,20 +1,28 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import React, { Component, ReactNode } from 'react';
 import globals from '../../Globals';
 
-// #4818 Issue
+type State = {
+  error: object | null;
+  // FIXME: remove any
+  // fix type for 'componentStack'
+  errorInfo: any;
+  hasError: boolean;
+};
 
-class VoyagerBoundary extends Component {
-  constructor() {
-    super();
-    this.state = {
-      error: false,
-      errorInfo: null,
-    };
+type Props = {
+  children: ReactNode
+};
+
+class VoyagerErrBoundary extends Component<Props, State> {
+  readonly state : State = {
+    hasError: false,
+    error: null,
+    errorInfo: null,
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: object, errorInfo: object) {
     this.setState({
+      hasError: true,
       error,
       errorInfo,
     });
@@ -24,7 +32,7 @@ class VoyagerBoundary extends Component {
     const errorImage = `${globals.assetsPath}/common/img/hasura_icon_green.svg`;
     const styles = require('./ErrorPage.scss');
 
-    if (this.state.errorInfo) {
+    if (this.state.hasError) {
       return (
         <div className={styles.viewContainer}>
           <div className={'container ' + styles.centerContent}>
@@ -51,7 +59,6 @@ class VoyagerBoundary extends Component {
                 <img
                   src={errorImage}
                   className="img-responsive"
-                  name="hasura"
                   title="Something went wrong!"
                 />
               </div>
@@ -65,8 +72,4 @@ class VoyagerBoundary extends Component {
   }
 }
 
-VoyagerBoundary.propTypes = {
-  dispatch: PropTypes.func.isRequired,
-};
-
-export default VoyagerBoundary;
+export default VoyagerErrBoundary;
