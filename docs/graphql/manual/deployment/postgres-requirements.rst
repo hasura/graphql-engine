@@ -2,6 +2,8 @@
    :description: Postgres requirements for Hasura GraphQL engine
    :keywords: hasura, docs, deployment, postgres, postgres permissions, postgres support
 
+.. _postgres_requirements:
+
 Postgres requirements
 =====================
 
@@ -9,6 +11,8 @@ Postgres requirements
   :backlinks: none
   :depth: 1
   :local:
+
+.. _postgres_version_support:
 
 Supported Postgres versions
 ---------------------------
@@ -19,6 +23,8 @@ Feature requirements
 ^^^^^^^^^^^^^^^^^^^^
 
 - :ref:`Hasura actions <actions>` are supported in Postgres 10 and above.
+
+.. _postgres_permissions:
 
 Postgres permissions
 --------------------
