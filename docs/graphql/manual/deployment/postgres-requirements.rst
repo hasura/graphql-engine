@@ -1,6 +1,6 @@
 .. meta::
    :description: Postgres requirements for Hasura GraphQL engine
-   :keywords: hasura, docs, deployment, postgres, postgres permissions, postgres support
+   :keywords: hasura, docs, deployment, postgres, postgres permissions, postgres version
 
 Postgres requirements
 =====================
