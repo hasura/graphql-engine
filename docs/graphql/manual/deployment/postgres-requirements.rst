@@ -1,16 +1,27 @@
 .. meta::
-   :description: Required Postgres permissions for Hasura GraphQL engine
-   :keywords: hasura, docs, deployment, postgres, postgres permissions
+   :description: Postgres requirements for Hasura GraphQL engine
+   :keywords: hasura, docs, deployment, postgres, postgres permissions, postgres support
 
-.. _postgres_permissions:
-
-Postgres permissions
-====================
+Postgres requirements
+=====================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
+
+Supported Postgres versions
+---------------------------
+
+Hasura GraphQL engine supports **Postgres versions 9.5 and above**.
+
+Feature requirements
+^^^^^^^^^^^^^^^^^^^^
+
+- :ref:`Hasura actions <actions>` are supported in Postgres 10 and above.
+
+Postgres permissions
+--------------------
 
 If you're running in a controlled environment, you might need to configure the Hasura GraphQL engine to use a
 specific Postgres user that your DBA gives you.
