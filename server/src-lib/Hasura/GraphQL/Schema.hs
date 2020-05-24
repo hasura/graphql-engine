@@ -315,7 +315,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
 
     -- computed fields' function args input objects and scalar types
     mkComputedFieldRequiredTypes computedFieldInfo =
-      let ComputedFieldFunction qf inputArgs _ _ = _cfFunction computedFieldInfo
+      let ComputedFieldFunction qf inputArgs _ _ _ = _cfFunction computedFieldInfo
           scalarArgs = map (_qptName . faType) $ toList inputArgs
       in (, scalarArgs) <$> mkFuncArgsInp qf inputArgs
 

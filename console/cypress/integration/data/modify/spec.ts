@@ -84,6 +84,16 @@ export const passMTRenameColumn = () => {
   validateColumn(getTableName(0, testName), ['id'], ResultType.SUCCESS);
 };
 
+export const passMTChangeDefaultValueForPKey = () => {
+  cy.wait(10000);
+  cy.get(getElementFromAlias('modify-table-edit-column-0')).click();
+  cy.get(getElementFromAlias('edit-col-default'))
+    .clear()
+    .type('1234');
+  cy.get(getElementFromAlias('modify-table-column-0-save')).click();
+  cy.wait(15000);
+};
+
 export const passMTMoveToTable = () => {
   cy.get(getElementFromAlias(getTableName(0, testName))).click();
   cy.url().should(

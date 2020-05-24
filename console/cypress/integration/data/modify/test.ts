@@ -18,6 +18,7 @@ import {
   passCreateUniqueKey,
   passModifyUniqueKey,
   passRemoveUniqueKey,
+  passMTChangeDefaultValueForPKey,
 } from './spec';
 
 import { testMode } from '../../../helpers/common';
@@ -49,6 +50,10 @@ export const runModifyTableTests = () => {
     it('Pass modify with wrong default value', passMCWithRightDefaultValue);
     it('Pass create foreign-key', passCreateForeignKey);
     it('Pass remove foreign-key', passRemoveForeignKey);
+    it(
+      'Pass edit default value for primary key',
+      passMTChangeDefaultValueForPKey
+    );
     it('Pass modifying a primary key', passModifyPkey);
     it('Pass creating a unique key', passCreateUniqueKey);
     it('Pass modifying a unique key', passModifyUniqueKey);

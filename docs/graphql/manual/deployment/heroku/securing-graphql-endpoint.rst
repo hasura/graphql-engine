@@ -21,13 +21,13 @@ Add the HASURA_GRAPHQL_ADMIN_SECRET env var
 
 Head to the config-vars URL on your Heroku dashboard and set the ``HASURA_GRAPHQL_ADMIN_SECRET`` environment variable.
 
-.. thumbnail:: ../../../../img/graphql/manual/deployment/secure-heroku.png
+.. thumbnail:: /img/graphql/manual/deployment/secure-heroku.png
    :alt: Add an admin secret
 
 Setting this environment variable will automatically restart the dyno. Now when you access your console, you'll be
 prompted for the admin secret key.
 
-.. thumbnail:: ../../../../img/graphql/manual/deployment/access-key-console.png
+.. thumbnail:: /img/graphql/manual/deployment/access-key-console.png
    :alt: Prompt for the admin secret
 
 .. note::

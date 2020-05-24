@@ -159,7 +159,9 @@
         "no-useless-constructor": "off",
         "no-unused-expressions": "off",
         "no-console": "off",
-        "prefer-destructuring": "off"
+        "prefer-destructuring": "off",
+        "react/no-danger": "off",
+        "react/no-array-index-key": "off"
       }
     }
   ]

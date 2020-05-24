@@ -447,11 +447,12 @@ export const checkViewRelationship = () => {
   cy.wait(1000);
   cy.get(getElementFromAlias('table-browse-rows')).click();
   cy.wait(1000);
-  cy.get('a')
-    .contains('View')
-    .first()
-    .click();
-  cy.wait(1000);
+  cy.get('.rt-table').within(() => {
+    cy.get('a')
+      .contains('View')
+      .click();
+    cy.wait(1000);
+  });
   cy.get('a')
     .contains('Close')
     .first()
@@ -461,6 +462,7 @@ export const checkViewRelationship = () => {
 export const passDeleteRow = () => {
   cy.get(getElementFromAlias('table-browse-rows')).click();
   cy.wait(5000);
+  cy.get(getElementFromAlias('table-browse-rows')).contains('21');
   cy.get(getElementFromAlias('row-delete-button-0')).click();
   cy.on('window:confirm', str => {
     expect(
@@ -468,5 +470,39 @@ export const passDeleteRow = () => {
         -1
     ).to.be.true;
   });
+  cy.get(getElementFromAlias('table-browse-rows')).contains('20');
+  cy.wait(14000);
+};
+
+export const passBulkDeleteRows = () => {
+  cy.get(getElementFromAlias('table-browse-rows')).click();
+  cy.wait(5000);
+  cy.get(getElementFromAlias('table-browse-rows')).contains('20');
+  cy.get(getElementFromAlias('row-checkbox-0')).click();
+  cy.get(getElementFromAlias('row-checkbox-1')).click();
+  cy.get(getElementFromAlias('bulk-delete')).click();
+  cy.wait(1000);
+  cy.on('window:confirm', str => {
+    expect(
+      str.indexOf('This will permanently delete rows from this table') !== -1
+    ).to.be.true;
+  });
+  cy.get(getElementFromAlias('table-browse-rows')).contains('18');
+  cy.wait(14000);
+};
+
+export const passBulkDeleteAllRows = () => {
+  cy.get(getElementFromAlias('table-browse-rows')).click();
+  cy.wait(5000);
+  cy.get(getElementFromAlias('table-browse-rows')).contains('18');
+  cy.get(getElementFromAlias('select-all-rows')).click();
+  cy.get(getElementFromAlias('bulk-delete')).click();
+  cy.wait(1000);
+  cy.on('window:confirm', str => {
+    expect(
+      str.indexOf('This will permanently delete rows from this table') !== -1
+    ).to.be.true;
+  });
+  cy.get(getElementFromAlias('table-browse-rows')).contains('(8)');
   cy.wait(14000);
 };

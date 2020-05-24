@@ -69,6 +69,7 @@ import {
   isEmpty,
   isJsonString,
   isObject,
+  exists,
 } from '../../../Common/utils/jsUtils';
 import {
   findTable,
@@ -868,7 +869,7 @@ class Permissions extends Component {
 
           if (query === 'select') {
             const limitValue =
-              permissionsState.select && permissionsState.select.limit
+              permissionsState.select && exists(permissionsState.select.limit)
                 ? permissionsState.select.limit
                 : '';
 
