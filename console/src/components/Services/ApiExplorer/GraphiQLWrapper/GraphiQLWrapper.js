@@ -143,6 +143,18 @@ class GraphiQLWrapper extends Component {
       dispatch(push(getActionsCreateRoute()));
     };
 
+    const handleClearHistory = () => {
+      try {
+        localStorage.removeItem('graphiql:queries');
+        localStorage.removeItem('graphiql:query');
+        const editor = graphiqlContext.getQueryEditor();
+        editor.setValue('');
+      } catch (e) {
+        dispatch(showErrorNotification('Unable to clear history', e.message));
+        return;
+      }
+    };
+
     const renderGraphiql = graphiqlProps => {
       const voyagerUrl = graphqlNetworkData.consoleUrl + '/voyager-view';
       let analyzerProps = {};
@@ -179,6 +191,11 @@ class GraphiQLWrapper extends Component {
             onClick: () => window.open(voyagerUrl, '_blank'),
             icon: <i className="fa fa-external-link" aria-hidden="true" />,
           },
+          {
+            label: 'Clear History',
+            title: 'Clear your history from local storage',
+            onClick: handleClearHistory,
+          },
         ];
         if (mode === 'graphql') {
           buttons.push({
@@ -187,6 +204,7 @@ class GraphiQLWrapper extends Component {
             onClick: deriveActionFromOperation,
           });
         }
+
         return buttons.map(b => {
           return <GraphiQL.Button key={b.label} {...b} />;
         });
