@@ -240,11 +240,14 @@ tableSelectionSet table selectPermissions stringifyNum = memoizeOn 'tableSelecti
   fieldParsers <- fmap concat $ for tableFields \fieldInfo ->
     fieldSelection fieldInfo selectPermissions stringifyNum
 
-  -- TODO Here we *don't* check if the subselection set is non-empty, even
-  -- though the GraphQL specification requires that it is.  See Note
-  -- [Selectability of tables]
+  -- We don't check *here* that the subselection set is non-empty,
+  -- even though the GraphQL specification requires that it is (see
+  -- Note [Selectability of tables]). However, the GraphQL parser
+  -- enforces that a selection set, if present, is non-empty; and our
+  -- parser later verifies that a selection set is present if
+  -- required, meaning that not having this check here does not allow
+  -- for the construction of invalid queries.
 
-  -- whenMaybe (not $ null fieldParsers) do
   let typenameRepr = (FieldName "__typename", RQL.FExp $ G.unName tableName)
       description  = G.Description . getPGDescription <$> _tciDescription tableInfo
   pure
@@ -540,8 +543,8 @@ computedField ComputedFieldInfo{..} selectPermissions stringifyNum = runMaybeT d
         `mapField` first aliasToName
     CFRSetofTable tableName -> do
       remotePerms        <- MaybeT $ tableSelectPermissions tableName
-      selectArgsParser   <- lift $ tableArgs tableName remotePerms
-      selectionSetParser <- lift $ tableSelectionSet tableName remotePerms stringifyNum
+      selectArgsParser   <- lift   $ tableArgs tableName remotePerms
+      selectionSetParser <- lift   $ tableSelectionSet tableName remotePerms stringifyNum
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure $ P.selection fieldName Nothing fieldArgsParser selectionSetParser
         `mapField` \(aliasName, (functionArgs, args), fields) ->
