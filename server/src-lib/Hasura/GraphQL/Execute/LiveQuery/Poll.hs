@@ -72,9 +72,10 @@ import           Hasura.Session
 -- -------------------------------------------------------------------------------------------------
 -- Subscribers
 
--- | This is to identify each subscriber based on their (websocket id, operation id) - this is
--- useful for collecting metrics and then correlating. The current 'SubscriberId' has a UUID which
--- is internal and not useful for metrics.
+-- | This is to identify each subscriber based on their (websocket id,
+-- operation id) - this is useful for collecting metrics and then correlating.
+-- The current 'SubscriberId' has a UUID which is internal and not useful for
+-- metrics.
 data UniqueSubscriberId
   = UniqueSubscriberId
   { _usiWebsocketId :: !WS.WSId
@@ -88,10 +89,6 @@ data Subscriber
   { _sOnChangeCallback     :: !OnChange
   , _sWebsocketOperationId :: !UniqueSubscriberId
   }
-
-instance Show Subscriber where
-  show (Subscriber _ wsOpId) =
-    "Subscriber { _sOnChangeCallback = <fn> , _sWebsocketOperationId =" <> show wsOpId <> " }"
 
 -- | live query onChange metadata, used for adding more extra analytics data
 data LiveQueryMetadata
@@ -398,22 +395,19 @@ pollQuery
   -> Poller
   -> IO ()
 pollQuery logger pollerId metrics lqOpts pgExecCtx pgQuery handler = do
-  (totalTime, (snapshotTime, cohorts, queryVars, queryVarsBatches, subscriberWsOpIds, execRes)) <- timing _rmTotal $ do
-    (snapshotTime, (cohortSnapshotMap, cohorts, queryVarsBatches, queryVars, subscriberWsOpIds)) <- timing _rmSnapshot $ do
+  (totalTime, (snapshotTime, cohortSnapshotMap, queryVarsBatches, execRes)) <- timing _rmTotal $ do
+    (snapshotTime, (cohortSnapshotMap, queryVarsBatches)) <- timing _rmSnapshot $ do
       -- get a snapshot of all the cohorts
       -- this need not be done in a transaction
       cohorts <- STM.atomically $ TMap.toList cohortMap
       cohortSnapshotMap <- Map.fromList <$> mapM (STM.atomically . getCohortSnapshot) cohorts
 
       -- queryVarsBatches are queryVars broken down into chunks specified by the batch size
-      -- TODO(anon): optimize this to fetch all data at one-shot
-      let queryVars = getQueryVars cohortSnapshotMap
-          queryVarsBatches = chunksOf (unBatchSize batchSize) queryVars
-          subscriberWsOpIds = getSubscribers cohortSnapshotMap
-      return (cohortSnapshotMap, cohorts, queryVarsBatches, queryVars, subscriberWsOpIds)
+      let queryVarsBatches = chunksOf (unBatchSize batchSize) $ getQueryVars cohortSnapshotMap
+      return (cohortSnapshotMap, queryVarsBatches)
 
     -- run the multiplexed query, in the partitioned batches
-    execRes <- A.forConcurrently queryVarsBatches $ \queryVarsBatch -> do
+    execRes <- A.forConcurrently queryVarsBatches $ \queryVars -> do
       (dt, mxRes) <- timing _rmQuery $
         runExceptT $ runLazyTx' pgExecCtx $ executeMultiplexedQuery pgQuery queryVars
       let lqMeta = LiveQueryMetadata $ convertDuration dt
@@ -424,20 +418,21 @@ pollQuery logger pollerId metrics lqOpts pgExecCtx pgQuery handler = do
         A.forConcurrently operations $ \(res, respSize, respHash, action, snapshot) ->
           pushResultToCohort res respHash action snapshot >> return respSize
         -- return various metrics of each opeartion of executing against postgres
-      return $ (ExecutionBatch dt pushTime (length queryVarsBatch), respSizes)
+      return $ (ExecutionBatch dt pushTime (length queryVars), respSizes)
 
-    return (snapshotTime, cohorts, queryVars, queryVarsBatches, subscriberWsOpIds, execRes)
+    return (snapshotTime, cohortSnapshotMap, queryVarsBatches, execRes)
 
   -- transform data for PollerLog and log it
   let (execBatches, respSizes') = unzip execRes
       respSizes = concat respSizes'
+      subscriberWsOpIds = getSubscribers cohortSnapshotMap
       simpleCohorts = zipWith3 (\(cId, vars) (_, size) (_, subs) -> SimpleCohort cId vars size subs)
-                      queryVars respSizes subscriberWsOpIds
+                      (getQueryVars cohortSnapshotMap) respSizes subscriberWsOpIds
       allSubscribers = concatMap snd $ subscriberWsOpIds
       pollerLog = PollerLog
                 { _plPollerId = pollerId
                 , _plSubscriberCount = length allSubscribers
-                , _plCohortSize = length cohorts
+                , _plCohortSize = length cohortSnapshotMap
                 , _plCohorts = simpleCohorts
                 , _plExecutionBatches = execBatches
                 , _plExecutionBatchSize = length queryVarsBatches
