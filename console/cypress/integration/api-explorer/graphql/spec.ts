@@ -14,7 +14,6 @@ let dataApiUrl: string;
 
 export const createTestTable = () => {
   cy.window().then(win => {
-    /* eslint-disable no-underscore-dangle */
     adminSecret = win.__env.adminSecret;
     dataApiUrl = win.__env.dataApiUrl;
     const { consoleMode } = win.__env;

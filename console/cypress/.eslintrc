@@ -6,6 +6,7 @@
   "rules": {
     "no-unused-expressions": "off",
     "chai-friendly/no-unused-expressions": "error",
+    "no-underscore-dangle": "off",
     "@typescript-eslint/no-unused-expressions": "off",
     "no-plusplus": [
       "error",

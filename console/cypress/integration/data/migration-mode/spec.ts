@@ -21,7 +21,6 @@ export const testToggleButton = () => {
 
 export const checkToggleButton = () => {
   cy.window().then(win => {
-    // eslint-disable-next-line no-underscore-dangle
     const { consoleMode } = win.__env;
     if (consoleMode === 'cli') {
       testToggleButton();
