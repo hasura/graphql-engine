@@ -301,6 +301,18 @@ selectionSet name description typenameRepr parser = Parser
             -- FIXME: handle fragments
             SelectionField inputField -> Just inputField
             _ -> Nothing
+      -- Not all fields have a selection set, but if they have one, it
+      -- must contain at least one field. The GraphQL parser returns a
+      -- list to represent this: an empty list indicates there was no
+      -- selection set, as an empty set is rejected outright.
+      -- Arguably, this would be better represented by a `Maybe
+      -- (NonEmpty a)`.
+      -- The parser can't know whether a given field needs a selection
+      -- set or not; but if we're in this function, it means that yes:
+      -- this field needs a selection set, and if none was provided,
+      -- we must fail.
+      when (null fields) $ parseError $ "missing selection set for " <>> name
+
       -- check for extraneous fields here, since the FieldsParser just
       -- handles parsing the fields it cares about
       for_ fields \Field{ _fName = fieldName } -> do
@@ -308,6 +320,7 @@ selectionSet name description typenameRepr parser = Parser
           unless (fieldName == $$(litName"__typename")) $
           parseError $ name <<> " has no field named " <>> fieldName
       parsedFields <- ifParser parser $! M.fromListOn _fName fields
+
       -- __typename is a special case: while every selection set
       -- must accept it as a potential output field, it is not
       -- exposed as part of the schema
