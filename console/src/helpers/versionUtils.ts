@@ -12,7 +12,7 @@ const featureLaunchVersions = {
 
 type Feature = keyof typeof featureLaunchVersions;
 
-type FeaturesCompatibility = {
+export type FeaturesCompatibility = {
   [key in Feature]?: boolean;
 };
 

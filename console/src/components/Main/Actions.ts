@@ -1,8 +1,10 @@
+import { ThunkDispatch } from 'redux-thunk';
+import { AnyAction } from 'redux';
 import defaultState from './State';
 import requestAction from '../../utils/requestAction';
 import requestActionPlain from '../../utils/requestActionPlain';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
-import { getFeaturesCompatibility } from '../../helpers/versionUtils';
+import { getFeaturesCompatibility, FeaturesCompatibility } from '../../helpers/versionUtils';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -22,8 +24,16 @@ const UPDATE_ADMIN_SECRET_INPUT = 'Main/UPDATE_ADMIN_SECRET_INPUT';
 const LOGIN_IN_PROGRESS = 'Main/LOGIN_IN_PROGRESS';
 const LOGIN_ERROR = 'Main/LOGIN_ERROR';
 
+interface RegisterRunTimeError {
+  type: typeof RUN_TIME_ERROR;
+  data: {
+    message: string;
+    stack: object;
+  };
+}
+type RegisterRunTimeErrorAction = (data: {message: string; stack: object}) => RegisterRunTimeError;
 const RUN_TIME_ERROR = 'Main/RUN_TIME_ERROR';
-const registerRunTimeError = data => ({
+const registerRunTimeError: RegisterRunTimeErrorAction  = (data) => ({
   type: RUN_TIME_ERROR,
   data,
 });
@@ -33,26 +43,44 @@ const FETCHING_SERVER_CONFIG = 'Main/FETCHING_SERVER_CONFIG';
 const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
 const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 /* End */
+
+interface SetFeaturesCompatibility {
+  type: typeof SET_FEATURES_COMPATIBILITY;
+  data: FeaturesCompatibility;
+}
+type SetFeaturesCompatibilityAction = (data: FeaturesCompatibility) => SetFeaturesCompatibility
 const SET_FEATURES_COMPATIBILITY = 'Main/SET_FEATURES_COMPATIBILITY';
-const setFeaturesCompatibility = data => ({
+const setFeaturesCompatibility: SetFeaturesCompatibilityAction = (data) => ({
   type: SET_FEATURES_COMPATIBILITY,
   data,
 });
 
+interface EmitProClickedEvent {
+  type: typeof PRO_CLICKED;
+  data: {
+    open: boolean;
+  };
+}
+type EmitProClickedEventAction = (data: {open: boolean}) => EmitProClickedEvent
 const PRO_CLICKED = 'Main/PRO_CLICKED';
-const emitProClickedEvent = data => ({
+const emitProClickedEvent: EmitProClickedEventAction = (data) => ({
   type: PRO_CLICKED,
   data,
 });
 
+interface SetReadOnlyMode {
+  type: typeof SET_READ_ONLY_MODE;
+  data: object;
+}
+type SetReadOnlyModeAction = (data: object) => SetReadOnlyMode;
 const SET_READ_ONLY_MODE = 'Main/SET_READ_ONLY_MODE';
-const setReadOnlyMode = data => ({
+const setReadOnlyMode: SetReadOnlyModeAction = data => ({
   type: SET_READ_ONLY_MODE,
   data,
 });
 
 const featureCompatibilityInit = () => {
-  return (dispatch, getState) => {
+  return (dispatch: ThunkDispatch<{}, {}, AnyAction>, getState: () => {main: {serverVersion: string}}) => {
     const { serverVersion } = getState().main;
 
     if (!serverVersion) {
@@ -65,7 +93,7 @@ const featureCompatibilityInit = () => {
   };
 };
 
-const loadMigrationStatus = () => dispatch => {
+const loadMigrationStatus = () => (dispatch: ThunkDispatch<{}, {}, AnyAction>) => {
   const url = Endpoints.hasuractlMigrateSettings;
   const options = {
     method: 'GET',
@@ -82,7 +110,7 @@ const loadMigrationStatus = () => dispatch => {
   );
 };
 
-const loadServerVersion = () => dispatch => {
+const loadServerVersion = () => (dispatch: ThunkDispatch<{}, {}, AnyAction>) => {
   const url = Endpoints.version;
   const options = {
     method: 'GET',
@@ -109,7 +137,7 @@ const loadServerVersion = () => dispatch => {
   );
 };
 
-const fetchServerConfig = () => (dispatch, getState) => {
+const fetchServerConfig = () => (dispatch: ThunkDispatch<{}, {}, AnyAction>, getState: () => {tables: {dataHeaders: object}}) => {
   const url = Endpoints.serverConfig;
   const options = {
     method: 'GET',
@@ -135,7 +163,7 @@ const fetchServerConfig = () => (dispatch, getState) => {
   );
 };
 
-const loadLatestServerVersion = () => (dispatch, getState) => {
+const loadLatestServerVersion = () => (dispatch: ThunkDispatch<{}, {}, AnyAction>, getState: () => {main: {serverVersion: string}}) => {
   const url =
     Endpoints.updateCheck +
     '?agent=console&version=' +
@@ -163,7 +191,7 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
   );
 };
 
-const updateMigrationModeStatus = () => (dispatch, getState) => {
+const updateMigrationModeStatus = () => (dispatch: ThunkDispatch<{}, {}, AnyAction>, getState: () => {main: {migrationMode: string}}) => {
   // make req to hasura cli to update migration mode
   dispatch({ type: UPDATE_MIGRATION_MODE_PROGRESS, data: true });
   const url = Endpoints.hasuractlMigrateSettings;
@@ -203,7 +231,38 @@ const updateMigrationModeStatus = () => (dispatch, getState) => {
   // refresh console
 };
 
-const mainReducer = (state = defaultState, action) => {
+export interface MainAction {
+  type: 
+    typeof SET_MIGRATION_STATUS_SUCCESS | 
+    typeof SET_MIGRATION_STATUS_ERROR |
+    typeof SET_SERVER_VERSION_SUCCESS |
+    typeof SET_SERVER_VERSION_ERROR |
+    typeof SET_LATEST_SERVER_VERSION_SUCCESS |
+    typeof SET_LATEST_SERVER_VERSION_ERROR |
+    typeof UPDATE_MIGRATION_STATUS_SUCCESS |
+    typeof EXPORT_METADATA_SUCCESS |
+    typeof EXPORT_METADATA_ERROR |
+    typeof UPDATE_MIGRATION_MODE_PROGRESS |
+    typeof SET_READ_ONLY_MODE |
+    typeof UPDATE_MIGRATION_STATUS_ERROR |
+    typeof HASURACTL_URL_ENV |
+    typeof UPDATE_MIGRATION_MODE |
+    typeof UPDATE_ADMIN_SECRET_INPUT |
+    typeof LOGIN_IN_PROGRESS |
+    typeof LOGIN_ERROR |
+    typeof RUN_TIME_ERROR |
+    typeof FETCHING_SERVER_CONFIG |
+    typeof SERVER_CONFIG_FETCH_SUCCESS |
+    typeof SERVER_CONFIG_FETCH_FAIL |
+    typeof SET_FEATURES_COMPATIBILITY;
+  data: {
+    migration_mode: string;
+    latest: string;
+    prerelease: string;
+  }
+}
+
+const mainReducer = (state = defaultState, action: MainAction) => {
   switch (action.type) {
     case SET_MIGRATION_STATUS_SUCCESS:
       return {
