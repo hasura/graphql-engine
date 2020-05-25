@@ -85,11 +85,14 @@ You don't need to integrate your UI with Cognito for testing. You can follow the
 .. thumbnail:: /img/graphql/manual/guides/cognito-login.png
    :alt: Cognito Login Page
 
+.. _test-cognito:
+
 3. After successfully logging in, you will be redirected to ``https://localhost:3000/cognito-callback#id_token=xxxxxx&yyyyyy``.
 This page may be a 404 if you don't have a UI running on localhost:3000. Extract the ``id_token`` value from this URL.
 
 .. thumbnail:: /img/graphql/manual/guides/cognito-redirect.png
    :alt: JWT from id_token query param
+
 
 4. To test this JWT, and to see if all the Hasura claims are added as per the sections above, let's test this out with `jwt.io <https://jwt.io>`__!
 
@@ -99,12 +102,13 @@ This page may be a 404 if you don't have a UI running on localhost:3000. Extract
 **Save this JWT token value so that we can use it later to test the authorization using the Hasura console.**
 
 
-Configure Hasura to use Auth0 keys
-----------------------------------
+
+Configure Hasura to use Cognito keys
+------------------------------------
 
 Cognito publishes their JWK under:
 
-``https://cognito-idp.<aws-region>.amazonaws.com/<userPoolId>/.well-known/jwks.json``
+``https://cognito-idp.<aws-region>.amazonaws.com/<user-pool-id>/.well-known/jwks.json``
 
 While starting Hasura, set the environmental variable ``HASURA_GRAPHQL_JWT_SECRET`` or the flag ``--jwt-secret`` to the below JSON:
 
@@ -112,7 +116,7 @@ While starting Hasura, set the environmental variable ``HASURA_GRAPHQL_JWT_SECRE
 
     {
     "type":"RS256",
-    "jwk_url": "https://cognito-idp.<aws-region>.amazonaws.com/<userPoolId>/.well-known/jwks.json",
+    "jwk_url": "https://cognito-idp.<aws-region>.amazonaws.com/<user-pool-id>/.well-known/jwks.json",
     "claims_format": "stringified_json"
     }
 
@@ -120,13 +124,13 @@ Add access control rules via the Hasura console
 -----------------------------------------------
 
 Cognito is configured and ready to be used in the application. You can now set up access control rules that
-will automatically get applied whenever a client makes a GraphQL query with the Auth0 token.
+will automatically get applied whenever a client makes a GraphQL query with the Cognito token.
 
 Refer to :ref:`auth_basics` for more information.
 
 To test this out, add an access control rule that uses ``x-hasura-user-id`` for the role ``user``.
-Then make a GraphQL query or a mutation, with the authorization token from the :ref:`previous step <test-auth0>`
-where we generated an Auth0 token.
+Then make a GraphQL query or a mutation, with the authorization token from the :ref:`previous step <test-cognito>`
+where we generated an Cognito token.
 
 .. image:: https://graphql-engine-cdn.hasura.io/img/jwt-header-auth-hasura.png
    :class: no-shadow
@@ -145,7 +149,7 @@ Sync users from Cognito
 -----------------------
 
 Now that you can sign up/log in using Cognito, you will need a way to sync your users in Postgres as well.
-All you really need is the Auth0 ``user_id`` in something like a ``users`` table.
+All you really need is the Cognito ``user_id`` in something like a ``users`` table.
 
 This can be done creating a lambda function and configuring it as the ``Post Authentication Trigger``. 
 The parameters available for this trigger are described `here <https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-post-authentication.html>`__
@@ -175,13 +179,13 @@ The parameters available for this trigger are described `here <https://docs.aws.
      });
    }
 
-That’s it! This lambda function will be triggered on every successful sign up/log in and sync your Auth0 user into your Postgres database.
+That’s it! This lambda function will be triggered on every successful sign up/log in and sync your Cognito user into your Postgres database.
 
 .. note::
 
    We need to use an ``upsert`` operation here because social logins do not distinguish between sign up and login. Hence, we need to run this rule every time a successful login is made and do nothing if the user already exists.
 
 
-.. admonition:: Local dev with Auth0 rules
+.. admonition:: Local dev with Cognito rules
 
    The sync step will require a reachable endpoint to Hasura and this is not possible in localhost. You can use `ngrok <https://ngrok.com/>`__ or similar services to expose your locally running Hasura with a public endpoint temporarily.
