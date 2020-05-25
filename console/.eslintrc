@@ -112,15 +112,20 @@
       "parser": "@typescript-eslint/parser",
       "files": ["*.ts", "*.tsx"],
       "rules": {
-        "jsx-a11y/label-has-for": [ 0, {
-          "required": {
-            "some": [ "nesting", "id"  ]
+        "jsx-a11y/label-has-for": [
+          0,
+          {
+            "required": {
+              "some": ["nesting", "id"]
+            }
           }
-        }],
-        "jsx-a11y/anchor-is-valid": [0, 
-          { "components": ["Link"], 
+        ],
+        "jsx-a11y/anchor-is-valid": [
+          0, 
+          { 
+            "components": ["Link"], 
             "specialLink": [], 
-            "aspects": ["​noHref", "invalidHref", "preferButton"]
+            "aspects": ["noHref", "invalidHref", "preferButton"]
           }
         ],
         "import/extensions": 0,
@@ -163,7 +168,9 @@
         "no-useless-constructor": "off",
         "no-unused-expressions": "off",
         "no-console": "off",
-        "prefer-destructuring": "off"
+        "prefer-destructuring": "off",
+        "react/no-danger": "off",
+        "react/no-array-index-key": "off"
       }
     }
   ]

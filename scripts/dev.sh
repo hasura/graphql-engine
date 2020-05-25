@@ -61,8 +61,8 @@ try_jq() {
 }
 
 # Bump this to:
-#  - force a reinstall of dependencies
-DEVSH_VERSION=1.2
+#  - force a reinstall of python dependencies, etc.
+DEVSH_VERSION=1.3
 
 case "${1-}" in
   graphql-engine)
@@ -162,23 +162,26 @@ function wait_docker_postgres {
 #################################
 if [ "$MODE" = "graphql-engine" ]; then
   cd "$PROJECT_ROOT/server"
+  # Existing tix files for a different hge binary will cause issues:
   rm -f graphql-engine.tix
 
   # Attempt to run this after a CTRL-C:
   function cleanup {
     echo
-    # Generate coverage, which can be useful for debugging or understanding 
-    if command -v hpc >/dev/null; then
+    # Generate coverage, which can be useful for debugging or understanding
+    if command -v hpc >/dev/null && command -v jq >/dev/null ; then
       # Get the appropriate mix dir (the newest one). This way this hopefully
       # works when cabal.project.dev-sh.local is edited to turn on optimizations.
-      hpcdir=$(ls -td dist-newstyle/build/**/hpc/vanilla/mix/graphql-engine-* | head -1)
+      # See also: https://hackage.haskell.org/package/cabal-plan 
+      distdir=$(cat dist-newstyle/cache/plan.json | jq -r '."install-plan"[] | select(."id" == "graphql-engine-1.0.0-inplace")? | ."dist-dir"')
+      hpcdir="$distdir/hpc/vanilla/mix/graphql-engine-1.0.0"
       echo_pretty "Generating code coverage report..."
       COVERAGE_DIR="dist-newstyle/dev.sh-coverage"
-      hpc_invocation=(hpc markup 
-        --exclude=Main 
-        --hpcdir "$hpcdir" 
-        --reset-hpcdirs graphql-engine.tix 
-        --fun-entry-count 
+      hpc_invocation=(hpc markup
+        --exclude=Main
+        --hpcdir "$hpcdir"
+        --reset-hpcdirs graphql-engine.tix
+        --fun-entry-count
         --destdir="$COVERAGE_DIR")
       ${hpc_invocation[@]} >/dev/null
 
@@ -190,11 +193,11 @@ if [ "$MODE" = "graphql-engine" ]; then
       echo_pretty ""
       echo_pretty "The tix file we used has been archived to: $tix_archive"
       echo_pretty ""
-      echo_pretty "You might want to use 'hpc combine' to create a diff of two different tix" 
+      echo_pretty "You might want to use 'hpc combine' to create a diff of two different tix"
       echo_pretty "files, and then generate a new report with something like:"
       echo_pretty "  $ ${hpc_invocation[*]}"
     else
-      echo_warn "Please install hpc to get a code coverage report"
+      echo_warn "Please install 'hpc' and 'jq' to get a code coverage report"
     fi
   }
   trap cleanup EXIT
@@ -365,6 +368,7 @@ elif [ "$MODE" = "test" ]; then
 
   export EVENT_WEBHOOK_HEADER="MyEnvValue"
   export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
+  export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
 
   # It's better UX to build first (possibly failing) before trying to launch
   # PG, but make sure that new-run uses the exact same build plan, else we risk
@@ -451,10 +455,9 @@ elif [ "$MODE" = "test" ]; then
     echo
   fi  # RUN_INTEGRATION_TESTS
 
-  # TODO generate coverage report when we CTRL-C from 'dev.sh graphql-engine'.
-  # If hpc available, combine any tix from haskell/unit tests:		
+  # If hpc available, combine any tix from haskell/unit tests:
   if command -v hpc >/dev/null; then
-    if [ "$RUN_UNIT_TESTS" = true ] && [ "$RUN_INTEGRATION_TESTS" = true ]; then		
+    if [ "$RUN_UNIT_TESTS" = true ] && [ "$RUN_INTEGRATION_TESTS" = true ]; then
       # As below, it seems we variously get errors related to having two Main
       # modules, so exclude:
       hpc combine --exclude=Main graphql-engine-tests.tix graphql-engine.tix --union > graphql-engine-combined.tix
@@ -480,7 +483,7 @@ elif [ "$MODE" = "test" ]; then
       --exclude=Main \
       --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/noopt/hpc/vanilla/mix/graphql-engine-* \
       --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/t/graphql-engine-tests/noopt/hpc/vanilla/mix/graphql-engine-tests \
-      --reset-hpcdirs graphql-engine-combined.tix 
+      --reset-hpcdirs graphql-engine-combined.tix
     echo_pretty "To view full coverage report open:"
     echo_pretty "  file://$(pwd)/$COVERAGE_DIR/hpc_index.html"
 

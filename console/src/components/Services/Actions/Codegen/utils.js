@@ -1,6 +1,10 @@
 /* eslint-disable */
 import globals from '../../../../Globals';
-import { CODEGEN_REPO, ALL_FRAMEWORKS_FILE_PATH } from '../constants';
+import {
+  CODEGEN_REPO,
+  ALL_FRAMEWORKS_FILE_PATH,
+  BASE_CODEGEN_PATH,
+} from '../constants';
 import endpoints from '../../../../Endpoints';
 
 const {
@@ -17,7 +21,7 @@ const { camelize } = require('inflection');
 import { getPersistedDerivedAction } from '../lsUtils';
 
 export const getCodegenFilePath = framework => {
-  return `${globals.assetsPath}/common/codegen/${framework}/actions-codegen.js`;
+  return `${BASE_CODEGEN_PATH}/${framework}/actions-codegen.js`;
 };
 
 export const getStarterKitPath = framework => {
