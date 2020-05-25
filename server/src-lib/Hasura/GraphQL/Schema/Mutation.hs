@@ -1,7 +1,9 @@
 {-# LANGUAGE ViewPatterns #-}
 
 module Hasura.GraphQL.Schema.Mutation
-  ( updateTable
+  ( insertIntoTable
+  , insertOneIntoTable
+  , updateTable
   , updateTableByPk
   , deleteFromTable
   , deleteFromTableByPk
@@ -106,11 +108,11 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
   selectionParser <- mutationSelectionSet table selectPerms stringifyNum
   objectsParser   <- P.list <$> tableFieldsInput table insertPerms
   conflictParser  <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
-  let conflictName  = $$(G.litName "on_conflict")
-      conflictDesc  = "on conflict condition"
-      objectsName   = $$(G.litName "objects")
-      objectsDesc   = "the rows to be inserted"
-      argsParser    = do
+  let conflictName = $$(G.litName "on_conflict")
+      conflictDesc = "on conflict condition"
+      objectsName  = $$(G.litName "objects")
+      objectsDesc  = "the rows to be inserted"
+      argsParser   = do
         onConflict <- maybe
           (pure Nothing)
           (P.fieldOptional conflictName (Just conflictDesc))
@@ -126,6 +128,43 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
                 , _aiDefVals        = ipiSet insertPerms
                 }
        , RQL.MOutMultirowFields output
+       )
+
+insertOneIntoTable
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => QualifiedTable       -- ^ qualified name of the table
+  -> G.Name               -- ^ field display name
+  -> Maybe G.Description  -- ^ field description, if any
+  -> InsPermInfo          -- ^ insert permissions of the table
+  -> SelPermInfo          -- ^ select permissions of the table
+  -> Maybe UpdPermInfo    -- ^ update permissions of the table (if any)
+  -> Bool
+  -> m (FieldsParser 'Output n (Maybe (AnnMultiInsert UnpreparedValue)))
+insertOneIntoTable table fieldName description insertPerms selectPerms updatePerms stringifyNum = do
+  columns         <- tableColumns table
+  selectionParser <- tableSelectionSet table selectPerms stringifyNum
+  objectsParser   <- tableFieldsInput table insertPerms
+  conflictParser  <- fmap join $ sequenceA $ conflictObject table (Just selectPerms) <$> updatePerms
+  let conflictName  = $$(G.litName "on_conflict")
+      conflictDesc  = "on conflict condition"
+      objectsName   = $$(G.litName "objects")
+      objectsDesc   = "the rows to be inserted"
+      argsParser    = do
+        onConflict <- maybe
+          (pure Nothing)
+          (P.fieldOptional conflictName (Just conflictDesc))
+          conflictParser
+        objects    <- P.field objectsName (Just objectsDesc) objectsParser
+        pure (onConflict, objects)
+  pure $ P.selection fieldName description argsParser selectionParser
+    `mapField` \(_, (onConflict, object), output) ->
+       ( AnnIns { _aiInsObj         = [object]
+                , _aiConflictClause = onConflict
+                , _aiCheckCond      = (undefined {- FIXME!!! -}, ipiCheck insertPerms)
+                , _aiTableCols      = columns
+                , _aiDefVals        = ipiSet insertPerms
+                }
+       , RQL.MOutSinglerowObject output
        )
 
 
