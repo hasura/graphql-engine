@@ -103,13 +103,15 @@ const runQuery = tableSchema => {
       limit: state.limit,
       offset: state.offset,
       order_by: state.order_by.filter(w => w.column.trim() !== ''),
-      columns: state.columns,
     };
     if (newQuery.where.$and.length === 0) {
       delete newQuery.where;
     }
     if (newQuery.order_by.length === 0) {
       delete newQuery.order_by;
+    }
+    if (state.columns) {
+      newQuery.columns = state.columns;
     }
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
     dispatch(vMakeTableRequests());

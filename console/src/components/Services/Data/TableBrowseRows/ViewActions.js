@@ -479,11 +479,11 @@ const addQueryOptsActivePath = (query, queryStuff, activePath) => {
   const newQuery = { ...query };
   let curQuery = newQuery;
   while (curPath.length > 0) {
-    curQuery = curQuery.columns.find(c => c.name === curPath[0]); // eslint-disable-line no-loop-func
+    curQuery = curQuery.columns.find(c => c.name === curPath[0]);
     curPath = curPath.slice(1);
   }
 
-  ['where', 'order_by', 'limit', 'offset', 'columns'].map(k => {
+  ['where', 'order_by', 'limit', 'offset'].map(k => {
     delete curQuery[k];
   });
 
