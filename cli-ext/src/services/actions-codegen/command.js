@@ -1,4 +1,4 @@
-const { getInputPayload } = require('../../utils/commandUtils')
+const { getInputPayload } = require('../../utils/commandUtils');
 const handler = require('./handler');
 
 const command = (subCommands) => {
