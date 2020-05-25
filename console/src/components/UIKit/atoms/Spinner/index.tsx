@@ -1,7 +1,7 @@
 import React from 'react';
 import { css, keyframes } from 'styled-components';
 
-import { StyledSpinner } from './Spinner';
+import { StyledSpinner, StyledSpinnerProps } from './Spinner';
 
 const smallSpinnerSize = 17;
 const largeSpinnerSize = 20;
@@ -37,7 +37,11 @@ const spinnerChildStyles = css`
   }
 `;
 
-export const Spinner = props => {
+export interface SpinnerProps extends StyledSpinnerProps {
+  size: string;
+}
+
+export const Spinner: React.FC<SpinnerProps> = props => {
   const { size } = props;
 
   const spinnerWidth = size === 'small' ? smallSpinnerSize : largeSpinnerSize;

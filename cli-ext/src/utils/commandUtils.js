@@ -4,7 +4,7 @@ const OUTPUT_FILE_FLAG = 'output-file';
 const INPUT_FILE_FLAG = 'input-file';
 
 const getFlagValue = (args, flagname) => {
-  for (var i = args.length - 1; i >= 0; i--) {
+  for (let i = args.length - 1; i >= 0; i--) {
     if (args[i] === `--${flagname}`) {
       const flagValue = args[i + 1];
       if (!flagValue) {
@@ -26,5 +26,5 @@ module.exports = {
   getInputPayload,
   getFlagValue,
   OUTPUT_FILE_FLAG,
-  INPUT_FILE_FLAG 
-}
+  INPUT_FILE_FLAG,
+};
