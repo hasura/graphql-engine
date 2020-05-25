@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css?family=Gudea');
 @import url('https://fonts.googleapis.com/css?family=Khula:400,700');
-
+@import url('https://fonts.googleapis.com/css?family=Poppins:300,400,500,600&display=swap');
 html {
   background-color: #f8f8f8 !important;
 }
@@ -76,7 +76,99 @@ ul {
   margin: auto;
   width: 100%;
 }
-
+.hideClass {
+  display: none;
+}
+.bannerStripWrapper {
+  background-color: #3D1BB7;
+  box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.4);
+  position: relative;
+  max-height: 56px;
+}
+.bannerStripWrapper .bannerInnerWrapper {
+  padding: 0 15px;
+}
+.bannerStripWrapper .displayFlex
+{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bannerStripWrapper .displayFlex a {
+  flex: 1;
+  text-decoration: none;
+}
+.bannerStripWrapper .bannerStripImg {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+.bannerStripWrapper .bannerStripImg img {
+  max-height: 56px;
+  opacity: .4;
+}
+.bannerStripWrapper .bannerStrip
+{
+  padding: 8px 0px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+}
+.bannerStripWrapper .bannerStrip .announceIcon {
+  display: inline-flex;
+}
+.bannerStripWrapper .bannerStrip .announceIcon img {
+  margin-top: 4px;
+  margin-right: 16px;
+  width: 32px;
+}
+.bannerStripWrapper .displayFlex a:hover, .bannerStripWrapper .displayFlex a:focus
+{
+  text-decoration: none;
+}
+.bannerStripWrapper .closeBanner
+{
+  cursor: pointer;
+  text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 11;
+  margin-left: auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(61,27,183,.8);
+  img {
+    margin-right: 0;
+  }
+}
+.bannerStripWrapper .bannerStrip .bodyTextSmall
+{
+  font-family: 'Poppins';
+  font-size: 18px;
+  text-align: left;
+  padding-top: 0;
+  letter-spacing: normal;
+  font-weight: 500;
+  display: inline-block;
+  line-height: 17px;
+  color: #fff;
+  padding-bottom: 0;
+  padding-right: 10px;
+}
+.bannerStripWrapper .bannerStrip .bodyTextSmall .textColor {
+  color: #fff;
+}
+.bannerStripWrapper .bannerStrip .bodyTextSmall .textColor img {
+  display: inline-block;
+  transition: 200ms;
+  margin-left: 5px;
+}
+.bannerStripWrapper .bannerStrip .bodyTextSmall .textColor:hover img {
+  transform: translateX(4px);
+}
 .content_inner_wrapper {
   width: 75% !important;
   height: 100vh;
@@ -284,6 +376,8 @@ article ol ol {
 
 #docs-header-actions .social_icons_wrapper {
   padding-left: 10px;
+  display: flex;
+  align-items: center;
 }
 
 #docs-header-actions .social_icons_wrapper .social_icons {
@@ -291,6 +385,8 @@ article ol ol {
   padding: 10px 5px;
   opacity: 0.7;
   vertical-align: middle;
+  display: flex;
+  align-items: center;
 }
 
 #docs-header-actions .social_icons_wrapper .social_icons:hover {
@@ -308,6 +404,7 @@ article ol ol {
 #docs-header-actions .social_icons_wrapper .social_icons a {
   text-decoration: none;
   color: #DB0037;
+  display: contents;
 }
 
 #docs-header-actions .social_icons_wrapper .social_icons iframe {
@@ -926,9 +1023,40 @@ article ol ol {
     min-width: calc(166% + 10px);  /* 1 / width(input_search_box) + 10px */
   }
 }
-
+@media (min-width: 768px) and (max-width: 991px) {
+  .bannerStripWrapper {
+    padding-left: 4vw;
+  }
+  .bannerStripWrapper .bannerStripImg {
+    display: none;
+  }
+  .bannerStripWrapper .bannerStrip .displayFlex {
+    justify-content: flex-start;
+  }
+  .bannerStripWrapper .closeBanner {
+    right: 0;
+  }
+}
 /*** Mobile overrides ***/
 @media (max-width: 768px) {
+  .bannerStripWrapper {
+      max-height: none;
+      padding: 0 0px;
+    }
+    .bannerStripWrapper .bannerStrip {
+      padding-left: 0px;
+    }
+    .bannerStripWrapper .bannerStrip .bodyTextSmall {
+      padding-left: 8px;
+      line-height: 120%;
+      font-size: 15px;
+    }
+    .bannerStripWrapper .bannerStripImg {
+      display: none;
+    }
+    .bannerStripWrapper .bannerStrip .bodyTextSmall {
+      padding-left: 0;
+    }
   #sidebar {
     top: 170px;
     height: calc(100% - 170px);

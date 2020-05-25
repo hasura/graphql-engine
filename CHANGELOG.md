@@ -2,6 +2,19 @@
 
 ## Next release
 
+### Scheduled Triggers
+
+A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron based or timestamp based.
+
+A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to  generate an end-of-day sales report every weekday at 9pm.
+
+You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience.
+
+<Add docs links>
+
+(close #1914)
+
+
 ### Allow access to session variables by computed fields (fix #3846)
 
 Sometimes it is useful for computed fields to have access to the Hasura session variables directly. For example, suppose you want to fetch some articles but also get related user info, say `likedByMe`. Now, you can define a function like:
@@ -16,6 +29,7 @@ RETURNS boolean AS $$
   );
 $$ LANGUAGE sql STABLE;
 ```
+
 and make a query like:
 
 ```
@@ -25,7 +39,7 @@ query {
     content
     likedByMe
   }
-}     
+}
 ```
 
 Support for this is now added through the `add_computed_field` API.
@@ -35,10 +49,35 @@ Read more about the session argument for computed fields in the [docs](https://h
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
+- server: fix explain queries with role permissions (fix #4816)
+- server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
 
+- server: fixes an issue where introspection queries with variables would fail because of caching (fix #4547)
+- server: avoid loss of precision when passing values in scientific notation (fix #4733)
+- server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
+- server: fix importing of allow list query from metadata (fix #4687)
+- server: flush log buffer during shutdown (#4800)
+- server: fix edge case with printing logs on startup failure (fix #4772)
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
-- cli: list all avialable commands in root command help (fix #4623)
+- console: allow modifying default value for PK (fix #4075) (#4679)
+- console: fix checkbox for forwarding client headers in actions (#4595)
+- console: re-enable foreign tables to be listed as views (fix #4714) (#4742)
+- console: display rows limit in permissions editor if set to zero (fix #4559)
+- console: fix inconsistency between selected rows state and displayed rows (fix #4654) (#4673)
+- console: fix displaying boolean values in `Edit Row` tab (#4682)
+- console: fix underscores not being displayed on raw sql page (close #4754) (#4799)
+- cli: list all available commands in root command help (fix #4623) (#4628)
+- docs: add section on actions vs. remote schemas to actions documentation (#4284)
+- docs: fix wrong info about excluding scheme in CORS config (#4685)
+- docs: add single object mutations docs (close #4622) (#4625)
+- docs: add docs page on query performance (close #2316) (#3693)
+- docs: add a sample Caddyfile for Caddy 2 in enable-https section (#4710)
+- docs: add disabling dev mode to production checklist (#4715)
+- docs: add integration guide for AWS Cognito (#4822, #4843)
+- docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
+- docs: add page for procuring custom docker images and binaries (#4828)
+- docs: add content on how to secure action handlers and other actions docs improvements (#4743)
 
 ## `v1.2.0`
 
@@ -104,6 +143,7 @@ The `internal` field for action errors is improved with more debug information. 
 `response` and `error` fields instead of just `webhook_response` field.
 
 Before:
+
 ```json
 {
   "errors": [
@@ -124,7 +164,9 @@ Before:
   ]
 }
 ```
+
 After:
+
 ```json
 {
   "errors": [
@@ -188,6 +230,7 @@ ENV vars can now be read from .env file present at the project root directory. A
 ```
 hasura console --envfile production.env
 ```
+
 The above command will read ENV vars from `production.env` file present at the project root directory.
 
 (close #4129) (#4454)

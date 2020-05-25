@@ -208,7 +208,9 @@ txtEncodedPGVal colVal = case colVal of
   PGValFloat f    -> TELit $ T.pack $ show f
   PGValDouble d   -> TELit $ T.pack $ show d
   PGValNumeric sc -> TELit $ T.pack $ show sc
-  PGValMoney m    -> TELit $ T.pack $ show m
+  -- PostgreSQL doesn't like scientific notation for money, so pass it
+  -- with 2 decimal places.
+  PGValMoney m    -> TELit $ T.pack $ formatScientific Fixed (Just 2) m
   PGValBoolean b  -> TELit $ bool "false" "true" b
   PGValChar t     -> TELit $ T.pack $ show t
   PGValVarchar t  -> TELit t

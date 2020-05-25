@@ -1,1 +1,1 @@
-module.exports = require('./command')
+module.exports = require('./command');
