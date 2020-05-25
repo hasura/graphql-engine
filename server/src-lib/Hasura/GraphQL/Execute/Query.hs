@@ -184,10 +184,10 @@ queryRootName = "query_root"
 
 toPGQuery :: QueryRootField S.SQLExp -> Q.Query
 toPGQuery = \case
-  QRFSimple s -> DS.selectQuerySQL DS.JASMultipleRows s
-  QRFPrimaryKey s -> DS.selectQuerySQL DS.JASSingleObject s
+  QRFSimple s      -> DS.selectQuerySQL DS.JASMultipleRows s
+  QRFPrimaryKey s  -> DS.selectQuerySQL DS.JASSingleObject s
   QRFAggregation s -> DS.selectAggQuerySQL s
-  QRFExp s -> _
+  QRFTextValue s   -> DS.selectConstSQL $ T.pack $ show s -- put quotes around the __typename
 
 traverseQueryRootField
   :: (Applicative f)
@@ -195,10 +195,10 @@ traverseQueryRootField
   -> QueryRootField a
   -> f (QueryRootField b)
 traverseQueryRootField f = \case
-  QRFPrimaryKey s           -> QRFPrimaryKey <$> DS.traverseAnnSimpleSel f s
+  QRFPrimaryKey s   -> QRFPrimaryKey <$> DS.traverseAnnSimpleSel f s
   QRFSimple s       -> QRFSimple <$> DS.traverseAnnSimpleSel f s
-  QRFAggregation s          -> QRFAggregation <$> DS.traverseAnnAggSel f s
-  QRFExp s -> _
+  QRFAggregation s  -> QRFAggregation <$> DS.traverseAnnAggSel f s
+  QRFTextValue s    -> pure $ QRFTextValue s
 convertQuerySelSet
   :: ( MonadError QErr m
      , MonadReader r m

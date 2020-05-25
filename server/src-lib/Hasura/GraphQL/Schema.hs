@@ -66,6 +66,6 @@ query allTables stringifyNum = do
         , toQrf QRFAggregation $ selectTableAggregate tableName aggName     (Just aggDesc)    perms stringifyNum
         ]
   let queryFieldsParser = fmap catMaybes $ sequenceA $ concat $ catMaybes selectExpParsers
-      typenameRepr = ($$(G.litName "__typename"), QRFExp "query_root")
+      typenameRepr = ($$(G.litName "__typename"), QRFTextValue "query_root")
   pure $ M.fromList <$> P.selectionSet $$(G.litName "query_root") Nothing typenameRepr queryFieldsParser
   where toQrf = fmap . fmap . fmap . fmap . fmap

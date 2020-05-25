@@ -305,6 +305,7 @@ selectionSet name description typenameRepr parser = Parser
       -- handles parsing the fields it cares about
       for_ fields \Field{ _fName = fieldName } -> do
         unless (fieldName `S.member` fieldNames) $
+          unless (fieldName == $$(litName"__typename")) $
           parseError $ name <<> " has no field named " <>> fieldName
       parsedFields <- ifParser parser $! M.fromListOn _fName fields
       -- __typename is a special case: while every selection set

@@ -32,7 +32,7 @@ data QueryRootField v
   = QRFSimple      (RQL.AnnSimpleSelG v)
   | QRFPrimaryKey  (RQL.AnnSimpleSelG v)
   | QRFAggregation (RQL.AnnAggSelG    v)
-  | QRFExp         Text
+  | QRFTextValue         Text
 
 {-
 
