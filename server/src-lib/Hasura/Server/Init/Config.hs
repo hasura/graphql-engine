@@ -9,7 +9,6 @@ import qualified Data.Text                        as T
 import qualified Database.PG.Query                as Q
 
 import           Data.Char                        (toLower)
-import           Data.Time.Clock.Units            (milliseconds)
 import           Network.Wai.Handler.Warp         (HostPreference)
 
 import qualified Hasura.Cache                     as Cache
@@ -254,7 +253,7 @@ instance FromEnv L.LogLevel where
   fromEnv = readLogLevel
 
 instance FromEnv Cache.CacheSize where
-  fromEnv = Cache.mkCacheSize
+  fromEnv = Cache.parseCacheSize
 
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 

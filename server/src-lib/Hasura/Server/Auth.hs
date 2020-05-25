@@ -125,7 +125,7 @@ mkJwtCtx JWTConfig{..} httpManager logger = do
         Nothing   -> return ref
         Just time -> do
           void $ liftIO $ forkImmortal "jwkRefreshCtrl" logger $
-            jwkRefreshCtrl logger httpManager url ref (fromUnits time)
+            jwkRefreshCtrl logger httpManager url ref (convertDuration time)
           return ref
 
     withJwkError act = do
@@ -149,7 +149,7 @@ getUserInfo
 getUserInfo l m r a = fst <$> getUserInfoWithExpTime l m r a
 
 getUserInfoWithExpTime
-  :: (HasVersion, MonadIO m, MonadError QErr m)
+  :: forall m. (HasVersion, MonadIO m, MonadError QErr m)
   => Logger Hasura
   -> H.Manager
   -> [N.Header]
@@ -157,44 +157,43 @@ getUserInfoWithExpTime
   -> m (UserInfo, Maybe UTCTime)
 getUserInfoWithExpTime logger manager rawHeaders = \case
 
-  AMNoAuth -> (, Nothing) <$> userInfoFromHeaders UAuthNotSet
+  AMNoAuth -> withNoExpTime $ mkUserInfoFallbackAdminRole UAuthNotSet
 
-  AMAdminSecret adminScrt unAuthRole ->
-    case adminSecretM of
-      Just givenAdminScrt ->
-        withNoExpTime $ userInfoWhenAdminSecret adminScrt givenAdminScrt
-      Nothing             ->
-        withNoExpTime $ userInfoWhenNoAdminSecret unAuthRole
+  AMAdminSecret adminSecretSet maybeUnauthRole ->
+    withAuthorization adminSecretSet $ withNoExpTime $
+      -- Consider unauthorized role, if not found raise admin secret header required exception
+      case maybeUnauthRole of
+        Nothing -> throw401 $ adminSecretHeader <> "/"
+                   <> deprecatedAccessKeyHeader <> " required, but not found"
+        Just unAuthRole ->
+          mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent sessionVariables
 
-  AMAdminSecretAndHook accKey hook ->
-    whenAdminSecretAbsent accKey $
-      userInfoFromAuthHook logger manager hook rawHeaders
+  AMAdminSecretAndHook adminSecretSet hook ->
+    withAuthorization adminSecretSet $ userInfoFromAuthHook logger manager hook rawHeaders
 
-  AMAdminSecretAndJWT accKey jwtSecret unAuthRole ->
-    whenAdminSecretAbsent accKey $ processJwt jwtSecret rawHeaders unAuthRole
+  AMAdminSecretAndJWT adminSecretSet jwtSecret unAuthRole ->
+    withAuthorization adminSecretSet $ processJwt jwtSecret rawHeaders unAuthRole
 
   where
-    -- when admin secret is absent, run the action to retrieve UserInfo, otherwise
-    -- adminsecret override
-    whenAdminSecretAbsent ak action =
-      maybe action (withNoExpTime . userInfoWhenAdminSecret ak) adminSecretM
-
-    adminSecretM= foldl1 (<|>) $
-      map (`getSessionVariableValue` sessionVariables) [adminSecretHeader, deprecatedAccessKeyHeader]
+    mkUserInfoFallbackAdminRole adminSecretState =
+      mkUserInfo (URBFromSessionVariablesFallback adminRoleName)
+      adminSecretState sessionVariables
 
     sessionVariables = mkSessionVariables rawHeaders
 
-    userInfoWhenAdminSecret key reqKey = do
-      when (reqKey /= getAdminSecret key) $ throw401 $
-        "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
-      userInfoFromHeaders UAdminSecretSent
+    withAuthorization
+      :: AdminSecret -> m (UserInfo, Maybe UTCTime) -> m (UserInfo, Maybe UTCTime)
+    withAuthorization adminSecretSet actionIfNoAdminSecret = do
+      let maybeRequestAdminSecret =
+            foldl1 (<|>) $ map (`getSessionVariableValue` sessionVariables)
+            [adminSecretHeader, deprecatedAccessKeyHeader]
 
-    userInfoWhenNoAdminSecret = \case
-      Nothing -> throw401 $ adminSecretHeader <> "/"
-                 <> deprecatedAccessKeyHeader <> " required, but not found"
-      Just roleName -> mkUserInfo UAdminSecretNotSent sessionVariables $ Just roleName
+      -- when admin secret is absent, run the action to retrieve UserInfo
+      case maybeRequestAdminSecret of
+        Nothing                 -> actionIfNoAdminSecret
+        Just requestAdminSecret -> do
+          when (requestAdminSecret /= getAdminSecret adminSecretSet) $ throw401 $
+            "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
+          withNoExpTime $ mkUserInfoFallbackAdminRole UAdminSecretSent
 
     withNoExpTime a = (, Nothing) <$> a
-
-    userInfoFromHeaders uas =
-      mkUserInfo uas sessionVariables $ Just adminRoleName
