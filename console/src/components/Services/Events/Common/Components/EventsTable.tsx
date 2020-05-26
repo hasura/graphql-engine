@@ -142,6 +142,7 @@ const EventsTable: React.FC<Props> = props => {
   return (
     <ReactTable
       className="-highlight"
+      data-test="events-table"
       data={rowsFormatted}
       columns={gridHeadings}
       resizable

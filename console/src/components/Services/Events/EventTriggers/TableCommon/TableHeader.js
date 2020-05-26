@@ -92,7 +92,6 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
             <li
               role="presentation"
               className={tabName === 'logs' ? styles.active : ''}
-              data-test="trigger-logs"
             >
               <Link
                 to={getETInvocationLogsRoute(triggerName)}
@@ -105,11 +104,10 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
               <li
                 role="presentation"
                 className={tabName === 'modify' ? styles.active : ''}
-                data-test="trigger-modify"
               >
                 <Link
                   to={getETModifyRoute(triggerName)}
-                  data-test="trigger-invocation-logs"
+                  data-test="trigger-modify"
                 >
                   Modify
                 </Link>
