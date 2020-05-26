@@ -163,7 +163,7 @@ runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
     case rootSelSet of
       VQ.RQuery (Seq.viewl -> selSet) -> getSchemaField selSet
       _                               -> throw500 "expected query for introspection"
-  introRes <- flip runReaderT rGCtx $ RI.schemaR schemaField
+  (introRes, _) <- flip runReaderT rGCtx $ VT.runReusabilityT $ RI.schemaR schemaField
   pure $ wrapInSpecKeys introRes
   where
     wrapInSpecKeys introObj =
