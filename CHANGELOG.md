@@ -2,6 +2,15 @@
 
 ## Next release
 
+### Remote Relationships
+
+Remote Joins will ensure independent and related types in Remote Schemas can be joined natively via Hasura.
+
+Remote joins will work similar to table relationships. You can define a relationship by giving:
+
+* a name for the relationship
+* a join configuration from table fields to remote schema fields.
+
 ### Scheduled Triggers
 
 A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron based or timestamp based.
