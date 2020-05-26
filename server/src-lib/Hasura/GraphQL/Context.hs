@@ -11,12 +11,14 @@ import           Hasura.Prelude
 import qualified Data.Aeson                    as J
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Data.HashMap.Strict.InsOrd    (InsOrdHashMap)
+
 import qualified Hasura.RQL.DML.Select.Types   as RQL
 
 import           Hasura.GraphQL.Parser
 
 data GQLContext = GQLContext
-  { gqlQueryParser :: ParserFn (HashMap G.Name (QueryRootField UnpreparedValue))
+  { gqlQueryParser :: ParserFn (InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
   }
 
 instance J.ToJSON GQLContext where

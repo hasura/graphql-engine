@@ -10,6 +10,7 @@ import qualified Data.Aeson                             as J
 import qualified Data.ByteString                        as B
 import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.IntMap                            as IntMap
 import qualified Data.TByteString                       as TBS
 import qualified Data.Text                              as T
@@ -23,18 +24,18 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Execute.Resolve
+import           Hasura.GraphQL.Parser.Column
+import           Hasura.GraphQL.Parser.Monad
+import           Hasura.GraphQL.Parser.Schema           (getName)
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.GraphQL.Parser.Column
-import           Hasura.GraphQL.Parser.Monad
-import           Hasura.GraphQL.Parser.Schema           (getName)
-import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Execute.Resolve
 
-import qualified Hasura.RQL.DML.Select             as DS
+import qualified Hasura.RQL.DML.Select                  as DS
 
 type PlanVariables = Map.HashMap G.Name Int
 
@@ -231,7 +232,7 @@ convertQuerySelSet gqlContext selectionSet varDefs varValsM = do
           -- "__schema"   -> fldPlanFromJ <$> R.schemaR fld
           -- "__typename" -> pure $ fldPlanFromJ queryRootName
           root         -> do
-            case Map.lookup root map of
+            case OMap.lookup root map of
               Just conv -> do
                 (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
                   traverseQueryRootField prepareWithPlan conv

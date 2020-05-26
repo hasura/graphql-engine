@@ -8,6 +8,7 @@ module Hasura.GraphQL.Parser.Internal.Parser where
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended  as M
+import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
 
 import           Control.Lens.Extended         hiding (enum, index)
@@ -412,7 +413,7 @@ selectionSet
   => Name
   -> Maybe Description
   -> [FieldParser m a]
-  -> Parser 'Output m (HashMap Name (ParsedSelection a))
+  -> Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
 selectionSet name description parsers = Parser
   { pType = NonNullable $ TNamed $ mkDefinition name description $
       TIObject $ map fDefinition parsers
@@ -433,7 +434,7 @@ selectionSet name description parsers = Parser
       -- we must fail.
       when (null fields) $ parseError $ "missing selection set for " <>> name
 
-      M.fromList <$> for fields \selectionField@Field{ _fName, _fAlias } -> do
+      OMap.fromList <$> for fields \selectionField@Field{ _fName, _fAlias } -> do
         parsedField <- if
           | _fName == $$(litName "__typename") ->
               pure $ SelectTypename name

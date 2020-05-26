@@ -3,6 +3,7 @@ module Hasura.GraphQL.Schema.Common where
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashMap.Strict.InsOrd    as OMap
 
 import           Language.GraphQL.Draft.Syntax as G
 
@@ -30,9 +31,9 @@ mapField fp f = fmap (fmap f) fp
 
 parsedSelectionsToFields
   :: (Text -> a) -- ^ how to handle @__typename@ fields
-  -> HashMap G.Name (P.ParsedSelection a)
+  -> OMap.InsOrdHashMap G.Name (P.ParsedSelection a)
   -> RQL.Fields a
-parsedSelectionsToFields mkTypename = Map.toList
+parsedSelectionsToFields mkTypename = OMap.toList
   >>> map (FieldName . G.unName *** P.handleTypename (mkTypename . G.unName))
 
 numericAggOperators :: [G.Name]

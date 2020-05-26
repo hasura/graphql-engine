@@ -6,6 +6,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict.Extended  as M
+import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -50,7 +51,7 @@ query
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => HashSet QualifiedTable
   -> Bool
-  -> m (Parser 'Output n (HashMap G.Name (QueryRootField UnpreparedValue)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 query allTables stringifyNum = do
   selectExpParsers <- for (toList allTables) \tableName -> do
     selectPerms <- tableSelectPermissions tableName
