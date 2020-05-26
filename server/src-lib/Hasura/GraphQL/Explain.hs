@@ -99,10 +99,13 @@ explainField userInfo gCtx sqlGenCtx actionExecuter fld =
     _            -> do
       unresolvedAST <-
         runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-        evalReusabilityT $ RS.queryFldToPGAST fld actionExecuter
+          evalReusabilityT $ RS.queryFldToPGAST fld actionExecuter
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo) unresolvedAST
-      let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
+      let (query, remoteJoins) = RS.toPGQuery resolvedAST
+          txtSQL = Q.getQueryText query
           withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
+      -- Reject if query contains any remote joins
+      when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
       planLines <- liftTx $ map runIdentity <$>
                      Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
       return $ FieldPlan fName (Just txtSQL) $ Just planLines
