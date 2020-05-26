@@ -379,7 +379,12 @@ recreateSystemMetadata = do
         , arrayRel $$(nonEmptyText "check_constraints") $
           manualConfig "hdb_catalog" "hdb_check_constraint" tableNameMapping
         , arrayRel $$(nonEmptyText "unique_constraints") $
-          manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping ]
+          manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping
+        , arrayRel $$(nonEmptyText "event_triggers") $
+          manualConfig "hdb_catalog" "event_triggers"
+          [ ("table_schema","schema_name")
+          , ("table_name","table_name")]
+        ]
       , table "hdb_catalog" "hdb_primary_key" []
       , table "hdb_catalog" "hdb_foreign_key_constraint" []
       , table "hdb_catalog" "hdb_relationship" []
