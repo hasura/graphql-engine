@@ -3,59 +3,62 @@
 
 module Hasura.App where
 
-import           Control.Concurrent.STM.TVar          (readTVarIO)
+import           Control.Concurrent.STM.TVar               (readTVarIO)
 import           Control.Monad.Base
-import           Control.Monad.Catch                  (MonadCatch, MonadThrow, onException)
+import           Control.Monad.Catch                       (MonadCatch, MonadThrow, onException)
 import           Control.Monad.Stateless
-import           Control.Monad.STM                    (atomically)
-import           Control.Monad.Trans.Control          (MonadBaseControl (..))
-import           Data.Aeson                           ((.=))
-import           Data.Time.Clock                      (UTCTime)
+import           Control.Monad.STM                         (atomically)
+import           Control.Monad.Trans.Control               (MonadBaseControl (..))
+import           Data.Aeson                                ((.=))
+import           Data.Time.Clock                           (UTCTime)
 import           GHC.AssertNF
 import           Options.Applicative
-import           System.Environment                   (getEnvironment, lookupEnv)
-import           System.Exit                          (exitFailure)
+import           System.Environment                        (getEnvironment, lookupEnv)
+import           System.Exit                               (exitFailure)
 
-import qualified Control.Concurrent.Async.Lifted.Safe as LA
-import qualified Control.Concurrent.Extended          as C
-import qualified Data.Aeson                           as A
-import qualified Data.ByteString.Char8                as BC
-import qualified Data.ByteString.Lazy.Char8           as BLC
-import qualified Data.Set                             as Set
-import qualified Data.Text                            as T
-import qualified Data.Time.Clock                      as Clock
-import qualified Data.Yaml                            as Y
-import qualified Database.PG.Query                    as Q
-import qualified Network.HTTP.Client                  as HTTP
-import qualified Network.HTTP.Client.TLS              as HTTP
-import qualified Network.Wai.Handler.Warp             as Warp
-import qualified System.Log.FastLogger                as FL
-import qualified System.Posix.Signals                 as Signals
-import qualified Text.Mustache.Compile                as M
+import qualified Control.Concurrent.Async.Lifted.Safe      as LA
+import qualified Control.Concurrent.Extended               as C
+import qualified Data.Aeson                                as A
+import qualified Data.ByteString.Char8                     as BC
+import qualified Data.ByteString.Lazy.Char8                as BLC
+import qualified Data.Set                                  as Set
+import qualified Data.Text                                 as T
+import qualified Data.Time.Clock                           as Clock
+import qualified Data.Yaml                                 as Y
+import qualified Database.PG.Query                         as Q
+import qualified Network.HTTP.Client                       as HTTP
+import qualified Network.HTTP.Client.TLS                   as HTTP
+import qualified Network.Wai.Handler.Warp                  as Warp
+import qualified System.Log.FastLogger                     as FL
+import qualified System.Posix.Signals                      as Signals
+import qualified Text.Mustache.Compile                     as M
 
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
-import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
+import           Hasura.GraphQL.Resolve.Action             (asyncActionsProcessor)
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
-                                                       HasSQLGenCtx, HasSystemDefined, QErr (..),
-                                                       SQLGenCtx (..), SchemaCache (..), UserInfoM,
-                                                       buildSchemaCacheStrict, decodeValue,
-                                                       throw400, withPathK)
+import           Hasura.RQL.Types                          (CacheRWM, Code (..), HasHttpManager,
+                                                            HasSQLGenCtx, HasSystemDefined,
+                                                            QErr (..), SQLGenCtx (..),
+                                                            SchemaCache (..), UserInfoM,
+                                                            buildSchemaCacheStrict, decodeValue,
+                                                            throw400, withPathK)
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.API.Query              (requiresAdmin, runQueryM)
+import           Hasura.Server.API.Query                   (requiresAdmin, runQueryM)
 import           Hasura.Server.App
 import           Hasura.Server.Auth
-import           Hasura.Server.CheckUpdates           (checkForUpdates)
+import           Hasura.Server.CheckUpdates                (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
 import           Hasura.Session
+
+import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
 
 
 printErrExit :: (MonadIO m) => forall a . String -> m a
@@ -194,6 +197,7 @@ runHGEServer
      , HttpLog m
      , ConsoleRenderer m
      , LA.Forall (LA.Pure m)
+     , WS.MonadWSLog m
      )
   => ServeOptions impl
   -> InitCtx
@@ -420,6 +424,9 @@ instance MetadataApiAuthorization AppM where
 instance ConsoleRenderer AppM where
   renderConsole path authMode enableTelemetry consoleAssetsDir =
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
+
+instance WS.MonadWSLog AppM where
+  logWSLog = unLogger
 
 mkConsoleHTML :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =

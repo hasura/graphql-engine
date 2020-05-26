@@ -63,6 +63,7 @@ import qualified Hasura.GraphQL.Explain                 as GE
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
+import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.API.PGDump               as PGD
 
@@ -454,6 +455,7 @@ mkWaiApp
      , UserAuthentication m
      , MetadataApiAuthorization m
      , LA.Forall (LA.Pure m)
+     , WS.MonadWSLog m
      )
   => Q.TxIsolation
   -> L.Logger L.Hasura
