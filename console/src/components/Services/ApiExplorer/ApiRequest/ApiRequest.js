@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-
 import jwt from 'jsonwebtoken';
 
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import Modal from '../../../Common/Modal/Modal';
+import TooltipCustom from '../../../Common/Tooltip/Tooltip';
 
 import {
   changeRequestHeader,
@@ -15,9 +15,11 @@ import {
   unfocusTypingHeader,
   verifyJWTToken,
   setHeadersBulk,
+  switchGraphiQLMode,
 } from '../Actions';
 
 import GraphiQLWrapper from '../GraphiQLWrapper/GraphiQLWrapper';
+import Toggle from '../../../Common/Toggle/Toggle';
 
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 
@@ -35,6 +37,7 @@ import {
   persistAdminSecretHeaderWasAdded,
   removePersistedAdminSecretHeaderWasAdded,
 } from './utils';
+import { getGraphQLEndpoint } from '../utils';
 
 import styles from '../ApiExplorer.scss';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../../constants';
@@ -207,6 +210,7 @@ class ApiRequest extends Component {
   }
 
   render() {
+    const { mode, dispatch, loading } = this.props;
     const { isAnalyzingToken, tokenInfo, analyzingHeaderRow } = this.state;
 
     const { is_jwt_set: isJWTSet = false } = this.props.serverConfig;
@@ -225,6 +229,11 @@ class ApiRequest extends Component {
         setEndPointSectionIsOpen(newIsOpen);
 
         this.setState({ endpointSectionIsOpen: newIsOpen });
+      };
+
+      const toggleGraphiqlMode = () => {
+        if (loading) return;
+        dispatch(switchGraphiQLMode(mode === 'relay' ? 'graphql' : 'relay'));
       };
 
       return (
@@ -259,8 +268,7 @@ class ApiRequest extends Component {
                   </button>
                 </div>
                 <input
-                  onChange={this.onUrlChanged}
-                  value={this.props.url || ''}
+                  value={getGraphQLEndpoint(mode)}
                   type="text"
                   readOnly
                   className={styles.inputGroupInput + ' form-control '}
@@ -268,6 +276,26 @@ class ApiRequest extends Component {
               </div>
             </div>
             <div className={styles.stickySeparator} />
+            <div
+              className={`${styles.display_flex} ${styles.graphiqlModeToggle} ${styles.cursorPointer}`}
+              onClick={toggleGraphiqlMode}
+            >
+              <Toggle
+                checked={mode === 'relay'}
+                className={`${styles.display_flex} ${styles.add_mar_right_mid}`}
+                readOnly
+                disabled={loading}
+                icons={false}
+              />
+              <span className={styles.add_mar_right_mid}>Relay API</span>
+              <TooltipCustom
+                id="relay-mode-toggle"
+                placement="left"
+                message={
+                  'Toggle to point this GraphiQL to a relay-compliant GraphQL API served at /v1/relay'
+                }
+              />
+            </div>
           </div>
         </CollapsibleToggle>
       );
@@ -564,6 +592,7 @@ class ApiRequest extends Component {
           return (
             <div className={styles.apiRequestBody}>
               <GraphiQLWrapper
+                mode={mode}
                 data={this.props}
                 numberOfTables={this.props.numberOfTables}
                 dispatch={this.props.dispatch}

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { push } from 'react-router-redux';
 import GraphiQL from 'graphiql';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
@@ -26,6 +27,7 @@ import {
   setTypeDefinition,
   setDerivedActionParentOperation,
 } from '../../Actions/Add/reducer';
+import { getGraphQLEndpoint } from '../utils';
 
 import 'graphiql/graphiql.css';
 import './GraphiQL.css';
@@ -52,7 +54,14 @@ class GraphiQLWrapper extends Component {
   render() {
     const styles = require('../../../Common/Common.scss');
 
-    const { numberOfTables, urlParams, headerFocus, dispatch } = this.props;
+    const {
+      numberOfTables,
+      urlParams,
+      headerFocus,
+      dispatch,
+      mode,
+      loading,
+    } = this.props;
     const graphqlNetworkData = this.props.data;
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {
@@ -61,14 +70,14 @@ class GraphiQLWrapper extends Component {
 
       return graphQLFetcherFinal(
         graphQLParams,
-        graphqlNetworkData.url,
+        getGraphQLEndpoint(mode),
         graphqlNetworkData.headers
       );
     };
 
     const analyzeFetcherInstance = analyzeFetcher(
-      graphqlNetworkData.url,
-      graphqlNetworkData.headers
+      graphqlNetworkData.headers,
+      mode
     );
 
     let graphiqlContext;
@@ -170,12 +179,14 @@ class GraphiQLWrapper extends Component {
             onClick: () => window.open(voyagerUrl, '_blank'),
             icon: <i className="fa fa-external-link" aria-hidden="true" />,
           },
-          {
+        ];
+        if (mode === 'graphql') {
+          buttons.push({
             label: 'Derive action',
             title: 'Derive action for the given mutation',
             onClick: deriveActionFromOperation,
-          },
-        ];
+          });
+        }
         return buttons.map(b => {
           return <GraphiQL.Button key={b.label} {...b} />;
         });
@@ -183,12 +194,12 @@ class GraphiQLWrapper extends Component {
 
       return (
         <GraphiQL
+          {...graphiqlProps}
           ref={c => {
             graphiqlContext = c;
           }}
           fetcher={graphQLFetcher}
           voyagerUrl={voyagerUrl}
-          {...graphiqlProps}
         >
           <GraphiQL.Logo>GraphiQL</GraphiQL.Logo>
           <GraphiQL.Toolbar>
@@ -210,13 +221,16 @@ class GraphiQLWrapper extends Component {
         >
           <OneGraphExplorer
             renderGraphiql={renderGraphiql}
-            endpoint={graphqlNetworkData.url}
+            endpoint={getGraphQLEndpoint(mode)}
+            dispatch={dispatch}
             headers={graphqlNetworkData.headers}
             headersInitialised={graphqlNetworkData.headersInitialised}
             headerFocus={headerFocus}
             urlParams={urlParams}
+            loading={loading}
             numberOfTables={numberOfTables}
             dispatch={dispatch}
+            mode={mode}
           />
         </div>
       </GraphiQLErrorBoundary>
@@ -232,4 +246,9 @@ GraphiQLWrapper.propTypes = {
   urlParams: PropTypes.object.isRequired,
 };
 
-export default GraphiQLWrapper;
+const mapStateToProps = state => ({
+  mode: state.apiexplorer.mode,
+  loading: state.apiexplorer.loading,
+});
+
+export default connect(mapStateToProps)(GraphiQLWrapper);
