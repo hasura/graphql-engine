@@ -36,9 +36,9 @@ class RelationshipsView extends Component {
       migrationMode,
       readOnlyMode,
       schemaList,
-      remoteRelationships,
       remoteSchemas,
     } = this.props;
+
     const styles = require('../TableModify/ModifyTable.scss');
     const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
@@ -140,9 +140,9 @@ class RelationshipsView extends Component {
         <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
           <h4 className={styles.subheading_text}>Remote Relationships</h4>
           <RemoteRelationships
-            remoteRelationships={remoteRelationships}
-            dispatch={dispatch}
-            tableSchema={tableSchema}
+            relationships={tableSchema.remote_relationships}
+            reduxDispatch={dispatch}
+            table={tableSchema}
             remoteSchemas={remoteSchemas}
           />
         </div>

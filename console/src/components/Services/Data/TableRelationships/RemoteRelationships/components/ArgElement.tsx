@@ -20,29 +20,24 @@ const ArgElement: React.FC<Props> = ({
 }) => {
   const style = {
     marginLeft: `${(arg.depth + arg.parentFieldDepth) * 20 + 20}px`,
-    color: '#8B2BB9',
-    fontStyle: 'italic',
   };
   const toggle = () => handleToggle(arg);
   return (
     <div
-      className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
       style={style}
+      className={`${styles.display_flex} ${styles.add_mar_bottom_mid} ${styles.argElement}`}
     >
-      <div className={styles.add_mar_right_small}>
-        <input
-          checked={arg.isChecked}
-          type="checkbox"
-          className={styles.cursorPointer}
-          onChange={toggle}
-        />
-      </div>
       <div
         className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
         onClick={toggle}
         role="checkbox"
         aria-checked={arg.isChecked}
       >
+        <input
+          checked={arg.isChecked}
+          type="checkbox"
+          className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+        />
         {arg.name}
       </div>
       {arg.isChecked && arg.isLeafArg && (

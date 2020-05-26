@@ -1,5 +1,6 @@
 import React from 'react';
 import { TreeFieldElement } from '../utils';
+import OverlayMessage from '../../../../../Common/OverlayMessage';
 import styles from '../SchemaExplorer.scss';
 
 type Props = {
@@ -10,37 +11,39 @@ type Props = {
 const FieldElement: React.FC<Props> = ({ field, handleToggle }) => {
   const style = {
     marginLeft: `${field.depth * 20}px`,
-    color: 'rgb(31, 97, 160)',
-    fontStyle: 'normal',
   };
-  const toggle = () => handleToggle(field);
-  const title = field.enabled
-    ? undefined
+  const toggle = () => {
+    if (!field.enabled) {
+      return;
+    }
+    handleToggle(field);
+  };
+  const overlayMessage = field.enabled
+    ? ''
     : 'Only fields with arguments or subfields can be toggled';
   return (
-    <div
-      className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
-      style={style}
-      title={title}
-    >
-      <div className={styles.add_mar_right_small}>
-        <input
-          checked={field.isChecked}
-          type="checkbox"
-          disabled={!field.enabled}
-          className={styles.cursorPointer}
-          onChange={toggle}
-        />
-      </div>
+    <OverlayMessage message={overlayMessage}>
       <div
-        className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
-        onClick={toggle}
-        role="checkbox"
-        aria-checked={field.isChecked}
+        style={style}
+        className={`${styles.display_flex} ${styles.add_mar_bottom_mid} ${
+          field.enabled ? styles.fieldElement : styles.fieldElementDisabled
+        }`}
       >
-        {field.name}
+        <div
+          className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+          onClick={toggle}
+          role="checkbox"
+          aria-checked={field.isChecked}
+        >
+          <input
+            checked={field.isChecked}
+            type="checkbox"
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+          />
+          {field.name}
+        </div>
       </div>
-    </div>
+    </OverlayMessage>
   );
 };
 
