@@ -23,6 +23,7 @@ import {
   TOGGLE_ENUM_FAILURE,
   MODIFY_ROOT_FIELD,
   SET_CHECK_CONSTRAINTS,
+  SET_VIEW_DEF_SQL,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -113,6 +114,11 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         viewDefinitionError: action.data,
+      };
+    case SET_VIEW_DEF_SQL:
+      return {
+        ...modifyState,
+        viewDefSql: action.data,
       };
 
     case REL_ADD_NEW_CLICKED:

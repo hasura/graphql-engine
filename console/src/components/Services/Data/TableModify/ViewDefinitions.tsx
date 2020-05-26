@@ -1,30 +1,26 @@
 import React from 'react';
 import styles from './ModifyTable.scss';
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
-import Button from '../../../Common/Button/Button';
+import RawSqlButton from '../Common/Components/RawSqlButton';
 
 export interface ViewDefinitionsProps {
-  modifyViewOnClick: () => void;
+  dispatch: () => void;
   sql: string | object;
 }
 
-const ViewDefinitions: React.FC<ViewDefinitionsProps> = ({
-  modifyViewOnClick,
-  sql,
-}) => (
+const ViewDefinitions: React.FC<ViewDefinitionsProps> = ({ dispatch, sql }) => (
   <>
     <h4 className={styles.subheading_text}>
       View Definition:
       <span className={styles.add_mar_left}>
-        <Button
-          type="submit"
-          size="xs"
+        <RawSqlButton
           className={styles.add_mar_right}
-          onClick={modifyViewOnClick}
+          sql={sql}
+          dispatch={dispatch}
           data-test="modify-view"
         >
           Modify
-        </Button>
+        </RawSqlButton>
       </span>
     </h4>
 

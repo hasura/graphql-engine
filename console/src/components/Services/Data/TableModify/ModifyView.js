@@ -31,7 +31,7 @@ import ViewDefinitions from './ViewDefinitions';
 
 const ModifyView = props => {
   const {
-    sql,
+    viewDefSql,
     tableName,
     tableType,
     allSchemas,
@@ -97,12 +97,6 @@ const ModifyView = props => {
       </div>
     );
   }
-
-  const modifyViewDefinition = viewName => {
-    // fetch the definition
-    dispatch(fetchViewDefinition(viewName, true, true));
-    // redirect the user to run_sql page and set state
-  };
 
   const getViewColumnsSection = () => {
     const columns = tableSchema.columns.sort(ordinalColSort);
@@ -200,10 +194,6 @@ const ModifyView = props => {
     );
   };
 
-  const modifyViewOnClick = () => {
-    modifyViewDefinition(tableName);
-  };
-
   const untrackOnclick = () => {
     const confirmMessage = `This will remove the view "${tableName}" from the GraphQL schema`;
     const isOk = getConfirmation(confirmMessage);
@@ -265,7 +255,7 @@ const ModifyView = props => {
           <h4 className={styles.subheading_text}>Columns</h4>
           {getViewColumnsSection()}
           <br />
-          <ViewDefinitions modifyViewOnClick={modifyViewOnClick} sql={sql} />
+          <ViewDefinitions dispatch={dispatch} sql={viewDefSql} />
 
           <hr />
           {getViewRootFieldsSection()}
@@ -318,7 +308,6 @@ const mapStateToProps = (state, ownProps) => {
     tableType,
     currentSchema: schemaName,
     allSchemas: state.tables.allSchemas,
-    sql: state.rawSQL.viewSql,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,
