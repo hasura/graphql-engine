@@ -49,6 +49,7 @@ import           Hasura.Server.Auth                     (AuthMode (..), UserAuth
 import           Hasura.Server.Compression
 import           Hasura.Server.Cors
 import           Hasura.Server.Init
+import           Hasura.GraphQL.Logging                 (MonadQueryLog(..))
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware               (corsMiddleware)
 import           Hasura.Server.Migrate                  (migrateCatalog)
@@ -318,7 +319,7 @@ v1QueryHandler query = do
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
 v1Alpha1GQHandler
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadIO m, MonadQueryLog m)
   => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
@@ -338,7 +339,7 @@ v1Alpha1GQHandler query = do
   flip runReaderT execCtx $ GH.runGQBatched requestId responseErrorsConfig userInfo reqHeaders query
 
 v1GQHandler
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadIO m, MonadQueryLog m)
   => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler
 
@@ -451,6 +452,7 @@ mkWaiApp
      , MonadStateless IO m
      , ConsoleRenderer m
      , HttpLog m
+     , MonadQueryLog m
      , UserAuthentication m
      , MetadataApiAuthorization m
      , LA.Forall (LA.Pure m)
@@ -548,7 +550,15 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
       pure (planCache, cacheRef, view _2 <$> lastUpdateEvent)
 
 httpApp
-  :: (HasVersion, MonadIO m, MonadBaseControl IO m, ConsoleRenderer m, HttpLog m, UserAuthentication m, MetadataApiAuthorization m)
+  :: ( HasVersion
+     , MonadIO m
+     , MonadBaseControl IO m
+     , ConsoleRenderer m
+     , HttpLog m
+     , MonadQueryLog m
+     , UserAuthentication m
+     , MetadataApiAuthorization m
+     )
   => CorsConfig
   -> ServerCtx
   -> Bool

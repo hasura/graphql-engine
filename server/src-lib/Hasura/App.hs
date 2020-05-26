@@ -37,6 +37,7 @@ import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
+import           Hasura.GraphQL.Logging               (MonadQueryLog (..), QueryLog (..))
 import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
 import           Hasura.Logging
 import           Hasura.Prelude
@@ -192,6 +193,7 @@ runHGEServer
      , UserAuthentication m
      , MetadataApiAuthorization m
      , HttpLog m
+     , MonadQueryLog m
      , ConsoleRenderer m
      , LA.Forall (LA.Pure m)
      )
@@ -420,6 +422,10 @@ instance MetadataApiAuthorization AppM where
 instance ConsoleRenderer AppM where
   renderConsole path authMode enableTelemetry consoleAssetsDir =
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
+
+instance MonadQueryLog AppM where
+  logQueryLog logger query genSqlM reqId =
+    unLogger logger $ QueryLog query genSqlM reqId
 
 mkConsoleHTML :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =

@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+
 module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   , runGQBatched
@@ -7,7 +8,7 @@ module Hasura.GraphQL.Transport.HTTP
 import qualified Network.HTTP.Types                     as N
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.Prelude
@@ -19,7 +20,6 @@ import           Hasura.Session
 
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
-import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
@@ -29,6 +29,7 @@ runGQ
      , MonadIO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
+     , MonadQueryLog m
      )
   => RequestId
   -> UserInfo
@@ -61,6 +62,7 @@ runGQBatched
      , MonadIO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
+     , MonadQueryLog m
      )
   => RequestId
   -> ResponseInternalErrorsConfig
@@ -88,6 +90,7 @@ runHasuraGQ
   :: ( MonadIO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
+     , MonadQueryLog m
      )
   => RequestId
   -> GQLReqUnparsed
@@ -98,14 +101,11 @@ runHasuraGQ
   -- spent in the PG query; for telemetry.
 runHasuraGQ reqId query userInfo resolvedOp = do
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
+  logQuery' logger
   (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ case resolvedOp of
-    E.ExOpQuery tx genSql  -> do
-      -- log the generated SQL and the graphql query
-      L.unLogger logger $ QueryLog query genSql reqId
+    E.ExOpQuery tx _ -> do
       ([],) <$> runLazyTx' pgExecCtx tx
     E.ExOpMutation respHeaders tx -> do
-      -- log the graphql query
-      L.unLogger logger $ QueryLog query Nothing reqId
       (respHeaders,) <$> runLazyTx pgExecCtx Q.ReadWrite (withUserInfo userInfo tx)
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
@@ -114,3 +114,11 @@ runHasuraGQ reqId query userInfo resolvedOp = do
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
       telemQueryType = case resolvedOp of E.ExOpMutation{} -> Telem.Mutation ; _ -> Telem.Query
   return (telemTimeIO, telemQueryType, respHdrs, json)
+
+  where
+    logQuery' logger = case resolvedOp of
+      -- log the generated SQL and the graphql query
+      E.ExOpQuery _ genSql -> logQueryLog logger query genSql reqId
+      -- log the graphql query
+      E.ExOpMutation _ _   -> logQueryLog logger query Nothing reqId
+      E.ExOpSubs _         -> return ()

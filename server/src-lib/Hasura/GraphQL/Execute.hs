@@ -34,7 +34,7 @@ import qualified Network.Wreq                           as Wreq
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
 import           Hasura.GraphQL.Resolve.Action
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Schema
@@ -352,6 +352,7 @@ execRemoteGQ
      , MonadIO m
      , MonadError QErr m
      , MonadReader ExecutionCtx m
+     , MonadQueryLog m
      )
   => RequestId
   -> UserInfo
@@ -387,7 +388,7 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
 
-  L.unLogger logger $ QueryLog q Nothing reqId
+  logQueryLog logger q Nothing reqId
   (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
   let !httpResp = HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) $ mkSetCookieHeaders resp
