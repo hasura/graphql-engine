@@ -11,7 +11,6 @@ import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
 import           System.Environment
 import           System.Exit
 import           System.Process
-import           Data.Aeson.Internal
 
 import qualified Data.ByteString            as B
 import qualified Data.CaseInsensitive       as CI
@@ -29,7 +28,6 @@ import qualified Network.Wreq               as Wreq
 import qualified Text.Regex.TDFA            as TDFA
 import qualified Text.Regex.TDFA.ReadRegex  as TDFA
 import qualified Text.Regex.TDFA.TDFA       as TDFA
-import qualified Data.Vector                as V
 
 import           Hasura.RQL.Instances       ()
 

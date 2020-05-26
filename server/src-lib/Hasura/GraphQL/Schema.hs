@@ -253,7 +253,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
     -- table obj
     selectObjects = case selPermM of
       Just (_, selFlds) ->
-        [ mkTableObj tn False descM selFlds
+        [ mkTableObj tn descM selFlds
         ]
       Nothing -> []
 

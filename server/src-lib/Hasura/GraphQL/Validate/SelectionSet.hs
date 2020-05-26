@@ -1,5 +1,5 @@
+{-# LANGUAGE RecordWildCards        #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
-{-# LANGUAGE RecordWildCards #-}
 module Hasura.GraphQL.Validate.SelectionSet
   ( ArgsMap
   , Field(..)
@@ -12,22 +12,24 @@ module Hasura.GraphQL.Validate.SelectionSet
   , RootSelectionSet(..)
   , parseObjectSelectionSet
   , asObjectSelectionSet
+  , asInterfaceSelectionSet
+  , getMemberSelectionSet
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Text                           as T
 import qualified Data.HashMap.Strict                 as Map
-import qualified Data.HashSet                        as Set
 import qualified Data.HashMap.Strict.InsOrd.Extended as OMap
-import qualified Language.GraphQL.Draft.Syntax       as G
-import qualified Data.Sequence.NonEmpty              as NE
+import qualified Data.HashSet                        as Set
 import qualified Data.List                           as L
+import qualified Data.Sequence.NonEmpty              as NE
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
-import           Hasura.GraphQL.Validate.Context
-import           Hasura.GraphQL.Validate.Types
-import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.NormalForm
+import           Hasura.GraphQL.Validate.Context
+import           Hasura.GraphQL.Validate.InputValue
+import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Value
 
@@ -116,9 +118,12 @@ parseSelectionSet
   => a
   -> G.SelectionSet
   -> m (NormalizedSelectionSet a)
-parseSelectionSet fieldTypeInfo selectionSet =
+parseSelectionSet fieldTypeInfo selectionSet = do
+  visitedFragments <- get
   withPathK "selectionSet" $ do
-    normalizedSelections <- catMaybes <$> mapM (parseSelection fieldTypeInfo) selectionSet
+    -- The visited fragments state shouldn't accumulate over a selection set.
+    normalizedSelections <-
+      catMaybes <$> mapM (parseSelection visitedFragments fieldTypeInfo) selectionSet
     mergeNormalizedSelections normalizedSelections
   where
     mergeNormalizedSelections = mergeNormalizedSelectionSets . map selectionToSelectionSet
@@ -129,27 +134,28 @@ parseSelection
   :: ( MonadReader ValidationCtx m
      , MonadError QErr m
      , MonadReusability m
-     , MonadState [G.Name] m
      , HasSelectionSet a
      )
-  => a -- parent type info
+  => [G.Name]
+  -> a -- parent type info
   -> G.Selection
   -> m (Maybe (NormalizedSelection a))
-parseSelection parentTypeInfo = \case
-  G.SelectionField fld -> withPathK (G.unName $ G._fName fld) $ do
-    let fieldName = G._fName fld
-        fieldAlias = fromMaybe (G.Alias fieldName) $ G._fAlias fld
-    fmap (SelectionField fieldAlias) <$> parseField_ parentTypeInfo fld
-  G.SelectionFragmentSpread (G.FragmentSpread name directives) -> do
-    FragDef _ fragmentTyInfo fragmentSelectionSet <- getFragmentInfo name
-    withPathK (G.unName name) $
-      fmap (SelectionFragmentSpread name) <$>
-      parseFragment parentTypeInfo fragmentTyInfo directives fragmentSelectionSet
-  G.SelectionInlineFragment (G.InlineFragment {..}) -> do
-    let fragmentType = fromMaybe (getTypename parentTypeInfo) _ifTypeCondition
-    fragmentTyInfo <- getFragmentTyInfo fragmentType
-    withPathK "inlineFragment" $ fmap SelectionInlineFragmentSpread <$>
-      parseFragment parentTypeInfo fragmentTyInfo _ifDirectives _ifSelectionSet
+parseSelection visitedFragments parentTypeInfo =
+  flip evalStateT visitedFragments . \case
+    G.SelectionField fld -> withPathK (G.unName $ G._fName fld) $ do
+      let fieldName = G._fName fld
+          fieldAlias = fromMaybe (G.Alias fieldName) $ G._fAlias fld
+      fmap (SelectionField fieldAlias) <$> parseField_ parentTypeInfo fld
+    G.SelectionFragmentSpread (G.FragmentSpread name directives) -> do
+      FragDef _ fragmentTyInfo fragmentSelectionSet <- getFragmentInfo name
+      withPathK (G.unName name) $
+        fmap (SelectionFragmentSpread name) <$>
+        parseFragment parentTypeInfo fragmentTyInfo directives fragmentSelectionSet
+    G.SelectionInlineFragment G.InlineFragment{..} -> do
+      let fragmentType = fromMaybe (getTypename parentTypeInfo) _ifTypeCondition
+      fragmentTyInfo <- getFragmentTyInfo fragmentType
+      withPathK "inlineFragment" $ fmap SelectionInlineFragmentSpread <$>
+        parseFragment parentTypeInfo fragmentTyInfo _ifDirectives _ifSelectionSet
 
 parseFragment
   :: ( MonadReader ValidationCtx m
@@ -193,13 +199,13 @@ parseFragment parentTyInfo fragmentTyInfo directives fragmentSelectionSet = do
     parentTypeMembers = getMemberTypes parentTyInfo
 
     fragmentType = case fragmentTyInfo of
-      FragmentTyObject tyInfo -> getTypename tyInfo
+      FragmentTyObject tyInfo    -> getTypename tyInfo
       FragmentTyInterface tyInfo -> getTypename tyInfo
-      FragmentTyUnion tyInfo -> getTypename tyInfo
+      FragmentTyUnion tyInfo     -> getTypename tyInfo
     fragmentTypeMembers = case fragmentTyInfo of
-      FragmentTyObject tyInfo -> getMemberTypes tyInfo
+      FragmentTyObject tyInfo    -> getMemberTypes tyInfo
       FragmentTyInterface tyInfo -> getMemberTypes tyInfo
-      FragmentTyUnion tyInfo -> getMemberTypes tyInfo
+      FragmentTyUnion tyInfo     -> getMemberTypes tyInfo
 
 class IsField f => MergeableField f where
 
@@ -542,4 +548,3 @@ instance HasSelectionSet UnionTyInfo where
     ScopedSelectionSet (AliasedFields mempty) $
       Map.fromList $ flip map (toList commonTypes) $
       \commonType -> (commonType, getMemberSelectionSet commonType unionSelectionSet)
-

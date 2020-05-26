@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Schema.Select
   ( mkTableObj
+  , mkRelayTableObj
   , mkTableAggObj
   , mkSelColumnTy
   , mkTableAggregateFieldsObj
@@ -206,11 +207,10 @@ type table {
 -}
 mkTableObj
   :: QualifiedTable
-  -> Bool
   -> Maybe PGDescription
   -> [SelField]
   -> ObjTyInfo
-mkTableObj tn isRelay descM allowedFlds =
+mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
     flds = pgColumnFields <> relFlds <> computedFlds
@@ -218,7 +218,27 @@ mkTableObj tn isRelay descM allowedFlds =
     relFlds = concatMap mkRelationshipField' $ getRelationshipFields allowedFlds
     computedFlds = map mkComputedFieldFld $ getComputedFields allowedFlds
     mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ maybePkCols isNullable) =
-      mkRelationshipField allowAgg relInfo isRelay maybePkCols isNullable
+      mkRelationshipField allowAgg relInfo False maybePkCols isNullable
+    desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
+
+mkRelayTableObj
+  :: QualifiedTable
+  -> Maybe PGDescription
+  -> [SelField]
+  -> ObjTyInfo
+mkRelayTableObj tn descM allowedFlds =
+  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
+  where
+    flds = nodeIdField:pgColumnFields <> relFlds <> computedFlds
+    nodeIdField = mkHsraObjFldInfo Nothing "id" mempty nodeIdType
+    pgColumnFields = map mkPGColFld $
+                     -- Remove "id" column
+                     filter ((/=) "id" . getPGColTxt . pgiColumn) $
+                     getPGColumnFields allowedFlds
+    relFlds = concatMap mkRelationshipField' $ getRelationshipFields allowedFlds
+    computedFlds = map mkComputedFieldFld $ getComputedFields allowedFlds
+    mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ maybePkCols isNullable) =
+      mkRelationshipField allowAgg relInfo True maybePkCols isNullable
     desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
 
 {-

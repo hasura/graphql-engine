@@ -22,7 +22,6 @@ import           Data.Has
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd.Extended    as OMap
 import qualified Data.HashSet                           as HS
-import qualified Data.Sequence                          as Seq
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.GraphQL.Schema
@@ -163,16 +162,16 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   case G._todType opDef of
     G.OperationTypeQuery -> return $ RQuery selSet
     G.OperationTypeMutation -> return $ RMutation selSet
-    G.OperationTypeSubscription -> do
+    G.OperationTypeSubscription ->
       case OMap.toList $ unAliasedFields $ unObjectSelectionSet selSet of
-        []     -> throw500 "empty selset for subscription"
-        ((alias, field):rst) -> do
+        []             -> throw500 "empty selset for subscription"
+        (_:rst) -> do
           -- As an internal testing feature, we support subscribing to multiple
           -- selection sets.  First check if the corresponding directive is set.
-          let multipleAllowed = elem (G.Directive "_multiple_top_level_fields" []) (G._todDirectives opDef)
+          let multipleAllowed = G.Directive "_multiple_top_level_fields" [] `elem` G._todDirectives opDef
           unless (multipleAllowed || null rst) $
             throwVE "subscriptions must select one top level field"
-          return $ RSubscription alias field
+          return $ RSubscription selSet
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery

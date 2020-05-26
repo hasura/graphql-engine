@@ -272,13 +272,13 @@ selectP2 jsonAggSelect (sel, p) =
   where
     selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel
 
-selectQuerySQL :: JsonAggSelect -> AnnSimpleSel -> Q.Query
-selectQuerySQL jsonAggSelect sel =
-  Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
+-- selectQuerySQL :: JsonAggSelect -> AnnSimpleSel -> Q.Query
+-- selectQuerySQL jsonAggSelect sel =
+--   Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
 
-selectAggQuerySQL :: AnnAggregateSelect -> Q.Query
-selectAggQuerySQL =
-  Q.fromBuilder . toSQL . mkAggregateSelect
+-- selectAggQuerySQL :: AnnAggregateSelect -> Q.Query
+-- selectAggQuerySQL =
+--   Q.fromBuilder . toSQL . mkAggregateSelect
 
 asSingleRowJsonResp :: Q.Query -> [Q.PrepArg] -> Q.TxE QErr EncJSON
 asSingleRowJsonResp query args =

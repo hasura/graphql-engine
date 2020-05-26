@@ -1,5 +1,5 @@
+{-# LANGUAGE RecordWildCards        #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
-{-# LANGUAGE RecordWildCards #-}
 module Hasura.GraphQL.NormalForm
   ( Selection(..)
   , NormalizedSelection
@@ -7,7 +7,7 @@ module Hasura.GraphQL.NormalForm
   , NormalizedField
   , SelectionSet(..)
   , RootSelectionSet(..)
-  , toGraphQLOperation
+  -- , toGraphQLOperation
   , ArgsMap
   , Field(..)
   , Typename(..)
@@ -19,6 +19,7 @@ module Hasura.GraphQL.NormalForm
   , ObjectSelectionSetMap
   , traverseObjectSelectionSet
   , InterfaceSelectionSet
+  , asInterfaceSelectionSet
   , getMemberSelectionSet
   , UnionSelectionSet
   , ScopedSelectionSet(..)
@@ -47,10 +48,10 @@ import qualified Data.HashMap.Strict                 as Map
 import qualified Data.HashMap.Strict.InsOrd.Extended as OMap
 import qualified Language.GraphQL.Draft.Syntax       as G
 
+import qualified Hasura.RQL.Types.Column             as RQL
+import qualified Hasura.RQL.Types.Error              as RQL
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import qualified Hasura.RQL.Types.Column       as RQL
-import qualified Hasura.RQL.Types.Error        as RQL
 
 data Selection f s
   = SelectionField !G.Alias !f
@@ -109,31 +110,29 @@ type UnionSelectionSet = ScopedSelectionSet Typename
 data RootSelectionSet
   = RQuery !ObjectSelectionSet
   | RMutation !ObjectSelectionSet
-  | RSubscription !G.Alias !Field
+  | RSubscription !ObjectSelectionSet
   deriving (Show, Eq)
 
-toGraphQLOperation :: RootSelectionSet -> G.ExecutableDefinition
-toGraphQLOperation = \case
-  RQuery selectionSet ->
-    mkExecutableDefinition G.OperationTypeQuery $
-    toGraphQLSelectionSet $ SelectionSetObject selectionSet
-  RMutation selectionSet ->
-    mkExecutableDefinition G.OperationTypeQuery $
-    toGraphQLSelectionSet $ SelectionSetObject selectionSet
-  RSubscription alias field ->
-    mkExecutableDefinition G.OperationTypeSubscription $
-    toGraphQLSelectionSet $ SelectionSetObject $ ObjectSelectionSet $
-      AliasedFields $ OMap.singleton alias field
-  where
-    mkExecutableDefinition operationType selectionSet =
-      G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped $
-      G.TypedOperationDefinition
-        { G._todName = Nothing -- TODO, store the name too?
-        , G._todDirectives = []
-        , G._todType = operationType
-        , G._todVariableDefinitions = []
-        , G._todSelectionSet = selectionSet
-        }
+-- toGraphQLOperation :: RootSelectionSet -> G.ExecutableDefinition
+-- toGraphQLOperation = \case
+--   RQuery selectionSet ->
+--     mkExecutableDefinition G.OperationTypeQuery $
+--     toGraphQLSelectionSet $ SelectionSetObject selectionSet
+--   RMutation selectionSet ->
+--     mkExecutableDefinition G.OperationTypeQuery $
+--     toGraphQLSelectionSet $ SelectionSetObject selectionSet
+--   RSubscription opDef _ ->
+--     G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped opDef
+--   where
+--     mkExecutableDefinition operationType selectionSet =
+--       G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped $
+--       G.TypedOperationDefinition
+--         { G._todName = Nothing -- TODO, store the name too?
+--         , G._todDirectives = []
+--         , G._todType = operationType
+--         , G._todVariableDefinitions = []
+--         , G._todSelectionSet = selectionSet
+--         }
 
 
 data SelectionSet
@@ -164,6 +163,12 @@ getInterfaceSelectionSet :: SelectionSet -> Maybe InterfaceSelectionSet
 getInterfaceSelectionSet = \case
   SelectionSetInterface s -> pure s
   _ -> Nothing
+
+asInterfaceSelectionSet
+  :: (MonadError RQL.QErr m) => SelectionSet -> m InterfaceSelectionSet
+asInterfaceSelectionSet selectionSet =
+  onNothing (getInterfaceSelectionSet selectionSet) $
+  RQL.throw500 "expecting InterfaceSelectionSet"
 
 type ArgsMap = Map.HashMap G.Name AnnInpVal
 

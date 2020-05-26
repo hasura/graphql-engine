@@ -175,6 +175,7 @@ data AnnFieldG v
   | AFObjectRelation !(ObjectRelationSelectG v)
   | AFArrayRelation !(ArraySelectG v)
   | AFComputedField !(ComputedFieldSelect v)
+  | AFNodeId !QualifiedTable !(NonEmpty PGColumnInfo)
   | AFExpression !T.Text
   deriving (Show, Eq)
 
@@ -194,6 +195,7 @@ traverseAnnField f = \case
   AFObjectRelation sel -> AFObjectRelation <$> traverse (traverseAnnSimpleSelect f) sel
   AFArrayRelation sel -> AFArrayRelation <$> traverseArraySelect f sel
   AFComputedField sel -> AFComputedField <$> traverseComputedFieldSelect f sel
+  AFNodeId qt pKeys -> pure $ AFNodeId qt pKeys
   AFExpression t -> AFExpression <$> pure t
 
 type AnnField = AnnFieldG S.SQLExp

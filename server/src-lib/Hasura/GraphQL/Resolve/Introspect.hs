@@ -44,7 +44,7 @@ withSubFields
   -> m J.Object
 withSubFields selSet fn = do
   objectSelectionSet <- asObjectSelectionSet selSet
-  fmap Map.fromList $ traverseObjectSelectionSet objectSelectionSet fn
+  Map.fromList <$> traverseObjectSelectionSet objectSelectionSet fn
   -- val <- fn fld
   -- return (G.unName $ G.unAlias $ _fAlias fld, val)
 
@@ -146,7 +146,7 @@ ifaceR'
   => IFaceTyInfo
   -> Field
   -> m J.Object
-ifaceR' i@(IFaceTyInfo descM n flds implementations) fld = do
+ifaceR' i@(IFaceTyInfo descM n flds _) fld = do
   dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
     case _fName subFld of

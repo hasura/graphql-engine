@@ -727,13 +727,15 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     case field of
       AFExpression t -> pure $ S.SELit t
 
+      AFNodeId tn pKeys -> pure $ mkNodeId tn pKeys
+
       AFColumn c -> toSQLCol c
 
       AFObjectRelation objSel -> withWriteObjectRelation $ do
         let AnnRelationSelectG relName relMapping annSel = objSel
             objRelSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
         (selectSource, extractors) <- processAnnSimpleSelect (mkSourcePrefixes objRelSourcePrefix)
-                                        fieldName PLSQNotRequired annSel
+                                      fieldName PLSQNotRequired annSel
         let objRelSource = ObjectRelationSource relName relMapping selectSource
         pure ( objRelSource
              , extractors
@@ -795,6 +797,19 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     withColumnOp colOpM sqlExp = case colOpM of
       Nothing                     -> sqlExp
       Just (ColumnOp opText cExp) -> S.mkSQLOpExp opText sqlExp cExp
+
+    mkNodeId :: QualifiedTable -> NonEmpty PGColumnInfo -> S.SQLExp
+    mkNodeId (QualifiedObject tableSchema tableName) pkeyColumns =
+      let tableObjectExp = S.applyJsonBuildObj
+                           [ S.SELit "schema"
+                           , S.SELit (getSchemaTxt tableSchema)
+                           , S.SELit "name"
+                           , S.SELit (toTxt tableName)
+                           ]
+      in encodeBase64 $ flip S.SETyAnn S.textTypeAnn $ S.applyJsonBuildObj
+         [ S.SELit "table", tableObjectExp
+         , S.SELit "columns", mkPrimaryKeyColumnsObjectExp sourcePrefix pkeyColumns
+         ]
 
 injectJoinCond :: S.BoolExp       -- ^ Join condition
                -> S.BoolExp -- ^ Where condition
@@ -991,6 +1006,22 @@ pageInfoSelectAliasIden = Iden "__page_info"
 cursorsSelectAliasIden :: Iden
 cursorsSelectAliasIden = Iden "__cursors_select"
 
+mkPrimaryKeyColumnsObjectExp :: Iden -> NonEmpty PGColumnInfo -> S.SQLExp
+mkPrimaryKeyColumnsObjectExp sourcePrefix primaryKeyColumns =
+  S.applyJsonBuildObj $ flip concatMap (toList primaryKeyColumns) $
+  \pgColumnInfo ->
+    [ S.SELit $ getPGColTxt $ pgiColumn pgColumnInfo
+    , toJSONableExp False (pgiType pgColumnInfo) False $
+      S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ pgiColumn pgColumnInfo
+    ]
+
+encodeBase64 :: S.SQLExp -> S.SQLExp
+encodeBase64 t =
+  S.SEFnApp "encode"
+  [S.SEFnApp "convert_to" [t, S.SELit "UTF8"] Nothing, S.SELit "base64"]
+  Nothing
+
+
 processConnectionSelect
   :: ( MonadReader Bool m
      , MonadWriter JoinTree m
@@ -1015,7 +1046,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
         Nothing ->
           -- Extract primary key columns from base select along with cursor expression.
           -- Those columns are required to perform connection split via a WHERE clause.
-          mkCursorExtractor primaryKeyColumnsCursor : primaryKeyColumnExtractors
+          mkCursorExtractor (mkPrimaryKeyColumnsObjectExp thisPrefix primaryKeyColumns) : primaryKeyColumnExtractors
       orderByExp = _ssOrderBy selectSource
   (topExtractorExp, exps) <- flip runStateT [] $ processFields orderByExp
   let topExtractor = S.Extractor topExtractorExp $ Just $ S.Alias fieldIden
@@ -1032,14 +1063,6 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
     fieldIden = toIden fieldAlias
     thisPrefix = _pfThis sourcePrefixes
     permLimitSubQuery = PLSQNotRequired
-
-    primaryKeyColumnsCursor =
-      S.applyJsonBuildObj $ flip concatMap (toList primaryKeyColumns) $
-      \pgColumnInfo ->
-        [ S.SELit $ getPGColTxt $ pgiColumn pgColumnInfo
-        , toJSONableExp False (pgiType pgColumnInfo) False $
-          S.mkQIdenExp (mkBaseTableAlias thisPrefix) $ pgiColumn pgColumnInfo
-        ]
 
     primaryKeyColumnExtractors =
       flip map (toList primaryKeyColumns) $
@@ -1072,10 +1095,6 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
         EdgeCursor{} -> mempty
         EdgeNode annFields ->
           mkSimilarArrayFields annFields $ _saOrderBy tableArgs
-
-    encodeBase64 t = S.SEFnApp "encode"
-                     [S.SETyAnn t $ S.TypeAnn "bytea", S.SELit "base64"]
-                     Nothing
 
     mkSimpleJsonAgg rowExp ob =
       let jsonAggExp = S.SEFnApp "json_agg" [rowExp] ob

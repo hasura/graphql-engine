@@ -8,6 +8,8 @@ module Hasura.GraphQL.Resolve.Select
   , convertFuncQueryAgg
   , parseColumns
   , processTableSelectionSet
+  , resolveNodeId
+  , convertNodeSelect
   , AnnSimpleSelect
   ) where
 
@@ -24,7 +26,6 @@ import qualified Data.HashMap.Strict.InsOrd           as OMap
 import qualified Data.List.NonEmpty                   as NE
 import qualified Data.Sequence                        as Seq
 import qualified Data.Text                            as T
-import qualified Data.Text.Conversions                as TC
 import qualified Language.GraphQL.Draft.Syntax        as G
 
 import qualified Hasura.RQL.DML.Select                as RS
@@ -34,6 +35,7 @@ import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Schema                (isAggregateField)
+import           Hasura.GraphQL.Schema.Common         (mkTableTy)
 import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal              (onlyPositiveInt)
@@ -113,6 +115,7 @@ processTableSelectionSet fldTy flds =
       _ -> do
         fldInfo <- getFldInfo fldTy fldName
         case fldInfo of
+          RFNodeId tn pkeys -> pure $ RS.AFNodeId tn pkeys
           RFPGColumn colInfo ->
             RS.mkAnnColumnField colInfo <$> argsToColumnOp (_fArguments fld)
           RFComputedField computedField ->
@@ -550,8 +553,8 @@ parseConnectionArgs pKeyColumns args = do
   maybeSplit <- case (Map.lookup "after" args, Map.lookup "before" args) of
     (Nothing, Nothing) -> pure Nothing
     (Just _, Just _)   -> throwVE "\"after\" and \"before\" are not allowed at once"
-    (Just v, Nothing)  -> fmap ((RS.CSKAfter,) . TC.convertText) <$> asPGColTextM v
-    (Nothing, Just v)  -> fmap ((RS.CSKBefore,) . TC.convertText) <$> asPGColTextM v
+    (Just v, Nothing)  -> fmap ((RS.CSKAfter,) . base64Decode) <$> asPGColTextM v
+    (Nothing, Just v)  -> fmap ((RS.CSKBefore,) . base64Decode) <$> asPGColTextM v
 
   let ordByExpM = NE.nonEmpty =<< ordByExpML
       tableArgs = RS.SelectArgs whereExpM ordByExpM Nothing Nothing Nothing
@@ -562,12 +565,11 @@ parseConnectionArgs pKeyColumns args = do
     validateConnectionSplit
       :: Maybe (NonEmpty (RS.AnnOrderByItemG UnresolvedVal))
       -> RS.ConnectionSplitKind
-      -> Maybe (TC.Base64 BL.ByteString)
+      -> BL.ByteString
       -> m (NonEmpty (RS.ConnectionSplit UnresolvedVal))
-    validateConnectionSplit maybeOrderBys splitKind maybeCursorSplit = do
-      cursorSplit <- maybe throwInvalidCursor pure maybeCursorSplit
+    validateConnectionSplit maybeOrderBys splitKind cursorSplit = do
       cursorValue <- either (const throwInvalidCursor) pure $
-                      J.eitherDecode $ TC.unBase64 cursorSplit
+                      J.eitherDecode cursorSplit
       case maybeOrderBys of
         Nothing -> forM pKeyColumns $
           \pgColumnInfo -> do
@@ -735,3 +737,54 @@ convertConnectionFuncQuery pkCols funcOpCtx fld =
     fromConnectionField selectFrom pkCols permFilter permLimit fld
   where
     FuncQOpCtx qf argSeq _ _ permFilter permLimit = funcOpCtx
+
+resolveNodeId
+  :: forall m. ( MonadError QErr m
+               , MonadReusability m
+               )
+  => Field -> m NodeIdData
+resolveNodeId field =
+  withPathK "selectionSet" $ fieldAsPath field $ do
+    nodeIdText <- asPGColText =<< getArg (_fArguments field) "id"
+    either (const throwInvalidNodeId) pure $
+      J.eitherDecode $ base64Decode nodeIdText
+  where
+    throwInvalidNodeId = throwVE "the node id is invalid"
+
+convertNodeSelect
+  :: ( MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     )
+  => SelOpCtx
+  -> Map.HashMap PGCol J.Value
+  -> Field
+  -> m (RS.AnnSimpleSelG UnresolvedVal)
+convertNodeSelect selOpCtx pkeyColumnValues field =
+  withPathK "selectionSet" $ fieldAsPath field $ do
+    -- Parse selection set as interface
+    ifaceSelectionSet <- asInterfaceSelectionSet $ _fSelSet field
+    let tableObjectType = mkTableTy table
+        selSet = getMemberSelectionSet tableObjectType ifaceSelectionSet
+        unresolvedPermFilter = fmapAnnBoolExp partialSQLExpToUnresolvedVal permFilter
+        tablePerm = RS.TablePerm unresolvedPermFilter permLimit
+    -- Resolve the table selection set
+    annFields <- processTableSelectionSet tableObjectType selSet
+    -- Resolve the Node id primary key column values
+    unresolvedPkeyValues <- flip Map.traverseWithKey pkeyColumnValues $
+      \pgColumn jsonValue -> case Map.lookup pgColumn pgColumnMap of
+        Nothing -> throwVE $ "column " <> pgColumn <<> " not found"
+        Just columnInfo -> (,columnInfo) . UVPG . AnnPGVal Nothing False <$>
+                           parsePGScalarValue (pgiType columnInfo) jsonValue
+    -- Generate the bool expression from the primary key column values
+    let pkeyBoolExp = BoolAnd $ flip map (Map.elems unresolvedPkeyValues) $
+          \(unresolvedValue, columnInfo) -> (BoolFld . AVCol columnInfo) [AEQ True unresolvedValue]
+        selectArgs = RS.noSelectArgs{RS._saWhere = Just pkeyBoolExp}
+    strfyNum <- stringifyNum <$> asks getter
+    pure $ RS.AnnSelectG annFields (RS.FromTable table) tablePerm selectArgs strfyNum
+  where
+    SelOpCtx table _ allColumns permFilter permLimit = selOpCtx
+    pgColumnMap = mapFromL pgiColumn $ Map.elems allColumns

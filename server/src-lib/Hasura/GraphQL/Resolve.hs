@@ -38,12 +38,14 @@ import qualified Hasura.GraphQL.Resolve.Insert     as RI
 import qualified Hasura.GraphQL.Resolve.Introspect as RIntro
 import qualified Hasura.GraphQL.Resolve.Mutation   as RM
 import qualified Hasura.GraphQL.Resolve.Select     as RS
+import qualified Hasura.GraphQL.Schema.Common      as GS
 import qualified Hasura.GraphQL.Validate           as V
 import qualified Hasura.RQL.DML.Select             as DS
 import qualified Hasura.SQL.DML                    as S
 
 data QueryRootFldAST v
-  = QRFPk !(DS.AnnSimpleSelG v)
+  = QRFNode !(DS.AnnSimpleSelG v)
+  | QRFPk !(DS.AnnSimpleSelG v)
   | QRFSimple !(DS.AnnSimpleSelG v)
   | QRFAgg !(DS.AnnAggregateSelectG v)
   | QRFConnection !(DS.ConnectionSelect v)
@@ -61,6 +63,7 @@ traverseQueryRootFldAST
   -> QueryRootFldAST a
   -> f (QueryRootFldAST b)
 traverseQueryRootFldAST f = \case
+  QRFNode s                -> QRFNode <$> DS.traverseAnnSimpleSelect f s
   QRFPk s                  -> QRFPk <$> DS.traverseAnnSimpleSelect f s
   QRFSimple s              -> QRFSimple <$> DS.traverseAnnSimpleSelect f s
   QRFAgg s                 -> QRFAgg <$> DS.traverseAnnAggregateSelect f s
@@ -71,6 +74,7 @@ traverseQueryRootFldAST f = \case
 
 toPGQuery :: QueryRootFldResolved -> Q.Query
 toPGQuery = \case
+  QRFNode s                -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASSingleObject s
   QRFPk s                  -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASSingleObject s
   QRFSimple s              -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASMultipleRows s
   QRFAgg s                 -> Q.fromBuilder $ toSQL $ DS.mkAggregateSelect s
@@ -106,6 +110,13 @@ queryFldToPGAST fld actionExecuter = do
   opCtx <- getOpCtx $ V._fName fld
   userInfo <- asks getter
   case opCtx of
+    QCNodeSelect nodeSelectMap -> do
+      NodeIdData table pkeyColumnValues <- RS.resolveNodeId fld
+      case Map.lookup (GS.mkTableTy table) nodeSelectMap of
+        Nothing       -> throwVE $ "table " <> table <<> " not found"
+        Just selOpCtx -> do
+          validateHdrs userInfo (_socHeaders selOpCtx)
+          QRFNode <$> RS.convertNodeSelect selOpCtx pkeyColumnValues fld
     QCSelect ctx -> do
       validateHdrs userInfo (_socHeaders ctx)
       QRFSimple <$> RS.convertSelect ctx fld
@@ -130,13 +141,11 @@ queryFldToPGAST fld actionExecuter = do
       -- an SQL query, but in case of query actions it's converted into JSON
       -- and included in the action's webhook payload.
       markNotReusable
-      let f = case jsonAggType of
+      let jsonAggType = RA.mkJsonAggSelect $ _saecOutputType ctx
+          f = case jsonAggType of
              DS.JASMultipleRows -> QRFActionExecuteList
              DS.JASSingleObject -> QRFActionExecuteObject
       f <$> actionExecuter (RA.resolveActionQuery fld ctx (_uiSession userInfo))
-      where
-        outputType = _saecOutputType ctx
-        jsonAggType = RA.mkJsonAggSelect outputType
     QCSelectConnection pk ctx ->
       QRFConnection <$> RS.convertConnectionSelect pk ctx fld
     QCFuncConnection pk ctx ->
@@ -200,6 +209,7 @@ getOpCtx f = do
 
 toSQLFromItem :: S.Alias -> QueryRootFldResolved -> S.FromItem
 toSQLFromItem alias = \case
+  QRFNode s                -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
   QRFPk s                  -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
   QRFSimple s              -> fromSelect $ DS.mkSQLSelect DS.JASMultipleRows s
   QRFAgg s                 -> fromSelect $ DS.mkAggregateSelect s

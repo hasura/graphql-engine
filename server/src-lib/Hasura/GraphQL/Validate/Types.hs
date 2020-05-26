@@ -262,7 +262,7 @@ instance Semigroup ObjTyInfo where
 mkObjTyInfo
   :: Maybe G.Description -> G.NamedType
   -> IFacesSet -> ObjFieldMap -> TypeLoc -> ObjTyInfo
-mkObjTyInfo descM ty iFaces flds loc =
+mkObjTyInfo descM ty iFaces flds _ =
   ObjTyInfo descM ty iFaces $ Map.insert (_fiName newFld) newFld flds
   where newFld = typenameFld
 
@@ -278,7 +278,7 @@ mkHsraObjTyInfo descM ty implIFaces flds =
 mkIFaceTyInfo
   :: Maybe G.Description -> G.NamedType
   -> Map.HashMap G.Name ObjFldInfo -> TypeLoc -> MemberTypes -> IFaceTyInfo
-mkIFaceTyInfo descM ty flds loc =
+mkIFaceTyInfo descM ty flds _ =
   IFaceTyInfo descM ty $ Map.insert (_fiName newFld) newFld flds
   where
     newFld = typenameFld

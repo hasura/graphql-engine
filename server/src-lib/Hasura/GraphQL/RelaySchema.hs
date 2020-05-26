@@ -4,8 +4,8 @@ import           Control.Lens.Extended          hiding (op)
 
 import qualified Data.HashMap.Strict            as Map
 import qualified Data.HashSet                   as Set
-
 import qualified Data.Text                      as T
+import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Types
@@ -24,31 +24,49 @@ import           Hasura.GraphQL.Schema.Function
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Select
 
+mkNodeInterface :: [QualifiedTable] -> IFaceTyInfo
+mkNodeInterface relayTableNames =
+  let description = G.Description "An object with globally unique ID"
+  in IFaceTyInfo (Just description) nodeType (mapFromL _fiName [idField]) $
+     Set.fromList $ map mkTableTy relayTableNames
+  where
+    idField =
+        let description = G.Description "A globally unique identifier"
+        in mkHsraObjFldInfo (Just description) "id" mempty nodeIdType
+
 mkRelayGCtxMap
   :: forall m. (MonadError QErr m)
   => TableCache -> FunctionCache -> m GCtxMap
 mkRelayGCtxMap tableCache functionCache = do
-  typesMapL <- mapM (mkRelayGCtxMapTable tableCache functionCache) $
-               filter (tableFltr . _tiCoreInfo) $ Map.elems tableCache
+  typesMapL <- mapM (mkRelayGCtxMapTable tableCache functionCache) relayTables
   typesMap <- combineTypes typesMapL
   let gCtxMap  = flip Map.map typesMap $
                  \(ty, flds) -> mkGCtx ty flds mempty
   pure $ Map.map (flip RoleContext Nothing) gCtxMap
   where
-    tableFltr ti = not (isSystemDefined $ _tciSystemDefined ti) && isValidObjectName (_tciName ti)
+    relayTables =
+      filter (tableFltr . _tiCoreInfo) $ Map.elems tableCache
+
+    tableFltr ti =
+      not (isSystemDefined $ _tciSystemDefined ti)
+      && isValidObjectName (_tciName ti)
+      && isJust (_tciPrimaryKey ti)
 
     combineTypes
       :: [Map.HashMap RoleName (TyAgg, RootFields)]
       -> m (Map.HashMap RoleName (TyAgg, RootFields))
     combineTypes maps = do
       let listMap = foldr (Map.unionWith (++) . Map.map pure) mempty maps
-      flip Map.traverseWithKey listMap $ \_ typeList -> do
-        let tyAgg = mconcat $ map (^. _1) typeList
-        rootFields <- combineRootFields $ map (^. _2) typeList
+      flip Map.traverseWithKey listMap $ \roleName typeList -> do
+        let relayTableNames = map (_tciName . _tiCoreInfo) relayTables
+            tyAgg = addTypeInfoToTyAgg
+                    (TIIFace $ mkNodeInterface relayTableNames) $
+                    mconcat $ map (^. _1) typeList
+        rootFields <- combineRootFields roleName $ map (^. _2) typeList
         pure (tyAgg, rootFields)
 
-    combineRootFields :: [RootFields] -> m RootFields
-    combineRootFields rootFields = do
+    combineRootFields :: RoleName -> [RootFields] -> m RootFields
+    combineRootFields roleName rootFields = do
       let duplicateQueryFields = duplicates $
             concatMap (Map.keys . _rootQueryFields) rootFields
           duplicateMutationFields = duplicates $
@@ -63,7 +81,7 @@ mkRelayGCtxMap tableCache functionCache = do
         throw400 Unexpected $ "following mutation root fields are duplicated: "
         <> showNames duplicateMutationFields
 
-      pure $ mconcat rootFields
+      pure $ mconcat $ mkNodeQueryRootFields roleName relayTables : rootFields
 
 mkRelayGCtxMapTable
   :: (MonadError QErr m)
@@ -181,7 +199,8 @@ mkRelayGCtxRole' tn descM selPermM pkeyCols funcs =
     -- table obj
     selectObjects = case selPermM of
       Just (_, selFlds) ->
-        [ mkTableObj tn True descM selFlds
+        [ (mkRelayTableObj tn descM selFlds)
+          {_otiImplIFaces = Set.singleton nodeType}
         , mkTableEdgeObj tn
         , mkTableConnectionObj tn
         ]
@@ -217,7 +236,10 @@ mkRelayGCtxRole' tn descM selPermM pkeyCols funcs =
           compFldsObjs = bool (map mkCompObjFld compAggregateOps) [] $ null compCols
       in numFldsObjs <> compFldsObjs
     -- the fields used in table object
-    selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
+    nodeFieldM =  RFNodeId tn . _pkColumns <$> pkeyCols
+    selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM >>=
+                  \fm -> nodeFieldM <&> \nodeField ->
+                    Map.insert (mkTableTy tn, "id") nodeField fm
     -- the scalar set for table_by_pk arguments
     selByPkScalarSet = pkeyCols ^.. folded.to _pkColumns.folded.to pgiType._PGColumnScalar
 
@@ -237,6 +259,16 @@ mkRelayGCtxRole' tn descM selPermM pkeyCols funcs =
 
     computedFieldFuncArgsInps = map (TIInpObj . fst) computedFieldReqTypes
     computedFieldFuncArgScalars = Set.fromList $ concatMap snd computedFieldReqTypes
+
+mkSelectOpCtx
+  :: QualifiedTable
+  -> [PGColumnInfo]
+  -> (AnnBoolExpPartialSQL, Maybe Int, [T.Text]) -- select filter
+  -> SelOpCtx
+mkSelectOpCtx tn allCols (fltr, pLimit, hdrs) =
+  SelOpCtx tn hdrs colGNameMap fltr pLimit
+  where
+    colGNameMap = mkPGColGNameMap allCols
 
 getRelayRootFldsRole'
   :: QualifiedTable
@@ -267,7 +299,7 @@ getRelayRootFldsRole' tn primaryKey fields funcs selM =
       (mkSelFldConnection Nothing) selFltr pLimit hdrs
 
     selFldHelper f g pFltr pLimit hdrs =
-      ( f $ SelOpCtx tn hdrs colGNameMap pFltr pLimit
+      ( f $ mkSelectOpCtx tn (getCols fields) (pFltr, pLimit, hdrs)
       , g tn
       )
 
@@ -279,3 +311,33 @@ getRelayRootFldsRole' tn primaryKey fields funcs selM =
       ( f $ FuncQOpCtx (fiName fi) (mkFuncArgItemSeq fi) hdrs colGNameMap pFltr pLimit
       , g fi $ fiDescription fi
       )
+
+mkNodeQueryRootFields :: RoleName -> [TableInfo] -> RootFields
+mkNodeQueryRootFields roleName relayTables =
+  RootFields (mapFromL (_fiName . snd) [nodeQueryDet]) mempty
+  where
+    nodeQueryDet =
+      ( QCNodeSelect nodeSelMap
+      , nodeQueryField
+      )
+
+    nodeQueryField =
+      let nodeParams = fromInpValL $ pure $
+                       InpValInfo (Just $ G.Description "A globally unique id")
+                       "id" Nothing nodeIdType
+      in mkHsraObjFldInfo Nothing "node" nodeParams $ G.toGT nodeType
+
+    nodeSelMap =
+      Map.fromList $ flip mapMaybe relayTables $ \table ->
+      let tableName = _tciName $ _tiCoreInfo table
+          allColumns = getCols $ _tciFieldInfoMap $ _tiCoreInfo table
+          selectPermM = _permSel <$> Map.lookup roleName
+                       (_tiRolePermInfoMap table)
+          permDetailsM = join selectPermM <&> \perm ->
+            ( spiFilter perm
+            , spiLimit perm
+            , spiRequiredHeaders perm
+            )
+          adminPermDetails = (noFilter, Nothing, [])
+      in (mkTableTy tableName,) . mkSelectOpCtx tableName allColumns
+         <$> bool permDetailsM (Just adminPermDetails) (isAdmin roleName)

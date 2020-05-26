@@ -30,6 +30,7 @@ import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.Extended                    as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Text                              as T
 import qualified Data.UUID.V4                           as UUID
 import qualified Database.PG.Query                      as Q
@@ -50,6 +51,10 @@ import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.Db
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Resolve.Action
+import           Hasura.GraphQL.Resolve.Types
+import           Hasura.GraphQL.Validate.SelectionSet
+import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.SQL.Error
@@ -62,7 +67,7 @@ import           Hasura.SQL.Value
 newtype MultiplexedQuery = MultiplexedQuery { unMultiplexedQuery :: Q.Query }
   deriving (Show, Eq, Hashable, J.ToJSON)
 
-mkMultiplexedQuery :: Map.HashMap G.Alias GR.QueryRootFldResolved -> MultiplexedQuery
+mkMultiplexedQuery :: OMap.InsOrdHashMap G.Alias GR.QueryRootFldResolved -> MultiplexedQuery
 mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
   { S.selExtr =
     -- SELECT _subs.result_id, _fld_resp.root AS result
@@ -83,13 +88,13 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
     selectRootFields = S.mkSelect
       { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Iden "root")]
       , S.selFrom = Just . S.FromExp $
-          flip map (Map.toList rootFields) $ \(fieldAlias, resolvedAST) ->
+          flip map (OMap.toList rootFields) $ \(fieldAlias, resolvedAST) ->
             GR.toSQLFromItem (S.Alias $ aliasToIden fieldAlias) resolvedAST
       }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
     rootFieldsJsonAggregate = S.SEFnApp "json_build_object" rootFieldsJsonPairs Nothing
-    rootFieldsJsonPairs = flip concatMap (Map.keys rootFields) $ \fieldAlias ->
+    rootFieldsJsonPairs = flip concatMap (OMap.keys rootFields) $ \fieldAlias ->
       [ S.SELit (G.unName $ G.unAlias fieldAlias)
       , mkQualIden (aliasToIden fieldAlias) (Iden "root") ]
 
@@ -264,19 +269,28 @@ buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has QueryCtxMap r
+     , Has SQLGenCtx r
      , MonadIO m
+     , HasVersion
      )
   => PGExecCtx
-  -> G.Alias
-  -> GR.QueryRootFldUnresolved
-  -> Maybe GV.ReusableVariableTypes
+  -> QueryReusability
+  -> QueryActionExecuter
+  -> ObjectSelectionSet
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
-buildLiveQueryPlan pgExecCtx alias unresolvedAST varTypes = do
-  (resolvedAST, (queryVariableValues, syntheticVariableValues)) <-
-    flip runStateT mempty $ GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
+buildLiveQueryPlan pgExecCtx initialReusability actionExecuter selectionSet = do
+  ((resolvedASTMap, (queryVariableValues, syntheticVariableValues)), finalReusability) <-
+    runReusabilityTWith initialReusability $
+      flip runStateT mempty $ flip OMap.traverseWithKey (unAliasedFields $ unObjectSelectionSet selectionSet) $
+      \_ field -> do
+        unresolvedAST <- GR.queryFldToPGAST field actionExecuter
+        GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
 
   userInfo <- asks getter
-  let multiplexedQuery = mkMultiplexedQuery $ Map.singleton alias resolvedAST
+  let multiplexedQuery = mkMultiplexedQuery resolvedASTMap
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery
 
@@ -287,6 +301,7 @@ buildLiveQueryPlan pgExecCtx alias unresolvedAST varTypes = do
   validatedSyntheticVars <- validateVariables pgExecCtx (toList syntheticVariableValues)
   let cohortVariables = CohortVariables (_uiSession userInfo) validatedQueryVars validatedSyntheticVars
       plan = LiveQueryPlan parameterizedPlan cohortVariables
+      varTypes = finalReusability ^? _Reusable
       reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars <$> varTypes
   pure (plan, reusablePlan)
 

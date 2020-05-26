@@ -65,9 +65,9 @@ mkTabAggregateOpOrdByInpObjs
   -> ([PGColumnInfo], [G.Name])
   -> ([PGColumnInfo], [G.Name])
   -> [InpObjTyInfo]
-mkTabAggregateOpOrdByInpObjs tn (numCols, numAggregateOps) (compCols, compAggregateOps) =
-  mapMaybe (mkInpObjTyM numCols) numAggregateOps
-  <> mapMaybe (mkInpObjTyM compCols) compAggregateOps
+mkTabAggregateOpOrdByInpObjs tn (numCols, numericAggregateOps) (compCols, compareAggregateOps) =
+  mapMaybe (mkInpObjTyM numCols) numericAggregateOps
+  <> mapMaybe (mkInpObjTyM compCols) compareAggregateOps
   where
 
     mkDesc (G.Name op) =
@@ -97,15 +97,15 @@ mkTabAggOrdByInpObj
   -> ([PGColumnInfo], [G.Name])
   -> ([PGColumnInfo], [G.Name])
   -> InpObjTyInfo
-mkTabAggOrdByInpObj tn (numCols, numAggregateOps) (compCols, compAggregateOps) =
+mkTabAggOrdByInpObj tn (numCols, numericAggregateOps) (compCols, compareAggregateOps) =
   mkHsraInpTyInfo (Just desc) (mkTabAggOrdByTy tn) $ fromInpValL $
   numOpOrdBys <> compOpOrdBys <> [countInpVal]
   where
     desc = G.Description $
       "order by aggregate values of table " <>> tn
 
-    numOpOrdBys = bool (map mkInpValInfo numAggregateOps) [] $ null numCols
-    compOpOrdBys = bool (map mkInpValInfo compAggregateOps) [] $ null compCols
+    numOpOrdBys = bool (map mkInpValInfo numericAggregateOps) [] $ null numCols
+    compOpOrdBys = bool (map mkInpValInfo compareAggregateOps) [] $ null compCols
     mkInpValInfo op = InpValInfo Nothing op Nothing $ G.toGT $
                      mkTabAggregateOpOrdByTy tn op
 

@@ -131,16 +131,16 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet) ->
       return (gCtx, rootSelSet)
-    E.GExPRemote _ _ _  ->
+    E.GExPRemote{}  ->
       throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
     GV.RQuery selSet ->
       runInTx $ encJFromJValue <$> GV.traverseObjectSelectionSet selSet (explainField userInfo gCtx sqlGenCtx actionExecuter)
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
-    GV.RSubscription alias rootField -> do
+    GV.RSubscription fields -> do
       (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo
-                     queryReusability actionExecuter alias rootField
+                     queryReusability actionExecuter fields
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     apiType = bool E.GATGeneral E.GATRelay $ fromMaybe False maybeIsRelay

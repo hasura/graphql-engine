@@ -236,9 +236,9 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
               (allowQueryActionExecuter httpManager reqHeaders) selSet
             traverse_ (addPlanToCache . EP.RPQuery) plan
             return $ ExOpQuery queryTx (Just genSql)
-          VQ.RSubscription alias fld -> do
+          VQ.RSubscription fields -> do
             (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability
-              (restrictActionExecuter "query actions cannot be run as a subscription") alias fld
+              (restrictActionExecuter "query actions cannot be run as a subscription") fields
             traverse_ (addPlanToCache . EP.RPSubs) plan
             return $ ExOpSubs lqOp
 
@@ -347,33 +347,6 @@ getMutOp ctx sqlGenCtx userInfo manager reqHeaders selSet =
         ordByCtx = _gOrdByCtx ctx
         insCtxMap = _gInsCtxMap ctx
 
-getSubsOpM
-  :: ( MonadError QErr m
-     , MonadReader r m
-     , Has QueryCtxMap r
-     , Has FieldMap r
-     , Has OrdByCtx r
-     , Has SQLGenCtx r
-     , Has UserInfo r
-     , MonadIO m
-     , HasVersion
-     )
-  => PGExecCtx
-  -> QueryReusability
-  -> G.Alias
-  -> VQ.Field
-  -> QueryActionExecuter
-  -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
-getSubsOpM pgExecCtx initialReusability alias fld actionExecuter =
-  case VQ._fName fld of
-    "__typename" ->
-      throwVE "you cannot create a subscription on '__typename' field"
-    _            -> do
-      (astUnresolved, finalReusability) <- runReusabilityTWith initialReusability $
-        GR.queryFldToPGAST fld actionExecuter
-      let varTypes = finalReusability ^? _Reusable
-      EL.buildLiveQueryPlan pgExecCtx alias astUnresolved varTypes
-
 getSubsOp
   :: ( MonadError QErr m
      , MonadIO m
@@ -385,11 +358,11 @@ getSubsOp
   -> UserInfo
   -> QueryReusability
   -> QueryActionExecuter
-  -> G.Alias
-  -> VQ.Field
+  -> VQ.ObjectSelectionSet
   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
-getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter alias fld =
-  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx queryReusability alias fld actionExecuter
+getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter =
+  runE gCtx sqlGenCtx userInfo .
+  EL.buildLiveQueryPlan pgExecCtx queryReusability actionExecuter
 
 execRemoteGQ
   :: ( HasVersion

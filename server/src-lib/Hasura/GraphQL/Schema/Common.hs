@@ -32,6 +32,9 @@ module Hasura.GraphQL.Schema.Common
 
   , numAggregateOps
   , compAggregateOps
+
+  , nodeType
+  , nodeIdType
   ) where
 
 import qualified Data.HashMap.Strict           as Map
@@ -152,3 +155,11 @@ numAggregateOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
 
 compAggregateOps :: [G.Name]
 compAggregateOps = ["max", "min"]
+
+nodeType :: G.NamedType
+nodeType =
+  G.NamedType "Node"
+
+nodeIdType :: G.GType
+nodeIdType =
+  G.toGT $ G.toNT $ G.NamedType "ID"
