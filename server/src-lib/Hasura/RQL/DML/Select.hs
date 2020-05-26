@@ -2,7 +2,6 @@ module Hasura.RQL.DML.Select
   ( selectP2
   , selectQuerySQL
   , selectAggQuerySQL
-  , selectConstSQL
   , convSelectQuery
   , asSingleRowJsonResp
   , module Hasura.RQL.DML.Select.Internal
@@ -275,11 +274,6 @@ selectP2 jsonAggSelect (sel, p) =
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel
-
-selectConstSQL :: Text -> Q.Query
-selectConstSQL content =
-  Q.fromBuilder $ toSQL $
-  S.mkSelect { S.selExtr = [S.Extractor (S.SELit content) Nothing] }
 
 selectQuerySQL :: JsonAggSelect -> AnnSimpleSel -> Q.Query
 selectQuerySQL jsonAggSelect sel =

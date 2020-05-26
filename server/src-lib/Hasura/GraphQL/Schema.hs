@@ -7,6 +7,7 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended  as M
 import qualified Data.HashSet                  as S
 import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.Aeson                    as J
 
 import           Control.Lens.Extended
 import           Control.Monad.Unique
@@ -66,6 +67,6 @@ query allTables stringifyNum = do
         , toQrf QRFAggregation $ selectTableAggregate tableName aggName     (Just aggDesc)    perms stringifyNum
         ]
   let queryFieldsParser = fmap catMaybes $ sequenceA $ concat $ catMaybes selectExpParsers
-      typenameRepr = ($$(G.litName "__typename"), QRFTextValue "query_root")
+      typenameRepr = ($$(G.litName "__typename"), QRFRaw (J.String "query_root"))
   pure $ M.fromList <$> P.selectionSet $$(G.litName "query_root") Nothing typenameRepr queryFieldsParser
   where toQrf = fmap . fmap . fmap . fmap . fmap

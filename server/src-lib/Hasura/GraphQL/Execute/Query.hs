@@ -182,12 +182,17 @@ prepareWithPlan = \case
 queryRootName :: Text
 queryRootName = "query_root"
 
-toPGQuery :: QueryRootField S.SQLExp -> Q.Query
-toPGQuery = \case
-  QRFSimple s      -> DS.selectQuerySQL DS.JASMultipleRows s
-  QRFPrimaryKey s  -> DS.selectQuerySQL DS.JASSingleObject s
-  QRFAggregation s -> DS.selectAggQuerySQL s
-  QRFTextValue s   -> DS.selectConstSQL $ T.pack $ show s -- put quotes around the __typename
+-- convert a query from an intermediate representation to... another
+irToRootFieldPlan
+  :: PlanVariables
+  -> PrepArgMap
+  -> QueryRootField S.SQLExp -> RootFieldPlan
+irToRootFieldPlan vars prepped = \case
+  QRFSimple s      -> RFPPostgres $ PGPlan (DS.selectQuerySQL DS.JASMultipleRows s) vars prepped
+  QRFPrimaryKey s  -> RFPPostgres $ PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped
+  QRFAggregation s -> RFPPostgres $ PGPlan (DS.selectAggQuerySQL s) vars prepped
+  -- TODO avoid converting to/from strict/lazy bytestrings
+  QRFRaw s         -> RFPRaw $ LBS.toStrict $ J.encode s
 
 traverseQueryRootField
   :: (Applicative f)
@@ -198,7 +203,7 @@ traverseQueryRootField f = \case
   QRFPrimaryKey s   -> QRFPrimaryKey <$> DS.traverseAnnSimpleSel f s
   QRFSimple s       -> QRFSimple <$> DS.traverseAnnSimpleSel f s
   QRFAggregation s  -> QRFAggregation <$> DS.traverseAnnAggSel f s
-  QRFTextValue s    -> pure $ QRFTextValue s
+  QRFRaw s          -> pure $ QRFRaw s
 convertQuerySelSet
   :: ( MonadError QErr m
      , MonadReader r m
@@ -230,7 +235,7 @@ convertQuerySelSet gqlContext selectionSet varDefs varValsM = do
               Just conv -> do
                 (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
                   traverseQueryRootField prepareWithPlan conv
-                pure . RFPPostgres $ PGPlan (toPGQuery q) vars prepped
+                pure $ irToRootFieldPlan vars prepped q
               _ -> _
         pure (fromMaybe (G._fName fld) (G._fAlias fld), fldPlan)
       _ -> _
