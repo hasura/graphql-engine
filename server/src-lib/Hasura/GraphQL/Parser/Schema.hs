@@ -18,6 +18,7 @@ module Hasura.GraphQL.Parser.Schema (
   , discardNullability
 
   , EnumValueInfo(..)
+  , InputFieldInfo(..)
   , FieldInfo(..)
 
   -- * Definitions
@@ -309,8 +310,8 @@ instance HasDefinition (NonNullableType k) (TypeInfo k) where
 data TypeInfo k where
   TIScalar :: TypeInfo 'Both
   TIEnum :: NonEmpty (Definition EnumValueInfo) -> TypeInfo 'Both
-  TIInputObject :: [Definition (FieldInfo 'Input)] -> TypeInfo 'Input
-  TIObject :: [Definition (FieldInfo 'Output)] -> TypeInfo 'Output
+  TIInputObject :: [Definition InputFieldInfo] -> TypeInfo 'Input
+  TIObject :: [Definition FieldInfo] -> TypeInfo 'Output
 
 instance Eq (TypeInfo k) where
   (==) = eqTypeInfo
@@ -378,9 +379,7 @@ addDefinitionUnique unique = over definitionLens \definition ->
 data EnumValueInfo = EnumValueInfo
   deriving (Eq)
 
-data family FieldInfo (k :: Kind)
-
-data instance FieldInfo 'Input
+data InputFieldInfo
   -- | A required field with a non-nullable type.
   = forall k. ('Input <: k) => IFRequired (NonNullableType k)
   -- | An optional input field with a nullable type and possibly a default
@@ -393,17 +392,17 @@ data instance FieldInfo 'Input
   -- completely absent; see <http://spec.graphql.org/June2018/#CoerceArgumentValues()>.
   | forall k. ('Input <: k) => IFOptional (NonNullableType k) (Maybe (Value Void))
 
-instance Eq (FieldInfo 'Input) where
+instance Eq InputFieldInfo where
   IFRequired t1    == IFRequired t2    = eqNonNullableType t1 t2
   IFOptional t1 v1 == IFOptional t2 v2 = eqNonNullableType t1 t2 && v1 == v2
   _                == _                = False
 
-data instance FieldInfo 'Output = forall k. ('Output <: k) => FieldInfo
-  { fArguments :: [Definition (FieldInfo 'Input)]
-  , fType :: Type k
+data FieldInfo = forall k. ('Output <: k) => FieldInfo
+  { fArguments :: [Definition InputFieldInfo]
+  , fType      :: Type k
   }
 
-instance Eq (FieldInfo 'Output) where
+instance Eq FieldInfo where
   FieldInfo args1 t1 == FieldInfo args2 t2 = args1 == args2 && eqType t1 t2
 
 data Variable = Variable
@@ -495,16 +494,18 @@ instance HasTypeDefinitions (TypeInfo k) where
     TIInputObject fields -> accumulateTypeDefinitions fields
     TIObject fields      -> accumulateTypeDefinitions fields
 
-instance HasTypeDefinitions (FieldInfo k)
-      => HasTypeDefinitions (Definition (FieldInfo k)) where
+instance HasTypeDefinitions (Definition InputFieldInfo) where
   accumulateTypeDefinitions = accumulateTypeDefinitions . dInfo
 
-instance HasTypeDefinitions (FieldInfo 'Input) where
+instance HasTypeDefinitions InputFieldInfo where
   accumulateTypeDefinitions = \case
     IFRequired t   -> accumulateTypeDefinitions t
     IFOptional t _ -> accumulateTypeDefinitions t
 
-instance HasTypeDefinitions (FieldInfo 'Output) where
+instance HasTypeDefinitions (Definition FieldInfo) where
+  accumulateTypeDefinitions = accumulateTypeDefinitions . dInfo
+
+instance HasTypeDefinitions FieldInfo where
   accumulateTypeDefinitions (FieldInfo args t) = do
     accumulateTypeDefinitions args
     accumulateTypeDefinitions t

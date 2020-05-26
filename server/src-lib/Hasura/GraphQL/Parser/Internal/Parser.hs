@@ -171,27 +171,45 @@ bind p f = p { pParser = pParser p >=> f }
 -- 'field', 'fieldWithDefault', or 'fieldOptional', combine several together
 -- with the 'Applicative' instance, and finish it off using 'object' to turn it
 -- into a 'Parser'.
-data FieldsParser k m a = FieldsParser
+data InputFieldsParser m a = InputFieldsParser
   -- Note: this is isomorphic to
-  -- `Compose ((,) [Definition (FieldInfo k)]) (ReaderT (HashMap Name (FieldInput k)) m) a`,
-  -- but working with that type kind of sucks.
-  { ifDefinitions :: [Definition (FieldInfo k)]
-  , ifParser      :: HashMap Name (FieldInput k) -> m a
+  --     Compose ((,) [Definition (FieldInfo k)])
+  --             (ReaderT (HashMap Name (FieldInput k)) m) a
+  -- but working with that type sucks.
+  { ifDefinitions :: [Definition InputFieldInfo]
+  , ifParser      :: HashMap Name (Value Variable) -> m a
   } deriving (Functor)
 
 infixl 1 `bindFields`
-bindFields :: Monad m => FieldsParser k m a -> (a -> m b) -> FieldsParser k m b
+bindFields :: Monad m => InputFieldsParser m a -> (a -> m b) -> InputFieldsParser m b
 bindFields p f = p { ifParser = ifParser p >=> f }
 
-type family FieldInput k = r | r -> k where
-  FieldInput 'Input = Value Variable
-  FieldInput 'Output = Field Variable
-
-instance Applicative m => Applicative (FieldsParser k m) where
-  pure v = FieldsParser [] (const $ pure v)
-  a <*> b = FieldsParser
+instance Applicative m => Applicative (InputFieldsParser m) where
+  pure v = InputFieldsParser [] (const $ pure v)
+  a <*> b = InputFieldsParser
     (ifDefinitions a <> ifDefinitions b)
     (liftA2 (<*>) (ifParser a) (ifParser b))
+
+-- | A parser for a single field in a selection set. Build a 'FieldParser'
+-- with 'selection' or 'subselection', and combine them together with
+-- 'selectionSet' to obtain a 'Parser'.
+data FieldParser m a = FieldParser
+  { fDefinition :: Definition FieldInfo
+  , fParser     :: Field Variable -> m a
+  } deriving (Functor)
+
+-- | A single parsed field in a selection set.
+data ParsedSelection a
+  -- | An ordinary field.
+  = SelectField a
+  -- | The magical @__typename@ field, implicitly available on all objects
+  -- <as part of GraphQL introspection http://spec.graphql.org/June2018/#sec-Type-Name-Introspection>.
+  | SelectTypename Name
+  deriving (Functor)
+
+handleTypename :: (Name -> a) -> ParsedSelection a -> a
+handleTypename _ (SelectField value)   = value
+handleTypename f (SelectTypename name) = f name
 
 -- -----------------------------------------------------------------------------
 -- combinators
@@ -280,14 +298,14 @@ object
   :: MonadParse m
   => Name
   -> Maybe Description
-  -> FieldsParser 'Input m a
+  -> InputFieldsParser m a
   -> Parser 'Input m a
 object name description parser = Parser
   { pType = NonNullable $ TNamed $ mkDefinition name description $
       TIInputObject (ifDefinitions parser)
   , pParser = peelVariable >=> \case
       VObject fields -> do
-        -- check for extraneous fields here, since the FieldsParser just
+        -- check for extraneous fields here, since the InputFieldsParser just
         -- handles parsing the fields it cares about
         for_ (M.keys fields) \fieldName -> do
           unless (fieldName `S.member` fieldNames) $
@@ -303,9 +321,9 @@ field
   => Name
   -> Maybe Description
   -> Parser k m a
-  -> FieldsParser 'Input m a
+  -> InputFieldsParser m a
 field name description parser = case pType parser of
-  NonNullable _ -> FieldsParser
+  NonNullable _ -> InputFieldsParser
     { ifDefinitions = [mkDefinition name description case pType parser of
         NonNullable typ -> IFRequired typ
         Nullable typ    -> IFOptional typ (Just VNull)]
@@ -322,8 +340,8 @@ fieldWithDefault
   -> Maybe Description
   -> Value Void -- ^ default value
   -> Parser k m a
-  -> FieldsParser 'Input m a
-fieldWithDefault name description defaultValue parser = FieldsParser
+  -> InputFieldsParser m a
+fieldWithDefault name description defaultValue parser = InputFieldsParser
   { ifDefinitions = [mkDefinition name description $
       IFOptional (discardNullability $ pType parser) (Just defaultValue)]
   , ifParser = M.lookup name >>> withPath (Key (unName name) :) . \case
@@ -380,8 +398,8 @@ fieldOptional
   => Name
   -> Maybe Description
   -> Parser k m a
-  -> FieldsParser 'Input m (Maybe a)
-fieldOptional name description parser = FieldsParser
+  -> InputFieldsParser m (Maybe a)
+fieldOptional name description parser = InputFieldsParser
   { ifDefinitions = [mkDefinition name description $
       IFOptional (discardNullability $ pType parser) Nothing]
   , ifParser = M.lookup name >>> withPath (Key (unName name) :) . traverse (pInputParser parser)
@@ -393,11 +411,11 @@ selectionSet
   :: MonadParse m
   => Name
   -> Maybe Description
-  -> a
-  -> FieldsParser 'Output m [a]
-  -> Parser 'Output m [a]
-selectionSet name description typenameRepr parser = Parser
-  { pType = NonNullable $ TNamed $ mkDefinition name description $ TIObject (ifDefinitions parser)
+  -> [FieldParser m a]
+  -> Parser 'Output m (HashMap Name (ParsedSelection a))
+selectionSet name description parsers = Parser
+  { pType = NonNullable $ TNamed $ mkDefinition name description $
+      TIObject $ map fDefinition parsers
   , pParser = \input -> do
       let fields = input & mapMaybe \case
             -- FIXME: handle fragments
@@ -415,125 +433,191 @@ selectionSet name description typenameRepr parser = Parser
       -- we must fail.
       when (null fields) $ parseError $ "missing selection set for " <>> name
 
-      -- check for extraneous fields here, since the FieldsParser just
-      -- handles parsing the fields it cares about
-      for_ fields \Field{ _fName = fieldName } -> do
-        unless (fieldName `S.member` fieldNames) $
-          unless (fieldName == $$(litName"__typename")) $
-          parseError $ name <<> " has no field named " <>> fieldName
-      parsedFields <- ifParser parser $! M.fromListOn _fName fields
-
-      -- __typename is a special case: while every selection set
-      -- must accept it as a potential output field, it is not
-      -- exposed as part of the schema
-      pure $ [typenameRepr | any (== $$(litName "__typename")) $ _fName <$> fields] <> parsedFields
+      M.fromList <$> for fields \selectionField@Field{ _fName, _fAlias } -> do
+        parsedField <- if
+          | _fName == $$(litName "__typename") ->
+              pure $ SelectTypename name
+          | Just parser <- M.lookup _fName parserMap ->
+              withPath (Key (unName _fName) :) $
+                SelectField <$> parser selectionField
+          | otherwise ->
+              parseError $ name <<> " has no field named " <>> _fName
+        pure (fromMaybe _fName _fAlias, parsedField)
   }
   where
-    fieldNames = S.fromList (dName <$> ifDefinitions parser)
+    parserMap = parsers
+      & map (\FieldParser{ fDefinition, fParser } -> (getName fDefinition, fParser))
+      & M.fromList
 
--- | See 'selection'. Also see Note [The delicate balance of GraphQL kinds] in
--- "Hasura.GraphQL.Parser.Schema".
-type family SelectionResult k a b = r | r -> k a where
-  SelectionResult 'Both   a _ = (Name, a)
-  SelectionResult 'Output a b = (Name, a, b)
-
--- | Constructs a parser for a field of a 'selectionSet'. Fields of a selection
--- set have two peculiarities:
+-- | Builds a 'FieldParser' for a field that does not take a subselection set,
+-- i.e. a field that returns a scalar or enum. The field’s type is taken from
+-- the provided 'Parser', but the 'Parser' is not otherwise used.
 --
---   1. They can have arguments, such as in @table(where: {field: {_eq: $blah}})@.
---
---   2. They have a sub-selection set /if and only if/ their result type is an
---      object type.
---
--- The first requirement is satisfied easily by providing a
--- @'FieldsParser' ''Input'@ to parse the arguments, but the second requirement
--- is more subtle. One might expect us to have two variants of 'selection':
---
---   1. A variant that accepts a @'Parser' ''Output'@ to parse a sub-selection
---      set.
---
---   2. Another variant that doesn’t accept a child 'Parser' at all and doesn’t
---      parse a sub-selection set.
---
--- However, that leaves us with a problem in case 2: how do we know what type
--- the field has? After all, we use the provided 'Parser' to build the GraphQL
--- schema in addition to parsing the GraphQL query.
---
--- We could solve this problem by passing in a @'Type' ''Both'@ instead of a
--- 'Parser', but generally the parsing code isn’t expected to deal with 'Type's
--- directly. Therefore, we just accept a @'Parser' ''Both'@, and we happen to
--- only use it for its type.
---
--- But this leaves us with /another/ problem: what is the result type of
--- 'selection'? If we have a sub-selection set, we must return three results:
--- the field alias, the parsed field arguments, and the parsed sub-selection
--- set. But if we /don’t/ have a sub-selection set, we have no third result to
--- return! That complication is handled by the 'SelectionResult' type family,
--- which computes how many results should be returned.
---
--- All quite subtle when you spell it out, but in practice, most of the above
--- can be ignored when actually writing parsers: just pass a 'Parser' for the
--- field’s result type, and everything “just works”.
---
--- Finally, a couple miscellaneous other details:
---
---   * All fields of a selection set are always optional according to the
---     GraphQL specification, so 'selection' always returns a 'Maybe'.
---
---   * It was alluded to above, but the 'Name' in the result is the field’s
---     /alias/, which must be used when constructing the query result, since it
---     may be different from the field name.
---
---   * If you have a field that takes no input arguments, use the 'selection_'
---     shorthand combinator.
+-- See also Note [The delicate balance of GraphQL kinds] in "Hasura.GraphQL.Parser.Schema".
 selection
-  :: forall k m a b
-   . (MonadParse m, 'Output <: k)
+  :: forall m a b
+   . MonadParse m
   => Name
   -> Maybe Description
-  -> FieldsParser 'Input m a -- ^ parser for the input arguments
-  -> Parser k m b -- ^ parser for the result type
-  -> FieldsParser 'Output m (Maybe (SelectionResult k a b))
-selection name description argumentsParser bodyParser = FieldsParser
-  { ifDefinitions = [mkDefinition name description $
-      FieldInfo (ifDefinitions argumentsParser) (pType bodyParser)]
-  , ifParser = M.lookup name >>> withPath (Key (unName name) :) . traverse \selectionField -> do
-      let Field{ _fName = fieldName, _fArguments = arguments } = selectionField
-          alias = _fAlias selectionField & fromMaybe fieldName
-
-      for_ (M.keys arguments) \argumentName -> do
-        unless (argumentName `S.member` argumentNames) $
-          parseError $ name <<> " has no argument named " <>> argumentName
-      parsedArguments <- ifParser argumentsParser arguments
-
-      -- see Note [The delicate balance of GraphQL kinds] in Hasura.GraphQL.Parser.Schema
-      case subKind @'Output @k of
-        KBoth -> pure (alias, parsedArguments)
-        KRefl -> do
-          parsedBody <- pParser bodyParser $ _fSelectionSet selectionField
-          pure (alias, parsedArguments, parsedBody)
+  -> InputFieldsParser m a -- ^ parser for the input arguments
+  -> Parser 'Both m b -- ^ type of the result
+  -> FieldParser m a
+selection name description argumentsParser resultParser = FieldParser
+  { fDefinition = mkDefinition name description $
+      FieldInfo (ifDefinitions argumentsParser) (pType resultParser)
+  , fParser = \Field{ _fArguments, _fSelectionSet } -> do
+      unless (null _fSelectionSet) $
+        parseError "unexpected subselection set for non-object field"
+      ifParser argumentsParser _fArguments
   }
-  where
-    argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
 
--- | Analogous to 'SelectionResult', but for 'selection_'.
-type family SelectionResult_ k a = r | r -> k where
-  SelectionResult_ 'Both   _ = Name
-  SelectionResult_ 'Output a = (Name, a)
-
--- | A shorthand for a 'selection' that takes no input arguments.
-selection_
-  :: forall k m a
-   . (MonadParse m, 'Output <: k)
+-- | Builds a 'FieldParser' for a field that takes a subselection set, i.e. a
+-- field that returns an object.
+--
+-- See also Note [The delicate balance of GraphQL kinds] in "Hasura.GraphQL.Parser.Schema".
+subselection
+  :: forall m a b
+   . MonadParse m
   => Name
   -> Maybe Description
-  -> Parser k m a
-  -> FieldsParser 'Output m (Maybe (SelectionResult_ k a))
-selection_ name description parser = selection name description (pure ()) parser
-  -- see Note [The delicate balance of GraphQL kinds] in Hasura.GraphQL.Parser.Schema
-  <&> fmap case subKind @'Output @k of
-        KBoth -> \(alias, ()) -> alias
-        KRefl -> \(alias, (), result) -> (alias, result)
+  -> InputFieldsParser m a -- ^ parser for the input arguments
+  -> Parser 'Output m b -- ^ parser for the subselection set; see also
+  -> FieldParser m (a, b)
+subselection name description argumentsParser bodyParser = FieldParser
+  { fDefinition = mkDefinition name description $
+      FieldInfo (ifDefinitions argumentsParser) (pType bodyParser)
+  , fParser = \Field{ _fArguments, _fSelectionSet } ->
+      (,) <$> ifParser argumentsParser _fArguments
+          <*> pParser bodyParser _fSelectionSet
+  }
+
+-- | A shorthand for a 'selection' that takes no arguments.
+selection_
+  :: MonadParse m
+  => Name
+  -> Maybe Description
+  -> Parser 'Both m a -- ^ type of the result
+  -> FieldParser m ()
+selection_ name description = selection name description (pure ())
+
+-- | A shorthand for a 'subselection' that takes no arguments.
+subselection_
+  :: MonadParse m
+  => Name
+  -> Maybe Description
+  -> Parser 'Output m a -- ^ parser for the subselection set
+  -> FieldParser m a
+subselection_ name description bodyParser =
+  snd <$> subselection name description (pure ()) bodyParser
+
+
+-- -- | See 'selection'. Also see Note [The delicate balance of GraphQL kinds] in
+-- -- "Hasura.GraphQL.Parser.Schema".
+-- type family SelectionResult k a b = r | r -> k a where
+--   SelectionResult 'Both   a _ = (Name, a)
+--   SelectionResult 'Output a b = (Name, a, b)
+--
+-- -- | Constructs a parser for a field of a 'selectionSet'. Fields of a selection
+-- -- set have two peculiarities:
+-- --
+-- --   1. They can have arguments, such as in @table(where: {field: {_eq: $blah}})@.
+-- --
+-- --   2. They have a sub-selection set /if and only if/ their result type is an
+-- --      object type.
+-- --
+-- -- The first requirement is satisfied easily by providing a
+-- -- @'FieldsParser' ''Input'@ to parse the arguments, but the second requirement
+-- -- is more subtle. One might expect us to have two variants of 'selection':
+-- --
+-- --   1. A variant that accepts a @'Parser' ''Output'@ to parse a sub-selection
+-- --      set.
+-- --
+-- --   2. Another variant that doesn’t accept a child 'Parser' at all and doesn’t
+-- --      parse a sub-selection set.
+-- --
+-- -- However, that leaves us with a problem in case 2: how do we know what type
+-- -- the field has? After all, we use the provided 'Parser' to build the GraphQL
+-- -- schema in addition to parsing the GraphQL query.
+-- --
+-- -- We could solve this problem by passing in a @'Type' ''Both'@ instead of a
+-- -- 'Parser', but generally the parsing code isn’t expected to deal with 'Type's
+-- -- directly. Therefore, we just accept a @'Parser' ''Both'@, and we happen to
+-- -- only use it for its type.
+-- --
+-- -- But this leaves us with /another/ problem: what is the result type of
+-- -- 'selection'? If we have a sub-selection set, we must return three results:
+-- -- the field alias, the parsed field arguments, and the parsed sub-selection
+-- -- set. But if we /don’t/ have a sub-selection set, we have no third result to
+-- -- return! That complication is handled by the 'SelectionResult' type family,
+-- -- which computes how many results should be returned.
+-- --
+-- -- All quite subtle when you spell it out, but in practice, most of the above
+-- -- can be ignored when actually writing parsers: just pass a 'Parser' for the
+-- -- field’s result type, and everything “just works”.
+-- --
+-- -- Finally, a couple miscellaneous other details:
+-- --
+-- --   * All fields of a selection set are always optional according to the
+-- --     GraphQL specification, so 'selection' always returns a 'Maybe'.
+-- --
+-- --   * It was alluded to above, but the 'Name' in the result is the field’s
+-- --     /alias/, which must be used when constructing the query result, since it
+-- --     may be different from the field name.
+-- --
+-- --   * If you have a field that takes no input arguments, use the 'selection_'
+-- --     shorthand combinator.
+-- selection
+--   :: forall k m a b
+--    . (MonadParse m, 'Output <: k)
+--   => Name
+--   -> Maybe Description
+--   -> InputFieldsParser m a -- ^ parser for the input arguments
+--   -> Parser k m b -- ^ parser for the result type
+--   -> FieldsParser 'Output m (Maybe (SelectionResult k a b))
+-- selection name description argumentsParser bodyParser = FieldsParser
+--   { ifDefinitions = [mkDefinition name description $
+--       FieldInfo (ifDefinitions argumentsParser) (pType bodyParser)]
+--   , ifParser = \selectionFields -> withPath (Key (unName name) :) $
+--       for (OMap.lookup name selectionFields) \selectionField -> do
+--         let Field{ _fName = fieldName, _fArguments = arguments } = selectionField
+--             alias = _fAlias selectionField & fromMaybe fieldName
+--
+--         for_ (M.keys arguments) \argumentName -> do
+--           unless (argumentName `S.member` argumentNames) $
+--             parseError $ name <<> " has no argument named " <>> argumentName
+--         -- Here we use OMap.fromHashMap, which is a bit cheaty, since we’re
+--         -- faking an ordered map from an unordered map. But the ordering isn’t
+--         -- really important for input arguments.
+--         parsedArguments <- ifParser argumentsParser (OMap.fromHashMap arguments)
+--
+--         -- see Note [The delicate balance of GraphQL kinds] in Hasura.GraphQL.Parser.Schema
+--         case subKind @'Output @k of
+--           KBoth -> pure (alias, parsedArguments)
+--           KRefl -> do
+--             parsedBody <- pParser bodyParser $ _fSelectionSet selectionField
+--             pure (alias, parsedArguments, parsedBody)
+--   }
+--   where
+--     argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
+--
+-- -- | Analogous to 'SelectionResult', but for 'selection_'.
+-- type family SelectionResult_ k a = r | r -> k where
+--   SelectionResult_ 'Both   _ = Name
+--   SelectionResult_ 'Output a = (Name, a)
+--
+-- -- | A shorthand for a 'selection' that takes no input arguments.
+-- selection_
+--   :: forall k m a
+--    . (MonadParse m, 'Output <: k)
+--   => Name
+--   -> Maybe Description
+--   -> Parser k m a
+--   -> FieldsParser 'Output m (Maybe (SelectionResult_ k a))
+-- selection_ name description parser = selection name description (pure ()) parser
+--   -- see Note [The delicate balance of GraphQL kinds] in Hasura.GraphQL.Parser.Schema
+--   <&> fmap case subKind @'Output @k of
+--         KBoth -> \(alias, ()) -> alias
+--         KRefl -> \(alias, (), result) -> (alias, result)
 
 -- -----------------------------------------------------------------------------
 -- internal helpers

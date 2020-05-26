@@ -16,15 +16,20 @@ module Hasura.GraphQL.Parser
   , nullable
   , list
   , object
-
   , selectionSet
-  , selection
-  , selection_
 
-  , FieldsParser
+  , InputFieldsParser
   , field
   , fieldWithDefault
   , fieldOptional
+
+  , FieldParser
+  , ParsedSelection(..)
+  , handleTypename
+  , selection
+  , selection_
+  , subselection
+  , subselection_
 
   , module Hasura.GraphQL.Parser.Class
   , module Hasura.GraphQL.Parser.Column

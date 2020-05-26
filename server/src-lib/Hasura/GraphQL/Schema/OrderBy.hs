@@ -10,7 +10,8 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Hasura.GraphQL.Parser         as P
 import qualified Hasura.RQL.DML.Select         as RQL
 
-import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser, UnpreparedValue)
+import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Parser,
+                                                UnpreparedValue)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.Common
@@ -45,7 +46,7 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
   where
     mkField
       :: FieldInfo
-      -> m (Maybe (FieldsParser 'Input n (Maybe [RQL.AnnOrderByItemG UnpreparedValue])))
+      -> m (Maybe (InputFieldsParser n (Maybe [RQL.AnnOrderByItemG UnpreparedValue])))
     mkField fieldInfo = runMaybeT $ do
       fieldName <- MaybeT $ pure $ fieldInfoGraphQLName fieldInfo
       case fieldInfo of
@@ -107,7 +108,7 @@ orderByAggregation table selectPermissions = do
       description = G.Description $ "order by aggregate values of table \"" <> table <<> "\""
   pure $ P.object objectName (Just description) aggFields
   where
-    mkField :: PGColumnInfo -> FieldsParser 'Input n (Maybe (PGCol, OrderInfo))
+    mkField :: PGColumnInfo -> InputFieldsParser n (Maybe (PGCol, OrderInfo))
     mkField columnInfo =
       P.fieldOptional (pgiName columnInfo) (pgiDescription columnInfo) orderByOperator
         `mapField` (pgiColumn columnInfo,)
@@ -115,8 +116,8 @@ orderByAggregation table selectPermissions = do
     parseOperator
       :: G.Name
       -> G.Name
-      -> FieldsParser 'Input n [(PGCol, OrderInfo)]
-      -> FieldsParser 'Input n (Maybe [OrderByItemG RQL.AnnAggOrdBy])
+      -> InputFieldsParser n [(PGCol, OrderInfo)]
+      -> InputFieldsParser n (Maybe [OrderByItemG RQL.AnnAggOrdBy])
     parseOperator operator tableName columns =
       let opText     = G.unName operator
           -- FIXME: isn't G.Name a Monoid?

@@ -9,8 +9,8 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Hasura.GraphQL.Parser         as P
 
-import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser, UnpreparedValue,
-                                                mkParameter)
+import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Parser,
+                                                UnpreparedValue, mkParameter)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.Table
@@ -59,7 +59,7 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
     pure (tableFields ++ specialFields)
   where
     mkField
-      :: FieldInfo -> m (Maybe (FieldsParser 'Input n (Maybe (AnnBoolExpFld UnpreparedValue))))
+      :: FieldInfo -> m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld UnpreparedValue))))
     mkField fieldInfo = runMaybeT do
       fieldName <- MaybeT $ pure $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
@@ -205,7 +205,7 @@ castExp sourceType nullability = do
       PGColumnScalar PGGeography -> [PGGeometry]
       _                          -> []
 
-    mkField :: PGScalarType -> m (FieldsParser 'Input n (Maybe (PGScalarType, [ComparisonExp])))
+    mkField :: PGScalarType -> m (InputFieldsParser n (Maybe (PGScalarType, [ComparisonExp])))
     mkField targetType = do
       targetName <- P.mkScalarTypeName targetType
       value <- comparisonExps (PGColumnScalar targetType) nullability

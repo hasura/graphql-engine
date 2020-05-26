@@ -12,8 +12,6 @@ module Hasura.GraphQL.Schema.Mutation
 
 import           Hasura.Prelude
 
-import           Data.Int                      (Int32)
-
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Data.List                     as L
@@ -26,9 +24,8 @@ import qualified Hasura.RQL.DML.Delete         as RQL
 import qualified Hasura.RQL.DML.Insert         as RQL
 import qualified Hasura.RQL.DML.Returning      as RQL
 import qualified Hasura.RQL.DML.Update         as RQL
-import qualified Hasura.SQL.DML                as SQL
 
-import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser,
+import           Hasura.GraphQL.Parser         (FieldParser, InputFieldsParser, Kind (..), Parser,
                                                 UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
@@ -102,7 +99,7 @@ insertIntoTable
   -> Maybe SelPermInfo    -- ^ select permissions of the table (if any)
   -> Maybe UpdPermInfo    -- ^ update permissions of the table (if any)
   -> Bool
-  -> m (FieldsParser 'Output n (Maybe (AnnMultiInsert UnpreparedValue)))
+  -> m (FieldParser n (AnnMultiInsert UnpreparedValue))
 insertIntoTable table fieldName description insertPerms selectPerms updatePerms stringifyNum = do
   columns         <- tableColumns table
   selectionParser <- mutationSelectionSet table selectPerms stringifyNum
@@ -119,8 +116,8 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
           conflictParser
         objects    <- P.field objectsName (Just objectsDesc) objectsParser
         pure (onConflict, objects)
-  pure $ P.selection fieldName description argsParser selectionParser
-    `mapField` \(_, (onConflict, objects), output) ->
+  pure $ P.subselection fieldName description argsParser selectionParser
+    <&> \((onConflict, objects), output) ->
        ( AnnIns { _aiInsObj         = objects
                 , _aiConflictClause = onConflict
                 , _aiCheckCond      = (undefined {- FIXME!!! -}, ipiCheck insertPerms)
@@ -139,7 +136,7 @@ insertOneIntoTable
   -> SelPermInfo          -- ^ select permissions of the table
   -> Maybe UpdPermInfo    -- ^ update permissions of the table (if any)
   -> Bool
-  -> m (FieldsParser 'Output n (Maybe (AnnMultiInsert UnpreparedValue)))
+  -> m (FieldParser n (AnnMultiInsert UnpreparedValue))
 insertOneIntoTable table fieldName description insertPerms selectPerms updatePerms stringifyNum = do
   columns         <- tableColumns table
   selectionParser <- tableSelectionSet table selectPerms stringifyNum
@@ -156,8 +153,8 @@ insertOneIntoTable table fieldName description insertPerms selectPerms updatePer
           conflictParser
         objects    <- P.field objectsName (Just objectsDesc) objectsParser
         pure (onConflict, objects)
-  pure $ P.selection fieldName description argsParser selectionParser
-    `mapField` \(_, (onConflict, object), output) ->
+  pure $ P.subselection fieldName description argsParser selectionParser
+    <&> \((onConflict, object), output) ->
        ( AnnIns { _aiInsObj         = [object]
                 , _aiConflictClause = onConflict
                 , _aiCheckCond      = (undefined {- FIXME!!! -}, ipiCheck insertPerms)
@@ -325,7 +322,7 @@ updateTable
   -> UpdPermInfo          -- ^ update permissions of the table
   -> Maybe SelPermInfo    -- ^ select permissions of the table (if any)
   -> Bool
-  -> m (Maybe (FieldsParser 'Output n (Maybe (RQL.AnnUpdG UnpreparedValue))))
+  -> m (Maybe (FieldParser n (RQL.AnnUpdG UnpreparedValue)))
 updateTable table fieldName description updatePerms selectPerms stringifyNum = runMaybeT $ do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be updated"
@@ -334,8 +331,8 @@ updateTable table fieldName description updatePerms selectPerms stringifyNum = r
   whereArg  <- lift $ P.field whereName (Just whereDesc) <$> boolExp table selectPerms
   selection <- lift $ mutationSelectionSet table selectPerms stringifyNum
   let argsParser = liftA2 (,) opArgs whereArg
-  pure $ P.selection fieldName description argsParser selection
-    `mapField` (mkUpdateObject table columns updatePerms . third RQL.MOutMultirowFields)
+  pure $ P.subselection fieldName description argsParser selection
+    <&> mkUpdateObject table columns updatePerms . fmap RQL.MOutMultirowFields
 
 updateTableByPk
   :: forall m n. (MonadSchema n m, MonadError QErr m)
@@ -345,28 +342,27 @@ updateTableByPk
   -> UpdPermInfo          -- ^ update permissions of the table
   -> SelPermInfo          -- ^ select permissions of the table
   -> Bool
-  -> m (Maybe (FieldsParser 'Output n (Maybe (RQL.AnnUpdG UnpreparedValue))))
+  -> m (Maybe (FieldParser n (RQL.AnnUpdG UnpreparedValue)))
 updateTableByPk table fieldName description updatePerms selectPerms stringifyNum = runMaybeT $ do
   columns   <- lift   $ tableSelectColumns table selectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
   opArgs    <- MaybeT $ updateOperators table updatePerms
   selection <- lift $ tableSelectionSet table selectPerms stringifyNum
   let argsParser = liftA2 (,) opArgs pkArgs
-  pure $ P.selection fieldName description argsParser selection
-    `mapField` (mkUpdateObject table columns updatePerms . third RQL.MOutSinglerowObject)
+  pure $ P.subselection fieldName description argsParser selection
+    <&> mkUpdateObject table columns updatePerms . fmap RQL.MOutSinglerowObject
 
 mkUpdateObject
   :: QualifiedTable
   -> [PGColumnInfo]
   -> UpdPermInfo
-  -> ( G.Name
-     , ( [(PGColumnInfo, RQL.UpdOpExpG UnpreparedValue)]
+  -> ( ( [(PGColumnInfo, RQL.UpdOpExpG UnpreparedValue)]
        , AnnBoolExp UnpreparedValue
        )
      , RQL.MutationOutputG UnpreparedValue
      )
   -> RQL.AnnUpdG UnpreparedValue
-mkUpdateObject table columns updatePerms (_, (opExps, whereExp), mutationOutput) =
+mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
   RQL.AnnUpd { RQL.uqp1Table   = table
              , RQL.uqp1OpExps  = opExps
              , RQL.uqp1Where   = (permissionFilter, whereExp)
@@ -383,7 +379,7 @@ updateOperators
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable -- ^ qualified name of the table
   -> UpdPermInfo    -- ^ update permissions of the table
-  -> m (Maybe (FieldsParser 'Input n [(PGColumnInfo, RQL.UpdOpExpG UnpreparedValue)]))
+  -> m (Maybe (InputFieldsParser n [(PGColumnInfo, RQL.UpdOpExpG UnpreparedValue)]))
 updateOperators table updatePermissions = do
   tableName <- qualifiedObjectToName table
   columns   <- tableUpdateColumns table updatePermissions
@@ -453,7 +449,7 @@ updateOperators table updatePermissions = do
       -> [PGColumnInfo]
       -> G.Description
       -> G.Description
-      -> m (Maybe (Text, FieldsParser 'Input n (Maybe [(PGColumnInfo, RQL.UpdOpExpG UnpreparedValue)])))
+      -> m (Maybe (Text, InputFieldsParser n (Maybe [(PGColumnInfo, RQL.UpdOpExpG UnpreparedValue)])))
     updateOperator tableName opName mkParser updOpExp columns opDesc objDesc =
       whenMaybe (not $ null columns) do
         fields <- for columns \columnInfo -> do
@@ -480,15 +476,15 @@ deleteFromTable
   -> DelPermInfo          -- ^ delete permissions of the table
   -> Maybe SelPermInfo    -- ^ select permissions of the table (if any)
   -> Bool
-  -> m (FieldsParser 'Output n (Maybe (RQL.AnnDelG UnpreparedValue)))
+  -> m (FieldParser n (RQL.AnnDelG UnpreparedValue))
 deleteFromTable table fieldName description deletePerms selectPerms stringifyNum = do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be deleted"
   whereArg  <- P.field whereName (Just whereDesc) <$> boolExp table selectPerms
   selection <- mutationSelectionSet table selectPerms stringifyNum
   columns   <- tableColumns table
-  pure $ P.selection fieldName description whereArg selection
-    `mapField` (mkDeleteObject table columns deletePerms . third RQL.MOutMultirowFields)
+  pure $ P.subselection fieldName description whereArg selection
+    <&> mkDeleteObject table columns deletePerms . fmap RQL.MOutMultirowFields
 
 deleteFromTableByPk
   :: forall m n. (MonadSchema n m, MonadError QErr m)
@@ -498,21 +494,21 @@ deleteFromTableByPk
   -> DelPermInfo          -- ^ delete permissions of the table
   -> SelPermInfo          -- ^ select permissions of the table
   -> Bool
-  -> m (Maybe (FieldsParser 'Output n (Maybe (RQL.AnnDelG UnpreparedValue))))
+  -> m (Maybe (FieldParser n (RQL.AnnDelG UnpreparedValue)))
 deleteFromTableByPk table fieldName description deletePerms selectPerms stringifyNum = runMaybeT $ do
   columns   <- lift   $ tableSelectColumns table selectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
   selection <- lift $ tableSelectionSet table selectPerms stringifyNum
-  pure $ P.selection fieldName description pkArgs selection
-    `mapField` (mkDeleteObject table columns deletePerms . third RQL.MOutSinglerowObject)
+  pure $ P.subselection fieldName description pkArgs selection
+    <&> mkDeleteObject table columns deletePerms . fmap RQL.MOutSinglerowObject
 
 mkDeleteObject
   :: QualifiedTable
   -> [PGColumnInfo]
   -> DelPermInfo
-  -> (G.Name, AnnBoolExp UnpreparedValue, RQL.MutationOutputG UnpreparedValue)
+  -> (AnnBoolExp UnpreparedValue, RQL.MutationOutputG UnpreparedValue)
   -> RQL.AnnDelG UnpreparedValue
-mkDeleteObject table columns deletePerms (_, whereExp, mutationOutput) =
+mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
   RQL.AnnDel { RQL.dqp1Table   = table
              , RQL.dqp1Where   = (permissionFilter, whereExp)
              , RQL.dqp1Output  = mutationOutput
@@ -538,27 +534,25 @@ mutationSelectionSet table selectPerms stringifyNum = do
     tableSet    <- lift $ tableSelectionSet table permissions stringifyNum
     let returningName = $$(G.litName "returning")
         returningDesc = "data from the rows affected by the mutation"
-    pure $ P.selection_ returningName  (Just returningDesc) tableSet
-        `mapField` (FieldName . G.unName *** RQL.MRet)
+    pure $ RQL.MRet <$> P.subselection_ returningName  (Just returningDesc) tableSet
   let affectedRowsName = $$(G.litName "affected_rows")
       affectedRowsDesc = "number of rows affected by the mutation"
       selectionName    = tableName <> $$(G.litName "_mutation_response")
       selectionDesc    = G.Description $ "response of any mutation on the table \"" <> G.unName tableName <> "\""
-      typenameRepr     = (FieldName "__typename", RQL.MExp $ G.unName selectionName)
-      dummyIntParser   = undefined :: Parser 'Output n Int32
 
-      selectionFields  = fmap catMaybes $ sequenceA $ catMaybes
-        [ Just $ P.selection_ affectedRowsName (Just affectedRowsDesc) dummyIntParser
-            `mapField` (FieldName . G.unName *** const RQL.MCount)
+      selectionFields  = catMaybes
+        [ Just $ RQL.MCount <$
+            P.selection_ affectedRowsName (Just affectedRowsDesc) P.int
         , returning
         ]
-  pure $ P.selectionSet selectionName (Just selectionDesc) typenameRepr selectionFields
+  pure $ P.selectionSet selectionName (Just selectionDesc) selectionFields
+    <&> parsedSelectionsToFields RQL.MExp
 
 primaryKeysArguments
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
   -> SelPermInfo
-  -> m (Maybe (FieldsParser 'Input n (AnnBoolExp UnpreparedValue)))
+  -> m (Maybe (InputFieldsParser n (AnnBoolExp UnpreparedValue)))
 primaryKeysArguments table selectPerms = runMaybeT $ do
   primaryKeys <- MaybeT $ _tciPrimaryKey . _tiCoreInfo <$> askTableInfo table
   let columns = _pkColumns primaryKeys

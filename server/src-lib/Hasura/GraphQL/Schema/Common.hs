@@ -2,9 +2,12 @@ module Hasura.GraphQL.Schema.Common where
 
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict           as Map
+
 import           Language.GraphQL.Draft.Syntax as G
 
 import qualified Hasura.GraphQL.Parser         as P
+import qualified Hasura.RQL.DML.Select.Types   as RQL
 
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -20,10 +23,17 @@ partialSQLExpToUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
 
 mapField
   :: Functor m
-  => P.FieldsParser k m (Maybe a)
+  => P.InputFieldsParser m (Maybe a)
   -> (a -> b)
-  -> P.FieldsParser k m (Maybe b)
+  -> P.InputFieldsParser m (Maybe b)
 mapField fp f = fmap (fmap f) fp
+
+parsedSelectionsToFields
+  :: (Text -> a) -- ^ how to handle @__typename@ fields
+  -> HashMap G.Name (P.ParsedSelection a)
+  -> RQL.Fields a
+parsedSelectionsToFields mkTypename = Map.toList
+  >>> map (FieldName . G.unName *** P.handleTypename (mkTypename . G.unName))
 
 numericAggOperators :: [G.Name]
 numericAggOperators =
