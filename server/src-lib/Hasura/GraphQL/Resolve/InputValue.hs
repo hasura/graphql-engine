@@ -10,6 +10,8 @@ module Hasura.GraphQL.Resolve.InputValue
   , asPGColumnValueM
   , asPGColumnValue
 
+  , asScalarValM
+  , asScalarVal
   , asEnumVal
   , asEnumValM
   , withObject
@@ -26,6 +28,8 @@ module Hasura.GraphQL.Resolve.InputValue
   ) where
 
 import           Hasura.Prelude
+
+import qualified Text.Builder                  as TB
 
 import qualified Language.GraphQL.Draft.Syntax  as G
 import qualified Data.Aeson                     as J
@@ -120,6 +124,19 @@ asPGColumnValue v = do
 
 openInputValue :: (MonadReusability m) => AnnInpVal -> m AnnGValue
 openInputValue v = when (isJust $ _aivVariable v) markNotReusable $> _aivValue v
+
+asScalarValM :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> PGScalarType -> m (Maybe PGScalarValue)
+asScalarValM v tp = openInputValue v >>= \case
+  AGScalar tp' vM ->
+    if tp == tp'
+    then pure vM
+    else tyMismatch "scalar" v
+  _ -> tyMismatch "scalar" v
+
+asScalarVal :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> PGScalarType -> m PGScalarValue
+asScalarVal v tp = asScalarValM v tp >>= \case
+  Just val -> pure val
+  Nothing -> throw500 $ "unexpected null for ty " <> TB.run (toSQL tp)
 
 -- | Note: only handles “synthetic” enums (see 'EnumValuesInfo'). Enum table references are handled
 -- by 'asPGColumnType' and its variants.
