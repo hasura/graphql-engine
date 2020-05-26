@@ -61,30 +61,185 @@ instance HasName Name where
 -- kind subsumption constraints.
 --
 -- For more details, see <http://spec.graphql.org/June2018/#sec-Input-and-Output-Types>.
-data Kind = Both | Input | Output
+data Kind
+  = Both -- ^ see Note [The 'Both kind]
+  | Input
+  | Output
 
-{- Note [The delicate balance of GraphQL kinds]
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The way we track kinds is rather delicate, and it succeeds many failed attempts
-at encoding the same ideas. We rely on a happy coincidence to keep the types as
-simple as possible: whether or not a field has a sub-selection set is knowable
-from its kind alone!
+{- Note [The 'Both kind]
+~~~~~~~~~~~~~~~~~~~~~~~~
+As described in the Haddock comments for Kind and <:, we use Kind to index
+various types, such as Type and Parser. We use this to enforce various
+correctness constraints mandated by the GraphQL spec; for example, we don’t
+allow input object fields to have output types and we don’t allow output object
+fields to have input types.
 
-  * Normal (non-input) object fields cannot have types of kind Input, so we can
-    ignore that case.
+But scalars and enums can be used as input types *or* output types. A natural
+encoding of that in Haskell would be to make constructors for those types
+polymorphic, like this:
 
-  * The only types of kind Both are scalars and enums, neither of which accept a
-    sub-selection set.
+    data Kind = Input | Output
 
-  * The remaining types, which we give kind Output, are objects, interfaces, and
-    unions. We don’t currently support the latter two, so we only have to deal
-    with objects, which always take sub-selection sets.
+    data TypeInfo k where
+      TIScalar      :: TypeInfo k           -- \ Polymorphic!
+      TIEnum        :: ... -> TypeInfo k    -- /
+      TIInputObject :: ... -> TypeInfo 'Input
+      TIObject      :: ... -> TypeInfo 'Output
 
-This allows us to conveniently re-use `Parser`s for types of kind Both to
-represent output types for selection set fields (while still disallowing types
-of kind Input). This trick avoids the need to track that information separately,
-significantly simplifying the types! But if that happy coincidence ever ceases
-to hold, we’d have to rethink things. -}
+Naturally, this would give the `scalar` parser constructor a similarly
+polymorphic type:
+
+    scalar
+      :: MonadParse m
+      => Name
+      -> Maybe Description
+      -> ScalarRepresentation a
+      -> Parser k m a             -- Polymorphic!
+
+But if we actually try that, we run into problems. The trouble is that we want
+to use the Kind to influence several different things:
+
+  * As mentioned above, we use it to ensure that the types we generate are
+    well-kinded according to the GraphQL spec rules.
+
+  * We use it to determine what a Parser consumes as input. Parsers for input
+    types parse GraphQL input values, but Parsers for output types parse
+    selection sets. (See Note [The meaning of Parser 'Output] in
+    Hasura.GraphQL.Parser.Internal.Parser for an explanation of why.)
+
+  * We use it to know when to expect a sub-selection set for a field of an
+    output object (see Note [The delicate balance of GraphQL kinds]).
+
+These many uses of Kind cause some trouble for a polymorphic representation. For
+example, consider our `scalar` parser constructor above---if we were to
+instantiate it at kind 'Output, we’d receive a `Parser 'Output`, which we would
+then expect to be able to apply to a selection set. But that doesn’t make any
+sense, since scalar fields don’t have selection sets!
+
+Another issue with this representation has to do with effectful parser
+constructors (such as constructors that can throw errors). These have types like
+
+    mkFooParser :: MonadSchema n m => Blah -> m (Parser k n Foo)
+
+where the parser construction is itself monadic. This causes some annoyance,
+since even if mkFooParser returns a Parser of a polymorphic kind, code like this
+will not typecheck:
+
+    (fooParser :: forall k. Parser k n Foo) <- mkFooParser blah
+
+The issue is that we have to instantiate k to a particular type to be able to
+call mkFooParser. If we want to use the result at both kinds, we’d have to call
+mkFooParser twice:
+
+    (fooInputParser :: Parser 'Input n Foo) <- mkFooParser blah
+    (fooOutputParser :: Parser 'Output n Foo) <- mkFooParser blah
+
+Other situations encounter similar difficulties, and they are not easy to
+resolve without impredicative polymorphism (which GHC does not support).
+
+To avoid this problem, we don’t use polymorphic kinds, but instead introduce a
+form of kind subsumption. Types that can be used as both input and output types
+are explicitly given the kind 'Both. This allows us to get the best of both
+worlds:
+
+    * We use the <: typeclass to accept 'Both in most places where we expect
+      either input or output types.
+
+    * We can treat 'Both specially to avoid requiring `scalar` to supply a
+      selection set parser (see Note [The delicate balance of GraphQL kinds] for
+      further explanation).
+
+    * Because we avoid the polymorphism, we don’t run into the aforementioned
+      issue with monadic parser constructors.
+
+All of this is subtle and somewhat complicated, but unfortunately there isn’t
+much of a way around that: GraphQL is subtle and complicated. Our use of an
+explicit 'Both kind isn’t the only way to encode these things, but it’s the
+particular set of compromises we’ve chosen to accept.
+
+Note [The delicate balance of GraphQL kinds]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+As discussed in Note [The 'Both kind], we use GraphQL kinds to distinguish
+several different things. One of them is which output types take sub-selection
+sets. For example, scalars don’t accept sub-selection sets, so if we have a
+schema like
+
+    type Query {
+      users: [User!]!
+    }
+
+    type User {
+      id: Int!
+    }
+
+then the following query is illegal:
+
+    query {
+      users {
+        id {
+          blah
+        }
+      }
+    }
+
+The id field has a scalar type, so it should not take a sub-selection set. This
+is actually something we care about distinguishing at the type level, because it
+affects the type of the `selection` parser combinator. Suppose we have a
+`Parser 'Output m UserQuery` for the User type. When we parse a field with that
+type, we expect to receive a UserQuery as a result, unsurprisingly. But what if
+we parse an output field using the `int` parser, which has this type:
+
+    int :: MonadParse m => Parser 'Both m Int32
+
+If we follow the same logic as for the User parser above, we’d expect to receive
+an Int32 as a result... but that doesn’t make any sense, since the Int32
+corresponds to the result *we* are suppose to produce as a result of executing
+the query, not something user-specified.
+
+One way to solve this would be to associate every Parser with two result types:
+one when given an input object, and one when given a selection set. Then our
+parsers could be given these types, instead:
+
+    user :: MonadParse m => Parser 'Output m Void UserQuery
+    int :: MonadParse m => Parser 'Both m Int32 ()
+
+But if you work through this, you’ll find that *all* parsers will either have
+Void or () for at least one of their input result types or their output result
+types, depending on their kind:
+
+  * All 'Input parsers must have Void for their output result type, since they
+    aren’t allowed to be used in output contexts at all.
+
+  * All 'Output parsers must have Void for their input result type, since they
+    aren’t allowed to be used in input contexts at all.
+
+  * That just leaves 'Both. The only types of kind 'Both are scalars and enums,
+    neither of which accept a sub-selection set. Their output result type would
+    therefore be (), since they are allowed to appear in output contexts, but
+    they don’t return any results.
+
+The end result of this is that we clutter all our types with Voids and ()s, with
+little actual benefit.
+
+If you really think about it, the fact that the no types of kind 'Both accept a
+sub-selection set is really something of a coincidence. In theory, one could
+imagine a future version of the GraphQL spec adding a type that can be used as
+both an input type or an output type, but accepts a sub-selection set. If that
+ever happens, we’ll have to tweak our encoding, but for now, we can take
+advantage of this happy coincidence and make the kinds serve double duty:
+
+  * We can make `ParserInput 'Both` identical to `ParserInput 'Input`, since
+    all parsers of kind 'Both only parse input values.
+
+  * We can make `selection`’s return type dependent on the kind of the field’s
+    type, which is handled by the SelectionResult type family.
+
+Relying on this coincidence might seem a little gross, and perhaps it is
+somewhat. But it’s enormously convenient: not doing this would make some types
+significantly more complicated, since we would have to thread around more
+information at the type level and we couldn’t make as many simplifying
+assumptions. So until GraphQL adds a type that violates these assumptions, we
+are happy to take advantage of this coincidence. -}
 
 -- | Evidence for '<:'.
 data k1 :<: k2 where
