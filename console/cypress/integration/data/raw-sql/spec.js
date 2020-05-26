@@ -22,6 +22,7 @@ export const openRawSQL = () => {
 export const passCreateTable = () => {
   prevStr = 'CREATE TABLE Apic_test_table_rsql (id serial PRIMARY KEY);';
   cy.get('textarea').type(prevStr, { force: true });
+  cy.wait(210); // debounce time + 10ms
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
   // validateCT('Apic_test_table_rsql', 'success');
@@ -33,6 +34,7 @@ export const passInsertValues = () => {
   }
   prevStr = 'INSERT INTO Apic_test_table_rsql VALUES (1);';
   cy.get('textarea').type(prevStr, { force: true });
+  cy.wait(210);
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
   // validateCT('Apic_test_table_rsql', 'success');
@@ -46,6 +48,7 @@ export const passAlterTable = () => {
   cy.get('textarea').type(prevStr, { force: true });
   // Untrack table
   cy.get(getElementFromAlias('raw-sql-track-check')).uncheck();
+  cy.wait(210);
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
   // validateCT('Apic_test_table_rsql', 'success');
@@ -59,6 +62,7 @@ export const passCreateView = () => {
   cy.get('textarea').type(prevStr, { force: true });
   // Track table
   cy.get(getElementFromAlias('raw-sql-track-check')).check();
+  cy.wait(210);
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
   // validateCT('Apic_test_table_rsql', 'success');
@@ -71,6 +75,7 @@ export const delTestTables = () => {
   prevStr = 'DROP TABLE Apic_test_table_rsql CASCADE;';
   cy.get('textarea').type(prevStr, { force: true });
   cy.get(getElementFromAlias('raw-sql-migration-check')).uncheck();
+  cy.wait(210);
   cy.get(getElementFromAlias('run-sql')).click();
   cy.get(getElementFromAlias('not-migration-confirm')).click();
   cy.wait(5000);
