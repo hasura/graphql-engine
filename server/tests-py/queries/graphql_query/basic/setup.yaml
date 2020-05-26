@@ -262,14 +262,20 @@ args:
   args:
     schema: public
     name: user
-- type: insert
+# - type: insert
+#   args:
+#     table: user
+#     objects:
+#     - name: User 1
+#       number: '123456789'
+#     - name: User 2
+#       number: '123456780'
+- type: run_sql
   args:
-    table: user
-    objects:
-    - name: User 1
-      number: '123456789'
-    - name: User 2
-      number: '123456780'
+    sql: |
+      INSERT INTO "user" (name, number) VALUES
+        ('User 1', '123456789'),
+        ('User 2', '123456780');
 
 - type: run_sql
   args:
@@ -283,13 +289,18 @@ args:
   args:
     schema: public
     name: person
-- type: insert
+# - type: insert
+#   args:
+#     table: person
+#     objects:
+#     - name: "John\\"
+#     - name: "Clarke"
+#     - name: "clarke"
+- type: run_sql
   args:
-    table: person
-    objects:
-    - name: "John\\"
-    - name: "Clarke"
-    - name: "clarke"
+    sql: |
+      INSERT INTO person (name) VALUES
+        ('John\'), ('Clarke'), ('clarke');
 
 #Set timezone
 - type: run_sql
