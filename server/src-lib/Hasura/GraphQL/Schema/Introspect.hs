@@ -119,18 +119,18 @@ fieldField
   => Parser 'Output n (P.Definition P.FieldInfo -> J.Value)
 fieldField =
   let
-    nameField :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
-    nameField = P.selection_ $$(G.litName "name") Nothing P.string $> mkTypeName . P.dName
-    descriptionField :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
-    descriptionField = P.selection_ $$(G.litName "name") Nothing P.string $> \defInfo ->
+    name :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
+    name = P.selection_ $$(G.litName "name") Nothing P.string $> mkTypeName . P.dName
+    description :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
+    description = P.selection_ $$(G.litName "description") Nothing P.string $> \defInfo ->
       case P.dDescription defInfo of
       Nothing -> J.Null
       Just desc -> J.String (G.unDescription desc)
   in
-    fmap (\omap -> \defInfo -> J.Object $ OMap.toHashMap $ (OMap.mapKeys G.unName) $ fmap ($ defInfo) $ fmap (P.handleTypename (\name _def -> mkTypeName name)) $ omap) $
+    fmap (\omap -> \defInfo -> J.Object $ OMap.toHashMap $ (OMap.mapKeys G.unName) $ fmap ($ defInfo) $ fmap (P.handleTypename (\name' _def -> mkTypeName name')) $ omap) $
     P.selectionSet $$(G.litName "__field") Nothing
-    [ nameField
-    , descriptionField
+    [ name
+    , description
     ]
 
 -- uhh this is wrong
