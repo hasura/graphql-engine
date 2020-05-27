@@ -201,8 +201,8 @@ traverseQueryRootField
   -> QueryRootField a
   -> f (QueryRootField b)
 traverseQueryRootField f = \case
-  QRFPrimaryKey s   -> QRFPrimaryKey <$> DS.traverseAnnSimpleSel f s
-  QRFSimple s       -> QRFSimple <$> DS.traverseAnnSimpleSel f s
+  QRFPrimaryKey s   -> QRFPrimaryKey  <$> DS.traverseAnnSimpleSel f s
+  QRFSimple s       -> QRFSimple      <$> DS.traverseAnnSimpleSel f s
   QRFAggregation s  -> QRFAggregation <$> DS.traverseAnnAggSel f s
   QRFRaw s          -> pure $ QRFRaw s
 
