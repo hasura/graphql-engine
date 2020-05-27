@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- A module for postgres execution related types and operations
@@ -66,6 +67,11 @@ data LazyTx e a
   = LTErr !e
   | LTNoTx !a
   | LTTx !(Q.TxE e a)
+  deriving Show
+
+-- orphan:
+instance Show (Q.TxE e a) where
+  show = const "(error \"TxE\")"
 
 lazyTxToQTx :: LazyTx e a -> Q.TxE e a
 lazyTxToQTx = \case

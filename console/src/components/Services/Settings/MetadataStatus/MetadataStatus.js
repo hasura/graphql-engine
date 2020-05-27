@@ -41,6 +41,13 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               definition = `relationship of table "${getTableNameFromDef(
                 ico.definition.table
               )}"`;
+            } else if (ico.type === 'remote_relationship') {
+              name = ico.definition.configuration.name;
+              definition = `relationship between table "${getTableNameFromDef(
+                ico.definition.table
+              )}" and remote schema "${
+                ico.definition.configuration.remote_schema
+              }"`;
             } else if (permissionTypes.includes(ico.type)) {
               name = `${ico.definition.role}-permission`;
               definition = `${ico.type} on table "${getTableNameFromDef(
