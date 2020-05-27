@@ -16,5 +16,5 @@ When you’re looking to set up migrations, there are two scenarios:
 .. toctree::
   :maxdepth: 1
 
-  Hasura is already set up <existing-hasura>
-  Hasura is not set up yet <new-hasura>
+  Existing Hasura <existing-hasura>
+  New Hasura <new-hasura>
