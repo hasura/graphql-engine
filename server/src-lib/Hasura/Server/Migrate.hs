@@ -380,8 +380,7 @@ recreateSystemMetadata = do
           manualConfig "hdb_catalog" "hdb_check_constraint" tableNameMapping
         , arrayRel $$(nonEmptyText "unique_constraints") $
           manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping
-        , arrayRel $$(nonEmptyText "remote_relationships") $
-          manualConfig "hdb_catalog" "hdb_remote_relationship" tableNameMapping]
+        ]
       , table "hdb_catalog" "hdb_primary_key" []
       , table "hdb_catalog" "hdb_foreign_key_constraint" []
       , table "hdb_catalog" "hdb_relationship" []
@@ -389,6 +388,7 @@ recreateSystemMetadata = do
       , table "hdb_catalog" "hdb_computed_field" []
       , table "hdb_catalog" "hdb_check_constraint" []
       , table "hdb_catalog" "hdb_unique_constraint" []
+      , table "hdb_catalog" "hdb_remote_relationship" []
       , table "hdb_catalog" "event_triggers"
         [ arrayRel $$(nonEmptyText "events") $
           manualConfig "hdb_catalog" "event_log" [("name", "trigger_name")] ]
@@ -421,7 +421,6 @@ recreateSystemMetadata = do
         , arrayRel $$(nonEmptyText "permissions") $ manualConfig "hdb_catalog" "hdb_permission_agg"
           [("role_name", "role_name")]
         ]
-      , table "hdb_catalog" "hdb_remote_relationship" []
       , table "hdb_catalog" "hdb_cron_triggers"
         [ arrayRel $$(nonEmptyText "cron_events") $ RUFKeyOn $
           ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_events") "trigger_name"
