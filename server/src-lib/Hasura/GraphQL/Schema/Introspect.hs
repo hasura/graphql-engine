@@ -26,8 +26,7 @@ data Schema = Schema
   , sDirectives :: [G.Directive Void]
   }
 
--- | Takes an existing @Parser@ that takes GraphQL queries to Postgres queries,
--- and generates the introspection parser.
+-- | Generate an introspection parser.
 schema
   :: forall n
    . MonadParse n
@@ -36,6 +35,9 @@ schema
 schema realSchema =
   let schemaSetParser = schemaSet realSchema
   in P.subselection_ $$(G.litName "__schema") Nothing schemaSetParser
+
+selectionSetToJSON :: OMap.InsOrdHashMap G.Name J.Value -> J.Value
+selectionSetToJSON = J.Object . OMap.toHashMap . OMap.mapKeys G.unName
 
 {-
 type __Type {
@@ -65,36 +67,36 @@ type __Type {
 typeField
   :: forall n k
    . MonadParse n
-  => P.Type k
-  -> Parser 'Output n J.Value
-typeField to = do
+  => Parser 'Output n (P.Type k -> J.Value)
+typeField =
   let
-    to' = case to of
+    takeType = \case
       P.NonNullable x -> x
       P.Nullable x -> x
-    name :: FieldParser n J.Value
+    name :: FieldParser n (P.Type k -> J.Value)
     name = P.selection_ $$(G.litName "name") Nothing P.string $>
-      case to' of
+      \to -> case takeType to of
         P.TList _ -> J.Null
         P.TNamed def -> mkTypeName (P.dName def)
-    description :: FieldParser n J.Value
+    description :: FieldParser n (P.Type k -> J.Value)
     description = P.selection_ $$(G.litName "description") Nothing P.string $>
-      case to' of
+      \to -> case takeType to of
         P.TList _ -> J.Null
-        P.TNamed def -> case (P.dDescription def) of
+        P.TNamed def -> case P.dDescription def of
           Nothing -> J.Null
           Just desc -> J.String (G.unDescription desc)
-    fields :: FieldParser n J.Value
+    fields :: FieldParser n (P.Type k -> J.Value)
     fields = do
       -- TODO includeDeprecated
       printer <- P.subselection_ $$(G.litName "fields") Nothing fieldField
-      return $ case to' of
+      return $ \to -> case takeType to of
         P.TList _ -> J.Null
         P.TNamed def -> case P.dInfo def of
-          P.TIObject fields' -> do
+          P.TIObject fields' ->
             J.Array $ V.fromList $ fmap printer fields'
-          _ -> J.Null -- TODO ghc says this is redundant?
-  fmap (J.Object . OMap.toHashMap . (OMap.mapKeys G.unName) . fmap (P.handleTypename mkTypeName)) $
+          _ -> J.Null
+  in
+    applyPrinter <$>
     P.selectionSet
       $$(G.litName "type")
       Nothing
@@ -102,6 +104,12 @@ typeField to = do
       , description
       , fields
       ]
+
+applyPrinter
+  :: OMap.InsOrdHashMap G.Name (P.ParsedSelection (a -> J.Value))
+  -> a
+  -> J.Value
+applyPrinter = flip (\x -> selectionSetToJSON . fmap (($ x) . P.handleTypename (const . mkTypeName)))
 
 {-
 type __Field {
@@ -127,7 +135,7 @@ fieldField =
       Nothing -> J.Null
       Just desc -> J.String (G.unDescription desc)
   in
-    fmap (\omap -> \defInfo -> J.Object $ OMap.toHashMap $ (OMap.mapKeys G.unName) $ fmap ($ defInfo) $ fmap (P.handleTypename (\name' _def -> mkTypeName name')) $ omap) $
+    applyPrinter <$>
     P.selectionSet $$(G.litName "__field") Nothing
     [ name
     , description
@@ -160,7 +168,7 @@ directiveSet =
     locations :: FieldParser n J.Value
     locations = J.Null <$ P.selection_ $$(G.litName "locations") Nothing P.string
     args :: FieldParser n J.Value
-    args = J.Null <$ P.subselection_ $$(G.litName "args") Nothing (P.selectionSet undefined Nothing [])
+    args = J.Null <$ P.subselection_ $$(G.litName "args") Nothing (P.selectionSet _todo Nothing [])
     isRepeatable :: FieldParser n J.Value
     isRepeatable = J.Null <$ P.selection_ $$(G.litName "isRepeatable") Nothing P.string
   in
@@ -198,18 +206,26 @@ schemaSet realSchema =
         Just s -> J.String $ G.unDescription s
 
     types :: FieldParser n J.Value
-    types = J.Array mempty <$ P.subselection_ $$(G.litName "types") Nothing (typeField undefined)
+    types = do
+      printer <- P.subselection_ $$(G.litName "types") Nothing typeField
+      return $ printer _todo
     queryType :: FieldParser n J.Value
-    queryType = P.subselection_ $$(G.litName "queryType") Nothing (typeField (sQueryType realSchema))
+    queryType = do
+      printer <- P.subselection_ $$(G.litName "queryType") Nothing typeField
+      return $ printer (sQueryType realSchema)
     directives :: FieldParser n J.Value
     directives = J.Array mempty <$ P.subselection_ $$(G.litName "directives") Nothing directiveSet
     -- TODO implement
     mutationType :: FieldParser n J.Value
-    mutationType = J.Null <$ P.subselection_ $$(G.litName "mutationType") Nothing (typeField undefined)
+    mutationType = do
+      printer <- P.subselection_ $$(G.litName "mutationType") Nothing typeField
+      return $ printer _todo
     subscriptionType :: FieldParser n J.Value
-    subscriptionType = J.Null <$ P.subselection_ $$(G.litName "subscriptionType") Nothing (typeField undefined)
+    subscriptionType = do
+      printer <- P.subselection_ $$(G.litName "subscriptionType") Nothing typeField
+      return $ printer _todo
   in
-    fmap (J.Object . OMap.toHashMap . (OMap.mapKeys G.unName) . fmap (P.handleTypename mkTypeName)) $
+    selectionSetToJSON . fmap (P.handleTypename mkTypeName) <$>
     P.selectionSet
       $$(G.litName "__schema")
       Nothing
