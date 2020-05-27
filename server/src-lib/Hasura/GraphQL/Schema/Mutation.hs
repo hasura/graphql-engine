@@ -12,25 +12,27 @@ module Hasura.GraphQL.Schema.Mutation
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashSet                  as Set
-import qualified Data.List                     as L
-import qualified Data.List.NonEmpty            as NE
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.HashSet                   as Set
+import qualified Data.List                      as L
+import qualified Data.List.NonEmpty             as NE
+import qualified Data.Text                      as T
+import qualified Language.GraphQL.Draft.Syntax  as G
 
-import qualified Hasura.GraphQL.Parser         as P
-import qualified Hasura.RQL.DML.Delete         as RQL
-import qualified Hasura.RQL.DML.Insert         as RQL
-import qualified Hasura.RQL.DML.Returning      as RQL
-import qualified Hasura.RQL.DML.Update         as RQL
+import qualified Hasura.GraphQL.Parser          as P
+import qualified Hasura.RQL.DML.Delete.Types    as RQL
+import qualified Hasura.RQL.DML.Insert.Types    as RQL
+import qualified Hasura.RQL.DML.Returning.Types as RQL
+import qualified Hasura.RQL.DML.Update          as RQL
+import qualified Hasura.RQL.DML.Update.Types    as RQL
 
-import           Hasura.GraphQL.Parser         (FieldParser, InputFieldsParser, Kind (..), Parser,
-                                                UnpreparedValue (..), mkParameter)
+import           Hasura.GraphQL.Parser          (FieldParser, InputFieldsParser, Kind (..), Parser,
+                                                 UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
+import           Hasura.GraphQL.Parser.Column   (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Schema.Insert
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
@@ -39,56 +41,6 @@ import           Hasura.SQL.Types
 
 
 -- insert
-
-
--- WIP NOTE
--- An abstract representation of insert was tricky to pin down.
--- The following structures are taken from Resolve, and slightly
--- modified.
--- What needs to be decided is where those should go and what we
--- should do with them, really.
--- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
-data AnnIns a v
-  = AnnIns
-  { _aiInsObj         :: !a
-  , _aiConflictClause :: !(Maybe (RQL.ConflictClauseP1 v))
-  , _aiCheckCond      :: !(AnnBoolExp v, AnnBoolExpPartialSQL)
-  , _aiTableCols      :: ![PGColumnInfo]
-  , _aiDefVals        :: !(PreSetColsPartial)
-  } deriving (Show, Eq)
-
-type SingleObjIns v = AnnIns (AnnInsObj v) v
-type MultiObjIns  v = AnnIns [AnnInsObj v] v
-
-data RelIns a
-  = RelIns
-  { _riAnnIns  :: !a
-  , _riRelInfo :: !RelInfo
-  } deriving (Show, Eq)
-
-type ObjRelIns v = RelIns (SingleObjIns v)
-type ArrRelIns v = RelIns (MultiObjIns  v)
-
-data AnnInsObj v
-  = AnnInsObj
-  { _aioColumns :: ![(PGCol, v)]
-  , _aioObjRels :: ![ObjRelIns v]
-  , _aioArrRels :: ![ArrRelIns v]
-  } deriving (Show, Eq)
-
-type AnnSingleInsert v = (SingleObjIns v, RQL.MutationOutputG v)
-type AnnMultiInsert  v = (MultiObjIns  v, RQL.MutationOutputG v)
-
-instance Semigroup (AnnInsObj v) where
-  (AnnInsObj col1 obj1 rel1) <> (AnnInsObj col2 obj2 rel2) =
-    AnnInsObj (col1 <> col2) (obj1 <> obj2) (rel1 <> rel2)
-
-instance Monoid (AnnInsObj v) where
-  mempty = AnnInsObj [] [] []
-
--- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 
 insertIntoTable
   :: forall m n. (MonadSchema n m, MonadError QErr m)
