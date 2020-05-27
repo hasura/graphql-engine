@@ -172,7 +172,7 @@ if [ "$MODE" = "graphql-engine" ]; then
     if command -v hpc >/dev/null && command -v jq >/dev/null ; then
       # Get the appropriate mix dir (the newest one). This way this hopefully
       # works when cabal.project.dev-sh.local is edited to turn on optimizations.
-      # See also: https://hackage.haskell.org/package/cabal-plan 
+      # See also: https://hackage.haskell.org/package/cabal-plan
       distdir=$(cat dist-newstyle/cache/plan.json | jq -r '."install-plan"[] | select(."id" == "graphql-engine-1.0.0-inplace")? | ."dist-dir"')
       hpcdir="$distdir/hpc/vanilla/mix/graphql-engine-1.0.0"
       echo_pretty "Generating code coverage report..."
@@ -404,6 +404,15 @@ elif [ "$MODE" = "test" ]; then
 
     ### Check for and install dependencies in venv
     cd "$PROJECT_ROOT/server/tests-py"
+
+    if [ ! -d "node_modules" ]; then
+        npm_config_loglevel=error npm install remote_schemas/nodejs/
+    else
+        echo_pretty "It looks like node dependencies have been installed already. Skipping."
+        echo_pretty "If things fail please run this and try again"
+        echo_pretty "  $ rm -r \"$PROJECT_ROOT/server/tests-py/node_modules\""
+    fi
+
     PY_VENV=.hasura-dev-python-venv
     DEVSH_VERSION_FILE=.devsh_version
     # Do we need to force reinstall?

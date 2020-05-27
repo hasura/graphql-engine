@@ -6,6 +6,7 @@ FROM phadej/ghc:8.10.1-stretch
 
 ARG docker_ver="17.09.0-ce"
 ARG postgres_ver="12"
+ARG node_ver="8.x"
 
 # Install GNU make, curl, git and docker client. Required to build the server
 RUN apt-get -y update \
