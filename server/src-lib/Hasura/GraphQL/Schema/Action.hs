@@ -6,8 +6,6 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Data.Coerce                   (coerce)
-
 import           Hasura.GraphQL.Schema.Builder
 import           Hasura.GraphQL.Schema.Common  (mkDescriptionWith)
 
