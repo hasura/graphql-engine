@@ -49,6 +49,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
+- server: fix explain queries with role permissions (fix #4816)
 - server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
 
 - server: fixes an issue where introspection queries with variables would fail because of caching (fix #4547)
@@ -73,7 +74,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: add docs page on query performance (close #2316) (#3693)
 - docs: add a sample Caddyfile for Caddy 2 in enable-https section (#4710)
 - docs: add disabling dev mode to production checklist (#4715)
-- docs: add integration guide for AWS Cognito (#4822)
+- docs: add integration guide for AWS Cognito (#4822, #4843)
 - docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
 - docs: add page for procuring custom docker images and binaries (#4828)
 - docs: add content on how to secure action handlers and other actions docs improvements (#4743)
