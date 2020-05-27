@@ -10,7 +10,7 @@ Schema/Metadata API Reference: Remote Relationships
   :depth: 1
   :local:
 
-Remote Joins will ensure independent and related types in Remote Schemas can be joined natively via Hasura.
+Remote Relationships will ensure independent remote schemas and related data types can be joined natively via Hasura.
 
 .. _create_remote_relationship:
 
@@ -72,7 +72,7 @@ Args syntax
    * - hasura_fields
      - true
      - [:ref:`PGColumn <PGColumn>`]
-     - List of PG columns in the table to join the remote schema
+     - List of PG columns in the table that will be used in the ``remote_field`` object.
    * - remote_schema
      - true
      - :ref:`RemoteSchemaName <RemoteSchemaName>`
@@ -100,17 +100,12 @@ update_remote_relationship
     "args": {
       "name": "sample_remote_relationship",
       "table": "users",
-      "hasura_fields": [
-        "id"
-      ],
+      "hasura_fields": [],
       "remote_schema": "my-remote-schema",
       "remote_field": {
         "messages": {
           "arguments": {
-            "where": {
-              "id": {
-                "eq": "$id"
-              }
+               "limit":10
             }
           }
         }
@@ -141,7 +136,7 @@ Args syntax
    * - hasura_fields
      - true
      - [:ref:`PGColumn <PGColumn>`]
-     - List of PG columns in the table to join the remote schema
+     - List of PG columns in the table that will be used in the ``remote_field`` object.
    * - remote_schema
      - true
      - :ref:`RemoteSchemaName <RemoteSchemaName>`
@@ -229,6 +224,5 @@ RemoteField
        }
    }
 
-Where ``message`` is a top-level node exposed by the remote-schema and the
-``arguments`` specifies how to join the specified hasura table to the ``message``
-table.
+In the specified example, `message` is a top-level node exposed by the remote schema.
+The `arguments` field is used to specify how to join the specified Hasura table to the remote schema table.
