@@ -194,7 +194,7 @@
     "bootstrap-loader": "2.2.0",
     "bootstrap-sass": "3.4.1",
     "clean-webpack-plugin": "0.1.19",
-    "concurrently": "3.6.1",
+    "concurrently": "5.2.0",
     "css-loader": "3.5.3",
     "cypress": "4.6.0",
     "dotenv": "5.0.1",
