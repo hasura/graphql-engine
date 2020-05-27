@@ -1,0 +1,25 @@
+description: Simple remote relationship GraphQL query with interface
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - id: 1
+        communicationsInterface:
+          - msg: You win!
+      - id: 2
+        communicationsInterface:
+          - msg: You lose!
+      - id: 3
+        communicationsInterface:
+          - msg: Another alice
+query:
+  query: |
+    query {
+      profiles {
+        id
+        communicationsInterface {
+          msg
+        }
+      }
+    }

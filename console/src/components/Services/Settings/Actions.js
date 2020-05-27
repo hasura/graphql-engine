@@ -1,4 +1,5 @@
 import requestAction from '../../../utils/requestAction';
+import { clearIntrospectionSchemaCache } from '../RemoteSchema/graphqlUtils';
 import { push } from 'react-router-redux';
 import globals from '../../../Globals';
 import endpoints, { globalCookiePolicy } from '../../../Endpoints';
@@ -256,6 +257,9 @@ export const loadInconsistentObjects = (reloadConfig, successCb, failureCb) => {
         if (successCb) {
           successCb();
         }
+        if (shouldReloadRemoteSchemas) {
+          clearIntrospectionSchemaCache();
+        }
       },
       error => {
         console.error(error);
@@ -290,6 +294,8 @@ export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
         const inconsistentObjects = data[1].inconsistent_objects;
 
         dispatch(handleInconsistentObjects(inconsistentObjects));
+
+        clearIntrospectionSchemaCache();
 
         if (successCb) {
           successCb();
@@ -340,6 +346,7 @@ export const dropInconsistentObjects = (successCb, failureCb) => {
         dispatch({ type: DROPPED_INCONSISTENT_METADATA });
         dispatch(showSuccessNotification('Dropped inconsistent metadata'));
         dispatch(loadInconsistentObjects({ shouldReloadRemoteSchemas: false }));
+        clearIntrospectionSchemaCache();
         if (successCb) {
           successCb();
         }
