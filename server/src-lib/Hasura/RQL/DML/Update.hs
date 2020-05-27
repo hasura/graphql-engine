@@ -1,10 +1,10 @@
 module Hasura.RQL.DML.Update where
 
 import           Data.Aeson.Types
-import           Instances.TH.Lift        ()
+import           Instances.TH.Lift           ()
 
-import qualified Data.HashMap.Strict      as M
-import qualified Data.Sequence            as DS
+import qualified Data.HashMap.Strict         as M
+import qualified Data.Sequence               as DS
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -12,36 +12,15 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
+import           Hasura.RQL.DML.Update.Types
 import           Hasura.RQL.GBoolExp
-import           Hasura.RQL.Instances     ()
+import           Hasura.RQL.Instances        ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query        as Q
-import qualified Hasura.SQL.DML           as S
+import qualified Database.PG.Query           as Q
+import qualified Hasura.SQL.DML              as S
 
-data AnnUpdG v
-  = AnnUpd
-  { uqp1Table   :: !QualifiedTable
-  , uqp1OpExps  :: ![(PGColumnInfo, UpdOpExpG v)]
-  , uqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
-  , uqp1Check   :: !(AnnBoolExp v)
-  -- we don't prepare the arguments for returning
-  -- however the session variable can still be
-  -- converted as desired
-  , uqp1Output  :: !(MutationOutputG v)
-  , uqp1AllCols :: ![PGColumnInfo]
-  } deriving (Show, Eq)
-
-
-data UpdOpExpG v = UpdSet !v
-                 | UpdInc !v
-                 | UpdAppend !v
-                 | UpdPrepend !v
-                 | UpdDeleteKey !v
-                 | UpdDeleteElem !v
-                 | UpdDeleteAtPath !v
-                 deriving (Eq, Show, Functor, Foldable, Traversable, Generic, Data)
 
 -- FIXME: avoid this?
 updateOperatorText :: UpdOpExpG a -> Text

@@ -1,36 +1,31 @@
 module Hasura.RQL.DML.Insert where
 
-import           Data.Aeson.Types
-import           Instances.TH.Lift        ()
+import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict      as HM
-import qualified Data.HashSet             as HS
-import qualified Data.Sequence            as DS
+import           Data.Aeson.Types
+import           Instances.TH.Lift           ()
+
+import qualified Data.HashMap.Strict         as HM
+import qualified Data.HashSet                as HS
+import qualified Data.Sequence               as DS
+import qualified Database.PG.Query           as Q
+
+import qualified Hasura.SQL.DML              as S
 
 import           Hasura.EncJSON
-import           Hasura.Prelude
+import           Hasura.RQL.DML.Insert.Types
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
-import           Hasura.RQL.GBoolExp
-import           Hasura.RQL.Instances     ()
+import           Hasura.RQL.Instances        ()
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.BoolExp
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query        as Q
-import qualified Hasura.SQL.DML           as S
 
-data ConflictTarget
-  = CTColumn ![PGCol]
-  | CTConstraint !ConstraintName
-  deriving (Show, Eq)
 
-data ConflictClauseP1 v
-  = CP1DoNothing !(Maybe ConflictTarget)
-  | CP1Update !ConflictTarget ![PGCol] !PreSetColsPartial (Maybe (AnnBoolExp v))
-  deriving (Show, Eq)
 
-{-
+{- FIXME
 
 data InsertQueryP1
   = InsertQueryP1

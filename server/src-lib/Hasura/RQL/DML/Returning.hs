@@ -2,18 +2,14 @@ module Hasura.RQL.DML.Returning where
 
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Data.Text               as T
-import qualified Hasura.SQL.DML          as S
+import qualified Data.Text                      as T
+import qualified Hasura.SQL.DML                 as S
 
-data MutFldG v
-  = MCount
-  | MExp !T.Text
-  | MRet !(AnnFldsG v)
-  deriving (Show, Eq)
 
 traverseMutFld
   :: (Applicative f)
@@ -25,14 +21,6 @@ traverseMutFld f = \case
   MExp t    -> pure $ MExp t
   MRet flds -> MRet <$> traverse (traverse (traverseAnnFld f)) flds
 
-type MutFld = MutFldG S.SQLExp
-
-type MutFldsG v = Fields (MutFldG v)
-
-data MutationOutputG v
-  = MOutMultirowFields !(MutFldsG v)
-  | MOutSinglerowObject !(AnnFldsG v)
-  deriving (Show, Eq)
 
 traverseMutationOutput
   :: (Applicative f)
@@ -44,8 +32,6 @@ traverseMutationOutput f = \case
   MOutSinglerowObject annFields ->
     MOutSinglerowObject <$> traverseAnnFlds f annFields
 
-type MutationOutput = MutationOutputG S.SQLExp
-
 traverseMutFlds
   :: (Applicative f)
   => (a -> f b)
@@ -53,8 +39,6 @@ traverseMutFlds
   -> f (MutFldsG b)
 traverseMutFlds f =
   traverse (traverse (traverseMutFld f))
-
-type MutFlds = MutFldsG S.SQLExp
 
 hasNestedFld :: MutationOutputG a -> Bool
 hasNestedFld = \case

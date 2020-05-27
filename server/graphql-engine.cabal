@@ -305,14 +305,18 @@ library
                      -- , Hasura.RQL.DDL.Action
                      -- , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DML.Delete
+                     , Hasura.RQL.DML.Delete.Types
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
+                     , Hasura.RQL.DML.Insert.Types
                      , Hasura.RQL.DML.Mutation
                      , Hasura.RQL.DML.Returning
+                     , Hasura.RQL.DML.Returning.Types
                      , Hasura.RQL.DML.Select.Internal
                      , Hasura.RQL.DML.Select.Types
                      , Hasura.RQL.DML.Select
                      , Hasura.RQL.DML.Update
+                     , Hasura.RQL.DML.Update.Types
                      , Hasura.RQL.DML.Count
                      , Hasura.RQL.GBoolExp
 

@@ -8,17 +8,18 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict      as Map
-import qualified Data.Sequence            as DS
-import qualified Database.PG.Query        as Q
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.Sequence                  as DS
+import qualified Database.PG.Query              as Q
 
-import qualified Hasura.SQL.DML           as S
+import qualified Hasura.SQL.DML                 as S
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning
+import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select
-import           Hasura.RQL.Instances     ()
+import           Hasura.RQL.Instances           ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
