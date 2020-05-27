@@ -188,6 +188,13 @@ echo -e "INFO: Logs Folder        : $OUTPUT_FOLDER\n"
 
 pip3 install -r requirements.txt
 
+# node js deps
+curl -sL https://deb.nodesource.com/setup_8.x | bash -
+apt-get install -y nodejs
+npm_config_loglevel=error npm install $PYTEST_ROOT/remote_schemas/nodejs/
+
+npm install apollo-server graphql
+
 mkdir -p "$OUTPUT_FOLDER/hpc"
 
 export EVENT_WEBHOOK_HEADER="MyEnvValue"

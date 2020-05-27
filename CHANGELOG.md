@@ -2,6 +2,19 @@
 
 ## Next release
 
+### Remote Joins
+
+Remote Joins extend the concept of joining data across tables, to being able to join data across tables and remote schemas.
+
+It works similar to table relationships. Head to the `Relationship` tab in your table page and define a remote relationship:
+
+1. give a name for the relationship
+2. select the remote schema
+3. give the join configuration from table columns to remote schema fields.
+
+[Add docs links]
+[Add console screenshot]
+
 ### Scheduled Triggers
 
 A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron based or timestamp based.
@@ -10,7 +23,8 @@ A cron trigger will be useful when something needs to be done periodically. For 
 
 You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience.
 
-<Add docs links>
+[Add docs links]
+[Add console screenshot]
 
 (close #1914)
 

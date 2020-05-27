@@ -57,7 +57,6 @@ import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
 import           Hasura.Session
 
-
 printErrExit :: (MonadIO m) => forall a . String -> m a
 printErrExit = liftIO . (>> exitFailure) . putStrLn
 
