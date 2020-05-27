@@ -115,8 +115,8 @@ about the format of migration files, check out the :ref:`migration_file_format_v
 
 .. note::
 
-   From version x.xx and higher, the migrations are created as directories, for example: ``<timestamp>_create_table_public_author``.
-   The directory contains a called ``up.yaml`` and - if applicable - a file called ``down.yaml``.
+   From version ``v1.0.0`` and higher, a directory is created for each migration with the name format ``timestamp_name``.
+   The directory contains four files: ``up.sql``, ``up.yaml``, ``down.sql`` and ``down.yaml``.
 
 .. note::
 
