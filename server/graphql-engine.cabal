@@ -333,6 +333,7 @@ library
                      -- , Hasura.GraphQL.Validate.InputValue
                      -- , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute
+                     , Hasura.GraphQL.Execute.Flatten
                      , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Execute.Resolve

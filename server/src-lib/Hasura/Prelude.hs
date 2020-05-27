@@ -58,6 +58,7 @@ import           Data.These                        as M (These (..), fromThese, 
                                                          mergeTheseWith, these)
 import           Data.Time.Clock.Units
 import           Data.Traversable                  as M (for)
+import           Data.Void                         as M (Void, absurd)
 import           Data.Word                         as M (Word64)
 import           GHC.Generics                      as M (Generic)
 import           Prelude                           as M hiding (fail, init, lookup)

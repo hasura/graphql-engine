@@ -12,7 +12,6 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
-import           Control.Lens
 import           Data.Scientific                        (toBoundedInteger, toRealFloat)
 
 import           Hasura.GraphQL.Parser.Schema
@@ -27,7 +26,7 @@ resolveVariables
   -> m (G.SelectionSet G.FragmentSpread Variable)
 resolveVariables definitions jsonValues selSet = do
   variables <- Map.fromListOn getName <$> traverse buildVariable definitions
-  traverseOf G.variables (resolveVariable variables) selSet
+  traverse (traverse (resolveVariable variables)) selSet
   where
     buildVariable :: G.VariableDefinition -> m Variable
     buildVariable G.VariableDefinition{ G._vdName, G._vdType, G._vdDefaultValue } = do

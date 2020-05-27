@@ -16,7 +16,6 @@ import           Data.GADT.Compare.Extended
 import           Data.Int                      (Int32)
 import           Data.Parser.JSONPath
 import           Data.Type.Equality
-import           Data.Void
 import           Language.GraphQL.Draft.Syntax (Description (..), EnumValue (..), Field (..),
                                                 FragmentSpread, Name (..), Selection (..),
                                                 SelectionSet, Value (..), litName, literal)
