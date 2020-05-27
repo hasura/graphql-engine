@@ -51,12 +51,14 @@ Follow the instructions in :ref:`install_hasura_cli`.
 Step 2: Set up a project directory
 ----------------------------------
 
-Execute the command below. For the endpoint referred here, let's say you've
+For the endpoint referred here, let's say you've
 deployed the GraphQL engine on Heroku, then this endpoint is:
 ``https://my-graphql.herokuapp.com``. In case you've deployed this using Docker,
 the URL might be ``http://xx.xx.xx.xx:8080``. This endpoint should not contain
 the ``v1/graphql`` API path. It should just be the hostname and any
 sub-path if it is configured that way. 
+
+Let's set up a project directory by executing the following command:
 
 .. code-block:: bash
 
@@ -87,7 +89,7 @@ metadata from the server:
 .. code-block:: bash
 
    # (available after version v1.0.0-alpha45)
-   # create migration files (note that this will only export public schema from postgres)
+   # create migration files (note that this will only export the public schema from postgres)
    hasura migrate create "init" --from-server
 
    # note down the version
@@ -186,4 +188,4 @@ issue.
 
 If ``DATABASE STATUS`` indicates ``Not Present``, it denotes that there are new
 migration versions in the local directory which are not applied on the database
-yet. Executing a ``migrate apply`` would take care of such scenarios.
+yet. Executing a ``migrate apply`` will resolve this.

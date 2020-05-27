@@ -81,6 +81,7 @@ Reference documentation
   :hidden:
 
   Basics <basics>
+  Migrations setup <migrations-setup/index>
   Manage metadata <manage-metadata>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>
