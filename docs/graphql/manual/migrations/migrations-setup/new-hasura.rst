@@ -45,7 +45,7 @@ Step 2: Set up a project directory
 
 For the endpoint referred here, let's say you've
 deployed the GraphQL engine on Heroku, then this endpoint is:
-``https://my-graphql.herokuapp.com``. In case you've deployed this using Docker,
+``https://my-graphql.herokuapp.com``. In case you've deployed Hasura using Docker,
 the URL might be ``http://xx.xx.xx.xx:8080``. In any case, the endpoint should **not** contain
 the ``v1/graphql`` API path. It should just be the hostname and any
 sub-path if it is configured that way. 
@@ -127,7 +127,7 @@ Next, export the metadata from your current instance:
    # in project dir
    hasura metadata export --endpoint http://my-graphql.herokuapp.com
 
-Now, import the metadata to your new instance:
+Now, apply the metadata to your new instance:
 
 .. code-block:: bash
 
@@ -152,7 +152,7 @@ Step 6: Check the status of migrations
    hasura migrate status
 
 This command will print out each migration version present in the ``migrations``
-directory and the ones applied on the database, along with a status text.
+directory along with its name, source status and database status.
 
 For example,
 
@@ -165,7 +165,7 @@ For example,
    1590497881360  create_table_public_article    Present        Present
 
 Such a migration status indicates that there are 2 migration versions in the
-local directory and all of them are applied on the database.
+local directory and both of them are applied on the database.
 
 If ``SOURCE STATUS`` indicates ``Not Present``, it means that the migration
 version is present on the server, but not on the current user's local directory.
