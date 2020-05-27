@@ -11,6 +11,19 @@ import { getPathRoot } from '../Common/utils/urlUtils';
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
 
+import logo from './images/white-logo.svg';
+import pixHeart from './images/pix-heart.svg';
+import close from './images/x-circle.svg';
+import monitoring from './images/monitoring.svg';
+import rate from './images/rate.svg';
+import regression from './images/regression.svg';
+import management from './images/management.svg';
+import allow from './images/allow-listing.svg';
+import read from './images/read-replica.svg';
+import arrowForwardRed from './images/arrow_forward-red.svg';
+
+import styles from './Main.scss';
+
 import {
   loadServerVersion,
   fetchServerConfig,
@@ -203,25 +216,8 @@ class Main extends React.Component {
 
     const { isProClicked } = this.state.proClickState;
 
-    const styles = require('./Main.scss');
-
     const appPrefix = '';
 
-    const logo = require('./images/white-logo.svg');
-    // const github = require('./images/Github.svg');
-    // const discord = require('./images/Discord.svg');
-    // const mail = require('./images/mail.svg');
-    // const docs = require('./images/docs-logo.svg');
-    const pixHeart = require('./images/pix-heart.svg');
-    const close = require('./images/x-circle.svg');
-    const monitoring = require('./images/monitoring.svg');
-    const rate = require('./images/rate.svg');
-    const regression = require('./images/regression.svg');
-    const management = require('./images/management.svg');
-    const allow = require('./images/allow-listing.svg');
-    const read = require('./images/read-replica.svg');
-
-    const arrowForwardRed = require('./images/arrow_forward-red.svg');
     const currentLocation = location.pathname;
     const currentActiveBlock = getPathRoot(currentLocation);
 
@@ -753,7 +749,11 @@ class Main extends React.Component {
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
               {getAdminSecretSection()}
-              <div className={styles.helpSection + ' ' + styles.proWrapper}>
+              <div
+                className={
+                  styles.headerRightNavbarBtn + ' ' + styles.proWrapper
+                }
+              >
                 <span
                   className={
                     !isProClicked ? styles.proName : styles.proNameClicked
@@ -765,11 +765,9 @@ class Main extends React.Component {
                 {renderProPopup()}
               </div>
               <Link to="/settings">
-                <div className={styles.supportSection}>
-                  <div className={styles.helpSection}>
-                    {getMetadataStatusIcon()}
-                    {getSettingsSelectedMarker()}
-                  </div>
+                <div className={styles.headerRightNavbarBtn}>
+                  {getMetadataStatusIcon()}
+                  {getSettingsSelectedMarker()}
                 </div>
               </Link>
               <a
@@ -778,9 +776,7 @@ class Main extends React.Component {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <div className={styles.supportSection}>
-                  <div className={styles.helpSection}>HELP</div>
-                </div>
+                <div className={styles.headerRightNavbarBtn}>HELP</div>
               </a>
               {getLoveSection()}
             </div>

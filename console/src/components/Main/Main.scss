@@ -908,24 +908,19 @@
   border-bottom: 1px solid #788095;
 }
 
-.supportSection {
-  cursor: pointer;
-
-  .helpSection {
-    &:hover {
-      opacity: 0.7;
-      font-weight: 600;
-    }
-  }
-}
-
-.helpSection {
+.headerRightNavbarBtn {
   display: flex;
   align-items: center;
   // background-color: #22283b;
   padding: 15px;
   position: relative;
   color: #fff;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.7;
+    font-weight: 600;
+  }
 
   .selected {
     bottom: 0;
@@ -1337,7 +1332,7 @@
     }
   }
 
-  .helpSection {
+  .headerRightNavbarBtn {
     font-size: 12px;
   }
 
