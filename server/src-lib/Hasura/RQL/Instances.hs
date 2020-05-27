@@ -26,12 +26,12 @@ instance NFData G.Name where
 
 instance NFData a => NFData (G.Directive a)
 instance NFData a => NFData (G.ExecutableDefinition a)
-instance NFData a => NFData (G.Field a)
+instance (NFData (a b), NFData b) => NFData (G.Field a b)
 instance NFData a => NFData (G.FragmentSpread a)
-instance NFData a => NFData (G.InlineFragment a)
-instance NFData a => NFData (G.OperationDefinition a)
-instance NFData a => NFData (G.Selection a)
-instance NFData a => NFData (G.TypedOperationDefinition a)
+instance (NFData (a b), NFData b) => NFData (G.InlineFragment a b)
+instance (NFData (a b), NFData b) => NFData (G.OperationDefinition a b)
+instance (NFData (a b), NFData b) => NFData (G.Selection a b)
+instance (NFData (a b), NFData b) => NFData (G.TypedOperationDefinition a b)
 instance NFData a => NFData (G.Value a)
 
 deriving instance NFData G.Description

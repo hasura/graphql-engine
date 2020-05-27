@@ -213,7 +213,7 @@ convertQuerySelSet
      , Has UserInfo r
      )
   => GQLContext
-  -> G.SelectionSet G.Name
+  -> G.SelectionSet G.FragmentSpread G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)

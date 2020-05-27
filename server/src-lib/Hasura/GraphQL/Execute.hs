@@ -47,10 +47,10 @@ import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward)
 import           Hasura.Server.Version                  (HasVersion)
 
+import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Query           as EQ
-import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
@@ -62,7 +62,7 @@ import qualified Hasura.Server.Telemetry.Counters       as Telem
 -- intermediate passes
 data GQExecPlan a
   = GExPHasura !a
-  | GExPRemote !RemoteSchemaInfo !(G.TypedOperationDefinition G.Name)
+  | GExPRemote !RemoteSchemaInfo !(G.TypedOperationDefinition G.FragmentSpread G.Name)
   deriving (Functor, Foldable, Traversable)
 
 -- | Execution context
@@ -92,7 +92,7 @@ data ExecutionCtx
 
 -- TODO: we should fix this function asap
 -- as this will fail when there is a fragment at the top level
-getTopLevelNodes :: G.TypedOperationDefinition G.Name -> [G.Name]
+getTopLevelNodes :: G.TypedOperationDefinition G.FragmentSpread G.Name -> [G.Name]
 getTopLevelNodes opDef =
   mapMaybe f $ G._todSelectionSet opDef
   where
@@ -112,14 +112,14 @@ getTopLevelNodes opDef =
 --       in maybe qr (Map.union qr) mr
 
 -- This is for when the graphql query is validated
-type ExecPlanPartial = GQExecPlan (C.GQLContext, G.TypedOperationDefinition G.Name)
+type ExecPlanPartial = GQExecPlan (C.GQLContext, G.TypedOperationDefinition G.FragmentSpread G.Name)
 
 getTypedOp
   :: (MonadError QErr m)
   => Maybe OperationName
-  -> [G.SelectionSet G.Name]
-  -> [G.TypedOperationDefinition G.Name]
-  -> m (G.TypedOperationDefinition G.Name)
+  -> [G.SelectionSet G.FragmentSpread G.Name]
+  -> [G.TypedOperationDefinition G.FragmentSpread G.Name]
+  -> m (G.TypedOperationDefinition G.FragmentSpread G.Name)
 getTypedOp opNameM selSets opDefs =
   case (opNameM, selSets, opDefs) of
     (Just opName, [], _) -> do
@@ -141,10 +141,10 @@ getTypedOp opNameM selSets opDefs =
 
 data QueryParts
   = QueryParts
-  { qpOpDef     :: !(G.TypedOperationDefinition G.Name)
+  { qpOpDef    :: !(G.TypedOperationDefinition G.FragmentSpread G.Name)
 --  , qpOpRoot    :: !ObjTyInfo
 --  , qpFragDefsL :: ![G.FragmentDefinition]
-  , qpVarValsM  :: !(Maybe VariableValues)
+  , qpVarValsM :: !(Maybe VariableValues)
   }
 
 getQueryParts
@@ -314,7 +314,7 @@ getQueryOp
   => C.GQLContext
   -> SQLGenCtx
   -> UserInfo
-  -> G.SelectionSet G.Name
+  -> G.SelectionSet G.FragmentSpread G.Name
   -> [G.VariableDefinition]
   -> Maybe VariableValues
   -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
@@ -429,7 +429,7 @@ execRemoteGQ
   -> [N.Header]
   -> GQLReqUnparsed
   -> RemoteSchemaInfo
-  -> G.TypedOperationDefinition G.Name
+  -> G.TypedOperationDefinition G.FragmentSpread G.Name
   -> m (DiffTime, HttpResponse EncJSON)
   -- ^ Also returns time spent in http request, for telemetry.
 execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do

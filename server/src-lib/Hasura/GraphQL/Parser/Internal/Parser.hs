@@ -18,8 +18,8 @@ import           Data.Parser.JSONPath
 import           Data.Type.Equality
 import           Data.Void
 import           Language.GraphQL.Draft.Syntax (Description (..), EnumValue (..), Field (..),
-                                                Name (..), Selection (..), SelectionSet, Value (..),
-                                                litName, literal)
+                                                FragmentSpread, Name (..), Selection (..),
+                                                SelectionSet, Value (..), litName, literal)
 
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Schema
@@ -85,9 +85,11 @@ instance HasDefinition (Parser k m a) (TypeInfo k) where
   definitionLens f parser = definitionLens f (pType parser) <&> \pType -> parser { pType }
 
 type family ParserInput k where
-  ParserInput 'Both = Value Variable -- see Note [The 'Both kind] in Hasura.GraphQL.Parser.Schema
+  -- see Note [The 'Both kind] in Hasura.GraphQL.Parser.Schema
+  ParserInput 'Both = Value Variable
   ParserInput 'Input = Value Variable
-  ParserInput 'Output = SelectionSet Variable -- see Note [The meaning of Parser 'Output]
+  -- see Note [The meaning of Parser 'Output]
+  ParserInput 'Output = SelectionSet FragmentSpread Variable
 
 {- Note [The meaning of Parser 'Output]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -196,7 +198,7 @@ instance Applicative m => Applicative (InputFieldsParser m) where
 -- 'selectionSet' to obtain a 'Parser'.
 data FieldParser m a = FieldParser
   { fDefinition :: Definition FieldInfo
-  , fParser     :: Field Variable -> m a
+  , fParser     :: Field FragmentSpread Variable -> m a
   } deriving (Functor)
 
 -- | A single parsed field in a selection set.

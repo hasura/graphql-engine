@@ -195,12 +195,12 @@ instance Cacheable a => Cacheable [a]
 instance Cacheable a => Cacheable (NonEmpty a)
 instance Cacheable a => Cacheable (G.Directive a)
 instance Cacheable a => Cacheable (G.ExecutableDefinition a)
-instance Cacheable a => Cacheable (G.Field a)
+instance (Cacheable (a b), Cacheable b) => Cacheable (G.Field a b)
 instance Cacheable a => Cacheable (G.FragmentSpread a)
-instance Cacheable a => Cacheable (G.InlineFragment a)
-instance Cacheable a => Cacheable (G.OperationDefinition a)
-instance Cacheable a => Cacheable (G.Selection a)
-instance Cacheable a => Cacheable (G.TypedOperationDefinition a)
+instance (Cacheable (a b), Cacheable b) => Cacheable (G.InlineFragment a b)
+instance (Cacheable (a b), Cacheable b) => Cacheable (G.OperationDefinition a b)
+instance (Cacheable (a b), Cacheable b) => Cacheable (G.Selection a b)
+instance (Cacheable (a b), Cacheable b) => Cacheable (G.TypedOperationDefinition a b)
 instance Cacheable a => Cacheable (G.Value a)
 
 deriving instance Cacheable G.Description

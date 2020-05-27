@@ -358,7 +358,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     runRemoteGQ :: ExceptT () IO DiffTime
                 -> Telem.CacheHit -> E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
-                -> G.TypedOperationDefinition G.Name -> RemoteSchemaInfo
+                -> G.TypedOperationDefinition G.FragmentSpread G.Name -> RemoteSchemaInfo
                 -> ExceptT () IO ()
     runRemoteGQ timerTot telemCacheHit execCtx reqId userInfo reqHdrs opDef rsi = do
       let telemLocality = Telem.Remote

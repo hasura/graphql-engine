@@ -4,29 +4,30 @@ module Hasura.GraphQL.Execute.Resolve
   ( resolveVariables
   ) where
 
-import Hasura.Prelude
+import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended  as Map
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Data.Aeson as J
+import qualified Data.Aeson                             as J
+import qualified Data.HashMap.Strict.Extended           as Map
+import qualified Language.GraphQL.Draft.Syntax          as G
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
-import Data.Scientific (toBoundedInteger, toRealFloat)
+import           Control.Lens
+import           Data.Scientific                        (toBoundedInteger, toRealFloat)
 
-import Hasura.GraphQL.Parser.Schema
-import Hasura.RQL.Types.Error
-import Hasura.SQL.Types
+import           Hasura.GraphQL.Parser.Schema
+import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Types
 
 resolveVariables
   :: forall m. MonadError QErr m
   => [G.VariableDefinition]
   -> GH.VariableValues
-  -> G.SelectionSet G.Name
-  -> m (G.SelectionSet Variable)
+  -> G.SelectionSet G.FragmentSpread G.Name
+  -> m (G.SelectionSet G.FragmentSpread Variable)
 resolveVariables definitions jsonValues selSet = do
   variables <- Map.fromListOn getName <$> traverse buildVariable definitions
-  traverse (traverse (resolveVariable variables)) selSet
+  traverseOf G.variables (resolveVariable variables) selSet
   where
     buildVariable :: G.VariableDefinition -> m Variable
     buildVariable G.VariableDefinition{ G._vdName, G._vdType, G._vdDefaultValue } = do
@@ -49,7 +50,7 @@ resolveVariables definitions jsonValues selSet = do
     resolveVariable :: HashMap G.Name Variable -> G.Name -> m Variable
     resolveVariable variables name = case Map.lookup name variables of
       Just variable -> pure variable
-      Nothing -> throw400 ValidationFailed $ "unbound variable " <>> name
+      Nothing       -> throw400 ValidationFailed $ "unbound variable " <>> name
 
 jsonToGqlValue :: MonadError QErr m => J.Value -> m (G.Value a)
 jsonToGqlValue J.Null         = pure $ G.VNull

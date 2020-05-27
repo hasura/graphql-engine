@@ -47,11 +47,11 @@ import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.Db
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.GraphQL.Parser.Column
 
 -- -------------------------------------------------------------------------------------------------
 -- Multiplexed queries
@@ -250,7 +250,7 @@ buildLiveQueryPlan
      )
   => PGExecCtx
   -> G.Name
-  -> G.SelectionSet G.Name
+  -> G.SelectionSet G.FragmentSpread G.Name
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
 buildLiveQueryPlan pgExecCtx fieldAlias astUnresolved = do
   _
