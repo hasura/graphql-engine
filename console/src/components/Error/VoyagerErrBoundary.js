@@ -1,57 +1,42 @@
-import React, { Component, ReactNode } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import globals from '../../Globals';
-import styles from './ErrorPage.scss';
 
-type State = {
-  error: object | null;
-  // FIXME: remove any
-  // fix type for 'componentStack'
-  errorInfo: any;
-};
-
-type Props = {
-  children: ReactNode;
-};
-
-export default class VoyagerErrBoundary extends Component<Props, State> {
-  readonly state: State = {
-    error: null,
-    errorInfo: null,
-  };
-
-  static getDerivedStateFromError(error: object) {
-    return { error };
+class VoyagerErrBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      error: null,
+      errorInfo: null,
+    };
   }
 
-  componentDidCatch(_: any, errorInfo: object) {
+  componentDidCatch(error, errorInfo) {
     this.setState({
       errorInfo,
+      error,
     });
+
+    // TODO: log error in redux? other service?
   }
 
   render() {
     const errorImage = `${globals.assetsPath}/common/img/hasura_icon_green.svg`;
+    const styles = require('./ErrorPage.scss');
 
-    if (this.state.error) {
+    if (this.state.errorInfo) {
       return (
         <div className={styles.viewContainer}>
           <div className={`container ${styles.centerContent}`}>
             <div className={`row ${styles.message}`}>
               <div className="col-xs-8">
-                <h1>Error</h1>
+                <h1>Error on VoyagerView!</h1>
                 <br />
                 <div>
-                  Something went wrong.
-                  <details>
-                    <summary>Error Summary</summary>
+                  <pre className={styles.errorStack}>
                     {this.state.error && this.state.error.toString()}
-                    <br />
-                    <div>
-                      <pre className={styles.errorStack}>
-                        {this.state.errorInfo.componentStack}
-                      </pre>
-                    </div>
-                  </details>
+                    {this.state.errorInfo.componentStack}
+                  </pre>
                 </div>
                 <br />
               </div>
@@ -72,3 +57,9 @@ export default class VoyagerErrBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+
+VoyagerErrBoundary.propTypes = {
+  children: PropTypes.node,
+};
+
+export default VoyagerErrBoundary;
