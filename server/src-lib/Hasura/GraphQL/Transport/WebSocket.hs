@@ -94,7 +94,7 @@ data WSConnData
   -- are not tracked here
   , _wscOpMap     :: !OperationMap
   , _wscErrRespTy :: !ErrRespType
-  , _wscAPIType   :: !E.GraphQLAPIType
+  , _wscAPIType   :: !E.GraphQLQueryType
   }
 
 type WSServer = WS.WSServer WSConnData
@@ -204,10 +204,10 @@ onConn :: (MonadIO m)
        => L.Logger L.Hasura -> CorsPolicy -> WS.OnConnH m WSConnData
 onConn (L.Logger logger) corsPolicy wsId requestHead = do
   res <- runExceptT $ do
-    (errType, apiType) <- checkPath
+    (errType, queryType) <- checkPath
     let reqHdrs = WS.requestHeaders requestHead
     headers <- maybe (return reqHdrs) (flip enforceCors reqHdrs . snd) getOrigin
-    return (WsHeaders $ filterWsHeaders headers, errType, apiType)
+    return (WsHeaders $ filterWsHeaders headers, errType, queryType)
   either reject accept res
 
   where
@@ -226,13 +226,13 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       currTime <- TC.getCurrentTime
       sleep $ convertDuration $ TC.diffUTCTime expTime currTime
 
-    accept (hdrs, errType, apiType) = do
+    accept (hdrs, errType, queryType) = do
       logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing Nothing) EAccepted
       connData <- liftIO $ WSConnData
                   <$> STM.newTVarIO (CSNotInitialised hdrs)
                   <*> STMMap.newIO
                   <*> pure errType
-                  <*> pure apiType
+                  <*> pure queryType
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
       return $ Right $ WS.AcceptWith connData acceptRequest keepAliveAction tokenExpiryHandler
@@ -245,9 +245,9 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
         (BL.toStrict $ J.encode $ encodeGQLErr False qErr)
 
     checkPath = case WS.requestPath requestHead of
-      "/v1alpha1/graphql" -> return (ERTLegacy, E.GATGeneral)
-      "/v1/graphql"       -> return (ERTGraphqlCompliant, E.GATGeneral)
-      "/v1/relay"         -> return (ERTGraphqlCompliant, E.GATRelay)
+      "/v1alpha1/graphql" -> return (ERTLegacy, E.QueryHasura)
+      "/v1/graphql"       -> return (ERTGraphqlCompliant, E.QueryHasura)
+      "/v1/relay"         -> return (ERTGraphqlCompliant, E.QueryRelay)
       _                   ->
         throw404 "only '/v1/graphql', '/v1alpha1/graphql' are supported on websockets"
 
@@ -309,7 +309,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   requestId <- getRequestId reqHdrs
   (sc, scVer) <- liftIO getSchemaCache
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
-               planCache userInfo sqlGenCtx enableAL sc scVer apiType httpMgr reqHdrs q
+               planCache userInfo sqlGenCtx enableAL sc scVer queryType httpMgr reqHdrs q
 
   (telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx
@@ -400,7 +400,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx planCache
       _ enableAL = serverEnv
 
-    WSConnData userInfoR opMap errRespTy apiType = WS.getData wsConn
+    WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
 
     logOpEv opTy reqId =
       logWSEvent logger wsConn $ EOperation opDet

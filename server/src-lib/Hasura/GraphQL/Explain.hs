@@ -37,7 +37,7 @@ data GQLExplain
   , _gqeIsRelay :: !(Maybe Bool)
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True}
   ''GQLExplain
  )
 
@@ -127,7 +127,7 @@ explainGQLQuery
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query userVarsRaw maybeIsRelay) = do
   userInfo <- mkUserInfo UAdminSecretSent sessionVariables $ Just adminRoleName
   (execPlan, queryReusability) <- runReusabilityT $
-    E.getExecPlanPartial userInfo sc apiType enableAL query
+    E.getExecPlanPartial userInfo sc queryType enableAL query
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet) ->
       return (gCtx, rootSelSet)
@@ -135,7 +135,8 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query
       throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
     GV.RQuery selSet ->
-      runInTx $ encJFromJValue <$> GV.traverseObjectSelectionSet selSet (explainField userInfo gCtx sqlGenCtx actionExecuter)
+      runInTx $ encJFromJValue . map snd <$>
+        GV.traverseObjectSelectionSet selSet (explainField userInfo gCtx sqlGenCtx actionExecuter)
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
     GV.RSubscription fields -> do
@@ -143,6 +144,6 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query
                      queryReusability actionExecuter fields
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
-    apiType = bool E.GATGeneral E.GATRelay $ fromMaybe False maybeIsRelay
+    queryType = bool E.QueryHasura E.QueryRelay $ fromMaybe False maybeIsRelay
     sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly

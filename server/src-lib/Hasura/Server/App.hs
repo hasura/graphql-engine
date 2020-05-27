@@ -319,8 +319,8 @@ v1QueryHandler query = do
 
 v1Alpha1GQHandler
   :: (HasVersion, MonadIO m)
-  => E.GraphQLAPIType -> GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
-v1Alpha1GQHandler apiType query = do
+  => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
+v1Alpha1GQHandler queryType query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
@@ -336,18 +336,18 @@ v1Alpha1GQHandler apiType query = do
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
                 (lastBuiltSchemaCache sc) scVer manager enableAL
   flip runReaderT execCtx $
-    GH.runGQBatched requestId responseErrorsConfig userInfo reqHeaders apiType query
+    GH.runGQBatched requestId responseErrorsConfig userInfo reqHeaders queryType query
 
 v1GQHandler
   :: (HasVersion, MonadIO m)
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
-v1GQHandler = v1Alpha1GQHandler E.GATGeneral
+v1GQHandler = v1Alpha1GQHandler E.QueryHasura
 
 v1GQRelayHandler
   :: (HasVersion, MonadIO m)
   => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
-v1GQRelayHandler = v1Alpha1GQHandler E.GATRelay
+v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 
 gqlExplainHandler :: (HasVersion, MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
 gqlExplainHandler query = do
@@ -616,7 +616,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     when enableGraphQL $ do
       Spock.post "v1alpha1/graphql" $ spockAction GH.encodeGQErr id $
-        mkPostHandler $ mkAPIRespHandler $ v1Alpha1GQHandler E.GATGeneral
+        mkPostHandler $ mkAPIRespHandler $ v1Alpha1GQHandler E.QueryHasura
 
       Spock.post "v1/graphql" $ spockAction GH.encodeGQErr allMod200 $
         mkPostHandler $ mkAPIRespHandler v1GQHandler

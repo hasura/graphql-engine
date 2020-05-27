@@ -4,6 +4,7 @@ module Hasura.GraphQL.Execute.Query
   , ReusableQueryPlan
   , GeneratedSqlMap
   , PreparedSql(..)
+  , GraphQLQueryType(..)
   ) where
 
 import qualified Data.Aeson                             as J
@@ -197,7 +198,7 @@ convertQuerySelSet
 convertQuerySelSet initialReusability selSet actionRunner = do
   usrVars <- asks (_uiSession . getter)
   (fldPlans, finalReusability) <- runReusabilityTWith initialReusability $
-    fmap (map (\(a, b) -> (G.Alias $ G.Name a, b))) $ V.traverseObjectSelectionSet selSet $ \fld -> do
+    fmap (map (\(a, b) -> (G.Alias $ G.Name a, b))) $ V.traverseObjectSelectionSet selSet $ \fld ->
       case V._fName fld of
         "__type"     -> fldPlanFromJ <$> R.typeR fld
         "__schema"   -> fldPlanFromJ <$> R.schemaR fld
@@ -274,3 +275,15 @@ mkGeneratedSqlMap resolved =
                 RRRaw _  -> Nothing
                 RRSql ps -> Just ps
     in (alias, res)
+
+-- The GraphQL Query type
+data GraphQLQueryType
+  = QueryHasura
+  | QueryRelay
+  deriving (Show, Eq, Ord, Generic)
+instance Hashable GraphQLQueryType
+
+instance J.ToJSON GraphQLQueryType where
+  toJSON = \case
+    QueryHasura -> "hasura"
+    QueryRelay  -> "relay"

@@ -1,6 +1,6 @@
 module Hasura.GraphQL.Execute
   ( GQExecPlan(..)
-  , GraphQLAPIType(..)
+  , EQ.GraphQLQueryType(..)
 
   , ExecPlanPartial
   , getExecPlanPartial
@@ -60,12 +60,6 @@ import qualified Hasura.GraphQL.Validate.SelectionSet   as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
-
--- The GraphQL API type
-data GraphQLAPIType
-  = GATGeneral
-  | GATRelay
-  deriving (Show, Eq)
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
@@ -130,19 +124,19 @@ getExecPlanPartial
   :: (MonadReusability m, MonadError QErr m)
   => UserInfo
   -> SchemaCache
-  -> GraphQLAPIType
+  -> EQ.GraphQLQueryType
   -> Bool
   -> GQLReqParsed
   -> m ExecPlanPartial
-getExecPlanPartial userInfo sc apiType enableAL req = do
+getExecPlanPartial userInfo sc queryType enableAL req = do
 
   -- check if query is in allowlist
   when enableAL checkQueryInAllowlist
 
-  let gCtx = case apiType of
-        GATGeneral -> getGCtx (_uiBackendOnlyFieldAccess userInfo) sc roleName
-        GATRelay   -> maybe GC.emptyGCtx _rctxDefault $
-                      Map.lookup roleName (scRelayGCtxMap sc)
+  let gCtx = case queryType of
+        EQ.QueryHasura -> getGCtx (_uiBackendOnlyFieldAccess userInfo) sc roleName
+        EQ.QueryRelay  -> maybe GC.emptyGCtx _rctxDefault $
+                          Map.lookup roleName (scRelayGCtxMap sc)
 
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
@@ -198,15 +192,15 @@ getResolvedExecPlan
   -> Bool
   -> SchemaCache
   -> SchemaCacheVer
-  -> GraphQLAPIType
+  -> EQ.GraphQLQueryType
   -> HTTP.Manager
   -> [N.Header]
   -> GQLReqUnparsed
   -> m (Telem.CacheHit, ExecPlanResolved)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  enableAL sc scVer apiType httpManager reqHeaders reqUnparsed = do
+  enableAL sc scVer queryType httpManager reqHeaders reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo)
-           opNameM queryStr planCache
+           opNameM queryStr queryType planCache
   let usrVars = _uiSession userInfo
   case planM of
     -- plans are only for queries and subscriptions
@@ -221,11 +215,11 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
     GQLReq opNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
       liftIO $ EP.addPlan scVer (_uiRole userInfo)
-      opNameM queryStr plan planCache
+      opNameM queryStr plan queryType planCache
     noExistingPlan = do
       req <- toParsed reqUnparsed
       (partialExecPlan, queryReusability) <- runReusabilityT $
-        getExecPlanPartial userInfo sc apiType enableAL req
+        getExecPlanPartial userInfo sc queryType enableAL req
       forM partialExecPlan $ \(gCtx, rootSelSet) ->
         case rootSelSet of
           VQ.RMutation selSet -> do
