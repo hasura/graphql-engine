@@ -189,7 +189,7 @@ Now, import the metadata to your new instance:
 
 If you now open the console of the new instance, you can see that the three tables have been created and are tracked:
 
-.. thumbnail:: /img/graphql/manual/migrations/tracked-tables.png
+.. thumbnail:: /img/graphql/manual/migrations/tracked-tables-hasura-set-up.png
    :alt: Schema for an article table
    :width: 40%
 
