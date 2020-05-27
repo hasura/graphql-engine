@@ -117,6 +117,9 @@ const RawSQL = ({
   );
 
   const submitSQL = () => {
+    // set SQL to LS
+    localStorage.setItem(LS_RAW_SQL_SQL, sql);
+
     // check migration mode global
     if (migrationMode) {
       const checkboxElem = document.getElementById('migration-checkbox');
