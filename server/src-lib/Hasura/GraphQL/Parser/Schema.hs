@@ -232,8 +232,8 @@ advantage of this happy coincidence and make the kinds serve double duty:
   * We can make `ParserInput 'Both` identical to `ParserInput 'Input`, since
     all parsers of kind 'Both only parse input values.
 
-  * We can make `selection`’s return type dependent on the kind of the field’s
-    type, which is handled by the SelectionResult type family.
+  * We can require types of kind 'Both in `selection`, which does not expect a
+    sub-selection set, and types of kind 'Output in `subselection`, which does.
 
 Relying on this coincidence might seem a little gross, and perhaps it is
 somewhat. But it’s enormously convenient: not doing this would make some types

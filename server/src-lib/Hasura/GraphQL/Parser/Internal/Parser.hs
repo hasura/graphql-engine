@@ -482,7 +482,7 @@ subselection
   => Name
   -> Maybe Description
   -> InputFieldsParser m a -- ^ parser for the input arguments
-  -> Parser 'Output m b -- ^ parser for the subselection set; see also
+  -> Parser 'Output m b -- ^ parser for the subselection set
   -> FieldParser m (a, b)
 subselection name description argumentsParser bodyParser = FieldParser
   { fDefinition = mkDefinition name description $
