@@ -28,18 +28,17 @@ create_remote_relationship
    {
       "type":"create_remote_relationship",
       "args":{
-         "name":"sample_remote_relationship",
-         "table":"users",
-         "hasura_fields":[
-           "id"
-         ],
-         "remote_schema":"my-remote-schema",
-         "remote_field":{
-           "messages":{
-              "arguments":{
+         "name": "sample_remote_relationship",
+         "table": "users",
+         "hasura_fields": ["id"],
+         "remote_schema": "my-remote-schema",
+         "remote_field": {
+           "messages": {
+              "arguments": {
                  "id":"$id"
               }
            }
+         }
       }
    }
 
@@ -74,7 +73,7 @@ Args syntax
    * - remote_field
      - true
      - RemoteField_
-     - Name of the field in remote schema with the join arguments.
+     - The schema tree ending at the field in remote schema which needs to be joined with.
 
 .. _update_remote_relationship:
 
@@ -99,12 +98,11 @@ update_remote_relationship
         "remote_field": {
           "posts": {
              "arguments": {
-                "id":"$id",
-                "where":{
-                   "likes":{
+                "id": "$id",
+                "likes": {
                    "lte":"1000"
-                },
-                "limit":100
+                }
+             }
           }
         }
      }
@@ -141,7 +139,7 @@ Args syntax
    * - remote_field
      - true
      - RemoteField_
-     - Name of the field in remote schema with the join arguments.
+     - The schema tree ending at the field in remote schema which needs to be joined with.
 
 .. _delete_remote_relationship:
 
@@ -168,8 +166,6 @@ delete_remote_relationship
    }
 
 .. _delete_remote_relationship_syntax:
-
-``delete_remote_relationship`` will delete an existing remote relationship.
 
 Args syntax
 ^^^^^^^^^^^
@@ -203,6 +199,19 @@ RemoteRelationshipName
 RemoteField
 &&&&&&&&&&&
 
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+      FieldName: {
+        "arguments": InputArguments
+        "field": RemoteField  # optional
+      }
+   }
+
+
+``RemoteField`` is a recursive tree structure that points to the field in the remote schema that needs to be joined with. It is recursive because the remote field maybe nested deeply in the remote schema.
+
 Examples:
 
 .. code-block:: http
@@ -228,24 +237,26 @@ Examples:
    {
       "messages": {
          "arguments": {
-            "where": {
-               "id": {
-                  "gt": "$id"
-               },
             "limit": 100
+         },
+         "field": {
+           "private": {
+             "arguments": {
+                "id" : "$id"
+             }
+           }
          }
       }
    }
 
-The `RemoteField` expects the following schema:
+InputArguments
+&&&&&&&&&&&&&&
 
-.. code-block:: json
+.. parsed-literal::
+   :class: haskell-pre
 
-  FieldName: {
-    "arguments": InputArguments
-  }
+   {
+     InputField : $PGColumn | Scalar
+   }
 
-
-The ``FieldName`` is the top-level node exposed by the remote schema.
-
-The `arguments` field is used to specify how to join the specified Hasura table to the remote schema table.
+Table columns can be referred by prefixing ``$`` e.g ``$id``.
