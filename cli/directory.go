@@ -38,7 +38,10 @@ func (ec *ExecutionContext) setExecutionDirectory() error {
 	if err != nil {
 		return err
 	}
-	ec.ExecutionDirectory, _ = filepath.Abs(ec.ExecutionDirectory)
+	ec.ExecutionDirectory, err = filepath.Abs(ec.ExecutionDirectory)
+	if err != nil {
+		return err
+	}
 
 	// check for configuration file if not already set
 	if len(ec.ConfigFile) == 0 {
@@ -81,7 +84,11 @@ func (ec *ExecutionContext) validateConfigFile() error {
 			ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, ec.ConfigFile)
 		}
 	}
-	ec.ConfigFile, _ = filepath.Abs(ec.ConfigFile)
+	config, err := filepath.Abs(ec.ConfigFile)
+	if err != nil {
+		return err
+	}
+	ec.ConfigFile = config
 	return nil
 }
 

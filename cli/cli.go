@@ -596,13 +596,9 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("actions.codegen.output_dir", "")
 	v.SetDefault("actions.codegen.uri", "")
 	if ec.ConfigFile != "" {
-		configBase := filepath.Base(ec.ConfigFile)
-		configName := strings.TrimSuffix(configBase, filepath.Ext(configBase))
-		configPath := filepath.Dir(ec.ConfigFile)
 		v.SetDefault("version", "1")
 		v.SetDefault("metadata_directory", "")
-		v.SetConfigName(configName)
-		v.AddConfigPath(configPath)
+		v.SetConfigFile(ec.ConfigFile)
 		err := v.ReadInConfig()
 		if err != nil {
 			return errors.Wrap(err, "cannot read config from config file")
