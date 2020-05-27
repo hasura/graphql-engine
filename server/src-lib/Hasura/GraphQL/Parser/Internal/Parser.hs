@@ -168,7 +168,7 @@ infixl 1 `bind`
 bind :: Monad m => Parser k m a -> (a -> m b) -> Parser k m b
 bind p f = p { pParser = pParser p >=> f }
 
--- | Parses some collection of input fields. Build a 'FieldsParser' using
+-- | Parses some collection of input fields. Build an 'InputFieldsParser' using
 -- 'field', 'fieldWithDefault', or 'fieldOptional', combine several together
 -- with the 'Applicative' instance, and finish it off using 'object' to turn it
 -- into a 'Parser'.

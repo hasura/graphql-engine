@@ -19,8 +19,10 @@ import qualified Hasura.GraphQL.Parser         as P
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser         (Kind (..), Parser, UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
+import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
+import           Hasura.GraphQL.Schema.Introspect
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -68,6 +70,17 @@ query allTables stringifyNum = do
         , toQrf QRFAggregation $ selectTableAggregate tableName aggName     (Just aggDesc)    perms stringifyNum
         ]
   let queryFieldsParser = concat $ catMaybes selectExpParsers
-  pure $ P.selectionSet $$(G.litName "query_root") Nothing queryFieldsParser
+      realSchema = Schema
+        { sDescription = Nothing
+        , sTypes = []
+        , sQueryType = P.NonNullable $ P.TNamed $ P.mkDefinition $$(G.litName "query_root") Nothing $
+                       P.TIObject $ map P.fDefinition queryFieldsParser
+        , sMutationType = Nothing
+        , sSubscriptionType = Nothing
+        , sDirectives = []
+        }
+      schemaFieldParser = schema realSchema
+  let queryFieldsParserWithIntrospection = queryFieldsParser ++ [fmap QRFRaw schemaFieldParser]
+  pure $ P.selectionSet $$(G.litName "query_root") Nothing queryFieldsParserWithIntrospection
     <&> fmap (P.handleTypename (QRFRaw . J.String . G.unName))
   where toQrf = fmap . fmap . fmap

@@ -366,6 +366,7 @@ library
                      , Hasura.GraphQL.Schema.Select
                      , Hasura.GraphQL.Schema.Mutation
                      , Hasura.GraphQL.Schema.OrderBy
+                     , Hasura.GraphQL.Schema.Introspect
 
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP

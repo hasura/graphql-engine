@@ -205,6 +205,7 @@ traverseQueryRootField f = \case
   QRFSimple s       -> QRFSimple <$> DS.traverseAnnSimpleSel f s
   QRFAggregation s  -> QRFAggregation <$> DS.traverseAnnAggSel f s
   QRFRaw s          -> pure $ QRFRaw s
+
 convertQuerySelSet
   :: ( MonadError QErr m
      , MonadReader r m
@@ -226,6 +227,7 @@ convertQuerySelSet gqlContext selectionSet varDefs varValsM = do
     Left errs -> throw500 $ T.concat $ map peMessage $ toList errs
     Right (map, _reus) -> forM (toList selectionSet) $ \case
       f@(G.SelectionField fld) -> do
+        -- TODO should we incorporate alias information?
         fldPlan <- case G._fName fld of
           -- TODO support introspection
           -- "__type"     -> fldPlanFromJ <$> R.typeR fld
