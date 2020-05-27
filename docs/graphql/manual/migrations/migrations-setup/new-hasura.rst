@@ -83,7 +83,7 @@ by running:
    # in project dir
    hasura console
 
-Step 4: Add tables and see how a migration is added
+Step 4: Add tables and see how migrations are added
 ---------------------------------------------------
 
 As you use the Hasura console UI served by the CLI to make changes to your schema, migration files
