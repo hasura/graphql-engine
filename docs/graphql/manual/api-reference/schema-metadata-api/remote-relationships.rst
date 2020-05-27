@@ -10,7 +10,7 @@ Schema/Metadata API Reference: Remote Relationships
   :depth: 1
   :local:
 
-Remote Relationships will ensure independent remote schemas and related data types can be joined natively via Hasura.
+Remote Relationships allow you to join tables with remote schemas.
 
 .. _create_remote_relationship:
 
@@ -25,29 +25,23 @@ create_remote_relationship
    Content-Type: application/json
    X-Hasura-Role: admin
 
-  {
-    "type": "create_remote_relationship",
-    "args": {
-      "name": "sample_remote_relationship",
-      "table": "users",
-      "hasura_fields": [
-        "id"
-      ],
-      "remote_schema": "my-remote-schema",
-      "remote_field": {
-        "messages": {
-          "arguments": {
-            "where": {
-              "id": {
-                "eq": "$id"
+   {
+      "type":"create_remote_relationship",
+      "args":{
+         "name":"sample_remote_relationship",
+         "table":"users",
+         "hasura_fields":[
+           "id"
+         ],
+         "remote_schema":"my-remote-schema",
+         "remote_field":{
+           "messages":{
+              "arguments":{
+                 "id":"$id"
               }
-            }
-          }
-        }
+           }
       }
-    }
-  }
-
+   }
 
 .. _create_remote_relationship_syntax:
 
@@ -72,7 +66,7 @@ Args syntax
    * - hasura_fields
      - true
      - [:ref:`PGColumn <PGColumn>`]
-     - List of PG columns in the table that will be used in the ``remote_field`` object.
+     - Column(s) in the table that is used for joining with remote schema field. All join keys in ``remote_field`` must appear here.
    * - remote_schema
      - true
      - :ref:`RemoteSchemaName <RemoteSchemaName>`
@@ -80,7 +74,7 @@ Args syntax
    * - remote_field
      - true
      - RemoteField_
-     - Joining parameters of the remote join
+     - Name of the field in remote schema with the join arguments.
 
 .. _update_remote_relationship:
 
@@ -95,23 +89,26 @@ update_remote_relationship
    Content-Type: application/json
    X-Hasura-Role: admin
 
-  {
-    "type": "update_remote_relationship",
-    "args": {
-      "name": "sample_remote_relationship",
-      "table": "users",
-      "hasura_fields": [],
-      "remote_schema": "my-remote-schema",
-      "remote_field": {
-        "messages": {
-          "arguments": {
-               "limit":10
-            }
+   {
+     "type": "update_remote_relationship",
+     "args": {
+        "name": "sample_remote_relationship",
+        "table": "users",
+        "hasura_fields": ["id"],
+        "remote_schema": "my-remote-schema",
+        "remote_field": {
+          "posts": {
+             "arguments": {
+                "id":"$id",
+                "where":{
+                   "likes":{
+                   "lte":"1000"
+                },
+                "limit":100
           }
         }
-      }
-    }
-  }
+     }
+   }
 
 .. _update_remote_relationship_syntax:
 
@@ -136,7 +133,7 @@ Args syntax
    * - hasura_fields
      - true
      - [:ref:`PGColumn <PGColumn>`]
-     - List of PG columns in the table that will be used in the ``remote_field`` object.
+     - Column(s) in the table that is used for joining with remote schema field. All join keys in ``remote_field`` must appear here.
    * - remote_schema
      - true
      - :ref:`RemoteSchemaName <RemoteSchemaName>`
@@ -144,7 +141,7 @@ Args syntax
    * - remote_field
      - true
      - RemoteField_
-     - Joining parameters of the remote join
+     - Name of the field in remote schema with the join arguments.
 
 .. _delete_remote_relationship:
 
@@ -206,6 +203,8 @@ RemoteRelationshipName
 RemoteField
 &&&&&&&&&&&
 
+Examples:
+
 .. code-block:: http
 
    POST /v1/query HTTP/1.1
@@ -213,16 +212,40 @@ RemoteField
    X-Hasura-Role: admin
 
    {
-       "message": {
-          "arguments":{
-             "where": {
-                 "id":{
-                     "eq":"$id"
-                  }
-             }
+      "message": {
+         "arguments":{
+            "message_id":"$id"
           }
-       }
+      }
    }
 
-In the specified example, `message` is a top-level node exposed by the remote schema.
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+      "messages": {
+         "arguments": {
+            "where": {
+               "id": {
+                  "gt": "$id"
+               },
+            "limit": 100
+         }
+      }
+   }
+
+The `RemoteField` expects the following schema:
+
+.. code-block:: json
+
+  FieldName: {
+    "arguments": InputArguments
+  }
+
+
+The ``FieldName`` is the top-level node exposed by the remote schema.
+
 The `arguments` field is used to specify how to join the specified Hasura table to the remote schema table.
