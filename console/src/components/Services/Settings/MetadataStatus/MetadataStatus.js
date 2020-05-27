@@ -213,9 +213,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
       <div
         className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${metaDataStyles.metadata_wrapper} container-fluid`}
       >
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-          Hasura Metadata Status
-        </h2>
+        <h2 className={styles.headerText}>Hasura Metadata Status</h2>
         {content()}
       </div>
     </div>
