@@ -1,0 +1,29 @@
+{
+  "env": {
+    "node": true
+  },
+  "extends": "airbnb-base",
+  "plugins": ["promise"],
+  "rules": {
+    "no-console": "off",
+    "consistent-return": "off",
+    "no-case-declarations": "off",
+    "no-useless-catch": "off",
+    "no-unused-vars": "off",
+    "no-eval": "off",
+    "no-new": "off",
+    "max-len": "off",
+    "no-plusplus": "off",
+    "import/no-unresolved": "off",
+    "promise/always-return": "off",
+    "promise/no-return-wrap": "error",
+    "promise/param-names": "error",
+    "promise/catch-or-return": "error",
+    "promise/no-native": "off",
+    "promise/no-nesting": "error",
+    "promise/no-promise-in-callback": "error",
+    "promise/no-callback-in-promise": "error",
+    "promise/no-return-in-finally": "error",
+    "prefer-arrow-callback": "error"
+  }
+}

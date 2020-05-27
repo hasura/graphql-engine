@@ -70,20 +70,36 @@ Custom object types can be connected to the rest of the graph by setting up
     userId: Int!
   }
 
-We can create an **object relationship** called ``createdUser`` between the
-``UserInfo`` object type and the ``user`` table via the
-``UserInfo::userId -> user::id`` fields.
+and tables:
+
+.. code-block:: sql
+
+  user (id int, name text)
+  order (id int, user_id int, ...)
+
+We can create:
+
+- an **object relationship** called ``loggedInUser`` between the ``UserInfo`` object
+  type and the ``user`` table via the ``UserInfo.userId`` and  ``user.id`` fields.
+- an **array relationship** called ``userOrders`` between the ``UserInfo`` object
+  type and the ``order`` table via the ``UserInfo.userId`` and ``order.user_id`` fields.
 
 The object type will now be modified as:
 
 .. code-block:: graphql
-  :emphasize-lines: 4
+  :emphasize-lines: 4,5
 
   type UserInfo {
     accessToken: String!
     userId: Int!
-    createdUser: user
+    loggedInUser: user
+    userOrders: [order]
   }
+
+.. note::
+
+  Only fields with non-list scalar types (e.g. ``Int``, ``String``) can be used
+  to define relationships
 
 Input types
 -----------
