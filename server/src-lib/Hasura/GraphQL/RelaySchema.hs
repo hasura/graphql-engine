@@ -41,7 +41,7 @@ mkRelayGCtxMap tableCache functionCache = do
   typesMapL <- mapM (mkRelayGCtxMapTable tableCache functionCache) relayTables
   typesMap <- combineTypes typesMapL
   let gCtxMap  = flip Map.map typesMap $
-                 \(ty, flds) -> mkGCtx ty flds mempty
+                 \(ty, flds, insCtx) -> mkGCtx ty flds insCtx
   pure $ Map.map (flip RoleContext Nothing) gCtxMap
   where
     relayTables =
@@ -53,8 +53,8 @@ mkRelayGCtxMap tableCache functionCache = do
       && isJust (_tciPrimaryKey ti)
 
     combineTypes
-      :: [Map.HashMap RoleName (TyAgg, RootFields)]
-      -> m (Map.HashMap RoleName (TyAgg, RootFields))
+      :: [Map.HashMap RoleName (TyAgg, RootFields, InsCtxMap)]
+      -> m (Map.HashMap RoleName (TyAgg, RootFields, InsCtxMap))
     combineTypes maps = do
       let listMap = foldr (Map.unionWith (++) . Map.map pure) mempty maps
       flip Map.traverseWithKey listMap $ \roleName typeList -> do
@@ -62,8 +62,9 @@ mkRelayGCtxMap tableCache functionCache = do
             tyAgg = addTypeInfoToTyAgg
                     (TIIFace $ mkNodeInterface relayTableNames) $
                     mconcat $ map (^. _1) typeList
+            insCtx = mconcat $ map (^. _3) typeList
         rootFields <- combineRootFields roleName $ map (^. _2) typeList
-        pure (tyAgg, rootFields)
+        pure (tyAgg, rootFields, insCtx)
 
     combineRootFields :: RoleName -> [RootFields] -> m RootFields
     combineRootFields roleName rootFields = do
@@ -88,22 +89,37 @@ mkRelayGCtxMapTable
   => TableCache
   -> FunctionCache
   -> TableInfo
-  -> m (Map.HashMap RoleName (TyAgg, RootFields))
+  -> m (Map.HashMap RoleName (TyAgg, RootFields, InsCtxMap))
 mkRelayGCtxMapTable tableCache funcCache tabInfo = do
   m <- flip Map.traverseWithKey rolePerms $
-       mkRelayGCtxRole tableCache tn descM fields primaryKey tabFuncs
+       mkRelayGCtxRole tableCache tn descM fields primaryKey validConstraints  tabFuncs viewInfo customConfig
   adminSelFlds <- mkAdminSelFlds fields tableCache
-  let adminCtx = mkRelayGCtxRole' tn descM (Just (True, adminSelFlds))
-                 primaryKey tabFuncs
-  return $ Map.insert adminRoleName (adminCtx, adminRootFlds) m
+  adminInsCtx <- mkAdminInsCtx tableCache fields
+  let adminCtx = mkRelayTyAggRole tn descM (Just (cols, icRelations adminInsCtx))
+                 (Just (True, adminSelFlds)) (Just cols) (Just ())
+                 primaryKey validConstraints viewInfo tabFuncs
+      adminInsCtxMap = Map.singleton tn adminInsCtx
+  return $ Map.insert adminRoleName (adminCtx, adminRootFlds, adminInsCtxMap) m
   where
     TableInfo coreInfo rolePerms _ = tabInfo
-    TableCoreInfo tn descM _ fields primaryKey _ _ _ _ _ = coreInfo
+    TableCoreInfo tn descM _ fields primaryKey _ _ viewInfo _ customConfig = coreInfo
+    validConstraints = mkValidConstraints $ map _cName (tciUniqueOrPrimaryKeyConstraints coreInfo)
     tabFuncs = filter (isValidObjectName . fiName) $
                getFuncsOfTable tn funcCache
+    cols = getValidCols fields
     adminRootFlds =
-      getRelayRootFldsRole' tn primaryKey fields tabFuncs
-      (Just (noFilter, Nothing, [], True))
+      let insertPermDetails = Just ([], True)
+          selectPermDetails = Just (noFilter, Nothing, [], True)
+          updatePermDetails = Just (getValidCols fields, mempty, noFilter, Nothing, [])
+          deletePermDetails = Just (noFilter, [])
+
+          queryFields = getRelayQueryRootFieldsRole tn primaryKey fields tabFuncs
+                        selectPermDetails
+          mutationFields = getMutationRootFieldsRole tn primaryKey
+                           validConstraints fields insertPermDetails
+                           selectPermDetails updatePermDetails
+                           deletePermDetails viewInfo customConfig
+      in RootFields queryFields mutationFields
 
 mkRelayGCtxRole
   :: (MonadError QErr m)
@@ -112,33 +128,73 @@ mkRelayGCtxRole
   -> Maybe PGDescription
   -> FieldInfoMap FieldInfo
   -> Maybe (PrimaryKey PGColumnInfo)
+  -> [ConstraintName]
   -> [FunctionInfo]
+  -> Maybe ViewInfo
+  -> TableConfig
   -> RoleName
   -> RolePermInfo
-  -> m (TyAgg, RootFields)
-mkRelayGCtxRole tableCache tn descM fields primaryKey funcs role permInfo = do
-  selPermM <- mapM (getSelPerm tableCache fields role) $ _permSel permInfo
-  let tyAgg = mkRelayGCtxRole' tn descM selPermM primaryKey funcs
-      rootFlds = getRelayRootFldsRole' tn primaryKey fields funcs
+  -> m (TyAgg, RootFields, InsCtxMap)
+mkRelayGCtxRole tableCache tn descM fields primaryKey constraints funcs viM tabConfigM role permInfo = do
+  selPermM <- mapM (getSelPerm tableCache fields role) selM
+  tabInsInfoM <- forM (_permIns permInfo) $ \ipi -> do
+    ctx <- mkInsCtx role tableCache fields ipi $ _permUpd permInfo
+    let permCols = flip getColInfos allCols $ Set.toList $ ipiCols ipi
+    return (ctx, (permCols, icRelations ctx))
+  let insPermM = snd <$> tabInsInfoM
+      insCtxM = fst <$> tabInsInfoM
+      updColsM = filterColumnFields . upiCols <$> _permUpd permInfo
+      tyAgg = mkRelayTyAggRole tn descM insPermM selPermM updColsM
+              (void $ _permDel permInfo) primaryKey constraints viM funcs
+      queryRootFlds = getRelayQueryRootFieldsRole tn primaryKey fields funcs
                  (mkSel <$> _permSel permInfo)
-  return (tyAgg, rootFlds)
+      mutationRootFlds = getMutationRootFieldsRole tn primaryKey constraints fields
+                       (mkIns <$> insM) (mkSel <$> selM)
+                       (mkUpd <$> updM) (mkDel <$> delM) viM tabConfigM
+      insCtxMap = maybe Map.empty (Map.singleton tn) insCtxM
+  return (tyAgg, RootFields queryRootFlds mutationRootFlds, insCtxMap)
   where
+    RolePermInfo insM selM updM delM = permInfo
+    allCols = getCols fields
+    filterColumnFields allowedSet =
+      filter ((`Set.member` allowedSet) . pgiColumn) $ getValidCols fields
+    mkIns i = (ipiRequiredHeaders i, isJust updM)
     mkSel s = ( spiFilter s, spiLimit s
               , spiRequiredHeaders s, spiAllowAgg s
               )
+    mkUpd u = ( flip getColInfos allCols $ Set.toList $ upiCols u
+              , upiSet u
+              , upiFilter u
+              , upiCheck u
+              , upiRequiredHeaders u
+              )
+    mkDel d = (dpiFilter d, dpiRequiredHeaders d)
 
-mkRelayGCtxRole'
+mkRelayTyAggRole
   :: QualifiedTable
   -> Maybe PGDescription
   -- ^ Postgres description
+  -> Maybe ([PGColumnInfo], RelationInfoMap)
+  -- ^ insert permission
   -> Maybe (Bool, [SelField])
   -- ^ select permission
+  -> Maybe [PGColumnInfo]
+  -- ^ update cols
+  -> Maybe ()
+  -- ^ delete cols
   -> Maybe (PrimaryKey PGColumnInfo)
+  -> [ConstraintName]
+  -- ^ constraints
+  -> Maybe ViewInfo
   -> [FunctionInfo]
   -- ^ all functions
   -> TyAgg
-mkRelayGCtxRole' tn descM selPermM pkeyCols funcs =
-  TyAgg (mkTyInfoMap allTypes) fieldMap scalars ordByCtx
+mkRelayTyAggRole tn descM insPermM selPermM updColsM delPermM pkeyCols constraints viM funcs =
+  let (mutationTypes, mutationFields) =
+        mkMutationTypesAndFieldsRole tn insPermM selFldsM updColsM delPermM pkeyCols constraints viM
+  in TyAgg (mkTyInfoMap allTypes <> mutationTypes)
+           (fieldMap <> mutationFields)
+            scalars ordByCtx
   where
     ordByCtx = fromMaybe Map.empty ordByCtxM
 
@@ -161,7 +217,15 @@ mkRelayGCtxRole' tn descM selPermM pkeyCols funcs =
     selColNamesM = (map pgiName . getPGColumnFields) <$> selFldsM
     selColInpTyM = mkSelColumnTy tn <$> selColNamesM
     -- boolexp input type
-    boolExpInpObjM = (mkBoolExpInp tn) <$> selFldsM
+    boolExpInpObjM = case selFldsM of
+      Just selFlds  -> Just $ mkBoolExpInp tn selFlds
+      -- no select permission
+      Nothing ->
+        -- but update/delete is defined
+        if isJust updColsM || isJust delPermM
+        then Just $ mkBoolExpInp tn []
+        else Nothing
+
     -- funcargs input type
     funcArgInpObjs = flip mapMaybe funcs $ \func ->
       mkFuncArgsInp (fiName func) (getInputArgs func)
@@ -270,25 +334,21 @@ mkSelectOpCtx tn allCols (fltr, pLimit, hdrs) =
   where
     colGNameMap = mkPGColGNameMap allCols
 
-getRelayRootFldsRole'
+getRelayQueryRootFieldsRole
   :: QualifiedTable
   -> Maybe (PrimaryKey PGColumnInfo)
   -> FieldInfoMap FieldInfo
   -> [FunctionInfo]
   -> Maybe (AnnBoolExpPartialSQL, Maybe Int, [T.Text], Bool) -- select filter
-  -> RootFields
-getRelayRootFldsRole' tn primaryKey fields funcs selM =
-  RootFields
-    { _rootQueryFields = makeFieldMap $
+  -> QueryRootFieldMap
+getRelayQueryRootFieldsRole tn primaryKey fields funcs selM =
+    makeFieldMap $
         funcConnectionQueries
         <> catMaybes
           [ getSelConnectionDet <$> selM <*> maybePrimaryKeyColumns
           ]
-    , _rootMutationFields = mempty
-    }
   where
     maybePrimaryKeyColumns = fmap _pkColumns primaryKey
-    makeFieldMap = mapFromL (_fiName . snd)
     colGNameMap = mkPGColGNameMap $ getCols fields
 
     funcConnectionQueries = fromMaybe [] $ getFuncQueryConnectionFlds
