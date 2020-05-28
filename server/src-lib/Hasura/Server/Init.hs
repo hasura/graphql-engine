@@ -132,6 +132,17 @@ withEnvBool bVal envVar =
       mEnvVal <- considerEnv envVar
       maybe (return False) return mEnvVal
 
+withEnvLogEnvHeaders :: Bool -> WithEnv Bool
+withEnvLogEnvHeaders bVal =
+  bool considerLogEnvHeader (return True) bVal
+  where
+    considerLogEnvHeader = do
+      hasuraLogEnvHeader <- considerEnv "HASURA_GRAPHQL_LOG_HEADERS_FROM_ENV"
+      -- if 'HASURA_GRAPHQL_LOG_HEADERS_FROM_ENV' is not set, then
+      -- lookup the 'LOG_HEADERS_FROM_ENV' environment variable, to maintain
+      -- backwards compatibility
+      maybe (withEnvBool False "LOG_HEADERS_FROM_ENV") return hasuraLogEnvHeader
+
 withEnvJwtConf :: Maybe JWTConfig -> String -> WithEnv (Maybe JWTConfig)
 withEnvJwtConf jVal envVar =
   maybe (considerEnv envVar) returnJust jVal
@@ -202,11 +213,7 @@ mkServeOptions rso = do
   eventsFetchInterval <- fromMaybe defaultEventFetchInterval <$>
                          withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
 
-  logEnvHeaders' <- withEnvBool (rsoLogHeadersFromEnv rso) $ fst logEnvHeadersEnv
-
-  -- When `HASURA_GRAPHQL_LOG_HEADERS_FROM_ENV` is false, then parse the `LOG_HEADERS_FROM_ENV`
-  -- to maintain backward compatibility
-  logEnvHeaders <- bool (withEnvBool False "LOG_HEADERS_FROM_ENV") (pure True) logEnvHeaders'
+  logEnvHeaders <- withEnvLogEnvHeaders (rsoLogHeadersFromEnv rso)
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
@@ -954,7 +961,7 @@ serveOptsToLog so =
       , "plan_cache_options" J..= soPlanCacheOptions so
       , "events_http_pool_size" J..= soEventsHttpPoolSize so
       , "events_fetch_interval" J..= soEventsFetchInterval so
-      , "log_env_headers" J..= soLogHeadersFromEnv so
+      , "log_headers_from_env" J..= soLogHeadersFromEnv so
       ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
