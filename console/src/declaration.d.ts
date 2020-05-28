@@ -12,4 +12,3 @@ declare namespace React {
     css?: import('styled-components').CSSProp;
   }
 }
-

@@ -1,7 +1,6 @@
 module Hasura.RQL.Types.RemoteSchema where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common    (NonEmptyText)
 import           Language.Haskell.TH.Syntax (Lift)
 import           System.Environment         (lookupEnv)
 
@@ -14,8 +13,9 @@ import qualified Network.URI.Extended       as N
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
+import           Hasura.RQL.Types.Common    (NonEmptyText (..))
 import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Types           (DQuote)
+import           Hasura.SQL.Types
 
 type UrlFromEnv = Text
 
@@ -27,14 +27,19 @@ newtype RemoteSchemaName
            , Generic, Cacheable, Arbitrary
            )
 
+remoteSchemaNameToTxt :: RemoteSchemaName -> Text
+remoteSchemaNameToTxt = unNonEmptyText . unRemoteSchemaName
+
 data RemoteSchemaInfo
   = RemoteSchemaInfo
-  { rsUrl              :: !N.URI
+  { rsName             :: !RemoteSchemaName
+  , rsUrl              :: !N.URI
   , rsHeaders          :: ![HeaderConf]
   , rsFwdClientHeaders :: !Bool
   , rsTimeoutSeconds   :: !Int
   } deriving (Show, Eq, Lift, Generic)
-
+instance NFData RemoteSchemaInfo
+instance Cacheable RemoteSchemaInfo
 instance Hashable RemoteSchemaInfo
 
 $(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''RemoteSchemaInfo)
@@ -90,15 +95,16 @@ getUrlFromEnv urlFromEnv = do
 
 validateRemoteSchemaDef
   :: (MonadError QErr m, MonadIO m)
-  => RemoteSchemaDef
+  => RemoteSchemaName
+  -> RemoteSchemaDef
   -> m RemoteSchemaInfo
-validateRemoteSchemaDef (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout) =
+validateRemoteSchemaDef rsName (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout) =
   case (mUrl, mUrlEnv) of
     (Just url, Nothing)    ->
-      return $ RemoteSchemaInfo url hdrs fwdHdrs timeout
+      return $ RemoteSchemaInfo rsName url hdrs fwdHdrs timeout
     (Nothing, Just urlEnv) -> do
       url <- getUrlFromEnv urlEnv
-      return $ RemoteSchemaInfo url hdrs fwdHdrs timeout
+      return $ RemoteSchemaInfo rsName url hdrs fwdHdrs timeout
     (Nothing, Nothing)     ->
         throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
     (Just _, Just _)       ->

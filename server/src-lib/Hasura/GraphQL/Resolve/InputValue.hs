@@ -24,6 +24,7 @@ module Hasura.GraphQL.Resolve.InputValue
   , parseMany
   , asPGColText
   , asPGColTextM
+  , annInpValueToJson
   ) where
 
 import           Hasura.Prelude
@@ -31,7 +32,7 @@ import           Hasura.Prelude
 import qualified Text.Builder                  as TB
 
 import qualified Language.GraphQL.Draft.Syntax  as G
-
+import qualified Data.Aeson                     as J
 import qualified Hasura.RQL.Types               as RQL
 
 import           Hasura.GraphQL.Resolve.Context
@@ -214,3 +215,13 @@ asPGColTextM :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m (Maybe
 asPGColTextM val = do
   pgColValM <- traverse openOpaqueValue =<< asPGColumnValueM val
   traverse onlyText (pstValue . _apvValue <$> pgColValM)
+
+annInpValueToJson :: AnnInpVal -> J.Value
+annInpValueToJson annInpValue =
+  case _aivValue annInpValue of
+    AGScalar _ pgColumnValueM -> maybe J.Null pgScalarValueToJson pgColumnValueM
+    AGEnum _ enumValue        -> case enumValue of
+      AGESynthetic enumValueM   -> J.toJSON enumValueM
+      AGEReference _ enumValueM -> J.toJSON enumValueM
+    AGObject _ objectM        -> J.toJSON $ fmap (fmap annInpValueToJson) objectM
+    AGArray _ valuesM         -> J.toJSON $ fmap (fmap annInpValueToJson) valuesM
