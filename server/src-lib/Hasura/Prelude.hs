@@ -41,6 +41,7 @@ import           Data.Function                     as M (on, (&))
 import           Data.Functor                      as M (($>), (<&>))
 import           Data.Hashable                     as M (Hashable)
 import           Data.HashMap.Strict               as M (HashMap)
+import           Data.HashMap.Strict.InsOrd        as M (InsOrdHashMap)
 import           Data.HashSet                      as M (HashSet)
 import           Data.List                         as M (find, findIndex, foldl', group,
                                                          intercalate, intersect, lookup, sort,

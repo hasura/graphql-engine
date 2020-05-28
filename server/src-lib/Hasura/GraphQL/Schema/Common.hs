@@ -2,7 +2,6 @@ module Hasura.GraphQL.Schema.Common where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 
 import           Language.GraphQL.Draft.Syntax as G

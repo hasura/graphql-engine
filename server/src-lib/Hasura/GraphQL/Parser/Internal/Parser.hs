@@ -16,12 +16,10 @@ import           Data.GADT.Compare.Extended
 import           Data.Int                      (Int32)
 import           Data.Parser.JSONPath
 import           Data.Type.Equality
-import           Language.GraphQL.Draft.Syntax (Description (..), EnumValue (..), Field (..),
-                                                FragmentSpread, Name (..), Selection (..),
-                                                SelectionSet, Value (..), litName, literal,
-                                                NoFragments, _ifSelectionSet)
+import           Language.GraphQL.Draft.Syntax hiding (Definition)
 
 import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Parser.Collect
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.Server.Utils           (englishList)
 import           Hasura.SQL.Types
@@ -420,16 +418,7 @@ selectionSet name description parsers = Parser
   { pType = NonNullable $ TNamed $ mkDefinition name description $
       TIObject $ map fDefinition parsers
   , pParser = \input -> do
-      let
-        getField :: Selection NoFragments var -> [Field NoFragments var]
-        getField = \case
-            SelectionField inputField -> [inputField]
-            SelectionInlineFragment frag -> concat $ map getField $ _ifSelectionSet frag
-            -- NoFragments is an empty data type; unfortunately with the
-            -- constructor, so we pattern match on x to convince GHC that there
-            -- really are no such elements.
-            SelectionFragmentSpread x -> case x of
-        fields = concat $ map getField input
+      fields <- collectFields name input
 
       -- Not all fields have a selection set, but if they have one, it
       -- must contain at least one field. The GraphQL parser returns a
@@ -441,18 +430,17 @@ selectionSet name description parsers = Parser
       -- set or not; but if we're in this function, it means that yes:
       -- this field needs a selection set, and if none was provided,
       -- we must fail.
-      when (null fields) $ parseError $ "missing selection set for " <>> name
+      when (OMap.null fields) $
+        parseError $ "missing selection set for " <>> name
 
-      OMap.fromList <$> for fields \selectionField@Field{ _fName, _fAlias } -> do
-        parsedField <- if
-          | _fName == $$(litName "__typename") ->
-              pure $ SelectTypename name
-          | Just parser <- M.lookup _fName parserMap ->
-              withPath (Key (unName _fName) :) $
-                SelectField <$> parser selectionField
-          | otherwise ->
-              parseError $ name <<> " has no field named " <>> _fName
-        pure (fromMaybe _fName _fAlias, parsedField)
+      for fields \selectionField@Field{ _fName, _fAlias } -> if
+        | _fName == $$(litName "__typename") ->
+            pure $ SelectTypename name
+        | Just parser <- M.lookup _fName parserMap ->
+            withPath (Key (unName _fName) :) $
+              SelectField <$> parser selectionField
+        | otherwise ->
+            parseError $ name <<> " has no field named " <>> _fName
   }
   where
     parserMap = parsers

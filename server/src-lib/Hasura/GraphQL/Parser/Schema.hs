@@ -45,7 +45,6 @@ import qualified Data.HashMap.Strict.Extended  as Map
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Functor.Classes
-import           Data.Void
 import           Language.GraphQL.Draft.Syntax (Description (..), Name (..), Value (..))
 
 class HasName a where
@@ -410,7 +409,7 @@ data Variable = Variable
   , vValue :: Value Void
   -- ^ Note: if the variable was null or was not provided and the field has a
   -- non-null default value, this field contains the default value, not 'VNull'.
-  }
+  } deriving (Eq)
 
 data VariableInfo
   = VIRequired Name
@@ -418,6 +417,7 @@ data VariableInfo
   -- value are indistinguishable from variables with a default value of null, so
   -- we don’t distinguish those cases here.
   | VIOptional Name (Value Void)
+  deriving (Eq)
 
 instance HasName Variable where
   getName = getName . vInfo

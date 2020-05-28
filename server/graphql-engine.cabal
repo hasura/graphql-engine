@@ -359,6 +359,7 @@ library
 
                      , Hasura.GraphQL.Parser
                      , Hasura.GraphQL.Parser.Class
+                     , Hasura.GraphQL.Parser.Collect
                      , Hasura.GraphQL.Parser.Column
                      , Hasura.GraphQL.Parser.Internal.Parser
                      , Hasura.GraphQL.Parser.Monad
