@@ -51,7 +51,7 @@ import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Query           as EQ
-import qualified Hasura.GraphQL.Execute.Flatten         as EF
+import qualified Hasura.GraphQL.Execute.Inline          as EI
 import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
@@ -281,9 +281,9 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       planPartial <- getExecPlanPartial userInfo sc enableAL req
       case planPartial of
         GExPHasura (gCtx, G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet) -> do
-          flattenedSelSet <- EF.flattenSelectionSet fragments selSet
+          inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           (queryTx, plan, genSql) <-
-            getQueryOp gCtx sqlGenCtx userInfo flattenedSelSet varDefs (_grVariables reqUnparsed)
+            getQueryOp gCtx sqlGenCtx userInfo inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ GExPHasura $ ExOpQuery queryTx (Just genSql)
         _ -> _
