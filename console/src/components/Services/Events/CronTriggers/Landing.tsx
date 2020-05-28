@@ -13,6 +13,21 @@ interface Props extends InjectedProps {}
 
 const Landing: React.FC<Props> = props => {
   const { dispatch } = props;
+
+  const topicDescription = (
+    <div>
+      {CRON_TRIGGER}s are used to trigger HTTP endpoints based on a{' '}
+      <a
+        href="https://en.wikipedia.org/wiki/Cron"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        cron schedule
+      </a>
+      .
+    </div>
+  );
+
   return (
     <div
       className={`${styles.padd_left_remove} container-fluid ${styles.padd_top}`}
@@ -36,7 +51,7 @@ const Landing: React.FC<Props> = props => {
             title="What are Cron Triggers?"
             imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
             imgAlt={CRON_TRIGGER}
-            description={`${CRON_TRIGGER}s are used to trigger HTTP endpoints based on a Cron Schedule.`}
+            description={topicDescription}
           />
           <hr className={styles.clear_fix} />
         </div>

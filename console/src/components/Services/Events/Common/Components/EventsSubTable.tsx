@@ -17,7 +17,7 @@ type Props = {
 
 const EventsSubTable: React.FC<Props> = ({ rows, rowsFormatted, headings }) => {
   return (
-    <div className={styles.add_padding20}>
+    <div className={styles.addPadding20Px}>
       <em>Recent Invocations</em>
       <div className={`${styles.invocationsSection} invocationsSection`}>
         {rows.length ? (

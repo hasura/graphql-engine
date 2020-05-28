@@ -41,7 +41,7 @@ const ProcessedEvents: React.FC<Props> = props => {
       render={renderRows}
       presets={{
         filters: [makeValueFilter('status', '$ne', 'scheduled')],
-        sorts: [makeOrderBy('created_at', 'desc')],
+        sorts: [makeOrderBy('scheduled_time', 'desc')],
       }}
       relationships={['scheduled_event_logs']}
     />

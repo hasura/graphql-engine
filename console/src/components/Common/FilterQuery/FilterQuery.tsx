@@ -86,6 +86,7 @@ const FilterQuery: React.FC<Props> = props => {
           {/* <div className={styles.count + ' alert alert-info'}><i>Total <b>{tableName}</b> rows in the database for current query: {count} </i></div> */}
         </div>
       </form>
+      {/* TODO: Handle loading state */}
       {render(rows, count, state, setState, runQuery)}
     </div>
   );

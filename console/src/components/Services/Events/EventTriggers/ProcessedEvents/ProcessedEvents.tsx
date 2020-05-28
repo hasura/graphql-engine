@@ -32,7 +32,7 @@ const ProcessedEvents: React.FC<Props> = props => {
       filterState={filterState}
       setFilterState={setFilterState}
       runQuery={runQuery}
-      columns={['id', 'status', 'created_at']}
+      columns={['id', 'delivered', 'created_at', 'tries']}
       identifier={triggerName}
     />
   );
@@ -56,6 +56,7 @@ const ProcessedEvents: React.FC<Props> = props => {
             makeOperationFilter('$or', [
               makeValueFilter('delivered', '$eq', 'true'),
               makeValueFilter('error', '$eq', 'true'),
+              makeValueFilter('archived', '$eq', 'true'),
             ]),
           ],
           sorts: [makeOrderBy('created_at', 'desc')],

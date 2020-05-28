@@ -1,8 +1,12 @@
 import React from 'react';
 
-const Clock = ({ className }) => {
+const Clock = ({ className, title = '' }) => {
   return (
-    <i className={`fa fa-clock-o ${className || ''}`} aria-hidden="true" />
+    <i
+      className={`fa fa-clock-o ${className || ''}`}
+      aria-hidden="true"
+      title={title}
+    />
   );
 };
 

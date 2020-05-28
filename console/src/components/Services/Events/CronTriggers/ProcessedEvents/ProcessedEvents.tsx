@@ -48,7 +48,7 @@ const ProcessedEvents: React.FC<Props> = props => {
           makeValueFilter('trigger_name', '$eq', triggerName),
           makeValueFilter('status', '$ne', 'scheduled'),
         ],
-        sorts: [makeOrderBy('created_at', 'desc')],
+        sorts: [makeOrderBy('scheduled_time', 'desc')],
       }}
       relationships={['cron_event_logs']}
     />

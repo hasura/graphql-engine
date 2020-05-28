@@ -5,15 +5,13 @@ import ReactTable, {
 } from 'react-table';
 import 'react-table/react-table.css';
 import { FilterTableProps } from './types';
-import CheckIcon from '../../../../Common/Icons/Check';
-import CrossIcon from '../../../../Common/Icons/Cross';
-import ClockIcon from '../../../../Common/Icons/Clock';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import EventsSubTable from './EventsSubTable';
 import { sanitiseRow } from '../../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
+import { getEventStatusIcon, getEventDeliveryIcon } from './utils';
 
 type Props = FilterTableProps;
 
@@ -83,19 +81,8 @@ const EventsTable: React.FC<Props> = props => {
     }, {});
     return {
       ...formattedRow,
-      delivered: r.delivered ? (
-        <CheckIcon className="" />
-      ) : (
-        <CrossIcon className="" />
-      ),
-      status:
-        r.status === 'scheduled' ? (
-          <ClockIcon className="" />
-        ) : r.status === 'dead' ? (
-          <CrossIcon className="" title="This event is dead" />
-        ) : (
-          <CheckIcon className="" />
-        ),
+      delivered: getEventDeliveryIcon(r.delivered),
+      status: getEventStatusIcon(r.status),
       scheduled_time: r.scheduled_time ? (
         <div>{convertDateTimeToLocale(r.scheduled_time, false)}</div>
       ) : (

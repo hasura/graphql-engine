@@ -67,39 +67,6 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
         <h2 className={styles.heading_text}>{triggerName}</h2>
         <div className={styles.nav}>
           <ul className="nav nav-pills">
-            <li
-              role="presentation"
-              className={tabName === 'processed' ? styles.active : ''}
-            >
-              <Link
-                to={getETProcessedEventsRoute(triggerName)}
-                data-test="trigger-processed-events"
-              >
-                Processed Events {tabName === 'processed' ? showCount : null}
-              </Link>
-            </li>
-            <li
-              role="presentation"
-              className={tabName === 'pending' ? styles.active : ''}
-            >
-              <Link
-                to={getETPendingEventsRoute(triggerName)}
-                data-test="trigger-pending-events"
-              >
-                Pending Events {tabName === 'pending' ? showCount : null}
-              </Link>
-            </li>
-            <li
-              role="presentation"
-              className={tabName === 'logs' ? styles.active : ''}
-            >
-              <Link
-                to={getETInvocationLogsRoute(triggerName)}
-                data-test="trigger-invocation-logs"
-              >
-                Invocation Logs
-              </Link>
-            </li>
             {!readOnlyMode && (
               <li
                 role="presentation"
@@ -113,6 +80,39 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
                 </Link>
               </li>
             )}
+            <li
+              role="presentation"
+              className={tabName === 'pending' ? styles.active : ''}
+            >
+              <Link
+                to={getETPendingEventsRoute(triggerName)}
+                data-test="trigger-pending-events"
+              >
+                Pending Events {tabName === 'pending' ? showCount : null}
+              </Link>
+            </li>
+            <li
+              role="presentation"
+              className={tabName === 'processed' ? styles.active : ''}
+            >
+              <Link
+                to={getETProcessedEventsRoute(triggerName)}
+                data-test="trigger-processed-events"
+              >
+                Processed Events {tabName === 'processed' ? showCount : null}
+              </Link>
+            </li>
+            <li
+              role="presentation"
+              className={tabName === 'logs' ? styles.active : ''}
+            >
+              <Link
+                to={getETInvocationLogsRoute(triggerName)}
+                data-test="trigger-invocation-logs"
+              >
+                Invocation Logs
+              </Link>
+            </li>
           </ul>
         </div>
         <div className="clearfix" />

@@ -1,22 +1,26 @@
 import React from 'react';
+import { Link } from 'react-router';
 import globals from '../../../../../Globals';
 import styles from '../../Events.scss';
 import { ADHOC_EVENTS_HEADING } from '../../constants';
 import TopicDescription from '../../../Common/Landing/TopicDescription';
+import { getAddAdhocEventRoute } from '../../../../Common/utils/routesUtils';
 
 const Info: React.FC = () => {
   const topicDescription = (
     <div>
       {ADHOC_EVENTS_HEADING} are individual one-off events that can be scheduled
-      at a particular timestamp. You can&nbsp;
+      at a particular timestamp. You can schedule an event from your
+      backend&nbsp;
       <a
         href="https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#create-scheduled-event"
         target="_blank"
         rel="noopener noreferrer"
       >
-        schedule an event from your backend
+        using the metadata api
       </a>
-      or through the console in the <i>Schedule an event</i> tab.
+      , or&nbsp;
+      <Link to={getAddAdhocEventRoute('absolute')}>through the console</Link>.
     </div>
   );
 

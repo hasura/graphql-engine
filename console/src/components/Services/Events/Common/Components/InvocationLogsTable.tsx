@@ -13,12 +13,11 @@ import styles from '../../Events.scss';
 import InvocationLogDetails from './InvocationLogDetails';
 import { redeliverDataEvent } from '../../ServerIO';
 import ReloadIcon from '../../../../Common/Icons/Reload';
-import CheckIcon from '../../../../Common/Icons/Check';
-import CrossIcon from '../../../../Common/Icons/Cross';
 import Modal from '../../../../Common/Modal/Modal';
 import RedeliverEvent from './RedeliverEvent';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { Nullable } from '../../../../Common/utils/tsUtils';
+import { getInvocationLogStatus } from './utils';
 
 interface Props extends FilterTableProps {
   dispatch: Dispatch;
@@ -115,15 +114,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
     });
     formattedRow = {
       ...formattedRow,
-      status: (
-        <div>
-          {r.status < 300 ? (
-            <CheckIcon className="" />
-          ) : (
-            <CrossIcon className="" />
-          )}
-        </div>
-      ),
+      status: <div>{getInvocationLogStatus(r.status)}</div>,
       created_at: r.created_at && (
         <div>{convertDateTimeToLocale(r.created_at, true)}</div>
       ),
@@ -188,6 +179,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
       columns={gridHeadings}
       minRows={0}
       resizable
+      defaultPageSize={rowsFormatted.length}
       manual
       getTheadThProps={getTheadThProps}
       getResizerProps={getResizerProps}

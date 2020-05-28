@@ -31,7 +31,7 @@ const PendingEvents: React.FC<Props> = props => {
       filterState={filterState}
       setFilterState={setFilterState}
       runQuery={runQuery}
-      columns={['id', 'status', 'created_at']}
+      columns={['id', 'delivered', 'created_at', 'tries']}
       identifier={triggerName}
     />
   );

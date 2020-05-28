@@ -14,24 +14,24 @@ type Props = {
 };
 
 const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
-  const [loading, setLoading] = React.useState(false);
+  // const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<any>(null);
   const [logs, setLogs] = React.useState<InvocationLog[]>([]);
 
   React.useEffect(() => {
     const intervalId = setInterval(() => {
-      setLoading(true);
+      // setLoading(true);
       dispatch(
         getEventLogs(
           eventId,
           'data',
           l => {
             setLogs(l);
-            setLoading(false);
+            //    setLoading(false);
           },
           e => {
             setError(e);
-            setLoading(false);
+            //    setLoading(false);
           }
         )
       );
@@ -50,7 +50,7 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
 
   const latestLog = logs[0];
 
-  if (!logs.length && loading) {
+  if (!logs.length) {
     return <Spinner />;
   }
 

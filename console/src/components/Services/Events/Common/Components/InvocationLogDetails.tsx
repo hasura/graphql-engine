@@ -12,7 +12,7 @@ type Props = {
 
 const InvocationLogDetails = ({ requestPayload, responsePayload }: Props) => {
   return (
-    <div style={{ padding: '20px' }}>
+    <div className={styles.addPadding20Px}>
       <Tabs animation={false} defaultActiveKey={1} id="requestResponseTab">
         <Tab eventKey={1} title="Request">
           <div className={styles.add_mar_top}>
