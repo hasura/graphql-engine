@@ -160,6 +160,10 @@
         "no-unused-expressions": "off",
         "no-console": "off",
         "prefer-destructuring": "off",
+        "jsx-a11y/click-events-have-key-events": "off",
+        "jsx-a11y/anchor-is-valid": "off",
+        "jsx-a11y/interactive-supports-focus": "off",
+        "no-restricted-properties": "off",
         "react/no-danger": "off",
         "react/no-array-index-key": "off"
       }

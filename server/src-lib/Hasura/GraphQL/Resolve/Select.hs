@@ -28,6 +28,7 @@ import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Schema             (isAggFld)
+import           Hasura.GraphQL.Validate
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal           (onlyPositiveInt)
@@ -109,8 +110,10 @@ processTableSelectionSet fldTy flds =
         case fldInfo of
           RFPGColumn colInfo ->
             RS.mkAnnColField colInfo <$> argsToColOp (_fArguments fld)
+
           RFComputedField computedField ->
             RS.FComputedField <$> resolveComputedField computedField fld
+
           RFRelationship (RelationshipField relInfo isAgg colGNameMap tableFilter tableLimit) -> do
             let relTN = riRTable relInfo
                 colMapping = riMapping relInfo
@@ -125,6 +128,14 @@ processTableSelectionSet fldTy flds =
                 ObjRel -> RS.FObj annRel
                 ArrRel -> RS.FArr $ RS.ASSimple annRel
 
+          RFRemoteRelationship info ->
+            pure $ RS.FRemote $ RS.RemoteSelect
+                                (unValidateArgsMap $ _fArguments fld) -- Unvalidate the input arguments
+                                (map unValidateField $ toList $ _fSelSet fld) -- Unvalidate the selection fields
+                                (_rfiHasuraFields info)
+                                (_rfiRemoteFields info)
+                                (_rfiRemoteSchema info)
+
 type TableAggFlds = RS.TableAggFldsG UnresolvedVal
 
 fromAggSelSet
@@ -133,13 +144,11 @@ fromAggSelSet
      )
   => PGColGNameMap -> G.NamedType -> SelSet -> m TableAggFlds
 fromAggSelSet colGNameMap fldTy selSet = fmap toFields $
-  withSelSet selSet $ \f -> do
-    let fTy = _fType f
-        fSelSet = _fSelSet f
-    case _fName f of
+  withSelSet selSet $ \Field{..} ->
+    case _fName of
       "__typename" -> return $ RS.TAFExp $ G.unName $ G.unNamedType fldTy
-      "aggregate"  -> RS.TAFAgg <$> convertAggFld colGNameMap fTy fSelSet
-      "nodes"      -> RS.TAFNodes <$> processTableSelectionSet fTy fSelSet
+      "aggregate"  -> RS.TAFAgg <$> convertAggFld colGNameMap _fType _fSelSet
+      "nodes"      -> RS.TAFNodes <$> processTableSelectionSet _fType _fSelSet
       G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 type TableArgs = RS.TableArgsG UnresolvedVal
@@ -395,14 +404,12 @@ convertAggFld
   :: (MonadReusability m, MonadError QErr m)
   => PGColGNameMap -> G.NamedType -> SelSet -> m RS.AggFlds
 convertAggFld colGNameMap ty selSet = fmap toFields $
-  withSelSet selSet $ \fld -> do
-    let fType = _fType fld
-        fSelSet = _fSelSet fld
-    case _fName fld of
+  withSelSet selSet $ \Field{..} ->
+    case _fName of
       "__typename" -> return $ RS.AFExp $ G.unName $ G.unNamedType ty
-      "count"      -> RS.AFCount <$> convertCount colGNameMap (_fArguments fld)
+      "count"      -> RS.AFCount <$> convertCount colGNameMap _fArguments
       n            -> do
-        colFlds <- convertColFlds colGNameMap fType fSelSet
+        colFlds <- convertColFlds colGNameMap _fType _fSelSet
         unless (isAggFld n) $ throwInvalidFld n
         return $ RS.AFOp $ RS.AggOp (G.unName n) colFlds
   where
