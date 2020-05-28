@@ -908,23 +908,19 @@
   border-bottom: 1px solid #788095;
 }
 
-.supportSection {
-  cursor: pointer;
-
-  .helpSection {
-    &:hover {
-      opacity: 0.7;
-      font-weight: 600;
-    }
-  }
-}
-
-.helpSection {
+.headerRightNavbarBtn {
   display: flex;
   align-items: center;
   // background-color: #22283b;
   padding: 15px;
   position: relative;
+  color: #fff;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.7;
+    font-weight: 600;
+  }
 
   .selected {
     bottom: 0;
@@ -934,14 +930,6 @@
     height: 4px;
     width: 100%;
     left: 0px;
-  }
-}
-
-.settingsIcon {
-  // background: #5668a4;
-
-  a {
-    text-decoration: none;
   }
 }
 
@@ -1078,10 +1066,6 @@
       opacity: 0.7;
     }
   }
-}
-
-.help_dropdown_menu_heart_dismissed {
-  right: 0;
 }
 
 .dropdown_menu {
@@ -1345,7 +1329,11 @@
   }
 
   .helpSection {
-    font-size: 12px;    
+    font-size: 12px;
+  }
+
+  .headerRightNavbarBtn {
+    font-size: 12px;
   }
 
   .proWrapper{
