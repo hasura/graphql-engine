@@ -12,19 +12,22 @@ It works similar to table relationships. Head to the `Relationship` tab in your 
 2. select the remote schema
 3. give the join configuration from table columns to remote schema fields.
 
-[Add docs links][add console screenshot]
+[Add docs links]
+[Add console screenshot]
 
 ### Scheduled Triggers
 
 A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron based or timestamp based.
 
-A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to generate an end-of-day sales report every weekday at 9pm.
+A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to  generate an end-of-day sales report every weekday at 9pm.
 
 You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience.
 
-[Add docs links][add console screenshot]
+[Add docs links]
+[Add console screenshot]
 
 (close #1914)
+
 
 ### Allow access to session variables by computed fields (fix #3846)
 
@@ -60,7 +63,6 @@ Read more about the session argument for computed fields in the [docs](https://h
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
-
 - server: fix explain queries with role permissions (fix #4816)
 - server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
 
