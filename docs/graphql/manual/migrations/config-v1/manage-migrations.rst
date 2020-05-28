@@ -179,8 +179,8 @@ mounted into a directory.
 
 If you now open the console of the new instance, you can see that the three tables have been created and are tracked:
 
-.. thumbnail:: /img/graphql/manual/migrations/tracked-tables-hasura-set-up.png
-   :alt: Schema for an article table
+.. thumbnail:: /img/graphql/manual/migrations/tracked-tables.png
+   :alt: Tracked tables from Hasura migrations
    :width: 40%
 
 Step 7: Check the status of migrations
