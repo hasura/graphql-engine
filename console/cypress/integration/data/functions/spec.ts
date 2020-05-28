@@ -6,6 +6,9 @@ import {
   testCustomFunctionSQL,
   createTable,
   dropTable,
+  createTableSessVar,
+  testCustomFunctionSQLWithSessArg,
+  getTrackFnPayload,
 } from '../../../helpers/dataHelpers';
 
 import {
@@ -14,6 +17,8 @@ import {
   validateCFunc,
   validateUntrackedFunc,
   ResultType,
+  createFunctionRequest,
+  trackFunctionRequest,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
@@ -52,6 +57,37 @@ export const trackFunction = () => {
   cy.wait(5000);
   validateCFunc(getCustomFunctionName(1), getSchema(), ResultType.SUCCESS);
   cy.wait(5000);
+};
+export const testSessVariable = () => {
+  // Round about way to create a function
+  const fN = 'customFunctionWithSessionArg'.toLowerCase(); // for reading
+  dataRequest(createTableSessVar(), ResultType.SUCCESS);
+  createFunctionRequest(
+    testCustomFunctionSQLWithSessArg(fN),
+    ResultType.SUCCESS
+  );
+  cy.wait(1500);
+  trackFunctionRequest(getTrackFnPayload(fN), ResultType.SUCCESS);
+  cy.wait(1500);
+  cy.visit(`data/schema/public/functions/${fN}/modify`);
+  cy.wait(1500);
+  cy.get(getElementFromAlias(`${fN}-session-argument-btn`)).click();
+  cy.wait(1000);
+  cy.get(getElementFromAlias(`${fN}-edit-sessvar-function-field`))
+    .clear()
+    .type('hasura_session');
+  cy.wait(1000);
+  cy.get(getElementFromAlias(`${fN}-session-argument-save`)).click();
+  cy.wait(2000);
+  cy.get(getElementFromAlias(fN)).should('be.visible');
+  cy.visit(`data/schema/public/functions/${fN}/modify`);
+  cy.wait(3000);
+  cy.get(getElementFromAlias(`${fN}-session-argument`)).should(
+    'contain',
+    'hasura_session'
+  );
+  dropTableRequest(dropTable('text_result', true), ResultType.SUCCESS);
+  cy.wait(2000);
 };
 
 export const verifyPermissionTab = () => {

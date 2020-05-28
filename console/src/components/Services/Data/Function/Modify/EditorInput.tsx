@@ -25,7 +25,7 @@ const EditorInput: React.FC<EditorInputProps> = ({
         onChange={onChange}
         placeholder={placeholder || ''}
         type="text"
-        data-test={`${testID}-edit-custom-function-col-custom-field`}
+        data-test={`${testID}-edit-sessvar-function-field`}
       />
     </div>
   </div>

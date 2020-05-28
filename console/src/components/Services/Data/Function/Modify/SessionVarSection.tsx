@@ -26,7 +26,7 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
     setSessVar(e.target.value);
   };
   const onSave = () => {
-    onSessVarUpdate(sessVar);
+    if (sessVar) onSessVarUpdate(sessVar);
   };
 
   return (
@@ -41,12 +41,16 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
           isEditing ? styles.editorExpanded : styles.editorCollapsed
         }`}
       >
-        <div className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}>
+        <div
+          className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
+          data-test={`${functionName}-session-argument`}
+        >
           <Button
             className={`${styles.add_mar_small}`}
             color="white"
             size="xs"
             onClick={toggleIsEditting}
+            data-test={`${functionName}-session-argument-btn`}
           >
             {isEditing ? 'Close' : 'Edit'}
           </Button>
@@ -59,6 +63,7 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
               value={sessVar}
               onChange={onSessVarChange}
               testID={functionName}
+              placeholder="hasura-session"
             />
             <div className={styles.add_mar_top_small}>
               <Button
@@ -68,7 +73,7 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
                 className={styles.add_mar_right}
                 onClick={onSave}
                 data-test={`${functionName}-session-argument-save`}
-                disabled={false}
+                disabled={!sessVar.length}
               >
                 Save
               </Button>

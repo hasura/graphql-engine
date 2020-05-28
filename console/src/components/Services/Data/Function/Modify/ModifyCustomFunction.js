@@ -246,6 +246,7 @@ class ModifyCustomFunction extends React.Component {
         </div>
         <SessionVarSection
           key={functionName}
+          functionName={functionName}
           dispatch={this.props.dispatch}
           configuration={configuration}
           loading={isRequesting || isDeleting || isUntracking || isFetching}
