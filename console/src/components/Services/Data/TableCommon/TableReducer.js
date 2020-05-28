@@ -38,11 +38,7 @@ import {
   MANUAL_REL_RESET,
   REL_SELECTION_CHANGED,
   REL_ADD_NEW_CLICKED,
-  INTROSPECTING_REMOTE_SCHEMA,
-  INTROSPECTION_ERROR,
-  INTROSPECTION_SUCCESSFUL,
   SET_REMOTE_RELATIONSHIPS,
-  FETCHED_REMOTE_RELATIONSHIPS,
 } from '../TableRelationships/Actions';
 
 // TABLE PERMISSIONS
@@ -596,39 +592,6 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         remoteRelationships: {
           ...modifyState.remoteRelationships,
           relationships: action.remoteRelationships,
-        },
-      };
-    case INTROSPECTING_REMOTE_SCHEMA:
-      return {
-        ...modifyState,
-        remoteRelationships: {
-          ...modifyState.remoteRelationships,
-          loading: true,
-        },
-      };
-    case INTROSPECTION_ERROR:
-      return {
-        ...modifyState,
-        remoteRelationships: {
-          ...modifyState.remoteRelationships,
-          loading: false,
-          error: true,
-        },
-      };
-    case INTROSPECTION_SUCCESSFUL:
-      return {
-        ...modifyState,
-        remoteRelationships: {
-          ...modifyState.remoteRelationships,
-          loading: false,
-        },
-      };
-    case FETCHED_REMOTE_RELATIONSHIPS:
-      return {
-        ...modifyState,
-        remoteRelationships: {
-          ...modifyState.remoteRelationships,
-          fetchedRemoteRelationships: true,
         },
       };
     case TOGGLE_ENUM:

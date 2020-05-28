@@ -28,11 +28,8 @@ export const isNumber = value => {
   return typeof value === 'number';
 };
 
-export const isFloat = value => {
-  if (typeof value === 'number') {
-    return parseInt(value, 10) !== parseFloat(value, 10);
-  }
-  return false;
+export const isFloat = n => {
+  return typeof value === 'number' && n % 1 !== 0;
 };
 
 export const isBoolean = value => {

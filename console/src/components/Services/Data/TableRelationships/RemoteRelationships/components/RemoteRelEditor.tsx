@@ -24,7 +24,7 @@ import {
 import Explorer from './Explorer';
 
 type Props = {
-  table: any; // use "Table" type after ST is merged
+  table: any; // TODO use "Table" type after ST is merged
   remoteSchemas: string[];
   isLast: boolean;
   state: RemoteRelationship;
