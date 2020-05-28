@@ -20,6 +20,7 @@ import           Hasura.Prelude
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Session
+import           Hasura.Eventing.HTTP            (LogEnvHeaders)
 
 data RawConnParams
   = RawConnParams
@@ -58,6 +59,7 @@ data RawServeOptions impl
   , rsoAdminInternalErrors :: !(Maybe Bool)
   , rsoEventsHttpPoolSize  :: !(Maybe Int)
   , rsoEventsFetchInterval :: !(Maybe DiffTime)
+  , rsoLogHeadersFromEnv   :: !LogEnvHeaders
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -99,6 +101,7 @@ data ServeOptions impl
   , soResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig
   , soEventsHttpPoolSize           :: !Int
   , soEventsFetchInterval          :: !DiffTime
+  , soLogHeadersFromEnv            :: !LogEnvHeaders
   }
 
 data DowngradeOptions

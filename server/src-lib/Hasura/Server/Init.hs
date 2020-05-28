@@ -66,6 +66,7 @@ import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Hasura.Session
+import           Hasura.Eventing.HTTP             (LogEnvHeaders)
 import           Network.URI                      (parseURI)
 
 newtype DbUid
@@ -201,11 +202,18 @@ mkServeOptions rso = do
   eventsFetchInterval <- fromMaybe defaultEventFetchInterval <$>
                          withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
 
+  logEnvHeaders' <- withEnvBool (rsoLogHeadersFromEnv rso) $ fst logEnvHeadersEnv
+
+  -- When `HASURA_GRAPHQL_LOG_HEADERS_FROM_ENV` is false, then parse the `LOG_HEADERS_FROM_ENV`
+  -- to maintain backward compatibility
+  logEnvHeaders <- bool (withEnvBool False "LOG_HEADERS_FROM_ENV") (pure True) logEnvHeaders'
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig maxEventThreads eventsFetchInterval
+                        logEnvHeaders
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -865,6 +873,20 @@ parseEventsFetchInterval = optional $
            metavar "EVENTS_FETCH_INTERVAL" <>
            help (snd eventsFetchIntervalEnv))
 
+logEnvHeadersEnv :: (String,String)
+logEnvHeadersEnv =
+  ( "HASURA_GRAPHQL_LOG_HEADERS_FROM_ENV"
+  , "Flag to indicate if whether the value of the " <>
+    "environment variable in the headers should be logged. When set to false," <>
+    "the name of the environment variable will be logged"
+  )
+
+parseLogEnvHeaders :: Parser LogEnvHeaders
+parseLogEnvHeaders =
+  switch ( long "log-headers-from-env" <>
+           help (snd logEnvHeadersEnv)
+         )
+
 parseEnabledLogs :: L.EnabledLogTypes impl => Parser (Maybe [L.EngineLogType impl])
 parseEnabledLogs = optional $
   option (eitherReader L.parseEnabledLogTypes)
@@ -932,6 +954,7 @@ serveOptsToLog so =
       , "plan_cache_options" J..= soPlanCacheOptions so
       , "events_http_pool_size" J..= soEventsHttpPoolSize so
       , "events_fetch_interval" J..= soEventsFetchInterval so
+      , "log_env_headers" J..= soLogHeadersFromEnv so
       ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
@@ -976,6 +999,7 @@ serveOptionsParser =
   <*> parseGraphqlAdminInternalErrors
   <*> parseEventsHttpPoolSize
   <*> parseEventsFetchInterval
+  <*> parseLogEnvHeaders
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

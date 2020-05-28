@@ -13,7 +13,7 @@ import           Data.Aeson                           ((.=))
 import           Data.Time.Clock                      (UTCTime)
 import           GHC.AssertNF
 import           Options.Applicative
-import           System.Environment                   (getEnvironment, lookupEnv)
+import           System.Environment                   (getEnvironment)
 import           System.Exit                          (exitFailure)
 
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
@@ -247,14 +247,12 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
                            cacheRef _icInstanceId cacheInitTime
 
-  logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
-
   -- prepare event triggers data
   prepareEvents _icPgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx soEventsHttpPoolSize soEventsFetchInterval
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
   _eventQueueThread <- C.forkImmortal "processEventQueue" logger $ liftIO $
-    processEventQueue logger logEnvHeaders
+    processEventQueue logger soLogHeadersFromEnv
     _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx
 
   -- start a backgroud thread to handle async actions
@@ -266,7 +264,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
 
   -- start a background thread to deliver the scheduled events
-  void $ liftIO $ C.forkImmortal "processScheduledTriggers" logger  $ processScheduledTriggers logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef)
+  void $ liftIO $ C.forkImmortal "processScheduledTriggers" logger  $
+    processScheduledTriggers logger soLogHeadersFromEnv _icHttpManager _icPgPool (getSCFromRef cacheRef)
 
   -- start a background thread to check for updates
   _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
@@ -325,15 +324,6 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
                          LevelWarn "event_triggers" ("Error in unlocking the events " ++ (show err))
             Right count -> logger $ mkGenericStrLog
                             LevelInfo "event_triggers" ((show count) ++ " events were updated")
-
-    getFromEnv :: (Read a) => a -> String -> IO a
-    getFromEnv defaults env = do
-      mEnv <- lookupEnv env
-      let mRes = case mEnv of
-            Nothing  -> Just defaults
-            Just val -> readMaybe val
-          eRes = maybe (Left $ "Wrong expected type for environment variable: " <> env) Right mRes
-      either printErrExit return eRes
 
     runTx :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO (Either QErr a)
     runTx pool txLevel tx =

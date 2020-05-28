@@ -128,14 +128,20 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - ``HASURA_GRAPHQL_ENABLE_TELEMETRY``
      - Enable anonymous telemetry (default: true)
 
-   * - ``--events-http-pool-size``
+   * - ``--events-http-pool-size <POOL_SIZE>``
      - ``HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE``
      - Max event threads
 
-   * - ``--events-fetch-interval``
+   * - ``--events-fetch-interval <MILLISECONDS>``
      - ``HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL``
      - Interval in milliseconds to sleep before trying to fetch events again after a fetch
-       returned no events from postgres
+       returned no events from postgres (default: 1000 ms)
+
+   * - ``--log-headers-from-env``
+     - ``HASURA_GRAPHQL_LOG_HEADERS_FROM_ENV``
+     - Flag to indicate if whether the values of the environment variables in the headers
+       should be logged. When set to false, the name of the environment variable will be
+       logged (default: false)
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``
