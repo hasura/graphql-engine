@@ -1,5 +1,38 @@
 {-# LANGUAGE StrictData #-}
 
+{-| This module implements /fragment inlining/, which converts all fragment
+spreads in a GraphQL query to inline fragments. For example, given a query like
+
+> query {
+>   users {
+>     id
+>     ...userFields
+>   }
+> }
+>
+> fragment userFields on User {
+>   name
+>   favoriteColor
+> }
+
+the fragment inliner will convert it to this:
+
+> query {
+>   users {
+>     id
+>     ... on User {
+>       name
+>       favoriteColor
+>     }
+>   }
+> }
+
+This is a straightforward and mechanical transformation, but it simplifies
+further processing, since we catch unbound fragments and recursive fragment
+definitions early in the pipeline, so parsing does not have to worry about it.
+In that sense, fragment inlining is similar to the variable resolution pass
+performed by "Hasura.GraphQL.Execute.Resolve", but for fragment definitions
+rather than variables. -}
 module Hasura.GraphQL.Execute.Inline
   ( inlineSelectionSet
   ) where
@@ -39,6 +72,8 @@ type MonadInline var m =
   , MonadReader InlineEnv m
   , MonadState (InlineState var) m )
 
+-- | Inlines all fragment spreads in a 'SelectionSet'; see the module
+-- documentation for "Hasura.GraphQL.Execute.Inline" for details.
 inlineSelectionSet
   :: MonadError QErr m
   => [FragmentDefinition]
@@ -72,7 +107,7 @@ inlineFragmentSpread FragmentSpread{ _fsName, _fsDirectives } = do
   InlineEnv{ _ieFragmentDefinitions, _ieFragmentStack } <- ask
   InlineState{ _isFragmentCache } <- get
 
-  if -- If we’ve already inlined this fragment, no need to inline it again.
+  if -- If we’ve already inlined this fragment, no need to process it again.
      | Just fragment <- Map.lookup _fsName _isFragmentCache ->
        pure $! addSpreadDirectives fragment
 
@@ -83,7 +118,8 @@ inlineFragmentSpread FragmentSpread{ _fsName, _fsDirectives } = do
          <> englishList "and" (dquoteTxt <$> (_fsName :| reverse fragmentCycle))
          <> " form a cycle"
 
-     -- We didn’t hit the fragment cache, so look up the definition and inline it.
+     -- We didn’t hit the fragment cache, so look up the definition and convert
+     -- it to an inline fragment.
      | Just FragmentDefinition{ _fdTypeCondition, _fdSelectionSet }
          <- Map.lookup _fsName _ieFragmentDefinitions -> do
 
