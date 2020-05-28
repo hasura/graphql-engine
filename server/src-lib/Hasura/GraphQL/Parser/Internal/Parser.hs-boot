@@ -1,8 +1,8 @@
 module Hasura.GraphQL.Parser.Internal.Parser where
 
-import Hasura.Prelude
+import           Hasura.Prelude
 
-import Language.GraphQL.Draft.Syntax
+import           Language.GraphQL.Draft.Syntax
 
 import {-# SOURCE #-} Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Schema
