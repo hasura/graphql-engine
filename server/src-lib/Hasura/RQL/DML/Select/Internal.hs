@@ -314,8 +314,9 @@ getArrayRelNameAndSelectArgs = \case
 
 getAnnArr :: (a, AnnFieldG v) -> Maybe (a, ArraySelectG v)
 getAnnArr (f, annFld) = case annFld of
-  AFArrayRelation ar -> Just (f, ar)
-  _                  -> Nothing
+  AFArrayRelation (ASConnection _) -> Nothing
+  AFArrayRelation ar               -> Just (f, ar)
+  _                                -> Nothing
 
 
 withWriteJoinTree
