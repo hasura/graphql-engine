@@ -89,7 +89,7 @@ Hasura migrations. You can commit this directory to version control.
 Step 3: Initialize the migrations (optional)
 --------------------------------------------
 
-In case you have already set up your database we will need to initialize our
+If you have previously set up your database, you need to initialize your
 migrations with the current state of the database.
 
 Create a migration called ``init`` by exporting the current Postgres schema and
@@ -102,7 +102,7 @@ metadata from the server:
    hasura migrate create "init" --from-server
 
    # note down the version
-   
+
    # mark the migration as applied on this server
    hasura migrate apply --version "<version>" --skip-execution
 

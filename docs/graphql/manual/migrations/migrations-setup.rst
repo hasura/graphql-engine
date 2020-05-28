@@ -1,11 +1,11 @@
 .. meta::
-   :description: Migrations setup for a new Hasura instance
-   :keywords: hasura, docs, migration, setup, new Hasura
+   :description: Migrations setup for an existing Hasura instance
+   :keywords: hasura, docs, migration, setup, existing Hasura
 
-.. _migrations_new_hasura:
+.. _migrations_existing_hasura:
 
-Migrations for a new database and Hasura instance
-=================================================
+Migrations for an existing database and Hasura instance
+=======================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,8 +15,18 @@ Migrations for a new database and Hasura instance
 Introduction
 ------------
 
-This guide will help you if you are about to start setting up your schema from scratch. You can use migrations to help track the database and GraphQL schema changes.
-Refer to the :ref:`getting started guide <getting_started>` to set up a Hasura project.
+If you don’t already use any tool to manage your Postgres schema, you can use Hasura to do that for you. 
+Hasura has a CLI which will help you save each action that you do on the console, including creating tables/views and schema modifying SQL statements, as SQL files. 
+These files are called migrations and they can be applied and rolled back step-by-step. These files can be version controlled and can be used with your CI/CD system to make incremental updates.
+
+Let's say we have the following two tables in our schema:
+
+.. code-block:: sql
+
+    author (id uuid, name text, rating integer)
+    article (id uuid, title text, content text, author_id uuid)
+
+Now we want to set up migrations for this schema.
 
 Step 0: Disable console on the server
 -------------------------------------
@@ -71,7 +81,62 @@ These directories can be committed to version control.
    machine and the CLI will use it. You can also use it as a flag to CLI commands:
    ``--admin-secret '<your-admin-secret>'``.
 
-Step 3: Use the console from the CLI
+Step 3: Initialize the migrations as per your current state (optional)
+----------------------------------------------------------------------
+
+If you have previously set up your database, you need to initialize your
+migrations with the current state of the database.
+
+Create a migration called ``init`` by exporting the current Postgres schema and
+metadata from the server:
+
+.. code-block:: bash
+
+   # create migration files (note that this will only export the public schema from postgres)
+   hasura migrate create "init" --from-server
+
+   # note down the version
+
+   # mark the migration as applied on this server
+   hasura migrate apply --version "<version>" --skip-execution
+
+This command will create a new directory named ``<timestamp>_init`` inside the ``migrations`` directory. 
+In the newly created directory, there's a file named ``up.sql``.
+This file will contain the required information to reproduce the current state of the server
+including the Postgres (public) schema. 
+
+The apply command will mark this migration as "applied" on the server. 
+If you'd like to read more about the format of migration files, check out the :ref:`migration_file_format_v2`.
+
+.. note::
+
+  If you need to export other schemas along with ``public``, you can name them using the
+  ``--schema`` flag. 
+  
+  For example, to export schemas ``public``, ``schema1`` and ``schema2``,
+  execute the following command:
+
+  .. code-block:: bash
+
+     hasura migrate create "init" --from-server --schema "public" --schema "schema1" --schema "schema2"
+
+Step 4: Initialize the metadata as per your current state (optional)
+--------------------------------------------------------------------
+
+If you have previously set up your database, you need to apply the metadata from your endpoint to your initialized project directory.
+
+.. code-block:: bash
+
+   # export the metadata from your endpoint
+   hasura metadata export --endpoint http://my-graphql.herokuapp.com
+
+   # apply the metadata to your local project directory
+   hasura metadata apply
+
+Applying the metadata tells Hasura to track tables, relationships, remote schemas etc.
+If you'd like to read more about the format of metadata files, check out the :ref:`metadata_format_v2`.
+
+Step 5: Use the console from the CLI
 ------------------------------------
 
 From this point onwards, instead of using the console at
@@ -83,28 +148,25 @@ by running:
    # in project dir
    hasura console
 
-Step 4: Add tables and see how migrations are added
----------------------------------------------------
+Step 6: Add a new table and see how a migration is added
+--------------------------------------------------------
 
 As you use the Hasura console UI served by the CLI to make changes to your schema, migration files
 are automatically generated in the ``migrations/`` directory in your project.
 
-Let's add the following tables to our schema:
+Let's add the following table to our schema:
 
 .. code-block:: sql
 
-    author (id uuid, name text, rating integer)
-    article (id uuid, title text, content text, author_id uuid)
+    address (id uuid, street text, zip text, city text, country text)
 
-In the ``migrations`` directory, we can find two directories called ``<timestamp>_create_table_public_author`` and ``<timestamp>_create_table_public_article`` containing an ``up.sql`` file and a ``down.sql`` file each.
-
-If you'd like to read more about the format of migration files, check out the :ref:`migration_file_format_v2`.
+In the ``migrations`` directory, we can find a new directory called ``<timestamp>_create_table_public_address`` containing an ``up.sql`` file and a ``down.sql`` file for the migration.
 
 .. note::
 
    Migrations are only created when using the console through the CLI.
 
-Step 5: Apply the migrations and metadata on another instance of the GraphQL engine
+Step 7: Apply the migrations and metadata on another instance of the GraphQL engine
 -----------------------------------------------------------------------------------
 
 Apply all migrations present in the ``migrations/`` directory on a new
@@ -134,16 +196,13 @@ Now, apply the metadata to your new instance:
    # in project dir
    hasura metadata apply --endpoint http://another-graphql-instance.herokuapp.com
 
-This command tells Hasura to track tables, relationships etc.
-If you'd like to read more about the format of metadata files, check out the :ref:`metadata_format_v2`.
+If you now open the console of the new instance, you can see that the three tables have been created and are tracked:
 
-If you now open the console of the new instance, you can see that the two tables have been created and are tracked:
-
-.. thumbnail:: /img/graphql/manual/migrations/tracked-tables-new-hasura.png
+.. thumbnail:: /img/graphql/manual/migrations/tracked-tables-hasura-set-up.png
    :alt: Schema for an article table
    :width: 40%
 
-Step 6: Check the status of migrations
+Step 8: Check the status of migrations
 --------------------------------------
 
 .. code-block:: bash
@@ -160,8 +219,8 @@ For example,
 
    $ hasura migrate status
    VERSION        NAME                           SOURCE STATUS  DATABASE STATUS
-   1590493510167  create_table_public_author     Present        Present
-   1590497881360  create_table_public_article    Present        Present
+   1590493510167  init                           Present        Present
+   1590497881360  create_table_public_address    Present        Present
 
 Such a migration status indicates that there are 2 migration versions in the
 local directory and both of them are applied on the database.
