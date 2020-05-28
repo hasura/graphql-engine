@@ -48,12 +48,15 @@ type deleteRemoteRelationshipInput struct {
 	Table tableSchema `json:"table" yaml:"table"`
 }
 
-type createRemoteRelationshipInput struct {
+type remoteRelationshipDefinition struct {
 	HasuraFields []string               `yaml:"hasura_fields" json:"hasura_fields"`
 	Name         string                 `yaml:"name" json:"name"`
 	RemoteField  map[string]interface{} `yaml:"remote_field" json:"remote_field"`
 	RemoteSchema string                 `yaml:"remote_schema" json:"remote_schema"`
-	Table        tableSchema            `yaml:"table" json:"table"`
+}
+type createRemoteRelationshipInput struct {
+	remoteRelationshipDefinition
+	Table tableSchema `yaml:"table" json:"table"`
 }
 type updateRemoteRelationshipInput struct {
 	createRemoteRelationshipInput
@@ -624,6 +627,9 @@ type dropComputedFieldInput struct {
 type clearMetadataInput struct {
 }
 
+type remoteRelationships []struct {
+	Definiton remoteRelationshipDefinition `json:"definiton" yaml:"definiton"`
+}
 type replaceMetadataInput struct {
 	Tables []struct {
 		Table               tableSchema                      `json:"table" yaml:"table"`
@@ -635,7 +641,7 @@ type replaceMetadataInput struct {
 		DeletePermissions   []*createDeletePermissionInput   `json:"delete_permissions" yaml:"delete_permissions"`
 		EventTriggers       []*createEventTriggerInput       `json:"event_triggers" yaml:"event_triggers"`
 		ComputedFields      []*addComputedFieldInput         `json:"computed_fields" yaml:"computed_fields"`
-		RemoteRelationships []*createRemoteRelationshipInput `json:"remote_relationships" yaml:"remote_relationships"`
+		RemoteRelationships *remoteRelationships             `json:"remote_relationships" yaml:"remote_relationships"`
 		Configuration       *tableConfiguration              `json:"configuration" yaml:"configuration"`
 	} `json:"tables" yaml:"tables"`
 	Functions        []*trackFunctionInput            `json:"functions" yaml:"functions"`
@@ -746,6 +752,20 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 			l.PushBack(cf)
 		}
 	}
+
+	for _, table := range rmi.Tables {
+		for _, remoteRelationship := range *table.RemoteRelationships {
+			r := createRemoteRelationshipInput{
+				remoteRelationshipDefinition: remoteRelationship.Definiton,
+				Table: tableSchema{
+					Name:   table.Table.Name,
+					Schema: table.Table.Schema,
+				},
+			}
+			l.PushBack(r)
+		}
+	}
+
 	// track functions
 	for _, function := range rmi.Functions {
 		l.PushBack(function)

@@ -800,6 +800,9 @@ func (c *customList) Iterate() linq.Iterator {
 	}
 }
 
+// PushList will read migration from source
+// for an sql migration it'll append it to the LinkedList
+// for a meta migration it'll append after some processing
 func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.CustomList) error {
 	migr, err := ioutil.ReadAll(migration)
 	if err != nil {
