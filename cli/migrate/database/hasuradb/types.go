@@ -614,10 +614,6 @@ type addComputedFieldInput struct {
 	Definition interface{} `json:"definition" yaml:"definition"`
 }
 
-type addRemoteRelationshipInput struct {
-	HasuraFields []string `json:"hasura_fields"`
-}
-
 type dropComputedFieldInput struct {
 	Table   tableSchema `json:"table" yaml:"table"`
 	Name    string      `json:"name" yaml:"name"`
@@ -639,7 +635,7 @@ type replaceMetadataInput struct {
 		DeletePermissions   []*createDeletePermissionInput   `json:"delete_permissions" yaml:"delete_permissions"`
 		EventTriggers       []*createEventTriggerInput       `json:"event_triggers" yaml:"event_triggers"`
 		ComputedFields      []*addComputedFieldInput         `json:"computed_fields" yaml:"computed_fields"`
-		RemoteRelationships []*addRemoteRelationshipInput    `json:"remote_relationships" yaml:"remote_relationships"`
+		RemoteRelationships []*createRemoteRelationshipInput `json:"remote_relationships" yaml:"remote_relationships"`
 		Configuration       *tableConfiguration              `json:"configuration" yaml:"configuration"`
 	} `json:"tables" yaml:"tables"`
 	Functions        []*trackFunctionInput            `json:"functions" yaml:"functions"`

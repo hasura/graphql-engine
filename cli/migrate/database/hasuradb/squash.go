@@ -843,7 +843,7 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 			}
 		}
 	default:
-		return fmt.Errorf("Invalid migration file type")
+		return fmt.Errorf("invalid migration file type")
 	}
 	return nil
 }
@@ -871,6 +871,8 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		func(element *list.Element) string {
 			switch args := element.Value.(type) {
 			case *createRemoteRelationshipInput:
+				return args.Name
+			case *updateRemoteRelationshipInput:
 				return args.Name
 			case *deleteRemoteRelationshipInput:
 				return args.Name
