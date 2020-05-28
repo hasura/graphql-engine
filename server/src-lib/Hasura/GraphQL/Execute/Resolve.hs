@@ -19,11 +19,12 @@ import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 
 resolveVariables
-  :: forall m. MonadError QErr m
+  :: forall m fragments
+   . (MonadError QErr m, Traversable fragments)
   => [G.VariableDefinition]
   -> GH.VariableValues
-  -> G.SelectionSet G.FragmentSpread G.Name
-  -> m (G.SelectionSet G.FragmentSpread Variable)
+  -> G.SelectionSet fragments G.Name
+  -> m (G.SelectionSet fragments Variable)
 resolveVariables definitions jsonValues selSet = do
   variables <- Map.fromListOn getName <$> traverse buildVariable definitions
   traverse (traverse (resolveVariable variables)) selSet

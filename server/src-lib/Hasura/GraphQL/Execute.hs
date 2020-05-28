@@ -51,6 +51,7 @@ import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Query           as EQ
+import qualified Hasura.GraphQL.Execute.Flatten         as EF
 import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
@@ -273,10 +274,16 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
     noExistingPlan :: m ExecPlanResolved
     noExistingPlan = do
       req <- toParsed reqUnparsed
+      let
+        takeFragment = \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
+        fragments =
+            mapMaybe takeFragment $ unGQLExecDoc $ _grQuery req
       planPartial <- getExecPlanPartial userInfo sc enableAL req
       case planPartial of
         GExPHasura (gCtx, G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet) -> do
-          (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo selSet varDefs (_grVariables reqUnparsed)
+          flattenedSelSet <- EF.flattenSelectionSet fragments selSet
+          (queryTx, plan, genSql) <-
+            getQueryOp gCtx sqlGenCtx userInfo flattenedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ GExPHasura $ ExOpQuery queryTx (Just genSql)
         _ -> _
@@ -314,7 +321,7 @@ getQueryOp
   => C.GQLContext
   -> SQLGenCtx
   -> UserInfo
-  -> G.SelectionSet G.FragmentSpread G.Name
+  -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe VariableValues
   -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)

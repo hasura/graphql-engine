@@ -29,7 +29,7 @@ instance J.ToJSON GQLContext where
   toJSON GQLContext{} = J.object [] -- FIXME
 
 type ParserFn a
-  =  G.SelectionSet G.FragmentSpread Variable
+  =  G.SelectionSet G.NoFragments Variable
   -> Either (NESeq ParseError) (a, QueryReusability)
 
 -- FIXME: taken from Resolve.hs

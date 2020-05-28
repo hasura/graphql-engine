@@ -18,7 +18,8 @@ import           Data.Parser.JSONPath
 import           Data.Type.Equality
 import           Language.GraphQL.Draft.Syntax (Description (..), EnumValue (..), Field (..),
                                                 FragmentSpread, Name (..), Selection (..),
-                                                SelectionSet, Value (..), litName, literal)
+                                                SelectionSet, Value (..), litName, literal,
+                                                NoFragments, _ifSelectionSet)
 
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Schema
@@ -88,7 +89,7 @@ type family ParserInput k where
   ParserInput 'Both = Value Variable
   ParserInput 'Input = Value Variable
   -- see Note [The meaning of Parser 'Output]
-  ParserInput 'Output = SelectionSet FragmentSpread Variable
+  ParserInput 'Output = SelectionSet NoFragments Variable
 
 {- Note [The meaning of Parser 'Output]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -197,7 +198,7 @@ instance Applicative m => Applicative (InputFieldsParser m) where
 -- 'selectionSet' to obtain a 'Parser'.
 data FieldParser m a = FieldParser
   { fDefinition :: Definition FieldInfo
-  , fParser     :: Field FragmentSpread Variable -> m a
+  , fParser     :: Field NoFragments Variable -> m a
   } deriving (Functor)
 
 -- | A single parsed field in a selection set.
@@ -419,10 +420,17 @@ selectionSet name description parsers = Parser
   { pType = NonNullable $ TNamed $ mkDefinition name description $
       TIObject $ map fDefinition parsers
   , pParser = \input -> do
-      let fields = input & mapMaybe \case
-            -- FIXME: handle fragments
-            SelectionField inputField -> Just inputField
-            _ -> Nothing
+      let
+        getField :: Selection NoFragments var -> [Field NoFragments var]
+        getField = \case
+            SelectionField inputField -> [inputField]
+            SelectionInlineFragment frag -> concat $ map getField $ _ifSelectionSet frag
+            -- GHC complains about non-exhaustive patterns here.  GHC is wrong:
+            -- NoFragments is an empty data type.  It's because Syntax.hs does
+            -- not export the constructors of NoFragments.
+            SelectionFragmentSpread x -> []
+        fields = concat $ map getField input
+
       -- Not all fields have a selection set, but if they have one, it
       -- must contain at least one field. The GraphQL parser returns a
       -- list to represent this: an empty list indicates there was no
