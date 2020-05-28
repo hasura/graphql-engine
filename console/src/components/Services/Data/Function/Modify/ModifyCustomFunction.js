@@ -20,6 +20,7 @@ import {
   fetchCustomFunction,
   deleteFunctionSql,
   unTrackCustomFunction,
+  updateSessVar,
 } from '../customFunctionReducer';
 
 import { SET_SQL } from '../../RawSQL/Actions';
@@ -29,6 +30,7 @@ import {
   getFunctionBaseRoute,
   getSchemaBaseRoute,
 } from '../../../../Common/utils/routesUtils';
+import SessionVarSection from './SessionVarSection';
 
 class ModifyCustomFunction extends React.Component {
   constructor() {
@@ -83,6 +85,10 @@ class ModifyCustomFunction extends React.Component {
     }
   }
 
+  onSessVarUpdate = sessVar => {
+    this.props.dispatch(updateSessVar(sessVar));
+  };
+
   loadRunSQLAndLoadPage() {
     const { functionDefinition } = this.props.functions;
     Promise.all([
@@ -135,6 +141,7 @@ class ModifyCustomFunction extends React.Component {
       isDeleting,
       isUntracking,
       isFetching,
+      configuration,
     } = this.props.functions;
 
     if (this.state.funcFetchCompleted && !functionName) {
@@ -237,6 +244,13 @@ class ModifyCustomFunction extends React.Component {
             id={'copyCustomFunctionSQL'}
           />
         </div>
+        <SessionVarSection
+          key={functionName}
+          dispatch={this.props.dispatch}
+          configuration={configuration}
+          loading={isRequesting || isDeleting || isUntracking || isFetching}
+          onSessVarUpdate={this.onSessVarUpdate}
+        />
         {migrationMode
           ? [<hr key="modify-custom-function-divider" />, generateMigrateBtns()]
           : null}
