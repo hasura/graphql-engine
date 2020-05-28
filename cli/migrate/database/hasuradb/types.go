@@ -55,7 +55,6 @@ type createRemoteRelationshipInput struct {
 	RemoteSchema string                 `yaml:"remote_schema" json:"remote_schema"`
 	Table        tableSchema            `yaml:"table" json:"table"`
 }
-
 type updateRemoteRelationshipInput struct {
 	createRemoteRelationshipInput
 }
@@ -151,7 +150,6 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		q.Args = &createRemoteRelationshipInput{}
 	case updateRemoteRelationship:
 		q.Args = &updateRemoteRelationshipInput{}
-
 	default:
 		return fmt.Errorf("cannot squash type %s", q.Type)
 	}
@@ -944,5 +942,10 @@ type queryInCollectionConfig struct {
 
 type allowListConfig struct {
 	collection string
+	transition.Transition
+}
+
+type remoteRelationshipConfig struct {
+	name string
 	transition.Transition
 }

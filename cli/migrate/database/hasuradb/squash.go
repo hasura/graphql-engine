@@ -17,6 +17,59 @@ import (
 
 type CustomQuery linq.Query
 
+func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) error {
+	remoteRelationshipTransition := transition.New(&remoteRelationshipConfig{})
+	remoteRelationshipTransition.Initial("new")
+	remoteRelationshipTransition.State("created")
+	remoteRelationshipTransition.State("updated")
+	remoteRelationshipTransition.State("deleted")
+
+	remoteRelationshipTransition.Event(createRemoteRelationship).To("created").From("new", "deleted")
+	remoteRelationshipTransition.Event(updateRemoteRelationship).To("updated").From("new", "created")
+	remoteRelationshipTransition.Event(deleteRemoteRelationship).To("deleted").From("new", "created", "updated")
+
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		g := item.(linq.Group)
+		if g.Key == "" {
+			continue
+		}
+		key := g.Key.(string)
+		cfg := remoteRelationshipConfig{
+			name: key,
+		}
+		prevElems := make([]*list.Element, 0)
+		for _, val := range g.Group {
+			element := val.(*list.Element)
+			switch obj := element.Value.(type) {
+			case *createRemoteRelationshipInput:
+				err := remoteRelationshipTransition.Trigger(createRemoteRelationship, &cfg, nil)
+				if err != nil {
+					return errors.Wrapf(err, "error squashing: %v", obj.Name)
+				}
+				prevElems = append(prevElems, element)
+			case *updateRemoteRelationshipInput:
+				err := remoteRelationshipTransition.Trigger(updateRemoteRelationship, &cfg, nil)
+				if err != nil {
+					return errors.Wrapf(err, "error squashing: %v", obj.Name)
+				}
+				prevElems = append(prevElems, element)
+			case *deleteRemoteRelationshipInput:
+				err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				prevElems = append(prevElems, element)
+				// drop previous elements
+				for _, e := range prevElems {
+					squashList.Remove(e)
+				}
+			}
+		}
+	}
+	return nil
+}
 func (q CustomQuery) MergeEventTriggers(squashList *database.CustomList) error {
 	eventTriggerTransition := transition.New(&eventTriggerConfig{})
 	eventTriggerTransition.Initial("new")
@@ -82,7 +135,6 @@ func (q CustomQuery) MergeRelationships(squashList *database.CustomList) error {
 	relationshipTransition.Event("drop_relationship").To("dropped").From("new", "created")
 
 	next := q.Iterate()
-
 	for item, ok := next(); ok; item, ok = next() {
 		g := item.(linq.Group)
 		if g.Key == nil {
@@ -603,13 +655,13 @@ func (q CustomQuery) MergeAllowLists(squashList *database.CustomList) error {
 		for _, val := range g.Group {
 			element := val.(*list.Element)
 			switch element.Value.(type) {
-			case *addRemoteSchemaInput:
+			case *addCollectionToAllowListInput:
 				err := allowListTransition.Trigger("add_collection_to_allowlist", &alCfg, nil)
 				if err != nil {
 					return err
 				}
 				prevElems = append(prevElems, element)
-			case *removeRemoteSchemaInput:
+			case *dropCollectionFromAllowListInput:
 				if alCfg.GetState() == "added" {
 					prevElems = append(prevElems, element)
 				}
@@ -815,6 +867,23 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
+	remoteRelationShipsGroup := CustomQuery(linq.FromIterable(l).GroupByT(
+		func(element *list.Element) string {
+			switch args := element.Value.(type) {
+			case *createRemoteRelationshipInput:
+				return args.Name
+			case *deleteRemoteRelationshipInput:
+				return args.Name
+			}
+			return ""
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err = remoteRelationShipsGroup.MergeRemoteRelationships(l)
+	if err != nil {
+		ret <- err
+	}
 	relationshipsGroup := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
@@ -1267,6 +1336,12 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			q.Type = addComputedField
 		case *dropComputedFieldInput:
 			q.Type = dropComputedField
+		case *createRemoteRelationshipInput:
+			q.Type = createRemoteRelationship
+		case *deleteRemoteRelationshipInput:
+			q.Type = deleteRemoteRelationship
+		case *updateRemoteRelationshipInput:
+			q.Type = updateRemoteRelationship
 		case *RunSQLInput:
 			ret <- []byte(args.SQL)
 			continue
