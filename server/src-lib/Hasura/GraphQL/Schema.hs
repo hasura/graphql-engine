@@ -77,7 +77,9 @@ query allTables stringifyNum = do
       queryType = P.NonNullable $ P.TNamed $ P.mkDefinition $$(G.litName "query_root") Nothing $
                   P.TIObject $ map P.fDefinition queryFieldsParser
   allTypes <- case P.collectTypeDefinitions queryType of
-    Left _err -> throw500 "conflicting type definitions when collecting types from the schema"
+    Left (P.ConflictingDefinitions type1 _) -> throw500 $
+      "found conflicting definitions for " <> P.getName type1
+      <<> " when collecting types from the schema"
     Right tps -> pure tps
   let realSchema = Schema
         { sDescription = Nothing

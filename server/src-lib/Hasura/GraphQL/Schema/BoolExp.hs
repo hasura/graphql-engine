@@ -64,8 +64,8 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
       fieldName <- MaybeT $ pure $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp
-        FIColumn columnInfo -> lift $ fmap (AVCol columnInfo) <$>
-          comparisonExps (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+        FIColumn columnInfo ->
+          lift $ fmap (AVCol columnInfo) <$> comparisonExps (pgiType columnInfo)
 
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
@@ -78,14 +78,15 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
 
 comparisonExps
   :: (MonadSchema n m, MonadError QErr m)
-  => PGColumnType -> G.Nullability -> m (Parser 'Input n [ComparisonExp])
-comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
+  => PGColumnType -> m (Parser 'Input n [ComparisonExp])
+comparisonExps = P.memoize 'comparisonExps \columnType -> do
   geogInputParser <- geographyWithinDistanceInput
   geomInputParser <- geometryWithinDistanceInput
   ignInputParser  <- intersectsGeomNbandInput
   ingInputParser  <- intersectsNbandGeomInput
-  columnParser    <- P.column columnType nullability
-  castParser      <- castExp columnType nullability
+  -- see Note [Columns in comparison expression are never nullable]
+  columnParser    <- P.column columnType (G.Nullability False)
+  castParser      <- castExp columnType
   let name       = P.getName columnParser <> $$(G.litName "_comparison_exp")
       listParser = P.list columnParser `P.bind` traverse P.openOpaque
   pure $ P.object name Nothing $ fmap catMaybes $ sequenceA $ concat
@@ -194,8 +195,8 @@ comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
 
 castExp
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => PGColumnType -> G.Nullability -> m (Parser 'Input n (CastExp UnpreparedValue))
-castExp sourceType nullability = do
+  => PGColumnType -> m (Parser 'Input n (CastExp UnpreparedValue))
+castExp sourceType = do
   sourceName <- P.mkColumnTypeName sourceType <&> (<> $$(G.litName "_cast_exp"))
   fields <- sequenceA <$> traverse mkField targetTypes
   pure $ P.object sourceName Nothing $ M.fromList . catMaybes <$> fields
@@ -208,7 +209,7 @@ castExp sourceType nullability = do
     mkField :: PGScalarType -> m (InputFieldsParser n (Maybe (PGScalarType, [ComparisonExp])))
     mkField targetType = do
       targetName <- P.mkScalarTypeName targetType
-      value <- comparisonExps (PGColumnScalar targetType) nullability
+      value <- comparisonExps (PGColumnScalar targetType)
       pure $ P.fieldOptional targetName Nothing $ (targetType,) <$> value
 
 geographyWithinDistanceInput
@@ -252,3 +253,33 @@ intersectsGeomNbandInput = do
   pure $ P.object $$(G.litName "st_intersects_geom_nband_input") Nothing $ STIntersectsGeomminNband
     <$> (     mkParameter <$> P.field         $$(G.litName "geommin") Nothing geometryParser)
     <*> (fmap mkParameter <$> P.fieldOptional $$(G.litName "nband")   Nothing integerParser)
+
+{- Note [Columns in comparison expression are never nullable]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In comparisonExps, we hardcode `Nullability False` when calling `column`, which
+might seem a bit sketchy. Shouldn’t the nullability depend on the nullability of
+the underlying Postgres column?
+
+No. If we did that, then we would allow boolean expressions like this:
+
+    delete_users(where: {status: {eq: null}})
+
+The user expects this to generate SQL like
+
+    DELETE FROM users WHERE users.status IS NULL
+
+but it doesn’t. We treat null to mean “no condition was specified” (since
+that’s how GraphQL indicates an optional field was omitted), and we actually
+generate SQL like this:
+
+    DELETE FROM users
+
+Now we’ve gone and deleted every user in the database. Hopefully the user had
+backups!
+
+We avoid this problem by making the column value non-nullable (which is correct,
+since we never treat a null value as a SQL NULL), then creating the field using
+fieldOptional. This creates a parser that rejects nulls, but won’t be called at
+all if the field is not specified, which is permitted by the GraphQL
+specification. See the Haddock documentation for IFOptional and fieldOptional
+for more details. -}
