@@ -116,7 +116,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
       ...formattedRow,
       status: <div>{getInvocationLogStatus(r.status)}</div>,
       created_at: r.created_at && (
-        <div>{convertDateTimeToLocale(r.created_at, true)}</div>
+        <div>{convertDateTimeToLocale(r.created_at)}</div>
       ),
       id: (
         <div>

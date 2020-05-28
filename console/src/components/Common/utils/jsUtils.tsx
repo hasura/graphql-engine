@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 // TODO: make functions from this file available without imports
 /* TYPE utils */
 
@@ -342,26 +344,8 @@ export const getCurrTimeForFileName = () => {
   return [year, month, day, hours, minutes, seconds, milliSeconds].join('_');
 };
 
-export const convertDateTimeToLocale = (
-  dateTime: string,
-  addTimezone = false
-) => {
-  const options = {
-    hourCycle: 'h24',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    month: 'short',
-    second: '2-digit',
-    timeZoneName: 'short',
-    weekday: 'short',
-    year: 'numeric',
-  };
-
-  return new Date(`${dateTime}${addTimezone ? 'Z' : ''}`).toLocaleString(
-    'en-US',
-    options
-  );
+export const convertDateTimeToLocale = (dateTime: string) => {
+  return moment(dateTime, moment.ISO_8601).format('ddd, MMM Do HH:mma');
 };
 
 export const convertDateTimeToReadable = (

@@ -84,12 +84,12 @@ const EventsTable: React.FC<Props> = props => {
       delivered: getEventDeliveryIcon(r.delivered),
       status: getEventStatusIcon(r.status),
       scheduled_time: r.scheduled_time ? (
-        <div>{convertDateTimeToLocale(r.scheduled_time, false)}</div>
+        <div>{convertDateTimeToLocale(r.scheduled_time)}</div>
       ) : (
         undefined
       ),
       created_at: r.created_at ? (
-        <div>{convertDateTimeToLocale(r.created_at, true)}</div>
+        <div>{convertDateTimeToLocale(r.created_at)}</div>
       ) : (
         undefined
       ),
