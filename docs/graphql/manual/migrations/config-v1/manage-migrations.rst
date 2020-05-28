@@ -18,7 +18,7 @@ Introduction
 If you don't already use any tool to manage your Postgres schema, you can use
 Hasura to do that for you. Hasura has a CLI which will help you save each
 action that you do on the console, including creating tables/views and schema
-modifying SQL statements, as YAML files. These files are called migrations and
+modifying SQL statements, as SQL files. These files are called migrations and
 they can be applied and rolled back step-by-step. These files can be version
 controlled and can be used with your CI/CD system to make incremental updates.
 
@@ -77,7 +77,9 @@ Let's set up a project directory by executing the following command:
 
 This will create a new directory called ``my-project`` with a ``config.yaml``
 file and a ``migrations`` directory. This directory structure is mandatory to use
-Hasura migrations. You can commit this directory to version control.
+Hasura migrations. 
+
+These directories can be committed to version control.
 
 .. note::
 
@@ -110,9 +112,10 @@ metadata from the server:
 This command will create a new migration under the ``migrations`` directory
 with the file name as ``<timestamp(version)>_init.up.yaml``. This file will
 contain the required information to reproduce the current state of the server
-including the Postgres (public) schema and Hasura metadata. The apply command
-will mark this migration as "applied" on the server. If you'd like to read more
+including the Postgres (public) schema and Hasura metadata. If you'd like to read more
 about the format of migration files, check out the :ref:`migration_file_format_v1`.
+
+The apply command will mark this migration as "applied" on the server. 
 
 .. note::
 

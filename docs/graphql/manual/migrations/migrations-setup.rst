@@ -103,10 +103,9 @@ metadata from the server:
 This command will create a new directory named ``<timestamp>_init`` inside the ``migrations`` directory. 
 In the newly created directory, there's a file named ``up.sql``.
 This file will contain the required information to reproduce the current state of the server
-including the Postgres (public) schema. 
+including the Postgres (public) schema. If you'd like to read more about the format of migration files, check out the :ref:`migration_file_format_v2`.
 
 The apply command will mark this migration as "applied" on the server. 
-If you'd like to read more about the format of migration files, check out the :ref:`migration_file_format_v2`.
 
 .. note::
 
