@@ -115,17 +115,20 @@ If you'd like to read more about the format of migration files, check out the :r
 
      hasura migrate create "init" --from-server --schema "public" --schema "schema1" --schema "schema2"
 
-Step 4: Apply the metadata as per your current state
-----------------------------------------------------
+Step 4: Initialize the metadata as per your current state
+---------------------------------------------------------
 
-Apart from the migrations that contain the SQL to reproduce the database schema, we need to apply the metadata:
+Apart from the migrations, we need to apply the metadata from your endpoint to your local project directory.
 
 .. code-block:: bash
 
-   # apply the metadata 
+   # export the metadata from your endpoint
+   hasura metadata export --endpoint http://my-graphql.herokuapp.com
+
+   # apply the metadata to your local project directory
    hasura metadata apply
 
-This command tells Hasura to track tables, relationships etc.
+Applying the metadata tells Hasura to track tables, relationships, remote schemas etc.
 If you'd like to read more about the format of metadata files, check out the :ref:`metadata_format_v2`.
 
 Step 5: Use the console from the CLI
@@ -210,7 +213,6 @@ For example,
 .. code-block:: bash
 
    $ hasura migrate status
-   INFO <info>                                   version=<version>
    VERSION        NAME                           SOURCE STATUS  DATABASE STATUS
    1590493510167  init                           Present        Present
    1590497881360  create_table_public_address    Present        Present

@@ -159,7 +159,6 @@ For example,
 .. code-block:: bash
 
    $ hasura migrate status
-   INFO <info>                                   version=<version>
    VERSION        NAME                           SOURCE STATUS  DATABASE STATUS
    1590493510167  create_table_public_author     Present        Present
    1590497881360  create_table_public_article    Present        Present
