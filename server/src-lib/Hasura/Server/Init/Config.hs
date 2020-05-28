@@ -56,6 +56,7 @@ data RawServeOptions impl
   , rsoPlanCacheSize       :: !(Maybe Cache.CacheSize)
   , rsoDevMode             :: !Bool
   , rsoAdminInternalErrors :: !(Maybe Bool)
+  , rsoEventsHttpPoolSize  :: !(Maybe Int)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -95,6 +96,7 @@ data ServeOptions impl
   , soLogLevel                     :: !L.LogLevel
   , soPlanCacheOptions             :: !E.PlanCacheOptions
   , soResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig
+  , soEventsHttpPoolSize           :: !Int
   }
 
 data DowngradeOptions

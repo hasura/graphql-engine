@@ -195,11 +195,14 @@ mkServeOptions rso = do
            | adminInternalErrors -> InternalErrorsAdminOnly
            | otherwise           -> InternalErrorsDisabled
 
+  maxEventThreads <- fromMaybe defaultMaxEventThreads <$>
+                     withEnv (rsoEventsHttpPoolSize rso) (fst eventsHttpPoolSizeEnv)
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
-                        internalErrorsConfig
+                        internalErrorsConfig maxEventThreads
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -246,6 +249,8 @@ mkServeOptions rso = do
       mxRefetchIntM <- withEnv (rsoMxRefetchInt rso) $ fst mxRefetchDelayEnv
       mxBatchSizeM <- withEnv (rsoMxBatchSize rso) $ fst mxBatchSizeEnv
       return $ LQ.mkLiveQueriesOptions mxBatchSizeM mxRefetchIntM
+
+    defaultMaxEventThreads = 100
 
 
 mkExamplesDoc :: [[String]] -> PP.Doc
@@ -828,6 +833,19 @@ parsePlanCacheSize =
       help (snd planCacheSizeEnv)
     )
 
+eventsHttpPoolSizeEnv :: (String,String)
+eventsHttpPoolSizeEnv =
+  ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+  , "The maximum number of event threads to be used to process event triggers."
+  )
+
+parseEventsHttpPoolSize :: Parser (Maybe Int)
+parseEventsHttpPoolSize = optional $
+  option auto
+         ( long "events-http-pool-size" <>
+           metavar "EVENTS_HTTP_POOL_SIZE" <>
+           help (snd eventsHttpPoolSizeEnv))
+
 parseEnabledLogs :: L.EnabledLogTypes impl => Parser (Maybe [L.EngineLogType impl])
 parseEnabledLogs = optional $
   option (eitherReader L.parseEnabledLogTypes)
@@ -893,6 +911,7 @@ serveOptsToLog so =
       , "enabled_log_types" J..= soEnabledLogTypes so
       , "log_level" J..= soLogLevel so
       , "plan_cache_options" J..= soPlanCacheOptions so
+      , "events_http_pool_size" J..= soEventsHttpPoolSize so
       ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
@@ -935,6 +954,7 @@ serveOptionsParser =
   <*> parsePlanCacheSize
   <*> parseGraphqlDevMode
   <*> parseGraphqlAdminInternalErrors
+  <*> parseEventsHttpPoolSize
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
