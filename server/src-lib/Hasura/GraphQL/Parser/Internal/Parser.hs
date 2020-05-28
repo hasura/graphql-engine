@@ -425,10 +425,8 @@ selectionSet name description parsers = Parser
         getField = \case
             SelectionField inputField -> [inputField]
             SelectionInlineFragment frag -> concat $ map getField $ _ifSelectionSet frag
-            -- GHC complains about non-exhaustive patterns here.  GHC is wrong:
-            -- NoFragments is an empty data type.  It's because Syntax.hs does
-            -- not export the constructors of NoFragments.
-            SelectionFragmentSpread x -> []
+            -- NoFragments is an empty data type; pattern match on it.
+            SelectionFragmentSpread x -> case x of
         fields = concat $ map getField input
 
       -- Not all fields have a selection set, but if they have one, it
