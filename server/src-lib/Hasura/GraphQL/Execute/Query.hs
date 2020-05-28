@@ -12,6 +12,7 @@ import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.IntMap                            as IntMap
+import qualified Data.Sequence.NonEmpty                 as NE
 import qualified Data.TByteString                       as TBS
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
@@ -210,60 +211,36 @@ convertQuerySelSet
   :: ( MonadError QErr m
      , MonadReader r m
      , Has SQLGenCtx r
-     , Has UserInfo r
-     )
+     , Has UserInfo r )
   => GQLContext
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
 convertQuerySelSet gqlContext selectionSet varDefs varValsM = do
-  let parsers = gqlQueryParser gqlContext
-  usrVars <- asks (userVars . getter)
-  let varVals = fromMaybe Map.empty varValsM
-  vals <- resolveVariables varDefs varVals selectionSet
-  fldPlans <- case parsers vals of
-    -- TODO return prettier errors
-    Left errs -> throw500 $ T.concat $ map peMessage $ toList errs
-    Right (map, _reus) -> forM (toList selectionSet) $ \case
-      f@(G.SelectionField fld) -> do
-        -- TODO should we incorporate alias information?
-        fldPlan <- case G._fName fld of
-          -- TODO support introspection
-          -- "__type"     -> fldPlanFromJ <$> R.typeR fld
-          -- "__schema"   -> fldPlanFromJ <$> R.schemaR fld
-          -- "__typename" -> pure $ fldPlanFromJ queryRootName
-          root         -> do
-            case OMap.lookup root map of
-              Just conv -> do
-                (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
-                  traverseQueryRootField prepareWithPlan conv
-                pure $ irToRootFieldPlan vars prepped q
-              _ -> _
-        pure (fromMaybe (G._fName fld) (G._fAlias fld), fldPlan)
-      _ -> _
-  {-let varTypes = finalReusability ^? _Reusable
-      reusablePlan = ReusableQueryPlan <$> varTypes <*> pure fldPlans-}
-  (tx, sql) <- mkCurPlanTx usrVars fldPlans
-  pure (tx, Nothing, sql) -- FIXME ReusableQueryPlan
+  -- Parse the GraphQL query into the RQL AST
+  (unpreparedQueries, _reusability)
+    <-  resolveVariables varDefs (fromMaybe Map.empty varValsM) selectionSet
+    >>= (gqlQueryParser gqlContext >>> (`onLeft` reportParseErrors))
 
-  -- usrVars <- asks (userVars . getter)
-  -- (fldPlans, finalReusability) <- runReusabilityTWith initialReusability $
-  --   forM (toList fields) $ \fld -> do
-  --     fldPlan <- case V._fName fld of
-  --       "__type"     -> fldPlanFromJ <$> R.typeR fld
-  --       "__schema"   -> fldPlanFromJ <$> R.schemaR fld
-  --       "__typename" -> pure $ fldPlanFromJ queryRootName
-  --       _            -> do
-  --         unresolvedAst <- R.queryFldToPGAST fld
-  --         (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
-  --           R.traverseQueryRootFldAST prepareWithPlan unresolvedAst
-  --         pure . RFPPostgres $ PGPlan (R.toPGQuery q) vars prepped
-  --     pure (V._fAlias fld, fldPlan)
-  -- let varTypes = finalReusability ^? _Reusable
-  --     reusablePlan = ReusableQueryPlan <$> varTypes <*> pure fldPlans
-  -- (tx, sql) <- mkCurPlanTx usrVars fldPlans
-  -- pure (tx, reusablePlan, sql)
+  -- Transform the RQL AST into a prepared SQL query
+  queryPlans <- for unpreparedQueries \unpreparedQuery -> do
+    (preparedQuery, PlanningSt _ planVars planVals)
+      <- flip runStateT initPlanningSt
+      $  traverseQueryRootField prepareWithPlan unpreparedQuery
+    pure $! irToRootFieldPlan planVars planVals preparedQuery
+
+  -- Build and return an executable action from the generated SQL
+  usrVars <- asks (userVars . getter)
+  (tx, sql) <- mkCurPlanTx usrVars (OMap.toList queryPlans)
+  pure (tx, Nothing, sql) -- FIXME ReusableQueryPlan
+  where
+    reportParseErrors errs = case NE.head errs of
+      -- TODO: Our error reporting machinery doesn’t currently support reporting
+      -- multiple errors at once, so we’re throwing away all but the first one
+      -- here. It would be nice to report all of them!
+      ParseError{ pePath, peMessage } ->
+        throwError (err400 ValidationFailed peMessage){ qePath = pePath }
 
 -- use the existing plan and new variables to create a pg query
 queryOpFromPlan
