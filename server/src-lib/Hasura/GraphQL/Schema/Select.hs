@@ -348,7 +348,7 @@ table(
   where: table_bool_exp
   limit: Int
   offset: Int
-):  [tableConnection!]!
+):  tableConnection!
 
 -}
 
@@ -359,7 +359,7 @@ mkSelFldConnection mCustomName tn =
     desc    = G.Description $ "fetch data from the table: " <>> tn
     fldName = fromMaybe (qualObjectToName tn <> "_connection") mCustomName
     args    = fromInpValL $ mkConnectionArgs tn
-    ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableConnectionTy tn
+    ty      = G.toGT $ G.toNT $ mkTableConnectionTy tn
 
 {-
 type tableConnection {
