@@ -41,10 +41,14 @@ buildGQLContext allTables =
     allRoles :: HashSet RoleName
     allRoles = S.insert adminRole $ allTables ^.. folded.tiRolePermInfoMap.to M.keys.folded
 
+    tableFilter ti = not (isSystemDefined $ _tciSystemDefined ti)
+
+    validTables = M.filter (tableFilter . _tiCoreInfo) allTables
+
     buildContextForRole roleName = do
       SQLGenCtx{ stringifyNum } <- askSQLGenCtx
       P.runSchemaT roleName allTables $ GQLContext
-        <$> (finalizeParser <$> query (S.fromList $ M.keys allTables) stringifyNum)
+        <$> (finalizeParser <$> query (S.fromList $ M.keys validTables) stringifyNum)
 
     finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
     finalizeParser parser = runIdentity . P.runParseT . P.runParser parser
