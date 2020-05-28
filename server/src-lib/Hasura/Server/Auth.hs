@@ -19,6 +19,9 @@ module Hasura.Server.Auth
   , processJwt
   , updateJwkRef
   , UserAuthentication (..)
+
+  -- * Exposed for testing
+  , getUserInfoWithExpTime_
   ) where
 
 import           Control.Concurrent.Extended (forkImmortal)
@@ -35,7 +38,7 @@ import qualified Network.HTTP.Types          as N
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth.JWT
+import           Hasura.Server.Auth.JWT      hiding (processJwt_)
 import           Hasura.Server.Auth.WebHook
 import           Hasura.Server.Utils
 import           Hasura.Session
@@ -60,14 +63,16 @@ class (Monad m) => UserAuthentication m where
 -- Although this exists only in memory we store only a hash of the admin secret
 -- primarily in order to:
 --     
---     - prevent theoretical timing attacks from a naive `==` 
+--     - prevent theoretical timing attacks from a naive `==` check
 --     - prevent misuse or inadvertent leaking of the secret
 --
--- NOTE: if we could scrub memory of admin secret (from argv and envp) somehow,
--- this would additionally harden against attacks that could read arbitrary
--- memory, so long as the secret was strong. I'm not sure that's attainable.
 newtype AdminSecretHash = AdminSecretHash (Crypto.Digest Crypto.SHA512)
   deriving (Ord, Eq)
+
+-- We don't want to be able to leak the secret hash. This is a dummy instance
+-- to support 'Show AuthMode' which we want for testing.
+instance Show AdminSecretHash where
+  show _ = "(error \"AdminSecretHash hidden\")"
 
 hashAdminSecret :: T.Text -> AdminSecretHash
 hashAdminSecret = AdminSecretHash . Crypto.hash . T.encodeUtf8
@@ -83,6 +88,7 @@ data AuthMode
   | AMAdminSecret !AdminSecretHash !(Maybe RoleName)
   | AMAdminSecretAndHook !AdminSecretHash !AuthHook
   | AMAdminSecretAndJWT !AdminSecretHash !JWTCtx !(Maybe RoleName)
+  deriving (Show, Eq)
 
 -- | Validate the user's requested authentication configuration, launching any
 -- required maintenance threads for JWT etc.
@@ -102,13 +108,19 @@ setupAuthMode
   -> m AuthMode
 setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logger =
   case (mAdminSecretHash, mWebHook, mJwtSecret) of
-    (Nothing,  Nothing,   Nothing)      -> return AMNoAuth
     (Just hash, Nothing,   Nothing)      -> return $ AMAdminSecret hash mUnAuthRole
-    (Just hash, Just hook, Nothing)      -> unAuthRoleNotReqForWebHook >>
-                                           return (AMAdminSecretAndHook hash hook)
     (Just hash, Nothing,   Just jwtConf) -> do
       jwtCtx <- mkJwtCtx jwtConf
       return $ AMAdminSecretAndJWT hash jwtCtx mUnAuthRole
+    -- Nothing below this case uses unauth role. Throw a fatal error if we would otherwise ignore
+    -- that parameter, lest users misunderstand their auth configuration:
+    _ | isJust mUnAuthRole -> throwError $ 
+        "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED_ROLE)" 
+          <> requiresAdminScrtMsg
+          <> " and is not allowed when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
+
+    (Nothing,  Nothing,   Nothing)  -> return AMNoAuth
+    (Just hash, Just hook, Nothing) -> return $ AMAdminSecretAndHook hash hook
 
     (Nothing, Just _,  Nothing) -> throwError $
       "Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)" <> requiresAdminScrtMsg
@@ -122,10 +134,6 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
     requiresAdminScrtMsg =
       " requires --admin-secret (HASURA_GRAPHQL_ADMIN_SECRET) or "
       <> " --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
-    unAuthRoleNotReqForWebHook =
-      when (isJust mUnAuthRole) $ throwError $
-        "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED_ROLE) is not allowed"
-        <> " when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
 
     -- | Given the 'JWTConfig' (the user input of JWT configuration), create
     -- the 'JWTCtx' (the runtime JWT config used)
@@ -177,12 +185,30 @@ getUserInfoWithExpTime
   -> [N.Header]
   -> AuthMode
   -> m (UserInfo, Maybe UTCTime)
-getUserInfoWithExpTime logger manager rawHeaders = \case
+getUserInfoWithExpTime = getUserInfoWithExpTime_ userInfoFromAuthHook processJwt
+
+-- Broken out for testing with mocks:
+getUserInfoWithExpTime_
+  :: forall m _Manager _Logger_Hasura. (MonadIO m, MonadError QErr m)
+  => (_Logger_Hasura -> _Manager -> AuthHook -> [N.Header] -> m (UserInfo, Maybe UTCTime))
+  -- ^ mock 'userInfoFromAuthHook'
+  -> (JWTCtx -> [N.Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime))
+  -- ^ mock 'processJwt'
+  -> _Logger_Hasura
+  -> _Manager
+  -> [N.Header]
+  -> AuthMode
+  -> m (UserInfo, Maybe UTCTime)
+getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHeaders = \case
 
   AMNoAuth -> withNoExpTime $ mkUserInfoFallbackAdminRole UAuthNotSet
 
+  -- If hasura was started with an admin secret we:
+  --   - check if a secret was sent in the request
+  --     - if so, check it and authorize as admin else fail
+  --   - if not proceed with either webhook or JWT auth if configured
   AMAdminSecret realAdminSecretHash maybeUnauthRole ->
-    withAuthorization realAdminSecretHash $ withNoExpTime $
+    checkingSecretIfSent realAdminSecretHash $ withNoExpTime $
       -- Consider unauthorized role, if not found raise admin secret header required exception
       case maybeUnauthRole of
         Nothing -> throw401 $ adminSecretHeader <> "/"
@@ -191,21 +217,22 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
           mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent sessionVariables
 
   AMAdminSecretAndHook realAdminSecretHash hook ->
-    withAuthorization realAdminSecretHash $ userInfoFromAuthHook logger manager hook rawHeaders
+    checkingSecretIfSent realAdminSecretHash $ userInfoFromAuthHook_ logger manager hook rawHeaders
 
   AMAdminSecretAndJWT realAdminSecretHash jwtSecret unAuthRole ->
-    withAuthorization realAdminSecretHash $ processJwt jwtSecret rawHeaders unAuthRole
+    checkingSecretIfSent realAdminSecretHash $ processJwt_ jwtSecret rawHeaders unAuthRole
 
   where
+    -- CAREFUL!:
     mkUserInfoFallbackAdminRole adminSecretState =
       mkUserInfo (URBFromSessionVariablesFallback adminRoleName)
       adminSecretState sessionVariables
 
     sessionVariables = mkSessionVariables rawHeaders
 
-    withAuthorization
+    checkingSecretIfSent
       :: AdminSecretHash -> m (UserInfo, Maybe UTCTime) -> m (UserInfo, Maybe UTCTime)
-    withAuthorization realAdminSecretHash actionIfNoAdminSecret = do
+    checkingSecretIfSent realAdminSecretHash actionIfNoAdminSecret = do
       let maybeRequestAdminSecret =
             foldl1 (<|>) $ map (`getSessionVariableValue` sessionVariables)
             [adminSecretHeader, deprecatedAccessKeyHeader]
