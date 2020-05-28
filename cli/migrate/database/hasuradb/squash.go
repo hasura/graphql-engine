@@ -479,6 +479,21 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 					return fmt.Errorf("cannot set table %s on schema %s has a enum when it is untracked", tblCfg.name, tblCfg.schema)
 				}
 				prevElems = append(prevElems, element)
+			case *createRemoteRelationshipInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot create remote relationship on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
+			case *deleteRemoteRelationshipInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot delete remote relationship on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
+			case *updateRemoteRelationshipInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot update remote relationship on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
 			}
 		}
 	}
