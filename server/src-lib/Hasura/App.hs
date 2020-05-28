@@ -247,13 +247,11 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
                            cacheRef _icInstanceId cacheInitTime
 
-  fetchI  <- fmap milliseconds $ liftIO $
-    getFromEnv (Milliseconds defaultFetchInterval) "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
   logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
 
   -- prepare event triggers data
   prepareEvents _icPgPool logger
-  eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx soEventsHttpPoolSize fetchI
+  eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx soEventsHttpPoolSize soEventsFetchInterval
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
   _eventQueueThread <- C.forkImmortal "processEventQueue" logger $ liftIO $
     processEventQueue logger logEnvHeaders

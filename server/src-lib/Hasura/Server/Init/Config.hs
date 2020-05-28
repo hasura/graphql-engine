@@ -57,6 +57,7 @@ data RawServeOptions impl
   , rsoDevMode             :: !Bool
   , rsoAdminInternalErrors :: !(Maybe Bool)
   , rsoEventsHttpPoolSize  :: !(Maybe Int)
+  , rsoEventsFetchInterval :: !(Maybe DiffTime)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -97,6 +98,7 @@ data ServeOptions impl
   , soPlanCacheOptions             :: !E.PlanCacheOptions
   , soResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig
   , soEventsHttpPoolSize           :: !Int
+  , soEventsFetchInterval          :: !DiffTime
   }
 
 data DowngradeOptions
@@ -244,6 +246,9 @@ instance FromEnv LQ.BatchSize where
 
 instance FromEnv LQ.RefetchInterval where
   fromEnv = fmap (LQ.RefetchInterval . milliseconds . fromInteger) . readEither
+
+instance FromEnv DiffTime where
+  fromEnv = fmap (milliseconds . fromInteger) . readEither
 
 instance FromEnv JWTConfig where
   fromEnv = readJson

@@ -33,7 +33,6 @@ module Hasura.Eventing.EventTrigger
   ( initEventEngineCtx
   , processEventQueue
   , unlockAllEvents
-  , defaultFetchInterval
   , Event(..)
   , unlockEvents
   , EventEngineCtx(..)
@@ -136,9 +135,6 @@ data EventPayload
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
-
-defaultFetchInterval :: DiffTime
-defaultFetchInterval = seconds 1
 
 initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval = do

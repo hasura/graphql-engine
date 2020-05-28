@@ -198,11 +198,14 @@ mkServeOptions rso = do
   maxEventThreads <- fromMaybe defaultMaxEventThreads <$>
                      withEnv (rsoEventsHttpPoolSize rso) (fst eventsHttpPoolSizeEnv)
 
+  eventsFetchInterval <- fromMaybe defaultEventFetchInterval <$>
+                         withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
-                        internalErrorsConfig maxEventThreads
+                        internalErrorsConfig maxEventThreads eventsFetchInterval
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -252,6 +255,8 @@ mkServeOptions rso = do
 
     defaultMaxEventThreads = 100
 
+    defaultEventFetchInterval :: DiffTime
+    defaultEventFetchInterval = seconds 1
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -846,6 +851,20 @@ parseEventsHttpPoolSize = optional $
            metavar "EVENTS_HTTP_POOL_SIZE" <>
            help (snd eventsHttpPoolSizeEnv))
 
+eventsFetchIntervalEnv :: (String,String)
+eventsFetchIntervalEnv =
+  ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+  , "Interval in milliseconds to sleep before trying to fetch " <>
+    "events again after a fetch returned no events from postgres"
+  )
+
+parseEventsFetchInterval :: Parser (Maybe DiffTime)
+parseEventsFetchInterval = optional $
+  option (eitherReader fromEnv)
+         ( long "events-fetch-interval" <>
+           metavar "EVENTS_FETCH_INTERVAL" <>
+           help (snd eventsFetchIntervalEnv))
+
 parseEnabledLogs :: L.EnabledLogTypes impl => Parser (Maybe [L.EngineLogType impl])
 parseEnabledLogs = optional $
   option (eitherReader L.parseEnabledLogTypes)
@@ -912,6 +931,7 @@ serveOptsToLog so =
       , "log_level" J..= soLogLevel so
       , "plan_cache_options" J..= soPlanCacheOptions so
       , "events_http_pool_size" J..= soEventsHttpPoolSize so
+      , "events_fetch_interval" J..= soEventsFetchInterval so
       ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
@@ -955,6 +975,7 @@ serveOptionsParser =
   <*> parseGraphqlDevMode
   <*> parseGraphqlAdminInternalErrors
   <*> parseEventsHttpPoolSize
+  <*> parseEventsFetchInterval
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
