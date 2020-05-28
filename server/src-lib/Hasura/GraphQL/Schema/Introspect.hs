@@ -7,7 +7,7 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 import qualified Language.GraphQL.Draft.Printer      as GP
 import qualified Language.GraphQL.Draft.Printer.Text as GPT
 import qualified Data.Aeson                          as J
--- import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashMap.Strict                 as Map
 import qualified Data.HashMap.Strict.InsOrd          as OMap
 import qualified Data.Vector                         as V
 
@@ -23,12 +23,27 @@ data Schema = Schema
   { sDescription :: Maybe G.Description
   -- TODO add support for input objects as well. NB 'Both does not suffice as
   -- this is the intersection of 'Input and 'Output, rather than its union.
-  , sTypes :: [P.Type 'Output]
+  , sTypes :: HashMap G.Name (P.Definition P.SomeTypeInfo)
   , sQueryType :: P.Type 'Output
   , sMutationType :: Maybe (P.Type 'Output)
   , sSubscriptionType :: Maybe (P.Type 'Output)
   , sDirectives :: [G.Directive Void]
   }
+
+typeIntrospection
+  :: forall n
+   . MonadParse n
+  => Schema
+  -> FieldParser n J.Value
+typeIntrospection realSchema = do
+  let
+    nameArgParser :: P.InputFieldsParser n G.Name
+    nameArgParser = G.unsafeMkName <$> P.field $$(G.litName "name") Nothing P.string
+  nameAndPrinter <- P.subselection $$(G.litName "__type") Nothing nameArgParser typeField
+  return $ case Map.lookup (fst nameAndPrinter) (sTypes realSchema) of
+    Nothing -> J.Null
+    Just (P.Definition n u d (P.SomeTypeInfo i)) ->
+      snd nameAndPrinter (SomeType (P.Nullable (P.TNamed (P.Definition n u d i))))
 
 -- | Generate an introspection parser.
 schema
@@ -72,61 +87,89 @@ type __Type {
 }
 -}
 
+data SomeType = forall k . SomeType (P.Type k)
+
 typeField
-  :: forall n k
+  :: forall n
    . MonadParse n
-  => Parser 'Output n (P.Type k -> J.Value)
+  => Parser 'Output n (SomeType -> J.Value)
 typeField =
   let
     -- TODO the kind printer code should be de-duplicated
-    kind :: FieldParser n (P.Type k -> J.Value)
+    kind :: FieldParser n (SomeType -> J.Value)
     kind = P.selection_ $$(G.litName "kind") Nothing typeKind $>
-      \tp -> J.String case takeType tp of
-        P.TList _ -> "LIST"
-        P.TNamed (P.Definition _ _ _ P.TIScalar) -> "SCALAR"
-        P.TNamed (P.Definition _ _ _ (P.TIEnum _)) -> "ENUM"
-        P.TNamed (P.Definition _ _ _ (P.TIInputObject _)) -> "INPUT_OBJECT"
-        P.TNamed (P.Definition _ _ _ (P.TIObject _)) -> "OBJECT"
-    name :: FieldParser n (P.Type k -> J.Value)
+      \case SomeType tp ->
+              case takeType tp of
+                P.TList _ -> J.String "LIST"
+                P.TNamed (P.Definition _ _ _ P.TIScalar) -> J.String "SCALAR"
+                P.TNamed (P.Definition _ _ _ (P.TIEnum _)) -> J.String "ENUM"
+                P.TNamed (P.Definition _ _ _ (P.TIInputObject _)) -> J.String "INPUT_OBJECT"
+                P.TNamed (P.Definition _ _ _ (P.TIObject _)) -> J.String "OBJECT"
+    name :: FieldParser n (SomeType -> J.Value)
     name = P.selection_ $$(G.litName "name") Nothing P.string $>
-      \tp -> case takeType tp of
-        P.TList _ -> J.Null
-        P.TNamed def -> mkTypeName (P.dName def)
-    description :: FieldParser n (P.Type k -> J.Value)
+      \case SomeType tp ->
+              case takeType tp of
+                P.TList _ -> J.Null
+                P.TNamed def -> mkTypeName (P.dName def)
+    description :: FieldParser n (SomeType -> J.Value)
     description = P.selection_ $$(G.litName "description") Nothing P.string $>
-      \tp -> case takeType tp of
-        P.TList _ -> J.Null
-        P.TNamed def -> case P.dDescription def of
-          Nothing -> J.Null
-          Just desc -> J.String (G.unDescription desc)
-    fields :: FieldParser n (P.Type k -> J.Value)
+      \case SomeType tp ->
+              case takeType tp of
+                P.TList _ -> J.Null
+                P.TNamed def ->
+                  case P.dDescription def of
+                    Nothing -> J.Null
+                    Just desc -> J.String (G.unDescription desc)
+    fields :: FieldParser n (SomeType -> J.Value)
     fields = do
       -- TODO includeDeprecated
       printer <- P.subselection_ $$(G.litName "fields") Nothing fieldField
-      return $ \to -> case takeType to of
-        P.TList _ -> J.Null
-        P.TNamed def -> case P.dInfo def of
-          P.TIObject fields' ->
-            J.Array $ V.fromList $ fmap printer fields'
-          _ -> J.Null
-    interfaces :: FieldParser n (P.Type k -> J.Value)
+      return $
+        \case SomeType tp ->
+                case takeType tp of
+                  P.TList _ -> J.Null
+                  P.TNamed def ->
+                    case P.dInfo def of
+                      P.TIObject fields' ->
+                        J.Array $ V.fromList $ fmap printer fields'
+                      _ -> J.Null
+    interfaces :: FieldParser n (SomeType -> J.Value)
     interfaces = P.subselection_ $$(G.litName "interfaces") Nothing typeField $>
-      \tp -> case takeType tp of
-        P.TNamed (P.Definition _ _ _ (P.TIObject _)) -> J.Array mempty
-        _ -> J.Null
-    possibleTypes :: FieldParser n (P.Type k -> J.Value)
+      \case SomeType tp ->
+              case takeType tp of
+                P.TNamed (P.Definition _ _ _ (P.TIObject _)) ->
+                  J.Array mempty
+                _ -> J.Null
+    possibleTypes :: FieldParser n (SomeType -> J.Value)
     possibleTypes = P.subselection_ $$(G.litName "possibleTypes") Nothing typeField $>
       const J.Null
-    enumValues :: FieldParser n (P.Type k -> J.Value)
+    enumValues :: FieldParser n (SomeType -> J.Value)
     enumValues = do
       printer <- P.subselection_ $$(G.litName "enumValues") Nothing enumValue
-      return $ \tp -> case takeType tp of
-        P.TNamed (P.Definition _ _ _ (P.TIEnum vals)) -> J.Array $ V.fromList $ toList $ fmap printer vals
+      return $
+        \case SomeType tp ->
+                case takeType tp of
+                  P.TNamed (P.Definition _ _ _ (P.TIEnum vals)) ->
+                    J.Array $ V.fromList $ toList $ fmap printer vals
+                  _ -> J.Null
+    inputFields :: FieldParser n (SomeType -> J.Value)
+    inputFields = do
+      printer <- P.subselection_ $$(G.litName "inputFields") Nothing inputValue
+      return $
+        \case SomeType tp ->
+                case takeType tp of
+                  P.TNamed (P.Definition _ _ _ (P.TIInputObject fieldDefs)) ->
+                    J.Array $ V.fromList $ map printer fieldDefs
+                  _ -> J.Null
+    ofType :: FieldParser n (SomeType -> J.Value)
+    ofType = do
+      printer <- P.subselection_ $$(G.litName "ofType") Nothing typeField
+      return $ \case
+        SomeType (P.NonNullable x) ->
+          printer $ SomeType $ P.Nullable x
+        SomeType (P.Nullable (P.TList x)) ->
+          printer $ SomeType x
         _ -> J.Null
-    inputFields :: FieldParser n (P.Type k -> J.Value)
-    inputFields = P.subselection_ $$(G.litName "inputFields") Nothing inputValue $> const J.Null
-    ofType :: FieldParser n (P.Type k -> J.Value)
-    ofType = P.subselection_ $$(G.litName "ofType") Nothing typeField $> const J.Null
   in
     applyPrinter <$>
     P.selectionSet
@@ -164,10 +207,10 @@ inputValue =
     description = P.selection_ $$(G.litName "description") Nothing P.string $> const J.Null
     typeF :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
     typeF = do
-      printer <- P.subselection_ $$(G.litName "type") Nothing (typeField @n @'Both)
+      printer <- P.subselection_ $$(G.litName "type") Nothing typeField
       return $ \defInfo -> case P.dInfo defInfo of
-        P.IFRequired tp -> printer $ P.NonNullable $ unsafeCoerce tp -- Typing/kinding mismatch, TODO
-        P.IFOptional tp _ -> printer $ P.NonNullable $ unsafeCoerce tp -- ditto
+        P.IFRequired tp -> printer $ SomeType $ P.NonNullable tp
+        P.IFOptional tp _ -> printer $ SomeType $ P.Nullable tp
     defaultValue :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
     defaultValue = P.selection_ $$(G.litName "defaultValue") Nothing P.string $>
       \defInfo -> case P.dInfo defInfo of
@@ -281,7 +324,8 @@ fieldField =
     typeF :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
     typeF = do
       printer <- P.subselection_ $$(G.litName "type") Nothing typeField
-      return $ printer . (\case P.FieldInfo _ tp -> unsafeCoerce tp) . P.dInfo
+      -- TODO avoid takeType below: the type may very well be nullable.
+      return $ printer . (\case P.FieldInfo _ tp -> SomeType tp) . P.dInfo
     -- TODO We don't seem to track deprecation info
     isDeprecated :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
     isDeprecated = P.selection_ $$(G.litName "isDeprecated") Nothing P.string $> const (J.Bool False)
@@ -348,7 +392,6 @@ type __Schema {
   directives: [__Directive!]!
 }
 -}
-
 schemaSet
   :: forall n
    . MonadParse n
@@ -365,24 +408,27 @@ schemaSet realSchema =
     types :: FieldParser n J.Value
     types = do
       printer <- P.subselection_ $$(G.litName "types") Nothing typeField
-      return $ J.Array $ V.fromList $ map printer (sTypes realSchema)
+      return $ J.Array $ V.fromList $
+        map (\case (P.Definition n u d (P.SomeTypeInfo i)) ->
+                     printer $ SomeType $ P.Nullable $ P.TNamed (P.Definition n u d (unsafeCoerce i))) $
+        Map.elems $ sTypes realSchema
     queryType :: FieldParser n J.Value
     queryType = do
       printer <- P.subselection_ $$(G.litName "queryType") Nothing typeField
-      return $ printer (sQueryType realSchema)
+      return $ printer $ SomeType $ sQueryType realSchema
     -- TODO implement
     mutationType :: FieldParser n J.Value
     mutationType = do
       printer <- P.subselection_ $$(G.litName "mutationType") Nothing typeField
       return $ case sMutationType realSchema of
         Nothing -> J.Null
-        Just tp -> printer tp
+        Just tp -> printer $ SomeType tp
     subscriptionType :: FieldParser n J.Value
     subscriptionType = do
       printer <- P.subselection_ $$(G.litName "subscriptionType") Nothing typeField
       return $ case sSubscriptionType realSchema of
         Nothing -> J.Null
-        Just tp -> printer tp
+        Just tp -> printer $ SomeType tp
     directives :: FieldParser n J.Value
     directives = J.Array mempty <$ P.subselection_ $$(G.litName "directives") Nothing directiveSet
   in

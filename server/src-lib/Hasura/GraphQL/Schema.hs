@@ -76,9 +76,12 @@ query allTables stringifyNum = do
   let queryFieldsParser = concat $ catMaybes selectExpParsers
       queryType = P.NonNullable $ P.TNamed $ P.mkDefinition $$(G.litName "query_root") Nothing $
                   P.TIObject $ map P.fDefinition queryFieldsParser
-      realSchema = Schema
+  allTypes <- case P.collectTypeDefinitions queryType of
+    Left _err -> throw500 "conflicting type definitions when collecting types from the schema"
+    Right tps -> pure tps
+  let realSchema = Schema
         { sDescription = Nothing
-        , sTypes = [queryType]
+        , sTypes = allTypes
         , sQueryType = queryType
         , sMutationType = Nothing
         , sSubscriptionType = Nothing
