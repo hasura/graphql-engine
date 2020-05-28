@@ -10,6 +10,7 @@ select
     'computed_fields', computed_field.items,
     'custom_types', custom_types.item,
     'actions', actions.items,
+    'remote_relationships', remote_relationships.items,
     'cron_triggers', cron_triggers.items
   )
 from
@@ -216,6 +217,18 @@ from
           where hap.action_name = ha.action_name
       ) p on 'true'
   ) as actions,
+  (
+    select coalesce(json_agg(
+      json_build_object(
+        'name', remote_relationship_name,
+        'table', json_build_object('schema', table_schema, 'name', table_name),
+        'hasura_fields', definition -> 'hasura_fields',
+        'remote_schema', definition -> 'remote_schema',
+        'remote_field', definition -> 'remote_field'
+      )
+    ),'[]') as items
+    from hdb_catalog.hdb_remote_relationship
+  ) as remote_relationships,
   (
     select
       coalesce(
