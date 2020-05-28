@@ -70,11 +70,12 @@ query allTables stringifyNum = do
         , toQrf QRFAggregation $ selectTableAggregate tableName aggName     (Just aggDesc)    perms stringifyNum
         ]
   let queryFieldsParser = concat $ catMaybes selectExpParsers
+      queryType = P.NonNullable $ P.TNamed $ P.mkDefinition $$(G.litName "query_root") Nothing $
+                  P.TIObject $ map P.fDefinition queryFieldsParser
       realSchema = Schema
         { sDescription = Nothing
-        , sTypes = []
-        , sQueryType = P.NonNullable $ P.TNamed $ P.mkDefinition $$(G.litName "query_root") Nothing $
-                       P.TIObject $ map P.fDefinition queryFieldsParser
+        , sTypes = [queryType]
+        , sQueryType = queryType
         , sMutationType = Nothing
         , sSubscriptionType = Nothing
         , sDirectives = []

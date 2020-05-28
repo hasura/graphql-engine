@@ -425,7 +425,9 @@ selectionSet name description parsers = Parser
         getField = \case
             SelectionField inputField -> [inputField]
             SelectionInlineFragment frag -> concat $ map getField $ _ifSelectionSet frag
-            -- NoFragments is an empty data type; pattern match on it.
+            -- NoFragments is an empty data type; unfortunately with the
+            -- constructor, so we pattern match on x to convince GHC that there
+            -- really are no such elements.
             SelectionFragmentSpread x -> case x of
         fields = concat $ map getField input
 
