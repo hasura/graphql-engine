@@ -132,17 +132,6 @@ withEnvBool bVal envVar =
       mEnvVal <- considerEnv envVar
       maybe (return False) return mEnvVal
 
-withEnvLogEnvHeaders :: Bool -> WithEnv Bool
-withEnvLogEnvHeaders bVal =
-  bool considerLogEnvHeader (return True) bVal
-  where
-    considerLogEnvHeader = do
-      hasuraLogEnvHeader <- considerEnv "HASURA_GRAPHQL_LOG_HEADERS_FROM_ENV"
-      -- if 'HASURA_GRAPHQL_LOG_HEADERS_FROM_ENV' is not set, then
-      -- lookup the 'LOG_HEADERS_FROM_ENV' environment variable, to maintain
-      -- backwards compatibility
-      maybe (withEnvBool False "LOG_HEADERS_FROM_ENV") return hasuraLogEnvHeader
-
 withEnvJwtConf :: Maybe JWTConfig -> String -> WithEnv (Maybe JWTConfig)
 withEnvJwtConf jVal envVar =
   maybe (considerEnv envVar) returnJust jVal
@@ -213,7 +202,7 @@ mkServeOptions rso = do
   eventsFetchInterval <- fromMaybe defaultEventFetchInterval <$>
                          withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
 
-  logEnvHeaders <- withEnvLogEnvHeaders (rsoLogHeadersFromEnv rso)
+  logEnvHeaders <- withEnvBool (rsoLogHeadersFromEnv rso) $ fst logEnvHeadersEnv
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
@@ -355,7 +344,7 @@ serveCmdFooter =
         ]
       ]
 
-    envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
+    envVarDoc = mkEnvVarDoc envVars
     envVars =
       [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv
       , pgStripesEnv, pgConnsEnv, pgTimeoutEnv, pgUsePrepareEnv, txIsoEnv
@@ -363,17 +352,8 @@ serveCmdFooter =
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, corsDisableEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
       , enableAllowlistEnv, enabledLogsEnv, logLevelEnv, devModeEnv
-      , adminInternalErrorsEnv
-      ]
-
-    eventEnvs =
-      [ ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-        , "Max event threads"
-        )
-      , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Interval in milliseconds to sleep before trying to fetch events again after a "
-          <> "fetch returned no events from postgres."
-        )
+      , adminInternalErrorsEnv, eventsHttpPoolSizeEnv, eventsFetchIntervalEnv
+      , logEnvHeadersEnv
       ]
 
 retriesNumEnv :: (String, String)
