@@ -139,9 +139,9 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - ``--log-headers-from-env``
      - ``HASURA_GRAPHQL_LOG_HEADERS_FROM_ENV``
-     - Flag to indicate if whether the values of the environment variables in the headers
-       should be logged. When set to false, the name of the environment variable will be
-       logged (default: false)
+     - If an environment variable is present in a log line, this flag indicates
+       if it's value should be logged. When set to false, only the name of the
+       environment variable will be logged (default: false)
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``
