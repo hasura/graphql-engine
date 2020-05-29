@@ -1,15 +1,15 @@
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 
-import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
+import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 
-import globals from '../../../Globals';
+import globals from '../../../../Globals';
 
-import styles from './About.scss';
-import requestAction from '../../../utils/requestAction';
-import { showErrorNotification } from '../Common/Notification';
-import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
-import { versionGT } from '../../../helpers/versionUtils';
+import styles from '../Settings.scss';
+import requestAction from '../../../../utils/requestAction';
+import { showErrorNotification } from '../../Common/Notification';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import { versionGT } from '../../../../helpers/versionUtils';
 
 class About extends Component {
   state = {
@@ -134,22 +134,20 @@ class About extends Component {
     };
 
     return (
-      <div className={`container-fluid ${styles.full_container}`}>
+      <div
+        className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
+      >
         <div className={styles.subHeader}>
           <Helmet title={'About | Hasura'} />
           <h2 className={styles.headerText}>About</h2>
-          <div className={styles.wd60}>
-            <div className={styles.add_mar_top}>
-              {getServerVersionSection()}
-            </div>
-            <div className={styles.add_mar_top}>
-              {getLatestServerVersionSection()}
-            </div>
-            <div className={styles.add_mar_top}>
-              {getConsoleAssetVersionSection()}
-            </div>
-            <div className={styles.add_mar_top}>{getPgVersionSection()}</div>
+          <div className={styles.add_mar_top}>{getServerVersionSection()}</div>
+          <div className={styles.add_mar_top}>
+            {getLatestServerVersionSection()}
           </div>
+          <div className={styles.add_mar_top}>
+            {getConsoleAssetVersionSection()}
+          </div>
+          <div className={styles.add_mar_top}>{getPgVersionSection()}</div>
         </div>
       </div>
     );

@@ -2,18 +2,29 @@
 
 ## Next release
 
+### Remote Joins
+
+Remote Joins extend the concept of joining data across tables, to being able to join data across tables and remote schemas.
+
+It works similar to table relationships. Head to the `Relationship` tab in your table page and define a remote relationship:
+
+1. give a name for the relationship
+2. select the remote schema
+3. give the join configuration from table columns to remote schema fields.
+
+[Add docs links][add console screenshot]
+
 ### Scheduled Triggers
 
 A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron based or timestamp based.
 
-A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to  generate an end-of-day sales report every weekday at 9pm.
+A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to generate an end-of-day sales report every weekday at 9pm.
 
 You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience.
 
-<Add docs links>
+[Add docs links][add console screenshot]
 
 (close #1914)
-
 
 ### Allow access to session variables by computed fields (fix #3846)
 
@@ -49,6 +60,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
+
 - server: fix explain queries with role permissions (fix #4816)
 - server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
 
@@ -68,6 +80,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix displaying boolean values in `Edit Row` tab (#4682)
 - console: fix underscores not being displayed on raw sql page (close #4754) (#4799)
 - console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
+- console: add help button and move about page to settings (#4848)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)

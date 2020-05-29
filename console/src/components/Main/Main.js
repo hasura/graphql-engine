@@ -11,6 +11,19 @@ import { getPathRoot } from '../Common/utils/urlUtils';
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
 
+import logo from './images/white-logo.svg';
+import pixHeart from './images/pix-heart.svg';
+import close from './images/x-circle.svg';
+import monitoring from './images/monitoring.svg';
+import rate from './images/rate.svg';
+import regression from './images/regression.svg';
+import management from './images/management.svg';
+import allow from './images/allow-listing.svg';
+import read from './images/read-replica.svg';
+import arrowForwardRed from './images/arrow_forward-red.svg';
+
+import styles from './Main.scss';
+
 import {
   loadServerVersion,
   fetchServerConfig,
@@ -203,26 +216,8 @@ class Main extends React.Component {
 
     const { isProClicked } = this.state.proClickState;
 
-    const styles = require('./Main.scss');
-
     const appPrefix = '';
 
-    const logo = require('./images/white-logo.svg');
-    const github = require('./images/Github.svg');
-    const discord = require('./images/Discord.svg');
-    const mail = require('./images/mail.svg');
-    const docs = require('./images/docs-logo.svg');
-    const about = require('./images/console-logo.svg');
-    const pixHeart = require('./images/pix-heart.svg');
-    const close = require('./images/x-circle.svg');
-    const monitoring = require('./images/monitoring.svg');
-    const rate = require('./images/rate.svg');
-    const regression = require('./images/regression.svg');
-    const management = require('./images/management.svg');
-    const allow = require('./images/allow-listing.svg');
-    const read = require('./images/read-replica.svg');
-
-    const arrowForwardRed = require('./images/arrow_forward-red.svg');
     const currentLocation = location.pathname;
     const currentActiveBlock = getPathRoot(currentLocation);
 
@@ -493,16 +488,6 @@ class Main extends React.Component {
       return loveSectionHtml;
     };
 
-    const getHelpDropdownPosStyle = () => {
-      let helpDropdownPosStyle = '';
-
-      if (this.state.loveConsentState.isDismissed) {
-        helpDropdownPosStyle = styles.help_dropdown_menu_heart_dismissed;
-      }
-
-      return helpDropdownPosStyle;
-    };
-
     const getSidebarItem = (
       title,
       icon,
@@ -764,7 +749,11 @@ class Main extends React.Component {
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
               {getAdminSecretSection()}
-              <div className={styles.helpSection + ' ' + styles.proWrapper}>
+              <div
+                className={
+                  styles.headerRightNavbarBtn + ' ' + styles.proWrapper
+                }
+              >
                 <span
                   className={
                     !isProClicked ? styles.proName : styles.proNameClicked
@@ -776,97 +765,19 @@ class Main extends React.Component {
                 {renderProPopup()}
               </div>
               <Link to="/settings">
-                <div className={styles.helpSection + ' ' + styles.settingsIcon}>
+                <div className={styles.headerRightNavbarBtn}>
                   {getMetadataStatusIcon()}
                   {getSettingsSelectedMarker()}
                 </div>
               </Link>
-              <div className={styles.supportSection}>
-                <div
-                  id="help"
-                  className={styles.helpSection + ' dropdown-toggle'}
-                  data-toggle="dropdown"
-                  aria-expanded="false"
-                  aria-haspopup="true"
-                >
-                  <i className={styles.question + ' fa fa-question'} />
-                </div>
-                <ul
-                  className={
-                    'dropdown-menu ' +
-                    styles.help_dropdown_menu +
-                    ' ' +
-                    getHelpDropdownPosStyle()
-                  }
-                  aria-labelledby="help"
-                >
-                  <div className={styles.help_dropdown_menu_container}>
-                    <li className={'dropdown-item'}>
-                      <a
-                        href="https://github.com/hasura/graphql-engine/issues"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <img
-                          className={'img-responsive'}
-                          src={github}
-                          alt={'github'}
-                        />
-                        <span>Report bugs & suggest improvements</span>
-                      </a>
-                    </li>
-                    <li className={'dropdown-item'}>
-                      <a
-                        href="https://discordapp.com/invite/vBPpJkS"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <img
-                          className={'img-responsive'}
-                          src={discord}
-                          alt={'discord'}
-                        />
-                        <span>Join discord community forum</span>
-                      </a>
-                    </li>
-                    <li className={'dropdown-item'}>
-                      <a href="mailto:support@hasura.io">
-                        <img
-                          className={'img-responsive'}
-                          src={mail}
-                          alt={'mail'}
-                        />
-                        <span>Reach out ({'support@hasura.io'})</span>
-                      </a>
-                    </li>
-                    <li className={'dropdown-item'}>
-                      <a
-                        href="https://hasura.io/docs/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <img
-                          className={'img-responsive'}
-                          src={docs}
-                          alt={'docs'}
-                        />
-                        <span>Head to docs</span>
-                      </a>
-                    </li>
-                    <li className={'dropdown-item'}>
-                      <Link to="/about">
-                        <img
-                          className={'img-responsive'}
-                          src={about}
-                          alt={'about'}
-                        />
-                        <span>About</span>
-                      </Link>
-                    </li>
-                  </div>
-                </ul>
-              </div>
-
+              <a
+                id="help"
+                href={'https://hasura.io/help'}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className={styles.headerRightNavbarBtn}>HELP</div>
+              </a>
               {getLoveSection()}
             </div>
           </div>
