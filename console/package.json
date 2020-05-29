@@ -12,15 +12,14 @@
   "homepage": "https://hasura.io/",
   "keywords": [],
   "scripts": {
-    "start": "concurrently --kill-others \"npm run start-prod\"",
-    "start-prod": "better-npm-run start-prod",
+    "start-dev": "node -r dotenv/config ./bin/server.js",
+    "watch-client": "node -r dotenv/config webpack/webpack-dev-server.js",
+    "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\"",
+    "start-prod": "cross-env NODE_PATH=./src PORT=8080 NODE_ENV=production node ./bin/server.js",
     "build": "webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
     "server-build": "make server-build",
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "postinstall": "webpack --display-error-details --config webpack/prod.config.js",
-    "start-dev": "better-npm-run start-dev",
-    "watch-client": "better-npm-run watch-client",
-    "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\" ",
     "cypress": "cypress open",
     "test": "cypress run --spec 'cypress/integration/**/**/test.ts' --key $CYPRESS_KEY --parallel --record",
     "lint": "eslint -c .eslintrc src --ext .js,.ts,.tsx",
@@ -37,22 +36,6 @@
       "prettier --write",
       "git add"
     ]
-  },
-  "betterScripts": {
-    "start-prod": {
-      "command": "node ./bin/server.js",
-      "env": {
-        "NODE_PATH": "./src",
-        "NODE_ENV": "production",
-        "PORT": 8080
-      }
-    },
-    "start-dev": {
-      "command": "node -r dotenv/config ./bin/server.js"
-    },
-    "watch-client": {
-      "command": "node -r dotenv/config webpack/webpack-dev-server.js"
-    }
   },
   "prettier": {
     "singleQuote": true,
@@ -190,11 +173,11 @@
     "babel-plugin-styled-components": "1.10.7",
     "babel-plugin-transform-react-remove-prop-types": "0.4.24",
     "babel-plugin-typecheck": "2.0.1",
-    "better-npm-run": "0.1.1",
     "bootstrap-loader": "2.2.0",
     "bootstrap-sass": "3.4.1",
     "clean-webpack-plugin": "0.1.19",
     "concurrently": "5.2.0",
+    "cross-env": "7.0.2",
     "css-loader": "3.5.3",
     "cypress": "4.6.0",
     "dotenv": "5.0.1",
