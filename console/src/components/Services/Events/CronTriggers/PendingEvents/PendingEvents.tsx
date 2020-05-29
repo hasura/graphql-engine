@@ -47,7 +47,7 @@ const PendingEvents: React.FC<Props> = props => {
           makeValueFilter('trigger_name', '$eq', triggerName),
           makeValueFilter('status', '$eq', 'scheduled'),
         ],
-        sorts: [makeOrderBy('scheduled_time', 'desc')],
+        sorts: [makeOrderBy('scheduled_time', 'asc')],
       }}
       relationships={['cron_event_logs']}
     />

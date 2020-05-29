@@ -48,7 +48,7 @@ const PendingEvents: React.FC<Props> = props => {
       render={renderRows}
       presets={{
         filters: [makeValueFilter('status', '$eq', 'scheduled')],
-        sorts: [makeOrderBy('scheduled_time', 'desc')],
+        sorts: [makeOrderBy('scheduled_time', 'asc')],
       }}
       relationships={['scheduled_event_logs']}
     />

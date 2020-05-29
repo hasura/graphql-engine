@@ -56,7 +56,7 @@ const PendingEvents: React.FC<Props> = props => {
             makeValueFilter('delivered', '$eq', 'false'),
             makeValueFilter('error', '$eq', 'false'),
           ],
-          sorts: [makeOrderBy('created_at', 'desc')],
+          sorts: [makeOrderBy('created_at', 'asc')],
         }}
         relationships={['logs']}
       />
