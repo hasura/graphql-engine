@@ -16,7 +16,8 @@ const Landing: React.FC<Props> = props => {
 
   const topicDescription = (
     <div>
-      {CRON_TRIGGER}s are used to trigger HTTP endpoints based on a{' '}
+      {CRON_TRIGGER}s can be used to reliably trigger HTTP endpoints to run some
+      custom business logic periodically based on a{' '}
       <a
         href="https://en.wikipedia.org/wiki/Cron"
         target="_blank"
