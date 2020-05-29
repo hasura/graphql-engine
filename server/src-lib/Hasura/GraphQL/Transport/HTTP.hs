@@ -41,7 +41,7 @@ runGQ reqId userInfo reqHdrs req = do
   (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
     E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer httpManager enableAL <- ask
     (telemCacheHit, execPlan) <- E.getResolvedExecPlan pgExecCtx planCache
-                userInfo sqlGenCtx enableAL sc scVer httpManager reqHdrs req
+                                 userInfo sqlGenCtx enableAL sc scVer httpManager reqHdrs req
     case execPlan of
       E.GExPHasura resolvedOp -> do
         (telemTimeIO, telemQueryType, respHdrs, resp) <- runHasuraGQ reqId req userInfo resolvedOp
@@ -49,10 +49,13 @@ runGQ reqId userInfo reqHdrs req = do
       E.GExPRemote rsi opDef  -> do
         let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
                             | otherwise = Telem.Query
-        (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi opDef
-        return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
+
+        (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi $ G._todType opDef
+        pure (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
+
   let telemTimeIO = convertDuration telemTimeIO_DT
       telemTimeTot = convertDuration telemTimeTot_DT
+
   Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
 
@@ -97,16 +100,18 @@ runHasuraGQ
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runHasuraGQ reqId query userInfo resolvedOp = do
-  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
+  (E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _) <- ask
   (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ case resolvedOp of
-    E.ExOpQuery tx genSql  -> do
+    E.ExOpQuery tx genSql -> do
       -- log the generated SQL and the graphql query
       L.unLogger logger $ QueryLog query genSql reqId
       ([],) <$> runLazyTx' pgExecCtx tx
+
     E.ExOpMutation respHeaders tx -> do
       -- log the graphql query
       L.unLogger logger $ QueryLog query Nothing reqId
       (respHeaders,) <$> runLazyTx pgExecCtx Q.ReadWrite (withUserInfo userInfo tx)
+
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"

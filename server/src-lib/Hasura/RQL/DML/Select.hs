@@ -1,5 +1,7 @@
 module Hasura.RQL.DML.Select
   ( selectP2
+  , selectQuerySQL
+  , selectAggQuerySQL
   , convSelectQuery
   , asSingleRowJsonResp
   , module Hasura.RQL.DML.Select.Internal
@@ -125,6 +127,9 @@ convOrderByElem sessVarBldr (flds, spi) = \case
         [ fldName <<> " is a"
         , " computed field and can't be used in 'order_by'"
         ]
+      -- TODO Rakesh
+      FIRemoteRelationship {} ->
+        throw400 UnexpectedPayload (mconcat [ fldName <<> " is a remote field" ])
   OCRel fldName rest -> do
     fldInfo <- askFieldInfo flds fldName
     case fldInfo of
@@ -146,6 +151,8 @@ convOrderByElem sessVarBldr (flds, spi) = \case
         resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSpi
         AOCObj relInfo resolvedSelFltr <$>
           convOrderByElem sessVarBldr (relFim, relSpi) rest
+      FIRemoteRelationship {} ->
+        throw400 UnexpectedPayload (mconcat [ fldName <<> " is a remote field" ])
 
 convSelectQ
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
@@ -265,6 +272,14 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ fieldInfo selPermInfo
     extSelQ sessVarBldr prepArgBuilder
+
+selectQuerySQL :: JsonAggSelect -> AnnSimpleSel -> Q.Query
+selectQuerySQL jsonAggSelect sel =
+  Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
+
+selectAggQuerySQL :: AnnAggSel -> Q.Query
+selectAggQuerySQL =
+  Q.fromBuilder . toSQL . mkAggSelect
 
 selectP2 :: JsonAggSelect -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 jsonAggSelect (sel, p) =

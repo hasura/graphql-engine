@@ -52,6 +52,13 @@ const Sidebar = ({ location, metadata }) => {
     });
   }
 
+  sectionsData.push({
+    key: 'about',
+    link: '/settings/about',
+    dataTestVal: 'about-link',
+    title: 'About',
+  });
+
   const currentLocation = location.pathname;
 
   const sections = [];

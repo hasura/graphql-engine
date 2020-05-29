@@ -136,6 +136,12 @@ This option may result in test failures if the schema has to change between the 
         help="When used along with collect-only, it will write the list of upgrade tests into the file specified"
     )
 
+    parser.addoption(
+        "--test-unauthorized-role",
+        action="store_true",
+        help="Run testcases for unauthorized role",
+    )
+
 #By default,
 #1) Set default parallelism to one
 #2) Set test grouping to by filename (--dist=loadfile)

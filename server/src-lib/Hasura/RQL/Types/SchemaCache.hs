@@ -114,11 +114,9 @@ module Hasura.RQL.Types.SchemaCache
   , FunctionCache
   , getFuncsOfTable
   , askFunctionInfo
-
   , CronTriggerInfo(..)
+  , mergeRemoteTypesWithGCtx
   ) where
-
-import qualified Hasura.GraphQL.Context            as GC
 
 import           Hasura.Db
 import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
@@ -145,6 +143,8 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           System.Cron.Types
 
+import qualified Hasura.GraphQL.Validate.Types     as VT
+import qualified Hasura.GraphQL.Context            as GC
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
 import qualified Data.Text                         as T
@@ -169,7 +169,7 @@ type WithDeps a = (a, [SchemaDependency])
 data RemoteSchemaCtx
   = RemoteSchemaCtx
   { rscName :: !RemoteSchemaName
-  , rscGCtx :: !GC.RemoteGCtx
+  , rscGCtx :: !GC.GCtx
   , rscInfo :: !RemoteSchemaInfo
   } deriving (Show, Eq)
 
@@ -304,3 +304,7 @@ getDependentObjsWith f sc objId =
     induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2
     induces objId1 objId2                    = objId1 == objId2
     -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc
+
+mergeRemoteTypesWithGCtx :: VT.TypeMap -> GC.GCtx -> GC.GCtx
+mergeRemoteTypesWithGCtx remoteTypeMap gctx =
+  gctx {GC._gTypes = remoteTypeMap <> GC._gTypes gctx }
