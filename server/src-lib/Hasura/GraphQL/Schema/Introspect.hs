@@ -16,6 +16,114 @@ import qualified Hasura.GraphQL.Parser               as P
 import           Hasura.GraphQL.Parser          (FieldParser, Kind (..), Parser)
 import           Hasura.GraphQL.Parser.Class
 
+{-
+Note [Basics of introspection schema generation]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We generate the introspection schema from the existing schema for queries,
+mutations and subscriptions.  In other words, we generate one @Parser@ from some
+other @Parser@s.  In this way, we avoid having to remember what types we have to
+expose through introspection explicitly, as we did in a previous version of
+graphql-engine.
+
+However the schema information is obtained, the @Schema@ type stores it.  From a
+@Schema@ object we then produce one @FieldParser@ that reads a `__schema` field,
+and one that reads a `__type` field.  The idea is that these parsers simply
+output a JSON value directly, and so indeed the type of @schema@, for instance,
+is @FieldParser n J.Value@.
+
+The idea of "just output the JSON object directly" breaks down when we want to
+output a list of things, however, such as in the `types` field of `__schema`.
+In the case of `types`, the JSON object to be generated is influenced by the
+underlying selection set, so that, for instance,
+
+```
+query {
+  __schema {
+    types {
+      name
+    }
+  }
+}
+```
+
+means that we only output the _name_ of every type in our schema.  One naive
+approach one might consider here would be to have a parser
+
+```
+typeField :: P.Type k -> Parser n J.Value
+```
+
+that takes a type, and is able to produce a JSON value for it, and then to apply
+this parser to all the types in our schema.
+
+However, we only have *one* selection set to parse: so which of the parsers we
+obtained should we use to parse it?  And what should we do in the theoretical
+case that we have a schema without any types?  (The latter is actually not
+possible since we always have `query_root`, but it illustrates the problem that
+there is no canonical choice of type to use to parse the selection set.)
+Additionally, this would allow us to get the JSON output for *one* type, rather
+than for our list of types.  After all, @Parser n@ is *not* a @Monad@ (it's not
+even an @Applicative@), so we don't have a map @(a -> Parser n b) -> [a] -> m
+[b]@.
+
+In order to resolve this conundrum, let's consider what the ordinary Postgres
+schema generates: rather than directly giving the desired output, it instead
+returns values that can, after parsing, be used to build an output, along the
+lines of:
+
+```
+table :: QualifiedTable -> FieldParser n SelectExp
+```
+
+(This is a heavily simplified representation of reality.)
+
+These values can be thought of as an intermediate representation that can then
+be used to generate and run SQL that gives the desired JSON output at a later
+stage.  In other words, in the above example, @SelectExp@ can be thought of as a
+function @PG.Connection -> IO J.Value@ that, given access to the database, can
+produce the desired JSON object.
+
+Such an approach could help us as well, as, from instructions on how to generate
+a JSON return for a given `__Type`, surely we can later simply apply this
+construction to all types desired.
+
+However, we don't _need_ to build an intermediate AST to do this: we can simply
+output the conversion functions directly.  So the type of @typeField@ is closer
+to:
+
+```
+typeField :: Parser n (P.Type k -> J.Value)
+```
+
+This says that we are always able to parse a selection set for a `__Type`, and
+once we do, we obtain a map, which we refer to as `printer` in this module,
+which can output a JSON object for a given GraphQL type from our schema.
+
+To use `typeField` as part of another selection set, we build up a corresponding
+`FieldParser`, thus obtaining a printer, then apply this printer to all desired
+types, and output the final JSON object as a J.Array of the printed results,
+like so (again, heavily simplified):
+
+```
+    types :: FieldParser n J.Value
+    types = do
+      printer <- P.subselection_ $$(G.litName "types") Nothing typeField
+      return $ J.Array $ map printer $ allSchemaTypes
+```
+
+Upon reading this you may be bewildered how we are able to use do notation for
+@FieldParser@, which does not have a @Monad@ instance, or even an @Applicative@
+instance.  It just so happens that, as long as we write our do blocks carefully,
+so that we only use the functoriality of @FieldParser@, the simplification rules
+of GHC kick in just in time to avoid any application of @(>>=)@ or @return@.
+Arguably the above notation is prettier than equivalent code that explicitly
+reduces this to applications of @fmap@.  If you, dear reader, feel like the do
+notation adds more confusion than value, you should feel free to change this, as
+there is no deeper meaning to the application of do notation than ease of
+reading.
+-}
+
 data Schema = Schema
   { sDescription      :: Maybe G.Description
   , sTypes            :: HashMap G.Name (P.Definition P.SomeTypeInfo)
@@ -208,7 +316,7 @@ inputValue =
     defaultValue :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
     defaultValue = P.selection_ $$(G.litName "defaultValue") Nothing P.string $>
       \defInfo -> case P.dInfo defInfo of
-        P.IFOptional _ (Just val) -> J.String $ GPT.render GP.value $ val
+        P.IFOptional _ (Just val) -> J.String $ GPT.render GP.value val
         _ -> J.Null
   in
     applyPrinter <$>
@@ -315,7 +423,7 @@ fieldField =
     args :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
     args = do
       printer <- P.subselection_ $$(G.litName "args") Nothing inputValue
-      return \defInfo -> J.Array $ V.fromList $ map printer $ P.fArguments $ P.dInfo defInfo
+      return $ J.Array . V.fromList . map printer . P.fArguments . P.dInfo
     typeF :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
     typeF = do
       printer <- P.subselection_ $$(G.litName "type") Nothing typeField
