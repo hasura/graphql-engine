@@ -8,7 +8,6 @@ module Hasura.RQL.DDL.Schema.Rename
   )
 where
 
-import           Control.Arrow                      ((***))
 import           Control.Lens.Combinators
 import           Control.Lens.Operators
 import           Hasura.Prelude
@@ -326,6 +325,8 @@ updateColExp qt rf (ColExp fld val) =
           be <- decodeValue val
           ube <- updateFieldInBoolExp remTable rf be
           return $ toJSON ube
+        FIRemoteRelationship {} ->
+          throw500 "cannot update remote field" -- TODO: determine the proper behavior here.
 
     (oFld, nFld, opQT) = case rf of
       RFCol (RenameItem tn oCol nCol) -> (fromPGCol oCol, fromPGCol nCol, tn)

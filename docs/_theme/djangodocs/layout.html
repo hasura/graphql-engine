@@ -29,6 +29,34 @@
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if not is_landing_page else '' }}{% endblock %}">
     <div class="main_container_wrapper">
       {% include 'pages/loading.html' %}
+      <div id="banner" class="bannerStripWrapper hideClass">
+        <div class='bannerInnerWrapper displayFlex'>
+          <a
+            href="https://hasura.io/events/hasura-con-2020/"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            <div class="bannerStrip">
+              <div class="displayFlex noPadd">
+                <div class="announceIcon">
+                  <img src="{{ pathto('_images/layout/hasura-con.svg', 1) }}" alt="Hasura Con20"/>
+                </div>
+                <div class="bodyTextSmall">
+                  <span class="textColor">
+                    Register for Hasura Con: A free, online conference on pushing the boundaries of GraphQL
+                  </span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <div id="banner-close" class="closeBanner">
+            <img src="{{ pathto('_images/layout/close.svg', 1) }}" alt="Close" />
+          </div>
+        </div>
+        <div class='bannerStripImg'>
+          <img src="{{ pathto('_images/layout/stripe.png', 1) }}" alt='stripe' />
+        </div>
+      </div>
       <div id="" class="content_wrapper">
         {%- if is_landing_page %}
           {% include 'pages/landing.html' %}
@@ -68,9 +96,6 @@
                         <a href="https://hasura.io/learn/" target="_blank" rel="noopener">
                           Tutorials
                         </a>
-                      </div>
-                      <div class="social_icons">
-                        <iframe title="Hasura GraphQL Github Stars" src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true" frameBorder="0" scrolling="0" width="100px" height="25px"></iframe>
                       </div>
                       <div class="social_icons">
                         <a href="https://twitter.com/hasurahq/" target="_blank" rel="noopener">
@@ -189,7 +214,20 @@
       $('.supportBtn').on('click', supportBtnHandler);
     });
   </script>
+  <!-- Local storage -->
+  <script type="text/javascript">
+    $(document).ready( function() {
+      const bannerStripeConsent = window.localStorage.getItem("hasuraCon2020BannerStripeConsent")
+      if (bannerStripeConsent !== "yes") {
+        $('#banner').removeClass("hideClass");
+      }
+      $('#banner-close').click(function(e){
+        window.localStorage.setItem('hasuraCon2020BannerStripeConsent', 'yes');
+        $('#banner').hide();
+      });
+    });
 
+  </script>
   <!-- utils -->
   <script type="text/javascript">
     // load script file

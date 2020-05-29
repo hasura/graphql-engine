@@ -116,9 +116,8 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody
     throw500 "Invalid response from authorization hook"
   where
     getUserInfoFromHdrs rawHeaders = do
-      userInfo <- mkUserInfo UAdminSecretNotSent
-                  (mkSessionVariablesText $ Map.toList rawHeaders)
-                  Nothing
+      userInfo <- mkUserInfo URBFromSessionVariables UAdminSecretNotSent $
+                  mkSessionVariablesText $ Map.toList rawHeaders
       logWebHookResp LevelInfo Nothing Nothing
       expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
       pure (userInfo, expiration)

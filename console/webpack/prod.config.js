@@ -47,6 +47,7 @@ module.exports = {
         test: /\.mjs$/,
         include: /node_modules/,
         type: 'javascript/auto',
+        use: 'babel-loader',
       },
       {
         test: /\.(j|t)sx?$/,

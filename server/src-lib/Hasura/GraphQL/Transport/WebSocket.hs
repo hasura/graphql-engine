@@ -40,12 +40,12 @@ import qualified ListT
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
+
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Error                      (Code (StartFailed))
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
                                                               resolveUserInfo)
 import           Hasura.Server.Cors
@@ -224,7 +224,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
           CSInitialised _ expTimeM _ ->
             maybe STM.retry return expTimeM
       currTime <- TC.getCurrentTime
-      sleep $ fromUnits $ TC.diffUTCTime expTime currTime
+      sleep $ convertDuration $ TC.diffUTCTime expTime currTime
 
     accept hdrs errType = do
       logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing Nothing) EAccepted
@@ -282,7 +282,6 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
             <> "security issue. If you're already handling CORS before Hasura and enforcing "
             <> "CORS on websocket connections, then you can use the flag --ws-read-cookie or "
             <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
-
 
 onStart :: HasVersion => WSServerEnv -> WSConn -> StartMsg -> IO ()
 onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
@@ -356,7 +355,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               -- Telemetry. NOTE: don't time network IO:
               telemTimeTot <- Seconds <$> timerTot
               sendSuccResp encJson $ LQ.LiveQueryMetadata telemTimeIO_DT
-              let telemTimeIO = fromUnits telemTimeIO_DT
+              let telemTimeIO = convertDuration telemTimeIO_DT
               Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
           sendCompleted (Just reqId)
@@ -376,13 +375,13 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
       (runExceptT $ flip runReaderT execCtx $
-        E.execRemoteGQ reqId userInfo reqHdrs q rsi opDef) >>= \case
+        E.execRemoteGQ reqId userInfo reqHdrs q rsi (G._todType opDef)) >>= \case
           Left  err           -> postExecErr reqId err
           Right (telemTimeIO_DT, !val) -> do
             -- Telemetry. NOTE: don't time network IO:
             telemTimeTot <- Seconds <$> timerTot
             sendRemoteResp reqId (_hrBody val) $ LQ.LiveQueryMetadata telemTimeIO_DT
-            let telemTimeIO = fromUnits telemTimeIO_DT
+            let telemTimeIO = convertDuration telemTimeIO_DT
             Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
       sendCompleted (Just reqId)
@@ -399,31 +398,26 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       _ enableAL = serverEnv
 
     WSConnData userInfoR opMap errRespTy = WS.getData wsConn
-
-    logOpEv opTy reqId =
-      logWSEvent logger wsConn $ EOperation opDet
+    logOpEv opTy reqId = logWSEvent logger wsConn $ EOperation opDet
       where
         opDet = OperationDetails opId reqId (_grOperationName q) opTy query
         -- log the query only in errors
-        query = case opTy of
-          ODQueryErr _ -> Just q
-          _            -> Nothing
-
+        query =
+          case opTy of
+            ODQueryErr _ -> Just q
+            _            -> Nothing
     getErrFn errTy =
       case errTy of
         ERTLegacy           -> encodeQErr
         ERTGraphqlCompliant -> encodeGQLErr
-
     sendStartErr e = do
       let errFn = getErrFn errRespTy
       sendMsg wsConn $
         SMErr $ ErrorMsg opId $ errFn False $ err400 StartFailed e
       logOpEv (ODProtoErr e) Nothing
-
     sendCompleted reqId = do
       sendMsg wsConn (SMComplete $ CompletionMsg opId)
       logOpEv ODCompleted reqId
-
     postExecErr reqId qErr = do
       let errFn = getErrFn errRespTy
       logOpEv (ODQueryErr qErr) (Just reqId)
@@ -531,7 +525,7 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
       ERejected _ -> True
       EConnErr _  -> True
       EClosed     -> False
-      EOperation op -> case _odOperationType op of
+      EOperation operation -> case _odOperationType operation of
         ODStarted    -> False
         ODProtoErr _ -> True
         ODQueryErr _ -> True
