@@ -142,15 +142,15 @@ form of kind subsumption. Types that can be used as both input and output types
 are explicitly given the kind 'Both. This allows us to get the best of both
 worlds:
 
-    * We use the <: typeclass to accept 'Both in most places where we expect
-      either input or output types.
+  * We use the <: typeclass to accept 'Both in most places where we expect
+    either input or output types.
 
-    * We can treat 'Both specially to avoid requiring `scalar` to supply a
-      selection set parser (see Note [The delicate balance of GraphQL kinds] for
-      further explanation).
+  * We can treat 'Both specially to avoid requiring `scalar` to supply a
+    selection set parser (see Note [The delicate balance of GraphQL kinds] for
+    further explanation).
 
-    * Because we avoid the polymorphism, we don’t run into the aforementioned
-      issue with monadic parser constructors.
+  * Because we avoid the polymorphism, we don’t run into the aforementioned
+    issue with monadic parser constructors.
 
 All of this is subtle and somewhat complicated, but unfortunately there isn’t
 much of a way around that: GraphQL is subtle and complicated. Our use of an
