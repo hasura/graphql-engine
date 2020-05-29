@@ -66,6 +66,7 @@ import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Hasura.Session
+import           Hasura.Eventing.HTTP             (LogEnvHeaders)
 import           Network.URI                      (parseURI)
 
 newtype DbUid
@@ -195,11 +196,20 @@ mkServeOptions rso = do
            | adminInternalErrors -> InternalErrorsAdminOnly
            | otherwise           -> InternalErrorsDisabled
 
+  maxEventThreads <- fromMaybe defaultMaxEventThreads <$>
+                     withEnv (rsoEventsHttpPoolSize rso) (fst eventsHttpPoolSizeEnv)
+
+  eventsFetchInterval <- fromMaybe defaultEventFetchInterval <$>
+                         withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
+
+  logEnvHeaders <- withEnvBool (rsoLogHeadersFromEnv rso) $ fst logEnvHeadersEnv
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
-                        internalErrorsConfig
+                        internalErrorsConfig maxEventThreads eventsFetchInterval
+                        logEnvHeaders
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -247,6 +257,10 @@ mkServeOptions rso = do
       mxBatchSizeM <- withEnv (rsoMxBatchSize rso) $ fst mxBatchSizeEnv
       return $ LQ.mkLiveQueriesOptions mxBatchSizeM mxRefetchIntM
 
+    defaultMaxEventThreads = 100
+
+    defaultEventFetchInterval :: DiffTime
+    defaultEventFetchInterval = seconds 1
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -330,7 +344,7 @@ serveCmdFooter =
         ]
       ]
 
-    envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
+    envVarDoc = mkEnvVarDoc envVars
     envVars =
       [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv
       , pgStripesEnv, pgConnsEnv, pgTimeoutEnv, pgUsePrepareEnv, txIsoEnv
@@ -338,17 +352,8 @@ serveCmdFooter =
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, corsDisableEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
       , enableAllowlistEnv, enabledLogsEnv, logLevelEnv, devModeEnv
-      , adminInternalErrorsEnv
-      ]
-
-    eventEnvs =
-      [ ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-        , "Max event threads"
-        )
-      , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Interval in milliseconds to sleep before trying to fetch events again after a "
-          <> "fetch returned no events from postgres."
-        )
+      , adminInternalErrorsEnv, eventsHttpPoolSizeEnv, eventsFetchIntervalEnv
+      , logEnvHeadersEnv
       ]
 
 retriesNumEnv :: (String, String)
@@ -828,6 +833,47 @@ parsePlanCacheSize =
       help (snd planCacheSizeEnv)
     )
 
+eventsHttpPoolSizeEnv :: (String,String)
+eventsHttpPoolSizeEnv =
+  ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+  , "The maximum number of event threads to be used to process event triggers."
+  )
+
+parseEventsHttpPoolSize :: Parser (Maybe Int)
+parseEventsHttpPoolSize = optional $
+  option auto
+         ( long "events-http-pool-size" <>
+           metavar "EVENTS_HTTP_POOL_SIZE" <>
+           help (snd eventsHttpPoolSizeEnv))
+
+eventsFetchIntervalEnv :: (String,String)
+eventsFetchIntervalEnv =
+  ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+  , "Interval in milliseconds to sleep before trying to fetch " <>
+    "events again after a fetch returned no events from postgres"
+  )
+
+parseEventsFetchInterval :: Parser (Maybe DiffTime)
+parseEventsFetchInterval = optional $
+  option (eitherReader fromEnv)
+         ( long "events-fetch-interval" <>
+           metavar "EVENTS_FETCH_INTERVAL" <>
+           help (snd eventsFetchIntervalEnv))
+
+logEnvHeadersEnv :: (String,String)
+logEnvHeadersEnv =
+  ( "HASURA_GRAPHQL_LOG_HEADERS_FROM_ENV"
+  , "Flag to indicate if whether the value of the " <>
+    "environment variable in the headers should be logged. When set to false," <>
+    "the name of the environment variable will be logged"
+  )
+
+parseLogEnvHeaders :: Parser LogEnvHeaders
+parseLogEnvHeaders =
+  switch ( long "log-headers-from-env" <>
+           help (snd logEnvHeadersEnv)
+         )
+
 parseEnabledLogs :: L.EnabledLogTypes impl => Parser (Maybe [L.EngineLogType impl])
 parseEnabledLogs = optional $
   option (eitherReader L.parseEnabledLogTypes)
@@ -893,6 +939,9 @@ serveOptsToLog so =
       , "enabled_log_types" J..= soEnabledLogTypes so
       , "log_level" J..= soLogLevel so
       , "plan_cache_options" J..= soPlanCacheOptions so
+      , "events_http_pool_size" J..= soEventsHttpPoolSize so
+      , "events_fetch_interval" J..= soEventsFetchInterval so
+      , "log_headers_from_env" J..= soLogHeadersFromEnv so
       ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
@@ -935,6 +984,9 @@ serveOptionsParser =
   <*> parsePlanCacheSize
   <*> parseGraphqlDevMode
   <*> parseGraphqlAdminInternalErrors
+  <*> parseEventsHttpPoolSize
+  <*> parseEventsFetchInterval
+  <*> parseLogEnvHeaders
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
