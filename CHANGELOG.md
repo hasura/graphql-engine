@@ -12,7 +12,8 @@ It works similar to table relationships. Head to the `Relationship` tab in your 
 2. select the remote schema
 3. give the join configuration from table columns to remote schema fields.
 
-[Add docs links][add console screenshot]
+[Add docs links]
+[add console screenshot]
 
 ### Scheduled Triggers
 
@@ -22,7 +23,8 @@ A cron trigger will be useful when something needs to be done periodically. For 
 
 You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience.
 
-[Add docs links][add console screenshot]
+[Add docs links]
+[add console screenshot]
 
 (close #1914)
 
@@ -63,7 +65,6 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 - server: fix explain queries with role permissions (fix #4816)
 - server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
-
 - server: fixes an issue where introspection queries with variables would fail because of caching (fix #4547)
 - server: avoid loss of precision when passing values in scientific notation (fix #4733)
 - server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
