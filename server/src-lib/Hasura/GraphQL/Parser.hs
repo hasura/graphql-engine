@@ -1,3 +1,5 @@
+-- | This module exports the public API to our internal GraphQL query parser
+-- combinator language. For more details, see the documentation for 'Parser'.
 module Hasura.GraphQL.Parser
   ( Parser
   , parserType
