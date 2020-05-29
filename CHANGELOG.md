@@ -13,7 +13,7 @@ It works similar to table relationships. Head to the `Relationship` tab in your 
 3. give the join configuration from table columns to remote schema fields.
 
 [Add docs links]
-[add console screenshot]
+[Add console screenshot]
 
 ### Scheduled Triggers
 
@@ -24,7 +24,7 @@ A cron trigger will be useful when something needs to be done periodically. For 
 You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience.
 
 [Add docs links]
-[add console screenshot]
+[Add console screenshot]
 
 (close #1914)
 
