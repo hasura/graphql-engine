@@ -122,7 +122,7 @@ tableFieldsInput
   => QualifiedTable -- ^ qualified name of the table
   -> InsPermInfo    -- ^ insert permissions of the table
   -> m (Parser 'Input n (AnnInsObj UnpreparedValue))
-tableFieldsInput table insertPerms = do -- TODO: memoize this!
+tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
   tableName    <- qualifiedObjectToName table
   allFields    <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   objectFields <- catMaybes <$> for (Map.elems allFields) \case
@@ -163,7 +163,8 @@ objectRelationshipInput
   -> Maybe SelPermInfo
   -> Maybe UpdPermInfo
   -> m (Parser 'Input n (SingleObjIns UnpreparedValue))
-objectRelationshipInput table insertPerms selectPerms updatePerms = do
+objectRelationshipInput table insertPerms selectPerms updatePerms =
+  memoizeOn 'objectRelationshipInput table do
   tableName      <- qualifiedObjectToName table
   columns        <- tableColumns table
   objectParser   <- tableFieldsInput table insertPerms
@@ -194,7 +195,8 @@ arrayRelationshipInput
   -> Maybe SelPermInfo
   -> Maybe UpdPermInfo
   -> m (Parser 'Input n (MultiObjIns UnpreparedValue))
-arrayRelationshipInput table insertPerms selectPerms updatePerms = do
+arrayRelationshipInput table insertPerms selectPerms updatePerms =
+  memoizeOn 'arrayRelationshipInput table do
   tableName      <- qualifiedObjectToName table
   columns        <- tableColumns table
   objectParser   <- tableFieldsInput table insertPerms
@@ -247,7 +249,8 @@ conflictConstraint
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
   -> m (Parser 'Both n ConstraintName)
-conflictConstraint table = do
+conflictConstraint table =
+  memoizeOn 'conflictConstraint table do
   tableName <- qualifiedObjectToName table
   let enumName  = tableName <> $$(G.litName "_constraint")
       enumDesc  = G.Description $ "unique or primary key constraints on table " <> G.unName tableName <> "\""
@@ -480,7 +483,8 @@ mutationSelectionSet
   -> Maybe SelPermInfo
   -> Bool
   -> m (Parser 'Output n (RQL.MutFldsG UnpreparedValue))
-mutationSelectionSet table selectPerms stringifyNum = do
+mutationSelectionSet table selectPerms stringifyNum =
+  memoizeOn 'mutationSelectionSet table do
   tableName <- qualifiedObjectToName table
   returning <- runMaybeT do
     permissions <- MaybeT $ pure selectPerms
