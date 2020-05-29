@@ -364,7 +364,7 @@ runQueryM rq = withPathK "args" $ case rq of
 
       -- RQInsert q                   -> runInsert q
       RQSelect q                   -> runSelect q
-      -- RQUpdate q                   -> runUpdate q
+      RQUpdate q                   -> runUpdate q
       RQDelete q                   -> runDelete q
       RQCount  q                   -> runCount q
 

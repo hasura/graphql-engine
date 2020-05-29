@@ -1,4 +1,10 @@
-module Hasura.RQL.DML.Update where
+module Hasura.RQL.DML.Update
+  ( AnnUpdG(..)
+  , traverseAnnUpd
+  , updateQueryToTx
+  , updateOperatorText
+  , runUpdate
+  ) where
 
 import           Data.Aeson.Types
 import           Instances.TH.Lift           ()
@@ -8,7 +14,7 @@ import qualified Data.Sequence               as DS
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
--- import           Hasura.RQL.DML.Insert    (insertCheckExpr)
+import           Hasura.RQL.DML.Insert       (insertCheckExpr)
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
@@ -30,13 +36,7 @@ updateOperatorText (UpdAppend       _) = "_append"
 updateOperatorText (UpdPrepend      _) = "_prepend"
 updateOperatorText (UpdDeleteKey    _) = "_delete_key"
 updateOperatorText (UpdDeleteElem   _) = "_delete_elem"
-updateOperatorText (UpdDeleteAtPath _) = "_delete_path_at"
-
-
-{-
-
-WIP NOTE: commented out for now, will fix / remove after deciding if
-we want to keep UpdOpExpG.
+updateOperatorText (UpdDeleteAtPath _) = "_delete_at_path"
 
 
 traverseAnnUpd
@@ -46,19 +46,17 @@ traverseAnnUpd
   -> f (AnnUpdG b)
 traverseAnnUpd f annUpd =
   AnnUpd tn
-  <$> traverse (traverse f) setExps
+  <$> traverse (traverse $ traverse f) opExps
   <*> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
   <*> traverseAnnBoolExp f chk
   <*> traverseMutationOutput f mutOutput
   <*> pure allCols
   where
-    AnnUpd tn setExps (whr, fltr) chk mutOutput allCols = annUpd
-
-type AnnUpd = AnnUpdG S.SQLExp
+    AnnUpd tn opExps (whr, fltr) chk mutOutput allCols = annUpd
 
 mkUpdateCTE
   :: AnnUpd -> S.CTE
-mkUpdateCTE (AnnUpd tn setExps (permFltr, wc) chk _ _) =
+mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ _) =
   S.CTEUpdate update
   where
     update =
@@ -68,10 +66,36 @@ mkUpdateCTE (AnnUpd tn setExps (permFltr, wc) chk _ _) =
         $ [ S.selectStar
           , S.Extractor (insertCheckExpr "update check constraint failed" checkExpr) Nothing
           ]
-    setExp    = S.SetExp $ map S.SetExpItem setExps
+    setExp    = S.SetExp $ map expandOperator opExps
     tableFltr = Just $ S.WhereFrag tableFltrExpr
     tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
     checkExpr = toSQLBoolExp (S.QualTable tn) chk
+
+
+expandOperator :: (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
+expandOperator (column, op) = S.SetExpItem $ (column,) $ case op of
+  (UpdSet          e) -> e
+  (UpdInc          e) -> S.mkSQLOpExp S.incOp               identifier (asInt  e)
+  (UpdAppend       e) -> S.mkSQLOpExp S.jsonbConcatOp       identifier (asJSON e)
+  (UpdPrepend      e) -> S.mkSQLOpExp S.jsonbConcatOp       (asJSON e) identifier
+  (UpdDeleteKey    e) -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asText e)
+  (UpdDeleteElem   e) -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asInt  e)
+  (UpdDeleteAtPath a) -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
+  where
+    identifier = S.SEIden $ toIden column
+    asInt  e   = S.SETyAnn e S.intTypeAnn
+    asText e   = S.SETyAnn e S.textTypeAnn
+    asJSON e   = S.SETyAnn e S.jsonbTypeAnn
+    asArray a  = S.SETyAnn (S.SEArray a) S.textArrTypeAnn
+
+
+updateQueryToTx
+  :: Bool -> (AnnUpd, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
+updateQueryToTx strfyNum (u, p) =
+  runMutation $ Mutation (uqp1Table u) (updateCTE, p)
+                (uqp1Output u) (uqp1AllCols u) strfyNum
+  where
+    updateCTE = mkUpdateCTE u
 
 convInc
   :: (QErrM m)
@@ -175,7 +199,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
     convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $ convMul prepValBldr
 
   defItems <- withPathK "$default" $
-    convOp fieldInfoMap preSetCols updPerm (zip (uqDefault uq) [()..]) convDefault
+    convOp fieldInfoMap preSetCols updPerm ((,()) <$> uqDefault uq) convDefault
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
@@ -184,8 +208,11 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   resolvedPreSetItems <- M.toList <$>
                          mapM (convPartialSQLExp sessVarBldr) preSetObj
 
-  let setExpItems = resolvedPreSetItems ++ setItems ++ incItems ++
-                    mulItems ++ defItems
+  let setExpItems = resolvedPreSetItems ++
+                    setItems ++
+                    incItems ++
+                    mulItems ++
+                    defItems
 
   when (null setExpItems) $
     throw400 UnexpectedPayload "atleast one of $set, $inc, $mul has to be present"
@@ -202,7 +229,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
   return $ AnnUpd
     tableName
-    setExpItems
+    (fmap UpdSet <$> setExpItems)
     (resolvedUpdFltr, annSQLBoolExp)
     resolvedUpdCheck
     (mkDefaultMutFlds mAnnRetCols)
@@ -220,19 +247,9 @@ validateUpdateQuery
 validateUpdateQuery =
   runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
 
-updateQueryToTx
-  :: Bool -> (AnnUpd, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
-updateQueryToTx strfyNum (u, p) =
-  runMutation $ Mutation (uqp1Table u) (updateCTE, p)
-                (uqp1Output u) (uqp1AllCols u) strfyNum
-  where
-    updateCTE = mkUpdateCTE u
-
 runUpdate
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
   => UpdateQuery -> m EncJSON
 runUpdate q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
   validateUpdateQuery q >>= liftTx . updateQueryToTx strfyNum
-
--}

@@ -308,7 +308,7 @@ mkUpdateObject
   :: QualifiedTable
   -> [PGColumnInfo]
   -> UpdPermInfo
-  -> ( ( [(PGColumnInfo, RQL.UpdOpExpG UnpreparedValue)]
+  -> ( ( [(PGCol, RQL.UpdOpExpG UnpreparedValue)]
        , AnnBoolExp UnpreparedValue
        )
      , RQL.MutationOutputG UnpreparedValue
@@ -331,7 +331,7 @@ updateOperators
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable -- ^ qualified name of the table
   -> UpdPermInfo    -- ^ update permissions of the table
-  -> m (Maybe (InputFieldsParser n [(PGColumnInfo, RQL.UpdOpExpG UnpreparedValue)]))
+  -> m (Maybe (InputFieldsParser n [(PGCol, RQL.UpdOpExpG UnpreparedValue)]))
 updateOperators table updatePermissions = do
   tableName <- qualifiedObjectToName table
   columns   <- tableUpdateColumns table updatePermissions
@@ -368,8 +368,8 @@ updateOperators table updatePermissions = do
         intParser RQL.UpdDeleteElem jsonCols
         "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array"
         "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array"
-    , updateOperator tableName $$(G.litName "_delete_path_at")
-        textParser RQL.UpdDeleteAtPath jsonCols
+    , updateOperator tableName $$(G.litName "_delete_at_path")
+        (fmap P.list . textParser) RQL.UpdDeleteAtPath jsonCols
         "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
         "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
     ]
@@ -378,14 +378,15 @@ updateOperators table updatePermissions = do
     pure $ fmap (concat . catMaybes) (sequenceA $ snd <$> parsers)
       `P.bindFields` \opExps -> do
         -- there needs to be at least one column in the update
+        -- FIXME this is wrong: if there are pre-sets values we shouldn't fail here
         when (null opExps) $ parseError $
           "at lease one of " <> (T.intercalate ", " allowedOperators) <> " is expected"
         -- no column should appear twice
-        let groupedExps   = L.groupBy ((==) `on` fst) $ sortOn (pgiName . fst) opExps
+        let groupedExps   = L.groupBy ((==) `on` fst) $ sortOn (getPGColTxt . fst) opExps
             erroneousExps = concat $ filter ((> 1) . length) groupedExps
         when (not $ null erroneousExps) $ parseError $ "column found in multiple operators; "
-          <> (T.intercalate ", " $ flip map erroneousExps \(columnInfo, opExp) ->
-                 G.unName (pgiName columnInfo) <> " in " <> RQL.updateOperatorText opExp)
+          <> (T.intercalate ", " $ flip map erroneousExps \(column, opExp) ->
+                 getPGColTxt column <> " in " <> RQL.updateOperatorText opExp)
         -- FIXME: validate JSON parsing here?
         pure opExps
   where
@@ -396,12 +397,12 @@ updateOperators table updatePermissions = do
     updateOperator
       :: G.Name
       -> G.Name
-      -> (PGColumnInfo -> m (Parser 'Both n UnpreparedValue))
-      -> (UnpreparedValue -> RQL.UpdOpExpG UnpreparedValue)
+      -> (PGColumnInfo -> m (Parser 'Both n a))
+      -> (a -> RQL.UpdOpExpG UnpreparedValue)
       -> [PGColumnInfo]
       -> G.Description
       -> G.Description
-      -> m (Maybe (Text, InputFieldsParser n (Maybe [(PGColumnInfo, RQL.UpdOpExpG UnpreparedValue)])))
+      -> m (Maybe (Text, InputFieldsParser n (Maybe [(PGCol, RQL.UpdOpExpG UnpreparedValue)])))
     updateOperator tableName opName mkParser updOpExp columns opDesc objDesc =
       whenMaybe (not $ null columns) do
         fields <- for columns \columnInfo -> do
@@ -409,7 +410,7 @@ updateOperators table updatePermissions = do
               fieldDesc = pgiDescription columnInfo
           fieldParser <- mkParser columnInfo
           pure $ P.fieldOptional fieldName fieldDesc fieldParser
-            `mapField` \value -> (columnInfo, updOpExp value)
+            `mapField` \value -> (pgiColumn columnInfo, updOpExp value)
         let objName = tableName <> opName <> $$(G.litName "_input")
         pure $ (G.unName opName,)
              $ P.fieldOptional opName (Just opDesc)

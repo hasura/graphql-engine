@@ -14,7 +14,7 @@ import           Hasura.SQL.Types
 data AnnUpdG v
   = AnnUpd
   { uqp1Table   :: !QualifiedTable
-  , uqp1OpExps  :: ![(PGColumnInfo, UpdOpExpG v)]
+  , uqp1OpExps  :: ![(PGCol, UpdOpExpG v)]
   , uqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
   , uqp1Check   :: !(AnnBoolExp v)
   -- we don't prepare the arguments for returning
@@ -32,5 +32,5 @@ data UpdOpExpG v = UpdSet !v
                  | UpdPrepend !v
                  | UpdDeleteKey !v
                  | UpdDeleteElem !v
-                 | UpdDeleteAtPath !v
+                 | UpdDeleteAtPath ![v]
                  deriving (Eq, Show, Functor, Foldable, Traversable, Generic, Data)
