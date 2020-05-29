@@ -356,6 +356,9 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
     Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getPartialCronEvents
   case cronScheduledEvents of
     Right partialEvents -> do
+      -- save the locked standalone events that have been fetched from the
+      -- database, the events stored here will be unlocked in case a
+      -- graceful shutdown is initiated in midst of processing these events
       saveLockedCronEvents partialEvents
       for_ partialEvents $ \(CronEventPartial id' name st tries)-> do
         case Map.lookup name cronTriggersInfo of
@@ -410,8 +413,10 @@ processStandAloneEvents logger logEnv httpMgr pgpool lockedStandAloneEvents = do
       Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getOneOffScheduledEvents
   case standAloneScheduledEvents of
     Right standAloneScheduledEvents' -> do
+      -- save the locked standalone events that have been fetched from the
+      -- database, the events stored here will be unlocked in case a
+      -- graceful shutdown is initiated in midst of processing these events
       saveLockedStandAloneEvents standAloneScheduledEvents'
-
       for_ standAloneScheduledEvents' $
              \(StandAloneScheduledEvent id'
                                         scheduledTime
@@ -767,7 +772,7 @@ unlockCronEvents scheduledEventIds =
      WITH "cte" AS
      (UPDATE hdb_catalog.hdb_cron_events
      SET status = 'scheduled'
-     WHERE id = ANY($1::text[]) RETURNING *)
+     WHERE id = ANY($1::text[]) RETURNING *) and status = 'locked'
      SELECT count(*) FROM "cte"
    |] (Identity $ ScheduledEventIdArray scheduledEventIds) True
 
@@ -778,7 +783,7 @@ unlockStandaloneScheduledEvents scheduledEventIds =
      WITH "cte" AS
      (UPDATE hdb_catalog.hdb_scheduled_events
      SET status = 'scheduled'
-     WHERE id = ANY($1::text[]) RETURNING *)
+     WHERE id = ANY($1::text[]) RETURNING *) AND status = 'locked'
      SELECT count(*) FROM "cte"
    |] (Identity $ ScheduledEventIdArray scheduledEventIds) True
 
