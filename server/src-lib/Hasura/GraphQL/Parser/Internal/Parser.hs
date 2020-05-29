@@ -415,7 +415,7 @@ selectionSet
   -> [FieldParser m a]
   -> Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
 selectionSet name description parsers = Parser
-  { pType = NonNullable $ TNamed $ mkDefinition name description $
+  { pType = Nullable $ TNamed $ mkDefinition name description $
       TIObject $ map fDefinition parsers
   , pParser = \input -> do
       fields <- collectFields name input

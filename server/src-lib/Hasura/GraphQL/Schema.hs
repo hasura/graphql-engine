@@ -107,7 +107,7 @@ queryWithIntrospection allTables stringifyNum = do
   let
     name = $$(G.litName "query_root")
     description = Nothing
-    fakeQueryType = P.NonNullable $ P.TNamed $ P.mkDefinition name description $
+    fakeQueryType = P.Nullable $ P.TNamed $ P.mkDefinition name description $
         P.TIObject $ map P.fDefinition fakeQueryFP
     collectTypes :: P.Type 'Output -> m (HashMap G.Name (P.Definition P.SomeTypeInfo))
     collectTypes tp = case P.collectTypeDefinitions tp of
