@@ -66,10 +66,17 @@ module Hasura.Eventing.ScheduledTrigger
   , generateScheduleTimes
   , insertCronEvents
   , StandAloneScheduledEvent(..)
+  , initLockedScheduledEventsCtx
+  , LockedScheduledEventsCtx(..)
+  , unlockCronEvents
+  , unlockStandaloneScheduledEvents
+  , unlockAllLockedScheduledEvents
   ) where
 
 import           Control.Arrow.Extended            (dup)
 import           Control.Concurrent.Extended       (sleep)
+import           Control.Monad.STM                 (atomically,STM)
+import           Control.Concurrent.STM.TVar
 import           Data.Has
 import           Data.Int                          (Int64)
 import           Data.List                         (unfoldr)
@@ -96,6 +103,10 @@ import qualified Hasura.Logging                    as L
 import qualified Network.HTTP.Client               as HTTP
 import qualified Text.Builder                      as TB (run)
 import qualified PostgreSQL.Binary.Decoding        as PD
+import qualified Data.Set                          as Set
+import qualified Database.PG.Query.PTI             as PTI
+import qualified PostgreSQL.Binary.Encoding        as PE
+
 
 newtype ScheduledTriggerInternalErr
   = ScheduledTriggerInternalErr QErr
@@ -141,6 +152,8 @@ instance Q.FromCol ScheduledEventStatus where
 instance J.ToJSON ScheduledEventStatus where
   toJSON = J.String . scheduledEventStatusToText
 
+type ScheduledEventId = Text
+
 data CronTriggerStats
   = CronTriggerStats
   { ctsName                :: !TriggerName
@@ -154,9 +167,11 @@ data CronEventSeed
   , cesScheduledTime :: !UTCTime
   } deriving (Show, Eq)
 
+type CronEventId = Text
+
 data CronEventPartial
   = CronEventPartial
-  { cepId            :: !Text
+  { cepId            :: !CronEventId
   , cepName          :: !TriggerName
   , cepScheduledTime :: !UTCTime
   , cepTries         :: !Int
@@ -164,7 +179,7 @@ data CronEventPartial
 
 data ScheduledEventFull
   = ScheduledEventFull
-  { sefId            :: !Text
+  { sefId            :: !ScheduledEventId
   , sefName          :: !(Maybe TriggerName)
   -- ^ sefName is the name of the cron trigger.
   -- A standalone scheduled event is not associated with a name, so in that
@@ -180,9 +195,11 @@ data ScheduledEventFull
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventFull)
 
+type StandAloneScheduledEventId = Text
+
 data StandAloneScheduledEvent
   = StandAloneScheduledEvent
-  { saseId            :: !Text
+  { saseId            :: !StandAloneScheduledEventId
   , saseScheduledTime :: !UTCTime
   , saseTries         :: !Int
   , saseWebhook       :: !InputWebhook
@@ -210,6 +227,18 @@ data ScheduledEventType =
   -- ^ A standalone scheduled event doesn't have any template defined
   -- so all the configuration is fetched along the scheduled events.
     deriving (Eq, Show)
+
+data LockedScheduledEventsCtx
+  = LockedScheduledEventsCtx
+  { lseCronEvents :: TVar (Set.Set CronEventId)
+  , lseStandAloneEvents :: TVar (Set.Set StandAloneScheduledEventId)
+  }
+
+initLockedScheduledEventsCtx :: STM LockedScheduledEventsCtx
+initLockedScheduledEventsCtx = do
+  lseCronEvents <- newTVar Set.empty
+  lseStandAloneEvents <- newTVar Set.empty
+  return $ LockedScheduledEventsCtx{..}
 
 -- | runCronEventsGenerator makes sure that all the cron triggers
 --   have an adequate buffer of cron events.
@@ -318,14 +347,16 @@ processCronEvents
   -> HTTP.Manager
   -> Q.PGPool
   -> IO SchemaCache
+  -> TVar (Set.Set CronEventId)
   -> IO ()
-processCronEvents logger logEnv httpMgr pgpool getSC = do
+processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
   cronTriggersInfo <- scCronTriggers <$> getSC
   cronScheduledEvents <-
     runExceptT $
     Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getPartialCronEvents
   case cronScheduledEvents of
-    Right partialEvents ->
+    Right partialEvents -> do
+      saveLockedCronEvents partialEvents
       for_ partialEvents $ \(CronEventPartial id' name st tries)-> do
         case Map.lookup name cronTriggersInfo of
           Nothing ->  logInternalError $
@@ -345,10 +376,25 @@ processCronEvents logger logEnv httpMgr pgpool getSC = do
                                        ctiComment
             finally <- runExceptT $
               runReaderT (processScheduledEvent logEnv pgpool scheduledEvent CronScheduledEvent) (logger, httpMgr)
+            removeEventFromLockedEvents id'
             either logInternalError pure finally
     Left err -> logInternalError err
   where
     logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
+
+    saveLockedCronEvents :: [CronEventPartial] -> IO ()
+    saveLockedCronEvents partialCronEvents =
+      liftIO $ atomically $ do
+        lockedEvents <- readTVar lockedCronEvents
+        let ids = map cepId partialCronEvents
+        writeTVar lockedCronEvents $
+          Set.union lockedEvents $ Set.fromList ids
+
+    removeEventFromLockedEvents :: CronEventId -> IO ()
+    removeEventFromLockedEvents eventId =
+      liftIO $ atomically $ do
+        lockedEvents <- readTVar lockedCronEvents
+        writeTVar lockedCronEvents $ Set.delete eventId lockedEvents
 
 processStandAloneEvents
   :: HasVersion
@@ -356,13 +402,16 @@ processStandAloneEvents
   -> LogEnvHeaders
   -> HTTP.Manager
   -> Q.PGPool
+  -> TVar (Set.Set StandAloneScheduledEventId)
   -> IO ()
-processStandAloneEvents logger logEnv httpMgr pgpool = do
+processStandAloneEvents logger logEnv httpMgr pgpool lockedStandAloneEvents = do
   standAloneScheduledEvents <-
     runExceptT $
       Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getOneOffScheduledEvents
   case standAloneScheduledEvents of
-    Right standAloneScheduledEvents' ->
+    Right standAloneScheduledEvents' -> do
+      saveLockedStandAloneEvents standAloneScheduledEvents'
+
       for_ standAloneScheduledEvents' $
              \(StandAloneScheduledEvent id'
                                         scheduledTime
@@ -394,6 +443,7 @@ processStandAloneEvents logger logEnv httpMgr pgpool = do
                 finally <- runExceptT $
                   runReaderT (processScheduledEvent logEnv pgpool scheduledEvent StandAloneEvent) $
                                  (logger, httpMgr)
+                removeEventFromLockedEvents id'
                 either logInternalError pure finally
 
               Left headerInfoErr -> logInternalError headerInfoErr
@@ -404,6 +454,20 @@ processStandAloneEvents logger logEnv httpMgr pgpool = do
   where
     logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
 
+    saveLockedStandAloneEvents :: [StandAloneScheduledEvent] -> IO ()
+    saveLockedStandAloneEvents standAloneEvents =
+      liftIO $ atomically $ do
+        lockedEvents <- readTVar lockedStandAloneEvents
+        let ids = map saseId standAloneEvents
+        writeTVar lockedStandAloneEvents $
+          Set.union lockedEvents $ Set.fromList ids
+
+    removeEventFromLockedEvents :: ScheduledEventId -> IO ()
+    removeEventFromLockedEvents eventId =
+      liftIO $ atomically $ do
+        lockedEvents <- readTVar lockedStandAloneEvents
+        writeTVar lockedStandAloneEvents $ Set.delete eventId lockedEvents
+
 processScheduledTriggers
   :: HasVersion
   => L.Logger L.Hasura
@@ -411,11 +475,12 @@ processScheduledTriggers
   -> HTTP.Manager
   -> Q.PGPool
   -> IO SchemaCache
+  -> LockedScheduledEventsCtx
   -> IO void
-processScheduledTriggers logger logEnv httpMgr pgpool getSC=
+processScheduledTriggers logger logEnv httpMgr pgpool getSC LockedScheduledEventsCtx {..} =
   forever $ do
-    processCronEvents logger logEnv httpMgr pgpool getSC
-    processStandAloneEvents logger logEnv httpMgr pgpool
+    processCronEvents logger logEnv httpMgr pgpool getSC lseCronEvents
+    processStandAloneEvents logger logEnv httpMgr pgpool lseStandAloneEvents
     sleep (minutes 1)
 
 processScheduledEvent ::
@@ -684,3 +749,48 @@ getOneOffScheduledEvents = do
 
 liftExceptTIO :: (MonadError e m, MonadIO m) => ExceptT e IO a -> m a
 liftExceptTIO m = liftEither =<< liftIO (runExceptT m)
+
+newtype ScheduledEventIdArray =
+  ScheduledEventIdArray { unScheduledEventIdArray :: [ScheduledEventId]}
+  deriving (Show, Eq)
+
+instance Q.ToPrepArg ScheduledEventIdArray where
+  toPrepVal (ScheduledEventIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ l
+    where
+      -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
+      encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)
+
+unlockCronEvents :: [ScheduledEventId] -> Q.TxE QErr Int
+unlockCronEvents scheduledEventIds =
+   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+   [Q.sql|
+     WITH "cte" AS
+     (UPDATE hdb_catalog.hdb_cron_events
+     SET status = 'scheduled'
+     WHERE id = ANY($1::text[]) RETURNING *)
+     SELECT count(*) FROM "cte"
+   |] (Identity $ ScheduledEventIdArray scheduledEventIds) True
+
+unlockStandaloneScheduledEvents :: [ScheduledEventId] -> Q.TxE QErr Int
+unlockStandaloneScheduledEvents scheduledEventIds =
+   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+   [Q.sql|
+     WITH "cte" AS
+     (UPDATE hdb_catalog.hdb_scheduled_events
+     SET status = 'scheduled'
+     WHERE id = ANY($1::text[]) RETURNING *)
+     SELECT count(*) FROM "cte"
+   |] (Identity $ ScheduledEventIdArray scheduledEventIds) True
+
+unlockAllLockedScheduledEvents :: Q.TxE QErr ()
+unlockAllLockedScheduledEvents = do
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.hdb_cron_events
+          SET status = 'scheduled'
+          WHERE status = 'locked'
+          |] () True
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.hdb_scheduled_events
+          SET status = 'scheduled'
+          WHERE status = 'locked'
+          |] () True

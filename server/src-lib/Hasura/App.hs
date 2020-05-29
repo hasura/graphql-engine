@@ -268,8 +268,13 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   void $ liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
     runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
 
+  -- prepare scheduled triggers
+  prepareScheduledEvents _icPgPool logger
+
+  lockedScheduledEventsCtx <- liftIO $ atomically $ initLockedScheduledEventsCtx
+
   -- start a background thread to deliver the scheduled events
-  void $ liftIO $ C.forkImmortal "processScheduledTriggers" logger  $ processScheduledTriggers logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef)
+  void $ liftIO $ C.forkImmortal "processScheduledTriggers" logger  $ processScheduledTriggers logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) lockedScheduledEventsCtx
 
   -- start a background thread to check for updates
   _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
@@ -290,7 +295,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers shutdownApp eventEngineCtx _icPgPool)
+                     . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers shutdownApp eventEngineCtx lockedScheduledEventsCtx _icPgPool)
                      $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 
@@ -311,6 +316,12 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
       res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllEvents
       either printErrJExit return res
 
+   -- | prepareScheduledEvents is like prepareEvents, but for scheduled triggers
+    prepareScheduledEvents pool (Logger logger) = do
+      liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "preparing data"
+      res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllLockedScheduledEvents
+      either printErrJExit return res
+
     -- | shutdownEvents will be triggered when a graceful shutdown has been inititiated, it will
     -- get the locked events from the event engine context and then it will unlock all those events.
     -- It may happen that an event may be processed more than one time, an event that has been already
@@ -328,6 +339,31 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
                          LevelWarn "event_triggers" ("Error in unlocking the events " ++ (show err))
             Right count -> logger $ mkGenericStrLog
                             LevelInfo "event_triggers" ((show count) ++ " events were updated")
+
+    -- | shutdownScheduledEvents is like the shutdownEvents action, the only difference being
+    --   it is for scheduled trigger's events (cron events and standalone scheduled events)
+    --   and shutdownEvents is for event trigger's events.
+    shutdownScheduledEvents :: Q.PGPool -> Logger Hasura -> LockedScheduledEventsCtx -> IO ()
+    shutdownScheduledEvents pool (Logger logger) LockedScheduledEventsCtx {..} = do
+      liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "unlocking scheduled events that are locked by the HGE"
+      lockedCronEvents <- readTVarIO lseCronEvents
+      lockedStandaloneEvents <- readTVarIO lseStandAloneEvents
+      liftIO $ do
+        when (not $ Set.null $ lockedCronEvents) $ do
+          res <- runTx pool (Q.ReadCommitted, Nothing) (unlockCronEvents $ toList lockedCronEvents)
+          case res of
+            Left err -> logger $ mkGenericStrLog
+                         LevelWarn "scheduled_triggers" ("Error in unlocking the cron events " ++ (show err))
+            Right count -> logger $ mkGenericStrLog
+                            LevelInfo "scheduled_triggers" ((show count) ++ " cron events were unlocked")
+      liftIO $ do
+        when (not $ Set.null $ lockedStandaloneEvents) $ do
+          res <- runTx pool (Q.ReadCommitted, Nothing) (unlockStandaloneScheduledEvents $ toList lockedStandaloneEvents)
+          case res of
+            Left err -> logger $ mkGenericStrLog
+                         LevelWarn "scheduled_triggers" ("Error in unlocking the scheduled events " ++ (show err))
+            Right count -> logger $ mkGenericStrLog
+                            LevelInfo "scheduled_triggers" ((show count) ++ " scheduled events were unlocked")
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
@@ -347,8 +383,14 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     -- We only catch the SIGTERM signal once, that is, if we catch another SIGTERM signal then the process
     -- is terminated immediately.
     -- If the user hits CTRL-C (SIGINT), then the process is terminated immediately
-    shutdownHandler :: Loggers -> IO () -> EventEngineCtx -> Q.PGPool -> IO () -> IO ()
-    shutdownHandler (Loggers loggerCtx (Logger logger) _) shutdownApp eeCtx pool closeSocket =
+    shutdownHandler :: Loggers
+                    -> IO ()
+                    -> EventEngineCtx
+                    -> LockedScheduledEventsCtx
+                    -> Q.PGPool
+                    -> IO ()
+                    -> IO ()
+    shutdownHandler (Loggers loggerCtx (Logger logger) _) shutdownApp eeCtx lseCtx pool closeSocket =
       void $ Signals.installHandler
         Signals.sigTERM
         (Signals.CatchOnce shutdownSequence)
@@ -356,6 +398,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
      where
       shutdownSequence = do
         shutdownEvents pool (Logger logger) eeCtx
+        shutdownScheduledEvents pool (Logger logger) lseCtx
         closeSocket
         shutdownApp
         logShutdown
