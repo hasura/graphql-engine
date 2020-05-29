@@ -2,7 +2,7 @@ import { terminateSql } from './sqlUtils';
 import { LocalScheduledTriggerState } from '../../Services/Events/CronTriggers/state';
 import { LocalAdhocEventState } from '../../Services/Events/AdhocEvents/Add/state';
 import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
-import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationships/RemoteRelationships/utils'
+import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationships/RemoteRelationships/utils';
 import { transformHeaders } from '../Headers/utils';
 import { generateTableDef } from './pgUtils';
 import { Nullable } from './tsUtils';
@@ -640,12 +640,18 @@ export const getRedeliverDataEventQuery = (eventId: string) => ({
   },
 });
 
-export const getSaveRemoteRelQuery = (args: RemoteRelationshipPayload, isNew: boolean) => ({
+export const getSaveRemoteRelQuery = (
+  args: RemoteRelationshipPayload,
+  isNew: boolean
+) => ({
   type: `${isNew ? 'create' : 'update'}_remote_relationship`,
   args,
 });
 
-export const getDropRemoteRelQuery = (name: string, table: TableDefinition) => ({
+export const getDropRemoteRelQuery = (
+  name: string,
+  table: TableDefinition
+) => ({
   type: 'delete_remote_relationship',
   args: {
     name,
@@ -653,7 +659,9 @@ export const getDropRemoteRelQuery = (name: string, table: TableDefinition) => (
   },
 });
 
-export const getRemoteSchemaIntrospectionQuery = (remoteSchemaName: string) => ({
+export const getRemoteSchemaIntrospectionQuery = (
+  remoteSchemaName: string
+) => ({
   type: 'introspect_remote_schema',
   args: {
     name: remoteSchemaName,

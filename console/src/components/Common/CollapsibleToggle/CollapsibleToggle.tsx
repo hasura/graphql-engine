@@ -40,7 +40,7 @@ class CollapsibleToggle extends React.Component<
     const { isOpen, toggleHandler } = nextProps;
 
     if (toggleHandler) {
-      this.setState({ isOpen: !!(isOpen), toggleHandler });
+      this.setState({ isOpen: !!isOpen, toggleHandler });
     }
   }
 

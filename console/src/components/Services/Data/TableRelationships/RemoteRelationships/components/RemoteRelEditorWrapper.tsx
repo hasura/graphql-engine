@@ -5,8 +5,8 @@ import RemoteRelEditor from './RemoteRelEditor';
 import RemoteRelCollapsedLabel from './EditorCollapsed';
 import { useRemoteRelationship } from '../state';
 import { saveRemoteRelationship, dropRemoteRelationship } from '../../Actions';
-import { Table } from '../../../../../Common/utils/pgUtils'
-import { Dispatch } from '../../../../../../types'
+import { Table } from '../../../../../Common/utils/pgUtils';
+import { Dispatch } from '../../../../../../types';
 
 type Props = {
   relationship?: RemoteRelationshipServer;

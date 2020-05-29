@@ -3,8 +3,8 @@ import styles from '../../TableModify/ModifyTable.scss';
 import { RemoteRelationshipServer } from './utils';
 import RemoteRelationshipList from './components/RemoteRelationshipList';
 import { fetchRemoteSchemas } from '../../../RemoteSchema/Actions';
-import { Table } from '../../../../Common/utils/pgUtils'
-import { Dispatch } from '../../../../../types'
+import { Table } from '../../../../Common/utils/pgUtils';
+import { Dispatch } from '../../../../../types';
 
 type Props = {
   relationships: RemoteRelationshipServer[];

@@ -1,8 +1,8 @@
 import React from 'react';
 import { RemoteRelationshipServer } from '../utils';
 import RemoteRelationshipEditor from './RemoteRelEditorWrapper';
-import { Table } from '../../../../../Common/utils/pgUtils'
-import { Dispatch } from '../../../../../../types'
+import { Table } from '../../../../../Common/utils/pgUtils';
+import { Dispatch } from '../../../../../../types';
 
 type Props = {
   relationships: RemoteRelationshipServer[];

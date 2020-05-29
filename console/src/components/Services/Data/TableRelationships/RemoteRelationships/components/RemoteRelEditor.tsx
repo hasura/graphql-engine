@@ -22,7 +22,7 @@ import {
   Configuration as ConfigTooltip,
 } from '../Tooltips';
 import Explorer from './Explorer';
-import { Table } from '../../../../../Common/utils/pgUtils'
+import { Table } from '../../../../../Common/utils/pgUtils';
 
 type Props = {
   table: Table;
