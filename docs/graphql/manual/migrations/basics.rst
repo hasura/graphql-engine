@@ -33,6 +33,9 @@ Now run:
   hasura migrate create <init-migration-name> --from-server --endpoint <endpoint>
   hasura metadata export --endpoint <endpoint>
 
+  # mark the init migration as applied on this server
+  hasura migrate apply --version "<init-migration-version>" --skip-execution
+
 Generating migrations
 ---------------------
 
@@ -82,6 +85,9 @@ the intermediate steps required to reach the final state.
 .. code-block:: bash
 
   hasura migrate squash --name "<feature-name>" --from <migration-version>
+
+  # mark the squashed migration as applied on this server
+  hasura migrate apply --version "<squash-migration-version>" --skip-execution
 
 Add checkpoints
 ^^^^^^^^^^^^^^^
