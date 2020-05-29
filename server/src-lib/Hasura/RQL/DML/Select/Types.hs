@@ -3,17 +3,20 @@
 
 module Hasura.RQL.DML.Select.Types where
 
+import           Control.Lens                  hiding ((.=))
 import           Data.Aeson.Types
-import           Language.Haskell.TH.Syntax (Lift)
+import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.List.NonEmpty         as NE
-import qualified Data.Sequence              as Seq
-import qualified Data.Text                  as T
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.List.NonEmpty            as NE
+import qualified Data.Sequence                 as Seq
+import qualified Data.Text                     as T
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.Aeson                    as J
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import qualified Hasura.SQL.DML             as S
+import qualified Hasura.SQL.DML                as S
 import           Hasura.SQL.Types
 
 type SelectQExt = SelectG ExtCol BoolExp Int
@@ -158,11 +161,28 @@ data AnnColField
   , _acfOp     :: !(Maybe ColOp)
   } deriving (Show, Eq)
 
+data RemoteFieldArgument
+  = RemoteFieldArgument
+  { _rfaArgument :: !G.Argument
+  , _rfaVariable :: !(Maybe [(G.VariableDefinition,J.Value)])
+  }
+  deriving (Eq,Show)
+
+data RemoteSelect
+  = RemoteSelect
+  { _rselArgs          :: ![RemoteFieldArgument]
+  , _rselSelection     :: ![G.Field]
+  , _rselHasuraColumns :: !(HashSet PGColumnInfo)
+  , _rselFieldCall     :: !(NonEmpty FieldCall)
+  , _rselRemoteSchema  :: !RemoteSchemaInfo
+  } deriving (Show, Eq)
+
 data AnnFldG v
   = FCol !AnnColField
   | FObj !(ObjSelG v)
   | FArr !(ArrSelG v)
   | FComputedField !(ComputedFieldSel v)
+  | FRemote !RemoteSelect
   | FExp !T.Text
   deriving (Show, Eq)
 
@@ -183,6 +203,7 @@ traverseAnnFld f = \case
   FArr sel -> FArr <$> traverseArrSel f sel
   FComputedField sel -> FComputedField <$> traverseComputedFieldSel f sel
   FExp t -> FExp <$> pure t
+  FRemote s -> pure $ FRemote s
 
 type AnnFld = AnnFldG S.SQLExp
 
@@ -361,9 +382,9 @@ insertFunctionArg
   -> a
   -> FunctionArgsExpG a
   -> FunctionArgsExpG a
-insertFunctionArg argName index value (FunctionArgsExp positional named) =
-  if (index + 1) <= length positional then
-    FunctionArgsExp (insertAt index value positional) named
+insertFunctionArg argName idx value (FunctionArgsExp positional named) =
+  if (idx + 1) <= length positional then
+    FunctionArgsExp (insertAt idx value positional) named
   else FunctionArgsExp positional $
     HM.insert (getFuncArgNameTxt argName) value named
   where
@@ -477,3 +498,6 @@ data Prefixes
   { _pfThis :: !Iden -- Current node prefix
   , _pfBase :: !Iden -- Base table row identifier for computed field function
   } deriving (Show, Eq)
+
+$(makeLenses ''AnnSelG)
+$(makePrisms ''AnnFldG)
