@@ -9,18 +9,24 @@ import { getAddAdhocEventRoute } from '../../../../Common/utils/routesUtils';
 const Info: React.FC = () => {
   const topicDescription = (
     <div>
-      {ADHOC_EVENTS_HEADING} are individual one-off events that can be scheduled
-      at a particular timestamp. You can schedule an event from your
-      backend&nbsp;
-      <a
-        href="https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#create-scheduled-event"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        using the metadata api
-      </a>
-      , or&nbsp;
-      <Link to={getAddAdhocEventRoute('absolute')}>through the console</Link>.
+      <p>
+        {ADHOC_EVENTS_HEADING} are individual events that can be scheduled to
+        reliably trigger a HTTP webhook to run some custom business logic at a
+        particular timestamp.
+      </p>
+      <p>
+        You can schedule an event from your backend using the{' '}
+        <a
+          href="https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#create-scheduled-event"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          create_scheduled_event API
+        </a>{' '}
+        or through the console from the{' '}
+        <Link to={getAddAdhocEventRoute('absolute')}>Schedule an event</Link>{' '}
+        tab.
+      </p>
     </div>
   );
 
@@ -29,14 +35,8 @@ const Info: React.FC = () => {
       className={`${styles.padd_left_remove} container-fluid ${styles.padd_top}`}
     >
       <div className={styles.padd_left}>
-        <div className={styles.display_flex}>
-          <h2 className={`${styles.headerText} ${styles.inline_block}`}>
-            {ADHOC_EVENTS_HEADING}
-          </h2>
-        </div>
-        <hr />
         <TopicDescription
-          title="What are Cron Triggers?"
+          title="What are Scheduled events?"
           imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
           imgAlt={ADHOC_EVENTS_HEADING}
           description={topicDescription}

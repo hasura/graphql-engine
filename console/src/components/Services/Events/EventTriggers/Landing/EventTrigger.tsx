@@ -32,10 +32,10 @@ insert_user(objects: [{name: "testuser"}] ){
     return (
       <div>
         <TopicDescription
-          title="What are Event Triggers?"
+          title="What are Data Triggers?"
           imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
-          imgAlt="Event Triggers"
-          description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
+          imgAlt="Data Triggers"
+          description="A Data Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a HTTP webhook to run some custom business logic."
         />
         <hr className={styles.clear_fix} />
       </div>
