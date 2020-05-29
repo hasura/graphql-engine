@@ -38,7 +38,6 @@ class GraphiQLWrapper extends Component {
     this.state = {
       error: false,
       noSchema: false,
-      onBoardingEnabled: false,
       copyButtonText: 'Copy',
     };
   }
@@ -104,9 +103,7 @@ class GraphiQLWrapper extends Component {
     };
 
     const handleToggleHistory = () => {
-      graphiqlContext.setState(prevState => ({
-        historyPaneOpen: !prevState.historyPaneOpen,
-      }));
+      graphiqlContext.handleToggleHistory();
     };
 
     const deriveActionFromOperation = () => {
@@ -147,8 +144,6 @@ class GraphiQLWrapper extends Component {
       try {
         localStorage.removeItem('graphiql:queries');
         localStorage.removeItem('graphiql:query');
-        const editor = graphiqlContext.getQueryEditor();
-        editor.setValue('');
       } catch (e) {
         dispatch(showErrorNotification('Unable to clear history', e.message));
         return;
