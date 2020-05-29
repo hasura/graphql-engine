@@ -1,10 +1,5 @@
 import React from 'react';
 
-/**
- * # NoteSection React static component
- *
- * @returns
- */
 const NotesSection = () => {
   return (
     <ul>
