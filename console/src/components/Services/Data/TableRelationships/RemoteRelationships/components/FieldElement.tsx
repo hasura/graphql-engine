@@ -9,9 +9,6 @@ type Props = {
 };
 
 const FieldElement: React.FC<Props> = ({ field, handleToggle }) => {
-  const style = {
-    marginLeft: `${field.depth * 20}px`,
-  };
   const toggle = () => {
     if (!field.enabled) {
       return;
@@ -24,7 +21,9 @@ const FieldElement: React.FC<Props> = ({ field, handleToggle }) => {
   return (
     <OverlayMessage message={overlayMessage}>
       <div
-        style={style}
+        style={{
+          marginLeft: `${field.depth * 20}px`,
+        }}
         className={`${styles.display_flex} ${styles.add_mar_bottom_mid} ${
           field.enabled ? styles.fieldElement : styles.fieldElementDisabled
         }`}
