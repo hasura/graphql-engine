@@ -33,6 +33,21 @@ Now run:
   hasura migrate create <init-migration-name> --from-server --endpoint <endpoint>
   hasura metadata export --endpoint <endpoint>
 
+If you wish to apply further migrations to that server, you'll need to mark the init migration as applied. To do this, run:
+
+.. code-block:: bash
+
+  # Mark init migration as applied
+  hasura migrate apply --endpoint <endpoint> --version "<init-version>" --skip-execution
+
+The <init-version> is the version of the migration you just created. You can find it by running the following:
+
+.. code-block:: bash
+
+  # Get the migration status of the server
+  hasura migrate status --endpoint <endpoint>
+
+
 Generating migrations
 ---------------------
 
