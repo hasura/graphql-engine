@@ -659,3 +659,14 @@ export const getRemoteSchemaIntrospectionQuery = (remoteSchemaName: string) => (
     name: remoteSchemaName,
   },
 });
+
+export const getConsoleOptsQuery = () =>
+  getSelectQuery(
+    'select',
+    { name: 'hdb_version', schema: 'hdb_catalog' },
+    ['hasura_uuid', 'console_state'],
+    {},
+    null,
+    null,
+    null
+  );

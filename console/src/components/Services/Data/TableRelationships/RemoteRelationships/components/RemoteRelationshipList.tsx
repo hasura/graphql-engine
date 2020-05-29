@@ -1,12 +1,14 @@
 import React from 'react';
 import { RemoteRelationshipServer } from '../utils';
 import RemoteRelationshipEditor from './RemoteRelEditorWrapper';
+import { Table } from '../../../../../Common/utils/pgUtils'
+import { Dispatch } from '../../../../../../types'
 
 type Props = {
   relationships: RemoteRelationshipServer[];
-  table: any;
+  table: Table;
   remoteSchemas: string[];
-  reduxDispatch: any; // TODO use Dispatch after ST is merged
+  reduxDispatch: Dispatch;
 };
 
 const RemoteRelationshipList: React.FC<Props> = ({
