@@ -315,10 +315,20 @@ export const getFetchManualTriggersQuery = tableName => ({
   },
 });
 
+export const getConsoleOptsQuery = () =>
+  generateSelectQuery(
+    'select',
+    { name: 'hdb_version', schema: 'hdb_catalog' },
+    {
+      columns: ['hasura_uuid', 'console_state'],
+    }
+  );
+
 export const getSaveRemoteRelQuery = (args, isNew) => ({
   type: `${isNew ? 'create' : 'update'}_remote_relationship`,
   args,
 });
+
 export const getDropRemoteRelQuery = (name, table) => ({
   type: 'delete_remote_relationship',
   args: {
