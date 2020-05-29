@@ -23,20 +23,31 @@ import           Hasura.RQL.Types.BoolExp
 import           Hasura.SQL.Types
 
 
+-- | Create an expression which will fail with a check constraint violation error
+-- if the condition is not met on any of the inserted rows.
+--
+-- The resulting SQL will look something like this:
+--
+-- > INSERT INTO
+-- >   ...
+-- > RETURNING
+-- >   *,
+-- >   CASE WHEN {cond}
+-- >     THEN NULL
+-- >     ELSE hdb_catalog.check_violation('insert check constraint failed')
+-- >   END
+insertCheckExpr :: Text -> S.BoolExp -> S.SQLExp
+insertCheckExpr errorMessage condExpr =
+  S.SECond condExpr S.SENull
+    (S.SEFunction
+      (S.FunctionExp
+        (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation"))
+        (S.FunctionArgs [S.SELit errorMessage] mempty)
+        Nothing)
+    )
 
 
 {- FIXME
-
-data InsertQueryP1
-  = InsertQueryP1
-  { iqp1Table     :: !QualifiedTable
-  , iqp1Cols      :: ![PGCol]
-  , iqp1Tuples    :: ![[S.SQLExp]]
-  , iqp1Conflict  :: !(Maybe ConflictClauseP1)
-  , iqp1CheckCond :: !(AnnBoolExpSQL, Maybe AnnBoolExpSQL)
-  , iqp1Output    :: !MutationOutput
-  , iqp1AllCols   :: ![PGColumnInfo]
-  } deriving (Show, Eq)
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
 mkInsertCTE (InsertQueryP1 tn cols vals c (insCheck, updCheck) _ _) =
@@ -254,28 +265,6 @@ insertP2 strfyNum (u, p) =
   where
     insertCTE = mkInsertCTE u
 
--- | Create an expression which will fail with a check constraint violation error
--- if the condition is not met on any of the inserted rows.
---
--- The resulting SQL will look something like this:
---
--- > INSERT INTO
--- >   ...
--- > RETURNING
--- >   *,
--- >   CASE WHEN {cond}
--- >     THEN NULL
--- >     ELSE hdb_catalog.check_violation('insert check constraint failed')
--- >   END
-insertCheckExpr :: Text -> S.BoolExp -> S.SQLExp
-insertCheckExpr errorMessage condExpr =
-  S.SECond condExpr S.SENull
-    (S.SEFunction
-      (S.FunctionExp
-        (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation"))
-        (S.FunctionArgs [S.SELit errorMessage] mempty)
-        Nothing)
-    )
 
 -- | When inserting data, we might need to also enforce the update
 -- check condition, because we might fall back to an update via an

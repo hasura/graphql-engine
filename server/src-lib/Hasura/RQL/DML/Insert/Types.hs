@@ -3,13 +3,12 @@ module Hasura.RQL.DML.Insert.Types where
 
 import           Hasura.Prelude
 
--- import           Instances.TH.Lift             ()
-
--- import           Hasura.RQL.DML.Internal.Types
--- import           Hasura.RQL.DML.Mutation.Types
--- import           Hasura.RQL.Instances          ()
+import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.Types.Column
 import           Hasura.SQL.Types
+
+import qualified Hasura.SQL.DML                 as S
 
 
 data ConflictTarget
@@ -21,3 +20,15 @@ data ConflictClauseP1 v
   = CP1DoNothing !(Maybe ConflictTarget)
   | CP1Update !ConflictTarget ![PGCol] !PreSetColsPartial (Maybe (AnnBoolExp v))
   deriving (Show, Eq)
+
+
+data InsertQueryP1
+  = InsertQueryP1
+  { iqp1Table     :: !QualifiedTable
+  , iqp1Cols      :: ![PGCol]
+  , iqp1Tuples    :: ![[S.SQLExp]]
+  , iqp1Conflict  :: !(Maybe (ConflictClauseP1 S.SQLExp))
+  , iqp1CheckCond :: !(AnnBoolExpSQL, Maybe AnnBoolExpSQL)
+  , iqp1Output    :: !MutationOutput
+  , iqp1AllCols   :: ![PGColumnInfo]
+  } deriving (Show, Eq)
