@@ -5,7 +5,7 @@ module Hasura.GraphQL.Schema
 import           Hasura.Prelude
 
 import qualified Data.Aeson                            as J
-import qualified Data.HashMap.Strict.Extended          as M
+import qualified Data.HashMap.Strict.Extended          as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
 import qualified Data.HashSet                          as S
 import qualified Language.GraphQL.Draft.Syntax         as G
@@ -35,30 +35,34 @@ buildGQLContext
   => TableCache
   -> m (HashMap RoleName GQLContext)
 buildGQLContext allTables =
-  S.toMap allRoles & M.traverseWithKey \roleName () ->
+  S.toMap allRoles & Map.traverseWithKey \roleName () ->
     buildContextForRole roleName
   where
     allRoles :: HashSet RoleName
-    allRoles = S.insert adminRole $ allTables ^.. folded.tiRolePermInfoMap.to M.keys.folded
+    allRoles = S.insert adminRole $ allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded
 
     tableFilter ti = not (isSystemDefined $ _tciSystemDefined ti)
 
-    validTables = M.filter (tableFilter . _tiCoreInfo) allTables
+    validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
 
     buildContextForRole roleName = do
       SQLGenCtx{ stringifyNum } <- askSQLGenCtx
       P.runSchemaT roleName allTables $ GQLContext
-        <$> (finalizeParser <$> query (S.fromList $ M.keys validTables) stringifyNum)
+        <$> (finalizeParser <$> queryWithIntrospection (S.fromList $ Map.keys validTables) stringifyNum)
 
     finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
     finalizeParser parser = runIdentity . P.runParseT . P.runParser parser
 
-query
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+-- | Generate all the field parsers for query-type GraphQL requests.  We don't
+-- actually collect these into a @Parser@ using @selectionSet@ so that we can
+-- insert the introspection before doing so.
+query'
+  :: forall m n
+   . (MonadSchema n m, MonadError QErr m)
   => HashSet QualifiedTable
   -> Bool
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-query allTables stringifyNum = do
+  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
+query' allTables stringifyNum = do
   selectExpParsers <- for (toList allTables) \tableName -> do
     selectPerms <- tableSelectPermissions tableName
     for selectPerms \perms -> do
@@ -73,31 +77,64 @@ query allTables stringifyNum = do
         , toQrf QRFPrimaryKey  $ selectTableByPk      tableName pkName      (Just pkDesc)     perms stringifyNum
         , toQrf QRFAggregation $ selectTableAggregate tableName aggName     (Just aggDesc)    perms stringifyNum
         ]
-  let queryFieldsParser = concat $ catMaybes selectExpParsers
-      queryType = P.NonNullable $ P.TNamed $ P.mkDefinition $$(G.litName "query_root") Nothing $
-                  P.TIObject $ map P.fDefinition queryFieldsParser
-  allTypes <- case P.collectTypeDefinitions queryType of
-    Left (P.ConflictingDefinitions type1 _) -> throw500 $
-      "found conflicting definitions for " <> P.getName type1
-      <<> " when collecting types from the schema"
-    Right tps -> pure tps
-  let realSchema = Schema
+  pure $ concat $ catMaybes selectExpParsers
+  where toQrf = fmap . fmap . fmap
+
+-- | Parse query-type GraphQL requests without introspection (should be unused;
+-- just here for completeness)
+query
+  :: forall m n
+   . (MonadSchema n m, MonadError QErr m)
+  => HashSet QualifiedTable
+  -> Bool
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+query allTables stringifyNum = do
+  queryFieldsParser <- query' allTables stringifyNum
+  pure $ P.selectionSet $$(G.litName "query_root") Nothing queryFieldsParser
+    <&> fmap (P.handleTypename (QRFRaw . J.String . G.unName))
+
+-- | Prepare the parser for query-type GraphQL requests, but with introspection
+-- for queries, mutations and subscriptions (TODO) built in.
+queryWithIntrospection
+  :: forall m n
+   . (MonadSchema n m, MonadError QErr m)
+  => HashSet QualifiedTable
+  -> Bool
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+queryWithIntrospection allTables stringifyNum = do
+  fakeQueryFP <- query' allTables stringifyNum
+  mutationP <- mutation allTables stringifyNum
+  let
+    name = $$(G.litName "query_root")
+    description = Nothing
+    fakeQueryType = P.NonNullable $ P.TNamed $ P.mkDefinition name description $
+        P.TIObject $ map P.fDefinition fakeQueryFP
+    collectTypes :: P.Type 'Output -> m (HashMap G.Name (P.Definition P.SomeTypeInfo))
+    collectTypes tp = case P.collectTypeDefinitions tp of
+      Left (P.ConflictingDefinitions type1 _) -> throw500 $
+        "found conflicting definitions for " <> P.getName type1
+        <<> " when collecting types from the schema"
+      Right tps -> pure tps
+  allQueryTypes <- collectTypes fakeQueryType
+  allMutationTypes <- collectTypes (P.pType mutationP)
+  let allTypes = Map.union allQueryTypes allMutationTypes
+      fakeSchema = Schema
         { sDescription = Nothing
         , sTypes = allTypes
-        , sQueryType = queryType
-        , sMutationType = Nothing
+        , sQueryType = fakeQueryType
+        , sMutationType = Just $ P.pType mutationP
+        -- TODO add subscriptions into introspection when they're done
         , sSubscriptionType = Nothing
         , sDirectives = []
         }
-      schemaFieldParser = schema realSchema
-  let queryFieldsParserWithIntrospection = queryFieldsParser ++ [fmap QRFRaw schemaFieldParser]
-  pure $ P.selectionSet $$(G.litName "query_root") Nothing queryFieldsParserWithIntrospection
+  let realQueryFields =
+        fakeQueryFP ++ (fmap QRFRaw <$> [schema fakeSchema, typeIntrospection fakeSchema])
+  pure $ P.selectionSet name Nothing realQueryFields
     <&> fmap (P.handleTypename (QRFRaw . J.String . G.unName))
-  where toQrf = fmap . fmap . fmap
-
 
 mutation
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n
+   . (MonadSchema n m, MonadError QErr m)
   => HashSet QualifiedTable
   -> Bool
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
