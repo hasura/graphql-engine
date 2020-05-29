@@ -26,6 +26,17 @@ export const isNumber = value => {
   return typeof value === 'number';
 };
 
+export const isFloat = value => {
+  if (typeof value === 'number') {
+    return parseInt(value, 10) !== parseFloat(value, 10);
+  }
+  return false;
+};
+
+export const isBoolean = value => {
+  return typeof value === 'boolean';
+};
+
 export const isPromise = value => {
   if (!value) return false;
   return value.constructor.name === 'Promise';

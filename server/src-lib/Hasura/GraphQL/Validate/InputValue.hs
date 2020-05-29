@@ -7,9 +7,9 @@ module Hasura.GraphQL.Validate.InputValue
   ) where
 
 import           Hasura.Prelude
-import           Hasura.Server.Utils             (duplicates)
 
 import           Data.Has
+import           Data.List.Extended              (duplicates)
 
 import qualified Data.Aeson                      as J
 import qualified Data.HashMap.Strict             as Map

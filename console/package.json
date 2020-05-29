@@ -12,18 +12,17 @@
   "homepage": "https://hasura.io/",
   "keywords": [],
   "scripts": {
-    "start": "concurrently --kill-others \"npm run start-prod\"",
-    "start-prod": "better-npm-run start-prod",
+    "start-dev": "node -r dotenv/config ./bin/server.js",
+    "watch-client": "node -r dotenv/config webpack/webpack-dev-server.js",
+    "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\"",
+    "start-prod": "cross-env NODE_PATH=./src PORT=8080 NODE_ENV=production node ./bin/server.js",
     "build": "webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
     "server-build": "make server-build",
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "postinstall": "webpack --display-error-details --config webpack/prod.config.js",
-    "lint": "eslint -c .eslintrc src --ext .js,.ts,.tsx",
-    "start-dev": "better-npm-run start-dev",
-    "watch-client": "better-npm-run watch-client",
-    "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\" ",
     "cypress": "cypress open",
-    "test": "cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record",
+    "test": "cypress run --spec 'cypress/integration/**/**/test.ts' --key $CYPRESS_KEY --parallel --record",
+    "lint": "eslint -c .eslintrc src --ext .js,.ts,.tsx",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\""
   },
   "lint-staged": {
@@ -35,22 +34,6 @@
       "prettier --write",
       "git add"
     ]
-  },
-  "betterScripts": {
-    "start-prod": {
-      "command": "node ./bin/server.js",
-      "env": {
-        "NODE_PATH": "./src",
-        "NODE_ENV": "production",
-        "PORT": 8080
-      }
-    },
-    "start-dev": {
-      "command": "node -r dotenv/config ./bin/server.js"
-    },
-    "watch-client": {
-      "command": "node -r dotenv/config webpack/webpack-dev-server.js"
-    }
   },
   "prettier": {
     "singleQuote": true,
@@ -66,7 +49,6 @@
   "dependencies": {
     "@graphql-codegen/core": "1.13.0",
     "@graphql-codegen/typescript": "1.13.0",
-    "@types/react-bootstrap": "0.32.21",
     "apollo-link": "1.2.13",
     "apollo-link-ws": "1.0.19",
     "brace": "0.11.1",
@@ -144,13 +126,13 @@
     "@babel/runtime": "7.8.7",
     "@types/clean-webpack-plugin": "0.1.3",
     "@types/concurrently": "5.1.0",
-    "@types/cypress": "1.1.3",
     "@types/dotenv": "8.2.0",
     "@types/express": "4.17.3",
     "@types/express-session": "1.17.0",
     "@types/extract-text-webpack-plugin": "3.0.4",
     "@types/file-loader": "4.2.0",
     "@types/fork-ts-checker-webpack-plugin": "0.4.5",
+    "@types/isomorphic-fetch": "0.0.35",
     "@types/jquery": "3.3.33",
     "@types/lodash": "4.14.149",
     "@types/mini-css-extract-plugin": "0.9.1",
@@ -158,12 +140,13 @@
     "@types/optimize-css-assets-webpack-plugin": "5.0.1",
     "@types/react": "16.9.23",
     "@types/react-addons-test-utils": "0.14.25",
+    "@types/react-bootstrap": "0.32.21",
     "@types/react-dom": "16.9.5",
     "@types/react-helmet": "5.0.15",
     "@types/react-hot-loader": "4.1.1",
     "@types/react-redux": "7.1.7",
-    "@types/react-router": "5.1.4",
-    "@types/react-router-redux": "5.0.18",
+    "@types/react-router": "^3.0.8",
+    "@types/react-router-redux": "4.0.44",
     "@types/react-toggle": "4.0.2",
     "@types/redux-devtools": "3.0.47",
     "@types/redux-devtools-dock-monitor": "1.1.33",
@@ -181,19 +164,20 @@
     "@types/ws": "7.2.3",
     "@typescript-eslint/eslint-plugin": "2.24.0",
     "@typescript-eslint/parser": "2.24.0",
+    "autoprefixer": "9.7.6",
     "babel-eslint": "10.1.0",
     "babel-loader": "8.0.6",
     "babel-plugin-istanbul": "5.2.0",
     "babel-plugin-styled-components": "1.10.7",
     "babel-plugin-transform-react-remove-prop-types": "0.4.24",
     "babel-plugin-typecheck": "2.0.1",
-    "better-npm-run": "0.1.1",
     "bootstrap-loader": "2.2.0",
     "bootstrap-sass": "3.4.1",
     "clean-webpack-plugin": "0.1.19",
     "concurrently": "3.6.1",
-    "css-loader": "0.28.11",
-    "cypress": "3.8.3",
+    "cross-env": "7.0.2",
+    "css-loader": "3.5.3",
+    "cypress": "4.6.0",
     "dotenv": "5.0.1",
     "eslint": "6.8.0",
     "eslint-config-airbnb": "16.1.0",
@@ -219,9 +203,9 @@
     "less-loader": "4.1.0",
     "lint-staged": "6.1.1",
     "mini-css-extract-plugin": "0.4.5",
-    "node-sass": "4.13.1",
-    "nyc": "13.3.0",
-    "optimize-css-assets-webpack-plugin": "4.0.3",
+    "node-sass": "4.14.1",
+    "nyc": "15.0.1",
+    "optimize-css-assets-webpack-plugin": "5.0.3",
     "prettier": "1.19.1",
     "react-a11y": "0.2.8",
     "react-addons-test-utils": "15.6.2",

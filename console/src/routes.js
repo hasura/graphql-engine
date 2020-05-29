@@ -9,6 +9,8 @@ import { App, Main, PageNotFound } from 'components';
 
 import validateLogin from './utils/validateLogin';
 
+import { requireAsyncGlobals } from './components/App/Actions';
+
 import { composeOnEnterHooks } from 'utils/router';
 
 import { loadMigrationStatus } from './components/Main/Actions';
@@ -25,17 +27,14 @@ import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer'
 
 import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
 
-import about from './components/Services/About/About';
-
-import { requireAsyncGlobals } from './components/App/Actions';
-
 import generatedLoginConnector from './components/Login/Login';
 
 import settingsContainer from './components/Services/Settings/Container';
-import metadataOptionsContainer from './components/Services/Settings/MetadataOptions/MetadataOptions';
-import metadataStatusContainer from './components/Services/Settings/MetadataStatus/MetadataStatus';
-import allowedQueriesContainer from './components/Services/Settings/AllowedQueries/AllowedQueries';
-import logoutContainer from './components/Services/Settings/Logout/Logout';
+import metadataOptionsConnector from './components/Services/Settings/MetadataOptions/MetadataOptions';
+import metadataStatusConnector from './components/Services/Settings/MetadataStatus/MetadataStatus';
+import allowedQueriesConnector from './components/Services/Settings/AllowedQueries/AllowedQueries';
+import logoutConnector from './components/Services/Settings/Logout/Logout';
+import aboutConnector from './components/Services/Settings/About/About';
 
 import { showErrorNotification } from './components/Services/Common/Notification';
 import { CLI_CONSOLE_MODE } from './constants';
@@ -130,22 +129,22 @@ const routes = store => {
             path="voyager-view"
             component={generatedVoyagerConnector(connect)}
           />
-          <Route path="about" component={about(connect)} />
           <Route path="settings" component={settingsContainer(connect)}>
             <IndexRedirect to="metadata-actions" />
             <Route
               path="metadata-actions"
-              component={metadataOptionsContainer(connect)}
+              component={metadataOptionsConnector(connect)}
             />
             <Route
               path="metadata-status"
-              component={metadataStatusContainer(connect)}
+              component={metadataStatusConnector(connect)}
             />
             <Route
               path="allowed-queries"
-              component={allowedQueriesContainer(connect)}
+              component={allowedQueriesConnector(connect)}
             />
-            <Route path="logout" component={logoutContainer(connect)} />
+            <Route path="logout" component={logoutConnector(connect)} />
+            <Route path="about" component={aboutConnector(connect)} />
           </Route>
           {dataRouter}
           {eventRouter}

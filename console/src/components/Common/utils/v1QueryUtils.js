@@ -323,3 +323,23 @@ export const getConsoleOptsQuery = () =>
       columns: ['hasura_uuid', 'console_state'],
     }
   );
+
+export const getSaveRemoteRelQuery = (args, isNew) => ({
+  type: `${isNew ? 'create' : 'update'}_remote_relationship`,
+  args,
+});
+
+export const getDropRemoteRelQuery = (name, table) => ({
+  type: 'delete_remote_relationship',
+  args: {
+    name,
+    table,
+  },
+});
+
+export const getRemoteSchemaIntrospectionQuery = remoteSchemaName => ({
+  type: 'introspect_remote_schema',
+  args: {
+    name: remoteSchemaName,
+  },
+});

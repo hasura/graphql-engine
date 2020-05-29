@@ -5,6 +5,7 @@ module Hasura.App where
 
 import           Control.Concurrent.STM.TVar          (readTVarIO)
 import           Control.Monad.Base
+import           Control.Monad.Catch                  (MonadCatch, MonadThrow, onException)
 import           Control.Monad.Stateless
 import           Control.Monad.STM                    (atomically)
 import           Control.Monad.Trans.Control          (MonadBaseControl (..))
@@ -28,6 +29,7 @@ import qualified Database.PG.Query                    as Q
 import qualified Network.HTTP.Client                  as HTTP
 import qualified Network.HTTP.Client.TLS              as HTTP
 import qualified Network.Wai.Handler.Warp             as Warp
+import qualified System.Log.FastLogger                as FL
 import qualified System.Posix.Signals                 as Signals
 import qualified Text.Mustache.Compile                as M
 
@@ -54,7 +56,6 @@ import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
 import           Hasura.Session
-
 
 printErrExit :: (MonadIO m) => forall a . String -> m a
 printErrExit = liftIO . (>> exitFailure) . putStrLn
@@ -126,7 +127,7 @@ data Loggers
   }
 
 newtype AppM a = AppM { unAppM :: IO a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO, MonadCatch, MonadThrow)
 
 -- | this function initializes the catalog and returns an @InitCtx@, based on the command given
 -- - for serve command it creates a proper PG connection pool
@@ -185,6 +186,7 @@ runTxIO pool isoLevel tx = do
 runHGEServer
   :: ( HasVersion
      , MonadIO m
+     , MonadCatch m
      , MonadStateless IO m
      , UserAuthentication m
      , MetadataApiAuthorization m
@@ -213,7 +215,11 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
 
-  HasuraApp app cacheRef cacheInitTime shutdownApp <-
+  -- If an exception is encountered in 'mkWaiApp', flush the log buffer and rethrow
+  -- If we do not flush the log buffer on exception, then log lines written in 'mkWaiApp' may be missed
+  -- See: https://github.com/hasura/graphql-engine/issues/4772
+  let flushLogger = liftIO $ FL.flushLogStr $ _lcLoggerSet loggerCtx
+  HasuraApp app cacheRef cacheInitTime shutdownApp <- flip onException flushLogger $
     mkWaiApp soTxIso
              logger
              sqlGenCtx
@@ -284,7 +290,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler (shutdownHandler logger shutdownApp eventEngineCtx _icPgPool)
+                     . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers shutdownApp eventEngineCtx _icPgPool)
                      $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 
@@ -341,8 +347,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     -- We only catch the SIGTERM signal once, that is, if we catch another SIGTERM signal then the process
     -- is terminated immediately.
     -- If the user hits CTRL-C (SIGINT), then the process is terminated immediately
-    shutdownHandler :: Logger Hasura -> IO () -> EventEngineCtx -> Q.PGPool -> IO () -> IO ()
-    shutdownHandler (Logger logger) shutdownApp eeCtx pool closeSocket =
+    shutdownHandler :: Loggers -> IO () -> EventEngineCtx -> Q.PGPool -> IO () -> IO ()
+    shutdownHandler (Loggers loggerCtx (Logger logger) _) shutdownApp eeCtx pool closeSocket =
       void $ Signals.installHandler
         Signals.sigTERM
         (Signals.CatchOnce shutdownSequence)
@@ -353,6 +359,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
         closeSocket
         shutdownApp
         logShutdown
+        cleanLoggerCtx loggerCtx
 
       logShutdown = logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
 
