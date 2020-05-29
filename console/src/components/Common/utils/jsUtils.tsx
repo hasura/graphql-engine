@@ -345,12 +345,5 @@ export const getCurrTimeForFileName = () => {
 };
 
 export const convertDateTimeToLocale = (dateTime: string) => {
-  return moment(dateTime, moment.ISO_8601).format('ddd, MMM Do HH:mma');
-};
-
-export const convertDateTimeToReadable = (
-  dateTime: string,
-  addTimezone = false
-) => {
-  return new Date(`${dateTime}${addTimezone ? 'Z' : ''}`).toString();
+  return moment(dateTime, moment.ISO_8601).format('ddd, MMM Do HH:mm:ss Z');
 };
