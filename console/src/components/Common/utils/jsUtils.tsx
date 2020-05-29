@@ -252,13 +252,11 @@ export const uploadFile = (
 
         if (invalidFileHandler) {
           invalidFileHandler(fileName);
-        } else {
-          if (errorCallback) {
-            errorCallback(
-              'Invalid file format',
-              `Expected a ${expectedFileSuffix} file`
-            );
-          }
+        } else if (errorCallback) {
+          errorCallback(
+            'Invalid file format',
+            `Expected a ${expectedFileSuffix} file`
+          );
         }
 
         fileInputElement.remove();

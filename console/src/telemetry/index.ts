@@ -3,8 +3,7 @@ import globals from '../Globals';
 import { filterEventsBlockList, sanitiseUrl } from './filters';
 import { RUN_TIME_ERROR } from '../components/Main/Actions';
 import { REDUX_LOCATION_CHANGE_ACTION_TYPE } from '../constants';
-import { GetReduxState, ReduxAction } from '../types';
-
+import { GetReduxState } from '../types';
 
 interface TelemetryGlobals {
   serverVersion: string;
@@ -14,28 +13,30 @@ interface TelemetryGlobals {
 }
 
 export type ErrorPayload = {
-  message: string,
-  stack?: string
+  message: string;
+  stack?: string;
 };
 
-export type TelemetryAction = {
-  type: typeof REDUX_LOCATION_CHANGE_ACTION_TYPE,
-  payload: {
-    pathname: string
-  }
-} | {
-  type: typeof RUN_TIME_ERROR,
-  data?: ErrorPayload
-};
+export type TelemetryAction =
+  | {
+      type: typeof REDUX_LOCATION_CHANGE_ACTION_TYPE;
+      payload: {
+        pathname: string;
+      };
+    }
+  | {
+      type: typeof RUN_TIME_ERROR;
+      data?: ErrorPayload;
+    };
 
 export type TelemetryPayload = {
-  server_version: string,
-  event_type: string,
-  url: string,
-  console_mode: string,
-  cli_uuid: string,
-  server_uuid: string,
-  data?: ErrorPayload
+  server_version: string;
+  event_type: string;
+  url: string;
+  console_mode: string;
+  cli_uuid: string;
+  server_uuid: string;
+  data?: ErrorPayload;
 };
 
 const createClient = () => {
@@ -78,7 +79,7 @@ const sendEvent = (payload: TelemetryPayload) => {
 };
 
 export const trackReduxAction = (
-  action: TelemetryAction ,
+  action: TelemetryAction,
   getState: GetReduxState
 ) => {
   const actionType = action.type;

@@ -1,8 +1,8 @@
-import { Nullable } from '../components/Common/utils/tsUtils'
+import { Nullable } from '../components/Common/utils/tsUtils';
 
 export type TelemetryState = {
-  console_opts: Nullable<any>,
-  hasura_uuid: string
+  console_opts: Nullable<any>;
+  hasura_uuid: string;
 };
 
 const defaultTelemetryState: TelemetryState = {

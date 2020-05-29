@@ -17,7 +17,7 @@ import {
   isNumber,
 } from '../../../../Common/utils/jsUtils';
 import { getUnderlyingType } from '../../../../../shared/utils/graphqlSchemaUtils';
-import { TableDefinition } from '../../../../Common/utils/v1QueryUtils'
+import { TableDefinition } from '../../../../Common/utils/v1QueryUtils';
 
 export type ArgValueKind = 'column' | 'static';
 export type ArgValue = {
@@ -266,14 +266,16 @@ const getTypedArgValueInput = (argValue: ArgValue, type: string) => {
 };
 
 export type RemoteRelationshipPayload = {
-  name: string,
-  remote_schema: string,
-  remote_field: Record <string, RemoteRelationshipFieldServer>,
-  hasura_fields: string[],
-  table: TableDefinition
+  name: string;
+  remote_schema: string;
+  remote_field: Record<string, RemoteRelationshipFieldServer>;
+  hasura_fields: string[];
+  table: TableDefinition;
 };
 
-export const getRemoteRelPayload = (relationship: RemoteRelationship): RemoteRelationshipPayload => {
+export const getRemoteRelPayload = (
+  relationship: RemoteRelationship
+): RemoteRelationshipPayload => {
   const hasuraFields: string[] = [];
   const getRemoteFieldArguments = (field: RemoteField) => {
     const getArgumentObject = (depth: number, parent?: string) => {

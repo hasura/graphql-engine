@@ -13,14 +13,14 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix, EVENTS_SERVICE_HEADING } from '../constants';
 import { setCurrentTrigger } from '../reducer';
 import { Triggers } from '../types';
-import { ConnectInjectedProps, Dispatch } from '../../../../types';
+import { Dispatch } from '../../../../types';
 import styles from '../Events.scss';
 
 interface Props {
   triggerName: string;
   allTriggers: Triggers;
   tabName: STTab;
-  dispatch: Dispatch
+  dispatch: Dispatch;
 }
 
 const STContainer: React.FC<Props> = ({

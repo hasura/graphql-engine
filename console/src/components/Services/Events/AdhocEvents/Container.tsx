@@ -14,11 +14,11 @@ import {
   EVENTS_SERVICE_HEADING,
 } from '../constants';
 import styles from '../Events.scss';
-import { Dispatch, ConnectInjectedProps } from '../../../../types';
+import { Dispatch } from '../../../../types';
 
 interface Props {
   tabName: AdhocEventsTab;
-  dispatch: Dispatch
+  dispatch: Dispatch;
 }
 
 const STContainer: React.FC<Props> = ({ children, tabName }) => {

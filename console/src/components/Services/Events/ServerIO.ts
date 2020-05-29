@@ -13,7 +13,7 @@ import {
   getSelectQuery,
   makeOrderBy,
 } from '../../Common/utils/v1QueryUtils';
-import { GetReduxState, Dispatch, Thunk } from '../../../types';
+import { Thunk } from '../../../types';
 import { makeMigrationCall } from '../Data/DataActions';
 import requestAction from '../../../utils/requestAction';
 import {
@@ -56,10 +56,9 @@ import {
 import { EventTriggerProperty } from './EventTriggers/Modify/utils';
 import { getLogsTableDef } from './utils';
 
-export const fetchTriggers = (kind: Nullable<TriggerKind>): Thunk<Promise<void>> => (
-  dispatch,
-  getState
-) => {
+export const fetchTriggers = (
+  kind: Nullable<TriggerKind>
+): Thunk<Promise<void>> => (dispatch, getState) => {
   const bulkQueryArgs = [];
   if (kind) {
     bulkQueryArgs.push(
@@ -510,7 +509,7 @@ export const createScheduledEvent = (
   state: LocalAdhocEventState,
   successCb?: () => void,
   errorCb?: () => void
-): Thunk => (dispatch) => {
+): Thunk => dispatch => {
   const validationError = validateAdhocEventState(state);
   const errorMessage = 'Failed scheduling the event';
   if (validationError) {
@@ -589,7 +588,7 @@ export const getEventLogs = (
   eventKind: EventKind,
   successCallback: (logs: InvocationLog[]) => void,
   errorCallback: (error: any) => void
-): Thunk => (dispatch) => {
+): Thunk => dispatch => {
   const logTableDef = getLogsTableDef(eventKind);
 
   const query = getSelectQuery(
