@@ -34,8 +34,8 @@ import           Hasura.GraphQL.Execute.LiveQuery.Poll
 
 -- | The top-level datatype that holds the state for all active live queries.
 --
--- NOTE!: This must be kept consistent with a websocket connection's 'OperationMap', in 'onClose'
--- and 'onStart'.
+-- NOTE!: This must be kept consistent with a websocket connection's
+-- 'OperationMap', in 'onClose' and 'onStart'.
 data LiveQueriesState
   = LiveQueriesState
   { _lqsOptions      :: !LiveQueriesOptions
@@ -63,18 +63,17 @@ data LiveQueryId
 
 addLiveQuery
   :: L.Logger L.Hasura
-  -> UniqueSubscriberId
+  -> SubscriberId
   -> LiveQueriesState
   -> LiveQueryPlan
   -> OnChange
   -- ^ the action to be executed when result changes
   -> IO LiveQueryId
-addLiveQuery logger wsOpId lqState plan onResultAction = do
+addLiveQuery logger subscriberId lqState plan onResultAction = do
   -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
   -- disposable UUIDs:
   responseId <- newCohortId
-  sinkId <- newSinkId
 
   $assertNFHere subscriber  -- so we don't write thunks to mutable vars
 
@@ -85,28 +84,27 @@ addLiveQuery logger wsOpId lqState plan onResultAction = do
       Just handler -> do
         cohortM <- TMap.lookup cohortKey $ _pCohorts handler
         case cohortM of
-          Just cohort -> addToCohort sinkId cohort
-          Nothing     -> addToPoller sinkId responseId handler
+          Just cohort -> addToCohort subscriberId cohort
+          Nothing     -> addToPoller subscriberId responseId handler
         return Nothing
       Nothing -> do
         !poller <- newPoller
-        addToPoller sinkId responseId poller
+        addToPoller subscriberId responseId poller
         STMMap.insert poller handlerId lqMap
         return $ Just poller
 
-  -- we can then attach a polling thread if it is new
-  -- the livequery can only be cancelled after putTMVar
+  -- we can then attach a polling thread if it is new the livequery can only be
+  -- cancelled after putTMVar
   onJust handlerM $ \handler -> do
-    metrics <- initRefetchMetrics
     pollerId <- PollerId <$> UUID.nextRandom
-    threadRef <- forkImmortal ("pollQuery." <> show sinkId) logger $ forever $ do
-      pollQuery logger pollerId metrics lqOpts pgExecCtx query handler
+    threadRef <- forkImmortal ("pollQuery." <> show pollerId) logger $ forever $ do
+      pollQuery logger pollerId lqOpts pgExecCtx query $ _pCohorts handler
       sleep $ unRefetchInterval refetchInterval
-    let !pState = PollerIOState threadRef metrics
+    let !pState = PollerIOState threadRef pollerId
     $assertNFHere pState  -- so we don't write thunks to mutable vars
     STM.atomically $ STM.putTMVar (_pIOState handler) pState
 
-  pure $ LiveQueryId handlerId cohortKey sinkId
+  pure $ LiveQueryId handlerId cohortKey subscriberId
   where
     LiveQueriesState lqOpts pgExecCtx lqMap = lqState
     LiveQueriesOptions _ refetchInterval = lqOpts
@@ -114,7 +112,7 @@ addLiveQuery logger wsOpId lqState plan onResultAction = do
 
     handlerId = PollerKey role query
 
-    !subscriber = Subscriber onResultAction wsOpId
+    !subscriber = Subscriber onResultAction subscriberId
 
     addToCohort sinkId handlerC =
       TMap.insert subscriber sinkId $ _cNewSubscribers handlerC
