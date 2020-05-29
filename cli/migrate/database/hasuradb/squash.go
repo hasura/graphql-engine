@@ -42,13 +42,16 @@ func (q CustomQuery) MergeEventTriggers(squashList *database.CustomList) error {
 			element := val.(*list.Element)
 			switch obj := element.Value.(type) {
 			case *createEventTriggerInput:
-				if obj.Replace {
-					for _, e := range prevElems {
-						squashList.Remove(e)
-					}
-					err := eventTriggerTransition.Trigger("delete_event_trigger", &evCfg, nil)
-					if err != nil {
-						return err
+				if obj.Replace != nil {
+					if *obj.Replace {
+						for _, e := range prevElems {
+							squashList.Remove(e)
+						}
+						err := eventTriggerTransition.Trigger("delete_event_trigger", &evCfg, nil)
+						if err != nil {
+							return err
+						}
+						obj.Replace = nil
 					}
 				}
 				err := eventTriggerTransition.Trigger("create_event_trigger", &evCfg, nil)
@@ -61,7 +64,6 @@ func (q CustomQuery) MergeEventTriggers(squashList *database.CustomList) error {
 				if err != nil {
 					return err
 				}
-				prevElems = append(prevElems, element)
 				// drop previous elements
 				for _, e := range prevElems {
 					squashList.Remove(e)
