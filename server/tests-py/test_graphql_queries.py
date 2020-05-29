@@ -608,6 +608,9 @@ class TestGraphQLQueryCaching:
     def test_include_directive(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/include_directive.yaml', transport)
 
+    def test_introspection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/introspection.yaml', transport)
+
 @pytest.mark.skipif(
     not PytestConf.config.getoption("--test-unauthorized-role"),
     reason="--test-unauthorized-role missing"
@@ -647,5 +650,3 @@ class TestGraphQLExplain:
         resp_sql = resp_json[0]['sql']
         exp_sql = conf['response'][0]['sql']
         assert resp_sql == exp_sql, resp_json
-    def test_introspection(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/introspection.yaml', transport)
