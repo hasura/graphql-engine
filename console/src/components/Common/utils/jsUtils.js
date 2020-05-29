@@ -1,7 +1,5 @@
 // TODO: make functions from this file available without imports
 
-import { showErrorNotification } from '../../Services/Common/Notification';
-
 /* TYPE utils */
 
 export const isNotDefined = value => {
@@ -26,6 +24,17 @@ export const isString = value => {
 
 export const isNumber = value => {
   return typeof value === 'number';
+};
+
+export const isFloat = value => {
+  if (typeof value === 'number') {
+    return parseInt(value, 10) !== parseFloat(value, 10);
+  }
+  return false;
+};
+
+export const isBoolean = value => {
+  return typeof value === 'boolean';
 };
 
 export const isPromise = value => {
@@ -222,8 +231,9 @@ export const getConfirmation = (
 export const uploadFile = (
   fileHandler,
   fileFormat = null,
-  invalidFileHandler = null
-) => dispatch => {
+  invalidFileHandler = null,
+  errorCallback = null
+) => {
   const fileInputElement = document.createElement('div');
   fileInputElement.innerHTML = '<input style="display:none" type="file">';
   const fileInput = fileInputElement.firstChild;
@@ -243,12 +253,12 @@ export const uploadFile = (
         if (invalidFileHandler) {
           invalidFileHandler(fileName);
         } else {
-          dispatch(
-            showErrorNotification(
+          if (errorCallback) {
+            errorCallback(
               'Invalid file format',
               `Expected a ${expectedFileSuffix} file`
-            )
-          );
+            );
+          }
         }
 
         fileInputElement.remove();

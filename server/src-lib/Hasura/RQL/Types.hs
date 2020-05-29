@@ -27,6 +27,7 @@ module Hasura.RQL.Types
   , askFieldInfo
   , askPGColInfo
   , askComputedFieldInfo
+  , askRemoteRel
   , askCurRole
   , askEventTriggerInfo
   , askTabInfoFromTrigger
@@ -41,31 +42,33 @@ import           Hasura.Prelude
 import           Hasura.Session
 import           Hasura.SQL.Types
 
-import           Hasura.Db                          as R
-import           Hasura.RQL.Types.Action            as R
-import           Hasura.RQL.Types.BoolExp           as R
-import           Hasura.RQL.Types.Column            as R
-import           Hasura.RQL.Types.Common            as R
-import           Hasura.RQL.Types.ComputedField     as R
-import           Hasura.RQL.Types.CustomTypes       as R
-import           Hasura.RQL.Types.DML               as R
-import           Hasura.RQL.Types.Error             as R
-import           Hasura.RQL.Types.EventTrigger      as R
-import           Hasura.RQL.Types.Function          as R
-import           Hasura.RQL.Types.Metadata          as R
-import           Hasura.RQL.Types.Permission        as R
-import           Hasura.RQL.Types.QueryCollection   as R
-import           Hasura.RQL.Types.RemoteSchema      as R
-import           Hasura.RQL.Types.ScheduledTrigger  as R
-import           Hasura.RQL.Types.SchemaCache       as R
-import           Hasura.RQL.Types.SchemaCache.Build as R
-import           Hasura.RQL.Types.Table             as R
 
-import qualified Hasura.GraphQL.Context             as GC
+import           Hasura.Db                           as R
+import           Hasura.RQL.Types.Action             as R
+import           Hasura.RQL.Types.BoolExp            as R
+import           Hasura.RQL.Types.Column             as R
+import           Hasura.RQL.Types.Common             as R
+import           Hasura.RQL.Types.ComputedField      as R
+import           Hasura.RQL.Types.CustomTypes        as R
+import           Hasura.RQL.Types.DML                as R
+import           Hasura.RQL.Types.Error              as R
+import           Hasura.RQL.Types.EventTrigger       as R
+import           Hasura.RQL.Types.Function           as R
+import           Hasura.RQL.Types.Metadata           as R
+import           Hasura.RQL.Types.Permission         as R
+import           Hasura.RQL.Types.RemoteRelationship as R
+import           Hasura.RQL.Types.QueryCollection    as R
+import           Hasura.RQL.Types.ScheduledTrigger   as R
+import           Hasura.RQL.Types.RemoteSchema       as R
+import           Hasura.RQL.Types.SchemaCache        as R
+import           Hasura.RQL.Types.SchemaCache.Build  as R
+import           Hasura.RQL.Types.Table              as R
 
-import qualified Data.HashMap.Strict                as M
-import qualified Data.Text                          as T
-import qualified Network.HTTP.Client                as HTTP
+import qualified Hasura.GraphQL.Context              as GC
+
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.Text                           as T
+import qualified Network.HTTP.Client                 as HTTP
 
 data QCtx
   = QCtx
@@ -218,9 +221,10 @@ askPGColInfo m c msg = do
   fieldInfo <- modifyErr ("column " <>) $
              askFieldInfo m (fromPGCol c)
   case fieldInfo of
-    (FIColumn pgColInfo) -> pure pgColInfo
-    (FIRelationship   _) -> throwErr "relationship"
-    (FIComputedField _)  -> throwErr "computed field"
+    (FIColumn pgColInfo)     -> pure pgColInfo
+    (FIRelationship   _)     -> throwErr "relationship"
+    (FIComputedField _)      -> throwErr "computed field"
+    (FIRemoteRelationship _) -> throwErr "remote relationship"
   where
     throwErr fieldType =
       throwError $ err400 UnexpectedPayload $ mconcat
@@ -238,9 +242,10 @@ askComputedFieldInfo fields computedField = do
   fieldInfo <- modifyErr ("computed field " <>) $
                askFieldInfo fields $ fromComputedField computedField
   case fieldInfo of
-    (FIColumn           _) -> throwErr "column"
-    (FIRelationship     _) -> throwErr "relationship"
-    (FIComputedField cci)  -> pure cci
+    (FIColumn           _)       -> throwErr "column"
+    (FIRelationship     _)       -> throwErr "relationship"
+    (FIRemoteRelationship     _) -> throwErr "remote relationship"
+    (FIComputedField cci)        -> pure cci
   where
     throwErr fieldType =
       throwError $ err400 UnexpectedPayload $ mconcat
@@ -285,6 +290,17 @@ askFieldInfo m f =
     throw400 NotExists $ mconcat
     [ f <<> " does not exist"
     ]
+
+askRemoteRel :: (MonadError QErr m)
+           => FieldInfoMap FieldInfo
+           -> RemoteRelationshipName
+           -> m RemoteFieldInfo
+askRemoteRel fieldInfoMap relName = do
+  fieldInfo <- askFieldInfo fieldInfoMap (fromRemoteRelationship relName)
+  case fieldInfo of
+    (FIRemoteRelationship remoteFieldInfo) -> return remoteFieldInfo
+    _                                      ->
+      throw400 UnexpectedPayload "expecting a remote relationship"
 
 askCurRole :: (UserInfoM m) => m RoleName
 askCurRole = _uiRole <$> askUserInfo

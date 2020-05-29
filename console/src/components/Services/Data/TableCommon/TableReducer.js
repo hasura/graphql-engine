@@ -23,6 +23,7 @@ import {
   TOGGLE_ENUM_FAILURE,
   MODIFY_ROOT_FIELD,
   SET_CHECK_CONSTRAINTS,
+  SET_VIEW_DEF_SQL,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -38,6 +39,11 @@ import {
   MANUAL_REL_RESET,
   REL_SELECTION_CHANGED,
   REL_ADD_NEW_CLICKED,
+  INTROSPECTING_REMOTE_SCHEMA,
+  INTROSPECTION_ERROR,
+  INTROSPECTION_SUCCESSFUL,
+  SET_REMOTE_RELATIONSHIPS,
+  FETCHED_REMOTE_RELATIONSHIPS,
 } from '../TableRelationships/Actions';
 
 // TABLE PERMISSIONS
@@ -113,6 +119,11 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         viewDefinitionError: action.data,
+      };
+    case SET_VIEW_DEF_SQL:
+      return {
+        ...modifyState,
+        viewDefSql: action.data,
       };
 
     case REL_ADD_NEW_CLICKED:
@@ -583,6 +594,48 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         uniqueKeyModify: action.keys,
+      };
+
+    case SET_REMOTE_RELATIONSHIPS:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          relationships: action.remoteRelationships,
+        },
+      };
+    case INTROSPECTING_REMOTE_SCHEMA:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          loading: true,
+        },
+      };
+    case INTROSPECTION_ERROR:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          loading: false,
+          error: true,
+        },
+      };
+    case INTROSPECTION_SUCCESSFUL:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          loading: false,
+        },
+      };
+    case FETCHED_REMOTE_RELATIONSHIPS:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          fetchedRemoteRelationships: true,
+        },
       };
     case TOGGLE_ENUM:
       return {

@@ -65,9 +65,10 @@ getPGColInfo
 getPGColInfo nt n = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
-    RFPGColumn pgColInfo -> return pgColInfo
-    RFRelationship _     -> throw500 $ mkErrMsg "relation"
-    RFComputedField _    -> throw500 $ mkErrMsg "computed field"
+    RFPGColumn pgColInfo   -> return pgColInfo
+    RFRelationship _       -> throw500 $ mkErrMsg "relation"
+    RFComputedField _      -> throw500 $ mkErrMsg "computed field"
+    RFRemoteRelationship _ -> throw500 $ mkErrMsg "remote relationship"
   where
     mkErrMsg ty =
       "found " <> ty <> " when expecting pgcolinfo for "

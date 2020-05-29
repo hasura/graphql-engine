@@ -41,6 +41,13 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               definition = `relationship of table "${getTableNameFromDef(
                 ico.definition.table
               )}"`;
+            } else if (ico.type === 'remote_relationship') {
+              name = ico.definition.configuration.name;
+              definition = `relationship between table "${getTableNameFromDef(
+                ico.definition.table
+              )}" and remote schema "${
+                ico.definition.configuration.remote_schema
+              }"`;
             } else if (permissionTypes.includes(ico.type)) {
               name = `${ico.definition.role}-permission`;
               definition = `${ico.type} on table "${getTableNameFromDef(
@@ -206,9 +213,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
       <div
         className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${metaDataStyles.metadata_wrapper} container-fluid`}
       >
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-          Hasura Metadata Status
-        </h2>
+        <h2 className={styles.headerText}>Hasura Metadata Status</h2>
         {content()}
       </div>
     </div>
