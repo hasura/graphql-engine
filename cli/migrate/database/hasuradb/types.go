@@ -152,7 +152,7 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 	case createRemoteRelationship:
 		q.Args = &createRemoteRelationshipInput{}
 	case updateRemoteRelationship:
-		q.Args = &updateRemoteRelationshipInput{}
+		q.Args = &createRemoteRelationshipInput{}
 	default:
 		return fmt.Errorf("cannot squash type %s", q.Type)
 	}
