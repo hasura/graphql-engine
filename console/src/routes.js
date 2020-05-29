@@ -3,11 +3,13 @@ import { Route, IndexRoute, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
-import { App, Main, PageNotFound } from 'components';
-
 import globals from './Globals';
 
+import { App, Main, PageNotFound } from 'components';
+
 import validateLogin from './utils/validateLogin';
+
+import { requireAsyncGlobals } from './components/App/Actions';
 
 import { composeOnEnterHooks } from 'utils/router';
 
@@ -103,7 +105,14 @@ const routes = store => {
   );
 
   return (
-    <Route path="/" component={App} onEnter={validateLogin(store)}>
+    <Route
+      path="/"
+      component={App}
+      onEnter={composeOnEnterHooks([
+        validateLogin(store),
+        requireAsyncGlobals(store),
+      ])}
+    >
       <Route path="login" component={generatedLoginConnector(connect)} />
       <Route
         path=""
