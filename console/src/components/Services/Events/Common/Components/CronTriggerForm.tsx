@@ -102,6 +102,7 @@ const Form: React.FC<Props> = props => {
       </FormSection>
       <CollapsibleToggle
         title={<h2 className={styles.subheading_text}>Advanced</h2>}
+        testId="advanced-configuration"
       >
         <FormSection
           id="trigger-headers"

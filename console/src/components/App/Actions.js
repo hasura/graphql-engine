@@ -1,4 +1,6 @@
 import defaultState from './State';
+import { loadConsoleOpts } from '../../telemetry/Actions';
+import { fetchServerConfig } from '../Main/Actions';
 
 const LOAD_REQUEST = 'App/ONGOING_REQUEST';
 const DONE_REQUEST = 'App/DONE_REQUEST';
@@ -21,6 +23,15 @@ const CONNECTION_FAILED = 'App/CONNECTION_FAILED';
  * onRemove: function, null, same as onAdd
  * uid: integer/string, null, unique identifier to the notification, same uid will not be shown again
  */
+
+export const requireAsyncGlobals = ({ dispatch }) => {
+  return (nextState, finalState, callback) => {
+    Promise.all([
+      dispatch(loadConsoleOpts()),
+      dispatch(fetchServerConfig()),
+    ]).finally(callback);
+  };
+};
 
 const progressBarReducer = (state = defaultState, action) => {
   switch (action.type) {
@@ -69,6 +80,7 @@ const progressBarReducer = (state = defaultState, action) => {
         ...state,
         modalOpen: true,
         error: true,
+        ongoingRequest: false,
         connectionFailed: true,
       };
     default:

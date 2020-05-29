@@ -5,6 +5,7 @@ import { RouterAction } from 'react-router-redux';
 import { Table, Schema } from './components/Common/utils/pgUtils';
 import { EventsState } from './components/Services/Events/state';
 import { RAEvents } from './components/Services/Events/types';
+import { TelemetryState } from './telemetry/state'
 
 // Redux Utils
 export type ReduxState = {
@@ -16,7 +17,9 @@ export type ReduxState = {
   events: EventsState;
   main: {
     readOnlyMode: boolean;
+    serverVersion: string
   };
+  telemetry: TelemetryState
 };
 export type ReduxAction = RAEvents | RouterAction;
 export type MapStateToProps<

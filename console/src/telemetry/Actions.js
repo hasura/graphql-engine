@@ -1,12 +1,16 @@
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import requestAction from '../utils/requestAction';
 import dataHeaders from '../components/Services/Data/Common/Headers';
-import defaultTelemetryState from './State';
-import { getRunSqlQuery } from '../components/Common/utils/v1QueryUtils';
+import defaultTelemetryState from './state';
+import {
+  getRunSqlQuery,
+  getConsoleOptsQuery,
+} from '../components/Common/utils/v1QueryUtils';
 import {
   showErrorNotification,
   showSuccessNotification,
 } from '../components/Services/Common/Notification';
+import globals from '../Globals';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
@@ -98,23 +102,14 @@ const setPreReleaseNotificationOptOutInDB = () => dispatch => {
   return dispatch(setConsoleOptsInDB(opts, successCb, errorCb));
 };
 
-const loadConsoleOpts = () => {
+export const loadConsoleOpts = () => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
     const options = {
       credentials: globalCookiePolicy,
       method: 'POST',
       headers: dataHeaders(getState),
-      body: JSON.stringify({
-        type: 'select',
-        args: {
-          table: {
-            name: 'hdb_version',
-            schema: 'hdb_catalog',
-          },
-          columns: ['hasura_uuid', 'console_state'],
-        },
-      }),
+      body: JSON.stringify(getConsoleOptsQuery()),
     };
 
     return dispatch(requestAction(url, options)).then(
@@ -124,19 +119,32 @@ const loadConsoleOpts = () => {
             type: SET_HASURA_UUID,
             data: data[0].hasura_uuid,
           });
+          globals.hasuraUUID = data[0].hasura_uuid;
           dispatch({
             type: SET_CONSOLE_OPTS,
             data: data[0].console_state,
           });
+          globals.telemetryNotificationShown =
+            data[0].console_state.telemetryNotificationShown;
         }
+        return Promise.resolve();
       },
       error => {
         console.error(
           'Failed to load console options: ' + JSON.stringify(error)
         );
+        return Promise.reject();
       }
     );
   };
+};
+
+export const requireConsoleOpts = ({ dispatch }) => (
+  nextState,
+  replaceState,
+  callback
+) => {
+  dispatch(loadConsoleOpts()).finally(callback);
 };
 
 const telemetryReducer = (state = defaultTelemetryState, action) => {
@@ -168,7 +176,6 @@ const telemetryReducer = (state = defaultTelemetryState, action) => {
 
 export default telemetryReducer;
 export {
-  loadConsoleOpts,
   telemetryNotificationShown,
   setPreReleaseNotificationOptOutInDB,
   setTelemetryNotificationShownInDB,

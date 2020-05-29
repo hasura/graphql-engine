@@ -3,8 +3,7 @@
   "env": {
     "browser": true,
     "node": true,
-    "mocha": true,
-    "cypress/globals": true
+    "mocha": true
   },
   "parser": "babel-eslint",
   "rules": {
@@ -87,7 +86,7 @@
     "eqeqeq": 0,
     "no-nested-ternary": 0
   },
-  "plugins": ["react", "import", "cypress", "@typescript-eslint/eslint-plugin"],
+  "plugins": ["react", "import", "@typescript-eslint/eslint-plugin"],
   "settings": {
     "import/resolve": {
       "moduleDirectory": ["node_modules", "src"]
@@ -168,6 +167,8 @@
         "jsx-a11y/no-static-element-interactions": "off",
         "no-new": "off",
         "no-nested-ternary": "off",
+        "jsx-a11y/interactive-supports-focus": "off",
+        "no-restricted-properties": "off",
         "react/no-danger": "off",
         "react/no-array-index-key": "off"
       }

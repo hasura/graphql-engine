@@ -3,31 +3,39 @@ import moment from 'moment';
 // TODO: make functions from this file available without imports
 /* TYPE utils */
 
-export const isNotDefined = (value: any) => {
+export const isNotDefined = (value: unknown) => {
   return value === null || value === undefined;
 };
 
 /*
  * Deprecated: Use "isNull" instead
  */
-export const exists = (value: any) => {
+export const exists = (value: unknown) => {
   return value !== null && value !== undefined;
 };
 
-export const isArray = (value: any) => {
+export const isArray = (value: unknown) => {
   return Array.isArray(value);
 };
 
-export const isObject = (value: any) => {
+export const isObject = (value: unknown) => {
   return typeof value === 'object' && value !== null;
 };
 
-export const isString = (value: any) => {
+export const isString = (value: unknown) => {
   return typeof value === 'string';
 };
 
-export const isNumber = (value: any) => {
+export const isNumber = (value: unknown) => {
   return typeof value === 'number';
+};
+
+export const isFloat = (value: unknown) => {
+  return typeof value === 'number' && value % 1 !== 0;
+};
+
+export const isBoolean = (value: unknown) => {
+  return typeof value === 'boolean';
 };
 
 export const isPromise = (value: any) => {
@@ -223,7 +231,8 @@ export const getConfirmation = (
 export const uploadFile = (
   fileHandler: (s: string | ArrayBufferLike | null) => void,
   fileFormat: string | null,
-  invalidFileHandler: any
+  invalidFileHandler: any,
+  errorCallback?: (title: string, subTitle: string, details?: any) => void
 ) => {
   const fileInputElement = document.createElement('div');
   fileInputElement.innerHTML = '<input style="display:none" type="file">';
@@ -244,8 +253,12 @@ export const uploadFile = (
         if (invalidFileHandler) {
           invalidFileHandler(fileName);
         } else {
-          // TODO
-          alert(`Invalid file format: Expected a ${expectedFileSuffix} file`);
+          if (errorCallback) {
+            errorCallback(
+              'Invalid file format',
+              `Expected a ${expectedFileSuffix} file`
+            );
+          }
         }
 
         fileInputElement.remove();

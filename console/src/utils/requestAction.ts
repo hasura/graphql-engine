@@ -8,6 +8,7 @@ import {
   DONE_REQUEST,
   FAILED_REQUEST,
   ERROR_REQUEST,
+  CONNECTION_FAILED,
 } from '../components/App/Actions';
 import { globalCookiePolicy } from '../Endpoints';
 
@@ -78,7 +79,7 @@ const requestAction = (
         },
         error => {
           console.error('Request error: ', error);
-          dispatch({ type: FAILED_REQUEST });
+          dispatch({ type: CONNECTION_FAILED });
           if (ERROR) {
             dispatch({
               type: ERROR,

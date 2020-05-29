@@ -41,6 +41,9 @@ const globals = {
   featuresCompatibility: window.__env.serverVersion
     ? getFeaturesCompatibility(window.__env.serverVersion)
     : null,
+  cliUUID: window.__env.cliUUID,
+  hasuraUUID: '',
+  telemetryNotificationShown: '',
   isProduction,
 };
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {

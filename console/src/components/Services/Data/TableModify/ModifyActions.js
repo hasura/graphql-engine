@@ -8,7 +8,6 @@ import {
   LOAD_SCHEMA,
 } from '../DataActions';
 import _push from '../push';
-import { SET_SQL } from '../RawSQL/Actions';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -71,6 +70,7 @@ const DELETE_PK_WARNING =
 
 const VIEW_DEF_REQUEST_SUCCESS = 'ModifyTable/VIEW_DEF_REQUEST_SUCCESS';
 const VIEW_DEF_REQUEST_ERROR = 'ModifyTable/VIEW_DEF_REQUEST_ERROR';
+const SET_VIEW_DEF_SQL = 'ModifyTable/SET_VIEW_DEF_SQL';
 
 const SAVE_NEW_TABLE_NAME = 'ModifyTable/SAVE_NEW_TABLE_NAME';
 
@@ -965,7 +965,7 @@ WHERE c.relname = '${viewName}'
             ' AS \n' +
             finalDef;
         }
-        dispatch({ type: SET_SQL, data: runSqlDef });
+        dispatch({ type: SET_VIEW_DEF_SQL, data: runSqlDef });
       },
       err => {
         dispatch(
@@ -2367,6 +2367,7 @@ export {
   FETCH_COLUMN_TYPE_CASTS_FAIL,
   VIEW_DEF_REQUEST_SUCCESS,
   VIEW_DEF_REQUEST_ERROR,
+  SET_VIEW_DEF_SQL,
   SET_COLUMN_EDIT,
   TABLE_COMMENT_EDIT,
   TABLE_COMMENT_INPUT_EDIT,

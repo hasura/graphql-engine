@@ -1,34 +1,38 @@
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
 import ProgressBar from 'react-progress-bar-plus';
 import Notifications from 'react-notification-system-redux';
 import { hot } from 'react-hot-loader';
 import { ThemeProvider } from 'styled-components';
 import ErrorBoundary from '../Error/ErrorBoundary';
-import {
-  loadConsoleOpts,
-  telemetryNotificationShown,
-} from '../../telemetry/Actions';
+import { telemetryNotificationShown } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
+import globals from '../../Globals';
+import styles from './App.scss';
 
 import { theme } from '../UIKit/theme';
 
-class App extends Component {
-  componentDidMount() {
-    const { dispatch } = this.props;
+export const GlobalContext = React.createContext(globals);
 
-    // Hide the loader once the react component is ready.
-    // NOTE: This will execute only once (since this is the parent component for all other components).
+const App = ({
+  ongoingRequest,
+  percent,
+  intervalTime,
+  children,
+  notifications,
+  connectionFailed,
+  dispatch,
+  metadata,
+  telemetry,
+}) => {
+  React.useEffect(() => {
     const className = document.getElementById('content').className;
     document.getElementById('content').className = className + ' show';
     document.getElementById('loading').style.display = 'none';
+  }, []);
 
-    dispatch(loadConsoleOpts());
-  }
-
-  componentDidUpdate() {
-    const { telemetry, dispatch } = this.props;
+  React.useEffect(() => {
     if (
       telemetry.console_opts &&
       !telemetry.console_opts.telemetryNotificationShown
@@ -36,44 +40,25 @@ class App extends Component {
       dispatch(telemetryNotificationShown());
       dispatch(showTelemetryNotification());
     }
+  }, [telemetry]);
+
+  let connectionFailMsg = null;
+  if (connectionFailed) {
+    connectionFailMsg = (
+      <div
+        className={`${styles.alertDanger} ${styles.remove_margin_bottom} alert alert-danger `}
+      >
+        <strong>
+          Hasura console is not able to reach your Hasura GraphQL engine
+          instance. Please ensure that your instance is running and the endpoint
+          is configured correctly.
+        </strong>
+      </div>
+    );
   }
 
-  render() {
-    const styles = require('./App.scss');
-    const {
-      requestError,
-      error,
-      ongoingRequest,
-      percent,
-      intervalTime,
-      children,
-      notifications,
-      connectionFailed,
-      dispatch,
-      metadata,
-    } = this.props;
-
-    if (requestError && error) {
-      // console.error(requestError, error);
-    }
-
-    let connectionFailMsg = null;
-    if (connectionFailed) {
-      connectionFailMsg = (
-        <div
-          style={{ marginBottom: '0px' }}
-          className={styles.alertDanger + ' alert alert-danger'}
-        >
-          <strong>
-            Hasura console is not able to reach your Hasura GraphQL engine
-            instance. Please ensure that your instance is running and the
-            endpoint is configured correctly.
-          </strong>
-        </div>
-      );
-    }
-
-    return (
+  return (
+    <GlobalContext.Provider value={globals}>
       <ThemeProvider theme={theme}>
         <ErrorBoundary metadata={metadata} dispatch={dispatch}>
           <div>
@@ -91,18 +76,16 @@ class App extends Component {
           </div>
         </ErrorBoundary>
       </ThemeProvider>
-    );
-  }
-}
+    </GlobalContext.Provider>
+  );
+};
 
 App.propTypes = {
   reqURL: PropTypes.string,
   reqData: PropTypes.object,
   statusCode: PropTypes.number,
 
-  error: PropTypes.object,
   ongoingRequest: PropTypes.bool,
-  requestError: PropTypes.bool,
   connectionFailed: PropTypes.bool,
 
   intervalTime: PropTypes.number,
