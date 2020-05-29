@@ -21,7 +21,7 @@ const FREQ_USED_CRONS = [
   },
   {
     name: 'Every friday noon',
-    value: '0 12 ',
+    value: '0 12 * * 5',
   },
 ];
 
