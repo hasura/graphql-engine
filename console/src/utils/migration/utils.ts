@@ -1,0 +1,257 @@
+import {
+  generateTableDef,
+  findTable,
+  getTableCustomColumnNames,
+  getTableCustomRootFields,
+} from '../../components/Common/utils/pgUtils';
+import { isColumnUnique } from '../../components/Services/Data/TableModify/ModifyActions';
+import {
+  getRunSqlQuery,
+  getSetCustomRootFieldsQuery,
+} from '../../components/Common/utils/v1QueryUtils';
+import {
+  isColTypeString,
+  isPostgresFunction,
+} from '../../components/Services/Data/utils';
+import gqlPattern from '../../components/Services/Data/Common/GraphQLValidation';
+import { sqlEscapeText } from '../../components/Common/utils/sqlUtils';
+import Migration from './Migration';
+
+export interface NewColumnType {
+  tableName: string;
+  type: string;
+  isNullable: boolean;
+  isUnique: boolean;
+  default?: string;
+  comment?: string;
+  name: string;
+  schemaName?: string;
+  customFieldName?: string;
+}
+const parseNewCol = (newColumn: NewColumnType) => ({
+  tableName: newColumn.tableName,
+  colType: newColumn.type,
+  nullable: newColumn.isNullable,
+  unique: newColumn.isUnique,
+  colDefault: (newColumn.default || '').trim(),
+  comment: (newColumn.comment || '').trim(),
+  newName: newColumn.name.trim(),
+  currentSchema: newColumn.schemaName,
+  customFieldName: (newColumn.customFieldName || '').trim(),
+});
+
+interface OldColumnType {
+  udt_name: string;
+  data_type: string;
+  column_default: string | null;
+  comment: string | null;
+  is_nullable?: string;
+}
+const parseOldColumns = (oldColumn: OldColumnType) => ({
+  originalColType: oldColumn.udt_name, // "value"
+  originalData_type: oldColumn.data_type, // "value"
+  originalColDefault: oldColumn.column_default || '', // null or "value"
+  originalColComment: oldColumn.comment || '', // null or "value"
+  originalColNullable: oldColumn.is_nullable, // "YES" or "NO"
+});
+
+// utility to compare old & new columns and generate up &down migrations
+export const getColumnUpdateMigration = (
+  oldColumn: OldColumnType,
+  newColumn: NewColumnType,
+  colName: string,
+  allSchemas: [],
+  onInalidGqlColName: () => void
+) => {
+  const {
+    tableName,
+    colType,
+    nullable,
+    unique,
+    colDefault,
+    comment,
+    newName,
+    currentSchema,
+    customFieldName,
+  } = parseNewCol(newColumn);
+
+  const tableDef = generateTableDef(tableName, currentSchema);
+  const table = findTable(allSchemas, tableDef);
+
+  const {
+    originalColType,
+    originalData_type,
+    originalColDefault,
+    originalColComment,
+    originalColNullable,
+  } = parseOldColumns(oldColumn);
+
+  const originalColUnique = isColumnUnique(table, colName);
+
+  const ALTER_TABLE = `ALTER TABLE "${currentSchema}"."${tableName}"`;
+  const ALTER_COL = `${ALTER_TABLE} ALTER COLUMN "${colName}"`;
+
+  /* column type up/down migration */
+  const columnChangesUpQuery = `${ALTER_COL} TYPE ${colType};`;
+  const columnChangesDownQuery = `${ALTER_COL} TYPE ${originalData_type};`;
+
+  // instantiate MIgration Helper
+  const migration = new Migration();
+
+  if (originalColType !== colType) {
+    migration.add(
+      getRunSqlQuery(columnChangesUpQuery),
+      getRunSqlQuery(columnChangesDownQuery)
+    );
+  }
+
+  /* column custom field up/down migration */
+  const existingCustomColumnNames = getTableCustomColumnNames(table);
+  const existingRootFields = getTableCustomRootFields(table);
+  const newCustomColumnNames = { ...existingCustomColumnNames };
+  let isCustomFieldNameChanged = false;
+  if (customFieldName) {
+    if (customFieldName !== existingCustomColumnNames[colName]) {
+      isCustomFieldNameChanged = true;
+      newCustomColumnNames[colName] = customFieldName.trim();
+    }
+  } else if (existingCustomColumnNames[colName]) {
+    isCustomFieldNameChanged = true;
+    delete newCustomColumnNames[colName];
+  }
+  if (isCustomFieldNameChanged) {
+    migration.add(
+      getSetCustomRootFieldsQuery(
+        tableDef,
+        existingRootFields,
+        newCustomColumnNames
+      ),
+      getSetCustomRootFieldsQuery(
+        tableDef,
+        existingRootFields,
+        existingCustomColumnNames
+      )
+    );
+  }
+
+  const colDefaultWithQuotes =
+    isColTypeString(colType) && !isPostgresFunction(colDefault)
+      ? `'${colDefault}'`
+      : colDefault;
+  const originalColDefaultWithQuotes =
+    isColTypeString(colType) && !isPostgresFunction(originalColDefault)
+      ? `'${originalColDefault}'`
+      : originalColDefault;
+
+  /* column default up/down migration */
+  let columnDefaultUpQuery;
+  let columnDefaultDownQuery;
+  if (colDefault !== '') {
+    // ALTER TABLE ONLY <table> ALTER COLUMN <column> SET DEFAULT <default>;
+    columnDefaultUpQuery = `ALTER TABLE ONLY "${currentSchema}"."${tableName}" ALTER COLUMN "${colName}" SET DEFAULT ${colDefaultWithQuotes};`;
+  } else {
+    // ALTER TABLE <table> ALTER COLUMN <column> DROP DEFAULT;
+    columnDefaultUpQuery = `${ALTER_COL} DROP DEFAULT;`;
+  }
+
+  if (originalColDefault !== '') {
+    columnDefaultDownQuery = `ALTER TABLE ONLY "${currentSchema}"."${tableName}" ALTER COLUMN "${colName}" SET DEFAULT ${originalColDefaultWithQuotes};`;
+  } else {
+    // there was no default value originally. so drop default.
+    columnDefaultDownQuery = `ALTER TABLE ONLY "${currentSchema}"."${tableName}" ALTER COLUMN "${colName}" DROP DEFAULT;`;
+  }
+
+  // check if default is unchanged and then do a drop. if not skip
+  if (originalColDefault !== colDefault) {
+    migration.add(
+      getRunSqlQuery(columnDefaultUpQuery),
+      getRunSqlQuery(columnDefaultDownQuery)
+    );
+  }
+
+  /* column nullable up/down migration */
+  if (nullable) {
+    // ALTER TABLE <table> ALTER COLUMN <column> DROP NOT NULL;
+    const nullableUpQuery = `${ALTER_COL} DROP NOT NULL;`;
+    const nullableDownQuery = `${ALTER_COL} SET NOT NULL;`;
+    // check with original null
+    if (originalColNullable !== 'YES') {
+      migration.add(
+        getRunSqlQuery(nullableUpQuery),
+        getRunSqlQuery(nullableDownQuery)
+      );
+    }
+  } else {
+    // ALTER TABLE <table> ALTER COLUMN <column> SET NOT NULL;
+    const nullableUpQuery = `${ALTER_COL} SET NOT NULL;`;
+    const nullableDownQuery = `${ALTER_COL} DROP NOT NULL;`;
+    // check with original null
+    if (originalColNullable !== 'NO') {
+      migration.add(
+        getRunSqlQuery(nullableUpQuery),
+        getRunSqlQuery(nullableDownQuery)
+      );
+    }
+  }
+
+  /* column unique up/down migration */
+  if (unique) {
+    const uniqueUpQuery = `${ALTER_TABLE} ADD CONSTRAINT "${tableName}_${colName}_key" UNIQUE ("${colName}")`;
+    const uniqueDownQuery = `${ALTER_TABLE} DROP CONSTRAINT "${tableName}_${colName}_key"`;
+    // check with original unique
+    if (!originalColUnique) {
+      migration.add(
+        getRunSqlQuery(uniqueUpQuery),
+        getRunSqlQuery(uniqueDownQuery)
+      );
+    }
+  } else {
+    const uniqueDownQuery = `${ALTER_TABLE} ADD CONSTRAINT "${tableName}_${colName}_key" UNIQUE ("${colName}")`;
+    const uniqueUpQuery = `${ALTER_TABLE} DROP CONSTRAINT "${tableName}_${colName}_key"`;
+    // check with original unique
+    if (originalColUnique) {
+      migration.add(
+        getRunSqlQuery(uniqueUpQuery),
+        getRunSqlQuery(uniqueDownQuery)
+      );
+    }
+  }
+
+  /* column comment up/down migration */
+  const columnCommentUpQuery = `COMMENT ON COLUMN "${currentSchema}"."${tableName}"."${colName}" IS ${sqlEscapeText(
+    comment
+  )}`;
+
+  const columnCommentDownQuery = `COMMENT ON COLUMN "${currentSchema}"."${tableName}"."${colName}" IS ${sqlEscapeText(
+    originalColComment
+  )}`;
+
+  // check if comment is unchanged and then do an update. if not skip
+  if (originalColComment !== comment) {
+    migration.add(
+      getRunSqlQuery(columnCommentUpQuery),
+      getRunSqlQuery(columnCommentDownQuery)
+    );
+  }
+
+  /* rename column */
+  if (newName && colName !== newName) {
+    if (!gqlPattern.test(newName)) {
+      onInalidGqlColName();
+    }
+    migration.add(
+      getRunSqlQuery(
+        `${ALTER_TABLE} rename column "${colName}" to "${newName}";`
+      ),
+      getRunSqlQuery(
+        `${ALTER_TABLE} rename column "${newName}" to "${colName}";`
+      )
+    );
+  }
+  const migrationName = `alter_table_${currentSchema}_${tableName}_alter_column_${colName}`;
+  return {
+    migrationName,
+    upMigration: migration.upMigration,
+    downMigration: migration.downMigration,
+  };
+};

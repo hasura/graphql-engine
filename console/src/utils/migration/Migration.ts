@@ -4,7 +4,7 @@ export interface RunSQLQueryType {
   args: object | [];
 }
 
-export default class MigrationHelper {
+export default class Migration {
   upMigration: RunSQLQueryType[];
   downMigration: RunSQLQueryType[];
   constructor() {
