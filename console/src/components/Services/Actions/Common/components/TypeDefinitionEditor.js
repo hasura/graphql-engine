@@ -52,6 +52,11 @@ const ActionDefinitionEditor = ({
 
   const errorMessage =
     error && (error.message || 'This is not valid GraphQL SDL');
+  const errorMessageLine =
+    error &&
+    error.locations &&
+    error.locations.length &&
+    ` at line ${error.locations[0].line}, column ${error.locations[0].column} `;
 
   // const handleClonedTypes = types => {
   //   onChange(`${value}\n\n${getTypesSdl(types)}`);
@@ -76,7 +81,7 @@ const ActionDefinitionEditor = ({
           {error && (
             <div className={`${styles.display_flex} ${styles.errorMessage}`}>
               <CrossIcon className={styles.add_mar_right_small} />
-              <div>{errorMessage}</div>
+              <div>{`${errorMessage} ${errorMessageLine}`}</div>
             </div>
           )}
           {/*

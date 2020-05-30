@@ -81,6 +81,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix underscores not being displayed on raw sql page (close #4754) (#4799)
 - console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
 - console: add help button and move about page to settings (#4848)
+- console: display line number that error message originated from in custom types editor (#4849)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
