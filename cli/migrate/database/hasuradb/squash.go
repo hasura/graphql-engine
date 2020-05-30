@@ -29,6 +29,7 @@ func (q CustomQuery) MergeEventTriggers(squashList *database.CustomList) error {
 	next := q.Iterate()
 
 	for item, ok := next(); ok; item, ok = next() {
+		var wasCreated bool
 		g := item.(linq.Group)
 		if g.Key == "" {
 			continue
@@ -53,6 +54,8 @@ func (q CustomQuery) MergeEventTriggers(squashList *database.CustomList) error {
 						}
 						obj.Replace = nil
 					}
+				} else {
+					wasCreated = true
 				}
 				err := eventTriggerTransition.Trigger("create_event_trigger", &evCfg, nil)
 				if err != nil {
@@ -60,6 +63,14 @@ func (q CustomQuery) MergeEventTriggers(squashList *database.CustomList) error {
 				}
 				prevElems = append(prevElems, element)
 			case *deleteEventTriggerInput:
+				if wasCreated {
+					// if this is true it means that a trigger was created
+					// which means their is no point in keeping the delete event trigger around
+					//
+					// otherwise it means that it was only updated so we have to keep
+					// the delete trigger migration
+					prevElems = append(prevElems, element)
+				}
 				err := eventTriggerTransition.Trigger("delete_event_trigger", &evCfg, nil)
 				if err != nil {
 					return err
