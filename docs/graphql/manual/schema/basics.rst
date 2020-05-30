@@ -40,16 +40,81 @@ Let's say we want to create two simple tables for an article/author schema:
 Create tables
 -------------
 
-Open the Hasura console and head to the ``Data`` tab and click the ``Create Table`` button to open up an interface to
-create tables.
+.. rst-class:: api_tabs
+.. tabs::
 
-As soon as a table is created, the corresponding GraphQL schema types and query/mutation resolvers will be
-automatically generated.
+  .. tab:: Via console
 
-For example, here is the schema for the ``article`` table in this interface:
+    Open the Hasura console and head to the ``Data`` tab and click the ``Create Table`` button to open up an interface to
+    create tables.
 
-.. thumbnail:: /img/graphql/manual/schema/create-table-graphql.png
-   :alt: Schema for an article table
+    As soon as a table is created, the corresponding GraphQL schema types and query/mutation resolvers will be
+    automatically generated.
+
+    For example, here is the schema for the ``article`` table in this interface:
+
+    .. thumbnail:: /img/graphql/manual/schema/create-table-graphql.png
+      :alt: Schema for an article table
+
+  .. tab:: Via CLI
+
+    You can :ref:`create a migration manually <manual_migrations>` with the following statement:
+
+    .. code-block:: sql
+
+      CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));
+
+    Then apply the migration by running:
+
+    .. code-block:: bash
+
+      hasura migrate apply
+
+    To track the table and expose it over the GraphQL API, edit the ``tables.yaml`` file in the ``metadata`` directory as follows:
+
+    .. code-block:: yaml
+       :emphasize-lines: 4-6
+
+        - table:
+            schema: public
+            name: author
+        - table:
+            schema: public
+            name: article
+
+  .. tab:: Via API
+
+    You can create a table by making an API call to the :ref:`run_sql API <run_sql>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "run_sql",
+          "args": {
+              "sql": "CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));"
+          }
+      }
+
+    To track the table and expose it over the GraphQL API, make the following API call to the :ref:`track_table API <track_table>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "track_table",
+          "args": {
+              "schema": "public",
+              "name": "article"
+          }
+      }
+
 
 The following object type and query/mutation fields are generated for the ``article`` table we just created:
 
@@ -97,82 +162,100 @@ You can insert some sample data into the tables using the ``Insert Row`` tab of 
 
 Try out basic GraphQL queries
 -----------------------------
-At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables
-from the GraphiQL tab in the console (*you may want to add some sample data into the tables first*).
 
-Here are a couple of examples:
+At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables (*you may want to add some sample data into the tables first*).
+
+Here are a couple of examples of GraphQL requests:
 
 - Query all rows in the ``article`` table
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      article {
-        id
-        title
-        author_id
-      }
-    }
-  :response:
-    {
-      "data": {
-        "article": [
-          {
-            "id": 1,
-            "title": "sit amet",
-            "author_id": 4
-          },
-          {
-            "id": 2,
-            "title": "a nibh",
-            "author_id": 2
-          },
-          {
-            "id": 3,
-            "title": "amet justo morbi",
-            "author_id": 4
-          },
-          {
-            "id": 4,
-            "title": "vestibulum ac est",
-            "author_id": 5
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          article {
+            id
+            title
+            author_id
           }
-        ]
-      }
-    }
+        }
+      :response:
+        {
+          "data": {
+            "article": [
+              {
+                "id": 1,
+                "title": "sit amet",
+                "author_id": 4
+              },
+              {
+                "id": 2,
+                "title": "a nibh",
+                "author_id": 2
+              },
+              {
+                "id": 3,
+                "title": "amet justo morbi",
+                "author_id": 4
+              },
+              {
+                "id": 4,
+                "title": "vestibulum ac est",
+                "author_id": 5
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    To do 
 
 - Insert data in the ``author`` table
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation add_author {
-      insert_author(
-        objects: [
-          { name: "Jane" }
-        ]
-      ) {
-        affected_rows
-        returning {
-          id
-          name
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_author": {
-          "affected_rows": 1,
-          "returning": [
-            {
-              "id": 11,
-              "name": "Jane"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation add_author {
+          insert_author(
+            objects: [
+              { name: "Jane" }
+            ]
+          ) {
+            affected_rows
+            returning {
+              id
+              name
             }
-          ]
+          }
         }
-      }
-    }
+      :response:
+        {
+          "data": {
+            "insert_author": {
+              "affected_rows": 1,
+              "returning": [
+                {
+                  "id": 11,
+                  "name": "Jane"
+                }
+              ]
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    TODO
     
 Note that the author's ``id`` does not need to passed as an input as it is of type ``serial`` (auto incrementing integer).
