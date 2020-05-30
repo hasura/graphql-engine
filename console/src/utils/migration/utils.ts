@@ -17,6 +17,8 @@ import gqlPattern from '../../components/Services/Data/Common/GraphQLValidation'
 import { sqlEscapeText } from '../../components/Common/utils/sqlUtils';
 import Migration from './Migration';
 
+// Types
+
 export interface NewColumnType {
   tableName: string;
   type: string;
@@ -28,6 +30,23 @@ export interface NewColumnType {
   schemaName?: string;
   customFieldName?: string;
 }
+
+export interface SchemaType {
+  table_name: string;
+  table_type: string;
+  table_schema: string;
+}
+
+export interface OldColumnType {
+  udt_name: string;
+  data_type: string;
+  column_default: string | null;
+  comment: string | null;
+  is_nullable?: string;
+}
+
+// utils
+
 const parseNewCol = (newColumn: NewColumnType) => ({
   tableName: newColumn.tableName,
   colType: newColumn.type,
@@ -40,13 +59,6 @@ const parseNewCol = (newColumn: NewColumnType) => ({
   customFieldName: (newColumn.customFieldName || '').trim(),
 });
 
-interface OldColumnType {
-  udt_name: string;
-  data_type: string;
-  column_default: string | null;
-  comment: string | null;
-  is_nullable?: string;
-}
 const parseOldColumns = (oldColumn: OldColumnType) => ({
   originalColType: oldColumn.udt_name, // "value"
   originalData_type: oldColumn.data_type, // "value"
@@ -59,8 +71,8 @@ const parseOldColumns = (oldColumn: OldColumnType) => ({
 export const getColumnUpdateMigration = (
   oldColumn: OldColumnType,
   newColumn: NewColumnType,
-  colName: string,
   allSchemas: [],
+  colName: string,
   onInalidGqlColName: () => void
 ) => {
   const {
