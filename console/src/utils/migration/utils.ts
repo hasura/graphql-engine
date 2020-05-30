@@ -18,7 +18,6 @@ import { sqlEscapeText } from '../../components/Common/utils/sqlUtils';
 import Migration from './Migration';
 
 // Types
-
 export interface NewColumnType {
   tableName: string;
   type: string;
