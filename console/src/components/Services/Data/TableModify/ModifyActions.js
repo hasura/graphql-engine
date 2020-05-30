@@ -67,6 +67,7 @@ import {
   getSchemaBaseRoute,
   getTableModifyRoute,
 } from '../../../Common/utils/routesUtils';
+import MigrationHelper from '../../../../utils/MigrationHelper';
 
 const DELETE_PK_WARNING =
   'Without a primary key there is no way to uniquely identify a row of a table';
@@ -1493,12 +1494,16 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     /* column type up/down migration */
     const columnChangesUpQuery = `ALTER TABLE "${currentSchema}"."${tableName}" ALTER COLUMN "${colName}" TYPE ${colType};`;
     const columnChangesDownQuery = `ALTER TABLE "${currentSchema}"."${tableName}" ALTER COLUMN "${colName}" TYPE ${column.data_type};`;
-    const schemaChangesUp =
-      originalColType !== colType ? [getRunSqlQuery(columnChangesUpQuery)] : [];
-    const schemaChangesDown =
-      originalColType !== colType
-        ? [getRunSqlQuery(columnChangesDownQuery)]
-        : [];
+
+    // instantiate MIgration Helper
+    const migration = new MigrationHelper();
+
+    if (originalColType !== colType) {
+      migration.add(
+        getRunSqlQuery(columnChangesUpQuery),
+        getRunSqlQuery(columnChangesDownQuery)
+      );
+    }
 
     /* column custom field up/down migration*/
     const existingCustomColumnNames = getTableCustomColumnNames(table);
@@ -1517,14 +1522,12 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       }
     }
     if (isCustomFieldNameChanged) {
-      schemaChangesUp.push(
+      migration.add(
         getSetCustomRootFieldsQuery(
           tableDef,
           existingRootFields,
           newCustomColumnNames
-        )
-      );
-      schemaChangesDown.push(
+        ),
         getSetCustomRootFieldsQuery(
           tableDef,
           existingRootFields,
@@ -1562,8 +1565,10 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
 
     // check if default is unchanged and then do a drop. if not skip
     if (originalColDefault !== colDefault) {
-      schemaChangesUp.push(getRunSqlQuery(columnDefaultUpQuery));
-      schemaChangesDown.push(getRunSqlQuery(columnDefaultDownQuery));
+      migration.add(
+        getRunSqlQuery(columnDefaultUpQuery),
+        getRunSqlQuery(columnDefaultDownQuery)
+      );
     }
 
     /* column nullable up/down migration */
@@ -1573,8 +1578,10 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       const nullableDownQuery = `ALTER TABLE "${currentSchema}"."${tableName}" ALTER COLUMN "${colName}" SET NOT NULL;`;
       // check with original null
       if (originalColNullable !== 'YES') {
-        schemaChangesUp.push(getRunSqlQuery(nullableUpQuery));
-        schemaChangesDown.push(getRunSqlQuery(nullableDownQuery));
+        migration.add(
+          getRunSqlQuery(nullableUpQuery),
+          getRunSqlQuery(nullableDownQuery)
+        );
       }
     } else {
       // ALTER TABLE <table> ALTER COLUMN <column> SET NOT NULL;
@@ -1582,8 +1589,10 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       const nullableDownQuery = `ALTER TABLE "${currentSchema}"."${tableName}" ALTER COLUMN "${colName}" DROP NOT NULL;`;
       // check with original null
       if (originalColNullable !== 'NO') {
-        schemaChangesUp.push(getRunSqlQuery(nullableUpQuery));
-        schemaChangesDown.push(getRunSqlQuery(nullableDownQuery));
+        migration.add(
+          getRunSqlQuery(nullableUpQuery),
+          getRunSqlQuery(nullableDownQuery)
+        );
       }
     }
 
@@ -1593,16 +1602,20 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       const uniqueDownQuery = `ALTER TABLE "${currentSchema}"."${tableName}" DROP CONSTRAINT "${tableName}_${colName}_key"`;
       // check with original unique
       if (!originalColUnique) {
-        schemaChangesUp.push(getRunSqlQuery(uniqueUpQuery));
-        schemaChangesDown.push(getRunSqlQuery(uniqueDownQuery));
+        migration.add(
+          getRunSqlQuery(uniqueUpQuery),
+          getRunSqlQuery(uniqueDownQuery)
+        );
       }
     } else {
       const uniqueDownQuery = `ALTER TABLE "${currentSchema}"."${tableName}" ADD CONSTRAINT "${tableName}_${colName}_key" UNIQUE ("${colName}")`;
       const uniqueUpQuery = `ALTER TABLE "${currentSchema}"."${tableName}" DROP CONSTRAINT "${tableName}_${colName}_key"`;
       // check with original unique
       if (originalColUnique) {
-        schemaChangesUp.push(getRunSqlQuery(uniqueUpQuery));
-        schemaChangesDown.push(getRunSqlQuery(uniqueDownQuery));
+        migration.add(
+          getRunSqlQuery(uniqueUpQuery),
+          getRunSqlQuery(uniqueDownQuery)
+        );
       }
     }
 
@@ -1617,8 +1630,10 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
 
     // check if comment is unchanged and then do an update. if not skip
     if (originalColComment !== comment) {
-      schemaChangesUp.push(getRunSqlQuery(columnCommentUpQuery));
-      schemaChangesDown.push(getRunSqlQuery(columnCommentDownQuery));
+      migration.add(
+        getRunSqlQuery(columnCommentUpQuery),
+        getRunSqlQuery(columnCommentDownQuery)
+      );
     }
 
     /* rename column */
@@ -1632,12 +1647,10 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
           )
         );
       }
-      schemaChangesUp.push(
+      migration.add(
         getRunSqlQuery(
           `alter table "${currentSchema}"."${tableName}" rename column "${colName}" to "${newName}";`
-        )
-      );
-      schemaChangesDown.push(
+        ),
         getRunSqlQuery(
           `alter table "${currentSchema}"."${tableName}" rename column "${newName}" to "${colName}";`
         )
@@ -1656,16 +1669,14 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       onSuccess();
     };
     const customOnError = () => {};
+    console.error(migration);
 
-    // ! Reverse the downmigrationchanges
-    schemaChangesDown.reverse();
-
-    if (schemaChangesUp.length > 0) {
+    if (migration.hasValue()) {
       makeMigrationCall(
         dispatch,
         getState,
-        schemaChangesUp,
-        schemaChangesDown,
+        migration.upMigration,
+        migration.downMigration,
         migrationName,
         customOnSuccess,
         customOnError,
