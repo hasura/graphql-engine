@@ -142,8 +142,18 @@ class GraphiQLWrapper extends Component {
 
     const handleClearHistory = () => {
       try {
+        // not clearing the favourites: graphiql:favorites
         localStorage.removeItem('graphiql:queries');
         localStorage.removeItem('graphiql:query');
+
+        // hack to clear history panel by triggering update.
+        graphiqlContext._queryHistory.historyStore.items = [];
+        const { query, variables, operationName } = graphiqlContext.state;
+        graphiqlContext._queryHistory.updateHistory(
+          query,
+          variables,
+          operationName
+        );
       } catch (e) {
         dispatch(showErrorNotification('Unable to clear history', e.message));
         return;
