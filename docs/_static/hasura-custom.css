@@ -105,6 +105,7 @@ ul {
 }
 .bannerStripWrapper .bannerStripImg img {
   max-height: 56px;
+  opacity: .4;
 }
 .bannerStripWrapper .bannerStrip
 {

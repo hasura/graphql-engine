@@ -3,15 +3,14 @@ const fromCommand = require('./from/command');
 
 const command = (subCommands) => {
   const rootSubCommand = subCommands[0];
-  switch(rootSubCommand) {
+  switch (rootSubCommand) {
     case 'to':
       const toSubCommands = subCommands.slice(1);
-      return toCommand(toSubCommands)
+      return toCommand(toSubCommands);
     case 'from':
       const fromSubCommands = subCommands.slice(1);
       return fromCommand(fromSubCommands);
     default:
-      return;
   }
 };
 
