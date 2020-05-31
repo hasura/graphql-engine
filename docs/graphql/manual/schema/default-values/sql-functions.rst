@@ -37,10 +37,46 @@ Step 1: Modify the table
 
 Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 
-Open the console and head to ``Data -> sql_function_table -> Modify``:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. thumbnail:: /img/graphql/manual/schema/modify-sql-fn-table.png
-   :alt: Modify the table
+  .. tab:: Via console
+
+    Open the console and head to ``Data -> sql_function_table -> Modify``:
+
+    .. thumbnail:: /img/graphql/manual/schema/modify-sql-fn-table.png
+      :alt: Modify the table
+
+  .. tab:: Via CLI
+
+    You can :ref:`create a migration manually <manual_migrations>` with the following statement:
+
+    .. code-block:: SQL
+
+      ALTER TABLE "public"."sql_function_table" ALTER COLUMN "output" DROP NOT NULL;
+
+    Then apply the migration by running:
+
+    .. code-block:: bash
+
+      hasura migrate apply
+
+  .. tab:: Via API
+
+    You can modify a table column by making an API call to the :ref:`run_sql API <run_sql>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "run_sql",
+          "args": {
+              "sql": "ALTER TABLE sql_function_table ALTER COLUMN output DROP NOT NULL;"
+          }
+      }
 
 Step 2: Create a trigger
 ------------------------
@@ -60,10 +96,42 @@ the ``output`` field whenever an insert or update is made to the ``sql_function_
      CREATE TRIGGER test_trigger BEFORE INSERT OR UPDATE ON sql_function_table
          FOR EACH ROW EXECUTE PROCEDURE test_func();
 
-Head to ``Data -> SQL`` and run the above SQL:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. thumbnail:: /img/graphql/manual/schema/create-trigger.png
-   :alt: Create a trigger with SQL
+  .. tab:: Via console
+
+    Head to ``Data -> SQL`` and run the above SQL:
+
+    .. thumbnail:: /img/graphql/manual/schema/create-trigger.png
+      :alt: Create a trigger with SQL
+
+  .. tab:: Via CLI
+
+    You can :ref:`create a migration manually <manual_migrations>` with above SQL.
+
+    Then apply the migration by running:
+
+    .. code-block:: bash
+
+      hasura migrate apply
+
+  .. tab:: Via API
+
+    You can create a trigger by making an API call to the :ref:`run_sql API <run_sql>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "run_sql",
+          "args": {
+              "sql": "<above SQL>"
+          }
+      }
 
 Step 3: Run an insert mutation
 ------------------------------
@@ -71,34 +139,43 @@ Step 3: Run an insert mutation
 Run a mutation to insert an object with (input = "yabba dabba doo!", output=null) and you'll see the output
 value (output="YABBA DABBA DOO!") will be set automatically.
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation {
-      insert_sql_function_table (
-        objects: [
-          {input: "yabba dabba doo!"}
-        ]
-      ) {
-        returning {
-          input
-          output
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_sql_function_table": {
-          "returning": [
-            {
-              "input": "yabba dabba doo!",
-              "output": "YABBA DABBA DOO!"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation {
+          insert_sql_function_table (
+            objects: [
+              {input: "yabba dabba doo!"}
+            ]
+          ) {
+            returning {
+              input
+              output
             }
-          ]
+          }
         }
-      }
-    }
+      :response:
+        {
+          "data": {
+            "insert_sql_function_table": {
+              "returning": [
+                {
+                  "input": "yabba dabba doo!",
+                  "output": "YABBA DABBA DOO!"
+                }
+              ]
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    TODO
 
 Also see
 --------
