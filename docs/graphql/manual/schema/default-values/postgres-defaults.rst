@@ -28,27 +28,79 @@ Step 1: Modify the table
 
 Edit the ``created_at`` field and set its default value as the SQL function ``now()``.
 
-Open the console and head to ``Data -> article -> Modify``:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. thumbnail:: /img/graphql/manual/schema/add-default-value.png
-   :alt: Modify the table in the console
+  .. tab:: Via console
 
-.. admonition:: To set an auto-incrementing default value
+    Open the console and head to ``Data -> article -> Modify``:
 
-  To set a default value as an auto-incrementing integer you first need to set up a ``sequence`` which will be the
-  source of our default value.
+    .. thumbnail:: /img/graphql/manual/schema/add-default-value.png
+      :alt: Modify the table in the console
 
-  Let's say we have a field called ``roll_number`` which we would like to be set by default as an auto-incremented
-  integer.
+    .. admonition:: To set an auto-incrementing default value
 
-  Head to ``Data -> SQL`` and run the following SQL command to create a new sequence.
+      To set a default value as an auto-incrementing integer you first need to set up a ``sequence`` which will be the
+      source of our default value.
 
-  .. code-block:: SQL
+      Let's say we have a field called ``roll_number`` which we would like to be set by default as an auto-incremented
+      integer.
 
-    CREATE SEQUENCE roll_number_seq;
+      Head to ``Data -> SQL`` and run the following SQL command to create a new sequence.
 
-  Now set the default value of the ``roll_number`` field as ``nextval('roll_number_seq')``.
+      .. code-block:: SQL
 
+        CREATE SEQUENCE roll_number_seq;
+
+      Now set the default value of the ``roll_number`` field as ``nextval('roll_number_seq')``.
+
+  .. tab:: Via CLI
+
+    You can :ref:`create a migration manually <manual_migrations>` with the following statement:
+
+    .. code-block:: SQL
+
+      ALTER TABLE ONLY "public"."article" ALTER COLUMN "created_at" SET DEFAULT now();
+
+    Then apply the migration by running:
+
+    .. code-block:: bash
+
+      hasura migrate apply
+
+    .. admonition:: To set an auto-incrementing default value
+
+      To set a default value as an auto-incrementing integer you first need to set up a ``sequence`` which will be the
+      source of our default value.
+
+      Let's say we have a field called ``roll_number`` which we would like to be set by default as an auto-incremented
+      integer.
+
+      :ref:`Create a migration manually <manual_migrations>` with the following statement:
+
+      .. code-block:: SQL
+
+        CREATE SEQUENCE roll_number_seq;
+
+      Now set the default value of the ``roll_number`` field as ``nextval('roll_number_seq')``.
+
+  .. tab:: Via API
+
+    You can add a default value by making an API call to the :ref:`run_sql API <run_sql>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "run_sql",
+          "args": {
+              "sql": "ALTER TABLE article ALTER COLUMN created_at SET DEFAULT now();"
+          }
+      }
+    
 
 Step 2: Run an insert mutation
 ------------------------------
@@ -56,38 +108,47 @@ Step 2: Run an insert mutation
 Now if you do not pass the ``created_at`` field value while running an insert mutation on the ``article`` table, its
 value will be set automatically by Postgres.
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation {
-      insert_article(
-        objects: [
-          {
-            title: "GraphQL manual",
-            author_id: 11
-          }
-        ]) {
-        returning {
-          id
-          title
-          created_at
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_article": {
-          "returning": [
-            {
-              "id": 12,
-              "title": "GraphQL manual",
-              "created_at": "2020-04-23T11:42:30.499315+00:00"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation {
+          insert_article(
+            objects: [
+              {
+                title: "GraphQL manual",
+                author_id: 11
+              }
+            ]) {
+            returning {
+              id
+              title
+              created_at
             }
-          ]
+          }
         }
-      }
-    }
+      :response:
+        {
+          "data": {
+            "insert_article": {
+              "returning": [
+                {
+                  "id": 12,
+                  "title": "GraphQL manual",
+                  "created_at": "2020-04-23T11:42:30.499315+00:00"
+                }
+              ]
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    TODO
 
 Also see
 --------
