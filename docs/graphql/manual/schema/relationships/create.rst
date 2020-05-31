@@ -251,7 +251,7 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
 
   .. tab:: Via API
 
-    You can create an object relationship by making an API call to the :ref:`create_object_relationship API <create_object_relationship>`:
+    You can create an array relationship by making an API call to the :ref:`create_array_relationship API <create_array_relationship>`:
 
     .. code-block:: http
 

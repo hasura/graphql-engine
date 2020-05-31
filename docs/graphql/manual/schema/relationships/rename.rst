@@ -14,9 +14,57 @@ Renaming relationships
 
 To rename a relationship:
 
-- Head to ``Data -> [table-name] -> Relationships`` in the console
-- Drop the existing relationship
-- Recreate the relationship with the new name
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    - Head to ``Data -> [table-name] -> Relationships`` in the console
+    - Drop the existing relationship
+    - Recreate the relationship with the new name
+
+  .. tab:: Via CLI
+
+    You can rename a relationship by changing the relationship name in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+       :emphasize-lines: 5
+
+        - table:
+            schema: public
+            name: article
+          object_relationships:
+          - name: author
+            using:
+              foreign_key_constraint_on: author_id
+        - table:
+            schema: public
+            name: author
+
+    After that, apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
+  .. tab:: Via API
+
+    You can rename a relationship by making an API call to the :ref:`rename_relationship API <rename_relationship>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "rename_relationship",
+          "args": {
+              "table": "article",
+              "name": "article_details",
+              "new_name": "article_detail"
+          }
+      }
 
 .. note::
 
