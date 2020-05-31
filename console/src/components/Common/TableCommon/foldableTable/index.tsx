@@ -1,26 +1,25 @@
 /* eslint-disable no-param-reassign */
-import React, { ComponentProps } from 'react';
+import React, { ComponentProps, useCallback, useMemo } from 'react';
 import ReactTable from 'react-table';
 
 import styles from '../Table.scss';
+import { exists } from '../../utils/jsUtils';
 
 type FoldIconProps = {
   collapsed: boolean;
   name: string;
 };
 const FoldIcon: React.FC<FoldIconProps> = ({ collapsed, name }) => {
-  let icon;
-  let title;
-
   if (collapsed) {
-    icon = 'fa-caret-right';
-    title = name ? `Expand column "${name}"` : 'Expand column';
-  } else {
-    icon = 'fa-caret-left';
-    title = 'Collapse column';
+    return (
+      <i
+        className="fa fa-caret-right"
+        title={name ? `Expand column "${name}"` : 'Expand column'}
+      />
+    );
   }
 
-  return <i className={`fa ${icon}`} title={title} />;
+  return <i className="fa fa-caret-left" title="Collapse column" />;
 };
 
 type FoldableHeaderProps = {
@@ -58,116 +57,107 @@ const foldedColumn = {
 };
 const foldableOriginalKey = 'original_';
 
+const copyOriginals = (column: Column & { id: string }) => {
+  // Stop copy if the column already copied
+  if (column.original_Header) return column;
+
+  const newColumn = { ...column };
+
+  Object.keys(foldedColumn).forEach(k => {
+    const copiedKey = `${foldableOriginalKey}${k}`;
+
+    if (k === 'Cell') {
+      newColumn[copiedKey] = column[k] ? column[k] : (c: Column) => c.value;
+    } else newColumn[copiedKey] = column[k];
+  });
+
+  // Copy sub Columns
+  if (column.columns && !column.original_Columns) {
+    newColumn.original_Columns = column.columns;
+  }
+
+  // Copy Header
+  if (!column.original_Header) {
+    newColumn.original_Header = column.Header;
+  }
+  return newColumn;
+};
+
+const applyFoldableForColumn = (
+  column: Column,
+  index: number,
+  folded: Record<string, boolean>,
+  onFold: (c: Column) => void
+) => {
+  if (!column.foldable) {
+    return column;
+  }
+
+  const newColumn = copyOriginals({
+    ...column,
+    id: column.id || `col_${index}`,
+  });
+
+  const collapsed = folded[newColumn.id];
+
+  newColumn.Header = () => (
+    <FoldableHeader isFolded={collapsed} onFold={onFold} column={newColumn} />
+  );
+  if (collapsed) {
+    if (column.columns) {
+      newColumn.columns = [foldedColumn];
+      newColumn.width = foldedColumn.width;
+      return newColumn;
+    }
+    return { ...newColumn, ...foldedColumn };
+  }
+  return newColumn;
+};
+
 interface Column extends Record<string, any> {
   Header: React.ReactNode;
   accessor: string;
   id?: string;
   width: number;
+  columns?: typeof foldedColumn[];
 }
 
 export interface FoldableTableProps extends ComponentProps<typeof ReactTable> {
   onFoldChange: (a: Record<string, boolean>) => void;
   folded: Record<string, boolean>;
-  foldableOriginalKey: number;
   columns: Column[];
 }
-class FoldableTable extends React.Component<FoldableTableProps> {
-  static displayName = 'RTFoldableTable';
 
-  onFold = (col: Column) => {
-    if (!col || !col.id) return;
+const FoldableTable: React.FC<FoldableTableProps> = ({
+  onFoldChange,
+  columns: originalCols,
+  folded,
+  ...rest
+}) => {
+  const onFold = useCallback(
+    (col?: Column) => {
+      if (!col || !col.id) return;
 
-    const { onFoldChange } = this.props;
-    const { id } = col;
-
-    const newFold = { ...this.props.folded, [id]: !this.props.folded[id] };
-
-    if (onFoldChange) {
-      onFoldChange(newFold);
-    }
-  };
-
-  copyOriginals = (column: Column) => {
-    // Stop copy if the column already copied
-    if (column.original_Header) return;
-
-    Object.keys(foldedColumn).forEach(k => {
-      const copiedKey = `${foldableOriginalKey}${k}`;
-
-      if (k === 'Cell') {
-        column[copiedKey] = column[k] ? column[k] : (c: Column) => c.value;
-      } else column[copiedKey] = column[k];
-    });
-
-    // Copy sub Columns
-    if (column.columns && !column.original_Columns) {
-      column.original_Columns = column.columns;
-    }
-
-    // Copy Header
-    if (!column.original_Header) {
-      column.original_Header = column.Header;
-    }
-  };
-
-  restoreToOriginal = (column: Column) => {
-    Object.keys(foldedColumn).forEach(k => {
-      // ignore header as handling by foldableHeaderRender
-      if (k === 'Header') return;
-
-      const copiedKey = `${foldableOriginalKey}${k}`;
-      column[k] = column[copiedKey];
-    });
-
-    if (column.columns && column.original_Columns) {
-      column.columns = column.original_Columns;
-    }
-  };
-
-  applyFoldableForColumn = (column: Column) => {
-    const collapsed = column.id && this.props.folded[column.id];
-    if (collapsed) {
-      if (column.columns) {
-        column.columns = [foldedColumn];
-        column.width = foldedColumn.width;
-      } else {
-        Object.assign(column, foldedColumn);
+      if (onFoldChange) {
+        onFoldChange({ ...folded, [col.id]: !folded[col.id] });
       }
-    } else this.restoreToOriginal(column);
-  };
+    },
+    [folded]
+  );
 
-  applyFoldableForColumns = (columns: Column[]) => {
-    return columns.map((col, index) => {
-      if (!col.foldable) return col;
+  const columns = useMemo(
+    () =>
+      originalCols
+        .filter(exists)
+        .map((col, index) =>
+          applyFoldableForColumn(col, index, folded, onFold)
+        ),
+    [originalCols, folded]
+  );
 
-      // If col don't have id then generate id based on index
-      if (!col.id) {
-        col.id = `col_${index}`;
-      }
+  return <ReactTable {...rest} columns={columns} />;
+};
 
-      this.copyOriginals(col);
-      // Replace current header with internal header render.
-      col.Header = () => (
-        <FoldableHeader
-          isFolded={!!(col.id && this.props.folded[col.id])}
-          onFold={this.onFold}
-          column={col}
-        />
-      );
-      // apply foldable
-      this.applyFoldableForColumn(col);
-
-      // return the new column out
-      return col;
-    });
-  };
-
-  render() {
-    const { columns: originalCols, ...rest } = this.props;
-    const columns = this.applyFoldableForColumns([...originalCols]);
-
-    return <ReactTable {...rest} columns={columns} />;
-  }
-}
+FoldableTable.displayName = 'RTFoldableTable';
 
 export default FoldableTable;
