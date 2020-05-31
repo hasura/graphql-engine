@@ -67,7 +67,7 @@ class DragFoldTable extends Component {
   render() {
     const { data, columns, headerTitle } = this.props;
 
-    const cols = columns.map((col, idx) => ({
+    const cols = columns.map(col => ({
       ...col,
       Header: (
         <div
