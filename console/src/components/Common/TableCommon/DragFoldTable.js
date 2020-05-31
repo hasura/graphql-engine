@@ -3,7 +3,7 @@
 import React, { Component } from 'react';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
-import FoldableHoc from './foldableTable';
+import FoldableTable from './foldableTable';
 
 import { isObject, isNotDefined } from '../utils/jsUtils';
 
@@ -86,8 +86,6 @@ class DragFoldTable extends Component {
     this.reorders.forEach(o =>
       cols.splice(o.newOrder, 0, cols.splice(o.defaultOrder, 1)[0])
     );
-
-    const FoldableTable = FoldableHoc(ReactTable);
 
     //render
     return (

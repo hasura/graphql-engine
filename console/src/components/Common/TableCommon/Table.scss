@@ -200,3 +200,13 @@ a.expanded {
   height: 16px;
   margin-bottom: 2px;
 }
+
+.foldButton {
+  cursor: pointer;
+  position: absolute;
+  font-size: 14px;
+  top: calc(50% - 8px);
+  left: 8px;
+  padding: 5px;
+  margin: -5px -5px -5px -5px;
+}
