@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import React, { ComponentProps, useCallback, useMemo } from 'react';
 import ReactTable from 'react-table';
 
