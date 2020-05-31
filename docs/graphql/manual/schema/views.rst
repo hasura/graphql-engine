@@ -28,12 +28,75 @@ Hasura GraphQL engine lets you expose views over the GraphQL API to allow queryi
 Creating & exposing views
 -------------------------
 
-Views can be created using SQL which can be run in the Hasura console:
+.. rst-class:: api_tabs
+.. tabs::
 
-- Head to the ``Data -> SQL`` section of the Hasura console
-- Enter your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__
-- Select the ``Track this`` checkbox to expose the new view over the GraphQL API
-- Hit the ``Run`` button
+  .. tab:: Via console
+
+    Views can be created using SQL which can be run in the Hasura console:
+
+    - Head to the ``Data -> SQL`` section of the Hasura console
+    - Enter your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__
+    - Select the ``Track this`` checkbox to expose the new view over the GraphQL API
+    - Hit the ``Run`` button
+
+  .. tab:: Via CLI
+
+    1. You can :ref:`create a migration manually <manual_migrations>` and add your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__ to it.
+
+    2. Then apply the migration by running:
+
+    .. code-block:: bash
+
+      hasura migrate apply
+
+    3. To track the view and expose it over the GraphQL API, edit the ``tables.yaml`` file in the ``metadata`` directory as follows:
+
+    .. code-block:: yaml
+       :emphasize-lines: 7-9
+
+        - table:
+            schema: public
+            name: author
+        - table:
+            schema: public
+            name: article
+        - table:
+            schema: public
+            name: <name of view>
+
+  .. tab:: Via API
+
+    You can add a view by making an API call to the :ref:`run_sql API <run_sql>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "run_sql",
+          "args": {
+              "sql": "<create view statement>"
+          }
+      }
+
+    To track the view and expose it over the GraphQL API, make the following API call to the :ref:`track_table API <track_table>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "track_table",
+          "args": {
+              "schema": "public",
+              "name": "<name of view>"
+          }
+      }
 
 Use cases
 ---------
