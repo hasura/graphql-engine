@@ -56,7 +56,7 @@ Computed fields whose associated SQL function returns a
 
 The ``author`` table has two ``text`` columns: ``first_name`` and ``last_name``.
 
-Define an SQL function called ``author_full_name``:
+:ref:`Define an SQL function <create_sql_functions>` called ``author_full_name``:
 
 .. code-block:: plpgsql
 
@@ -107,7 +107,7 @@ table to fetch authors along with their articles.
 
 We can make use of computed fields to fetch the author's articles with a search parameter.
 
-Define an SQL function called ``filter_author_articles``:
+:ref:`Define an SQL function <create_sql_functions>` called ``filter_author_articles``:
 
 .. code-block:: plpgsql
 
@@ -179,10 +179,59 @@ Adding a computed field to a table
 
        Console support is available in ``v1.1.0`` and above
 
+  .. tab:: CLI
+
+    You can add a computed field in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+       :emphasize-lines: 4-11
+
+        - table:
+          schema: public
+          name: author
+        computed_fields:
+        - name: full_name
+          definition:
+            function:
+              schema: public
+              name: author_full_name
+            table_argument: null
+          comment: ""
+
+    After that, apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
   .. tab:: API
 
      A computed field can be added to a table using the :ref:`add_computed_field <api_computed_field>`
-     metadata API
+     metadata API:
+
+     .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "add_computed_field",
+          "args": {
+              "table": {
+                  "name": "author",
+                  "schema": "public"
+              },
+              "name": "full_name",
+              "definition": {
+                  "function": {
+                      "name": "author_full_name",
+                      "schema": "public"
+                  },
+                  "table_argument": "author_row"
+              }
+          }
+      }
 
 Computed fields permissions
 ---------------------------
