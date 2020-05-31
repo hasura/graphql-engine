@@ -15,6 +15,13 @@ Synopsis
 
 Manage Hasura plugins.
 
+Plugins can be installed to extend the functionality of Hasura CLI
+An index for all available plugins can be found at 
+https://github.com/hasura/cli-plugins-index
+
+Please open pull requests against this repo to add new plugins
+
+Alias: plugin
 Examples
 ~~~~~~~~
 
@@ -44,6 +51,7 @@ Options inherited from parent commands
 
 ::
 
+      --envfile string      .env filename to load ENV vars from (default ".env")
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)

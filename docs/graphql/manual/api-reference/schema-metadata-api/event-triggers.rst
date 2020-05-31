@@ -105,6 +105,10 @@ Args syntax
      - false
      - [ :ref:`HeaderFromValue <HeaderFromValue>` | :ref:`HeaderFromEnv <HeaderFromEnv>` ]
      - List of headers to be sent with the webhook
+   * - retry_conf
+     - false
+     - RetryConf_
+     - Retry configuration if event delivery fails
    * - replace
      - false
      - Boolean
@@ -271,3 +275,28 @@ EventTriggerColumns
    :class: haskell-pre
 
    "*" | [:ref:`PGColumn`]
+
+.. _RetryConf:
+
+RetryConf
+&&&&&&&&&
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - num_retries
+     - false
+     - Integer
+     - Number of times to retry delivery. Default: 0
+   * - interval_sec
+     - false
+     - Integer
+     - Number of seconds to wait between each retry. Default: 10
+   * - timeout_sec
+     - false
+     - Integer
+     - Number of seconds to wait for response before timing out. Default: 60

@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from '../Common/components/Styles.scss';
-import GraphQLEditor from '../../../Common/AceEditor/SDLEditor';
+import AceEditor from '../../../Common/AceEditor/BaseEditor';
 import Tooltip from '../Common/components/Tooltip';
 
 const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
@@ -29,7 +29,8 @@ const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
           Generate code with delegation to the derived mutation
         </label>
       </div>
-      <GraphQLEditor
+      <AceEditor
+        mode="graphql"
         value={parentMutation}
         width={'600px'}
         height={'200px'}

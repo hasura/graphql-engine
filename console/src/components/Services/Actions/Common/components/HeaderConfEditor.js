@@ -32,15 +32,12 @@ const HandlerEditor = ({
         />
       </h2>
       <div className={`${styles.add_mar_bottom_mid}`}>
-        <label
-          className={`${styles.add_mar_right} ${styles.cursorPointer}`}
-          onClick={toggleForwardClientHeaders}
-        >
+        <label className={`${styles.add_mar_right} ${styles.cursorPointer}`}>
           <input
             type="checkbox"
             checked={forwardClientHeaders}
-            readOnly
-            className={`${styles.add_mar_right_small}`}
+            onChange={toggleForwardClientHeaders}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
           />
           Forward client headers to webhook
         </label>

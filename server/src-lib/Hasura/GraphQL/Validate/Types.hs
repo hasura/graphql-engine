@@ -101,14 +101,10 @@ import qualified Hasura.RQL.Types.Column       as RQL
 
 import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Instances          ()
-import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.RemoteSchema (RemoteSchemaInfo, RemoteSchemaName)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-
--- | Typeclass for equating relevant properties of various GraphQL types defined below
-class EquatableGType a where
-  type EqProps a
-  getEqProps :: a -> EqProps a
 
 typeEq :: (EquatableGType a, Eq (EqProps a)) => a -> a -> Bool
 typeEq a b = getEqProps a == getEqProps b
@@ -168,18 +164,6 @@ mkHsraEnumTyInfo
   -> EnumTyInfo
 mkHsraEnumTyInfo descM ty enumVals =
   EnumTyInfo descM ty enumVals TLHasuraType
-
-data InpValInfo
-  = InpValInfo
-  { _iviDesc   :: !(Maybe G.Description)
-  , _iviName   :: !G.Name
-  , _iviDefVal :: !(Maybe G.ValueConst)
-  , _iviType   :: !G.GType
-  } deriving (Show, Eq, TH.Lift)
-
-instance EquatableGType InpValInfo where
-  type EqProps InpValInfo = (G.Name, G.GType)
-  getEqProps ity = (,) (_iviName ity) (_iviType ity)
 
 fromInpValDef :: G.InputValueDefinition -> InpValInfo
 fromInpValDef (G.InputValueDefinition descM n ty defM) =
@@ -433,7 +417,7 @@ getPossibleObjTypes' tyMap (AOTIFace i) = toObjMap $ mapMaybe previewImplTypeM $
 getPossibleObjTypes' tyMap (AOTUnion u) = toObjMap $ mapMaybe (extrObjTyInfoM tyMap) $ Set.toList $ _utiMemberTypes u
 
 toObjMap :: [ObjTyInfo] -> Map.HashMap G.NamedType ObjTyInfo
-toObjMap objs = foldr (\o -> Map.insert (_otiName o) o) Map.empty objs
+toObjMap = foldr (\o -> Map.insert (_otiName o) o) Map.empty
 
 
 isObjTy :: TypeInfo -> Bool
@@ -642,7 +626,7 @@ fromTyDef tyDef loc = case tyDef of
 
 fromSchemaDoc :: G.SchemaDocument -> TypeLoc -> Either Text TypeMap
 fromSchemaDoc (G.SchemaDocument tyDefs) loc = do
-  let tyMap = mkTyInfoMap $ map (flip fromTyDef loc) tyDefs
+  let tyMap = mkTyInfoMap $ map (`fromTyDef` loc) tyDefs
   validateTypeMap tyMap
   return tyMap
 
@@ -706,6 +690,7 @@ type FragDefMap = Map.HashMap G.Name FragDef
 type AnnVarVals =
   Map.HashMap G.Variable AnnInpVal
 
+-- TODO document me
 data AnnInpVal
   = AnnInpVal
   { _aivType     :: !G.GType
@@ -823,6 +808,9 @@ class (Monad m) => MonadReusability m where
   markNotReusable :: m ()
 
 instance (MonadReusability m) => MonadReusability (ReaderT r m) where
+  recordVariableUse a b = lift $ recordVariableUse a b
+  markNotReusable = lift markNotReusable
+instance (MonadReusability m) => MonadReusability (StateT s m) where
   recordVariableUse a b = lift $ recordVariableUse a b
   markNotReusable = lift markNotReusable
 

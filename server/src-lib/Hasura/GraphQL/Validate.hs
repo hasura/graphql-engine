@@ -13,25 +13,38 @@ module Hasura.GraphQL.Validate
   , validateVariablesForReuse
 
   , isQueryInAllowlist
+
+  , unValidateArgsMap
+  , unValidateField
   ) where
 
 import           Hasura.Prelude
 
 import           Data.Has
+import           Data.Time
 
+import qualified Data.Aeson                             as A
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.HashSet                           as HS
 import qualified Data.Sequence                          as Seq
+import qualified Data.Text                              as T
+import qualified Data.UUID                              as UUID
+import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.QueryCollection
+import           Hasura.SQL.Time
+import           Hasura.SQL.Value
+import           Hasura.RQL.DML.Select.Types
+import           Hasura.GraphQL.Resolve.InputValue      (annInpValueToJson)
 
 data QueryParts
   = QueryParts
@@ -58,8 +71,7 @@ getTypedOp opNameM selSets opDefs =
       throwVE $ "operationName cannot be used when " <>
       "an anonymous operation exists in the document"
     (Nothing, [selSet], []) ->
-      return $ G.TypedOperationDefinition
-      G.OperationTypeQuery Nothing [] [] selSet
+      return $ G.TypedOperationDefinition G.OperationTypeQuery Nothing [] [] selSet
     (Nothing, [], [opDef])  ->
       return opDef
     (Nothing, _, _) ->
@@ -145,7 +157,7 @@ validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
 data RootSelSet
   = RQuery !SelSet
   | RMutation !SelSet
-  | RSubscription !Field
+  | RSubscription !SelSet
   deriving (Show, Eq)
 
 validateGQ
@@ -172,12 +184,15 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
     G.OperationTypeQuery -> return $ RQuery selSet
     G.OperationTypeMutation -> return $ RMutation selSet
     G.OperationTypeSubscription ->
-      case Seq.viewl selSet of
-        Seq.EmptyL     -> throw500 "empty selset for subscription"
-        fld Seq.:< rst -> do
-          unless (null rst) $
-            throwVE "subscription must select only one top level field"
-          return $ RSubscription fld
+      case selSet of
+        Seq.Empty       -> throw500 "empty selset for subscription"
+        (_ Seq.:<| rst) -> do
+          -- As an internal testing feature, we support subscribing to multiple
+          -- selection sets.  First check if the corresponding directive is set.
+          let multipleAllowed = elem (G.Directive "_multiple_top_level_fields" []) (G._todDirectives opDef)
+          unless (multipleAllowed || null rst) $
+            throwVE "subscriptions must select one top level field"
+          return $ RSubscription selSet
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery
@@ -204,3 +219,100 @@ getQueryParts (GQLReq opNameM q varValsM) = do
   return $ QueryParts opDef opRoot fragDefsL varValsM
   where
     (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGQLExecDoc q
+
+-- | Convert the validated arguments to GraphQL parser AST arguments
+unValidateArgsMap :: ArgsMap -> [RemoteFieldArgument]
+unValidateArgsMap argsMap =
+  map (\(n, inpVal) ->
+         let _rfaArgument = G.Argument n $ unValidateInpVal inpVal
+             _rfaVariable = unValidateInpVariable inpVal
+         in RemoteFieldArgument {..})
+  . Map.toList $ argsMap
+
+-- | Convert the validated field to GraphQL parser AST field
+unValidateField :: Field -> G.Field
+unValidateField (Field alias name _ argsMap selSet _) =
+  let args = map (\(n, inpVal) -> G.Argument n $ unValidateInpVal inpVal) $
+             Map.toList argsMap
+      sels = map (G.SelectionField . unValidateField) $ toList selSet
+  in G.Field (Just alias) name args [] sels
+
+-- | Get the variable definition and it's value (if exists)
+unValidateInpVariable :: AnnInpVal -> Maybe [(G.VariableDefinition,A.Value)]
+unValidateInpVariable inputValue =
+  case (_aivValue inputValue) of
+    AGScalar _ _ -> mkVariableDefnValueTuple inputValue
+    AGEnum _ _ -> mkVariableDefnValueTuple inputValue
+    AGObject _ o ->
+      (\obj ->
+         let listObjects = OMap.toList obj
+         in concat $
+         mapMaybe (\(_, inpVal) -> unValidateInpVariable inpVal) listObjects)
+      <$> o
+    AGArray _ _ -> mkVariableDefnValueTuple inputValue
+   where
+     mkVariableDefnValueTuple val = maybe Nothing (\vars -> Just [vars]) $
+                                     variableDefnValueTuple val
+
+     variableDefnValueTuple :: AnnInpVal -> Maybe (G.VariableDefinition,A.Value)
+     variableDefnValueTuple inpVal@AnnInpVal {..} =
+      let varDefn = G.VariableDefinition <$> _aivVariable <*> Just _aivType <*> Just Nothing
+      in (,) <$> varDefn <*> Just (annInpValueToJson inpVal)
+
+-- | Convert the validated input value to GraphQL value, if the input value
+-- is a variable then it will be returned without resolving it, otherwise it
+-- will be resolved
+unValidateInpVal :: AnnInpVal -> G.Value
+unValidateInpVal (AnnInpVal _ var val) = fromMaybe G.VNull $
+  -- if a variable is found, then directly return that, if not found then
+  -- convert it into a G.Value and return it
+  case var of
+    Just var' -> Just $ G.VVariable var'
+    Nothing ->
+      case val of
+        AGScalar _ v -> pgScalarToGValue <$> v
+        AGEnum _ v -> pgEnumToGEnum v
+        AGObject _ o ->
+          (G.VObject . G.ObjectValueG
+          . map (uncurry G.ObjectFieldG . (second unValidateInpVal))
+          . OMap.toList
+          ) <$> o
+        AGArray _ vs -> (G.VList . G.ListValueG . map unValidateInpVal) <$> vs
+
+  where
+    pgEnumToGEnum :: AnnGEnumValue -> Maybe G.Value
+    pgEnumToGEnum = \case
+      AGESynthetic v -> G.VEnum <$> v
+      AGEReference _ v -> (G.VEnum . G.EnumValue . G.Name . getEnumValue) <$> v
+
+    pgScalarToGValue :: PGScalarValue -> G.Value
+    pgScalarToGValue = \case
+      PGValInteger i  -> G.VInt $ fromIntegral i
+      PGValSmallInt i -> G.VInt $ fromIntegral i
+      PGValBigInt i   -> G.VInt $ fromIntegral i
+      PGValFloat f    -> G.VFloat $ realToFrac f
+      PGValDouble d   -> G.VFloat $ realToFrac d
+      -- TODO: Scientific is a danger zone; use its safe conv function.
+      PGValNumeric sc -> G.VFloat $ realToFrac sc
+      PGValMoney m    -> G.VFloat $ realToFrac m
+      PGValBoolean b  -> G.VBoolean b
+      PGValChar t     -> toStringValue $ T.singleton t
+      PGValVarchar t  -> toStringValue t
+      PGValText t     -> toStringValue t
+      PGValCitext t   -> toStringValue t
+      PGValDate d     -> toStringValue $ T.pack $ showGregorian d
+      PGValTimeStampTZ u -> toStringValue $ T.pack $
+                            formatTime defaultTimeLocale "%FT%T%QZ" u
+      PGValTimeStamp u   -> toStringValue $ T.pack $
+                            formatTime defaultTimeLocale "%FT%T%QZ" u
+      PGValTimeTZ (ZonedTimeOfDay tod tz) ->
+        toStringValue $ T.pack (show tod ++ timeZoneOffsetString tz)
+      PGNull _ -> G.VNull
+      PGValJSON (Q.JSON v)  -> jsonValueToGValue v
+      PGValJSONB (Q.JSONB v)  -> jsonValueToGValue v
+      PGValGeo v    -> jsonValueToGValue $ A.toJSON v
+      PGValRaster v -> jsonValueToGValue $ A.toJSON v
+      PGValUUID u    -> toStringValue $ UUID.toText u
+      PGValUnknown t ->  toStringValue t
+      where
+        toStringValue = G.VString . G.StringValue
