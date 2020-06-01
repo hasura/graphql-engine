@@ -337,6 +337,13 @@ data BatchExecutionDetail
   -- ^ execution details of the cohorts belonging to this batch
   } deriving (Show, Eq)
 
+-- | see Note [Minimal LiveQuery Poller Log]
+batchExecutionDetailMinimal :: BatchExecutionDetail -> J.Value
+batchExecutionDetailMinimal BatchExecutionDetail{..} =
+  J.object [ "pg_execution_time" J..= _bedPgExecutionTime
+           , "push_time" J..= _bedPushTime
+           ]
+
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''BatchExecutionDetail)
 
 data PollDetail
@@ -359,8 +366,27 @@ data PollDetail
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''PollDetail)
 
+{- Note [Minimal LiveQuery Poller Log]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+We only want to log the minimal information in the livequery-poller-log as it
+could be expensive to log the details of every subscriber (all poller related
+information can always be retrieved by dumping the current live queries state)
+The reason why we capture a lot more detail in PollDetail and
+BatchExecutionDetail as other implementations such as pro can use them if they
+need to.
+-}
+
+-- | see Note [Minimal LiveQuery Poller Log]
+pollDetailMinimal :: PollDetail -> J.Value
+pollDetailMinimal (PollDetail{..}) =
+  J.object [ "poller_id" J..= _pdPollerId
+           , "snapshot_time" J..= _pdSnapshotTime
+           , "batches" J..= (map batchExecutionDetailMinimal _pdBatches)
+           , "total_time" J..= _pdTotalTime
+           ]
+
 instance L.ToEngineLog PollDetail L.Hasura where
-  toEngineLog pl = (L.LevelInfo, L.ELTLivequeryPollerLog, J.toJSON pl)
+  toEngineLog pl = (L.LevelInfo, L.ELTLivequeryPollerLog, pollDetailMinimal pl)
 
 -- | Where the magic happens: the top-level action run periodically by each
 -- active 'Poller'. This needs to be async exception safe.
