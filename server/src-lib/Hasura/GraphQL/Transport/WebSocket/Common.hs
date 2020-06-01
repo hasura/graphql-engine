@@ -3,8 +3,11 @@ module Hasura.GraphQL.Transport.WebSocket.Common where
 import           Hasura.Prelude
 
 import qualified Control.Concurrent.STM                               as STM
+import qualified Data.Time.Clock                                      as TC
 import qualified Network.HTTP.Client                                  as H
 import qualified Network.HTTP.Types                                   as H
+
+import           Control.Concurrent.Extended                          (sleep)
 
 
 import           Hasura.RQL.Types
@@ -66,3 +69,26 @@ filterWsHeaders hdrs = flip filter hdrs $ \(n, _) ->
               , "upgrade"
               , "connection"
               ]
+
+tokenExpiryHandler :: WSConn -> IO ()
+tokenExpiryHandler wsConn = do
+  let connData = WS.getData wsConn
+  expiryTime <- liftIO $ STM.atomically $ do
+    maybeExpiryTime <- case connData of
+      CSQueries queryData -> do
+        connState <- STM.readTVar $ WQT._wscUser queryData
+        case connState of
+          WQT.CSNotInitialised _         -> STM.retry
+          WQT.CSInitError _              -> STM.retry
+          WQT.CSInitialised _ expTimeM _ -> pure expTimeM
+      CSTransaction txData -> do
+        txStatus <- STM.readTVar $ WTT._wtdTxStatus txData
+        case txStatus of
+          WTT.TxNotInitialised _   -> STM.retry
+          WTT.TxBegin _ expTimeM _ -> pure expTimeM
+          WTT.TxCommit             -> STM.retry
+          WTT.TxAbort              -> STM.retry
+    maybe STM.retry pure maybeExpiryTime
+
+  currTime <- TC.getCurrentTime
+  sleep $ convertDuration $ TC.diffUTCTime expiryTime currTime

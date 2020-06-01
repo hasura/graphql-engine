@@ -1,8 +1,4 @@
-import {
-  defaultModifyState,
-  defaultPermissionsState,
-  defaultPresetsState,
-} from '../DataState';
+import { defaultModifyState, defaultPermissionsState } from '../DataState';
 
 import { MAKE_REQUEST, REQUEST_SUCCESS, REQUEST_ERROR } from '../DataActions';
 
@@ -27,6 +23,7 @@ import {
   TOGGLE_ENUM_FAILURE,
   MODIFY_ROOT_FIELD,
   SET_CHECK_CONSTRAINTS,
+  SET_VIEW_DEF_SQL,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -42,6 +39,11 @@ import {
   MANUAL_REL_RESET,
   REL_SELECTION_CHANGED,
   REL_ADD_NEW_CLICKED,
+  INTROSPECTING_REMOTE_SCHEMA,
+  INTROSPECTION_ERROR,
+  INTROSPECTION_SUCCESSFUL,
+  SET_REMOTE_RELATIONSHIPS,
+  FETCHED_REMOTE_RELATIONSHIPS,
 } from '../TableRelationships/Actions';
 
 // TABLE PERMISSIONS
@@ -67,18 +69,18 @@ import {
   PERM_RESET_APPLY_SAME,
   PERM_SET_APPLY_SAME_PERM,
   PERM_DEL_APPLY_SAME_PERM,
+  PERM_TOGGLE_BACKEND_ONLY,
   toggleField,
   toggleAllFields,
-  getFilterKey,
   getBasePermissionsState,
   updatePermissionsState,
   deleteFromPermissionsState,
   updateBulkSelect,
   updateApplySamePerms,
-  CREATE_NEW_PRESET,
   DELETE_PRESET,
   SET_PRESET_VALUE,
 } from '../TablePermissions/Actions';
+import { getDefaultFilterType } from '../TablePermissions/utils';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
   const modifyState = JSON.parse(JSON.stringify(modifyStateOrig));
@@ -117,6 +119,11 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         viewDefinitionError: action.data,
+      };
+    case SET_VIEW_DEF_SQL:
+      return {
+        ...modifyState,
+        viewDefSql: action.data,
       };
 
     case REL_ADD_NEW_CLICKED:
@@ -283,7 +290,10 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          custom_checked: true,
+          custom_checked: {
+            ...modifyState.permissionsState.custom_checked,
+            [action.filterType]: true,
+          },
         },
       };
 
@@ -329,23 +339,26 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            getFilterKey(modifyState.permissionsState.query),
+            action.filterType ||
+              getDefaultFilterType(modifyState.permissionsState.query),
             action.filter
           ),
-          custom_checked: false,
+          custom_checked: {
+            ...modifyState.permissionsState.custom_checked,
+            [action.filterType]: false,
+          },
         },
       };
-
     case PERM_SET_FILTER:
       return {
         ...modifyState,
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            getFilterKey(modifyState.permissionsState.query),
+            action.filterType ||
+              getDefaultFilterType(modifyState.permissionsState.query),
             action.filter
           ),
-          // custom_checked: true,
         },
       };
 
@@ -355,10 +368,14 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            getFilterKey(modifyState.permissionsState.query),
+            action.filterType ||
+              getDefaultFilterType(modifyState.permissionsState.query),
             {}
           ),
-          custom_checked: false,
+          custom_checked: {
+            ...modifyState.permissionsState.custom_checked,
+            [action.filterType]: false,
+          },
         },
       };
 
@@ -479,78 +496,58 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ),
         },
       };
-
+    case PERM_TOGGLE_BACKEND_ONLY:
+      const pState = modifyState.permissionsState;
+      const isBackendOnly =
+        pState[pState.query] && pState[pState.query].backend_only;
+      return {
+        ...modifyState,
+        permissionsState: updatePermissionsState(
+          modifyState.permissionsState,
+          'backend_only',
+          !isBackendOnly
+        ),
+      };
     /* Preset operations */
-    case CREATE_NEW_PRESET:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...modifyState.permissionsState,
-          [action.data.query]: {
-            ...modifyState.permissionsState[action.data.query],
-            localPresets: [
-              ...modifyState.permissionsState[action.data.query].localPresets,
-              { ...defaultPresetsState[action.data.query] },
-            ],
-          },
-        },
-      };
     case DELETE_PRESET:
-      const deleteIndex = action.data.index;
+      const deletedSet = {
+        ...modifyState.permissionsState[action.data.queryType].set,
+      };
+      delete deletedSet[action.data.column];
+
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
           [action.data.queryType]: {
             ...modifyState.permissionsState[action.data.queryType],
-            localPresets: [
-              ...modifyState.permissionsState[
-                action.data.queryType
-              ].localPresets.slice(0, deleteIndex),
-              ...modifyState.permissionsState[
-                action.data.queryType
-              ].localPresets.slice(
-                deleteIndex + 1,
-                modifyState.permissionsState[action.data.queryType].localPresets
-                  .length
-              ),
-            ],
+            set: deletedSet,
           },
         },
       };
+
     case SET_PRESET_VALUE:
-      const updatedIndex = action.data.index;
-      const setKeyVal =
-        modifyState.permissionsState[action.data.queryType].localPresets[
-          updatedIndex
-        ];
-      setKeyVal[action.data.key] = action.data.value;
-      if (action.data.key === 'key') {
-        // Clear if key changes
-        setKeyVal.value = '';
+      const updatedSet = {
+        ...modifyState.permissionsState[action.data.queryType].set,
+      };
+      if (action.data.prevKey) {
+        updatedSet[action.data.column] = updatedSet[action.data.prevKey];
+        delete updatedSet[action.data.prevKey];
+      } else {
+        updatedSet[action.data.column] = action.data.value || '';
       }
+
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
           [action.data.queryType]: {
             ...modifyState.permissionsState[action.data.queryType],
-            localPresets: [
-              ...modifyState.permissionsState[
-                action.data.queryType
-              ].localPresets.slice(0, updatedIndex),
-              { ...setKeyVal },
-              ...modifyState.permissionsState[
-                action.data.queryType
-              ].localPresets.slice(
-                updatedIndex + 1,
-                modifyState.permissionsState[action.data.queryType].localPresets
-                  .length
-              ),
-            ],
+            set: updatedSet,
           },
         },
       };
+
     case PERM_RESET_BULK_SELECT:
       return {
         ...modifyState,
@@ -597,6 +594,48 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         uniqueKeyModify: action.keys,
+      };
+
+    case SET_REMOTE_RELATIONSHIPS:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          relationships: action.remoteRelationships,
+        },
+      };
+    case INTROSPECTING_REMOTE_SCHEMA:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          loading: true,
+        },
+      };
+    case INTROSPECTION_ERROR:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          loading: false,
+          error: true,
+        },
+      };
+    case INTROSPECTION_SUCCESSFUL:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          loading: false,
+        },
+      };
+    case FETCHED_REMOTE_RELATIONSHIPS:
+      return {
+        ...modifyState,
+        remoteRelationships: {
+          ...modifyState.remoteRelationships,
+          fetchedRemoteRelationships: true,
+        },
       };
     case TOGGLE_ENUM:
       return {

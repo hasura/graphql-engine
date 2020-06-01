@@ -3,11 +3,11 @@ import { parse as sdlParse } from 'graphql/language/parser';
 import styles from './Styles.scss';
 import Tooltip from './Tooltip';
 import CrossIcon from '../../../../Common/Icons/Cross';
-import CopyIcon from '../../../../Common/Icons/Copy';
-import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
-import Modal from '../../../../Common/Modal/Modal';
-import CloneTypeModal from './CloneTypeModal';
-import { getTypesSdl } from '../../../../../shared/utils/sdlUtils';
+import AceEditor from '../../../../Common/AceEditor/BaseEditor';
+// import CopyIcon from '../../../../Common/Icons/Copy';
+// import Modal from '../../../../Common/Modal/Modal';
+// import CloneTypeModal from './CloneTypeModal';
+// import { getTypesSdl } from '../../../../../shared/utils/sdlUtils';
 
 const editorLabel = 'New types definition';
 const editorTooltip =
@@ -25,8 +25,8 @@ const ActionDefinitionEditor = ({
   editorHeight = '200px',
   editorWidth = '600px',
 }) => {
-  const [modalOpen, setModalState] = React.useState(false);
-  const toggleModal = () => setModalState(!modalOpen);
+  // const [modalOpen, setModalState] = React.useState(false);
+  // const toggleModal = () => setModalState(!modalOpen);
 
   const onChangeWithError = v => {
     if (timer) {
@@ -35,7 +35,7 @@ const ActionDefinitionEditor = ({
 
     const parseDebounceTimer = setTimeout(() => {
       if (v === '') {
-        return;
+        return onChange(v, null, null, null);
       }
       let _e = null;
       let ast = null;
@@ -53,9 +53,9 @@ const ActionDefinitionEditor = ({
   const errorMessage =
     error && (error.message || 'This is not valid GraphQL SDL');
 
-  const handleClonedTypes = types => {
-    onChange(`${value}\n\n${getTypesSdl(types)}`);
-  };
+  // const handleClonedTypes = types => {
+  //   onChange(`${value}\n\n${getTypesSdl(types)}`);
+  // };
 
   return (
     <div className={`${className || ''}`}>
@@ -79,27 +79,31 @@ const ActionDefinitionEditor = ({
               <div>{errorMessage}</div>
             </div>
           )}
-          <a
-            className={`${styles.cloneTypeText} ${styles.cursorPointer} ${styles.add_mar_right}`}
-            onClick={toggleModal}
-          >
-            <CopyIcon className={styles.add_mar_right_small} />
-            Clone an existing type
-          </a>
-          <Modal
-            show={modalOpen}
-            title={'Clone an existing type'}
-            onClose={toggleModal}
-            customClass={styles.modal}
-          >
-            <CloneTypeModal
-              handleClonedTypes={handleClonedTypes}
-              toggleModal={toggleModal}
-            />
-          </Modal>
+          {/*
+            <a
+              className={`${styles.cloneTypeText} ${styles.cursorPointer} ${styles.add_mar_right}`}
+              onClick={toggleModal}
+            >
+              <CopyIcon className={styles.add_mar_right_small} />
+              Clone an existing type
+            </a>
+            <Modal
+              show={modalOpen}
+              title={'Clone an existing type'}
+              onClose={toggleModal}
+              customClass={styles.modal}
+            >
+              <CloneTypeModal
+                handleClonedTypes={handleClonedTypes}
+                toggleModal={toggleModal}
+              />
+            </Modal>
+            
+          */}
         </div>
-        <SDLEditor
+        <AceEditor
           name="sdl-editor"
+          mode="graphqlschema"
           value={value}
           onChange={onChangeWithError}
           placeholder={placeholder}

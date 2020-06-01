@@ -18,42 +18,7 @@ import getRoutes from './routes';
 
 import reducer from './reducer';
 import globals from './Globals';
-import Endpoints from './Endpoints';
-
-import { filterEventsBlockList, sanitiseUrl } from './telemetryFilter';
-import { RUN_TIME_ERROR } from './components/Main/Actions';
-
-/** telemetry **/
-let analyticsConnection;
-
-const analyticsUrl = Endpoints.telemetryServer;
-
-const { consoleMode, enableTelemetry, cliUUID } = window.__env;
-
-const telemetryEnabled =
-  enableTelemetry !== undefined && enableTelemetry === true;
-
-if (telemetryEnabled) {
-  try {
-    analyticsConnection = new WebSocket(analyticsUrl);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-const onError = error => {
-  console.error('WebSocket Error for Events' + error);
-};
-
-const onClose = () => {
-  try {
-    analyticsConnection = new WebSocket(analyticsUrl);
-  } catch (error) {
-    console.error(error);
-  }
-  analyticsConnection.onclose = onClose();
-  analyticsConnection.onerror = onError();
-};
+import { trackReduxAction } from './telemetry';
 
 function analyticsLogger({ getState }) {
   return next => action => {
@@ -61,53 +26,9 @@ function analyticsLogger({ getState }) {
     const returnValue = next(action);
 
     // check if analytics tracking is enabled
-    if (telemetryEnabled) {
-      const actionType = action.type;
-
-      // filter events
-      if (!filterEventsBlockList.includes(actionType)) {
-        // When the connection is open, send data to the server
-        if (
-          analyticsConnection &&
-          analyticsConnection.readyState === analyticsConnection.OPEN
-        ) {
-          const serverVersion = getState().main.serverVersion;
-          const url = sanitiseUrl(window.location.pathname);
-
-          const reqBody = {
-            server_version: serverVersion,
-            event_type: actionType,
-            url,
-            console_mode: consoleMode,
-            cli_uuid: cliUUID,
-            server_uuid: getState().telemetry.hasura_uuid,
-          };
-
-          const isLocationType = actionType === '@@router/LOCATION_CHANGE';
-          if (isLocationType) {
-            // capture page views
-            const payload = action.payload;
-            reqBody.url = sanitiseUrl(payload.pathname);
-          }
-
-          const isErrorType = actionType === RUN_TIME_ERROR;
-          if (isErrorType) {
-            reqBody.data = action.data;
-          }
-
-          // Send the data
-          analyticsConnection.send(
-            JSON.stringify({ data: reqBody, topic: globals.telemetryTopic })
-          );
-
-          // check for possible error events and store more data?
-        } else {
-          // retry websocket connection
-          // analyticsConnection = new WebSocket(analyticsUrl);
-        }
-      }
+    if (globals.enableTelemetry) {
+      trackReduxAction(action, getState);
     }
-
     // This will likely be the action itself, unless
     // a middleware further in chain changed it.
     return returnValue;

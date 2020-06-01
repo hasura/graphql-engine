@@ -13,6 +13,7 @@ import           Hasura.GraphQL.Transport.WebSocket.Queries.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                                 (RequestId)
+import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute.LiveQuery                    as LQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server           as WS
@@ -98,7 +99,7 @@ $(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''WsConnInfo)
 
 data WSLogInfo
   = WSLogInfo
-  { _wsliUserVars       :: !(Maybe UserVars)
+  { _wsliUserVars       :: !(Maybe SessionVariables)
   , _wsliConnectionInfo :: !WsConnInfo
   , _wsliEvent          :: !WSEvent
   } deriving (Show, Eq)
@@ -114,10 +115,10 @@ instance L.ToEngineLog WSLog L.Hasura where
   toEngineLog (WSLog logLevel wsLog) =
     (logLevel, L.ELTWebsocketLog, J.toJSON wsLog)
 
-mkWsInfoLog :: Maybe UserVars -> WsConnInfo -> WSEvent -> WSLog
+mkWsInfoLog :: Maybe SessionVariables -> WsConnInfo -> WSEvent -> WSLog
 mkWsInfoLog uv ci ev =
   WSLog L.LevelInfo $ WSLogInfo uv ci ev
 
-mkWsErrorLog :: Maybe UserVars -> WsConnInfo -> WSEvent -> WSLog
+mkWsErrorLog :: Maybe SessionVariables -> WsConnInfo -> WSEvent -> WSLog
 mkWsErrorLog uv ci ev =
   WSLog L.LevelError $ WSLogInfo uv ci ev

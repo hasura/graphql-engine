@@ -1,120 +1,22 @@
 module Hasura.RQL.Types.Permission
-       ( RoleName(..)
-       , roleNameToTxt
-
-       , SessVar
-       , SessVarVal
-
-       , UserVars
-       , mkUserVars
-       , isUserVar
-       , getVarNames
-       , getVarVal
-       , roleFromVars
-
-       , UserInfo(..)
-       , mkUserInfo
-       , userInfoToList
-       , adminUserInfo
-       , adminRole
-       , isAdmin
-       , PermType(..)
-       , permTypeToCode
-       , PermId(..)
-       ) where
+  ( PermType(..)
+  , permTypeToCode
+  , PermId(..)
+  ) where
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
-                                             unNonEmptyText)
-import           Hasura.Server.Utils        (adminSecretHeader, deprecatedAccessKeyHeader,
-                                             isUserVar, userRoleHeader)
+import           Hasura.Session
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query          as Q
-
 import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
 import           Data.Hashable
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.HashMap.Strict        as Map
 import qualified Data.Text                  as T
+import qualified Database.PG.Query          as Q
 import qualified PostgreSQL.Binary.Decoding as PD
-
-newtype RoleName
-  = RoleName {getRoleTxt :: NonEmptyText}
-  deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
-           , ToJSON, Q.FromCol, Q.ToPrepArg, Lift, Generic, Arbitrary, NFData, Cacheable )
-
-instance DQuote RoleName where
-  dquoteTxt = roleNameToTxt
-
-roleNameToTxt :: RoleName -> Text
-roleNameToTxt = unNonEmptyText . getRoleTxt
-
-adminRole :: RoleName
-adminRole = RoleName adminText
-
-isAdmin :: RoleName -> Bool
-isAdmin = (adminRole ==)
-
-type SessVar = Text
-type SessVarVal = Text
-
-newtype UserVars
-  = UserVars { unUserVars :: Map.HashMap SessVar SessVarVal}
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable)
-
--- returns Nothing if x-hasura-role is an empty string
-roleFromVars :: UserVars -> Maybe RoleName
-roleFromVars uv =
-  getVarVal userRoleHeader uv >>= fmap RoleName . mkNonEmptyText
-
-getVarVal :: SessVar -> UserVars -> Maybe SessVarVal
-getVarVal k =
-  Map.lookup (T.toLower k) . unUserVars
-
-getVarNames :: UserVars -> [T.Text]
-getVarNames =
-  Map.keys . unUserVars
-
-mkUserVars :: [(T.Text, T.Text)] -> UserVars
-mkUserVars l =
-  UserVars $ Map.fromList
-  [ (T.toLower k, v)
-  | (k, v) <- l, isUserVar k
-  ]
-
-data UserInfo
-  = UserInfo
-  { userRole :: !RoleName
-  , userVars :: !UserVars
-  } deriving (Show, Eq, Generic)
-$(deriveJSON (aesonDrop 4 snakeCase) ''UserInfo)
-
-mkUserInfo :: RoleName -> UserVars -> UserInfo
-mkUserInfo rn (UserVars v) =
-  UserInfo rn $ UserVars $ Map.insert userRoleHeader (roleNameToTxt rn) $
-  foldl (flip Map.delete) v [adminSecretHeader, deprecatedAccessKeyHeader]
-
-instance Hashable UserInfo
-
--- $(J.deriveToJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
---   ''UserInfo
---  )
-
-userInfoToList :: UserInfo -> [(Text, Text)]
-userInfoToList userInfo =
-  let vars = Map.toList $ unUserVars . userVars $ userInfo
-      rn = roleNameToTxt . userRole $ userInfo
-  in (userRoleHeader, rn) : vars
-
-adminUserInfo :: UserInfo
-adminUserInfo =
-  mkUserInfo adminRole $ mkUserVars []
 
 data PermType
   = PTInsert

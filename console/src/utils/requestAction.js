@@ -7,7 +7,9 @@ import {
   DONE_REQUEST,
   FAILED_REQUEST,
   ERROR_REQUEST,
-} from 'components/App/Actions';
+  CONNECTION_FAILED,
+} from '../components/App/Actions';
+import { globalCookiePolicy } from '../Endpoints';
 
 const requestAction = (
   url,
@@ -17,7 +19,7 @@ const requestAction = (
   includeCredentials = true
 ) => {
   if (!options.credentials && includeCredentials) {
-    options.credentials = 'omit';
+    options.credentials = globalCookiePolicy;
   }
 
   return dispatch => {
@@ -72,7 +74,7 @@ const requestAction = (
         },
         error => {
           console.error('Request error: ', error);
-          dispatch({ type: FAILED_REQUEST });
+          dispatch({ type: CONNECTION_FAILED });
           if (ERROR) {
             dispatch({
               type: ERROR,

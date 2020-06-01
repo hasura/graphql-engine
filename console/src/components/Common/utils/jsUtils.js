@@ -1,6 +1,10 @@
 // TODO: make functions from this file available without imports
 
-import { showErrorNotification } from '../../Services/Common/Notification';
+/* TYPE utils */
+
+export const isNotDefined = value => {
+  return value === null || value === undefined;
+};
 
 export const exists = value => {
   return value !== null && value !== undefined;
@@ -18,9 +22,44 @@ export const isString = value => {
   return typeof value === 'string';
 };
 
+export const isNumber = value => {
+  return typeof value === 'number';
+};
+
+export const isFloat = value => {
+  if (typeof value === 'number') {
+    return parseInt(value, 10) !== parseFloat(value, 10);
+  }
+  return false;
+};
+
+export const isBoolean = value => {
+  return typeof value === 'boolean';
+};
+
 export const isPromise = value => {
   if (!value) return false;
   return value.constructor.name === 'Promise';
+};
+
+export const isValidTemplateLiteral = literal_ => {
+  const literal = literal_.trim();
+  if (!literal) return false;
+  const templateStartIndex = literal.indexOf('{{');
+  const templateEndEdex = literal.indexOf('}}');
+  return (
+    templateStartIndex !== '-1' && templateEndEdex > templateStartIndex + 2
+  );
+};
+
+export const isJsonString = str => {
+  try {
+    JSON.parse(str);
+  } catch (e) {
+    return false;
+  }
+
+  return true;
 };
 
 export const isEmpty = value => {
@@ -68,17 +107,30 @@ export const isEqual = (value1, value2) => {
   return _isEqual;
 };
 
-export function isJsonString(str) {
-  try {
-    JSON.parse(str);
-  } catch (e) {
-    return false;
-  }
+/* ARRAY utils */
 
-  return true;
-}
+export const getLastArrayElement = array => {
+  if (!array) return null;
+  if (!array.length) return null;
+  return array[array.length - 1];
+};
 
-export function getAllJsonPaths(json, leafKeys = [], prefix = '') {
+export const getFirstArrayElement = array => {
+  if (!array) return null;
+  return array[0];
+};
+
+export const deleteArrayElementAtIndex = (array, index) => {
+  return array.splice(index, 1);
+};
+
+export const arrayDiff = (arr1, arr2) => {
+  return arr1.filter(v => !arr2.includes(v));
+};
+
+/* JSON utils */
+
+export const getAllJsonPaths = (json, leafKeys = [], prefix = '') => {
   const _paths = [];
 
   const addPrefix = subPath => {
@@ -114,7 +166,29 @@ export function getAllJsonPaths(json, leafKeys = [], prefix = '') {
   }
 
   return _paths;
-}
+};
+
+/* TRANSFORM utils*/
+
+export const capitalize = s => {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
+// return number with commas for readability
+export const getReadableNumber = number => {
+  if (!isNumber(number)) return number;
+
+  return number.toLocaleString();
+};
+
+/* URL utils */
+
+export const getUrlSearchParamValue = param => {
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  return urlSearchParams.get(param);
+};
+
+/* ALERT utils */
 
 // use browser confirm and prompt to get user confirmation for actions
 export const getConfirmation = (
@@ -152,11 +226,14 @@ export const getConfirmation = (
   return isConfirmed;
 };
 
+/* FILE utils */
+
 export const uploadFile = (
   fileHandler,
   fileFormat = null,
-  invalidFileHandler = null
-) => dispatch => {
+  invalidFileHandler = null,
+  errorCallback = null
+) => {
   const fileInputElement = document.createElement('div');
   fileInputElement.innerHTML = '<input style="display:none" type="file">';
   const fileInput = fileInputElement.firstChild;
@@ -176,12 +253,12 @@ export const uploadFile = (
         if (invalidFileHandler) {
           invalidFileHandler(fileName);
         } else {
-          dispatch(
-            showErrorNotification(
+          if (errorCallback) {
+            errorCallback(
               'Invalid file format',
               `Expected a ${expectedFileSuffix} file`
-            )
-          );
+            );
+          }
         }
 
         fileInputElement.remove();
@@ -279,30 +356,4 @@ export const getCurrTimeForFileName = () => {
     .padStart(3, '0');
 
   return [year, month, day, hours, minutes, seconds, milliSeconds].join('_');
-};
-
-export const isValidTemplateLiteral = literal_ => {
-  const literal = literal_.trim();
-  if (!literal) return false;
-  const templateStartIndex = literal.indexOf('{{');
-  const templateEndEdex = literal.indexOf('}}');
-  return (
-    templateStartIndex !== '-1' && templateEndEdex > templateStartIndex + 2
-  );
-};
-
-export const getUrlSearchParamValue = param => {
-  const urlSearchParams = new URLSearchParams(window.location.search);
-  return urlSearchParams.get(param);
-};
-
-export const getLastArrayElement = array => {
-  if (!array) return null;
-  if (!array.length) return null;
-  return array[array.length - 1];
-};
-
-export const getFirstArrayElement = array => {
-  if (!array) return null;
-  return array[0];
 };

@@ -172,7 +172,7 @@ instance A.FromJSON ServiceTimingMetric
 instance A.ToJSON ServiceTimingMetrics
 instance A.FromJSON ServiceTimingMetrics
 
-dumpServiceTimingMetrics :: MonadIO m=> m ServiceTimingMetrics
+dumpServiceTimingMetrics :: MonadIO m => m ServiceTimingMetrics
 dumpServiceTimingMetrics = liftIO $ do
   cs <- readIORef requestCounters
   let serviceTimingMetrics = flip map (HM.toList cs) $

@@ -1,10 +1,9 @@
 module Hasura.GraphQL.Schema.Merge
-  ( checkSchemaConflicts
+  ( mergeGCtx
+  , checkSchemaConflicts
   , checkConflictingNode
   ) where
 
-
-import           Data.Maybe                    (maybeToList)
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
@@ -14,6 +13,33 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+
+mergeGCtx :: (MonadError QErr m) => GCtx -> GCtx -> m GCtx
+mergeGCtx lGCtx rGCtx = do
+  checkSchemaConflicts lGCtx rGCtx
+  pure GCtx { _gTypes = mergedTypeMap
+            , _gFields = _gFields lGCtx <> _gFields rGCtx
+            , _gQueryRoot = mergedQueryRoot
+            , _gMutRoot = mergedMutationRoot
+            , _gSubRoot = mergedSubRoot
+            , _gOrdByCtx = _gOrdByCtx lGCtx <> _gOrdByCtx rGCtx
+            , _gQueryCtxMap = _gQueryCtxMap lGCtx <> _gQueryCtxMap rGCtx
+            , _gMutationCtxMap = _gMutationCtxMap lGCtx <> _gMutationCtxMap rGCtx
+            , _gInsCtxMap = _gInsCtxMap lGCtx <> _gInsCtxMap rGCtx
+           }
+  where
+    mergedQueryRoot = _gQueryRoot lGCtx <> _gQueryRoot rGCtx
+    mergedMutationRoot = _gMutRoot lGCtx <> _gMutRoot rGCtx
+    mergedSubRoot = _gSubRoot lGCtx <> _gSubRoot rGCtx
+    mergedTypeMap =
+      let mergedTypes = _gTypes lGCtx <> _gTypes rGCtx
+          modifyQueryRootField = Map.insert queryRootNamedType (TIObj mergedQueryRoot)
+          modifyMaybeRootField tyname maybeObj m = case maybeObj of
+            Nothing  -> m
+            Just obj -> Map.insert tyname (TIObj obj) m
+      in modifyMaybeRootField subscriptionRootNamedType mergedSubRoot $
+         modifyMaybeRootField mutationRootNamedType mergedMutationRoot $
+         modifyQueryRootField mergedTypes
 
 checkSchemaConflicts
   :: (MonadError QErr m)
@@ -68,8 +94,8 @@ checkSchemaConflicts gCtx remoteCtx = do
       (TIInpObj t1, TIInpObj t2) -> typeEq t1 t2
       _                          -> False
 
-    hQRName = G.NamedType "query_root"
-    hMRName = G.NamedType "mutation_root"
+    hQRName = queryRootNamedType
+    hMRName = mutationRootNamedType
     tyMsg ty = "types: [ " <> namesToTxt ty <>
                " ] have mismatch with current graphql schema. HINT: Types must be same."
     nodesMsg n = "top-level nodes: [ " <> namesToTxt n <>
@@ -109,8 +135,8 @@ checkConflictingNode typeMap node = do
         throw400 RemoteSchemaConflicts msg
     _ -> return ()
   where
-    hQRName = G.NamedType "query_root"
-    hMRName = G.NamedType "mutation_root"
+    hQRName = queryRootNamedType
+    hMRName = mutationRootNamedType
     msg = "node " <> G.unName node <>
           " already exists in current graphql schema"
 

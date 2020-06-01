@@ -17,8 +17,8 @@ import qualified Network.HTTP.Types                                  as H
 import qualified Network.WebSockets                                  as WS
 import qualified StmContainers.Map                                   as STMMap
 
-import           Control.Concurrent                                  (threadDelay)
 import           Control.Concurrent.Extended                         (sleep)
+import           Data.String                                         (fromString)
 import           GHC.AssertNF
 import qualified ListT
 
@@ -28,20 +28,20 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Common
 import           Hasura.GraphQL.Transport.WebSocket.Queries.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Queries.Types
+import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Error                              (Code (StartFailed))
 import           Hasura.Server.Auth                                  (AuthMode, UserAuthentication,
                                                                       resolveUserInfo)
-import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils                                 (RequestId, getRequestId)
 import           Hasura.Server.Version
+import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute                              as E
 import qualified Hasura.GraphQL.Execute.LiveQuery                    as LQ
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll               as LQ
-import qualified Hasura.GraphQL.Resolve                              as R
+import qualified Hasura.GraphQL.Resolve.Action                       as RA
 import qualified Hasura.GraphQL.Transport.WebSocket.Server           as WS
 import qualified Hasura.Logging                                      as L
 import qualified Hasura.Server.Telemetry.Counters                    as Telem
@@ -60,18 +60,7 @@ onConnHandler (L.Logger logger) corsPolicy wsId requestHead = do
   where
     keepAliveAction wsConn = liftIO $ forever $ do
       sendMsg wsConn SMConnKeepAlive
-      threadDelay $ 5 * 1000 * 1000
-
-    jwtExpiryHandler connData _ = do
-      expTime <- liftIO $ STM.atomically $ do
-        connState <- STM.readTVar $ _wscUser connData
-        case connState of
-          CSNotInitialised _         -> STM.retry
-          CSInitError _              -> STM.retry
-          CSInitialised _ expTimeM _ ->
-            maybe STM.retry return expTimeM
-      currTime <- TC.getCurrentTime
-      sleep $ fromUnits $ TC.diffUTCTime expTime currTime
+      sleep $ seconds 5
 
     accept hdrs errType = do
       logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing Nothing) EAccepted
@@ -82,7 +71,7 @@ onConnHandler (L.Logger logger) corsPolicy wsId requestHead = do
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
       return $ Right $ WS.AcceptWith (CSQueries connData) acceptRequest
-                       (Just keepAliveAction) (jwtExpiryHandler connData)
+                       (Just keepAliveAction) tokenExpiryHandler
 
     reject qErr = do
       logger $ mkWsErrorLog Nothing (WsConnInfo wsId Nothing Nothing) (ERejected qErr)
@@ -111,6 +100,10 @@ onMessageHandler authMode serverEnv connData wsConn msgRaw =
       CMStart startMsg  -> liftIO $ onStart serverEnv wsConn connData startMsg
       CMStop stopMsg    -> liftIO $ onStop logger (_wseLiveQMap serverEnv)
                                     wsConn connData stopMsg
+      -- The idea is cleanup will be handled by 'onClose', but...
+      -- NOTE: we need to close the websocket connection when we receive the
+      -- CMConnTerm message and calling WS.closeConn will definitely throw an
+      -- exception, but I'm not sure if 'closeConn' is the correct thing here....
       CMConnTerm        -> liftIO $ WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
   where
     logger = _wseLogger serverEnv
@@ -123,14 +116,20 @@ onConnInit logger manager wsConn connData authMode connParamsM = do
   res <- resolveUserInfo logger manager headers authMode
   case res of
     Left e  -> do
-      liftIO $ STM.atomically $ STM.writeTVar (_wscUser connData) $
-        CSInitError $ qeError e
+      let !initErr = CSInitError $ qeError e
+      liftIO $ do
+        $assertNFHere initErr  -- so we don't write thunks to mutable vars
+        STM.atomically $ STM.writeTVar (_wscUser connData) initErr
+
       let connErr = ConnErrMsg $ qeError e
       logWSEvent logger wsConn connData $ EConnErr connErr
       sendMsg wsConn $ SMConnErr connErr
     Right (userInfo, expTimeM) -> do
-      liftIO $ STM.atomically $ STM.writeTVar (_wscUser connData) $
-        CSInitialised userInfo expTimeM paramHeaders
+      let !csInit = CSInitialised userInfo expTimeM paramHeaders
+      liftIO $ do
+        $assertNFHere csInit  -- so we don't write thunks to mutable vars
+        STM.atomically $ STM.writeTVar (_wscUser connData) csInit
+
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?
@@ -153,6 +152,8 @@ onStart serverEnv wsConn connData (StartMsg opId q) = catchAndIgnore $ do
   timerTot <- startTimer
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
+  -- NOTE: it should be safe to rely on this check later on in this function, since we expect that
+  -- we process all operations on a websocket connection serially:
   when (isJust opM) $ withComplete $ sendStartErr $
     "an operation already exists with this id: " <> unOperationId opId
 
@@ -168,8 +169,8 @@ onStart serverEnv wsConn connData (StartMsg opId q) = catchAndIgnore $ do
 
   requestId <- getRequestId reqHdrs
   (sc, scVer) <- liftIO getSchemaCache
-  execPlanE <- runExceptT $ E.getResolvedExecPlan R.allowActions pgExecCtx
-               planCache userInfo sqlGenCtx enableAL sc scVer httpMgr reqHdrs q
+  execPlanE <- runExceptT $ E.getResolvedExecPlan (RA.allowActions httpMgr reqHdrs)
+               pgExecCtx planCache userInfo sqlGenCtx enableAL sc scVer httpMgr reqHdrs q
   (telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx
                 planCache sc scVer httpMgr enableAL
@@ -187,6 +188,7 @@ onStart serverEnv wsConn connData (StartMsg opId q) = catchAndIgnore $ do
     runHasuraGQ timerTot telemCacheHit reqId query userInfo = \case
       E.ExOpQuery opTx genSql ->
         execQueryOrMut Telem.Query genSql $ runLazyTx' pgExecCtx opTx
+      -- Response headers discarded over websockets
       E.ExOpMutation _ opTx ->
         execQueryOrMut Telem.Mutation Nothing $
           runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo opTx
@@ -216,7 +218,7 @@ onStart serverEnv wsConn connData (StartMsg opId q) = catchAndIgnore $ do
               -- Telemetry. NOTE: don't time network IO:
               telemTimeTot <- Seconds <$> timerTot
               sendSuccResp encJson $ LQ.LiveQueryMetadata telemTimeIO_DT
-              let telemTimeIO = fromUnits telemTimeIO_DT
+              let telemTimeIO = convertDuration telemTimeIO_DT
               Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
           sendCompleted (Just reqId)
@@ -236,13 +238,13 @@ onStart serverEnv wsConn connData (StartMsg opId q) = catchAndIgnore $ do
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
       runExceptT (flip runReaderT execCtx $
-        E.execRemoteGQ reqId userInfo reqHdrs q rsi opDef) >>= \case
+        E.execRemoteGQ reqId userInfo reqHdrs q rsi (G._todType opDef)) >>= \case
           Left  err           -> postExecErr reqId err
           Right (telemTimeIO_DT, !val) -> do
             -- Telemetry. NOTE: don't time network IO:
             telemTimeTot <- Seconds <$> timerTot
             sendRemoteResp reqId (_hrBody val) $ LQ.LiveQueryMetadata telemTimeIO_DT
-            let telemTimeIO = fromUnits telemTimeIO_DT
+            let telemTimeIO = convertDuration telemTimeIO_DT
             Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
       sendCompleted (Just reqId)
@@ -328,13 +330,22 @@ onStop
   -> StopMsg
   -> IO ()
 onStop logger lqMap wsConn connData (StopMsg opId) = do
-  -- probably wrap the whole thing in a single tx?
+  -- When a stop message is received for an operation, it may not be present in OpMap
+  -- in these cases:
+  -- 1. If the operation is a query/mutation - as we remove the operation from the
+  -- OpMap as soon as it is executed
+  -- 2. A misbehaving client
+  -- 3. A bug on our end
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   case opM of
     Just (lqId, opNameM) -> do
       logWSEvent logger wsConn connData $ EOperation $ opDet opNameM
       LQ.removeLiveQuery logger lqMap lqId
-    Nothing    -> return ()
+    Nothing    ->
+      L.unLogger logger $ L.UnstructuredLog L.LevelDebug $ fromString $
+        "Received STOP for an operation that we have no record for: "
+        <> show (unOperationId opId)
+        <> " (could be a query/mutation operation or a misbehaving client or a bug)"
   STM.atomically $ STMMap.delete opId opMap
   where
     -- logger = _wseLogger serverEnv
@@ -363,8 +374,8 @@ logWSEvent
 logWSEvent (L.Logger logger) wsConn connData wsEv = do
   userInfoME <- liftIO $ STM.readTVarIO userInfoR
   let (userVarsM, jwtExpM) = case userInfoME of
-        CSInitialised userInfo jwtM _ -> ( Just $ userVars userInfo
-                                         , jwtM
+        CSInitialised userInfo tokenM _ -> ( Just $ _uiSession userInfo
+                                         , tokenM
                                          )
         _                             -> (Nothing, Nothing)
   liftIO $ logger $ WSLog logLevel $ WSLogInfo userVarsM (WsConnInfo wsId jwtExpM Nothing) wsEv

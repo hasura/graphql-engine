@@ -279,3 +279,67 @@ export const resetMetadataQuery = {
   type: 'clear_metadata',
   args: {},
 };
+
+export const generateSelectQuery = (
+  type,
+  tableDef,
+  { where, limit, offset, order_by, columns }
+) => ({
+  type,
+  args: {
+    columns,
+    where,
+    limit,
+    offset,
+    order_by,
+    table: tableDef,
+  },
+});
+
+export const getFetchManualTriggersQuery = tableName => ({
+  type: 'select',
+  args: {
+    table: {
+      name: 'event_triggers',
+      schema: 'hdb_catalog',
+    },
+    columns: ['*'],
+    order_by: {
+      column: 'name',
+      type: 'asc',
+      nulls: 'last',
+    },
+    where: {
+      table_name: tableName,
+    },
+  },
+});
+
+export const getConsoleOptsQuery = () =>
+  generateSelectQuery(
+    'select',
+    { name: 'hdb_version', schema: 'hdb_catalog' },
+    {
+      columns: ['hasura_uuid', 'console_state'],
+    }
+  );
+
+export const getSaveRemoteRelQuery = (args, isNew) => ({
+  type: `${isNew ? 'create' : 'update'}_remote_relationship`,
+  args,
+});
+
+export const getDropRemoteRelQuery = (name, table) => ({
+  type: 'delete_remote_relationship',
+  args: {
+    name,
+    table,
+  },
+});
+
+export const getRemoteSchemaIntrospectionQuery = remoteSchemaName => ({
+  type: 'introspect_remote_schema',
+  args: {
+    name: remoteSchemaName,
+  },
+});

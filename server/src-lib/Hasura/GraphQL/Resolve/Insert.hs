@@ -4,10 +4,10 @@ module Hasura.GraphQL.Resolve.Insert
   )
 where
 
-import           Control.Arrow                     ((>>>))
 import           Data.Has
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.Session
 
 import qualified Data.Aeson                        as J
 import qualified Data.Aeson.Casing                 as J
@@ -33,10 +33,12 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Insert             (insertOrUpdateCheckExpr)
 import           Hasura.RQL.DML.Internal           (convAnnBoolExpPartialSQL, convPartialSQLExp,
-                                                    dmlTxErrorHandler, sessVarFromCurrentSetting)
+                                                    sessVarFromCurrentSetting)
 import           Hasura.RQL.DML.Mutation
+import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
 import           Hasura.RQL.Types
+import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -294,13 +296,15 @@ validateInsert insCols objRels addCols = do
 -- | insert an object relationship and return affected rows
 -- | and parent dependent columns
 insertObjRel
-  :: Bool
+  :: (HasVersion, MonadTx m, MonadIO m)
+  => Bool
+  -> MutationRemoteJoinCtx
   -> RoleName
   -> ObjRelIns
-  -> Q.TxE QErr (Int, [PGColWithValue])
-insertObjRel strfyNum role objRelIns =
+  -> m (Int, [PGColWithValue])
+insertObjRel strfyNum rjCtx role objRelIns =
   withPathK relNameTxt $ do
-    (affRows, colValM) <- withPathK "data" $ insertObj strfyNum role tn singleObjIns []
+    (affRows, colValM) <- withPathK "data" $ insertObj strfyNum rjCtx role tn singleObjIns []
     colVal <- onNothing colValM $ throw400 NotSupported errMsg
     retColsWithVals <- fetchFromColVals colVal rColInfos
     let c = mergeListsWith (Map.toList mapCols) retColsWithVals
@@ -328,18 +332,20 @@ decodeEncJSON =
 
 -- | insert an array relationship and return affected rows
 insertArrRel
-  :: Bool
+  :: (HasVersion, MonadTx m, MonadIO m)
+  => Bool
+  -> MutationRemoteJoinCtx
   -> RoleName
   -> [PGColWithValue]
   -> ArrRelIns
-  -> Q.TxE QErr Int
-insertArrRel strfyNum role resCols arrRelIns =
+  -> m Int
+insertArrRel strfyNum rjCtx role resCols arrRelIns =
     withPathK relNameTxt $ do
     let addCols = mergeListsWith resCols (Map.toList colMapping)
                (\(col, _) (lCol, _) -> col == lCol)
                (\(_, colVal) (_, rCol) -> (rCol, colVal))
 
-    resBS <- insertMultipleObjects strfyNum role tn multiObjIns addCols mutOutput "data"
+    resBS <- insertMultipleObjects strfyNum rjCtx role tn multiObjIns addCols mutOutput "data"
     resObj <- decodeEncJSON resBS
     onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
       throw500 "affected_rows not returned in array rel insert"
@@ -352,18 +358,20 @@ insertArrRel strfyNum role resCols arrRelIns =
 
 -- | insert an object with object and array relationships
 insertObj
-  :: Bool
+  :: (HasVersion, MonadTx m, MonadIO m)
+  => Bool
+  -> MutationRemoteJoinCtx
   -> RoleName
   -> QualifiedTable
   -> SingleObjIns
   -> [PGColWithValue] -- ^ additional fields
-  -> Q.TxE QErr (Int, Maybe ColumnValuesText)
-insertObj strfyNum role tn singleObjIns addCols = do
+  -> m (Int, Maybe ColumnValuesText)
+insertObj strfyNum rjCtx role tn singleObjIns addCols = do
   -- validate insert
   validateInsert (map fst cols) (map _riRelInfo objRels) $ map fst addCols
 
   -- insert all object relations and fetch this insert dependent column values
-  objInsRes <- forM objRels $ insertObjRel strfyNum role
+  objInsRes <- forM objRels $ insertObjRel strfyNum rjCtx role
 
   -- prepare final insert columns
   let objRelAffRows = sum $ map fst objInsRes
@@ -377,7 +385,7 @@ insertObj strfyNum role tn singleObjIns addCols = do
   CTEExp cte insPArgs <-
     mkInsertQ tn onConflictM finalInsCols defVals role (insCheck, updCheck)
 
-  MutateResp affRows colVals <- mutateAndFetchCols tn allCols (cte, insPArgs) strfyNum
+  MutateResp affRows colVals <- liftTx $ mutateAndFetchCols tn allCols (cte, insPArgs) strfyNum
   colValM <- asSingleObject colVals
 
   arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null arrRels
@@ -394,7 +402,7 @@ insertObj strfyNum role tn singleObjIns addCols = do
     withArrRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
       arrDepColsWithVal <- fetchFromColVals colVal arrRelDepCols
-      arrInsARows <- forM arrRels $ insertArrRel strfyNum role arrDepColsWithVal
+      arrInsARows <- forM arrRels $ insertArrRel strfyNum rjCtx role arrDepColsWithVal
       return $ sum arrInsARows
 
     asSingleObject = \case
@@ -409,15 +417,17 @@ insertObj strfyNum role tn singleObjIns addCols = do
 
 -- | insert multiple Objects in postgres
 insertMultipleObjects
-  :: Bool
+  :: (HasVersion, MonadTx m, MonadIO m)
+  => Bool
+  -> MutationRemoteJoinCtx
   -> RoleName
   -> QualifiedTable
   -> MultiObjIns
   -> [PGColWithValue] -- ^ additional fields
   -> RR.MutationOutput
   -> T.Text -- ^ error path
-  -> Q.TxE QErr EncJSON
-insertMultipleObjects strfyNum role tn multiObjIns addCols mutOutput errP =
+  -> m EncJSON
+insertMultipleObjects strfyNum rjCtx role tn multiObjIns addCols mutOutput errP =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
     AnnIns insObjs onConflictM (insCond, updCond) tableColInfos defVals = multiObjIns
@@ -447,33 +457,35 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutOutput errP =
       let insQP1 = RI.InsertQueryP1 tn tableCols sqlRows onConflictM
                      (insCheck, updCheck) mutOutput tableColInfos
           p1 = (insQP1, prepArgs)
-      RI.insertP2 strfyNum p1
+      RI.execInsertQuery strfyNum (Just rjCtx) p1
 
     -- insert each object with relations
     withRelsInsert = withErrPath $ do
       insResps <- indexedForM singleObjInserts $ \objIns ->
-          insertObj strfyNum role tn objIns addCols
+          insertObj strfyNum rjCtx role tn objIns addCols
 
       let affRows = sum $ map fst insResps
-          columnValues = catMaybes $ map snd insResps
+          columnValues = mapMaybe snd insResps
       cteExp <- mkSelCTEFromColVals tn tableColInfos columnValues
-      let sql = toSQL $ RR.mkMutationOutputExp tn tableColInfos (Just affRows) cteExp mutOutput strfyNum
-      runIdentity . Q.getRow
-               <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) [] False
+      let (mutOutputRJ, remoteJoins) = getRemoteJoinsMutationOutput mutOutput
+          sqlQuery = Q.fromBuilder $ toSQL $
+                     RR.mkMutationOutputExp tn tableColInfos (Just affRows) cteExp mutOutputRJ strfyNum
+      executeMutationOutputQuery sqlQuery [] $ (,rjCtx) <$> remoteJoins
 
 prefixErrPath :: (MonadError QErr m) => Field -> m a -> m a
 prefixErrPath fld =
   withPathK "selectionSet" . fieldAsPath fld . withPathK "args"
 
 convertInsert
-  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r, Has InsCtxMap r
+  :: ( HasVersion, MonadReusability m, MonadError QErr m, MonadReader r m
+     , Has FieldMap r , Has OrdByCtx r, Has SQLGenCtx r, Has InsCtxMap r
      )
-  => RoleName
+  => MutationRemoteJoinCtx
+  -> RoleName
   -> QualifiedTable -- table
   -> Field -- the mutation field
   -> m RespTx
-convertInsert role tn fld = prefixErrPath fld $ do
+convertInsert rjCtx role tn fld = prefixErrPath fld $ do
   mutOutputUnres <- RR.MOutMultirowFields <$> resolveMutationFields (_fType fld) (_fSelSet fld)
   mutOutputRes <- RR.traverseMutationOutput resolveValTxt mutOutputUnres
   annVals <- withArg arguments "objects" asArray
@@ -493,7 +505,7 @@ convertInsert role tn fld = prefixErrPath fld $ do
                           tableCols defValMapRes
           tableCols = Map.elems tableColMap
       strfyNum <- stringifyNum <$> asks getter
-      return $ prefixErrPath fld $ insertMultipleObjects strfyNum role tn
+      return $ prefixErrPath fld $ insertMultipleObjects strfyNum rjCtx role tn
         multiObjIns [] mutOutput "objects"
     withEmptyObjs mutOutput =
       return $ return $ buildEmptyMutResp mutOutput
@@ -501,14 +513,15 @@ convertInsert role tn fld = prefixErrPath fld $ do
     onConflictM = Map.lookup "on_conflict" arguments
 
 convertInsertOne
-  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r, Has InsCtxMap r
+  :: ( HasVersion, MonadReusability m, MonadError QErr m, MonadReader r m
+     , Has FieldMap r , Has OrdByCtx r, Has SQLGenCtx r, Has InsCtxMap r
      )
-  => RoleName
+  => MutationRemoteJoinCtx
+  -> RoleName
   -> QualifiedTable -- table
   -> Field -- the mutation field
   -> m RespTx
-convertInsertOne role qt field = prefixErrPath field $ do
+convertInsertOne rjCtx role qt field = prefixErrPath field $ do
   tableSelFields <- processTableSelectionSet (_fType field) $ _fSelSet field
   let mutationOutputUnresolved = RR.MOutSinglerowObject tableSelFields
   mutationOutputResolved <- RR.traverseMutationOutput resolveValTxt mutationOutputUnresolved
@@ -521,7 +534,7 @@ convertInsertOne role qt field = prefixErrPath field $ do
                     tableCols defValMapRes
       tableCols = Map.elems tableColMap
   strfyNum <- stringifyNum <$> asks getter
-  pure $ prefixErrPath field $ insertMultipleObjects strfyNum role qt
+  pure $ prefixErrPath field $ insertMultipleObjects strfyNum rjCtx role qt
          multiObjIns [] mutationOutputResolved "object"
   where
     arguments = _fArguments field

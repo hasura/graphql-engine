@@ -4,6 +4,7 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
+import           Hasura.Session
 
 import           Data.Aeson
 import           Data.Aeson.Casing
