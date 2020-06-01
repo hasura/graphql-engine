@@ -24,21 +24,76 @@ Expose columns with a different name in the GraphQL API
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: Via console
 
      Head to the ``Data -> [table-name] -> Modify``
 
      .. thumbnail:: /img/graphql/manual/schema/custom-field-name-column.png
         :alt: Customise GraphQL field name
 
-  .. tab:: Metadata API
+  .. tab:: Via CLI
+
+    You can customize auto-generated field names in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+       :emphasize-lines: 4-7
+
+        - table:
+            schema: public
+            name: author
+          configuration:
+            custom_column_names:
+              addr: address
+
+    After that, apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
+  .. tab:: Via API
 
     A custom field name can be set for a column via the following 2 methods:
 
-    - passing a :ref:`table_config` with the :ref:`CustomColumnNames` to the :ref:`track_table_v2` API while
-      tracking a table
-    - using the :ref:`set_table_custom_fields` API to set the :ref:`CustomColumnNames`
+    1. passing a :ref:`table_config` with the :ref:`CustomColumnNames` to the :ref:`track_table_v2` API while tracking a table:
 
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "track_table",
+          "version": 2,
+          "args": {
+              "table": "author",
+              "configuration": {
+                  "custom_column_names": {
+                      "addr": "address"
+                  }
+              }
+          }
+      }
+
+    2. using the :ref:`set_table_custom_fields` API to set the :ref:`CustomColumnNames`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "set_table_custom_fields",
+          "version": 2,
+          "args": {
+              "table": "author",
+              "custom_column_names": {
+                  "addr": "address"
+              }
+          }
+      }
 
 Expose table root fields with a different name in the GraphQL API
 -----------------------------------------------------------------
@@ -46,19 +101,76 @@ Expose table root fields with a different name in the GraphQL API
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: Via console
 
      Head to the ``Data -> [table-name] -> Modify``
 
      .. thumbnail:: /img/graphql/manual/schema/custom-field-name-root-fields.png
         :alt: Customise GraphQL root field
 
-  .. tab:: Metadata API
+  .. tab:: Via CLI
+
+    You can expose table root fields with a different name in the GraphQL API in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+       :emphasize-lines: 4-7
+
+        - table:
+            schema: public
+            name: author
+          configuration:
+            custom_root_fields:
+              select_by_pk: author
+              select: authors
+
+    After that, apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
+  .. tab:: Via API
 
     A custom field name can be set for a table root field via the following 2 methods:
 
-    - passing a :ref:`table_config` with the :ref:`custom_root_fields` names to the :ref:`track_table_v2` API while
-      tracking a table
-    - using the :ref:`set_table_custom_fields` API to set the :ref:`custom_root_fields` names
+    1. passing a :ref:`table_config` with the :ref:`custom_root_fields` names to the :ref:`track_table_v2` API while tracking a table:
 
+    .. code-block:: http
 
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "track_table",
+          "version": 2,
+          "args": {
+              "table": "author",
+              "configuration": {
+                  "custom_root_fields": {
+                      "select": "authors",
+                      "select_by_pk": "author"
+                  }
+              }
+          }
+      }
+
+    2. using the :ref:`set_table_custom_fields` API to set the :ref:`custom_root_fields` names
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "set_table_custom_fields",
+        "version": 2,
+        "args": {
+          "table": "author",
+          "custom_root_fields": {
+              "select": "authors",
+              "select_by_pk": "author"
+          }
+        }
+      }
