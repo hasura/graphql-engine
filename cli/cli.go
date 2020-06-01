@@ -237,6 +237,8 @@ type Config struct {
 	MetadataDirectory string `yaml:"metadata_directory,omitempty"`
 	// MigrationsDirectory defines the directory where the migration files were stored.
 	MigrationsDirectory string `yaml:"migrations_directory,omitempty"`
+	// SeedsDirectory defines the directory where seed files will be stored
+	SeedsDirectory string `yaml:"seeds_directory,omitempty"`
 	// ActionConfig defines the config required to create or generate codegen for an action.
 	ActionConfig *types.ActionExecutionConfig `yaml:"actions,omitempty"`
 }
@@ -269,6 +271,8 @@ type ExecutionContext struct {
 	MigrationDir string
 	// MetadataDir is the name of directory where metadata files are stored.
 	MetadataDir string
+	// Seed directory -- directory in which seed files are to be stored
+	SeedsDirectory string
 	// ConfigFile is the file where endpoint etc. are stored.
 	ConfigFile string
 	// HGE Headers, are the custom headers which can be passed to HGE API
@@ -495,6 +499,14 @@ func (ec *ExecutionContext) Validate() error {
 		}
 	}
 
+	ec.SeedsDirectory = filepath.Join(ec.ExecutionDirectory, ec.Config.SeedsDirectory)
+	if _, err := os.Stat(ec.SeedsDirectory); os.IsNotExist(err) {
+		err = os.MkdirAll(ec.SeedsDirectory, os.ModePerm)
+		if err != nil {
+			return errors.Wrap(err, "cannot create seeds directory")
+		}
+	}
+
 	if ec.Config.Version == V2 && ec.Config.MetadataDirectory != "" {
 		// set name of metadata directory
 		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
@@ -586,6 +598,7 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("api_paths.version", "v1/version")
 	v.SetDefault("metadata_directory", "")
 	v.SetDefault("migrations_directory", "migrations")
+	v.SetDefault("seeds_directory", "seeds")
 	v.SetDefault("actions.kind", "synchronous")
 	v.SetDefault("actions.handler_webhook_baseurl", "http://localhost:3000")
 	v.SetDefault("actions.codegen.framework", "")
@@ -617,6 +630,7 @@ func (ec *ExecutionContext) readConfig() error {
 		},
 		MetadataDirectory:   v.GetString("metadata_directory"),
 		MigrationsDirectory: v.GetString("migrations_directory"),
+		SeedsDirectory:      v.GetString("seeds_directory"),
 		ActionConfig: &types.ActionExecutionConfig{
 			Kind:                  v.GetString("actions.kind"),
 			HandlerWebhookBaseURL: v.GetString("actions.handler_webhook_baseurl"),
