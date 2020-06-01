@@ -51,7 +51,6 @@ import qualified Data.ByteString.Lazy            as BL
 import qualified Data.ByteString.Lazy.Char8      as BLC
 import qualified Data.CaseInsensitive            as CI
 import qualified Data.HashMap.Strict             as Map
-import qualified Data.Parser.JSONPath            as JSONPath
 import qualified Data.Text                       as T
 import qualified Data.Text.Encoding              as T
 import qualified Network.HTTP.Client             as HTTP
@@ -110,17 +109,28 @@ instance J.FromJSON JWTClaimsMap where
       flip (J.<?>) (J.Key t) $ (T.toLower t,) <$> case val of
         J.Array allowedRoles ->
           if isAllowedRolesTuple
-          then pure . JWTClaimsMapAllowedRoles $ map (T.pack . show) $ V.toList allowedRoles
+          then do
+            allowedRoles' <- mapM (\role -> do
+                                      case role of
+                                        J.String role' -> pure role'
+                                        _ -> fail "expected role to be a string"
+                                  ) $ V.toList allowedRoles
+            pure . JWTClaimsMapAllowedRoles $ allowedRoles'
           else fail $ "only x-hasura-allowed-roles can have an array value"
+
         J.String s ->
           if isAllowedRolesTuple
           then fail $ "expecting array of strings for 'x-hasura-allowed-roles' literal value"
           else pure $ JWTClaimsMapString s
+
         J.Object o ->
           case Map.lookup "path" o of
             Nothing    -> fail "path key not present"
             Just path  ->
-              either fail (pure . JWTClaimsMapJSONPath) $ parseJSONPath $ (T.pack . show) path
+              case path of
+                J.String path' -> either fail (pure . JWTClaimsMapJSONPath) $ parseJSONPath path'
+                _ -> fail "expected a JSON Path value"
+
         _          -> fail "expecting String or JSON object with a JSONPath value in the key 'path'"
 
     let withParseError l = maybe (fail $ T.unpack $ l <> " is expected but not found")
@@ -511,7 +521,7 @@ instance J.FromJSON JWTConfig where
     hasuraClaimsNs <-
       case (claimsNsPath,claimsNs) of
         (Nothing, Nothing) -> pure $ ClaimNs defaultClaimsNamespace
-        (Just nsPath, Nothing) -> either failJSONPathParsing (return . ClaimNsPath) . JSONPath.parseJSONPath $ nsPath
+        (Just nsPath, Nothing) -> either failJSONPathParsing (return . ClaimNsPath) . parseJSONPath $ nsPath
         (Nothing, Just ns) -> return $ ClaimNs ns
         (Just _, Just _) -> fail "claims_namespace and claims_namespace_path both cannot be set"
 
