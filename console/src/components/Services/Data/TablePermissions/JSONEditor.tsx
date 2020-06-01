@@ -14,7 +14,7 @@ const JSONEditor: React.FC<JSONEditorProps> = ({
   data,
 }) => {
   const [value, setValue] = useState(initData || data || '');
-  const [annotations, setAnnotations] = useState([] as IAnnotation[]);
+  const [annotations, setAnnotations] = useState<IAnnotation[]>([]);
   useEffect(() => {
     if (value !== data) onChange(value);
   }, [value]);
