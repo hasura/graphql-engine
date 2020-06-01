@@ -5,10 +5,9 @@ import (
 	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli/migrate"
-
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	"github.com/pkg/errors"
 
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	"github.com/spf13/afero"
 )
 

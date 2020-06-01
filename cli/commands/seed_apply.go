@@ -22,12 +22,12 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	cmd := &cobra.Command{
 		Use:   "apply",
-		Short: "Apply seeds on the datase",
+		Short: "Apply seed data",
 		Example: `  # Apply all seeds on the database:
   hasura seed apply
 
   # Apply only a particular file:
-  hasura seed apply --file seeds/1234_new_table.sql`,
+  hasura seed apply --file seeds/1234_add_some_seed_data.sql`,
 		SilenceUsage: false,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return ec.Validate()
