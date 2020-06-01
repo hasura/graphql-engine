@@ -1112,6 +1112,9 @@ article ol ol {
 .blueBgColor {
   background-color: #001934;
 }
+.boderBottom {
+  border-bottom: 1px solid rgba(255, 255, 255, .2);
+}
 .commonBtn {
   border-radius: 5px;
   font-family: 'Poppins';
