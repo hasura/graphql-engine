@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
@@ -11,25 +10,40 @@ import PageNotFound, { NotFoundError } from './PageNotFound';
 import RuntimeError from './RuntimeError';
 import { registerRunTimeError } from '../Main/Actions';
 
-class ErrorBoundary extends React.Component {
-  initialState = {
-    hasError: false,
-    info: null,
-    error: null,
-    type: '500',
-  };
+export interface Metadata {
+  inconsistentObjects: object[];
+  ongoingRequest: boolean;
+  allowedQueries: object[];
+}
 
-  constructor(props) {
+export interface ErrorBoundaryProps {
+  metadata: Metadata;
+  dispatch: (arg: unknown) => Promise<unknown>; // TODO update when Redux is migrated to TS;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  type: string;
+}
+
+const initialState: ErrorBoundaryState = {
+  hasError: false,
+  error: null,
+  type: '500',
+};
+
+class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
 
-    this.state = this.initialState;
+    this.state = initialState;
   }
 
-  resetState = () => {
-    this.setState({ ...this.initialState });
-  };
-
-  componentDidCatch(error, info) {
+  componentDidCatch(error: Error) {
     const { dispatch } = this.props;
 
     // for invalid path segment errors
@@ -39,7 +53,7 @@ class ErrorBoundary extends React.Component {
       });
     }
 
-    this.setState({ hasError: true, info: info, error: error });
+    this.setState({ hasError: true, error });
 
     // trigger telemetry
     dispatch(
@@ -60,16 +74,16 @@ class ErrorBoundary extends React.Component {
     );
   }
 
+  resetState = () => {
+    this.setState(initialState);
+  };
+
   render() {
     const { metadata } = this.props;
     const { hasError, type, error } = this.state;
 
     if (hasError && metadata.ongoingRequest) {
-      return (
-        <div>
-          <Spinner />
-        </div>
-      );
+      return <Spinner />;
     }
 
     if (hasError) {
@@ -83,9 +97,5 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
-
-ErrorBoundary.propTypes = {
-  children: PropTypes.element,
-};
 
 export default ErrorBoundary;

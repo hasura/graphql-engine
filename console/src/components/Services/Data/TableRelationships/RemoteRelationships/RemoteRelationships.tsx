@@ -26,14 +26,12 @@ const RemoteRelationships: React.FC<Props> = ({
       <div className={styles.add_mar_bottom}>
         Relationships to remote schemas
       </div>
-      <div>
-        <RemoteRelationshipList
-          relationships={relationships}
-          table={table}
-          remoteSchemas={remoteSchemas}
-          reduxDispatch={reduxDispatch}
-        />
-      </div>
+      <RemoteRelationshipList
+        relationships={relationships}
+        table={table}
+        remoteSchemas={remoteSchemas}
+        reduxDispatch={reduxDispatch}
+      />
     </div>
   );
 };
