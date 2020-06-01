@@ -92,6 +92,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
 - docs: add page for procuring custom docker images and binaries (#4828)
 - docs: add content on how to secure action handlers and other actions docs improvements (#4743)
+- docs: make header common with other hasura.io/ pages (#4957)
 
 ## `v1.2.0`
 
