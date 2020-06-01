@@ -57,6 +57,7 @@ import qualified Data.Text.Encoding              as T
 import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
+import qualified Data.Vector                     as V
 
 newtype RawJWT = RawJWT BL.ByteString
 
@@ -80,36 +81,55 @@ defaultRoleClaim = "x-hasura-default-role"
 defaultClaimsNamespace :: Text
 defaultClaimsNamespace = "https://hasura.io/jwt/claims"
 
-type CustomClaimsMap = Map.HashMap Text J.JSONPath
+data JWTClaimsMapField = JWTClaimsMapJSONPath !J.JSONPath
+                       | JWTClaimsMapString !Text
+                       | JWTClaimsMapAllowedRoles ![Text]
+                       deriving (Eq,Show)
+
+instance J.ToJSON JWTClaimsMapField where
+  toJSON (JWTClaimsMapJSONPath jsonPath) =
+    J.Object $ Map.fromList $ [("path", J.String $ T.pack . encodeJSONPath $ jsonPath)]
+  toJSON (JWTClaimsMapString s) = J.String s
+  toJSON (JWTClaimsMapAllowedRoles allowedRoles) = J.toJSON allowedRoles
+
+type CustomClaimsMap = Map.HashMap Text JWTClaimsMapField
 
 data JWTClaimsMap
   = JWTClaimsMap
-  { jcmDefaultRole  :: !J.JSONPath
-  , jcmAllowedRoles :: !J.JSONPath
+  { jcmDefaultRole  :: !JWTClaimsMapField
+  , jcmAllowedRoles :: !JWTClaimsMapField
   , jcmCustomClaims :: !CustomClaimsMap
   } deriving (Show, Eq)
 
 instance J.FromJSON JWTClaimsMap where
-  parseJSON = J.withObject "Object" $ \obj -> do
+  parseJSON = J.withObject "JWTClaimsMap" $ \obj -> do
     let onlyXHasuraTuples = filter (isSessionVariable . fst) $ Map.toList obj
-    jsonPathTuples <- forM onlyXHasuraTuples $
-      \(t, val) -> flip (J.<?>) (J.Key t) $ (T.toLower t,) <$> case val of
-                         J.String s -> either fail pure $ parseJSONPath s
-                         _          -> fail "expecting String for JSONPath"
+    claimsMapTuples <- forM onlyXHasuraTuples $ \(t,val) ->
+      let isAllowedRolesTuple = T.toLower t == allowedRolesClaim
+      in
+      flip (J.<?>) (J.Key t) $ (T.toLower t,) <$> case val of
+        J.Array allowedRoles ->
+          if isAllowedRolesTuple
+          then pure . JWTClaimsMapAllowedRoles $ map (T.pack . show) $ V.toList allowedRoles
+          else fail $ "only x-hasura-allowed-roles can have an array value"
+        J.String s ->
+          if isAllowedRolesTuple
+          then fail $ "expecting array of strings for 'x-hasura-allowed-roles' literal value"
+          else pure $ JWTClaimsMapString s
+        J.Object o ->
+          case Map.lookup "path" o of
+            Nothing    -> fail "path key not present"
+            Just path  ->
+              either fail (pure . JWTClaimsMapJSONPath) $ parseJSONPath $ (T.pack . show) path
+        _          -> fail "expecting String or JSON object with a JSONPath value in the key 'path'"
 
     let withParseError l = maybe (fail $ T.unpack $ l <> " is expected but not found")
-                           pure $ Map.lookup l $ Map.fromList jsonPathTuples
+                           pure $ Map.lookup l $ Map.fromList claimsMapTuples
         customClaims = Map.fromList $
-                       filter (not . flip elem [allowedRolesClaim, defaultRoleClaim] . fst) jsonPathTuples
+                       filter (not . flip elem [allowedRolesClaim, defaultRoleClaim] . fst) claimsMapTuples
     JWTClaimsMap <$> withParseError defaultRoleClaim <*> withParseError allowedRolesClaim <*> pure customClaims
 
-instance J.ToJSON JWTClaimsMap where
-  toJSON (JWTClaimsMap defaultRole allowedRoles customClaims) =
-    let encodeJSONPath' = T.pack . encodeJSONPath
-    in J.Object $
-       Map.fromList $ [ (defaultRoleClaim, J.String $ encodeJSONPath' defaultRole)
-                      , (allowedRolesClaim, J.String $ encodeJSONPath' allowedRoles)
-                      ] <> map (second (J.String . encodeJSONPath')) (Map.toList customClaims)
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''JWTClaimsMap)
 
 data JWTNamespace
   = ClaimNsPath JSONPath
@@ -346,18 +366,31 @@ parseHasuraClaims unregisteredClaims = \case
     pure (HasuraClaims allowedRoles defaultRole, otherClaims)
 
   JCMap claimsConfig -> do
-    let JWTClaimsMap defaultRoleJsonPath allowedRolesJsonPath otherClaimsMap = claimsConfig
+    let JWTClaimsMap defaultRoleClaimsMap allowedRolesClaimsMap otherClaimsMap = claimsConfig
         claimsObjValue = J.Object unregisteredClaims
 
-    allowedRoles <- parseAllowedRolesClaim $ iResultToMaybe $
-                    executeJSONPath allowedRolesJsonPath claimsObjValue
+    allowedRoles <- case allowedRolesClaimsMap of
+      JWTClaimsMapJSONPath allowedRolesJsonPath ->
+        parseAllowedRolesClaim $ iResultToMaybe $
+        executeJSONPath allowedRolesJsonPath claimsObjValue
+      JWTClaimsMapAllowedRoles allowedRoles' ->
+        parseAllowedRolesClaim $ Just $ J.Array $ V.fromList $ map J.String allowedRoles'
+      JWTClaimsMapString _ -> throw500 $ "unexpected: x-hasura-allowed-roles cannot be a string"
 
-    defaultRole <- parseDefaultRoleClaim $ iResultToMaybe $
-                   executeJSONPath defaultRoleJsonPath claimsObjValue
+    defaultRole <- case defaultRoleClaimsMap of
+      JWTClaimsMapJSONPath defaultRoleJsonPath ->
+        parseDefaultRoleClaim $ iResultToMaybe $
+        executeJSONPath defaultRoleJsonPath claimsObjValue
+      JWTClaimsMapString defaultRoleString -> parseDefaultRoleClaim $ Just $ J.String defaultRoleString
+      JWTClaimsMapAllowedRoles _ -> throw500 $ "unexpected: default role array should be a string"
 
-    otherClaimsObject <- flip Map.traverseWithKey otherClaimsMap $ \k path -> do
+    otherClaimsObject <- flip Map.traverseWithKey otherClaimsMap $ \k claimObj -> do
       let throwClaimErr = throw400 JWTInvalidClaims $ "JWT claim from claims_map, " <> k <> " not found"
-      maybe throwClaimErr pure $ iResultToMaybe $ executeJSONPath path claimsObjValue
+      case claimObj of
+        JWTClaimsMapJSONPath path ->
+          maybe throwClaimErr pure $ iResultToMaybe $ executeJSONPath path claimsObjValue
+        JWTClaimsMapString claimStringValue -> pure $ J.String claimStringValue
+        JWTClaimsMapAllowedRoles _ -> throw500 $ "unexpected: expected a string value for a non x-hasura-allowed-role claim"
 
     otherClaims <- toClaimsTextMap otherClaimsObject
 
