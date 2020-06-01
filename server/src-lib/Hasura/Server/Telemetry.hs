@@ -98,7 +98,7 @@ data TelemetryPayload
 $(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''TelemetryPayload)
 
 telemetryUrl :: Text
-telemetryUrl = "https://telemetry.hasura.io/v1/http"
+telemetryUrl = "http://telemetry-staging.hasura-app.io/v1/http"
 
 mkPayload :: Text -> InstanceId -> Version -> Metrics -> IO TelemetryPayload
 mkPayload dbId instanceId version metrics = do

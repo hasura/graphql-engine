@@ -18,7 +18,7 @@ const Endpoints = {
   hasuractlMigrate: `${hasuractlUrl}/apis/migrate`,
   hasuractlMetadata: `${hasuractlUrl}/apis/metadata`,
   hasuractlMigrateSettings: `${hasuractlUrl}/apis/migrate/settings`,
-  telemetryServer: 'wss://telemetry.hasura.io/v1/ws',
+  telemetryServer: 'ws://telemetry-staging.hasura-app.io/v1/ws',
 };
 
 const globalCookiePolicy = 'same-origin';
