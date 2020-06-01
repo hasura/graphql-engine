@@ -12,12 +12,14 @@ module Hasura.GraphQL.Resolve
   , QueryRootFldUnresolved
   , QueryRootFldResolved
   , toPGQuery
+  , toSQLSelect
 
   , RIntro.schemaR
   , RIntro.typeR
   ) where
 
 import           Data.Has
+import           Hasura.Session
 
 import qualified Data.HashMap.Strict               as Map
 import qualified Database.PG.Query                 as Q
@@ -37,6 +39,7 @@ import qualified Hasura.GraphQL.Resolve.Introspect as RIntro
 import qualified Hasura.GraphQL.Resolve.Mutation   as RM
 import qualified Hasura.GraphQL.Resolve.Select     as RS
 import qualified Hasura.GraphQL.Validate           as V
+import qualified Hasura.RQL.DML.RemoteJoin         as RR
 import qualified Hasura.RQL.DML.Select             as DS
 import qualified Hasura.SQL.DML                    as S
 
@@ -65,21 +68,21 @@ traverseQueryRootFldAST f = \case
   QRFActionExecuteObject s -> QRFActionExecuteObject <$> DS.traverseAnnSimpleSel f s
   QRFActionExecuteList s   -> QRFActionExecuteList <$> DS.traverseAnnSimpleSel f s
 
-toPGQuery :: QueryRootFldResolved -> Q.Query
+toPGQuery :: QueryRootFldResolved -> (Q.Query, Maybe RR.RemoteJoins)
 toPGQuery = \case
-  QRFPk s                  -> DS.selectQuerySQL DS.JASSingleObject s
-  QRFSimple s              -> DS.selectQuerySQL DS.JASMultipleRows s
-  QRFAgg s                 -> DS.selectAggQuerySQL s
-  QRFActionSelect s        -> DS.selectQuerySQL DS.JASSingleObject s
-  QRFActionExecuteObject s -> DS.selectQuerySQL DS.JASSingleObject s
-  QRFActionExecuteList s   -> DS.selectQuerySQL DS.JASMultipleRows s
+  QRFPk s           -> first (DS.selectQuerySQL DS.JASSingleObject) $ RR.getRemoteJoins s
+  QRFSimple s       -> first (DS.selectQuerySQL DS.JASMultipleRows) $ RR.getRemoteJoins s
+  QRFAgg s          -> first DS.selectAggQuerySQL $ RR.getRemoteJoinsAggSel s
+  QRFActionSelect s -> first (DS.selectQuerySQL DS.JASSingleObject) $ RR.getRemoteJoins s
+  QRFActionExecuteObject s -> first (DS.selectQuerySQL DS.JASSingleObject) $ RR.getRemoteJoins s
+  QRFActionExecuteList s   -> first (DS.selectQuerySQL DS.JASMultipleRows) $ RR.getRemoteJoins s
 
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
 validateHdrs userInfo hdrs = do
-  let receivedVars = userVars userInfo
+  let receivedVars = _uiSession userInfo
   forM_ hdrs $ \hdr ->
-    unless (isJust $ getVarVal hdr receivedVars) $
+    unless (isJust $ getSessionVariableValue (mkSessionVariable hdr) receivedVars) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
 
 queryFldToPGAST
@@ -119,10 +122,16 @@ queryFldToPGAST fld actionExecuter = do
     QCAsyncActionFetch ctx ->
       QRFActionSelect <$> RA.resolveAsyncActionQuery userInfo ctx fld
     QCAction ctx -> do
-      case jsonAggType of
-        DS.JASMultipleRows -> QRFActionExecuteList
-        DS.JASSingleObject -> QRFActionExecuteObject
-      <$> actionExecuter (RA.resolveActionQuery fld ctx (userVars userInfo))
+      -- query actions should not be marked reusable because we aren't
+      -- capturing the variable value in the state as re-usable variables.
+      -- The variables captured in non-action queries are used to generate
+      -- an SQL query, but in case of query actions it's converted into JSON
+      -- and included in the action's webhook payload.
+      markNotReusable
+      let f = case jsonAggType of
+             DS.JASMultipleRows -> QRFActionExecuteList
+             DS.JASSingleObject -> QRFActionExecuteObject
+      f <$> actionExecuter (RA.resolveActionQuery fld ctx (_uiSession userInfo))
       where
         outputType = _saecOutputType ctx
         jsonAggType = RA.mkJsonAggSelect outputType
@@ -146,29 +155,33 @@ mutFldToTx
   -> m (RespTx, HTTP.ResponseHeaders)
 mutFldToTx fld = do
   userInfo <- asks getter
+  reqHeaders <- asks getter
+  httpManager <- asks getter
+  let rjCtx = (httpManager, reqHeaders, userInfo)
   opCtx <- getOpCtx $ V._fName fld
   let noRespHeaders = fmap (,[])
+      roleName = _uiRole userInfo
   case opCtx of
     MCInsert ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsert (userRole userInfo) (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsert rjCtx roleName (_iocTable ctx) fld
     MCInsertOne ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsertOne (userRole userInfo) (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsertOne rjCtx roleName (_iocTable ctx) fld
     MCUpdate ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
-      noRespHeaders $ RM.convertUpdate ctx fld
+      noRespHeaders $ RM.convertUpdate ctx rjCtx fld
     MCUpdateByPk ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
-      noRespHeaders $ RM.convertUpdateByPk ctx fld
+      noRespHeaders $ RM.convertUpdateByPk ctx rjCtx fld
     MCDelete ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
-      noRespHeaders $ RM.convertDelete ctx fld
+      noRespHeaders $ RM.convertDelete ctx rjCtx fld
     MCDeleteByPk ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
-      noRespHeaders $ RM.convertDeleteByPk ctx fld
+      noRespHeaders $ RM.convertDeleteByPk ctx rjCtx fld
     MCAction ctx ->
-      RA.resolveActionMutation fld ctx (userVars userInfo)
+      RA.resolveActionMutation fld ctx (_uiSession userInfo)
 
 getOpCtx
   :: ( MonadReusability m
@@ -181,3 +194,12 @@ getOpCtx f = do
   opCtxMap <- asks getter
   onNothing (Map.lookup f opCtxMap) $ throw500 $
     "lookup failed: opctx: " <> showName f
+
+toSQLSelect :: QueryRootFldResolved -> S.Select
+toSQLSelect = \case
+  QRFPk s       -> DS.mkSQLSelect DS.JASSingleObject s
+  QRFSimple s   -> DS.mkSQLSelect DS.JASMultipleRows s
+  QRFAgg s      -> DS.mkAggSelect s
+  QRFActionSelect s -> DS.mkSQLSelect DS.JASSingleObject s
+  QRFActionExecuteObject s -> DS.mkSQLSelect DS.JASSingleObject s
+  QRFActionExecuteList s -> DS.mkSQLSelect DS.JASSingleObject s

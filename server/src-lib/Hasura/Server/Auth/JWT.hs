@@ -14,10 +14,8 @@ module Hasura.Server.Auth.JWT
 
 import           Control.Exception               (try)
 import           Control.Lens
-import           Control.Monad                   (when)
 import           Control.Monad.Trans.Maybe
 import           Data.IORef                      (IORef, readIORef, writeIORef)
-import           Data.List                       (find)
 import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
                                                   getCurrentTime)
 import           GHC.AssertNF
@@ -32,26 +30,27 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (getRequestHeader, userRoleHeader, executeJSONPath)
+import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,
+                                                  isSessionVariable, userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
-import           Hasura.RQL.Types.Error          (encodeJSONPath)
+import           Hasura.Session
 
 import qualified Control.Concurrent.Extended     as C
 import qualified Crypto.JWT                      as Jose
 import qualified Data.Aeson                      as J
 import qualified Data.Aeson.Casing               as J
-import qualified Data.Aeson.TH                   as J
 import qualified Data.Aeson.Internal             as J
+import qualified Data.Aeson.TH                   as J
 import qualified Data.ByteString.Lazy            as BL
 import qualified Data.ByteString.Lazy.Char8      as BLC
 import qualified Data.CaseInsensitive            as CI
 import qualified Data.HashMap.Strict             as Map
+import qualified Data.Parser.JSONPath            as JSONPath
 import qualified Data.Text                       as T
 import qualified Data.Text.Encoding              as T
 import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
-import qualified Data.Parser.JSONPath            as JSONPath
 
 newtype RawJWT = RawJWT BL.ByteString
 
@@ -70,7 +69,7 @@ data JWTConfigClaims
 
 instance J.ToJSON JWTConfigClaims where
   toJSON (ClaimNsPath nsPath) = J.String . T.pack $ encodeJSONPath nsPath
-  toJSON (ClaimNs ns) = J.String ns
+  toJSON (ClaimNs ns)         = J.String ns
 
 data JWTConfig
   = JWTConfig
@@ -126,7 +125,7 @@ jwkRefreshCtrl logger manager url ref time = liftIO $ do
       res <- runExceptT $ updateJwkRef logger manager url ref
       mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
-      let delay = maybe (minutes 1) fromUnits mTime
+      let delay = maybe (minutes 1) (convertDuration) mTime
       C.sleep delay
   where
     logNotice = do
@@ -224,8 +223,8 @@ processJwt jwtCtx headers mUnAuthRole =
 
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
-      return $ (, Nothing) $
-        mkUserInfo unAuthRole $ mkUserVars $ hdrsToText headers
+      userInfo <- mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $ mkSessionVariables headers
+      pure (userInfo, Nothing)
 
     missingAuthzHeader =
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
@@ -259,22 +258,22 @@ processAuthZHeader jwtCtx headers authzHeader = do
   hasuraClaims <- parseObjectFromString claimsFmt hasuraClaimsV
 
   -- filter only x-hasura claims and convert to lower-case
-  let claimsMap = Map.filterWithKey (\k _ -> isUserVar k)
+  let claimsMap = Map.filterWithKey (\k _ -> isSessionVariable k)
                 $ Map.fromList $ map (first T.toLower)
                 $ Map.toList hasuraClaims
 
   HasuraClaims allowedRoles defaultRole <- parseHasuraClaims claimsMap
-  let role = getCurrentRole defaultRole
+  let roleName = getCurrentRole defaultRole
 
-  when (role `notElem` allowedRoles) currRoleNotAllowed
+  when (roleName `notElem` allowedRoles) currRoleNotAllowed
   let finalClaims =
         Map.delete defaultRoleClaim . Map.delete allowedRolesClaim $ claimsMap
 
   -- transform the map of text:aeson-value -> text:text
   metadata <- decodeJSON $ J.Object finalClaims
-
-  return $ (, expTimeM) $ mkUserInfo role $ mkUserVars $ Map.toList metadata
-
+  userInfo <- mkUserInfo (URBPreDetermined roleName) UAdminSecretNotSent $
+              mkSessionVariablesText $ Map.toList metadata
+  pure (userInfo, expTimeM)
   where
     parseAuthzHeader = do
       let tokenParts = BLC.words authzHeader
@@ -302,7 +301,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
         claimsLocation =
           case jcxClaimNs jwtCtx of
             ClaimNsPath path -> T.pack $ "claims_namespace_path " <> encodeJSONPath path
-            ClaimNs ns -> "claims_namespace " <> ns
+            ClaimNs ns       -> "claims_namespace " <> ns
 
     claimsErr = throw400 JWTInvalidClaims
 
@@ -312,7 +311,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
     -- see if there is a x-hasura-role header, or else pick the default role
     getCurrentRole defaultRole =
       let mUserRole = getRequestHeader userRoleHeader headers
-      in maybe defaultRole RoleName $ mUserRole >>= mkNonEmptyText . bsToTxt
+      in fromMaybe defaultRole $ mUserRole >>= mkRoleName . bsToTxt
 
     decodeJSON val = case J.fromJSON val of
       J.Error e   -> throw400 JWTInvalidClaims ("x-hasura-* claims: " <> T.pack e)
@@ -332,9 +331,10 @@ processAuthZHeader jwtCtx headers authzHeader = do
       throw400 AccessDenied "Your current role is not in allowed roles"
     claimsNotFound = do
       let claimsNsError = case jcxClaimNs jwtCtx of
-                            ClaimNsPath path -> T.pack $ "claims not found at claims_namespace_path: '" <> (encodeJSONPath path) <> "'"
+                            ClaimNsPath path -> T.pack $ "claims not found at claims_namespace_path: '"
+                                                <> encodeJSONPath path <> "'"
                             ClaimNs ns -> "claims key: '" <> ns <> "' not found"
-      throw400 JWTInvalidClaims $ claimsNsError
+      throw400 JWTInvalidClaims claimsNsError
 
 
 -- parse x-hasura-allowed-roles, x-hasura-default-role from JWT claims
@@ -406,7 +406,7 @@ instance J.ToJSON JWTConfig where
 
       claimsNsFields = case claimNs of
         ClaimNsPath nsPath ->
-          ["claims_namespace_path" J..= (encodeJSONPath nsPath)]
+          ["claims_namespace_path" J..= encodeJSONPath nsPath]
         ClaimNs ns -> ["claims_namespace" J..= J.String ns]
 
       sharedFields = [ "claims_format" J..= claimsFmt

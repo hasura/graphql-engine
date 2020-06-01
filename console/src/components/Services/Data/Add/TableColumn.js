@@ -134,28 +134,32 @@ const TableColumn = props => {
         data-test={`col-default-${i}`}
       />
       */}{' '}
-      <input
-        className={`${styles.inputCheckbox} form-control `}
-        checked={column.nullable}
-        type="checkbox"
-        onChange={onColNullableChange.bind(undefined, i)}
-        data-test={`nullable-${i}`}
-      />{' '}
-      <label>Nullable</label>
-      <input
-        className={`${styles.inputCheckbox} form-control `}
-        checked={isColumnUnique}
-        type="checkbox"
-        onChange={onColUniqueChange.bind(
-          undefined,
-          i,
-          numUniqueKeys,
-          isColumnUnique,
-          _uindex
-        )}
-        data-test={`unique-${i.toString()}`}
-      />{' '}
-      <label>Unique</label>
+      <label>
+        <input
+          className={styles.inputCheckbox}
+          checked={column.nullable}
+          type="checkbox"
+          onChange={onColNullableChange.bind(undefined, i)}
+          data-test={`nullable-${i}`}
+        />
+        Nullable
+      </label>
+      <label>
+        <input
+          className={styles.inputCheckbox}
+          checked={isColumnUnique}
+          type="checkbox"
+          onChange={onColUniqueChange.bind(
+            undefined,
+            i,
+            numUniqueKeys,
+            isColumnUnique,
+            _uindex
+          )}
+          data-test={`unique-${i.toString()}`}
+        />
+        Unique
+      </label>
       {getRemoveIcon(colLength)}
     </div>
   );

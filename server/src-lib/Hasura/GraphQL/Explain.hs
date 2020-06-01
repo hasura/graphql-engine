@@ -12,14 +12,15 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Resolve.Action
 import           Hasura.GraphQL.Validate.Types          (evalReusabilityT, runReusabilityT)
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
+import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.Server.Version             (HasVersion)
-import           Hasura.GraphQL.Resolve.Action
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as E
@@ -68,19 +69,19 @@ resolveVal userInfo = \case
       PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
       PGTypeArray _      -> sessVarVal
   RS.UVSQL sqlExp -> return sqlExp
-  RS.UVSession -> pure $ sessionInfoJsonExp $ userVars userInfo
+  RS.UVSession -> pure $ sessionInfoJsonExp $ _uiSession userInfo
 
 getSessVarVal
   :: (MonadError QErr m)
-  => UserInfo -> SessVar -> m SessVarVal
+  => UserInfo -> SessionVariable -> m Text
 getSessVarVal userInfo sessVar =
-  onNothing (getVarVal sessVar usrVars) $
+  onNothing (getSessionVariableValue sessVar sessionVariables) $
     throw400 UnexpectedPayload $
     "missing required session variable for role " <> rn <<>
-    " : " <> sessVar
+    " : " <> sessionVariableToText sessVar
   where
-    rn = userRole userInfo
-    usrVars = userVars userInfo
+    rn = _uiRole userInfo
+    sessionVariables = _uiSession userInfo
 
 explainField
   :: (MonadError QErr m, MonadTx m, HasVersion, MonadIO m)
@@ -98,10 +99,13 @@ explainField userInfo gCtx sqlGenCtx actionExecuter fld =
     _            -> do
       unresolvedAST <-
         runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-        evalReusabilityT $ RS.queryFldToPGAST fld actionExecuter
+          evalReusabilityT $ RS.queryFldToPGAST fld actionExecuter
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo) unresolvedAST
-      let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
+      let (query, remoteJoins) = RS.toPGQuery resolvedAST
+          txtSQL = Q.getQueryText query
           withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
+      -- Reject if query contains any remote joins
+      when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
       planLines <- liftTx $ map runIdentity <$>
                      Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
       return $ FieldPlan fName (Just txtSQL) $ Just planLines
@@ -122,6 +126,7 @@ explainGQLQuery
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query userVarsRaw) = do
+  userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
   (execPlan, queryReusability) <- runReusabilityT $
     E.getExecPlanPartial userInfo sc enableAL query
   (gCtx, rootSelSet) <- case execPlan of
@@ -139,6 +144,5 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query
       (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter rootField
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
-    usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
-    userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
+    sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly
