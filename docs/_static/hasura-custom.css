@@ -1396,17 +1396,20 @@ article ol ol {
 	}
 }
 @media (min-width: 768px) {
-.container {
-    width: 750px;
-    padding: 0 0 !important;
+  .container {
+      width: 750px;
+      padding: 0 0 !important;
+  }
 }
 @media (min-width: 992px) {
-.container {
-    width: 970px;
-    padding: 0 0 !important;
+  .container {
+      width: 970px;
+      padding: 0 0 !important;
+  }
 }
 @media (min-width: 1200px) {
-.container {
-    width: 1170px;
-    padding: 0 0 !important;
+  .container {
+      width: 1170px;
+      padding: 0 0 !important;
+  }
 }
