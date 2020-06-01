@@ -360,7 +360,7 @@ data PollDetail
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''PollDetail)
 
 instance L.ToEngineLog PollDetail L.Hasura where
-  toEngineLog pl = (L.LevelInfo, L.ELTInternal L.ILTPollerLog, J.toJSON pl)
+  toEngineLog pl = (L.LevelInfo, L.ELTLivequeryPollerLog, J.toJSON pl)
 
 -- | Where the magic happens: the top-level action run periodically by each
 -- active 'Poller'. This needs to be async exception safe.
