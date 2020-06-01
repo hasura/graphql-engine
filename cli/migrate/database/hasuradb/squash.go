@@ -30,13 +30,18 @@ func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) e
 
 	for item, ok := next(); ok; item, ok = next() {
 		g := item.(linq.Group)
-		if g.Key == "" {
+		if g.Key == nil {
 			// ignore this because this is the default value for the key
 			continue
 		}
-		key := g.Key.(string)
+		key, ok := g.Key.(remoteRelationshipMap)
+		if !ok {
+			continue
+		}
 		cfg := remoteRelationshipConfig{
-			name: key,
+			tableName:  key.tableName,
+			schemaName: key.schemaName,
+			name:       key.name,
 		}
 		prevElems := make([]*list.Element, 0)
 		for _, val := range g.Group {
@@ -60,8 +65,8 @@ func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) e
 				if err != nil {
 					return err
 				}
-				prevElems = append(prevElems, element)
 				// drop previous elements
+				prevElems = append(prevElems, element)
 				for _, e := range prevElems {
 					squashList.Remove(e)
 				}
@@ -886,14 +891,22 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 	}
 
 	remoteRelationShipsGroup := CustomQuery(linq.FromIterable(l).GroupByT(
-		func(element *list.Element) string {
+		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
 			case *createRemoteRelationshipInput:
-				return args.Name
+				return remoteRelationshipMap{
+					tableName:  args.Table.Name,
+					schemaName: args.Table.Schema,
+					name:       args.Name,
+				}
 			case *deleteRemoteRelationshipInput:
-				return args.Name
+				return remoteRelationshipMap{
+					tableName:  args.Table.Name,
+					schemaName: args.Table.Schema,
+					name:       args.Name,
+				}
 			}
-			return ""
+			return nil
 		}, func(element *list.Element) *list.Element {
 			return element
 		},

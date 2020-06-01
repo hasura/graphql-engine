@@ -332,6 +332,10 @@ type queryInCollectionMap struct {
 	collectionName, queryName string
 }
 
+type remoteRelationshipMap struct {
+	tableName, schemaName, name string
+}
+
 type tableSchema struct {
 	Name   string `json:"name" yaml:"name"`
 	Schema string `json:"schema" yaml:"schema"`
@@ -959,6 +963,6 @@ type allowListConfig struct {
 }
 
 type remoteRelationshipConfig struct {
-	name string
+	tableName, schemaName, name string
 	transition.Transition
 }
