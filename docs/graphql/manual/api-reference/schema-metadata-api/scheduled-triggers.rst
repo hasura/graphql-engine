@@ -54,7 +54,7 @@ Args syntax
      - Description
    * - name
      - true
-     - TriggerName_
+     - :ref:`TriggerName <TriggerName>`
      - Name of the cron trigger
    * - webhook
      - true
@@ -70,7 +70,7 @@ Args syntax
      - Any JSON payload which will be sent when the webhook is invoked.
    * - headers
      - false
-     - [ HeaderFromValue_ | HeaderFromEnv_ ]
+     - [ :ref:`HeaderFromValue <HeaderFromValue>` | :ref:`HeaderFromEnv <HeaderFromEnv>` ]
      - List of headers to be sent with the webhook
    * - retry_conf
      - false
@@ -127,7 +127,7 @@ Args syntax
      - Description
    * - name
      - true
-     - TriggerName_
+     - :ref:`TriggerName <TriggerName>`
      - Name of the cron trigger
 
 .. _create_scheduled_event:
@@ -186,7 +186,7 @@ Args syntax
      - Any JSON payload which will be sent when the webhook is invoked.
    * - headers
      - false
-     - [ HeaderFromValue_ | HeaderFromEnv_ ]
+     - [ :ref:`HeaderFromValue <HeaderFromValue>` | :ref:`HeaderFromEnv <HeaderFromEnv>` ]
      - List of headers to be sent with the webhook
    * - retry_conf
      - false
@@ -196,17 +196,6 @@ Args syntax
      - false
      - Text
      - Custom comment.
-
-.. _TriggerName:
-
-TriggerName
-&&&&&&&&&&&
-
-.. parsed-literal::
-
-  String
-
-.. _UrlFromEnv:
 
 UrlFromEnv
 &&&&&&&&&&
@@ -222,48 +211,6 @@ UrlFromEnv
      - true
      - String
      - Name of the environment variable which has the URL
-
-.. _HeaderFromValue:
-
-HeaderFromValue
-&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - required
-     - Schema
-     - Description
-   * - name
-     - true
-     - String
-     - Name of the header
-   * - value
-     - true
-     - String
-     - Value of the header
-
-.. _HeaderFromEnv:
-
-HeaderFromEnv
-&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - required
-     - Schema
-     - Description
-   * - name
-     - true
-     - String
-     - Name of the header
-   * - value_from_env
-     - true
-     - String
-     - Name of the environment variable which holds the value of the header
 
 .. _RetryConfST:
 
