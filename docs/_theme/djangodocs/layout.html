@@ -213,6 +213,9 @@
 
           {% block sidebarwrapper %}
             <div class="yui-b mobile-hide" id="sidebar">
+              <div id='sidebar-close' class='mobile-only closeIcon'>
+                <img src="{{ pathto('_images/layout/close-icon.svg', 1) }}" alt="Close"/>
+              </div>
               {{ sidebar() }}
             </div>
           {% endblock %}
@@ -508,6 +511,7 @@
         }
       };
       $('#nav_tree_icon').on('click', navTreeHandler);
+      $('#sidebar-close').on('click', navTreeHandler);
     });
   </script>
 

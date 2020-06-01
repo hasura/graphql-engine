@@ -650,8 +650,17 @@ article ol ol {
   padding-left: 15px !important;
   position: sticky;
   top: 0;
+  padding-top: 20px;
 }
-
+#sidebar li {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+#sidebar .closeIcon {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
 #sidebar .sphinxsidebar .sphinxsidebarwrapper h3 {
   padding-top: 10px;
   /*
@@ -1414,7 +1423,7 @@ article ol ol {
 }
 @media (min-width: 1200px) {
   .container {
-      width: 1170px;
-      padding: 0 0 !important;
+      width: calc(100% - 30px);
+      padding: 0 15px !important;
   }
 }
