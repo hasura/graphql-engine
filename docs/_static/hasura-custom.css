@@ -75,7 +75,7 @@ ul {
   font-family: 'Gudea';
   margin: auto;
   width: 100%;
-  height: calc(100vh - 8px);
+  height: calc(100vh - 60px);
 }
 .hideClass {
   display: none;

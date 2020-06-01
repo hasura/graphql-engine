@@ -130,7 +130,7 @@
             </div>
             <div class='navBlueBG'>
               <span class="navBarToggle"
-                onclick="myFunction()"
+                onclick="openMenu()"
               >
                 <span class="iconBar"></span>
                 <span class="iconBar"></span>
@@ -142,47 +142,47 @@
                 <ul class="navBarULMobile">
                   <li>
                     <a href='/'
-                      onclick="myFunction()"
+                      onclick="openMenu()"
                     >Docs</a>
                   </li>
                   <li>
                     <a href='https://hasura.io/blog/'
-                      onclick="myFunction()"
+                      onclick="openMenu()"
                     >
                       Blog
                     </a>
                   </li>
                   <li>
                     <a href='https://hasura.io/learn/'
-                      onclick="myFunction()"
+                      onclick="openMenu()"
                     >
                       Tutorials
                     </a>
                   </li>
                   <li>
                     <a href="https://hasura.io/enterprise/"
-                      onclick="myFunction()"
+                      onclick="openMenu()"
                     >
                       Enterprise
                     </a>
                   </li>
                   <li>
                     <a href="https://hasura.io/hasura-pro/"
-                      onclick="myFunction()"
+                      onclick="openMenu()"
                     >
                       Hasura Pro
                     </a>
                   </li>
                   <li>
                     <a href="https://hasura.io/pricing/"
-                      onclick="myFunction()"
+                      onclick="openMenu()"
                     >
                       Pricing
                     </a>
                   </li>
                   <li>
                     <a href='https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html'
-                      onclick="myFunction()"
+                      onclick="openMenu()"
                     >
                       <button class='commonBtn navBtnHome'>
                         Get Started
@@ -191,7 +191,7 @@
                   </li>
                   <li>
                     <a href="https://calendly.com/hasura/prod-expert-call"
-                      onclick="myFunction()"
+                      onclick="openMenu()"
                     >
                       <button class="commonBtn navBtnContactHome">
                         Talk to a Product Expert
@@ -382,7 +382,7 @@
   </script>
   <!--Hamburger menu-->
   <script type="text/javascript">
-    function myFunction() {
+    function openMenu() {
       var x = document.getElementById("navbar")
       if (x.className === "topnav") {
         x.className += " responsive"
