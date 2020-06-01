@@ -55,7 +55,7 @@
     "dbName": "[parameters('postgresDatabaseName')]",
     "containerGroupName": "[concat(parameters('name'), '-container-group')]",
     "containerName": "hasura-graphql-engine",
-    "containerImage": "hasura/graphql-engine:v1.2.2"
+    "containerImage": "hasura/graphql-engine:v1.2.1"
   },
   "resources": [
     {
