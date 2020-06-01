@@ -75,7 +75,7 @@ ul {
   font-family: 'Gudea';
   margin: auto;
   width: 100%;
-  height: calc(100vh - 60px);
+  /* height: calc(100vh - 60px); */
 }
 .hideClass {
   display: none;
@@ -172,7 +172,7 @@ ul {
 }
 .content_inner_wrapper {
   width: 75% !important;
-  height: 100vh;
+  /* height: 100vh; */
   overflow-y: auto;
 }
 
@@ -648,6 +648,8 @@ article ol ol {
   height: 100vh;
   overflow-y: auto;
   padding-left: 15px !important;
+  position: sticky;
+  top: 0;
 }
 
 #sidebar .sphinxsidebar .sphinxsidebarwrapper h3 {
