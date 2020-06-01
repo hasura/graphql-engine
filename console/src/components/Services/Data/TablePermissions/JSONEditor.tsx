@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AceEditor, { IAnnotation } from 'react-ace';
 import { isJsonString } from '../../../Common/utils/jsUtils';
+import { usePrevious } from '../../../../hooks/usePrevious';
 
 export interface JSONEditorProps {
   initData: string;
@@ -15,9 +16,14 @@ const JSONEditor: React.FC<JSONEditorProps> = ({
 }) => {
   const [value, setValue] = useState(initData || data || '');
   const [annotations, setAnnotations] = useState<IAnnotation[]>([]);
+  const prevData = usePrevious<string>(data);
+
   useEffect(() => {
+    // if the data prop is changed do nothing
+    if (prevData !== data) return;
+    // when state gets new data, trigger parent callback
     if (value !== data) onChange(value);
-  }, [value]);
+  }, [value, data, prevData]);
 
   // check and set error message
   useEffect(() => {
@@ -51,7 +57,6 @@ const JSONEditor: React.FC<JSONEditorProps> = ({
       showPrintMargin={false}
       value={value}
       annotations={annotations}
-      debounceChangePeriod={200}
     />
   );
 };
