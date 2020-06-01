@@ -57,6 +57,155 @@
           <img src="{{ pathto('_images/layout/stripe.png', 1) }}" alt='stripe' />
         </div>
       </div>
+      <header
+        id="header"
+        class='blueBgColor'
+      >
+        <div class="container noPadd">
+          <div class="headerWrapper">
+            <div class="navLeft">
+              <div class="brand">
+                <a href="https://hasura.io/">
+                  <img src="{{ pathto('_images/layout/white-logo.svg', 1) }}" alt="Logo"/>
+                </a>
+              </div>
+              <a href="https://discordapp.com/invite/hasura" target="_blank" rel="noopener noreferrer">
+                <div class="discordBtn">
+                  <img src="{{ pathto('_images/layout/discord-brands-block.svg', 1) }}" alt="Discord"/>
+                </div>
+              </a>
+              <a href="https://twitter.com/hasurahq" target="_blank" rel="noopener noreferrer">
+                <div class="twitterBtn">
+                  <img src="{{ pathto('_images/layout/twitter-brands-block.svg', 1) }}" alt="Twitter"/>
+                </div>
+              </a>
+            </div>
+            <div class="navBlueBG">
+              <ul class="navBarUL">
+                <li class='navListActive'>
+                  <a href="/">Docs</a>
+                </li>
+                <li>
+                  <a href='https://hasura.io/blog/'>
+                    Blog
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/learn/">
+                    Tutorials
+                  </a>
+                </li>
+                <li>
+                  <a to="https://hasura.io/enterprise/">
+                    Enterprise
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/hasura-pro/">
+                    Hasura Pro
+                  </a>
+                </li>
+                <li>
+                  <a to="https://hasura.io/pricing/">
+                    Pricing
+                  </a>
+                </li>
+                <li>
+                  <a href={`https://${baseDomain}/docs/1.0/graphql/manual/getting-started/index.html`} target="_blank" rel="noopener noreferrer">
+                    <button class="commonBtn navBtnHome">
+                      Get Started
+                    </button>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    to='https://hasura.io/contact-us'
+                  >
+                    <button class="commonBtn navBtnContactHome">
+                      Talk to a Product Expert
+                    </button>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class='navBlueBG'>
+              <span class="navBarToggle"
+                onclick="myFunction()"
+              >
+                <span class="iconBar"></span>
+                <span class="iconBar"></span>
+                <span class="iconBar"></span>
+              </span>
+            </div>
+            <div id="navbar" class="topnav">
+              <div class="visibleMobile">
+                <ul class="navBarULMobile">
+                  <li>
+                    <a href='/'
+                      onclick="myFunction()"
+                    >Docs</a>
+                  </li>
+                  <li>
+                    <a href='https://hasura.io/blog/'
+                      onclick="myFunction()"
+                    >
+                      Blog
+                    </a>
+                  </li>
+                  <li>
+                    <a href='https://hasura.io/learn/'
+                      onclick="myFunction()"
+                    >
+                      Tutorials
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://hasura.io/enterprise/"
+                      onclick="myFunction()"
+                    >
+                      Enterprise
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://hasura.io/hasura-pro/"
+                      onclick="myFunction()"
+                    >
+                      Hasura Pro
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://hasura.io/pricing/"
+                      onclick="myFunction()"
+                    >
+                      Pricing
+                    </a>
+                  </li>
+                  <li>
+                    <a href='https://hasura.io//docs/1.0/graphql/manual/getting-started/index.html'
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onclick="myFunction()"
+                    >
+                      <button class='commonBtn navBtnHome'>
+                        Get Started
+                      </button>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://hasura.io/contact-us/"
+                      onclick="myFunction()"
+                    >
+                      <button class="commonBtn navBtnContactHome">
+                        Talk to a Product Expert
+                      </button>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
       <div id="" class="content_wrapper">
         {%- if is_landing_page %}
           {% include 'pages/landing.html' %}
@@ -74,6 +223,7 @@
             <div role="main" parent={{ rootpage }}>
 
               <div id="docs-header">
+                <!--
                 <div class="mobile-only" id="mobile-logo">
                   <a href="https://{{ BASE_DOMAIN }}/" target="_blank" rel="noopener">
                     <div class="img_wrapper inline-block">
@@ -82,14 +232,18 @@
                   </a>
                   <a href="https://{{ BASE_DOMAIN }}/docs" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
                 </div>
+                -->
                 <div id="docs-header-actions">
-                  <div class="inline-block mobile-only" id="nav_tree_icon">
-                    <span class="fa fa-bars"></span>
-                  </div>
                   <div class="inline-block" id="input_search_box">
                     <span class="fa fa-search search_icon"></span>
                     <input type="text" id="search_element" placeholder="Search docs..." />
                   </div>
+                  <div class="inline-block mobile-only" id="nav_tree_icon">
+                    <div class="docs-menu">
+                      DOCS MENU >
+                    </div>
+                  </div>
+                  <!--
                   <div class="inline-block header_links">
                     <div class="social_icons_wrapper">
                       <div class="social_icons">
@@ -110,6 +264,7 @@
                       </div>
                     </div>
                   </div>
+                  -->
                 </div>
               </div>
 
@@ -226,8 +381,19 @@
         $('#banner').hide();
       });
     });
-
   </script>
+  <!--Hamburger menu-->
+  <script type="text/javascript">
+    function myFunction() {
+      var x = document.getElementById("navbar")
+      if (x.className === "topnav") {
+        x.className += " responsive"
+      } else {
+        x.className = "topnav"
+      }
+    }
+  </script>
+
   <!-- utils -->
   <script type="text/javascript">
     // load script file
