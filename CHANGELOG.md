@@ -83,6 +83,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix underscores not being displayed on raw sql page (close #4754) (#4799)
 - console: add help button and move about page to settings (#4848)
 - cli: list all available commands in root command help (fix #4623) (#4628)
+- cli: fix bug with squashing event triggers (close #4883)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
 - docs: add single object mutations docs (close #4622) (#4625)
