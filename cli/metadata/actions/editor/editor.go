@@ -74,7 +74,7 @@ func OpenFileInEditor(filename string, resolveEditor PreferredEditorResolver) er
 // the written bytes on success or an error on failure. It handles deletion
 // of the temporary file behind the scenes.
 func CaptureInputFromEditor(resolveEditor PreferredEditorResolver, text, extension string) ([]byte, error) {
-	file, err := ioutil.TempFile(os.TempDir(), extension)
+	file, err := ioutil.TempFile(os.TempDir(), fmt.Sprintf("*.%s", extension))
 	if err != nil {
 		return []byte{}, err
 	}
