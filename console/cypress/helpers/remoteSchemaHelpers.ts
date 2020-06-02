@@ -6,7 +6,7 @@ export const getRemoteSchemaName = (i: number, schemaName: string) =>
   `test-remote-schema-${schemaName}-${i}`;
 
 export const getRemoteGraphQLURL = () =>
-  'https://realtime-poll.demo.hasura.app/v1/graphql';
+  'https://hasura-sample-remote-schema.glitch.me/';
 
 export const getRemoteGraphQLURLFromEnv = () => 'GRAPHQL_URL';
 
