@@ -3,8 +3,7 @@
   "env": {
     "browser": true,
     "node": true,
-    "mocha": true,
-    "cypress/globals": true
+    "mocha": true
   },
   "parser": "babel-eslint",
   "rules": {
@@ -86,7 +85,7 @@
     "eqeqeq": 0,
     "no-nested-ternary": 0
   },
-  "plugins": ["react", "import", "cypress", "@typescript-eslint/eslint-plugin"],
+  "plugins": ["react", "import", "@typescript-eslint/eslint-plugin"],
   "settings": {
     "import/resolve": {
       "moduleDirectory": ["node_modules", "src"]
@@ -112,11 +111,14 @@
       "parser": "@typescript-eslint/parser",
       "files": ["*.ts", "*.tsx"],
       "rules": {
-        "jsx-a11y/label-has-for": [ 0, {
-          "required": {
-            "some": [ "nesting", "id"  ]
+        "jsx-a11y/label-has-for": [
+          0,
+          {
+            "required": {
+              "some": ["nesting", "id"]
+            }
           }
-        }],
+        ],
         "import/extensions": 0,
         "import/prefer-default-export": "off",
         "react/prop-types": "off",
@@ -157,7 +159,13 @@
         "no-useless-constructor": "off",
         "no-unused-expressions": "off",
         "no-console": "off",
-        "prefer-destructuring": "off"
+        "prefer-destructuring": "off",
+        "jsx-a11y/click-events-have-key-events": "off",
+        "jsx-a11y/anchor-is-valid": "off",
+        "jsx-a11y/interactive-supports-focus": "off",
+        "no-restricted-properties": "off",
+        "react/no-danger": "off",
+        "react/no-array-index-key": "off"
       }
     }
   ]

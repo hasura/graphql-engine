@@ -189,18 +189,22 @@ const RelationshipEditor = ({
           onChange={setRelRefSchema}
           disabled={!name}
         >
-          {// default unselected option
-          refSchema === '' && (
-            <option value={''} disabled>
-              {'-- reference schema --'}
-            </option>
-          )}
-          {// all reference schema options
-          orderedSchemaList.map((rs, j) => (
-            <option key={j} value={rs}>
-              {rs}
-            </option>
-          ))}
+          {
+            // default unselected option
+            refSchema === '' && (
+              <option value={''} disabled>
+                {'-- reference schema --'}
+              </option>
+            )
+          }
+          {
+            // all reference schema options
+            orderedSchemaList.map((rs, j) => (
+              <option key={j} value={rs}>
+                {rs}
+              </option>
+            ))
+          }
         </select>
       </div>
     );

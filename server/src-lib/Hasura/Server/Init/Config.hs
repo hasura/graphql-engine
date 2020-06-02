@@ -9,7 +9,6 @@ import qualified Data.Text                        as T
 import qualified Database.PG.Query                as Q
 
 import           Data.Char                        (toLower)
-import           Data.Time.Clock.Units            (milliseconds)
 import           Network.Wai.Handler.Warp         (HostPreference)
 
 import qualified Hasura.Cache                     as Cache

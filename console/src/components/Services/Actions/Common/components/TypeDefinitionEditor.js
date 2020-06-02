@@ -3,7 +3,7 @@ import { parse as sdlParse } from 'graphql/language/parser';
 import styles from './Styles.scss';
 import Tooltip from './Tooltip';
 import CrossIcon from '../../../../Common/Icons/Cross';
-import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
+import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 // import CopyIcon from '../../../../Common/Icons/Copy';
 // import Modal from '../../../../Common/Modal/Modal';
 // import CloneTypeModal from './CloneTypeModal';
@@ -102,8 +102,9 @@ const TypeDefinitionEditor = ({
             
           */}
         </div>
-        <SDLEditor
+        <AceEditor
           name="sdl-editor"
+          mode="graphqlschema"
           value={value}
           onChange={onChangeWithError}
           placeholder={placeholder}

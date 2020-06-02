@@ -43,9 +43,8 @@ import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
 import           Hasura.GraphQL.Validate.Field
-import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
-import           Hasura.RQL.DDL.Headers            (HeaderConf, makeHeadersFromConf, toHeadersConf)
+import           Hasura.RQL.DDL.Headers            (makeHeadersFromConf, toHeadersConf)
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
@@ -54,8 +53,7 @@ import           Hasura.Server.Utils               (mkClientHeadersForward, mkSe
 import           Hasura.Server.Version             (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
-                                                    toTxtValue)
+import           Hasura.SQL.Value                  (PGScalarValue (..),toTxtValue)
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -535,16 +533,6 @@ callWebhook manager outputType outputFields reqHeaders confHeaders
                        "field " <> fieldName <<> " expected in webhook response, but not found"
             Just v -> when (v == J.Null) $ throwUnexpected $
                       "expecting not null value for field " <>> fieldName
-
-annInpValueToJson :: AnnInpVal -> J.Value
-annInpValueToJson annInpValue =
-  case _aivValue annInpValue of
-    AGScalar _ pgColumnValueM -> maybe J.Null pgScalarValueToJson pgColumnValueM
-    AGEnum _ enumValue        -> case enumValue of
-      AGESynthetic enumValueM   -> J.toJSON enumValueM
-      AGEReference _ enumValueM -> J.toJSON enumValueM
-    AGObject _ objectM        -> J.toJSON $ fmap (fmap annInpValueToJson) objectM
-    AGArray _ valuesM         -> J.toJSON $ fmap (fmap annInpValueToJson) valuesM
 
 mkJsonAggSelect :: GraphQLType -> RS.JsonAggSelect
 mkJsonAggSelect =

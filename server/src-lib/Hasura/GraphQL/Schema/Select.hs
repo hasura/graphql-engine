@@ -9,6 +9,7 @@ module Hasura.GraphQL.Schema.Select
   , mkAggSelFld
   , mkSelFldPKey
 
+  , mkRemoteRelationshipName
   , mkSelArgs
   ) where
 
@@ -171,13 +172,28 @@ mkTableObj
 mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
-    flds = pgColFlds <> relFlds <> computedFlds
-    pgColFlds = map mkPGColFld $ getPGColumnFields allowedFlds
-    relFlds = concatMap mkRelationshipField' $ getRelationshipFields allowedFlds
-    computedFlds = map mkComputedFieldFld $ getComputedFields allowedFlds
+    flds = flip concatMap allowedFlds $ \case
+      SFPGColumn info -> pure $ mkPGColFld info
+      SFRelationship info -> mkRelationshipField' info
+      SFComputedField info -> pure $ mkComputedFieldFld info
+      SFRemoteRelationship info -> pure $ mkRemoteRelationshipFld info
+
     mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ isNullable) =
       mkRelationshipField allowAgg relInfo isNullable
     desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
+
+mkRemoteRelationshipName :: RemoteRelationshipName -> G.Name
+mkRemoteRelationshipName =
+  G.Name . remoteRelationshipNameToText
+
+mkRemoteRelationshipFld :: RemoteFieldInfo -> ObjFldInfo
+mkRemoteRelationshipFld remoteField =
+  mkHsraObjFldInfo description fieldName paramMap gType
+  where
+    description = Just "Remote relationship field"
+    fieldName = mkRemoteRelationshipName $ _rfiName remoteField
+    paramMap = _rfiParamMap remoteField
+    gType = _rfiGType remoteField
 
 {-
 type table_aggregate {
