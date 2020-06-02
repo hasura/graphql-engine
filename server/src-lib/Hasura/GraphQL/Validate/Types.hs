@@ -18,7 +18,15 @@ module Hasura.GraphQL.Validate.Types
   , mkObjTyInfo
   , mkHsraObjTyInfo
 
-  , IFaceTyInfo(..)
+  -- Don't expose 'IFaceTyInfo' constructor. Instead use 'mkIFaceTyInfo'
+  -- which will auto-insert the compulsory '__typename' field.
+  , IFaceTyInfo
+  , _ifDesc
+  , _ifName
+  , _ifFields
+  , _ifMemberTypes
+  , mkIFaceTyInfo
+
   , IFacesSet
   , UnionTyInfo(..)
   , FragDef(..)
@@ -277,8 +285,8 @@ mkHsraObjTyInfo descM ty implIFaces flds =
 
 mkIFaceTyInfo
   :: Maybe G.Description -> G.NamedType
-  -> Map.HashMap G.Name ObjFldInfo -> TypeLoc -> MemberTypes -> IFaceTyInfo
-mkIFaceTyInfo descM ty flds _ =
+  -> Map.HashMap G.Name ObjFldInfo -> MemberTypes -> IFaceTyInfo
+mkIFaceTyInfo descM ty flds =
   IFaceTyInfo descM ty $ Map.insert (_fiName newFld) newFld flds
   where
     newFld = typenameFld
@@ -317,7 +325,7 @@ instance Semigroup IFaceTyInfo where
 fromIFaceDef
   :: InterfaceImplementations -> G.InterfaceTypeDefinition -> TypeLoc -> IFaceTyInfo
 fromIFaceDef interfaceImplementations (G.InterfaceTypeDefinition descM n _ flds) loc =
-  mkIFaceTyInfo descM (G.NamedType n) fldMap loc implementations
+  mkIFaceTyInfo descM (G.NamedType n) fldMap implementations
   where
     fldMap = Map.fromList [(G._fldName fld, fromFldDef fld loc) | fld <- flds]
     implementations = fromMaybe mempty $ Map.lookup (G.NamedType n) interfaceImplementations

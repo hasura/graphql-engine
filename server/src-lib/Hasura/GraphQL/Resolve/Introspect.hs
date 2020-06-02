@@ -146,20 +146,24 @@ ifaceR'
   => IFaceTyInfo
   -> Field
   -> m J.Object
-ifaceR' i@(IFaceTyInfo descM n flds _) fld = do
+ifaceR' ifaceTyInfo fld = do
   dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
     case _fName subFld of
       "__typename"    -> retJT "__Type"
       "kind"          -> retJ TKINTERFACE
-      "name"          -> retJ $ namedTyToTxt n
-      "description"   -> retJ $ fmap G.unDescription descM
+      "name"          -> retJ $ namedTyToTxt name
+      "description"   -> retJ $ fmap G.unDescription maybeDescription
       "fields"        -> fmap J.toJSON $ mapM (`fieldR` subFld) $
                         sortOn _fiName $
-                        filter notBuiltinFld $ Map.elems flds
+                        filter notBuiltinFld $ Map.elems fields
       "possibleTypes" -> fmap J.toJSON $ mapM (`objectTypeR` subFld)
-                         =<< getImplTypes (AOTIFace i)
+                         =<< getImplTypes (AOTIFace ifaceTyInfo)
       _               -> return J.Null
+  where
+    maybeDescription = _ifDesc ifaceTyInfo
+    name = _ifName ifaceTyInfo
+    fields = _ifFields ifaceTyInfo
 
 -- 4.5.2.5
 enumTypeR

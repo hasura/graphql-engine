@@ -27,7 +27,7 @@ import           Hasura.GraphQL.Schema.Select
 mkNodeInterface :: [QualifiedTable] -> IFaceTyInfo
 mkNodeInterface relayTableNames =
   let description = G.Description "An object with globally unique ID"
-  in IFaceTyInfo (Just description) nodeType (mapFromL _fiName [idField]) $
+  in mkIFaceTyInfo (Just description) nodeType (mapFromL _fiName [idField]) $
      Set.fromList $ map mkTableTy relayTableNames
   where
     idField =
@@ -214,7 +214,7 @@ mkRelayTyAggRole tn descM insPermM selPermM updColsM delPermM pkeyCols constrain
     scalars = selByPkScalarSet <> funcArgScalarSet <> computedFieldFuncArgScalars
 
     selFldsM = snd <$> selPermM
-    selColNamesM = (map pgiName . getPGColumnFields) <$> selFldsM
+    selColNamesM = map pgiName . getPGColumnFields <$> selFldsM
     selColInpTyM = mkSelColumnTy tn <$> selColNamesM
     -- boolexp input type
     boolExpInpObjM = case selFldsM of
