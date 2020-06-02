@@ -19,7 +19,6 @@ import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.Sequence                 as Seq
 import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
 
 newtype ComputedFieldName =
   ComputedFieldName { unComputedFieldName :: NonEmptyText}
