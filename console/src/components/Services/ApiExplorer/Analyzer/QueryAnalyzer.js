@@ -11,6 +11,14 @@ export default class QueryAnalyser extends React.Component {
       activeNode: 0,
     };
   }
+  modifyResponse = data => {
+    // analyze on subscriptions returns an object
+    if (!Array.isArray(data)) {
+      return [data];
+    }
+
+    return data;
+  };
   componentDidMount() {
     this.props
       .analyzeFetcher(this.props.analyseQuery.query)
@@ -22,7 +30,7 @@ export default class QueryAnalyser extends React.Component {
       })
       .then(data => {
         this.setState({
-          analyseData: data,
+          analyseData: this.modifyResponse(data),
           activeNode: 0,
         });
       })
@@ -31,21 +39,26 @@ export default class QueryAnalyser extends React.Component {
         this.props.clearAnalyse();
       });
   }
+  renderAnalysisList() {
+    return this.state.analyseData.map((analysis, i) => {
+      if (analysis.hasOwnProperty('field')) {
+        return (
+          <li
+            className={i === this.state.activeNode ? 'active' : ''}
+            key={i}
+            data-key={i}
+            onClick={this.handleAnalyseNodeChange.bind(this)}
+          >
+            {console.log(analysis)}
+            <i className="fa fa-table" aria-hidden="true" />
+            {analysis.field}
+          </li>
+        );
+      }
+    });
+  }
   render() {
     const { show, clearAnalyse } = this.props;
-    const analysisList = this.state.analyseData.map((analysis, i) => {
-      return (
-        <li
-          className={i === this.state.activeNode ? 'active' : ''}
-          key={i}
-          data-key={i}
-          onClick={this.handleAnalyseNodeChange.bind(this)}
-        >
-          <i className="fa fa-table" aria-hidden="true" />
-          {analysis.field}
-        </li>
-      );
-    });
     return (
       <Modal
         className="modalWrapper"
@@ -64,7 +77,7 @@ export default class QueryAnalyser extends React.Component {
           <div className="wd25">
             <div className="topLevelNodesWrapper">
               <div className="title">Top level nodes</div>
-              <ul>{analysisList}</ul>
+              <ul>{this.renderAnalysisList()}</ul>
             </div>
           </div>
           <div className="wd75">
