@@ -26,8 +26,14 @@ const toggleLoadingNewer = status => ({
   type: V_IS_LOADING_NEWER,
   data: status,
 });
-const toggleOldAvailable = status => ({ type: V_OLD_AVAILABLE, data: status });
-const toggleNewAvailable = status => ({ type: V_NEW_AVAILABLE, data: status });
+const toggleOldAvailable = status => ({
+  type: V_OLD_AVAILABLE,
+  data: status,
+});
+const toggleNewAvailable = status => ({
+  type: V_NEW_AVAILABLE,
+  data: status,
+});
 
 const vMakeRequest = triggerName => {
   return (dispatch, getState) => {
