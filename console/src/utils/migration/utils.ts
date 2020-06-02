@@ -72,7 +72,7 @@ export const getColumnUpdateMigration = (
   newColumn: NewColumnType,
   allSchemas: [],
   colName: string,
-  onInalidGqlColName: () => void
+  onInvalidGqlColName: () => void
 ) => {
   const {
     tableName,
@@ -248,7 +248,7 @@ export const getColumnUpdateMigration = (
   /* rename column */
   if (newName && colName !== newName) {
     if (!gqlPattern.test(newName)) {
-      onInalidGqlColName();
+      onInvalidGqlColName();
     }
     migration.add(
       getRunSqlQuery(

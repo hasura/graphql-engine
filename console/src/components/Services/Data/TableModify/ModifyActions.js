@@ -1473,7 +1473,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const columnEdit = state.tables.modify.columnEdit[colName];
     const allSchemas = state.tables.allSchemas;
 
-    const onInalidGqlColName = () =>
+    const onInvalidGqlColName = () =>
       dispatch(
         showErrorNotification(
           gqlColumnErrorNotif[3],
@@ -1490,7 +1490,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       columnEdit,
       allSchemas,
       colName,
-      onInalidGqlColName
+      onInvalidGqlColName
     );
 
     // Apply migrations
