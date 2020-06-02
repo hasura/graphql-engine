@@ -5,7 +5,7 @@
     "TEST_MODE": "parallel",
     "MIGRATE_URL": "http://localhost:9693/apis/migrate"
   },
-  "ignoreTestFiles": ["*spec.js", "validators.js", "utils.js"],
+  "ignoreTestFiles": ["spec.ts", "validators.ts", "utils.ts"],
   "viewportWidth": 1280,
   "viewportHeight": 720,
   "chromeWebSecurity": false,
