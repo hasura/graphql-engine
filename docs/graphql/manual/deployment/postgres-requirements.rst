@@ -89,3 +89,25 @@ Here's a sample SQL block that you can run on your database to create the right 
     -- GRANT USAGE ON SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
+
+**pgcrypto** in PG search path
+------------------------------
+
+Hasura GraphQL engine needs the ``pgcrypto`` Postgres extension to function.
+
+Ensure that ``pgcrypto`` is installed in a schema which is in the Postgres
+`search path <https://www.postgresql.org/docs/current/ddl-schemas.html#DDL-SCHEMAS-PATH>`_.
+
+If ``pgcrypto`` is installed in a schema that is not in the search path, the
+schema can be added to the search path by executing one of the following SQL commands
+depending on your setup:
+
+.. code-block:: sql
+
+    -- set search path to include schemas for the entire database
+    ALTER DATABASE <database_name> SET search_path TO schema1,schema2;
+
+    -- OR --
+
+    -- set search path to include schemas for a particular role
+    ALTER ROLE <hasura_role> SET search_path TO schema1,schema2;
