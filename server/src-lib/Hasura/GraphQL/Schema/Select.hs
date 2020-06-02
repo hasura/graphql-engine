@@ -30,6 +30,7 @@ import qualified Hasura.SQL.DML                as SQL
 import           Hasura.GraphQL.Parser         (FieldParser, InputFieldsParser, Kind (..), Parser,
                                                 UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Parser.Internal.Parser as P
 import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
@@ -391,12 +392,14 @@ fieldSelection fieldInfo selectPermissions stringifyNum = do
       let otherTable = riRTable  relationshipInfo
           colMapping = riMapping relationshipInfo
           relName    = riName    relationshipInfo
+          nullable   = riIsNullable relationshipInfo
           desc       = Just $ G.Description $ case riType relationshipInfo of
             ObjRel -> "An object relationship"
             ArrRel -> "An array relationship"
       remotePerms      <- MaybeT $ tableSelectPermissions otherTable
       relFieldName     <- lift $ textToName $ relNameToTxt relName
-      otherTableParser <- MaybeT $ selectTable otherTable relFieldName desc remotePerms stringifyNum
+      otherTableParser <- MaybeT $ (if nullable then id else fmap (fmap P.nonNullableField)) $
+        selectTable otherTable relFieldName desc remotePerms stringifyNum
       let field = otherTableParser <&> \selectExp ->
             let annotatedRelationship = RQL.AnnRelG relName colMapping selectExp
             in case riType relationshipInfo of

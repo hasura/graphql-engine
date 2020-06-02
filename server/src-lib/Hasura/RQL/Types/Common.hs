@@ -134,11 +134,12 @@ instance Q.FromCol RelType where
 
 data RelInfo
   = RelInfo
-  { riName     :: !RelName
-  , riType     :: !RelType
-  , riMapping  :: !(HashMap PGCol PGCol)
-  , riRTable   :: !QualifiedTable
-  , riIsManual :: !Bool
+  { riName       :: !RelName
+  , riType       :: !RelType
+  , riMapping    :: !(HashMap PGCol PGCol)
+  , riRTable     :: !QualifiedTable
+  , riIsManual   :: !Bool
+  , riIsNullable :: !Bool
   } deriving (Show, Eq, Generic)
 instance NFData RelInfo
 instance Cacheable RelInfo

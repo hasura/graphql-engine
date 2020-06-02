@@ -285,6 +285,29 @@ nullable parser = gcastWith (inputParserInput @k) Parser
       other -> Just <$> pParser parser other
   }
 
+-- | Decorate a type as NON_NULL
+nonNullableType :: forall k . Type k -> Type k
+nonNullableType = \case
+  NonNullable t -> NonNullable t
+  Nullable t    -> NonNullable t
+
+-- | Decorate a schema field as NON_NULL
+nonNullableField :: forall m a . FieldParser m a -> FieldParser m a
+nonNullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
+  (FieldParser (Definition n u d (FieldInfo as (nonNullableType t))) p)
+{-
+field = field
+  { fDefinition = (fDefinition field)
+    { dInfo = (dInfo (fDefinition field))
+      { fType = nonNullableType (fType (dInfo (fDefinition field)))
+      }
+    }
+  }
+-}
+-- | Decorate a schema output type as NON_NULL
+nonNullableParser :: forall m a . Parser 'Output m a -> Parser 'Output m a
+nonNullableParser parser = parser { pType = nonNullableType (pType parser) }
+
 list :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m [a]
 list parser = gcastWith (inputParserInput @k) Parser
   { pType = NonNullable $ TList $ pType parser
