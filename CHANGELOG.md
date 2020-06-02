@@ -105,6 +105,7 @@ hasura seed apply --file seeds/1234_add_some_seed_data.sql
 - console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
 - console: add help button and move about page to settings (#4848)
 - cli: list all available commands in root command help (fix #4623) (#4628)
+- cli: add support for skipping execution while generating migrations through the migrate REST API
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
 - docs: add single object mutations docs (close #4622) (#4625)
