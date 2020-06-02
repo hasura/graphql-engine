@@ -25,6 +25,7 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
+import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.Schema
@@ -57,9 +58,12 @@ data RQLQueryV1
   | RQRenameRelationship !RenameRel
 
   -- computed fields related
-
   | RQAddComputedField !AddComputedField
   | RQDropComputedField !DropComputedField
+
+  | RQCreateRemoteRelationship !RemoteRelationship
+  | RQUpdateRemoteRelationship !RemoteRelationship
+  | RQDeleteRemoteRelationship !DeleteRemoteRelationship
 
   | RQCreateInsertPermission !CreateInsPerm
   | RQCreateSelectPermission !CreateSelPerm
@@ -86,6 +90,7 @@ data RQLQueryV1
   | RQAddRemoteSchema !AddRemoteSchemaQuery
   | RQRemoveRemoteSchema !RemoteSchemaNameQuery
   | RQReloadRemoteSchema !RemoteSchemaNameQuery
+  | RQIntrospectRemoteSchema !RemoteSchemaNameQuery
 
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
@@ -232,6 +237,10 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQAddComputedField _                -> True
   RQDropComputedField _               -> True
 
+  RQCreateRemoteRelationship _        -> True
+  RQUpdateRemoteRelationship _        -> True
+  RQDeleteRemoteRelationship _        -> True
+
   RQCreateInsertPermission _          -> True
   RQCreateSelectPermission _          -> True
   RQCreateUpdatePermission _          -> True
@@ -255,6 +264,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQAddRemoteSchema _                 -> True
   RQRemoveRemoteSchema _              -> True
   RQReloadRemoteSchema _              -> True
+  RQIntrospectRemoteSchema _          -> False
 
   RQCreateEventTrigger _              -> True
   RQDeleteEventTrigger _              -> True
@@ -290,6 +300,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQSetCustomTypes _                  -> True
 
   RQBulk qs                           -> any queryModifiesSchemaCache qs
+
 queryModifiesSchemaCache (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
@@ -382,6 +393,11 @@ runQueryM rq = withPathK "args" $ case rq of
       RQAddRemoteSchema    q       -> runAddRemoteSchema q
       RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q
       RQReloadRemoteSchema q       -> runReloadRemoteSchema q
+      RQIntrospectRemoteSchema q   -> runIntrospectRemoteSchema q
+
+      RQCreateRemoteRelationship q -> runCreateRemoteRelationship q
+      RQUpdateRemoteRelationship q -> runUpdateRemoteRelationship q
+      RQDeleteRemoteRelationship q -> runDeleteRemoteRelationship q
 
       RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
@@ -445,6 +461,10 @@ requiresAdmin = \case
     RQAddComputedField _                -> True
     RQDropComputedField _               -> True
 
+    RQCreateRemoteRelationship _        -> True
+    RQUpdateRemoteRelationship _        -> True
+    RQDeleteRemoteRelationship _        -> True
+
     RQCreateInsertPermission _          -> True
     RQCreateSelectPermission _          -> True
     RQCreateUpdatePermission _          -> True
@@ -468,6 +488,7 @@ requiresAdmin = \case
     RQAddRemoteSchema    _              -> True
     RQRemoveRemoteSchema _              -> True
     RQReloadRemoteSchema _              -> True
+    RQIntrospectRemoteSchema _          -> True
 
     RQCreateEventTrigger _              -> True
     RQDeleteEventTrigger _              -> True
