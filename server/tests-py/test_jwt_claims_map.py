@@ -186,7 +186,7 @@ class TestJWTClaimsMapBasic():
 # The values of 'x-hasura-allowed-roles' and 'x-hasura-default-role' has
 # been set in the JWT config
 @pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
-class TestJWTClaimsMapWithDefaultHasuraClaims():
+class TestJWTClaimsMapWithStaticHasuraClaimsMapValues():
     def mk_claims(self, user_id=None):
         self.claims['https://myapp.com/jwt/claims'] = clean_null_terms({
             'user': {
