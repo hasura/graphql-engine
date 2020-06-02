@@ -187,13 +187,13 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
         lockedEvents <- readTVar _eeCtxLockedEvents
         let evtsIds = map eId evts
         let newLockedEvents = Set.union lockedEvents (Set.fromList evtsIds)
-        writeTVar _eeCtxLockedEvents newLockedEvents
+        writeTVar _eeCtxLockedEvents $! newLockedEvents
 
     removeEventFromLockedEvents :: EventId -> IO ()
     removeEventFromLockedEvents eventId = do
       liftIO $ atomically $ do
         lockedEvents <- readTVar _eeCtxLockedEvents
-        writeTVar _eeCtxLockedEvents $ Set.delete eventId lockedEvents
+        writeTVar _eeCtxLockedEvents $! Set.delete eventId lockedEvents
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
