@@ -21,7 +21,6 @@ import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.Session

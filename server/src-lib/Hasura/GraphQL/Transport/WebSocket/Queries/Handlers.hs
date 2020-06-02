@@ -9,7 +9,6 @@ import qualified Data.CaseInsensitive                                as CI
 import qualified Data.HashMap.Strict                                 as Map
 import qualified Data.Text                                           as T
 import qualified Data.Text.Encoding                                  as TE
-import qualified Data.Time.Clock                                     as TC
 import qualified Database.PG.Query                                   as Q
 import qualified Language.GraphQL.Draft.Syntax                       as G
 import qualified Network.HTTP.Client                                 as H

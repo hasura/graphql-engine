@@ -35,7 +35,6 @@ import qualified Data.ByteString.Lazy                                    as BL
 import qualified Data.CaseInsensitive                                    as CI
 import qualified Data.HashMap.Strict                                     as Map
 import qualified Data.Text                                               as T
-import qualified Data.Time.Clock                                         as TC
 import qualified Database.PG.Query                                       as PG
 import qualified Network.HTTP.Types                                      as H
 import qualified Network.WebSockets                                      as WS
