@@ -30,7 +30,7 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create seed_name",
 		Short: "create a new seed file",
-		Example: `  # Create a new seed file and use the terminal edit to add SQL:
+		Example: `  # Create a new seed file and use editor to add SQL:
   hasura seed create new_table_seed
 
   # Create a new seed by exporting data from tables already present in the database:
@@ -70,10 +70,7 @@ func (o *seedNewOptions) run() error {
 	if len(o.fromTableNames) > 0 {
 		migrateDriver, err := migrate.NewMigrate(ec, true)
 		if err != nil {
-			return err
-		}
-		if err != nil {
-			return errors.Wrap(err, "cannot initialize hasura client")
+			return errors.Wrap(err, "cannot initialize migrate driver")
 		}
 		// Send the query
 		body, err := migrateDriver.ExportDataDump(o.fromTableNames)
