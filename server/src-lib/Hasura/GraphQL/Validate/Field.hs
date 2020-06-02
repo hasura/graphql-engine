@@ -1,10 +1,11 @@
 module Hasura.GraphQL.Validate.Field
   ( ArgsMap
-  , Field(..)
+  , Field(..), fAlias, fName, fType, fArguments, fSelSet, fSource
   , SelSet
   , denormSelSet
   ) where
 
+import           Control.Lens
 import           Hasura.Prelude
 
 import qualified Data.Aeson                          as J
@@ -54,11 +55,15 @@ data Field
   , _fType      :: !G.NamedType
   , _fArguments :: !ArgsMap
   , _fSelSet    :: !SelSet
+  , _fSource    :: !TypeLoc
   } deriving (Eq, Show)
 
 $(J.deriveToJSON (J.aesonDrop 2 J.camelCase){J.omitNothingFields=True}
   ''Field
  )
+
+makeLenses ''Field
+
 
 -- newtype FieldMapAlias
 --   = FieldMapAlias
@@ -213,6 +218,7 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
 
   let fldTy = _fiTy fldInfo
       fldBaseTy = getBaseTy fldTy
+      fldSource = _fiLoc fldInfo
 
   fldTyInfo <- getTyInfo fldBaseTy
 
@@ -234,13 +240,17 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
       throwVE $ "internal error: unexpected input type for field: "
       <> showName name
 
+    (TIIFace _, _) -> throwVE $ "interface types not supported"
+
+    (TIUnion _, _) -> throwVE $ "union types not supported"
+
     -- when scalar/enum and no empty set
     (_, _) ->
       throwVE $ "field " <> showName name <> " must not have a "
       <> "selection since type " <> G.showGT fldTy <> " has no subfields"
 
   withPathK "directives" $ withDirectives dirs $ return $
-    Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap fields
+    Field (fromMaybe (G.Alias name) aliasM) name fldBaseTy argMap fields fldSource
 
 denormInlnFrag
   :: ( MonadReader ValidationCtx m
