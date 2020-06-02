@@ -74,13 +74,13 @@ mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ _) =
 
 expandOperator :: (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
 expandOperator (column, op) = S.SetExpItem $ (column,) $ case op of
-  (UpdSet          e) -> e
-  (UpdInc          e) -> S.mkSQLOpExp S.incOp               identifier (asInt  e)
-  (UpdAppend       e) -> S.mkSQLOpExp S.jsonbConcatOp       identifier (asJSON e)
-  (UpdPrepend      e) -> S.mkSQLOpExp S.jsonbConcatOp       (asJSON e) identifier
-  (UpdDeleteKey    e) -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asText e)
-  (UpdDeleteElem   e) -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asInt  e)
-  (UpdDeleteAtPath a) -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
+  UpdSet          e -> e
+  UpdInc          e -> S.mkSQLOpExp S.incOp               identifier (asInt  e)
+  UpdAppend       e -> S.mkSQLOpExp S.jsonbConcatOp       identifier (asJSON e)
+  UpdPrepend      e -> S.mkSQLOpExp S.jsonbConcatOp       (asJSON e) identifier
+  UpdDeleteKey    e -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asText e)
+  UpdDeleteElem   e -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asInt  e)
+  UpdDeleteAtPath a -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
   where
     identifier = S.SEIden $ toIden column
     asInt  e   = S.SETyAnn e S.intTypeAnn
