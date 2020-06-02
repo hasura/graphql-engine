@@ -141,7 +141,7 @@ const FoldableTable: React.FC<FoldableTableProps> = ({
         onFoldChange({ ...folded, [col.id]: !folded[col.id] });
       }
     },
-    [folded]
+    [folded, onFoldChange]
   );
 
   const columns = useMemo(
