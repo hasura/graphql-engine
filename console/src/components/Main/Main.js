@@ -30,6 +30,7 @@ import {
   loadLatestServerVersion,
   featureCompatibilityInit,
   emitProClickedEvent,
+  checkServerHealth
 } from './Actions';
 
 import {
@@ -75,6 +76,8 @@ class Main extends React.Component {
     document
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
+
+      //dispatch(checkServerHealth());
 
     dispatch(loadServerVersion()).then(() => {
       dispatch(featureCompatibilityInit());

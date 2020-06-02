@@ -26,6 +26,7 @@ const defaultState = {
     isFetching: false,
   },
   featuresCompatibility: {},
+  serverHealth: false
 };
 
 export default defaultState;

@@ -3,6 +3,7 @@ import globals from '../../Globals';
 import requestAction from '../../utils/requestAction';
 import requestActionPlain from '../../utils/requestActionPlain';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
+import fetch from 'isomorphic-fetch';
 import { getFeaturesCompatibility } from '../../helpers/versionUtils';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
@@ -51,6 +52,26 @@ const setReadOnlyMode = data => ({
   type: SET_READ_ONLY_MODE,
   data,
 });
+
+const SERVER_HEALTH_STATUS = 'Main/SERVER_HEALTH_STATUS';
+
+const checkServerHealth = () => {
+  const url = Endpoints.healthCheck;
+  const options = {
+    method: "GET"
+  };
+  return fetch(url, options).then(response => {
+    if (response.status === 200) {
+      dispatch({ type: SERVER_HEALTH_STATUS, data: true });
+      return;
+    }
+
+    if (response.status === 500) {
+      dispatch({ type: SERVER_HEALTH_STATUS, data: false });
+      return;
+    }
+  })
+}
 
 const featureCompatibilityInit = () => {
   return (dispatch, getState) => {
@@ -318,6 +339,11 @@ const mainReducer = (state = defaultState, action) => {
         ...state,
         featuresCompatibility: { ...action.data },
       };
+    case SERVER_HEALTH_STATUS: 
+      return {
+        ...state,
+        serverHealth: { ...action.data },
+      };
     default:
       return state;
   }
@@ -341,4 +367,5 @@ export {
   featureCompatibilityInit,
   RUN_TIME_ERROR,
   registerRunTimeError,
+  checkServerHealth
 };
