@@ -171,6 +171,22 @@ You can disable it if you wish by commenting out the `createLogger` line in `src
 - Run tests: `npm run cypress`
 - Write your tests in the `cypress` directory, integration.
 
+### Linter and formatter
+
+Pre-commit git-hook that runs linter and formatter is by default disabled. You can enable it by adding `HUSKY_PRE_COMMIT=true` to your `.env` file.
+
+If you want to run a linter for all files, you can do:
+
+```bash
+npm run lint
+```
+
+To format all files, you can run:
+
+```bash
+npm run format
+```
+
 ### Submitting a pull request
 
 - All the development work happens in your own fork of the graphql-engine.
