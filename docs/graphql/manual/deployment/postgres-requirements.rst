@@ -99,7 +99,7 @@ During initialization, Hasura GraphQL engine tries to install the ``pgcrypto`` e
 in the ``public`` schema, if it is not already installed.
 
 It needs to be ensured that ``pgcrypto`` is installed in a schema which is in the Postgres
-`search path <https://www.postgresql.org/docs/current/ddl-schemas.html#DDL-SCHEMAS-PATH>`_.
+`search path <https://www.postgresql.org/docs/current/ddl-schemas.html#DDL-SCHEMAS-PATH>`_
 for the Postgres user/role that Hasura connects with.
 
 If ``pgcrypto`` is installed in a schema that is not in the search path, the
