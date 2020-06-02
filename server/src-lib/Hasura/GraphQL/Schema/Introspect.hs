@@ -68,21 +68,34 @@ even an @Applicative@), so we don't have a map @(a -> Parser n b) -> [a] -> m
 [b]@.
 
 In order to resolve this conundrum, let's consider what the ordinary Postgres
-schema generates: rather than directly giving the desired output, it instead
-returns values that can, after parsing, be used to build an output, along the
-lines of:
+schema generates for a query such as follows.
 
 ```
-table :: QualifiedTable -> FieldParser n SelectExp
+query {
+  author {
+    articles {
+      title
+    }
+  }
+}
+```
+
+Now the @Parser@ for an article's title does not directly give the desired
+output data: indeed, there would be many different titles, rather than any
+single one we can return.  Instead, it returns a value that can, after parsing,
+be used to build an output, along the lines of:
+
+```
+articleTitle :: FieldParser n SQLArticleTitle
 ```
 
 (This is a heavily simplified representation of reality.)
 
 These values can be thought of as an intermediate representation that can then
 be used to generate and run SQL that gives the desired JSON output at a later
-stage.  In other words, in the above example, @SelectExp@ can be thought of as a
-function @PG.Connection -> IO J.Value@ that, given access to the database, can
-produce the desired JSON object.
+stage.  In other words, in the above example, @SQLArticleTitle@ can be thought
+of as a function @Article -> Title@ that, given an article, gives back its
+title.
 
 Such an approach could help us as well, as, from instructions on how to generate
 a JSON return for a given `__Type`, surely we can later simply apply this
