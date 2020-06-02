@@ -1,7 +1,10 @@
 module Hasura.RQL.DML.Insert
  ( insertCheckExpr
+ , insertOrUpdateCheckExpr
  , mkInsertCTE
  , runInsert
+ , insertP2
+ , toSQLConflict
  ) where
 
 import           Hasura.Prelude
@@ -23,32 +26,8 @@ import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.BoolExp
 import           Hasura.SQL.Types
 
-
--- | Create an expression which will fail with a check constraint violation error
--- if the condition is not met on any of the inserted rows.
---
--- The resulting SQL will look something like this:
---
--- > INSERT INTO
--- >   ...
--- > RETURNING
--- >   *,
--- >   CASE WHEN {cond}
--- >     THEN NULL
--- >     ELSE hdb_catalog.check_violation('insert check constraint failed')
--- >   END
-insertCheckExpr :: Text -> S.BoolExp -> S.SQLExp
-insertCheckExpr errorMessage condExpr =
-  S.SECond condExpr S.SENull
-    (S.SEFunction
-      (S.FunctionExp
-        (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation"))
-        (S.FunctionArgs [S.SELit errorMessage] mempty)
-        Nothing)
-    )
 
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
@@ -266,6 +245,28 @@ insertP2 strfyNum (u, p) =
   where
     insertCTE = mkInsertCTE u
 
+-- | Create an expression which will fail with a check constraint violation error
+-- if the condition is not met on any of the inserted rows.
+--
+-- The resulting SQL will look something like this:
+--
+-- > INSERT INTO
+-- >   ...
+-- > RETURNING
+-- >   *,
+-- >   CASE WHEN {cond}
+-- >     THEN NULL
+-- >     ELSE hdb_catalog.check_violation('insert check constraint failed')
+-- >   END
+insertCheckExpr :: Text -> S.BoolExp -> S.SQLExp
+insertCheckExpr errorMessage condExpr =
+  S.SECond condExpr S.SENull
+    (S.SEFunction
+      (S.FunctionExp
+        (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation"))
+        (S.FunctionArgs [S.SELit errorMessage] mempty)
+        Nothing)
+    )
 
 -- | When inserting data, we might need to also enforce the update
 -- check condition, because we might fall back to an update via an

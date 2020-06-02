@@ -7,25 +7,39 @@ module Hasura.GraphQL.Schema.Mutation
   , updateTableByPk
   , deleteFromTable
   , deleteFromTableByPk
+  , -- FIXME: move somewhere else
+    convertToSQLTransaction
   ) where
 
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson                     as J
 import qualified Data.HashMap.Strict            as Map
+import qualified Data.HashMap.Strict.InsOrd     as OMap
 import qualified Data.HashSet                   as Set
 import qualified Data.List                      as L
 import qualified Data.List.NonEmpty             as NE
+import qualified Data.Sequence                  as Seq
 import qualified Data.Text                      as T
+import qualified Database.PG.Query              as Q
 import qualified Language.GraphQL.Draft.Syntax  as G
 
 import qualified Hasura.GraphQL.Parser          as P
 import qualified Hasura.RQL.DML.Delete.Types    as RQL
+import qualified Hasura.RQL.DML.Insert          as RQL
 import qualified Hasura.RQL.DML.Insert.Types    as RQL
+import qualified Hasura.RQL.DML.Internal        as RQL
+import qualified Hasura.RQL.DML.Mutation        as RQL
+import qualified Hasura.RQL.DML.Returning       as RQL
 import qualified Hasura.RQL.DML.Returning.Types as RQL
 import qualified Hasura.RQL.DML.Update          as RQL
 import qualified Hasura.RQL.DML.Update.Types    as RQL
+import qualified Hasura.RQL.GBoolExp            as RQL
+import qualified Hasura.SQL.DML                 as S
 
+import           Hasura.Db
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Parser          (FieldParser, InputFieldsParser, Kind (..), Parser,
                                                  UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
@@ -37,6 +51,7 @@ import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value
 
 
 
@@ -72,9 +87,12 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
     <&> \((onConflict, objects), output) ->
        ( AnnIns { _aiInsObj         = objects
                 , _aiConflictClause = onConflict
-                , _aiCheckCond      = (undefined {- FIXME!!! -}, ipiCheck insertPerms)
+                , _aiCheckCond      = ( undefined {- FIXME!!! -}
+                                      , fmapAnnBoolExp partialSQLExpToUnpreparedValue $
+                                        ipiCheck insertPerms
+                                      )
                 , _aiTableCols      = columns
-                , _aiDefVals        = ipiSet insertPerms
+                , _aiDefVals        = fmap partialSQLExpToUnpreparedValue $ ipiSet insertPerms
                 }
        , RQL.MOutMultirowFields output
        )
@@ -109,9 +127,12 @@ insertOneIntoTable table fieldName description insertPerms selectPerms updatePer
     <&> \((onConflict, object), output) ->
        ( AnnIns { _aiInsObj         = [object]
                 , _aiConflictClause = onConflict
-                , _aiCheckCond      = (undefined {- FIXME!!! -}, ipiCheck insertPerms)
+                , _aiCheckCond      = ( undefined {- FIXME!!! -}
+                                      , fmapAnnBoolExp partialSQLExpToUnpreparedValue $
+                                        ipiCheck insertPerms
+                                      )
                 , _aiTableCols      = columns
-                , _aiDefVals        = ipiSet insertPerms
+                , _aiDefVals        = fmap partialSQLExpToUnpreparedValue $ ipiSet insertPerms
                 }
        , RQL.MOutSinglerowObject output
        )
@@ -182,9 +203,12 @@ objectRelationshipInput table insertPerms selectPerms updatePerms =
         pure $ AnnIns
           { _aiInsObj         = object
           , _aiConflictClause = conflict
-          , _aiCheckCond      = (undefined {- FIXME!!! -}, ipiCheck insertPerms)
+          , _aiCheckCond      = ( undefined {- FIXME!!! -}
+                                , fmapAnnBoolExp partialSQLExpToUnpreparedValue $
+                                  ipiCheck insertPerms
+                                )
           , _aiTableCols      = columns
-          , _aiDefVals        = ipiSet insertPerms
+          , _aiDefVals        = fmap partialSQLExpToUnpreparedValue $ ipiSet insertPerms
           }
   pure $ P.object inputName (Just inputDesc) inputParser <&> undefined
 
@@ -214,9 +238,12 @@ arrayRelationshipInput table insertPerms selectPerms updatePerms =
         pure $ AnnIns
           { _aiInsObj         = objects
           , _aiConflictClause = conflict
-          , _aiCheckCond      = (undefined {- FIXME!!! -}, ipiCheck insertPerms)
+          , _aiCheckCond      = ( undefined {- FIXME!!! -}
+                                , fmapAnnBoolExp partialSQLExpToUnpreparedValue $
+                                  ipiCheck insertPerms
+                                )
           , _aiTableCols      = columns
-          , _aiDefVals        = ipiSet insertPerms
+          , _aiDefVals        = fmap partialSQLExpToUnpreparedValue $ ipiSet insertPerms
           }
   pure $ P.object inputName (Just inputDesc) inputParser
 
@@ -525,3 +552,225 @@ primaryKeysArguments table selectPerms = runMaybeT $ do
 
 third :: (c -> d) -> (a,b,c) -> (a,b,d)
 third f (a,b,c) = (a,b,f c)
+
+
+
+-- insert translation
+
+-- FIXME: this should probably be elsewhere, perhaps in Execute?
+-- Furthermore, this has been lifted almost verbatim from Resolve
+-- and is unlikely to be correct on the first try. For instance:
+-- - all calls to "validate" have been removed, since everything they
+--   do should be baked directly into the parsers above.
+-- - some paths still throw errors; is this something we're okay with
+--   or should this operation be total? what should we move to our
+--   internal representation, to avoid errors here?
+-- - is some of this code dead or unused? are there paths never taken?
+--   can it be simplified?
+
+convertToSQLTransaction
+  :: QualifiedTable
+  -> AnnMultiInsert S.SQLExp
+  -> Bool
+  -> RespTx
+convertToSQLTransaction table (annIns, mutationOutput) stringifyNum =
+  if null $ _aiInsObj annIns
+  then pure $ buildEmptyMutResp mutationOutput
+  else insertMultipleObjects table annIns mutationOutput stringifyNum
+
+insertMultipleObjects
+  :: QualifiedTable
+  -> MultiObjIns S.SQLExp
+  -> RQL.MutationOutput
+  -> Bool
+  -> Q.TxE QErr EncJSON
+insertMultipleObjects table multiObjIns mutationOutput stringifyNum =
+  bool withoutRelsInsert withRelsInsert anyRelsToInsert
+  where
+    AnnIns insObjs conflictClause checkCondition columnInfos defVals = multiObjIns
+    allInsObjRels = concatMap _aioObjRels insObjs
+    allInsArrRels = concatMap _aioArrRels insObjs
+    anyRelsToInsert = not $ null allInsArrRels && null allInsObjRels
+
+    withoutRelsInsert =
+      let columnValues = map (mkSQLRow defVals) $ map _aioColumns insObjs
+          columnNames  = Map.keys defVals
+          insertQuery  = RQL.InsertQueryP1
+            table
+            columnNames
+            columnValues
+            conflictClause
+            (Just <$> checkCondition)
+            mutationOutput
+            columnInfos
+      in RQL.insertP2 stringifyNum (insertQuery, Seq.empty)
+         -- FIXME: is this correct? Can we pass empty PrepArgs here?
+         -- if no: they'll need to be injected all the way from outside
+         -- I think it's fine since the other branch doesn't rely on prep args?
+
+    withRelsInsert = do
+      insertRequests <- for insObjs \obj -> do
+        let singleObj = AnnIns obj conflictClause checkCondition columnInfos defVals
+        insertObject table singleObj stringifyNum
+      let affectedRows = sum $ map fst insertRequests
+          columnValues = catMaybes $ map snd insertRequests
+      selectExpr <- RQL.mkSelCTEFromColVals table columnInfos columnValues
+      let sqlOutput = toSQL $ RQL.mkMutationOutputExp table (Just affectedRows) selectExpr mutationOutput stringifyNum
+      runIdentity . Q.getRow <$> Q.rawQE RQL.dmlTxErrorHandler (Q.fromBuilder sqlOutput) [] False
+
+insertObject
+  :: QualifiedTable
+  -> SingleObjIns S.SQLExp
+  -> Bool
+  -> Q.TxE QErr (Int, Maybe (ColumnValues TxtEncodedPGVal))
+insertObject table singleObjIns stringifyNum = do
+  -- insert all object relations and fetch this insert dependent column values
+  objInsRes <- forM objectRels $ insertObjRel stringifyNum
+
+  -- prepare final insert columns
+  let objRelAffRows = sum $ map fst objInsRes
+      objRelDeterminedCols = concatMap snd objInsRes
+      finalInsCols = columns <> objRelDeterminedCols
+
+  cte <- mkInsertQ table onConflict finalInsCols defaultValues (insertCond, Just updateCond)
+
+  MutateResp affRows colVals <- RQL.mutateAndFetchCols table allColumns (cte, Seq.empty) stringifyNum
+  colValM <- asSingleObject colVals
+
+  arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null arrayRels
+  let totAffRows = objRelAffRows + affRows + arrRelAffRows
+
+  return (totAffRows, colValM)
+  where
+    AnnIns annObj onConflict (insertCond, updateCond) allColumns defaultValues = singleObjIns
+    AnnInsObj columns objectRels arrayRels = annObj
+
+    arrRelDepCols = flip getColInfos allColumns $
+      concatMap (Map.keys . riMapping . _riRelInfo) arrayRels
+
+    withArrRels colValM = do
+      colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
+      arrDepColsWithVal <- fetchFromColVals colVal arrRelDepCols
+      arrInsARows <- forM arrayRels $ insertArrRel arrDepColsWithVal stringifyNum
+      return $ sum arrInsARows
+
+    asSingleObject = \case
+      [] -> pure Nothing
+      [r] -> pure $ Just r
+      _ -> throw500 "more than one row returned"
+
+    cannotInsArrRelErr =
+      "cannot proceed to insert array relations since insert to table "
+      <> table <<> " affects zero rows"
+
+insertObjRel
+  :: Bool
+  -> ObjRelIns S.SQLExp
+  -> Q.TxE QErr (Int, [(PGCol, S.SQLExp)])
+insertObjRel stringifyNum objRelIns = do
+  (affRows, colValM) <- insertObject table singleObjIns stringifyNum
+  colVal <- onNothing colValM $ throw400 NotSupported errMsg
+  retColsWithVals <- fetchFromColVals colVal rColInfos
+  let c = mergeListsWith (Map.toList mapCols) retColsWithVals
+        (\(_, rCol) (col, _) -> rCol == col)
+        (\(lCol, _) (_, cVal) -> (lCol, cVal))
+  return (affRows, c)
+  where
+    RelIns singleObjIns relInfo = objRelIns
+    -- multiObjIns = singleToMulti singleObjIns
+    relName = riName relInfo
+    mapCols = riMapping relInfo
+    table = riRTable relInfo
+    allCols = _aiTableCols singleObjIns
+    rCols = Map.elems mapCols
+    rColInfos = getColInfos rCols allCols
+    errMsg = "cannot proceed to insert object relation "
+             <> relName <<> " since insert to table "
+             <> table <<> " affects zero rows"
+
+insertArrRel
+  :: [(PGCol, S.SQLExp)]
+  -> Bool
+  -> ArrRelIns S.SQLExp
+  -> Q.TxE QErr Int
+insertArrRel resCols stringifyNum arrRelIns = do
+  resBS <- insertMultipleObjects table multiObjIns mutOutput stringifyNum
+  resObj <- decodeEncJSON resBS
+  onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
+    throw500 "affected_rows not returned in array rel insert"
+  where
+    RelIns multiObjIns relInfo = arrRelIns
+    colMapping = riMapping relInfo
+    table = riRTable relInfo
+    mutOutput = RQL.MOutMultirowFields [("affected_rows", RQL.MCount)]
+
+mkInsertQ
+  :: MonadError QErr m
+  => QualifiedTable
+  -> Maybe (RQL.ConflictClauseP1 S.SQLExp)
+  -> [(PGCol, S.SQLExp)]
+  -> Map.HashMap PGCol S.SQLExp
+  -> (AnnBoolExpSQL, Maybe AnnBoolExpSQL)
+  -> m S.CTE
+mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
+  let sqlConflict = RQL.toSQLConflict table <$> onConflictM
+      sqlExps = mkSQLRow defVals insCols
+      valueExp = S.ValuesExp [S.TupleExp sqlExps]
+      tableCols = Map.keys defVals
+      sqlInsert =
+        S.SQLInsert table tableCols valueExp sqlConflict
+          . Just
+          $ S.RetExp
+            [ S.selectStar
+            , S.Extractor
+                (RQL.insertOrUpdateCheckExpr table onConflictM
+                  (RQL.toSQLBoolExp (S.QualTable table) insCheck)
+                  (fmap (RQL.toSQLBoolExp (S.QualTable table)) updCheck))
+                Nothing
+            ]
+  pure $ S.CTEInsert sqlInsert
+
+fetchFromColVals
+  :: MonadError QErr m
+  => ColumnValues TxtEncodedPGVal
+  -> [PGColumnInfo]
+  -> m [(PGCol, S.SQLExp)]
+fetchFromColVals colVal reqCols =
+  forM reqCols $ \ci -> do
+    let valM = Map.lookup (pgiColumn ci) colVal
+    val <- onNothing valM $ throw500 $ "column "
+           <> pgiColumn ci <<> " not found in given colVal"
+    let pgColVal = case val of
+          TENull  -> S.SENull
+          TELit t -> S.SELit t
+    return (pgiColumn ci, pgColVal)
+
+mkSQLRow :: Map.HashMap PGCol S.SQLExp -> [(PGCol, S.SQLExp)] -> [S.SQLExp]
+mkSQLRow defVals withPGCol = map snd $
+  flip map (Map.toList defVals) $
+    \(col, defVal) -> (col,) $ fromMaybe defVal $ Map.lookup col withPGColMap
+  where
+    withPGColMap = Map.fromList withPGCol
+
+buildEmptyMutResp :: RQL.MutationOutput -> EncJSON
+buildEmptyMutResp = \case
+  RQL.MOutMultirowFields mutFlds -> encJFromJValue $ OMap.fromList $ map (second convMutFld) mutFlds
+  RQL.MOutSinglerowObject _      -> encJFromJValue $ J.Object mempty
+  where
+    convMutFld = \case
+      RQL.MCount -> J.toJSON (0 :: Int)
+      RQL.MExp e -> J.toJSON e
+      RQL.MRet _ -> J.toJSON ([] :: [J.Value])
+
+mergeListsWith
+  :: [a] -> [b] -> (a -> b -> Bool) -> (a -> b -> c) -> [c]
+mergeListsWith _ [] _ _ = []
+mergeListsWith [] _ _ _ = []
+mergeListsWith (x:xs) l b f = case find (b x) l of
+  Nothing -> mergeListsWith xs l b f
+  Just y  ->  f x y : mergeListsWith xs l b f
+
+decodeEncJSON :: (J.FromJSON a, QErrM m) => EncJSON -> m a
+decodeEncJSON =
+  either (throw500 . T.pack) decodeValue .
+  J.eitherDecode . encJToLBS

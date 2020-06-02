@@ -24,6 +24,7 @@ module Hasura.RQL.DDL.Schema.Table
   ) where
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Schema.Common       (textToName)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Schema.Cache.Common
@@ -35,10 +36,8 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
-import Hasura.GraphQL.Schema.Common (textToName)
 
 import qualified Database.PG.Query                  as Q
-import qualified Hasura.GraphQL.Schema              as GS
 import qualified Hasura.Incremental                 as Inc
 import qualified Language.GraphQL.Draft.Syntax      as G
 

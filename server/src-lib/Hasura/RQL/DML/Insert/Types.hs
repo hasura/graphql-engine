@@ -19,7 +19,7 @@ data ConflictTarget
 data ConflictClauseP1 v
   = CP1DoNothing !(Maybe ConflictTarget)
   | CP1Update !ConflictTarget ![PGCol] !(PreSetColsG v) (AnnBoolExp v)
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor, Foldable, Traversable)
 
 
 data InsertQueryP1
