@@ -19,9 +19,9 @@ const ReloadEnumValuesButton = ({ isEnum, dispatch, tooltipStyle }) => {
       <ReloadEnumMetadata buttonText="Reload enum values" dispatch={dispatch} />
       <OverlayTrigger overlay={tooltip} placement="right">
         <i
-          className={`fa fa-info-circle ${
-            styles.cursorPointer
-          } ${tooltipStyle || ''}`}
+          className={`fa fa-info-circle ${styles.cursorPointer} ${
+            tooltipStyle || ''
+          }`}
           aria-hidden="true"
         />
       </OverlayTrigger>
