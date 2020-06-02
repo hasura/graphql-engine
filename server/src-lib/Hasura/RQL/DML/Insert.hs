@@ -1,4 +1,8 @@
-module Hasura.RQL.DML.Insert where
+module Hasura.RQL.DML.Insert
+ ( insertCheckExpr
+ , mkInsertCTE
+ , runInsert
+ ) where
 
 import           Hasura.Prelude
 
@@ -17,7 +21,7 @@ import           Hasura.RQL.DML.Insert.Types
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
-import           Hasura.RQL.Instances        ()
+import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.SQL.Types
@@ -47,32 +51,31 @@ insertCheckExpr errorMessage condExpr =
     )
 
 
-{- FIXME
-
 mkInsertCTE :: InsertQueryP1 -> S.CTE
-mkInsertCTE (InsertQueryP1 tn cols vals c (insCheck, updCheck) _ _) =
+mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
     S.CTEInsert insert
   where
     tupVals = S.ValuesExp $ map S.TupleExp vals
     insert =
-      S.SQLInsert tn cols tupVals (toSQLConflict <$> c)
+      S.SQLInsert tn cols tupVals (toSQLConflict tn <$> conflict)
         . Just
         . S.RetExp
         $ [ S.selectStar
           , S.Extractor
-              (insertOrUpdateCheckExpr tn c
-                (toSQLBoolExp (S.QualTable tn) insCheck)
-                (fmap (toSQLBoolExp (S.QualTable tn)) updCheck))
+              (insertOrUpdateCheckExpr tn conflict
+                (toSQLBool insCheck)
+                (fmap toSQLBool updCheck))
               Nothing
           ]
+    toSQLBool = toSQLBoolExp $ S.QualTable tn
 
-toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
-toSQLConflict conflict = case conflict of
-  CP1DoNothing Nothing          -> S.DoNothing Nothing
-  CP1DoNothing (Just ct)        -> S.DoNothing $ Just $ toSQLCT ct
-  CP1Update ct inpCols preSet filtr    -> S.Update (toSQLCT ct)
-    (S.buildUpsertSetExp inpCols preSet) $ Just $ S.WhereFrag filtr
 
+toSQLConflict :: QualifiedTable -> ConflictClauseP1 S.SQLExp -> S.SQLConflict
+toSQLConflict tableName = \case
+  CP1DoNothing ct -> S.DoNothing $ toSQLCT <$> ct
+  CP1Update ct inpCols preSet filtr -> S.Update
+    (toSQLCT ct) (S.buildUpsertSetExp inpCols preSet) $
+    Just $ S.WhereFrag $ toSQLBoolExp (S.QualTable tableName) filtr
   where
     toSQLCT ct = case ct of
       CTColumn pgCols -> S.SQLColumn pgCols
@@ -118,7 +121,7 @@ buildConflictClause
   -> TableInfo
   -> [PGCol]
   -> OnConflict
-  -> m ConflictClauseP1
+  -> m (ConflictClauseP1 S.SQLExp)
 buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) =
   case (mTCol, mTCons, act) of
     (Nothing, Nothing, CAIgnore)    -> return $ CP1DoNothing Nothing
@@ -135,21 +138,19 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
       (updFltr, preSet) <- getUpdPerm
       resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr updFltr
       resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) preSet
-      return $ CP1Update (CTColumn $ getPGCols col) inpCols resolvedPreSet $
-        toSQLBool resolvedUpdFltr
+      return $ CP1Update (CTColumn $ getPGCols col) inpCols resolvedPreSet resolvedUpdFltr
     (Nothing, Just cons, CAUpdate)  -> do
       validateConstraint cons
       (updFltr, preSet) <- getUpdPerm
       resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr updFltr
       resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) preSet
-      return $ CP1Update (CTConstraint cons) inpCols resolvedPreSet $
-        toSQLBool resolvedUpdFltr
+      return $ CP1Update (CTConstraint cons) inpCols resolvedPreSet resolvedUpdFltr
     (Just _, Just _, _)             -> throw400 UnexpectedPayload
       "'constraint' and 'constraint_on' cannot be set at a time"
   where
     coreInfo = _tiCoreInfo tableInfo
     fieldInfoMap = _tciFieldInfoMap coreInfo
-    toSQLBool = toSQLBoolExp (S.mkQual $ _tciName coreInfo)
+    -- toSQLBool = toSQLBoolExp (S.mkQual $ _tciName coreInfo)
 
     validateCols c = do
       let targetcols = getPGCols c
@@ -293,7 +294,7 @@ insertP2 strfyNum (u, p) =
 -- the @xmax@ system column.
 insertOrUpdateCheckExpr
   :: QualifiedTable
-  -> Maybe ConflictClauseP1
+  -> Maybe (ConflictClauseP1 S.SQLExp)
   -> S.BoolExp
   -> Maybe S.BoolExp
   -> S.SQLExp
@@ -324,5 +325,3 @@ runInsert q = do
   res <- convInsQ q
   strfyNum <- stringifyNum <$> askSQLGenCtx
   liftTx $ insertP2 strfyNum res
-
--}

@@ -18,7 +18,7 @@ data ConflictTarget
 
 data ConflictClauseP1 v
   = CP1DoNothing !(Maybe ConflictTarget)
-  | CP1Update !ConflictTarget ![PGCol] !PreSetColsPartial (Maybe (AnnBoolExp v))
+  | CP1Update !ConflictTarget ![PGCol] !(PreSetColsG v) (AnnBoolExp v)
   deriving (Show, Eq)
 
 

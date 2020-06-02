@@ -242,8 +242,10 @@ conflictObject table selectPerms updatePerms = runMaybeT $ do
         whereExp   <- P.fieldOptional whereExpName Nothing whereExpParser
         pure $ case columns of
           [] -> RQL.CP1DoNothing $ Just constraint
-          _  -> RQL.CP1Update constraint columns (upiSet updatePerms) whereExp
+          _  -> RQL.CP1Update constraint columns preSetColumns $
+            BoolAnd $ catMaybes [whereExp, Just $ fmapAnnBoolExp partialSQLExpToUnpreparedValue $ upiFilter updatePerms]
   pure $ P.object objectName (Just objectDesc) fieldsParser
+  where preSetColumns = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
 
 conflictConstraint
   :: forall m n. (MonadSchema n m, MonadError QErr m)
@@ -326,6 +328,8 @@ mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
              , RQL.uqp1AllCols = columns
              }
   where
+    -- FIXME!!!
+    -- OpExps should also include preset columns
     permissionFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ upiFilter updatePerms
     checkExp = maybe annBoolExpTrue (fmapAnnBoolExp partialSQLExpToUnpreparedValue) $ upiCheck updatePerms
 

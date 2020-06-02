@@ -33,6 +33,7 @@ module Hasura.RQL.Types.BoolExp
        , AnnBoolExpPartialSQL
 
        , PreSetCols
+       , PreSetColsG
        , PreSetColsPartial
        ) where
 
@@ -336,6 +337,7 @@ type AnnBoolExpSQL = AnnBoolExp S.SQLExp
 type AnnBoolExpFldPartialSQL = AnnBoolExpFld PartialSQLExp
 type AnnBoolExpPartialSQL = AnnBoolExp PartialSQLExp
 
+type PreSetColsG v = M.HashMap PGCol v
 type PreSetColsPartial = M.HashMap PGCol PartialSQLExp
 type PreSetCols = M.HashMap PGCol S.SQLExp
 

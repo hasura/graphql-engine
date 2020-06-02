@@ -362,7 +362,7 @@ runQueryM rq = withPathK "args" $ case rq of
       RQGetInconsistentMetadata q  -> runGetInconsistentMetadata q
       RQDropInconsistentMetadata q -> runDropInconsistentMetadata q
 
-      -- RQInsert q                   -> runInsert q
+      RQInsert q                   -> runInsert q
       RQSelect q                   -> runSelect q
       RQUpdate q                   -> runUpdate q
       RQDelete q                   -> runDelete q
