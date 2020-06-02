@@ -44,7 +44,6 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVarP(&opts.fileName, "file", "f", "", "seed file to apply")
-
 	return cmd
 }
 
@@ -54,5 +53,5 @@ func (o *seedApplyOptions) run() error {
 		return err
 	}
 	fs := afero.NewOsFs()
-	return seed.ApplySeedsToDatabase(fs, migrateDriver, o.ec.SeedsDirectory, o.fileName)
+	return seed.ApplySeedsToDatabase(ec, fs, migrateDriver, o.fileName)
 }

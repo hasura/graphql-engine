@@ -1,8 +1,11 @@
 package seed
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/hasura/graphql-engine/cli"
 
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
@@ -13,7 +16,7 @@ import (
 
 // ApplySeedsToDatabase will read all .sql files in the given
 // directory and apply it to hasura
-func ApplySeedsToDatabase(fs afero.Fs, m *migrate.Migrate, directoryPath string, fileName string) error {
+func ApplySeedsToDatabase(ec *cli.ExecutionContext, fs afero.Fs, m *migrate.Migrate, fileName string) error {
 	seedQuery := hasuradb.HasuraInterfaceBulk{
 		Type: "bulk",
 		Args: make([]interface{}, 0),
@@ -22,7 +25,7 @@ func ApplySeedsToDatabase(fs afero.Fs, m *migrate.Migrate, directoryPath string,
 	if fileName != "" {
 		absFileName, err := filepath.Abs(fileName)
 		if err != nil {
-			return errors.Wrap(err, "error getting abolute filepath")
+			return errors.Wrap(err, "error getting absolute filepath")
 		}
 		b, err := afero.ReadFile(fs, absFileName)
 		if err != nil {
@@ -36,7 +39,7 @@ func ApplySeedsToDatabase(fs afero.Fs, m *migrate.Migrate, directoryPath string,
 		}
 		seedQuery.Args = append(seedQuery.Args, q)
 	} else {
-		err := afero.Walk(fs, directoryPath, func(path string, file os.FileInfo, err error) error {
+		err := afero.Walk(fs, ec.SeedsDirectory, func(path string, file os.FileInfo, err error) error {
 			if !file.IsDir() && filepath.Ext(file.Name()) == ".sql" {
 				b, err := afero.ReadFile(fs, path)
 				if err != nil {
@@ -56,6 +59,9 @@ func ApplySeedsToDatabase(fs afero.Fs, m *migrate.Migrate, directoryPath string,
 		if err != nil {
 			return errors.Wrap(err, "error walking the directory path")
 		}
+	}
+	if len(seedQuery.Args) == 0 {
+		return fmt.Errorf("no SQL files found in %s", ec.SeedsDirectory)
 	}
 	return m.ApplySeed(seedQuery)
 }
