@@ -6,7 +6,6 @@ module Hasura.RQL.Types.Error
        , encodeJSONPath
        , encodeQErr
        , encodeGQLErr
-       , encodeJSONPath
        , noInternalQErrEnc
        , err400
        , err404
