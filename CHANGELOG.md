@@ -12,22 +12,19 @@ It works similar to table relationships. Head to the `Relationship` tab in your 
 2. select the remote schema
 3. give the join configuration from table columns to remote schema fields.
 
-[Add docs links]
-[Add console screenshot]
+[Add docs links][add console screenshot]
 
 ### Scheduled Triggers
 
 A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron based or timestamp based.
 
-A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to  generate an end-of-day sales report every weekday at 9pm.
+A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to generate an end-of-day sales report every weekday at 9pm.
 
 You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience.
 
-[Add docs links]
-[Add console screenshot]
+[Add docs links][add console screenshot]
 
 (close #1914)
-
 
 ### Allow access to session variables by computed fields (fix #3846)
 
@@ -63,15 +60,16 @@ Read more about the session argument for computed fields in the [docs](https://h
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
+
 - server: fix explain queries with role permissions (fix #4816)
 - server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
-
 - server: fixes an issue where introspection queries with variables would fail because of caching (fix #4547)
 - server: avoid loss of precision when passing values in scientific notation (fix #4733)
 - server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
 - server: fix importing of allow list query from metadata (fix #4687)
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
+- console: allow entering big int values in the console (close #3667) (#4775)
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
 - console: allow modifying default value for PK (fix #4075) (#4679)
@@ -81,8 +79,10 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix inconsistency between selected rows state and displayed rows (fix #4654) (#4673)
 - console: fix displaying boolean values in `Edit Row` tab (#4682)
 - console: fix underscores not being displayed on raw sql page (close #4754) (#4799)
+- console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
 - console: add help button and move about page to settings (#4848)
 - cli: list all available commands in root command help (fix #4623) (#4628)
+- cli: add support for skipping execution while generating migrations through the migrate REST API
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
 - docs: add single object mutations docs (close #4622) (#4625)

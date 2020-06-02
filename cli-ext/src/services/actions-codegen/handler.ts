@@ -1,6 +1,6 @@
 const { getActionsCodegen } = require('./codegen');
 
-const handler = async (payload) => {
+const handler = async (payload: unknown) => {
   try {
     const codegen = await getActionsCodegen(payload);
     return { codegen };

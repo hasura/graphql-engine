@@ -1,5 +1,5 @@
 import React from 'react';
-
+import styles from './CollapsibleToggle.scss';
 /**
  *  Accepts following props
  *    `title, string || react-element `: Title of the collapsible toggle
@@ -9,8 +9,24 @@ import React from 'react';
  *    `children, react-element`: The content which needs to be toggled
  */
 
-class CollapsibleToggle extends React.Component {
-  constructor(props) {
+interface CollapsibleToggleProps {
+  title: string;
+  isOpen: boolean;
+  toggleHandler?: () => void;
+  testId: string;
+  useDefaultTitleStyle?: boolean;
+}
+
+interface CollapsibleToggleState {
+  isOpen: boolean;
+  toggleHandler: () => void;
+}
+
+class CollapsibleToggle extends React.Component<
+  CollapsibleToggleProps,
+  CollapsibleToggleState
+> {
+  constructor(props: CollapsibleToggleProps) {
     super(props);
 
     this.state = {
@@ -20,35 +36,35 @@ class CollapsibleToggle extends React.Component {
     };
   }
 
+  componentWillReceiveProps(nextProps: CollapsibleToggleProps) {
+    const { isOpen, toggleHandler } = nextProps;
+
+    if (toggleHandler) {
+      this.setState({ isOpen, toggleHandler });
+    }
+  }
+
   defaultToggleHandler() {
     this.setState({ isOpen: !this.state.isOpen });
   }
 
-  componentWillReceiveProps(nextProps) {
-    const { isOpen, toggleHandler } = nextProps;
-
-    if (toggleHandler) {
-      this.setState({ isOpen: isOpen, toggleHandler: toggleHandler });
-    }
-  }
-
   render() {
-    const styles = require('./CollapsibleToggle.scss');
-
     const { title, children, testId, useDefaultTitleStyle } = this.props;
 
     const { isOpen, toggleHandler } = this.state;
 
     const getTitle = () => {
-      let _title;
+      let resultTitle;
 
       if (useDefaultTitleStyle) {
-        _title = <div className={styles.defaultCollapsibleTitle}>{title}</div>;
+        resultTitle = (
+          <div className={styles.defaultCollapsibleTitle}>{title}</div>
+        );
       } else {
-        _title = title;
+        resultTitle = title;
       }
 
-      return _title;
+      return resultTitle;
     };
 
     const getChildren = () => {
@@ -61,12 +77,15 @@ class CollapsibleToggle extends React.Component {
           className={styles.collapsibleToggle}
           data-test={testId}
           onClick={toggleHandler}
+          onKeyDown={toggleHandler}
+          role="button"
+          tabIndex={0}
         >
           <span className={styles.collapsibleIndicatorWrapper}>
             <i
-              className={`fa fa-chevron-right ${
-                styles.collapsibleIndicator
-              } ${isOpen && styles.collapsibleIndicatorOpen}`}
+              className={`fa fa-chevron-right ${styles.collapsibleIndicator} ${
+                isOpen && styles.collapsibleIndicatorOpen
+              }`}
             />
           </span>
 
