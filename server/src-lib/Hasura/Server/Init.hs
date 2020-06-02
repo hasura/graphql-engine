@@ -1,5 +1,6 @@
 -- | Types and functions related to the server initialisation
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP    #-}
+{-# OPTIONS_GHC -O0 #-}
 module Hasura.Server.Init
   ( DbUid(..)
   , getDbId
@@ -186,7 +187,7 @@ mkServeOptions rso = do
   enabledLogs <- maybe L.defaultEnabledLogTypes (Set.fromList) <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
-  planCacheOptions <- E.mkPlanCacheOptions <$> withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
+  planCacheOptions <- E.PlanCacheOptions <$> withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
   devMode <- withEnvBool (rsoDevMode rso) $ fst devModeEnv
   adminInternalErrors <- fromMaybe True <$> -- Default to `true` to enable backwards compatibility
                                 withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
@@ -822,7 +823,7 @@ planCacheSizeEnv =
 parsePlanCacheSize :: Parser (Maybe Cache.CacheSize)
 parsePlanCacheSize =
   optional $
-    option (eitherReader Cache.mkCacheSize)
+    option (eitherReader Cache.parseCacheSize)
     ( long "query-plan-cache-size" <>
       metavar "QUERY_PLAN_CACHE_SIZE" <>
       help (snd planCacheSizeEnv)

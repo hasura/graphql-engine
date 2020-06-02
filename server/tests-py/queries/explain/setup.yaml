@@ -1,0 +1,23 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user"(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        age INTEGER
+      );
+
+- type: track_table
+  args:
+    name: user
+    schema: public
+- type: create_select_permission
+  args:
+    table: user
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        id: X-Hasura-User-Id

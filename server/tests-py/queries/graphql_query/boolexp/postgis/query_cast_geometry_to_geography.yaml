@@ -8,7 +8,7 @@ response:
     - name: Paris
 query:
   query: |
-    {
+    query {
       geog_as_geom_table(where: {
         geom_col: {
           _cast: {

@@ -7,13 +7,13 @@
 Hasura CLI: hasura update-cli
 -----------------------------
 
-Update the CLI to the latest version.
+Update the CLI to latest or a specific version.
 
 Synopsis
 ~~~~~~~~
 
 
-Update the CLI to the latest version.
+Update the CLI to latest or a specific version.
 
 ::
 
@@ -31,19 +31,24 @@ Examples
     # "show_update_notification": false
     # in ~/.hasura/config.json
 
+    # Update CLI to a specific version (say v1.2.0-beta.1):
+    hasura update-cli --version v1.2.0-beta.1
+
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for update-cli
+  -h, --help             help for update-cli
+      --version string   a specific version to install
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
+      --envfile string      .env filename to load ENV vars from (default ".env")
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
