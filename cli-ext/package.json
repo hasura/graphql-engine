@@ -11,7 +11,21 @@
     "build": "rm -rf ./bin/* && pkg ./build/command.js --output ./bin/cli-ext-hasura -t node12-linux-x64,node12-macos-x64,node12-win-x64",
     "pretest": "npm run transpile && babel ./tests --out-dir _tmptests",
     "posttest": "rm -rf _tmptests",
-    "test": "node ./_tmptests/index.js"
+    "test": "node ./_tmptests/index.js",
+    "lint": "eslint 'src/**/*.js' --fix",
+    "format": "prettier-eslint $PWD'src/**/*.{js,json}' --write && npm run lint"
+  },
+  "lint-staged": {
+    "**/*.js": [
+      "eslint --fix",
+      "prettier-eslint --write",
+      "git add"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   },
   "author": "wawhal",
   "license": "ISC",
@@ -27,6 +41,13 @@
     "@babel/cli": "^7.0.0",
     "@babel/core": "^7.0.0",
     "@babel/plugin-transform-async-to-generator": "^7.7.4",
-    "@babel/preset-env": "^7.7.6"
+    "@babel/preset-env": "^7.7.6",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-promise": "^4.2.1",
+    "husky": "^4.2.5",
+    "lint-staged": "^10.1.5",
+    "prettier-eslint-cli": "^5.0.0"
   }
 }

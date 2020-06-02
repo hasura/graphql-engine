@@ -17,6 +17,7 @@ import {
   getRunSqlQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { generateTableDef } from '../../../Common/utils/pgUtils';
+import { COUNT_LIMIT } from '../constants';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -96,7 +97,7 @@ const vMakeRowsRequest = () => {
             dispatch({
               type: V_REQUEST_SUCCESS,
               data: data[0],
-              estimatedCount: data[1].result[1],
+              estimatedCount: parseInt(data[1].result[1][0], 10),
             }),
             dispatch({ type: V_REQUEST_PROGRESS, data: false }),
           ]);
@@ -157,9 +158,19 @@ const vMakeCountRequest = () => {
   };
 };
 
-const vMakeTableRequests = () => dispatch => {
-  dispatch(vMakeRowsRequest());
-  dispatch(vMakeCountRequest());
+const vMakeTableRequests = () => (dispatch, getState) => {
+  dispatch(vMakeRowsRequest()).then(() => {
+    const { estimatedCount } = getState().tables.view;
+    if (estimatedCount > COUNT_LIMIT) {
+      dispatch({
+        type: V_COUNT_REQUEST_SUCCESS,
+        count: estimatedCount,
+        isEstimated: true,
+      });
+    } else {
+      dispatch(vMakeCountRequest());
+    }
+  });
 };
 
 const fetchManualTriggers = tableName => {
@@ -198,7 +209,7 @@ const fetchManualTriggers = tableName => {
   };
 };
 
-const deleteItem = pkClause => {
+const deleteItem = (pkClause, tableName, tableSchema) => {
   return (dispatch, getState) => {
     const confirmMessage =
       'This will permanently delete this row from this table';
@@ -207,14 +218,9 @@ const deleteItem = pkClause => {
       return;
     }
 
-    const state = getState();
-
     const url = Endpoints.query;
-    const reqBody = getDeleteQuery(
-      pkClause,
-      state.tables.currentTable,
-      state.tables.currentSchema
-    );
+
+    const reqBody = getDeleteQuery(pkClause, tableName, tableSchema);
 
     const options = {
       method: 'POST',
@@ -239,7 +245,7 @@ const deleteItem = pkClause => {
   };
 };
 
-const deleteItems = pkClauses => {
+const deleteItems = (pkClauses, tableName, tableSchema) => {
   return (dispatch, getState) => {
     const confirmMessage = 'This will permanently delete rows from this table';
     const isOk = getConfirmation(confirmMessage);
@@ -247,15 +253,9 @@ const deleteItems = pkClauses => {
       return;
     }
 
-    const state = getState();
-
     const reqBody = {
       type: 'bulk',
-      args: getBulkDeleteQuery(
-        pkClauses,
-        state.tables.currentTable,
-        state.tables.currentSchema
-      ),
+      args: getBulkDeleteQuery(pkClauses, tableName, tableSchema),
     };
     const options = {
       method: 'POST',
@@ -583,7 +583,11 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
     case V_REQUEST_PROGRESS:
       return { ...viewState, isProgressing: action.data };
     case V_COUNT_REQUEST_SUCCESS:
-      return { ...viewState, count: action.count };
+      return {
+        ...viewState,
+        count: action.count,
+        isCountEstimated: action.isEstimated === true,
+      };
     case V_EXPAND_ROW:
       return {
         ...viewState,

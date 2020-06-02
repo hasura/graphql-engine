@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- A module for postgres execution related types and operations
@@ -30,7 +31,7 @@ import qualified Database.PG.Query.Connection as Q
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.Permission
+import           Hasura.Session
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 
@@ -66,6 +67,11 @@ data LazyTx e a
   = LTErr !e
   | LTNoTx !a
   | LTTx !(Q.TxE e a)
+  deriving Show
+
+-- orphan:
+instance Show (Q.TxE e a) where
+  show = const "(error \"TxE\")"
 
 lazyTxToQTx :: LazyTx e a -> Q.TxE e a
 lazyTxToQTx = \case
@@ -93,14 +99,14 @@ runLazyTx' (PGExecCtx pgPool _) = \case
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON
 
-setHeadersTx :: UserVars -> Q.TxE QErr ()
-setHeadersTx uVars =
+setHeadersTx :: SessionVariables -> Q.TxE QErr ()
+setHeadersTx session =
   Q.unitQE defaultTxErrorHandler setSess () False
   where
     setSess = Q.fromText $
-      "SET LOCAL \"hasura.user\" = " <> toSQLTxt (sessionInfoJsonExp uVars)
+      "SET LOCAL \"hasura.user\" = " <> toSQLTxt (sessionInfoJsonExp session)
 
-sessionInfoJsonExp :: UserVars -> S.SQLExp
+sessionInfoJsonExp :: SessionVariables -> S.SQLExp
 sessionInfoJsonExp = S.SELit . J.encodeToStrictText
 
 defaultTxErrorHandler :: Q.PGTxErr -> QErr
@@ -142,7 +148,7 @@ withUserInfo :: UserInfo -> LazyTx QErr a -> LazyTx QErr a
 withUserInfo uInfo = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
-  LTTx tx  -> LTTx $ setHeadersTx (userVars uInfo) >> tx
+  LTTx tx  -> LTTx $ setHeadersTx (_uiSession uInfo) >> tx
 
 instance Functor (LazyTx e) where
   fmap f = \case

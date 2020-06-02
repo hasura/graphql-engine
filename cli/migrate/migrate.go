@@ -8,6 +8,7 @@ package migrate
 import (
 	"bytes"
 	"container/list"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"os"
@@ -102,7 +103,7 @@ type Migrate struct {
 
 // New returns a new Migrate instance from a source URL and a database URL.
 // The URL scheme is defined by each driver.
-func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, logger *log.Logger) (*Migrate, error) {
+func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, tlsConfig *tls.Config, logger *log.Logger) (*Migrate, error) {
 	m := newCommon(cmd)
 
 	sourceName, err := schemeFromUrl(sourceUrl)
@@ -136,7 +137,7 @@ func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, logg
 		m.sourceDrv.DefaultParser(source.DefaultParsev2)
 	}
 
-	databaseDrv, err := database.Open(databaseUrl, cmd, logger)
+	databaseDrv, err := database.Open(databaseUrl, cmd, tlsConfig, logger)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
@@ -321,6 +322,10 @@ func (m *Migrate) GetIntroSpectionSchema() (interface{}, error) {
 
 func (m *Migrate) SetMetadataPlugins(plugins types.MetadataPlugins) {
 	m.databaseDrv.SetMetadataPlugins(plugins)
+}
+
+func (m *Migrate) EnableCheckMetadataConsistency(enabled bool) {
+	m.databaseDrv.EnableCheckMetadataConsistency(enabled)
 }
 
 func (m *Migrate) ExportMetadata() (map[string][]byte, error) {
@@ -537,7 +542,7 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 	return m.unlockErr(m.runMigrations(ret))
 }
 
-func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser) error {
+func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser, skipExecution bool) error {
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
 		return err
@@ -551,9 +556,11 @@ func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser) error {
 		return err
 	}
 
-	if err := m.databaseDrv.Run(data, "meta", ""); err != nil {
-		m.databaseDrv.ResetQuery()
-		return m.unlockErr(err)
+	if !skipExecution {
+		if err := m.databaseDrv.Run(data, "meta", ""); err != nil {
+			m.databaseDrv.ResetQuery()
+			return m.unlockErr(err)
+		}
 	}
 
 	if version != 0 {

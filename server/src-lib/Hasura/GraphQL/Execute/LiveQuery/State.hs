@@ -18,13 +18,13 @@ import qualified Control.Immortal                         as Immortal
 import qualified Data.Aeson.Extended                      as J
 import qualified StmContainers.Map                        as STMMap
 
-import           Control.Concurrent.Extended              (sleep, forkImmortal)
+import           Control.Concurrent.Extended              (forkImmortal, sleep)
 import           Control.Exception                        (mask_)
 import           Data.String
 import           GHC.AssertNF
 
-import qualified Hasura.Logging                           as L
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
+import qualified Hasura.Logging                           as L
 
 import           Hasura.Db
 import           Hasura.GraphQL.Execute.LiveQuery.Options
@@ -33,7 +33,7 @@ import           Hasura.GraphQL.Execute.LiveQuery.Poll
 
 -- | The top-level datatype that holds the state for all active live queries.
 --
--- NOTE!: This must be kept consistent with a websocket connection's 'OperationMap', in 'onClose' 
+-- NOTE!: This must be kept consistent with a websocket connection's 'OperationMap', in 'onClose'
 -- and 'onStart'.
 data LiveQueriesState
   = LiveQueriesState
@@ -107,11 +107,11 @@ addLiveQuery logger lqState plan onResultAction = do
   where
     LiveQueriesState lqOpts pgExecCtx lqMap = lqState
     LiveQueriesOptions batchSize refetchInterval = lqOpts
-    LiveQueryPlan (ParameterizedLiveQueryPlan role alias query) cohortKey = plan
+    LiveQueryPlan (ParameterizedLiveQueryPlan role query) cohortKey = plan
 
     handlerId = PollerKey role query
 
-    !subscriber = Subscriber alias onResultAction
+    !subscriber = Subscriber onResultAction
     addToCohort sinkId handlerC =
       TMap.insert subscriber sinkId $ _cNewSubscribers handlerC
 

@@ -64,11 +64,15 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
+	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
+	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
 	util.BindPFlag(v, "endpoint", f.Lookup("endpoint"))
 	util.BindPFlag(v, "admin_secret", f.Lookup("admin-secret"))
 	util.BindPFlag(v, "access_key", f.Lookup("access-key"))
+	util.BindPFlag(v, "insecure_skip_tls_verify", f.Lookup("insecure-skip-tls-verify"))
+	util.BindPFlag(v, "certificate_authority", f.Lookup("certificate-authority"))
 
 	return consoleCmd
 }
@@ -111,17 +115,18 @@ func (o *ConsoleOptions) Run() error {
 
 	adminSecretHeader := cli.GetAdminSecretHeaderName(o.EC.Version)
 	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
-		"apiHost":         "http://" + o.Address,
-		"apiPort":         o.APIPort,
-		"cliVersion":      o.EC.Version.GetCLIVersion(),
-		"serverVersion":   o.EC.Version.GetServerVersion(),
-		"dataApiUrl":      o.EC.Config.ServerConfig.ParsedEndpoint.String(),
-		"dataApiVersion":  "",
-		"hasAccessKey":    adminSecretHeader == cli.XHasuraAccessKey,
-		"adminSecret":     o.EC.Config.ServerConfig.AdminSecret,
-		"assetsVersion":   consoleAssetsVersion,
-		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
-		"cliUUID":         o.EC.GlobalConfig.UUID,
+		"apiHost":              "http://" + o.Address,
+		"apiPort":              o.APIPort,
+		"cliVersion":           o.EC.Version.GetCLIVersion(),
+		"serverVersion":        o.EC.Version.GetServerVersion(),
+		"dataApiUrl":           o.EC.Config.ServerConfig.ParsedEndpoint.String(),
+		"dataApiVersion":       "",
+		"hasAccessKey":         adminSecretHeader == cli.XHasuraAccessKey,
+		"adminSecret":          o.EC.Config.ServerConfig.AdminSecret,
+		"assetsVersion":        consoleAssetsVersion,
+		"enableTelemetry":      o.EC.GlobalConfig.EnableTelemetry,
+		"cliUUID":              o.EC.GlobalConfig.UUID,
+		"migrateSkipExecution": true,
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")

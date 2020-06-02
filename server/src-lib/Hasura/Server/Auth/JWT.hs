@@ -17,12 +17,11 @@ module Hasura.Server.Auth.JWT
 
 import           Control.Exception               (try)
 import           Control.Lens
-import           Control.Monad                   (when)
 
 import           Control.Monad.Trans.Maybe
 import           Data.IORef                      (IORef, readIORef, writeIORef)
-import           Data.List                       (find)
 import           Data.Parser.JSONPath            (parseJSONPath)
+
 import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
                                                   getCurrentTime)
 import           GHC.AssertNF
@@ -35,11 +34,11 @@ import           Hasura.HTTP
 import           Hasura.Logging                  (Hasura, LogLevel (..), Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Error          (encodeJSONPath)
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader, userRoleHeader)
+import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader, userRoleHeader,isSessionVariable)
 import           Hasura.Server.Version           (HasVersion)
+import           Hasura.Session
 
 import qualified Control.Concurrent.Extended     as C
 import qualified Crypto.JWT                      as Jose
@@ -92,7 +91,7 @@ data JWTClaimsMap
 
 instance J.FromJSON JWTClaimsMap where
   parseJSON = J.withObject "Object" $ \obj -> do
-    let onlyXHasuraTuples = filter (isUserVar . fst) $ Map.toList obj
+    let onlyXHasuraTuples = filter (isSessionVariable . fst) $ Map.toList obj
     jsonPathTuples <- forM onlyXHasuraTuples $
       \(t, val) -> flip (J.<?>) (J.Key t) $ (T.toLower t,) <$> case val of
                          J.String s -> either fail pure $ parseJSONPath s
@@ -168,7 +167,7 @@ jwkRefreshCtrl logger manager url ref time = liftIO $ do
       res <- runExceptT $ updateJwkRef logger manager url ref
       mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
-      let delay = maybe (minutes 1) fromUnits mTime
+      let delay = maybe (minutes 1) (convertDuration) mTime
       C.sleep delay
   where
     logNotice = do
@@ -266,8 +265,8 @@ processJwt jwtCtx headers mUnAuthRole =
 
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
-      return $ (, Nothing) $
-        mkUserInfo unAuthRole $ mkUserVars $ hdrsToText headers
+      userInfo <- mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $ mkSessionVariables headers
+      pure (userInfo, Nothing)
 
     missingAuthzHeader =
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
@@ -290,10 +289,13 @@ processAuthZHeader jwtCtx headers authzHeader = do
   (HasuraClaims allowedRoles defaultRole, otherClaims) <-
     parseHasuraClaims (claims ^. Jose.unregisteredClaims) claimsConfig
 
-  let role = getCurrentRole defaultRole
-  when (role `notElem` allowedRoles) currRoleNotAllowed
-  return $ (, expTimeM) $ mkUserInfo role $ mkUserVars $ Map.toList otherClaims
+  let roleName = getCurrentRole defaultRole
 
+  when (roleName `notElem` allowedRoles) currRoleNotAllowed
+
+  userInfo <- mkUserInfo (URBPreDetermined roleName) UAdminSecretNotSent $
+              mkSessionVariablesText $ Map.toList otherClaims
+  pure (userInfo, expTimeM)
   where
     claimsConfig = jcxClaims jwtCtx
     parseAuthzHeader = do
@@ -305,7 +307,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
     -- see if there is a x-hasura-role header, or else pick the default role
     getCurrentRole defaultRole =
       let mUserRole = getRequestHeader userRoleHeader headers
-      in maybe defaultRole RoleName $ mUserRole >>= mkNonEmptyText . bsToTxt
+      in fromMaybe defaultRole $ mUserRole >>= mkRoleName . bsToTxt
 
     liftJWTError :: (MonadError e' m) => (e -> e') -> ExceptT e m a -> m a
     liftJWTError ef action = do

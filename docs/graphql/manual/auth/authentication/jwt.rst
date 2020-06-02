@@ -21,7 +21,7 @@ The idea is that your auth server will return JWT tokens, which are decoded and
 verified by the GraphQL engine, to authorize and get metadata about the request
 (``x-hasura-*`` values).
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/jwt-auth.png
+.. thumbnail:: /img/graphql/manual/auth/jwt-auth.png
    :alt: Authentication using JWT
 
 The JWT is decoded, the signature is verified, then it is asserted that the
@@ -586,7 +586,7 @@ https://hasura.io/jwt-config.
 The config generated from this page can be directly pasted in yaml files and command line arguments as it takes
 care of escaping new lines.
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
+.. thumbnail:: /img/graphql/manual/auth/jwt-config-generated.png
    :width: 75%
    :alt: Generating JWT config
 

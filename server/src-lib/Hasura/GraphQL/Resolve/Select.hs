@@ -28,6 +28,7 @@ import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Schema             (isAggFld)
+import           Hasura.GraphQL.Validate
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal           (onlyPositiveInt)
@@ -35,20 +36,23 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-jsonPathToColExp :: (MonadError QErr m) => T.Text -> m S.SQLExp
+jsonPathToColExp :: (MonadError QErr m) => T.Text -> m (Maybe S.SQLExp)
 jsonPathToColExp t = case parseJSONPath t of
   Left s       -> throw400 ParseFailed $ T.pack $ "parse json path error: " ++ s
-  Right jPaths -> return $ S.SEArray $ map elToColExp jPaths
+  Right []     -> return Nothing
+  Right jPaths -> return $ Just $ S.SEArray $ map elToColExp jPaths
   where
     elToColExp (Key k)   = S.SELit k
     elToColExp (Index i) = S.SELit $ T.pack (show i)
 
 
 argsToColOp :: (MonadReusability m, MonadError QErr m) => ArgsMap -> m (Maybe RS.ColOp)
-argsToColOp args = maybe (return Nothing) toOp $ Map.lookup "path" args
-  where
-    toJsonPathExp = fmap (RS.ColOp S.jsonbPathOp) . jsonPathToColExp
-    toOp v = asPGColTextM v >>= traverse toJsonPathExp
+argsToColOp args = case Map.lookup "path" args of
+  Nothing -> return Nothing
+  Just txt -> do
+    mColTxt <- asPGColTextM txt
+    mColExps <- maybe (return Nothing) jsonPathToColExp mColTxt
+    return $ RS.ColOp S.jsonbPathOp <$> mColExps
 
 type AnnFlds = RS.AnnFldsG UnresolvedVal
 
@@ -59,7 +63,7 @@ resolveComputedField
   => ComputedField -> Field -> m (RS.ComputedFieldSel UnresolvedVal)
 resolveComputedField computedField fld = fieldAsPath fld $ do
   funcArgs <- parseFunctionArgs argSeq argFn $ Map.lookup "args" $ _fArguments fld
-  let argsWithTableArgument = withTableArgument funcArgs
+  let argsWithTableArgument = withTableAndSessionArgument funcArgs
   case fieldType of
     CFTScalar scalarTy -> do
       colOpM <- argsToColOp $ _fArguments fld
@@ -70,16 +74,25 @@ resolveComputedField computedField fld = fieldAsPath fld $ do
       RS.CFSTable RS.JASMultipleRows <$> fromField functionFrom cols permFilter permLimit fld
   where
     ComputedField _ function argSeq fieldType = computedField
-    ComputedFieldFunction qf _ tableArg _ = function
+    ComputedFieldFunction qf _ tableArg sessionArg _ = function
+    argFn :: FunctionArgItem -> InputFunctionArgument
     argFn = IFAUnknown
-    withTableArgument resolvedArgs =
+    withTableAndSessionArgument :: RS.FunctionArgsExpG        UnresolvedVal
+                                -> RS.FunctionArgsExpTableRow UnresolvedVal
+    withTableAndSessionArgument resolvedArgs =
       let argsExp@(RS.FunctionArgsExp positional named) = RS.AEInput <$> resolvedArgs
           tableRowArg = RS.AETableRow Nothing
-      in case tableArg of
-        FTAFirst      ->
-          RS.FunctionArgsExp (tableRowArg:positional) named
-        FTANamed argName index ->
-          RS.insertFunctionArg argName index tableRowArg argsExp
+          withTable = case tableArg of
+            FTAFirst      ->
+              RS.FunctionArgsExp (tableRowArg:positional) named
+            FTANamed argName index ->
+              RS.insertFunctionArg argName index tableRowArg argsExp
+          sessionArgVal = RS.AESession UVSession
+          alsoWithSession = case sessionArg of
+            Nothing -> withTable
+            Just (FunctionSessionArgument argName index) ->
+              RS.insertFunctionArg argName index sessionArgVal withTable
+      in alsoWithSession
 
 processTableSelectionSet
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
@@ -97,8 +110,10 @@ processTableSelectionSet fldTy flds =
         case fldInfo of
           RFPGColumn colInfo ->
             RS.mkAnnColField colInfo <$> argsToColOp (_fArguments fld)
+
           RFComputedField computedField ->
             RS.FComputedField <$> resolveComputedField computedField fld
+
           RFRelationship (RelationshipField relInfo isAgg colGNameMap tableFilter tableLimit) -> do
             let relTN = riRTable relInfo
                 colMapping = riMapping relInfo
@@ -113,6 +128,14 @@ processTableSelectionSet fldTy flds =
                 ObjRel -> RS.FObj annRel
                 ArrRel -> RS.FArr $ RS.ASSimple annRel
 
+          RFRemoteRelationship info ->
+            pure $ RS.FRemote $ RS.RemoteSelect
+                                (unValidateArgsMap $ _fArguments fld) -- Unvalidate the input arguments
+                                (map unValidateField $ toList $ _fSelSet fld) -- Unvalidate the selection fields
+                                (_rfiHasuraFields info)
+                                (_rfiRemoteFields info)
+                                (_rfiRemoteSchema info)
+
 type TableAggFlds = RS.TableAggFldsG UnresolvedVal
 
 fromAggSelSet
@@ -121,13 +144,11 @@ fromAggSelSet
      )
   => PGColGNameMap -> G.NamedType -> SelSet -> m TableAggFlds
 fromAggSelSet colGNameMap fldTy selSet = fmap toFields $
-  withSelSet selSet $ \f -> do
-    let fTy = _fType f
-        fSelSet = _fSelSet f
-    case _fName f of
+  withSelSet selSet $ \Field{..} ->
+    case _fName of
       "__typename" -> return $ RS.TAFExp $ G.unName $ G.unNamedType fldTy
-      "aggregate"  -> RS.TAFAgg <$> convertAggFld colGNameMap fTy fSelSet
-      "nodes"      -> RS.TAFNodes <$> processTableSelectionSet fTy fSelSet
+      "aggregate"  -> RS.TAFAgg <$> convertAggFld colGNameMap _fType _fSelSet
+      "nodes"      -> RS.TAFNodes <$> processTableSelectionSet _fType _fSelSet
       G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 type TableArgs = RS.TableArgsG UnresolvedVal
@@ -383,14 +404,12 @@ convertAggFld
   :: (MonadReusability m, MonadError QErr m)
   => PGColGNameMap -> G.NamedType -> SelSet -> m RS.AggFlds
 convertAggFld colGNameMap ty selSet = fmap toFields $
-  withSelSet selSet $ \fld -> do
-    let fType = _fType fld
-        fSelSet = _fSelSet fld
-    case _fName fld of
+  withSelSet selSet $ \Field{..} ->
+    case _fName of
       "__typename" -> return $ RS.AFExp $ G.unName $ G.unNamedType ty
-      "count"      -> RS.AFCount <$> convertCount colGNameMap (_fArguments fld)
+      "count"      -> RS.AFCount <$> convertCount colGNameMap _fArguments
       n            -> do
-        colFlds <- convertColFlds colGNameMap fType fSelSet
+        colFlds <- convertColFlds colGNameMap _fType _fSelSet
         unless (isAggFld n) $ throwInvalidFld n
         return $ RS.AFOp $ RS.AggOp (G.unName n) colFlds
   where

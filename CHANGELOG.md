@@ -2,29 +2,315 @@
 
 ## Next release
 
+### Remote Joins
+
+Remote Joins extend the concept of joining data across tables, to being able to join data across tables and remote schemas.
+
+It works similar to table relationships. Head to the `Relationship` tab in your table page and define a remote relationship:
+
+1. give a name for the relationship
+2. select the remote schema
+3. give the join configuration from table columns to remote schema fields.
+
+[Add docs links][add console screenshot]
+
+### Scheduled Triggers
+
+A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron based or timestamp based.
+
+A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to generate an end-of-day sales report every weekday at 9pm.
+
+You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience.
+
+[Add docs links][add console screenshot]
+
+(close #1914)
+
+### Allow access to session variables by computed fields (fix #3846)
+
+Sometimes it is useful for computed fields to have access to the Hasura session variables directly. For example, suppose you want to fetch some articles but also get related user info, say `likedByMe`. Now, you can define a function like:
+
+```
+CREATE OR REPLACE FUNCTION article_liked(article_row article, hasura_session json)
+RETURNS boolean AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM liked_article A
+    WHERE A.user_id = hasura_session ->> 'x-hasura-user-id' AND A.article_id = article_row.id
+  );
+$$ LANGUAGE sql STABLE;
+```
+
+and make a query like:
+
+```
+query {
+  articles {
+    title
+    content
+    likedByMe
+  }
+}
+```
+
+Support for this is now added through the `add_computed_field` API.
+
+Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: fix explain queries with role permissions (fix #4816)
+- server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
+- server: fixes an issue where introspection queries with variables would fail because of caching (fix #4547)
+- server: avoid loss of precision when passing values in scientific notation (fix #4733)
+- server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
+- server: fix importing of allow list query from metadata (fix #4687)
+- server: flush log buffer during shutdown (#4800)
+- server: fix edge case with printing logs on startup failure (fix #4772)
+- console: allow entering big int values in the console (close #3667) (#4775)
+- console: avoid count queries for large tables (#4692)
+- console: add read replica support section to pro popup (#4118)
+- console: allow modifying default value for PK (fix #4075) (#4679)
+- console: fix checkbox for forwarding client headers in actions (#4595)
+- console: re-enable foreign tables to be listed as views (fix #4714) (#4742)
+- console: display rows limit in permissions editor if set to zero (fix #4559)
+- console: fix inconsistency between selected rows state and displayed rows (fix #4654) (#4673)
+- console: fix displaying boolean values in `Edit Row` tab (#4682)
+- console: fix underscores not being displayed on raw sql page (close #4754) (#4799)
+- console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
+- console: add help button and move about page to settings (#4848)
+- cli: list all available commands in root command help (fix #4623) (#4628)
+- cli: add support for skipping execution while generating migrations through the migrate REST API
+- docs: add section on actions vs. remote schemas to actions documentation (#4284)
+- docs: fix wrong info about excluding scheme in CORS config (#4685)
+- docs: add single object mutations docs (close #4622) (#4625)
+- docs: add docs page on query performance (close #2316) (#3693)
+- docs: add a sample Caddyfile for Caddy 2 in enable-https section (#4710)
+- docs: add disabling dev mode to production checklist (#4715)
+- docs: add integration guide for AWS Cognito (#4822, #4843)
+- docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
+- docs: add page for procuring custom docker images and binaries (#4828)
+- docs: add content on how to secure action handlers and other actions docs improvements (#4743)
+
+## `v1.2.0`
+
+Include the changelog from **v1.2.0-beta.1**, **v1.2.0-beta.2**, **v1.2.0-beta.3**, **v1.2.0-beta.4**, **v1.2.0-beta.5**
+
+Additional changelog:
+
+### CLI: Support servers with self-signed certificates (close #4564) (#4582)
+
+A new flag `--certificate-authority` is added so that the CA certificate can be
+provided to trust the Hasura Endpoint with a self-signed SSL certificate.
+
+Another flag `--insecure-skip-tls-verification` is added to skip verifying the certificate
+in case you don't have access to the CA certificate. As the name suggests,
+using this flag is insecure since verification is not carried out.
+
+### Bug fixes and improvements
+
+- console: update graphiql explorer to support operation transform (#4567)
+- console: make GraphiQL Explorer taking the whole viewport (#4553)
+- console: fix table columns type comparision during column edit (close #4125) (#4393)
+- cli: allow initialising project in current directory (fix #4560) #4566
+- cli: remove irrelevant flags from init command (close #4508) (#4549)
+- docs: update migrations docs with config v2 (#4586)
+- docs: update actions docs (#4586)
+
+## `v1.2.0-beta.5`
+
+### server: backend only insert permissions
+
+Introduces optional `backend_only` (default: `false`) configuration in insert permissions
+(see [api reference](https://deploy-preview-4224--hasura-docs.netlify.com/graphql/manual/api-reference/schema-metadata-api/permission.html#insertpermission)).
+If this is set to `true`, the insert mutation is accessible to the role only if the request
+is accompanied by `x-hasura-use-backend-only-permissions` session variable whose value is set to `true` along with the `x-hasura-admin-secret` header.
+Otherwise, the behavior of the permission remains unchanged.
+
+This feature is highly useful in disabling `insert_table` mutation for a role from frontend clients while still being able to access it from a Action webhook handler (with the same role).
+
+(rfc #4120) (#4224)
+
+### server: debugging mode for non-admin roles
+
+For any errors the server sends extra information in `extensions` field under `internal` key. Till now this was only
+available for `admin` role requests. To enable this for other roles, start the server with `--dev-mode` flag or set `HASURA_GRAPHQL_DEV_MODE` env variable to `true`:
+
+```bash
+$ graphql-engine --database-url <database-url> serve --dev-mode
+```
+
+In case you want to disable `internal` field for `admin` role requests, set `--admin-internal-errors` option to `false` or or set `HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS` env variable to `false`
+
+```bash
+$ graphql-engine --database-url <database-url> serve --admin-internal-errors false
+```
+
+This feature come in handy during development when you may want to see detailed errors irrespective of roles.
+
+**Improved internal errors for Actions**:
+
+(This is a **breaking change** with previous 1.2.0-beta releases)
+
+The `internal` field for action errors is improved with more debug information. It now includes `request`,
+`response` and `error` fields instead of just `webhook_response` field.
+
+Before:
+
+```json
+{
+  "errors": [
+    {
+      "extensions": {
+        "internal": {
+          "webhook_response": {
+            "age": 25,
+            "name": "Alice",
+            "id": "some-id"
+          }
+        },
+        "path": "$",
+        "code": "unexpected"
+      },
+      "message": "unexpected fields in webhook response: age"
+    }
+  ]
+}
+```
+
+After:
+
+```json
+{
+  "errors": [
+    {
+      "extensions": {
+        "internal": {
+          "error": "unexpected response",
+          "response": {
+            "status": 200,
+            "body": {
+              "age": 25,
+              "name": "Alice",
+              "id": "some-id"
+            },
+            "headers": [
+              {
+                "value": "application/json",
+                "name": "Content-Type"
+              },
+              {
+                "value": "abcd",
+                "name": "Set-Cookie"
+              }
+            ]
+          },
+          "request": {
+            "body": {
+              "session_variables": {
+                "x-hasura-role": "admin"
+              },
+              "input": {
+                "arg": {
+                  "age": 25,
+                  "name": "Alice",
+                  "id": "some-id"
+                }
+              },
+              "action": {
+                "name": "mirror"
+              }
+            },
+            "url": "http://127.0.0.1:5593/mirror-action",
+            "headers": []
+          }
+        },
+        "path": "$",
+        "code": "unexpected"
+      },
+      "message": "unexpected fields in webhook response: age"
+    }
+  ]
+}
+```
+
+### cli: add support for .env file
+
+ENV vars can now be read from .env file present at the project root directory. A global flag, `--envfile`, is added so you can explicitly provide the .env filename, which defaults to `.env` filename if no flag is provided.
+
+**Example**:
+
+```
+hasura console --envfile production.env
+```
+
+The above command will read ENV vars from `production.env` file present at the project root directory.
+
+(close #4129) (#4454)
+
+### console: allow setting post-update check in update permissions
+
+Along with the check for filtering rows that can be updated, you can now set a post-update permission check that needs to be satisfied by the updated rows after the update is made.
+
+<add-screenshot>
+
+(close #4142) (#4313)
+
+### console: support for Postgres [materialized views](https://www.postgresql.org/docs/current/rules-materializedviews.html)
+
+Postgres materialized views are views that are persisted in a table-like form. They are now supported in the Hasura Console, in the same way as views. They will appear on the 'Schema' page, under the 'Data' tab, in the 'Untracked tables or views' section.
+
+(close #91) (#4270)
+
+### docs: map Postgres operators to corresponding Hasura operators
+
+Map Postgres operators to corresponding Hasura operators at various places in docs and link to PG documentation for reference.
+For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#operator).
+
+(#4502) (close #4056)
+
+### Bug fixes and improvements
+
+- server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
+- server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
+- server: add graphql-engine support for timestamps without timezones (fix #1217)
+- server: support inserting unquoted bigint, and throw an error if value overflows the bounds of the integer type (fix #576) (fix #4368)
+- console: change react ace editor theme to eclipse (close #4437)
+- console: fix columns reordering for relationship tables in data browser (#4483)
+- console: format row count in data browser for readablity (#4433)
+- console: move pre-release notification tooltip msg to top (#4433)
+- console: remove extra localPresets key present in migration files on permissions change (close #3976) (#4433)
+- console: make nullable and unique labels for columns clickable in insert and modify (#4433)
+- console: fix row delete for relationships in data browser (#4433)
+- console: prevent trailing spaces while creating new role (close #3871) (#4497)
+- docs: add API docs for using environment variables as webhook urls in event triggers
+- server: fix recreating action's permissions (close #4377)
+- docs: add reference docs for CLI (clsoe #4327) (#4408)
 
 ## `v1.2.0-beta.4`
 
-### add query support in actions 
+### add query support in actions
 
 (close #4032) (#4309)
 
-### console: persist columns state in data browser
+### console: persist page state in data browser across navigation
 
-The order, collapsed state of columns and page size is now persisted across page navigation
+The order, collapsed state of columns and rows limit is now persisted across page navigation
 
 (close #3390) (#3753)
 
 ### Bug fixes and improvements
 
-- cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
-- console: query support for actions (#4318)
 - cli: query support for actions (#4318)
 - cli: add retry_conf in event trigger for squashing migrations (close #4296) (#4324)
 - cli: allow customization of server api paths (close #4016)
 - cli: clean up migration files created during a failed migrate api (close #4312) (#4319)
 - cli: add support for multiple versions of plugin (close #4105)
 - cli: template assets path in console HTML for unversioned builds
+- cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
+- console: query support for actions (#4318)
 - console: recover from SDL parse in actions type definition editor (fix #4385) (#4389)
 - console: allow customising graphql field names for columns of views (close #3689) (#4255)
 - console: fix clone permission migrations (close #3985) (#4277)
@@ -34,7 +320,6 @@ The order, collapsed state of columns and page size is now persisted across page
 - console: surround string type column default value with quotes (close #4371) (#4423)
 - console: add undefined check to fix error (close #4444) (#4445)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
-- server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
 - server: manage inflight events when HGE instance is gracefully shutdown (close #3548)
@@ -52,6 +337,7 @@ Postgres Check constraints allows you to specify that the value in a certain col
 
 **Example**:
 When a product is created, ensure that the price is greater than zero. The SQL would look like this:
+
 ```sql
 CREATE TABLE products (
     product_id UUID DEFAULT gen_random_uuid(),
@@ -59,7 +345,9 @@ CREATE TABLE products (
     price NUMERIC CONSTRAINT positive_price CHECK (price > 0)
 );
 ```
+
 To create this table with Hasura Console, on the 'Add a new table' screen, after adding all the columns, scroll down to 'Check constraints' section and 'Add a new check constraint' with the following properties:
+
 - Constraint name: `positive_price`
 - Check expression: `price > 0`
 
@@ -69,11 +357,14 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 
 ### CLI: V2 migrations architecture
 
-  A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
+A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
+
+See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-v2.html).
 
 (close #3969) (#4145)
 
 ### Bug fixes and improvements
+
 - server: improve performance of replace_metadata tracking many tables (fix #3802)
 - server: option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
 - server: fix various space leaks to avoid excessive memory consumption
@@ -132,6 +423,7 @@ Read more about actions in the [docs](https://docs.hasura.io/1.0/graphql/manual/
 A new command is added to the server executable for downgrading to earlier releases. Previously, if you ran a newer Hasura version and wanted to go back to an old version on the same database, you had to stop Hasura, run some SQL statements and start Hasura again. With the new `downgrade` command, these SQL statements can be run automatically.
 
 **Example**: Downgrade from `v1.2.0` to `v1.0.0`:
+
 ```bash
 # stop hasura v1.2.0
 
@@ -152,7 +444,8 @@ When using webhooks to authenticate incoming requests to the GraphQL engine serv
 Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/authentication/webhook.html).
 
 ### Bug fixes and improvements
+
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
 - console: show pre-release update notifications with opt out option (#3888)
-- Allow special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890)
 - console: handle invalid keys in permission builder (close #3848) (#3863)
+- docs: add page on data validation to docs (close #4085) (#4260)
