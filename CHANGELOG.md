@@ -83,6 +83,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: add help button and move about page to settings (#4848)
 - console: display line number that error message originated from in custom types editor (#4849)
 - cli: list all available commands in root command help (fix #4623) (#4628)
+- cli: add support for skipping execution while generating migrations through the migrate REST API
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
 - docs: add single object mutations docs (close #4622) (#4625)
