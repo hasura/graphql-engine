@@ -71,57 +71,82 @@ $(J.deriveJSON J.defaultOptions { J.sumEncoding = J.ObjectWithSingleField
 defaultClaimsFormat :: JWTClaimsFormat
 defaultClaimsFormat = JCFJson
 
-allowedRolesClaim :: T.Text
+allowedRolesClaim :: SessionVariable
 allowedRolesClaim = "x-hasura-allowed-roles"
 
-defaultRoleClaim :: T.Text
+defaultRoleClaim :: SessionVariable
 defaultRoleClaim = "x-hasura-default-role"
 
 defaultClaimsNamespace :: Text
 defaultClaimsNamespace = "https://hasura.io/jwt/claims"
 
-data JWTClaimsMapField = JWTClaimsMapJSONPath !J.JSONPath
-                       | JWTClaimsMapString !Text
-                       | JWTClaimsMapAllowedRoles ![Text]
-                       deriving (Eq,Show)
+data JWTClaimsMapValueG v
+  = JWTClaimsMapJSONPath !J.JSONPath
+  | JWTClaimsMapStatic !v
+  deriving (Show,Eq,Functor,Foldable,Traversable)
 
-instance J.ToJSON JWTClaimsMapField where
-  toJSON (JWTClaimsMapJSONPath jsonPath) =
-    J.Object $ Map.fromList $ [("path", J.String $ T.pack . encodeJSONPath $ jsonPath)]
-  toJSON (JWTClaimsMapString s) = J.String s
-  toJSON (JWTClaimsMapAllowedRoles allowedRoles) = J.toJSON allowedRoles
+instance (J.FromJSON v) => J.FromJSON (JWTClaimsMapValueG v) where
+  parseJSON (J.Object obj) =
+    case Map.lookup "path" obj of
+      Just path ->
+        case path of
+          J.String path' -> either fail (pure . JWTClaimsMapJSONPath) $ parseJSONPath path'
+          _ -> fail "expected a string value for a JSON path"
+      Nothing -> fail "path containing the JSON path not present"
+  parseJSON v = JWTClaimsMapStatic <$> J.parseJSON v
 
-type CustomClaimsMap = Map.HashMap Text JWTClaimsMapField
+instance (J.ToJSON v) => J.ToJSON (JWTClaimsMapValueG v) where
+  toJSON (JWTClaimsMapJSONPath jsonPath) = J.String . T.pack $ encodeJSONPath jsonPath
+  toJSON (JWTClaimsMapStatic v) = J.toJSON v
+
+type JWTClaimsMapValue = JWTClaimsMapValueG SessionVariableValue
+type JWTClaimsMapAllowedRoles = JWTClaimsMapValueG [SessionVariableValue]
+
+type CustomClaimsMap = Map.HashMap SessionVariable JWTClaimsMapValue
 
 data JWTClaimsMap
   = JWTClaimsMap
-  { jcmDefaultRole  :: !JWTClaimsMapField
-  , jcmAllowedRoles :: !JWTClaimsMapField
+  { jcmDefaultRole  :: !JWTClaimsMapValue
+  , jcmAllowedRoles :: !JWTClaimsMapAllowedRoles
   , jcmCustomClaims :: !CustomClaimsMap
-  } deriving (Show, Eq)
+  } deriving (Show,Eq)
+
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''JWTClaimsMap)
 
 instance J.FromJSON JWTClaimsMap where
   parseJSON = J.withObject "JWTClaimsMap" $ \obj -> do
     let onlyXHasuraTuples = filter (isSessionVariable . fst) $ Map.toList obj
-    claimsMapTuples <- forM onlyXHasuraTuples $ \(t,val) ->
-      let isAllowedRolesTuple = T.toLower t == allowedRolesClaim
-      in
-      flip (J.<?>) (J.Key t) $ (T.toLower t,) <$> case val of
-        J.Array allowedRoles ->
-          if isAllowedRolesTuple
-          then do
-            allowedRoles' <- mapM (\role -> do
-                                      case role of
-                                        J.String role' -> pure role'
-                                        _ -> fail "expected role to be a string"
-                                  ) $ V.toList allowedRoles
-            pure . JWTClaimsMapAllowedRoles $ allowedRoles'
-          else fail $ "only x-hasura-allowed-roles can have an array value"
+    let onlyXHasuraTuplesWithoutAllowedRoles =
+          filter (not . (==allowedRolesClaim) . mkSessionVariable . fst) $ onlyXHasuraTuples
+    let allowedRolesTuple = lookup allowedRolesClaim $ map (\(k,v) -> (mkSessionVariable k,v)) onlyXHasuraTuples
 
-        J.String s ->
-          if isAllowedRolesTuple
-          then fail $ "expecting array of strings for 'x-hasura-allowed-roles' literal value"
-          else pure $ JWTClaimsMapString s
+    allowedRolesClaimsMap <-
+      case allowedRolesTuple of
+        Nothing -> fail $ "x-hasura-allowed-roles is expected but not found"
+
+        Just val ->
+          case val of
+            J.Array allowedRoles -> do
+              allowedRoles' <- mapM (\role -> do
+                                        case role of
+                                          J.String role' -> pure role'
+                                          _ -> fail "expected role to be a string"
+                                    ) $ V.toList allowedRoles
+              pure . JWTClaimsMapStatic $ allowedRoles'
+
+            J.Object o ->
+              case Map.lookup "path" o of
+                Nothing    -> fail "path key not present"
+                Just path  ->
+                  case path of
+                    J.String path' -> either fail (pure . JWTClaimsMapJSONPath) $ parseJSONPath path'
+                    _ -> fail "expected a JSON Path value"
+
+            _    -> fail "x-hasura-allowed-roles can either be an array or an JSON object containing an JSON path"
+
+    claimsMapTuples <- forM onlyXHasuraTuplesWithoutAllowedRoles $ \(t,val) ->
+      flip (J.<?>) (J.Key t) $ (mkSessionVariable t,) <$> case val of
+        J.String s -> pure $ JWTClaimsMapStatic s
 
         J.Object o ->
           case Map.lookup "path" o of
@@ -133,13 +158,11 @@ instance J.FromJSON JWTClaimsMap where
 
         _          -> fail "expecting String or JSON object with a JSONPath value in the key 'path'"
 
-    let withParseError l = maybe (fail $ T.unpack $ l <> " is expected but not found")
+    let withParseError l = maybe (fail $ T.unpack $ sessionVariableToText l <> " is expected but not found")
                            pure $ Map.lookup l $ Map.fromList claimsMapTuples
         customClaims = Map.fromList $
                        filter (not . flip elem [allowedRolesClaim, defaultRoleClaim] . fst) claimsMapTuples
-    JWTClaimsMap <$> withParseError defaultRoleClaim <*> withParseError allowedRolesClaim <*> pure customClaims
-
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''JWTClaimsMap)
+    JWTClaimsMap <$> withParseError defaultRoleClaim <*> pure allowedRolesClaimsMap <*> pure customClaims
 
 data JWTNamespace
   = ClaimNsPath JSONPath
@@ -324,7 +347,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
   when (roleName `notElem` allowedRoles) currRoleNotAllowed
 
   userInfo <- mkUserInfo (URBPreDetermined roleName) UAdminSecretNotSent $
-              mkSessionVariablesText $ Map.toList otherClaims
+               SessionVariables otherClaims
   pure (userInfo, expTimeM)
   where
     claimsConfig = jcxClaims jwtCtx
@@ -357,14 +380,14 @@ parseHasuraClaims
   :: (MonadError QErr m)
   => J.Object -- ^ Unregistered JWT claims
   -> JWTClaims -- ^ Claims config
-  -> m (HasuraClaims, Map.HashMap Text Text) -- ^ Hasura claims and other claims
+  -> m (HasuraClaims, Map.HashMap SessionVariable SessionVariableValue) -- ^ Hasura claims and other claims
 parseHasuraClaims unregisteredClaims = \case
   JCNamespace namespace claimsFormat -> do
     claimsV <- maybe (claimsNotFound namespace) pure $ case namespace of
           ClaimNs k -> Map.lookup k unregisteredClaims
           ClaimNsPath path -> parseIValueJsonValue $ executeJSONPath path (J.toJSON unregisteredClaims)
     -- get hasura claims value as an object. parse from string possibly
-    claimsObject <- Map.fromList . map (first T.toLower) . Map.toList <$>
+    claimsObject <- Map.fromList . map (first mkSessionVariable) . Map.toList <$>
                     parseObjectFromString namespace claimsFormat claimsV
 
     allowedRoles <- parseAllowedRolesClaim $ Map.lookup allowedRolesClaim claimsObject
@@ -383,24 +406,21 @@ parseHasuraClaims unregisteredClaims = \case
       JWTClaimsMapJSONPath allowedRolesJsonPath ->
         parseAllowedRolesClaim $ iResultToMaybe $
         executeJSONPath allowedRolesJsonPath claimsObjValue
-      JWTClaimsMapAllowedRoles allowedRoles' ->
+      JWTClaimsMapStatic allowedRoles' ->
         parseAllowedRolesClaim $ Just $ J.Array $ V.fromList $ map J.String allowedRoles'
-      JWTClaimsMapString _ -> throw500 $ "unexpected: x-hasura-allowed-roles cannot be a string"
 
     defaultRole <- case defaultRoleClaimsMap of
       JWTClaimsMapJSONPath defaultRoleJsonPath ->
         parseDefaultRoleClaim $ iResultToMaybe $
         executeJSONPath defaultRoleJsonPath claimsObjValue
-      JWTClaimsMapString defaultRoleString -> parseDefaultRoleClaim $ Just $ J.String defaultRoleString
-      JWTClaimsMapAllowedRoles _ -> throw500 $ "unexpected: default role array should be a string"
+      JWTClaimsMapStatic defaultRoleString -> parseDefaultRoleClaim $ Just $ J.String defaultRoleString
 
     otherClaimsObject <- flip Map.traverseWithKey otherClaimsMap $ \k claimObj -> do
-      let throwClaimErr = throw400 JWTInvalidClaims $ "JWT claim from claims_map, " <> k <> " not found"
+      let throwClaimErr = throw400 JWTInvalidClaims $ "JWT claim from claims_map, " <> (sessionVariableToText k) <> " not found"
       case claimObj of
         JWTClaimsMapJSONPath path ->
           maybe throwClaimErr pure $ iResultToMaybe $ executeJSONPath path claimsObjValue
-        JWTClaimsMapString claimStringValue -> pure $ J.String claimStringValue
-        JWTClaimsMapAllowedRoles _ -> throw500 $ "unexpected: expected a string value for a non x-hasura-allowed-role claim"
+        JWTClaimsMapStatic claimStaticValue -> pure $ J.String claimStaticValue
 
     otherClaims <- toClaimsTextMap otherClaimsObject
 
@@ -412,13 +432,13 @@ parseHasuraClaims unregisteredClaims = \case
       J.ISuccess v -> Just v
 
     parseAllowedRolesClaim = \case
-      Nothing -> throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> allowedRolesClaim
-      Just v -> parseJwtClaim (J.fromJSON v) $ "invalid " <> allowedRolesClaim <>
+      Nothing -> throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> sessionVariableToText allowedRolesClaim
+      Just v -> parseJwtClaim (J.fromJSON v) $ "invalid " <> sessionVariableToText allowedRolesClaim <>
                 "; should be a list of roles"
 
     parseDefaultRoleClaim = \case
-      Nothing -> throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> defaultRoleClaim
-      Just v -> parseJwtClaim (J.fromJSON v) $ "invalid " <> defaultRoleClaim <>
+      Nothing -> throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> sessionVariableToText defaultRoleClaim
+      Just v -> parseJwtClaim (J.fromJSON v) $ "invalid " <> sessionVariableToText defaultRoleClaim <>
                 "; should be a role"
 
     parseJwtClaim res errMsg =
@@ -428,7 +448,7 @@ parseHasuraClaims unregisteredClaims = \case
 
     toClaimsTextMap = Map.traverseWithKey $ \key value ->
       either (throw400 JWTInvalidClaims . T.pack) pure $ J.parseEither
-      (J.modifyFailure ("x-hasura-* cliams: " <>) . J.withText (T.unpack key) pure) value
+      (J.modifyFailure ("x-hasura-* cliams: " <>) . J.withText (T.unpack . sessionVariableToText $ key) pure) value
 
     claimsNotFound namespace =
       throw400 JWTInvalidClaims $ case namespace of
