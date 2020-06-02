@@ -16,6 +16,7 @@ import {
 import gqlPattern from '../../components/Services/Data/Common/GraphQLValidation';
 import { sqlEscapeText } from '../../components/Common/utils/sqlUtils';
 import Migration from './Migration';
+import { RunSqlType } from '../../';
 
 // Types
 export interface NewColumnType {
@@ -265,4 +266,18 @@ export const getColumnUpdateMigration = (
     upMigration: migration.upMigration,
     downMigration: migration.downMigration,
   };
+};
+export const getDownQueryComment = (upqueries: RunSqlType[]) => {
+  if (upqueries instanceof Array && upqueries.length >= 0) {
+    let comment = `-- Could not auto-generate a down migration.
+-- Please write an appropriate down migration for the SQL below:`;
+    comment = upqueries.reduce(
+      (acc, i) => `${acc}
+-- ${i.args.sql}`,
+      comment
+    );
+    return [getRunSqlQuery(comment)];
+  }
+  // all other errors
+  return [];
 };
