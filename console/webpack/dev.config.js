@@ -10,8 +10,6 @@ const host = hasuraConfig.hmrHost;
 const port = hasuraConfig.hmrPort;
 
 const autoprefixer = require('autoprefixer');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
-  .BundleAnalyzerPlugin;
 
 const WebpackIsomorphicToolsPlugin = require('webpack-isomorphic-tools/plugin');
 const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
@@ -81,7 +79,15 @@ module.exports = {
         test: /\.scss$/,
         use: [
           'style-loader',
-          'css-loader?modules&importLoaders=2&sourceMap&localIdentName=[local]___[hash:base64:5]',
+          {
+            loader: 'css-loader',
+            options: {
+              importLoaders: 2,
+              modules: {
+                localIdentName: '[local]___[hash:base64:5]',
+              },
+            },
+          },
           'sass-loader?outputStyle=expanded&sourceMap',
         ],
       },
