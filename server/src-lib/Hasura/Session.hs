@@ -4,9 +4,10 @@ module Hasura.Session
   , adminRoleName
   , isAdmin
   , roleNameToTxt
-  , SessionVariable
+  , SessionVariable(..)
   , mkSessionVariable
-  , SessionVariables
+  , SessionVariables(..)
+  , SessionVariableValue
   , sessionVariableToText
   , mkSessionVariablesText
   , mkSessionVariables
@@ -33,6 +34,7 @@ import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
 import           Data.Aeson
+import           Data.Aeson.Types           (toJSONKeyText)
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -67,6 +69,9 @@ newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
 
 instance ToJSON SessionVariable where
   toJSON = toJSON . CI.original . unSessionVariable
+
+instance ToJSONKey SessionVariable where
+  toJSONKey = toJSONKeyText sessionVariableToText
 
 sessionVariableToText :: SessionVariable -> Text
 sessionVariableToText = T.toLower . CI.original . unSessionVariable
