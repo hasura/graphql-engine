@@ -4,7 +4,7 @@ module Hasura.RQL.DML.Update
   , AnnUpdG(..)
   , traverseAnnUpd
   , AnnUpd
-  , updateQueryToTx
+  , execUpdateQuery
   , runUpdate
   ) where
 
@@ -23,6 +23,7 @@ import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances     ()
 import           Hasura.RQL.Types
+import           Hasura.Server.Version    (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
 
@@ -223,17 +224,23 @@ validateUpdateQuery
 validateUpdateQuery =
   runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
 
-updateQueryToTx
-  :: Bool -> (AnnUpd, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
-updateQueryToTx strfyNum (u, p) =
-  runMutation $ Mutation (uqp1Table u) (updateCTE, p)
+execUpdateQuery
+  :: (HasVersion, MonadTx m, MonadIO m)
+  => Bool
+  -> Maybe MutationRemoteJoinCtx
+  -> (AnnUpd, DS.Seq Q.PrepArg)
+  -> m EncJSON
+execUpdateQuery strfyNum remoteJoinCtx (u, p) =
+  runMutation $ mkMutation remoteJoinCtx (uqp1Table u) (updateCTE, p)
                 (uqp1Output u) (uqp1AllCols u) strfyNum
   where
     updateCTE = mkUpdateCTE u
 
 runUpdate
-  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
+  :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
+     , MonadTx m, HasSQLGenCtx m, MonadIO m
+     )
   => UpdateQuery -> m EncJSON
 runUpdate q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateUpdateQuery q >>= liftTx . updateQueryToTx strfyNum
+  validateUpdateQuery q >>= execUpdateQuery strfyNum Nothing

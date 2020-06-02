@@ -1,7 +1,5 @@
 // TODO: make functions from this file available without imports
 
-import { showErrorNotification } from '../../Services/Common/Notification';
-
 /* TYPE utils */
 
 export const isNotDefined = value => {
@@ -26,6 +24,14 @@ export const isString = value => {
 
 export const isNumber = value => {
   return typeof value === 'number';
+};
+
+export const isFloat = n => {
+  return typeof value === 'number' && n % 1 !== 0;
+};
+
+export const isBoolean = value => {
+  return typeof value === 'boolean';
 };
 
 export const isPromise = value => {
@@ -222,8 +228,9 @@ export const getConfirmation = (
 export const uploadFile = (
   fileHandler,
   fileFormat = null,
-  invalidFileHandler = null
-) => dispatch => {
+  invalidFileHandler = null,
+  errorCallback = null
+) => {
   const fileInputElement = document.createElement('div');
   fileInputElement.innerHTML = '<input style="display:none" type="file">';
   const fileInput = fileInputElement.firstChild;
@@ -243,12 +250,12 @@ export const uploadFile = (
         if (invalidFileHandler) {
           invalidFileHandler(fileName);
         } else {
-          dispatch(
-            showErrorNotification(
+          if (errorCallback) {
+            errorCallback(
               'Invalid file format',
               `Expected a ${expectedFileSuffix} file`
-            )
-          );
+            );
+          }
         }
 
         fileInputElement.remove();
@@ -313,37 +320,19 @@ export const getFileExtensionFromFilename = filename => {
 export const getCurrTimeForFileName = () => {
   const currTime = new Date();
 
-  const year = currTime
-    .getFullYear()
-    .toString()
-    .padStart(4, '0');
+  const year = currTime.getFullYear().toString().padStart(4, '0');
 
   const month = (currTime.getMonth() + 1).toString().padStart(2, '0');
 
-  const day = currTime
-    .getDate()
-    .toString()
-    .padStart(2, '0');
+  const day = currTime.getDate().toString().padStart(2, '0');
 
-  const hours = currTime
-    .getHours()
-    .toString()
-    .padStart(2, '0');
+  const hours = currTime.getHours().toString().padStart(2, '0');
 
-  const minutes = currTime
-    .getMinutes()
-    .toString()
-    .padStart(2, '0');
+  const minutes = currTime.getMinutes().toString().padStart(2, '0');
 
-  const seconds = currTime
-    .getSeconds()
-    .toString()
-    .padStart(2, '0');
+  const seconds = currTime.getSeconds().toString().padStart(2, '0');
 
-  const milliSeconds = currTime
-    .getMilliseconds()
-    .toString()
-    .padStart(3, '0');
+  const milliSeconds = currTime.getMilliseconds().toString().padStart(3, '0');
 
   return [year, month, day, hours, minutes, seconds, milliSeconds].join('_');
 };
