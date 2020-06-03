@@ -45,7 +45,7 @@ import qualified Data.HashMap.Strict.Extended  as Map
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Functor.Classes
-import           Language.GraphQL.Draft.Syntax (Description (..), Name (..), Value (..))
+import           Language.GraphQL.Draft.Syntax (Description (..), Name (..), Value (..), Directive(..))
 
 class HasName a where
   getName :: a -> Name
@@ -432,11 +432,14 @@ instance HasName VariableInfo where
 -- introspection queries. It corresponds to the GraphQL @__Schema@ type defined
 -- in <§ 4.5 Schema Introspection http://spec.graphql.org/June2018/#sec-Introspection>.
 data Schema = Schema
-  { sTypes            :: HashMap Name (Definition SomeTypeInfo)
-  , sQueryType        :: Definition (TypeInfo 'Output)
-  , sMutationType     :: Definition (TypeInfo 'Output)
-  , sSubscriptionType :: Definition (TypeInfo 'Output)
+  { sDescription      :: Maybe Description
+  , sTypes            :: HashMap Name (Definition SomeTypeInfo)
+  , sQueryType        :: Type 'Output
+  , sMutationType     :: Maybe (Type 'Output)
+  , sSubscriptionType :: Maybe (Type 'Output)
+  , sDirectives       :: [Directive Void]
   }
+
 
 -- | Recursively collects all type definitions accessible from the given value.
 collectTypeDefinitions

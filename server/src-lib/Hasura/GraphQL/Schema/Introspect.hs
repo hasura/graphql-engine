@@ -13,7 +13,7 @@ import qualified Data.Vector                         as V
 
 import qualified Hasura.GraphQL.Parser               as P
 
-import           Hasura.GraphQL.Parser          (FieldParser, Kind (..), Parser)
+import           Hasura.GraphQL.Parser          (FieldParser, Kind (..), Parser, Schema (..))
 import           Hasura.GraphQL.Parser.Class
 
 {-
@@ -137,26 +137,17 @@ there is no deeper meaning to the application of do notation than ease of
 reading.
 -}
 
-data Schema = Schema
-  { sDescription      :: Maybe G.Description
-  , sTypes            :: HashMap G.Name (P.Definition P.SomeTypeInfo)
-  , sQueryType        :: P.Type 'Output
-  , sMutationType     :: Maybe (P.Type 'Output)
-  , sSubscriptionType :: Maybe (P.Type 'Output)
-  , sDirectives       :: [G.Directive Void]
-  }
-
 -- | Generate a __type introspection parser
 typeIntrospection
   :: forall n
    . MonadParse n
   => Schema
   -> FieldParser n J.Value
-typeIntrospection realSchema = do
+typeIntrospection fakeSchema = do
   let nameArg :: P.InputFieldsParser n G.Name
       nameArg = G.unsafeMkName <$> P.field $$(G.litName "name") Nothing P.string
   nameAndPrinter <- P.subselection $$(G.litName "__type") Nothing nameArg typeField
-  return $ case Map.lookup (fst nameAndPrinter) (sTypes realSchema) of
+  return $ case Map.lookup (fst nameAndPrinter) (sTypes fakeSchema) of
     Nothing -> J.Null
     Just (P.Definition n u d (P.SomeTypeInfo i)) ->
       snd nameAndPrinter (SomeType (P.Nullable (P.TNamed (P.Definition n u d i))))
@@ -167,8 +158,8 @@ schema
    . MonadParse n
   => Schema
   -> FieldParser n J.Value
-schema realSchema =
-  let schemaSetParser = schemaSet realSchema
+schema fakeSchema =
+  let schemaSetParser = schemaSet fakeSchema
   in P.subselection_ $$(G.litName "__schema") Nothing schemaSetParser
 
 {-
@@ -515,18 +506,18 @@ schemaSet
    . MonadParse n
   => Schema
   -> Parser 'Output n J.Value
-schemaSet realSchema =
+schemaSet fakeSchema =
   let
     description :: FieldParser n J.Value
     description = P.selection_ $$(G.litName "description") Nothing P.string $>
-      case sDescription realSchema of
+      case sDescription fakeSchema of
         Nothing -> J.Null
         Just s -> J.String $ G.unDescription s
     types :: FieldParser n J.Value
     types = do
       printer <- P.subselection_ $$(G.litName "types") Nothing typeField
       return $ J.Array $ V.fromList $ map (printer . schemaTypeToSomeType) $
-        Map.elems $ sTypes realSchema
+        Map.elems $ sTypes fakeSchema
         where
           schemaTypeToSomeType
             :: P.Definition P.SomeTypeInfo
@@ -536,17 +527,17 @@ schemaSet realSchema =
     queryType :: FieldParser n J.Value
     queryType = do
       printer <- P.subselection_ $$(G.litName "queryType") Nothing typeField
-      return $ printer $ SomeType $ sQueryType realSchema
+      return $ printer $ SomeType $ sQueryType fakeSchema
     mutationType :: FieldParser n J.Value
     mutationType = do
       printer <- P.subselection_ $$(G.litName "mutationType") Nothing typeField
-      return $ case sMutationType realSchema of
+      return $ case sMutationType fakeSchema of
         Nothing -> J.Null
         Just tp -> printer $ SomeType tp
     subscriptionType :: FieldParser n J.Value
     subscriptionType = do
       printer <- P.subselection_ $$(G.litName "subscriptionType") Nothing typeField
-      return $ case sSubscriptionType realSchema of
+      return $ case sSubscriptionType fakeSchema of
         Nothing -> J.Null
         Just tp -> printer $ SomeType tp
     directives :: FieldParser n J.Value

@@ -17,7 +17,7 @@ import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Parser                 (Kind (..), Parser, UnpreparedValue (..))
+import           Hasura.GraphQL.Parser                 (Kind (..), Parser, UnpreparedValue (..), Schema (..))
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Introspect
 import           Hasura.GraphQL.Schema.Mutation
