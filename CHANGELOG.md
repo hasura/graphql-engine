@@ -82,6 +82,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
 - console: add help button and move about page to settings (#4848)
 - cli: list all available commands in root command help (fix #4623) (#4628)
+- cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
 - cli: add dry run flag in hasura migrate apply command (fix #3128) (#3499)
 - cli: load assets from server when HASURA_GRAPHQL_CONSOLE_ASSETS_DIR is set (close #3382)
