@@ -29,6 +29,16 @@ const setConsoleOptsInDB = (opts, successCb, errorCb) => (
     ...opts,
   };
 
+  if (!hasura_uuid) {
+    if (errorCb) {
+      const err = new Error('Internal Server Occurred!');
+      errorCb(err);
+      return;
+    }
+    // exit action, as callback isn't available
+    return;
+  }
+
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
