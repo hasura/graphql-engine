@@ -63,9 +63,9 @@ instance (MonadTx m) => MonadTx (ValidateT e m) where
 -- exclusively use remote schemas never will; using 'LazyTx' keeps those branches from unnecessarily
 -- allocating a connection.
 data LazyTx e a
-  = LTErr !e
-  | LTNoTx !a
-  | LTTx !(Q.TxE e a)
+  = LTErr !e -- ^ Error condition
+  | LTNoTx !a -- ^ Empty transaction; e.g. for introspection
+  | LTTx !(Q.TxE e a) -- ^ Actually execute SQL stuff on the database (eventually)
 
 lazyTxToQTx :: LazyTx e a -> Q.TxE e a
 lazyTxToQTx = \case

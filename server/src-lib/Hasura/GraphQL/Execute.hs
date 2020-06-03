@@ -51,6 +51,7 @@ import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Query           as EQ
+import qualified Hasura.GraphQL.Execute.Mutation        as EM
 import qualified Hasura.GraphQL.Execute.Inline          as EI
 import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.Logging                         as L
@@ -143,30 +144,22 @@ getTypedOp opNameM selSets opDefs =
 data QueryParts
   = QueryParts
   { qpOpDef    :: !(G.TypedOperationDefinition G.FragmentSpread G.Name)
---  , qpOpRoot    :: !ObjTyInfo
---  , qpFragDefsL :: ![G.FragmentDefinition]
   , qpVarValsM :: !(Maybe VariableValues)
   }
 
+-- | Depending on the request parameters, fetch the correct typed operation
+-- definition from the GraphQL query
 getQueryParts
-  :: ( MonadError QErr m, MonadReader C.GQLContext m)
+  :: ( MonadError QErr m )
   => GQLReqParsed
   -> m QueryParts
 getQueryParts (GQLReq opNameM q varValsM) = do
-  -- get the operation that needs to be evaluated
-  opDef <- getTypedOp opNameM selSets opDefs
-  ctx <- ask
 
-  -- get the operation root
-  opRoot <- case G._todType opDef of
-    G.OperationTypeQuery        -> return $ _gQueryRoot ctx
-    G.OperationTypeMutation     ->
-      onNothing (_gMutRoot ctx) $ _throwVE "no mutations exist"
-    G.OperationTypeSubscription ->
-      onNothing (_gSubRoot ctx) $ _throwVE "no subscriptions exist"
-  return $ QueryParts opDef {-opRoot fragDefsL-} varValsM
+  opDef <- getTypedOp opNameM selSets opDefs
+
+  return $ QueryParts opDef varValsM
   where
-    (selSets, opDefs, fragDefsL) = G.partitionExDefs $ unGQLExecDoc q
+    (selSets, opDefs, _fragDefsL) = G.partitionExDefs $ unGQLExecDoc q
 
 getGCtx :: SchemaCache -> RoleName -> C.GQLContext
 getGCtx sc rn =
@@ -286,6 +279,11 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
             getQueryOp gCtx sqlGenCtx userInfo inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ GExPHasura $ ExOpQuery queryTx (Just genSql)
+        GExPHasura (gCtx, G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet) -> do
+          inlinedSelSet <- EI.inlineSelectionSet fragments selSet
+          queryTx <- getMutOp gCtx inlinedSelSet varDefs (_grVariables reqUnparsed)
+          -- traverse_ (addPlanToCache . EP.RPQuery) plan
+          return $ GExPHasura $ ExOpMutation queryTx
         _ -> _
       -- forM partialExecPlan $ \(gCtx, rootSelSet) ->
       --   case rootSelSet of
@@ -331,67 +329,16 @@ getQueryOp gqlContext sqlGenCtx userInfo fields varDefs varValsM =
 mutationRootName :: Text
 mutationRootName = "mutation_root"
 
--- resolveMutSelSet
---   :: ( HasVersion
---      , MonadError QErr m
---      , MonadReader r m
---      , Has UserInfo r
---      , Has MutationCtxMap r
---      , Has FieldMap r
---      , Has OrdByCtx r
---      , Has SQLGenCtx r
---      , Has InsCtxMap r
---      , Has HTTP.Manager r
---      , Has [N.Header] r
---      , MonadIO m
---      )
---   => VQ.SelSet
---   -> m LazyRespTx
--- resolveMutSelSet fields = do
---   aliasedTxs <- forM (toList fields) $ \fld -> do
---     fldRespTx <- case VQ._fName fld of
---       "__typename" -> return $ return $ encJFromJValue mutationRootName
---       _            -> fmap liftTx . evalReusabilityT $ GR.mutFldToTx fld
---     return (G.unName $ G.unAlias $ VQ._fAlias fld, fldRespTx)
---
---   -- combines all transactions into a single transaction
---   return $ liftTx $ toSingleTx aliasedTxs
---   where
---     -- A list of aliased transactions for eg
---     -- [("f1", Tx r1), ("f2", Tx r2)]
---     -- are converted into a single transaction as follows
---     -- Tx {"f1": r1, "f2": r2}
---     -- toSingleTx :: [(Text, LazyRespTx)] -> LazyRespTx
---     toSingleTx aliasedTxs =
---       fmap encJFromAssocList $
---       forM aliasedTxs $ \(al, tx) -> (,) al <$> tx
-
--- getMutOp
---   :: (HasVersion, MonadError QErr m, MonadIO m)
---   => GCtx
---   -> SQLGenCtx
---   -> UserInfo
---   -> HTTP.Manager
---   -> [N.Header]
---   -> VQ.SelSet
---   -> m LazyRespTx
--- getMutOp ctx sqlGenCtx userInfo manager reqHeaders selSet =
---   runE_ $ resolveMutSelSet selSet
---   where
---     runE_ action = do
---       res <- runExceptT $ runReaderT action
---         ( userInfo, queryCtxMap, mutationCtxMap
---         , typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx
---         , manager, reqHeaders
---         )
---       either throwError return res
---       where
---         queryCtxMap = _gQueryCtxMap ctx
---         mutationCtxMap = _gMutationCtxMap ctx
---         typeMap = _gTypes ctx
---         fldMap = _gFields ctx
---         ordByCtx = _gOrdByCtx ctx
---         insCtxMap = _gInsCtxMap ctx
+getMutOp
+  :: (HasVersion, MonadError QErr m, MonadIO m)
+  => C.GQLContext
+  -> G.SelectionSet G.NoFragments G.Name
+  -> [G.VariableDefinition]
+  -> Maybe VariableValues
+  -> m LazyRespTx
+getMutOp ctx selSet varDefs varValsM =
+  runE _sqlGenCtx _userInfo $ EM.convertMutationSelectionSet ctx selSet varDefs varValsM
+  where
 
 -- getSubsOpM
 --   :: ( MonadError QErr m

@@ -23,6 +23,8 @@ import           Hasura.GraphQL.Schema.Insert  (AnnMultiInsert)
 
 data GQLContext = GQLContext
   { gqlQueryParser :: ParserFn (InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+  -- TODO should we make mutation (and later subscription) parsers Maybe?
+  , gqlMutationParser :: ParserFn (InsOrdHashMap G.Name (MutationRootField UnpreparedValue))
   }
 
 instance J.ToJSON GQLContext where

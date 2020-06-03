@@ -49,6 +49,7 @@ buildGQLContext allTables =
       SQLGenCtx{ stringifyNum } <- askSQLGenCtx
       P.runSchemaT roleName allTables $ GQLContext
         <$> (finalizeParser <$> queryWithIntrospection (S.fromList $ Map.keys validTables) stringifyNum)
+        <*> (finalizeParser <$> mutation (S.fromList $ Map.keys validTables) stringifyNum)
 
     finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
     finalizeParser parser = runIdentity . P.runParseT . P.runParser parser

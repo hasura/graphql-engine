@@ -336,7 +336,9 @@ library
                      , Hasura.GraphQL.Execute.Inline
                      , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Query
+                     , Hasura.GraphQL.Execute.Mutation
                      , Hasura.GraphQL.Execute.Resolve
+                     , Hasura.GraphQL.Execute.Prepare
                      , Hasura.GraphQL.Execute.LiveQuery
                      , Hasura.GraphQL.Execute.LiveQuery.Options
                      , Hasura.GraphQL.Execute.LiveQuery.Plan
