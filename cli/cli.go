@@ -10,6 +10,7 @@ package cli
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -26,6 +27,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/telemetry"
 	"github.com/hasura/graphql-engine/cli/util"
@@ -160,7 +162,51 @@ type ServerConfig struct {
 
 	TLSConfig *tls.Config `yaml:"-"`
 
-	HTTPClient *http.Client `yaml:"-"`
+	HTTPClient                 *http.Client               `yaml:"-"`
+	HasuraServerInternalConfig HasuraServerInternalConfig `yaml:"-"`
+}
+
+func (c *ServerConfig) GetHasuraInternalServerConfig() error {
+	// Determine from where assets should be served
+	url := c.getConfigEndpoint()
+	client := http.Client{Timeout: 30 * time.Second}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return errors.Wrap(err, "error fetching config from server")
+	}
+
+	if c.AdminSecret != "" {
+		req.Header.Set(XHasuraAdminSecret, c.AdminSecret)
+	}
+
+	r, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+	if r.StatusCode != http.StatusOK {
+		var horror hasuradb.HasuraError
+		err := json.NewDecoder(r.Body).Decode(&horror)
+		if err != nil {
+			return fmt.Errorf("error fetching server config")
+		}
+
+		return fmt.Errorf("error fetching server config: %v", horror.Error())
+	}
+
+	return json.NewDecoder(r.Body).Decode(&c.HasuraServerInternalConfig)
+}
+
+// HasuraServerConfig is the type returned by the v1alpha1/config API
+// TODO: Move this type to a client implementation for hasura
+type HasuraServerInternalConfig struct {
+	Version          string `json:"version"`
+	IsAdminSecretSet bool   `json:"is_admin_secret_set"`
+	IsAuthHookSet    bool   `json:"is_auth_hook_set"`
+	IsJwtSet         bool   `json:"is_jwt_set"`
+	JWT              string `json:"jwt"`
+	ConsoleAssetsDir string `json:"console_assets_dir"`
 }
 
 // GetVersionEndpoint provides the url to contact the version API
@@ -174,6 +220,13 @@ func (s *ServerConfig) GetVersionEndpoint() string {
 func (s *ServerConfig) GetQueryEndpoint() string {
 	nurl := *s.ParsedEndpoint
 	nurl.Path = path.Join(nurl.Path, s.APIPaths.Query)
+	return nurl.String()
+}
+
+// GetVersionEndpoint provides the url to contact the config API
+func (s *ServerConfig) getConfigEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.Config)
 	return nurl.String()
 }
 
@@ -600,6 +653,7 @@ func (ec *ExecutionContext) readConfig() error {
 	if adminSecret == "" {
 		adminSecret = v.GetString("access_key")
 	}
+
 	ec.Config = &Config{
 		Version: ConfigVersion(v.GetInt("version")),
 		ServerConfig: ServerConfig{
@@ -634,11 +688,20 @@ func (ec *ExecutionContext) readConfig() error {
 	if err != nil {
 		return errors.Wrap(err, "unable to parse server endpoint")
 	}
+
+	// this populates the ec.Config.ServerConfig.HasuraServerInternalConfig
+	err = ec.Config.ServerConfig.GetHasuraInternalServerConfig()
+	if err != nil {
+		// If config API is not enabled log it and don't fail
+		ec.Logger.Debugf("cannot get config information from server, this might be because config API is not enabled: %v", err)
+	}
+
 	err = ec.Config.ServerConfig.SetTLSConfig()
 	if err != nil {
 		return errors.Wrap(err, "setting up TLS config failed")
 	}
 	return ec.Config.ServerConfig.SetHTTPClient()
+	return nil
 }
 
 // setupSpinner creates a default spinner if the context does not already have
