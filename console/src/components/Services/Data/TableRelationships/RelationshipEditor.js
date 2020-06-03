@@ -116,7 +116,9 @@ class RelationshipEditor extends React.Component {
             className={styles.add_mar_left_small}
           />
           <div className={tableStyles.relationshipTopPadding}>
-            {getRelDef(relConfig)}
+            <p className={tableStyles.relationshipText}>
+              {getRelDef(relConfig)}
+            </p>
           </div>
         </div>
       );

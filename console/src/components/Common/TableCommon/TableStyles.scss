@@ -125,6 +125,13 @@ a.expanded {
   padding: 10px 0;
 }
 
+.relationshipText {
+  word-break: break-all;
+  hyphens: auto;
+  white-space: normal;
+  display: block;
+}
+
 .relEditButtons {
   display: flex;
   flex-direction: row;
