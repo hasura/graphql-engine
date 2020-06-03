@@ -29,7 +29,7 @@ import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Resolve.Select
-import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Insert             (insertOrUpdateCheckExpr)
 import           Hasura.RQL.DML.Internal           (convAnnBoolExpPartialSQL, convPartialSQLExp,
@@ -474,7 +474,8 @@ convertInsert
   -> Field -- the mutation field
   -> m RespTx
 convertInsert role tn fld = prefixErrPath fld $ do
-  mutOutputUnres <- RR.MOutMultirowFields <$> resolveMutationFields (_fType fld) (_fSelSet fld)
+  selSet <- asObjectSelectionSet $ _fSelSet fld
+  mutOutputUnres <- RR.MOutMultirowFields <$> resolveMutationFields (_fType fld) selSet
   mutOutputRes <- RR.traverseMutationOutput resolveValTxt mutOutputUnres
   annVals <- withArg arguments "objects" asArray
   -- if insert input objects is empty array then
@@ -509,7 +510,8 @@ convertInsertOne
   -> Field -- the mutation field
   -> m RespTx
 convertInsertOne role qt field = prefixErrPath field $ do
-  tableSelFields <- processTableSelectionSet (_fType field) $ _fSelSet field
+  selSet <- asObjectSelectionSet $ _fSelSet field
+  tableSelFields <- processTableSelectionSet (_fType field) selSet
   let mutationOutputUnresolved = RR.MOutSinglerowObject tableSelFields
   mutationOutputResolved <- RR.traverseMutationOutput resolveValTxt mutationOutputUnresolved
   annInputObj <- withArg arguments "object" asObject

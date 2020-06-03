@@ -163,5 +163,6 @@ Learn more
   Codegen <codegen>
   derive
   action-permissions
-  action-connect
+  reuse-types-actions
   debugging
+  .. action-examples

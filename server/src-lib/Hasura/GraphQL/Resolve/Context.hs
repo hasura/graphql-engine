@@ -23,7 +23,7 @@ module Hasura.GraphQL.Resolve.Context
 
   , txtConverter
 
-  , withSelSet
+  , traverseObjectSelectionSet
   , fieldAsPath
   , resolvePGCol
   , module Hasura.GraphQL.Utils
@@ -40,7 +40,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Utils
-import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal       (currentSession, sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
@@ -138,12 +138,6 @@ prepareColVal (WithScalarType scalarType colVal) = do
 
 txtConverter :: Applicative f => AnnPGVal -> f S.SQLExp
 txtConverter (AnnPGVal _ _ scalarValue) = pure $ toTxtValue scalarValue
-
-withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
-withSelSet selSet f =
-  forM (toList selSet) $ \fld -> do
-    res <- f fld
-    return (G.unName $ G.unAlias $ _fAlias fld, res)
 
 fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath = nameAsPath . _fName

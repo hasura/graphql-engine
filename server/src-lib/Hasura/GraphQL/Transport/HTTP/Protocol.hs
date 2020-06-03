@@ -4,7 +4,7 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GQLReqUnparsed
   , GQLReqParsed
   , toParsed
-  , GQLQueryText
+  , GQLQueryText(..)
   , GQLExecDoc(..)
   , OperationName(..)
   , VariableValues

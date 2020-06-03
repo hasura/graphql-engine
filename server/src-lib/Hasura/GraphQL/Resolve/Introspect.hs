@@ -6,20 +6,20 @@ module Hasura.GraphQL.Resolve.Introspect
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                         as J
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.HashSet                       as Set
-import qualified Data.Text                          as T
-import qualified Language.GraphQL.Draft.Syntax      as G
-import qualified Hasura.SQL.Value                   as S
-import qualified Hasura.SQL.Types                   as S
+import qualified Data.Aeson                           as J
+import qualified Data.HashMap.Strict                  as Map
+import qualified Data.HashSet                         as Set
+import qualified Data.Text                            as T
+import qualified Hasura.SQL.Types                     as S
+import qualified Hasura.SQL.Value                     as S
+import qualified Language.GraphQL.Draft.Syntax        as G
 
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Context
-import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 
@@ -38,14 +38,15 @@ instance J.ToJSON TypeKind where
   toJSON = J.toJSON . T.pack . drop 2 . show
 
 withSubFields
-  :: (Monad m)
-  => SelSet
+  :: (MonadError QErr m)
+  => SelectionSet
   -> (Field -> m J.Value)
   -> m J.Object
-withSubFields selSet fn =
-  fmap Map.fromList $ forM (toList selSet) $ \fld -> do
-  val <- fn fld
-  return (G.unName $ G.unAlias $ _fAlias fld, val)
+withSubFields selSet fn = do
+  objectSelectionSet <- asObjectSelectionSet selSet
+  fmap Map.fromList $ traverseObjectSelectionSet objectSelectionSet fn
+  -- val <- fn fld
+  -- return (G.unName $ G.unAlias $ _fAlias fld, val)
 
 namedTyToTxt :: G.NamedType -> Text
 namedTyToTxt = G.unName . G.unNamedType
@@ -106,9 +107,9 @@ notBuiltinFld f =
 
 getImplTypes :: (MonadReader t m, Has TypeMap t) => AsObjType -> m [ObjTyInfo]
 getImplTypes aot = do
-   tyInfo :: TypeMap <- asks getter
+   tyInfo <- asks getter
    return $ sortOn _otiName $
-     Map.elems $ getPossibleObjTypes' tyInfo aot
+     Map.elems $ getPossibleObjTypes tyInfo aot
 
 -- 4.5.2.3
 unionR
@@ -145,7 +146,7 @@ ifaceR'
   => IFaceTyInfo
   -> Field
   -> m J.Object
-ifaceR' i@(IFaceTyInfo descM n flds) fld = do
+ifaceR' i@(IFaceTyInfo descM n flds implementations) fld = do
   dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
     case _fName subFld of
@@ -219,8 +220,10 @@ dummyReadIncludeDeprecated
   :: ( Monad m, MonadReusability m, MonadError QErr m )
   => Field
   -> m ()
-dummyReadIncludeDeprecated fld =
-  void $ forM (toList (_fSelSet fld)) $ \subFld ->
+dummyReadIncludeDeprecated fld = do
+  selSet <- unAliasedFields . unObjectSelectionSet
+            <$> asObjectSelectionSet (_fSelSet fld)
+  forM_ (toList selSet) $ \subFld ->
     case _fName subFld of
       "fields"     -> readIncludeDeprecated subFld
       "enumValues" -> readIncludeDeprecated subFld
@@ -337,7 +340,7 @@ inputValueR fld (InpValInfo descM n defM ty) =
 
 -- 4.5.5
 enumValueR
-  :: (Monad m)
+  :: (MonadError QErr m)
   => Field -> EnumValInfo -> m J.Object
 enumValueR fld (EnumValInfo descM enumVal isDeprecated) =
   withSubFields (_fSelSet fld) $ \subFld ->

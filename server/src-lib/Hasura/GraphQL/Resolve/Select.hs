@@ -11,32 +11,32 @@ module Hasura.GraphQL.Resolve.Select
   , AnnSimpleSelect
   ) where
 
-import           Control.Lens                      ((^?), _2)
+import           Control.Lens                         ((^?), _2)
 import           Data.Has
 import           Data.Parser.JSONPath
 import           Hasura.Prelude
 
-import qualified Data.Aeson                        as J
-import qualified Data.Aeson.Internal               as J
-import qualified Data.ByteString.Lazy              as BL
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashMap.Strict.InsOrd        as OMap
-import qualified Data.List.NonEmpty                as NE
-import qualified Data.Sequence                     as Seq
-import qualified Data.Text                         as T
-import qualified Data.Text.Conversions             as TC
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Data.Aeson                           as J
+import qualified Data.Aeson.Internal                  as J
+import qualified Data.ByteString.Lazy                 as BL
+import qualified Data.HashMap.Strict                  as Map
+import qualified Data.HashMap.Strict.InsOrd           as OMap
+import qualified Data.List.NonEmpty                   as NE
+import qualified Data.Sequence                        as Seq
+import qualified Data.Text                            as T
+import qualified Data.Text.Conversions                as TC
+import qualified Language.GraphQL.Draft.Syntax        as G
 
-import qualified Hasura.RQL.DML.Select             as RS
-import qualified Hasura.SQL.DML                    as S
+import qualified Hasura.RQL.DML.Select                as RS
+import qualified Hasura.SQL.DML                       as S
 
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Schema             (isAggregateField)
-import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Schema                (isAggregateField)
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Internal           (onlyPositiveInt)
+import           Hasura.RQL.DML.Internal              (onlyPositiveInt)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
@@ -104,12 +104,11 @@ processTableSelectionSet
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => G.NamedType -> SelSet -> m AnnFields
+  => G.NamedType -> ObjectSelectionSet -> m AnnFields
 processTableSelectionSet fldTy flds =
-  forM (toList flds) $ \fld -> do
+  fmap (map (\(a, b) -> (FieldName a, b))) $ traverseObjectSelectionSet flds $ \fld -> do
     let fldName = _fName fld
-    let rqlFldName = FieldName $ G.unName $ G.unAlias $ _fAlias fld
-    (rqlFldName,) <$> case fldName of
+    case fldName of
       "__typename" -> return $ RS.AFExpression $ G.unName $ G.unNamedType fldTy
       _ -> do
         fldInfo <- getFldInfo fldTy fldName
@@ -142,30 +141,35 @@ fromAggSelSet
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => PGColGNameMap -> G.NamedType -> SelSet -> m TableAggregateFields
+  => PGColGNameMap -> G.NamedType -> ObjectSelectionSet -> m TableAggregateFields
 fromAggSelSet colGNameMap fldTy selSet = fmap toFields $
-  withSelSet selSet $ \f -> do
+  traverseObjectSelectionSet selSet $ \f -> do
     let fTy = _fType f
-        fSelSet = _fSelSet f
     case _fName f of
       "__typename" -> return $ RS.TAFExp $ G.unName $ G.unNamedType fldTy
-      "aggregate"  -> RS.TAFAgg <$> convertAggregateField colGNameMap fTy fSelSet
-      "nodes"      -> RS.TAFNodes <$> processTableSelectionSet fTy fSelSet
+      "aggregate"  -> do
+        objSelSet <-  asObjectSelectionSet $ _fSelSet f
+        RS.TAFAgg <$> convertAggregateField colGNameMap fTy objSelSet
+      "nodes"      -> do
+        objSelSet <-  asObjectSelectionSet $ _fSelSet f
+        RS.TAFNodes <$> processTableSelectionSet fTy objSelSet
       G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 fromConnectionSelSet
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => G.NamedType -> SelSet -> m (RS.ConnectionFields UnresolvedVal)
+  => G.NamedType -> ObjectSelectionSet -> m (RS.ConnectionFields UnresolvedVal)
 fromConnectionSelSet fldTy selSet = fmap toFields $
-  withSelSet selSet $ \f -> do
-    let fTy = _fType f
-        fSelSet = _fSelSet f
-    case _fName f of
+  traverseObjectSelectionSet selSet $ \Field{..} ->
+    case _fName of
       "__typename" -> return $ RS.ConnectionTypename $ G.unName $ G.unNamedType fldTy
-      "pageInfo"   -> RS.ConnectionPageInfo <$> parsePageInfoSelectionSet fTy fSelSet
-      "edges"      -> RS.ConnectionEdges <$> parseEdgeSelectionSet fTy fSelSet
+      "pageInfo"   -> do
+        fSelSet <-  asObjectSelectionSet _fSelSet
+        RS.ConnectionPageInfo <$> parsePageInfoSelectionSet _fType fSelSet
+      "edges"      -> do
+        fSelSet <-  asObjectSelectionSet _fSelSet
+        RS.ConnectionEdges <$> parseEdgeSelectionSet _fType fSelSet
       -- "aggregate"  -> RS.TAFAgg <$> convertAggregateField colGNameMap fTy fSelSet
       -- "nodes"      -> RS.TAFNodes <$> processTableSelectionSet fTy fSelSet
       G.Name t     -> throw500 $ "unexpected field in _connection node: " <> t
@@ -174,22 +178,23 @@ parseEdgeSelectionSet
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => G.NamedType -> SelSet -> m (RS.EdgeFields UnresolvedVal)
+  => G.NamedType -> ObjectSelectionSet -> m (RS.EdgeFields UnresolvedVal)
 parseEdgeSelectionSet fldTy selSet = fmap toFields $
-  withSelSet selSet $ \f -> do
+  traverseObjectSelectionSet selSet $ \f -> do
     let fTy = _fType f
-        fSelSet = _fSelSet f
     case _fName f of
       "__typename" -> pure $ RS.EdgeTypename $ G.unName $ G.unNamedType fldTy
       "cursor"     -> pure RS.EdgeCursor
-      "node"       -> RS.EdgeNode <$> processTableSelectionSet fTy fSelSet
+      "node"       -> do
+        fSelSet <- asObjectSelectionSet $ _fSelSet f
+        RS.EdgeNode <$> processTableSelectionSet fTy fSelSet
       G.Name t     -> throw500 $ "unexpected field in Edge node: " <> t
 
 parsePageInfoSelectionSet
   :: ( MonadReusability m, MonadError QErr m)
-  => G.NamedType -> SelSet -> m RS.PageInfoFields
+  => G.NamedType -> ObjectSelectionSet -> m RS.PageInfoFields
 parsePageInfoSelectionSet fldTy selSet =
-  fmap toFields $ withSelSet selSet $ \f ->
+  fmap toFields $ traverseObjectSelectionSet selSet $ \f ->
     case _fName f of
       "__typename"      -> pure $ RS.PageInfoTypename $ G.unName $ G.unNamedType fldTy
       "hasNextPage"     -> pure RS.PageInfoHasNextPage
@@ -246,7 +251,8 @@ fromField
   -> Field -> m AnnSimpleSelect
 fromField selFrom colGNameMap permFilter permLimitM fld = fieldAsPath fld $ do
   tableArgs <- parseSelectArgs colGNameMap args
-  annFlds   <- processTableSelectionSet (_fType fld) $ _fSelSet fld
+  selSet <- asObjectSelectionSet $ _fSelSet fld
+  annFlds   <- processTableSelectionSet (_fType fld) selSet
   let unresolvedPermFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal permFilter
   let tabPerm = RS.TablePerm unresolvedPermFltr permLimitM
   strfyNum <- stringifyNum <$> asks getter
@@ -381,7 +387,8 @@ fromFieldByPKey
   -> AnnBoolExpPartialSQL -> Field -> m AnnSimpleSel
 fromFieldByPKey tn colArgMap permFilter fld = fieldAsPath fld $ do
   boolExp <- pgColValToBoolExp colArgMap $ _fArguments fld
-  annFlds <- processTableSelectionSet fldTy $ _fSelSet fld
+  selSet <- asObjectSelectionSet $ _fSelSet fld
+  annFlds <- processTableSelectionSet fldTy selSet
   let tabFrom = RS.FromTable tn
       unresolvedPermFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal
                            permFilter
@@ -447,24 +454,24 @@ toFields = map (first FieldName)
 
 convertColumnFields
   :: (MonadError QErr m)
-  => PGColGNameMap -> G.NamedType -> SelSet -> m RS.ColumnFields
+  => PGColGNameMap -> G.NamedType -> ObjectSelectionSet -> m RS.ColumnFields
 convertColumnFields colGNameMap ty selSet = fmap toFields $
-  withSelSet selSet $ \fld ->
+  traverseObjectSelectionSet selSet $ \fld ->
     case _fName fld of
       "__typename" -> return $ RS.PCFExp $ G.unName $ G.unNamedType ty
       n            -> RS.PCFCol . pgiColumn <$> resolvePGCol colGNameMap n
 
 convertAggregateField
   :: (MonadReusability m, MonadError QErr m)
-  => PGColGNameMap -> G.NamedType -> SelSet -> m RS.AggregateFields
+  => PGColGNameMap -> G.NamedType -> ObjectSelectionSet -> m RS.AggregateFields
 convertAggregateField colGNameMap ty selSet = fmap toFields $
-  withSelSet selSet $ \fld -> do
+  traverseObjectSelectionSet selSet $ \fld -> do
     let fType = _fType fld
-        fSelSet = _fSelSet fld
     case _fName fld of
       "__typename" -> return $ RS.AFExp $ G.unName $ G.unNamedType ty
       "count"      -> RS.AFCount <$> convertCount colGNameMap (_fArguments fld)
       n            -> do
+        fSelSet <- asObjectSelectionSet $ _fSelSet fld
         colFlds <- convertColumnFields colGNameMap fType fSelSet
         unless (isAggregateField n) $ throwInvalidFld n
         return $ RS.AFOp $ RS.AggregateOp (G.unName n) colFlds
@@ -485,7 +492,8 @@ fromAggField
   -> Field -> m AnnAggregateSelect
 fromAggField selectFrom colGNameMap permFilter permLimit fld = fieldAsPath fld $ do
   tableArgs   <- parseSelectArgs colGNameMap args
-  aggSelFlds  <- fromAggSelSet colGNameMap (_fType fld) (_fSelSet fld)
+  selSet <- asObjectSelectionSet $ _fSelSet fld
+  aggSelFlds  <- fromAggSelSet colGNameMap (_fType fld) selSet
   let unresolvedPermFltr =
         fmapAnnBoolExp partialSQLExpToUnresolvedVal permFilter
   let tabPerm = RS.TablePerm unresolvedPermFltr permLimit
@@ -505,7 +513,8 @@ fromConnectionField
   -> Field -> m (RS.ConnectionSelect UnresolvedVal)
 fromConnectionField selectFrom pkCols permFilter permLimit fld = fieldAsPath fld $ do
   (tableArgs, slice, split)   <- parseConnectionArgs pkCols args
-  connSelFlds  <- fromConnectionSelSet (_fType fld) (_fSelSet fld)
+  selSet <- asObjectSelectionSet $ _fSelSet fld
+  connSelFlds  <- fromConnectionSelSet (_fType fld) selSet
   strfyNum <- stringifyNum <$> asks getter
   let unresolvedPermFltr =
         fmapAnnBoolExp partialSQLExpToUnresolvedVal permFilter

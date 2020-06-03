@@ -44,16 +44,12 @@ import           Data.Has
 import           Data.UUID                              (UUID)
 
 import qualified Hasura.GraphQL.Resolve                 as GR
-import qualified Hasura.GraphQL.Resolve.Action          as RA
-import qualified Hasura.GraphQL.Resolve.Types           as GR
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
-import qualified Hasura.GraphQL.Validate.Types          as GV
 import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.Db
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.SQL.Error
@@ -268,30 +264,19 @@ buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
-     , Has GR.FieldMap r
-     , Has GR.OrdByCtx r
-     , Has GR.QueryCtxMap r
-     , Has SQLGenCtx r
-     , HasVersion
      , MonadIO m
      )
   => PGExecCtx
-  -> GV.QueryReusability
-  -> RA.QueryActionExecuter
-  -> GV.SelSet
+  -> G.Alias
+  -> GR.QueryRootFldUnresolved
+  -> Maybe GV.ReusableVariableTypes
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
-buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
-  ((resolvedASTs, (queryVariableValues, syntheticVariableValues)), finalReusability) <-
-    GV.runReusabilityTWith initialReusability . flip runStateT mempty $
-      fmap Map.fromList . for (toList fields) $ \field -> case GV._fName field of
-        "__typename" -> throwVE "you cannot create a subscription on '__typename' field"
-        _ -> do
-          unresolvedAST <- GR.queryFldToPGAST field actionExecutioner
-          resolvedAST <- GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
-          pure (GV._fAlias field, resolvedAST)
+buildLiveQueryPlan pgExecCtx alias unresolvedAST varTypes = do
+  (resolvedAST, (queryVariableValues, syntheticVariableValues)) <-
+    flip runStateT mempty $ GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
 
   userInfo <- asks getter
-  let multiplexedQuery = mkMultiplexedQuery resolvedASTs
+  let multiplexedQuery = mkMultiplexedQuery $ Map.singleton alias resolvedAST
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery
 
@@ -302,7 +287,6 @@ buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
   validatedSyntheticVars <- validateVariables pgExecCtx (toList syntheticVariableValues)
   let cohortVariables = CohortVariables (_uiSession userInfo) validatedQueryVars validatedSyntheticVars
       plan = LiveQueryPlan parameterizedPlan cohortVariables
-      varTypes = finalReusability ^? GV._Reusable
       reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars <$> varTypes
   pure (plan, reusablePlan)
 

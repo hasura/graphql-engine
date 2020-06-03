@@ -1,8 +1,8 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
   , showVars
-  , RootSelSet(..)
-  , SelSet
+  , RootSelectionSet(..)
+  , SelectionSet(..)
   , Field(..)
   , getTypedOp
   , QueryParts(..)
@@ -20,15 +20,16 @@ import           Hasura.Prelude
 import           Data.Has
 
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd.Extended    as OMap
 import qualified Data.HashSet                           as HS
-import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Data.Sequence                          as Seq
+import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Validate.Context
-import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 
@@ -135,19 +136,12 @@ validateFrag
 validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
   unless (null dirs) $ throwVE
     "unexpected directives at fragment definition"
-  tyInfo <- getTyInfoVE onTy
-  objTyInfo <- onNothing (getObjTyM tyInfo) $ throwVE
-    "fragments can only be defined on object types"
-  return $ FragDef n objTyInfo selSet
-
-data RootSelSet
-  = RQuery !SelSet
-  | RMutation !SelSet
-  | RSubscription !SelSet
-  deriving (Show, Eq)
+  fragmentTypeInfo <- getFragmentTyInfo onTy
+  return $ FragDef n fragmentTypeInfo selSet
 
 validateGQ
-  :: (MonadError QErr m, MonadReader GCtx m, MonadReusability m) => QueryParts -> m RootSelSet
+  :: (MonadError QErr m, MonadReader GCtx m, MonadReusability m)
+  => QueryParts -> m RootSelectionSet
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   ctx <- ask
 
@@ -163,22 +157,22 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   -- build a validation ctx
   let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs
 
-  selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
+  selSet <- flip runReaderT valCtx $ parseObjectSelectionSet valCtx opRoot $
             G._todSelectionSet opDef
 
   case G._todType opDef of
     G.OperationTypeQuery -> return $ RQuery selSet
     G.OperationTypeMutation -> return $ RMutation selSet
-    G.OperationTypeSubscription ->
-      case selSet of
-        Seq.Empty       -> throw500 "empty selset for subscription"
-        (_ Seq.:<| rst) -> do
+    G.OperationTypeSubscription -> do
+      case OMap.toList $ unAliasedFields $ unObjectSelectionSet selSet of
+        []     -> throw500 "empty selset for subscription"
+        ((alias, field):rst) -> do
           -- As an internal testing feature, we support subscribing to multiple
           -- selection sets.  First check if the corresponding directive is set.
           let multipleAllowed = elem (G.Directive "_multiple_top_level_fields" []) (G._todDirectives opDef)
           unless (multipleAllowed || null rst) $
             throwVE "subscriptions must select one top level field"
-          return $ RSubscription selSet
+          return $ RSubscription alias field
 
 isQueryInAllowlist :: GQLExecDoc -> HS.HashSet GQLQuery -> Bool
 isQueryInAllowlist q = HS.member gqlQuery

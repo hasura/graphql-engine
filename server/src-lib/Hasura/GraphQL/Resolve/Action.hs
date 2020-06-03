@@ -14,48 +14,48 @@ module Hasura.GraphQL.Resolve.Action
 
 import           Hasura.Prelude
 
-import           Control.Concurrent                (threadDelay)
-import           Control.Exception                 (try)
+import           Control.Concurrent                   (threadDelay)
+import           Control.Exception                    (try)
 import           Control.Lens
 import           Data.Has
 import           Data.IORef
 
-import qualified Control.Concurrent.Async          as A
-import qualified Data.Aeson                        as J
-import qualified Data.Aeson.Casing                 as J
-import qualified Data.Aeson.TH                     as J
-import qualified Data.ByteString.Lazy              as BL
-import qualified Data.CaseInsensitive              as CI
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.Text                         as T
-import qualified Data.UUID                         as UUID
-import qualified Database.PG.Query                 as Q
-import qualified Language.GraphQL.Draft.Syntax     as G
-import qualified Network.HTTP.Client               as HTTP
-import qualified Network.HTTP.Types                as HTTP
-import qualified Network.Wreq                      as Wreq
+import qualified Control.Concurrent.Async             as A
+import qualified Data.Aeson                           as J
+import qualified Data.Aeson.Casing                    as J
+import qualified Data.Aeson.TH                        as J
+import qualified Data.ByteString.Lazy                 as BL
+import qualified Data.CaseInsensitive                 as CI
+import qualified Data.HashMap.Strict                  as Map
+import qualified Data.Text                            as T
+import qualified Data.UUID                            as UUID
+import qualified Database.PG.Query                    as Q
+import qualified Language.GraphQL.Draft.Syntax        as G
+import qualified Network.HTTP.Client                  as HTTP
+import qualified Network.HTTP.Types                   as HTTP
+import qualified Network.Wreq                         as Wreq
 
-import qualified Hasura.GraphQL.Resolve.Select     as GRS
-import qualified Hasura.RQL.DML.Select             as RS
+import qualified Hasura.GraphQL.Resolve.Select        as GRS
+import qualified Hasura.RQL.DML.Select                as RS
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
-import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Resolve.Select        (processTableSelectionSet)
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
-import           Hasura.RQL.DDL.Headers            (makeHeadersFromConf, toHeadersConf)
+import           Hasura.RQL.DDL.Headers               (makeHeadersFromConf, toHeadersConf)
 import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
+import           Hasura.RQL.DML.Select                (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Utils               (mkClientHeadersForward, mkSetCookieHeaders)
-import           Hasura.Server.Version             (HasVersion)
+import           Hasura.Server.Utils                  (mkClientHeadersForward, mkSetCookieHeaders)
+import           Hasura.Server.Version                (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
-                                                    toTxtValue)
+import           Hasura.SQL.Value                     (PGScalarValue (..), pgScalarValueToJson,
+                                                       toTxtValue)
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -166,9 +166,10 @@ resolveActionMutationSync field executionContext sessionVariables = do
                                forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
+  selSet <- asObjectSelectionSet $ _fSelSet field
   selectAstUnresolved <-
     processOutputSelectionSet webhookResponseExpression outputType definitionList
-    (_fType field) $ _fSelSet field
+    (_fType field) selSet
   astResolved <- RS.traverseAnnSimpleSelect resolveValTxt selectAstUnresolved
   let jsonAggType = mkJsonAggSelect outputType
   return $ (,respHeaders) $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
@@ -218,9 +219,10 @@ resolveActionQuery field executionContext sessionVariables httpManager reqHeader
                                forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
+  selSet <- asObjectSelectionSet $ _fSelSet field
   selectAstUnresolved <-
     processOutputSelectionSet webhookResponseExpression outputType definitionList
-    (_fType field) $ _fSelSet field
+    (_fType field) selSet
   return selectAstUnresolved
   where
     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
@@ -293,7 +295,9 @@ resolveAsyncActionQuery userInfo selectOpCtx field = do
   actionId <- withArg (_fArguments field) "id" parseActionId
   stringifyNumerics <- stringifyNum <$> asks getter
 
-  annotatedFields <- fmap (map (first FieldName)) $ withSelSet (_fSelSet field) $ \fld ->
+  selSet <- asObjectSelectionSet $ _fSelSet field
+
+  annotatedFields <- fmap (map (first FieldName)) $ traverseObjectSelectionSet selSet $ \fld ->
     case _fName fld of
       "__typename" -> return $ RS.AFExpression $ G.unName $ G.unNamedType $ _fType field
       "output"     -> do
@@ -301,9 +305,10 @@ resolveAsyncActionQuery userInfo selectOpCtx field = do
         let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
             ActionSelectOpContext outputType definitionList = selectOpCtx
             jsonAggSelect = mkJsonAggSelect outputType
+        fldSelSet <- asObjectSelectionSet $ _fSelSet fld
         (RS.AFComputedField . RS.CFSTable jsonAggSelect)
           <$> processOutputSelectionSet inputTableArgument outputType
-              definitionList (_fType fld) (_fSelSet fld)
+              definitionList (_fType fld) fldSelSet
 
       -- The metadata columns
       "id"         -> return $ mkAnnFieldFromPGCol "id" PGUUID
@@ -561,7 +566,7 @@ processOutputSelectionSet
   => RS.ArgumentExp UnresolvedVal
   -> GraphQLType
   -> [(PGCol, PGScalarType)]
-  -> G.NamedType -> SelSet -> m GRS.AnnSimpleSelect
+  -> G.NamedType -> ObjectSelectionSet -> m GRS.AnnSimpleSelect
 processOutputSelectionSet tableRowInput actionOutputType definitionList fldTy flds = do
   stringifyNumerics <- stringifyNum <$> asks getter
   annotatedFields <- processTableSelectionSet fldTy flds

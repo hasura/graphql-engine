@@ -27,6 +27,7 @@ import qualified Hasura.GraphQL.Execute.LiveQuery       as E
 import qualified Hasura.GraphQL.Resolve                 as RS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
+import qualified Hasura.GraphQL.Validate.SelectionSet   as GV
 import qualified Hasura.SQL.DML                         as S
 
 data GQLExplain
@@ -130,16 +131,16 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet) ->
       return (gCtx, rootSelSet)
-    E.GExPRemote _ _  ->
+    E.GExPRemote _ _ _  ->
       throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
     GV.RQuery selSet ->
-      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx actionExecuter)
-      (toList selSet)
+      runInTx $ encJFromJValue <$> GV.traverseObjectSelectionSet selSet (explainField userInfo gCtx sqlGenCtx actionExecuter)
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
-    GV.RSubscription rootField -> do
-      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter rootField
+    GV.RSubscription alias rootField -> do
+      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo
+                     queryReusability actionExecuter alias rootField
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     apiType = bool E.GATGeneral E.GATRelay $ fromMaybe False maybeIsRelay
