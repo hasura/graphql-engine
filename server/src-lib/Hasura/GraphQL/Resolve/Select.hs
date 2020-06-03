@@ -13,7 +13,7 @@ module Hasura.GraphQL.Resolve.Select
   , AnnSimpleSelect
   ) where
 
-import           Control.Lens                         ((^?), _2)
+import           Control.Lens                         (to, (^..), (^?), _2)
 import           Data.Has
 import           Data.Parser.JSONPath
 import           Hasura.Prelude
@@ -563,12 +563,21 @@ parseConnectionArgs pKeyColumns args = do
     (Just v, Nothing)  -> fmap ((RS.CSKAfter,) . base64Decode) <$> asPGColTextM v
     (Nothing, Just v)  -> fmap ((RS.CSKBefore,) . base64Decode) <$> asPGColTextM v
 
-  let ordByExpM = NE.nonEmpty =<< ordByExpML
+  let ordByExpM = NE.nonEmpty =<< appendPrimaryKeyOrderBy <$> ordByExpML
       tableArgs = RS.SelectArgs whereExpM ordByExpM Nothing Nothing Nothing
 
   split <- mapM (uncurry (validateConnectionSplit ordByExpM)) maybeSplit
   pure (tableArgs, slice, split)
   where
+    appendPrimaryKeyOrderBy :: [RS.AnnOrderByItemG v] -> [RS.AnnOrderByItemG v]
+    appendPrimaryKeyOrderBy orderBys =
+      let orderByColumnNames =
+            orderBys ^.. traverse . to obiColumn . RS._AOCColumn . to pgiColumn
+          pkeyOrderBys = flip mapMaybe (toList pKeyColumns) $ \pgColumnInfo ->
+                         if pgiColumn pgColumnInfo `elem` orderByColumnNames then Nothing
+                         else Just $ OrderByItemG Nothing (RS.AOCColumn pgColumnInfo) Nothing
+      in orderBys <> pkeyOrderBys
+
     validateConnectionSplit
       :: Maybe (NonEmpty (RS.AnnOrderByItemG UnresolvedVal))
       -> RS.ConnectionSplitKind

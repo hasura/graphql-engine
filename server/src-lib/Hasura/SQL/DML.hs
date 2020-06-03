@@ -272,6 +272,9 @@ jsonTypeAnn = mkTypeAnn $ PGTypeScalar PGJSON
 jsonbTypeAnn :: TypeAnn
 jsonbTypeAnn = mkTypeAnn $ PGTypeScalar PGJSONB
 
+boolTypeAnn :: TypeAnn
+boolTypeAnn = mkTypeAnn $ PGTypeScalar PGBoolean
+
 data CountType
   = CTStar
   | CTSimple ![PGCol]

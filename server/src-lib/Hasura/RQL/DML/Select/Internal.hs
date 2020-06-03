@@ -226,6 +226,12 @@ withJsonBuildObj parAls exps =
   where
     jsonRow = S.applyJsonBuildObj exps
 
+-- | Forces aggregation
+withForceAggregation :: S.TypeAnn -> S.SQLExp -> S.SQLExp
+withForceAggregation tyAnn e =
+  -- bool_or to force aggregation
+  S.SEFnApp "coalesce" [e, S.SETyAnn (S.SEUnsafe "bool_or('true')") tyAnn] Nothing
+
 mkAggregateOrderByExtractorAndFields
   :: AnnAggregateOrderBy -> (S.Extractor, AggregateFields)
 mkAggregateOrderByExtractorAndFields annAggOrderBy =
@@ -454,9 +460,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
              )
       TAFExp e ->
         pure ( []
-             -- bool_or to force aggregation
-             , S.SEFnApp "coalesce"
-               [ S.SELit e , S.SEUnsafe "bool_or('true')::text"] Nothing
+             , withForceAggregation S.textTypeAnn $ S.SELit e
              )
 
   let topLevelExtractor =
@@ -1019,10 +1023,15 @@ mkPrimaryKeyColumnsObjectExp sourcePrefix primaryKeyColumns =
     ]
 
 encodeBase64 :: S.SQLExp -> S.SQLExp
-encodeBase64 t =
-  S.SEFnApp "encode"
-  [S.SEFnApp "convert_to" [t, S.SELit "UTF8"] Nothing, S.SELit "base64"]
-  Nothing
+encodeBase64 =
+  removeNewline . bytesToBase64Text . convertToBytes
+  where
+    convertToBytes e =
+      S.SEFnApp "convert_to" [e, S.SELit "UTF8"] Nothing
+    bytesToBase64Text e =
+      S.SEFnApp "encode" [e, S.SELit "base64"] Nothing
+    removeNewline e =
+      S.SEFnApp "regexp_replace" [e, S.SELit "\\n", S.SELit "", S.SELit "g"] Nothing
 
 
 processConnectionSelect
@@ -1054,14 +1063,14 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
   (topExtractorExp, exps) <- flip runStateT [] $ processFields orderByExp
   let topExtractor = S.Extractor topExtractorExp $ Just $ S.Alias fieldIden
       allExtractors = HM.fromList $ cursorExtractors <> exps <> orderByAndDistinctExtrs
-      arrayConnectionSource = ArrayConnectionSource relAlias
-                              colMapping splitBoolExp slice selectSource
+      arrayConnectionSource = ArrayConnectionSource relAlias colMapping
+                              (mkSplitBoolExp <$> maybeSplit) maybeSlice selectSource
   pure ( arrayConnectionSource
        , topExtractor
        , allExtractors
        )
   where
-    ConnectionSelect primaryKeyColumns split slice select = connectionSelect
+    ConnectionSelect primaryKeyColumns maybeSplit maybeSlice select = connectionSelect
     AnnSelectG fields selectFrom tablePermissions tableArgs _ = select
     fieldIden = toIden fieldAlias
     thisPrefix = _pfThis sourcePrefixes
@@ -1075,18 +1084,28 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
            , S.mkQIdenExp (mkBaseTableAlias thisPrefix) pgColumn
            )
 
-    splitBoolExp = flip fmap split $ \splits ->
-      foldr (S.BEBin S.OrOp) (S.BELit False) $
-      flip map (toList splits) $ \s ->
-        let ConnectionSplit kind v (OrderByItemG obTyM obCol _) = s
-            obAlias = mkAnnOrderByAlias thisPrefix fieldAlias similarArrayFields obCol
-            obTy = maybe S.OTAsc unOrderType obTyM
-            compareOp = case (kind, obTy) of
-              (CSKAfter, S.OTAsc)   -> S.SGT
-              (CSKAfter, S.OTDesc)  -> S.SLT
-              (CSKBefore, S.OTAsc)  -> S.SLT
-              (CSKBefore, S.OTDesc) -> S.SGT
-        in S.BECompare compareOp (S.SEIden $ toIden obAlias) v
+    mkSplitBoolExp (firstSplit NE.:| rest) =
+      S.BEBin S.OrOp (mkSplitCompareExp firstSplit) $ mkBoolExpFromRest firstSplit rest
+      where
+        mkBoolExpFromRest previousSplit =
+          S.BEBin S.AndOp (mkEqualityCompareExp previousSplit) . \case
+            []                         -> S.BELit False
+            (thisSplit:remainingSplit) -> mkSplitBoolExp (thisSplit NE.:| remainingSplit)
+
+        mkSplitCompareExp (ConnectionSplit kind v (OrderByItemG obTyM obCol _)) =
+          let obAlias = mkAnnOrderByAlias thisPrefix fieldAlias similarArrayFields obCol
+              obTy = maybe S.OTAsc unOrderType obTyM
+              compareOp = case (kind, obTy) of
+                (CSKAfter, S.OTAsc)   -> S.SGT
+                (CSKAfter, S.OTDesc)  -> S.SLT
+                (CSKBefore, S.OTAsc)  -> S.SLT
+                (CSKBefore, S.OTDesc) -> S.SGT
+          in S.BECompare compareOp (S.SEIden $ toIden obAlias) v
+
+        mkEqualityCompareExp (ConnectionSplit _ v orderByItem) =
+          let obAlias = mkAnnOrderByAlias thisPrefix fieldAlias similarArrayFields $
+                        obiColumn orderByItem
+          in S.BECompare S.SEQ (S.SEIden $ toIden obAlias) v
 
     similarArrayFields = HM.unions $
       flip map (map snd fields) $ \case
@@ -1114,7 +1133,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
       forM fields $
         \(FieldName fieldText, field) -> (S.SELit fieldText:) . pure <$>
         case field of
-          ConnectionTypename t              -> pure $ S.SELit t
+          ConnectionTypename t              -> pure $ withForceAggregation S.textTypeAnn $ S.SELit t
           ConnectionPageInfo pageInfoFields -> pure $ processPageInfoFields pageInfoFields
           ConnectionEdges edges ->
             fmap (flip mkSimpleJsonAgg orderByExp . S.applyJsonBuildObj . concat) $ forM edges $
@@ -1133,14 +1152,14 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
     processPageInfoFields infoFields =
       S.applyJsonBuildObj $ flip concatMap infoFields $
       \(FieldName fieldText, field) -> (:) (S.SELit fieldText) $ pure case field of
-        PageInfoTypename t      -> S.SELit t
-        PageInfoHasNextPage     ->
+        PageInfoTypename t      -> withForceAggregation S.textTypeAnn $ S.SELit t
+        PageInfoHasNextPage     -> withForceAggregation S.boolTypeAnn $
           mkSingleFieldSelect (S.SEIden hasNextPageIden) pageInfoSelectAliasIden
-        PageInfoHasPreviousPage ->
+        PageInfoHasPreviousPage -> withForceAggregation S.boolTypeAnn $
           mkSingleFieldSelect (S.SEIden hasPreviousPageIden) pageInfoSelectAliasIden
-        PageInfoStartCursor     ->
+        PageInfoStartCursor     -> withForceAggregation S.textTypeAnn $
           encodeBase64 $ mkSingleFieldSelect (S.SEIden startCursorIden) cursorsSelectAliasIden
-        PageInfoEndCursor       ->
+        PageInfoEndCursor       -> withForceAggregation S.textTypeAnn $
           encodeBase64 $ mkSingleFieldSelect (S.SEIden endCursorIden) cursorsSelectAliasIden
       where
         mkSingleFieldSelect field fromIden = S.SESelect

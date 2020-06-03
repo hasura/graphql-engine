@@ -593,3 +593,4 @@ data PermissionLimitSubQuery
 
 $(makeLenses ''AnnSelectG)
 $(makePrisms ''AnnFieldG)
+$(makePrisms ''AnnOrderByElementG)

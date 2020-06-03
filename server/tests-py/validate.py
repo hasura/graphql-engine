@@ -211,7 +211,7 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
 
 def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=False):
     assert 'response' in conf
-    assert conf['url'].endswith('/graphql')
+    assert conf['url'].endswith('/graphql') or conf['url'].endswith('/relay')
     endpoint = conf['url']
     query = conf['query']
     exp_http_response = conf['response']
@@ -226,6 +226,8 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
 
     if endpoint == '/v1alpha1/graphql':
         ws_client = GQLWsClient(hge_ctx, '/v1alpha1/graphql')
+    elif endpoint == '/v1/relay':
+        ws_client = GQLWsClient(hge_ctx, '/v1/relay')
     else:
         ws_client = hge_ctx.ws_client
     print(ws_client.ws_url)
