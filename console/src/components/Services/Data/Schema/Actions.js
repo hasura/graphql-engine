@@ -61,12 +61,6 @@ export const deleteCurrentSchema = (successCb, errorCb) => {
   return (dispatch, getState) => {
     const { currentSchema } = getState().tables;
 
-    if (currentSchema === 'public') {
-      return dispatch(
-        showErrorNotification('Dropping "public" schema is not supported')
-      );
-    }
-
     const confirmMessage = `This will permanently delete the Postgres schema "${currentSchema}" from the database`;
     const isOk = getConfirmation(confirmMessage, true, currentSchema);
     if (!isOk) {

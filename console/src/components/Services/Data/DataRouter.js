@@ -1,10 +1,8 @@
 import React from 'react';
-// import {push} fropm 'react-router-redux';
 import { Route, IndexRedirect } from 'react-router';
-import globals from '../../../Globals';
-// import { loadAdminSecretState } from '../../AppState';
-import { SERVER_CONSOLE_MODE } from '../../../constants';
 
+import globals from '../../../Globals';
+import { SERVER_CONSOLE_MODE } from '../../../constants';
 import {
   schemaConnector,
   viewTableConnector,
@@ -24,22 +22,19 @@ import {
   permissionsSummaryConnector,
   ModifyCustomFunction,
   PermissionCustomFunction,
-  // metadataConnector,
 } from '.';
-
 import { rightContainerConnector } from '../../Common/Layout';
-
 import {
   fetchDataInit,
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
   updateSchemaInfo,
   fetchSchemaList,
-  // ADMIN_SECRET_ERROR,
 } from './DataActions';
-
-// import { changeRequestHeader } from '../../ApiExplorer/Actions';
-// import { validateLogin } from '../../Main/Actions';
+import {
+  showErrorNotification,
+  showInfoNotification,
+} from '../Common/Notification';
 
 const makeDataRouter = (
   connect,
@@ -156,16 +151,24 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
         return cb();
       }
 
-      if (
-        currentSchema === null ||
-        currentSchema === undefined ||
-        currentSchema === ''
-      ) {
+      if (!currentSchema) {
         if (schemaList.map(s => s.schema_name).includes('public')) {
           currentSchema = 'public';
-        } else {
+        } else if (schemaList.length) {
+          // select new currentSchema from schemaList
           currentSchema = schemaList[0].schema_name;
-          replaceState(`/data/schema/${currentSchema}`);
+          if (nextState.location.pathname.includes('data')) {
+            store.dispatch(
+              showInfoNotification(
+                `No public schema, showing ${currentSchema} schema instead`
+              )
+            );
+            // redirect to current schema instead of public
+            replaceState(`/data/schema/${currentSchema}`);
+          }
+        } else {
+          store.dispatch(showErrorNotification('No schema available'));
+          replaceState('/');
         }
       }
 
@@ -189,7 +192,6 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
     const state = store.getState();
     if (!state.main.migrationMode) {
       replaceState('/data/schema');
-      cb();
     }
     cb();
   };
@@ -197,7 +199,6 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
   const consoleModeRedirects = (nextState, replaceState, cb) => {
     if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       replaceState('/data/schema');
-      cb();
     }
     cb();
   };

@@ -240,7 +240,15 @@ class Schema extends Component {
         if (migrationMode) {
           const handleDelete = () => {
             const successCb = () => {
-              dispatch(updateCurrentSchema('public', true, schemaList));
+              dispatch(
+                updateCurrentSchema(
+                  'public',
+                  true,
+                  schemaList.filter(
+                    ({ schema_name }) => schema_name !== currentSchema
+                  )
+                )
+              );
             };
 
             dispatch(deleteCurrentSchema(successCb));
