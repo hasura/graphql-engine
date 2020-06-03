@@ -10,9 +10,9 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   , PollerMap
   , dumpPollerMap
 
-  , PollDetail(..)
-  , BatchExecutionDetail(..)
-  , CohortExecutionDetail(..)
+  , PollDetails(..)
+  , BatchExecutionDetails(..)
+  , CohortExecutionDetails(..)
 
   -- * Cohorts
   , Cohort(..)
@@ -211,8 +211,8 @@ pushResultToCohort
   -> LiveQueryMetadata
   -> CohortSnapshot
   -> IO ([SubscriberId], [SubscriberId])
-  -- ^ (subscribers to which data has been pushed, subscribers which already
-  -- have this data)
+  -- ^ subscribers to which data has been pushed, subscribers which already
+  -- have this data (this information is exposed by metrics reporting)
 pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = do
   prevRespHashM <- STM.readTVarIO respRef
   -- write to the current websockets if needed
@@ -308,8 +308,8 @@ newtype PollerId = PollerId { unPollerId :: UUID.UUID }
   deriving (Show, Eq, Generic, J.ToJSON)
 
 -- | Execution information related to a cohort on a poll cycle
-data CohortExecutionDetail
-  = CohortExecutionDetail
+data CohortExecutionDetails
+  = CohortExecutionDetails
   { _cedCohortId     :: !CohortId
   , _cedVariables    :: !CohortVariables
   , _cedResponseSize :: !(Maybe Int)
@@ -324,30 +324,30 @@ data CohortExecutionDetail
   -- polled cycle
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''CohortExecutionDetail)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''CohortExecutionDetails)
 
 -- | Execution information related to a single batched execution
-data BatchExecutionDetail
-  = BatchExecutionDetail
+data BatchExecutionDetails
+  = BatchExecutionDetails
   { _bedPgExecutionTime :: !Clock.DiffTime
   -- ^ postgres execution time of each batch
   , _bedPushTime        :: !Clock.DiffTime
   -- ^ time to taken to push to all cohorts belonging to this batch
-  , _bedCohorts         :: ![CohortExecutionDetail]
+  , _bedCohorts         :: ![CohortExecutionDetails]
   -- ^ execution details of the cohorts belonging to this batch
   } deriving (Show, Eq)
 
 -- | see Note [Minimal LiveQuery Poller Log]
-batchExecutionDetailMinimal :: BatchExecutionDetail -> J.Value
-batchExecutionDetailMinimal BatchExecutionDetail{..} =
+batchExecutionDetailMinimal :: BatchExecutionDetails -> J.Value
+batchExecutionDetailMinimal BatchExecutionDetails{..} =
   J.object [ "pg_execution_time" J..= _bedPgExecutionTime
            , "push_time" J..= _bedPushTime
            ]
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''BatchExecutionDetail)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''BatchExecutionDetails)
 
-data PollDetail
-  = PollDetail
+data PollDetails
+  = PollDetails
   { _pdPollerId         :: !PollerId
   -- ^ the unique ID (basically a thread that run as a 'Poller') for the
   -- 'Poller'
@@ -357,35 +357,35 @@ data PollDetail
   , _pdSnapshotTime     :: !Clock.DiffTime
   -- ^ the time taken to get a snapshot of cohorts from our 'LiveQueriesState'
   -- data structure
-  , _pdBatches          :: ![BatchExecutionDetail]
+  , _pdBatches          :: ![BatchExecutionDetails]
   -- ^ list of execution batches and their details
   , _pdTotalTime        :: !Clock.DiffTime
   -- ^ total time spent on a poll cycle
   , _pdLiveQueryOptions :: !LiveQueriesOptions
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''PollDetail)
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''PollDetails)
 
 {- Note [Minimal LiveQuery Poller Log]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 We only want to log the minimal information in the livequery-poller-log as it
 could be expensive to log the details of every subscriber (all poller related
 information can always be retrieved by dumping the current live queries state)
-The reason why we capture a lot more detail in PollDetail and
-BatchExecutionDetail as other implementations such as pro can use them if they
-need to.
+We capture a lot more details in PollDetails and BatchExecutionDetails than
+that is logged currently as other implementations such as pro can use them if
+they need to.
 -}
 
 -- | see Note [Minimal LiveQuery Poller Log]
-pollDetailMinimal :: PollDetail -> J.Value
-pollDetailMinimal (PollDetail{..}) =
+pollDetailMinimal :: PollDetails -> J.Value
+pollDetailMinimal (PollDetails{..}) =
   J.object [ "poller_id" J..= _pdPollerId
            , "snapshot_time" J..= _pdSnapshotTime
            , "batches" J..= (map batchExecutionDetailMinimal _pdBatches)
            , "total_time" J..= _pdTotalTime
            ]
 
-instance L.ToEngineLog PollDetail L.Hasura where
+instance L.ToEngineLog PollDetails L.Hasura where
   toEngineLog pl = (L.LevelInfo, L.ELTLivequeryPollerLog, pollDetailMinimal pl)
 
 -- | Where the magic happens: the top-level action run periodically by each
@@ -399,7 +399,7 @@ pollQuery
   -> CohortMap
   -> IO ()
 pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap = do
-  (totalTime, (snapshotTime, batchesDetail)) <- withElapsedTime $ do
+  (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
 
     -- snapshot the current cohorts and split them into batches
     (snapshotTime, cohortBatches) <- withElapsedTime $ do
@@ -411,7 +411,7 @@ pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap = do
       pure $ chunksOf (unBatchSize batchSize) cohortSnapshots
 
     -- concurrently process each batch
-    batchesDetail <- A.forConcurrently cohortBatches $ \cohorts -> do
+    batchesDetails <- A.forConcurrently cohortBatches $ \cohorts -> do
       (queryExecutionTime, mxRes) <- withElapsedTime $
         runExceptT $ runLazyTx' pgExecCtx $
           executeMultiplexedQuery pgQuery $ map (over _2 _csVariables) cohorts
@@ -419,31 +419,29 @@ pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap = do
       let lqMeta = LiveQueryMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes
 
-      (pushTime, cohortsExecutionDetail) <- withElapsedTime $
+      (pushTime, cohortsExecutionDetails) <- withElapsedTime $
         A.forConcurrently operations $ \(res, cohortId, respData, snapshot) -> do
           (pushedSubscribers, ignoredSubscribers) <-
             pushResultToCohort res (fst <$> respData) lqMeta snapshot
-          pure CohortExecutionDetail
+          pure CohortExecutionDetails
             { _cedCohortId = cohortId
             , _cedVariables = _csVariables snapshot
             , _cedPushedTo = pushedSubscribers
             , _cedIgnored = ignoredSubscribers
             , _cedResponseSize = snd <$> respData
             }
-      pure $ BatchExecutionDetail queryExecutionTime pushTime cohortsExecutionDetail
+      pure $ BatchExecutionDetails queryExecutionTime pushTime cohortsExecutionDetails
 
-    pure (snapshotTime, batchesDetail)
+    pure (snapshotTime, batchesDetails)
 
-  let pollDetail = PollDetail
-                   { _pdPollerId = pollerId
-                   , _pdGeneratedSql = unMultiplexedQuery pgQuery
-                   , _pdSnapshotTime = snapshotTime
-                   , _pdBatches = batchesDetail
-                   , _pdLiveQueryOptions = lqOpts
-                   , _pdTotalTime = totalTime
-                   }
-  L.unLogger logger pollDetail
-
+  L.unLogger logger $ PollDetails
+                      { _pdPollerId = pollerId
+                      , _pdGeneratedSql = unMultiplexedQuery pgQuery
+                      , _pdSnapshotTime = snapshotTime
+                      , _pdBatches = batchesDetails
+                      , _pdLiveQueryOptions = lqOpts
+                      , _pdTotalTime = totalTime
+                      }
   where
 
     LiveQueriesOptions batchSize _ = lqOpts
