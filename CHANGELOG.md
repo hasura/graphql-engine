@@ -105,6 +105,7 @@ hasura seed apply --file seeds/1234_add_some_seed_data.sql
 - console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
 - console: add help button and move about page to settings (#4848)
 - cli: list all available commands in root command help (fix #4623) (#4628)
+- cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
@@ -310,7 +311,9 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
+- server: make the graceful shutdown logic customizable (graceful shutdown on the SIGTERM signal continues to be the default) 
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
+- cli: load assets from server when HASURA_GRAPHQL_CONSOLE_ASSETS_DIR is set (close #3382)
 
 ## `v1.2.0-beta.4`
 

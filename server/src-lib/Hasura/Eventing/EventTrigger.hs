@@ -187,8 +187,13 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
         lockedEvents <- readTVar _eeCtxLockedEvents
         let evtsIds = map eId evts
         let newLockedEvents = Set.union lockedEvents (Set.fromList evtsIds)
-        writeTVar _eeCtxLockedEvents newLockedEvents
+        writeTVar _eeCtxLockedEvents $! newLockedEvents
 
+    removeEventFromLockedEvents :: EventId -> IO ()
+    removeEventFromLockedEvents eventId = do
+      liftIO $ atomically $ do
+        lockedEvents <- readTVar _eeCtxLockedEvents
+        writeTVar _eeCtxLockedEvents $! Set.delete eventId lockedEvents
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
@@ -202,8 +207,11 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       -- worth the effort for something more fine-tuned
       eventsNext <- withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
-        forM_ events $ \event ->
+        forM_ events $ \event -> do
              runReaderT (withEventEngineCtx eeCtx $ (processEvent event)) (logger, httpMgr)
+             -- removing an event from the _eeCtxLockedEvents after the event has
+             -- been processed
+             removeEventFromLockedEvents (eId event)
         wait eventsNextA
 
       let lenEvents = length events
@@ -472,6 +480,8 @@ instance Q.ToPrepArg EventIdArray where
       -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
       encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)
 
+-- | unlockEvents takes an array of 'EventId' and unlocks them. This function is called
+--   when a graceful shutdown is initiated.
 unlockEvents :: [EventId] -> Q.TxE QErr Int
 unlockEvents eventIds =
    (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
@@ -479,6 +489,11 @@ unlockEvents eventIds =
      WITH "cte" AS
      (UPDATE hdb_catalog.event_log
      SET locked = 'f'
-     WHERE id = ANY($1::text[]) RETURNING *)
+     WHERE id = ANY($1::text[])
+     -- only unlock those events that have been locked, it's possible
+     -- that an event has been processed but not yet been removed from
+     -- the saved locked events, which will lead to a double send
+     AND locked = 't'
+     RETURNING *)
      SELECT count(*) FROM "cte"
    |] (Identity $ EventIdArray eventIds) True
