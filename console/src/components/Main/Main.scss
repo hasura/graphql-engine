@@ -66,6 +66,42 @@
   }
 }
 
+.healthCheckBannerWrapper {
+  position: fixed;
+  right: 0;
+  top: 45px;
+  width: 100%;
+  z-index: 10;
+  text-align: center;
+  background-color: #d9534f;
+  color: #eee;
+  padding: 14.5px 10px;
+  font-weight: 700;
+
+  .healthCheckBanner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .healthCheckText {
+      font-weight: 500;
+      margin-left: 16px;
+    }
+
+    a {
+      color: #eee;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+  }
+
+  .healthCheckBannerClose {
+    cursor: pointer;
+    position: absolute;
+    right: 10px;
+  }
+}
+
 .vulnerableVersionBannerWrapper {
   background-color: #d9534f;
   color: #eee;
@@ -562,7 +598,7 @@
       // color: $navbar-inverse-link-hover-color;
       // background: #444;
       transition: color 0.5s;
-      pointer: cursor;
+      cursor: pointer;
     }
   }
 }
@@ -749,10 +785,6 @@
   }
 }
 
-.exploreDisabled {
-  // opacity: 0.2;
-}
-
 .exploreSidebar {
   box-shadow: -3px 7px 14px 0px rgba(222, 222, 222, 1);
   float: right;
@@ -812,10 +844,6 @@
       text-align: center;
       padding: 7px 0;
     }
-  }
-
-  .exploreTaskDisabled {
-    // opacity: 0.1;
   }
 
   .progressBtn {

@@ -56,22 +56,25 @@ const setReadOnlyMode = data => ({
 const SERVER_HEALTH_STATUS = 'Main/SERVER_HEALTH_STATUS';
 
 const checkServerHealth = () => {
-  const url = Endpoints.healthCheck;
-  const options = {
-    method: "GET"
-  };
-  return fetch(url, options).then(response => {
-    if (response.status === 200) {
-      dispatch({ type: SERVER_HEALTH_STATUS, data: true });
-      return;
-    }
+  return dispatch => {
+    const url = Endpoints.healthCheck;
+    const options = {
+      method: 'GET',
+    };
 
-    if (response.status === 500) {
-      dispatch({ type: SERVER_HEALTH_STATUS, data: false });
-      return;
-    }
-  })
-}
+    return fetch(url, options).then(response => {
+      if (response.status === 200) {
+        dispatch({ type: SERVER_HEALTH_STATUS, data: true });
+        return;
+      }
+
+      if (response.status === 500) {
+        dispatch({ type: SERVER_HEALTH_STATUS, data: false });
+        return;
+      }
+    });
+  };
+};
 
 const featureCompatibilityInit = () => {
   return (dispatch, getState) => {
@@ -339,10 +342,10 @@ const mainReducer = (state = defaultState, action) => {
         ...state,
         featuresCompatibility: { ...action.data },
       };
-    case SERVER_HEALTH_STATUS: 
+    case SERVER_HEALTH_STATUS:
       return {
         ...state,
-        serverHealth: { ...action.data },
+        serverHealth: action.data,
       };
     default:
       return state;
@@ -367,5 +370,5 @@ export {
   featureCompatibilityInit,
   RUN_TIME_ERROR,
   registerRunTimeError,
-  checkServerHealth
+  checkServerHealth,
 };

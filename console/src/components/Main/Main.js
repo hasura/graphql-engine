@@ -30,7 +30,7 @@ import {
   loadLatestServerVersion,
   featureCompatibilityInit,
   emitProClickedEvent,
-  checkServerHealth
+  checkServerHealth,
 } from './Actions';
 
 import {
@@ -68,6 +68,8 @@ class Main extends React.Component {
     };
 
     this.handleBodyClick = this.handleBodyClick.bind(this);
+    this.healthCheckPollerRef = null;
+    this.healthCheckPollTime = 2000;
   }
 
   componentDidMount() {
@@ -77,7 +79,7 @@ class Main extends React.Component {
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
 
-      //dispatch(checkServerHealth());
+    this.healthCheckPoller();
 
     dispatch(loadServerVersion()).then(() => {
       dispatch(featureCompatibilityInit());
@@ -206,6 +208,17 @@ class Main extends React.Component {
     this.setState({ updateNotificationVersion: null });
   }
 
+  healthCheckPoller() {
+    this.healthCheckPollerRef = setInterval(
+      () => this.props.dispatch(checkServerHealth()),
+      this.healthCheckPollTime
+    );
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.healthCheckPollerRef);
+  }
+
   render() {
     const {
       children,
@@ -215,6 +228,7 @@ class Main extends React.Component {
       serverVersion,
       metadata,
       dispatch,
+      serverHealth,
     } = this.props;
 
     const { isProClicked } = this.state.proClickState;
@@ -289,6 +303,25 @@ class Main extends React.Component {
         );
       }
       return adminSecretHtml;
+    };
+
+    const getHealthCheckNotification = () => {
+      if (!serverHealth) {
+        // render the banner
+        const badHealthBanner = (
+          <div>
+            <div className={styles.phantom} />{' '}
+            <div className={styles.healthCheckBannerWrapper}>
+              <div className={styles.healthCheckBanner}>
+                <span> We can't reach the Hasura server!</span>
+                <span className={styles.healthCheckText}>Retrying...</span>
+              </div>
+            </div>
+          </div>
+        );
+
+        return badHealthBanner;
+      }
     };
 
     const getUpdateNotification = () => {
@@ -784,6 +817,8 @@ class Main extends React.Component {
               {getLoveSection()}
             </div>
           </div>
+
+          {getHealthCheckNotification()}
 
           <div className={styles.main + ' container-fluid'}>
             {getMainContent()}
