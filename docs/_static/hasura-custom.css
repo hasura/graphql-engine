@@ -1277,6 +1277,18 @@ article ol ol {
    margin: 0 0;
    letter-spacing: -.48px;
 }
+.versionTxt select {
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, .24);
+  margin-right: 8px;
+  font-family: 'Poppins';
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+}
+.versionTxt select:focus {
+  outline: none;
+}
  .headerWrapper .navBlueBG .navBarUL li a:hover, .headerWrapper .navWhiteBG .navBarUL li a:hover {
 	 text-decoration: none;
 }
@@ -1306,6 +1318,10 @@ article ol ol {
 	 border-bottom: 2px solid #505050;
 }
  @media (min-width: 768px) and (max-width: 991px) {
+   .versionTxt select {
+     margin-right: 0;
+     margin-left: 8px;
+   }
 	 .headerSticky {
 		 position: static;
 	}
@@ -1352,6 +1368,10 @@ article ol ol {
 	}
 }
  @media (max-width: 767px) {
+   .versionTxt select {
+     margin-right: 0;
+     margin-left: 8px;
+   }
 	 .headerSticky {
 		 position: static;
 	}
