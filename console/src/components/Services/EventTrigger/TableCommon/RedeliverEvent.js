@@ -27,7 +27,7 @@ class RedeliverEvent extends Component {
       this.attachFetching(this.props.log.redeliverEventId);
     }
   }
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (this.props.log.isModalOpen !== nextProps.log.isModalOpen) {
       if (nextProps.log.isModalOpen === true) {
         this.attachFetching(nextProps.log.redeliverEventId);

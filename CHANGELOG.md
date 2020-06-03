@@ -57,6 +57,29 @@ Support for this is now added through the `add_computed_field` API.
 
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
+### Manage seed migrations as SQL files
+A new `seeds` command is introduced in CLI, this will allow managing seed migrations as SQL files
+
+#### Creating seed
+```                                                        
+# create a new seed file and use editor to add SQL content
+hasura seed create new_table_seed
+
+# create a new seed by exporting data from tables already present in the database
+hasura seed create table1_seed --from-table table1
+
+# create from data in multiple tables:
+hasura seed create tables_seed --from-table table1 --from-table table2
+```
+#### Applying seed
+```
+# apply all seeds on the database:
+hasura seed apply
+
+# apply only a particular seed
+hasura seed apply --file seeds/1234_add_some_seed_data.sql
+```
+
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
@@ -82,7 +105,8 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
 - console: add help button and move about page to settings (#4848)
 - cli: list all available commands in root command help (fix #4623) (#4628)
-- cli: new command to manage seed data
+- cli: fix bug with squashing event triggers (close #4883)
+- cli: add support for skipping execution while generating migrations through the migrate REST API
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
 - docs: add single object mutations docs (close #4622) (#4625)
@@ -287,7 +311,9 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
+- server: make the graceful shutdown logic customizable (graceful shutdown on the SIGTERM signal continues to be the default) 
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
+- cli: load assets from server when HASURA_GRAPHQL_CONSOLE_ASSETS_DIR is set (close #3382)
 
 ## `v1.2.0-beta.4`
 

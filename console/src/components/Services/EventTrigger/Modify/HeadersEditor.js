@@ -112,8 +112,10 @@ class HeadersEditor extends React.Component {
               <i
                 className={`${styles.fontAwosomeClose}
                     ${styles.removeHeader}
-                    ${i !== modifyTrigger.headers.length - 1 &&
-                      'fa-lg fa fa-times'}
+                    ${
+                      i !== modifyTrigger.headers.length - 1 &&
+                      'fa-lg fa fa-times'
+                    }
                   `}
                 onClick={() => {
                   dispatch(removeHeader(i));
