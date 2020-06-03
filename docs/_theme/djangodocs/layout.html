@@ -250,9 +250,7 @@
     });
 
   </script>
-  <!-- mailchimp -->
-  <script type='text/javascript' src='//s3.amazonaws.com/downloads.mailchimp.com/js/mc-validate.js'>
-  <script type='text/javascript'>(function($) {window.fnames = new Array(); window.ftypes = new Array();fnames[0]='EMAIL';ftypes[0]='email';fnames[1]='FNAME';ftypes[1]='text';fnames[2]='LNAME';ftypes[2]='text';fnames[3]='ADDRESS';ftypes[3]='address';fnames[4]='PHONE';ftypes[4]='phone';}(jQuery));var $mcj = jQuery.noConflict(true);</script>
+
   <!-- utils -->
   <script type="text/javascript">
     // load script file
@@ -372,6 +370,12 @@
     });
   </script>
 
+  <script type="text/javascript">
+    $(document).ready( function() {
+        loadScript("{{ pathto('_static/mailchimp/mc-validate.js', 1) }}", function(){});
+    });
+  </script>
+  <script type='text/javascript'>(function($) {window.fnames = new Array(); window.ftypes = new Array();fnames[0]='EMAIL';ftypes[0]='email';fnames[1]='FNAME';ftypes[1]='text';fnames[2]='LNAME';ftypes[2]='text';fnames[3]='ADDRESS';ftypes[3]='address';fnames[4]='PHONE';ftypes[4]='phone';}(jQuery));var $mcj = jQuery.noConflict(true);</script>
   <!-- feedback -->
   <script type="text/javascript">
     $(document).ready( function() {
