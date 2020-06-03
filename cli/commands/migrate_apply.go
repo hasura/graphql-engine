@@ -95,12 +95,12 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.UpMigration, "up", "", "apply all or N up migration steps")
 	f.StringVar(&opts.DownMigration, "down", "", "apply all or N down migration steps")
 	f.StringVar(&opts.GotoVersion, "goto", "", "apply migration chain up to to the version specified")
-	f.BoolVar(&opts.dryRun, "dry-run", false, "print the names of migrations which are going to be applied")
 
 	f.StringVar(&opts.VersionMigration, "version", "", "only apply this particular migration")
 	f.BoolVar(&opts.SkipExecution, "skip-execution", false, "skip executing the migration action, but mark them as applied")
 	f.StringVar(&opts.MigrationType, "type", "up", "type of migration (up, down) to be used with version flag")
 
+	f.BoolVar(&opts.dryRun, "dry-run", false, "print the names of migrations which are going to be applied")
 	return migrateApplyCmd
 }
 

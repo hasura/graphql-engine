@@ -10,12 +10,13 @@ import (
 	"container/list"
 	"crypto/tls"
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/util"
 	"io"
 	"os"
 	"sync"
 	"text/tabwriter"
 	"time"
+
+	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
@@ -1626,8 +1627,11 @@ func (m *Migrate) GotoVersion(gotoVersion int64) error {
 		go m.readDownFromVersion(currVersion, gotoVersion, ret)
 	}
 
-	return m.unlockErr(m.runMigrations(ret))
-
+	if m.DryRun {
+		return m.unlockErr(m.runDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 // readUpFromVersion reads up migrations from `from` limitted by `limit`. (is a modified version of readUp)
