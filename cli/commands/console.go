@@ -133,7 +133,9 @@ func (o *ConsoleOptions) Run() error {
 		"enableTelemetry":      o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":              o.EC.GlobalConfig.UUID,
 		"migrateSkipExecution": true,
-		"cdnAssets":       !o.UseServerAssets,
+		"cdnAssets":            !o.UseServerAssets,
+		"consolePath":          "/console",
+		"urlPrefix":            "/console",
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")

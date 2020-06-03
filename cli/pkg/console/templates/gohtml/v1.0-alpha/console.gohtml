@@ -1,28 +1,29 @@
 <html lang="en-us">
 <head>
   <script>
-    window.__env = {
-        apiHost: {{.apiHost}},
-        apiPort: "{{.apiPort}}",
-        cliVersion: {{.cliVersion}},
-        dataApiUrl: {{.dataApiUrl}},
-        dataApiVersion: {{.dataApiVersion}},
-        {{- if .hasAccessKey }}
-        accessKey: {{.adminSecret}},
-        {{ else }}
-        adminSecret: {{.adminSecret}},
-        {{ end -}}
-        urlPrefix: {{.urlPrefix}},
-        consoleMode: "cli",
-        cliUUID: {{.cliUUID}},
-        enableTelemetry: {{.enableTelemetry}},
-        assetsPath:"https://graphql-engine-cdn.hasura.io/console/assets",
-        serverVersion: "{{.serverVersion}}",
-        cdnAssets: {{.cdnAssets}},
-        assetsVersion: {{.assetsVersion}},
-        consolePath:{{.consolePath}},
-    };
-    window.__env.versionedAssetsPath = window.__env.assetsPath;
+      window.__env = {
+          apiHost: {{.apiHost}},
+          apiPort: "{{.apiPort}}",
+          cliVersion: {{.cliVersion}},
+          dataApiUrl: {{.dataApiUrl}},
+          dataApiVersion: {{.dataApiVersion}},
+          {{- if .hasAccessKey }}
+          accessKey: {{.adminSecret}},
+          {{ else }}
+          adminSecret: {{.adminSecret}},
+          {{ end -}}
+          urlPrefix: {{.urlPrefix}},
+          consoleMode: "cli",
+          cliUUID: {{.cliUUID}},
+          enableTelemetry: {{.enableTelemetry}},
+          assetsPath:"https://graphql-engine-cdn.hasura.io/console/assets",
+          serverVersion: "{{.serverVersion}}",
+          migrateSkipExecution: {{.migrateSkipExecution}},
+          cdnAssets: {{.cdnAssets}},
+          assetsVersion: {{.assetsVersion}},
+          consolePath:{{.consolePath}},
+      };
+      window.__env.versionedAssetsPath = window.__env.assetsPath;
   </script>
 </head>
 <body>
