@@ -4,10 +4,16 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import styles from './WarningSymbol.scss';
 
-const WarningSymbol = ({
+export interface WarningSymbolProps {
+  tooltipText: string;
+  tooltipPlacement?: 'left' | 'right' | 'top' | 'bottom';
+  customStyle?: string;
+}
+
+const WarningSymbol: React.FC<WarningSymbolProps> = ({
   tooltipText,
   tooltipPlacement = 'right',
-  customStyle = null,
+  customStyle = '',
 }) => {
   const tooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
 
@@ -22,12 +28,16 @@ const WarningSymbol = ({
   );
 };
 
-export const WarningIcon = ({ customStyle }) => {
+export interface WarningIconProps {
+  customStyle?: string;
+}
+
+export const WarningIcon: React.FC<WarningIconProps> = ({
+  customStyle = '',
+}) => {
   return (
     <i
-      className={`fa fa-exclamation-triangle ${styles.warningSymbol} ${
-        customStyle ? customStyle : ''
-      }`}
+      className={`fa fa-exclamation-triangle ${styles.warningSymbol} ${customStyle}`}
       aria-hidden="true"
     />
   );
