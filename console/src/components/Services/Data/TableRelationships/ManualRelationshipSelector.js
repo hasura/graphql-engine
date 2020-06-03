@@ -90,22 +90,18 @@ const ManualRelationshipSelector = ({
           onChange={dispatchSetRefSchema}
           disabled={!relAdd.relType || !relAdd.relName}
         >
-          {
-            // default unselected option
-            relAdd.rSchema === '' && (
-              <option value={''} disabled>
-                {'-- reference schema --'}
-              </option>
-            )
-          }
-          {
-            // all reference schema options
-            schemaList.map((rs, j) => (
-              <option key={j} value={rs}>
-                {rs}
-              </option>
-            ))
-          }
+          {// default unselected option
+          relAdd.rSchema === '' && (
+            <option value={''} disabled>
+              {'-- reference schema --'}
+            </option>
+          )}
+          {// all reference schema options
+          schemaList.map((rs, j) => (
+            <option key={j} value={rs}>
+              {rs}
+            </option>
+          ))}
         </select>
       </div>
     );

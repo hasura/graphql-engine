@@ -81,7 +81,10 @@ const getValueFromObject = (object, name) => {
     return object[name];
   } else if (object && name.includes('[') && name.includes(']')) {
     // name is consider as a key followed by array indices.
-    const names = name.split(']').join('').split('[');
+    const names = name
+      .split(']')
+      .join('')
+      .split('[');
     let tempObj = object;
     for (let i = 0; i < names.length; i++) {
       const selector = names[i];
