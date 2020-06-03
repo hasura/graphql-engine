@@ -37,7 +37,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
 import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,
-                                                  isSessionVariable, userRoleHeader)
+                                                   userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
 import           Hasura.Session
 
@@ -112,7 +112,13 @@ data JWTClaimsMap
   , jcmCustomClaims :: !CustomClaimsMap
   } deriving (Show,Eq)
 
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''JWTClaimsMap)
+instance J.ToJSON JWTClaimsMap where
+  toJSON (JWTClaimsMap defaultRole allowedRoles customClaims) =
+    in J.Object $
+       Map.fromList $ [ (sessionVariableToText defaultRoleClaim, J.toJSON defaultRole)
+                      , (sessionVariableToText allowedRolesClaim, J.toJSON allowedRoles)
+                      ]
+       <> map (\(var, val) -> (sessionVariableToText var,J.toJSON val)) (Map.toList customClaims)
 
 instance J.FromJSON JWTClaimsMap where
   parseJSON v = do
