@@ -1,7 +1,7 @@
 const toCommand = require('./to/command');
 const fromCommand = require('./from/command');
 
-const command = (subCommands) => {
+const command = (subCommands: string[]) => {
   const rootSubCommand = subCommands[0];
   switch (rootSubCommand) {
     case 'to':

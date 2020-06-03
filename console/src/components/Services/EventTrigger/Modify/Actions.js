@@ -11,7 +11,10 @@ export const setDefaults = () => ({ type: SET_DEFAULTS });
 const SET_WEBHOOK_URL = 'ModifyTrigger/SET_WEBHOOK_URL';
 const SET_WEBHOOK_URL_TYPE = 'ModifyTrigger/SET_WEBHOOK_URL_TYPE';
 export const setWebhookUrl = data => ({ type: SET_WEBHOOK_URL, data });
-export const setWebhookUrlType = data => ({ type: SET_WEBHOOK_URL_TYPE, data });
+export const setWebhookUrlType = data => ({
+  type: SET_WEBHOOK_URL_TYPE,
+  data,
+});
 
 const SET_RETRY_NUM = 'ModifyTrigger/SET_RETRY_NUM';
 const SET_RETRY_INTERVAL = 'ModifyTrigger/SET_RETRY_INTERVAL';
