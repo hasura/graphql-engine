@@ -1,0 +1,37 @@
+description: Array remote relationship GraphQL query
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - id: 1
+        name: alice
+        messagesNestedArr:
+          - name: alice
+            msg: You win!
+          - name: alice
+            msg: Another alice
+      - id: 2
+        name: bob
+        messagesNestedArr:
+          - name: bob
+            msg: You lose!
+      - id: 3
+        name: alice
+        messagesNestedArr:
+          - name: alice
+            msg: You win!
+          - name: alice
+            msg: Another alice
+query:
+  query: |
+    query {
+      profiles {
+        id
+        name
+        messagesNestedArr {
+          name
+          msg
+        }
+      }
+    }

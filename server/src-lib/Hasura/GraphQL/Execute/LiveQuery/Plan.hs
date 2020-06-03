@@ -245,7 +245,7 @@ data LiveQueryPlan
   = LiveQueryPlan
   { _lqpParameterizedPlan :: !ParameterizedLiveQueryPlan
   , _lqpVariables         :: !CohortVariables
-  }
+  } deriving Show
 
 data ParameterizedLiveQueryPlan
   = ParameterizedLiveQueryPlan
@@ -288,6 +288,12 @@ buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
         _ -> do
           unresolvedAST <- GR.queryFldToPGAST field actionExecutioner
           resolvedAST <- GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
+
+          let (_, remoteJoins) = GR.toPGQuery resolvedAST
+          -- Reject remote relationships in subscription live query
+          when (remoteJoins /= mempty) $
+               throw400 NotSupported
+                       "Remote relationships are not allowed in subscriptions"
           pure (GV._fAlias field, resolvedAST)
 
   userInfo <- asks getter

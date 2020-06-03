@@ -1,0 +1,44 @@
+type: bulk
+args:
+  - type: run_sql
+    args:
+      sql: |
+        create table address (
+          address_id serial primary key,
+          user_id integer references profiles(id),
+          address_line text
+        )
+  - type: run_sql
+    args:
+      sql: |
+        insert into address (user_id, address_line) values
+        ( 1, 'address-1' ),
+        ( 2, 'address-2' ),
+        ( 3, 'address-3'),
+        ( 1, 'address-1b')
+  - type: track_table
+    args:
+      name: address
+  - type: create_object_relationship
+    args:
+      name: myProfile
+      table: address
+      using:
+        foreign_key_constraint_on: user_id
+  - type: create_array_relationship
+    args:
+      name: myAddresses
+      table: profiles
+      using:
+        foreign_key_constraint_on:
+          table: address
+          column: user_id
+  - type: create_object_relationship
+    args:
+      name: mySpecialAddress
+      table: profiles
+      using:
+        manual_configuration:
+          remote_table: address
+          column_mapping:
+            id: address_id
