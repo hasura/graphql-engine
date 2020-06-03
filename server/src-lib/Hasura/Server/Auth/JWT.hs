@@ -114,11 +114,11 @@ data JWTClaimsMap
 
 instance J.ToJSON JWTClaimsMap where
   toJSON (JWTClaimsMap defaultRole allowedRoles customClaims) =
-    in J.Object $
-       Map.fromList $ [ (sessionVariableToText defaultRoleClaim, J.toJSON defaultRole)
-                      , (sessionVariableToText allowedRolesClaim, J.toJSON allowedRoles)
-                      ]
-       <> map (\(var, val) -> (sessionVariableToText var,J.toJSON val)) (Map.toList customClaims)
+    J.Object $
+    Map.fromList $ [ (sessionVariableToText defaultRoleClaim, J.toJSON defaultRole)
+                   , (sessionVariableToText allowedRolesClaim, J.toJSON allowedRoles)
+                   ]
+    <> map (\(var, val) -> (sessionVariableToText var,J.toJSON val)) (Map.toList customClaims)
 
 instance J.FromJSON JWTClaimsMap where
   parseJSON v = do
