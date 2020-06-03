@@ -3,8 +3,10 @@ package commands
 import (
 	"bytes"
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/util"
+	"os"
 	"text/tabwriter"
+
+	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
@@ -33,7 +35,7 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 				return err
 			}
 			buf := printStatus(status)
-			fmt.Println(buf.String())
+			fmt.Fprintf(os.Stdout, "%s", buf)
 			return nil
 		},
 	}

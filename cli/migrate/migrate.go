@@ -1229,7 +1229,7 @@ func (m *Migrate) runDryRun(ret <-chan interface{}) error {
 			}
 		}
 	}
-	fmt.Println(printDryRunStatus(migrations).String())
+	fmt.Fprintf(os.Stdout, "%s", printDryRunStatus(migrations))
 	return nil
 }
 
