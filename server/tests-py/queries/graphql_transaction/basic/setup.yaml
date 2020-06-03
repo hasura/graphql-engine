@@ -1,0 +1,10 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE table test(id serial primary key, name text not null);
+- type: track_table
+  args:
+    name: test
+    schema: public

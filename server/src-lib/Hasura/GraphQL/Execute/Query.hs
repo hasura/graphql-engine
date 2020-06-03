@@ -196,13 +196,13 @@ convertQuerySelSet
      , HasVersion
      , MonadIO m
      )
-  => HTTP.Manager
+  => ActionExecuter
+  -> HTTP.Manager
   -> [N.Header]
   -> QueryReusability
   -> V.SelSet
-  -> QueryActionExecuter
   -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
-convertQuerySelSet manager reqHdrs initialReusability fields actionRunner = do
+convertQuerySelSet actionExecuter manager reqHdrs initialReusability fields = do
   userInfo <- asks getter
   (fldPlans, finalReusability) <- runReusabilityTWith initialReusability $
     forM (toList fields) $ \fld -> do
@@ -211,7 +211,7 @@ convertQuerySelSet manager reqHdrs initialReusability fields actionRunner = do
         "__schema"   -> fldPlanFromJ <$> R.schemaR fld
         "__typename" -> pure $ fldPlanFromJ queryRootNamedType
         _            -> do
-          unresolvedAst <- R.queryFldToPGAST fld actionRunner
+          unresolvedAst <- R.queryFldToPGAST actionExecuter fld
           (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
             R.traverseQueryRootFldAST prepareWithPlan unresolvedAst
           let (query, remoteJoins) = R.toPGQuery q

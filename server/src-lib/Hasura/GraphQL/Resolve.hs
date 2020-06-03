@@ -97,10 +97,10 @@ queryFldToPGAST
      , HasVersion
      , MonadIO m
      )
-  => V.Field
-  -> RA.QueryActionExecuter
+  => RA.ActionExecuter
+  -> V.Field
   -> m QueryRootFldUnresolved
-queryFldToPGAST fld actionExecuter = do
+queryFldToPGAST actionExecuter fld = do
   opCtx <- getOpCtx $ V._fName fld
   userInfo <- asks getter
   case opCtx of
@@ -151,9 +151,8 @@ mutFldToTx
      , Has [HTTP.Header] r
      , MonadIO m
      )
-  => V.Field
-  -> m (RespTx, HTTP.ResponseHeaders)
-mutFldToTx fld = do
+  => RA.ActionExecuter -> V.Field -> m (RespTx, HTTP.ResponseHeaders)
+mutFldToTx actionExecuter fld = do
   userInfo <- asks getter
   reqHeaders <- asks getter
   httpManager <- asks getter
@@ -181,7 +180,7 @@ mutFldToTx fld = do
       validateHdrs userInfo (_docHeaders ctx)
       noRespHeaders $ RM.convertDeleteByPk ctx rjCtx fld
     MCAction ctx ->
-      RA.resolveActionMutation fld ctx (_uiSession userInfo)
+      actionExecuter $ RA.resolveActionMutation fld ctx (_uiSession userInfo)
 
 getOpCtx
   :: ( MonadReusability m

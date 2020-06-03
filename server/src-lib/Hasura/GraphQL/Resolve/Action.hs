@@ -1,4 +1,4 @@
--- This pragma is needed for allowQueryActionExecuter
+-- This pragma is needed for allowActions
 {-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 
 module Hasura.GraphQL.Resolve.Action
@@ -7,9 +7,9 @@ module Hasura.GraphQL.Resolve.Action
   , asyncActionsProcessor
   , resolveActionQuery
   , mkJsonAggSelect
-  , QueryActionExecuter
-  , allowQueryActionExecuter
-  , restrictActionExecuter
+  , ActionExecuter
+  , allowActions
+  , restrictActions
   ) where
 
 import           Hasura.Prelude
@@ -53,7 +53,7 @@ import           Hasura.Server.Utils               (mkClientHeadersForward, mkSe
 import           Hasura.Server.Version             (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value                  (PGScalarValue (..),toTxtValue)
+import           Hasura.SQL.Value                  (PGScalarValue (..), toTxtValue)
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -123,19 +123,19 @@ resolveActionMutation
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r
-     , Has HTTP.Manager r
-     , Has [HTTP.Header] r
      )
   => Field
   -> ActionMutationExecutionContext
   -> SessionVariables
+  -> HTTP.Manager
+  -> [HTTP.Header]
   -> m (RespTx, HTTP.ResponseHeaders)
-resolveActionMutation field executionContext sessionVariables =
+resolveActionMutation field executionContext sessionVariables manager reqHeaders =
   case executionContext of
     ActionMutationSyncWebhook executionContextSync ->
-      resolveActionMutationSync field executionContextSync sessionVariables
+      resolveActionMutationSync field executionContextSync sessionVariables manager reqHeaders
     ActionMutationAsync ->
-      (,[]) <$> resolveActionMutationAsync field sessionVariables
+      (,[]) <$> resolveActionMutationAsync field sessionVariables reqHeaders
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionMutationSync
@@ -147,19 +147,17 @@ resolveActionMutationSync
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r
-     , Has HTTP.Manager r
-     , Has [HTTP.Header] r
      )
   => Field
   -> ActionExecutionContext
   -> SessionVariables
+  -> HTTP.Manager
+  -> [HTTP.Header]
   -> m (RespTx, HTTP.ResponseHeaders)
-resolveActionMutationSync field executionContext sessionVariables = do
+resolveActionMutationSync field executionContext sessionVariables manager reqHeaders = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
       actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
-  manager <- asks getter
-  reqHeaders <- asks getter
   (webhookRes, respHeaders) <- callWebhook manager outputType outputFields reqHeaders confHeaders
                                forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
@@ -174,22 +172,22 @@ resolveActionMutationSync field executionContext sessionVariables = do
     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
 
--- QueryActionExecuter is a type for a higher function, this is being used
+-- ActionExecuter is a type for a higher function, this is being used
 -- to allow or disallow where a query action can be executed. We would like
 -- to explicitly control where a query action can be run.
--- Example: We do not explain a query action, so we use the `restrictActionExecuter`
+-- Example: We do not explain a query action, so we use the `restrictActions`
 -- to prevent resolving the action query.
-type QueryActionExecuter =
+type ActionExecuter =
   forall m a. (MonadError QErr m)
   => (HTTP.Manager -> [HTTP.Header] -> m a)
   -> m a
 
-allowQueryActionExecuter :: HTTP.Manager -> [HTTP.Header] -> QueryActionExecuter
-allowQueryActionExecuter manager reqHeaders actionResolver =
+allowActions :: HTTP.Manager -> [HTTP.Header] -> ActionExecuter
+allowActions manager reqHeaders actionResolver =
   actionResolver manager reqHeaders
 
-restrictActionExecuter :: Text -> QueryActionExecuter
-restrictActionExecuter errMsg _ =
+restrictActions :: Text -> ActionExecuter
+restrictActions errMsg _ =
   throw400 NotSupported errMsg
 
 resolveActionQuery
@@ -239,14 +237,12 @@ table provides the action response. See Note [Resolving async action query/subsc
 
 -- | Resolve asynchronous action mutation which returns only the action uuid
 resolveActionMutationAsync
-  :: ( MonadError QErr m, MonadReader r m
-     , Has [HTTP.Header] r
-     )
+  :: (MonadError QErr m)
   => Field
   -> SessionVariables
+  -> [HTTP.Header]
   -> m RespTx
-resolveActionMutationAsync field sessionVariables = do
-  reqHeaders <- asks getter
+resolveActionMutationAsync field sessionVariables reqHeaders = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
   pure $ do
     actionId <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|

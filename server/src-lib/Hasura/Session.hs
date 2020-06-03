@@ -33,6 +33,8 @@ import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
 import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -127,6 +129,10 @@ data BackendOnlyFieldAccess
   | BOFADisallowed
   deriving (Show, Eq, Generic)
 instance Hashable BackendOnlyFieldAccess
+$(deriveToJSON
+  defaultOptions {constructorTagModifier = snakeCase . drop 4}
+  ''BackendOnlyFieldAccess
+ )
 
 data UserInfo
   = UserInfo
@@ -135,6 +141,7 @@ data UserInfo
   , _uiBackendOnlyFieldAccess :: !BackendOnlyFieldAccess
   } deriving (Show, Eq, Generic)
 instance Hashable UserInfo
+$(deriveToJSON (aesonDrop 3 snakeCase) ''UserInfo)
 
 -- | Represents how to build a role from the session variables
 data UserRoleBuild

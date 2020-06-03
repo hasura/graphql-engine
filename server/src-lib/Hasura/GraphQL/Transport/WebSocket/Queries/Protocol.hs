@@ -1,5 +1,5 @@
 -- | See: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md
-module Hasura.GraphQL.Transport.WebSocket.Protocol
+module Hasura.GraphQL.Transport.WebSocket.Queries.Protocol
   ( OperationId(..)
   , ConnParams(..)
   , StartMsg(..)
@@ -35,7 +35,7 @@ data StartMsg
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StartMsg)
 
-data StopMsg
+newtype StopMsg
   = StopMsg
   { _stId :: OperationId
   } deriving (Show, Eq)
@@ -48,7 +48,7 @@ data ClientMsg
   | CMConnTerm
   deriving (Show, Eq)
 
-data ConnParams
+newtype ConnParams
   = ConnParams
   { _cpHeaders :: Maybe (Map.HashMap Text Text)
   } deriving (Show, Eq)

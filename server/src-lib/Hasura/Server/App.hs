@@ -350,7 +350,7 @@ gqlExplainHandler query = do
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   enableAL <- scEnableAllowlist . hcServerCtx <$> ask
-  res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (restrictActionExecuter "query actions cannot be explained") query
+  res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (restrictActions "query actions cannot be explained") query
   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m) => PGD.PGDumpReqBody -> Handler m APIResp

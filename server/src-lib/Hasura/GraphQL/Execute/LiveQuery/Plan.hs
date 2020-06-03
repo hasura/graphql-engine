@@ -55,10 +55,10 @@ import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Types
+import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.Server.Version             (HasVersion)
 
 -- -------------------------------------------------------------------------------------------------
 -- Multiplexed queries
@@ -277,7 +277,7 @@ buildLiveQueryPlan
      )
   => PGExecCtx
   -> GV.QueryReusability
-  -> RA.QueryActionExecuter
+  -> RA.ActionExecuter
   -> GV.SelSet
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
 buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
@@ -286,7 +286,7 @@ buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
       fmap Map.fromList . for (toList fields) $ \field -> case GV._fName field of
         "__typename" -> throwVE "you cannot create a subscription on '__typename' field"
         _ -> do
-          unresolvedAST <- GR.queryFldToPGAST field actionExecutioner
+          unresolvedAST <- GR.queryFldToPGAST actionExecutioner field
           resolvedAST <- GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
 
           let (_, remoteJoins) = GR.toPGQuery resolvedAST

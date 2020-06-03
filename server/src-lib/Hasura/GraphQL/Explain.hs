@@ -88,7 +88,7 @@ explainField
   => UserInfo
   -> GCtx
   -> SQLGenCtx
-  -> QueryActionExecuter
+  -> ActionExecuter
   -> GV.Field
   -> m FieldPlan
 explainField userInfo gCtx sqlGenCtx actionExecuter fld =
@@ -99,7 +99,7 @@ explainField userInfo gCtx sqlGenCtx actionExecuter fld =
     _            -> do
       unresolvedAST <-
         runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-          evalReusabilityT $ RS.queryFldToPGAST fld actionExecuter
+          evalReusabilityT $ RS.queryFldToPGAST actionExecuter fld
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo) unresolvedAST
       let (query, remoteJoins) = RS.toPGQuery resolvedAST
           txtSQL = Q.getQueryText query
@@ -122,7 +122,7 @@ explainGQLQuery
   -> SchemaCache
   -> SQLGenCtx
   -> Bool
-  -> QueryActionExecuter
+  -> ActionExecuter
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query userVarsRaw) = do

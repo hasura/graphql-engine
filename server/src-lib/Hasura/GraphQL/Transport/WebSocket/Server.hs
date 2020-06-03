@@ -1,5 +1,5 @@
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE NondecreasingIndentation #-}
+{-# LANGUAGE RankNTypes               #-}
 
 module Hasura.GraphQL.Transport.WebSocket.Server
   ( WSId(..)
@@ -23,12 +23,23 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , closeAll
   , createServerApp
   , shutdown
+
+  , ErrRespType(..)
+  , checkPath
+  , getHeadersWithEnforceCors
   ) where
+
+import           Hasura.Prelude
+import           Hasura.RQL.Types.Error
+import           Hasura.Server.Cors
+
+import           Control.Exception.Lifted
+import           Data.Word                            (Word16)
+import           GHC.Int                              (Int64)
 
 import qualified Control.Concurrent.Async             as A
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
 import qualified Control.Concurrent.STM               as STM
-import           Control.Exception.Lifted
 import qualified Control.Monad.Trans.Control          as MC
 import qualified Data.Aeson                           as J
 import qualified Data.Aeson.Casing                    as J
@@ -38,11 +49,9 @@ import           Data.String
 import qualified Data.TByteString                     as TBS
 import qualified Data.UUID                            as UUID
 import qualified Data.UUID.V4                         as UUID
-import           Data.Word                            (Word16)
-import           GHC.Int                              (Int64)
-import           Hasura.Prelude
 import           GHC.AssertNF
 import qualified ListT
+import qualified Network.HTTP.Types                   as H
 import qualified Network.WebSockets                   as WS
 import qualified StmContainers.Map                    as STMMap
 import qualified System.IO.Error                      as E
@@ -197,7 +206,7 @@ data AcceptWith a
   = AcceptWith
   { _awData        :: !a
   , _awReq         :: !WS.AcceptRequest
-  , _awKeepAlive   :: !(WSConn a -> IO ())
+  , _awKeepAlive   :: !(Maybe (WSConn a -> IO ()))
   , _awOnJwtExpiry :: !(WSConn a -> IO ())
   }
 
@@ -235,13 +244,13 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !p
       onReject wsId shuttingDownReject
 
   where
-    -- It's not clear what the unexpected exception handling story here should be. So at 
+    -- It's not clear what the unexpected exception handling story here should be. So at
     -- least log properly and re-raise:
     logUnexpectedExceptions = handle $ \(e :: SomeException) -> do
       writeLog $ L.UnstructuredLog L.LevelError $ fromString $
         "Unexpected exception raised in websocket. Please report this as a bug: "<>show e
       throwIO e
-      
+
     shuttingDownReject =
       WS.RejectRequest 503
                         "Service Unavailable"
@@ -273,7 +282,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !p
 
       -- ensure we clean up connMap even if an unexpected exception is raised from our worker
       -- threads, or an async exception is raised somewhere in the body here:
-      bracket 
+      bracket
         whenAcceptingInsertConn
         (onConnClose wsConn)
         $ \case
@@ -306,12 +315,12 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !p
           -- forking that the threads we launched will be cleaned up. See also below.
           LA.withAsync rcv $ \rcvRef -> do
           LA.withAsync send $ \sendRef -> do
-          LA.withAsync (liftIO $ keepAlive wsConn) $ \keepAliveRef -> do
+          withAsyncMaybe (($ wsConn) <$> keepAlive) $ \maybeKeepAliveRef -> do -- Keepalive thread ref is ignored. See below.
           LA.withAsync (liftIO $ onJwtExpiry wsConn) $ \onJwtExpiryRef -> do
 
           -- terminates on WS.ConnectionException and JWT expiry
-          let waitOnRefs = [keepAliveRef, onJwtExpiryRef, rcvRef, sendRef]
-          -- withAnyCancel re-raises exceptions from forkedThreads, and is guarenteed to cancel in
+          let waitOnRefs = [onJwtExpiryRef, rcvRef, sendRef] <> maybe [] pure maybeKeepAliveRef
+          -- withAnyCancel re-raises exceptions from forkedThreads (except Keepalive), and is guarenteed to cancel in
           -- case of async exceptions raised while blocking here:
           try (LA.waitAnyCancel waitOnRefs) >>= \case
             -- NOTE: 'websockets' is a bit of a rat's nest at the moment wrt
@@ -330,6 +339,11 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !p
         _hOnClose wsHandlers wsConn
         writeLog $ WSLog (_wcConnId wsConn) EClosed Nothing
 
+    withAsyncMaybe maybeAction withRef =
+      case maybeAction of
+        Nothing     -> withRef Nothing
+        Just action -> LA.withAsync (liftIO action) $ withRef . Just
+
 
 shutdown :: WSServer a -> IO ()
 shutdown (WSServer (L.Logger writeLog) serverStatus) = do
@@ -339,3 +353,51 @@ shutdown (WSServer (L.Logger writeLog) serverStatus) = do
     STM.writeTVar serverStatus ShuttingDown
     return conns
   closeAllWith (flip forceConnReconnect) "shutting server down" conns
+
+data ErrRespType
+  = ERTLegacy
+  | ERTGraphqlCompliant
+  deriving (Show)
+
+checkPath :: MonadError QErr m => WS.RequestHead -> m ErrRespType
+checkPath requestHead = case WS.requestPath requestHead of
+  "/v1alpha1/graphql" -> return ERTLegacy
+  "/v1/graphql"       -> return ERTGraphqlCompliant
+  _                   ->
+    throw404 "only '/v1/graphql', '/v1alpha1/graphql' are supported on websockets"
+
+getHeadersWithEnforceCors
+  :: MonadError QErr m
+  => (Text -> m ())
+  -> WS.RequestHead
+  -> CorsPolicy
+  -> m [H.Header]
+getHeadersWithEnforceCors logCorsNote requestHead corsPolicy =
+  maybe (pure reqHeaders) (enforceCors . snd) originM
+  where
+    reqHeaders = WS.requestHeaders requestHead
+    originM = find ((==) "Origin" . fst) reqHeaders
+
+    enforceCors origin = case cpConfig corsPolicy of
+      CCAllowAll -> return reqHeaders
+      CCDisabled readCookie ->
+        if readCookie
+        then return reqHeaders
+        else do
+          logCorsNote corsNote
+          pure $ filter (\h -> fst h /= "Cookie") reqHeaders
+      CCAllowedOrigins ds
+        -- if the origin is in our cors domains, no error
+        | bsToTxt origin `elem` dmFqdns ds   -> return reqHeaders
+        -- if current origin is part of wildcard domain list, no error
+        | inWildcardList ds (bsToTxt origin) -> return reqHeaders
+        -- otherwise error
+        | otherwise                          -> corsErr
+
+    corsErr = throw400 AccessDenied
+              "received origin header does not match configured CORS domains"
+
+    corsNote = "Cookie is not read when CORS is disabled, because it is a potential "
+            <> "security issue. If you're already handling CORS before Hasura and enforcing "
+            <> "CORS on websocket connections, then you can use the flag --ws-read-cookie or "
+            <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."

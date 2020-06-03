@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 module Hasura.GraphQL.Resolve.Types
   ( module Hasura.GraphQL.Resolve.Types
   -- * Re-exports
