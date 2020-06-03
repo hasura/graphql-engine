@@ -121,17 +121,18 @@ func (o *ConsoleOptions) Run() error {
 	}
 
 	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
-		"apiHost":         "http://" + o.Address,
-		"apiPort":         o.APIPort,
-		"cliVersion":      o.EC.Version.GetCLIVersion(),
-		"serverVersion":   o.EC.Version.GetServerVersion(),
-		"dataApiUrl":      o.EC.Config.ServerConfig.ParsedEndpoint.String(),
-		"dataApiVersion":  "",
-		"hasAccessKey":    adminSecretHeader == cli.XHasuraAccessKey,
-		"adminSecret":     o.EC.Config.ServerConfig.AdminSecret,
-		"assetsVersion":   consoleAssetsVersion,
-		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
-		"cliUUID":         o.EC.GlobalConfig.UUID,
+		"apiHost":              "http://" + o.Address,
+		"apiPort":              o.APIPort,
+		"cliVersion":           o.EC.Version.GetCLIVersion(),
+		"serverVersion":        o.EC.Version.GetServerVersion(),
+		"dataApiUrl":           o.EC.Config.ServerConfig.ParsedEndpoint.String(),
+		"dataApiVersion":       "",
+		"hasAccessKey":         adminSecretHeader == cli.XHasuraAccessKey,
+		"adminSecret":          o.EC.Config.ServerConfig.AdminSecret,
+		"assetsVersion":        consoleAssetsVersion,
+		"enableTelemetry":      o.EC.GlobalConfig.EnableTelemetry,
+		"cliUUID":              o.EC.GlobalConfig.UUID,
+		"migrateSkipExecution": true,
 		"cdnAssets":       !o.UseServerAssets,
 	})
 	if err != nil {

@@ -90,7 +90,7 @@ class ViewTable extends Component {
     ]);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const dispatch = this.props.dispatch;
     if (nextProps.triggerName !== this.props.triggerName) {
       Promise.all([
