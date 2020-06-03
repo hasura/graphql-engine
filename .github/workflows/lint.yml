@@ -1,0 +1,31 @@
+name: lint
+on:
+  pull_request:
+    paths:
+      - 'console/**'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    env:
+      working-directory: ./console
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js 12
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+
+      - name: Install
+        working-directory: ${{env.working-directory}}
+        run: npm ci
+
+      - name: Lint
+        working-directory: ${{env.working-directory}}
+        run: npm run lint:quiet
+
+      - name: Format
+        working-directory: ${{env.working-directory}}
+        run: npm run format:check
