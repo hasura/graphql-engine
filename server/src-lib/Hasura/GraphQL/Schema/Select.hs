@@ -172,9 +172,10 @@ mkRelationshipField
   -> Maybe (NonEmpty PGColumnInfo)
   -> Bool
   -> [ObjFldInfo]
-mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isRelay maybePkCols isNullable = case rTy of
-  ArrRel -> bool [arrRelFld] ([arrRelFld, aggArrRelFld] <> connFields) allowAgg
-  ObjRel -> [objRelFld]
+mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isRelay maybePkCols isNullable =
+  case rTy of
+    ArrRel -> bool [arrRelFld] ([arrRelFld, aggArrRelFld] <> connFields) allowAgg
+    ObjRel -> [objRelFld]
   where
     objRelFld = mkHsraObjFldInfo (Just "An object relationship")
       (mkRelName rn) Map.empty objRelTy
@@ -187,16 +188,29 @@ mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isRelay maybePkC
       (fromInpValL $ mkSelArgs remTab) $
       G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy remTab
 
-    arrConnectionFld = if isNothing maybePkCols then [] else pure $
+    connFields = if isNothing maybePkCols || not isRelay then [] else pure $
       mkHsraObjFldInfo Nothing (mkConnectionRelName rn)
       (fromInpValL $ mkConnectionArgs remTab) $
-      G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableConnectionTy remTab
+      G.toGT $ G.toNT $ mkTableConnectionTy remTab
 
     aggArrRelFld = mkHsraObjFldInfo (Just "An aggregated array relationship")
       (mkAggRelName rn) (fromInpValL $ mkSelArgs remTab) $
       G.toGT $ G.toNT $ mkTableAggTy remTab
 
-    connFields = bool [] arrConnectionFld isRelay
+mkTableObjectDescription :: QualifiedTable -> Maybe PGDescription -> G.Description
+mkTableObjectDescription tn pgDescription =
+  mkDescriptionWith pgDescription $ "columns and relationships of " <>> tn
+
+mkTableObjectFields :: Bool -> [SelField] -> [ObjFldInfo]
+mkTableObjectFields isRelay =
+  concatMap \case
+    SFPGColumn info -> pure $ mkPGColFld info
+    SFRelationship info -> mkRelationshipField' info
+    SFComputedField info -> pure $ mkComputedFieldFld info
+    SFRemoteRelationship info -> pure $ mkRemoteRelationshipFld info
+  where
+    mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ maybePkCols isNullable) =
+      mkRelationshipField allowAgg relInfo isRelay maybePkCols isNullable
 
 {-
 type table {
@@ -211,39 +225,30 @@ mkTableObj
   -> Maybe PGDescription
   -> [SelField]
   -> ObjTyInfo
-mkTableObj tn descM allowedFlds =
-  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
+mkTableObj tn descM allowedFields =
+  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName fields) TLHasuraType
   where
-    flds = flip concatMap allowedFlds $ \case
-      SFPGColumn info -> pure $ mkPGColFld info
-      SFRelationship info -> mkRelationshipField' info
-      SFComputedField info -> pure $ mkComputedFieldFld info
-      SFRemoteRelationship info -> pure $ mkRemoteRelationshipFld info
-
-    mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ maybePkCols isNullable) =
-      mkRelationshipField allowAgg relInfo False maybePkCols isNullable
-    desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
+    fields = mkTableObjectFields False allowedFields
+    desc = mkTableObjectDescription tn descM
 
 mkRelayTableObj
   :: QualifiedTable
   -> Maybe PGDescription
   -> [SelField]
   -> ObjTyInfo
-mkRelayTableObj tn descM allowedFlds =
-  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
+mkRelayTableObj tn descM allowedFields =
+  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName fields) TLHasuraType
   where
-    -- TODO: Reuse code from `mkTableObj`
-    flds = nodeIdField:pgColumnFields <> relFlds <> computedFlds
+    fields =
+      let idColumnFilter = \case
+            SFPGColumn columnInfo -> (/=) "id" $ getPGColTxt $ pgiColumn columnInfo
+            _                     -> True
+      in (:) nodeIdField $ mkTableObjectFields True $
+             -- Remove "id" column
+             filter idColumnFilter allowedFields
+
     nodeIdField = mkHsraObjFldInfo Nothing "id" mempty nodeIdType
-    pgColumnFields = map mkPGColFld $
-                     -- Remove "id" column
-                     filter ((/=) "id" . getPGColTxt . pgiColumn) $
-                     getPGColumnFields allowedFlds
-    relFlds = concatMap mkRelationshipField' $ getRelationshipFields allowedFlds
-    computedFlds = map mkComputedFieldFld $ getComputedFields allowedFlds
-    mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ maybePkCols isNullable) =
-      mkRelationshipField allowAgg relInfo True maybePkCols isNullable
-    desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
+    desc = mkTableObjectDescription tn descM
 
 mkRemoteRelationshipName :: RemoteRelationshipName -> G.Name
 mkRemoteRelationshipName =
