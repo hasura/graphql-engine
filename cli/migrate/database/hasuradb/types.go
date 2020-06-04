@@ -57,8 +57,9 @@ type remoteRelationshipDefinition struct {
 type createRemoteRelationshipInput struct {
 	remoteRelationshipDefinition
 	Table tableSchema `yaml:"table" json:"table"`
-
-	operationType requestTypes `yaml:"-" json:"-"`
+}
+type updateRemoteRelationshipInput struct {
+	*createRemoteRelationshipInput
 }
 
 func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {

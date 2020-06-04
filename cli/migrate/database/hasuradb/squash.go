@@ -27,7 +27,7 @@ func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) e
 	remoteRelationshipTransition.State("deleted")
 
 	createEvent := remoteRelationshipTransition.Event(createRemoteRelationship).To("created").From("new", "deleted")
-	remoteRelationshipTransition.Event(updateRemoteRelationship).To("updated").From("new", "created", "deleted")
+	remoteRelationshipTransition.Event(updateRemoteRelationship).To("updated").From("new", "created", "updated", "deleted")
 	remoteRelationshipTransition.Event(deleteRemoteRelationship).To("deleted").From("new", "created", "updated")
 
 	next := q.Iterate()
@@ -55,6 +55,11 @@ func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) e
 		}
 		createEvent.After(afterCreate)
 		for _, val := range g.Group {
+			// possible inputs
+			// 1. create, update, update .....
+			// 2. create, update, update .........., delete
+			// 3. update, update, update ..........
+			// 4. update, update, ...., delete
 			element := val.(*list.Element)
 			switch obj := element.Value.(type) {
 			case *createRemoteRelationshipInput:
@@ -65,16 +70,31 @@ func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) e
 						return errors.Wrapf(err, "error squashing: %v", obj.Name)
 					}
 				}
-				if obj.operationType == createRemoteRelationship {
-					err := remoteRelationshipTransition.Trigger(createRemoteRelationship, &cfg, nil)
+				err := remoteRelationshipTransition.Trigger(createRemoteRelationship, &cfg, nil)
+				if err != nil {
+					return errors.Wrapf(err, "error squashing: %v", obj.Name)
+				}
+				prevElems = append(prevElems, element)
+			case *updateRemoteRelationshipInput:
+				if len(prevElems) != 0 {
+					if _, ok := prevElems[0].Value.(*createRemoteRelationshipInput); ok {
+						prevElems[0].Value = obj.createRemoteRelationshipInput
+						squashList.Remove(element)
+						continue
+					}
+
+					for _, e := range prevElems {
+						squashList.Remove(e)
+					}
+					err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
 					if err != nil {
 						return errors.Wrapf(err, "error squashing: %v", obj.Name)
 					}
-				} else if obj.operationType == updateRemoteRelationship {
-					err := remoteRelationshipTransition.Trigger(updateRemoteRelationship, &cfg, nil)
-					if err != nil {
-						return errors.Wrapf(err, "error squashing: %v", obj.Name)
-					}
+				}
+
+				err := remoteRelationshipTransition.Trigger(updateRemoteRelationship, &cfg, nil)
+				if err != nil {
+					return errors.Wrapf(err, "error squashing: %v", obj.Name)
 				}
 				prevElems = append(prevElems, element)
 			case *deleteRemoteRelationshipInput:
@@ -888,9 +908,24 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 					}
 				}
 				l.PushBack(actionType)
-			case *createRemoteRelationshipInput:
-				actionType.operationType = v.Type
-				l.PushBack(actionType)
+			case *createRemoteRelationshipInput, *updateRemoteRelationshipInput:
+				if v.Type == updateRemoteRelationship {
+					createRemoteRelationship, ok := v.Args.(*createRemoteRelationshipInput)
+					if !ok {
+						continue
+					}
+					o := &updateRemoteRelationshipInput{
+						createRemoteRelationship,
+					}
+					l.PushBack(o)
+				}
+				if v.Type == createRemoteRelationship {
+					o, ok := v.Args.(*createRemoteRelationshipInput)
+					if !ok {
+						break
+					}
+					l.PushBack(o)
+				}
 			default:
 				l.PushBack(actionType)
 			}
@@ -929,6 +964,12 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
 			case *createRemoteRelationshipInput:
+				return remoteRelationshipMap{
+					tableName:  args.Table.Name,
+					schemaName: args.Table.Schema,
+					name:       args.Name,
+				}
+			case *updateRemoteRelationshipInput:
 				return remoteRelationshipMap{
 					tableName:  args.Table.Name,
 					schemaName: args.Table.Schema,
@@ -1404,6 +1445,8 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			q.Type = dropComputedField
 		case *createRemoteRelationshipInput:
 			q.Type = createRemoteRelationship
+		case *updateRemoteRelationshipInput:
+			q.Type = updateRemoteRelationship
 		case *deleteRemoteRelationshipInput:
 			q.Type = deleteRemoteRelationship
 		case *RunSQLInput:
