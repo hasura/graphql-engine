@@ -22,7 +22,7 @@ require (
 	github.com/gorilla/sessions v1.2.0 // indirect
 	github.com/gosimple/slug v1.9.0 // indirect
 	github.com/jinzhu/configor v1.1.1 // indirect
-	github.com/jinzhu/gorm v1.9.11 // indirect
+	github.com/jinzhu/gorm v1.9.11
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/manifoldco/promptui v0.6.0
 	github.com/markbates/pkger v0.15.1
