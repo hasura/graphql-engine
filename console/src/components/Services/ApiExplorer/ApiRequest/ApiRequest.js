@@ -224,7 +224,7 @@ class ApiRequest extends Component {
 
       const toggleGraphiqlMode = () => {
         if (loading) return;
-        const newMode = (mode === 'relay' ? 'graphql' : 'relay');
+        const newMode = mode === 'relay' ? 'graphql' : 'relay';
         persistGraphiQLMode(newMode);
         dispatch(switchGraphiQLMode(newMode));
       };

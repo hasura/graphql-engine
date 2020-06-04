@@ -1,5 +1,5 @@
-import { getPersistedGraphiQLMode } from './ApiRequest/utils'
-import { getGraphQLEndpoint } from './utils'
+import { getPersistedGraphiQLMode } from './ApiRequest/utils';
+import { getGraphQLEndpoint } from './utils';
 
 const persistedGraphiqlMode = getPersistedGraphiQLMode();
 
