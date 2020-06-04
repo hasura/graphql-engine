@@ -151,7 +151,7 @@ class PermissionsSummary extends Component {
         />
       );
     };
-
+    
     const getEditIcon = () => {
       return getActionIcon('fa-pencil');
     };
@@ -187,27 +187,31 @@ class PermissionsSummary extends Component {
       selectable,
       isSelected,
       onClick,
-      actionBtn = null,
+      actionBtns = [],
       key = null
     ) => {
       const getContents = () => {
         let headerContent;
 
-        if (!actionBtn) {
+        if (!actionBtns.length) {
           headerContent = content;
         } else {
           headerContent = (
             <div
               className={
-                styles.actionCell +
-                ' ' +
-                styles.display_flex +
-                ' ' +
-                styles.flex_space_between
+                `${styles.actionCell} ${styles.display_flex} ${styles.flex_space_between}`
               }
             >
               <div>{content}</div>
-              <div>{actionBtn}</div>
+              <div className={`${styles.tableHeaderActions} ${styles.display_flex}`}>
+                {
+                  actionBtns.map((actionBtn, i) => (
+                    <div key={`${content}-action-btn-${i}`}>
+                    {actionBtn}
+                    </div>
+                  ))
+                }
+              </div>
             </div>
           );
         }
@@ -290,12 +294,42 @@ class PermissionsSummary extends Component {
             );
           };
 
+          const getDeleteBtn = () => {
+            const deleteOnClick = e => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              const deleteConfirmed = getConfirmation(
+                `You want to delete permissions for the role: ${role}?`,
+                true,
+                role
+              );
+              
+              if (deleteConfirmed) {
+                // 
+                console.log(`Deleted permissions for the role: ${role}`);
+              }
+            }
+
+            return (
+              <Button
+                color="white"
+                size="xs"
+                onClick={deleteOnClick}
+                title="Delete Permissions"
+                >
+                  {getActionIcon('fa-trash')}
+                </Button>
+            );
+          };
+
           const roleHeader = getHeader(
             role,
             selectable,
             isCurrRole,
             setRole,
-            getCopyBtn()
+            [getCopyBtn(),
+            getDeleteBtn()]
           );
 
           if (selectedFirst && isCurrRole) {
@@ -307,7 +341,7 @@ class PermissionsSummary extends Component {
       }
 
       return rolesHeaders;
-    };
+    };  
 
     const getRolesCells = (table, roleCellRenderer) => {
       const tablePermissions = getTablePermissionsByRoles(table);
@@ -390,7 +424,7 @@ class PermissionsSummary extends Component {
               selectable,
               isCurrTable,
               setTable,
-              null,
+              [],
               tableName
             );
           };
