@@ -88,7 +88,7 @@ import {
   getDefaultFilterType,
   getUpdateTooltip,
 } from './utils';
-import PermButtonSection from './molecules/PermButtonsSection';
+import PermButtonSection from './PermButtonsSection';
 
 class Permissions extends Component {
   constructor() {

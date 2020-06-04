@@ -1,15 +1,12 @@
 import React, { useCallback } from 'react';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import Button from '../../../../Common/Button';
-import {
-  isJsonString,
-  getConfirmation,
-} from '../../../../Common/utils/jsUtils';
-import { FilterState } from '../utils';
-import { showErrorNotification } from '../../../Common/Notification';
-import { permChangePermissions, permChangeTypes } from '../Actions';
-import styles from '../../../../Common/Permissions/PermissionStyles.scss';
+import Button from '../../../Common/Button';
+import { isJsonString, getConfirmation } from '../../../Common/utils/jsUtils';
+import { FilterState } from './utils';
+import { showErrorNotification } from '../../Common/Notification';
+import { permChangePermissions, permChangeTypes } from './Actions';
+import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 interface PermButtonSectionProps {
   readOnlyMode: string;
