@@ -85,6 +85,8 @@ Read more about the session argument for computed fields in the [docs](https://h
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
+- cli: add dry run flag in hasura migrate apply command (fix #3128) (#3499)
+- cli: load assets from server when HASURA_GRAPHQL_CONSOLE_ASSETS_DIR is set (close #3382)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
 - docs: add single object mutations docs (close #4622) (#4625)
@@ -95,6 +97,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
 - docs: add page for procuring custom docker images and binaries (#4828)
 - docs: add content on how to secure action handlers and other actions docs improvements (#4743)
+- install manifests: update all install manifests to enable dev mode by default (close #4599) (#4716)
 
 ## `v1.2.0`
 
@@ -291,7 +294,6 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - server: fix recreating action's permissions (close #4377)
 - server: make the graceful shutdown logic customizable (graceful shutdown on the SIGTERM signal continues to be the default) 
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
-- cli: load assets from server when HASURA_GRAPHQL_CONSOLE_ASSETS_DIR is set (close #3382)
 
 ## `v1.2.0-beta.4`
 
