@@ -1,16 +1,33 @@
 .. meta::
-   :description: Required Postgres permissions for Hasura GraphQL engine
-   :keywords: hasura, docs, deployment, postgres, postgres permissions
+   :description: Postgres requirements for Hasura GraphQL engine
+   :keywords: hasura, docs, deployment, postgres, postgres permissions, postgres version
 
-.. _postgres_permissions:
+.. _postgres_requirements:
 
-Postgres permissions
-====================
+Postgres requirements
+=====================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
+
+.. _postgres_version_support:
+
+Supported Postgres versions
+---------------------------
+
+Hasura GraphQL engine supports **Postgres versions 9.5 and above**.
+
+Feature requirements
+^^^^^^^^^^^^^^^^^^^^
+
+- :ref:`Hasura actions <actions>` are supported in Postgres 10 and above.
+
+.. _postgres_permissions:
+
+Postgres permissions
+--------------------
 
 If you're running in a controlled environment, you might need to configure the Hasura GraphQL engine to use a
 specific Postgres user that your DBA gives you.
@@ -72,3 +89,29 @@ Here's a sample SQL block that you can run on your database to create the right 
     -- GRANT USAGE ON SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
+
+**pgcrypto** in PG search path
+------------------------------
+
+Hasura GraphQL engine needs the ``pgcrypto`` Postgres extension to function.
+
+During initialization, Hasura GraphQL engine tries to install the ``pgcrypto`` extension
+in the ``public`` schema, if it is not already installed.
+
+It needs to be ensured that ``pgcrypto`` is installed in a schema which is in the Postgres
+`search path <https://www.postgresql.org/docs/current/ddl-schemas.html#DDL-SCHEMAS-PATH>`_
+for the Postgres user/role that Hasura connects with.
+
+If ``pgcrypto`` is installed in a schema that is not in the search path, the
+schema can be added to the search path by executing one of the following SQL commands
+depending on your setup:
+
+.. code-block:: sql
+
+    -- set search path to include schemas for the entire database
+    ALTER DATABASE <database_name> SET search_path TO schema1,schema2;
+
+    -- OR --
+
+    -- set search path to include schemas for a particular role
+    ALTER ROLE <hasura_role> SET search_path TO schema1,schema2;

@@ -29,14 +29,7 @@ const ProcessedEvents: React.FC<Props> = props => {
       filterState={filterState}
       setFilterState={setFilterState}
       runQuery={runQuery}
-      columns={[
-        'id',
-        'status',
-        'scheduled_time',
-        'created_at',
-        'tries',
-        'next_retry_at',
-      ]}
+      columns={['id', 'status', 'scheduled_time', 'created_at', 'tries']}
       identifier="adhoc-events-processed"
     />
   );

@@ -2,6 +2,7 @@ import React from 'react';
 import { RetryConf } from '../../types';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import styles from '../../Events.scss';
+import { exists } from '../../../../Common/utils/jsUtils';
 
 type Props = {
   setRetryConf: (r: RetryConf) => void;
@@ -91,7 +92,7 @@ const RetryConfEditor: React.FC<Props> = props => {
           />
         </div>
       </div>
-      {retryConf.tolerance_sec !== null ? (
+      {exists(retryConf.tolerance_sec) ? (
         <div
           className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}
         >
@@ -112,7 +113,7 @@ const RetryConfEditor: React.FC<Props> = props => {
               className={`${styles.display_inline} form-control ${styles.width300}`}
               type="number"
               min="0"
-              value={retryConf.tolerance_sec}
+              value={retryConf.tolerance_sec || ''}
               placeholder="tolerance in seconds (default: 21600)"
             />
           </div>
