@@ -1352,7 +1352,7 @@ code {
 
 .tooltip {
   cursor: pointer;
-  color: #4D4D4D;
+  color: #4d4d4d;
 }
 
 .hiddenMoreWidth {
@@ -1379,6 +1379,13 @@ code {
 .flexColumn {
   display: flex;
   flex-direction: column;
+}
+
+.textNoNewLine {
+  word-break: break-all;
+  hyphens: auto;
+  white-space: normal;
+  display: block;
 }
 
 /* container height subtracting top header and bottom scroll bar */
