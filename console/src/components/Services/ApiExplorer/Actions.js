@@ -44,9 +44,9 @@ const CREATE_WEBSOCKET_CLIENT = 'ApiExplorer/CREATE_WEBSOCKET_CLIENT';
 const FOCUS_ROLE_HEADER = 'ApiExplorer/FOCUS_ROLE_HEADER';
 const UNFOCUS_ROLE_HEADER = 'ApiExplorer/UNFOCUS_ROLE_HEADER';
 
-const LOADING = 'ApiExplorer/LOADING';
+const SET_LOADING = 'ApiExplorer/SET_LOADING';
 export const setLoading = isLoading => ({
-  type: LOADING,
+  type: SET_LOADING,
   data: isLoading,
 });
 
@@ -638,7 +638,7 @@ const apiExplorerReducer = (state = defaultState, action) => {
         ...state,
         mode: action.mode,
       };
-    case LOADING:
+    case SET_LOADING:
       return {
         ...state,
         loading: action.data,

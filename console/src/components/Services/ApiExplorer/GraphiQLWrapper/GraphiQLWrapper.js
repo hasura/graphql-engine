@@ -251,4 +251,6 @@ const mapStateToProps = state => ({
   loading: state.apiexplorer.loading,
 });
 
-export default connect(mapStateToProps)(GraphiQLWrapper);
+const GraphiQLWrapperConnected = connect(mapStateToProps)(GraphiQLWrapper);
+
+export default GraphiQLWrapperConnected;

@@ -3,10 +3,8 @@ import PropTypes from 'prop-types';
 import jwt from 'jsonwebtoken';
 
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 import Modal from '../../../Common/Modal/Modal';
-import TooltipCustom from '../../../Common/Tooltip/Tooltip';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 import {
   changeRequestHeader,
@@ -41,14 +39,6 @@ import { getGraphQLEndpoint } from '../utils';
 
 import styles from '../ApiExplorer.scss';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../../constants';
-
-const inspectJWTTooltip = (
-  <Tooltip id="tooltip-inspect-jwt">Decode JWT</Tooltip>
-);
-
-const jwtValidityStatus = message => (
-  <Tooltip id="tooltip-jwt-validity-status">{message}</Tooltip>
-);
 
 /* When the page is loaded for the first time, hydrate the header state from the localStorage
  * Keep syncing the localStorage state when user modifies.
@@ -288,7 +278,7 @@ class ApiRequest extends Component {
                 icons={false}
               />
               <span className={styles.add_mar_right_mid}>Relay API</span>
-              <TooltipCustom
+              <Tooltip
                 id="relay-mode-toggle"
                 placement="left"
                 message={
@@ -445,12 +435,18 @@ class ApiRequest extends Component {
 
             if (isAdminSecret) {
               headerAdminVal = (
-                <i
-                  className={styles.showAdminSecret + ' fa fa-eye'}
-                  data-header-id={i}
-                  aria-hidden="true"
-                  onClick={onShowAdminSecretClicked}
-                />
+                <Tooltip
+                  id="admin-secret-show"
+                  placement="left"
+                  message="Show admin secret"
+                >
+                  <i
+                    className={styles.showAdminSecret + ' fa fa-eye'}
+                    data-header-id={i}
+                    aria-hidden="true"
+                    onClick={onShowAdminSecretClicked}
+                  />
+                </Tooltip>
               );
             }
 
@@ -490,9 +486,13 @@ class ApiRequest extends Component {
 
             if (isAuthHeader && isJWTSet) {
               inspectorIcon = (
-                <OverlayTrigger placement="top" overlay={inspectJWTTooltip}>
+                <Tooltip
+                  id="tooltip-inspect-jwt"
+                  message="Decode JWT"
+                  placement="left"
+                >
                   {getAnalyzeIcon()}
-                </OverlayTrigger>
+                </Tooltip>
               );
             }
 
@@ -635,14 +635,14 @@ class ApiRequest extends Component {
           switch (true) {
             case tokenVerified:
               return (
-                <OverlayTrigger
-                  placement="top"
-                  overlay={jwtValidityStatus('Valid JWT token')}
+                <Tooltip
+                  id="tooltip-jwt-validity-status"
+                  message="Valid JWT token"
                 >
                   <span className={styles.valid_jwt_token}>
                     <i className="fa fa-check" />
                   </span>
-                </OverlayTrigger>
+                </Tooltip>
               );
             case !tokenVerified && JWTError.length > 0:
               return (
