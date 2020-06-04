@@ -5,7 +5,6 @@ import {
   show as displayNotification,
   NotificationLevel,
 } from 'react-notification-system-redux';
-import { Notification } from 'react-notification-system';
 import Button from '../../Common/Button/Button';
 import { Thunk } from '../../../types';
 import { Json } from '../../Common/utils/tsUtils';
@@ -14,6 +13,21 @@ import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
 
 const styles = require('./Notification/Notification.scss');
+
+export interface Notification {
+  title?: string | JSX.Element;
+  message?: string | JSX.Element;
+  level?: 'error' | 'warning' | 'info' | 'success';
+  position?: 'tr' | 'tl' | 'tc' | 'br' | 'bl' | 'bc';
+  autoDismiss?: number;
+  dismissible?: boolean;
+  children?: React.ReactNode;
+  uid?: number | string;
+  action?: {
+    label: string;
+    callback?: () => void;
+  };
+}
 
 const showNotification = (
   options: Notification,
