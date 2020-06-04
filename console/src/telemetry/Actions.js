@@ -30,9 +30,11 @@ const setConsoleOptsInDB = (opts, successCb, errorCb) => (
   };
 
   if (!hasura_uuid) {
-    showErrorNotification(
-      'Opt out of pre-release notifications failed',
-      'Internal error: missing hasura_uuid'
+    dispatch(
+      showErrorNotification(
+        'Opt out of pre-release notifications failed',
+        'Internal error: missing hasura_uuid'
+      )
     );
     return;
   }
