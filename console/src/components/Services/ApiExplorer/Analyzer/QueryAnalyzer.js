@@ -53,13 +53,11 @@ export default class QueryAnalyser extends React.Component {
           <div className="wd25">
             <div className="topLevelNodesWrapper">
               <div className="title">Top level nodes</div>
-              <ul>
-                <AnalyzeText
-                  data={this.state.analyseData}
-                  activeNode={this.state.activeNode}
-                  onClick={this.handleAnalyseNodeChange}
-                />
-              </ul>
+              <AnalyzeText
+                data={this.state.analyseData}
+                activeNode={this.state.activeNode}
+                onClick={this.handleAnalyseNodeChange}
+              />
             </div>
           </div>
           <div className="wd75">

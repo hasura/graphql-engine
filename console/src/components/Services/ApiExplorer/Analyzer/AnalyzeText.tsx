@@ -1,12 +1,24 @@
-import React, { MouseEvent } from 'react';
+import React from 'react';
 
-const AnalyzeText: React.FC<{
-  data: Array<object>;
+type ExplainPayload = {
+  field: string;
+  sql: string;
+  plan: string[];
+};
+
+type RootFieldsProps = {
+  data: ExplainPayload[];
   activeNode: number;
-  onClick: (e: MouseEvent) => void;
-}> = ({ data, activeNode, onClick }) => (
-  <>
-    {data.map((analysis: any, i: number) => {
+  onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+};
+
+const AnalyzeText: React.FC<RootFieldsProps> = ({
+  data,
+  activeNode,
+  onClick,
+}) => (
+  <ul>
+    {data.map((analysis, i) => {
       return (
         analysis.field && (
           <div
@@ -22,7 +34,7 @@ const AnalyzeText: React.FC<{
         )
       );
     })}
-  </>
+  </ul>
 );
 
 export default AnalyzeText;
