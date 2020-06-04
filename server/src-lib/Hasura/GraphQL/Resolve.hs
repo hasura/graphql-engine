@@ -40,6 +40,7 @@ import qualified Hasura.GraphQL.Resolve.Mutation   as RM
 import qualified Hasura.GraphQL.Resolve.Select     as RS
 import qualified Hasura.GraphQL.Schema.Common      as GS
 import qualified Hasura.GraphQL.Validate           as V
+import qualified Hasura.RQL.DML.RemoteJoin         as RR
 import qualified Hasura.RQL.DML.Select             as DS
 import qualified Hasura.SQL.DML                    as S
 
@@ -72,16 +73,19 @@ traverseQueryRootFldAST f = \case
   QRFActionExecuteList s   -> QRFActionExecuteList <$> DS.traverseAnnSimpleSelect f s
   QRFConnection s   -> QRFConnection <$> DS.traverseConnectionSelect f s
 
-toPGQuery :: QueryRootFldResolved -> Q.Query
+toPGQuery :: QueryRootFldResolved -> (Q.Query, Maybe RR.RemoteJoins)
 toPGQuery = \case
-  QRFNode s                -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASSingleObject s
-  QRFPk s                  -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASSingleObject s
-  QRFSimple s              -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASMultipleRows s
-  QRFAgg s                 -> Q.fromBuilder $ toSQL $ DS.mkAggregateSelect s
-  QRFActionSelect s        -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASSingleObject s
-  QRFActionExecuteObject s -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASSingleObject s
-  QRFActionExecuteList s   -> Q.fromBuilder $ toSQL $ DS.mkSQLSelect DS.JASMultipleRows s
-  QRFConnection s   -> Q.fromBuilder $ toSQL $ DS.mkConnectionSelect s
+  QRFNode s                -> first (toQuery . DS.mkSQLSelect DS.JASSingleObject) $ RR.getRemoteJoins s
+  QRFPk s                  -> first (toQuery . DS.mkSQLSelect DS.JASSingleObject) $ RR.getRemoteJoins s
+  QRFSimple s              -> first (toQuery . DS.mkSQLSelect DS.JASMultipleRows) $ RR.getRemoteJoins s
+  QRFAgg s                 -> first (toQuery . DS.mkAggregateSelect) $ RR.getRemoteJoinsAggregateSelect s
+  QRFActionSelect s        -> first (toQuery . DS.mkSQLSelect DS.JASSingleObject) $ RR.getRemoteJoins s
+  QRFActionExecuteObject s -> first (toQuery . DS.mkSQLSelect DS.JASSingleObject) $ RR.getRemoteJoins s
+  QRFActionExecuteList s   -> first (toQuery . DS.mkSQLSelect DS.JASMultipleRows) $ RR.getRemoteJoins s
+  QRFConnection s          -> first (toQuery . DS.mkConnectionSelect) $ RR.getRemoteJoinsConnectionSelect s
+  where
+    toQuery :: ToSQL a => a -> Q.Query
+    toQuery = Q.fromBuilder . toSQL
 
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
@@ -170,28 +174,31 @@ mutFldToTx
   -> m (RespTx, HTTP.ResponseHeaders)
 mutFldToTx fld = do
   userInfo <- asks getter
+  reqHeaders <- asks getter
+  httpManager <- asks getter
+  let rjCtx = (httpManager, reqHeaders, userInfo)
   opCtx <- getOpCtx $ V._fName fld
   let noRespHeaders = fmap (,[])
       roleName = _uiRole userInfo
   case opCtx of
     MCInsert ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsert roleName (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsert rjCtx roleName (_iocTable ctx) fld
     MCInsertOne ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsertOne roleName (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsertOne rjCtx roleName (_iocTable ctx) fld
     MCUpdate ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
-      noRespHeaders $ RM.convertUpdate ctx fld
+      noRespHeaders $ RM.convertUpdate ctx rjCtx fld
     MCUpdateByPk ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
-      noRespHeaders $ RM.convertUpdateByPk ctx fld
+      noRespHeaders $ RM.convertUpdateByPk ctx rjCtx fld
     MCDelete ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
-      noRespHeaders $ RM.convertDelete ctx fld
+      noRespHeaders $ RM.convertDelete ctx rjCtx fld
     MCDeleteByPk ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
-      noRespHeaders $ RM.convertDeleteByPk ctx fld
+      noRespHeaders $ RM.convertDeleteByPk ctx rjCtx fld
     MCAction ctx ->
       RA.resolveActionMutation fld ctx (_uiSession userInfo)
 

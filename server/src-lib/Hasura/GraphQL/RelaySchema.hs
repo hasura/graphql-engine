@@ -256,6 +256,10 @@ mkRelayTyAggRole tn descM insPermM selPermM updColsM delPermM pkeyCols constrain
         ( (ty, mkComputedFieldName $ _cfName cf)
         , RFComputedField cf
         )
+      SFRemoteRelationship remoteField -> pure
+        ( (ty, G.Name (remoteRelationshipNameToText (_rfiName remoteField)))
+        , RFRemoteRelationship remoteField
+        )
 
     -- the fields used in bool exp
     boolExpInpObjFldsM = mkFldMap (mkBoolExpTy tn) <$> selFldsM

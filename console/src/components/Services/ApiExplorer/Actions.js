@@ -276,7 +276,10 @@ const changeRequestHeader = (index, key, newValue, isDisabled) => {
   };
 };
 
-const setHeadersBulk = headers => ({ type: SET_REQUEST_HEADERS_BULK, headers });
+const setHeadersBulk = headers => ({
+  type: SET_REQUEST_HEADERS_BULK,
+  headers,
+});
 
 const removeRequestHeader = index => {
   return (dispatch, getState) => {

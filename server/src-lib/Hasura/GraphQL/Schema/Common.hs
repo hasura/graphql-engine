@@ -9,6 +9,7 @@ module Hasura.GraphQL.Schema.Common
   , getPGColumnFields
   , getRelationshipFields
   , getComputedFields
+  , getRemoteRelationships
 
   , mkColumnType
   , mkRelName
@@ -64,6 +65,7 @@ data SelField
   = SFPGColumn !PGColumnInfo
   | SFRelationship !RelationshipFieldInfo
   | SFComputedField !ComputedField
+  | SFRemoteRelationship !RemoteFieldInfo
   deriving (Show, Eq)
 $(makePrisms ''SelField)
 
@@ -75,6 +77,9 @@ getRelationshipFields = mapMaybe (^? _SFRelationship)
 
 getComputedFields :: [SelField] -> [ComputedField]
 getComputedFields = mapMaybe (^? _SFComputedField)
+
+getRemoteRelationships :: [SelField] -> [RemoteFieldInfo]
+getRemoteRelationships = mapMaybe (^? _SFRemoteRelationship)
 
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
 qualObjectToName = G.Name . snakeCaseQualObject

@@ -611,6 +611,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
                       (scAuthMode serverCtx)
                       (scEnableAllowlist serverCtx)
                       (EL._lqsOptions $ scLQState serverCtx)
+                      consoleAssetsDir
 
           return $ JSONResp $ HttpResponse res []
 

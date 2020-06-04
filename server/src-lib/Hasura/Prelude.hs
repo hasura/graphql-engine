@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.Prelude
   ( module M
@@ -12,6 +13,9 @@ module Hasura.Prelude
   , txtToBs
   , base64Decode
   , spanMaybeM
+  -- * Efficient coercions
+  , coerce
+  , coerceSet
   , findWithIndex
   , mapFromL
   -- * Measuring and working with moments and durations
@@ -66,12 +70,15 @@ import qualified Data.ByteString                   as B
 import qualified Data.ByteString.Lazy              as BL
 
 import qualified Data.ByteString.Base64.Lazy       as Base64
+import           Data.Coerce
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.Set                          as Set
 import qualified Data.Text                         as T
 import qualified Data.Text.Encoding                as TE
 import qualified Data.Text.Encoding.Error          as TE
 import qualified GHC.Clock                         as Clock
 import qualified Test.QuickCheck                   as QC
+import           Unsafe.Coerce
 
 alphabet :: String
 alphabet = ['a'..'z'] ++ ['A'..'Z']
@@ -118,6 +125,16 @@ spanMaybeM f = go . toList
     go l@(x:xs) = f x >>= \case
       Just y  -> first (y:) <$> go xs
       Nothing -> pure ([], l)
+
+-- | Efficiently coerce a set from one type to another.
+--
+-- This has the same safety properties as 'Set.mapMonotonic', and is equivalent
+-- to @Set.mapMonotonic coerce@ but is more efficient. This is safe to use when
+-- both @a@ and @b@ have automatically derived @Ord@ instances.
+--
+-- https://stackoverflow.com/q/57963881/176841
+coerceSet :: Coercible a b=> Set.Set a -> Set.Set b
+coerceSet = unsafeCoerce
 
 findWithIndex :: (a -> Bool) -> [a] -> Maybe (a, Int)
 findWithIndex p l = do

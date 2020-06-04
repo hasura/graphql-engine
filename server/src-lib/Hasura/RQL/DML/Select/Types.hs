@@ -3,17 +3,20 @@
 
 module Hasura.RQL.DML.Select.Types where
 
+import           Control.Lens                  hiding ((.=))
 import           Data.Aeson.Types
-import           Language.Haskell.TH.Syntax (Lift)
+import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.List.NonEmpty         as NE
-import qualified Data.Sequence              as Seq
-import qualified Data.Text                  as T
+import qualified Data.Aeson                    as J
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.List.NonEmpty            as NE
+import qualified Data.Sequence                 as Seq
+import qualified Data.Text                     as T
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import qualified Hasura.SQL.DML             as S
+import qualified Hasura.SQL.DML                as S
 import           Hasura.SQL.Types
 
 type SelectQExt = SelectG ExtCol BoolExp Int
@@ -170,11 +173,27 @@ data AnnColumnField
   , _acfOp     :: !(Maybe ColumnOp)
   } deriving (Show, Eq)
 
+data RemoteFieldArgument
+  = RemoteFieldArgument
+  { _rfaArgument :: !G.Argument
+  , _rfaVariable :: !(Maybe [(G.VariableDefinition,J.Value)])
+  } deriving (Eq,Show)
+
+data RemoteSelect
+  = RemoteSelect
+  { _rselArgs          :: ![RemoteFieldArgument]
+  , _rselSelection     :: !G.SelectionSet
+  , _rselHasuraColumns :: !(HashSet PGColumnInfo)
+  , _rselFieldCall     :: !(NonEmpty FieldCall)
+  , _rselRemoteSchema  :: !RemoteSchemaInfo
+  } deriving (Show, Eq)
+
 data AnnFieldG v
   = AFColumn !AnnColumnField
   | AFObjectRelation !(ObjectRelationSelectG v)
   | AFArrayRelation !(ArraySelectG v)
   | AFComputedField !(ComputedFieldSelect v)
+  | AFRemote !RemoteSelect
   | AFNodeId !QualifiedTable !(NonEmpty PGColumnInfo)
   | AFExpression !T.Text
   deriving (Show, Eq)
@@ -195,6 +214,7 @@ traverseAnnField f = \case
   AFObjectRelation sel -> AFObjectRelation <$> traverse (traverseAnnSimpleSelect f) sel
   AFArrayRelation sel -> AFArrayRelation <$> traverseArraySelect f sel
   AFComputedField sel -> AFComputedField <$> traverseComputedFieldSelect f sel
+  AFRemote s -> pure $ AFRemote s
   AFNodeId qt pKeys -> pure $ AFNodeId qt pKeys
   AFExpression t -> AFExpression <$> pure t
 
@@ -463,9 +483,9 @@ insertFunctionArg
   -> a
   -> FunctionArgsExpG a
   -> FunctionArgsExpG a
-insertFunctionArg argName index value (FunctionArgsExp positional named) =
-  if (index + 1) <= length positional then
-    FunctionArgsExp (insertAt index value positional) named
+insertFunctionArg argName idx value (FunctionArgsExp positional named) =
+  if (idx + 1) <= length positional then
+    FunctionArgsExp (insertAt idx value positional) named
   else FunctionArgsExp positional $
     HM.insert (getFuncArgNameTxt argName) value named
   where
@@ -570,3 +590,6 @@ data PermissionLimitSubQuery
   = PLSQRequired !Int -- ^ Permission limit
   | PLSQNotRequired
   deriving (Show, Eq)
+
+$(makeLenses ''AnnSelectG)
+$(makePrisms ''AnnFieldG)

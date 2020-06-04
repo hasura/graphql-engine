@@ -732,6 +732,8 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
 
       AFColumn c -> toSQLCol c
 
+      AFRemote _ -> pure $ S.SELit "null: remote field selected"
+
       AFObjectRelation objSel -> withWriteObjectRelation $ do
         let AnnRelationSelectG relName relMapping annSel = objSel
             objRelSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName

@@ -246,7 +246,7 @@ data LiveQueryPlan
   = LiveQueryPlan
   { _lqpParameterizedPlan :: !ParameterizedLiveQueryPlan
   , _lqpVariables         :: !CohortVariables
-  }
+  } deriving Show
 
 data ParameterizedLiveQueryPlan
   = ParameterizedLiveQueryPlan
@@ -285,9 +285,18 @@ buildLiveQueryPlan pgExecCtx initialReusability actionExecuter selectionSet = do
   ((resolvedASTMap, (queryVariableValues, syntheticVariableValues)), finalReusability) <-
     runReusabilityTWith initialReusability $
       flip runStateT mempty $ flip OMap.traverseWithKey (unAliasedFields $ unObjectSelectionSet selectionSet) $
-      \_ field -> do
-        unresolvedAST <- GR.queryFldToPGAST field actionExecuter
-        GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
+      \_ field -> case GV._fName field of
+        "__typename" -> throwVE "you cannot create a subscription on '__typename' field"
+        _ -> do
+          unresolvedAST <- GR.queryFldToPGAST field actionExecuter
+          resolvedAST <- GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
+
+          let (_, remoteJoins) = GR.toPGQuery resolvedAST
+          -- Reject remote relationships in subscription live query
+          when (remoteJoins /= mempty) $
+               throw400 NotSupported
+                       "Remote relationships are not allowed in subscriptions"
+          pure resolvedAST
 
   userInfo <- asks getter
   let multiplexedQuery = mkMultiplexedQuery resolvedASTMap

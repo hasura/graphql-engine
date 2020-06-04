@@ -31,21 +31,20 @@ module Hasura.GraphQL.Schema
   ) where
 
 import           Control.Lens.Extended                 hiding (op)
+import           Data.List.Extended                    (duplicates)
 
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashSet                          as Set
 import qualified Data.Sequence                         as Seq
-
 import qualified Data.Text                             as T
 import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Resolve.Types
+import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal               (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                   (duplicates)
 import           Hasura.Session
 import           Hasura.SQL.Types
 
@@ -86,6 +85,17 @@ isValidCol = G.isValidName . pgiName
 
 isValidRel :: ToTxt a => RelName -> QualifiedObject a -> Bool
 isValidRel rn rt = G.isValidName (mkRelName rn) && isValidObjectName rt
+
+isValidRemoteRel :: RemoteFieldInfo -> Bool
+isValidRemoteRel =
+  G.isValidName . mkRemoteRelationshipName . _rfiName
+
+isValidField :: FieldInfo -> Bool
+isValidField = \case
+  FIColumn colInfo -> isValidCol colInfo
+  FIRelationship (RelInfo rn _ _ remTab _) -> isValidRel rn remTab
+  FIComputedField info -> G.isValidName $ mkComputedFieldName $ _cfiName info
+  FIRemoteRelationship remoteField -> isValidRemoteRel remoteField
 
 upsertable :: [ConstraintName] -> Bool -> Bool -> Bool
 upsertable uniqueOrPrimaryCons isUpsertAllowed isAView =
@@ -257,6 +267,7 @@ mkTyAggRole tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
     selFldsM = snd <$> selPermM
     selColNamesM = (map pgiName . getPGColumnFields) <$> selFldsM
     selColInpTyM = mkSelColumnTy tn <$> selColNamesM
+
     -- boolexp input type
     boolExpInpObjM = case selFldsM of
       Just selFlds  -> Just $ mkBoolExpInp tn selFlds
@@ -291,6 +302,10 @@ mkTyAggRole tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
       SFComputedField cf -> pure
         ( (ty, mkComputedFieldName $ _cfName cf)
         , RFComputedField cf
+        )
+      SFRemoteRelationship remoteField -> pure
+        ( (ty, G.Name (remoteRelationshipNameToText (_rfiName remoteField)))
+        , RFRemoteRelationship remoteField
         )
 
     -- the fields used in bool exp
@@ -504,8 +519,11 @@ getSelPerm
   -> RoleName -> SelPermInfo
   -> m (Bool, [SelField])
 getSelPerm tableCache fields roleName selPermInfo = do
-
-  relFlds <- fmap catMaybes $ forM validRels $ \relInfo -> do
+  selFlds <- fmap catMaybes $ forM (filter isValidField $ Map.elems fields) $ \case
+    FIColumn pgColInfo ->
+      return $ fmap SFPGColumn $ bool Nothing (Just pgColInfo) $
+        Set.member (pgiColumn pgColInfo) $ spiCols selPermInfo
+    FIRelationship relInfo -> do
       remTableInfo <- getTabInfo tableCache $ riRTable relInfo
       let remTableSelPermM = getSelPermission remTableInfo roleName
           remTableFlds = _tciFieldInfoMap $ _tiCoreInfo remTableInfo
@@ -522,40 +540,29 @@ getSelPerm tableCache fields roleName selPermInfo = do
                                  _tciPrimaryKey (_tiCoreInfo remTableInfo)
                              , _rfiIsNullable = isRelNullable fields relInfo
                              }
+    FIComputedField info -> do
+      let ComputedFieldInfo name function returnTy _ = info
+          inputArgSeq = mkComputedFieldFunctionArgSeq $ _cffInputArgs function
+      fmap (SFComputedField . ComputedField name function inputArgSeq) <$>
+        case returnTy of
+          CFRScalar scalarTy  -> pure $ Just $ CFTScalar scalarTy
+          CFRSetofTable retTable -> do
+            retTableInfo <- getTabInfo tableCache retTable
+            let retTableSelPermM = getSelPermission retTableInfo roleName
+                retTableFlds = _tciFieldInfoMap $ _tiCoreInfo retTableInfo
+                retTableColGNameMap =
+                  mkPGColGNameMap $ getValidCols retTableFlds
+            pure $ flip fmap retTableSelPermM $
+              \selPerm -> CFTTable ComputedFieldTable
+                          { _cftTable = retTable
+                          , _cftCols = retTableColGNameMap
+                          , _cftPermFilter = spiFilter selPerm
+                          , _cftPermLimit = spiLimit selPerm
+                          }
+   -- TODO: Derive permissions for remote relationships
+    FIRemoteRelationship remoteField  -> pure $ Just (SFRemoteRelationship remoteField)
 
-  computedSelFields <- fmap catMaybes $ forM computedFields $ \info -> do
-    let ComputedFieldInfo name function returnTy _ = info
-        inputArgSeq = mkComputedFieldFunctionArgSeq $ _cffInputArgs function
-    fmap (SFComputedField . ComputedField name function inputArgSeq) <$>
-      case returnTy of
-        CFRScalar scalarTy  -> pure $ Just $ CFTScalar scalarTy
-        CFRSetofTable retTable -> do
-          retTableInfo <- getTabInfo tableCache retTable
-          let retTableSelPermM = getSelPermission retTableInfo roleName
-              retTableFlds = _tciFieldInfoMap $ _tiCoreInfo retTableInfo
-              retTableColGNameMap =
-                mkPGColGNameMap $ getValidCols retTableFlds
-          pure $ flip fmap retTableSelPermM $
-            \selPerm -> CFTTable ComputedFieldTable
-                        { _cftTable = retTable
-                        , _cftCols = retTableColGNameMap
-                        , _cftPermFilter = spiFilter selPerm
-                        , _cftPermLimit = spiLimit selPerm
-                        }
-
-  return (spiAllowAgg selPermInfo, cols <> relFlds <> computedSelFields)
-  where
-    validRels = getValidRels fields
-    validCols = getValidCols fields
-    cols = map SFPGColumn $ getColInfos (toList allowedCols) validCols
-    computedFields = flip filter (getComputedFieldInfos fields) $
-                      \info -> case _cfiReturnType info of
-                        CFRScalar _     ->
-                          _cfiName info `Set.member` allowedScalarComputedFields
-                        CFRSetofTable _ -> True
-
-    allowedCols = spiCols selPermInfo
-    allowedScalarComputedFields = spiScalarComputedFields selPermInfo
+  return (spiAllowAgg selPermInfo, selFlds)
 
 mkInsCtx
   :: MonadError QErr m
@@ -619,47 +626,45 @@ mkAdminSelFlds
   => FieldInfoMap FieldInfo
   -> TableCache
   -> m [SelField]
-mkAdminSelFlds fields tableCache = do
-  relSelFlds <- forM validRels $ \relInfo -> do
-    let remoteTable = riRTable relInfo
-    remoteTableInfo <- _tiCoreInfo <$> getTabInfo tableCache remoteTable
-    let remoteTableFlds = _tciFieldInfoMap remoteTableInfo
-        remoteTableColGNameMap =
-          mkPGColGNameMap $ getValidCols remoteTableFlds
-    return $ SFRelationship RelationshipFieldInfo
-                   { _rfiInfo       = relInfo
-                   , _rfiAllowAgg   = True
-                   , _rfiColumns    = remoteTableColGNameMap
-                   , _rfiPermFilter = noFilter
-                   , _rfiPermLimit  = Nothing
-                   , _rfiPrimaryKeyColumns = _pkColumns <$> _tciPrimaryKey remoteTableInfo
-                   , _rfiIsNullable = isRelNullable fields relInfo
-                   }
+mkAdminSelFlds fields tableCache =
+  forM (filter isValidField $ Map.elems fields) $ \case
+    FIColumn info -> pure $ SFPGColumn info
 
-  computedSelFields <- forM computedFields $ \info -> do
-    let ComputedFieldInfo name function returnTy _ = info
-        inputArgSeq = mkComputedFieldFunctionArgSeq $ _cffInputArgs function
-    (SFComputedField . ComputedField name function inputArgSeq) <$>
-      case returnTy of
-        CFRScalar scalarTy  -> pure $ CFTScalar scalarTy
-        CFRSetofTable retTable -> do
-          retTableInfo <- _tiCoreInfo <$> getTabInfo tableCache retTable
-          let retTableFlds = _tciFieldInfoMap retTableInfo
-              retTableColGNameMap =
-                mkPGColGNameMap $ getValidCols retTableFlds
-          pure $ CFTTable ComputedFieldTable
-                        { _cftTable = retTable
-                        , _cftCols = retTableColGNameMap
-                        , _cftPermFilter = noFilter
-                        , _cftPermLimit = Nothing
-                        }
+    FIRelationship info -> do
+      let remoteTable = riRTable info
+      remoteTableInfo <- _tiCoreInfo <$> getTabInfo tableCache remoteTable
+      let remoteTableFlds = _tciFieldInfoMap remoteTableInfo
+          remoteTableColGNameMap =
+            mkPGColGNameMap $ getValidCols remoteTableFlds
+      return $ SFRelationship RelationshipFieldInfo
+                     { _rfiInfo       = info
+                     , _rfiAllowAgg   = True
+                     , _rfiColumns    = remoteTableColGNameMap
+                     , _rfiPermFilter = noFilter
+                     , _rfiPermLimit  = Nothing
+                     , _rfiPrimaryKeyColumns = _pkColumns <$> _tciPrimaryKey remoteTableInfo
+                     , _rfiIsNullable = isRelNullable fields info
+                     }
 
-  return $ colSelFlds <> relSelFlds <> computedSelFields
-  where
-    cols = getValidCols fields
-    colSelFlds = map SFPGColumn cols
-    validRels = getValidRels fields
-    computedFields = getComputedFieldInfos fields
+    FIComputedField info -> do
+      let ComputedFieldInfo name function returnTy _ = info
+          inputArgSeq = mkComputedFieldFunctionArgSeq $ _cffInputArgs function
+      (SFComputedField . ComputedField name function inputArgSeq) <$>
+        case returnTy of
+          CFRScalar scalarTy  -> pure $ CFTScalar scalarTy
+          CFRSetofTable retTable -> do
+            retTableInfo <- _tiCoreInfo <$> getTabInfo tableCache retTable
+            let retTableFlds = _tciFieldInfoMap retTableInfo
+                retTableColGNameMap =
+                  mkPGColGNameMap $ getValidCols retTableFlds
+            pure $ CFTTable ComputedFieldTable
+                          { _cftTable = retTable
+                          , _cftCols = retTableColGNameMap
+                          , _cftPermFilter = noFilter
+                          , _cftPermLimit = Nothing
+                          }
+
+    FIRemoteRelationship info -> pure $ SFRemoteRelationship info
 
 mkGCtxRole
   :: (MonadError QErr m)

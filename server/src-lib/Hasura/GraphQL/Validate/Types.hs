@@ -111,14 +111,10 @@ import qualified Hasura.RQL.Types.Column       as RQL
 import           Hasura.GraphQL.NormalForm
 import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Instances          ()
-import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.RemoteSchema (RemoteSchemaInfo, RemoteSchemaName)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-
--- | Typeclass for equating relevant properties of various GraphQL types defined below
-class EquatableGType a where
-  type EqProps a
-  getEqProps :: a -> EqProps a
 
 typeEq :: (EquatableGType a, Eq (EqProps a)) => a -> a -> Bool
 typeEq a b = getEqProps a == getEqProps b
@@ -179,18 +175,6 @@ mkHsraEnumTyInfo
   -> EnumTyInfo
 mkHsraEnumTyInfo descM ty enumVals =
   EnumTyInfo descM ty enumVals TLHasuraType
-
-data InpValInfo
-  = InpValInfo
-  { _iviDesc   :: !(Maybe G.Description)
-  , _iviName   :: !G.Name
-  , _iviDefVal :: !(Maybe G.ValueConst)
-  , _iviType   :: !G.GType
-  } deriving (Show, Eq, TH.Lift)
-
-instance EquatableGType InpValInfo where
-  type EqProps InpValInfo = (G.Name, G.GType)
-  getEqProps ity = (,) (_iviName ity) (_iviType ity)
 
 fromInpValDef :: G.InputValueDefinition -> InpValInfo
 fromInpValDef (G.InputValueDefinition descM n ty defM) =
@@ -446,7 +430,7 @@ getPossibleObjTypes tyMap = \case
 
 
 toObjMap :: [ObjTyInfo] -> Map.HashMap G.NamedType ObjTyInfo
-toObjMap objs = foldr (\o -> Map.insert (_otiName o) o) Map.empty objs
+toObjMap = foldr (\o -> Map.insert (_otiName o) o) Map.empty
 
 
 isObjTy :: TypeInfo -> Bool

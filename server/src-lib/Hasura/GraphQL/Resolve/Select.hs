@@ -36,6 +36,7 @@ import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Schema                (isAggregateField)
 import           Hasura.GraphQL.Schema.Common         (mkTableTy)
+import           Hasura.GraphQL.Validate
 import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal              (onlyPositiveInt)
@@ -138,6 +139,14 @@ processTableSelectionSet fldTy flds =
                 connSel <- fromConnectionField (RS.FromTable relTN) pkCols tableFilter tableLimit fld
                 pure $ RS.AFArrayRelation $ RS.ASConnection $ RS.AnnRelationSelectG rn colMapping connSel
 
+          RFRemoteRelationship info ->
+            pure $ RS.AFRemote $ RS.RemoteSelect
+                                (unValidateArgsMap $ _fArguments fld) -- Unvalidate the input arguments
+                                (unValidateSelectionSet $ _fSelSet fld) -- Unvalidate the selection fields
+                                (_rfiHasuraFields info)
+                                (_rfiRemoteFields info)
+                                (_rfiRemoteSchema info)
+
 type TableAggregateFields = RS.TableAggregateFieldsG UnresolvedVal
 
 fromAggSelSet
@@ -146,16 +155,15 @@ fromAggSelSet
      )
   => PGColGNameMap -> G.NamedType -> ObjectSelectionSet -> m TableAggregateFields
 fromAggSelSet colGNameMap fldTy selSet = fmap toFields $
-  traverseObjectSelectionSet selSet $ \f -> do
-    let fTy = _fType f
-    case _fName f of
+  traverseObjectSelectionSet selSet $ \Field{..} ->
+    case _fName of
       "__typename" -> return $ RS.TAFExp $ G.unName $ G.unNamedType fldTy
       "aggregate"  -> do
-        objSelSet <-  asObjectSelectionSet $ _fSelSet f
-        RS.TAFAgg <$> convertAggregateField colGNameMap fTy objSelSet
+        objSelSet <-  asObjectSelectionSet _fSelSet
+        RS.TAFAgg <$> convertAggregateField colGNameMap _fType objSelSet
       "nodes"      -> do
-        objSelSet <-  asObjectSelectionSet $ _fSelSet f
-        RS.TAFNodes <$> processTableSelectionSet fTy objSelSet
+        objSelSet <-  asObjectSelectionSet _fSelSet
+        RS.TAFNodes <$> processTableSelectionSet _fType objSelSet
       G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 fromConnectionSelSet
@@ -468,14 +476,13 @@ convertAggregateField
   :: (MonadReusability m, MonadError QErr m)
   => PGColGNameMap -> G.NamedType -> ObjectSelectionSet -> m RS.AggregateFields
 convertAggregateField colGNameMap ty selSet = fmap toFields $
-  traverseObjectSelectionSet selSet $ \fld -> do
-    let fType = _fType fld
-    case _fName fld of
+  traverseObjectSelectionSet selSet $ \Field{..} ->
+    case _fName of
       "__typename" -> return $ RS.AFExp $ G.unName $ G.unNamedType ty
-      "count"      -> RS.AFCount <$> convertCount colGNameMap (_fArguments fld)
+      "count"      -> RS.AFCount <$> convertCount colGNameMap _fArguments
       n            -> do
-        fSelSet <- asObjectSelectionSet $ _fSelSet fld
-        colFlds <- convertColumnFields colGNameMap fType fSelSet
+        fSelSet <- asObjectSelectionSet _fSelSet
+        colFlds <- convertColumnFields colGNameMap _fType fSelSet
         unless (isAggregateField n) $ throwInvalidFld n
         return $ RS.AFOp $ RS.AggregateOp (G.unName n) colFlds
   where

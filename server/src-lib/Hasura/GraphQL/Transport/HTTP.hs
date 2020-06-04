@@ -57,10 +57,11 @@ runGQ reqId userInfo reqHdrs queryType req = do
             --          , _grVariables = Nothing
             --          , _grOperationName = Nothing
             --          }
-        (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi opDef
+        (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi $ G._todType opDef
         return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
   let telemTimeIO = convertDuration telemTimeIO_DT
       telemTimeTot = convertDuration telemTimeTot_DT
+
   Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
 
@@ -106,16 +107,18 @@ runHasuraGQ
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runHasuraGQ reqId query userInfo resolvedOp = do
-  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
+  (E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _) <- ask
   (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ case resolvedOp of
-    E.ExOpQuery tx genSql  -> do
+    E.ExOpQuery tx genSql -> do
       -- log the generated SQL and the graphql query
       L.unLogger logger $ QueryLog query genSql reqId
       ([],) <$> runLazyTx' pgExecCtx tx
+
     E.ExOpMutation respHeaders tx -> do
       -- log the graphql query
       L.unLogger logger $ QueryLog query Nothing reqId
       (respHeaders,) <$> runLazyTx pgExecCtx Q.ReadWrite (withUserInfo userInfo tx)
+
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"

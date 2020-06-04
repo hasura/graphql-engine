@@ -21,6 +21,8 @@ module Hasura.RQL.Types.Common
        , pkConstraint
        , pkColumns
        , ForeignKey(..)
+       , EquatableGType(..)
+       , InpValInfo(..)
        , CustomColumnNames
 
        , NonEmptyText
@@ -61,6 +63,7 @@ import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Language.Haskell.TH.Syntax    as TH
 import qualified PostgreSQL.Binary.Decoding    as PD
 import qualified Test.QuickCheck               as QC
 
@@ -240,6 +243,24 @@ instance NFData ForeignKey
 instance Hashable ForeignKey
 instance Cacheable ForeignKey
 $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
+
+data InpValInfo
+  = InpValInfo
+  { _iviDesc   :: !(Maybe G.Description)
+  , _iviName   :: !G.Name
+  , _iviDefVal :: !(Maybe G.ValueConst)
+  , _iviType   :: !G.GType
+  } deriving (Show, Eq, TH.Lift, Generic)
+instance Cacheable InpValInfo
+
+instance EquatableGType InpValInfo where
+  type EqProps InpValInfo = (G.Name, G.GType)
+  getEqProps ity = (,) (_iviName ity) (_iviType ity)
+
+-- | Typeclass for equating relevant properties of various GraphQL types defined below
+class EquatableGType a where
+  type EqProps a
+  getEqProps :: a -> EqProps a
 
 type CustomColumnNames = HM.HashMap PGCol G.Name
 

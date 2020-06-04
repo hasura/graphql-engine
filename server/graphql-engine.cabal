@@ -36,6 +36,7 @@ common common-all
     InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns NoImplicitPrelude
     OverloadedStrings QuantifiedConstraints QuasiQuotes RankNTypes RecordWildCards ScopedTypeVariables
     StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeOperators
+    RecordWildCards
 
 common common-exe
   ghc-options:
@@ -53,10 +54,14 @@ library
   import: common-all
   hs-source-dirs:      src-lib
   build-depends:       base
+                     , bifunctors
+                     , witherable
+                     , validation
                      , lifted-base
                      , pg-client
                      , text
                      , text-builder >= 0.6
+                     , vector-builder
                      , bytestring
                      , postgresql-libpq
                      , mtl
@@ -95,6 +100,7 @@ library
                      -- Encoder related
                      , uuid
                      , vector
+                     , vector-builder
 
                      -- Logging related
                      , network
@@ -225,6 +231,7 @@ library
 
                      , Hasura.Server.App
                      , Hasura.Server.Auth
+                     , Hasura.Server.Cors
                      , Hasura.Server.Init
                      , Hasura.Server.Init.Config
                      , Hasura.Server.API.Query
@@ -257,7 +264,6 @@ library
                      , Hasura.Server.Auth.JWT
                      , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware
-                     , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
@@ -289,6 +295,7 @@ library
                      , Hasura.RQL.DDL.ComputedField
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.Types.CustomTypes
+                     , Hasura.RQL.Types.RemoteRelationship
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission
@@ -313,6 +320,8 @@ library
                      , Hasura.RQL.DDL.QueryCollection
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.CustomTypes
+                     , Hasura.RQL.DDL.RemoteRelationship
+                     , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
@@ -323,6 +332,7 @@ library
                      , Hasura.RQL.DML.Select
                      , Hasura.RQL.DML.Update
                      , Hasura.RQL.DML.Count
+                     , Hasura.RQL.DML.RemoteJoin
                      , Hasura.RQL.GBoolExp
 
                      , Hasura.GraphQL.Transport.HTTP.Protocol
@@ -410,6 +420,7 @@ executable graphql-engine
                    , pg-client
                    , text
                    , text-conversions
+                   , unix
 
 test-suite graphql-engine-tests
   import: common-all, common-exe

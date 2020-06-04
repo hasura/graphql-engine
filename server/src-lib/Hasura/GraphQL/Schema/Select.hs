@@ -15,6 +15,7 @@ module Hasura.GraphQL.Schema.Select
   , mkSelFldPKey
   , mkSelFldConnection
 
+  , mkRemoteRelationshipName
   , mkSelArgs
   , mkConnectionArgs
   ) where
@@ -213,10 +214,12 @@ mkTableObj
 mkTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
-    flds = pgColumnFields <> relFlds <> computedFlds
-    pgColumnFields = map mkPGColFld $ getPGColumnFields allowedFlds
-    relFlds = concatMap mkRelationshipField' $ getRelationshipFields allowedFlds
-    computedFlds = map mkComputedFieldFld $ getComputedFields allowedFlds
+    flds = flip concatMap allowedFlds $ \case
+      SFPGColumn info -> pure $ mkPGColFld info
+      SFRelationship info -> mkRelationshipField' info
+      SFComputedField info -> pure $ mkComputedFieldFld info
+      SFRemoteRelationship info -> pure $ mkRemoteRelationshipFld info
+
     mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ maybePkCols isNullable) =
       mkRelationshipField allowAgg relInfo False maybePkCols isNullable
     desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
@@ -229,6 +232,7 @@ mkRelayTableObj
 mkRelayTableObj tn descM allowedFlds =
   mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
   where
+    -- TODO: Reuse code from `mkTableObj`
     flds = nodeIdField:pgColumnFields <> relFlds <> computedFlds
     nodeIdField = mkHsraObjFldInfo Nothing "id" mempty nodeIdType
     pgColumnFields = map mkPGColFld $
@@ -240,6 +244,19 @@ mkRelayTableObj tn descM allowedFlds =
     mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ maybePkCols isNullable) =
       mkRelationshipField allowAgg relInfo True maybePkCols isNullable
     desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
+
+mkRemoteRelationshipName :: RemoteRelationshipName -> G.Name
+mkRemoteRelationshipName =
+  G.Name . remoteRelationshipNameToText
+
+mkRemoteRelationshipFld :: RemoteFieldInfo -> ObjFldInfo
+mkRemoteRelationshipFld remoteField =
+  mkHsraObjFldInfo description fieldName paramMap gType
+  where
+    description = Just "Remote relationship field"
+    fieldName = mkRemoteRelationshipName $ _rfiName remoteField
+    paramMap = _rfiParamMap remoteField
+    gType = _rfiGType remoteField
 
 {-
 type table_aggregate {

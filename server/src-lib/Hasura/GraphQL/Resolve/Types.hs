@@ -7,16 +7,16 @@ module Hasura.GraphQL.Resolve.Types
 import           Control.Lens.TH
 import           Hasura.Prelude
 
-import qualified Data.Aeson                     as J
-import qualified Data.Aeson.Casing              as J
-import qualified Data.Aeson.TH                  as J
-import qualified Data.HashMap.Strict            as Map
-import qualified Data.Sequence                  as Seq
-import qualified Data.Text                      as T
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.Aeson                          as J
+import qualified Data.Aeson.Casing                   as J
+import qualified Data.Aeson.TH                       as J
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.Sequence                       as Seq
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DDL.Headers         (HeaderConf)
+import           Hasura.RQL.DDL.Headers              (HeaderConf)
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
@@ -24,11 +24,12 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.SQL.DML                 as S
+import qualified Hasura.SQL.DML                      as S
 
 type NodeSelectMap = Map.HashMap G.NamedType SelOpCtx
 
@@ -73,6 +74,8 @@ data SelOpCtx
   , _socFilter  :: !AnnBoolExpPartialSQL
   , _socLimit   :: !(Maybe Int)
   } deriving (Show, Eq)
+
+type PGColArgMap = Map.HashMap G.Name PGColumnInfo
 
 data SelPkOpCtx
   = SelPkOpCtx
@@ -180,6 +183,7 @@ data ResolveField
   = RFPGColumn !PGColumnInfo
   | RFRelationship !RelationshipField
   | RFComputedField !ComputedField
+  | RFRemoteRelationship !RemoteFieldInfo
   | RFNodeId !QualifiedTable !(NonEmpty PGColumnInfo)
   deriving (Show, Eq)
 
@@ -224,8 +228,6 @@ data InsCtx
   } deriving (Show, Eq)
 
 type InsCtxMap = Map.HashMap QualifiedTable InsCtx
-
-type PGColArgMap = Map.HashMap G.Name PGColumnInfo
 
 data AnnPGVal
   = AnnPGVal
