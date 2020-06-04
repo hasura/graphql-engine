@@ -43,7 +43,6 @@ import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Select        (processTableSelectionSet)
 import           Hasura.GraphQL.Validate.SelectionSet
-import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers               (makeHeadersFromConf, toHeadersConf)
 import           Hasura.RQL.DDL.Schema.Cache
