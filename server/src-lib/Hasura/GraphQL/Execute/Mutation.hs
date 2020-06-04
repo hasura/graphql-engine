@@ -9,6 +9,8 @@ import qualified Database.PG.Query              as Q
 import qualified Hasura.RQL.DML.Delete          as RQL
 import qualified Hasura.RQL.DML.Update          as RQL
 
+import           Data.Has
+
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Resolve
@@ -24,20 +26,22 @@ import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 
 convertDelete
-  :: RQL.AnnDelG UnpreparedValue
+  :: UserVars
+  -> RQL.AnnDelG UnpreparedValue
   -> Bool
   -> Q.TxE QErr EncJSON
-convertDelete deleteOperation stringifyNum =
-  RQL.deleteQueryToTx stringifyNum (preparedDelete, planVariablesSequence planningState)
+convertDelete usrVars deleteOperation stringifyNum =
+  RQL.deleteQueryToTx stringifyNum (preparedDelete, planVariablesSequence usrVars planningState)
   where (preparedDelete, planningState) = runIdentity $ runPlan $ RQL.traverseAnnDel prepareWithPlan deleteOperation
 
 convertUpdate
-  :: RQL.AnnUpdG UnpreparedValue
+  :: UserVars
+  -> RQL.AnnUpdG UnpreparedValue
   -> Bool
   -> RespTx
-convertUpdate updateOperation stringifyNum =
+convertUpdate usrVars updateOperation stringifyNum =
   -- FIXME: return empty mutation response if nothing to be inserted
-  RQL.updateQueryToTx stringifyNum (preparedUpdate, planVariablesSequence planningState)
+  RQL.updateQueryToTx stringifyNum (preparedUpdate, planVariablesSequence usrVars planningState)
   where (preparedUpdate, planningState) = runIdentity $ runPlan $ RQL.traverseAnnUpd prepareWithPlan updateOperation
 {-
 convertInsert
@@ -48,21 +52,26 @@ convertInsert
 convertInsert table annIns stringifyNum = _todo
 -}
 
-planVariablesSequence :: PlanningSt -> Seq.Seq Q.PrepArg
-planVariablesSequence = Seq.fromList . map fst . IntMap.elems . _psPrepped
+planVariablesSequence :: UserVars -> PlanningSt -> Seq.Seq Q.PrepArg
+planVariablesSequence usrVars = Seq.fromList . map fst . withUserVars usrVars . IntMap.elems . _psPrepped
 
 convertMutationRootField
-  :: Bool
+  :: UserVars
+  -> Bool
   -> MutationRootField UnpreparedValue
   -> RespTx
-convertMutationRootField stringifyNum = \case
-  MRFInsert s -> _convertInsert s stringifyNum
-  MRFUpdate s -> convertUpdate s stringifyNum
-  MRFDelete s -> convertDelete s stringifyNum
+convertMutationRootField usrVars stringifyNum = \case
+  MRFInsert s -> _convertInsert usrVars s stringifyNum
+  MRFUpdate s -> convertUpdate usrVars s stringifyNum
+  MRFDelete s -> convertDelete usrVars s stringifyNum
   MRFRaw s    -> return $ encJFromJValue s
 
 convertMutationSelectionSet
-  :: MonadError QErr m
+  :: ( MonadError QErr m
+     , MonadReader r m
+     , Has SQLGenCtx r
+     , Has UserInfo r
+     )
   => GQLContext
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
@@ -76,8 +85,9 @@ convertMutationSelectionSet gqlContext selectionSet varDefs varValsM = do
     >>= (gqlMutationParser gqlContext >>> (`onLeft` reportParseErrors))
 
   -- Transform the RQL AST into a prepared SQL query
+  usrVars <- asks (userVars . getter)
   -- TODO pass the correct stringifyNum somewhere rather than True
-  let txs = convertMutationRootField True <$> unpreparedQueries
+  let txs = convertMutationRootField usrVars True <$> unpreparedQueries
 
   -- Build and return an executable action from the generated SQL
   pure $ liftTx $ toSingleTx $ map (\(name, bla) -> (G.unName name, bla)) $ OMap.toList txs

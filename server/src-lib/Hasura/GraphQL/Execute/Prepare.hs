@@ -5,6 +5,7 @@ module Hasura.GraphQL.Execute.Prepare
   , initPlanningSt
   , runPlan
   , prepareWithPlan
+  , withUserVars
   ) where
 
 
@@ -15,6 +16,7 @@ import qualified Data.IntMap                   as IntMap
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.Aeson                             as J
 
 import qualified Hasura.SQL.DML                as S
 
@@ -22,7 +24,7 @@ import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema  (getName)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-
+import           Hasura.RQL.Types
 
 
 type PlanVariables = Map.HashMap G.Name Int
@@ -68,6 +70,11 @@ prepareWithPlan = \case
   where
     currentSession = S.SEPrep 1
 
+withUserVars :: UserVars -> [(Q.PrepArg, PGScalarValue)] -> [(Q.PrepArg, PGScalarValue)]
+withUserVars usrVars list =
+  let usrVarsAsPgScalar = PGValJSON $ Q.JSON $ J.toJSON usrVars
+      prepArg = Q.toPrepVal (Q.AltJ usrVars)
+  in (prepArg, usrVarsAsPgScalar):list
 
 getVarArgNum :: (MonadState PlanningSt m) => G.Name -> m Int
 getVarArgNum var = do

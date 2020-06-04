@@ -281,7 +281,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
           return $ GExPHasura $ ExOpQuery queryTx (Just genSql)
         GExPHasura (gCtx, G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet) -> do
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          queryTx <- getMutOp gCtx inlinedSelSet varDefs (_grVariables reqUnparsed)
+          queryTx <- getMutOp gCtx sqlGenCtx userInfo inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ GExPHasura $ ExOpMutation queryTx
         _ -> _
@@ -332,12 +332,14 @@ mutationRootName = "mutation_root"
 getMutOp
   :: (HasVersion, MonadError QErr m, MonadIO m)
   => C.GQLContext
+  -> SQLGenCtx
+  -> UserInfo
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe VariableValues
   -> m LazyRespTx
-getMutOp ctx selSet varDefs varValsM =
-  runE _sqlGenCtx _userInfo $ EM.convertMutationSelectionSet ctx selSet varDefs varValsM
+getMutOp gqlContext sqlGenCtx userInfo fields varDefs varValsM =
+  runE sqlGenCtx userInfo $ EM.convertMutationSelectionSet gqlContext fields varDefs varValsM
   where
 
 -- getSubsOpM
