@@ -7,7 +7,10 @@ import { escapeRegExp } from '../utils';
 import { UNSAFE_keys } from '../../../Common/utils/tsUtils';
 
 type FilterType = 'check' | 'filter';
-type BaseQueryType = 'select' | 'update' | 'insert' | 'delete';
+export type BaseQueryType = 'select' | 'update' | 'insert' | 'delete';
+export interface FilterState {
+  [key: string]: BaseQueryType;
+}
 
 type DisplayQueryType =
   | Exclude<BaseQueryType, 'update'>
@@ -64,10 +67,10 @@ export const getFilterQueries = (
   filterType: FilterType
 ) => {
   const filterQueries: Record<string, DisplayQueryType[]> = {};
-  queryTypes.forEach(queryType => {
+  queryTypes.forEach((queryType) => {
     if (queryType === 'update') {
       const options = getOptionsForUpdate(filterType, query);
-      options.forEach(fType => {
+      options.forEach((fType) => {
         const filterString = getPermissionFilterString(
           permissionsState[queryType],
           queryType,
@@ -114,11 +117,11 @@ type FilterString = Partial<{ check: string; filter: string }>;
 export const replaceLegacyOperators = (filterString: FilterString) => {
   const newFilterString = { ...filterString };
 
-  allOperators.forEach(operator => {
+  allOperators.forEach((operator) => {
     const currentString = `"${operator}"`;
     const legacyString = `"${getLegacyOperator(operator)}"`;
 
-    UNSAFE_keys(newFilterString).forEach(key => {
+    UNSAFE_keys(newFilterString).forEach((key) => {
       newFilterString[key] = newFilterString[key]!.replace(
         new RegExp(escapeRegExp(legacyString), 'g'),
         currentString
