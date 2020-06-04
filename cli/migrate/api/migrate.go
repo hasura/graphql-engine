@@ -31,9 +31,10 @@ type Response struct {
 }
 
 type Request struct {
-	Name string        `json:"name"`
-	Up   []requestType `json:"up"`
-	Down []requestType `json:"down"`
+	Name          string        `json:"name"`
+	Up            []requestType `json:"up"`
+	Down          []requestType `json:"down"`
+	SkipExecution bool          `json:"skip_execution"`
 }
 
 type requestType struct {
@@ -200,7 +201,7 @@ func MigrateAPI(c *gin.Context) {
 			return
 		}
 
-		if err = t.QueryWithVersion(uint64(timestamp), ioutil.NopCloser(bytes.NewReader(upByt))); err != nil {
+		if err = t.QueryWithVersion(uint64(timestamp), ioutil.NopCloser(bytes.NewReader(upByt)), request.SkipExecution); err != nil {
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(http.StatusBadRequest, &Response{Code: "data_api_error", Message: strings.TrimPrefix(err.Error(), DataAPIError)})
 				return

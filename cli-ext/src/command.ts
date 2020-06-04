@@ -7,7 +7,7 @@ const { getFlagValue, OUTPUT_FILE_FLAG } = require('./utils/commandUtils');
 const commandArgs = process.argv;
 const outputFilePath = getFlagValue(commandArgs, OUTPUT_FILE_FLAG);
 
-const logOutput = (log) => {
+const logOutput = (log: any) => {
   try {
     fs.writeFile(outputFilePath, log, 'utf8', () => {
       console.log(
@@ -43,13 +43,13 @@ try {
   }
   if (cliResponse.constructor.name === 'Promise') {
     cliResponse
-      .then((r) => {
+      .then((r: { error?: string }) => {
         if (r.error) {
           throw Error(r.error);
         }
         logOutput(JSON.stringify(r));
       })
-      .catch((e) => {
+      .catch((e: Error) => {
         console.error(e);
         process.exit(1);
       });
