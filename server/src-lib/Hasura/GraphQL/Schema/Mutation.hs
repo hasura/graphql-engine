@@ -7,8 +7,9 @@ module Hasura.GraphQL.Schema.Mutation
   , updateTableByPk
   , deleteFromTable
   , deleteFromTableByPk
-  , -- FIXME: move somewhere else
-    convertToSQLTransaction
+  -- FIXME: move somewhere else
+  , traverseAnnInsert
+  , convertToSQLTransaction
   ) where
 
 
@@ -553,6 +554,41 @@ third f (a,b,c) = (a,b,f c)
 --   internal representation, to avoid errors here?
 -- - is some of this code dead or unused? are there paths never taken?
 --   can it be simplified?
+
+traverseAnnInsert
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnMultiInsert a
+  -> f (AnnMultiInsert b)
+traverseAnnInsert f (annIns, mutationOutput) =
+  (,) <$> traverseMulti annIns
+      <*> RQL.traverseMutationOutput f mutationOutput
+  where
+    traverseMulti (AnnIns objs table conflictClause (insertCheck, updateCheck) columns defaultValues) =
+      AnnIns <$> traverse traverseObject objs
+             <*> pure table
+             <*> traverse (traverse f) conflictClause
+             <*> ( (,) <$> traverseAnnBoolExp f insertCheck
+                       <*> traverse (traverseAnnBoolExp f) updateCheck
+                 )
+             <*> pure columns
+             <*> traverse f defaultValues
+    traverseSingle (AnnIns obj table conflictClause (insertCheck, updateCheck) columns defaultValues) =
+      AnnIns <$> traverseObject obj
+             <*> pure table
+             <*> traverse (traverse f) conflictClause
+             <*> ( (,) <$> traverseAnnBoolExp f insertCheck
+                       <*> traverse (traverseAnnBoolExp f) updateCheck
+                 )
+             <*> pure columns
+             <*> traverse f defaultValues
+    traverseObject (AnnInsObj columns objRels arrRels) =
+      AnnInsObj <$> traverse (traverse f) columns
+                <*> traverse (traverseRel traverseSingle) objRels
+                <*> traverse (traverseRel traverseMulti)  arrRels
+    traverseRel t (RelIns object relInfo) =
+      RelIns <$> t object <*> pure relInfo
+
 
 convertToSQLTransaction
   :: AnnMultiInsert S.SQLExp

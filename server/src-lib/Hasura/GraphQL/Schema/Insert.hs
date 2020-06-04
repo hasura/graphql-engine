@@ -23,7 +23,6 @@ import           Hasura.SQL.Types
 -- temporary emplacement: they are not part of the Schema and don't
 -- belong in this folder.
 
-
 data AnnIns a v
   = AnnIns
   { _aiInsObj         :: !a
@@ -62,37 +61,3 @@ instance Semigroup (AnnInsObj v) where
 
 instance Monoid (AnnInsObj v) where
   mempty = AnnInsObj [] [] []
-
-
-{-
-traverseAnnInsert
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnMultiInsert a
-  -> f (AnnMultiInsert b)
-traverseAnnInsert f (annIns, mutationOutput) = (,)
-  <$> traverseMulti f annIns
-  <*> traverseMutationOutput f mutOutput
-  where
-    traverseMulti f (AnnIns objs conflictClause checkCond columns defaultValues) = AnnIns
-      <$> traverse (traverseObject f) objs
-      <*> traverse (traverseConflictClause f) conflictClause
-      <*> ( traverseAnnBoolExp f $ fst checkCond
-          , traverseAnnBoolExp f $ snd checkCond
-          )
-      <*> pure columns
-      <*> traverse f defaultValues
-    traverseSingle f (AnnIns obj conflictClause checkCond columns defaultValues) = AnnIns
-      <$> traverseObject f obj
-      <*> traverse (traverseConflictClause f) conflictClause
-      <*> ( traverseAnnBoolExp f $ fst checkCond
-          , traverseAnnBoolExp f $ snd checkCond
-          )
-      <*> pure columns
-      <*> traverse f defaultValues
-    traverseObject f (AnnInsObj columns objRels arrRels) = AnnInsObj
-      <$> traverse (traverse f) columns
-      <*> traverse (traverseRel $ traverseSingle f) objRels
-      <*> traverse (traverseRel $ traverseMulti  f) arrRels
-    traverseRel f (RelIns object relInfo) = RelIns <$> f object <*> pure relInfo
--}

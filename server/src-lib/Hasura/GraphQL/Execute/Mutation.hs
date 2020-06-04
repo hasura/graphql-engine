@@ -2,26 +2,28 @@ module Hasura.GraphQL.Execute.Mutation where
 
 import           Hasura.Prelude
 
-import qualified Data.IntMap                    as IntMap
-import qualified Data.Sequence                  as Seq
-import qualified Database.PG.Query              as Q
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.IntMap                            as IntMap
+import qualified Data.Sequence                          as Seq
+import qualified Data.Sequence.NonEmpty                 as NE
+import qualified Database.PG.Query                      as Q
 
-import qualified Hasura.RQL.DML.Delete          as RQL
-import qualified Hasura.RQL.DML.Update          as RQL
+import qualified Hasura.RQL.DML.Delete                  as RQL
+import qualified Hasura.RQL.DML.Update                  as RQL
 
 import           Hasura.Db
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Execute.Resolve
-import           Hasura.GraphQL.Execute.Prepare
-import           Hasura.GraphQL.Parser.Column
-import           Hasura.GraphQL.Parser
-import           Hasura.RQL.Types
 import           Hasura.GraphQL.Context
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Data.Sequence.NonEmpty                 as NE
+import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.GraphQL.Execute.Resolve
+import           Hasura.GraphQL.Parser
+import           Hasura.GraphQL.Parser.Column
+import           Hasura.GraphQL.Schema.Insert
+import           Hasura.GraphQL.Schema.Mutation         (convertToSQLTransaction, traverseAnnInsert)
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
+import           Hasura.RQL.Types
+import qualified Language.GraphQL.Draft.Syntax          as G
 
 
 convertDelete
@@ -42,14 +44,15 @@ convertUpdate usrVars updateOperation stringifyNum =
   -- FIXME: return empty mutation response if nothing to be inserted
   RQL.updateQueryToTx stringifyNum (preparedUpdate, planVariablesSequence usrVars planningState)
   where (preparedUpdate, planningState) = runIdentity $ runPlan $ RQL.traverseAnnUpd prepareWithPlan updateOperation
-{-
+
 convertInsert
-  :: QualifiedTable
+  :: UserVars
   -> AnnMultiInsert UnpreparedValue
   -> Bool
   -> RespTx
-convertInsert table annIns stringifyNum = _todo
--}
+convertInsert userVars insertOperation stringifyNum =
+  convertToSQLTransaction preparedUpdate stringifyNum
+  where (preparedUpdate, _FIXME) = runIdentity $ runPlan $ traverseAnnInsert prepareWithPlan insertOperation
 
 planVariablesSequence :: UserVars -> PlanningSt -> Seq.Seq Q.PrepArg
 planVariablesSequence usrVars = Seq.fromList . map fst . withUserVars usrVars . IntMap.elems . _psPrepped
@@ -60,7 +63,7 @@ convertMutationRootField
   -> MutationRootField UnpreparedValue
   -> RespTx
 convertMutationRootField usrVars stringifyNum = \case
-  MRFInsert s -> _convertInsert usrVars s stringifyNum
+  MRFInsert s -> convertInsert usrVars s stringifyNum
   MRFUpdate s -> convertUpdate usrVars s stringifyNum
   MRFDelete s -> convertDelete usrVars s stringifyNum
   MRFRaw s    -> return $ encJFromJValue s
