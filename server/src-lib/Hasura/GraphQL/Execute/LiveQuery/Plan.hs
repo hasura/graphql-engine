@@ -6,7 +6,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
   ( MultiplexedQuery
   , mkMultiplexedQuery
   , unMultiplexedQuery
---  , resolveMultiplexedValue
+  , resolveMultiplexedValue
 
   , CohortId
   , newCohortId
@@ -29,6 +29,7 @@ import           Hasura.Prelude
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.Extended                    as J
 import qualified Data.Aeson.TH                          as J
+import qualified Data.ByteString                        as B
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Sequence                          as Seq
@@ -51,7 +52,6 @@ import qualified Hasura.SQL.DML                         as S
 --import qualified Hasura.GraphQL.Execute.Query           as GEQ
 
 import           Hasura.Db
-import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
@@ -59,10 +59,12 @@ import           Hasura.GraphQL.Resolve.Action
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
+
+import           Hasura.GraphQL.Utils
+
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.Server.Version             (HasVersion)
 
 -- -------------------------------------------------------------------------------------------------
 -- Multiplexed queries
@@ -199,7 +201,7 @@ instance Q.ToPrepArg CohortVariablesArray where
       encoder = PE.array 114 . PE.dimensionArray foldl' (PE.encodingArray . PE.json_ast)
 
 executeMultiplexedQuery
-  :: (MonadTx m) => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, EncJSON)]
+  :: (MonadTx m) => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, B.ByteString)]
 executeMultiplexedQuery (MultiplexedQuery query) = executeQuery query
 
 -- | Internal; used by both 'executeMultiplexedQuery' and 'explainLiveQueryPlan'.

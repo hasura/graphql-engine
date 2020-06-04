@@ -264,38 +264,6 @@ Date:   Thu Jun 4 16:20:06 2020 -0400
 
     Don't compile in developer APIs by default
 
-commit ae75c6c06edfc8e604af8401f95f55c4160f742b
-Author: Vamshi Surabhi <0x777@users.noreply.github.com>
-Date:   Thu Jun 4 22:55:21 2020 +0530
-
-    allow logging details of a live query polling thread (#4959)
-
-    * changes for poller-log
-
-    add various multiplexed query info in poller-log
-
-    * minor cleanup, also fixes a bug which will return duplicate data
-
-    * Live query poller stats can now be logged
-
-    This also removes in-memory stats that are collected about batched
-    query execution as the log lines when piped into an monitoring tool
-    will give us better insights.
-
-    * allow poller-log to be configurable
-
-    * log minimal information in the livequery-poller-log
-
-    Other information can be retrieved from /dev/subscriptions/extended
-
-    * fix few review comments
-
-    * avoid marshalling and unmarshalling from ByteString to EncJSON
-
-    * separate out SubscriberId and SubscriberMetadata
-
-    Co-authored-by: Anon Ray <rayanon004@gmail.com>
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
