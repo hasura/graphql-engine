@@ -13,7 +13,10 @@ import (
 	"io"
 	"os"
 	"sync"
+	"text/tabwriter"
 	"time"
+
+	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
@@ -99,6 +102,7 @@ type Migrate struct {
 	status *Status
 
 	SkipExecution bool
+	DryRun        bool
 }
 
 // New returns a new Migrate instance from a source URL and a database URL.
@@ -538,8 +542,11 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 
 	ret := make(chan interface{}, m.PrefetchMigrations)
 	go m.read(version, direction, ret)
-
-	return m.unlockErr(m.runMigrations(ret))
+	if m.DryRun {
+		return m.unlockErr(m.runDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser, skipExecution bool) error {
@@ -600,7 +607,11 @@ func (m *Migrate) Steps(n int64) error {
 		go m.readDown(-n, ret)
 	}
 
-	return m.unlockErr(m.runMigrations(ret))
+	if m.DryRun {
+		return m.unlockErr(m.runDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 // Up looks at the currently active migration version
@@ -632,7 +643,11 @@ func (m *Migrate) Up() error {
 
 	go m.readUp(-1, ret)
 
-	return m.unlockErr(m.runMigrations(ret))
+	if m.DryRun {
+		return m.unlockErr(m.runDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 // Down looks at the currently active migration version
@@ -663,7 +678,11 @@ func (m *Migrate) Down() error {
 	ret := make(chan interface{}, m.PrefetchMigrations)
 	go m.readDown(-1, ret)
 
-	return m.unlockErr(m.runMigrations(ret))
+	if m.DryRun {
+		return m.unlockErr(m.runDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
@@ -1188,6 +1207,32 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 	return nil
 }
 
+func (m *Migrate) runDryRun(ret <-chan interface{}) error {
+	migrations := make([]*Migration, 0)
+	var lastInsertVersion int64
+	for r := range ret {
+		if m.stop() {
+			return nil
+		}
+
+		switch r.(type) {
+		case error:
+			return r.(error)
+		case *Migration:
+			migr := r.(*Migration)
+			if migr.Body != nil {
+				version := int64(migr.Version)
+				if version != lastInsertVersion {
+					migrations = append(migrations, migr)
+					lastInsertVersion = version
+				}
+			}
+		}
+	}
+	fmt.Fprintf(os.Stdout, "%s", printDryRunStatus(migrations))
+	return nil
+}
+
 func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan interface{}, dataUp chan<- interface{}, dataDown chan<- interface{}, versions chan<- int64) error {
 	var latestVersion int64
 	go func() {
@@ -1582,8 +1627,11 @@ func (m *Migrate) GotoVersion(gotoVersion int64) error {
 		go m.readDownFromVersion(currVersion, gotoVersion, ret)
 	}
 
-	return m.unlockErr(m.runMigrations(ret))
-
+	if m.DryRun {
+		return m.unlockErr(m.runDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 // readUpFromVersion reads up migrations from `from` limitted by `limit`. (is a modified version of readUp)
@@ -1778,4 +1826,27 @@ func (m *Migrate) ApplySeed(q interface{}) error {
 
 func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
 	return m.databaseDrv.ExportDataDump(tableNames)
+}
+
+func printDryRunStatus(migrations []*Migration) *bytes.Buffer {
+	out := new(tabwriter.Writer)
+	buf := &bytes.Buffer{}
+	out.Init(buf, 0, 8, 2, ' ', 0)
+	w := util.NewPrefixWriter(out)
+	w.Write(util.LEVEL_0, "VERSION\tTYPE\tNAME\n")
+	for _, migration := range migrations {
+		var direction string
+		if int64(migration.Version) == migration.TargetVersion {
+			direction = "up"
+		} else {
+			direction = "down"
+		}
+		w.Write(util.LEVEL_0, "%d\t%s\t%s\n",
+			migration.Version,
+			direction,
+			migration.Identifier,
+		)
+	}
+	out.Flush()
+	return buf
 }
