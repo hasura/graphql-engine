@@ -167,6 +167,7 @@ tableUpdateColumns
   -> m [PGColumnInfo]
 tableUpdateColumns table permissions = do
   -- TODO: memoize this?
+  -- TODO: check that colums that have presets are NOT included in this
   tableFields <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   pure $ mapMaybe isUpdatable $ Map.elems tableFields
   where
