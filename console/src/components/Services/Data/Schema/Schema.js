@@ -226,9 +226,21 @@ class Schema extends Component {
             </div>
           );
 
-          createSchemaSection = createSchemaOpen
-            ? openCreateSection
-            : closedCreateSection;
+          createSchemaSection = (
+            <div className={`${styles.display_flex}`}>
+            {createSchemaOpen
+              ? openCreateSection
+              : closedCreateSection}
+                <Link to={getSchemaPermissionsRoute(currentSchema)}>
+                  <Button
+                    color="white"
+                    size="xs"
+                    className={styles.add_mar_left_mid}>
+                    Schema permissions summary
+                </Button>
+              </Link>
+            </div>
+          );
         }
 
         return createSchemaSection;
@@ -675,16 +687,6 @@ class Schema extends Component {
       );
     };
 
-    const getPermissionsSummaryLink = () => {
-      return (
-        <div className={styles.add_mar_top}>
-          <Link to={getSchemaPermissionsRoute(currentSchema)}>
-            Schema permissions summary
-          </Link>
-        </div>
-      );
-    };
-
     return (
       <div
         className={`container-fluid ${styles.padd_left_remove} ${styles.padd_top}`}
@@ -703,7 +705,6 @@ class Schema extends Component {
           {getUntrackedFunctionsSection()}
           {getNonTrackableFunctionsSection()}
           <hr />
-          {getPermissionsSummaryLink()}
         </div>
       </div>
     );
