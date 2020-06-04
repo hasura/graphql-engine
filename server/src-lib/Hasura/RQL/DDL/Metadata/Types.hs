@@ -11,6 +11,7 @@ module Hasura.RQL.DDL.Metadata.Types
   , tmObjectRelationships
   , tmArrayRelationships
   , tmComputedFields
+  , tmRemoteRelationships
   , tmInsertPermissions
   , tmSelectPermissions
   , tmUpdatePermissions
@@ -22,6 +23,7 @@ module Hasura.RQL.DDL.Metadata.Types
   , ActionMetadata(..)
   , ActionPermissionMetadata(..)
   , ComputedFieldMeta(..)
+  , RemoteRelationshipMeta(..)
   , FunctionsMetadata(..)
   , ExportMetadata(..)
   , ClearMetadata(..)
@@ -33,25 +35,26 @@ module Hasura.RQL.DDL.Metadata.Types
 
 import           Hasura.Prelude
 
-import           Control.Lens                   hiding (set, (.=))
+import           Control.Lens                        hiding (set, (.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Language.Haskell.TH.Syntax          (Lift)
 
-import qualified Data.Aeson.Ordered             as AO
-import qualified Data.HashMap.Strict            as HM
-import qualified Data.HashSet                   as HS
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.Aeson.Ordered                  as AO
+import qualified Data.HashMap.Strict                 as HM
+import qualified Data.HashSet                        as HS
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Hasura.RQL.DDL.ComputedField   as ComputedField
-import qualified Hasura.RQL.DDL.Permission      as Permission
-import qualified Hasura.RQL.DDL.QueryCollection as Collection
-import qualified Hasura.RQL.DDL.Relationship    as Relationship
-import qualified Hasura.RQL.DDL.Schema          as Schema
+import qualified Hasura.RQL.DDL.ComputedField        as ComputedField
+import qualified Hasura.RQL.DDL.Permission           as Permission
+import qualified Hasura.RQL.DDL.QueryCollection      as Collection
+import qualified Hasura.RQL.DDL.Relationship         as Relationship
+import qualified Hasura.RQL.DDL.Schema               as Schema
+import qualified Hasura.RQL.Types.RemoteRelationship as RemoteRelationship
 
 data MetadataVersion
   = MVVersion1
@@ -81,6 +84,13 @@ data ComputedFieldMeta
   } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldMeta)
 
+data RemoteRelationshipMeta
+  = RemoteRelationshipMeta
+  { _rrmName       :: !RemoteRelationshipName
+  , _rrmDefinition :: !RemoteRelationship.RemoteRelationshipDef
+  } deriving (Show, Eq, Lift, Generic)
+$(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipMeta)
+
 data TableMeta
   = TableMeta
   { _tmTable               :: !QualifiedTable
@@ -89,6 +99,7 @@ data TableMeta
   , _tmObjectRelationships :: ![Relationship.ObjRelDef]
   , _tmArrayRelationships  :: ![Relationship.ArrRelDef]
   , _tmComputedFields      :: ![ComputedFieldMeta]
+  , _tmRemoteRelationships :: ![RemoteRelationshipMeta]
   , _tmInsertPermissions   :: ![Permission.InsPermDef]
   , _tmSelectPermissions   :: ![Permission.SelPermDef]
   , _tmUpdatePermissions   :: ![Permission.UpdPermDef]
@@ -99,7 +110,7 @@ $(makeLenses ''TableMeta)
 
 mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMeta
 mkTableMeta qt isEnum config =
-  TableMeta qt isEnum config [] [] [] [] [] [] [] []
+  TableMeta qt isEnum config [] [] [] [] [] [] [] [] []
 
 instance FromJSON TableMeta where
   parseJSON (Object o) = do
@@ -114,6 +125,7 @@ instance FromJSON TableMeta where
      <*> o .:? orKey .!= []
      <*> o .:? arKey .!= []
      <*> o .:? cfKey .!= []
+     <*> o .:? rrKey .!= []
      <*> o .:? ipKey .!= []
      <*> o .:? spKey .!= []
      <*> o .:? upKey .!= []
@@ -132,6 +144,7 @@ instance FromJSON TableMeta where
       dpKey = "delete_permissions"
       etKey = "event_triggers"
       cfKey = "computed_fields"
+      rrKey = "remote_relationships"
 
       unexpectedKeys =
         HS.fromList (HM.keys o) `HS.difference` expectedKeySet
@@ -139,7 +152,7 @@ instance FromJSON TableMeta where
       expectedKeySet =
         HS.fromList [ tableKey, isEnumKey, configKey, orKey
                     , arKey , ipKey, spKey, upKey, dpKey, etKey
-                    , cfKey
+                    , cfKey, rrKey
                     ]
 
   parseJSON _ =
@@ -288,6 +301,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                          objectRelationships
                          arrayRelationships
                          computedFields
+                         remoteRelationships
                          insertPermissions
                          selectPermissions
                          updatePermissions
@@ -299,6 +313,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                         , objectRelationshipsPair
                                         , arrayRelationshipsPair
                                         , computedFieldsPair
+                                        , remoteRelationshipsPair
                                         , insertPermissionsPair
                                         , selectPermissionsPair
                                         , updatePermissionsPair
@@ -315,6 +330,8 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                  relDefToOrdJSON arrayRelationships
         computedFieldsPair = listToMaybeOrdPair "computed_fields"
                              computedFieldMetaToOrdJSON computedFields
+        remoteRelationshipsPair = listToMaybeOrdPair "remote_relationships"
+                                  AO.toOrdered remoteRelationships
         insertPermissionsPair = listToMaybeOrdPair "insert_permissions"
                                 insPermDefToOrdJSON insertPermissions
         selectPermissionsPair = listToMaybeOrdPair "select_permissions"
