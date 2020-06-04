@@ -228,15 +228,14 @@ class Schema extends Component {
 
           createSchemaSection = (
             <div className={`${styles.display_flex}`}>
-            {createSchemaOpen
-              ? openCreateSection
-              : closedCreateSection}
-                <Link to={getSchemaPermissionsRoute(currentSchema)}>
-                  <Button
-                    color="white"
-                    size="xs"
-                    className={styles.add_mar_left_mid}>
-                    Schema permissions summary
+              {createSchemaOpen ? openCreateSection : closedCreateSection}
+              <Link to={getSchemaPermissionsRoute(currentSchema)}>
+                <Button
+                  color="white"
+                  size="xs"
+                  className={styles.add_mar_left_mid}
+                >
+                  Schema permissions summary
                 </Button>
               </Link>
             </div>

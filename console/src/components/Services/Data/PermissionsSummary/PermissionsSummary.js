@@ -151,7 +151,7 @@ class PermissionsSummary extends Component {
         />
       );
     };
-    
+
     const getEditIcon = () => {
       return getActionIcon('fa-pencil');
     };
@@ -198,19 +198,15 @@ class PermissionsSummary extends Component {
         } else {
           headerContent = (
             <div
-              className={
-                `${styles.actionCell} ${styles.display_flex} ${styles.flex_space_between}`
-              }
+              className={`${styles.actionCell} ${styles.display_flex} ${styles.flex_space_between}`}
             >
               <div>{content}</div>
-              <div className={`${styles.tableHeaderActions} ${styles.display_flex}`}>
-                {
-                  actionBtns.map((actionBtn, i) => (
-                    <div key={`${content}-action-btn-${i}`}>
-                    {actionBtn}
-                    </div>
-                  ))
-                }
+              <div
+                className={`${styles.tableHeaderActions} ${styles.display_flex}`}
+              >
+                {actionBtns.map((actionBtn, i) => (
+                  <div key={`${content}-action-btn-${i}`}>{actionBtn}</div>
+                ))}
               </div>
             </div>
           );
@@ -304,12 +300,12 @@ class PermissionsSummary extends Component {
                 true,
                 role
               );
-              
+
               if (deleteConfirmed) {
-                // 
+                // TODO: insert the function to call for deletion here
                 console.log(`Deleted permissions for the role: ${role}`);
               }
-            }
+            };
 
             return (
               <Button
@@ -317,20 +313,16 @@ class PermissionsSummary extends Component {
                 size="xs"
                 onClick={deleteOnClick}
                 title="Delete Permissions"
-                >
-                  {getActionIcon('fa-trash')}
-                </Button>
+              >
+                {getActionIcon('fa-trash')}
+              </Button>
             );
           };
 
-          const roleHeader = getHeader(
-            role,
-            selectable,
-            isCurrRole,
-            setRole,
-            [getCopyBtn(),
-            getDeleteBtn()]
-          );
+          const roleHeader = getHeader(role, selectable, isCurrRole, setRole, [
+            getCopyBtn(),
+            getDeleteBtn(),
+          ]);
 
           if (selectedFirst && isCurrRole) {
             rolesHeaders.unshift(roleHeader);
@@ -341,7 +333,7 @@ class PermissionsSummary extends Component {
       }
 
       return rolesHeaders;
-    };  
+    };
 
     const getRolesCells = (table, roleCellRenderer) => {
       const tablePermissions = getTablePermissionsByRoles(table);
