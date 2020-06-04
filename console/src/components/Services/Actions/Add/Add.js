@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styles from './Styles.scss';
 import Helmet from 'react-helmet';
 import HandlerEditor from '../Common/components/HandlerEditor';
@@ -19,6 +19,8 @@ import {
 } from './reducer';
 import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import { AlertBox } from '../../../UIKit/atoms';
 
 const AddAction = ({
   handler,
@@ -30,8 +32,9 @@ const AddAction = ({
   headers,
   forwardClientHeaders,
   derive,
+  readOnlyMode,
 }) => {
-  React.useEffect(() => {
+  useEffect(() => {
     if (!derive.operation) {
       dispatch(setDefaults());
     }
@@ -80,6 +83,7 @@ const AddAction = ({
     !typesDefinitionError &&
     !actionDefinitionError &&
     !actionParseTimer &&
+    !readOnlyMode &&
     !typedefParseTimer;
 
   let actionType;
@@ -96,6 +100,11 @@ const AddAction = ({
   return (
     <div>
       <Helmet title={'Add Action - Actions | Hasura'} />
+      {readOnlyMode && (
+        <AlertBox type="warning" m="sm">
+          Adding new action is not allowed in Read only mode!
+        </AlertBox>
+      )}
       <div className={styles.heading_text}>Add a new action</div>
       <ActionDefinitionEditor
         value={actionDefinitionSdl}
@@ -103,6 +112,7 @@ const AddAction = ({
         onChange={actionDefinitionOnChange}
         timer={actionParseTimer}
         placeholder={''}
+        readOnlyMode={readOnlyMode}
       />
       <hr />
       <TypeDefinitionEditor
@@ -111,6 +121,7 @@ const AddAction = ({
         timer={typedefParseTimer}
         onChange={typeDefinitionOnChange}
         placeholder={''}
+        readOnlyMode={readOnlyMode}
       />
       <hr />
       <HandlerEditor
@@ -147,6 +158,12 @@ const AddAction = ({
       >
         Create
       </Button>
+      {readOnlyMode && (
+        <ToolTip
+          id="tooltip-actions-add-readonlymode"
+          message="Adding new action is not allowed in Read only mode!"
+        />
+      )}
     </div>
   );
 };

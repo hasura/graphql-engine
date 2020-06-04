@@ -1,6 +1,6 @@
 import React from 'react';
 import CustomTypesContainer from '../../Containers/CustomTypesContainer';
-import TypesEditor from '../../Common/components/TypeDefinitionEditor';
+import TypeDefinitionEditor from '../../Common/components/TypeDefinitionEditor';
 import Button from '../../../../Common/Button/Button';
 import styles from '../../Common/components/Styles.scss';
 import {
@@ -11,7 +11,7 @@ import { setTypeDefinition, setFetching, unsetFetching } from '../reducer';
 import { setCustomGraphQLTypes } from '../../../Types/ServerIO';
 import { showErrorNotification } from '../../../Common/Notification';
 
-const Manage = ({ allTypes, dispatch, ...manageProps }) => {
+const Manage = ({ allTypes, dispatch, readOnlyMode, ...manageProps }) => {
   const sdlOnChange = (value, _error, _timer, ast) => {
     dispatch(setTypeDefinition(value, _error, _timer, ast));
   };
@@ -50,7 +50,7 @@ const Manage = ({ allTypes, dispatch, ...manageProps }) => {
 
   return (
     <CustomTypesContainer tabName="manage" dispatch={dispatch}>
-      <TypesEditor
+      <TypeDefinitionEditor
         value={sdl}
         error={error}
         timer={timer}
@@ -59,6 +59,7 @@ const Manage = ({ allTypes, dispatch, ...manageProps }) => {
         label={editorLabel}
         tooltip={editorTooltip}
         editorHeight="600px"
+        readOnlyMode={readOnlyMode}
       />
       <hr />
       <Button

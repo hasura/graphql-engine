@@ -80,7 +80,6 @@ const Permissions = ({
             dispatch(permCloseEdit());
           };
 
-          const isEditAllowed = role !== 'admin';
           const isCurrEdit =
             isEditing &&
             (permissionEdit.role === role ||
@@ -88,14 +87,15 @@ const Permissions = ({
           let editIcon = '';
           let className = '';
           let onClick = () => {};
-          if (isEditAllowed) {
+          if (role !== 'admin' && !readOnlyMode) {
             editIcon = getEditIcon();
 
-            className += styles.clickableCell;
-            onClick = dispatchOpenEdit(queryType);
             if (isCurrEdit) {
               onClick = dispatchCloseEdit;
               className += ` ${styles.currEdit}`;
+            } else {
+              className += styles.clickableCell;
+              onClick = dispatchOpenEdit(queryType);
             }
           }
 
@@ -120,7 +120,7 @@ const Permissions = ({
             permType: queryType,
             className,
             editIcon: editIcon,
-            onClick: !readOnlyMode && onClick,
+            onClick,
             dataTest: `${role}-${queryType}`,
             access: getRoleQueryPermission(),
           };

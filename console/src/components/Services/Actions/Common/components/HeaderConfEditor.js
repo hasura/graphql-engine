@@ -16,10 +16,6 @@ const HeaderConfEditor = ({
   setHeaders,
   disabled = false,
 }) => {
-  const getHeaders = () => {
-    return <Headers {...{ headers, setHeaders, disabled }} />;
-  };
-
   return (
     <div className={`${className || ''}`}>
       <h2
@@ -44,7 +40,7 @@ const HeaderConfEditor = ({
           Forward client headers to webhook
         </label>
       </div>
-      {getHeaders()}
+      <Headers headers={headers} setHeaders={setHeaders} disabled={disabled} />
     </div>
   );
 };

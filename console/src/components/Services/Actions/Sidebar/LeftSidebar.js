@@ -10,7 +10,6 @@ const LeftSidebar = ({
   readOnlyMode,
 }) => {
   const [searchText, setSearchText] = React.useState('');
-  const showActionBtns = !readOnlyMode;
 
   const handleSearch = e => setSearchText(e.target.value);
 
@@ -86,7 +85,7 @@ const LeftSidebar = ({
 
   return (
     <LeftSubSidebar
-      showAddBtn={showActionBtns}
+      showAddBtn={!readOnlyMode}
       searchInput={getSearchInput()}
       heading={`Actions (${actionsList.length})`}
       addLink={`${appPrefix}/manage/add`}
