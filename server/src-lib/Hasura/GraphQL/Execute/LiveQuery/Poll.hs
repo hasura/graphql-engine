@@ -24,8 +24,10 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
 
   -- * Subscribers
   , Subscriber(..)
-  , SubscriberId(..)
-  , mkSubscriberId
+  , SubscriberId
+  , newSubscriberId
+  , SubscriberMetadata
+  , mkSubscriberMetadata
   , SubscriberMap
   , OnChange
   , LGQResponse
@@ -35,30 +37,28 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Async                    as A
-import qualified Control.Concurrent.STM                      as STM
-import qualified Control.Immortal                            as Immortal
-import qualified Crypto.Hash                                 as CH
-import qualified Data.Aeson.Casing                           as J
-import qualified Data.Aeson.Extended                         as J
-import qualified Data.Aeson.TH                               as J
-import qualified Data.ByteString                             as BS
-import qualified Data.HashMap.Strict                         as Map
-import qualified Data.Time.Clock                             as Clock
-import qualified Data.UUID                                   as UUID
-import qualified Database.PG.Query                           as Q
+import qualified Control.Concurrent.Async                 as A
+import qualified Control.Concurrent.STM                   as STM
+import qualified Control.Immortal                         as Immortal
+import qualified Crypto.Hash                              as CH
+import qualified Data.Aeson.Casing                        as J
+import qualified Data.Aeson.Extended                      as J
+import qualified Data.Aeson.TH                            as J
+import qualified Data.ByteString                          as BS
+import qualified Data.HashMap.Strict                      as Map
+import qualified Data.Time.Clock                          as Clock
+import qualified Data.UUID                                as UUID
+import qualified Data.UUID.V4                             as UUID
+import qualified Database.PG.Query                        as Q
 import qualified ListT
-import qualified StmContainers.Map                           as STMMap
+import qualified StmContainers.Map                        as STMMap
 
-import           Data.Hashable
-import           Data.List.Split                             (chunksOf)
+import           Data.List.Split                          (chunksOf)
 import           GHC.AssertNF
 import           Control.Lens
 
-import qualified Hasura.GraphQL.Execute.LiveQuery.TMap       as TMap
-import qualified Hasura.GraphQL.Transport.WebSocket.Protocol as WS
-import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
-import qualified Hasura.Logging                              as L
+import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
+import qualified Hasura.Logging                           as L
 
 import           Hasura.Db
 import           Hasura.GraphQL.Execute.LiveQuery.Options
@@ -67,37 +67,33 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types.Error
 import           Hasura.Session
 
--- -------------------------------------------------------------------------------------------------
+-- ----------------------------------------------------------------------------------------------
 -- Subscribers
 
--- | Identifies a subscriber of a live query based on their (websocket id,
--- operation id) - this is useful for collecting metrics and then correlating.
--- The 'createdAt' to ensure that there is uniqueness even if the operationId
--- is later repeated on the same websocket
-data SubscriberId
-  = SubscriberId
-  { _siWebsocketId :: !WS.WSId
-  , _siOperationId :: !WS.OperationId
-  , _siCreatedAt   :: !Clock.UTCTime
-  } deriving (Show, Eq, Generic)
+newtype SubscriberId
+  = SubscriberId { unSubscriberId :: UUID.UUID }
+  deriving (Show, Eq, Generic, Hashable, J.ToJSON)
 
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''SubscriberId)
+newSubscriberId :: IO SubscriberId
+newSubscriberId =
+  SubscriberId <$> UUID.nextRandom
 
-instance Hashable SubscriberId where
-  -- UTCTime has no Hashable instance however we can hash using only (WSId,
-  -- OperationId) as it is unlikely for us to see the same (WSId, OperationId)
-  -- with different 'CreatedAt' fields
-  hashWithSalt salt (SubscriberId websocketId operationId _) =
-    hashWithSalt salt (websocketId, operationId)
+-- | Allows a user of the live query subsystem (currently websocket transport)
+-- to attach arbitrary metadata about a subscriber. This information is available
+-- as part of Subscriber in CohortExecutionDetails and can be logged by customizing
+-- in pollerlog
+newtype SubscriberMetadata
+  = SubscriberMetadata { unSubscriberMetadata :: J.Value }
+  deriving (Show, Eq, J.ToJSON)
 
-mkSubscriberId :: WS.WSId -> WS.OperationId -> IO SubscriberId
-mkSubscriberId weboscketId operationId =
-  SubscriberId weboscketId operationId <$> Clock.getCurrentTime
+mkSubscriberMetadata :: J.Value -> SubscriberMetadata
+mkSubscriberMetadata = SubscriberMetadata
 
 data Subscriber
   = Subscriber
-  { _sOnChangeCallback :: !OnChange
-  , _sId               :: !SubscriberId
+  { _sId               :: !SubscriberId
+  , _sMetadata         :: !SubscriberMetadata
+  , _sOnChangeCallback :: !OnChange
   }
 
 -- | live query onChange metadata, used for adding more extra analytics data
@@ -208,7 +204,7 @@ pushResultToCohort
   -> Maybe ResponseHash
   -> LiveQueryMetadata
   -> CohortSnapshot
-  -> IO ([SubscriberId], [SubscriberId])
+  -> IO ( [(SubscriberId, SubscriberMetadata)], [(SubscriberId, SubscriberMetadata)])
   -- ^ subscribers to which data has been pushed, subscribers which already
   -- have this data (this information is exposed by metrics reporting)
 pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = do
@@ -223,12 +219,13 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = 
     else
       return (newSinks, curSinks)
   pushResultToSubscribers subscribersToPush
-  return (map _sId subscribersToPush, map _sId subscribersToIgnore)
+  pure $ over (each.each) (\Subscriber{..} -> (_sId, _sMetadata))
+         (subscribersToPush, subscribersToIgnore)
   where
     CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
     response = result <&> \payload -> LiveQueryResponse payload dTime
     pushResultToSubscribers =
-      A.mapConcurrently_ $ \(Subscriber action _) -> action response
+      A.mapConcurrently_ $ \(Subscriber _ _ action) -> action response
 
 -- -----------------------------------------------------------------------------
 -- Pollers
@@ -312,11 +309,11 @@ data CohortExecutionDetails
   , _cedVariables    :: !CohortVariables
   , _cedResponseSize :: !(Maybe Int)
   -- ^ Nothing in case of an error
-  , _cedPushedTo     :: ![SubscriberId]
+  , _cedPushedTo     :: ![(SubscriberId, SubscriberMetadata)]
   -- ^ The response on this cycle has been pushed to these above subscribers
   -- New subscribers (those which haven't been around during the previous poll
   -- cycle) will always be part of this
-  , _cedIgnored      :: ![SubscriberId]
+  , _cedIgnored      :: ![(SubscriberId, SubscriberMetadata)]
   -- ^ The response on this cycle has *not* been pushed to these above
   -- subscribers. This would when the response hasn't changed from the previous
   -- polled cycle
@@ -412,7 +409,7 @@ pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap = do
     batchesDetails <- A.forConcurrently cohortBatches $ \cohorts -> do
       (queryExecutionTime, mxRes) <- withElapsedTime $
         runExceptT $ runLazyTx' pgExecCtx $
-          executeMultiplexedQuery pgQuery $ map (over _2 _csVariables) cohorts
+          executeMultiplexedQuery pgQuery $ over (each._2) _csVariables cohorts
 
       let lqMeta = LiveQueryMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes

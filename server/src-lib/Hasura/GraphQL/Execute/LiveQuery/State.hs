@@ -63,33 +63,34 @@ data LiveQueryId
 
 addLiveQuery
   :: L.Logger L.Hasura
-  -> SubscriberId
+  -> SubscriberMetadata
   -> LiveQueriesState
   -> LiveQueryPlan
   -> OnChange
   -- ^ the action to be executed when result changes
   -> IO LiveQueryId
-addLiveQuery logger subscriberId lqState plan onResultAction = do
+addLiveQuery logger subscriberMetadata lqState plan onResultAction = do
   -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
   -- disposable UUIDs:
-  responseId <- newCohortId
+  cohortId <- newCohortId
+  subscriberId <- newSubscriberId
+
+  let !subscriber = Subscriber subscriberId subscriberMetadata onResultAction
 
   $assertNFHere subscriber  -- so we don't write thunks to mutable vars
 
   -- a handler is returned only when it is newly created
-  handlerM <- STM.atomically $ do
-    handlerM <- STMMap.lookup handlerId lqMap
-    case handlerM of
+  handlerM <- STM.atomically $
+    STMMap.lookup handlerId lqMap >>= \case
       Just handler -> do
-        cohortM <- TMap.lookup cohortKey $ _pCohorts handler
-        case cohortM of
-          Just cohort -> addToCohort subscriberId cohort
-          Nothing     -> addToPoller subscriberId responseId handler
+        TMap.lookup cohortKey (_pCohorts handler) >>= \case
+          Just cohort -> addToCohort subscriber cohort
+          Nothing     -> addToPoller subscriber cohortId handler
         return Nothing
       Nothing -> do
         !poller <- newPoller
-        addToPoller subscriberId responseId poller
+        addToPoller subscriber cohortId poller
         STMMap.insert poller handlerId lqMap
         return $ Just poller
 
@@ -112,14 +113,12 @@ addLiveQuery logger subscriberId lqState plan onResultAction = do
 
     handlerId = PollerKey role query
 
-    !subscriber = Subscriber onResultAction subscriberId
+    addToCohort subscriber handlerC =
+      TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
 
-    addToCohort sinkId handlerC =
-      TMap.insert subscriber sinkId $ _cNewSubscribers handlerC
-
-    addToPoller sinkId responseId handler = do
-      !newCohort <- Cohort responseId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new
-      addToCohort sinkId newCohort
+    addToPoller subscriber cohortId handler = do
+      !newCohort <- Cohort cohortId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new
+      addToCohort subscriber newCohort
       TMap.insert newCohort cohortKey $ _pCohorts handler
 
     newPoller = Poller <$> TMap.new <*> STM.newEmptyTMVar
