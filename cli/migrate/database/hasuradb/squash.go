@@ -63,13 +63,6 @@ func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) e
 			element := val.(*list.Element)
 			switch obj := element.Value.(type) {
 			case *createRemoteRelationshipInput:
-				for _, e := range prevElems {
-					squashList.Remove(e)
-					err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
-					if err != nil {
-						return errors.Wrapf(err, "error squashing: %v", obj.Name)
-					}
-				}
 				err := remoteRelationshipTransition.Trigger(createRemoteRelationship, &cfg, nil)
 				if err != nil {
 					return errors.Wrapf(err, "error squashing: %v", obj.Name)
@@ -86,6 +79,7 @@ func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) e
 					for _, e := range prevElems {
 						squashList.Remove(e)
 					}
+					prevElems = prevElems[:0]
 					err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
 					if err != nil {
 						return errors.Wrapf(err, "error squashing: %v", obj.Name)
@@ -109,6 +103,7 @@ func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) e
 				for _, e := range prevElems {
 					squashList.Remove(e)
 				}
+				prevElems = prevElems[:0]
 			}
 		}
 	}
@@ -546,6 +541,11 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 					return fmt.Errorf("cannot delete remote relationship on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
 				}
 				prevElems = append(prevElems, element)
+			case *updateRemoteRelationshipInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot update remote relationship on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
 			}
 		}
 	}
@@ -824,32 +824,6 @@ func (q CustomQuery) MergeQueryCollections(squashList *database.CustomList) erro
 		}
 	}
 	return nil
-}
-
-type customList struct {
-	*list.List
-}
-
-func (c *customList) Iterate() linq.Iterator {
-	length := c.Len()
-	var prevElem *list.Element
-	i := 0
-	return func() (item interface{}, ok bool) {
-		if length == 0 {
-			return
-		}
-
-		if i == 0 {
-			prevElem = c.Front()
-			i++
-		} else {
-			prevElem = prevElem.Next()
-			if prevElem == nil {
-				return
-			}
-		}
-		return prevElem, true
-	}
 }
 
 // PushList will read migration from source
