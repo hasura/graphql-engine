@@ -77,23 +77,15 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
       objectsName  = $$(G.litName "objects")
       objectsDesc  = "the rows to be inserted"
       argsParser   = do
-        onConflict <- maybe
+        conflictClause <- maybe
           (pure Nothing)
           (P.fieldOptional conflictName (Just conflictDesc))
           conflictParser
-        objects    <- P.field objectsName (Just objectsDesc) objectsParser
-        pure (onConflict, objects)
+        objects <- P.field objectsName (Just objectsDesc) objectsParser
+        pure (conflictClause, objects)
   pure $ P.subselection fieldName description argsParser selectionParser
-    <&> \((onConflict, objects), output) ->
-       ( AnnIns { _aiInsObj         = objects
-                , _aiConflictClause = onConflict
-                , _aiCheckCond      = ( undefined {- FIXME!!! -}
-                                      , fmapAnnBoolExp partialSQLExpToUnpreparedValue $
-                                        ipiCheck insertPerms
-                                      )
-                , _aiTableCols      = columns
-                , _aiDefVals        = fmap partialSQLExpToUnpreparedValue $ ipiSet insertPerms
-                }
+    <&> \((conflictClause, objects), output) ->
+       ( mkInsertObject objects columns conflictClause insertPerms updatePerms
        , RQL.MOutMultirowFields output
        )
 
@@ -110,30 +102,22 @@ insertOneIntoTable
 insertOneIntoTable table fieldName description insertPerms selectPerms updatePerms stringifyNum = do
   columns         <- tableColumns table
   selectionParser <- tableSelectionSet table selectPerms stringifyNum
-  objectsParser   <- tableFieldsInput table insertPerms
+  objectParser    <- tableFieldsInput table insertPerms
   conflictParser  <- fmap join $ sequenceA $ conflictObject table (Just selectPerms) <$> updatePerms
   let conflictName  = $$(G.litName "on_conflict")
       conflictDesc  = "on conflict condition"
-      objectsName   = $$(G.litName "objects")
-      objectsDesc   = "the rows to be inserted"
+      objectName    = $$(G.litName "object")
+      objectDesc    = "the row to be inserted"
       argsParser    = do
-        onConflict <- maybe
+        conflictClause <- maybe
           (pure Nothing)
           (P.fieldOptional conflictName (Just conflictDesc))
           conflictParser
-        objects    <- P.field objectsName (Just objectsDesc) objectsParser
-        pure (onConflict, objects)
+        object <- P.field objectName (Just objectDesc) objectParser
+        pure (conflictClause, object)
   pure $ P.subselection fieldName description argsParser selectionParser
-    <&> \((onConflict, object), output) ->
-       ( AnnIns { _aiInsObj         = [object]
-                , _aiConflictClause = onConflict
-                , _aiCheckCond      = ( undefined {- FIXME!!! -}
-                                      , fmapAnnBoolExp partialSQLExpToUnpreparedValue $
-                                        ipiCheck insertPerms
-                                      )
-                , _aiTableCols      = columns
-                , _aiDefVals        = fmap partialSQLExpToUnpreparedValue $ ipiSet insertPerms
-                }
+    <&> \((conflictClause, object), output) ->
+       ( mkInsertObject [object] columns conflictClause insertPerms updatePerms
        , RQL.MOutSinglerowObject output
        )
 
@@ -195,21 +179,12 @@ objectRelationshipInput table insertPerms selectPerms updatePerms =
       inputName    = tableName <> $$(G.litName "_obj_rel_insert_input")
       inputDesc    = G.Description $ "input type for inserting object relation for remote table \"" <> G.unName tableName <> "\""
       inputParser = do
-        conflict <- maybe
+        conflictClause <- maybe
           (pure Nothing)
           (P.fieldOptional conflictName Nothing)
           conflictParser
-        object   <- P.field objectName Nothing objectParser
-        pure $ AnnIns
-          { _aiInsObj         = object
-          , _aiConflictClause = conflict
-          , _aiCheckCond      = ( undefined {- FIXME!!! -}
-                                , fmapAnnBoolExp partialSQLExpToUnpreparedValue $
-                                  ipiCheck insertPerms
-                                )
-          , _aiTableCols      = columns
-          , _aiDefVals        = fmap partialSQLExpToUnpreparedValue $ ipiSet insertPerms
-          }
+        object <- P.field objectName Nothing objectParser
+        pure $ mkInsertObject object columns conflictClause insertPerms updatePerms
   pure $ P.object inputName (Just inputDesc) inputParser <&> undefined
 
 arrayRelationshipInput
@@ -230,22 +205,31 @@ arrayRelationshipInput table insertPerms selectPerms updatePerms =
       inputName    = tableName <> $$(G.litName "_arr_rel_insert_input")
       inputDesc    = G.Description $ "input type for inserting array relation for remote table \"" <> G.unName tableName <> "\""
       inputParser = do
-        conflict <- maybe
+        conflictClause <- maybe
           (pure Nothing)
           (P.fieldOptional conflictName Nothing)
           conflictParser
-        objects  <- P.field objectsName Nothing $ P.list objectParser
-        pure $ AnnIns
-          { _aiInsObj         = objects
-          , _aiConflictClause = conflict
-          , _aiCheckCond      = ( undefined {- FIXME!!! -}
-                                , fmapAnnBoolExp partialSQLExpToUnpreparedValue $
-                                  ipiCheck insertPerms
-                                )
-          , _aiTableCols      = columns
-          , _aiDefVals        = fmap partialSQLExpToUnpreparedValue $ ipiSet insertPerms
-          }
+        objects <- P.field objectsName Nothing $ P.list objectParser
+        pure $ mkInsertObject objects columns conflictClause insertPerms updatePerms
   pure $ P.object inputName (Just inputDesc) inputParser
+
+
+mkInsertObject
+  :: a
+  -> [PGColumnInfo]
+  -> Maybe (RQL.ConflictClauseP1 UnpreparedValue)
+  -> InsPermInfo
+  -> Maybe UpdPermInfo
+  -> AnnIns a UnpreparedValue
+mkInsertObject objects columns conflictClause insertPerms updatePerms =
+  AnnIns { _aiInsObj         = objects
+         , _aiConflictClause = conflictClause
+         , _aiCheckCond      = (insertCheck, updateCheck)
+         , _aiTableCols      = columns
+         , _aiDefVals        = fmap partialSQLExpToUnpreparedValue $ ipiSet insertPerms
+         }
+  where insertCheck = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ ipiCheck insertPerms
+        updateCheck = fmapAnnBoolExp partialSQLExpToUnpreparedValue <$> (upiCheck =<< updatePerms)
 
 conflictObject
   :: forall m n. (MonadSchema n m, MonadError QErr m)
@@ -600,7 +584,7 @@ insertMultipleObjects table multiObjIns mutationOutput stringifyNum =
             columnNames
             columnValues
             conflictClause
-            (Just <$> checkCondition)
+            checkCondition
             mutationOutput
             columnInfos
       in RQL.insertP2 stringifyNum (insertQuery, Seq.empty)
@@ -632,7 +616,7 @@ insertObject table singleObjIns stringifyNum = do
       objRelDeterminedCols = concatMap snd objInsRes
       finalInsCols = columns <> objRelDeterminedCols
 
-  cte <- mkInsertQ table onConflict finalInsCols defaultValues (insertCond, Just updateCond)
+  cte <- mkInsertQ table onConflict finalInsCols defaultValues checkCond
 
   MutateResp affRows colVals <- RQL.mutateAndFetchCols table allColumns (cte, Seq.empty) stringifyNum
   colValM <- asSingleObject colVals
@@ -642,7 +626,7 @@ insertObject table singleObjIns stringifyNum = do
 
   return (totAffRows, colValM)
   where
-    AnnIns annObj onConflict (insertCond, updateCond) allColumns defaultValues = singleObjIns
+    AnnIns annObj onConflict checkCond allColumns defaultValues = singleObjIns
     AnnInsObj columns objectRels arrayRels = annObj
 
     arrRelDepCols = flip getColInfos allColumns $

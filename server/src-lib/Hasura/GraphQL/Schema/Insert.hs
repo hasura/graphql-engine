@@ -28,7 +28,7 @@ data AnnIns a v
   = AnnIns
   { _aiInsObj         :: !a
   , _aiConflictClause :: !(Maybe (RQL.ConflictClauseP1 v))
-  , _aiCheckCond      :: !(AnnBoolExp v, AnnBoolExp v)
+  , _aiCheckCond      :: !(AnnBoolExp v, Maybe (AnnBoolExp v))
   , _aiTableCols      :: ![PGColumnInfo]
   , _aiDefVals        :: !(PreSetColsG v)
   } deriving (Show, Eq)
