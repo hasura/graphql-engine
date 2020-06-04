@@ -147,3 +147,11 @@ export const parseAuthHeader = header => {
 
   return { isAuthHeader, token };
 };
+
+export const persistGraphiQLMode = (mode) => {
+  window.localStorage.setItem('ApiExplorer:GraphiQLMode', mode);
+};
+
+export const getPersistedGraphiQLMode = () => {
+  return window.localStorage.getItem('ApiExplorer:GraphiQLMode');
+};

@@ -634,6 +634,7 @@ const apiExplorerReducer = (state = defaultState, action) => {
         },
       };
     case SWITCH_GRAPHIQL_MODE:
+
       return {
         ...state,
         mode: action.mode,

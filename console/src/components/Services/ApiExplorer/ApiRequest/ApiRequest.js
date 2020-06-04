@@ -34,6 +34,7 @@ import {
   getPersistedAdminSecretHeaderWasAdded,
   persistAdminSecretHeaderWasAdded,
   removePersistedAdminSecretHeaderWasAdded,
+  persistGraphiQLMode,
 } from './utils';
 import { getGraphQLEndpoint } from '../utils';
 
@@ -223,7 +224,9 @@ class ApiRequest extends Component {
 
       const toggleGraphiqlMode = () => {
         if (loading) return;
-        dispatch(switchGraphiQLMode(mode === 'relay' ? 'graphql' : 'relay'));
+        const newMode = (mode === 'relay' ? 'graphql' : 'relay');
+        persistGraphiQLMode(newMode);
+        dispatch(switchGraphiQLMode(newMode));
       };
 
       return (

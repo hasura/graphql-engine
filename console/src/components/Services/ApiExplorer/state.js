@@ -1,4 +1,7 @@
-import endpoints from '../../../Endpoints';
+import { getPersistedGraphiQLMode } from './ApiRequest/utils'
+import { getGraphQLEndpoint } from './utils'
+
+const persistedGraphiqlMode = getPersistedGraphiQLMode();
 
 const defaultHeader = [
   {
@@ -27,7 +30,7 @@ const dataApisContent = [
     },
     request: {
       method: 'POST',
-      url: endpoints.graphQLUrl,
+      url: getGraphQLEndpoint(persistedGraphiqlMode),
       headers: defaultHeader,
       headersInitialised: false,
       bodyType: 'graphql',
@@ -60,7 +63,7 @@ const defaultState = {
   explorerData,
   authApiExpanded: 'Username-password Login',
   headerFocus: false,
-  mode: 'graphql',
+  mode: persistedGraphiqlMode,
   loading: false,
 };
 
