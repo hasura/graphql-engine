@@ -276,12 +276,12 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
         GExPHasura (gCtx, G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet) -> do
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           (queryTx, plan, genSql) <-
-            getQueryOp gCtx sqlGenCtx userInfo inlinedSelSet varDefs (_grVariables reqUnparsed)
+            EQ.convertQuerySelSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ GExPHasura $ ExOpQuery queryTx (Just genSql)
         GExPHasura (gCtx, G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet) -> do
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          queryTx <- getMutOp gCtx sqlGenCtx userInfo inlinedSelSet varDefs (_grVariables reqUnparsed)
+          queryTx <- EM.convertMutationSelectionSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ GExPHasura $ ExOpMutation queryTx
         _ -> _
@@ -297,50 +297,6 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       --       (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld
       --       traverse_ (addPlanToCache . EP.RPSubs) plan
       --       return $ ExOpSubs lqOp
-
--- Monad for resolving a hasura query/mutation
-type E m =
-  ReaderT ( UserInfo
-          , SQLGenCtx
-          ) (ExceptT QErr m)
-
-runE
-  :: (MonadError QErr m)
-  => SQLGenCtx
-  -> UserInfo
-  -> E m a
-  -> m a
-runE sqlGenCtx userInfo action = do
-  res <- runExceptT $ runReaderT action (userInfo, sqlGenCtx)
-  either throwError return res
-
-getQueryOp
-  :: (MonadError QErr m)
-  => C.GQLContext
-  -> SQLGenCtx
-  -> UserInfo
-  -> G.SelectionSet G.NoFragments G.Name
-  -> [G.VariableDefinition]
-  -> Maybe VariableValues
-  -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
-getQueryOp gqlContext sqlGenCtx userInfo fields varDefs varValsM =
-  runE sqlGenCtx userInfo $ EQ.convertQuerySelSet gqlContext fields varDefs varValsM
-
-mutationRootName :: Text
-mutationRootName = "mutation_root"
-
-getMutOp
-  :: (HasVersion, MonadError QErr m, MonadIO m)
-  => C.GQLContext
-  -> SQLGenCtx
-  -> UserInfo
-  -> G.SelectionSet G.NoFragments G.Name
-  -> [G.VariableDefinition]
-  -> Maybe VariableValues
-  -> m LazyRespTx
-getMutOp gqlContext sqlGenCtx userInfo fields varDefs varValsM =
-  runE sqlGenCtx userInfo $ EM.convertMutationSelectionSet gqlContext fields varDefs varValsM
-  where
 
 -- getSubsOpM
 --   :: ( MonadError QErr m

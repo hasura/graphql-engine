@@ -14,12 +14,8 @@ import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.IntMap                            as IntMap
 import qualified Data.Sequence.NonEmpty                 as NE
 import qualified Data.TByteString                       as TBS
-import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
-
-import           Control.Lens                           ((^?))
-import           Data.Has
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.SQL.DML                         as S
@@ -28,9 +24,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Execute.Prepare
-import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Monad
-import           Hasura.GraphQL.Parser.Schema           (getName)
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
@@ -56,9 +50,6 @@ instance J.ToJSON PGPlan where
 data RootFieldPlan
   = RFPRaw !B.ByteString
   | RFPPostgres !PGPlan
-
-fldPlanFromJ :: (J.ToJSON a) => a -> RootFieldPlan
-fldPlanFromJ = RFPRaw . LBS.toStrict . J.encode
 
 instance J.ToJSON RootFieldPlan where
   toJSON = \case
@@ -137,9 +128,6 @@ getNextArgNum = do
   put $ PlanningSt (curArgNum + 1) vars prepped
   return curArgNum
 
-queryRootName :: Text
-queryRootName = "query_root"
-
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
   :: PlanVariables
@@ -164,19 +152,17 @@ traverseQueryRootField f = \case
   QRFRaw s          -> pure $ QRFRaw s
 
 convertQuerySelSet
-  :: ( MonadError QErr m
-     , MonadReader r m
-     , Has SQLGenCtx r
-     , Has UserInfo r )
+  :: MonadError QErr m
   => GQLContext
+  -> UserVars
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
-convertQuerySelSet gqlContext selectionSet varDefs varValsM = do
+convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
-    <-  resolveVariables varDefs (fromMaybe Map.empty varValsM) selectionSet
+    <-  resolveVariables varDefs (fromMaybe Map.empty varValsM) fields
     >>= (gqlQueryParser gqlContext >>> (`onLeft` reportParseErrors))
 
   -- Transform the RQL AST into a prepared SQL query
@@ -187,7 +173,6 @@ convertQuerySelSet gqlContext selectionSet varDefs varValsM = do
     pure $! irToRootFieldPlan planVars planVals preparedQuery
 
   -- Build and return an executable action from the generated SQL
-  usrVars <- asks (userVars . getter)
   (tx, sql) <- mkCurPlanTx usrVars (OMap.toList queryPlans)
   pure (tx, Nothing, sql) -- FIXME ReusableQueryPlan
   where
@@ -214,7 +199,6 @@ queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
       RFPPostgres pgPlan -> RRSql <$> withPlan usrVars pgPlan validatedVars
 
   return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
-
 
 data PreparedSql
   = PreparedSql

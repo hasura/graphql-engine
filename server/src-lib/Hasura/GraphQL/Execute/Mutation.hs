@@ -9,8 +9,6 @@ import qualified Database.PG.Query              as Q
 import qualified Hasura.RQL.DML.Delete          as RQL
 import qualified Hasura.RQL.DML.Update          as RQL
 
-import           Data.Has
-
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Resolve
@@ -24,6 +22,7 @@ import qualified Data.Sequence.NonEmpty                 as NE
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
+
 
 convertDelete
   :: UserVars
@@ -67,25 +66,21 @@ convertMutationRootField usrVars stringifyNum = \case
   MRFRaw s    -> return $ encJFromJValue s
 
 convertMutationSelectionSet
-  :: ( MonadError QErr m
-     , MonadReader r m
-     , Has SQLGenCtx r
-     , Has UserInfo r
-     )
+  :: MonadError QErr m
   => GQLContext
+  -> UserVars
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> m LazyRespTx
-convertMutationSelectionSet gqlContext selectionSet varDefs varValsM = do
+convertMutationSelectionSet gqlContext usrVars fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
     :: (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue), QueryReusability)
-    <-  resolveVariables varDefs (fromMaybe Map.empty varValsM) selectionSet
+    <-  resolveVariables varDefs (fromMaybe Map.empty varValsM) fields
     >>= (gqlMutationParser gqlContext >>> (`onLeft` reportParseErrors))
 
   -- Transform the RQL AST into a prepared SQL query
-  usrVars <- asks (userVars . getter)
   -- TODO pass the correct stringifyNum somewhere rather than True
   let txs = convertMutationRootField usrVars True <$> unpreparedQueries
 
