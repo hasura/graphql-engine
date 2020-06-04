@@ -446,11 +446,13 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     -- on change, send message on the websocket
     liveQOnChange :: LQ.OnChange
-    liveQOnChange (GQSuccess (LQ.LiveQueryResponse bs dTime)) =
-      sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRHasura $ GQSuccess bs) $
-        LQ.LiveQueryMetadata dTime
-    liveQOnChange resp = sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $
-      LQ._lqrPayload <$> resp
+    liveQOnChange = \case
+      GQSuccess (LQ.LiveQueryResponse bs dTime) ->
+        sendMsgWithMetadata wsConn
+        (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ BL.fromStrict bs)
+        (LQ.LiveQueryMetadata dTime)
+      resp -> sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $
+        (BL.fromStrict . LQ._lqrPayload) <$> resp
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m

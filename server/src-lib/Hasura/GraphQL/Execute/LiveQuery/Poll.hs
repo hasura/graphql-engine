@@ -43,7 +43,6 @@ import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.Extended                         as J
 import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString                             as BS
-import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.Time.Clock                             as Clock
 import qualified Data.UUID                                   as UUID
@@ -62,7 +61,6 @@ import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
 
 import           Hasura.Db
-import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -111,7 +109,7 @@ data LiveQueryMetadata
 
 data LiveQueryResponse
   = LiveQueryResponse
-  { _lqrPayload       :: !BL.ByteString
+  { _lqrPayload       :: !BS.ByteString
   , _lqrExecutionTime :: !Clock.DiffTime
   }
 
@@ -206,7 +204,7 @@ data CohortSnapshot
   }
 
 pushResultToCohort
-  :: GQResult EncJSON
+  :: GQResult BS.ByteString
   -> Maybe ResponseHash
   -> LiveQueryMetadata
   -> CohortSnapshot
@@ -228,7 +226,7 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = 
   return (map _sId subscribersToPush, map _sId subscribersToIgnore)
   where
     CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
-    response = result <&> \payload -> LiveQueryResponse (encJToLBS payload) dTime
+    response = result <&> \payload -> LiveQueryResponse payload dTime
     pushResultToSubscribers =
       A.mapConcurrently_ $ \(Subscriber action _) -> action response
 
@@ -462,18 +460,12 @@ pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap = do
         in [(resp, cohortId, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
         let cohortSnapshotMap = Map.fromList cohorts
-        flip mapMaybe responses $ \(cohortId, result) ->
-          -- TODO: change it to use bytestrings directly
-          let -- No reason to use lazy bytestrings here, since (1) we fetch the
-              -- entire result set from Postgres strictly and (2) even if we
-              -- didn’t, hashing will have to force the whole thing anyway.
-              respBS = encJToBS result
-              respHash = mkRespHash respBS
+        flip mapMaybe responses $ \(cohortId, respBS) ->
+          let respHash = mkRespHash respBS
               respSize = BS.length respBS
           -- TODO: currently we ignore the cases when the cohortId from
           -- Postgres response is not present in the cohort map of this batch
           -- (this shouldn't happen but if it happens it means a logic error and
           -- we should log it)
-          in ( GQSuccess result
-             , cohortId, Just $!(respHash, respSize)
-             , ) <$> Map.lookup cohortId cohortSnapshotMap
+          in (GQSuccess respBS, cohortId, Just $!(respHash, respSize),) <$>
+             Map.lookup cohortId cohortSnapshotMap
