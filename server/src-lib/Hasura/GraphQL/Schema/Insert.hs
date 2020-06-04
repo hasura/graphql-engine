@@ -27,6 +27,7 @@ import           Hasura.SQL.Types
 data AnnIns a v
   = AnnIns
   { _aiInsObj         :: !a
+  , _aiTableName      :: !QualifiedTable
   , _aiConflictClause :: !(Maybe (RQL.ConflictClauseP1 v))
   , _aiCheckCond      :: !(AnnBoolExp v, Maybe (AnnBoolExp v))
   , _aiTableCols      :: ![PGColumnInfo]

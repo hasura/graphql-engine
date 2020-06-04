@@ -85,7 +85,7 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
         pure (conflictClause, objects)
   pure $ P.subselection fieldName description argsParser selectionParser
     <&> \((conflictClause, objects), output) ->
-       ( mkInsertObject objects columns conflictClause insertPerms updatePerms
+       ( mkInsertObject objects table columns conflictClause insertPerms updatePerms
        , RQL.MOutMultirowFields output
        )
 
@@ -117,7 +117,7 @@ insertOneIntoTable table fieldName description insertPerms selectPerms updatePer
         pure (conflictClause, object)
   pure $ P.subselection fieldName description argsParser selectionParser
     <&> \((conflictClause, object), output) ->
-       ( mkInsertObject [object] columns conflictClause insertPerms updatePerms
+       ( mkInsertObject [object] table columns conflictClause insertPerms updatePerms
        , RQL.MOutSinglerowObject output
        )
 
@@ -184,7 +184,7 @@ objectRelationshipInput table insertPerms selectPerms updatePerms =
           (P.fieldOptional conflictName Nothing)
           conflictParser
         object <- P.field objectName Nothing objectParser
-        pure $ mkInsertObject object columns conflictClause insertPerms updatePerms
+        pure $ mkInsertObject object table columns conflictClause insertPerms updatePerms
   pure $ P.object inputName (Just inputDesc) inputParser <&> undefined
 
 arrayRelationshipInput
@@ -210,19 +210,21 @@ arrayRelationshipInput table insertPerms selectPerms updatePerms =
           (P.fieldOptional conflictName Nothing)
           conflictParser
         objects <- P.field objectsName Nothing $ P.list objectParser
-        pure $ mkInsertObject objects columns conflictClause insertPerms updatePerms
+        pure $ mkInsertObject objects table columns conflictClause insertPerms updatePerms
   pure $ P.object inputName (Just inputDesc) inputParser
 
 
 mkInsertObject
   :: a
+  -> QualifiedTable
   -> [PGColumnInfo]
   -> Maybe (RQL.ConflictClauseP1 UnpreparedValue)
   -> InsPermInfo
   -> Maybe UpdPermInfo
   -> AnnIns a UnpreparedValue
-mkInsertObject objects columns conflictClause insertPerms updatePerms =
+mkInsertObject objects table columns conflictClause insertPerms updatePerms =
   AnnIns { _aiInsObj         = objects
+         , _aiTableName      = table
          , _aiConflictClause = conflictClause
          , _aiCheckCond      = (insertCheck, updateCheck)
          , _aiTableCols      = columns
@@ -553,25 +555,23 @@ third f (a,b,c) = (a,b,f c)
 --   can it be simplified?
 
 convertToSQLTransaction
-  :: QualifiedTable
-  -> AnnMultiInsert S.SQLExp
+  :: AnnMultiInsert S.SQLExp
   -> Bool
   -> RespTx
-convertToSQLTransaction table (annIns, mutationOutput) stringifyNum =
+convertToSQLTransaction (annIns, mutationOutput) stringifyNum =
   if null $ _aiInsObj annIns
   then pure $ buildEmptyMutResp mutationOutput
-  else insertMultipleObjects table annIns mutationOutput stringifyNum
+  else insertMultipleObjects annIns mutationOutput stringifyNum
 
 insertMultipleObjects
-  :: QualifiedTable
-  -> MultiObjIns S.SQLExp
+  :: MultiObjIns S.SQLExp
   -> RQL.MutationOutput
   -> Bool
   -> Q.TxE QErr EncJSON
-insertMultipleObjects table multiObjIns mutationOutput stringifyNum =
+insertMultipleObjects multiObjIns mutationOutput stringifyNum =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
-    AnnIns insObjs conflictClause checkCondition columnInfos defVals = multiObjIns
+    AnnIns insObjs table conflictClause checkCondition columnInfos defVals = multiObjIns
     allInsObjRels = concatMap _aioObjRels insObjs
     allInsArrRels = concatMap _aioArrRels insObjs
     anyRelsToInsert = not $ null allInsArrRels && null allInsObjRels
@@ -594,8 +594,8 @@ insertMultipleObjects table multiObjIns mutationOutput stringifyNum =
 
     withRelsInsert = do
       insertRequests <- for insObjs \obj -> do
-        let singleObj = AnnIns obj conflictClause checkCondition columnInfos defVals
-        insertObject table singleObj stringifyNum
+        let singleObj = AnnIns obj table conflictClause checkCondition columnInfos defVals
+        insertObject singleObj stringifyNum
       let affectedRows = sum $ map fst insertRequests
           columnValues = catMaybes $ map snd insertRequests
       selectExpr <- RQL.mkSelCTEFromColVals table columnInfos columnValues
@@ -603,11 +603,10 @@ insertMultipleObjects table multiObjIns mutationOutput stringifyNum =
       runIdentity . Q.getRow <$> Q.rawQE RQL.dmlTxErrorHandler (Q.fromBuilder sqlOutput) [] False
 
 insertObject
-  :: QualifiedTable
-  -> SingleObjIns S.SQLExp
+  :: SingleObjIns S.SQLExp
   -> Bool
   -> Q.TxE QErr (Int, Maybe (ColumnValues TxtEncodedPGVal))
-insertObject table singleObjIns stringifyNum = do
+insertObject singleObjIns stringifyNum = do
   -- insert all object relations and fetch this insert dependent column values
   objInsRes <- forM objectRels $ insertObjRel stringifyNum
 
@@ -626,7 +625,7 @@ insertObject table singleObjIns stringifyNum = do
 
   return (totAffRows, colValM)
   where
-    AnnIns annObj onConflict checkCond allColumns defaultValues = singleObjIns
+    AnnIns annObj table onConflict checkCond allColumns defaultValues = singleObjIns
     AnnInsObj columns objectRels arrayRels = annObj
 
     arrRelDepCols = flip getColInfos allColumns $
@@ -652,7 +651,7 @@ insertObjRel
   -> ObjRelIns S.SQLExp
   -> Q.TxE QErr (Int, [(PGCol, S.SQLExp)])
 insertObjRel stringifyNum objRelIns = do
-  (affRows, colValM) <- insertObject table singleObjIns stringifyNum
+  (affRows, colValM) <- insertObject singleObjIns stringifyNum
   colVal <- onNothing colValM $ throw400 NotSupported errMsg
   retColsWithVals <- fetchFromColVals colVal rColInfos
   let c = mergeListsWith (Map.toList mapCols) retColsWithVals
@@ -663,8 +662,8 @@ insertObjRel stringifyNum objRelIns = do
     RelIns singleObjIns relInfo = objRelIns
     -- multiObjIns = singleToMulti singleObjIns
     relName = riName relInfo
-    mapCols = riMapping relInfo
     table = riRTable relInfo
+    mapCols = riMapping relInfo
     allCols = _aiTableCols singleObjIns
     rCols = Map.elems mapCols
     rColInfos = getColInfos rCols allCols
@@ -678,14 +677,12 @@ insertArrRel
   -> ArrRelIns S.SQLExp
   -> Q.TxE QErr Int
 insertArrRel resCols stringifyNum arrRelIns = do
-  resBS <- insertMultipleObjects table multiObjIns mutOutput stringifyNum
+  resBS <- insertMultipleObjects multiObjIns mutOutput stringifyNum
   resObj <- decodeEncJSON resBS
   onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
     throw500 "affected_rows not returned in array rel insert"
   where
     RelIns multiObjIns relInfo = arrRelIns
-    colMapping = riMapping relInfo
-    table = riRTable relInfo
     mutOutput = RQL.MOutMultirowFields [("affected_rows", RQL.MCount)]
 
 mkInsertQ
