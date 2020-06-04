@@ -258,12 +258,6 @@ Date:   Tue May 19 10:48:49 2020 -0400
 
     Referencing #4736
 
-commit 5de647b9261d151665d9e5be827b31828b309840
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Thu Jun 4 16:20:06 2020 -0400
-
-    Don't compile in developer APIs by default
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
