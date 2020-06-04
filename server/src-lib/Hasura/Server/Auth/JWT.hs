@@ -36,8 +36,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,
-                                                   userRoleHeader)
+import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader, userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
 import           Hasura.Session
 
@@ -54,7 +53,6 @@ import qualified Data.CaseInsensitive            as CI
 import qualified Data.HashMap.Strict             as Map
 import qualified Data.Text                       as T
 import qualified Data.Text.Encoding              as T
-import qualified Data.Vector                     as V
 import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
@@ -100,14 +98,15 @@ instance (J.ToJSON v) => J.ToJSON (JWTClaimsMapValueG v) where
   toJSON (JWTClaimsMapJSONPath jsonPath) = J.String . T.pack $ encodeJSONPath jsonPath
   toJSON (JWTClaimsMapStatic v)          = J.toJSON v
 
+type JWTClaimsMapDefaultRole = JWTClaimsMapValueG RoleName
+type JWTClaimsMapAllowedRoles = JWTClaimsMapValueG [RoleName]
 type JWTClaimsMapValue = JWTClaimsMapValueG SessionVariableValue
-type JWTClaimsMapAllowedRoles = JWTClaimsMapValueG [SessionVariableValue]
 
 type CustomClaimsMap = Map.HashMap SessionVariable JWTClaimsMapValue
 
 data JWTClaimsMap
   = JWTClaimsMap
-  { jcmDefaultRole  :: !JWTClaimsMapValue
+  { jcmDefaultRole  :: !JWTClaimsMapDefaultRole
   , jcmAllowedRoles :: !JWTClaimsMapAllowedRoles
   , jcmCustomClaims :: !CustomClaimsMap
   } deriving (Show,Eq)
@@ -191,7 +190,7 @@ jwkRefreshCtrl logger manager url ref time = liftIO $ do
       res <- runExceptT $ updateJwkRef logger manager url ref
       mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
-      let delay = maybe (minutes 1) (convertDuration) mTime
+      let delay = maybe (minutes 1) convertDuration mTime
       C.sleep delay
   where
     logNotice = do
@@ -375,19 +374,18 @@ parseHasuraClaims unregisteredClaims = \case
 
     allowedRoles <- case allowedRolesClaimsMap of
       JWTClaimsMapJSONPath allowedRolesJsonPath ->
-        parseAllowedRolesClaim $ iResultToMaybe $
-        executeJSONPath allowedRolesJsonPath claimsObjValue
-      JWTClaimsMapStatic allowedRoles' ->
-        parseAllowedRolesClaim $ Just $ J.Array $ V.fromList $ map J.String allowedRoles'
+        parseAllowedRolesClaim $ iResultToMaybe $ executeJSONPath allowedRolesJsonPath claimsObjValue
+      JWTClaimsMapStatic staticAllowedRoles -> pure staticAllowedRoles
 
     defaultRole <- case defaultRoleClaimsMap of
       JWTClaimsMapJSONPath defaultRoleJsonPath ->
         parseDefaultRoleClaim $ iResultToMaybe $
         executeJSONPath defaultRoleJsonPath claimsObjValue
-      JWTClaimsMapStatic defaultRoleString -> parseDefaultRoleClaim $ Just $ J.String defaultRoleString
+      JWTClaimsMapStatic staticDefaultRole -> pure staticDefaultRole
 
     otherClaimsObject <- flip Map.traverseWithKey otherClaimsMap $ \k claimObj -> do
-      let throwClaimErr = throw400 JWTInvalidClaims $ "JWT claim from claims_map, " <> (sessionVariableToText k) <> " not found"
+      let throwClaimErr = throw400 JWTInvalidClaims $ "JWT claim from claims_map, "
+                          <> sessionVariableToText k <> " not found"
       case claimObj of
         JWTClaimsMapJSONPath path ->
           maybe throwClaimErr pure $ iResultToMaybe $ executeJSONPath path claimsObjValue
