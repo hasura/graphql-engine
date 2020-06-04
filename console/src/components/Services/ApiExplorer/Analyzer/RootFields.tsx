@@ -9,7 +9,7 @@ type ExplainPayload = {
 type RootFieldsProps = {
   data: ExplainPayload[];
   activeNode: number;
-  onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onClick: (e: React.MouseEvent<HTMLLIElement>) => void;
 };
 
 const AnalyzeText: React.FC<RootFieldsProps> = ({
@@ -21,16 +21,16 @@ const AnalyzeText: React.FC<RootFieldsProps> = ({
     {data.map((analysis, i) => {
       return (
         analysis.field && (
-          <div
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+          <li
             className={i === activeNode ? 'active' : ''}
             key={i}
             data-key={i}
             onClick={onClick}
-            role="link"
           >
             <i className="fa fa-table" aria-hidden="true" />
             {analysis.field}
-          </div>
+          </li>
         )
       );
     })}

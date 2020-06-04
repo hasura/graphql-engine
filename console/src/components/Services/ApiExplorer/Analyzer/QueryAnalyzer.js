@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Modal from 'react-modal';
-import AnalyzeText from './AnalyzeText';
+import RootFields from './RootFields';
 
 export default class QueryAnalyser extends React.Component {
   constructor() {
@@ -53,7 +53,7 @@ export default class QueryAnalyser extends React.Component {
           <div className="wd25">
             <div className="topLevelNodesWrapper">
               <div className="title">Top level nodes</div>
-              <AnalyzeText
+              <RootFields
                 data={this.state.analyseData}
                 activeNode={this.state.activeNode}
                 onClick={this.handleAnalyseNodeChange}
