@@ -30,12 +30,10 @@ const setConsoleOptsInDB = (opts, successCb, errorCb) => (
   };
 
   if (!hasura_uuid) {
-    if (errorCb) {
-      const err = new Error('Internal Server Occurred!');
-      errorCb(err);
-      return;
-    }
-    // exit action, as callback isn't available
+    showErrorNotification(
+      'Opt out of pre-release notifications failed',
+      'Internal error: missing hasura_uuid'
+    );
     return;
   }
 
