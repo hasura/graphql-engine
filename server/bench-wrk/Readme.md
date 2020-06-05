@@ -131,3 +131,9 @@ python3 hge_wrk_bench.py --hge-docker-image DOCKER_IMAGE
 - To compare the results, with another docker build, run the same command again with the modified ``DOCKER_IMAGE`` and the same ``WORK_DIR``
 - If the catalog versions of the two docker builds are not the same, run the benchmarks first on the docker image with a lower
   catalog version and then run the benchmarks on the docker image with the higher catalog version.
+
+### Steps to run benchmarks on a new linux hosted instance ###
+- Install docker,python3
+- optional: install ghcup (cabal and ghc will be installed with it), you'll need cabal to be setup only when
+  you want to run the benchmarks on a branch directly (i.e. there's no docker image for it).
+- Run the benchmarks following the steps in the ``The simplest way to setup the benchmark``
