@@ -17,7 +17,8 @@ import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Parser                 (Kind (..), Parser, UnpreparedValue (..), Schema (..))
+import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),
+                                                        UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Introspect
 import           Hasura.GraphQL.Schema.Mutation
@@ -66,6 +67,7 @@ query'
 query' allTables stringifyNum = do
   selectExpParsers <- for (toList allTables) \tableName -> do
     selectPerms <- tableSelectPermissions tableName
+    customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo tableName
     for selectPerms \perms -> do
       displayName <- P.qualifiedObjectToName tableName
       let fieldsDesc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName tableName) <> "\""
@@ -74,9 +76,9 @@ query' allTables stringifyNum = do
           pkName = displayName <> $$(G.litName "_by_pk")
           pkDesc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName tableName) <> "\" using primary key columns"
       catMaybes <$> sequenceA
-        [ toQrf QRFSimple      $ selectTable          tableName displayName (Just fieldsDesc) perms stringifyNum
-        , toQrf QRFPrimaryKey  $ selectTableByPk      tableName pkName      (Just pkDesc)     perms stringifyNum
-        , toQrf QRFAggregation $ selectTableAggregate tableName aggName     (Just aggDesc)    perms stringifyNum
+        [ toQrf QRFSimple      $ selectTable          tableName (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms stringifyNum
+        , toQrf QRFPrimaryKey  $ selectTableByPk      tableName (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms stringifyNum
+        , toQrf QRFAggregation $ selectTableAggregate tableName (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms stringifyNum
         ]
   pure $ concat $ catMaybes selectExpParsers
   where toQrf = fmap . fmap . fmap
