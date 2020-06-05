@@ -49,89 +49,89 @@ export const defaultDataTypeToCast = 'text';
 // https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/index.html#error-codes
 export const ERROR_CODES = {
   postgresError: {
-    ERRORCODE: 'postgres-error',
-    HTTPCODE: '500',
+    code: 'postgres-error',
+    httpCode: '500',
   },
   permissionDenied: {
-    ERRORCODE: 'permission-denied',
-    HTTPCODE: '400',
+    code: 'permission-denied',
+    httpCode: '400',
   },
   notExists: {
-    ERRORCODE: 'not-exists',
+    code: 'not-exists',
 
-    HTTPCODE: '400',
+    httpCode: '400',
   },
   alreadyTracked: {
-    ERRORCODE: 'already-tracked',
-    HTTPCODE: '400',
+    code: 'already-tracked',
+    httpCode: '400',
   },
   accessDenied: {
-    ERRORCODE: 'access-denied',
+    code: 'access-denied',
 
-    HTTPCODE: '400',
+    httpCode: '400',
   },
   notSupported: {
-    ERRORCODE: 'not-supported',
-    HTTPCODE: '400',
+    code: 'not-supported',
+    httpCode: '400',
   },
   alreadyExists: {
-    ERRORCODE: 'already-exists',
-    HTTPCODE: '400',
+    code: 'already-exists',
+    httpCode: '400',
   },
   invalidJson: {
-    ERRORCODE: 'invalid-json',
-    HTTPCODE: '400',
+    code: 'invalid-json',
+    httpCode: '400',
   },
   invalidHeaders: {
-    ERRORCODE: 'invalid-headers',
-    HTTPCODE: '400',
+    code: 'invalid-headers',
+    httpCode: '400',
   },
   dependencyError: {
-    ERRORCODE: 'dependency-error',
-    HTTPCODE: '400',
+    code: 'dependency-error',
+    httpCode: '400',
   },
   parseFailed: {
-    ERRORCODE: 'parse-failed',
-    HTTPCODE: '400',
+    code: 'parse-failed',
+    httpCode: '400',
   },
   alreadyInitialised: {
-    ERRORCODE: 'already-initialised',
+    code: 'already-initialised',
 
-    HTTPCODE: '400',
+    httpCode: '400',
   },
   constraintError: {
-    ERRORCODE: 'constraint-error',
-    HTTPCODE: '400',
+    code: 'constraint-error',
+    httpCode: '400',
   },
   permissionError: {
-    ERRORCODE: 'permission-error',
+    code: 'permission-error',
 
-    HTTPCODE: '400',
+    httpCode: '400',
   },
   unexpectedPayload: {
-    ERRORCODE: 'unexpected-payload',
-    HTTPCODE: '400',
+    code: 'unexpected-payload',
+    httpCode: '400',
   },
   invalidParams: {
-    ERRORCODE: 'invalid-params',
-    HTTPCODE: '400',
+    code: 'invalid-params',
+    httpCode: '400',
   },
   ' ': {
-    ERRORCODE: ' ',
+    code: ' ',
     description: ' <name> is relationship',
-    HTTPCODE: '400',
+    httpCode: '400',
   },
   unexpected: {
-    ERRORCODE: 'unexpected',
-    HTTPCODE: '500',
+    code: 'unexpected',
+    httpCode: '500',
   },
   notFound: {
-    ERRORCODE: 'not-found',
+    code: 'not-found',
     ERRORS: ['No such resource exists'],
-    HTTPCODE: '404',
+    httpCode: '404',
   },
   // todo update this, this happens on bulk request failed
   dataApiError: {
-    ERRORCODE: 'data_api_error',
+    code: 'data_api_error',
   },
 };
