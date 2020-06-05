@@ -1,7 +1,7 @@
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import requestAction from '../utils/requestAction';
 import dataHeaders from '../components/Services/Data/Common/Headers';
-import defaultTelemetryState from './State';
+import defaultTelemetryState from './state';
 import {
   getRunSqlQuery,
   getConsoleOptsQuery,
