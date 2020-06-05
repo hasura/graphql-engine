@@ -21,8 +21,8 @@ const ReloadEnumValuesButton: React.FC<ReloadEnumValuesButtonProps> = ({
   return (
     <ReloadMetadata
       buttonText="Reload enum values"
-      buttonToolTip={TOOLTIP_TEXT}
-      checkBoxVisible={false}
+      btnTooltipMessage={TOOLTIP_TEXT}
+      showReloadRemoteSchemas={false}
       dispatch={dispatch}
       tooltipStyle={tooltipStyle}
     />

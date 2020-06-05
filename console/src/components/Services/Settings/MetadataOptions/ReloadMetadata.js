@@ -28,9 +28,9 @@ class ReloadMetadata extends Component {
   render() {
     const {
       dispatch,
-      buttonToolTip,
+      btnTooltipMessage,
       tooltipStyle,
-      checkBoxVisible = true,
+      showReloadRemoteSchemas = true,
     } = this.props;
     const { isReloading, shouldReloadRemoteSchemas } = this.state;
 
@@ -69,14 +69,14 @@ class ReloadMetadata extends Component {
         >
           {this.props.buttonText || buttonText}
         </Button>
-        {buttonToolTip && (
+        {btnTooltipMessage && (
           <Tooltip
-            message={buttonToolTip}
+            message={btnTooltipMessage}
             icon="fa-info-circle"
             tooltipStyle={tooltipStyle}
           />
         )}
-        {checkBoxVisible && (
+        {showReloadRemoteSchemas && (
           <>
             <label
               className={`${metaDataStyles.cursorPointer} ${metaDataStyles.add_mar_right_small} ${metaDataStyles.add_mar_left_small}`}
