@@ -573,7 +573,6 @@ const deleteRolePermissions = roleName => {
     const errorMsg = 'Permissions deletion failed';
 
     const customOnSuccess = () => {
-      onSuccess();
       // fetch all roles
       dispatch(fetchRoleList());
     };
