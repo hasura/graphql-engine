@@ -5,7 +5,6 @@ import { isEmpty } from './components/Common/utils/jsUtils';
 
 // TODO: move this section to a more appropriate location
 /* set helper tools into window */
-
 import sqlFormatter from './helpers/sql-formatter.min';
 import hljs from './helpers/highlight.min';
 
@@ -47,7 +46,6 @@ const globals = {
   telemetryNotificationShown: '',
   isProduction,
 };
-
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (isProduction) {
     const consolePath = window.__env.consolePath;
