@@ -122,7 +122,7 @@ class DataSubSidebar extends React.Component {
                 data-test={tableName}
               >
                 <i
-                  className={[styles.tableIcon, 'fa', iconStyle].join(' ')}
+                  className={`${styles.tableIcon} fa ${iconStyle}`}
                   aria-hidden="true"
                 />
                 {displayTableName(table)}
