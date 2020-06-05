@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link, RouteComponentProps } from 'react-router';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
@@ -14,11 +14,16 @@ interface Metadata {
 }
 
 type SidebarProps = {
-  location: Location;
+  location: RouteComponentProps<{}, {}>['location'];
   metadata: Metadata;
 };
 
-type SectionDataKey = 'actions' | 'status' | 'allowed-queries' | 'logout';
+type SectionDataKey =
+  | 'actions'
+  | 'status'
+  | 'allowed-queries'
+  | 'logout'
+  | 'about';
 
 interface SectionData {
   key: SectionDataKey;
