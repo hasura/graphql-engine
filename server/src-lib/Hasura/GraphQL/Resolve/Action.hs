@@ -169,13 +169,13 @@ resolveActionMutationSync field executionContext userInfo = do
     processOutputSelectionSet webhookResponseExpression outputType definitionList
     (_fType field) $ _fSelSet field
   astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
-  let (astResolved',remoteJoins) = RJ.getRemoteJoins astResolved
+  let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
   let jsonAggType = mkJsonAggSelect outputType
   return $ (,respHeaders) $
-    case remoteJoins of
-      Just remoteJoins' ->
-        let query = Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved'
-        in RJ.executeQueryWithRemoteJoins manager reqHeaders userInfo query [] remoteJoins'
+    case maybeRemoteJoins of
+      Just remoteJoins ->
+        let query = Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
+        in RJ.executeQueryWithRemoteJoins manager reqHeaders userInfo query [] remoteJoins
       Nothing ->
         asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
 
