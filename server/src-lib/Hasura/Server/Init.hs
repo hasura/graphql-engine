@@ -1,5 +1,6 @@
 -- | Types and functions related to the server initialisation
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP    #-}
+{-# OPTIONS_GHC -O0 #-}
 module Hasura.Server.Init
   ( DbUid(..)
   , getDbId
