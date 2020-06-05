@@ -1,7 +1,7 @@
 // todo use well typed interface after generating
 export interface RunSQLQueryType {
   type: string;
-  args: object | [];
+  args: object | RunSQLQueryType[];
 }
 
 export default class Migration {
