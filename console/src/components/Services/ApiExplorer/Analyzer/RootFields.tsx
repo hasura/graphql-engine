@@ -12,7 +12,7 @@ type RootFieldsProps = {
   onClick: (e: React.MouseEvent<HTMLLIElement>) => void;
 };
 
-const AnalyzeText: React.FC<RootFieldsProps> = ({
+const RootFields: React.FC<RootFieldsProps> = ({
   data,
   activeNode,
   onClick,
@@ -37,4 +37,4 @@ const AnalyzeText: React.FC<RootFieldsProps> = ({
   </ul>
 );
 
-export default AnalyzeText;
+export default RootFields;
