@@ -215,7 +215,8 @@ processTableChanges ti tableDiff = do
         let tnGQL = _qualObjectToName newTN
             defGCtx = _scDefaultRemoteGCtx sc
         -- check for GraphQL schema conflicts on new name
-        _checkConflictingNode defGCtx tnGQL
+        -- FIXME
+        -- _checkConflictingNode defGCtx tnGQL
         procAlteredCols sc tn
         -- update new table in catalog
         renameTableInCatalog newTN tn
