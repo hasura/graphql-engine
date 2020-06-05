@@ -29,12 +29,13 @@ data ServerConfig
   , scfgJwt                :: !(Maybe JWTInfo)
   , scfgIsAllowListEnabled :: !Bool
   , scfgLiveQueries        :: !LQ.LiveQueriesOptions
+  , scfgConsoleAssetsDir   :: !(Maybe Text)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ServerConfig)
 
-runGetConfig :: HasVersion => AuthMode -> Bool -> LQ.LiveQueriesOptions -> ServerConfig
-runGetConfig am isAllowListEnabled liveQueryOpts = ServerConfig
+runGetConfig :: HasVersion => AuthMode -> Bool -> LQ.LiveQueriesOptions -> Maybe Text -> ServerConfig
+runGetConfig am isAllowListEnabled liveQueryOpts consoleAssetsDir = ServerConfig
     currentVersion
     (isAdminSecretSet am)
     (isAuthHookSet am)
@@ -42,6 +43,7 @@ runGetConfig am isAllowListEnabled liveQueryOpts = ServerConfig
     (getJWTInfo am)
     isAllowListEnabled
     liveQueryOpts
+    consoleAssetsDir
 
 isAdminSecretSet :: AuthMode -> Bool
 isAdminSecretSet = \case
