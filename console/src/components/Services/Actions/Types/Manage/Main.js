@@ -10,6 +10,7 @@ import {
 import { setTypeDefinition, setFetching, unsetFetching } from '../reducer';
 import { setCustomGraphQLTypes } from '../../../Types/ServerIO';
 import { showErrorNotification } from '../../../Common/Notification';
+import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
 const Manage = ({ allTypes, dispatch, readOnlyMode, ...manageProps }) => {
   const sdlOnChange = (value, _error, _timer, ast) => {
@@ -43,7 +44,7 @@ const Manage = ({ allTypes, dispatch, readOnlyMode, ...manageProps }) => {
   };
 
   // TODO handling error elegantly
-  const allowSave = !isFetching && !error;
+  const allowSave = !isFetching && !error && !readOnlyMode;
 
   const editorTooltip = 'All GraphQL types used in actions';
   const editorLabel = 'All custom types';
@@ -70,9 +71,12 @@ const Manage = ({ allTypes, dispatch, readOnlyMode, ...manageProps }) => {
       >
         Save
       </Button>
-      <Button onClick={init} color="white">
+      <Button onClick={init} color="white" disabled={readOnlyMode}>
         Reset
       </Button>
+      {readOnlyMode && (
+        <ToolTip message="Modifying custom type is not allowed in Read only mode!" />
+      )}
     </CustomTypesContainer>
   );
 };

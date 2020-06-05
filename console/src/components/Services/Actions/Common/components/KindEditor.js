@@ -9,11 +9,11 @@ const docsRef =
 
 const KindEditor = ({ value, onChange, className, disabled = false }) => {
   const setAsynchronous = () => {
-    onChange('asynchronous');
+    if (!disabled) onChange('asynchronous');
   };
 
   const setSynchronous = () => {
-    onChange('synchronous');
+    if (!disabled) onChange('synchronous');
   };
 
   return (
