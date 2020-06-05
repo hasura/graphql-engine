@@ -1,6 +1,19 @@
-module Hasura.RQL.Types.QueryCollection where
+module Hasura.RQL.Types.QueryCollection
+  ( CollectionName
+  , CollectionDef(..)
+  , CreateCollection(..)
+  , AddQueryToCollection(..)
+  , DropQueryFromCollection(..)
+  , DropCollection(..)
+  , CollectionReq(..)
+  , GQLQuery(..)
+  , GQLQueryWithText(..)
+  , QueryName(..)
+  , ListedQuery(..)
+  , getGQLQuery
+  , queryWithoutTypeNames
+  ) where
 
--- import           Hasura.GraphQL.Validate.Types    (stripTypenames)
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Instances          ()
@@ -45,10 +58,43 @@ instance ToJSON GQLQueryWithText where
 getGQLQuery :: GQLQueryWithText -> GQLQuery
 getGQLQuery (GQLQueryWithText v) = snd v
 
--- queryWithoutTypeNames :: GQLQuery -> GQLQuery
--- queryWithoutTypeNames =
---   GQLQuery . G.ExecutableDocument . stripTypenames
---   . G.getExecutableDefinitions . unGQLQuery
+queryWithoutTypeNames :: GQLQuery -> GQLQuery
+queryWithoutTypeNames =
+  GQLQuery . G.ExecutableDocument . stripTypenames
+  . G.getExecutableDefinitions . unGQLQuery
+
+-- WIP NOTE
+-- this was lifted from Validate. Should this be here?
+stripTypenames :: forall var. [G.ExecutableDefinition var] -> [G.ExecutableDefinition var]
+stripTypenames = map filterExecDef
+  where
+    filterExecDef :: G.ExecutableDefinition var -> G.ExecutableDefinition var
+    filterExecDef = \case
+      G.ExecutableDefinitionOperation opDef  ->
+        G.ExecutableDefinitionOperation $ filterOpDef opDef
+      G.ExecutableDefinitionFragment fragDef ->
+        let newSelset = filterSelSet $ G._fdSelectionSet fragDef
+        in G.ExecutableDefinitionFragment fragDef{G._fdSelectionSet = newSelset}
+
+    filterOpDef  = \case
+      G.OperationDefinitionTyped typeOpDef ->
+        let newSelset = filterSelSet $ G._todSelectionSet typeOpDef
+        in G.OperationDefinitionTyped typeOpDef{G._todSelectionSet = newSelset}
+      G.OperationDefinitionUnTyped selset ->
+        G.OperationDefinitionUnTyped $ filterSelSet selset
+
+    filterSelSet :: [G.Selection frag var'] -> [G.Selection frag var']
+    filterSelSet = mapMaybe filterSel
+    filterSel :: G.Selection frag var' -> Maybe (G.Selection frag var')
+    filterSel s = case s of
+      G.SelectionField f ->
+        if G._fName f == $$(G.litName "__typename")
+        then Nothing
+        else
+          let newSelset = filterSelSet $ G._fSelectionSet f
+          in Just $ G.SelectionField  f{G._fSelectionSet = newSelset}
+      _                  -> Just s
+
 
 data ListedQuery
   = ListedQuery

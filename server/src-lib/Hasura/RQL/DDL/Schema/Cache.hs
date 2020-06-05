@@ -254,7 +254,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
       -- allow list
       let allowList = allowlistDefs
             & concatMap _cdQueries
-            & map (_queryWithoutTypeNames . getGQLQuery . _lqQuery)
+            & map (queryWithoutTypeNames . getGQLQuery . _lqQuery)
             & HS.fromList
 
       -- custom types
