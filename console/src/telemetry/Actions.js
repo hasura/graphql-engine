@@ -1,7 +1,7 @@
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import requestAction from '../utils/requestAction';
 import dataHeaders from '../components/Services/Data/Common/Headers';
-import defaultTelemetryState from './State';
+import defaultTelemetryState from './state';
 import {
   getRunSqlQuery,
   getConsoleOptsQuery,
@@ -28,6 +28,16 @@ const setConsoleOptsInDB = (opts, successCb, errorCb) => (
     ...console_opts,
     ...opts,
   };
+
+  if (!hasura_uuid) {
+    dispatch(
+      showErrorNotification(
+        'Opt out of pre-release notifications failed',
+        'Internal error: missing hasura_uuid'
+      )
+    );
+    return;
+  }
 
   const options = {
     credentials: globalCookiePolicy,

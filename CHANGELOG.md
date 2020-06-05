@@ -73,6 +73,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: allow entering big int values in the console (close #3667) (#4775)
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
+- console: fix regression in editing permissions manually (fix #4683) (#4826)
 - console: allow modifying default value for PK (fix #4075) (#4679)
 - console: fix checkbox for forwarding client headers in actions (#4595)
 - console: re-enable foreign tables to be listed as views (fix #4714) (#4742)
