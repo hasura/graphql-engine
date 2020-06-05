@@ -157,8 +157,7 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
         } else if (schemaList.length) {
           // select new currentSchema from schemaList
           currentSchema = schemaList[0].schema_name;
-          console.log({ nextState });
-          if (nextState.location.pathname.includes('data')) {
+          if (/^data|schema|data\/[^\w+]/.test(nextState.location.pathname)) {
             store.dispatch(
               showInfoNotification(
                 `No public schema, showing ${currentSchema} schema instead`
