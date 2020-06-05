@@ -21,6 +21,7 @@ import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { AlertBox } from '../../../UIKit/atoms';
+import { showWarningNotification } from '../../Common/Notification';
 
 const AddAction = ({
   handler,
@@ -34,6 +35,14 @@ const AddAction = ({
   derive,
   readOnlyMode,
 }) => {
+  useEffect(() => {
+    if (readOnlyMode)
+      dispatch(
+        showWarningNotification(
+          'Adding new action is not allowed in Read only mode!'
+        )
+      );
+  }, [dispatch, readOnlyMode]);
   useEffect(() => {
     if (!derive.operation) {
       dispatch(setDefaults());
@@ -100,11 +109,6 @@ const AddAction = ({
   return (
     <div>
       <Helmet title={'Add Action - Actions | Hasura'} />
-      {readOnlyMode && (
-        <AlertBox type="warning" m="sm">
-          Adding new action is not allowed in Read only mode!
-        </AlertBox>
-      )}
       <div className={styles.heading_text}>Add a new action</div>
       <ActionDefinitionEditor
         value={actionDefinitionSdl}
@@ -130,6 +134,7 @@ const AddAction = ({
         placeholder="action handler"
         className={styles.add_mar_bottom_mid}
         service="create-action"
+        disabled={readOnlyMode}
       />
       <hr />
       {actionType === 'query' ? null : (
@@ -138,6 +143,7 @@ const AddAction = ({
             value={kind}
             onChange={kindOnChange}
             className={styles.add_mar_bottom_mid}
+            disabled={readOnlyMode}
           />
           <hr />
         </React.Fragment>
@@ -147,6 +153,7 @@ const AddAction = ({
         toggleForwardClientHeaders={toggleForwardClientHeaders}
         headers={headers}
         setHeaders={setHeaders}
+        disabled={readOnlyMode}
       />
       <hr />
       <Button
