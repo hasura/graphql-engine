@@ -1,55 +1,57 @@
-{-# LANGUAGE RecordWildCards      #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.App where
 
-import           Control.Concurrent.STM.TVar          (readTVarIO)
+import           Control.Concurrent.STM.TVar            (readTVarIO)
 import           Control.Monad.Base
-import           Control.Monad.Catch                  (MonadCatch, MonadThrow, onException)
+import           Control.Monad.Catch                    (MonadCatch, MonadThrow, onException)
 import           Control.Monad.Stateless
-import           Control.Monad.STM                    (atomically)
-import           Control.Monad.Trans.Control          (MonadBaseControl (..))
-import           Data.Aeson                           ((.=))
-import           Data.Time.Clock                      (UTCTime)
+import           Control.Monad.STM                      (atomically)
+import           Control.Monad.Trans.Control            (MonadBaseControl (..))
+import           Data.Aeson                             ((.=))
+import           Data.Time.Clock                        (UTCTime)
 import           GHC.AssertNF
 import           Options.Applicative
-import           System.Environment                   (getEnvironment, lookupEnv)
-import           System.Exit                          (exitFailure)
+import           System.Environment                     (getEnvironment, lookupEnv)
+import           System.Exit                            (exitFailure)
 
-import qualified Control.Concurrent.Async             as Async
-import qualified Control.Concurrent.Async.Lifted.Safe as LA
-import qualified Control.Concurrent.Extended          as C
-import qualified Data.Aeson                           as A
-import qualified Data.ByteString.Char8                as BC
-import qualified Data.ByteString.Lazy.Char8           as BLC
-import qualified Data.Set                             as Set
-import qualified Data.Text                            as T
-import qualified Data.Time.Clock                      as Clock
-import qualified Data.Yaml                            as Y
-import qualified Database.PG.Query                    as Q
-import qualified Network.HTTP.Client                  as HTTP
-import qualified Network.HTTP.Client.TLS              as HTTP
-import qualified Network.Wai.Handler.Warp             as Warp
-import qualified System.Log.FastLogger                as FL
-import qualified Text.Mustache.Compile                as M
+import qualified Control.Concurrent.Async               as Async
+import qualified Control.Concurrent.Async.Lifted.Safe   as LA
+import qualified Control.Concurrent.Extended            as C
+import qualified Data.Aeson                             as A
+import qualified Data.ByteString.Char8                  as BC
+import qualified Data.ByteString.Lazy.Char8             as BLC
+import qualified Data.Set                               as Set
+import qualified Data.Text                              as T
+import qualified Data.Time.Clock                        as Clock
+import qualified Data.Yaml                              as Y
+import qualified Database.PG.Query                      as Q
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Client.TLS                as HTTP
+import qualified Network.Wai.Handler.Warp               as Warp
+import qualified System.Log.FastLogger                  as FL
+import qualified Text.Mustache.Compile                  as M
 
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
-import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
+import           Hasura.GraphQL.Execute                 (MonadGQLSystemAuthz (..),
+                                                         checkQueryInAllowlist)
+import           Hasura.GraphQL.Resolve.Action          (asyncActionsProcessor)
+import           Hasura.GraphQL.Transport.HTTP.Protocol (toParsed)
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
-                                                       HasSQLGenCtx, HasSystemDefined, QErr (..),
-                                                       SQLGenCtx (..), SchemaCache (..), UserInfoM,
-                                                       buildSchemaCacheStrict, decodeValue,
-                                                       throw400, withPathK)
+import           Hasura.RQL.Types                       (CacheRWM, Code (..), HasHttpManager,
+                                                         HasSQLGenCtx, HasSystemDefined, QErr (..),
+                                                         SQLGenCtx (..), SchemaCache (..),
+                                                         UserInfoM, buildSchemaCacheStrict,
+                                                         decodeValue, throw400, withPathK)
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.API.Query              (requiresAdmin, runQueryM)
+import           Hasura.Server.API.Query                (requiresAdmin, runQueryM)
 import           Hasura.Server.App
 import           Hasura.Server.Auth
-import           Hasura.Server.CheckUpdates           (checkForUpdates)
+import           Hasura.Server.CheckUpdates             (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.SchemaUpdate
@@ -195,7 +197,7 @@ newShutdownLatch = fmap ShutdownLatch C.newEmptyMVar
 waitForShutdown :: ShutdownLatch -> IO ()
 waitForShutdown = C.takeMVar . unShutdownLatch
 
--- | Initiate a graceful shutdown of the server associated with the provided 
+-- | Initiate a graceful shutdown of the server associated with the provided
 -- latch.
 shutdownGracefully :: InitCtx -> IO ()
 shutdownGracefully = flip C.putMVar () . unShutdownLatch . _icShutdownLatch
@@ -205,11 +207,13 @@ runHGEServer
      , MonadIO m
      , MonadCatch m
      , MonadStateless IO m
+     , LA.Forall (LA.Pure m)
      , UserAuthentication m
      , MetadataApiAuthorization m
      , HttpLog m
      , ConsoleRenderer m
-     , LA.Forall (LA.Pure m)
+     , MonadGQLSystemAuthz m
+     , MonadConfigApiHandler m
      )
   => ServeOptions impl
   -> InitCtx
@@ -286,7 +290,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
 
   -- start a background thread to deliver the scheduled events
-  void $ liftIO $ C.forkImmortal "processScheduledTriggers" logger  $ processScheduledTriggers logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef)
+  void $ liftIO $ C.forkImmortal "processScheduledTriggers" logger $
+    processScheduledTriggers logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef)
 
   -- start a background thread to check for updates
   _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
@@ -362,10 +367,10 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     -- | Waits for the shutdown latch 'MVar' to be filled, and then
     -- shuts down the server and associated resources.
     -- Structuring things this way lets us decide elsewhere exactly how
-    -- we want to control shutdown. 
+    -- we want to control shutdown.
     shutdownHandler :: Loggers -> IO () -> EventEngineCtx -> Q.PGPool -> IO () -> IO ()
     shutdownHandler (Loggers loggerCtx (Logger logger) _) shutdownApp eeCtx pool closeSocket =
-      void . Async.async $ do 
+      void . Async.async $ do
         waitForShutdown _icShutdownLatch
         logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
         shutdownEvents pool (Logger logger) eeCtx
@@ -429,6 +434,19 @@ instance MetadataApiAuthorization AppM where
 instance ConsoleRenderer AppM where
   renderConsole path authMode enableTelemetry consoleAssetsDir =
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
+
+instance MonadGQLSystemAuthz AppM where
+  authorizeGQLApi userInfo _ enableAL sc query = do
+    runExceptT $ do
+      req <- toParsed query
+      checkQueryInAllowlist enableAL userInfo req sc
+      return req
+
+instance MonadConfigApiHandler AppM where
+  runConfigApiHandler = configApiGetHandler
+
+
+--- helper functions ---
 
 mkConsoleHTML :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =

@@ -405,7 +405,9 @@ library
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
                      , Hasura.SQL.Value
+
                      , Network.URI.Extended
+                     , Network.Wai.Handler.WebSockets.Custom
 
 executable graphql-engine
   import: common-all, common-exe

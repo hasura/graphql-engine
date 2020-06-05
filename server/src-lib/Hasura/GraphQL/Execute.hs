@@ -17,6 +17,9 @@ module Hasura.GraphQL.Execute
   , EP.dumpPlanCache
 
   , ExecutionCtx(..)
+
+  , MonadGQLSystemAuthz(..)
+  , checkQueryInAllowlist
   ) where
 
 import           Control.Lens
@@ -27,7 +30,7 @@ import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as N
+import qualified Network.HTTP.Types                     as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -41,7 +44,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (RequestId)
+import           Hasura.Server.Utils                    (IpAddress, RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
@@ -76,6 +79,34 @@ data ExecutionCtx
   , _ecxHttpManager     :: !HTTP.Manager
   , _ecxEnableAllowList :: !Bool
   }
+
+-- | Typeclass representing rules/authorization to be enforced on the GraphQL API (over both HTTP & Websockets)
+-- TODO: elaborate better. langugage.
+-- This is separate from the permissions system. Permissions apply on GraphQL related objects, but
+-- this is applicable on other things
+-- We are calling this system authorization, in contrast with user authorization. Which is the
+-- 'RQL.Permissions' layer. This enforces some system specific authorization (like enforcing
+-- allow-lists)
+-- | System Authorization for the GraphQL API
+class Monad m => MonadGQLSystemAuthz m where
+  authorizeGQLApi
+    :: UserInfo
+    -> ([HTTP.Header], IpAddress)
+    -> Bool
+    -- ^ allow list enabled?
+    -> SchemaCache
+    -- ^ needs allow list
+    -> GQLReqUnparsed
+    -- ^ the unparsed GraphQL query string (and related values)
+    -> m (Either QErr GQLReqParsed)
+
+instance MonadGQLSystemAuthz m => MonadGQLSystemAuthz (ExceptT e m) where
+  authorizeGQLApi ui det enableAL sc req =
+    lift $ authorizeGQLApi ui det enableAL sc req
+
+instance MonadGQLSystemAuthz m => MonadGQLSystemAuthz (ReaderT r m) where
+  authorizeGQLApi ui det enableAL sc req =
+    lift $ authorizeGQLApi ui det enableAL sc req
 
 -- Enforces the current limitation
 assertSameLocationNodes
@@ -117,14 +148,9 @@ getExecPlanPartial
   :: (MonadReusability m, MonadError QErr m)
   => UserInfo
   -> SchemaCache
-  -> Bool
   -> GQLReqParsed
   -> m ExecPlanPartial
-getExecPlanPartial userInfo sc enableAL req = do
-
-  -- check if query is in allowlist
-  when enableAL checkQueryInAllowlist
-
+getExecPlanPartial userInfo sc req = do
   let gCtx = getGCtx (_uiBackendOnlyFieldAccess userInfo) sc roleName
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
@@ -147,24 +173,28 @@ getExecPlanPartial userInfo sc enableAL req = do
   where
     roleName = _uiRole userInfo
 
-    checkQueryInAllowlist =
-      -- only for non-admin roles
-      when (roleName /= adminRoleName) $ do
-        let notInAllowlist =
-              not $ VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)
-        when notInAllowlist $ modifyQErr modErr $ throwVE "query is not allowed"
 
+checkQueryInAllowlist
+  :: (MonadError QErr m) => Bool -> UserInfo -> GQLReqParsed -> SchemaCache -> m ()
+checkQueryInAllowlist enableAL userInfo req sc =
+  -- only for non-admin roles
+  -- check if query is in allowlist
+  when (enableAL && (_uiRole userInfo /= adminRoleName)) $ do
+    let notInAllowlist =
+          not $ VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)
+    when notInAllowlist $ modifyQErr modErr $ throwVE "query is not allowed"
+
+  where
     modErr e =
       let msg = "query is not in any of the allowlists"
       in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
 
 
--- An execution operation, in case of
--- queries and mutations it is just a transaction
--- to be executed
+-- An execution operation, in case of queries and mutations it is just a
+-- transaction to be executed
 data ExecOp
   = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
-  | ExOpMutation !N.ResponseHeaders !LazyRespTx
+  | ExOpMutation !HTTP.ResponseHeaders !LazyRespTx
   | ExOpSubs !EL.LiveQueryPlan
 
 -- The graphql query is resolved into an execution operation
@@ -176,17 +206,16 @@ getResolvedExecPlan
   -> EP.PlanCache
   -> UserInfo
   -> SQLGenCtx
-  -> Bool
   -> SchemaCache
   -> SchemaCacheVer
   -> HTTP.Manager
-  -> [N.Header]
-  -> GQLReqUnparsed
+  -> [HTTP.Header]
+  -> (GQLReqUnparsed, GQLReqParsed)
   -> m (Telem.CacheHit, GQExecPlanResolved)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  enableAL sc scVer httpManager reqHeaders reqUnparsed = do
-  planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo)
-           opNameM queryStr planCache
+  sc scVer httpManager reqHeaders (reqUnparsed, reqParsed) = do
+
+  planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo) operationNameM queryStr planCache
   let usrVars = _uiSession userInfo
   case planM of
     -- plans are only for queries and subscriptions
@@ -198,27 +227,31 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
         ExOpSubs <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
     Nothing -> (Telem.Miss,) <$> noExistingPlan
   where
-    GQLReq opNameM queryStr queryVars = reqUnparsed
+    GQLReq operationNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
       liftIO $ EP.addPlan scVer (_uiRole userInfo)
-      opNameM queryStr plan planCache
+      operationNameM queryStr plan planCache
 
     noExistingPlan :: m GQExecPlanResolved
     noExistingPlan = do
-      req <- toParsed reqUnparsed
+      -- req <- toParsed reqUnparsed
       (partialExecPlan, queryReusability) <- runReusabilityT $
-        getExecPlanPartial userInfo sc enableAL req
+        getExecPlanPartial userInfo sc reqParsed
       forM partialExecPlan $ \(gCtx, rootSelSet) ->
         case rootSelSet of
           VQ.RMutation selSet -> do
             (tx, respHeaders) <- getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
             pure $ ExOpMutation respHeaders tx
           VQ.RQuery selSet -> do
-            (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx httpManager reqHeaders userInfo queryReusability (allowQueryActionExecuter httpManager reqHeaders) selSet
+            (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx httpManager
+                                       reqHeaders userInfo queryReusability
+                                       (allowQueryActionExecuter httpManager reqHeaders) selSet
             traverse_ (addPlanToCache . EP.RPQuery) plan
             return $ ExOpQuery queryTx (Just genSql)
           VQ.RSubscription fld -> do
-            (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability (restrictActionExecuter "query actions cannot be run as a subscription") fld
+            (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo
+                            queryReusability
+                            (restrictActionExecuter "query actions cannot be run as a subscription") fld
             traverse_ (addPlanToCache . EP.RPSubs) plan
             return $ ExOpSubs lqOp
 
@@ -260,7 +293,7 @@ getQueryOp
   => GCtx
   -> SQLGenCtx
   -> HTTP.Manager
-  -> [N.Header]
+  -> [HTTP.Header]
   -> UserInfo
   -> QueryReusability
   -> QueryActionExecuter
@@ -280,11 +313,11 @@ resolveMutSelSet
      , Has SQLGenCtx r
      , Has InsCtxMap r
      , Has HTTP.Manager r
-     , Has [N.Header] r
+     , Has [HTTP.Header] r
      , MonadIO m
      )
   => VQ.SelSet
-  -> m (LazyRespTx, N.ResponseHeaders)
+  -> m (LazyRespTx, HTTP.ResponseHeaders)
 resolveMutSelSet fields = do
   aliasedTxs <- forM (toList fields) $ \fld -> do
     fldRespTx <- case VQ._fName fld of
@@ -301,8 +334,7 @@ resolveMutSelSet fields = do
     -- Tx {"f1": r1, "f2": r2}
     -- toSingleTx :: [(Text, LazyRespTx)] -> LazyRespTx
     toSingleTx aliasedTxs =
-      fmap encJFromAssocList $
-      forM aliasedTxs $ \(al, (tx, _)) -> (,) al <$> tx
+      fmap encJFromAssocList $ forM aliasedTxs $ \(al, (tx, _)) -> (,) al <$> tx
 
 getMutOp
   :: (HasVersion, MonadError QErr m, MonadIO m)
@@ -310,9 +342,9 @@ getMutOp
   -> SQLGenCtx
   -> UserInfo
   -> HTTP.Manager
-  -> [N.Header]
+  -> [HTTP.Header]
   -> VQ.SelSet
-  -> m (LazyRespTx, N.ResponseHeaders)
+  -> m (LazyRespTx, HTTP.ResponseHeaders)
 getMutOp ctx sqlGenCtx userInfo manager reqHeaders selSet =
   peelReaderT $ resolveMutSelSet selSet
   where
@@ -355,7 +387,7 @@ execRemoteGQ
      )
   => RequestId
   -> UserInfo
-  -> [N.Header]
+  -> [HTTP.Header]
   -> GQLReqUnparsed
   -> RemoteSchemaInfo
   -> G.OperationType

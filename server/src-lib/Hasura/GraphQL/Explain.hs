@@ -9,6 +9,7 @@ import qualified Data.Aeson.TH                          as J
 import qualified Data.HashMap.Strict                    as Map
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Types                     as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -17,6 +18,7 @@ import           Hasura.GraphQL.Validate.Types          (evalReusabilityT, runRe
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils                    (IpAddress)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
@@ -29,9 +31,9 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.SQL.DML                         as S
 
-data GQLExplain
+data GQLExplain a
   = GQLExplain
-  { _gqeQuery :: !GH.GQLReqParsed
+  { _gqeQuery :: !a -- !GH.GQLReqParsed
   , _gqeUser  :: !(Maybe (Map.HashMap Text Text))
   } deriving (Show, Eq)
 
@@ -117,18 +119,25 @@ explainField userInfo gCtx sqlGenCtx actionExecuter fld =
     orderByCtx = _gOrdByCtx gCtx
 
 explainGQLQuery
-  :: (MonadError QErr m, MonadIO m,HasVersion)
+  :: (MonadError QErr m, MonadIO m, HasVersion, E.MonadGQLSystemAuthz m)
   => PGExecCtx
   -> SchemaCache
   -> SQLGenCtx
   -> Bool
+  -> [HTTP.Header]
+  -> IpAddress
   -> QueryActionExecuter
-  -> GQLExplain
+  -> GQLExplain GH.GQLReqUnparsed
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query userVarsRaw) = do
+explainGQLQuery pgExecCtx sc sqlGenCtx enableAL hdrs ip actionExecuter (GQLExplain query userVarsRaw) = do
   userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
+  -- NOTE: previously 'E.getExecPlanPartial' would perform allow-list checking. This has been moved
+  -- into a separate `E.MonadGQLSystemAuthz` class. Hence, now E.authorizeGQLApi is called enforce
+  -- the GraphQL API authorization check
+  reqParsed <- E.authorizeGQLApi userInfo (hdrs, ip) enableAL sc query
+               >>= flip onLeft throwError
   (execPlan, queryReusability) <- runReusabilityT $
-    E.getExecPlanPartial userInfo sc enableAL query
+    E.getExecPlanPartial userInfo sc reqParsed
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet) ->
       return (gCtx, rootSelSet)
