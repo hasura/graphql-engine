@@ -21,7 +21,7 @@ const DataPageContainer = ({
 }) => {
   const styles = require('../../Common/TableCommon/Table.scss');
 
-  if (!schemaList.map(s => s.schema_name).includes(currentSchema)) {
+  if (!schemaList.find(s => s.schema_name === currentSchema)) {
     dispatch(updateCurrentSchema('public', false, schemaList));
 
     // throw a 404 exception

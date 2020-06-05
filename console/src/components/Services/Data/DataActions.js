@@ -466,7 +466,7 @@ const updateCurrentSchema = (
 ) => dispatch => {
   if (
     schemaList.length &&
-    !schemaList.map(s => s.schema_name).includes(schemaName)
+    !schemaList.find(s => s.schema_name === schemaName)
   ) {
     schemaName = schemaList[0].schema_name;
   }
