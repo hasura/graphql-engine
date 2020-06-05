@@ -13,8 +13,9 @@ import {
   TreeArgElement,
   ArgValueKind,
 } from './utils';
+import { Table } from '../../../../Common/utils/pgUtils';
 
-const getDefaultState = (table: any): RemoteRelationship => ({
+const getDefaultState = (table: Table): RemoteRelationship => ({
   name: '',
   remoteSchema: '',
   remoteFields: [],
@@ -224,7 +225,7 @@ const reducer = (
 
 // type "table" once ST PR is merged
 export const useRemoteRelationship = (
-  table: any,
+  table: Table,
   relationship?: RemoteRelationshipServer
 ) => {
   const [state, dispatch] = React.useReducer(
