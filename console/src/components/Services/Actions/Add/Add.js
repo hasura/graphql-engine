@@ -20,7 +20,6 @@ import {
 import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
-import { AlertBox } from '../../../UIKit/atoms';
 import { showWarningNotification } from '../../Common/Notification';
 
 const AddAction = ({
