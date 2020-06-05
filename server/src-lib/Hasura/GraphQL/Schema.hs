@@ -65,20 +65,20 @@ query'
   -> Bool
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
 query' allTables stringifyNum = do
-  selectExpParsers <- for (toList allTables) \tableName -> do
-    selectPerms <- tableSelectPermissions tableName
-    customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo tableName
+  selectExpParsers <- for (toList allTables) \table -> do
+    selectPerms <- tableSelectPermissions table
+    customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
     for selectPerms \perms -> do
-      displayName <- P.qualifiedObjectToName tableName
-      let fieldsDesc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName tableName) <> "\""
+      displayName <- P.qualifiedObjectToName table
+      let fieldsDesc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName table) <> "\""
           aggName = displayName <> $$(G.litName "_aggregate")
-          aggDesc = G.Description $ "fetch aggregated fields from the table: \"" <> getTableTxt (qName tableName) <> "\""
+          aggDesc = G.Description $ "fetch aggregated fields from the table: \"" <> getTableTxt (qName table) <> "\""
           pkName = displayName <> $$(G.litName "_by_pk")
-          pkDesc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName tableName) <> "\" using primary key columns"
+          pkDesc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName table) <> "\" using primary key columns"
       catMaybes <$> sequenceA
-        [ toQrf QRFSimple      $ selectTable          tableName (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms stringifyNum
-        , toQrf QRFPrimaryKey  $ selectTableByPk      tableName (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms stringifyNum
-        , toQrf QRFAggregation $ selectTableAggregate tableName (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms stringifyNum
+        [ toQrf QRFSimple      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms stringifyNum
+        , toQrf QRFPrimaryKey  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms stringifyNum
+        , toQrf QRFAggregation $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms stringifyNum
         ]
   pure $ concat $ catMaybes selectExpParsers
   where toQrf = fmap . fmap . fmap
@@ -143,6 +143,7 @@ mutation
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
 mutation allTables stringifyNum = do
   mutationParsers <- for (toList allTables) \table -> do
+    customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
     displayName <- P.qualifiedObjectToName table
     tablePerms  <- tablePermissions table
     for tablePerms \permissions -> do
@@ -153,13 +154,13 @@ mutation allTables stringifyNum = do
             insertDesc = G.Description $ "insert data into the table: \"" <> G.unName displayName <> "\""
             insertOneName = $$(G.litName "insert_") <> displayName <> $$(G.litName "_one")
             insertOneDesc = G.Description $ "insert a single row into the table: \"" <> G.unName displayName <> "\""
-        insert <- insertIntoTable table insertName (Just insertDesc) insertPerms selectPerms (_permUpd permissions) stringifyNum
+        insert <- insertIntoTable table (fromMaybe insertName $ _tcrfInsert customRootFields) (Just insertDesc) insertPerms selectPerms (_permUpd permissions) stringifyNum
         -- select permissions are required for InsertOne: the
         -- selection set is the same as a select on that table, and it
         -- therefore can't be populated if the user doesn't have
         -- select permissions
         insertOne <- for selectPerms \selPerms ->
-          insertOneIntoTable table insertOneName (Just insertOneDesc) insertPerms selPerms (_permUpd permissions) stringifyNum
+          insertOneIntoTable table (fromMaybe insertOneName $ _tcrfInsertOne customRootFields) (Just insertOneDesc) insertPerms selPerms (_permUpd permissions) stringifyNum
         pure $ fmap MRFInsert insert : maybe [] (pure . fmap MRFInsert) insertOne
 
       updates <- for (_permUpd permissions) \updatePerms -> do
@@ -167,12 +168,12 @@ mutation allTables stringifyNum = do
             updateDesc = G.Description $ "update data of the table: \"" <> G.unName displayName <> "\""
             updateByPkName = $$(G.litName "update_") <> displayName <> $$(G.litName "_by_pk")
             updateByPkDesc = G.Description $ "update single row of the table: \"" <> G.unName displayName <> "\""
-        update <- updateTable table updateName (Just updateDesc) updatePerms selectPerms stringifyNum
+        update <- updateTable table (fromMaybe updateName $ _tcrfUpdate customRootFields) (Just updateDesc) updatePerms selectPerms stringifyNum
         -- likewise; furthermore, primary keys can only be tested in
         -- the `where` clause if the user has select permissions for
         -- them, which at the very least requires select permissions
         updateByPk <- join <$> for selectPerms \selPerms ->
-          updateTableByPk table updateByPkName (Just updateByPkDesc) updatePerms selPerms stringifyNum
+          updateTableByPk table (fromMaybe updateByPkName $ _tcrfUpdateByPk customRootFields) (Just updateByPkDesc) updatePerms selPerms stringifyNum
         pure $ fmap MRFUpdate <$> catMaybes [update, updateByPk]
 
       deletes <- for (_permDel permissions) \deletePerms -> do
@@ -180,10 +181,10 @@ mutation allTables stringifyNum = do
             deleteDesc = G.Description $ "delete data from the table: \"" <> G.unName displayName <> "\""
             deleteByPkName = $$(G.litName "delete_") <> displayName <> $$(G.litName "_by_pk")
             deleteByPkDesc = G.Description $ "delete single row from the table: \"" <> G.unName displayName <> "\""
-        delete <- deleteFromTable table deleteName (Just deleteDesc) deletePerms selectPerms stringifyNum
+        delete <- deleteFromTable table (fromMaybe deleteName $ _tcrfDelete customRootFields) (Just deleteDesc) deletePerms selectPerms stringifyNum
         -- ditto
         deleteByPk <- join <$> for selectPerms \selPerms ->
-          deleteFromTableByPk table deleteByPkName (Just deleteByPkDesc) deletePerms selPerms stringifyNum
+          deleteFromTableByPk table (fromMaybe deleteByPkName $ _tcrfDeleteByPk customRootFields) (Just deleteByPkDesc) deletePerms selPerms stringifyNum
         pure $ fmap MRFDelete delete : maybe [] (pure . fmap MRFDelete) deleteByPk
 
       pure $ concat $ catMaybes [inserts, updates, deletes]
