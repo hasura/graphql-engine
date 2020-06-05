@@ -292,7 +292,7 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
-- server: make the graceful shutdown logic customizable (graceful shutdown on the SIGTERM signal continues to be the default) 
+- server: make the graceful shutdown logic customizable (graceful shutdown on the SIGTERM signal continues to be the default)
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
 
 ## `v1.2.0-beta.4`
