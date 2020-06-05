@@ -489,8 +489,15 @@ selection name description argumentsParser resultParser = FieldParser
   , fParser = \Field{ _fArguments, _fSelectionSet } -> do
       unless (null _fSelectionSet) $
         parseError "unexpected subselection set for non-object field"
+      -- check for extraneous arguments here, since the InputFieldsParser just
+      -- handles parsing the fields it cares about
+      for_ (M.keys _fArguments) \argumentName -> do
+        unless (argumentName `S.member` argumentNames) $
+          parseError $ name <<> " has no argument named " <>> argumentName
       ifParser argumentsParser _fArguments
   }
+  where
+    argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
 
 -- | Builds a 'FieldParser' for a field that takes a subselection set, i.e. a
 -- field that returns an object.
@@ -507,10 +514,17 @@ subselection
 subselection name description argumentsParser bodyParser = FieldParser
   { fDefinition = mkDefinition name description $
       FieldInfo (ifDefinitions argumentsParser) (pType bodyParser)
-  , fParser = \Field{ _fArguments, _fSelectionSet } ->
+  , fParser = \Field{ _fArguments, _fSelectionSet } -> do
+      -- check for extraneous arguments here, since the InputFieldsParser just
+      -- handles parsing the fields it cares about
+      for_ (M.keys _fArguments) \argumentName -> do
+        unless (argumentName `S.member` argumentNames) $
+          parseError $ name <<> " has no argument named " <>> argumentName
       (,) <$> ifParser argumentsParser _fArguments
           <*> pParser bodyParser _fSelectionSet
   }
+  where
+    argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
 
 -- | A shorthand for a 'selection' that takes no arguments.
 selection_
