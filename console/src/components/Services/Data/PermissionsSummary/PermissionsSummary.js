@@ -26,7 +26,7 @@ import { updateSchemaInfo } from '../DataActions';
 import {
   copyRolePermissions,
   permOpenEdit,
-  deleteRolePermissions,
+  deleteRoleGlobally,
 } from '../TablePermissions/Actions';
 
 import {
@@ -306,7 +306,7 @@ class PermissionsSummary extends Component {
               );
 
               if (deleteConfirmed) {
-                dispatch(deleteRolePermissions(role));
+                dispatch(deleteRoleGlobally(role));
               }
             };
 
