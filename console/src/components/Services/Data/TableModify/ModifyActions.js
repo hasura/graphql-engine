@@ -1505,7 +1505,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     };
     const customOnError = () => {};
 
-    if (upMigration.length > 0 || downMigration.length > 0) {
+    if (upMigration.length > 0) {
       makeMigrationCall(
         dispatch,
         getState,

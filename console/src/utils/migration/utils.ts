@@ -16,7 +16,7 @@ import {
 import gqlPattern from '../../components/Services/Data/Common/GraphQLValidation';
 import { sqlEscapeText } from '../../components/Common/utils/sqlUtils';
 import Migration from './Migration';
-import { RunSqlType } from '../../';
+import { RunSqlType } from '../../types';
 
 // Types
 export interface NewColumnType {
@@ -60,18 +60,18 @@ const parseNewCol = (newColumn: NewColumnType) => ({
 });
 
 const parseOldColumns = (oldColumn: OldColumnType) => ({
-  originalColType: oldColumn.udt_name, // "value"
-  originalData_type: oldColumn.data_type, // "value"
-  originalColDefault: oldColumn.column_default || '', // null or "value"
-  originalColComment: oldColumn.comment || '', // null or "value"
-  originalColNullable: oldColumn.is_nullable, // "YES" or "NO"
+  originalColType: oldColumn.udt_name,
+  originalData_type: oldColumn.data_type,
+  originalColDefault: oldColumn.column_default || '',
+  originalColComment: oldColumn.comment || '',
+  originalColNullable: oldColumn.is_nullable,
 });
 
 // utility to compare old & new columns and generate up &down migrations
 export const getColumnUpdateMigration = (
   oldColumn: OldColumnType,
   newColumn: NewColumnType,
-  allSchemas: [],
+  allSchemas: object[],
   colName: string,
   onInvalidGqlColName: () => void
 ) => {
@@ -268,7 +268,7 @@ export const getColumnUpdateMigration = (
   };
 };
 export const getDownQueryComment = (upqueries: RunSqlType[]) => {
-  if (upqueries instanceof Array && upqueries.length >= 0) {
+  if (Array.isArray(upqueries) && upqueries.length >= 0) {
     let comment = `-- Could not auto-generate a down migration.
 -- Please write an appropriate down migration for the SQL below:`;
     comment = upqueries.reduce(
