@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 -- | Functions for mutating the catalog (with integrity checking) to incorporate schema changes
 -- discovered after applying a user-supplied SQL query. None of these functions modify the schema
 -- cache, so it must be reloaded after the catalog is updated.
@@ -20,10 +22,13 @@ import           Hasura.Session
 import           Hasura.SQL.Types
 
 import qualified Hasura.RQL.DDL.EventTrigger        as DS
+import qualified Hasura.RQL.DDL.RemoteRelationship  as RR
 
 import qualified Data.HashMap.Strict                as M
 import qualified Database.PG.Query                  as Q
-
+import qualified Data.Set                           as Set
+import qualified Data.List.NonEmpty                 as NE
+import qualified Language.GraphQL.Draft.Syntax      as G
 import           Data.Aeson
 
 data RenameItem a
@@ -97,6 +102,8 @@ renameColInCatalog oCol nCol qt fieldInfo = do
       updateColInRel refQT rn $ RenameItem qt oCol nCol
     SOTableObj _ (TOTrigger triggerName) ->
       updateColInEventTriggerDef triggerName $ RenameItem qt oCol nCol
+    SOTableObj _ (TORemoteRel remoteRelName) ->
+      updateColInRemoteRelationship remoteRelName $ RenameItem qt oCol nCol
     d -> otherDeps errMsg d
   -- Update custom column names
   possiblyUpdateCustomColumnNames qt oCol nCol
@@ -135,7 +142,6 @@ renameRelInCatalog qt oldRN newRN = do
            AND rel_name = $4
       |] (newRN, sn, tn, oldRN) True
 
-
 -- update table names in relationship definition
 updateRelDefs
   :: (MonadTx m, CacheRM m)
@@ -146,7 +152,6 @@ updateRelDefs qt rn renameTable = do
   case riType ri of
     ObjRel -> updateObjRelDef qt rn renameTable
     ArrRel -> updateArrRelDef qt rn renameTable
-
 
 updateObjRelDef
   :: (MonadTx m)
@@ -347,6 +352,55 @@ updateColInRel fromQT rn rnCol = do
     ArrRel -> fmap toJSON $
       updateColInArrRel fromQT toQT rnCol <$> decodeValue oldDefV
   liftTx $ updateRel fromQT rn newDefV
+
+-- please refactor this function before submitting it for review
+updateColInRemoteRelationship
+  :: (MonadTx m)
+  => RemoteRelationshipName -> RenameCol -> m ()
+updateColInRemoteRelationship remoteRelationshipName renameCol = do
+  let (RenameItem _ oldCol newCol) = renameCol
+  (RemoteRelationshipDef remoteSchemaName hasuraFlds remoteFields) <-
+    liftTx $ RR.getRemoteRelDefFromCatalog remoteRelationshipName
+  let oldColFieldName = FieldName $ getPGColTxt oldCol
+  let newColFieldName = FieldName $ getPGColTxt newCol
+  let modifiedHasuraFlds = Set.insert newColFieldName $ Set.delete oldColFieldName hasuraFlds
+  let fieldCalls = unRemoteFields remoteFields
+  let oldColName = G.Name $ getPGColTxt oldCol
+  let newColName = G.Name $ getPGColTxt newCol
+  let !bc = NE.map (\(FieldCall name args) ->
+                      let remoteArgs = getRemoteArguments args
+                      in FieldCall name $ RemoteArguments $
+                      map (\(G.ObjectFieldG key val) ->
+                               G.ObjectFieldG key $ replaceVariableName oldColName newColName val
+                          ) $ remoteArgs
+                    ) $ fieldCalls
+  liftTx $ updateRemoteRelDefnInCatalog (RemoteRelationshipDef remoteSchemaName modifiedHasuraFlds (RemoteFields bc))
+  where
+    -- definitely should use runUpdateRemoteRelationship
+    updateRemoteRelDefnInCatalog newDefn =
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+        UPDATE hdb_catalog.hdb_remote_relationship
+        SET definition = $2::jsonb
+        WHERE remote_relationship_name = $1
+        |] (remoteRelationshipName,Q.AltJ newDefn) True
+
+    replaceVariableName :: G.Name -> G.Name -> G.Value -> G.Value
+    replaceVariableName oldColName newColName = \case
+      G.VVariable (G.Variable oldColName') ->
+        G.VVariable $
+        if oldColName == oldColName'
+        then (G.Variable newColName)
+        else (G.Variable oldColName')
+      G.VList (G.unListValue -> values) -> G.VList $ G.ListValueG $ map (replaceVariableName oldColName newColName) values
+      G.VObject (G.unObjectValue -> values) ->
+        G.VObject $ G.ObjectValueG $
+        map (\(G.ObjectFieldG key val) -> G.ObjectFieldG key $ replaceVariableName oldColName newColName val) values
+      G.VInt i -> G.VInt i
+      G.VFloat f -> G.VFloat f
+      G.VBoolean b -> G.VBoolean b
+      G.VNull -> G.VNull
+      G.VString s -> G.VString s
+      G.VEnum e -> G.VEnum e
 
 -- rename columns in relationship definitions
 updateColInEventTriggerDef

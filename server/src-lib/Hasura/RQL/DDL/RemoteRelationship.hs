@@ -6,6 +6,7 @@ module Hasura.RQL.DDL.RemoteRelationship
   , persistRemoteRelationship
   , resolveRemoteRelationship
   , delRemoteRelFromCatalog
+  , getRemoteRelDefFromCatalog
   ) where
 
 import           Hasura.EncJSON
@@ -115,3 +116,13 @@ delRemoteRelFromCatalog (QualifiedObject sn tn) (RemoteRelationshipName relName)
              AND table_name = $2
              AND remote_relationship_name = $3
                 |] (sn, tn, relName) True
+
+getRemoteRelDefFromCatalog :: RemoteRelationshipName -> Q.TxE QErr RemoteRelationshipDef
+getRemoteRelDefFromCatalog relName = do
+  (Q.AltJ defn) <- (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+    [Q.sql|
+     SELECT definition::json
+     FROM hdb_catalog.hdb_remote_relationship
+     WHERE remote_relationship_name = $1
+     |] (Identity relName) False
+  return defn
