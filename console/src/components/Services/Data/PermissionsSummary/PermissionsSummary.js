@@ -23,7 +23,11 @@ import {
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 import { updateSchemaInfo } from '../DataActions';
-import { copyRolePermissions, permOpenEdit } from '../TablePermissions/Actions';
+import {
+  copyRolePermissions,
+  permOpenEdit,
+  deleteRolePermissions,
+} from '../TablePermissions/Actions';
 
 import {
   getAllRoles,
@@ -302,8 +306,7 @@ class PermissionsSummary extends Component {
               );
 
               if (deleteConfirmed) {
-                // TODO: insert the function to call for deletion here
-                console.log(`Deleted permissions for the role: ${role}`);
+                dispatch(deleteRolePermissions(role));
               }
             };
 

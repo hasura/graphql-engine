@@ -526,6 +526,74 @@ export const isQueryTypeBackendOnlyCompatible = queryType => {
   return queryType === 'insert';
 };
 
+const deleteRolePermissions = roleName => {
+  return (dispatch, getState) => {
+    const permissionsUpQueries = [];
+    const permissionsDownQueries = [];
+
+    const allSchemas = getState().tables.allSchemas;
+    const currentSchema = getState().tables.currentSchema;
+
+    const tables = getSchemaTables(allSchemas, currentSchema);
+
+    tables.forEach(table => {
+      const tableDef = getTableDef(table);
+
+      const actions = ['select', 'insert', 'update', 'delete'];
+
+      actions.forEach(_action => {
+        const currPermissions = getTablePermissions(table, roleName, _action);
+
+        if (currPermissions) {
+          // existing permission is there
+          const deleteQuery = getDropPermissionQuery(
+            _action,
+            tableDef,
+            roleName
+          );
+          // since the actions must be revertible
+          const createQuery = getCreatePermissionQuery(
+            _action,
+            tableDef,
+            roleName,
+            currPermissions
+          );
+
+          permissionsUpQueries.push(deleteQuery);
+          permissionsDownQueries.push(createQuery);
+        }
+      });
+    });
+
+    // Apply migration
+    const migrationName = `delete_all_permissions_for_${roleName}`;
+
+    const requestMsg = 'Deleting permissions';
+    const successMsg = 'Permissions Deleted';
+    const errorMsg = 'Permissions deletion failed';
+
+    const customOnSuccess = () => {
+      onSuccess();
+      // fetch all roles
+      dispatch(fetchRoleList());
+    };
+    const customOnError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      permissionsUpQueries,
+      permissionsDownQueries,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
 const copyRolePermissions = (
   fromRole,
   tableNameWithSchema,
@@ -790,4 +858,5 @@ export {
   permDelApplySamePerm,
   applySamePermissionsBulk,
   copyRolePermissions,
+  deleteRolePermissions,
 };
