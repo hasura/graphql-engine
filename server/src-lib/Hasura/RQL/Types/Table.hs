@@ -39,6 +39,7 @@ module Hasura.RQL.Types.Table
        , _FIColumn
        , _FIRelationship
        , _FIComputedField
+       , _FIRemoteRelationship
        , fieldInfoName
        , fieldInfoGraphQLNames
        , getFieldInfoM
@@ -47,6 +48,7 @@ module Hasura.RQL.Types.Table
        , sortCols
        , getRels
        , getComputedFieldInfos
+       , getRemoteRels
 
        , isPGColInfo
        , RelInfo(..)
@@ -77,8 +79,8 @@ module Hasura.RQL.Types.Table
 
        ) where
 
-import           Hasura.GraphQL.Utils           (showNames)
-import           Hasura.Incremental             (Cacheable)
+import           Hasura.GraphQL.Utils                (showNames)
+import           Hasura.Incremental                  (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
@@ -87,7 +89,7 @@ import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
-import           Hasura.Server.Utils            (duplicates)
+import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.Session
 import           Hasura.SQL.Types
 
@@ -95,12 +97,13 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Data.List.Extended                  (duplicates)
+import           Language.Haskell.TH.Syntax          (Lift)
 
-import qualified Data.HashMap.Strict            as M
-import qualified Data.HashSet                   as HS
-import qualified Data.Text                      as T
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashSet                        as HS
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 data TableCustomRootFields
   = TableCustomRootFields
@@ -160,6 +163,7 @@ data FieldInfo
   = FIColumn !PGColumnInfo
   | FIRelationship !RelInfo
   | FIComputedField !ComputedFieldInfo
+  | FIRemoteRelationship !RemoteFieldInfo
   deriving (Show, Eq, Generic)
 instance Cacheable FieldInfo
 $(deriveToJSON
@@ -176,6 +180,7 @@ fieldInfoName = \case
   FIColumn info -> fromPGCol $ pgiColumn info
   FIRelationship info -> fromRel $ riName info
   FIComputedField info -> fromComputedField $ _cfiName info
+  FIRemoteRelationship info -> fromRemoteRelationship $ _rfiName info
 
 -- | Returns all the field names created for the given field. Columns, object relationships, and
 -- computed fields only ever produce a single field, but array relationships also contain an
@@ -189,6 +194,7 @@ fieldInfoGraphQLNames = \case
       ObjRel -> [name]
       ArrRel -> [name, name <> "_aggregate"]
   FIComputedField info -> [G.Name . computedFieldNameToText $ _cfiName info]
+  FIRemoteRelationship info -> pure $ G.Name $ remoteRelationshipNameToText $ _rfiName info
 
 getCols :: FieldInfoMap FieldInfo -> [PGColumnInfo]
 getCols = mapMaybe (^? _FIColumn) . M.elems
@@ -202,6 +208,9 @@ getRels = mapMaybe (^? _FIRelationship) . M.elems
 
 getComputedFieldInfos :: FieldInfoMap FieldInfo -> [ComputedFieldInfo]
 getComputedFieldInfos = mapMaybe (^? _FIComputedField) . M.elems
+
+getRemoteRels :: FieldInfoMap FieldInfo -> [RemoteFieldInfo]
+getRemoteRels = mapMaybe (^? _FIRemoteRelationship) . M.elems
 
 isPGColInfo :: FieldInfo -> Bool
 isPGColInfo (FIColumn _) = True
