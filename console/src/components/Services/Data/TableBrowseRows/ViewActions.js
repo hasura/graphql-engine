@@ -11,7 +11,7 @@ import dataHeaders from '../Common/Headers';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   getBulkDeleteQuery,
-  generateSelectQuery,
+  getSelectQuery,
   getFetchManualTriggersQuery,
   getDeleteQuery,
   getRunSqlQuery,
@@ -73,10 +73,14 @@ const vMakeRowsRequest = () => {
     const requestBody = {
       type: 'bulk',
       args: [
-        generateSelectQuery(
+        getSelectQuery(
           'select',
           generateTableDef(originalTable, currentSchema),
-          view.query
+          view.query.columns,
+          view.query.where,
+          view.query.offset,
+          view.query.limit,
+          view.query.order_by
         ),
         getRunSqlQuery(getEstimateCountQuery(currentSchema, originalTable)),
       ],
@@ -124,10 +128,14 @@ const vMakeCountRequest = () => {
     } = getState().tables;
     const url = Endpoints.query;
 
-    const requestBody = generateSelectQuery(
+    const requestBody = getSelectQuery(
       'count',
       generateTableDef(originalTable, currentSchema),
-      view.query
+      view.query.columns,
+      view.query.where,
+      view.query.offset,
+      view.query.limit,
+      view.query.order_by
     );
 
     const options = {
@@ -176,7 +184,10 @@ const vMakeTableRequests = () => (dispatch, getState) => {
 const fetchManualTriggers = tableName => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
-    const body = getFetchManualTriggersQuery(tableName);
+    const { currentSchema } = getState().tables;
+    const body = getFetchManualTriggersQuery(
+      generateTableDef(tableName, currentSchema)
+    );
 
     const options = {
       credentials: globalCookiePolicy,
