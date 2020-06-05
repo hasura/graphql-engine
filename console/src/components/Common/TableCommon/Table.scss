@@ -150,9 +150,6 @@ a.expanded {
   text-overflow: ellipsis;
 }
 
-.sqlBody {
-}
-
 .tablesBody {
   padding-top: 20px;
 }
@@ -199,4 +196,15 @@ a.expanded {
 .headerInputCheckbox {
   height: 16px;
   margin-bottom: 2px;
+}
+
+.labelText {
+  display: inline-block;
+  margin-left: 17px;
+  font-size: 16px;
+}
+
+input[type='checkbox'].migrationCheckbox {
+  margin: 0;
+  margin-right: 10px;
 }

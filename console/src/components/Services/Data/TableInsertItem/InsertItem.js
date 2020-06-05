@@ -19,7 +19,7 @@ import styles from '../../../Common/TableCommon/Table.scss';
 class InsertItem extends Component {
   constructor() {
     super();
-    this.state = { insertedRows: 0 };
+    this.state = { insertedRows: 0, isMigrationChecked: false };
   }
 
   componentDidMount() {
@@ -39,6 +39,19 @@ class InsertItem extends Component {
       insertedRows: prev.insertedRows + 1,
     }));
   }
+
+  toggleMigrationCheckBox = () => {
+    this.setState(
+      prevState => ({
+        isMigrationChecked: !prevState.isMigrationChecked,
+      }),
+      () => {
+        // TODO: insert code to execute here?
+        // if the checkbox is checked then fundamental changes
+        // have to be made to how the Save functionality would workx
+      }
+    );
+  };
 
   render() {
     const {
@@ -213,65 +226,77 @@ class InsertItem extends Component {
           <div className="col-xs-9">
             <form id="insertForm" className="form-horizontal">
               {elements}
-              <Button
-                type="submit"
-                color="yellow"
-                size="sm"
-                onClick={e => {
-                  e.preventDefault();
-                  const inputValues = {};
-                  Object.keys(refs).map(colName => {
-                    if (refs[colName].nullNode.checked) {
-                      // null
-                      inputValues[colName] = null;
-                    } else if (refs[colName].defaultNode.checked) {
-                      // default
-                      return;
-                    } else {
-                      inputValues[colName] =
-                        refs[colName].valueNode.props !== undefined
-                          ? refs[colName].valueNode.props.value
-                          : refs[colName].valueNode.value;
+              <div className={styles.display_flex}>
+                <Button
+                  type="submit"
+                  color="yellow"
+                  size="sm"
+                  onClick={e => {
+                    e.preventDefault();
+                    const inputValues = {};
+                    Object.keys(refs).map(colName => {
+                      if (refs[colName].nullNode.checked) {
+                        // null
+                        inputValues[colName] = null;
+                      } else if (refs[colName].defaultNode.checked) {
+                        // default
+                        return;
+                      } else {
+                        inputValues[colName] =
+                          refs[colName].valueNode.props !== undefined
+                            ? refs[colName].valueNode.props.value
+                            : refs[colName].valueNode.value;
+                      }
+                    });
+                    dispatch(insertItem(tableName, inputValues)).then(() => {
+                      this.nextInsert();
+                    });
+                  }}
+                  data-test="insert-save-button"
+                >
+                  {buttonText}
+                </Button>
+                <Button
+                  color="white"
+                  size="sm"
+                  onClick={e => {
+                    e.preventDefault();
+                    const form = document.getElementById('insertForm');
+                    const inputs = form.getElementsByTagName('input');
+                    for (let i = 0; i < inputs.length; i++) {
+                      switch (inputs[i].type) {
+                        // case 'hidden':
+                        case 'text':
+                          inputs[i].value = '';
+                          break;
+                        case 'radio':
+                        case 'checkbox':
+                          // inputs[i].checked = false;
+                          break;
+                        default:
+                        // pass
+                      }
                     }
-                  });
-                  dispatch(insertItem(tableName, inputValues)).then(() => {
-                    this.nextInsert();
-                  });
-                }}
-                data-test="insert-save-button"
-              >
-                {buttonText}
-              </Button>
-              <Button
-                color="white"
-                size="sm"
-                onClick={e => {
-                  e.preventDefault();
-                  const form = document.getElementById('insertForm');
-                  const inputs = form.getElementsByTagName('input');
-                  for (let i = 0; i < inputs.length; i++) {
-                    switch (inputs[i].type) {
-                      // case 'hidden':
-                      case 'text':
-                        inputs[i].value = '';
-                        break;
-                      case 'radio':
-                      case 'checkbox':
-                        // inputs[i].checked = false;
-                        break;
-                      default:
-                      // pass
-                    }
-                  }
-                }}
-                data-test="clear-button"
-              >
-                Clear
-              </Button>
-              <ReloadEnumValuesButton
-                dispatch={dispatch}
-                isEnum={currentTable.is_enum}
-              />
+                  }}
+                  data-test="clear-button"
+                >
+                  Clear
+                </Button>
+                <ReloadEnumValuesButton
+                  dispatch={dispatch}
+                  isEnum={currentTable.is_enum}
+                />
+                <label className={styles.labelText}>
+                  <input
+                    type="checkbox"
+                    checked={this.state.isMigrationChecked}
+                    title="This is a Migration"
+                    onChange={this.toggleMigrationCheckBox}
+                    className={styles.migrationCheckbox}
+                  />
+                  This is a Migration
+                </label>
+              </div>
             </form>
           </div>
           <div className="col-xs-3">{alert}</div>
