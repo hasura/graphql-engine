@@ -69,7 +69,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - server: fix importing of allow list query from metadata (fix #4687)
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
-- console: add ability to delete permissions for a role (#3353)
+- console: add ability to delete permissions for a role across tables (#3353)
 - console: allow entering big int values in the console (close #3667) (#4775)
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
@@ -293,7 +293,7 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
-- server: make the graceful shutdown logic customizable (graceful shutdown on the SIGTERM signal continues to be the default) 
+- server: make the graceful shutdown logic customizable (graceful shutdown on the SIGTERM signal continues to be the default)
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
 
 ## `v1.2.0-beta.4`
