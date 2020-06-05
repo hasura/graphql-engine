@@ -120,14 +120,6 @@
             }
           }
         ],
-        "jsx-a11y/anchor-is-valid": [
-          0, 
-          { 
-            "components": ["Link"], 
-            "specialLink": [], 
-            "aspects": ["noHref", "invalidHref", "preferButton"]
-          }
-        ],
         "import/extensions": 0,
         "import/prefer-default-export": "off",
         "react/prop-types": "off",
