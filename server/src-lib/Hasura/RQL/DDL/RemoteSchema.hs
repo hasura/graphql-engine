@@ -156,7 +156,7 @@ runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
         throw400 NotExists $
         "remote schema: " <> remoteSchemaNameToTxt rsName <> " not found"
       Just rCtx -> mergeGCtx (rscGCtx rCtx) GC.emptyGCtx
-      -- ^ merge with emptyGCtx to get default query fields
+      -- merge with emptyGCtx to get default query fields
   queryParts <- flip runReaderT rGCtx $ VQ.getQueryParts introspectionQuery
   (rootSelSet, _) <- flip runReaderT rGCtx $ VT.runReusabilityT $ VQ.validateGQ queryParts
   schemaField <-
