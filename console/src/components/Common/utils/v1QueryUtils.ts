@@ -98,6 +98,42 @@ export const getDropPermissionQuery = (
   };
 };
 
+export const getInsertQuery = (
+  tableDef: TableDefinition,
+  insertObject: object
+) => {
+  const queryCols = Object.keys(insertObject);
+  const colString = queryCols.join(',');
+
+  const queryValues = Object.values(insertObject);
+  const modifiedValues = queryValues.map(value => {
+    // currently, only modifying for string data,
+    // unsure of how it is for other types.
+    if (typeof value === 'string') {
+      return `'${value}'`;
+    }
+
+    return value;
+  });
+  const valueString = modifiedValues.join(',');
+
+  // NOTE:
+  // this is probably not the best way to do it. but
+  // certainly felt like one of the ways to do it.
+  // I was trying it with type of `input` but, the
+  // "objects" weren't provided to it correctly and I
+  // did not find any documentation for it on here:
+  // https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/index.html
+  // perhaps was looking in the wrong space
+  // need to discuss
+  return {
+    type: 'run_sql',
+    args: {
+      sql: `INSERT into ${tableDef.schema}.${tableDef.name} (${colString}) values (${valueString})`,
+    },
+  };
+};
+
 type CustomTypeScalar = {
   name: string;
   description: string;
