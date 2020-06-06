@@ -1,5 +1,4 @@
 import defaultState from './State';
-import Notifications from 'react-notification-system-redux';
 import { loadConsoleOpts } from '../../telemetry/Actions';
 import { fetchServerConfig } from '../Main/Actions';
 
@@ -24,29 +23,6 @@ const CONNECTION_FAILED = 'App/CONNECTION_FAILED';
  * onRemove: function, null, same as onAdd
  * uid: integer/string, null, unique identifier to the notification, same uid will not be shown again
  */
-const showNotification = ({
-  level = 'info',
-  position = 'tr',
-  ...options
-} = {}) => {
-  return dispatch => {
-    if (level === 'success') {
-      dispatch(Notifications.removeAll());
-    }
-
-    dispatch(
-      Notifications.show(
-        {
-          position,
-          autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
-          dismissible: ['error', 'warning'].includes(level) ? 'button' : 'both',
-          ...options,
-        },
-        level
-      )
-    );
-  };
-};
 
 export const requireAsyncGlobals = ({ dispatch }) => {
   return (nextState, finalState, callback) => {
@@ -119,5 +95,4 @@ export {
   FAILED_REQUEST,
   ERROR_REQUEST,
   CONNECTION_FAILED,
-  showNotification,
 };
