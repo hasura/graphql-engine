@@ -138,7 +138,7 @@ const setPreReleaseNotificationOptOutInDB = () => (
 
 const loadConsoleOpts = () => {
   return (
-    dispatch: ThunkDispatch<{}, {}, AnyAction>,
+    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
     getState: GetReduxState
   ) => {
     const url = Endpoints.getSchema;
