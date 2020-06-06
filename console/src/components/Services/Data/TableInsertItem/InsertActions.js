@@ -27,6 +27,38 @@ const I_FETCH_ENUM_OPTIONS_ERROR = 'InsertItem/I_FETCH_ENUM_ERROR';
 const Open = () => ({ type: _OPEN });
 const Close = () => ({ type: _CLOSE });
 
+// insert helper
+const createInsertMigration = (dispatch, getState, tableInfo, insertObj) => {
+  const upQuery = getInsertQuery(
+    { name: tableInfo.name, schema: tableInfo.schema },
+    insertObj
+  );
+  const migrationName = `insert_into_${tableInfo.name}`;
+  const customOnSuccess = () => {
+    // NOTE: maybe unnecessary.
+    dispatch(setTable(tableInfo.name));
+  };
+  const customOnError = () => {};
+  const requestMessage = 'Creating Insert Migration';
+  const successMessage = 'Created Insert Migration!';
+  const errorMessage = 'Error in creating Insert Migration';
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    null,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMessage,
+    successMessage,
+    errorMessage,
+    true,
+    true
+  );
+};
+
 /* ****************** insert action creators ************ */
 const insertItem = (tableName, colValues, isMigration = false) => {
   return (dispatch, getState) => {
@@ -118,37 +150,6 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       }
     );
   };
-};
-
-const createInsertMigration = (dispatch, getState, tableInfo, insertObj) => {
-  const upQuery = getInsertQuery(
-    { name: tableInfo.name, schema: tableInfo.schema },
-    insertObj
-  );
-  const migrationName = `insert_into_${tableInfo.name}`;
-  const customOnSuccess = () => {
-    // NOTE: maybe unnecessary.
-    dispatch(setTable(tableName));
-  };
-  const customOnError = () => {};
-  const requestMessage = 'Creating Insert Migration';
-  const successMessage = 'Created Insert Migration!';
-  const errorMessage = 'Error in creating Insert Migration';
-
-  makeMigrationCall(
-    dispatch,
-    getState,
-    [upQuery],
-    null,
-    migrationName,
-    customOnSuccess,
-    customOnError,
-    requestMessage,
-    successMessage,
-    errorMessage,
-    true,
-    true
-  );
 };
 
 const fetchEnumOptions = () => {
