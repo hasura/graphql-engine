@@ -12,8 +12,8 @@ API Reference - Query / Subscription
   :depth: 3
   :local:
 
-Query / subscription syntax
----------------------------
+**query** / **subscription** syntax
+-----------------------------------
 
 .. code-block:: none
 
@@ -68,6 +68,57 @@ Query / subscription syntax
 .. note::
 
     For more examples and details of usage, please see :ref:`this <queries>`.
+
+**query_by_pk** / **subscription_by_pk** syntax
+-----------------------------------------------
+
+.. code-block:: none
+
+    query|subscription [<op-name>] {
+      <query-field-name> (
+        column1: value1
+        column2: value2
+      )
+      <object-fields>
+    }
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - op-name
+     - false
+     - Value
+     - Name query/subscription for observability
+   * - query-field-name
+     - true
+     - Value
+     - Name of the auto-generated query field, e.g. *article_by_pk*
+
+**E.g. QUERY BY PK**:
+
+.. code-block:: graphql
+
+    query {
+      article_by_pk(id: 1) {
+        id
+        title
+      }
+    }
+
+**E.g. SUBSCRIPTION BY PK**:
+
+.. code-block:: graphql
+
+    subscription {
+      article_by_pk(id: 1) {
+        id
+        title
+      }
+    }
 
 Syntax definitions
 ------------------

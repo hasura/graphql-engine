@@ -223,7 +223,7 @@ processJwt jwtCtx headers mUnAuthRole =
 
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
-      userInfo <- mkUserInfo UAdminSecretNotSent (mkSessionVariables headers) $ Just unAuthRole
+      userInfo <- mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $ mkSessionVariables headers
       pure (userInfo, Nothing)
 
     missingAuthzHeader =
@@ -271,8 +271,8 @@ processAuthZHeader jwtCtx headers authzHeader = do
 
   -- transform the map of text:aeson-value -> text:text
   metadata <- decodeJSON $ J.Object finalClaims
-  userInfo <- mkUserInfo UAdminSecretNotSent
-              (mkSessionVariablesText $ Map.toList metadata) $ Just roleName
+  userInfo <- mkUserInfo (URBPreDetermined roleName) UAdminSecretNotSent $
+              mkSessionVariablesText $ Map.toList metadata
   pure (userInfo, expTimeM)
   where
     parseAuthzHeader = do

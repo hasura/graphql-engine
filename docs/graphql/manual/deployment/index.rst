@@ -30,6 +30,11 @@ Choose from the following guides to deploy the Hasura GraphQL engine and connect
 
 You can also check :ref:`guides_deployment` for more specific examples.
 
+.. admonition:: Custom Docker images or binaries
+
+  If you need a custom Docker image or binary for GraphQL engine, please see :ref:`this page <custom_docker_image>`
+
+
 Configuration
 -------------
 
@@ -57,12 +62,13 @@ For access to Hasura GraphQL engine logs, check the below page for details:
    Using Docker <docker/index>
    Using Kubernetes <kubernetes/index>
    Server configuration <graphql-engine-flags/index>
-   postgres-permissions
+   postgres-requirements
    securing-graphql-endpoint
    Server logs <logging>
    Enable HTTPS <enable-https>
    allow-list
    HTTP Compression <compression>
    Production checklist <production-checklist>
+   Custom Docker images or binaries <custom-docker-images>
    Updating GraphQL engine <updating>
    Downgrading GraphQL engine <downgrading>

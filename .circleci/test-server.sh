@@ -188,6 +188,13 @@ echo -e "INFO: Logs Folder        : $OUTPUT_FOLDER\n"
 
 pip3 install -r requirements.txt
 
+# node js deps
+curl -sL https://deb.nodesource.com/setup_8.x | bash -
+apt-get install -y nodejs
+npm_config_loglevel=error npm install $PYTEST_ROOT/remote_schemas/nodejs/
+
+npm install apollo-server graphql
+
 mkdir -p "$OUTPUT_FOLDER/hpc"
 
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
@@ -245,6 +252,24 @@ start_multiple_hge_servers
 run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"
 
 kill_hge_servers
+
+##########
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND UNAUTHORIZED ROLE #####################################>\n"
+TEST_TYPE="admin-secret-unauthorized-role"
+
+export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+export HASURA_GRAPHQL_UNAUTHORIZED_ROLE="anonymous"
+
+run_hge_with_args serve
+
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-unauthorized-role test_graphql_queries.py::TestUnauthorizedRolePermission
+
+kill_hge_servers
+
+unset HASURA_GRAPHQL_UNAUTHORIZED_ROLE
+
 
 ##########
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT #####################################>\n"

@@ -5,6 +5,7 @@ module Hasura.App where
 
 import           Control.Concurrent.STM.TVar          (readTVarIO)
 import           Control.Monad.Base
+import           Control.Monad.Catch                  (MonadCatch, MonadThrow, onException)
 import           Control.Monad.Stateless
 import           Control.Monad.STM                    (atomically)
 import           Control.Monad.Trans.Control          (MonadBaseControl (..))
@@ -15,6 +16,7 @@ import           Options.Applicative
 import           System.Environment                   (getEnvironment, lookupEnv)
 import           System.Exit                          (exitFailure)
 
+import qualified Control.Concurrent.Async             as Async
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
 import qualified Control.Concurrent.Extended          as C
 import qualified Data.Aeson                           as A
@@ -28,7 +30,7 @@ import qualified Database.PG.Query                    as Q
 import qualified Network.HTTP.Client                  as HTTP
 import qualified Network.HTTP.Client.TLS              as HTTP
 import qualified Network.Wai.Handler.Warp             as Warp
-import qualified System.Posix.Signals                 as Signals
+import qualified System.Log.FastLogger                as FL
 import qualified Text.Mustache.Compile                as M
 
 import           Hasura.Db
@@ -54,7 +56,6 @@ import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
 import           Hasura.Session
-
 
 printErrExit :: (MonadIO m) => forall a . String -> m a
 printErrExit = liftIO . (>> exitFailure) . putStrLn
@@ -109,11 +110,12 @@ mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
 -- | most of the required types for initializing graphql-engine
 data InitCtx
   = InitCtx
-  { _icHttpManager :: !HTTP.Manager
-  , _icInstanceId  :: !InstanceId
-  , _icLoggers     :: !Loggers
-  , _icConnInfo    :: !Q.ConnInfo
-  , _icPgPool      :: !Q.PGPool
+  { _icHttpManager   :: !HTTP.Manager
+  , _icInstanceId    :: !InstanceId
+  , _icLoggers       :: !Loggers
+  , _icConnInfo      :: !Q.ConnInfo
+  , _icPgPool        :: !Q.PGPool
+  , _icShutdownLatch :: !ShutdownLatch
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -126,7 +128,7 @@ data Loggers
   }
 
 newtype AppM a = AppM { unAppM :: IO a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO, MonadCatch, MonadThrow)
 
 -- | this function initializes the catalog and returns an @InitCtx@, based on the command given
 -- - for serve command it creates a proper PG connection pool
@@ -144,6 +146,7 @@ initialiseCtx hgeCmd rci = do
   httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
   instanceId <- liftIO generateInstanceId
   connInfo <- liftIO procConnInfo
+  latch <- liftIO newShutdownLatch
   (loggers, pool) <- case hgeCmd of
     -- for server command generate a proper pool
     HCServe so@ServeOptions{..} -> do
@@ -161,7 +164,7 @@ initialiseCtx hgeCmd rci = do
       pool <- getMinimalPool pgLogger connInfo
       pure (l, pool)
 
-  pure (InitCtx httpManager instanceId loggers connInfo pool, initTime)
+  pure (InitCtx httpManager instanceId loggers connInfo pool latch, initTime)
   where
     procConnInfo =
       either (printErrExit . ("Fatal Error : " <>)) return $ mkConnInfo rci
@@ -182,9 +185,25 @@ runTxIO pool isoLevel tx = do
   eVal <- liftIO $ runExceptT $ Q.runTx pool isoLevel tx
   either printErrJExit return eVal
 
+-- | A latch for the graceful shutdown of a server process.
+newtype ShutdownLatch = ShutdownLatch { unShutdownLatch :: C.MVar () }
+
+newShutdownLatch :: IO ShutdownLatch
+newShutdownLatch = fmap ShutdownLatch C.newEmptyMVar
+
+-- | Block the current thread, waiting on the latch.
+waitForShutdown :: ShutdownLatch -> IO ()
+waitForShutdown = C.takeMVar . unShutdownLatch
+
+-- | Initiate a graceful shutdown of the server associated with the provided 
+-- latch.
+shutdownGracefully :: InitCtx -> IO ()
+shutdownGracefully = flip C.putMVar () . unShutdownLatch . _icShutdownLatch
+
 runHGEServer
   :: ( HasVersion
      , MonadIO m
+     , MonadCatch m
      , MonadStateless IO m
      , UserAuthentication m
      , MetadataApiAuthorization m
@@ -213,7 +232,11 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
 
-  HasuraApp app cacheRef cacheInitTime shutdownApp <-
+  -- If an exception is encountered in 'mkWaiApp', flush the log buffer and rethrow
+  -- If we do not flush the log buffer on exception, then log lines written in 'mkWaiApp' may be missed
+  -- See: https://github.com/hasura/graphql-engine/issues/4772
+  let flushLogger = liftIO $ FL.flushLogStr $ _lcLoggerSet loggerCtx
+  HasuraApp app cacheRef cacheInitTime shutdownApp <- flip onException flushLogger $
     mkWaiApp soTxIso
              logger
              sqlGenCtx
@@ -284,7 +307,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler (shutdownHandler logger shutdownApp eventEngineCtx _icPgPool)
+                     . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers shutdownApp eventEngineCtx _icPgPool)
                      $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 
@@ -336,25 +359,19 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     runTx pool txLevel tx =
       liftIO $ runExceptT $ Q.runTx pool txLevel tx
 
-    -- | Catches the SIGTERM signal and initiates a graceful shutdown. Graceful shutdown for regular HTTP
-    -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
-    -- We only catch the SIGTERM signal once, that is, if we catch another SIGTERM signal then the process
-    -- is terminated immediately.
-    -- If the user hits CTRL-C (SIGINT), then the process is terminated immediately
-    shutdownHandler :: Logger Hasura -> IO () -> EventEngineCtx -> Q.PGPool -> IO () -> IO ()
-    shutdownHandler (Logger logger) shutdownApp eeCtx pool closeSocket =
-      void $ Signals.installHandler
-        Signals.sigTERM
-        (Signals.CatchOnce shutdownSequence)
-        Nothing
-     where
-      shutdownSequence = do
+    -- | Waits for the shutdown latch 'MVar' to be filled, and then
+    -- shuts down the server and associated resources.
+    -- Structuring things this way lets us decide elsewhere exactly how
+    -- we want to control shutdown. 
+    shutdownHandler :: Loggers -> IO () -> EventEngineCtx -> Q.PGPool -> IO () -> IO ()
+    shutdownHandler (Loggers loggerCtx (Logger logger) _) shutdownApp eeCtx pool closeSocket =
+      void . Async.async $ do 
+        waitForShutdown _icShutdownLatch
+        logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
         shutdownEvents pool (Logger logger) eeCtx
         closeSocket
         shutdownApp
-        logShutdown
-
-      logShutdown = logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
+        cleanLoggerCtx loggerCtx
 
 runAsAdmin
   :: (MonadIO m)

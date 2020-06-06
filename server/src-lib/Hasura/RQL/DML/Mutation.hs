@@ -1,6 +1,9 @@
 module Hasura.RQL.DML.Mutation
-  ( Mutation(..)
+  ( Mutation
+  , mkMutation
+  , MutationRemoteJoinCtx
   , runMutation
+  , executeMutationOutputQuery
   , mutateAndFetchCols
   , mkSelCTEFromColVals
   )
@@ -8,52 +11,90 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict      as Map
-import qualified Data.Sequence            as DS
-import qualified Database.PG.Query        as Q
+import qualified Data.HashMap.Strict       as Map
+import qualified Data.Sequence             as DS
+import qualified Database.PG.Query         as Q
+import qualified Network.HTTP.Client       as HTTP
+import qualified Network.HTTP.Types        as N
 
-import qualified Hasura.SQL.DML           as S
+import qualified Hasura.SQL.DML            as S
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Select
-import           Hasura.RQL.Instances     ()
+import           Hasura.RQL.Instances      ()
 import           Hasura.RQL.Types
+import           Hasura.Server.Version     (HasVersion)
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
+
 data Mutation
   = Mutation
-  { _mTable    :: !QualifiedTable
-  , _mQuery    :: !(S.CTE, DS.Seq Q.PrepArg)
-  , _mOutput   :: !MutationOutput
-  , _mCols     :: ![PGColumnInfo]
-  , _mStrfyNum :: !Bool
-  } deriving (Show, Eq)
+  { _mTable       :: !QualifiedTable
+  , _mQuery       :: !(S.CTE, DS.Seq Q.PrepArg)
+  , _mOutput      :: !MutationOutput
+  , _mCols        :: ![PGColumnInfo]
+  , _mRemoteJoins :: !(Maybe (RemoteJoins, MutationRemoteJoinCtx))
+  , _mStrfyNum    :: !Bool
+  }
 
-runMutation :: Mutation -> Q.TxE QErr EncJSON
+mkMutation
+  :: Maybe MutationRemoteJoinCtx
+  -> QualifiedTable
+  -> (S.CTE, DS.Seq Q.PrepArg)
+  -> MutationOutput
+  -> [PGColumnInfo]
+  -> Bool
+  -> Mutation
+mkMutation ctx table query output' allCols strfyNum =
+  let (output, remoteJoins) = getRemoteJoinsMutationOutput output'
+      remoteJoinsCtx = (,) <$> remoteJoins <*> ctx
+  in Mutation table query output allCols remoteJoinsCtx strfyNum
+
+runMutation
+  :: (HasVersion, MonadTx m, MonadIO m)
+  => Mutation -> m EncJSON
 runMutation mut =
   bool (mutateAndReturn mut) (mutateAndSel mut) $
     hasNestedFld $ _mOutput mut
 
-mutateAndReturn :: Mutation -> Q.TxE QErr EncJSON
-mutateAndReturn (Mutation qt (cte, p) mutationOutput allCols strfyNum) =
-  encJFromBS . runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith)
-        (toList p) True
+mutateAndReturn
+  :: (HasVersion, MonadTx m, MonadIO m)
+  => Mutation -> m EncJSON
+mutateAndReturn (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
+  executeMutationOutputQuery sqlQuery (toList p) remoteJoins
   where
-    selWith = mkMutationOutputExp qt allCols Nothing cte mutationOutput strfyNum
+    sqlQuery = Q.fromBuilder $ toSQL $
+               mkMutationOutputExp qt allCols Nothing cte mutationOutput strfyNum
 
-mutateAndSel :: Mutation -> Q.TxE QErr EncJSON
-mutateAndSel (Mutation qt q mutationOutput allCols strfyNum) = do
+mutateAndSel
+  :: (HasVersion, MonadTx m, MonadIO m)
+  => Mutation -> m EncJSON
+mutateAndSel (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = do
   -- Perform mutation and fetch unique columns
-  MutateResp _ columnVals <- mutateAndFetchCols qt allCols q strfyNum
+  MutateResp _ columnVals <- liftTx $ mutateAndFetchCols qt allCols q strfyNum
   selCTE <- mkSelCTEFromColVals qt allCols columnVals
   let selWith = mkMutationOutputExp qt allCols Nothing selCTE mutationOutput strfyNum
   -- Perform select query and fetch returning fields
-  encJFromBS . runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
+  executeMutationOutputQuery (Q.fromBuilder $ toSQL selWith) [] remoteJoins
+
+executeMutationOutputQuery
+  :: (HasVersion, MonadTx m, MonadIO m)
+  => Q.Query -- ^ SQL query
+  -> [Q.PrepArg] -- ^ Prepared params
+  -> Maybe (RemoteJoins, MutationRemoteJoinCtx)  -- ^ Remote joins context
+  -> m EncJSON
+executeMutationOutputQuery query prepArgs = \case
+  Nothing ->
+    runIdentity . Q.getRow
+      <$> liftTx (Q.rawQE dmlTxErrorHandler query prepArgs True)
+  Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
+    executeQueryWithRemoteJoins httpManager reqHeaders userInfo query prepArgs remoteJoins
 
 
 mutateAndFetchCols
