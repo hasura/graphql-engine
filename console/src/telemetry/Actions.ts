@@ -3,7 +3,6 @@ import { ThunkDispatch } from 'redux-thunk';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import requestAction from '../utils/requestAction';
 import dataHeaders from '../components/Services/Data/Common/Headers';
-import defaultTelemetryState, { TelemetryState } from './state';
 import {
   getRunSqlQuery,
   getConsoleOptsQuery,
@@ -14,32 +13,30 @@ import {
 } from '../components/Services/Common/Notification';
 import globals from '../Globals';
 import { Nullable } from '../components/Common/utils/tsUtils';
+import defaultTelemetryState, { TelemetryState } from './State';
+import { GetReduxState, ReduxState } from '../types';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
 const SET_HASURA_UUID = 'Telemetry/SET_HASURA_UUID';
 
-type Opts = {
-  telemetryNotificationShown: boolean;
-  disablePreReleaseUpdateNotifications: boolean;
+type Options = {
+  telemetryNotificationShown?: boolean;
+  disablePreReleaseUpdateNotifications?: boolean;
 };
 
 type Telemetry = {
-  console_state: Nullable<Opts>;
+  console_state: Nullable<Options>;
   hasura_uuid: string;
 };
 
-type SuccessCb = (arg: object) => void;
-type ErrorCb = (arg: Error) => void;
-type SetConsoleOptsInDB = (
-  opts: Partial<Opts>,
-  successCb: SuccessCb,
-  errorCb: ErrorCb
-) => (dispatch: Dispatch<any>, getState: any) => void;
-
-const setConsoleOptsInDB: SetConsoleOptsInDB = (opts, successCb, errorCb) => (
-  dispatch,
-  getState
+const setConsoleOptsInDB = (
+  opts: Options,
+  successCb: (arg: object) => void,
+  errorCb: (arg: Error) => void
+) => (
+  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+  getState: GetReduxState
 ) => {
   const url = Endpoints.getSchema;
 
@@ -89,27 +86,27 @@ const setConsoleOptsInDB: SetConsoleOptsInDB = (opts, successCb, errorCb) => (
 };
 
 const telemetryNotificationShown = () => (
-  dispatch: (arg: Partial<SetNotificationShowAction>) => void
+  dispatch: Dispatch<TelemetryActionTypes>
 ) => {
   dispatch({ type: SET_NOTIFICATION_SHOWN });
 };
 
 const setTelemetryNotificationShownInDB = () => {
-  const successCb: SuccessCb = (data: object) => {
+  const successCb = (data: object) => {
     console.log(
-      `Updated telemetry notification status in db${JSON.stringify(data)}`
+      `Updated telemetry notification status in db ${JSON.stringify(data)}`
     );
   };
 
-  const errorCb: ErrorCb = (error: Error) => {
+  const errorCb = (error: Error) => {
     console.error(
-      `Failed to update telemetry notification status in db${JSON.stringify(
+      `Failed to update telemetry notification status in db ${JSON.stringify(
         error
       )}`
     );
   };
 
-  const opts: Partial<Opts> = {
+  const opts = {
     telemetryNotificationShown: true,
   };
 
@@ -117,7 +114,7 @@ const setTelemetryNotificationShownInDB = () => {
 };
 
 const setPreReleaseNotificationOptOutInDB = () => (
-  dispatch: (arg: unknown) => void
+  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>
 ) => {
   const successCb = () => {
     dispatch(
@@ -132,15 +129,18 @@ const setPreReleaseNotificationOptOutInDB = () => (
     dispatch(showErrorNotification('Failed to opt out', null, error));
   };
 
-  const opts: Partial<Opts> = {
+  const options = {
     disablePreReleaseUpdateNotifications: true,
   };
 
-  return dispatch(setConsoleOptsInDB(opts, successCb, errorCb));
+  return dispatch(setConsoleOptsInDB(options, successCb, errorCb));
 };
 
 const loadConsoleOpts = () => {
-  return (dispatch: ThunkDispatch<{}, {}, AnyAction>, getState: any) => {
+  return (
+    dispatch: ThunkDispatch<{}, {}, AnyAction>,
+    getState: GetReduxState
+  ) => {
     const url = Endpoints.getSchema;
     const options: RequestInit = {
       credentials: globalCookiePolicy,
@@ -183,12 +183,12 @@ interface SetConsoleOptsAction {
 
 interface SetNotificationShowAction {
   type: typeof SET_NOTIFICATION_SHOWN;
-  data: object;
+  data?: object;
 }
 
 interface SetHasuraUuid {
   type: typeof SET_HASURA_UUID;
-  data: object;
+  data: string;
 }
 
 type TelemetryActionTypes =
@@ -199,7 +199,7 @@ type TelemetryActionTypes =
 export const requireConsoleOpts = ({
   dispatch,
 }: {
-  dispatch: ThunkDispatch<TelemetryState, {}, AnyAction>;
+  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>;
 }) => (
   nextState: TelemetryState,
   replaceState: TelemetryState,
