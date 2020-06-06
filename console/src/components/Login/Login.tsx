@@ -1,5 +1,4 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { Dispatch } from 'redux';
 import { Connect } from 'react-redux';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
@@ -8,15 +7,12 @@ import globals from '../../Globals';
 import { verifyLogin } from './Actions';
 import { CLI_CONSOLE_MODE } from '../../constants';
 import { getAdminSecret } from '../Services/ApiExplorer/ApiRequest/utils';
+import { ConnectInjectedProps } from '../../types';
 
 const styles = require('./Login.scss');
 const hasuraLogo = require('./blue-logo.svg');
 
-type LoginProps = {
-  dispatch: Dispatch;
-};
-
-const Login: React.FC<LoginProps> = ({ dispatch }) => {
+const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
   // request state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
