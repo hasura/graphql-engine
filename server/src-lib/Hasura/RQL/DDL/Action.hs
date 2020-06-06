@@ -38,11 +38,9 @@ import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
-import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Data.URL.Template             (renderURLTemplate)
 import           Language.Haskell.TH.Syntax    (Lift)
 
 getActionInfo
@@ -104,8 +102,8 @@ resolveAction
   -> ActionDefinitionInput
   -> m ( ResolvedActionDefinition
        , AnnotatedObjectType
-       , HashSet PGScalarType -- ^ see Note [Postgres scalars in action input arguments].
-       )
+       , HashSet PGScalarType
+       ) -- ^ see Note [Postgres scalars in action input arguments].
 resolveAction customTypes allPGScalars actionDefinition = do
   let responseType = unGraphQLType $ _adOutputType actionDefinition
       responseBaseType = G.getBaseType responseType
@@ -140,10 +138,6 @@ resolveAction customTypes allPGScalars actionDefinition = do
       let nonObjectTypeMap = unNonObjectTypeMap $ fst $ customTypes
           inputTypeInfos = nonObjectTypeMap <> mapFromL VT.getNamedTy defaultTypes
       in Map.lookup typeName inputTypeInfos
-
-    resolveWebhook (InputWebhook urlTemplate) = do
-      eitherRenderedTemplate <- renderURLTemplate urlTemplate
-      either (throw400 Unexpected . T.pack) (pure . ResolvedWebhook) eitherRenderedTemplate
 
     getObjectTypeInfo typeName =
       onNothing (Map.lookup (ObjectTypeName typeName) (snd customTypes)) $

@@ -34,18 +34,17 @@ import qualified Language.GraphQL.Draft.Syntax     as G
 import qualified Network.HTTP.Client               as HTTP
 import qualified Network.HTTP.Types                as HTTP
 import qualified Network.Wreq                      as Wreq
-
 import qualified Hasura.GraphQL.Resolve.Select     as GRS
 import qualified Hasura.RQL.DML.Select             as RS
+import qualified Hasura.RQL.DML.RemoteJoin         as RJ
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
 import           Hasura.GraphQL.Validate.Field
-import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
-import           Hasura.RQL.DDL.Headers            (HeaderConf, makeHeadersFromConf, toHeadersConf)
+import           Hasura.RQL.DDL.Headers            (makeHeadersFromConf, toHeadersConf)
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
@@ -54,8 +53,7 @@ import           Hasura.Server.Utils               (mkClientHeadersForward, mkSe
 import           Hasura.Server.Version             (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
-                                                    toTxtValue)
+import           Hasura.SQL.Value                  (PGScalarValue (..),toTxtValue)
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -130,14 +128,14 @@ resolveActionMutation
      )
   => Field
   -> ActionMutationExecutionContext
-  -> SessionVariables
+  -> UserInfo
   -> m (RespTx, HTTP.ResponseHeaders)
-resolveActionMutation field executionContext sessionVariables =
+resolveActionMutation field executionContext userInfo =
   case executionContext of
     ActionMutationSyncWebhook executionContextSync ->
-      resolveActionMutationSync field executionContextSync sessionVariables
+      resolveActionMutationSync field executionContextSync userInfo
     ActionMutationAsync ->
-      (,[]) <$> resolveActionMutationAsync field sessionVariables
+      (,[]) <$> resolveActionMutationAsync field userInfo
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionMutationSync
@@ -154,11 +152,12 @@ resolveActionMutationSync
      )
   => Field
   -> ActionExecutionContext
-  -> SessionVariables
+  -> UserInfo
   -> m (RespTx, HTTP.ResponseHeaders)
-resolveActionMutationSync field executionContext sessionVariables = do
+resolveActionMutationSync field executionContext userInfo = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
       actionContext = ActionContext actionName
+      sessionVariables = _uiSession userInfo
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
   manager <- asks getter
   reqHeaders <- asks getter
@@ -170,8 +169,16 @@ resolveActionMutationSync field executionContext sessionVariables = do
     processOutputSelectionSet webhookResponseExpression outputType definitionList
     (_fType field) $ _fSelSet field
   astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
+  let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
   let jsonAggType = mkJsonAggSelect outputType
-  return $ (,respHeaders) $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
+  return $ (,respHeaders) $
+    case maybeRemoteJoins of
+      Just remoteJoins ->
+        let query = Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
+        in RJ.executeQueryWithRemoteJoins manager reqHeaders userInfo query [] remoteJoins
+      Nothing ->
+        asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
+
   where
     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
@@ -245,9 +252,10 @@ resolveActionMutationAsync
      , Has [HTTP.Header] r
      )
   => Field
-  -> SessionVariables
+  -> UserInfo
   -> m RespTx
-resolveActionMutationAsync field sessionVariables = do
+resolveActionMutationAsync field userInfo = do
+  let sessionVariables = _uiSession userInfo
   reqHeaders <- asks getter
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
   pure $ do
@@ -535,16 +543,6 @@ callWebhook manager outputType outputFields reqHeaders confHeaders
                        "field " <> fieldName <<> " expected in webhook response, but not found"
             Just v -> when (v == J.Null) $ throwUnexpected $
                       "expecting not null value for field " <>> fieldName
-
-annInpValueToJson :: AnnInpVal -> J.Value
-annInpValueToJson annInpValue =
-  case _aivValue annInpValue of
-    AGScalar _ pgColumnValueM -> maybe J.Null pgScalarValueToJson pgColumnValueM
-    AGEnum _ enumValue        -> case enumValue of
-      AGESynthetic enumValueM   -> J.toJSON enumValueM
-      AGEReference _ enumValueM -> J.toJSON enumValueM
-    AGObject _ objectM        -> J.toJSON $ fmap (fmap annInpValueToJson) objectM
-    AGArray _ valuesM         -> J.toJSON $ fmap (fmap annInpValueToJson) valuesM
 
 mkJsonAggSelect :: GraphQLType -> RS.JsonAggSelect
 mkJsonAggSelect =

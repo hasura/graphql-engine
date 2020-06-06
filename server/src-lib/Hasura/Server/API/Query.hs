@@ -8,7 +8,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Time                          (UTCTime)
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.Text                          as T
@@ -26,7 +25,9 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
+import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.RemoteSchema
+import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
@@ -57,9 +58,12 @@ data RQLQueryV1
   | RQRenameRelationship !RenameRel
 
   -- computed fields related
-
   | RQAddComputedField !AddComputedField
   | RQDropComputedField !DropComputedField
+
+  | RQCreateRemoteRelationship !RemoteRelationship
+  | RQUpdateRemoteRelationship !RemoteRelationship
+  | RQDeleteRemoteRelationship !DeleteRemoteRelationship
 
   | RQCreateInsertPermission !CreateInsPerm
   | RQCreateSelectPermission !CreateSelPerm
@@ -86,11 +90,18 @@ data RQLQueryV1
   | RQAddRemoteSchema !AddRemoteSchemaQuery
   | RQRemoveRemoteSchema !RemoteSchemaNameQuery
   | RQReloadRemoteSchema !RemoteSchemaNameQuery
+  | RQIntrospectRemoteSchema !RemoteSchemaNameQuery
 
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
   | RQRedeliverEvent     !RedeliverEventQuery
   | RQInvokeEventTrigger !InvokeEventTriggerQuery
+
+  -- scheduled triggers
+  | RQCreateCronTrigger !CreateCronTrigger
+  | RQDeleteCronTrigger !ScheduledTriggerName
+
+  | RQCreateScheduledEvent !CreateScheduledEvent
 
   -- query collections, allow list related
   | RQCreateQueryCollection !CreateCollection
@@ -114,19 +125,20 @@ data RQLQueryV1
   | RQDropActionPermission !DropActionPermission
 
   | RQDumpInternalState !DumpInternalState
+
   | RQSetCustomTypes !CustomTypes
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 data RQLQueryV2
   = RQV2TrackTable !TrackTableV2
   | RQV2SetTableCustomFields !SetTableCustomFields
   | RQV2TrackFunction !TrackFunctionV2
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 data RQLQuery
   = RQV1 !RQLQueryV1
   | RQV2 !RQLQueryV2
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 instance FromJSON RQLQuery where
   parseJSON = withObject "Object" $ \o -> do
@@ -209,75 +221,86 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = d
 -- by hand.
 queryModifiesSchemaCache :: RQLQuery -> Bool
 queryModifiesSchemaCache (RQV1 qi) = case qi of
-  RQAddExistingTableOrView _      -> True
-  RQTrackTable _                  -> True
-  RQUntrackTable _                -> True
-  RQTrackFunction _               -> True
-  RQUntrackFunction _             -> True
-  RQSetTableIsEnum _              -> True
+  RQAddExistingTableOrView _          -> True
+  RQTrackTable _                      -> True
+  RQUntrackTable _                    -> True
+  RQTrackFunction _                   -> True
+  RQUntrackFunction _                 -> True
+  RQSetTableIsEnum _                  -> True
 
-  RQCreateObjectRelationship _    -> True
-  RQCreateArrayRelationship  _    -> True
-  RQDropRelationship  _           -> True
-  RQSetRelationshipComment  _     -> False
-  RQRenameRelationship _          -> True
+  RQCreateObjectRelationship _        -> True
+  RQCreateArrayRelationship  _        -> True
+  RQDropRelationship  _               -> True
+  RQSetRelationshipComment  _         -> False
+  RQRenameRelationship _              -> True
 
-  RQAddComputedField _            -> True
-  RQDropComputedField _           -> True
+  RQAddComputedField _                -> True
+  RQDropComputedField _               -> True
 
-  RQCreateInsertPermission _      -> True
-  RQCreateSelectPermission _      -> True
-  RQCreateUpdatePermission _      -> True
-  RQCreateDeletePermission _      -> True
+  RQCreateRemoteRelationship _        -> True
+  RQUpdateRemoteRelationship _        -> True
+  RQDeleteRemoteRelationship _        -> True
 
-  RQDropInsertPermission _        -> True
-  RQDropSelectPermission _        -> True
-  RQDropUpdatePermission _        -> True
-  RQDropDeletePermission _        -> True
-  RQSetPermissionComment _        -> False
+  RQCreateInsertPermission _          -> True
+  RQCreateSelectPermission _          -> True
+  RQCreateUpdatePermission _          -> True
+  RQCreateDeletePermission _          -> True
 
-  RQGetInconsistentMetadata _     -> False
-  RQDropInconsistentMetadata _    -> True
+  RQDropInsertPermission _            -> True
+  RQDropSelectPermission _            -> True
+  RQDropUpdatePermission _            -> True
+  RQDropDeletePermission _            -> True
+  RQSetPermissionComment _            -> False
 
-  RQInsert _                      -> False
-  RQSelect _                      -> False
-  RQUpdate _                      -> False
-  RQDelete _                      -> False
-  RQCount _                       -> False
+  RQGetInconsistentMetadata _         -> False
+  RQDropInconsistentMetadata _        -> True
 
-  RQAddRemoteSchema _             -> True
-  RQRemoveRemoteSchema _          -> True
-  RQReloadRemoteSchema _          -> True
+  RQInsert _                          -> False
+  RQSelect _                          -> False
+  RQUpdate _                          -> False
+  RQDelete _                          -> False
+  RQCount _                           -> False
 
-  RQCreateEventTrigger _          -> True
-  RQDeleteEventTrigger _          -> True
-  RQRedeliverEvent _              -> False
-  RQInvokeEventTrigger _          -> False
+  RQAddRemoteSchema _                 -> True
+  RQRemoveRemoteSchema _              -> True
+  RQReloadRemoteSchema _              -> True
+  RQIntrospectRemoteSchema _          -> False
 
-  RQCreateQueryCollection _       -> True
-  RQDropQueryCollection _         -> True
-  RQAddQueryToCollection _        -> True
-  RQDropQueryFromCollection _     -> True
-  RQAddCollectionToAllowlist _    -> True
-  RQDropCollectionFromAllowlist _ -> True
+  RQCreateEventTrigger _              -> True
+  RQDeleteEventTrigger _              -> True
+  RQRedeliverEvent _                  -> False
+  RQInvokeEventTrigger _              -> False
 
-  RQRunSql q                      -> isSchemaCacheBuildRequiredRunSQL q
+  RQCreateCronTrigger _               -> True
+  RQDeleteCronTrigger _               -> True
 
-  RQReplaceMetadata _             -> True
-  RQExportMetadata _              -> False
-  RQClearMetadata _               -> True
-  RQReloadMetadata _              -> True
+  RQCreateScheduledEvent _            -> False
 
-  RQCreateAction _                -> True
-  RQDropAction _                  -> True
-  RQUpdateAction _                -> True
-  RQCreateActionPermission _      -> True
-  RQDropActionPermission _        -> True
+  RQCreateQueryCollection _           -> True
+  RQDropQueryCollection _             -> True
+  RQAddQueryToCollection _            -> True
+  RQDropQueryFromCollection _         -> True
+  RQAddCollectionToAllowlist _        -> True
+  RQDropCollectionFromAllowlist _     -> True
 
-  RQDumpInternalState _           -> False
-  RQSetCustomTypes _              -> True
+  RQRunSql q                          -> isSchemaCacheBuildRequiredRunSQL q
 
-  RQBulk qs                       -> any queryModifiesSchemaCache qs
+  RQReplaceMetadata _                 -> True
+  RQExportMetadata _                  -> False
+  RQClearMetadata _                   -> True
+  RQReloadMetadata _                  -> True
+
+  RQCreateAction _                    -> True
+  RQDropAction _                      -> True
+  RQUpdateAction _                    -> True
+  RQCreateActionPermission _          -> True
+  RQDropActionPermission _            -> True
+
+  RQDumpInternalState _               -> False
+  RQSetCustomTypes _                  -> True
+
+  RQBulk qs                           -> any queryModifiesSchemaCache qs
+
 queryModifiesSchemaCache (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
@@ -370,11 +393,21 @@ runQueryM rq = withPathK "args" $ case rq of
       RQAddRemoteSchema    q       -> runAddRemoteSchema q
       RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q
       RQReloadRemoteSchema q       -> runReloadRemoteSchema q
+      RQIntrospectRemoteSchema q   -> runIntrospectRemoteSchema q
+
+      RQCreateRemoteRelationship q -> runCreateRemoteRelationship q
+      RQUpdateRemoteRelationship q -> runUpdateRemoteRelationship q
+      RQDeleteRemoteRelationship q -> runDeleteRemoteRelationship q
 
       RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
       RQRedeliverEvent q           -> runRedeliverEvent q
       RQInvokeEventTrigger q       -> runInvokeEventTrigger q
+
+      RQCreateCronTrigger q      -> runCreateCronTrigger q
+      RQDeleteCronTrigger q      -> runDeleteCronTrigger q
+
+      RQCreateScheduledEvent q   -> runCreateScheduledEvent q
 
       RQCreateQueryCollection q        -> runCreateCollection q
       RQDropQueryCollection q          -> runDropCollection q
@@ -411,76 +444,86 @@ runQueryM rq = withPathK "args" $ case rq of
 requiresAdmin :: RQLQuery -> Bool
 requiresAdmin = \case
   RQV1 q -> case q of
-    RQAddExistingTableOrView _      -> True
-    RQTrackTable _                  -> True
-    RQUntrackTable _                -> True
-    RQSetTableIsEnum _              -> True
+    RQAddExistingTableOrView _          -> True
+    RQTrackTable _                      -> True
+    RQUntrackTable _                    -> True
+    RQSetTableIsEnum _                  -> True
 
-    RQTrackFunction _               -> True
-    RQUntrackFunction _             -> True
+    RQTrackFunction _                   -> True
+    RQUntrackFunction _                 -> True
 
-    RQCreateObjectRelationship _    -> True
-    RQCreateArrayRelationship  _    -> True
-    RQDropRelationship  _           -> True
-    RQSetRelationshipComment  _     -> True
-    RQRenameRelationship _          -> True
+    RQCreateObjectRelationship _        -> True
+    RQCreateArrayRelationship  _        -> True
+    RQDropRelationship  _               -> True
+    RQSetRelationshipComment  _         -> True
+    RQRenameRelationship _              -> True
 
-    RQAddComputedField _            -> True
-    RQDropComputedField _           -> True
+    RQAddComputedField _                -> True
+    RQDropComputedField _               -> True
 
-    RQCreateInsertPermission _      -> True
-    RQCreateSelectPermission _      -> True
-    RQCreateUpdatePermission _      -> True
-    RQCreateDeletePermission _      -> True
+    RQCreateRemoteRelationship _        -> True
+    RQUpdateRemoteRelationship _        -> True
+    RQDeleteRemoteRelationship _        -> True
 
-    RQDropInsertPermission _        -> True
-    RQDropSelectPermission _        -> True
-    RQDropUpdatePermission _        -> True
-    RQDropDeletePermission _        -> True
-    RQSetPermissionComment _        -> True
+    RQCreateInsertPermission _          -> True
+    RQCreateSelectPermission _          -> True
+    RQCreateUpdatePermission _          -> True
+    RQCreateDeletePermission _          -> True
 
-    RQGetInconsistentMetadata _     -> True
-    RQDropInconsistentMetadata _    -> True
+    RQDropInsertPermission _            -> True
+    RQDropSelectPermission _            -> True
+    RQDropUpdatePermission _            -> True
+    RQDropDeletePermission _            -> True
+    RQSetPermissionComment _            -> True
 
-    RQInsert _                      -> False
-    RQSelect _                      -> False
-    RQUpdate _                      -> False
-    RQDelete _                      -> False
-    RQCount  _                      -> False
+    RQGetInconsistentMetadata _         -> True
+    RQDropInconsistentMetadata _        -> True
 
-    RQAddRemoteSchema    _          -> True
-    RQRemoveRemoteSchema _          -> True
-    RQReloadRemoteSchema _          -> True
+    RQInsert _                          -> False
+    RQSelect _                          -> False
+    RQUpdate _                          -> False
+    RQDelete _                          -> False
+    RQCount  _                          -> False
 
-    RQCreateEventTrigger _          -> True
-    RQDeleteEventTrigger _          -> True
-    RQRedeliverEvent _              -> True
-    RQInvokeEventTrigger _          -> True
+    RQAddRemoteSchema    _              -> True
+    RQRemoveRemoteSchema _              -> True
+    RQReloadRemoteSchema _              -> True
+    RQIntrospectRemoteSchema _          -> True
 
-    RQCreateQueryCollection _       -> True
-    RQDropQueryCollection _         -> True
-    RQAddQueryToCollection _        -> True
-    RQDropQueryFromCollection _     -> True
-    RQAddCollectionToAllowlist _    -> True
-    RQDropCollectionFromAllowlist _ -> True
+    RQCreateEventTrigger _              -> True
+    RQDeleteEventTrigger _              -> True
+    RQRedeliverEvent _                  -> True
+    RQInvokeEventTrigger _              -> True
 
-    RQReplaceMetadata _             -> True
-    RQClearMetadata _               -> True
-    RQExportMetadata _              -> True
-    RQReloadMetadata _              -> True
+    RQCreateCronTrigger _               -> True
+    RQDeleteCronTrigger _               -> True
 
-    RQCreateAction _                -> True
-    RQDropAction _                  -> True
-    RQUpdateAction _                -> True
-    RQCreateActionPermission _      -> True
-    RQDropActionPermission _        -> True
+    RQCreateScheduledEvent _            -> True
 
-    RQDumpInternalState _           -> True
-    RQSetCustomTypes _              -> True
+    RQCreateQueryCollection _           -> True
+    RQDropQueryCollection _             -> True
+    RQAddQueryToCollection _            -> True
+    RQDropQueryFromCollection _         -> True
+    RQAddCollectionToAllowlist _        -> True
+    RQDropCollectionFromAllowlist _     -> True
 
-    RQRunSql _                      -> True
+    RQReplaceMetadata _                 -> True
+    RQClearMetadata _                   -> True
+    RQExportMetadata _                  -> True
+    RQReloadMetadata _                  -> True
 
-    RQBulk qs                       -> any requiresAdmin qs
+    RQCreateAction _                    -> True
+    RQDropAction _                      -> True
+    RQUpdateAction _                    -> True
+    RQCreateActionPermission _          -> True
+    RQDropActionPermission _            -> True
+
+    RQDumpInternalState _               -> True
+    RQSetCustomTypes _                  -> True
+
+    RQRunSql _                          -> True
+
+    RQBulk qs                           -> any requiresAdmin qs
 
   RQV2 q -> case q of
     RQV2TrackTable _           -> True

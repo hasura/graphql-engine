@@ -7,7 +7,7 @@ class Editor extends React.Component {
     isEditing: this.props.toggled || false,
   };
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.toggled !== this.state.isEditing) {
       if (nextProps.toggled !== undefined) {
         this.setState({
