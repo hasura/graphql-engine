@@ -1,6 +1,7 @@
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
 import defaultState from './State';
+import globals from '../../Globals';
 import requestAction from '../../utils/requestAction';
 import requestActionPlain from '../../utils/requestActionPlain';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
@@ -149,16 +150,19 @@ const fetchServerConfig = () => (dispatch: ThunkDispatch<{}, {}, AnyAction>, get
   });
   return dispatch(requestAction(url, options)).then(
     data => {
-      return dispatch({
+      dispatch({
         type: SERVER_CONFIG_FETCH_SUCCESS,
         data: data,
       });
+      globals.serverConfig = data;
+      return Promise.resolve();
     },
     error => {
-      return dispatch({
+      dispatch({
         type: SERVER_CONFIG_FETCH_FAIL,
         data: error,
       });
+      return Promise.reject();
     }
   );
 };

@@ -169,6 +169,8 @@ parseColExp nt n val = do
         fmapAnnBoolExp partialSQLExpToUnresolvedVal permExp
     RFComputedField _ -> throw500
           "computed fields are not allowed in bool_exp"
+    RFRemoteRelationship _ -> throw500
+          "remote relationships are not allowed in bool_exp"
 
 parseBoolExp
   :: ( MonadReusability m

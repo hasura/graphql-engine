@@ -8,7 +8,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
 import qualified Hasura.RQL.DDL.ComputedField                  as ComputedField
@@ -29,6 +28,9 @@ import qualified Language.Haskell.TH.Syntax                    as TH
 import qualified Network.URI                                   as N
 import qualified System.Cron.Parser                            as Cr
 
+
+import           Data.List.Extended                 (duplicates)
+import           Data.Scientific
 import           Test.QuickCheck
 import           Test.QuickCheck.Instances.Semigroup           ()
 import           Test.QuickCheck.Instances.Time                ()
@@ -91,6 +93,9 @@ instance Arbitrary ComputedField.ComputedFieldDefinition where
 instance Arbitrary ComputedFieldMeta where
   arbitrary = genericArbitrary
 
+instance Arbitrary Scientific where
+  arbitrary = ((fromRational . toRational) :: Int -> Scientific) <$> arbitrary
+
 instance Arbitrary J.Value where
   arbitrary = sized sizedArbitraryValue
     where
@@ -100,7 +105,7 @@ instance Arbitrary J.Value where
         where
           n' = n `div` 2
           boolean = J.Bool <$> arbitrary
-          number = (J.Number . fromRational . toRational :: Int -> J.Value) <$> arbitrary
+          number = J.Number <$> arbitrary
           string = J.String <$> arbitrary
           array = J.Array . V.fromList <$> arbitrary
           object' = J.Object <$> arbitrary
@@ -294,6 +299,30 @@ instance Arbitrary ActionPermissionMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary ActionMetadata where
+  arbitrary = genericArbitrary
+
+deriving instance Arbitrary G.StringValue
+deriving instance Arbitrary G.Variable
+deriving instance Arbitrary G.ListValue
+deriving instance Arbitrary G.ObjectValue
+
+instance Arbitrary G.Value where
+  arbitrary = genericArbitrary
+
+instance (Arbitrary a) => Arbitrary (G.ObjectFieldG a) where
+  arbitrary = genericArbitrary
+
+deriving instance Arbitrary RemoteArguments
+
+instance Arbitrary FieldCall where
+  arbitrary = genericArbitrary
+
+deriving instance Arbitrary RemoteFields
+
+instance Arbitrary RemoteRelationshipDef where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteRelationshipMeta where
   arbitrary = genericArbitrary
 
 instance Arbitrary CronTriggerMetadata where
