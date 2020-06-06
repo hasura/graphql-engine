@@ -23,7 +23,9 @@ export const savePermission = () => {
 export const permNoCheck = (tableName: string, query: QueryType) => {
   // click on the query type to edit permission
   cy.get(getElementFromAlias(`role0-${query}`)).click();
-  cy.get(getElementFromAlias('without-checks')).first().click();
+  cy.get(getElementFromAlias('without-checks'))
+    .first()
+    .click();
   // set filter { }
   // Toggle all columns in case
   if (query === 'select' || query === 'update') {
@@ -35,7 +37,9 @@ export const permNoCheck = (tableName: string, query: QueryType) => {
       getColName(0)
     );
     cy.get(getElementFromAlias('column-presets-type-0')).select('static');
-    cy.get(getElementFromAlias('column-presets-value-0')).type('1').blur();
+    cy.get(getElementFromAlias('column-presets-value-0'))
+      .type('1')
+      .blur();
     cy.get(getElementFromAlias('column-presets-column-1')).select(
       getColName(1)
     );
@@ -60,20 +64,26 @@ export const permCustomCheck = (tableName: string, query: QueryType) => {
   cy.get(getElementFromAlias(`role0-${query}`)).click();
   // check the without checks textbox
   cy.get(getElementFromAlias('toggle-row-permission')).click();
-  cy.get(getElementFromAlias('custom-check')).first().click();
+  cy.get(getElementFromAlias('custom-check'))
+    .first()
+    .click();
 
   cy.get(getElementFromAlias('qb_container'))
     .first()
     .within(() => {
       // Select column
-      cy.get(getElementFromAlias('qb-select')).first().select(getColName(0));
+      cy.get(getElementFromAlias('qb-select'))
+        .first()
+        .select(getColName(0));
       // Select operator
       cy.get(getElementFromAlias('qb-select'))
         .last()
         .select(`${getColName(0)}._eq`);
     });
   // Set filter to 1
-  cy.get(getElementFromAlias('perm-check-textbox')).first().type('1');
+  cy.get(getElementFromAlias('perm-check-textbox'))
+    .first()
+    .type('1');
   // Save
   savePermission();
   // Validate
@@ -129,7 +139,9 @@ export const testPermissions = (
 
 export const trackView = () => {
   // track view
-  cy.get('a').contains('Data').click();
+  cy.get('a')
+    .contains('Data')
+    .click();
   cy.wait(7000);
   cy.get(
     getElementFromAlias(`add-track-table-${getTableName(1, testName)}`)

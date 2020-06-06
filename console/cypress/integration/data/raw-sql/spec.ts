@@ -5,7 +5,9 @@ let prevStr = '';
 export const openRawSQL = () => {
   // eslint-disable-line
   // Open RawSQL
-  cy.get('a').contains('Data').click();
+  cy.get('a')
+    .contains('Data')
+    .click();
   cy.wait(3000);
   cy.get(getElementFromAlias('sql-link')).click();
   cy.wait(3000);

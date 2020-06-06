@@ -74,7 +74,9 @@ export const failCTDuplicateColumns = () => {
 
 export const failCTWrongDefaultValue = () => {
   // Set second column
-  cy.get(getElementFromAlias('column-1')).clear().type(getColName(1));
+  cy.get(getElementFromAlias('column-1'))
+    .clear()
+    .type(getColName(1));
   tableColumnTypeSelector('col-type-1');
   cy.get(getElementFromAlias('data_test_column_type_value_integer'))
     .first()
@@ -92,7 +94,9 @@ export const failCTWrongDefaultValue = () => {
 
 export const passCT = () => {
   // Set second column
-  cy.get(getElementFromAlias('column-1')).clear().type(getColName(1));
+  cy.get(getElementFromAlias('column-1'))
+    .clear()
+    .type(getColName(1));
   tableColumnTypeSelector('col-type-1');
   cy.get(getElementFromAlias('data_test_column_type_value_text'))
     .first()
@@ -208,7 +212,9 @@ const deleteTable = (tableName: string) => {
   // Click on delete
   cy.get(getElementFromAlias('delete-table')).click();
   // Confirm
-  cy.window().its('prompt').should('be.called');
+  cy.window()
+    .its('prompt')
+    .should('be.called');
 
   cy.wait(5000);
   validateCT(tableName, ResultType.FAILURE);
