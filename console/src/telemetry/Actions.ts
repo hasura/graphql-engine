@@ -12,26 +12,20 @@ import {
   showSuccessNotification,
 } from '../components/Services/Common/Notification';
 import globals from '../Globals';
-import { Nullable } from '../components/Common/utils/tsUtils';
-import defaultTelemetryState from './state';
+import defaultTelemetryState, { TelemetryState } from './state';
 import { GetReduxState, ReduxState } from '../types';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
 const SET_HASURA_UUID = 'Telemetry/SET_HASURA_UUID';
 
-type Options = {
-  telemetryNotificationShown?: boolean;
-  disablePreReleaseUpdateNotifications?: boolean;
-};
-
 type Telemetry = {
-  console_state: Nullable<Options>;
+  console_state: TelemetryState['console_opts'];
   hasura_uuid: string;
 };
 
 const setConsoleOptsInDB = (
-  opts: Options,
+  opts: TelemetryState['console_opts'],
   successCb: (arg: object) => void,
   errorCb: (arg: Error) => void
 ) => (
