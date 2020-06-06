@@ -1317,7 +1317,7 @@ article ol ol {
 	 color: #505050;
 	 border-bottom: 2px solid #505050;
 }
- @media (min-width: 768px) and (max-width: 991px) {
+ @media (min-width: 768px) and (max-width: 1200px) {
    .versionTxt select {
      margin-right: 0;
      margin-left: 8px;
