@@ -25,6 +25,7 @@ declare global {
       assetsPath: string;
       serverVersion: string;
       consolePath: string;
+      cliUUID: string;
     };
     sqlFormatter: unknown;
     hljs: unknown;
