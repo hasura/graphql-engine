@@ -41,16 +41,9 @@ class InsertItem extends Component {
   }
 
   toggleMigrationCheckBox = () => {
-    this.setState(
-      prevState => ({
-        isMigrationChecked: !prevState.isMigrationChecked,
-      }),
-      () => {
-        // TODO: insert code to execute here?
-        // if the checkbox is checked then fundamental changes
-        // have to be made to how the Save functionality would workx
-      }
-    );
+    this.setState(prevState => ({
+      isMigrationChecked: !prevState.isMigrationChecked,
+    }));
   };
 
   render() {
@@ -248,7 +241,13 @@ class InsertItem extends Component {
                             : refs[colName].valueNode.value;
                       }
                     });
-                    dispatch(insertItem(tableName, inputValues)).then(() => {
+                    dispatch(
+                      insertItem(
+                        tableName,
+                        inputValues,
+                        this.state.isMigrationChecked
+                      )
+                    ).then(() => {
                       this.nextInsert();
                     });
                   }}
