@@ -5,6 +5,7 @@
 module Hasura.GraphQL.Execute.LiveQuery.Plan
   ( MultiplexedQuery
   , mkMultiplexedQuery
+  , unMultiplexedQuery
   , resolveMultiplexedValue
 
   , CohortId
@@ -29,6 +30,7 @@ import           Hasura.Session
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.Extended                    as J
 import qualified Data.Aeson.TH                          as J
+import qualified Data.ByteString                        as B
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Text                              as T
 import qualified Data.UUID.V4                           as UUID
@@ -52,13 +54,12 @@ import qualified Hasura.GraphQL.Validate.Types          as GV
 import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.Db
-import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.RQL.Types
+import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.Server.Version             (HasVersion)
 
 -- -------------------------------------------------------------------------------------------------
 -- Multiplexed queries
@@ -182,7 +183,7 @@ instance Q.ToPrepArg CohortVariablesArray where
       encoder = PE.array 114 . PE.dimensionArray foldl' (PE.encodingArray . PE.json_ast)
 
 executeMultiplexedQuery
-  :: (MonadTx m) => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, EncJSON)]
+  :: (MonadTx m) => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, B.ByteString)]
 executeMultiplexedQuery (MultiplexedQuery query) = executeQuery query
 
 -- | Internal; used by both 'executeMultiplexedQuery' and 'explainLiveQueryPlan'.
@@ -245,7 +246,7 @@ data LiveQueryPlan
   = LiveQueryPlan
   { _lqpParameterizedPlan :: !ParameterizedLiveQueryPlan
   , _lqpVariables         :: !CohortVariables
-  }
+  } deriving Show
 
 data ParameterizedLiveQueryPlan
   = ParameterizedLiveQueryPlan
@@ -288,6 +289,12 @@ buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
         _ -> do
           unresolvedAST <- GR.queryFldToPGAST field actionExecutioner
           resolvedAST <- GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
+
+          let (_, remoteJoins) = GR.toPGQuery resolvedAST
+          -- Reject remote relationships in subscription live query
+          when (remoteJoins /= mempty) $
+               throw400 NotSupported
+                       "Remote relationships are not allowed in subscriptions"
           pure (GV._fAlias field, resolvedAST)
 
   userInfo <- asks getter

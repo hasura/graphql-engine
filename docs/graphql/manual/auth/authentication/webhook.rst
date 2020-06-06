@@ -173,7 +173,7 @@ You can deploy these samples using `glitch <https://glitch.com/>`__:
 Once deployed, you can use any of the following endpoints as your auth webhook in the GraphQL engine:
 
 - ``/simple/webhook``  (`View source <https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-express/server.js>`__)
-- ``/firebase/webhook`` (`View source <https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-express/firebase/firebaseHandler.js>`__)
+- ``/firebase/webhook`` (`View source <https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-firebase/firebase/firebaseHandler.js>`__)
 
 .. note::
 
