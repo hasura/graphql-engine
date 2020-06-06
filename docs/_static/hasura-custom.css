@@ -66,7 +66,7 @@ ul {
 
 .main_container_wrapper {
   min-width: 90%;
-  overflow-y: auto;
+  /* overflow-y: auto; */
   -webkit-overflow-scrolling: touch; /* for iOS momentum scroll */
 }
 
@@ -75,6 +75,7 @@ ul {
   font-family: 'Gudea';
   margin: auto;
   width: 100%;
+  /* height: calc(100vh - 60px); */
 }
 .hideClass {
   display: none;
@@ -171,7 +172,7 @@ ul {
 }
 .content_inner_wrapper {
   width: 75% !important;
-  height: 100vh;
+  /* height: 100vh; */
   overflow-y: auto;
 }
 
@@ -457,7 +458,13 @@ article ol ol {
   font-size: 18px;
   color: #1CD3C6;
 }
-
+#nav_tree_icon .docs-menu {
+  font-family: 'Poppins';
+  font-size: 14px;
+  font-weight: 600;
+  color: #001934;
+  margin-left: 20px;
+}
 /*** Mobile only END ***/
 
 /*** Search box ***/
@@ -641,8 +648,19 @@ article ol ol {
   height: 100vh;
   overflow-y: auto;
   padding-left: 15px !important;
+  position: sticky;
+  top: 0;
+  padding-top: 20px;
 }
-
+#sidebar li {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+#sidebar .closeIcon {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
 #sidebar .sphinxsidebar .sphinxsidebarwrapper h3 {
   padding-top: 10px;
   /*
@@ -1006,13 +1024,16 @@ article ol ol {
     margin-left: 0;
     margin-right: 0;
   }
-
+  #docs-header-actions {
+    display: flex;
+    align-items: center;
+  }
   #docs-header-actions {
     margin-top: 20px;
   }
 
   #input_search_box {
-    width: 60%;
+    flex: 1;
     margin-left: 10px;
   }
 
@@ -1023,7 +1044,7 @@ article ol ol {
     min-width: calc(166% + 10px);  /* 1 / width(input_search_box) + 10px */
   }
 }
-@media (min-width: 768px) and (max-width: 991px) {
+@media (min-width: 768px) and (max-width: 1200px) {
   .bannerStripWrapper {
     padding-left: 4vw;
   }
@@ -1063,7 +1084,7 @@ article ol ol {
   }
 
   #input_search_box {
-    width: 90%;
+    flex: 1;
     margin-left: 10px;
   }
 
@@ -1093,5 +1114,336 @@ article ol ol {
 
   .footer-hasura-custom .footer_logo {
     margin-right: 0;
+  }
+}
+
+/* common Header */
+.blueBgColor {
+  background-color: #001934;
+}
+.boderBottom {
+  border-bottom: 1px solid rgba(255, 255, 255, .2);
+}
+.commonBtn {
+  border-radius: 5px;
+  font-family: 'Poppins';
+  font-size: 15px;
+  font-weight: 500;
+  transition: 500ms;
+  position: relative;
+  padding: 6px 13px;
+  line-height: 140%;
+}
+.commonBtn:focus {
+  outline: none;
+}
+.navBtnHome {
+  background-color: #1CD3C6;
+  border: 1px solid #1CD3C6;
+  color: #001934;
+}
+.navBtnHome:hover {
+  background-color: transparent;
+  border: 1px solid #1CD3C6;
+  color: #1CD3C6;
+}
+.navBtnContactHome {
+  background-color: transparent;
+  border: 1px solid #1CD3C6;
+  color: #1CD3C6;
+}
+.navBtnContactHome:hover {
+  background-color: #1CD3C6;
+  border: 1px solid #1CD3C6;
+  color: #001934;
+}
+.gitHubBtnSmallMobile {
+	 display: none !important;
+}
+ .visibleMobile {
+	 display: none;
+}
+ .navBarToggle {
+	 border-radius: 4px;
+	 padding: 8px 8px;
+	 display: none;
+	 position: absolute;
+	 right: 0;
+	 top: 13px;
+}
+ .navBarToggle .iconBar {
+	 display: block;
+	 width: 22px;
+	 height: 2px;
+	 border-radius: 1px;
+	 margin: 0 auto;
+	 margin-top: 4px;
+}
+ .navBarToggle .iconBar:first-child {
+	 margin-top: 0px;
+}
+ .navBarToggle:focus {
+	 outline: none;
+}
+ .navWhiteBG .navBarToggle {
+	 border: 1px solid #001934 !important;
+}
+ .navWhiteBG .navBarToggle .iconBar {
+	 background-color: #001934 !important;
+}
+ .navBlueBG .navBarToggle {
+	 border: 1px solid #fff !important;
+}
+ .navBlueBG .navBarToggle .iconBar {
+	 background-color: #fff !important;
+}
+ .headerSticky {
+	 position: fixed;
+	 width: 100%;
+	 z-index: 100;
+}
+ .headerWrapper {
+	 height: 60px;
+	 display: flex;
+	 align-items: center;
+	 position: relative;
+	 z-index: 1;
+}
+ .headerWrapper .navLeft {
+	 display: flex;
+	 align-items: center;
+	 flex: 1;
+}
+ .headerWrapper .navLeft a {
+	 display: contents;
+}
+ .headerWrapper .navLeft .brand {
+	 margin-right: 25px;
+   margin-top: 7px;
+}
+ .headerWrapper .navLeft .brand img {
+	 width: 120px;
+}
+ .headerWrapper .navLeft .twitterBtn, .headerWrapper .navLeft .discordBtn {
+	 border-radius: 4px;
+	 border: solid 1px #d1d2d3;
+	 background-color: #f1f5f8;
+	 width: 20px;
+	 height: 20px;
+   max-height: 18px;
+   max-width: 18px;
+	 margin-top: 8px;
+	 margin-right: 12px;
+	 display: flex;
+	 align-items: center;
+	 justify-content: center;
+	 opacity: 0.8;
+	 cursor: pointer;
+}
+ .headerWrapper .navLeft .twitterBtn img, .headerWrapper .navLeft .discordBtn img {
+	 width: 12px;
+
+}
+ .headerWrapper .navLeft .twitterBtn:hover, .headerWrapper .navLeft .discordBtn:hover {
+	 opacity: 1;
+}
+ .headerWrapper .navLeft .discordBtn {
+	 padding-top: 2px;
+   max-height: 16px;
+}
+ .headerWrapper .navLeft .discordBtn img {
+	 width: 10px;
+}
+ .headerWrapper .navLeft .gitHubBtn {
+	 height: 20px;
+	 padding-top: 4px;
+	 opacity: 0.8;
+	 color: #fff;
+}
+ .headerWrapper .navLeft .gitHubBtn .gitHubStats {
+	 color: #fff;
+}
+.headerWrapper .navBlueBG .navBarUL {
+  padding-left: 0;
+  margin: 0 0;
+}
+ .headerWrapper .navBlueBG .navBarUL li, .headerWrapper .navWhiteBG .navBarUL li {
+	 font-size: 15px;
+	 font-family: 'Poppins';
+	 list-style-type: none;
+	 display: inline-block;
+	 padding: 10px 6px;
+	 font-weight: 600;
+   margin: 0 0;
+   letter-spacing: -.48px;
+}
+.versionTxt select {
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, .24);
+  margin-right: 12px;
+  font-family: 'Poppins';
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+}
+.versionTxt select:focus {
+  outline: none;
+}
+ .headerWrapper .navBlueBG .navBarUL li a:hover, .headerWrapper .navWhiteBG .navBarUL li a:hover {
+	 text-decoration: none;
+}
+ .headerWrapper .navBlueBG .navBarUL li:last-child, .headerWrapper .navWhiteBG .navBarUL li:last-child {
+	 padding: 0 0;
+	 margin-left: 0px;
+}
+ .headerWrapper .navBlueBG .navBarUL li a {
+	 color: rgba(255, 255, 255, .6);
+   text-decoration: none;
+}
+ .headerWrapper .navBlueBG .navBarUL li a:hover {
+	 color: rgba(255, 255, 255, 1);
+}
+ .headerWrapper .navBlueBG .navBarUL .navListActive a {
+	 color: #fff;
+	 border-bottom: 2px solid #fff;
+}
+ .headerWrapper .navWhiteBG .navBarUL li a {
+	 color: #6e6e6e;
+}
+ .headerWrapper .navWhiteBG .navBarUL li a:hover {
+	 color: #505050;
+}
+ .headerWrapper .navWhiteBG .navBarUL .navListActive a {
+	 color: #505050;
+	 border-bottom: 2px solid #505050;
+}
+ @media (min-width: 768px) and (max-width: 1200px) {
+   .versionTxt select {
+     margin-right: 0;
+     margin-left: 8px;
+   }
+	 .headerSticky {
+		 position: static;
+	}
+	 .headerWrapper {
+		 position: relative;
+		 display: block;
+     z-index: 10;
+	}
+	 .headerWrapper .brand {
+		 padding: 8px 0;
+	}
+	 .headerWrapper .topnav .visibleMobile .navBarULMobile {
+		 padding: 10px 15px;
+		 background-color: #001934;
+		 border-top: 1px solid rgba(255, 255, 255, .6);
+		 border-bottom: 1px solid rgba(255, 255, 255, .6);
+     margin-top: 0;
+	}
+	 .headerWrapper .topnav .visibleMobile .navBarULMobile li {
+		 font-size: 15px;
+		 font-family: 'Poppins';
+		 list-style-type: none;
+		 font-weight: 600;
+		 text-transform: uppercase;
+		 padding: 10px 0;
+     margin: 0 0;
+	}
+	 .headerWrapper .topnav .visibleMobile .navBarULMobile li a {
+		 color: rgba(255, 255, 255, .6);
+     text-decoration: none;
+	}
+	 .headerWrapper .topnav .visibleMobile .navBarULMobile li a:hover {
+		 color: rgba(255, 255, 255, 1);
+		 text-decoration: none;
+	}
+	 .navBarToggle {
+		 display: block;
+	}
+	 .topnav.responsive .visibleMobile {
+		 display: block;
+	}
+	 .navBarUL {
+		 display: none;
+	}
+}
+ @media (max-width: 767px) {
+   .versionTxt select {
+     margin-right: 0;
+     margin-left: 8px;
+   }
+	 .headerSticky {
+		 position: static;
+	}
+	 .headerWrapper {
+		 display: block;
+     z-index: 10;
+	}
+	 .headerWrapper .brand {
+		 padding: 8px 0;
+		 padding-left: 15px;
+	}
+	 .headerWrapper .topnav .visibleMobile .navBarULMobile {
+		 padding: 10px 15px;
+		 background-color: #001934;
+		 border-top: 1px solid rgba(255, 255, 255, .6);
+		 border-bottom: 1px solid rgba(255, 255, 255, .6);
+	}
+	 .headerWrapper .topnav .visibleMobile .navBarULMobile li {
+		 font-size: 15px;
+		 font-family: 'Poppins';
+		 list-style-type: none;
+		 font-weight: 600;
+		 text-transform: uppercase;
+		 padding: 10px 0;
+	}
+	 .headerWrapper .topnav .visibleMobile .navBarULMobile li a {
+		 color: rgba(255, 255, 255, .6);
+     text-decoration: none;
+	}
+	 .headerWrapper .topnav .visibleMobile .navBarULMobile li a:hover {
+		 color: rgba(255, 255, 255, 1);
+		 text-decoration: none;
+	}
+	 .navBarToggle {
+		 display: block;
+		 right: 15px;
+	}
+	 .topnav.responsive .visibleMobile {
+		 display: block;
+	}
+	 .navBarUL {
+		 display: none;
+	}
+}
+ @media (max-width: 400px) {
+	 .gitHubBtn {
+		 display: none;
+	}
+	 .gitHubBtnSmallMobile {
+		 display: block !important;
+	}
+}
+ @media (max-width: 320px) {
+	 .headerWrapper .navLeft .brand {
+		 margin-right: 16px;
+	}
+}
+@media (min-width: 768px) {
+  .container {
+      width: 750px;
+      padding: 0 0 !important;
+  }
+}
+@media (min-width: 992px) {
+  .container {
+      width: 970px;
+      padding: 0 0 !important;
+  }
+}
+@media (min-width: 1200px) {
+  .container {
+      width: calc(100% - 30px);
+      padding: 0 15px !important;
   }
 }
