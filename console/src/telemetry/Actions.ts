@@ -13,7 +13,7 @@ import {
 } from '../components/Services/Common/Notification';
 import globals from '../Globals';
 import { Nullable } from '../components/Common/utils/tsUtils';
-import defaultTelemetryState, { TelemetryState } from './State';
+import defaultTelemetryState from './state';
 import { GetReduxState, ReduxState } from '../types';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
@@ -71,7 +71,7 @@ const setConsoleOptsInDB = (
   };
 
   // eslint-disable-next-line consistent-return
-  return (dispatch(requestAction(url, options)) as any).then(
+  return dispatch(requestAction(url, options)).then(
     (data: object) => {
       if (successCb) {
         successCb(data);
@@ -200,11 +200,7 @@ export const requireConsoleOpts = ({
   dispatch,
 }: {
   dispatch: ThunkDispatch<ReduxState, {}, AnyAction>;
-}) => (
-  nextState: TelemetryState,
-  replaceState: TelemetryState,
-  callback: any
-) => {
+}) => (nextState: ReduxState, replaceState: ReduxState, callback: any) => {
   dispatch(loadConsoleOpts()).finally(callback);
 };
 
@@ -240,6 +236,8 @@ const telemetryReducer = (
 
 export default telemetryReducer;
 export {
+  setConsoleOptsInDB,
+  loadConsoleOpts,
   telemetryNotificationShown,
   setPreReleaseNotificationOptOutInDB,
   setTelemetryNotificationShownInDB,
