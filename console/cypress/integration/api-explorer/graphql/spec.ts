@@ -29,12 +29,16 @@ export const createTestTable = () => {
   // Enter the table name
   cy.get(getElementFromAlias('tableName')).type('users');
   // Set first column
-  cy.get(getElementFromAlias('column-0')).clear().type('id');
+  cy.get(getElementFromAlias('column-0'))
+    .clear()
+    .type('id');
   tableColumnTypeSelector('col-type-0');
   cy.get(getElementFromAlias('data_test_column_type_value_serial'))
     .first()
     .click();
-  cy.get(getElementFromAlias('column-1')).clear().type('name');
+  cy.get(getElementFromAlias('column-1'))
+    .clear()
+    .type('name');
   tableColumnTypeSelector('col-type-1');
   cy.get(getElementFromAlias('data_test_column_type_value_text'))
     .first()
@@ -134,7 +138,9 @@ export const checkSub = () => {
 };
 
 export const delTestTable = () => {
-  cy.get('a').contains('Data').click();
+  cy.get('a')
+    .contains('Data')
+    .click();
   // Go to the modify section of the table
   cy.get(getElementFromAlias('users')).click();
   cy.get(getElementFromAlias('table-modify')).click();
@@ -142,7 +148,9 @@ export const delTestTable = () => {
   // Click on delete
   cy.get(getElementFromAlias('delete-table')).click();
   //   Confirm
-  cy.window().its('prompt').should('be.called');
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(5000);
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);

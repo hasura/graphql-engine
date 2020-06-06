@@ -102,13 +102,17 @@ export const passCT = () => {
   cy.get(getElementFromAlias('delete-operation')).check();
 
   // webhook url
-  cy.get(getElementFromAlias('webhook-input')).clear().type(getWebhookURL());
+  cy.get(getElementFromAlias('webhook-input'))
+    .clear()
+    .type(getWebhookURL());
 
   // advanced settings
   cy.get(getElementFromAlias('advanced-settings')).click();
 
   // retry configuration
-  cy.get(getElementFromAlias('no-of-retries')).clear().type(getNoOfRetries());
+  cy.get(getElementFromAlias('no-of-retries'))
+    .clear()
+    .type(getNoOfRetries());
   cy.get(getElementFromAlias('interval-seconds'))
     .clear()
     .type(getIntervalSeconds());
@@ -147,7 +151,9 @@ export const failCTDuplicateTrigger = () => {
   cy.get(getElementFromAlias('delete-operation')).check();
 
   // webhook url
-  cy.get(getElementFromAlias('webhook-input')).clear().type(getWebhookURL());
+  cy.get(getElementFromAlias('webhook-input'))
+    .clear()
+    .type(getWebhookURL());
 
   //  click on create
   cy.get(getElementFromAlias('trigger-create')).click();
@@ -185,7 +191,9 @@ export const deleteCTTestTrigger = () => {
   //  Click on delete
   cy.get(getElementFromAlias('delete-trigger')).click();
   //  Confirm
-  cy.window().its('prompt').should('be.called');
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   //  Match the URL
   cy.url().should('eq', `${baseUrl}${EVENT_TRIGGER_INDEX_ROUTE}/manage`);
@@ -201,7 +209,9 @@ export const deleteCTTestTable = () => {
   setPromptValue(getTableName(0, testName));
   cy.get(getElementFromAlias('delete-table')).click();
   //   Confirm
-  cy.window().its('prompt').should('be.called');
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   //   Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
