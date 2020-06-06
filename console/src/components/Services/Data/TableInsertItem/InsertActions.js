@@ -8,7 +8,11 @@ import {
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { getEnumColumnMappings } from '../../../Common/utils/pgUtils';
-import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
+import {
+  getEnumOptionsQuery,
+  getInsertQuery,
+} from '../../../Common/utils/v1QueryUtils';
+import { makeMigrationCall, setTable } from '../DataActions';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
 const I_RESET = 'InsertItem/I_RESET';
@@ -24,7 +28,7 @@ const Open = () => ({ type: _OPEN });
 const Close = () => ({ type: _CLOSE });
 
 /* ****************** insert action creators ************ */
-const insertItem = (tableName, colValues) => {
+const insertItem = (tableName, colValues, isMigration = false) => {
   return (dispatch, getState) => {
     /* Type all the values correctly */
     dispatch({ type: I_ONGOING_REQ });
@@ -99,12 +103,52 @@ const insertItem = (tableName, colValues) => {
             'Affected rows: ' + data.affected_rows
           )
         );
+
+        if (isMigration) {
+          createInsertMigration(
+            dispatch,
+            getState,
+            { name: tableName, schema: currentSchema },
+            insertObject
+          );
+        }
       },
       err => {
         dispatch(showErrorNotification('Insert failed!', err.error, err));
       }
     );
   };
+};
+
+const createInsertMigration = (dispatch, getState, tableInfo, insertObj) => {
+  const upQuery = getInsertQuery(
+    { name: tableInfo.name, schema: tableInfo.schema },
+    insertObj
+  );
+  const migrationName = `insert_into_${tableInfo.name}`;
+  const customOnSuccess = () => {
+    // NOTE: maybe unnecessary.
+    dispatch(setTable(tableName));
+  };
+  const customOnError = () => {};
+  const requestMessage = 'Creating Insert Migration';
+  const successMessage = 'Created Insert Migration!';
+  const errorMessage = 'Error in creating Insert Migration';
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    null,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMessage,
+    successMessage,
+    errorMessage,
+    true,
+    true
+  );
 };
 
 const fetchEnumOptions = () => {
