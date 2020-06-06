@@ -70,6 +70,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
 - console: allow entering big int values in the console (close #3667) (#4775)
+- console: add support for subscriptions analyze in API explorer (close #2541) (#2541)
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
 - console: fix regression in editing permissions manually (fix #4683) (#4826)
