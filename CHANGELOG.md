@@ -70,6 +70,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
 - console: allow entering big int values in the console (close #3667) (#4775)
+- console: add support for subscriptions analyze in API explorer (close #2541) (#2541)
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
 - console: fix regression in editing permissions manually (fix #4683) (#4826)
@@ -98,6 +99,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
 - docs: add page for procuring custom docker images and binaries (#4828)
 - docs: add content on how to secure action handlers and other actions docs improvements (#4743)
+- docs: make header common with other hasura.io/ pages (#4957)
 - install manifests: update all install manifests to enable dev mode by default (close #4599) (#4716)
 
 ## `v1.2.0`
@@ -293,7 +295,7 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
-- server: make the graceful shutdown logic customizable (graceful shutdown on the SIGTERM signal continues to be the default) 
+- server: make the graceful shutdown logic customizable (graceful shutdown on the SIGTERM signal continues to be the default)
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
 
 ## `v1.2.0-beta.4`

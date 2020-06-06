@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Modal from 'react-modal';
+import RootFields from './RootFields';
 
 export default class QueryAnalyser extends React.Component {
   constructor() {
@@ -11,6 +12,7 @@ export default class QueryAnalyser extends React.Component {
       activeNode: 0,
     };
   }
+
   componentDidMount() {
     this.props
       .analyzeFetcher(this.props.analyseQuery.query)
@@ -22,7 +24,7 @@ export default class QueryAnalyser extends React.Component {
       })
       .then(data => {
         this.setState({
-          analyseData: data,
+          analyseData: Array.isArray(data) ? data : [data],
           activeNode: 0,
         });
       })
@@ -33,19 +35,6 @@ export default class QueryAnalyser extends React.Component {
   }
   render() {
     const { show, clearAnalyse } = this.props;
-    const analysisList = this.state.analyseData.map((analysis, i) => {
-      return (
-        <li
-          className={i === this.state.activeNode ? 'active' : ''}
-          key={i}
-          data-key={i}
-          onClick={this.handleAnalyseNodeChange.bind(this)}
-        >
-          <i className="fa fa-table" aria-hidden="true" />
-          {analysis.field}
-        </li>
-      );
-    });
     return (
       <Modal
         className="modalWrapper"
@@ -64,7 +53,11 @@ export default class QueryAnalyser extends React.Component {
           <div className="wd25">
             <div className="topLevelNodesWrapper">
               <div className="title">Top level nodes</div>
-              <ul>{analysisList}</ul>
+              <RootFields
+                data={this.state.analyseData}
+                activeNode={this.state.activeNode}
+                onClick={this.handleAnalyseNodeChange}
+              />
             </div>
           </div>
           <div className="wd75">
@@ -171,12 +164,12 @@ export default class QueryAnalyser extends React.Component {
   }
   */
 
-  handleAnalyseNodeChange(e) {
+  handleAnalyseNodeChange = e => {
     const nodeKey = e.target.getAttribute('data-key');
     if (nodeKey) {
       this.setState({ activeNode: parseInt(nodeKey, 10) });
     }
-  }
+  };
   copyToClip(type, id) {
     let text = '';
     if (this.state.analyseData.length > 0) {
