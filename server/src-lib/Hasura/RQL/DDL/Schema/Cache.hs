@@ -543,7 +543,7 @@ withMetadataCheck cascade action = do
   where
     reportFuncs = T.intercalate ", " . map dquoteTxt
 
-    processSchemaChanges :: (MonadTx m, CacheRM m) => SchemaDiff -> m ()
+    processSchemaChanges :: (MonadTx m, CacheRWM m) => SchemaDiff -> m ()
     processSchemaChanges schemaDiff = do
       -- Purge the dropped tables
       mapM_ delTableAndDirectDeps droppedTables
