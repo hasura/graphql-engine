@@ -59,7 +59,18 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
 
 export const deleteCurrentSchema = (successCb, errorCb) => {
   return (dispatch, getState) => {
-    const { currentSchema } = getState().tables;
+    const { currentSchema, schemaList } = getState().tables;
+
+    if (
+      !schemaList ||
+      !schemaList.filter(s => s.schema_name !== currentSchema).length
+    ) {
+      return dispatch(
+        showErrorNotification(
+          "Can't delete schema — no other schemas available"
+        )
+      );
+    }
 
     const confirmMessage = `This will permanently delete the Postgres schema "${currentSchema}" from the database`;
     const isOk = getConfirmation(confirmMessage, true, currentSchema);

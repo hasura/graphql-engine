@@ -31,10 +31,7 @@ import {
   updateSchemaInfo,
   fetchSchemaList,
 } from './DataActions';
-import {
-  showErrorNotification,
-  showInfoNotification,
-} from '../Common/Notification';
+import { showInfoNotification } from '../Common/Notification';
 
 const makeDataRouter = (
   connect,
@@ -166,9 +163,6 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
             // redirect to current schema instead of public
             replaceState(`/data/schema/${currentSchema}`);
           }
-        } else {
-          store.dispatch(showErrorNotification('No schema available'));
-          replaceState('/');
         }
       }
 
