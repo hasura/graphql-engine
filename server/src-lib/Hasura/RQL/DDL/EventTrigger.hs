@@ -129,12 +129,12 @@ addEventTriggerToCatalog qt etc = do
   Q.unitQE defaultTxErrorHandler
          [Q.sql|
            INSERT into hdb_catalog.event_triggers
-                       (name, type, schema_name, table_name, configuration)
+                       (name, type, schema_name, table_name, configuration, comment)
            VALUES ($1, 'table', $2, $3, $4)
          |] (name, sn, tn, Q.AltJ $ toJSON etc) False
   where
     QualifiedObject sn tn = qt
-    (EventTriggerConf name _ _ _ _ _) = etc
+    (EventTriggerConf name _ _ _ _ _ _) = etc
 
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
 delEventTriggerFromCatalog trn = do
@@ -186,7 +186,7 @@ markForDelivery eid =
           |] (Identity eid) True
 
 subTableP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateEventTriggerQuery -> m (QualifiedTable, Bool, EventTriggerConf)
-subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace) = do
+subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace comment) = do
   ti <- askTableCoreInfo qt
   -- can only replace for same table
   when replace $ do
@@ -198,7 +198,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual re
   assertCols ti delete
 
   let rconf = fromMaybe defaultRetryConf retryConf
-  return (qt, replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders)
+  return (qt, replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders comment)
   where
     assertCols _ Nothing = return ()
     assertCols ti (Just sos) = do
@@ -210,7 +210,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual re
 subTableP2Setup
   :: (QErrM m, MonadIO m)
   => QualifiedTable -> EventTriggerConf -> m (EventTriggerInfo, [SchemaDependency])
-subTableP2Setup qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
+subTableP2Setup qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders comment) = do
   webhookConf <- case (webhook, webhookFromEnv) of
     (Just w, Nothing)    -> return $ WCValue w
     (Nothing, Just wEnv) -> return $ WCEnv wEnv

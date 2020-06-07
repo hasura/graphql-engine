@@ -139,6 +139,7 @@ data CreateEventTriggerQuery
   , cetqWebhookFromEnv :: !(Maybe T.Text)
   , cetqHeaders        :: !(Maybe [HeaderConf])
   , cetqReplace        :: !Bool
+  , cetqComment        :: !(Maybe Text)
   } deriving (Show, Eq, Lift)
 
 instance FromJSON CreateEventTriggerQuery where
@@ -154,6 +155,7 @@ instance FromJSON CreateEventTriggerQuery where
     webhookFromEnv <- o .:? "webhook_from_env"
     headers        <- o .:? "headers"
     replace        <- o .:? "replace" .!= False
+    comment        <- o .:? "comment"
     let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
         compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
         isMatch = TDFA.match compiledRegex . T.unpack $ triggerNameToTxt name
@@ -169,7 +171,7 @@ instance FromJSON CreateEventTriggerQuery where
       (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
       _                 ->   fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace
+    return $ CreateEventTriggerQuery name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace comment
     where
       checkEmptyCols spec
         = case spec of
@@ -207,6 +209,7 @@ data EventTriggerConf
   , etcWebhookFromEnv :: !(Maybe T.Text)
   , etcRetryConf      :: !RetryConf
   , etcHeaders        :: !(Maybe [HeaderConf])
+  , etcComment        :: !(Maybe Text)
   } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerConf)
