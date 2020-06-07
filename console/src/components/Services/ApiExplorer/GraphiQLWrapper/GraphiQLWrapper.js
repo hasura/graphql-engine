@@ -28,6 +28,7 @@ import {
   setDerivedActionParentOperation,
 } from '../../Actions/Add/reducer';
 import { getGraphQLEndpoint } from '../utils';
+import { removeStore } from '../../../../utils/localstorage';
 
 import 'graphiql/graphiql.css';
 import './GraphiQL.css';
@@ -102,10 +103,6 @@ class GraphiQLWrapper extends Component {
       }, 1500);
     };
 
-    const handleToggleHistory = () => {
-      graphiqlContext.handleToggleHistory();
-    };
-
     const deriveActionFromOperation = () => {
       const { schema, query } = graphiqlContext.state;
       if (!schema) return;
@@ -143,8 +140,8 @@ class GraphiQLWrapper extends Component {
     const handleClearHistory = () => {
       try {
         // not clearing the favourites: graphiql:favorites
-        localStorage.removeItem('graphiql:queries');
-        localStorage.removeItem('graphiql:query');
+        removeStore('graphiql', 'queries');
+        removeStore('graphiql', 'query');
 
         // hack to clear history panel by triggering update.
         graphiqlContext._queryHistory.historyStore.items = [];
@@ -178,7 +175,9 @@ class GraphiQLWrapper extends Component {
           {
             label: 'History',
             title: 'Show History',
-            onClick: handleToggleHistory,
+            onClick: () => {
+              graphiqlContext.handleToggleHistory();
+            },
           },
           {
             label: this.state.copyButtonText,
