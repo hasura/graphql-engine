@@ -543,7 +543,7 @@ const makeMigrationCall = (
     name: sanitize(migrationName),
     up: upQuery.args,
     down: downQuery.args,
-    skipExecution,
+    skip_execution: skipExecution,
   };
 
   const currMigrationMode = getState().main.migrationMode;
