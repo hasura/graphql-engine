@@ -62,8 +62,6 @@ renameTableInCatalog
 renameTableInCatalog newQT oldQT = do
   sc <- askSchemaCache
   let allDeps = getDependentObjs sc $ SOTable oldQT
-  -- Update table name in hdb_catalog
-  liftTx $ Q.catchE defaultTxErrorHandler updateTableInCatalog
 
   -- update all dependant schema objects
   forM_ allDeps $ \case
@@ -77,6 +75,9 @@ renameTableInCatalog newQT oldQT = do
     SOTableObj _ (TORemoteRel _) -> return ()
 
     d -> otherDeps errMsg d
+  -- Update table name in hdb_catalog
+  liftTx $ Q.catchE defaultTxErrorHandler updateTableInCatalog
+
   where
     QualifiedObject nsn ntn = newQT
     QualifiedObject osn otn = oldQT
