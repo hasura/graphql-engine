@@ -256,8 +256,6 @@ set to ``$.hasura.claims``:
    values set. If neither keys are set, then the default value of
    ``claims_namespace`` i.e. https://hasura.io/jwt/claims will be used.
 
-
-^^^^^^^^^^^^^^^^^
 This is an optional field, with only the following possible values:
 - ``json``
 - ``stringified_json``
@@ -375,24 +373,22 @@ Examples:
 ``claims_map``
 ^^^^^^^^^^^^^^
 This is an optional field. Certain providers might not allow adding custom claims.
-In such case the users can map hasura session variables with existing JWT claims
-using ``claims_map``. The ``claims_map`` is an JSON object where keys are session
-variables and values can be a JSON Path or a literal value. The value of claim referred by a
-JSON Path must be a ``String``.
+In such a case, you can map Hasura session variables with existing JWT claims
+using ``claims_map``. The ``claims_map`` is a JSON object where keys are session
+variables and values can be a JSON path or a literal value. 
 
-The literal values should be a ``String``. Except, the ``X-Hasura-Allowed-Roles`` Claim
-which expects an array of ``String``.
+The literal values should be a ``String``, except for the ``x-hasura-allowed-roles`` claim
+which expects a ``String`` array. 
 
-To use the JSON path value, the path needs to be given in an JSON object with ``path``
-as the key and the JSON path as the value to the ``path`` key.
-
-For example,
+The value of a claim referred by a JSON path must be a ``String``.
+To use the JSON path value, the path needs to be given in a JSON object with ``path``
+as the key and the JSON path as the value:
 
 .. code-block:: json
 
-   { "path" : "$.user.all_roles"}
+   { "path" : "$.user.all_roles" }
 
-Consider the following JWT claim.
+**Example: JWT config with JSON path values**
 
 .. code-block:: json
 
@@ -411,7 +407,7 @@ Consider the following JWT claim.
   }
 
 The mapping for ``x-hasura-allowed-roles``, ``x-hasura-default-role`` and ``x-hasura-user-id`` session
-variables can be specified in ``claims_map`` configuration as follows.
+variables can be specified in the ``claims_map`` configuration as follows:
 
 .. code-block:: json
 
@@ -425,7 +421,7 @@ variables can be specified in ``claims_map`` configuration as follows.
     }
   }
 
-Example of using JWT config with literal values
+**Example: JWT config containing literal values**
 
 .. code-block:: json
 
@@ -454,8 +450,9 @@ The corresponding JWT config should be:
 
   }
 
-In the above example, ``x-hasura-allowed-roles`` and ``x-hasura-default-role`` values are set in the JWT
+In the above example, the ``x-hasura-allowed-roles`` and ``x-hasura-default-role`` values are set in the JWT
 config and the value of the ``x-hasura-user-id`` is a JSON path to the value in the JWT token.
+
 
 Examples
 ^^^^^^^^
