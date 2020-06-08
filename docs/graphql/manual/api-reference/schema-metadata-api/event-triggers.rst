@@ -57,7 +57,8 @@ create_event_trigger
                  "value_from_env": "EVENT_WEBHOOK_HEADER"
              }
            ],
-           "replace": false
+           "replace": false,
+           "comment": "creating my first event trigger"
        }
    }
 
@@ -113,6 +114,10 @@ Args syntax
      - false
      - Boolean
      - If set to true, the event trigger is replaced with the new definition
+   * - comment
+     - false
+     - String
+     - comment
 
 (*) Either ``webhook`` or ``webhook_from_env`` are required.
 
