@@ -55,15 +55,15 @@ export type Header = {
 
 export const getRunSqlQuery = (
   sql: string,
-  shouldCascade: boolean,
-  readOnly: boolean
+  cascade = false,
+  read_only = false
 ) => {
   return {
     type: 'run_sql',
     args: {
       sql: terminateSql(sql),
-      cascade: !!shouldCascade,
-      read_only: !!readOnly,
+      cascade,
+      read_only,
     },
   };
 };
@@ -209,7 +209,7 @@ export const getFetchCustomTypesQuery = () => {
   };
 };
 
-type CustomRootFields = {
+export type CustomRootFields = {
   select: string;
   select_by_pk: string;
   select_aggregate: string;

@@ -3,11 +3,13 @@ import {
   findTable,
   getTableCustomColumnNames,
   getTableCustomRootFields,
+  Table,
 } from '../../components/Common/utils/pgUtils';
 import { isColumnUnique } from '../../components/Services/Data/TableModify/ModifyActions';
 import {
   getRunSqlQuery,
   getSetCustomRootFieldsQuery,
+  CustomRootFields,
 } from '../../components/Common/utils/v1QueryUtils';
 import {
   isColTypeString,
@@ -71,7 +73,7 @@ const parseOldColumns = (oldColumn: OldColumnType) => ({
 export const getColumnUpdateMigration = (
   oldColumn: OldColumnType,
   newColumn: NewColumnType,
-  allSchemas: object[],
+  allSchemas: Table[],
   colName: string,
   onInvalidGqlColName: () => void
 ) => {
@@ -88,7 +90,7 @@ export const getColumnUpdateMigration = (
   } = parseNewCol(newColumn);
 
   const tableDef = generateTableDef(tableName, currentSchema);
-  const table = findTable(allSchemas, tableDef);
+  const table = findTable(allSchemas, tableDef) as Table;
 
   const {
     originalColType,
@@ -119,7 +121,9 @@ export const getColumnUpdateMigration = (
 
   /* column custom field up/down migration */
   const existingCustomColumnNames = getTableCustomColumnNames(table);
-  const existingRootFields = getTableCustomRootFields(table);
+  const existingRootFields = getTableCustomRootFields(
+    table
+  ) as CustomRootFields;
   const newCustomColumnNames = { ...existingCustomColumnNames };
   let isCustomFieldNameChanged = false;
   if (customFieldName) {
@@ -265,9 +269,10 @@ export const getColumnUpdateMigration = (
     migrationName,
     upMigration: migration.upMigration,
     downMigration: migration.downMigration,
+    migration,
   };
 };
-export const getDownQueryComment = (upqueries: RunSqlType[]) => {
+export const getDownQueryComments = (upqueries: RunSqlType[]) => {
   if (Array.isArray(upqueries) && upqueries.length >= 0) {
     let comment = `-- Could not auto-generate a down migration.
 -- Please write an appropriate down migration for the SQL below:`;

@@ -11,7 +11,7 @@ type DropDownButtonProps = {
   }[];
   dataKey: string;
   dataIndex?: string;
-  onButtonChange: (e: React.MouseEvent) => void;
+  onButtonChange: (e: React.MouseEvent<{}, MouseEvent>) => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   value?: string;
   inputVal: string;

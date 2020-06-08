@@ -42,3 +42,14 @@ export type ReduxStore = Store<ReduxState, ReduxAction>;
 
 // Router Utils
 export type ReplaceRouterState = (route: string) => void;
+
+// HGE common types
+export type RunSqlType = {
+  type: string;
+  version?: number;
+  args: {
+    cascade?: boolean;
+    read_only?: boolean;
+    sql: string;
+  };
+};

@@ -38,7 +38,7 @@ import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
 import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
 
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
-import { getDownQueryComment } from '../../../utils/migration/utils';
+import { getDownQueryComments } from '../../../utils/migration/utils';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -536,7 +536,8 @@ const makeMigrationCall = (
 
   const downQuery = {
     type: 'bulk',
-    args: downQueries.length > 0 ? downQueries : getDownQueryComment(upQueries),
+    args:
+      downQueries.length > 0 ? downQueries : getDownQueryComments(upQueries),
   };
 
   const migrationBody = {

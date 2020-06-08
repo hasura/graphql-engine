@@ -3,6 +3,7 @@ import { showErrorNotification } from '../../Common/Notification';
 import { makeMigrationCall, fetchSchemaList } from '../DataActions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import Migration from '../../../../utils/migration/Migration';
 
 const getDropSchemaSql = schemaName => `drop schema "${schemaName}" cascade;`;
 
@@ -19,10 +20,11 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
         )
       );
     }
-
-    const migrationUp = [getRunSqlQuery(getCreateSchemaSql(schemaName))];
-
-    const migrationDown = [getRunSqlQuery(getDropSchemaSql(schemaName))];
+    const migration = new Migration();
+    migration.add(
+      getRunSqlQuery(getCreateSchemaSql(schemaName)),
+      getRunSqlQuery(getDropSchemaSql(schemaName))
+    );
 
     const migrationName = `create_schema_${schemaName}`;
     const requestMsg = 'Creating schema';
@@ -45,8 +47,8 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
     makeMigrationCall(
       dispatch,
       getState,
-      migrationUp,
-      migrationDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -72,8 +74,8 @@ export const deleteCurrentSchema = (successCb, errorCb) => {
     if (!isOk) {
       return;
     }
-
-    const migrationUp = [getRunSqlQuery(getDropSchemaSql(currentSchema))];
+    const migration = new Migration();
+    migration.add(getRunSqlQuery(getDropSchemaSql(currentSchema)));
     const migrationName = `drop_schema_${currentSchema}`;
     const requestMsg = 'Dropping schema';
     const successMsg = 'Successfully dropped schema';
@@ -94,8 +96,8 @@ export const deleteCurrentSchema = (successCb, errorCb) => {
     makeMigrationCall(
       dispatch,
       getState,
-      migrationUp,
-      [],
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
