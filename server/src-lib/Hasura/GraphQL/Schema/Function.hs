@@ -2,14 +2,17 @@ module Hasura.GraphQL.Schema.Function
   ( procFuncArgs
   , mkFuncArgsInp
   , mkFuncQueryFld
+  , mkFuncQueryConnectionFld
   , mkFuncAggQueryFld
   , mkFuncArgsTy
+  , mkFuncArgItemSeq
   ) where
 
 import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Validate.Types
@@ -92,6 +95,20 @@ mkFuncQueryFld funInfo descM =
 
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy retTable
 
+mkFuncQueryConnectionFld
+  :: FunctionInfo -> Maybe PGDescription -> ObjFldInfo
+mkFuncQueryConnectionFld funInfo descM =
+  mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
+  where
+    retTable = fiReturnType funInfo
+    funcName = fiName funInfo
+
+    desc = mkDescriptionWith descM $ "execute function " <> funcName
+           <<> " which returns " <>> retTable
+    fldName = qualObjectToName funcName <> "_connection"
+
+    ty = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableConnectionTy retTable
+
 {-
 
 function_aggregate(
@@ -118,3 +135,15 @@ mkFuncAggQueryFld funInfo descM =
     fldName = qualObjectToName funcName <> "_aggregate"
 
     ty = G.toGT $ G.toNT $ mkTableAggTy retTable
+
+
+mkFuncArgItemSeq :: FunctionInfo -> Seq (InputArgument FunctionArgItem)
+mkFuncArgItemSeq functionInfo =
+  let inputArgs = fiInputArgs functionInfo
+  in Seq.fromList $ procFuncArgs inputArgs nameFn resultFn
+  where
+    nameFn = \case
+      IAUserProvided fa       -> faName fa
+      IASessionVariables name -> Just name
+    resultFn arg gName = flip fmap arg $
+      \fa -> FunctionArgItem (G.Name gName) (faName fa) (faHasDefault fa)
