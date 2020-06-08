@@ -318,7 +318,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   case execPlan of
     E.GExPHasura resolvedOp ->
       runHasuraGQ timerTot telemCacheHit requestId q userInfo resolvedOp
-    E.GExPRemote rsi opDef _  ->
+    E.GExPRemote rsi opDef  ->
       runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
   where
     telemTransport = Telem.HTTP

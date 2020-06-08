@@ -47,16 +47,9 @@ runGQ reqId userInfo reqHdrs queryType req = do
       E.GExPHasura resolvedOp -> do
         (telemTimeIO, telemQueryType, respHdrs, resp) <- runHasuraGQ reqId req userInfo resolvedOp
         return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
-      E.GExPRemote rsi opDef _ -> do
+      E.GExPRemote rsi opDef  -> do
         let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
                            | otherwise = Telem.Query
-            -- rewrittenQuery =
-            --   GQLReq { _grQuery = GQLQueryText $ GP.renderExecutableDoc $
-            --                       G.ExecutableDocument $ pure $
-            --                       toGraphQLOperation rootSelSet
-            --          , _grVariables = Nothing
-            --          , _grOperationName = Nothing
-            --          }
         (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi $ G._todType opDef
         return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
   let telemTimeIO = convertDuration telemTimeIO_DT

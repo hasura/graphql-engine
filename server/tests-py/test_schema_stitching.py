@@ -364,10 +364,10 @@ class TestRemoteSchemaQueriesOverWebsocket:
         try:
             ev = next(resp)
             print(ev)
-            assert ev['type'] == 'error' and ev['id'] == query_id, ev
+            assert ev['type'] == 'data' and ev['id'] == query_id, ev
             assert 'errors' in ev['payload']
             assert ev['payload']['errors'][0]['message'] == \
-                'field "blah" not found in type: \'User\''
+                'Cannot query field "blah" on type "User".'
         finally:
             ws_client.stop(query_id)
 

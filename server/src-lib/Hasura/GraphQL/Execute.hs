@@ -64,7 +64,7 @@ import qualified Hasura.Server.Telemetry.Counters       as Telem
 -- intermediate passes
 data GQExecPlan a
   = GExPHasura !a
-  | GExPRemote !RemoteSchemaInfo !G.TypedOperationDefinition !VQ.RootSelectionSet
+  | GExPRemote !RemoteSchemaInfo !G.TypedOperationDefinition
   deriving (Functor, Foldable, Traversable)
 
 -- | Execution context
@@ -148,9 +148,8 @@ getExecPlanPartial userInfo sc queryType enableAL req = do
     VT.TLHasuraType -> do
       rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
       pure $ GExPHasura (gCtx, rootSelSet)
-    VT.TLRemoteType _ rsi -> do
-      rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
-      pure $ GExPRemote rsi opDef rootSelSet
+    VT.TLRemoteType _ rsi ->
+      pure $ GExPRemote rsi opDef
     VT.TLCustom ->
       throw500 "unexpected custom type for top level field"
   where
