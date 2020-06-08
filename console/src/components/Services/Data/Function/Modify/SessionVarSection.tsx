@@ -34,7 +34,8 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
   };
   const closeEditMode = React.useCallback(setIsEditing, [setIsEditing]);
   const onSave = () => {
-    if (sessVar) onSessVarUpdate(sessVar).then(() => closeEditMode(false));
+    if (sessVar !== (configuration?.session_argument || ''))
+      onSessVarUpdate(sessVar).then(() => closeEditMode(false));
   };
 
   return (
@@ -61,7 +62,7 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
           >
             {isEditing ? 'Close' : 'Edit'}
           </Button>
-          {configuration?.session_argument || 'No Session argument provided'}
+          {configuration?.session_argument || 'No Session argument'}
         </div>
         {isEditing && (
           <>

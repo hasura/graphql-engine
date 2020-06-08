@@ -310,6 +310,8 @@ const updateSessVar = session_argument => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const functionName = getState().functions.functionName;
+    const oldConfiguration = getState().functions.configuration;
+
     const migrationName = 'update_session_arg_custom_function_' + functionName;
 
     //untrack function first
@@ -320,11 +322,16 @@ const updateSessVar = session_argument => {
         schema: currentSchema,
       },
     };
-    const untrackPayloadDown = {
+    const retrackPayloadDown = {
       type: 'track_function',
       args: {
-        name: functionName,
-        schema: currentSchema,
+        function: {
+          name: functionName,
+          schema: currentSchema,
+        },
+        configuration: {
+          ...(oldConfiguration && oldConfiguration),
+        },
       },
     };
 
@@ -338,12 +345,14 @@ const updateSessVar = session_argument => {
           schema: currentSchema,
         },
         configuration: {
-          session_argument,
+          ...(session_argument && {
+            session_argument,
+          }),
         },
       },
     };
 
-    const retrackPayloadDown = {
+    const untrackPayloadDown = {
       type: 'untrack_function',
       args: {
         name: functionName,
@@ -358,7 +367,7 @@ const updateSessVar = session_argument => {
 
     const downQuery = {
       type: 'bulk',
-      args: [retrackPayloadDown, untrackPayloadDown],
+      args: [untrackPayloadDown, retrackPayloadDown],
     };
     const requestMsg = 'Updating Session argument variable...';
     const successMsg = 'Session variable argument updated successfully';
