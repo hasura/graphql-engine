@@ -246,7 +246,9 @@ class ApiRequest extends Component {
               styles.stickyHeader
             }
           >
-            <div className={'col-xs-12 ' + styles.padd_remove}>
+            <div
+              className={`col-xs-12 ${styles.padd_remove} ${styles.add_mar_bottom_mid}`}
+            >
               <div
                 className={
                   'input-group ' +
@@ -268,7 +270,6 @@ class ApiRequest extends Component {
                 />
               </div>
             </div>
-            <div className={styles.stickySeparator} />
             <div
               className={`${styles.display_flex} ${styles.graphiqlModeToggle} ${styles.cursorPointer}`}
               onClick={toggleGraphiqlMode}
