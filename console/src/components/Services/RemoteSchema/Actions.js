@@ -9,7 +9,7 @@ import globals from '../../../Globals';
 import returnMigrateUrl from '../Data/Common/getMigrateUrl';
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { loadMigrationStatus } from '../../Main/Actions';
-import { handleMigrationErrors } from '../EventTrigger/EventActions';
+import { handleMigrationErrors } from '../../../utils/migration';
 
 import { showSuccessNotification } from '../Common/Notification';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
@@ -132,7 +132,7 @@ const listReducer = (state = listState, action) => {
   }
 };
 
-/* makeRequest function to identify what the current mode is and send normal query or a migration call */
+/* makeRequest function to identify what the current mode is and send normal query or a call */
 const makeRequest = (
   upQueries,
   downQueries,

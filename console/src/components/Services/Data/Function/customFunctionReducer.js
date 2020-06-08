@@ -12,7 +12,7 @@ import globals from '../../../../Globals';
 import returnMigrateUrl from '../Common/getMigrateUrl';
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../../constants';
 import { loadMigrationStatus } from '../../../Main/Actions';
-import { handleMigrationErrors } from '../../EventTrigger/EventActions';
+import { handleMigrationErrors } from '../../../../utils/migration';
 
 import { showSuccessNotification } from '../../Common/Notification';
 

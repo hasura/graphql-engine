@@ -202,6 +202,7 @@ library
                      , ghc-heap-view
 
                      , directory
+                     , semigroups >= 0.19.1
 
                      -- scheduled triggers
                      , cron >= 0.6.2
@@ -230,6 +231,7 @@ library
 
                      , Hasura.Server.App
                      , Hasura.Server.Auth
+                     , Hasura.Server.Cors
                      , Hasura.Server.Init
                      , Hasura.Server.Init.Config
                      , Hasura.Server.API.Query
@@ -262,7 +264,6 @@ library
                      , Hasura.Server.Auth.JWT
                      , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware
-                     , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
@@ -353,11 +354,13 @@ library
                      , Hasura.GraphQL.Schema.Mutation.Update
                      , Hasura.GraphQL.Schema.Mutation.Delete
                      , Hasura.GraphQL.Schema
+                     , Hasura.GraphQL.RelaySchema
                      , Hasura.GraphQL.Utils
+                     , Hasura.GraphQL.NormalForm
                      , Hasura.GraphQL.Validate
                      , Hasura.GraphQL.Validate.Types
                      , Hasura.GraphQL.Validate.Context
-                     , Hasura.GraphQL.Validate.Field
+                     , Hasura.GraphQL.Validate.SelectionSet
                      , Hasura.GraphQL.Validate.InputValue
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute
@@ -417,6 +420,7 @@ executable graphql-engine
                    , pg-client
                    , text
                    , text-conversions
+                   , unix
 
 test-suite graphql-engine-tests
   import: common-all, common-exe

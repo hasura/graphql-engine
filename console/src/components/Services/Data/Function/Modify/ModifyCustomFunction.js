@@ -64,7 +64,7 @@ class ModifyCustomFunction extends React.Component {
     ]);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const { functionName, schema } = this.props.params;
     if (
       functionName !== nextProps.params.functionName ||
