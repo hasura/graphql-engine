@@ -211,6 +211,12 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'rename_col_with_remote_rel_dependency.yaml')
 
+    def test_renaming_table_with_remote_relationship_dependency(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_args.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'rename_table_with_remote_rel_dependency.yaml')
+
+
 class TestDeepExecution:
 
     @classmethod

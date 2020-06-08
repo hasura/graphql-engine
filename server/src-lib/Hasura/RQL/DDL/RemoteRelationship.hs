@@ -117,12 +117,12 @@ delRemoteRelFromCatalog (QualifiedObject sn tn) (RemoteRelationshipName relName)
              AND remote_relationship_name = $3
                 |] (sn, tn, relName) True
 
-getRemoteRelDefFromCatalog :: RemoteRelationshipName -> Q.TxE QErr RemoteRelationshipDef
-getRemoteRelDefFromCatalog relName = do
+getRemoteRelDefFromCatalog :: RemoteRelationshipName -> QualifiedTable ->  Q.TxE QErr RemoteRelationshipDef
+getRemoteRelDefFromCatalog relName (QualifiedObject schemaName tableName) = do
   (Q.AltJ defn) <- (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
     [Q.sql|
      SELECT definition::json
      FROM hdb_catalog.hdb_remote_relationship
-     WHERE remote_relationship_name = $1
-     |] (Identity relName) False
+     WHERE remote_relationship_name = $1 and table_schema = $2 and table_name = $3
+     |] (relName,schemaName,tableName) False
   return defn

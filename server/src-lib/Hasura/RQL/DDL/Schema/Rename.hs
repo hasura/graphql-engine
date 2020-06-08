@@ -62,6 +62,9 @@ renameTableInCatalog
 renameTableInCatalog newQT oldQT = do
   sc <- askSchemaCache
   let allDeps = getDependentObjs sc $ SOTable oldQT
+  -- Update table name in hdb_catalog
+  liftTx $ Q.catchE defaultTxErrorHandler updateTableInCatalog
+
   -- update all dependant schema objects
   forM_ allDeps $ \case
     SOTableObj refQT (TORel rn) ->
@@ -70,9 +73,10 @@ renameTableInCatalog newQT oldQT = do
       updatePermFlds refQT rn pt $ RTable (oldQT, newQT)
     -- A trigger's definition is not dependent on the table directly
     SOTableObj _ (TOTrigger _)   -> return ()
+    -- A remote relationship's definition is not dependent on the table directly
+    SOTableObj _ (TORemoteRel _) -> return ()
+
     d -> otherDeps errMsg d
-  -- -- Update table name in hdb_catalog
-  liftTx $ Q.catchE defaultTxErrorHandler updateTableInCatalog
   where
     QualifiedObject nsn ntn = newQT
     QualifiedObject osn otn = oldQT
@@ -359,7 +363,7 @@ updateColInRemoteRelationship
 updateColInRemoteRelationship remoteRelationshipName renameCol = do
   let (RenameItem qt oldCol newCol) = renameCol
   (RemoteRelationshipDef remoteSchemaName hasuraFlds remoteFields) <-
-    liftTx $ RR.getRemoteRelDefFromCatalog remoteRelationshipName
+    liftTx $ RR.getRemoteRelDefFromCatalog remoteRelationshipName qt
   let oldColPGTxt = getPGColTxt oldCol
   let newColPGTxt = getPGColTxt newCol
   let oldColFieldName = FieldName $ oldColPGTxt
