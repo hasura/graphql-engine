@@ -1381,7 +1381,6 @@ article ol ol {
 	}
 	 .headerWrapper .brand {
 		 padding: 8px 0;
-		 padding-left: 15px;
 	}
 	 .headerWrapper .topnav .visibleMobile .navBarULMobile {
 		 padding: 10px 15px;
@@ -1407,7 +1406,7 @@ article ol ol {
 	}
 	 .navBarToggle {
 		 display: block;
-		 right: 15px;
+		 right: 0px;
 	}
 	 .topnav.responsive .visibleMobile {
 		 display: block;
@@ -1429,21 +1428,7 @@ article ol ol {
 		 margin-right: 16px;
 	}
 }
-@media (min-width: 768px) {
-  .container {
-      width: 750px;
-      padding: 0 0 !important;
-  }
-}
-@media (min-width: 992px) {
-  .container {
-      width: 970px;
-      padding: 0 0 !important;
-  }
-}
-@media (min-width: 1200px) {
-  .container {
-      width: calc(100% - 30px);
-      padding: 0 15px !important;
-  }
+.navContainerWrapper {
+    width: calc(100% - 30px);
+    padding: 0 15px !important;
 }
