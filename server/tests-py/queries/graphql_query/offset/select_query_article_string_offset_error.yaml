@@ -2,14 +2,11 @@ description: Nested select on article with string offset
 url: /v1/graphql
 status: 200
 response:
-  data:
-    article:
-    - id: 2
-      title: Article 2
-      content: Sample article content 2
-      author:
-        id: 1
-        name: Author 1
+  errors:
+    - extensions:
+        code: validation-failed
+        path: $.offset.article
+      message: expected an integer for type "Int", but found a string
 query:
   query: |
     query {

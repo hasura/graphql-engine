@@ -1,6 +1,12 @@
-description: Nested select on article with negative offset. Expecting error. Currently 500. Idealy should be 400
+description: Nested select on article with negative offset. Expecting error.
 url: /v1/graphql
 status: 200
+response:
+  errors:
+    - extensions:
+        code: validation-failed
+        path: $.offset.article
+      message: expecting a positive integer
 query:
   query: |
     query {
