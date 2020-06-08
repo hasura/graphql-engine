@@ -152,13 +152,13 @@ orderByOperator =
       , (SQL.OTAsc, SQL.NLast)
       )
     , ( define $$(G.litName "desc") "in descending order, nulls first"
-      , (SQL.OTAsc, SQL.NFirst)
+      , (SQL.OTDesc, SQL.NFirst)
       )
     , ( define $$(G.litName "desc_nulls_first") "in descending order, nulls first"
-      , (SQL.OTAsc, SQL.NFirst)
+      , (SQL.OTDesc, SQL.NFirst)
       )
     , ( define $$(G.litName "desc_nulls_last") "in descending order, nulls last"
-      , (SQL.OTAsc, SQL.NLast)
+      , (SQL.OTDesc, SQL.NLast)
       )
     ]
   where
