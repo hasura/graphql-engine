@@ -230,7 +230,7 @@ mkFieldMap annotatedOutputType actionInfo fieldReferences roleName =
                         (RelName $ mkNonEmptyTextUnsafe $ coerce relationshipName)
                         (_trType relationship)
                         columnMapping remoteTable True)
-                       False mempty
+                       RFKSimple mempty
                        tableFilter
                        tableLimit
                      )
