@@ -32,10 +32,12 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
   const onSessVarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSessVar(e.target.value);
   };
-  const closeEditMode = React.useCallback(setIsEditing, [setIsEditing]);
+  const closeEditPopUp = React.useCallback(() => setIsEditing(false), [
+    setIsEditing,
+  ]);
   const onSave = () => {
     if (sessVar !== (configuration?.session_argument || ''))
-      onSessVarUpdate(sessVar).then(() => closeEditMode(false));
+      onSessVarUpdate(sessVar).then(closeEditPopUp);
   };
 
   return (
