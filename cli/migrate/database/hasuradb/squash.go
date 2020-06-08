@@ -98,13 +98,13 @@ func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) e
 			case *deleteRemoteRelationshipInput:
 				if cfg.GetState() == "created" {
 					prevElems = append(prevElems, element)
-					for _, e := range prevElems {
-						squashList.Remove(e)
-					}
-					err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
-					if err != nil {
-						return err
-					}
+				}
+				err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				for _, e := range prevElems {
+					squashList.Remove(e)
 				}
 			}
 		}
