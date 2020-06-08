@@ -150,9 +150,11 @@ queryFldToPGAST fld actionExecuter = do
              DS.JASMultipleRows -> QRFActionExecuteList
              DS.JASSingleObject -> QRFActionExecuteObject
       f <$> actionExecuter (RA.resolveActionQuery fld ctx (_uiSession userInfo))
-    QCSelectConnection pk ctx ->
+    QCSelectConnection pk ctx -> do
+      validateHdrs userInfo (_socHeaders ctx)
       QRFConnection <$> RS.convertConnectionSelect pk ctx fld
-    QCFuncConnection pk ctx ->
+    QCFuncConnection pk ctx -> do
+      validateHdrs userInfo (_fqocHeaders ctx)
       QRFConnection <$> RS.convertConnectionFuncQuery pk ctx fld
 
 mutFldToTx

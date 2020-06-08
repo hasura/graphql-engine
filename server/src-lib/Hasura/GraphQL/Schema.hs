@@ -913,7 +913,6 @@ mkGCtx tyAgg (RootFields queryFields mutationFields) insCtxMap =
                             , TIObj <$> mutRootM
                             , TIObj <$> subRootM
                             , TIEnum <$> ordByEnumTyM
-                            , Just $ TIObj mkPageInfoObj
                             ] <>
                   scalarTys <> compTys <> defaultTypes <> wiredInGeoInputTypes
                   <> wiredInRastInputTypes

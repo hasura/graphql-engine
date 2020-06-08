@@ -6,7 +6,7 @@ module Hasura.GraphQL.Schema.Select
   , mkTableAggregateFieldsObj
   , mkTableColAggregateFieldsObj
   , mkTableEdgeObj
-  , mkPageInfoObj
+  , pageInfoObj
   , mkTableConnectionObj
   , mkTableConnectionTy
 
@@ -420,8 +420,8 @@ type PageInfo {
   endCursor: String!
 }
 -}
-mkPageInfoObj :: ObjTyInfo
-mkPageInfoObj =
+pageInfoObj :: ObjTyInfo
+pageInfoObj =
   mkHsraObjTyInfo Nothing pageInfoTy Set.empty $ mapFromL _fiName
   [hasNextPage, hasPreviousPage, startCursor, endCursor]
   where

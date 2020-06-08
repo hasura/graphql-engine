@@ -36,13 +36,13 @@ mkNodeInterface relayTableNames =
 
 mkRelayGCtxMap
   :: forall m. (MonadError QErr m)
-  => TableCache -> FunctionCache -> m GCtxMap
+  => TableCache -> FunctionCache -> m RelayGCtxMap
 mkRelayGCtxMap tableCache functionCache = do
   typesMapL <- mapM (mkRelayGCtxMapTable tableCache functionCache) relayTables
   typesMap <- combineTypes typesMapL
   let gCtxMap  = flip Map.map typesMap $
                  \(ty, flds, insCtx) -> mkGCtx ty flds insCtx
-  pure $ Map.map (flip RoleContext Nothing) gCtxMap
+  pure gCtxMap
   where
     relayTables =
       filter (tableFltr . _tiCoreInfo) $ Map.elems tableCache
@@ -59,9 +59,10 @@ mkRelayGCtxMap tableCache functionCache = do
       let listMap = foldr (Map.unionWith (++) . Map.map pure) mempty maps
       flip Map.traverseWithKey listMap $ \roleName typeList -> do
         let relayTableNames = map (_tciName . _tiCoreInfo) relayTables
-            tyAgg = addTypeInfoToTyAgg
-                    (TIIFace $ mkNodeInterface relayTableNames) $
-                    mconcat $ map (^. _1) typeList
+            tyAgg = foldr addTypeInfoToTyAgg (mconcat $ map (^. _1) typeList)
+                    [ TIIFace $ mkNodeInterface relayTableNames
+                    , TIObj pageInfoObj
+                    ]
             insCtx = mconcat $ map (^. _3) typeList
         rootFields <- combineRootFields roleName $ map (^. _2) typeList
         pure (tyAgg, rootFields, insCtx)
