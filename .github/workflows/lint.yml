@@ -1,4 +1,4 @@
-name: lint
+name: console lint
 on:
   pull_request:
     paths:
