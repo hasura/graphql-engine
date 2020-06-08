@@ -43,8 +43,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
-                                                         mkSetCookieHeaders,
-                                                         userRoleHeader)
+                                                         mkSetCookieHeaders, userRoleHeader)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
@@ -142,8 +141,8 @@ getExecPlanPartial userInfo sc enableAL queryType req = do
     getGCtx :: C.GQLContext
     getGCtx =
       case Map.lookup roleName contextMap of
-        Nothing                                           -> defaultContext
-        Just gql   -> gql
+        Nothing  -> defaultContext
+        Just gql -> gql
         -- TODO FIXME implement backend-only field access
         {-
         Just (RoleContext defaultGCtx maybeBackendGCtx)   ->
@@ -206,7 +205,7 @@ getResolvedExecPlan
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   enableAL sc scVer queryType httpManager reqHeaders reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo)
-           opNameM queryStr planCache
+           opNameM queryStr queryType planCache
   let usrVars = _uiSession userInfo
   case planM of
     -- plans are only for queries and subscriptions
@@ -246,7 +245,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          queryTx <- EM.convertMutationSelectionSet gCtx (_uiSession userInfo) httpManager reqHeaders
+          queryTx <- EM.convertMutationSelectionSet gCtx userInfo httpManager reqHeaders
                      inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ MutationExecutionPlan $ queryTx

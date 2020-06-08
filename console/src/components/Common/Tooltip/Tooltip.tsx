@@ -2,7 +2,6 @@ import React from 'react';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import styles from './Tooltip.scss';
-
 const tooltipGen = (message: string) => {
   return <Tooltip id={message}>{message}</Tooltip>;
 };
@@ -28,5 +27,4 @@ const ToolTip: React.FC<TooltipProps> = ({
     )}
   </OverlayTrigger>
 );
-
 export default ToolTip;

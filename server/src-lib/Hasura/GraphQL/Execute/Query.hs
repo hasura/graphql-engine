@@ -37,9 +37,9 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.Session
 
 import qualified Hasura.RQL.DML.Select                  as DS
 
@@ -165,7 +165,7 @@ irToRootFieldPlan vars prepped = \case
   QDBPrimaryKey s  -> mkPGPlan (DS.selectQuerySQL DS.JASSingleObject) s
   QDBAggregation s ->
     let (annAggSel, aggRemoteJoins) = getRemoteJoinsAggregateSelect s
-    in PGPlan (DS.selectAggQuerySQL annAggSel) vars prepped aggRemoteJoins
+    in PGPlan (DS.selectAggregateQuerySQL annAggSel) vars prepped aggRemoteJoins
   where
     mkPGPlan f simpleSel =
       let (simpleSel',remoteJoins) = getRemoteJoins simpleSel
@@ -182,9 +182,9 @@ traverseQueryRootField f =
   where
     f' :: QueryDB a -> f (QueryDB b)
     f' = \case
-      QDBSimple s       -> QDBSimple      <$> DS.traverseAnnSimpleSel f s
-      QDBPrimaryKey s   -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSel f s
-      QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggSel f s
+      QDBSimple s       -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
+      QDBPrimaryKey s   -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
+      QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
 
 convertQuerySelSet
   :: forall m. (HasVersion, MonadError QErr m, MonadIO m)
@@ -265,9 +265,9 @@ convertQuerySelSet gqlContext userInfo manager reqHeaders fields varDefs varVals
       :: ActionQuery UnpreparedValue -> StateT PlanningSt m ActionQueryPlan
     convertActionQuery = \case
       AQQuery s -> (AQPQuery . fst) <$>
-        lift (resolveActionExecution s $ ActionExecContext manager reqHeaders usrVars)
+        lift (resolveActionExecution userInfo s $ ActionExecContext manager reqHeaders usrVars)
       AQAsync s -> AQPAsyncQuery <$>
-        DS.traverseAnnSimpleSel prepareWithPlan (resolveAsyncActionQuery userInfo s)
+        DS.traverseAnnSimpleSelect prepareWithPlan (resolveAsyncActionQuery userInfo s)
 
 -- use the existing plan and new variables to create a pg query
 queryOpFromPlan
@@ -341,3 +341,15 @@ mkGeneratedSqlMap resolved =
                 RRSql ps        -> Just ps
                 RRActionQuery _ -> Nothing
     in (alias, res)
+
+-- The GraphQL Query type
+data GraphQLQueryType
+  = QueryHasura
+  | QueryRelay
+  deriving (Show, Eq, Ord, Generic)
+instance Hashable GraphQLQueryType
+
+instance J.ToJSON GraphQLQueryType where
+  toJSON = \case
+    QueryHasura -> "hasura"
+    QueryRelay  -> "relay"

@@ -76,9 +76,9 @@ traverseAction f = \case
   RFRaw x -> pure $ RFRaw x
 
 data QueryDB v
-  = QDBSimple      (RQL.AnnSimpleSelG v)
-  | QDBPrimaryKey  (RQL.AnnSimpleSelG v)
-  | QDBAggregation (RQL.AnnAggSelG    v)
+  = QDBSimple      (RQL.AnnSimpleSelG       v)
+  | QDBPrimaryKey  (RQL.AnnSimpleSelG       v)
+  | QDBAggregation (RQL.AnnAggregateSelectG v)
 
 data ActionQuery v
   = AQQuery !(RQL.AnnActionExecution v)

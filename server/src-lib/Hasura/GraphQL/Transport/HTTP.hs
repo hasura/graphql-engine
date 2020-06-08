@@ -44,7 +44,7 @@ runGQ reqId userInfo reqHdrs queryType req = do
   (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
     E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer httpManager enableAL <- ask
     (telemCacheHit, execPlan) <- E.getResolvedExecPlan pgExecCtx planCache
-                userInfo sqlGenCtx enableAL sc scVer queryType httpManager reqHdrs req
+                                 userInfo sqlGenCtx enableAL sc scVer queryType httpManager reqHdrs req
     case execPlan of
       E.QueryExecutionPlan queryPlan -> do
         case queryPlan of
@@ -76,8 +76,8 @@ runGQ reqId userInfo reqHdrs queryType req = do
         return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
       E.GExPRemote rsi opDef  -> do
         let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
-                            | otherwise = Telem.Query
-        (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi opDef
+                           | otherwise = Telem.Query
+        (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi $ G._todType opDef
         return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
 -}
   let telemTimeIO = fromUnits telemTimeIO_DT

@@ -52,7 +52,7 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
         FIColumn columnInfo -> do
           let fieldName = pgiName columnInfo
           pure $ P.fieldOptional fieldName Nothing orderByOperator
-            <&> fmap (pure . mkOrderByItemG (RQL.AOCPG $ pgiColumn columnInfo)) . join
+            <&> fmap (pure . mkOrderByItemG (RQL.AOCColumn columnInfo)) . join
         FIRelationship relationshipInfo -> do
           let remoteTable = riRTable relationshipInfo
           fieldName <- MaybeT $ pure $ G.mkName $ relNameToTxt $ riName relationshipInfo
@@ -63,13 +63,13 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
               otherTableParser <- lift $ orderByExp remoteTable perms
               pure $ do
                 otherTableOrderBy <- join <$> P.fieldOptional fieldName Nothing (P.nullable otherTableParser)
-                pure $ fmap (map $ fmap $ RQL.AOCObj relationshipInfo newPerms) otherTableOrderBy
+                pure $ fmap (map $ fmap $ RQL.AOCObjectRelation relationshipInfo newPerms) otherTableOrderBy
             ArrRel -> do
               let aggregateFieldName = fieldName <> $$(G.litName "_aggregate")
               aggregationParser <- lift $ orderByAggregation remoteTable perms
               pure $ do
                 aggregationOrderBy <- join <$> P.fieldOptional aggregateFieldName Nothing (P.nullable aggregationParser)
-                pure $ fmap (map $ fmap $ RQL.AOCAgg relationshipInfo newPerms) aggregationOrderBy
+                pure $ fmap (map $ fmap $ RQL.AOCArrayAggregation relationshipInfo newPerms) aggregationOrderBy
         FIComputedField _ -> empty
         FIRemoteRelationship _ -> empty
 
@@ -84,7 +84,7 @@ orderByAggregation
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> SelPermInfo
-  -> m (Parser 'Input n [OrderByItemG RQL.AnnAggOrdBy])
+  -> m (Parser 'Input n [OrderByItemG RQL.AnnAggregateOrderBy])
 orderByAggregation table selectPermissions = do
   -- WIP NOTE
   -- there is heavy duplication between this and Select.tableAggregationFields
@@ -113,16 +113,16 @@ orderByAggregation table selectPermissions = do
       description = G.Description $ "order by aggregate values of table \"" <> table <<> "\""
   pure $ P.object objectName (Just description) aggFields
   where
-    mkField :: PGColumnInfo -> InputFieldsParser n (Maybe (PGCol, OrderInfo))
+    mkField :: PGColumnInfo -> InputFieldsParser n (Maybe (PGColumnInfo, OrderInfo))
     mkField columnInfo =
       P.fieldOptional (pgiName columnInfo) (pgiDescription columnInfo) orderByOperator
-        <&> fmap (pgiColumn columnInfo,) . join
+        <&> fmap (columnInfo,) . join
 
     parseOperator
       :: G.Name
       -> G.Name
-      -> InputFieldsParser n [(PGCol, OrderInfo)]
-      -> InputFieldsParser n (Maybe [OrderByItemG RQL.AnnAggOrdBy])
+      -> InputFieldsParser n [(PGColumnInfo, OrderInfo)]
+      -> InputFieldsParser n (Maybe [OrderByItemG RQL.AnnAggregateOrderBy])
     parseOperator operator tableName columns =
       let opText     = G.unName operator
           -- FIXME: isn't G.Name a Monoid?

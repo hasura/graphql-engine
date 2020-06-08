@@ -133,8 +133,8 @@ import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
-import           Hasura.SQL.Types
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -198,18 +198,18 @@ type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
 
 data SchemaCache
   = SchemaCache
-  { scTables           :: !TableCache
-  , scActions          :: !ActionCache
-  , scFunctions        :: !FunctionCache
-  , scRemoteSchemas    :: !RemoteSchemaMap
-  , scAllowlist        :: !(HS.HashSet GQLQuery)
-  , scGQLContext       :: !(HashMap RoleName GQLContext)
-  , scUnauthenticatedGQLContext :: !GQLContext
-  , scRelayContext     :: !(HashMap RoleName GQLContext)
+  { scTables                      :: !TableCache
+  , scActions                     :: !ActionCache
+  , scFunctions                   :: !FunctionCache
+  , scRemoteSchemas               :: !RemoteSchemaMap
+  , scAllowlist                   :: !(HS.HashSet GQLQuery)
+  , scGQLContext                  :: !(HashMap RoleName GQLContext)
+  , scUnauthenticatedGQLContext   :: !GQLContext
+  , scRelayContext                :: !(HashMap RoleName GQLContext)
   , scUnauthenticatedRelayContext :: !GQLContext
   -- , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
-  , scDepMap           :: !DepMap
-  , scInconsistentObjs :: ![InconsistentMetadata]
+  , scDepMap                      :: !DepMap
+  , scInconsistentObjs            :: ![InconsistentMetadata]
   }
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 

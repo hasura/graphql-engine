@@ -2,7 +2,6 @@
 
 ## Next release
 
-
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
@@ -97,7 +96,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 A new `seeds` command is introduced in CLI, this will allow managing seed migrations as SQL files
 
 #### Creating seed
-```                                                        
+```
 # create a new seed file and use editor to add SQL content
 hasura seed create new_table_seed
 

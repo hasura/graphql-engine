@@ -10,7 +10,6 @@ import           Hasura.SQL.Types
 import qualified Data.Text                      as T
 import qualified Hasura.SQL.DML                 as S
 
-
 traverseMutFld
   :: (Applicative f)
   => (a -> f b)
@@ -19,8 +18,7 @@ traverseMutFld
 traverseMutFld f = \case
   MCount    -> pure MCount
   MExp t    -> pure $ MExp t
-  MRet flds -> MRet <$> traverse (traverse (traverseAnnFld f)) flds
-
+  MRet flds -> MRet <$> traverse (traverse (traverseAnnField f)) flds
 
 traverseMutationOutput
   :: (Applicative f)
@@ -30,7 +28,7 @@ traverseMutationOutput f = \case
   MOutMultirowFields mutationFields ->
     MOutMultirowFields <$> traverse (traverse (traverseMutFld f)) mutationFields
   MOutSinglerowObject annFields ->
-    MOutSinglerowObject <$> traverseAnnFlds f annFields
+    MOutSinglerowObject <$> traverseAnnFields f annFields
 
 traverseMutFlds
   :: (Applicative f)
@@ -43,15 +41,15 @@ traverseMutFlds f =
 hasNestedFld :: MutationOutputG a -> Bool
 hasNestedFld = \case
   MOutMultirowFields flds -> any isNestedMutFld flds
-  MOutSinglerowObject annFlds -> any isNestedAnnFld annFlds
+  MOutSinglerowObject annFlds -> any isNestedAnnField annFlds
   where
     isNestedMutFld (_, mutFld) = case mutFld of
-      MRet annFlds -> any isNestedAnnFld annFlds
+      MRet annFlds -> any isNestedAnnField annFlds
       _            -> False
-    isNestedAnnFld (_, annFld) = case annFld of
-      FObj _ -> True
-      FArr _ -> True
-      _      -> False
+    isNestedAnnField (_, annFld) = case annFld of
+      AFObjectRelation _ -> True
+      AFArrayRelation _  -> True
+      _                  -> False
 
 pgColsFromMutFld :: MutFld -> [(PGCol, PGColumnType)]
 pgColsFromMutFld = \case
@@ -59,16 +57,16 @@ pgColsFromMutFld = \case
   MExp _ -> []
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    FCol (AnnColField (PGColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
-    _                                                       -> Nothing
+    AFColumn (AnnColumnField (PGColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
+    _                                                              -> Nothing
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColumnType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 
-pgColsToSelFlds :: [PGColumnInfo] -> [(FieldName, AnnFld)]
+pgColsToSelFlds :: [PGColumnInfo] -> [(FieldName, AnnField)]
 pgColsToSelFlds cols =
   flip map cols $
-  \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, mkAnnColField pgColInfo Nothing)
+  \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing)
 
 mkDefaultMutFlds :: Maybe [PGColumnInfo] -> MutationOutput
 mkDefaultMutFlds = MOutMultirowFields . \case
@@ -95,7 +93,7 @@ mkMutFldExp qt preCalAffRows strfyNum = \case
     let tabFrom = FromIden cteAlias
         tabPerm = TablePerm annBoolExpTrue Nothing
     in S.SESelect $ mkSQLSelect JASMultipleRows $
-       AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
+       AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
   where
     cteAlias = qualTableToAliasIden qt
 
@@ -117,7 +115,7 @@ mkMutationOutputExp qt preCalAffRows cte mutOutput strfyNum =
         let tabFrom = FromIden cteAlias
             tabPerm = TablePerm annBoolExpTrue Nothing
         in S.SESelect $ mkSQLSelect JASSingleObject $
-           AnnSelG annFlds tabFrom tabPerm noTableArgs strfyNum
+           AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum
 
 
 checkRetCols

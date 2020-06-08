@@ -67,37 +67,38 @@ convertMutationRootField
                , MonadIO m
                , MonadError QErr m
                )
-  => SessionVariables
+  => UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
   -> Bool
   -> MutationRootField UnpreparedValue
   -> m (Either (LazyRespTx, HTTP.ResponseHeaders) RemoteField)
-convertMutationRootField usrVars manager reqHeaders stringifyNum = \case
-  RFDB (MDBInsert s)  -> noResponseHeaders $ convertInsert usrVars s stringifyNum
-  RFDB (MDBUpdate s)  -> noResponseHeaders $ convertUpdate usrVars s stringifyNum
-  RFDB (MDBDelete s)  -> noResponseHeaders $ convertDelete usrVars s stringifyNum
+convertMutationRootField userInfo manager reqHeaders stringifyNum = \case
+  RFDB (MDBInsert s)  -> noResponseHeaders $ convertInsert userSession s stringifyNum
+  RFDB (MDBUpdate s)  -> noResponseHeaders $ convertUpdate userSession s stringifyNum
+  RFDB (MDBDelete s)  -> noResponseHeaders $ convertDelete userSession s stringifyNum
   RFRemote remote     -> pure $ Right remote
-  RFAction (AMSync s) -> Left <$> first liftTx <$> resolveActionExecution s actionExecContext
-  RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders usrVars
+  RFAction (AMSync s) -> Left <$> first liftTx <$> resolveActionExecution userInfo s actionExecContext
+  RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders userSession
   RFRaw s             -> noResponseHeaders $ pure $ encJFromJValue s
   where
     noResponseHeaders :: RespTx -> m (Either (LazyRespTx, HTTP.ResponseHeaders) RemoteField)
     noResponseHeaders rTx = pure $ Left (liftTx rTx, [])
 
-    actionExecContext = ActionExecContext manager reqHeaders usrVars
+    userSession = _uiSession userInfo
+    actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
 
 convertMutationSelectionSet
   :: (HasVersion, MonadIO m, MonadError QErr m)
   => GQLContext
-  -> SessionVariables
+  -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> m (ExecutionPlan (LazyRespTx, HTTP.ResponseHeaders) RemoteCall (G.Name, J.Value))
-convertMutationSelectionSet gqlContext usrVars manager reqHeaders fields varDefs varValsM = do
+convertMutationSelectionSet gqlContext userInfo manager reqHeaders fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
     :: (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue), QueryReusability)
@@ -106,7 +107,7 @@ convertMutationSelectionSet gqlContext usrVars manager reqHeaders fields varDefs
 
   -- Transform the RQL AST into a prepared SQL query
   -- TODO pass the correct stringifyNum somewhere rather than True
-  txs <- for unpreparedQueries $ convertMutationRootField usrVars manager reqHeaders True
+  txs <- for unpreparedQueries $ convertMutationRootField userInfo manager reqHeaders True
   let txList = OMap.toList txs
   case (mapMaybe takeTx txList, mapMaybe takeRemote txList) of
     (dbPlans, []) -> do
@@ -148,9 +149,9 @@ convertMutationSelectionSet gqlContext usrVars manager reqHeaders fields varDefs
       :: (G.Name, Either (LazyRespTx, HTTP.ResponseHeaders) RemoteField)
       -> Maybe (G.Name, (LazyRespTx, HTTP.ResponseHeaders))
     takeTx (name, Left tx) = Just (name, tx)
-    takeTx _ = Nothing
+    takeTx _               = Nothing
     takeRemote
       :: (G.Name, Either (LazyRespTx, HTTP.ResponseHeaders) RemoteField)
       -> Maybe (G.Name, RemoteField)
     takeRemote (name, Right remote) = Just (name, remote)
-    takeRemote _ = Nothing
+    takeRemote _                    = Nothing

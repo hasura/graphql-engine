@@ -8,34 +8,36 @@ import           Data.Has
 import           Hasura.EncJSON
 import           Hasura.Prelude
 
-import qualified Data.Aeson                        as J
-import qualified Data.Aeson.Casing                 as J
-import qualified Data.Aeson.TH                     as J
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashMap.Strict.InsOrd        as OMap
-import qualified Data.Sequence                     as Seq
-import qualified Data.Text                         as T
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Data.Aeson                           as J
+import qualified Data.Aeson.Casing                    as J
+import qualified Data.Aeson.TH                        as J
+import qualified Data.HashMap.Strict                  as Map
+import qualified Data.HashMap.Strict.InsOrd           as OMap
+import qualified Data.Sequence                        as Seq
+import qualified Data.Text                            as T
+import qualified Language.GraphQL.Draft.Syntax        as G
 
-import qualified Database.PG.Query                 as Q
-import qualified Hasura.RQL.DML.Insert             as RI
-import qualified Hasura.RQL.DML.Returning          as RR
+import qualified Database.PG.Query                    as Q
+import qualified Hasura.RQL.DML.Insert                as RI
+import qualified Hasura.RQL.DML.Returning             as RR
 
-import qualified Hasura.SQL.DML                    as S
+import qualified Hasura.SQL.DML                       as S
 
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Resolve.Select
-import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Insert             (insertOrUpdateCheckExpr)
-import           Hasura.RQL.DML.Internal           (convAnnBoolExpPartialSQL, convPartialSQLExp,
-                                                    dmlTxErrorHandler, sessVarFromCurrentSetting)
+import           Hasura.RQL.DML.Insert                (insertOrUpdateCheckExpr)
+import           Hasura.RQL.DML.Internal              (convAnnBoolExpPartialSQL, convPartialSQLExp,
+                                                       sessVarFromCurrentSetting)
 import           Hasura.RQL.DML.Mutation
-import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
+import           Hasura.RQL.DML.RemoteJoin
+import           Hasura.RQL.GBoolExp                  (toSQLBoolExp)
 import           Hasura.RQL.Types
+import           Hasura.Server.Version                (HasVersion)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -473,7 +475,8 @@ convertInsert
   -> Field -- the mutation field
   -> m RespTx
 convertInsert role tn fld = prefixErrPath fld $ do
-  mutOutputUnres <- RR.MOutMultirowFields <$> resolveMutationFields (_fType fld) (_fSelSet fld)
+  selSet <- asObjectSelectionSet $ _fSelSet fld
+  mutOutputUnres <- RR.MOutMultirowFields <$> resolveMutationFields (_fType fld) selSet
   mutOutputRes <- RR.traverseMutationOutput resolveValTxt mutOutputUnres
   annVals <- withArg arguments "objects" asArray
   -- if insert input objects is empty array then
@@ -508,7 +511,8 @@ convertInsertOne
   -> Field -- the mutation field
   -> m RespTx
 convertInsertOne role qt field = prefixErrPath field $ do
-  tableSelFields <- processTableSelectionSet (_fType field) $ _fSelSet field
+  selSet <- asObjectSelectionSet $ _fSelSet field
+  tableSelFields <- processTableSelectionSet (_fType field) selSet
   let mutationOutputUnresolved = RR.MOutSinglerowObject tableSelFields
   mutationOutputResolved <- RR.traverseMutationOutput resolveValTxt mutationOutputUnresolved
   annInputObj <- withArg arguments "object" asObject

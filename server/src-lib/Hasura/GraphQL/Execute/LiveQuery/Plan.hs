@@ -29,12 +29,13 @@ import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.Extended                    as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.Sequence                          as Seq
 import qualified Data.Text                              as T
 import qualified Data.UUID.V4                           as UUID
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.Sequence                          as Seq
 
 -- remove these when array encoding is merged
 import qualified Database.PG.Query.PTI                  as PTI
@@ -43,24 +44,25 @@ import qualified PostgreSQL.Binary.Encoding             as PE
 import           Control.Lens
 import           Data.UUID                              (UUID)
 
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Parser.Schema           as PS
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.RQL.DML.Select                  as DS
 import qualified Hasura.SQL.DML                         as S
 --import qualified Hasura.GraphQL.Execute.Query           as GEQ
 
 import           Hasura.Db
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Parser.Column
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Query
-import           Hasura.RQL.Types
+import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Resolve.Action
+import           Hasura.RQL.Types
+import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.GraphQL.Context
-import           Hasura.Session
 
 -- -------------------------------------------------------------------------------------------------
 -- Multiplexed queries
@@ -72,7 +74,7 @@ toSQLSelect :: SubscriptionRootFieldResolved -> S.Select
 toSQLSelect = \case
   RFDB (QDBPrimaryKey s)  -> DS.mkSQLSelect DS.JASSingleObject s
   RFDB (QDBSimple s)      -> DS.mkSQLSelect DS.JASMultipleRows s
-  RFDB (QDBAggregation s) -> DS.mkAggSelect s
+  RFDB (QDBAggregation s) -> DS.mkAggregateSelect s
   RFAction s              -> DS.mkSQLSelect DS.JASSingleObject s
   -- QRFActionSelect s -> DS.mkSQLSelect DS.JASSingleObject s
   -- QRFActionExecuteObject s -> DS.mkSQLSelect DS.JASSingleObject s
@@ -279,6 +281,7 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadIO m
+     , HasVersion
      )
   => PGExecCtx
   -> UserInfo
@@ -310,7 +313,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
   (preparedAST, (queryVariableValues, querySyntheticVariableValues)) <- flip runStateT (mempty, Seq.empty) $
     for unpreparedAST \unpreparedQuery -> do
     traverseQueryRootField resolveMultiplexedValue unpreparedQuery
-    >>= traverseAction (DS.traverseAnnSimpleSel resolveMultiplexedValue . resolveAsyncActionQuery userInfo)
+    >>= traverseAction (DS.traverseAnnSimpleSelect resolveMultiplexedValue . resolveAsyncActionQuery userInfo)
 
 
 

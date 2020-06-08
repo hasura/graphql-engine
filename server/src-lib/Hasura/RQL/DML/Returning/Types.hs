@@ -12,7 +12,7 @@ import           Hasura.RQL.DML.Select.Types
 data MutFldG v
   = MCount
   | MExp !T.Text
-  | MRet !(AnnFldsG v)
+  | MRet !(AnnFieldsG v)
   deriving (Show, Eq)
 
 type MutFld = MutFldG S.SQLExp
@@ -21,7 +21,7 @@ type MutFldsG v = Fields (MutFldG v)
 
 data MutationOutputG v
   = MOutMultirowFields !(MutFldsG v)
-  | MOutSinglerowObject !(AnnFldsG v)
+  | MOutSinglerowObject !(AnnFieldsG v)
   deriving (Show, Eq)
 
 type MutationOutput = MutationOutputG S.SQLExp

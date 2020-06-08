@@ -143,6 +143,7 @@ data RelInfo
   } deriving (Show, Eq, Generic)
 instance NFData RelInfo
 instance Cacheable RelInfo
+instance Hashable RelInfo
 $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName
@@ -150,6 +151,7 @@ newtype FieldName
   deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
            , FromJSONKey, ToJSONKey, Lift, Data, Generic
            , IsString, Arbitrary, NFData, Cacheable
+           , Semigroup
            )
 
 instance IsIden FieldName where
@@ -212,7 +214,7 @@ data PrimaryKey a
   = PrimaryKey
   { _pkConstraint :: !Constraint
   , _pkColumns    :: !(NESeq a)
-  } deriving (Show, Eq, Generic)
+  } deriving (Show, Eq, Generic, Foldable)
 instance (NFData a) => NFData (PrimaryKey a)
 instance (Cacheable a) => Cacheable (PrimaryKey a)
 $(makeLenses ''PrimaryKey)

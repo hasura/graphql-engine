@@ -12,23 +12,20 @@ import           Hasura.Prelude
 
 import           Control.Lens
 import           Data.List                              (nub)
-import           Data.Validation
 import           Data.Scientific                        (toBoundedInteger, toRealFloat)
+import           Data.Validation
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.GraphQL.Utils
-import           Hasura.GraphQL.Parser
-import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
-import           Hasura.SQL.Types                       ((<<>))
 import           Hasura.Session
+import           Hasura.SQL.Types                       ((<<>))
 
 import qualified Hasura.SQL.DML                         as S
 
@@ -45,8 +42,6 @@ import qualified Language.GraphQL.Draft.Printer.Text    as G
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
-import qualified Data.ByteString.Lazy                   as BL
-import qualified Network.Wreq                           as Wreq
 
 -- | Executes given query and fetch response JSON from Postgres. Substitutes remote relationship fields.
 executeQueryWithRemoteJoins
@@ -106,7 +101,7 @@ pathToAlias path counter = do
   parseGraphQLName $ T.intercalate "_" (map getFieldNameTxt $ unFieldPath path)
                  <> "__" <> (T.pack . show . unCounter) counter
 
--- | A 'RemoteJoin' represents the context of remote relationship to be extracted from 'AnnFldG's.
+-- | A 'RemoteJoin' represents the context of remote relationship to be extracted from 'AnnFieldG's.
 data RemoteJoin
   = RemoteJoin
   { _rjName          :: !FieldName -- ^ The remote join field name.
@@ -139,14 +134,14 @@ transformSelect path sel = do
   pure sel{_asnFields = transformedFields}
 
 -- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
-getRemoteJoinsAggregateSelect :: AnnAggSel -> (AnnAggSel, Maybe RemoteJoins)
+getRemoteJoinsAggregateSelect :: AnnAggregateSelect -> (AnnAggregateSelect, Maybe RemoteJoins)
 getRemoteJoinsAggregateSelect =
   second mapToNonEmpty . flip runState mempty . transformAggregateSelect mempty
 
 transformAggregateSelect
   :: FieldPath
-  -> AnnAggSel
-  -> State RemoteJoinMap AnnAggSel
+  -> AnnAggregateSelect
+  -> State RemoteJoinMap AnnAggregateSelect
 transformAggregateSelect path sel = do
   let aggFields = _asnFields sel
   transformedFields <- forM aggFields $ \(fieldName, aggField) ->
@@ -156,32 +151,32 @@ transformAggregateSelect path sel = do
       TAFExp t           -> pure $ TAFExp t
   pure sel{_asnFields = transformedFields}
 
--- -- | Traverse through @'ConnectionSelect' and collect remote join fields (if any).
--- getRemoteJoinsConnectionSelect :: ConnectionSelect S.SQLExp -> (ConnectionSelect S.SQLExp, Maybe RemoteJoins)
--- getRemoteJoinsConnectionSelect =
---   second mapToNonEmpty . flip runState mempty . transformConnectionSelect mempty
+-- | Traverse through @'ConnectionSelect' and collect remote join fields (if any).
+getRemoteJoinsConnectionSelect :: ConnectionSelect S.SQLExp -> (ConnectionSelect S.SQLExp, Maybe RemoteJoins)
+getRemoteJoinsConnectionSelect =
+  second mapToNonEmpty . flip runState mempty . transformConnectionSelect mempty
 
--- transformConnectionSelect
---   :: FieldPath
---   -> ConnectionSelect S.SQLExp
---   -> State RemoteJoinMap (ConnectionSelect S.SQLExp)
--- transformConnectionSelect path ConnectionSelect{..} = do
---   let connectionFields = _asnFields _csSelect
---   transformedFields <- forM connectionFields $ \(fieldName, field) ->
---     (fieldName,) <$> case field of
---       ConnectionTypename t -> pure $ ConnectionTypename t
---       ConnectionPageInfo p -> pure $ ConnectionPageInfo p
---       ConnectionEdges edges -> ConnectionEdges <$> transformEdges (appendPath fieldName path) edges
---   let select = _csSelect{_asnFields = transformedFields}
---   pure $ ConnectionSelect _csPrimaryKeyColumns _csSplit _csSlice select
---   where
---     transformEdges edgePath edgeFields =
---       forM edgeFields $ \(fieldName, edgeField) ->
---       (fieldName,) <$> case edgeField of
---         EdgeTypename t -> pure $ EdgeTypename t
---         EdgeCursor -> pure EdgeCursor
---         EdgeNode annFields ->
---           EdgeNode <$> transformAnnFields (appendPath fieldName edgePath) annFields
+transformConnectionSelect
+  :: FieldPath
+  -> ConnectionSelect S.SQLExp
+  -> State RemoteJoinMap (ConnectionSelect S.SQLExp)
+transformConnectionSelect path ConnectionSelect{..} = do
+  let connectionFields = _asnFields _csSelect
+  transformedFields <- forM connectionFields $ \(fieldName, field) ->
+    (fieldName,) <$> case field of
+      ConnectionTypename t -> pure $ ConnectionTypename t
+      ConnectionPageInfo p -> pure $ ConnectionPageInfo p
+      ConnectionEdges edges -> ConnectionEdges <$> transformEdges (appendPath fieldName path) edges
+  let select = _csSelect{_asnFields = transformedFields}
+  pure $ ConnectionSelect _csPrimaryKeyColumns _csSplit _csSlice select
+  where
+    transformEdges edgePath edgeFields =
+      forM edgeFields $ \(fieldName, edgeField) ->
+      (fieldName,) <$> case edgeField of
+        EdgeTypename t -> pure $ EdgeTypename t
+        EdgeCursor -> pure EdgeCursor
+        EdgeNode annFields ->
+          EdgeNode <$> transformAnnFields (appendPath fieldName edgePath) annFields
 
 -- | Traverse through 'MutationOutput' and collect remote join fields (if any)
 getRemoteJoinsMutationOutput :: MutationOutput -> (MutationOutput, Maybe RemoteJoins)
@@ -203,10 +198,10 @@ getRemoteJoinsMutationOutput =
             MExp t         -> pure $ MExp t
             MRet annFields -> MRet <$> transformAnnFields fieldPath annFields
 
-transformAnnFields :: FieldPath -> AnnFlds -> State RemoteJoinMap AnnFlds
+transformAnnFields :: FieldPath -> AnnFields -> State RemoteJoinMap AnnFields
 transformAnnFields path fields = do
-  let pgColumnFields = map fst $ getFields _FCol fields
-      remoteSelects = getFields _FRemote fields
+  let pgColumnFields = map fst $ getFields _AFColumn fields
+      remoteSelects = getFields _AFRemote fields
       remoteJoins = flip map remoteSelects $ \(fieldName, remoteSelect) ->
         let RemoteSelect argsMap selSet hasuraColumns remoteFields rsi = remoteSelect
             hasuraColumnL = toList hasuraColumns
@@ -217,44 +212,46 @@ transformAnnFields path fields = do
   transformedFields <- forM fields $ \(fieldName, field') -> do
     let fieldPath = appendPath fieldName path
     (fieldName,) <$> case field' of
-      FCol c -> pure $ FCol c
-      FObj annRel ->
-        FObj <$> transformAnnRelation fieldPath annRel
-      FArr (ASSimple annRel) ->
-        FArr . ASSimple <$> transformAnnRelation fieldPath annRel
-      FArr (ASAgg aggRel) ->
-        FArr . ASAgg <$> transformAnnAggregateRelation fieldPath aggRel
-      -- AFArrayRelation (ASConnection annRel) ->
-      --   AFArrayRelation . ASConnection <$> transformArrayConnection fieldPath annRel
-      FComputedField computedField ->
-        FComputedField <$> case computedField of
+      AFNodeId qt pkeys -> pure $ AFNodeId qt pkeys
+      AFColumn c -> pure $ AFColumn c
+      AFObjectRelation annRel ->
+        AFObjectRelation <$> transformAnnRelation fieldPath annRel
+      AFArrayRelation (ASSimple annRel) ->
+        AFArrayRelation . ASSimple <$> transformAnnRelation fieldPath annRel
+      AFArrayRelation (ASAggregate aggRel) ->
+        AFArrayRelation . ASAggregate <$> transformAnnAggregateRelation fieldPath aggRel
+      AFArrayRelation (ASConnection annRel) ->
+        AFArrayRelation . ASConnection <$> transformArrayConnection fieldPath annRel
+      AFComputedField computedField ->
+        AFComputedField <$> case computedField of
           CFSScalar _         -> pure computedField
           CFSTable jas annSel -> CFSTable jas <$> transformSelect fieldPath annSel
-      FRemote rs -> pure $ FRemote rs
+      AFRemote rs -> pure $ AFRemote rs
+      AFExpression t     -> pure $ AFExpression t
 
   case NE.nonEmpty remoteJoins of
     Nothing -> pure transformedFields
     Just nonEmptyRemoteJoins -> do
-      let phantomColumns = map (\ci -> (fromPGCol $ pgiColumn ci, FCol $ AnnColField ci False Nothing)) $
+      let phantomColumns = map (\ci -> (fromPGCol $ pgiColumn ci, AFColumn $ AnnColumnField ci False Nothing)) $
                            concatMap _rjPhantomFields remoteJoins
       modify (Map.insert path nonEmptyRemoteJoins)
       pure $ transformedFields <> phantomColumns
     where
       getFields f = mapMaybe (sequence . second (^? f))
       transformAnnRelation fieldPath annRel = do
-        let annSel = aarAnnSel annRel
+        let annSel = aarAnnSelect annRel
         transformedSel <- transformSelect fieldPath annSel
-        pure annRel{aarAnnSel = transformedSel}
+        pure annRel{aarAnnSelect = transformedSel}
 
       transformAnnAggregateRelation fieldPath annRel = do
-        let annSel = aarAnnSel annRel
+        let annSel = aarAnnSelect annRel
         transformedSel <- transformAggregateSelect fieldPath annSel
-        pure annRel{aarAnnSel = transformedSel}
+        pure annRel{aarAnnSelect = transformedSel}
 
-      -- transformArrayConnection fieldPath annRel = do
-      --   let connectionSelect = aarAnnSelect annRel
-      --   transformedConnectionSelect <- transformConnectionSelect fieldPath connectionSelect
-      --   pure annRel{aarAnnSelect = transformedConnectionSelect}
+      transformArrayConnection fieldPath annRel = do
+        let connectionSelect = aarAnnSelect annRel
+        transformedConnectionSelect <- transformConnectionSelect fieldPath connectionSelect
+        pure annRel{aarAnnSelect = transformedConnectionSelect}
 
 type CompositeObject a = OMap.InsOrdHashMap Text (CompositeValue a)
 
@@ -338,7 +335,7 @@ traverseQueryResponseJSON rjm =
                   A.Number val ->
                     case (toBoundedInteger val) of
                       Just intVal -> pure $  G.VInt intVal
-                      Nothing -> pure $  G.VFloat $ toRealFloat val
+                      Nothing     -> pure $  G.VFloat $ toRealFloat val
                   A.Array vals -> G.VList <$> traverse go (toList vals)
                   A.Object vals ->
                     G.VObject . Map.fromList <$> for (Map.toList vals) \(key, val) -> do

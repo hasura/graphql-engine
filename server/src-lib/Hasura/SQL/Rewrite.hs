@@ -1,5 +1,6 @@
 module Hasura.SQL.Rewrite
   ( prefixNumToAliases
+  , prefixNumToAliasesSelectWith
   ) where
 
 import qualified Data.HashMap.Strict as Map
@@ -19,6 +20,11 @@ https://www.postgresql.org/docs/12/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIER
 prefixNumToAliases :: S.Select -> S.Select
 prefixNumToAliases s =
   uSelect s `evalState` UniqSt 0 Map.empty
+
+prefixNumToAliasesSelectWith
+  :: S.SelectWithG S.Select -> S.SelectWithG S.Select
+prefixNumToAliasesSelectWith s =
+  uSelectWith s `evalState` UniqSt 0 Map.empty
 
 type Rewrite a = State a
 
@@ -55,6 +61,12 @@ restoringIdens action = do
   -- restore the idens to before the action
   modify' $ \s -> s { _uqIdens = idens }
   return res
+
+uSelectWith :: S.SelectWithG S.Select -> Uniq (S.SelectWithG S.Select)
+uSelectWith (S.SelectWith ctes baseSelect) =
+  S.SelectWith
+    <$> forM ctes (\(als, sel) -> (als,) <$> restoringIdens (uSelect sel))
+    <*> uSelect baseSelect
 
 uSelect :: S.Select -> Uniq S.Select
 uSelect sel = do
@@ -113,6 +125,10 @@ uFromItem fromItem = case fromItem of
     newSel <- restoringIdens $ uSelect sel
     newAls <- addAlias al
     return $ S.FISelect isLateral newSel newAls
+  S.FISelectWith isLateral selectWith al -> do
+    newSelectWith <- uSelectWith selectWith
+    newAls <- addAlias al
+    return $ S.FISelectWith isLateral newSelectWith newAls
   S.FIValues (S.ValuesExp tups) als mCols -> do
     newValExp <- fmap S.ValuesExp $
                  forM tups $ \(S.TupleExp ts) ->
@@ -196,8 +212,10 @@ uSqlExp = restoringIdens . \case
     S.SEExcluded <$> return t
   S.SEArray l                   ->
     S.SEArray <$> mapM uSqlExp l
+  S.SEArrayIndex arrayExp indexExp ->
+    S.SEArrayIndex <$> uSqlExp arrayExp <*> uSqlExp indexExp
   S.SETuple (S.TupleExp l)      ->
-    S.SEArray <$> mapM uSqlExp l
+    S.SETuple . S.TupleExp <$> mapM uSqlExp l
   S.SECount cty                 -> return $ S.SECount cty
   S.SENamedArg arg val          -> S.SENamedArg arg <$> uSqlExp val
   S.SEFunction funcExp          -> S.SEFunction <$> uFunctionExp funcExp

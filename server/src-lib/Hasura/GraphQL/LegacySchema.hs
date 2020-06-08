@@ -236,7 +236,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
         in case riType relInfo of
           ObjRel -> [relFld]
           ArrRel -> bool [relFld] [relFld, aggRelFld] allowAgg
-      SFComputedField cf -> pure
+      SAFComputedField cf -> pure
         ( (ty, mkComputedFieldName $ _cfName cf)
         , RFComputedField cf
         )

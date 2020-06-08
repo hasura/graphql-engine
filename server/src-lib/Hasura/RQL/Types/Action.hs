@@ -55,9 +55,9 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Permission
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax    (Lift)
-import           Hasura.Session
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
@@ -273,7 +273,7 @@ data AnnActionExecution v
   = AnnActionExecution
   { _aaeName                 :: !ActionName
   , _aaeOutputType           :: !GraphQLType -- ^ output type
-  , _aaeFields               :: !(AnnFldsG v) -- ^ output selection
+  , _aaeFields               :: !(AnnFieldsG v) -- ^ output selection
   , _aaePayload              :: !J.Value -- ^ jsonified input arguments
   , _aaeOutputFields         :: !ActionOutputFields
   -- ^ to validate the response fields from webhook
@@ -292,7 +292,7 @@ data AnnActionMutationAsync
 
 data AsyncActionQueryFieldG v
   = AsyncTypename !Text
-  | AsyncOutput !(AnnFldsG v)
+  | AsyncOutput !(AnnFieldsG v)
   | AsyncId
   | AsyncCreatedAt
   | AsyncErrors

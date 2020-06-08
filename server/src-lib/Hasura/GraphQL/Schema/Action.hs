@@ -132,7 +132,7 @@ actionIdParser =
 actionOutputFields
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => AnnotatedObjectType
-  -> MaybeT m (Parser 'Output n (RQL.AnnFldsG UnpreparedValue))
+  -> MaybeT m (Parser 'Output n (RQL.AnnFieldsG UnpreparedValue))
 actionOutputFields outputObject = do
   let scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
   relationshipFields <- forM (_otdRelationships outputObject) $ traverse relationshipFieldParser
@@ -141,11 +141,11 @@ actionOutputFields outputObject = do
       outputTypeName = unObjectTypeName $ _otdName outputObject
       outputTypeDescription = _otdDescription outputObject
   pure $ P.selectionSet outputTypeName outputTypeDescription allFieldParsers
-         <&> parsedSelectionsToFields RQL.FExp
+         <&> parsedSelectionsToFields RQL.AFExpression
   where
     scalarOrEnumFieldParser
       :: ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType)
-      -> FieldParser n (RQL.AnnFldG UnpreparedValue)
+      -> FieldParser n (RQL.AnnFieldG UnpreparedValue)
     scalarOrEnumFieldParser (ObjectFieldDefinition name _ description ty) =
       let (gType, objectFieldType) = ty
           fieldName = unObjectFieldName name
@@ -157,11 +157,11 @@ actionOutputFields outputObject = do
             AOFTEnum def   -> customEnumParser def
       in bool P.nonNullableField id (G.isNullable gType) $
          P.selection_ (unObjectFieldName name) description fieldParser
-         $> RQL.mkAnnColField pgColumnInfo Nothing
+         $> RQL.mkAnnColumnField pgColumnInfo Nothing
 
     relationshipFieldParser
       :: TypeRelationship TableInfo PGColumnInfo
-      -> MaybeT m (FieldParser n (RQL.AnnFldG UnpreparedValue))
+      -> MaybeT m (FieldParser n (RQL.AnnFieldG UnpreparedValue))
     relationshipFieldParser typeRelationship = do
       let TypeRelationship relName relType tableInfo fieldMapping = typeRelationship
           tableName = _tciName $ _tiCoreInfo tableInfo
@@ -175,10 +175,10 @@ actionOutputFields outputObject = do
               [ (unsafePGCol $ G.unName $ unObjectFieldName k, pgiColumn v)
               | (k, v) <- Map.toList fieldMapping
               ]
-            annotatedRelationship = RQL.AnnRelG tableRelName columnMapping selectExp
+            annotatedRelationship = RQL.AnnRelationSelectG tableRelName columnMapping selectExp
         in case relType of
-             ObjRel -> RQL.FObj annotatedRelationship
-             ArrRel -> RQL.FArr $ RQL.ASSimple annotatedRelationship
+             ObjRel -> RQL.AFObjectRelation annotatedRelationship
+             ArrRel -> RQL.AFArrayRelation $ RQL.ASSimple annotatedRelationship
 
 mkDefinitionList :: AnnotatedObjectType -> [(PGCol, PGScalarType)]
 mkDefinitionList annotatedOutputType =

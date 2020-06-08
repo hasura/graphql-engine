@@ -233,6 +233,7 @@ library
                      , ghc-heap-view
 
                      , directory
+                     , semigroups >= 0.19.1
 
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans

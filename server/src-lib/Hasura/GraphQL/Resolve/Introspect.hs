@@ -6,17 +6,19 @@ module Hasura.GraphQL.Resolve.Introspect
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                         as J
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.HashSet                       as Set
-import qualified Data.Text                          as T
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Data.Aeson                           as J
+import qualified Data.HashMap.Strict                  as Map
+import qualified Data.HashSet                         as Set
+import qualified Data.Text                            as T
+import qualified Hasura.SQL.Types                     as S
+import qualified Hasura.SQL.Value                     as S
+import qualified Language.GraphQL.Draft.Syntax        as G
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Validate.Context
-import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 
@@ -35,14 +37,15 @@ instance J.ToJSON TypeKind where
   toJSON = J.toJSON . T.pack . drop 2 . show
 
 withSubFields
-  :: (Monad m)
-  => SelSet
+  :: (MonadError QErr m)
+  => SelectionSet
   -> (Field -> m J.Value)
   -> m J.Object
-withSubFields selSet fn =
-  fmap Map.fromList $ forM (toList selSet) $ \fld -> do
-  val <- fn fld
-  return (G.unName $ G.unAlias $ _fAlias fld, val)
+withSubFields selSet fn = do
+  objectSelectionSet <- asObjectSelectionSet selSet
+  Map.fromList <$> traverseObjectSelectionSet objectSelectionSet fn
+  -- val <- fn fld
+  -- return (G.unName $ G.unAlias $ _fAlias fld, val)
 
 namedTyToTxt :: G.NamedType -> Text
 namedTyToTxt = G.unName . G.unNamedType
@@ -101,9 +104,9 @@ notBuiltinFld f =
 
 getImplTypes :: (MonadReader t m, Has TypeMap t) => AsObjType -> m [ObjTyInfo]
 getImplTypes aot = do
-   tyInfo :: TypeMap <- asks getter
+   tyInfo <- asks getter
    return $ sortOn _otiName $
-     Map.elems $ getPossibleObjTypes' tyInfo aot
+     Map.elems $ getPossibleObjTypes tyInfo aot
 
 -- 4.5.2.3
 unionR
@@ -139,19 +142,24 @@ ifaceR'
   => IFaceTyInfo
   -> Field
   -> m J.Object
-ifaceR' i@(IFaceTyInfo descM n flds) fld =
+ifaceR' ifaceTyInfo fld = do
+  dummyReadIncludeDeprecated fld
   withSubFields (_fSelSet fld) $ \subFld ->
-  case _fName subFld of
-    "__typename"    -> retJT "__Type"
-    "kind"          -> retJ TKINTERFACE
-    "name"          -> retJ $ namedTyToTxt n
-    "description"   -> retJ $ fmap G.unDescription descM
-    "fields"        -> fmap J.toJSON $ mapM (`fieldR` subFld) $
-                      sortOn _fiName $
-                      filter notBuiltinFld $ Map.elems flds
-    "possibleTypes" -> fmap J.toJSON $ mapM (`objectTypeR` subFld)
-                       =<< getImplTypes (AOTIFace i)
-    _               -> return J.Null
+    case _fName subFld of
+      "__typename"    -> retJT "__Type"
+      "kind"          -> retJ TKINTERFACE
+      "name"          -> retJ $ namedTyToTxt name
+      "description"   -> retJ $ fmap G.unDescription maybeDescription
+      "fields"        -> fmap J.toJSON $ mapM (`fieldR` subFld) $
+                        sortOn _fiName $
+                        filter notBuiltinFld $ Map.elems fields
+      "possibleTypes" -> fmap J.toJSON $ mapM (`objectTypeR` subFld)
+                         =<< getImplTypes (AOTIFace ifaceTyInfo)
+      _               -> return J.Null
+  where
+    maybeDescription = _ifDesc ifaceTyInfo
+    name = _ifName ifaceTyInfo
+    fields = _ifFields ifaceTyInfo
 
 -- 4.5.2.5
 enumTypeR
@@ -161,14 +169,64 @@ enumTypeR
   -> m J.Object
 enumTypeR (EnumTyInfo descM n vals _) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
-  case _fName subFld of
-    "__typename"  -> retJT "__Type"
-    "kind"        -> retJ TKENUM
-    "name"        -> retJ $ namedTyToTxt n
-    "description" -> retJ $ fmap G.unDescription descM
-    "enumValues"  -> fmap J.toJSON $ mapM (enumValueR subFld) $
-                     sortOn _eviVal $ Map.elems (normalizeEnumValues vals)
-    _             -> return J.Null
+    case _fName subFld of
+      "__typename"  -> retJT "__Type"
+      "kind"        -> retJ TKENUM
+      "name"        -> retJ $ namedTyToTxt n
+      "description" -> retJ $ fmap G.unDescription descM
+      "enumValues"  -> do
+        includeDeprecated <- readIncludeDeprecated subFld
+        fmap J.toJSON $
+          mapM (enumValueR subFld) $
+          filter (\val -> includeDeprecated || not (_eviIsDeprecated val)) $
+          sortOn _eviVal $
+          Map.elems (normalizeEnumValues vals)
+      _             -> return J.Null
+
+readIncludeDeprecated
+  :: ( Monad m, MonadReusability m, MonadError QErr m )
+  => Field
+  -> m Bool
+readIncludeDeprecated subFld = do
+  let argM = Map.lookup "includeDeprecated" (_fArguments subFld)
+  case argM of
+    Nothing -> pure False
+    Just arg -> asScalarVal arg S.PGBoolean >>= \case
+      S.PGValBoolean b -> pure b
+      _ -> throw500 "unexpected non-Boolean argument for includeDeprecated"
+
+{- Note [Reusability of introspection queries with variables]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Introspection queries can have variables, too, in particular to influence one of
+two arguments: the @name@ argument of the @__type@ field, and the
+@includeDeprecated@ argument of the @fields@ and @enumValues@ fields.  The
+current code does not cache all introspection queries with variables correctly.
+As a workaround to this, whenever a variable is passed to an @includeDeprecated@
+argument, we mark the query as unreusable.  This is the purpose of
+'dummyReadIncludeDeprecated'.
+
+Now @fields@ and @enumValues@ are intended to be used when introspecting,
+respectively [object and interface types] and enum types.  However, it does not
+suffice to only call 'dummyReadIncludeDeprecated' for such types, since @fields@
+and @enumValues@ are valid GraphQL fields regardless of what type we are looking
+at.  So precisely because @__Type@ is _thought of_ as a union, but _not
+actually_ a union, we need to call 'dummyReadIncludeDeprecated' in all cases.
+
+See also issue #4547.
+-}
+
+dummyReadIncludeDeprecated
+  :: ( Monad m, MonadReusability m, MonadError QErr m )
+  => Field
+  -> m ()
+dummyReadIncludeDeprecated fld = do
+  selSet <- unAliasedFields . unObjectSelectionSet
+            <$> asObjectSelectionSet (_fSelSet fld)
+  forM_ (toList selSet) $ \subFld ->
+    case _fName subFld of
+      "fields"     -> readIncludeDeprecated subFld
+      "enumValues" -> readIncludeDeprecated subFld
+      _            -> return False
 
 -- 4.5.2.6
 inputObjR
@@ -276,7 +334,7 @@ inputValueR fld (InpValInfo descM n defM ty) =
 
 -- 4.5.5
 enumValueR
-  :: (Monad m)
+  :: (MonadError QErr m)
   => Field -> EnumValInfo -> m J.Object
 enumValueR fld (EnumValInfo descM enumVal isDeprecated) =
   withSubFields (_fSelSet fld) $ \subFld ->

@@ -5,8 +5,6 @@ module Data.Sequence.NonEmpty
   ( NESeq
   , pattern (:<||)
   , pattern (:||>)
-  , (<|)
-  , (|>)
   , singleton
   , head
   , tail
@@ -21,9 +19,6 @@ import           Control.DeepSeq (NFData)
 import           Data.Aeson
 import           Data.Foldable
 import           GHC.Generics    (Generic)
-
-infixr 5 <|
-infixl 5 |>
 
 data NESeq a = NESeq
   { head :: a
@@ -58,12 +53,6 @@ instance ToJSON a => ToJSON (NESeq a) where
 
 singleton :: a -> NESeq a
 singleton a = NESeq a Seq.empty
-
-(|>) :: NESeq a -> a -> NESeq a
-NESeq h l |> v = NESeq h (l Seq.|> v)
-
-(<|) :: a -> NESeq a -> NESeq a
-v <| NESeq h l = NESeq v (h Seq.<| l)
 
 toSeq :: NESeq a -> Seq.Seq a
 toSeq (NESeq v l) = v Seq.<| l

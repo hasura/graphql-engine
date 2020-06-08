@@ -36,6 +36,16 @@ import qualified Network.Wreq                   as Wreq
 
 import qualified Hasura.RQL.DML.Select          as RS
 
+import qualified Control.Concurrent.Async       as A
+import qualified Data.Aeson                     as J
+import qualified Data.Aeson.Casing              as J
+import qualified Data.Aeson.TH                  as J
+import qualified Data.ByteString.Lazy           as BL
+import qualified Data.CaseInsensitive           as CI
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.Text                      as T
+import qualified Data.UUID                      as UUID
+import qualified Database.PG.Query              as Q
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser
@@ -48,9 +58,34 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Utils            (mkClientHeadersForward, mkSetCookieHeaders)
 import           Hasura.Server.Version          (HasVersion)
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value               (PGScalarValue (..), toTxtValue)
+import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Network.HTTP.Client            as HTTP
+import qualified Network.HTTP.Types             as HTTP
+import qualified Network.Wreq                   as Wreq
+
+-- import qualified Hasura.GraphQL.Resolve.Select     as GRS
+import qualified Hasura.RQL.DML.RemoteJoin      as RJ
+import qualified Hasura.RQL.DML.Select          as RS
+
+import           Hasura.EncJSON
+-- import           Hasura.GraphQL.Resolve.Context
+-- import           Hasura.GraphQL.Resolve.InputValue
+-- import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
+-- import           Hasura.GraphQL.Validate.SelectionSet
+import           Hasura.HTTP
+import           Hasura.RQL.DDL.Headers         (makeHeadersFromConf, toHeadersConf)
+import           Hasura.RQL.DDL.Schema.Cache
+import           Hasura.RQL.DML.Select          (asSingleRowJsonResp)
+import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
+import           Hasura.Server.Utils            (mkClientHeadersForward, mkSetCookieHeaders)
+import           Hasura.Server.Version          (HasVersion)
 import           Hasura.Session
+import           Hasura.SQL.Types
+import           Hasura.SQL.Value               (PGScalarValue (..), toTxtValue)
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -136,10 +171,11 @@ resolveActionExecution
      , MonadError QErr m
      , MonadIO m
      )
-  => AnnActionExecution UnpreparedValue
+  => UserInfo
+  -> AnnActionExecution UnpreparedValue
   -> ActionExecContext
   -> m (RespTx, HTTP.ResponseHeaders)
-resolveActionExecution annAction execContext = do
+resolveActionExecution userInfo annAction execContext = do
   let actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload
   (webhookRes, respHeaders) <- callWebhook manager outputType outputFields reqHeaders confHeaders
@@ -148,9 +184,17 @@ resolveActionExecution annAction execContext = do
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
       selectAstUnresolved = processOutputSelectionSet webhookResponseExpression
                             outputType definitionList annFields stringifyNum
-  astResolved <- RS.traverseAnnSimpleSel (pure . unpreparedToTextSQL) selectAstUnresolved
-  let jsonAggType = mkJsonAggSelect outputType
-  return $ (,respHeaders) $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
+  astResolved <- RS.traverseAnnSimpleSelect (pure . unpreparedToTextSQL) selectAstUnresolved
+  let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
+      jsonAggType = mkJsonAggSelect outputType
+  return $ (,respHeaders) $
+    case maybeRemoteJoins of
+      Just remoteJoins ->
+        let query = Q.fromBuilder $ toSQL $
+                    RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
+        in RJ.executeQueryWithRemoteJoins manager reqHeaders userInfo query [] remoteJoins
+      Nothing ->
+        asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
   where
     AnnActionExecution actionName outputType annFields inputPayload
       outputFields definitionList resolvedWebhook confHeaders
@@ -177,10 +221,17 @@ restrictActionExecuter errMsg _ =
 
 -- resolveActionQuery
 --   :: ( HasVersion
+--      , MonadReusability m
 --      , MonadError QErr m
+--      , MonadReader r m
 --      , MonadIO m
+--      , Has FieldMap r
+--      , Has OrdByCtx r
+--      , Has SQLGenCtx r
 --      )
---   => UserVars
+--   => Field
+--   -> ActionExecutionContext
+--   -> SessionVariables
 --   -> HTTP.Manager
 --   -> [HTTP.Header]
 --   -> m (RS.AnnSimpleSelG UnresolvedVal)
@@ -192,9 +243,10 @@ restrictActionExecuter errMsg _ =
 --                                forwardClientHeaders resolvedWebhook handlerPayload
 --   let webhookResponseExpression = RS.AEInput $ UVSQL $
 --         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
+--   selSet <- asObjectSelectionSet $ _fSelSet field
 --   selectAstUnresolved <-
 --     processOutputSelectionSet webhookResponseExpression outputType definitionList
---     (_fType field) $ _fSelSet field
+--     (_fType field) selSet
 --   return selectAstUnresolved
 --   where
 --     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
@@ -254,12 +306,12 @@ resolveAsyncActionQuery
   -> RS.AnnSimpleSelG UnpreparedValue
 resolveAsyncActionQuery userInfo annAction =
   let annotatedFields = asyncFields <&> second \case
-        AsyncTypename t -> RS.FExp t
+        AsyncTypename t -> RS.AFExpression t
         AsyncOutput annFields ->
           -- See Note [Resolving async action query/subscription]
           let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
               jsonAggSelect = mkJsonAggSelect outputType
-          in RS.FComputedField $ RS.CFSTable jsonAggSelect $
+          in RS.AFComputedField $ RS.CFSTable jsonAggSelect $
              processOutputSelectionSet inputTableArgument outputType
              definitionList annFields stringifyNumerics
 
@@ -268,20 +320,20 @@ resolveAsyncActionQuery userInfo annAction =
         AsyncErrors    -> mkAnnFldFromPGCol "errors" PGJSONB
 
       tableFromExp = RS.FromTable actionLogTable
-      tableArguments = RS.noTableArgs
-                       { RS._taWhere = Just tableBoolExpression}
+      tableArguments = RS.noSelectArgs
+                       { RS._saWhere = Just tableBoolExpression}
       tablePermissions = RS.TablePerm annBoolExpTrue Nothing
 
-  in RS.AnnSelG annotatedFields tableFromExp tablePermissions
+  in RS.AnnSelectG annotatedFields tableFromExp tablePermissions
      tableArguments stringifyNumerics
   where
     AnnActionAsyncQuery actionName actionId outputType asyncFields definitionList stringifyNumerics = annAction
     actionLogTable = QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
 
     -- TODO:- Avoid using PGColumnInfo
-    mkAnnFldFromPGCol col columnType =
-      flip RS.mkAnnColField Nothing $
-      PGColumnInfo (unsafePGCol col) (G.unsafeMkName col) 0 (PGColumnScalar columnType) True Nothing
+    mkAnnFldFromPGCol column columnType =
+      flip RS.mkAnnColumnField Nothing $
+      PGColumnInfo (unsafePGCol column) (G.unsafeMkName column) 0 (PGColumnScalar columnType) True Nothing
 
     tableBoolExpression =
       let actionIdColumnInfo = PGColumnInfo (unsafePGCol "id") $$(G.litName "id")
@@ -510,12 +562,12 @@ processOutputSelectionSet
   :: RS.ArgumentExp v
   -> GraphQLType
   -> [(PGCol, PGScalarType)]
-  -> RS.AnnFldsG v
+  -> RS.AnnFieldsG v
   -> Bool
   -> RS.AnnSimpleSelG v
 processOutputSelectionSet tableRowInput actionOutputType definitionList
   annotatedFields =
-  RS.AnnSelG annotatedFields selectFrom RS.noTablePermissions RS.noTableArgs
+  RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
   where
     jsonbToPostgresRecordFunction =
       QualifiedObject "pg_catalog" $ FunctionName $

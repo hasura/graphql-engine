@@ -19,6 +19,7 @@ import qualified Data.Aeson.TH                          as J
 import qualified Hasura.Cache                           as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery       as LQ
 import qualified Hasura.GraphQL.Execute.Query           as EQ
+import qualified Hasura.GraphQL.Execute.Types           as ET
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import           Hasura.RQL.Types
 import           Hasura.Session
@@ -29,17 +30,19 @@ data PlanId
   , _piRole               :: !RoleName
   , _piOperationName      :: !(Maybe GH.OperationName)
   , _piQuery              :: !GH.GQLQueryText
+  , _piQueryType          :: !ET.GraphQLQueryType
   } deriving (Show, Eq, Ord, Generic)
 
 instance Hashable PlanId
 
 instance J.ToJSON PlanId where
-  toJSON (PlanId scVer rn opNameM query) =
+  toJSON (PlanId scVer rn opNameM query queryType) =
     J.object
     [ "schema_cache_version" J..= scVer
     , "role" J..= rn
     , "operation" J..= opNameM
     , "query" J..= query
+    , "query_type" J..= queryType
     ]
 
 newtype PlanCache
@@ -68,19 +71,19 @@ initPlanCache options =
 
 getPlan
   :: SchemaCacheVer -> RoleName -> Maybe GH.OperationName -> GH.GQLQueryText
-  -> PlanCache -> IO (Maybe ReusablePlan)
-getPlan schemaVer rn opNameM q (PlanCache planCache) =
+  -> ET.GraphQLQueryType -> PlanCache -> IO (Maybe ReusablePlan)
+getPlan schemaVer rn opNameM q queryType (PlanCache planCache) =
   Cache.lookup planId planCache
   where
-    planId = PlanId schemaVer rn opNameM q
+    planId = PlanId schemaVer rn opNameM q queryType
 
 addPlan
   :: SchemaCacheVer -> RoleName -> Maybe GH.OperationName -> GH.GQLQueryText
-  -> ReusablePlan -> PlanCache -> IO ()
-addPlan schemaVer rn opNameM q queryPlan (PlanCache planCache) =
+  -> ReusablePlan -> ET.GraphQLQueryType -> PlanCache -> IO ()
+addPlan schemaVer rn opNameM q queryPlan queryType (PlanCache planCache) =
   Cache.insert planId queryPlan planCache
   where
-    planId = PlanId schemaVer rn opNameM q
+    planId = PlanId schemaVer rn opNameM q queryType
 
 clearPlanCache :: PlanCache -> IO ()
 clearPlanCache (PlanCache planCache) =

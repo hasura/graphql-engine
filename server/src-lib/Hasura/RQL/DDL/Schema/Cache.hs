@@ -47,6 +47,7 @@ import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.RemoteSchema
+-- import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Cache.Dependencies
 import           Hasura.RQL.DDL.Schema.Cache.Fields
@@ -191,6 +192,9 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
   --                                   )
 
 
+
+  -- Step 4: Build the relay GraphQL schema
+  -- relayGQLSchema <- bindA -< Relay.mkRelayGCtxMap (_boTables resolvedOutputs) (_boFunctions resolvedOutputs)
 
   returnA -< SchemaCache
     { scTables = _boTables resolvedOutputs
