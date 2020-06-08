@@ -3,6 +3,7 @@ module Hasura.RQL.DDL.RemoteRelationship
   ( runCreateRemoteRelationship
   , runDeleteRemoteRelationship
   , runUpdateRemoteRelationship
+  , updateRemoteRelInCatalog
   , persistRemoteRelationship
   , resolveRemoteRelationship
   , delRemoteRelFromCatalog

@@ -200,7 +200,7 @@ runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 q
   unTrackExistingTableOrViewP2 q
 
-processTableChanges :: (MonadTx m, CacheRWM m) => TableCoreInfo -> TableDiff -> m ()
+processTableChanges :: (MonadTx m, CacheRM m) => TableCoreInfo -> TableDiff -> m ()
 processTableChanges ti tableDiff = do
   -- If table rename occurs then don't replace constraints and
   -- process dropped/added columns, because schema reload happens eventually

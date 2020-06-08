@@ -89,7 +89,7 @@ renameTableInCatalog newQT oldQT = do
                 |] (nsn, ntn, osn, otn) False
 
 renameColInCatalog
-  :: (MonadTx m, CacheRWM m)
+  :: (MonadTx m, CacheRM m)
   => PGCol -> PGCol -> QualifiedTable -> FieldInfoMap FieldInfo -> m ()
 renameColInCatalog oCol nCol qt fieldInfo = do
   sc <- askSchemaCache
@@ -358,29 +358,28 @@ updateColInRel fromQT rn rnCol = do
   liftTx $ updateRel fromQT rn newDefV
 
 updateColInRemoteRelationship
-  :: (MonadTx m, CacheRWM m)
+  :: (MonadTx m)
   => RemoteRelationshipName -> RenameCol -> m ()
 updateColInRemoteRelationship remoteRelationshipName renameCol = do
   let (RenameItem qt oldCol newCol) = renameCol
   (RemoteRelationshipDef remoteSchemaName hasuraFlds remoteFields) <-
     liftTx $ RR.getRemoteRelDefFromCatalog remoteRelationshipName qt
   let oldColPGTxt = getPGColTxt oldCol
-  let newColPGTxt = getPGColTxt newCol
-  let oldColFieldName = FieldName $ oldColPGTxt
-  let newColFieldName = FieldName $ newColPGTxt
-  let modifiedHasuraFlds = Set.insert newColFieldName $ Set.delete oldColFieldName hasuraFlds
-  let fieldCalls = unRemoteFields remoteFields
-  let oldColName = G.Name $ oldColPGTxt
-  let newColName = G.Name $ newColPGTxt
-  let modifiedFieldCalls = NE.map (\(FieldCall name args) ->
+      newColPGTxt = getPGColTxt newCol
+      oldColFieldName = FieldName $ oldColPGTxt
+      newColFieldName = FieldName $ newColPGTxt
+      modifiedHasuraFlds = Set.insert newColFieldName $ Set.delete oldColFieldName hasuraFlds
+      fieldCalls = unRemoteFields remoteFields
+      oldColName = G.Name $ oldColPGTxt
+      newColName = G.Name $ newColPGTxt
+      modifiedFieldCalls = NE.map (\(FieldCall name args) ->
                                      let remoteArgs = getRemoteArguments args
                                      in FieldCall name $ RemoteArguments $
                                          map (\(G.ObjectFieldG key val) ->
                                                 G.ObjectFieldG key $ replaceVariableName oldColName newColName val
                                              ) $ remoteArgs
                                   ) $ fieldCalls
-  RR.runUpdateRemoteRelationship (RemoteRelationship remoteRelationshipName qt modifiedHasuraFlds remoteSchemaName (RemoteFields modifiedFieldCalls))
-  pure ()
+  liftTx $ RR.updateRemoteRelInCatalog (RemoteRelationship remoteRelationshipName qt modifiedHasuraFlds remoteSchemaName (RemoteFields modifiedFieldCalls))
   where
     replaceVariableName :: G.Name -> G.Name -> G.Value -> G.Value
     replaceVariableName oldColName newColName = \case
