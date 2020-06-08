@@ -436,11 +436,10 @@ instance ConsoleRenderer AppM where
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
 
 instance MonadGQLSystemAuthz AppM where
-  authorizeGQLApi userInfo _ enableAL sc query = do
-    runExceptT $ do
-      req <- toParsed query
-      checkQueryInAllowlist enableAL userInfo req sc
-      return req
+  authorizeGQLApi userInfo _ enableAL sc query = runExceptT $ do
+    req <- toParsed query
+    checkQueryInAllowlist enableAL userInfo req sc
+    return req
 
 instance MonadConfigApiHandler AppM where
   runConfigApiHandler = configApiGetHandler
