@@ -134,7 +134,7 @@ addEventTriggerToCatalog qt etc = do
          |] (name, sn, tn, Q.AltJ $ toJSON etc) False
   where
     QualifiedObject sn tn = qt
-    (EventTriggerConf name _ _ _ _ _ _) = etc
+    (EventTriggerConf name _ _ _ _ _ comment) = etc
 
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
 delEventTriggerFromCatalog trn = do
