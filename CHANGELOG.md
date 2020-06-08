@@ -61,6 +61,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add comment field support for event-triggers (#5021)
 - server: fix explain queries with role permissions (fix #4816)
 - server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
 - server: fixes an issue where introspection queries with variables would fail because of caching (fix #4547)
