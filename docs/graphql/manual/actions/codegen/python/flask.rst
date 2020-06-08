@@ -13,7 +13,7 @@ GraphQL API with Python & Flask
   :local:
 
 Introduction
---------------------------
+------------
 
 In this example, we will discuss how to utilize Actions and Codegen to build a Python Flask API for JWT Authentication.
 
@@ -46,28 +46,19 @@ Start by creating the Signup Action type definitions in the Console:
 
 .. image:: python-flask-signup-types.png
   :width: 900px
-  :alt: do_create_droplet_button
+  :alt: python-flask-signup-types
   :class: no-shadow
-  :target: https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=docs
 
 If we check the "Codegen" tab, we can see that a nice scaffold has been generated for us from these GraphQL types:
 
 
-.. |logo1| image:: python-flask-signup-codegen-1.png  
+.. image:: python-flask-signup-codegen-1.png  
   :scale: 100%
-  :align: middle
-  :alt: do_create_droplet_button
-  :target: https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=docs
+  :alt: python-flask-signup-codegen1
 
-.. |logo2| image:: python-flask-signup-codegen-types.png
+.. image:: python-flask-signup-codegen-types.png
   :scale: 100%
-  :align: middle
-  :alt: do_create_droplet_button
-  :target: https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=docs
-
-+---------+---------+
-| |logo1| | |logo2| |
-+---------+---------+
+  :alt: python-flask-signup-codegen-types
 
 You may notice a couple of things about the generated code:
 
@@ -136,7 +127,7 @@ the ``.to_json()`` helper method we define on all ``RequestMixin`` objects.
     password: str
 
 Overview of Action Handler Implementation
---------------------------
+-----------------------------------------
 
 Now we need to implement the business logic for ``Signup``. Our Action will do the following:
 
@@ -156,7 +147,7 @@ Our ``requirements.txt`` will now look like: ::
 On to the implementation.
 
 Signup Handler & Password Hashing
---------------------------
+----------------------------------
 
 For password hashing, the ``argon2`` API is minimal and straightforward: an instance of a password hasher is created with ``PasswordHasher()``, which has methods ``.hash(password)``, ``.verify(hashed_password, password)``, and `.check_needs_rehash(hashed_password)`.
 
@@ -173,7 +164,7 @@ In our signup handler, the first thing we'll do is convert the Action input pass
       hashed_password = Password.hash(args.password)
 
 Creating the GraphQL Request Client
---------------------------
+-----------------------------------
 
 Next, since we have the user's email and hashed password, we need to send a request to Hasura to save them in the database. For that, we'll need a request client implementation:
 
@@ -238,9 +229,8 @@ To test this out, send an HTTP request to your Flask API at ``/signup`` with an 
 
 .. image:: python-flask-signup-request.png
   :width: 800px
-  :alt: do_create_droplet_button
+  :alt: python-flask-signup-request
   :class: no-shadow
-  :target: https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=docs
 
 Now our Signup Action is functional! The last piece is create the Login handler, which will do a password comparison, and then return a signed JWT if successful.
 
@@ -339,28 +329,21 @@ And finally, ``client.update_password()``:
   )
 
 Testing out the Handler Routes
---------------------------
+-------------------------------
 
 Now, if we send a request to ``/login`` using our email and password from ``/signup``, we should successful get a signed JWT, and decoding the JWT should return the correct information:
 
-.. |login-request| image:: python-request-login.png  
+.. image:: python-request-login.png  
   :scale: 90%
-  :align: middle
-  :alt: do_create_droplet_button
-  :target: https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=docs
+  :alt: python-request-login
 
-.. |decode-jwt| image:: python-flask-jwt-decode.png
+.. image:: python-flask-jwt-decode.png
   :scale: 80%
-  :align: middle
-  :alt: do_create_droplet_button
-  :target: https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=docs
+  :alt: python-flask-jwt-decode
 
-+---------------------+--------------+
-|   |login-request|   | |decode-jwt| |
-+---------------------+--------------+
 
 Calling the Finished Actions
---------------------------
+-----------------------------
 
 Now we can call our finished Action from Hasura's API, and validate our responses:
 
