@@ -11,6 +11,7 @@ import { pageTitle, appPrefix } from './constants';
 import tabInfo from './tabInfo';
 import globals from '../../../../../Globals';
 import Button from '../../../../Common/Button/Button';
+import styles from './ModifyCustomFunction.scss';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -132,7 +133,6 @@ class ModifyCustomFunction extends React.Component {
   }
 
   render() {
-    const styles = require('./ModifyCustomFunction.scss');
     const {
       functionSchema: schema,
       functionName,
@@ -148,6 +148,10 @@ class ModifyCustomFunction extends React.Component {
       // throw a 404 exception
       throw new NotFoundError();
     }
+    const loading =
+      isRequesting || isDeleting || isUntracking || isFetching
+        ? { isRequesting, isDeleting, isUntracking, isFetching }
+        : null;
 
     const { migrationMode } = this.props;
 
@@ -168,18 +172,20 @@ class ModifyCustomFunction extends React.Component {
             color="white"
             className={styles.add_mar_right}
             onClick={this.handleUntrackCustomFunction}
-            disabled={isRequesting || isDeleting || isUntracking}
+            disabled={loading}
             data-test={'custom-function-edit-untrack-btn'}
           >
-            {isUntracking ? 'Untracking Function...' : 'Untrack Function'}
+            {loading?.isUntracking
+              ? 'Untracking Function...'
+              : 'Untrack Function'}
           </Button>
           <Button
             color="red"
             onClick={this.handleDeleteCustomFunction}
             data-test={'custom-function-edit-delete-btn'}
-            disabled={isRequesting || isDeleting || isUntracking}
+            disabled={loading}
           >
-            {isDeleting ? 'Deleting Function...' : 'Delete Function'}
+            {loading?.isDeleting ? 'Deleting Function...' : 'Delete Function'}
           </Button>
           {this.state.deleteConfirmationError ? (
             <span
@@ -249,7 +255,7 @@ class ModifyCustomFunction extends React.Component {
           functionName={functionName}
           dispatch={this.props.dispatch}
           configuration={configuration}
-          loading={isRequesting || isDeleting || isUntracking || isFetching}
+          loading={loading}
           onSessVarUpdate={this.onSessVarUpdate}
         />
         {migrationMode

@@ -7,20 +7,26 @@ import EditorInput from './EditorInput';
 type ConfigurationType = {
   session_argument: string;
 };
-
+export type FunctionLoadingType = {
+  isRequesting?: boolean;
+  isDeleting?: boolean;
+  isUntracking?: boolean;
+  isFetching?: boolean;
+} | null;
 export interface SessionVarSectionProps {
   functionName?: string;
   onSessVarUpdate: (s: string) => void;
   configuration?: ConfigurationType;
+  loading: FunctionLoadingType;
 }
 const SessionVarSection: React.FC<SessionVarSectionProps> = ({
   onSessVarUpdate,
   configuration,
   functionName,
 }) => {
-  const [sessVar, setSessVar] = useState('');
+  const [sessVar, setSessVar] = useState(configuration?.session_argument || '');
   const [isEditing, setIsEditing] = useState(false);
-  const toggleIsEditting = () => setIsEditing(b => !b);
+  const toggleIsEditting = () => setIsEditing(prev => !prev);
 
   const onSessVarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSessVar(e.target.value);
@@ -37,9 +43,7 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
         <ToolTip message="Use Session Variable argument as SQL function input argument." />
       </h4>
       <div
-        className={`${
-          isEditing ? styles.editorExpanded : styles.editorCollapsed
-        }`}
+        className={isEditing ? styles.editorExpanded : styles.editorCollapsed}
       >
         <div
           className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}

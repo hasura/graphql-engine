@@ -38,8 +38,8 @@ const UNTRACKING_CUSTOM_FUNCTION = '@customFunction/UNTRACKING_CUSTOM_FUNCTION';
 const UNTRACK_CUSTOM_FUNCTION_FAIL =
   '@customFunction/UNTRACK_CUSTOM_FUNCTION_FAIL';
 
-const SESSVAR_CUSTOM_FUNCTION_ADDING =
-  '@customFunction/SESSVAR_CUSTOM_FUNCTION_ADDING';
+const SESSVAR_CUSTOM_FUNCTION_REQUEST =
+  '@customFunction/SESSVAR_CUSTOM_FUNCTION_REQUEST';
 const SESSVAR_CUSTOM_FUNCTION_ADD_FAIL =
   '@customFunction/SESSVAR_CUSTOM_FUNCTION_ADD_FAIL';
 const SESSVAR_CUSTOM_FUNCTION_ADD_SUCCESS =
@@ -310,17 +310,17 @@ const updateSessVar = session_argument => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const functionName = getState().functions.functionName;
-    const migrationName = 'remove_custom_function_' + functionName;
+    const migrationName = 'update_session_arg_custom_function_' + functionName;
 
     //untrack function first
-    const untrackPayload = {
+    const untrackPayloadUp = {
       type: 'untrack_function',
       args: {
         name: functionName,
         schema: currentSchema,
       },
     };
-    const downUntrackPayload = {
+    const untrackPayloadDown = {
       type: 'track_function',
       args: {
         name: functionName,
@@ -346,19 +346,19 @@ const updateSessVar = session_argument => {
     const retrackPayloadDown = {
       type: 'untrack_function',
       args: {
-        name,
+        name: functionName,
         schema: currentSchema,
       },
     };
 
     const upQuery = {
       type: 'bulk',
-      args: [untrackPayload, retrackPayloadUp],
+      args: [untrackPayloadUp, retrackPayloadUp],
     };
 
     const downQuery = {
       type: 'bulk',
-      args: [retrackPayloadDown, downUntrackPayload],
+      args: [retrackPayloadDown, untrackPayloadDown],
     };
     const requestMsg = 'Updating Session argument variable...';
     const successMsg = 'Session variable argument updated successfully';
@@ -370,12 +370,10 @@ const updateSessVar = session_argument => {
       dispatch(fetchTrackedFunctions());
     };
     const customOnError = error => {
-      Promise.all([
-        dispatch({ type: SESSVAR_CUSTOM_FUNCTION_ADD_FAIL, data: error }),
-      ]);
+      dispatch({ type: SESSVAR_CUSTOM_FUNCTION_ADD_FAIL, data: error });
     };
 
-    dispatch({ type: SESSVAR_CUSTOM_FUNCTION_ADDING });
+    dispatch({ type: SESSVAR_CUSTOM_FUNCTION_REQUEST });
     return dispatch(
       makeRequest(
         upQuery.args,
@@ -453,7 +451,7 @@ const customFunctionReducer = (state = functionData, action) => {
         isUntracking: true,
         isError: null,
       };
-    case SESSVAR_CUSTOM_FUNCTION_ADDING:
+    case SESSVAR_CUSTOM_FUNCTION_REQUEST:
       return {
         ...state,
         isUpdating: true,
