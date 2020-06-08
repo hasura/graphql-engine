@@ -266,7 +266,7 @@ tableArgs table selectPermissions = do
     orderBy  <- P.fieldOptional orderByName orderByDesc orderByParser
     limit    <- P.fieldOptional limitName   limitDesc   positiveInt
     offset   <- P.fieldOptional offsetName  offsetDesc  positiveInt
-    distinct <- maybe (pure Nothing) (P.fieldOptional offsetName  offsetDesc . P.list) columnsEnum
+    distinct <- maybe (pure Nothing) (P.fieldOptional distinctOnName  distinctOnDesc . P.list) columnsEnum
 
     -- TODO: offset should be a bigint
     --
