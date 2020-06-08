@@ -241,7 +241,7 @@ mkRelayTableObj tn descM allowedFields =
   where
     fields =
       let idColumnFilter = \case
-            SFPGColumn columnInfo -> (/=) "id" $ getPGColTxt $ pgiColumn columnInfo
+            SFPGColumn columnInfo -> (/=) "id" $ pgiName columnInfo
             _                     -> True
       in (:) nodeIdField $ mkTableObjectFields True $
              -- Remove "id" column
