@@ -48,13 +48,14 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
       :: FieldInfo
       -> m (Maybe (InputFieldsParser n (Maybe [RQL.AnnOrderByItemG UnpreparedValue])))
     mkField fieldInfo = runMaybeT $ do
-      fieldName <- MaybeT $ pure $ fieldInfoGraphQLName fieldInfo
       case fieldInfo of
-        FIColumn columnInfo ->
+        FIColumn columnInfo -> do
+          let fieldName = pgiName columnInfo
           pure $ P.fieldOptional fieldName Nothing orderByOperator
             `mapField` (pure . mkOrderByItemG (RQL.AOCPG $ pgiColumn columnInfo))
         FIRelationship relationshipInfo -> do
           let remoteTable = riRTable relationshipInfo
+          fieldName <- MaybeT $ pure $ G.mkName $ relNameToTxt $ riName relationshipInfo
           perms <- MaybeT $ tableSelectPermissions remoteTable
           let newPerms = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter perms
           case riType relationshipInfo of
@@ -63,8 +64,9 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
               pure $ P.fieldOptional fieldName Nothing otherTableParser `mapField`
                 map (fmap $ RQL.AOCObj relationshipInfo newPerms)
             ArrRel -> do
+              let aggregateFieldName = fieldName <> $$(G.litName "_aggregate")
               aggregationParser <- lift $ orderByAggregation remoteTable perms
-              pure $ P.fieldOptional fieldName Nothing aggregationParser `mapField`
+              pure $ P.fieldOptional aggregateFieldName Nothing aggregationParser `mapField`
                 map (fmap $ RQL.AOCAgg relationshipInfo newPerms)
         FIComputedField _ -> empty
 
