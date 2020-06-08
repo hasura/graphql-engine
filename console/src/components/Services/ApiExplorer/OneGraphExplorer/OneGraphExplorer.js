@@ -1,6 +1,7 @@
 import React from 'react';
 import { getIntrospectionQuery, buildClientSchema } from 'graphql';
 import GraphiQLExplorer from 'graphiql-explorer';
+import { setLoading } from '../Actions';
 
 import {
   makeDefaultArg,
@@ -25,7 +26,6 @@ class OneGraphExplorer extends React.Component {
     schema: null,
     query: undefined,
     isResizing: false,
-    loading: false,
     previousIntrospectionHeaders: [],
   };
 
@@ -34,9 +34,14 @@ class OneGraphExplorer extends React.Component {
     this.introspect();
   }
 
-  componentDidUpdate() {
-    const { headerFocus, headers } = this.props;
-    const { loading, previousIntrospectionHeaders } = this.state;
+  componentDidUpdate(prevProps) {
+    const { headerFocus, headers, loading } = this.props;
+    const { previousIntrospectionHeaders } = this.state;
+    // always introspect if mode changes
+    if (this.props.mode !== prevProps.mode) {
+      this.introspect();
+      return;
+    }
     if (!headerFocus && !loading) {
       if (
         JSON.stringify(headers) !== JSON.stringify(previousIntrospectionHeaders)
@@ -78,12 +83,18 @@ class OneGraphExplorer extends React.Component {
   }
 
   introspect() {
-    const { endpoint, headersInitialised, headers: headers_ } = this.props;
+    const {
+      endpoint,
+      headersInitialised,
+      headers: headers_,
+      dispatch,
+    } = this.props;
     if (!headersInitialised) {
       return;
     }
     const headers = JSON.parse(JSON.stringify(headers_));
-    this.setState({ loading: true });
+    dispatch(setLoading(true));
+    this.setState({ schema: null });
     fetch(endpoint, {
       method: 'POST',
       headers: getHeadersAsJSON(headers || []),
@@ -95,16 +106,17 @@ class OneGraphExplorer extends React.Component {
       .then(result => {
         this.setState({
           schema: buildClientSchema(result.data),
-          loading: false,
           previousIntrospectionHeaders: headers,
         });
       })
       .catch(() => {
         this.setState({
           schema: null,
-          loading: false,
           previousIntrospectionHeaders: headers,
         });
+      })
+      .finally(() => {
+        dispatch(setLoading(false));
       });
   }
 
