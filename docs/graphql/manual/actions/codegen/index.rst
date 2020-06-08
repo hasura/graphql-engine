@@ -114,9 +114,6 @@ Hasura provides codegen for the following frameworks:
 .. toctree::
   :maxdepth: 1
 
-  Nodejs <nodejs>
-  Java <java>
-  .net <dotnet>
   Python <python/index>
 
 If you wish to build a code generator for your framework

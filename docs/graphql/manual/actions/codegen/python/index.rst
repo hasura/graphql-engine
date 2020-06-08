@@ -12,15 +12,10 @@ Python Action Codegens
   :depth: 2
   :local:
 
-Introduction
-------------
-
-Text here
-
-Codegen for your framework
+Guide for your framework
 --------------------------
 
-Hasura provides codegen for the following frameworks:
+Hasura provides guides for the following frameworks:
 
 .. toctree::
   :maxdepth: 1
