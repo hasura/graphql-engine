@@ -92,7 +92,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
 - console: add help button and move about page to settings (#4848)
 - console: add new sidebar icon that separates enums from tables (fix #4984) (#4992)
-- console: fix runtime error when accessing a table in `Browse Rows` page (fix #4907) (#5016)
+- console: fix "Cannot read property 'foldable'" runtime error in `Browse Rows` page (fix #4907) (#5016)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
