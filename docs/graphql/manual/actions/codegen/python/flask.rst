@@ -143,6 +143,7 @@ Our ``requirements.txt`` will now look like: ::
   flask
   argon2-cffi
   requests
+  pyjwt
 
 On to the implementation.
 
