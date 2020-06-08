@@ -264,9 +264,23 @@ tableArgs table selectPermissions = do
   pure $ do
     whereF   <- P.fieldOptional whereName   whereDesc   boolExpParser
     orderBy  <- P.fieldOptional orderByName orderByDesc orderByParser
-    limit    <- P.fieldOptional limitName   limitDesc   P.int
-    offset   <- P.fieldOptional offsetName  offsetDesc  P.int
+    limit    <- P.fieldOptional limitName   limitDesc   positiveInt
+    offset   <- P.fieldOptional offsetName  offsetDesc  positiveInt
     distinct <- maybe (pure Nothing) (P.fieldOptional offsetName  offsetDesc . P.list) columnsEnum
+
+    -- TODO: offset should be a bigint
+    --
+    -- Previous versions of the code used to also accept a string for the offset
+    -- despite the schema explicitly declaring it as an int; the suspected goal
+    -- of this was to allow for bigint offsets, but there's no surviving commit
+    -- message or documentation that states it explicity. A visible artefact of
+    -- this is the fact that in the TableArgs we store a SQL expression for the
+    -- offet while the limit is stored as a normal int.
+    --
+    -- While it would be possible to write a custom parser that advertises
+    -- itself as an int, but also accepts strings, to replicate the old
+    -- behaviour, a much better approach would be to use custom scalar types.
+
     pure $ RQL.TableArgs
       { RQL._taWhere    = whereF
       , RQL._taOrderBy  = nonEmpty =<< orderBy
@@ -288,6 +302,12 @@ tableArgs table selectPermissions = do
     offsetDesc     = Just $ G.Description "skip the first n rows. Use only with order_by"
     distinctOnDesc = Just $ G.Description "distinct select on columns"
 
+    -- TODO:
+    -- this should either be moved to Common, or to Parser itself; even better,
+    -- we could think of exposing a "PositiveInt" custom scalar type in the schema.
+    positiveInt = P.int `P.bind` \value -> do
+      when (value < 0) $ parseError "expecting a positive integer"
+      pure value
 
 -- | Aggregation fields
 --
