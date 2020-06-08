@@ -125,7 +125,6 @@ selectTableByPk table fieldName description selectPermissions stringifyNum = run
            , RQL._asnStrfyNum = stringifyNum
            }
 
-
 -- | Table aggregation selection
 --
 -- Parser for an aggregation selection of a table.
@@ -410,10 +409,10 @@ fieldSelection fieldInfo selectPermissions stringifyNum = do
         ArrRel -> do
           let relAggFieldName = relFieldName <> $$(G.litName "_aggregate")
               relAggDesc      = Just $ G.Description "An aggregate relationship"
-          remoteAggField <- MaybeT $ selectTableAggregate otherTable relAggFieldName relAggDesc remotePerms stringifyNum
-          pure [ field
-               , RQL.FArr . RQL.ASAgg . RQL.AnnRelG relName colMapping <$> remoteAggField
-               ]
+          remoteAggField <- lift $ selectTableAggregate otherTable relAggFieldName relAggDesc remotePerms stringifyNum
+          pure $ catMaybes [ Just field
+                           , fmap (RQL.FArr . RQL.ASAgg . RQL.AnnRelG relName colMapping) <$> remoteAggField
+                           ]
 
     FIComputedField computedFieldInfo ->
       maybeToList <$> computedField computedFieldInfo selectPermissions stringifyNum
