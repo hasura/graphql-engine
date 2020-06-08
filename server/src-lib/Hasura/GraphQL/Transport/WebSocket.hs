@@ -335,9 +335,13 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       E.ExOpSubs lqOp -> do
         -- log the graphql query
         L.unLogger logger $ QueryLog query Nothing reqId
+        let subscriberMetadata = LQ.mkSubscriberMetadata $ J.object
+                                 [ "websocket_id" J..= WS.getWSId wsConn
+                                 , "operation_id" J..= opId
+                                 ]
         -- NOTE!: we mask async exceptions higher in the call stack, but it's
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
-        !lqId <- liftIO $ LQ.addLiveQuery logger lqMap lqOp liveQOnChange
+        !lqId <- liftIO $ LQ.addLiveQuery logger subscriberMetadata lqMap lqOp liveQOnChange
         let !opName = _grOperationName q
         liftIO $ $assertNFHere $! (lqId, opName)  -- so we don't write thunks to mutable vars
 
@@ -449,11 +453,13 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     -- on change, send message on the websocket
     liveQOnChange :: LQ.OnChange
-    liveQOnChange (GQSuccess (LQ.LiveQueryResponse bs dTime)) =
-      sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRHasura $ GQSuccess bs) $
-        LQ.LiveQueryMetadata dTime
-    liveQOnChange resp = sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $
-      LQ._lqrPayload <$> resp
+    liveQOnChange = \case
+      GQSuccess (LQ.LiveQueryResponse bs dTime) ->
+        sendMsgWithMetadata wsConn
+        (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ BL.fromStrict bs)
+        (LQ.LiveQueryMetadata dTime)
+      resp -> sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $
+        (BL.fromStrict . LQ._lqrPayload) <$> resp
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m

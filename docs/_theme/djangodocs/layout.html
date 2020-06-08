@@ -57,6 +57,171 @@
           <img src="{{ pathto('_images/layout/stripe.png', 1) }}" alt='stripe' />
         </div>
       </div>
+      <header
+        id="header"
+        class='blueBgColor boderBottom'
+      >
+        <div class="navContainerWrapper noPadd">
+          <div class="headerWrapper">
+            <div class="navLeft">
+              <div class="brand">
+                <a href="https://hasura.io/">
+                  <img src="{{ pathto('_images/layout/white-logo.svg', 1) }}" alt="Logo"/>
+                </a>
+              </div>
+              <a href="https://discordapp.com/invite/hasura" target="_blank" rel="noopener noreferrer">
+                <div class="discordBtn">
+                  <img src="{{ pathto('_images/layout/discord-brands-block.svg', 1) }}" alt="Discord"/>
+                </div>
+              </a>
+              <a href="https://twitter.com/hasurahq" target="_blank" rel="noopener noreferrer">
+                <div class="twitterBtn">
+                  <img src="{{ pathto('_images/layout/twitter-brands-block.svg', 1) }}" alt="Twitter"/>
+                </div>
+              </a>
+            </div>
+            <div class="navBlueBG">
+              <ul class="navBarUL">
+                <li class='navListActive'>
+                  <span class="versionTxt">
+                    <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                      {%- if version == '1.0' %}
+                        <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.x</option>
+                      {%- else -%}
+                        <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.x</option>
+                      {% endif %}
+                    </select>
+                  </span>
+                  <a href="/">Docs</a>
+                </li>
+                <li>
+                  <a href='https://hasura.io/blog/'>
+                    Blog
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/learn/">
+                    Tutorials
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/enterprise/">
+                    Enterprise
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/hasura-pro/">
+                    Hasura Pro
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/pricing/">
+                    Pricing
+                  </a>
+                </li>
+                <li>
+                  <a href='https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html'>
+                    <button class="commonBtn navBtnHome">
+                      Get Started
+                    </button>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href='https://calendly.com/hasura/prod-expert-call'
+                  >
+                    <button class="commonBtn navBtnContactHome">
+                      Talk to a Product Expert
+                    </button>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class='navBlueBG'>
+              <span class="navBarToggle"
+                onclick="openMenu()"
+              >
+                <span class="iconBar"></span>
+                <span class="iconBar"></span>
+                <span class="iconBar"></span>
+              </span>
+            </div>
+            <div id="navbar" class="topnav">
+              <div class="visibleMobile">
+                <ul class="navBarULMobile">
+                  <li>
+                    <a href='/'
+                      onclick="openMenu()"
+                    >Docs</a>
+                    <span class="versionTxt">
+                      <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                        {%- if version == '1.0' %}
+                          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.x</option>
+                        {%- else -%}
+                          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.x</option>
+                        {% endif %}
+                      </select>
+                    </span>
+                  </li>
+                  <li>
+                    <a href='https://hasura.io/blog/'
+                      onclick="openMenu()"
+                    >
+                      Blog
+                    </a>
+                  </li>
+                  <li>
+                    <a href='https://hasura.io/learn/'
+                      onclick="openMenu()"
+                    >
+                      Tutorials
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://hasura.io/enterprise/"
+                      onclick="openMenu()"
+                    >
+                      Enterprise
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://hasura.io/hasura-pro/"
+                      onclick="openMenu()"
+                    >
+                      Hasura Pro
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://hasura.io/pricing/"
+                      onclick="openMenu()"
+                    >
+                      Pricing
+                    </a>
+                  </li>
+                  <li>
+                    <a href='https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html'
+                      onclick="openMenu()"
+                    >
+                      <button class='commonBtn navBtnHome'>
+                        Get Started
+                      </button>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://calendly.com/hasura/prod-expert-call"
+                      onclick="openMenu()"
+                    >
+                      <button class="commonBtn navBtnContactHome">
+                        Talk to a Product Expert
+                      </button>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
       <div id="" class="content_wrapper">
         {%- if is_landing_page %}
           {% include 'pages/landing.html' %}
@@ -66,6 +231,9 @@
 
           {% block sidebarwrapper %}
             <div class="yui-b mobile-hide" id="sidebar">
+              <div id='sidebar-close' class='mobile-only closeIcon'>
+                <img src="{{ pathto('_images/layout/close-icon.svg', 1) }}" alt="Close"/>
+              </div>
               {{ sidebar() }}
             </div>
           {% endblock %}
@@ -74,6 +242,7 @@
             <div role="main" parent={{ rootpage }}>
 
               <div id="docs-header">
+                <!--
                 <div class="mobile-only" id="mobile-logo">
                   <a href="https://{{ BASE_DOMAIN }}/" target="_blank" rel="noopener">
                     <div class="img_wrapper inline-block">
@@ -82,14 +251,18 @@
                   </a>
                   <a href="https://{{ BASE_DOMAIN }}/docs" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
                 </div>
+                -->
                 <div id="docs-header-actions">
-                  <div class="inline-block mobile-only" id="nav_tree_icon">
-                    <span class="fa fa-bars"></span>
-                  </div>
                   <div class="inline-block" id="input_search_box">
                     <span class="fa fa-search search_icon"></span>
                     <input type="text" id="search_element" placeholder="Search docs..." />
                   </div>
+                  <div class="inline-block mobile-only" id="nav_tree_icon">
+                    <div class="docs-menu">
+                      DOCS MENU >
+                    </div>
+                  </div>
+                  <!--
                   <div class="inline-block header_links">
                     <div class="social_icons_wrapper">
                       <div class="social_icons">
@@ -110,6 +283,7 @@
                       </div>
                     </div>
                   </div>
+                  -->
                 </div>
               </div>
 
@@ -226,8 +400,19 @@
         $('#banner').hide();
       });
     });
-
   </script>
+  <!--Hamburger menu-->
+  <script type="text/javascript">
+    function openMenu() {
+      var x = document.getElementById("navbar")
+      if (x.className === "topnav") {
+        x.className += " responsive"
+      } else {
+        x.className = "topnav"
+      }
+    }
+  </script>
+
   <!-- utils -->
   <script type="text/javascript">
     // load script file
@@ -344,6 +529,7 @@
         }
       };
       $('#nav_tree_icon').on('click', navTreeHandler);
+      $('#sidebar-close').on('click', navTreeHandler);
     });
   </script>
 

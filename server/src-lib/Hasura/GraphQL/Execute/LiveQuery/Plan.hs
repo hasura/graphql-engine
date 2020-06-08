@@ -5,6 +5,7 @@
 module Hasura.GraphQL.Execute.LiveQuery.Plan
   ( MultiplexedQuery
   , mkMultiplexedQuery
+  , unMultiplexedQuery
   , resolveMultiplexedValue
 
   , CohortId
@@ -29,6 +30,7 @@ import           Hasura.Session
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.Extended                    as J
 import qualified Data.Aeson.TH                          as J
+import qualified Data.ByteString                        as B
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Text                              as T
@@ -50,9 +52,9 @@ import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.Db
-import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Action
 import           Hasura.GraphQL.Resolve.Types
+import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -183,7 +185,7 @@ instance Q.ToPrepArg CohortVariablesArray where
       encoder = PE.array 114 . PE.dimensionArray foldl' (PE.encodingArray . PE.json_ast)
 
 executeMultiplexedQuery
-  :: (MonadTx m) => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, EncJSON)]
+  :: (MonadTx m) => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, B.ByteString)]
 executeMultiplexedQuery (MultiplexedQuery query) = executeQuery query
 
 -- | Internal; used by both 'executeMultiplexedQuery' and 'explainLiveQueryPlan'.

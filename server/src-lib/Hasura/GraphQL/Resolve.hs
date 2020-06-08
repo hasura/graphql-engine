@@ -200,7 +200,7 @@ mutFldToTx fld = do
       validateHdrs userInfo (_docHeaders ctx)
       noRespHeaders $ RM.convertDeleteByPk ctx rjCtx fld
     MCAction ctx ->
-      RA.resolveActionMutation fld ctx (_uiSession userInfo)
+      RA.resolveActionMutation fld ctx userInfo
 
 getOpCtx
   :: ( MonadReusability m

@@ -78,8 +78,10 @@ Read more about the session argument for computed fields in the [docs](https://h
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
 - console: allow entering big int values in the console (close #3667) (#4775)
+- console: add support for subscriptions analyze in API explorer (close #2541) (#2541)
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
+- console: fix regression in editing permissions manually (fix #4683) (#4826)
 - console: allow modifying default value for PK (fix #4075) (#4679)
 - console: fix checkbox for forwarding client headers in actions (#4595)
 - console: re-enable foreign tables to be listed as views (fix #4714) (#4742)
@@ -89,6 +91,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix underscores not being displayed on raw sql page (close #4754) (#4799)
 - console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
 - console: add help button and move about page to settings (#4848)
+- console: add new sidebar icon that separates enums from tables (fix #4984) (#4992)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
@@ -104,6 +107,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
 - docs: add page for procuring custom docker images and binaries (#4828)
 - docs: add content on how to secure action handlers and other actions docs improvements (#4743)
+- docs: make header common with other hasura.io/ pages (#4957)
 - install manifests: update all install manifests to enable dev mode by default (close #4599) (#4716)
 
 ## `v1.2.0`

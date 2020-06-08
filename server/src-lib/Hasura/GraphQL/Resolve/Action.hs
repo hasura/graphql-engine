@@ -36,6 +36,7 @@ import qualified Network.HTTP.Types                   as HTTP
 import qualified Network.Wreq                         as Wreq
 
 import qualified Hasura.GraphQL.Resolve.Select        as GRS
+import qualified Hasura.RQL.DML.RemoteJoin            as RJ
 import qualified Hasura.RQL.DML.Select                as RS
 
 import           Hasura.EncJSON
@@ -128,14 +129,14 @@ resolveActionMutation
      )
   => Field
   -> ActionMutationExecutionContext
-  -> SessionVariables
+  -> UserInfo
   -> m (RespTx, HTTP.ResponseHeaders)
-resolveActionMutation field executionContext sessionVariables =
+resolveActionMutation field executionContext userInfo =
   case executionContext of
     ActionMutationSyncWebhook executionContextSync ->
-      resolveActionMutationSync field executionContextSync sessionVariables
+      resolveActionMutationSync field executionContextSync userInfo
     ActionMutationAsync ->
-      (,[]) <$> resolveActionMutationAsync field sessionVariables
+      (,[]) <$> resolveActionMutationAsync field userInfo
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionMutationSync
@@ -152,11 +153,12 @@ resolveActionMutationSync
      )
   => Field
   -> ActionExecutionContext
-  -> SessionVariables
+  -> UserInfo
   -> m (RespTx, HTTP.ResponseHeaders)
-resolveActionMutationSync field executionContext sessionVariables = do
+resolveActionMutationSync field executionContext userInfo = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
       actionContext = ActionContext actionName
+      sessionVariables = _uiSession userInfo
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
   manager <- asks getter
   reqHeaders <- asks getter
@@ -169,8 +171,17 @@ resolveActionMutationSync field executionContext sessionVariables = do
     processOutputSelectionSet webhookResponseExpression outputType definitionList
     (_fType field) selSet
   astResolved <- RS.traverseAnnSimpleSelect resolveValTxt selectAstUnresolved
-  let jsonAggType = mkJsonAggSelect outputType
-  return $ (,respHeaders) $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
+  let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
+      jsonAggType = mkJsonAggSelect outputType
+  return $ (,respHeaders) $
+    case maybeRemoteJoins of
+      Just remoteJoins ->
+        let query = Q.fromBuilder $ toSQL $
+                    RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
+        in RJ.executeQueryWithRemoteJoins manager reqHeaders userInfo query [] remoteJoins
+      Nothing ->
+        asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
+
   where
     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
@@ -245,9 +256,10 @@ resolveActionMutationAsync
      , Has [HTTP.Header] r
      )
   => Field
-  -> SessionVariables
+  -> UserInfo
   -> m RespTx
-resolveActionMutationAsync field sessionVariables = do
+resolveActionMutationAsync field userInfo = do
+  let sessionVariables = _uiSession userInfo
   reqHeaders <- asks getter
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
   pure $ do
