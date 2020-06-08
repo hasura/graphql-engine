@@ -3,6 +3,7 @@ import styles from './ModifyCustomFunction.scss';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import Button from '../../../../Common/Button';
 import EditorInput from './EditorInput';
+import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 
 type ConfigurationType = {
   session_argument: string;
@@ -15,7 +16,7 @@ export type FunctionLoadingType = {
 } | null;
 export interface SessionVarSectionProps {
   functionName?: string;
-  onSessVarUpdate: (s: string) => void;
+  onSessVarUpdate: (s: string) => Promise<void>;
   configuration?: ConfigurationType;
   loading: FunctionLoadingType;
 }
@@ -31,16 +32,18 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
   const onSessVarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSessVar(e.target.value);
   };
+  const closeEditMode = React.useCallback(setIsEditing, [setIsEditing]);
   const onSave = () => {
-    if (sessVar) onSessVarUpdate(sessVar);
+    if (sessVar) onSessVarUpdate(sessVar).then(() => closeEditMode(false));
   };
 
   return (
     <>
       <hr />
       <h4 className={styles.subheading_text}>
-        Session Variable Argument
-        <ToolTip message="Use Session Variable argument as SQL function input argument." />
+        Session argument
+        <ToolTip message="the function argument into which hasura session variables will be passed" />
+        <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/custom-functions.html#accessing-hasura-session-variables-in-custom-functions" />
       </h4>
       <div
         className={isEditing ? styles.editorExpanded : styles.editorCollapsed}
@@ -50,7 +53,7 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
           data-test={`${functionName}-session-argument`}
         >
           <Button
-            className={`${styles.add_mar_small}`}
+            className={styles.add_mar_small}
             color="white"
             size="xs"
             onClick={toggleIsEditting}
@@ -58,16 +61,16 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
           >
             {isEditing ? 'Close' : 'Edit'}
           </Button>
-          {configuration?.session_argument || 'No Session Argument selected'}
+          {configuration?.session_argument || 'No Session argument provided'}
         </div>
         {isEditing && (
           <>
             <EditorInput
-              label="Session Variable Argument"
+              label="Session argument"
               value={sessVar}
               onChange={onSessVarChange}
               testID={functionName}
-              placeholder="hasura-session"
+              placeholder="hasura_session"
             />
             <div className={styles.add_mar_top_small}>
               <Button
@@ -77,7 +80,7 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
                 className={styles.add_mar_right}
                 onClick={onSave}
                 data-test={`${functionName}-session-argument-save`}
-                disabled={!sessVar.length}
+                disabled={sessVar === configuration?.session_argument}
               >
                 Save
               </Button>

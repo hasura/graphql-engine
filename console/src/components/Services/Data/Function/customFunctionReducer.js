@@ -365,9 +365,7 @@ const updateSessVar = session_argument => {
     const errorMsg = 'Updating Session argument variable failed';
 
     const customOnSuccess = () => {
-      dispatch(_push(getSchemaBaseRoute(currentSchema)));
-      dispatch({ type: RESET });
-      dispatch(fetchTrackedFunctions());
+      dispatch(fetchCustomFunction());
     };
     const customOnError = error => {
       dispatch({ type: SESSVAR_CUSTOM_FUNCTION_ADD_FAIL, data: error });

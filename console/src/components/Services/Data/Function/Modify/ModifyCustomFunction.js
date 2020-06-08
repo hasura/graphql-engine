@@ -86,9 +86,7 @@ class ModifyCustomFunction extends React.Component {
     }
   }
 
-  onSessVarUpdate = sessVar => {
-    this.props.dispatch(updateSessVar(sessVar));
-  };
+  onSessVarUpdate = sessVar => this.props.dispatch(updateSessVar(sessVar));
 
   loadRunSQLAndLoadPage() {
     const { functionDefinition } = this.props.functions;
@@ -161,14 +159,6 @@ class ModifyCustomFunction extends React.Component {
       return (
         <div className={styles.commonBtn}>
           <Button
-            color="yellow"
-            className={styles.add_mar_right}
-            data-test={'custom-function-edit-modify-btn'}
-            onClick={this.loadRunSQLAndLoadPage}
-          >
-            Modify
-          </Button>
-          <Button
             color="white"
             className={styles.add_mar_right}
             onClick={this.handleUntrackCustomFunction}
@@ -240,20 +230,29 @@ class ModifyCustomFunction extends React.Component {
           testPrefix={'functions'}
         />
         <br />
-        {/*
-        <h4>Function Definition:</h4>
-        */}
+        <div className={`${styles.display_flex}`}>
+          <h4 className={styles.subheading_text}>Function Definition:</h4>
+          <Button
+            color="white"
+            size="xs"
+            data-test="custom-function-edit-modify-btn"
+            className={`${styles.align_baseline} ${styles.mar_small_left}`}
+            onClick={this.loadRunSQLAndLoadPage}
+          >
+            Modify
+          </Button>
+        </div>
+
         <div className={styles.sqlBlock}>
           <TextAreaWithCopy
             copyText={functionDefinition}
             textLanguage={'sql'}
-            id={'copyCustomFunctionSQL'}
+            id="copyCustomFunctionSQL"
           />
         </div>
         <SessionVarSection
           key={functionName}
           functionName={functionName}
-          dispatch={this.props.dispatch}
           configuration={configuration}
           loading={loading}
           onSessVarUpdate={this.onSessVarUpdate}
