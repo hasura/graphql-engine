@@ -11,27 +11,27 @@ module Hasura.GraphQL.Schema.Select
 
 import           Hasura.Prelude
 
-import           Data.Either                   (partitionEithers)
-import           Data.Foldable                 (toList)
-import           Data.Maybe                    (fromJust)
+import           Data.Either                           (partitionEithers)
+import           Data.Foldable                         (toList)
+import           Data.Maybe                            (fromJust)
 import           Data.Parser.JSONPath
-import           Data.Traversable              (mapAccumL)
+import           Data.Traversable                      (mapAccumL)
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashSet                  as Set
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict                   as Map
+import qualified Data.HashSet                          as Set
+import qualified Data.Sequence                         as Seq
+import qualified Data.Text                             as T
+import qualified Language.GraphQL.Draft.Syntax         as G
 
-import qualified Hasura.GraphQL.Parser         as P
-import qualified Hasura.RQL.DML.Select         as RQL
-import qualified Hasura.SQL.DML                as SQL
+import qualified Hasura.GraphQL.Parser                 as P
+import qualified Hasura.RQL.DML.Select                 as RQL
+import qualified Hasura.SQL.DML                        as SQL
 
-import           Hasura.GraphQL.Parser         (FieldParser, InputFieldsParser, Kind (..), Parser,
-                                                UnpreparedValue (..), mkParameter)
+import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
+                                                        Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Parser.Column          (qualifiedObjectToName)
 import           Hasura.GraphQL.Parser.Internal.Parser as P
-import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
@@ -327,8 +327,8 @@ tableAggregationFields table selectPermissions = do
         let columnsName  = $$(G.litName "columns")
             distinctName = $$(G.litName "distinct")
             args = do
-              distinct <- P.fieldOptional columnsName  Nothing P.boolean
-              columns  <- maybe (pure Nothing) (P.fieldOptional distinctName Nothing . P.list) columnsEnum
+              distinct <- P.fieldOptional distinctName Nothing P.boolean
+              columns  <- maybe (pure Nothing) (P.fieldOptional columnsName Nothing . P.list) columnsEnum
               pure $ case columns of
                        Nothing   -> SQL.CTStar
                        Just cols -> if fromMaybe False distinct
