@@ -1,0 +1,67 @@
+description: Query the relay Node interface
+url: /v1/relay
+status: 200
+query:
+  variables:
+    author_id: eyJ0YWJsZSIgOiB7InNjaGVtYSIgOiAicHVibGljIiwgIm5hbWUiIDogImF1dGhvciJ9LCAiY29sdW1ucyIgOiB7ImlkIiA6IDJ9fQ==
+    article_id: eyJ0YWJsZSIgOiB7InNjaGVtYSIgOiAicHVibGljIiwgIm5hbWUiIDogImFydGljbGUifSwgImNvbHVtbnMiIDogeyJpZCIgOiAzfX0=
+  query: |
+    query nodeQuery($author_id: ID!, $article_id: ID!){
+      author_node: node(id: $author_id){
+        __typename
+        ... on author{
+          name
+          articles_connection{
+            edges{
+              cursor
+              node{
+                title
+                content
+              }
+            }
+          }
+        }
+      }
+
+      article_node_with_author_id: node(id: $author_id){
+        id
+        ... on article{
+          title
+          content
+        }
+      }
+
+      article_node: node(id: $article_id){
+        __typename
+        ... on article{
+          title
+          content
+          author{
+            name
+          }
+        }
+      }
+    }
+response:
+  data:
+    author_node:
+      __typename: author
+      name: Author 2
+      articles_connection:
+        edges:
+        - cursor: eyJpZCIgOiA0fQ==
+          node:
+            title: Article 4
+            content: Sample article content 4
+        - cursor: eyJpZCIgOiA1fQ==
+          node:
+            title: Article 5
+            content: Sample article content 5
+    article_node_with_author_id:
+      id: eyJ0YWJsZSIgOiB7InNjaGVtYSIgOiAicHVibGljIiwgIm5hbWUiIDogImF1dGhvciJ9LCAiY29sdW1ucyIgOiB7ImlkIiA6IDJ9fQ==
+    article_node:
+      __typename: article
+      title: Article 3
+      content: Sample article content 3
+      author:
+        name: Author 1

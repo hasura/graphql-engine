@@ -68,7 +68,7 @@ const globals = {
     : null,
   cliUUID: window.__env.cliUUID,
   hasuraUUID: '',
-  telemetryNotificationShown: '',
+  telemetryNotificationShown: false,
   isProduction,
 };
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {

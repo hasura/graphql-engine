@@ -650,3 +650,56 @@ class TestGraphQLExplain:
         resp_sql = resp_json[0]['sql']
         exp_sql = conf['response'][0]['sql']
         assert resp_sql == exp_sql, resp_json
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestRelayQueries:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/relay'
+
+    # Basic queries
+    def test_article_connection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/basic/article_connection.yaml', transport)
+
+    def test_author_connection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/basic/author_connection.yaml', transport)
+
+    def test_node(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/basic/node.yaml', transport)
+
+    def test_invalid_node(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/basic/invalid_node_id.yaml', transport)
+
+    def test_only_pageinfo(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/basic/only_pageinfo.yaml', transport)
+
+    # Articles forward pagination
+    def test_article_no_orderby_forward_pagination(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + "/article_pagination_no_orderby/forward", 3)
+
+    # Articles backward pagination
+    def test_article_no_orderby_backward_pagination(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + "/article_pagination_no_orderby/backward", 3)
+
+    # Authors forward pagination
+    def test_author_orderby_articles_aggregate_orderby_forward_pagination(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + "/author_pagination_articles_aggregate_orderby/forward", 2)
+
+    # Authors backward pagination
+    def test_author_orderby_articles_aggregate_orderby_backward_pagination(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + "/author_pagination_articles_aggregate_orderby/backward", 3)
+
+    # Pagination errors
+    def test_first_and_last_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/pagination_errors/first_and_last.yaml", transport)
+
+    def test_after_and_before_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/pagination_errors/after_and_before.yaml", transport)
+
+def _test_relay_pagination(hge_ctx, transport, test_file_prefix, no_of_pages):
+    for i in range(no_of_pages):
+        page_no = i + 1
+        test_file = "page_" + str(page_no) + ".yaml"
+        check_query_f(hge_ctx, test_file_prefix + "/" + test_file, transport)
