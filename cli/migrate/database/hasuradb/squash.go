@@ -52,9 +52,21 @@ func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) e
 			// 2. create, update, update .........., delete
 			// 3. update, update, update ..........
 			// 4. update, update, ...., delete
+			// 5. update, update, ...., delete, create
 			element := val.(*list.Element)
 			switch obj := element.Value.(type) {
 			case *createRemoteRelationshipInput:
+				if len(prevElems) != 0 {
+					for _, e := range prevElems {
+						squashList.Remove(e)
+					}
+					err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
+					if err != nil {
+						return errors.Wrapf(err, "error squashing: %v", obj.Name)
+					}
+					prevElems = prevElems[:0]
+				}
+
 				err := remoteRelationshipTransition.Trigger(createRemoteRelationship, &cfg, nil)
 				if err != nil {
 					return errors.Wrapf(err, "error squashing: %v", obj.Name)
@@ -98,14 +110,17 @@ func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) e
 			case *deleteRemoteRelationshipInput:
 				if cfg.GetState() == "created" {
 					prevElems = append(prevElems, element)
+					for _, e := range prevElems {
+						squashList.Remove(e)
+					}
+					err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
+					if err != nil {
+						return err
+					}
+					prevElems = prevElems[:0]
+					continue
 				}
-				err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
-				if err != nil {
-					return err
-				}
-				for _, e := range prevElems {
-					squashList.Remove(e)
-				}
+				prevElems = append(prevElems, element)
 			}
 		}
 	}
