@@ -13,7 +13,7 @@ export interface TooltipProps extends React.ComponentProps<'i'> {
   tooltipStyle?: string;
 }
 
-const Tooltip: React.FC<TooltipProps> = ({
+const ToolTip: React.FC<TooltipProps> = ({
   message,
   placement = 'right',
   tooltipStyle = '',
@@ -26,4 +26,4 @@ const Tooltip: React.FC<TooltipProps> = ({
   </OverlayTrigger>
 );
 
-export default Tooltip;
+export default ToolTip;

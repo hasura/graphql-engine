@@ -43,6 +43,11 @@ The request payload is of the format:
       }
     }
 
+.. note::
+
+    All ``session_variables`` in the request payload have lowercase keys.
+
+
 
 Returning a success response
 ----------------------------
