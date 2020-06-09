@@ -71,7 +71,7 @@ Creating & exposing SQL functions
 
         - function:
             schema: public
-            name: search_articles
+            name: <function name>
 
   .. tab:: Via API
 

@@ -137,6 +137,17 @@ Step 2: Run an insert mutation
 
   .. tab:: Via API
 
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: user
+      X-Hasura-User-Id: 1
+
+      {
+        "query": "mutation article { insert_article(objects: [{title: \"Software is eating the world\"}]) { returning { id title user_id }}}"
+      }
+
 .. note::
 
   Not passing the configured header will result in a run-time error:

@@ -148,7 +148,15 @@ value will be set automatically by Postgres.
 
   .. tab:: Via API
 
-    TODO
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "query": "mutation { insert_article(objects: [{ title: \"GraphQL manual\", author_id: 11 }]) { returning { id title created_at } }}"
+      }
 
 Also see
 --------

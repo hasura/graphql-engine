@@ -175,7 +175,15 @@ value (output="YABBA DABBA DOO!") will be set automatically.
 
   .. tab:: Via API
 
-    TODO
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "query": "mutation { insert_sql_function_table (objects: [{input: \"yabba dabba doo!\"}]) { returning { input output }}}"
+      }
 
 Also see
 --------

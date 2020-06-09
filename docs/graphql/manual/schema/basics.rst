@@ -214,7 +214,15 @@ Here are a couple of examples of GraphQL requests:
 
   .. tab:: Via API
 
-    To do 
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "query": "query { article { id title author_id } }"
+      }
 
 - Insert data in the ``author`` table
 
@@ -256,6 +264,14 @@ Here are a couple of examples of GraphQL requests:
 
   .. tab:: Via API
 
-    TODO
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "query": "mutation add_author { insert_author(objects: [ { name: \"Jane\" } ]) { affected_rows returning { id name }} }"
+      }
     
 Note that the author's ``id`` does not need to passed as an input as it is of type ``serial`` (auto incrementing integer).

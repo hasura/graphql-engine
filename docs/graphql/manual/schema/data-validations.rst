@@ -48,11 +48,48 @@ Let's say we have a table:
 
    author (id uuid, name text, rating integer)
 
-Now, we can head to the ``Modify`` tab in the table page and add a check
-constraint in the ``Check Constraints`` section:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. thumbnail:: /img/graphql/manual/schema/validation-add-check-constraint.png
-   :alt: Add check constraint
+  .. tab:: Via console
+
+    Now, we can head to the ``Modify`` tab in the table page and add a check
+    constraint in the ``Check Constraints`` section:
+
+    .. thumbnail:: /img/graphql/manual/schema/validation-add-check-constraint.png
+      :alt: Add check constraint
+
+  .. tab:: Via CLI
+
+    You can :ref:`create a migration manually <manual_migrations>` with the following statement:
+
+    .. code-block:: sql
+
+      ALTER TABLE author
+      ADD CONSTRAINT authors_rating_check CHECK (rating > 0 AND rating <= 10);
+
+    Then apply the migration by running:
+
+    .. code-block:: bash
+
+      hasura migrate apply
+
+  .. tab:: Via API
+
+    You can add a check constraint by making an API call to the :ref:`run_sql API <run_sql>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "run_sql",
+          "args": {
+              "sql": "ALTER TABLE author ADD CONSTRAINT authors_rating_check CHECK (rating > 0 AND rating <= 10);"
+          }
+      }
 
 If someone now tries to add an author with a rating of ``11``, the following
 error is thrown:
@@ -99,11 +136,44 @@ Suppose we have the following table:
 
   article (id uuid, title text, content text)
 
-Now, we can head to the ``Data -> SQL`` tab in the console and
-create a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-that checks if an article's content exceeds a certain number of words,
-and then add a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__
-that will call this function every time before an article is inserted or updated.
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    Now, we can head to the ``Data -> SQL`` tab in the console and
+    create a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
+    that checks if an article's content exceeds a certain number of words,
+    and then add a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__
+    that will call this function every time before an article is inserted or updated.
+
+  .. tab:: Via CLI
+
+    You can :ref:`create a migration manually <manual_migrations>` and add your `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
+    and your `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ to it.
+
+    Then apply the migration by running:
+
+    .. code-block:: bash
+
+      hasura migrate apply
+
+  .. tab:: Via API
+
+    You can add a function by making an API call to the :ref:`run_sql API <run_sql>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "run_sql",
+          "args": {
+              "sql": "<SQL statement>"
+          }
+      }
 
 .. code-block:: plpgsql
 
@@ -233,8 +303,19 @@ Also, suppose there is an :ref:`object relationship <graphql_relationships>` ``a
 
 Now, we can create a role ``user`` and add the following rule:
 
-.. thumbnail:: /img/graphql/manual/schema/validation-author-isactive.png
-   :alt: validation using permissions: author should be active
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. thumbnail:: /img/graphql/manual/schema/validation-author-isactive.png
+      :alt: validation using permissions: author should be active
+
+  .. tab:: Via CLI
+
+    
+
+  .. tab:: Via API
 
 If we try to insert an article for an author for whom ``is_active = false``, we
 will receive a ``permission-error`` :

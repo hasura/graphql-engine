@@ -62,7 +62,7 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``article`
 
   .. tab:: Via API
 
-    You can a foreign-key constraint by making an API call to the :ref:`run_sql API <run_sql>`:
+    You can add a foreign-key constraint by making an API call to the :ref:`run_sql API <run_sql>`:
 
     .. code-block:: http
 
@@ -196,7 +196,15 @@ Fetch a list of articles and each article's author:
 
   .. tab:: Via API
 
-    TODO
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "query": "query { article { id title author { id first_name }}}"
+      }
 
 Step 3: Create an array relationship
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -351,7 +359,15 @@ Fetch a list of authors and a nested list of each author's articles:
 
   .. tab:: Via API
 
-    TODO
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "query": "query { article { id title author { id first_name }}}"
+      }
 
 .. _create_manual_relationships:
 
@@ -507,4 +523,12 @@ Fetch a list of authors with the average rating of their articles:
 
   .. tab:: Via API
 
-    TODO
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "query": "query { authors { id name avg_rating { avg }}}"
+      }
