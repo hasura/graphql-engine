@@ -17,12 +17,15 @@ const ToolTip: React.FC<TooltipProps> = ({
   message,
   placement = 'right',
   tooltipStyle = '',
+  children,
 }) => (
   <OverlayTrigger placement={placement} overlay={tooltipGen(message)}>
-    <i
-      className={`fa fa-info-circle ${styles.tooltipIcon} ${tooltipStyle}`}
-      aria-hidden="true"
-    />
+    {children || (
+      <i
+        className={`fa fa-info-circle ${styles.tooltipIcon} ${tooltipStyle}`}
+        aria-hidden="true"
+      />
+    )}
   </OverlayTrigger>
 );
 
