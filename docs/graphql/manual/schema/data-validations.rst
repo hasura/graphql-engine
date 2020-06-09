@@ -255,8 +255,61 @@ Suppose, we have a table:
 
 Now, we can create a role ``user`` and add the following rule:
 
-.. thumbnail:: /img/graphql/manual/schema/validation-not-empty.png
-   :alt: validation using permission: title cannot be empty
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. thumbnail:: /img/graphql/manual/schema/validation-not-empty.png
+      :alt: validation using permission: title cannot be empty
+
+  .. tab:: Via CLI
+  
+    You can add roles and permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+      :emphasize-lines: 4-9
+
+        - table:
+            schema: public
+            name: article
+          insert_permissions:
+          - role: user
+            permission:
+              check:
+                title:
+                  _ne: ''
+
+    After that, apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
+  .. tab:: Via API
+
+    You can add column presets by making an API call to the :ref:`create_insert_permission API <create_insert_permission>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "create_insert_permission",
+          "args": {
+              "table": "article",
+              "role": "user",
+              "permission": {
+                  "check": {
+                      "title": {
+                          "_ne": ""
+                      }
+                  }
+              }
+          }
+      }
 
 If we try to insert an article with ``title = ""``, we will get a ``permission-error``:
 
@@ -313,9 +366,52 @@ Now, we can create a role ``user`` and add the following rule:
 
   .. tab:: Via CLI
 
-    
+    You can add roles and permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+      :emphasize-lines: 4-10
+
+        - table:
+            schema: public
+            name: article
+          insert_permissions:
+          - role: user
+            permission:
+              check:
+                author:
+                  is_active:
+                    _eq: true
+
+    After that, apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
 
   .. tab:: Via API
+
+    You can add column presets by making an API call to the :ref:`create_insert_permission API <create_insert_permission>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type": "create_insert_permission",
+          "args": {
+              "table": "article",
+              "role": "user",
+              "permission": {
+                  "check": {
+                      "author": {
+                          "is_active": true
+                      }
+                  }
+              }
+          }
+      }
 
 If we try to insert an article for an author for whom ``is_active = false``, we
 will receive a ``permission-error`` :
@@ -382,8 +478,21 @@ Actions allow us to define :ref:`custom types <custom_types>` in our GraphQL sch
 We create a new action called ``InsertAuthor`` that takes an ``author`` object with type ``AuthorInput`` as input and
 returns an object of type ``AuthorOutput``:
 
-.. thumbnail:: /img/graphql/manual/schema/validation-actions-def.png
-   :alt: Create action
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. thumbnail:: /img/graphql/manual/schema/validation-actions-def.png
+      :alt: Create action
+
+  .. tab:: Via CLI
+
+    TODO
+
+  .. tab:: Via API
+
+    TODO  
 
 The business logic of an action - in our case the author validation - happens in the :ref:`action handler <action_handlers>`
 which is an HTTP webhook which contains the code to call the external service.
