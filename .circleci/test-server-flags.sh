@@ -66,6 +66,19 @@ OUTPUT_FOLDER=${OUTPUT_FOLDER:-"$CIRCLECI_FOLDER/test-server-flags-output"}
 mkdir -p "$OUTPUT_FOLDER"
 
 
+########## Test that we didn't compile with +developer by accident
+echoInfo "Test we didn't compile in the deveoper-only APIs"
+
+run_hge_with_flags
+
+code=$(curl -s -o /dev/null -w "%{http_code}"  http://localhost:8080/dev/plan_cache)
+if [ "$code" != "404" ]; then  
+  echo "Expected a dev endpoint to return 404, but got: $code"
+  exit 1
+fi
+
+kill_hge
+
 ########## Test --use-prepared-statements=false and flag --admin-secret
 
 key="HGE$RANDOM$RANDOM"
