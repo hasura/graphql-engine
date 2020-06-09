@@ -1,3 +1,5 @@
+import { ThunkDispatch } from 'redux-thunk';
+import { AnyAction } from 'redux';
 import requestAction from '../../../utils/requestAction';
 import { clearIntrospectionSchemaCache } from '../RemoteSchema/graphqlUtils';
 import { push } from 'react-router-redux';
@@ -5,24 +7,17 @@ import globals from '../../../Globals';
 import endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import defaultState from './State';
 import { filterInconsistentMetadataObjects } from './utils';
-import {
-  setConsistentSchema,
-  setConsistentFunctions,
-  makeMigrationCall,
-} from '../Data/DataActions';
+import { makeMigrationCall, setConsistentFunctions, setConsistentSchema, } from '../Data/DataActions';
 import { setConsistentRemoteSchemas } from '../RemoteSchema/Actions';
 import { setActions } from '../Actions/reducer';
+import { showErrorNotification, showSuccessNotification, } from '../Common/Notification';
 import {
-  showSuccessNotification,
-  showErrorNotification,
-} from '../Common/Notification';
-import {
-  inconsistentObjectsQuery,
-  getReloadMetadataQuery,
-  getReloadRemoteSchemaCacheQuery,
   dropInconsistentObjectsQuery,
   exportMetadataQuery,
   generateReplaceMetadataQuery,
+  getReloadMetadataQuery,
+  getReloadRemoteSchemaCacheQuery,
+  inconsistentObjectsQuery,
   resetMetadataQuery,
 } from '../../Common/utils/v1QueryUtils';
 
@@ -40,7 +35,7 @@ const UPDATE_ALLOWED_QUERY = 'Metadata/UPDATE_ALLOWED_QUERY';
 const DELETE_ALLOWED_QUERY = 'Metadata/DELETE_ALLOWED_QUERY';
 const DELETE_ALLOW_LIST = 'Metadata/DELETE_ALLOW_LIST';
 
-const reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery = remoteSchemaName => {
+const reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery = (remoteSchemaName: string) => {
   return {
     type: 'bulk',
     args: [
@@ -50,7 +45,7 @@ const reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery = remoteSchemaName =
   };
 };
 
-const getReloadCacheAndGetInconsistentObjectsQuery = shouldReloadRemoteSchemas => ({
+const getReloadCacheAndGetInconsistentObjectsQuery = (shouldReloadRemoteSchemas: boolean) => ({
   type: 'bulk',
   args: [
     getReloadMetadataQuery(shouldReloadRemoteSchemas),
@@ -58,135 +53,129 @@ const getReloadCacheAndGetInconsistentObjectsQuery = shouldReloadRemoteSchemas =
   ],
 });
 
-export const exportMetadata = (successCb, errorCb) => (dispatch, getState) => {
-  const { dataHeaders } = getState().tables;
+export const exportMetadata = (successCb: Function, errorCb: Function) =>
+  (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => AppState) => {
+    const { dataHeaders } = getState().tables;
 
-  const query = exportMetadataQuery;
+    const options: RequestInit = {
+      method: 'POST',
+      headers: {
+        ...dataHeaders,
+      },
+      body: JSON.stringify(exportMetadataQuery),
+    };
 
-  const options = {
-    method: 'POST',
-    headers: {
-      ...dataHeaders,
-    },
-    body: JSON.stringify(query),
+    dispatch(requestAction(endpoints.query, options))
+      .then(response => {
+        successCb(response);
+      })
+      .catch((err: Error) => {
+        errorCb(err);
+      });
   };
 
-  dispatch(requestAction(endpoints.query, options))
-    .then(response => {
-      successCb(response);
-    })
-    .catch(err => {
-      errorCb(err);
-    });
-};
+export const replaceMetadata = (newMetadata: object, successCb: Function, errorCb: Function) =>
+  (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => AppState) => {
+    const exportSuccessCb = (oldMetadata: object) => {
+      const upQuery = generateReplaceMetadataQuery(newMetadata);
+      const downQuery = generateReplaceMetadataQuery(oldMetadata);
 
-export const replaceMetadata = (newMetadata, successCb, errorCb) => (
-  dispatch,
-  getState
-) => {
-  const exportSuccessCb = oldMetadata => {
-    const upQuery = generateReplaceMetadataQuery(newMetadata);
-    const downQuery = generateReplaceMetadataQuery(oldMetadata);
+      const migrationName = 'replace_metadata';
 
-    const migrationName = 'replace_metadata';
+      const requestMsg = 'Importing metadata...';
+      const successMsg = 'Metadata imported';
+      const errorMsg = 'Failed importing metadata';
 
-    const requestMsg = 'Importing metadata...';
-    const successMsg = 'Metadata imported';
-    const errorMsg = 'Failed importing metadata';
+      const customOnSuccess = () => {
+        if (successCb) successCb();
+      };
+      const customOnError = () => {
+        if (errorCb) errorCb();
+      };
 
-    const customOnSuccess = () => {
+      makeMigrationCall(
+        dispatch,
+        getState,
+        [upQuery],
+        [downQuery],
+        migrationName,
+        customOnSuccess,
+        customOnError,
+        requestMsg,
+        successMsg,
+        errorMsg
+      );
+    };
+
+    const exportErrorCb = () => {
+      if (errorCb) errorCb();
+
+      dispatch(
+        showErrorNotification(
+          'Metadata import failed',
+          'Failed to get the existing metadata from the server'
+        )
+      );
+    };
+
+    dispatch(exportMetadata(exportSuccessCb, exportErrorCb));
+  };
+
+export const resetMetadata = (successCb: Function, errorCb: Function) =>
+  (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => AppState) => {
+    const headers = getState().tables.dataHeaders;
+
+    const options: RequestInit = {
+      method: 'POST',
+      credentials: globalCookiePolicy,
+      headers: headers || {},
+      body: JSON.stringify(resetMetadataQuery),
+    };
+
+    return dispatch(requestAction(endpoints.query, options))
+      .then(() => {
+          if (successCb) {
+            successCb();
+          }
+          dispatch(showSuccessNotification('Metadata reset successfully!'));
+        }, (error: Error) => {
+          console.error(error);
+          dispatch(showErrorNotification('Metadata reset failed', null, error));
+          if (errorCb) {
+            errorCb(error);
+          }
+        }
+      );
+  };
+
+export const replaceMetadataFromFile = (fileContent: string, successCb: Function, errorCb: (err?: Error) => {}) =>
+  (dispatch: ThunkDispatch<any, any, AnyAction>) => {
+    let parsedFileContent;
+    try {
+      parsedFileContent = JSON.parse(fileContent);
+    } catch (e) {
+      dispatch(
+        showErrorNotification('Error parsing metadata file', e.toString())
+      );
+
+      if (errorCb) errorCb();
+
+      return;
+    }
+
+    const onSuccess = () => {
       if (successCb) successCb();
     };
-    const customOnError = () => {
+
+    const onError = () => {
       if (errorCb) errorCb();
     };
 
-    makeMigrationCall(
-      dispatch,
-      getState,
-      [upQuery],
-      [downQuery],
-      migrationName,
-      customOnSuccess,
-      customOnError,
-      requestMsg,
-      successMsg,
-      errorMsg
-    );
+    dispatch(replaceMetadata(parsedFileContent, onSuccess, onError));
   };
 
-  const exportErrorCb = () => {
-    if (errorCb) errorCb();
-
-    dispatch(
-      showErrorNotification(
-        'Metadata import failed',
-        'Failed to get the existing metadata from the server'
-      )
-    );
-  };
-
-  dispatch(exportMetadata(exportSuccessCb, exportErrorCb));
-};
-
-export const resetMetadata = (successCb, errorCb) => (dispatch, getState) => {
-  const headers = getState().tables.dataHeaders;
-
-  const options = {
-    method: 'POST',
-    credentials: globalCookiePolicy,
-    headers: headers || {},
-    body: JSON.stringify(resetMetadataQuery),
-  };
-
-  return dispatch(requestAction(endpoints.query, options)).then(
-    () => {
-      if (successCb) {
-        successCb();
-      }
-      dispatch(showSuccessNotification('Metadata reset successfully!'));
-    },
-    error => {
-      console.error(error);
-      dispatch(showErrorNotification('Metadata reset failed', null, error));
-      if (errorCb) {
-        errorCb(error);
-      }
-    }
-  );
-};
-
-export const replaceMetadataFromFile = (
-  fileContent,
-  successCb,
-  errorCb
-) => dispatch => {
-  let parsedFileContent;
-  try {
-    parsedFileContent = JSON.parse(fileContent);
-  } catch (e) {
-    dispatch(
-      showErrorNotification('Error parsing metadata file', e.toString())
-    );
-
-    if (errorCb) errorCb();
-
-    return;
-  }
-
-  const onSuccess = () => {
-    if (successCb) successCb();
-  };
-
-  const onError = () => {
-    if (errorCb) errorCb();
-  };
-
-  dispatch(replaceMetadata(parsedFileContent, onSuccess, onError));
-};
-
-const handleInconsistentObjects = inconsistentObjects => {
-  return (dispatch, getState) => {
+const handleInconsistentObjects = (inconsistentObjects: object[]) => {
+  return (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => AppState) => {
     const allSchemas = getState().tables.allSchemas;
     const functions = getState().tables.trackedFunctions;
     const remoteSchemas = getState().remoteSchemas.listData.remoteSchemas;
@@ -227,16 +216,16 @@ const handleInconsistentObjects = inconsistentObjects => {
   };
 };
 
-export const loadInconsistentObjects = (reloadConfig, successCb, failureCb) => {
-  return (dispatch, getState) => {
+export const loadInconsistentObjects = (reloadConfig: ReloadConfig, successCb?: Function, failureCb?: Function) => {
+  return (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => AppState) => {
     const headers = getState().tables.dataHeaders;
 
     const { shouldReloadMetadata, shouldReloadRemoteSchemas } = reloadConfig;
 
     const loadQuery = shouldReloadMetadata
       ? getReloadCacheAndGetInconsistentObjectsQuery(
-          shouldReloadRemoteSchemas === false ? false : true
-        )
+        shouldReloadRemoteSchemas === false ? false : true
+      )
       : inconsistentObjectsQuery;
 
     dispatch({ type: LOADING_METADATA });
@@ -246,8 +235,7 @@ export const loadInconsistentObjects = (reloadConfig, successCb, failureCb) => {
         headers,
         body: JSON.stringify(loadQuery),
       })
-    ).then(
-      data => {
+    ).then(data => {
         const inconsistentObjects = shouldReloadMetadata
           ? data[1].inconsistent_objects
           : data.inconsistent_objects;
@@ -260,8 +248,7 @@ export const loadInconsistentObjects = (reloadConfig, successCb, failureCb) => {
         if (shouldReloadRemoteSchemas) {
           clearIntrospectionSchemaCache();
         }
-      },
-      error => {
+      }, (error: Error) => {
         console.error(error);
         dispatch({ type: LOAD_METADATA_ERROR });
         if (failureCb) {
@@ -274,8 +261,8 @@ export const loadInconsistentObjects = (reloadConfig, successCb, failureCb) => {
 
 /* Reloads only remote schema metadata */
 
-export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
-  return (dispatch, getState) => {
+export const reloadRemoteSchema = (remoteSchemaName: string, successCb?: Function, failureCb?: Function) => {
+  return (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => AppState) => {
     const headers = getState().tables.dataHeaders;
 
     const reloadQuery = reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery(
@@ -289,8 +276,7 @@ export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
         headers,
         body: JSON.stringify(reloadQuery),
       })
-    ).then(
-      data => {
+    ).then(data => {
         const inconsistentObjects = data[1].inconsistent_objects;
 
         dispatch(handleInconsistentObjects(inconsistentObjects));
@@ -300,8 +286,7 @@ export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
         if (successCb) {
           successCb();
         }
-      },
-      error => {
+      }, (error: Error) => {
         console.error(error);
         dispatch({ type: LOAD_METADATA_ERROR });
         if (failureCb) {
@@ -313,11 +298,11 @@ export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
 };
 
 export const reloadMetadata = (
-  shouldReloadRemoteSchemas,
-  successCb,
-  failureCb
+  shouldReloadRemoteSchemas: boolean,
+  successCb?: Function,
+  failureCb?: Function
 ) => {
-  return dispatch => {
+  return (dispatch: ThunkDispatch<any, any, AnyAction>) => {
     return dispatch(
       loadInconsistentObjects(
         {
@@ -331,8 +316,8 @@ export const reloadMetadata = (
   };
 };
 
-export const dropInconsistentObjects = (successCb, failureCb) => {
-  return (dispatch, getState) => {
+export const dropInconsistentObjects = (successCb: Function, failureCb: Function) => {
+  return (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => AppState) => {
     const headers = getState().tables.dataHeaders;
     dispatch({ type: DROP_INCONSISTENT_METADATA });
     return dispatch(
@@ -341,8 +326,7 @@ export const dropInconsistentObjects = (successCb, failureCb) => {
         headers,
         body: JSON.stringify(dropInconsistentObjectsQuery),
       })
-    ).then(
-      () => {
+    ).then(() => {
         dispatch({ type: DROPPED_INCONSISTENT_METADATA });
         dispatch(showSuccessNotification('Dropped inconsistent metadata'));
         dispatch(loadInconsistentObjects({ shouldReloadRemoteSchemas: false }));
@@ -350,8 +334,7 @@ export const dropInconsistentObjects = (successCb, failureCb) => {
         if (successCb) {
           successCb();
         }
-      },
-      error => {
+      }, (error: Error) => {
         console.error(error);
         dispatch({ type: DROPPING_INCONSISTENT_METADATA_FAILED });
         dispatch(
@@ -374,7 +357,7 @@ export const isMetadataStatusPage = () => {
 };
 
 export const redirectToMetadataStatus = () => {
-  return dispatch => {
+  return (dispatch: ThunkDispatch<any, any, AnyAction>) => {
     return dispatch(
       push(globals.urlPrefix + '/settings/metadata-status?is_redirected=true')
     );
@@ -395,7 +378,7 @@ const loadAllowedQueriesQuery = () => ({
   },
 });
 
-const createAllowListQuery = queries => {
+const createAllowListQuery = (queries: Query[]) => {
   const createAllowListCollectionQuery = () => ({
     type: 'create_query_collection',
     args: {
@@ -427,7 +410,7 @@ const deleteAllowListQuery = () => ({
   },
 });
 
-const addAllowedQueryQuery = query => ({
+const addAllowedQueryQuery = (query: Query) => ({
   type: 'add_query_to_collection',
   args: {
     collection_name: allowedQueriesCollection,
@@ -436,7 +419,7 @@ const addAllowedQueryQuery = query => ({
   },
 });
 
-const addAllowedQueriesQuery = queries => {
+const addAllowedQueriesQuery = (queries: Query[]) => {
   const addQueries = queries.map(query => addAllowedQueryQuery(query));
 
   return {
@@ -445,7 +428,7 @@ const addAllowedQueriesQuery = queries => {
   };
 };
 
-const deleteAllowedQueryQuery = queryName => ({
+const deleteAllowedQueryQuery = (queryName: string) => ({
   type: 'drop_query_from_collection',
   args: {
     collection_name: allowedQueriesCollection,
@@ -453,13 +436,13 @@ const deleteAllowedQueryQuery = queryName => ({
   },
 });
 
-const updateAllowedQueryQuery = (queryName, newQuery) => ({
+const updateAllowedQueryQuery = (queryName: string, newQuery: Query) => ({
   type: 'bulk',
   args: [deleteAllowedQueryQuery(queryName), addAllowedQueryQuery(newQuery)],
 });
 
 export const loadAllowedQueries = () => {
-  return (dispatch, getState) => {
+  return (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => AppState) => {
     const headers = getState().tables.dataHeaders;
 
     return dispatch(
@@ -468,8 +451,7 @@ export const loadAllowedQueries = () => {
         headers,
         body: JSON.stringify(loadAllowedQueriesQuery()),
       })
-    ).then(
-      data => {
+    ).then(data => {
         let queries;
 
         const collection = data[0];
@@ -479,8 +461,7 @@ export const loadAllowedQueries = () => {
           queries = [];
         }
         dispatch({ type: LOAD_ALLOWED_QUERIES, data: queries });
-      },
-      error => {
+      }, (error: Error) => {
         console.error(error);
         dispatch(showErrorNotification('Fetching allow list failed'));
       }
@@ -488,8 +469,8 @@ export const loadAllowedQueries = () => {
   };
 };
 
-export const addAllowedQueries = (queries, isEmptyList, callback) => {
-  return (dispatch, getState) => {
+export const addAllowedQueries = (queries: Query[], isEmptyList: boolean, callback: Function) => {
+  return (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => AppState) => {
     if (queries.length === 0) {
       dispatch(showErrorNotification('No queries found'));
 
@@ -508,8 +489,7 @@ export const addAllowedQueries = (queries, isEmptyList, callback) => {
         headers,
         body: JSON.stringify(addQuery),
       })
-    ).then(
-      () => {
+    ).then(() => {
         dispatch(
           showSuccessNotification(
             `${queries.length > 1 ? 'Queries' : 'Query'} added to allow-list`
@@ -517,8 +497,7 @@ export const addAllowedQueries = (queries, isEmptyList, callback) => {
         );
         dispatch({ type: ADD_ALLOWED_QUERIES, data: queries });
         callback();
-      },
-      error => {
+      }, (error: Error) => {
         console.error(error);
         dispatch(
           showErrorNotification(
@@ -533,7 +512,7 @@ export const addAllowedQueries = (queries, isEmptyList, callback) => {
 };
 
 export const deleteAllowList = () => {
-  return (dispatch, getState) => {
+  return (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => AppState) => {
     const headers = getState().tables.dataHeaders;
 
     return dispatch(
@@ -542,14 +521,12 @@ export const deleteAllowList = () => {
         headers,
         body: JSON.stringify(deleteAllowListQuery()),
       })
-    ).then(
-      () => {
+    ).then(() => {
         dispatch(
           showSuccessNotification('Deleted all queries from allow-list')
         );
         dispatch({ type: DELETE_ALLOW_LIST });
-      },
-      error => {
+      }, (error: Error) => {
         console.error(error);
         dispatch(
           showErrorNotification(
@@ -563,8 +540,8 @@ export const deleteAllowList = () => {
   };
 };
 
-export const deleteAllowedQuery = (queryName, isLastQuery) => {
-  return (dispatch, getState) => {
+export const deleteAllowedQuery = (queryName: string, isLastQuery: boolean) => {
+  return (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => AppState) => {
     const headers = getState().tables.dataHeaders;
 
     const deleteQuery = isLastQuery
@@ -581,8 +558,7 @@ export const deleteAllowedQuery = (queryName, isLastQuery) => {
       () => {
         dispatch(showSuccessNotification('Deleted query from allow-list'));
         dispatch({ type: DELETE_ALLOWED_QUERY, data: queryName });
-      },
-      error => {
+      }, (error: Error) => {
         console.error(error);
         dispatch(
           showErrorNotification(
@@ -596,8 +572,8 @@ export const deleteAllowedQuery = (queryName, isLastQuery) => {
   };
 };
 
-export const updateAllowedQuery = (queryName, newQuery) => {
-  return (dispatch, getState) => {
+export const updateAllowedQuery = (queryName: string, newQuery: Query) => {
+  return (dispatch: ThunkDispatch<any, any, AnyAction>, getState: () => AppState) => {
     const headers = getState().tables.dataHeaders;
 
     return dispatch(
@@ -606,12 +582,10 @@ export const updateAllowedQuery = (queryName, newQuery) => {
         headers,
         body: JSON.stringify(updateAllowedQueryQuery(queryName, newQuery)),
       })
-    ).then(
-      () => {
+    ).then(() => {
         dispatch(showSuccessNotification('Updated allow-list query'));
         dispatch({ type: UPDATE_ALLOWED_QUERY, data: { queryName, newQuery } });
-      },
-      error => {
+      }, (error: Error) => {
         console.error(error);
         dispatch(
           showErrorNotification('Updating allow-list query failed', null, error)
@@ -621,7 +595,7 @@ export const updateAllowedQuery = (queryName, newQuery) => {
   };
 };
 
-export const metadataReducer = (state = defaultState, action) => {
+export const metadataReducer = (state: SettingsState = defaultState, action: MetadataReducerAction) => {
   switch (action.type) {
     case LOAD_INCONSISTENT_OBJECTS:
       return {
@@ -664,7 +638,7 @@ export const metadataReducer = (state = defaultState, action) => {
     case ADD_ALLOWED_QUERIES:
       return {
         ...state,
-        allowedQueries: [...state.allowedQueries, ...action.data],
+        allowedQueries: [...state.allowedQueries, ...action.data as Query[]],
       };
     case DELETE_ALLOW_LIST:
       return {
@@ -675,19 +649,66 @@ export const metadataReducer = (state = defaultState, action) => {
       return {
         ...state,
         allowedQueries: [
-          ...state.allowedQueries.filter(q => q.name !== action.data),
+          ...state.allowedQueries.filter((q: Query) => q.name !== action.data),
         ],
       };
     case UPDATE_ALLOWED_QUERY:
       return {
         ...state,
         allowedQueries: [
-          ...state.allowedQueries.map(q =>
-            q.name === action.data.queryName ? action.data.newQuery : q
-          ),
+          ...state.allowedQueries.map((q: Query) => {
+            const { queryName, newQuery } = action.data as UpdateAllowedQuery;
+            return q.name === queryName ? newQuery : q;
+          }),
         ],
       };
     default:
       return state;
   }
 };
+
+export type SettingsState = {
+  inconsistentObjects: object[],
+  ongoingRequest: boolean,
+  allowedQueries: Query[],
+}
+
+type ReloadConfig = { shouldReloadMetadata?: boolean, shouldReloadRemoteSchemas?: boolean };
+
+type Query = { name: string, query: string }
+
+type UpdateAllowedQuery = { queryName: string, newQuery: Query };
+
+type MetadataReducerAction = {
+  type: typeof LOAD_INCONSISTENT_OBJECTS |
+    typeof LOADING_METADATA |
+    typeof LOAD_METADATA_ERROR |
+    typeof DROP_INCONSISTENT_METADATA |
+    typeof DROPPED_INCONSISTENT_METADATA |
+    typeof DROPPING_INCONSISTENT_METADATA_FAILED |
+    typeof LOAD_ALLOWED_QUERIES |
+    typeof ADD_ALLOWED_QUERIES |
+    typeof UPDATE_ALLOWED_QUERY |
+    typeof DELETE_ALLOWED_QUERY |
+    typeof DELETE_ALLOW_LIST,
+  data: Array<Query> | Query | string | Array<object> | UpdateAllowedQuery
+}
+
+export type AppState = {
+  tables: {
+    dataHeaders: HeadersInit,
+    allSchemas: object[],
+    trackedFunctions: object[],
+  },
+  remoteSchemas: {
+    listData: {
+      remoteSchemas: object[]
+    }
+  },
+  metadata: SettingsState,
+  actions: {
+    common: {
+      actions: object[]
+    }
+  }
+}
