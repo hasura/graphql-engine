@@ -1,0 +1,21 @@
+description: Use first and last arguments in the same query
+url: /v1/relay
+status: 200
+query:
+  query: |
+    query {
+      author_connection(
+        first: 1
+        last: 2
+      ){
+        edges{
+          cursor
+        }
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: "$.selectionSet.author_connection"
+      code: validation-failed
+    message: '"first" and "last" are not allowed at once'
