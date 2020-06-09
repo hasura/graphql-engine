@@ -32,6 +32,7 @@ import {
   getSchemaBaseRoute,
 } from '../../../../Common/utils/routesUtils';
 import SessionVarSection from './SessionVarSection';
+import RawSqlButton from '../../Common/Components/RawSqlButton';
 
 class ModifyCustomFunction extends React.Component {
   constructor() {
@@ -42,7 +43,6 @@ class ModifyCustomFunction extends React.Component {
       funcFetchCompleted: false,
     };
 
-    this.loadRunSQLAndLoadPage = this.loadRunSQLAndLoadPage.bind(this);
     this.handleUntrackCustomFunction = this.handleUntrackCustomFunction.bind(
       this
     );
@@ -87,14 +87,6 @@ class ModifyCustomFunction extends React.Component {
   }
 
   onSessVarUpdate = sessVar => this.props.dispatch(updateSessVar(sessVar));
-
-  loadRunSQLAndLoadPage() {
-    const { functionDefinition } = this.props.functions;
-    Promise.all([
-      this.props.dispatch({ type: SET_SQL, data: functionDefinition }),
-      this.props.dispatch(_push('/data/sql')),
-    ]);
-  }
 
   updateDeleteConfirmationError(data) {
     this.setState({ deleteConfirmationError: data });
@@ -151,7 +143,7 @@ class ModifyCustomFunction extends React.Component {
         ? { isRequesting, isDeleting, isUntracking, isFetching }
         : null;
 
-    const { migrationMode } = this.props;
+    const { migrationMode, dispatch } = this.props;
 
     const functionBaseUrl = getFunctionBaseRoute(schema, functionName);
 
@@ -231,16 +223,19 @@ class ModifyCustomFunction extends React.Component {
         />
         <br />
         <div className={`${styles.display_flex}`}>
-          <h4 className={styles.subheading_text}>Function Definition:</h4>
-          <Button
-            color="white"
-            size="xs"
-            data-test="custom-function-edit-modify-btn"
-            className={`${styles.align_baseline} ${styles.mar_small_left}`}
-            onClick={this.loadRunSQLAndLoadPage}
-          >
-            Modify
-          </Button>
+          <h4 className={styles.subheading_text}>
+            Function Definition:
+            <span className={styles.add_mar_left}>
+              <RawSqlButton
+                className={styles.add_mar_right}
+                sql={functionDefinition}
+                dispatch={dispatch}
+                data-test="modify-view"
+              >
+                Modify
+              </RawSqlButton>
+            </span>
+          </h4>
         </div>
 
         <div className={styles.sqlBlock}>
