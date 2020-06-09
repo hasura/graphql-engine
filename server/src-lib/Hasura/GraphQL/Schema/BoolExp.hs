@@ -85,17 +85,20 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
   ignInputParser  <- intersectsGeomNbandInput
   ingInputParser  <- intersectsNbandGeomInput
   -- see Note [Columns in comparison expression are never nullable]
-  columnParser    <- P.column columnType (G.Nullability False)
-  castParser      <- castExp columnType
-  let name       = P.getName columnParser <> $$(G.litName "_comparison_exp")
-      listParser = P.list columnParser `P.bind` traverse P.openOpaque
+  columnParser       <- P.column columnType (G.Nullability False)
+  nullableTextParser <- P.column (PGColumnScalar PGText) (G.Nullability True)
+  textParser         <- P.column (PGColumnScalar PGText) (G.Nullability False)
+  castParser         <- castExp columnType
+  let name = P.getName columnParser <> $$(G.litName "_comparison_exp")
+      textListParser = P.list textParser `P.bind` traverse P.openOpaque
+      columnListParser = P.list columnParser `P.bind` traverse P.openOpaque
   pure $ P.object name Nothing $ fmap catMaybes $ sequenceA $ concat
     [ [ P.fieldOptional $$(G.litName "_cast")    Nothing (ACast <$> castParser)
       , P.fieldOptional $$(G.litName "_is_null") Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
       , P.fieldOptional $$(G.litName "_eq")      Nothing (AEQ True . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_neq")     Nothing (ANE True . mkParameter <$> columnParser)
-      , P.fieldOptional $$(G.litName "_in")      Nothing (AIN  . mkListLiteral columnType <$> listParser)
-      , P.fieldOptional $$(G.litName "_nin")     Nothing (ANIN . mkListLiteral columnType <$> listParser)
+      , P.fieldOptional $$(G.litName "_in")      Nothing (AIN  . mkListLiteral columnType <$> columnListParser)
+      , P.fieldOptional $$(G.litName "_nin")     Nothing (ANIN . mkListLiteral columnType <$> columnListParser)
       ]
     , guard (isScalarColumnWhere (/= PGRaster) columnType) *>
       [ P.fieldOptional $$(G.litName "_gt")  Nothing (AGT  . mkParameter <$> columnParser)
@@ -143,13 +146,13 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         (AContainedIn . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_has_key")
         (Just "does the string exist as a top-level key in the column")
-        (AHasKey      . mkParameter <$> columnParser)
+        (AHasKey      . mkParameter <$> nullableTextParser)
       , P.fieldOptional $$(G.litName "_has_key_any")
         (Just "do any of these strings exist as top-level keys in the column")
-        (AHasKeysAny . mkListLiteral columnType <$> listParser)
+        (AHasKeysAny . mkListLiteral columnType <$> textListParser)
       , P.fieldOptional $$(G.litName "_has_key_all")
         (Just "do all of these strings exist as top-level keys in the column")
-        (AHasKeysAll . mkListLiteral columnType <$> listParser)
+        (AHasKeysAll . mkListLiteral columnType <$> textListParser)
       ]
     , guard (isScalarColumnWhere (== PGGeography) columnType) *>
       [ P.fieldOptional $$(G.litName "_st_intersects")
