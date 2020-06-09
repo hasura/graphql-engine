@@ -262,11 +262,12 @@ tableArgs table selectPermissions = do
   orderByParser <- orderByExp table selectPermissions
   columnsEnum   <- tableSelectColumnsEnum table selectPermissions
   pure $ do
-    whereF   <- P.fieldOptional whereName   whereDesc   boolExpParser
-    orderBy  <- P.fieldOptional orderByName orderByDesc orderByParser
-    limit    <- P.fieldOptional limitName   limitDesc   positiveInt
-    offset   <- P.fieldOptional offsetName  offsetDesc  positiveInt
-    distinct <- maybe (pure Nothing) (P.fieldOptional distinctOnName  distinctOnDesc . P.list) columnsEnum
+    whereF   <- fmap join $ P.fieldOptional whereName   whereDesc   $ P.nullable boolExpParser
+    orderBy  <- fmap join $ P.fieldOptional orderByName orderByDesc $ P.nullable $ P.list orderByParser
+    limit    <- fmap join $ P.fieldOptional limitName   limitDesc   $ P.nullable positiveInt
+    offset   <- fmap join $ P.fieldOptional offsetName  offsetDesc  $ P.nullable positiveInt
+    distinct <- fmap (join.join) $ for columnsEnum \columnNameParser ->
+      P.fieldOptional distinctOnName distinctOnDesc $ P.nullable $ P.list columnNameParser
 
     -- TODO: offset should be a bigint
     --
@@ -283,7 +284,7 @@ tableArgs table selectPermissions = do
 
     pure $ RQL.TableArgs
       { RQL._taWhere    = whereF
-      , RQL._taOrderBy  = nonEmpty =<< orderBy
+      , RQL._taOrderBy  = nonEmpty . concat =<< orderBy
       , RQL._taLimit    = fromIntegral <$> limit
       , RQL._taOffset   = txtEncoder . PGValInteger <$> offset
       , RQL._taDistCols = nonEmpty =<< distinct
