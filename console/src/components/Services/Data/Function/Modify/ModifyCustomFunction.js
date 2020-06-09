@@ -5,7 +5,6 @@ import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 
-import _push from '../../push';
 import { pageTitle, appPrefix } from './constants';
 
 import tabInfo from './tabInfo';
@@ -24,7 +23,6 @@ import {
   updateSessVar,
 } from '../customFunctionReducer';
 
-import { SET_SQL } from '../../RawSQL/Actions';
 import { NotFoundError } from '../../../../Error/PageNotFound';
 import { getConfirmation } from '../../../../Common/utils/jsUtils';
 import {
