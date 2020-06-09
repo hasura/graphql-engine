@@ -147,10 +147,10 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
       , P.fieldOptional $$(G.litName "_has_key")
         (Just "does the string exist as a top-level key in the column")
         (AHasKey      . mkParameter <$> nullableTextParser)
-      , P.fieldOptional $$(G.litName "_has_key_any")
+      , P.fieldOptional $$(G.litName "_has_keys_any")
         (Just "do any of these strings exist as top-level keys in the column")
         (AHasKeysAny . mkListLiteral columnType <$> textListParser)
-      , P.fieldOptional $$(G.litName "_has_key_all")
+      , P.fieldOptional $$(G.litName "_has_keys_all")
         (Just "do all of these strings exist as top-level keys in the column")
         (AHasKeysAll . mkListLiteral columnType <$> textListParser)
       ]
