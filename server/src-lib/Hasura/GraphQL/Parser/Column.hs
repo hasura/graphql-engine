@@ -17,6 +17,7 @@ module Hasura.GraphQL.Parser.Column
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended          as M
+import qualified Database.PG.Query                     as Q
 
 import           Language.GraphQL.Draft.Syntax         (Description (..), Name, Nullability (..),
                                                         Value (..), litName, literal, mkName,
@@ -82,9 +83,11 @@ column columnType (Nullability isNullable) =
     PGColumnScalar scalarType -> withScalarType scalarType <$> case scalarType of
       PGInteger -> pure (PGValInteger <$> int)
       PGBoolean -> pure (PGValBoolean <$> boolean)
-      PGFloat   -> pure (PGValDouble <$> float)
-      PGText    -> pure (PGValText <$> string)
+      PGFloat   -> pure (PGValDouble  <$> float)
+      PGText    -> pure (PGValText    <$> string)
       PGVarchar -> pure (PGValVarchar <$> string)
+      PGJSON    -> pure (PGValJSON  . Q.JSON  <$> json)
+      PGJSONB   -> pure (PGValJSONB . Q.JSONB <$> json)
       _         -> do
         name <- mkColumnTypeName columnType
         pure (PGValUnknown <$> scalar name Nothing SRString) -- FIXME: is SRString right?

@@ -7,6 +7,7 @@ module Hasura.GraphQL.Parser.Internal.Parser where
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson                    as A
 import qualified Data.HashMap.Strict.Extended  as M
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
@@ -255,6 +256,23 @@ float = scalar $$(litName "Float") Nothing SRFloat
 
 string :: MonadParse m => Parser 'Both m Text
 string = scalar $$(litName "String") Nothing SRString
+
+json :: MonadParse m => Parser 'Both m A.Value
+json = Parser
+  { pType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
+  , pParser = valueToJSON
+  }
+  where
+    name = $$(litName "JSON")
+    valueToJSON = peelVariable >=> \case
+      VInt i              -> pure $ A.toJSON i
+      VFloat f            -> pure $ A.toJSON f
+      VString t           -> pure $ A.toJSON t
+      VBoolean b          -> pure $ A.toJSON b
+      VEnum (EnumValue n) -> pure $ A.toJSON n
+      VList values        -> A.toJSON <$> traverse valueToJSON values
+      VObject objects     -> A.toJSON <$> traverse valueToJSON objects
+      input               -> typeMismatch name "a json value" input
 
 enum
   :: MonadParse m
