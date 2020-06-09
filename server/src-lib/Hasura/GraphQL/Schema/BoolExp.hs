@@ -149,10 +149,10 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         (AHasKey      . mkParameter <$> nullableTextParser)
       , P.fieldOptional $$(G.litName "_has_keys_any")
         (Just "do any of these strings exist as top-level keys in the column")
-        (AHasKeysAny . mkListLiteral columnType <$> textListParser)
+        (AHasKeysAny . mkListLiteral (PGColumnScalar PGText) <$> textListParser)
       , P.fieldOptional $$(G.litName "_has_keys_all")
         (Just "do all of these strings exist as top-level keys in the column")
-        (AHasKeysAll . mkListLiteral columnType <$> textListParser)
+        (AHasKeysAll . mkListLiteral (PGColumnScalar PGText) <$> textListParser)
       ]
     , guard (isScalarColumnWhere (== PGGeography) columnType) *>
       [ P.fieldOptional $$(G.litName "_st_intersects")
