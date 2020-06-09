@@ -77,7 +77,7 @@ const getNotificationDetails = (
 
 const showErrorNotification = (
   title: string,
-  message: string,
+  message: string | null,
   error?: Record<string, any>
 ): Thunk => {
   const getErrorMessage = () => {
