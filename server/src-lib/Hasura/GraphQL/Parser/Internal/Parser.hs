@@ -314,8 +314,19 @@ list parser = gcastWith (inputParserInput @k) Parser
   , pParser = peelVariable >=> \case
       VList values -> for (zip [0..] values) \(index, value) ->
         withPath (Index index :) $ pParser parser value
-      -- TODO: handle input list coercion
-      other -> parseError $ "expected a list, but found " <> describeValue other
+      -- List Input Coercion
+      --
+      -- According to section 3.11 of the GraphQL spec: iff the value
+      -- passed as an input to a list type is not a list and not the
+      -- null value, then the result of input coercion is a list of
+      -- size one, where the single item value is the result of input
+      -- coercion for the list’s item type on the provided value.
+      --
+      -- We need to explicitly test for VNull here, otherwise we could
+      -- be returning `[null]` if the parser accepts a null value,
+      -- which would contradict the spec.
+      VNull -> parseError "expected a list, but found null"
+      other -> fmap pure $ withPath (Index 0 :) $ pParser parser other
   }
 
 object
