@@ -27,10 +27,11 @@ export interface BaseTableColumn {
 }
 
 export interface TableColumn extends BaseTableColumn {
-  column_name: string;
-  data_type: string;
   udt_name: string;
   column_default: string;
+  is_generated?: string;
+  is_nullable?: string;
+  is_identity?: string;
 }
 
 export type ForeignKeyConstraint = {

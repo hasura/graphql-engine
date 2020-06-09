@@ -1,19 +1,14 @@
 import React from 'react';
 
-import { isColumnAutoIncrement } from '../../../../Common/utils/pgUtils';
+import {
+  isColumnAutoIncrement,
+  TableColumn,
+} from '../../../../Common/utils/pgUtils';
 import styles from '../../../../Common/TableCommon/Table.scss';
 import { TypedInput } from './TypedInput';
 
-type Column = {
-  column_name: string;
-  is_generated?: string;
-  is_nullable?: string;
-  is_identity?: string;
-  column_default?: string;
-};
-
 export interface TableRowProps {
-  column: Column;
+  column: TableColumn;
   setRef: (
     refName: 'valueNode' | 'nullNode' | 'defaultNode' | 'insertRadioNode',
     node: HTMLInputElement | null
@@ -46,7 +41,7 @@ export const TableRow: React.FC<TableRowProps> = ({
   } = column;
   const hasDefault = column_default ? column_default.trim() !== '' : false;
   const isIdentity = is_identity ? is_identity !== 'NO' : false;
-  const isAutoIncrement = isColumnAutoIncrement(column);
+  const isAutoIncrement = !!isColumnAutoIncrement(column);
   const isGenerated =
     generatedColumns.length > 0 && generatedColumns.includes(colName);
   const isNullable = is_nullable ? is_nullable !== 'NO' && !isGenerated : false;
