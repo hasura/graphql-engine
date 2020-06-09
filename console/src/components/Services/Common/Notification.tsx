@@ -74,10 +74,58 @@ const getNotificationDetails = (
     </div>
   );
 };
+export const getErrorMessage = (
+  message: string,
+  error?: Record<string, any>
+) => {
+  let notificationMessage;
 
+  if (error) {
+    if (isString(error)) {
+      notificationMessage = error;
+    } else if (
+      error.message &&
+      (error.message.error === 'postgres query error' ||
+        error.message.error === 'query execution failed')
+    ) {
+      if (error.message.internal) {
+        notificationMessage = `${error.message.code}: ${error.message.internal.error.message}`;
+      } else {
+        notificationMessage = `${error.code}: ${error.message.error}`;
+      }
+    } else if ('info' in error) {
+      notificationMessage = error.info;
+    } else if ('message' in error) {
+      if (error.code) {
+        if (error.message.error) {
+          notificationMessage = error.message.error.message;
+        } else {
+          notificationMessage = error.message;
+        }
+      } else if (error.message && isString(error.message)) {
+        notificationMessage = error.message;
+      } else if (error.message && 'code' in error.message) {
+        notificationMessage = `${error.message.code} : ${message}`;
+      } else {
+        notificationMessage = error.code;
+      }
+    } else if ('internal' in error && 'error' in error.internal) {
+      notificationMessage = `${error.code} : ${error.internal.error.message}`;
+    } else if ('custom' in error) {
+      notificationMessage = error.custom;
+    } else if ('code' in error && 'error' in error && 'path' in error) {
+      // Data API error
+      notificationMessage = error.error;
+    }
+  } else {
+    notificationMessage = message;
+  }
+
+  return notificationMessage;
+};
 const showErrorNotification = (
   title: string,
-  message: string | null,
+  message: string,
   error?: Record<string, any>
 ): Thunk => {
   const getRefreshBtn = () => {
@@ -160,55 +208,7 @@ const showErrorNotification = (
     );
   };
 };
-export const getErrorMessage = (
-  message: string,
-  error?: Record<string, any>
-) => {
-  let notificationMessage;
 
-  if (error) {
-    if (isString(error)) {
-      notificationMessage = error;
-    } else if (
-      error.message &&
-      (error.message.error === 'postgres query error' ||
-        error.message.error === 'query execution failed')
-    ) {
-      if (error.message.internal) {
-        notificationMessage = `${error.message.code}: ${error.message.internal.error.message}`;
-      } else {
-        notificationMessage = `${error.code}: ${error.message.error}`;
-      }
-    } else if ('info' in error) {
-      notificationMessage = error.info;
-    } else if ('message' in error) {
-      if (error.code) {
-        if (error.message.error) {
-          notificationMessage = error.message.error.message;
-        } else {
-          notificationMessage = error.message;
-        }
-      } else if (error.message && isString(error.message)) {
-        notificationMessage = error.message;
-      } else if (error.message && 'code' in error.message) {
-        notificationMessage = `${error.message.code} : ${message}`;
-      } else {
-        notificationMessage = error.code;
-      }
-    } else if ('internal' in error && 'error' in error.internal) {
-      notificationMessage = `${error.code} : ${error.internal.error.message}`;
-    } else if ('custom' in error) {
-      notificationMessage = error.custom;
-    } else if ('code' in error && 'error' in error && 'path' in error) {
-      // Data API error
-      notificationMessage = error.error;
-    }
-  } else {
-    notificationMessage = message;
-  }
-
-  return notificationMessage;
-};
 const showSuccessNotification = (title: string, message?: string): Thunk => {
   return dispatch => {
     dispatch(
