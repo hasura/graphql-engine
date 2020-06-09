@@ -47,11 +47,15 @@ runGQ reqId userInfo reqHdrs req = do
           E.ExecStepDB txGenSql -> do
             (telemTimeIO, telemQueryType, resp) <- runQueryDB reqId req userInfo txGenSql
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp Nothing))
+          E.ExecStepRemote (rsi, opDef) ->
+            runRemoteGQ telemCacheHit rsi opDef
       E.MutationExecutionPlan mutationPlan -> do
         case NESeq.head mutationPlan of
           E.ExecStepDB tx -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId req userInfo tx
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp Nothing))
+          E.ExecStepRemote (rsi, opDef) ->
+            runRemoteGQ telemCacheHit rsi opDef
       E.SubscriptionExecutionPlan _sub -> do
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
 {-
@@ -65,6 +69,13 @@ runGQ reqId userInfo reqHdrs req = do
       telemTimeTot = fromUnits telemTimeTot_DT
   Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
+  where
+    runRemoteGQ telemCacheHit rsi opDef = do
+      let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
+                         | otherwise = Telem.Query
+      (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi opDef
+      return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
+
 
 runGQBatched
   :: ( HasVersion

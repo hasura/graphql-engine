@@ -153,11 +153,13 @@ getExecPlanPartial userInfo sc enableAL req = do
           _throwVE $ "exactly one operation has to be present " <>
           "in the document when operationName is not specified"
 
+type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.FragmentSpread G.Name)
+
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan
-  = QueryExecutionPlan (ExecutionPlan (LazyRespTx, EQ.GeneratedSqlMap) Void J.Value)
+  = QueryExecutionPlan (ExecutionPlan (LazyRespTx, EQ.GeneratedSqlMap) RemoteCall J.Value)
   -- ^ query execution; remote schemata and introspection possible (TODO implement remote)
-  | MutationExecutionPlan (ExecutionPlan LazyRespTx Void J.Value)
+  | MutationExecutionPlan (ExecutionPlan LazyRespTx RemoteCall J.Value)
   -- ^ mutation execution; only __typename introspection supported (TODO implement remote)
   | SubscriptionExecutionPlan (ExecutionPlan EL.LiveQueryPlan Void Void)
   -- ^ live query execution; remote schemata and introspection not supported

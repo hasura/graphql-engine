@@ -319,11 +319,15 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepDB (tx, genSql) ->
           execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local (Just genSql) requestId q $
             runLazyTx' pgExecCtx tx
+        E.ExecStepRemote (rsi, opDef) ->
+          runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
     E.MutationExecutionPlan mutationPlan -> do
       case NESeq.head mutationPlan of
         E.ExecStepDB tx ->
           execQueryOrMut timerTot Telem.Mutation telemCacheHit Telem.Local Nothing requestId q $
             runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo tx
+        E.ExecStepRemote (rsi, opDef) ->
+          runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
     E.SubscriptionExecutionPlan subscriptionPlan ->
       case NESeq.head subscriptionPlan of
         E.ExecStepDB lqOp -> do
@@ -395,6 +399,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
           sendCompleted (Just reqId)
+-}
 
     runRemoteGQ :: ExceptT () IO DiffTime
                 -> Telem.CacheHit -> E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
@@ -421,7 +426,6 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
       sendCompleted (Just reqId)
--}
 
     sendRemoteResp reqId resp meta =
       case J.eitherDecodeStrict (encJToBS resp) of
