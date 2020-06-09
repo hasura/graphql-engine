@@ -76,9 +76,9 @@ query' allTables stringifyNum = do
           pkName = displayName <> $$(G.litName "_by_pk")
           pkDesc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName table) <> "\" using primary key columns"
       catMaybes <$> sequenceA
-        [ toQrf QRFSimple      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms stringifyNum
-        , toQrf QRFPrimaryKey  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms stringifyNum
-        , toQrf QRFAggregation $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms stringifyNum
+        [ toQrf (RFDB . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms stringifyNum
+        , toQrf (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms stringifyNum
+        , toQrf (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms stringifyNum
         ]
   pure $ concat $ catMaybes selectExpParsers
   where toQrf = fmap . fmap . fmap
@@ -94,7 +94,7 @@ query
 query allTables stringifyNum = do
   queryFieldsParser <- query' allTables stringifyNum
   pure $ P.selectionSet $$(G.litName "query_root") Nothing queryFieldsParser
-    <&> fmap (P.handleTypename (QRFRaw . J.String . G.unName))
+    <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 
 -- | Prepare the parser for query-type GraphQL requests, but with introspection
 -- for queries, mutations and subscriptions (TODO) built in.
@@ -131,9 +131,9 @@ queryWithIntrospection allTables stringifyNum = do
         , sDirectives = []
         }
   let realQueryFields =
-        fakeQueryFP ++ (fmap QRFRaw <$> [schema fakeSchema, typeIntrospection fakeSchema])
+        fakeQueryFP ++ (fmap RFRaw <$> [schema fakeSchema, typeIntrospection fakeSchema])
   pure $ P.selectionSet name Nothing realQueryFields
-    <&> fmap (P.handleTypename (QRFRaw . J.String . G.unName))
+    <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 
 mutation
   :: forall m n
@@ -161,7 +161,7 @@ mutation allTables stringifyNum = do
         -- select permissions
         insertOne <- for selectPerms \selPerms ->
           insertOneIntoTable table (fromMaybe insertOneName $ _tcrfInsertOne customRootFields) (Just insertOneDesc) insertPerms selPerms (_permUpd permissions) stringifyNum
-        pure $ fmap MRFInsert insert : maybe [] (pure . fmap MRFInsert) insertOne
+        pure $ fmap (RFDB . MDBInsert) insert : maybe [] (pure . fmap (RFDB . MDBInsert)) insertOne
 
       updates <- for (_permUpd permissions) \updatePerms -> do
         let updateName = $$(G.litName "update_") <> displayName
@@ -174,7 +174,7 @@ mutation allTables stringifyNum = do
         -- them, which at the very least requires select permissions
         updateByPk <- join <$> for selectPerms \selPerms ->
           updateTableByPk table (fromMaybe updateByPkName $ _tcrfUpdateByPk customRootFields) (Just updateByPkDesc) updatePerms selPerms stringifyNum
-        pure $ fmap MRFUpdate <$> catMaybes [update, updateByPk]
+        pure $ fmap (RFDB . MDBUpdate) <$> catMaybes [update, updateByPk]
 
       deletes <- for (_permDel permissions) \deletePerms -> do
         let deleteName = $$(G.litName "delete_") <> displayName
@@ -185,9 +185,9 @@ mutation allTables stringifyNum = do
         -- ditto
         deleteByPk <- join <$> for selectPerms \selPerms ->
           deleteFromTableByPk table (fromMaybe deleteByPkName $ _tcrfDeleteByPk customRootFields) (Just deleteByPkDesc) deletePerms selPerms stringifyNum
-        pure $ fmap MRFDelete delete : maybe [] (pure . fmap MRFDelete) deleteByPk
+        pure $ fmap (RFDB . MDBDelete) delete : maybe [] (pure . fmap (RFDB . MDBDelete)) deleteByPk
 
       pure $ concat $ catMaybes [inserts, updates, deletes]
   let mutationFieldsParser = concat $ catMaybes mutationParsers
   pure $ P.selectionSet $$(G.litName "mutation_root") Nothing mutationFieldsParser
-    <&> fmap (P.handleTypename (MRFRaw . J.String . G.unName))
+    <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))

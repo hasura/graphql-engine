@@ -134,22 +134,27 @@ irToRootFieldPlan
   -> PrepArgMap
   -> QueryRootField S.SQLExp -> RootFieldPlan
 irToRootFieldPlan vars prepped = \case
-  QRFSimple s      -> RFPPostgres $ PGPlan (DS.selectQuerySQL DS.JASMultipleRows s) vars prepped
-  QRFPrimaryKey s  -> RFPPostgres $ PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped
-  QRFAggregation s -> RFPPostgres $ PGPlan (DS.selectAggQuerySQL s) vars prepped
+  RFDB (QDBSimple s)      -> RFPPostgres $ PGPlan (DS.selectQuerySQL DS.JASMultipleRows s) vars prepped
+  RFDB (QDBPrimaryKey s)  -> RFPPostgres $ PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped
+  RFDB (QDBAggregation s) -> RFPPostgres $ PGPlan (DS.selectAggQuerySQL s) vars prepped
+  RFRemote s -> case s of -- Remote calls not supported at the moment
   -- TODO avoid converting to/from strict/lazy bytestrings
-  QRFRaw s         -> RFPRaw $ LBS.toStrict $ J.encode s
+  RFRaw s                 -> RFPRaw $ LBS.toStrict $ J.encode s
 
 traverseQueryRootField
-  :: (Applicative f)
+  :: forall f a b
+   . Applicative f
   => (a -> f b)
   -> QueryRootField a
   -> f (QueryRootField b)
-traverseQueryRootField f = \case
-  QRFPrimaryKey s   -> QRFPrimaryKey  <$> DS.traverseAnnSimpleSel f s
-  QRFSimple s       -> QRFSimple      <$> DS.traverseAnnSimpleSel f s
-  QRFAggregation s  -> QRFAggregation <$> DS.traverseAnnAggSel f s
-  QRFRaw s          -> pure $ QRFRaw s
+traverseQueryRootField f =
+  traverseDB f'
+  where
+    f' :: QueryDB a -> f (QueryDB b)
+    f' = \case
+      QDBSimple s       -> QDBSimple      <$> DS.traverseAnnSimpleSel f s
+      QDBPrimaryKey s   -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSel f s
+      QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggSel f s
 
 convertQuerySelSet
   :: MonadError QErr m

@@ -63,10 +63,10 @@ convertMutationRootField
   -> MutationRootField UnpreparedValue
   -> RespTx
 convertMutationRootField usrVars stringifyNum = \case
-  MRFInsert s -> convertInsert usrVars s stringifyNum
-  MRFUpdate s -> convertUpdate usrVars s stringifyNum
-  MRFDelete s -> convertDelete usrVars s stringifyNum
-  MRFRaw s    -> return $ encJFromJValue s
+  RFDB (MDBInsert s) -> convertInsert usrVars s stringifyNum
+  RFDB (MDBUpdate s) -> convertUpdate usrVars s stringifyNum
+  RFDB (MDBDelete s) -> convertDelete usrVars s stringifyNum
+  RFRaw s    -> return $ encJFromJValue s
 
 convertMutationSelectionSet
   :: MonadError QErr m

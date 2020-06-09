@@ -31,6 +31,7 @@ import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
 import qualified Network.WebSockets                          as WS
 import qualified StmContainers.Map                           as STMMap
+import qualified Data.Sequence.NonEmpty                      as NESeq
 
 import           Control.Concurrent.Extended                 (sleep)
 import           Control.Exception.Lifted
@@ -285,7 +286,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
 
 onStart :: HasVersion => WSServerEnv -> WSConn -> StartMsg -> IO ()
 onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
-  timerTot <- startTimer
+  (timerTot :: ExceptT () IO DiffTime) <- startTimer
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
   -- NOTE: it should be safe to rely on this check later on in this function, since we expect that
@@ -313,12 +314,51 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                 planCache sc scVer httpMgr enableAL
 
   case execPlan of
-    E.GExPHasura resolvedOp ->
-      runHasuraGQ timerTot telemCacheHit requestId q userInfo resolvedOp
-    E.GExPRemote rsi opDef  ->
-      runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
+    E.QueryExecutionPlan queryPlan -> do
+      case NESeq.head queryPlan of
+        E.ExecStepDB (tx, genSql) ->
+          execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local (Just genSql) requestId q $
+            runLazyTx' pgExecCtx tx
+    E.MutationExecutionPlan mutationPlan -> do
+      case NESeq.head mutationPlan of
+        E.ExecStepDB tx ->
+          execQueryOrMut timerTot Telem.Mutation telemCacheHit Telem.Local Nothing requestId q $
+            runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo tx
+    E.SubscriptionExecutionPlan subscriptionPlan ->
+      case NESeq.head subscriptionPlan of
+        E.ExecStepDB lqOp -> do
+          -- log the graphql query
+          L.unLogger logger $ QueryLog q Nothing requestId
+          -- NOTE!: we mask async exceptions higher in the call stack, but it's
+          -- crucial we don't lose lqId after addLiveQuery returns successfully.
+          lqId <- liftIO $ LQ.addLiveQuery logger lqMap lqOp liveQOnChange
+          liftIO $ STM.atomically $
+            -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
+            STMMap.insert (lqId, _grOperationName q) opId opMap
+          logOpEv ODStarted (Just requestId)
+
+  -- case execPlan of
+  --   E.GExPHasura resolvedOp ->
+  --     runHasuraGQ timerTot telemCacheHit requestId q userInfo resolvedOp
+  --   E.GExPRemote rsi opDef  ->
+  --     runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
   where
     telemTransport = Telem.HTTP
+    execQueryOrMut timerTot telemQueryType telemCacheHit telemLocality genSql requestId q action = do
+      logOpEv ODStarted (Just requestId)
+      -- log the generated SQL and the graphql query
+      L.unLogger logger $ QueryLog q genSql requestId
+      (withElapsedTime $ liftIO $ runExceptT action) >>= \case
+        (_,      Left err) -> postExecErr requestId err
+        (telemTimeIO_DT, Right encJson) -> do
+          -- Telemetry. NOTE: don't time network IO:
+          telemTimeTot <- Seconds <$> timerTot
+          sendSuccResp encJson $ LQ.LiveQueryMetadata telemTimeIO_DT
+          let telemTimeIO = fromUnits telemTimeIO_DT
+          Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
+
+      sendCompleted (Just requestId)
+{-
     runHasuraGQ :: ExceptT () IO DiffTime
                 -> Telem.CacheHit -> RequestId -> GQLReqUnparsed -> UserInfo -> E.ExecOp
                 -> ExceptT () IO ()
@@ -381,6 +421,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
       sendCompleted (Just reqId)
+-}
 
     sendRemoteResp reqId resp meta =
       case J.eitherDecodeStrict (encJToBS resp) of
@@ -409,6 +450,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         ERTLegacy           -> encodeQErr
         ERTGraphqlCompliant -> encodeGQLErr
 
+    sendStartErr :: Text -> ExceptT () IO ()
     sendStartErr e = do
       let errFn = getErrFn errRespTy
       sendMsg wsConn $
@@ -425,6 +467,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       sendMsg wsConn $ SMData $
         DataMsg opId $ GRHasura $ GQExecError $ pure $ errFn False qErr
 
+    preExecErr :: RequestId -> QErr -> ExceptT () IO ()
     -- why wouldn't pre exec error use graphql response?
     preExecErr reqId qErr = do
       let errFn = getErrFn errRespTy
@@ -434,6 +477,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
       sendMsg wsConn (SMErr $ ErrorMsg opId err)
 
+    -- TODO Not sure if this is the right type
+    sendSuccResp :: EncJSON -> LQ.LiveQueryMetadata -> ExceptT () IO ()
     sendSuccResp encJson =
       sendMsgWithMetadata wsConn
         (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ encJToLBS encJson)

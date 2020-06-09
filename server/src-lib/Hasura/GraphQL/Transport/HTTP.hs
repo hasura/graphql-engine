@@ -17,9 +17,11 @@ import           Hasura.Server.Version                  (HasVersion)
 
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.Sequence.NonEmpty                 as NESeq
 
 runGQ
   :: ( HasVersion
@@ -40,14 +42,25 @@ runGQ reqId userInfo reqHdrs req = do
     (telemCacheHit, execPlan) <- E.getResolvedExecPlan pgExecCtx planCache
                 userInfo sqlGenCtx enableAL sc scVer httpManager reqHdrs req
     case execPlan of
-      E.GExPHasura resolvedOp -> do
-        (telemTimeIO, telemQueryType, resp) <- runHasuraGQ reqId req userInfo resolvedOp
-        return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp Nothing))
+      E.QueryExecutionPlan queryPlan -> do
+        case NESeq.head queryPlan of
+          E.ExecStepDB txGenSql -> do
+            (telemTimeIO, telemQueryType, resp) <- runQueryDB reqId req userInfo txGenSql
+            return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp Nothing))
+      E.MutationExecutionPlan mutationPlan -> do
+        case NESeq.head mutationPlan of
+          E.ExecStepDB tx -> do
+            (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId req userInfo tx
+            return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp Nothing))
+      E.SubscriptionExecutionPlan _sub -> do
+        throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
+{-
       E.GExPRemote rsi opDef  -> do
         let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
                             | otherwise = Telem.Query
         (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi opDef
         return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
+-}
   let telemTimeIO = fromUnits telemTimeIO_DT
       telemTimeTot = fromUnits telemTimeTot_DT
   Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
@@ -80,6 +93,53 @@ runGQBatched reqId userInfo reqHdrs reqs =
       fmap removeHeaders $
         traverse (try . runGQ reqId userInfo reqHdrs) batch
 
+runQueryDB
+  :: ( MonadIO m
+     , MonadError QErr m
+     , MonadReader E.ExecutionCtx m
+     )
+  => RequestId
+  -> GQLReqUnparsed
+  -> UserInfo
+  -> (LazyRespTx, EQ.GeneratedSqlMap)
+  -> m (DiffTime, Telem.QueryType, EncJSON)
+  -- ^ Also return 'Mutation' when the operation was a mutation, and the time
+  -- spent in the PG query; for telemetry.
+runQueryDB reqId query userInfo (tx, genSql) = do
+  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
+  (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ do
+    -- log the generated SQL and the graphql query
+    L.unLogger logger $ QueryLog query (Just genSql) reqId
+    runLazyTx' pgExecCtx tx
+  resp <- liftEither respE
+  let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
+      telemQueryType = Telem.Query
+  return (telemTimeIO, telemQueryType, json)
+
+runMutationDB
+  :: ( MonadIO m
+     , MonadError QErr m
+     , MonadReader E.ExecutionCtx m
+     )
+  => RequestId
+  -> GQLReqUnparsed
+  -> UserInfo
+  -> LazyRespTx
+  -> m (DiffTime, Telem.QueryType, EncJSON)
+  -- ^ Also return 'Mutation' when the operation was a mutation, and the time
+  -- spent in the PG query; for telemetry.
+runMutationDB reqId query userInfo tx = do
+  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
+  (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ do
+    -- log the graphql query
+    L.unLogger logger $ QueryLog query Nothing reqId
+    runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo tx
+  resp <- liftEither respE
+  let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
+      telemQueryType = Telem.Mutation
+  return (telemTimeIO, telemQueryType, json)
+
+{-
 runHasuraGQ
   :: ( MonadIO m
      , MonadError QErr m
@@ -110,3 +170,4 @@ runHasuraGQ reqId query userInfo resolvedOp = do
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
       telemQueryType = case resolvedOp of E.ExOpMutation{} -> Telem.Mutation ; _ -> Telem.Query
   return (telemTimeIO, telemQueryType, json)
+-}

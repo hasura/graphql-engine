@@ -3,8 +3,12 @@
 module Hasura.GraphQL.Context
   ( GQLContext(..)
   , ParserFn
-  , QueryRootField(..)
-  , MutationRootField(..)
+  , RootField(..)
+  , traverseDB
+  , QueryDB(..)
+  , QueryRootField
+  , MutationDB(..)
+  , MutationRootField
   ) where
 
 import           Hasura.Prelude
@@ -34,16 +38,31 @@ type ParserFn a
   =  G.SelectionSet G.NoFragments Variable
   -> Either (NESeq ParseError) (a, QueryReusability)
 
--- FIXME: taken from Resolve.hs
--- do we want to keep it the same?
-data QueryRootField v
-  = QRFSimple      (RQL.AnnSimpleSelG v)
-  | QRFPrimaryKey  (RQL.AnnSimpleSelG v)
-  | QRFAggregation (RQL.AnnAggSelG    v)
-  | QRFRaw         J.Value
+data RootField db remote raw
+  = RFDB db
+  | RFRemote remote
+  | RFRaw raw
 
-data MutationRootField v
-  = MRFInsert      (AnnMultiInsert v)
-  | MRFUpdate      (RQL.AnnUpdG    v)
-  | MRFDelete      (RQL.AnnDelG    v)
-  | MRFRaw         J.Value
+traverseDB :: forall db db' remote raw f
+        . Applicative f
+       => (db -> f db')
+       -> RootField db  remote raw
+       -> f (RootField db' remote raw)
+traverseDB f = \case
+  RFDB x -> RFDB <$> f x
+  RFRemote x -> pure $ RFRemote x
+  RFRaw x -> pure $ RFRaw x
+
+data QueryDB v
+  = QDBSimple      (RQL.AnnSimpleSelG v)
+  | QDBPrimaryKey  (RQL.AnnSimpleSelG v)
+  | QDBAggregation (RQL.AnnAggSelG    v)
+
+type QueryRootField v = RootField (QueryDB v) Void J.Value
+
+data MutationDB v
+  = MDBInsert (AnnMultiInsert v)
+  | MDBUpdate (RQL.AnnUpdG    v)
+  | MDBDelete (RQL.AnnDelG    v)
+
+type MutationRootField v = RootField (MutationDB v) Void J.Value

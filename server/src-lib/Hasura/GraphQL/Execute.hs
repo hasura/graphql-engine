@@ -1,11 +1,11 @@
 module Hasura.GraphQL.Execute
-  ( GQExecPlan(..)
+  ( ExecutionPlan
 
   -- , ExecPlanPartial
   -- , getExecPlanPartial
 
-  , ExecOp(..)
-  , ExecPlanResolved
+  , ExecutionStep(..)
+  , ResolvedExecutionPlan(..)
   , getResolvedExecPlan
   , execRemoteGQ
   -- , getSubsOp
@@ -34,6 +34,7 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
+import qualified Data.Sequence.NonEmpty                 as NESeq
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
@@ -57,15 +58,19 @@ import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 
--- The current execution plan of a graphql operation, it is
--- currently, either local pg execution or a remote execution
---
--- The 'a' is parameterised so this AST can represent
--- intermediate passes
-data GQExecPlan a
-  = GExPHasura !a
-  | GExPRemote !RemoteSchemaInfo !(G.TypedOperationDefinition G.FragmentSpread G.Name)
-  deriving (Functor, Foldable, Traversable)
+-- | Full execution plan to process one GraphQL query.  Contains a mixture of
+-- things to run on the database and things to run on remote schemata.
+type ExecutionPlan db remote raw = NESeq.NESeq (ExecutionStep db remote raw)
+
+-- | One execution step to processing a GraphQL query (e.g. one root field).
+-- Polymorphic to allow the SQL to be generated in stages.
+data ExecutionStep db remote raw
+  = ExecStepDB db
+  -- ^ A query to execute against the database
+  | ExecStepRemote remote -- !RemoteSchemaInfo !(G.Selection G.NoFragments G.Name)
+  -- ^ A query to execute against a remote schema
+  | ExecStepRaw raw
+  -- ^ Output a plain JSON object
 
 -- | Execution context
 data ExecutionCtx
@@ -80,99 +85,7 @@ data ExecutionCtx
   , _ecxEnableAllowList :: !Bool
   }
 
--- -- Enforces the current limitation
--- assertSameLocationNodes
---   :: (MonadError QErr m) => [VT.TypeLoc] -> m VT.TypeLoc
--- assertSameLocationNodes typeLocs =
---   case Set.toList (Set.fromList typeLocs) of
---     -- this shouldn't happen
---     []    -> return VT.TLHasuraType
---     [loc] -> return loc
---     _     -> throw400 NotSupported msg
---   where
---     msg = "cannot mix top level fields from two different graphql servers"
-
--- TODO: we should fix this function asap
--- as this will fail when there is a fragment at the top level
-getTopLevelNodes :: G.TypedOperationDefinition G.FragmentSpread G.Name -> [G.Name]
-getTopLevelNodes opDef =
-  mapMaybe f $ G._todSelectionSet opDef
-  where
-    f = \case
-      G.SelectionField fld        -> Just $ G._fName fld
-      G.SelectionFragmentSpread _ -> Nothing
-      G.SelectionInlineFragment _ -> Nothing
-
--- gatherTypeLocs :: GCtx -> [G.Name] -> [VT.TypeLoc]
--- gatherTypeLocs gCtx nodes =
---   catMaybes $ flip map nodes $ \node ->
---     VT._fiLoc <$> Map.lookup node schemaNodes
---   where
---     schemaNodes =
---       let qr = VT._otiFields $ _gQueryRoot gCtx
---           mr = VT._otiFields <$> _gMutRoot gCtx
---       in maybe qr (Map.union qr) mr
-
--- This is for when the graphql query is validated
-type ExecPlanPartial = GQExecPlan (C.GQLContext, G.TypedOperationDefinition G.FragmentSpread G.Name)
-
-getTypedOp
-  :: (MonadError QErr m)
-  => Maybe OperationName
-  -> [G.SelectionSet G.FragmentSpread G.Name]
-  -> [G.TypedOperationDefinition G.FragmentSpread G.Name]
-  -> m (G.TypedOperationDefinition G.FragmentSpread G.Name)
-getTypedOp opNameM selSets opDefs =
-  case (opNameM, selSets, opDefs) of
-    (Just opName, [], _) -> do
-      let n = _unOperationName opName
-          opDefM = find (\opDef -> G._todName opDef == Just n) opDefs
-      onNothing opDefM $ _throwVE $
-        "no such operation found in the document: " <> _showName n
-    (Just _, _, _)  ->
-      _throwVE $ "operationName cannot be used when " <>
-      "an anonymous operation exists in the document"
-    (Nothing, [selSet], []) ->
-      return $ G.TypedOperationDefinition
-      G.OperationTypeQuery Nothing [] [] selSet
-    (Nothing, [], [opDef])  ->
-      return opDef
-    (Nothing, _, _) ->
-      _throwVE $ "exactly one operation has to be present " <>
-      "in the document when operationName is not specified"
-
-data QueryParts
-  = QueryParts
-  { qpOpDef    :: !(G.TypedOperationDefinition G.FragmentSpread G.Name)
-  , qpVarValsM :: !(Maybe VariableValues)
-  }
-
--- | Depending on the request parameters, fetch the correct typed operation
--- definition from the GraphQL query
-getQueryParts
-  :: ( MonadError QErr m )
-  => GQLReqParsed
-  -> m QueryParts
-getQueryParts (GQLReq opNameM q varValsM) = do
-
-  opDef <- getTypedOp opNameM selSets opDefs
-
-  return $ QueryParts opDef varValsM
-  where
-    (selSets, opDefs, _fragDefsL) = G.partitionExDefs $ unGQLExecDoc q
-
-getGCtx :: SchemaCache -> RoleName -> C.GQLContext
-getGCtx sc rn =
-  {- TODO TODO FIXME of course this is wrong -}
-  {- TODO TODO FIXME of course this is wrong -}
-  {- TODO TODO FIXME of course this is wrong -}
-  {- TODO TODO FIXME of course this is wrong -}
-  {- TODO TODO FIXME of course this is wrong -}
-  {- TODO TODO FIXME of course this is wrong -}
-  {- TODO TODO FIXME of course this is wrong -}
-  {- TODO TODO FIXME of course this is wrong -}
-  {- TODO TODO FIXME of course this is wrong -}
-  fromMaybe (head $ Map.elems $ scGQLContext sc) $ Map.lookup rn (scGQLContext sc)
+type QueryParts = G.TypedOperationDefinition G.FragmentSpread G.Name
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -180,31 +93,14 @@ getExecPlanPartial
   -> SchemaCache
   -> Bool
   -> GQLReqParsed
-  -> m ExecPlanPartial
+  -> m (C.GQLContext, QueryParts)
 getExecPlanPartial userInfo sc enableAL req = do
-
   -- check if query is in allowlist
   when enableAL checkQueryInAllowlist
 
   let gCtx = getGCtx sc role
-  QueryParts tod _ <- flip runReaderT gCtx $ getQueryParts req
 
-  let topLevelNodes = getTopLevelNodes tod
-      -- -- gather TypeLoc of topLevelNodes
-      -- typeLocs = gatherTypeLocs gCtx topLevelNodes
-
-  -- -- see if they are all the same
-  -- typeLoc <- assertSameLocationNodes typeLocs
-
-  return $ GExPHasura (gCtx , tod)
-  -- case typeLoc of
-  --   VT.TLHasuraType -> do
-  --     rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
-  --     return $ GExPHasura (gCtx, rootSelSet)
-  --   VT.TLRemoteType _ rsi ->
-  --     _ -- return $ GExPRemote rsi opDef
-  --   VT.TLCustom ->
-  --     throw500 "unexpected custom type for top level field"
+  (gCtx ,) <$> getQueryParts req
   where
     role = userRole userInfo
 
@@ -219,18 +115,52 @@ getExecPlanPartial userInfo sc enableAL req = do
       let msg = "query is not in any of the allowlists"
       in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
 
+    getGCtx :: SchemaCache -> RoleName -> C.GQLContext
+    getGCtx sc rn =
+      {- TODO TODO FIXME of course this is wrong -}
+      {- TODO TODO FIXME of course this is wrong -}
+      {- TODO TODO FIXME of course this is wrong -}
+      {- TODO TODO FIXME of course this is wrong -}
+      {- TODO TODO FIXME of course this is wrong -}
+      {- TODO TODO FIXME of course this is wrong -}
+      {- TODO TODO FIXME of course this is wrong -}
+      {- TODO TODO FIXME of course this is wrong -}
+      {- TODO TODO FIXME of course this is wrong -}
+      fromMaybe (head $ Map.elems $ scGQLContext sc) $ Map.lookup rn (scGQLContext sc)
 
--- An execution operation, in case of
--- queries and mutations it is just a transaction
--- to be executed
-data ExecOp
-  = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
-  | ExOpMutation !LazyRespTx
-  | ExOpSubs !EL.LiveQueryPlan
+    -- | Depending on the request parameters, fetch the correct typed operation
+    -- definition from the GraphQL query
+    getQueryParts
+      :: MonadError QErr m
+      => GQLReqParsed
+      -> m QueryParts
+    getQueryParts (GQLReq opNameM q _varValsM) = do
+      let (selSets, opDefs, _fragDefsL) = G.partitionExDefs $ unGQLExecDoc q
+      case (opNameM, selSets, opDefs) of
+        (Just opName, [], _) -> do
+          let n = _unOperationName opName
+              opDefM = find (\opDef -> G._todName opDef == Just n) opDefs
+          onNothing opDefM $ _throwVE $
+            "no such operation found in the document: " <> _showName n
+        (Just _, _, _)  ->
+          _throwVE $ "operationName cannot be used when " <>
+          "an anonymous operation exists in the document"
+        (Nothing, [selSet], []) ->
+          return $ G.TypedOperationDefinition G.OperationTypeQuery Nothing [] [] selSet
+        (Nothing, [], [opDef])  ->
+          return opDef
+        (Nothing, _, _) ->
+          _throwVE $ "exactly one operation has to be present " <>
+          "in the document when operationName is not specified"
 
--- The graphql query is resolved into an execution operation
-type ExecPlanResolved
-  = GQExecPlan ExecOp
+-- The graphql query is resolved into a sequence of execution operations
+data ResolvedExecutionPlan
+  = QueryExecutionPlan (ExecutionPlan (LazyRespTx, EQ.GeneratedSqlMap) Void J.Value)
+  -- ^ query execution; remote schemata and introspection possible (TODO implement remote)
+  | MutationExecutionPlan (ExecutionPlan LazyRespTx Void J.Value)
+  -- ^ mutation execution; only __typename introspection supported (TODO implement remote)
+  | SubscriptionExecutionPlan (ExecutionPlan EL.LiveQueryPlan Void Void)
+  -- ^ live query execution; remote schemata and introspection not supported
 
 getResolvedExecPlan
   :: forall m . (HasVersion, MonadError QErr m, MonadIO m)
@@ -244,7 +174,7 @@ getResolvedExecPlan
   -> HTTP.Manager
   -> [N.Header]
   -> GQLReqUnparsed
-  -> m (Telem.CacheHit, ExecPlanResolved)
+  -> m (Telem.CacheHit, ResolvedExecutionPlan)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   enableAL sc scVer httpManager reqHeaders reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
@@ -252,38 +182,38 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   let usrVars = userVars userInfo
   case planM of
     -- plans are only for queries and subscriptions
-    Just plan -> (Telem.Hit,) . GExPHasura <$> case plan of
+    Just plan -> (Telem.Hit,) <$> case plan of
       EP.RPQuery queryPlan -> do
         (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
-        return $ ExOpQuery tx (Just genSql)
+        return $ QueryExecutionPlan _ -- tx (Just genSql)
       EP.RPSubs subsPlan ->
-        ExOpSubs <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
+        return $ SubscriptionExecutionPlan _ -- <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
     Nothing -> (Telem.Miss,) <$> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     -- addPlanToCache plan =
     --   liftIO $ EP.addPlan scVer (userRole userInfo)
     --   opNameM queryStr plan planCache
-    noExistingPlan :: m ExecPlanResolved
+    noExistingPlan :: m ResolvedExecutionPlan
     noExistingPlan = do
       req <- toParsed reqUnparsed
       let
         takeFragment = \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
         fragments =
             mapMaybe takeFragment $ unGQLExecDoc $ _grQuery req
-      planPartial <- getExecPlanPartial userInfo sc enableAL req
-      case planPartial of
-        GExPHasura (gCtx, G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet) -> do
+      (gCtx, queryParts) <- getExecPlanPartial userInfo sc enableAL req
+      case queryParts of
+        G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           (queryTx, plan, genSql) <-
             EQ.convertQuerySelSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
-          return $ GExPHasura $ ExOpQuery queryTx (Just genSql)
-        GExPHasura (gCtx, G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet) -> do
+          return $ QueryExecutionPlan $ NESeq.singleton $ ExecStepDB (queryTx, genSql)
+        G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           queryTx <- EM.convertMutationSelectionSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
-          return $ GExPHasura $ ExOpMutation queryTx
+          return $ MutationExecutionPlan $ NESeq.singleton $ ExecStepDB queryTx
         _ -> _
       -- forM partialExecPlan $ \(gCtx, rootSelSet) ->
       --   case rootSelSet of

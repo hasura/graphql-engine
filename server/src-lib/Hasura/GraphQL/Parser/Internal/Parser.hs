@@ -499,6 +499,28 @@ selectionSet name description parsers = Parser
       & map (\FieldParser{ fDefinition, fParser } -> (getName fDefinition, fParser))
       & M.fromList
 
+-- | An "escape hatch" that doesn't validate anything and just gives the
+-- requested selection set
+unsafeRawParser
+  :: forall m
+   . MonadParse m
+  => Type 'Output
+  -> Parser 'Output m (SelectionSet NoFragments Variable)
+unsafeRawParser tp = Parser
+  { pType = tp
+  , pParser = pure
+  }
+
+unsafeRawField
+  :: forall m
+   . MonadParse m
+  => Definition FieldInfo
+  -> FieldParser m (Field NoFragments Variable)
+unsafeRawField def = FieldParser
+  { fDefinition = def
+  , fParser = pure
+  }
+
 -- | Builds a 'FieldParser' for a field that does not take a subselection set,
 -- i.e. a field that returns a scalar or enum. The field’s type is taken from
 -- the provided 'Parser', but the 'Parser' is not otherwise used.
