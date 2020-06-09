@@ -18,6 +18,7 @@ export type ReduxState = {
   main: {
     readOnlyMode: boolean;
     serverVersion: string;
+    latestStableServerVersion: string;
   };
   telemetry: TelemetryState;
 };
