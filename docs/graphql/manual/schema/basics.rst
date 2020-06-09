@@ -82,6 +82,12 @@ Create tables
             schema: public
             name: article
 
+    Then apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
   .. tab:: Via API
 
     You can create a table by making an API call to the :ref:`run_sql API <run_sql>`:

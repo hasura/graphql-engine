@@ -121,7 +121,7 @@ Each article has one author. This is an ``object relationship``.
 
   .. tab:: Via API
 
-    You can an object relationship by making an API call to the :ref:`create_object_relationship API <create_object_relationship>`:
+    You can create an object relationship by making an API call to the :ref:`create_object_relationship API <create_object_relationship>`:
 
     .. code-block:: http
 
