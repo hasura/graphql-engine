@@ -15,6 +15,7 @@ import {
 } from '../../../Common/utils/pgUtils';
 import { TypedInput } from '../Common/Components/TypedInput';
 import styles from '../../../Common/TableCommon/Table.scss';
+import MigrationCheckBox from './MigrationCheckbox';
 
 class InsertItem extends Component {
   constructor() {
@@ -285,17 +286,10 @@ class InsertItem extends Component {
                   dispatch={dispatch}
                   isEnum={currentTable.is_enum}
                 />
-                {/* This should be rendering only on cli-mode? */}
-                <label className={styles.labelText}>
-                  <input
-                    type="checkbox"
-                    checked={this.state.isMigrationChecked}
-                    title="This is a Migration"
-                    onChange={this.toggleMigrationCheckBox}
-                    className={styles.migrationCheckbox}
-                  />
-                  This is a Migration
-                </label>
+                <MigrationCheckBox
+                  onChange={this.toggleMigrationCheckBox}
+                  isChecked={this.state.isMigrationChecked}
+                />
               </div>
             </form>
           </div>
