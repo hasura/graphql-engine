@@ -12,7 +12,7 @@ import { Json } from '../../Common/utils/tsUtils';
 import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
 
-const styles = require('./Notification/Notification.scss');
+import styles from './Notification/Notification.scss';
 
 export interface Notification {
   title?: string | JSX.Element;
