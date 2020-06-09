@@ -14,11 +14,11 @@ module Hasura.RQL.DDL.RemoteSchema
 import qualified Data.Aeson                        as J
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashSet                      as S
-import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
 import qualified Database.PG.Query                 as Q
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.NormalForm
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.GraphQL.Schema.Merge
 import           Hasura.Prelude
@@ -161,8 +161,9 @@ runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
   (rootSelSet, _) <- flip runReaderT rGCtx $ VT.runReusabilityT $ VQ.validateGQ queryParts
   schemaField <-
     case rootSelSet of
-      VQ.RQuery (Seq.viewl -> selSet) -> getSchemaField selSet
-      _                               -> throw500 "expected query for introspection"
+      VQ.RQuery selSet -> getSchemaField $ toList $ unAliasedFields $
+                          unObjectSelectionSet selSet
+      _                -> throw500 "expected query for introspection"
   (introRes, _) <- flip runReaderT rGCtx $ VT.runReusabilityT $ RI.schemaR schemaField
   pure $ wrapInSpecKeys introRes
   where
@@ -171,8 +172,7 @@ runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
         [ ( T.pack "data"
           , encJFromAssocList [(T.pack "__schema", encJFromJValue introObj)])
         ]
-    getSchemaField =
-      \case
-        Seq.EmptyL -> throw500 "found empty when looking for __schema field"
-        (f Seq.:< Seq.Empty) -> pure f
-        _ -> throw500 "expected __schema field, found many fields"
+    getSchemaField = \case
+        []  -> throw500 "found empty when looking for __schema field"
+        [f] -> pure f
+        _   -> throw500 "expected __schema field, found many fields"

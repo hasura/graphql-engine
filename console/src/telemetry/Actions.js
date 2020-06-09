@@ -29,6 +29,16 @@ const setConsoleOptsInDB = (opts, successCb, errorCb) => (
     ...opts,
   };
 
+  if (!hasura_uuid) {
+    dispatch(
+      showErrorNotification(
+        'Opt out of pre-release notifications failed',
+        'Internal error: missing hasura_uuid'
+      )
+    );
+    return;
+  }
+
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
