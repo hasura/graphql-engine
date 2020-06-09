@@ -32,7 +32,7 @@ import {
   fetchTrackedTableRemoteRelationshipQuery,
   mergeLoadSchemaData,
   cascadeUpQueries,
-  getRetryStatus,
+  getDependencyError,
 } from './utils';
 
 import _push from './push';
@@ -620,9 +620,9 @@ const makeMigrationCall = (
   };
 
   const onError = err => {
-    const { canRetry, errorObj } = getRetryStatus(isRetry, err);
-    if (canRetry) {
-      return retryMigration(errorObj, errorMsg);
+    if (!isRetry) {
+      const dependecyError = getDependencyError(err);
+      if (dependecyError) return retryMigration(dependecyError, errorMsg);
     }
 
     dispatch(handleMigrationErrors(errorMsg, err));

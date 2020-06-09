@@ -801,25 +801,17 @@ export const cascadeUpQueries = (upQueries = []) =>
     return i;
   });
 
-export const getRetryStatus = (isRetry, err = {}) => {
-  const defaultRes = { canRetry: false, errorObj: err };
-  if (isRetry) return defaultRes;
-
+export const getDependencyError = (err = {}) => {
   if (err.code == ERROR_CODES.dependencyError.code) {
     // direct dependency error
-    return { canRetry: true, errorObj: err };
+    return err;
   } else if (err.code == ERROR_CODES.dataApiError.code) {
     // message is coming as error, further parssing willbe based on message key
     const actualError = isJsonString(err.message)
       ? JSON.parse(err.message)
       : {};
     if (actualError.code == ERROR_CODES.dependencyError.code) {
-      return {
-        canRetry: true,
-        errorObj: { ...actualError, message: actualError.error },
-      };
+      return { ...actualError, message: actualError.error };
     }
-    return defaultRes;
   }
-  return defaultRes;
 };
