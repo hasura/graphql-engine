@@ -8,17 +8,14 @@ const editorTooltip =
   'Headers Hasura will send to the webhook with the POST request';
 // Tooltip todo
 
-const HandlerEditor = ({
+const HeaderConfEditor = ({
   className,
   forwardClientHeaders,
   toggleForwardClientHeaders,
   headers,
   setHeaders,
+  disabled = false,
 }) => {
-  const getHeaders = () => {
-    return <Headers headers={headers} setHeaders={setHeaders} />;
-  };
-
   return (
     <div className={`${className || ''}`}>
       <h2
@@ -38,13 +35,14 @@ const HandlerEditor = ({
             checked={forwardClientHeaders}
             onChange={toggleForwardClientHeaders}
             className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+            disabled={disabled}
           />
           Forward client headers to webhook
         </label>
       </div>
-      {getHeaders()}
+      <Headers headers={headers} setHeaders={setHeaders} disabled={disabled} />
     </div>
   );
 };
 
-export default HandlerEditor;
+export default HeaderConfEditor;

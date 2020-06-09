@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Invalid = ({ className, title = '' }) => {
+const Invalid = ({ className = '', title = '' }) => {
   return (
     <i
       className={`fa fa-exclamation ${className || ''}`}

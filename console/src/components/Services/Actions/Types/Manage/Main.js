@@ -1,6 +1,6 @@
 import React from 'react';
 import CustomTypesContainer from '../../Containers/CustomTypesContainer';
-import TypesEditor from '../../Common/components/TypeDefinitionEditor';
+import TypeDefinitionEditor from '../../Common/components/TypeDefinitionEditor';
 import Button from '../../../../Common/Button/Button';
 import styles from '../../Common/components/Styles.scss';
 import {
@@ -10,8 +10,9 @@ import {
 import { setTypeDefinition, setFetching, unsetFetching } from '../reducer';
 import { setCustomGraphQLTypes } from '../../../Types/ServerIO';
 import { showErrorNotification } from '../../../Common/Notification';
+import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
-const Manage = ({ allTypes, dispatch, ...manageProps }) => {
+const Manage = ({ allTypes, dispatch, readOnlyMode, ...manageProps }) => {
   const sdlOnChange = (value, _error, _timer, ast) => {
     dispatch(setTypeDefinition(value, _error, _timer, ast));
   };
@@ -43,14 +44,14 @@ const Manage = ({ allTypes, dispatch, ...manageProps }) => {
   };
 
   // TODO handling error elegantly
-  const allowSave = !isFetching && !error;
+  const allowSave = !isFetching && !error && !readOnlyMode;
 
   const editorTooltip = 'All GraphQL types used in actions';
   const editorLabel = 'All custom types';
 
   return (
     <CustomTypesContainer tabName="manage" dispatch={dispatch}>
-      <TypesEditor
+      <TypeDefinitionEditor
         value={sdl}
         error={error}
         timer={timer}
@@ -59,6 +60,7 @@ const Manage = ({ allTypes, dispatch, ...manageProps }) => {
         label={editorLabel}
         tooltip={editorTooltip}
         editorHeight="600px"
+        readOnlyMode={readOnlyMode}
       />
       <hr />
       <Button
@@ -69,9 +71,12 @@ const Manage = ({ allTypes, dispatch, ...manageProps }) => {
       >
         Save
       </Button>
-      <Button onClick={init} color="white">
+      <Button onClick={init} color="white" disabled={readOnlyMode}>
         Reset
       </Button>
+      {readOnlyMode && (
+        <ToolTip message="Modifying custom type is not allowed in Read only mode!" />
+      )}
     </CustomTypesContainer>
   );
 };

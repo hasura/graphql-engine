@@ -2,6 +2,14 @@
 
 ## Next release
 
+### Relay
+
+The Hasura GraphQL Engine serves [Relay](https://relay.dev/en/) schema for Postgres tables which has a primary key defined.
+
+The Relay schema can be accessed through `/v1/relay` endpoint.
+
+[Add docs links][add console screenshot for relay toggle]
+
 ### Remote Joins
 
 Remote Joins extend the concept of joining data across tables, to being able to join data across tables and remote schemas.
@@ -84,6 +92,8 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
 - console: add help button and move about page to settings (#4848)
 - console: add new sidebar icon that separates enums from tables (fix #4984) (#4992)
+- console: fix "Cannot read property 'foldable'" runtime error in `Browse Rows` page (fix #4907) (#5016)
+- console: respect read-only mode in actions pages (fix #4656) (#4764)
 - console: handle databases with no public schema (fix #2652) (#4358)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)
