@@ -9,23 +9,21 @@ const tooltipGen = (message: string) => {
 export interface TooltipProps extends React.ComponentProps<'i'> {
   message: string;
   placement?: 'right' | 'left' | 'top' | 'bottom';
-  icon?: string;
   className?: string;
   tooltipStyle?: string;
 }
 
-const ToolTip: React.FC<TooltipProps> = ({
+const Tooltip: React.FC<TooltipProps> = ({
   message,
   placement = 'right',
-  icon = 'fa-question-circle',
   tooltipStyle = '',
 }) => (
   <OverlayTrigger placement={placement} overlay={tooltipGen(message)}>
     <i
-      className={`fa ${icon} ${styles.tooltipIcon} ${tooltipStyle}`}
+      className={`fa fa-info-circle ${styles.tooltipIcon} ${tooltipStyle}`}
       aria-hidden="true"
     />
   </OverlayTrigger>
 );
 
-export default ToolTip;
+export default Tooltip;

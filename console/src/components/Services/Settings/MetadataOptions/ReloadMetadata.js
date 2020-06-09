@@ -70,11 +70,7 @@ class ReloadMetadata extends Component {
           {this.props.buttonText || buttonText}
         </Button>
         {btnTooltipMessage && (
-          <Tooltip
-            message={btnTooltipMessage}
-            icon="fa-info-circle"
-            tooltipStyle={tooltipStyle}
-          />
+          <Tooltip message={btnTooltipMessage} tooltipStyle={tooltipStyle} />
         )}
         {showReloadRemoteSchemas && (
           <>
