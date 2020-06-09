@@ -29,6 +29,199 @@
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if not is_landing_page else '' }}{% endblock %}">
     <div class="main_container_wrapper">
       {% include 'pages/loading.html' %}
+      <div id="banner" class="bannerStripWrapper hide">
+        <div class='bannerInnerWrapper displayFlex'>
+          <a
+            href="https://hasura.io/events/data-federation-hasura-graphql/#webinar-register"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            <div class="bannerStrip">
+              <div class="displayFlex noPadd">
+                <div class="announceIcon">
+                  <img src="{{ pathto('_images/layout/webinar.svg', 1) }}" alt="webinar"/>
+                </div>
+                <div class="bodyTextSmall">
+                  Hasura Remote Joins is now in Beta: <span class='fontNormal'>Sign up for our Webinar to learn more<span class='mLeft15'>·</span></span><span class='underLine mLeft15'>Register now</span>
+                </div>
+              </div>
+            </div>
+          </a>
+          <div id="banner-close" class="closeBanner">
+            <img src="{{ pathto('_images/layout/webinar-close.svg', 1) }}" alt="Close" />
+          </div>
+        </div>
+        <!--
+        <div class='bannerStripImg'>
+          <img src="{{ pathto('_images/layout/stripe.png', 1) }}" alt='stripe' />
+        </div>
+        -->
+      </div>
+      <header
+        id="header"
+        class='blueBgColor boderBottom'
+      >
+        <div class="navContainerWrapper noPadd">
+          <div class="headerWrapper">
+            <div class="navLeft">
+              <div class="brand">
+                <a href="https://hasura.io/">
+                  <img src="{{ pathto('_images/layout/white-logo.svg', 1) }}" alt="Logo"/>
+                </a>
+              </div>
+              <a href="https://discordapp.com/invite/hasura" target="_blank" rel="noopener noreferrer">
+                <div class="discordBtn">
+                  <img src="{{ pathto('_images/layout/discord-brands-block.svg', 1) }}" alt="Discord"/>
+                </div>
+              </a>
+              <a href="https://twitter.com/hasurahq" target="_blank" rel="noopener noreferrer">
+                <div class="twitterBtn">
+                  <img src="{{ pathto('_images/layout/twitter-brands-block.svg', 1) }}" alt="Twitter"/>
+                </div>
+              </a>
+            </div>
+            <div class="navBlueBG">
+              <ul class="navBarUL">
+                <li class='navListActive'>
+                  <span class="versionTxt">
+                    <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                      {%- if version == '1.0' %}
+                        <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.x</option>
+                      {%- else -%}
+                        <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.x</option>
+                      {% endif %}
+                    </select>
+                  </span>
+                  <a href="/docs/">Docs</a>
+                </li>
+                <li>
+                  <a href='https://hasura.io/blog/'>
+                    Blog
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/learn/">
+                    Tutorials
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/enterprise/">
+                    Enterprise
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/hasura-pro/">
+                    Hasura Pro
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/pricing/">
+                    Pricing
+                  </a>
+                </li>
+                <li>
+                  <a href='https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html'>
+                    <button class="commonBtn navBtnHome">
+                      Get Started
+                    </button>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href='https://calendly.com/hasura/prod-expert-call'
+                  >
+                    <button class="commonBtn navBtnContactHome">
+                      Talk to a Product Expert
+                    </button>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class='navBlueBG'>
+              <span class="navBarToggle"
+                onclick="openMenu()"
+              >
+                <span class="iconBar"></span>
+                <span class="iconBar"></span>
+                <span class="iconBar"></span>
+              </span>
+            </div>
+            <div id="navbar" class="topnav">
+              <div class="visibleMobile">
+                <ul class="navBarULMobile">
+                  <li>
+                    <a href="/docs/">
+                      onclick="openMenu()"
+                    >Docs</a>
+                    <span class="versionTxt">
+                      <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                        {%- if version == '1.0' %}
+                          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.x</option>
+                        {%- else -%}
+                          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.x</option>
+                        {% endif %}
+                      </select>
+                    </span>
+                  </li>
+                  <li>
+                    <a href='https://hasura.io/blog/'
+                      onclick="openMenu()"
+                    >
+                      Blog
+                    </a>
+                  </li>
+                  <li>
+                    <a href='https://hasura.io/learn/'
+                      onclick="openMenu()"
+                    >
+                      Tutorials
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://hasura.io/enterprise/"
+                      onclick="openMenu()"
+                    >
+                      Enterprise
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://hasura.io/hasura-pro/"
+                      onclick="openMenu()"
+                    >
+                      Hasura Pro
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://hasura.io/pricing/"
+                      onclick="openMenu()"
+                    >
+                      Pricing
+                    </a>
+                  </li>
+                  <li>
+                    <a href='https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html'
+                      onclick="openMenu()"
+                    >
+                      <button class='commonBtn navBtnHome'>
+                        Get Started
+                      </button>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://calendly.com/hasura/prod-expert-call"
+                      onclick="openMenu()"
+                    >
+                      <button class="commonBtn navBtnContactHome">
+                        Talk to a Product Expert
+                      </button>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
       <div id="" class="content_wrapper">
         {%- if is_landing_page %}
           {% include 'pages/landing.html' %}
@@ -38,6 +231,9 @@
 
           {% block sidebarwrapper %}
             <div class="yui-b mobile-hide" id="sidebar">
+              <div id='sidebar-close' class='mobile-only closeIcon'>
+                <img src="{{ pathto('_images/layout/close-icon.svg', 1) }}" alt="Close"/>
+              </div>
               {{ sidebar() }}
             </div>
           {% endblock %}
@@ -46,6 +242,7 @@
             <div role="main" parent={{ rootpage }}>
 
               <div id="docs-header">
+                <!--
                 <div class="mobile-only" id="mobile-logo">
                   <a href="https://{{ BASE_DOMAIN }}/" target="_blank" rel="noopener">
                     <div class="img_wrapper inline-block">
@@ -54,23 +251,24 @@
                   </a>
                   <a href="https://{{ BASE_DOMAIN }}/docs" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
                 </div>
+                -->
                 <div id="docs-header-actions">
-                  <div class="inline-block mobile-only" id="nav_tree_icon">
-                    <span class="fa fa-bars"></span>
-                  </div>
                   <div class="inline-block" id="input_search_box">
                     <span class="fa fa-search search_icon"></span>
                     <input type="text" id="search_element" placeholder="Search docs..." />
                   </div>
+                  <div class="inline-block mobile-only" id="nav_tree_icon">
+                    <div class="docs-menu">
+                      DOCS MENU >
+                    </div>
+                  </div>
+                  <!--
                   <div class="inline-block header_links">
                     <div class="social_icons_wrapper">
                       <div class="social_icons">
                         <a href="https://hasura.io/learn/" target="_blank" rel="noopener">
                           Tutorials
                         </a>
-                      </div>
-                      <div class="social_icons">
-                        <iframe title="Hasura GraphQL Github Stars" src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true" frameBorder="0" scrolling="0" width="100px" height="25px"></iframe>
                       </div>
                       <div class="social_icons">
                         <a href="https://twitter.com/hasurahq/" target="_blank" rel="noopener">
@@ -85,6 +283,7 @@
                       </div>
                     </div>
                   </div>
+                  -->
                 </div>
               </div>
 
@@ -129,7 +328,28 @@
                   Thank you for your feedback!
                 </div>
               </div>
-
+              <div class="subscribe-form-wrapper">
+                <div id="mc_embed_signup">
+                  <div class="subscribe-form-content">
+                    Stay up to date with product & security updates
+                  </div>
+                  <form action="https://hasura.us13.list-manage.com/subscribe/post?u=9b63e92a98ecdc99732456b0e&amp;id=f5c4f66bcf" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate post-subscription-form mailchimp-form" target="_blank" rel="noopener" novalidate>
+                    <div id="mc_embed_signup_scroll" class="full-width">
+                      <div class="input-box">
+                        <input type="email" value="" name="EMAIL" class="required email" id="mce-EMAIL" placeholder="Your Email Address" aria-label="Subscribe">
+                      </div>
+                      <div id="mce-responses" class="clear display-inline">
+                        <div class="response error-message" id="mce-error-response" style="display:none"></div>
+                        <div class="response success-message" id="mce-success-response" style="display:none"></div>
+                      </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+                      <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_9b63e92a98ecdc99732456b0e_f5c4f66bcf" tabindex="-1" value=""></div>
+                      <div class="clear submit-box">
+                      <input type="submit" value="SUBSCRIBE" name="subscribe" id="mc-embedded-subscribe">
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
               <div class="footer-hasura-custom">
                 <img class="responsive footer_logo" src="{{ pathto('_images/layout/hasura_logo.svg', 1) }}" alt="Hasura Logo Dark"/>
                 <div class="footer_text">
@@ -188,6 +408,33 @@
       };
       $('.supportBtn').on('click', supportBtnHandler);
     });
+  </script>
+
+  <!-- Local storage -->
+  <script type="text/javascript">
+    $(document).ready( function() {
+      const bannerLocalStorageKey = 'remoteJoinsWebinarBannerDismissed';	    
+      const bannerDismissed = window.localStorage.getItem(bannerLocalStorageKey);
+      if (bannerDismissed !== "yes") {
+        $('#banner').removeClass("hide");
+      }
+      $('#banner-close').click(function(e){
+        window.localStorage.setItem(bannerLocalStorageKey, 'yes');
+        $('#banner').hide();
+      });
+    });
+  </script>
+
+  <!--Hamburger menu-->
+  <script type="text/javascript">
+    function openMenu() {
+      var x = document.getElementById("navbar");
+      if (x.className === "topnav") {
+        x.className += " responsive"
+      } else {
+        x.className = "topnav"
+      }
+    }
   </script>
 
   <!-- utils -->
@@ -306,7 +553,19 @@
         }
       };
       $('#nav_tree_icon').on('click', navTreeHandler);
+      $('#sidebar-close').on('click', navTreeHandler);
     });
+  </script>
+
+  <!-- mailchimp -->
+  <script type="text/javascript">
+    $(document).ready( function() {
+        loadCss('//cdn-images.mailchimp.com/embedcode/classic-10_7.css', function(){});
+        loadScript("{{ pathto('_static/mailchimp/mc-validate.min.js', 1) }}", function(){});
+    });
+  </script>
+  <script type='text/javascript'>
+    (function($) {window.fnames = new Array(); window.ftypes = new Array();fnames[0]='EMAIL';ftypes[0]='email';fnames[1]='FNAME';ftypes[1]='text';fnames[2]='LNAME';ftypes[2]='text';fnames[3]='ADDRESS';ftypes[3]='address';fnames[4]='PHONE';ftypes[4]='phone';}(jQuery));
   </script>
 
   <!-- feedback -->

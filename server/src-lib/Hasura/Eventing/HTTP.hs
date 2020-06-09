@@ -46,14 +46,11 @@ import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as TE
 import qualified Data.Text.Encoding.Error      as TE
-import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
 import qualified Data.Time.Clock               as Time
 
 import           Control.Exception             (try)
-import           Control.Monad.IO.Class        (MonadIO, liftIO)
-import           Control.Monad.Reader          (MonadReader)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
