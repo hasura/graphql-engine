@@ -9,7 +9,6 @@ import           Control.Lens                           (view, _2)
 import           Control.Monad.Stateless
 import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Aeson                             hiding (json)
-import           Data.Either                            (isRight)
 import           Data.Int                               (Int64)
 import           Data.IORef
 import           Data.Time.Clock                        (UTCTime, getCurrentTime)
@@ -35,6 +34,7 @@ import qualified System.Metrics.Json                    as EKG
 import qualified Text.Mustache                          as M
 import qualified Web.Spock.Core                         as Spock
 
+import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Action
 import           Hasura.HTTP
@@ -515,7 +515,8 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
-        pgExecCtx = PGExecCtx pool isoLevel
+        pgExecCtx = mkPGExecCtx isoLevel pool
+
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx
     wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
                                         corsPolicy sqlGenCtx enableAL planCache
@@ -560,7 +561,7 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
 
     migrateAndInitialiseSchemaCache :: m (E.PlanCache, SchemaCacheRef, Maybe UTCTime)
     migrateAndInitialiseSchemaCache = do
-      let pgExecCtx = PGExecCtx pool Q.Serializable
+      let pgExecCtx = mkPGExecCtx Q.Serializable pool
           adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
       currentTime <- liftIO getCurrentTime
       initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite do
@@ -612,7 +613,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     -- Health check endpoint
     Spock.get "healthz" $ do
       sc <- getSCFromRef $ scCacheRef serverCtx
-      dbOk <- checkDbConnection
+      dbOk <- liftIO $ _pecCheckHealth $ scPGExecCtx serverCtx
       if dbOk
         then Spock.setStatus HTTP.status200 >> (Spock.text $ if null (scInconsistentObjs sc)
                                                  then "OK"
@@ -702,14 +703,6 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     enableMetadata = isMetadataEnabled serverCtx
     enablePGDump = isPGDumpEnabled serverCtx
     enableConfig = isConfigEnabled serverCtx
-
-    checkDbConnection = do
-      e <- liftIO $ runExceptT $ runLazyTx' (scPGExecCtx serverCtx) select1Query
-      pure $ isRight e
-      where
-        select1Query :: (MonadTx m) => m Int
-        select1Query =   liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-                         [Q.sql| SELECT 1 |] () False
 
     serveApiConsole = do
       -- redirect / to /console

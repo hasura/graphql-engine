@@ -342,7 +342,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                 -> ExceptT () m ()
     runHasuraGQ timerTot telemCacheHit reqId query userInfo = \case
       E.ExOpQuery opTx genSql ->
-        execQueryOrMut Telem.Query genSql $ runLazyTx' pgExecCtx opTx
+        execQueryOrMut Telem.Query genSql $ runQueryTx pgExecCtx opTx
       -- Response headers discarded over websockets
       E.ExOpMutation _ opTx ->
         execQueryOrMut Telem.Mutation Nothing $

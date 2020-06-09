@@ -221,9 +221,10 @@ runHGEServer
   -- ^ start time
   -> m ()
 runHGEServer ServeOptions{..} InitCtx{..} initTime = do
-  -- Comment this to enable expensive assertions from "GHC.AssertNF". These will log lines to
-  -- STDOUT containing "not in normal form". In the future we could try to integrate this into
-  -- our tests. For now this is a development tool.
+  -- Comment this to enable expensive assertions from "GHC.AssertNF". These
+  -- will log lines to STDOUT containing "not in normal form". In the future we
+  -- could try to integrate this into our tests. For now this is a development
+  -- tool.
   --
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
   liftIO disableAssertNF
@@ -236,8 +237,9 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
 
-  -- If an exception is encountered in 'mkWaiApp', flush the log buffer and rethrow
-  -- If we do not flush the log buffer on exception, then log lines written in 'mkWaiApp' may be missed
+  -- If an exception is encountered in 'mkWaiApp', flush the log buffer and
+  -- rethrow If we do not flush the log buffer on exception, then log lines
+  -- written in 'mkWaiApp' may be missed
   -- See: https://github.com/hasura/graphql-engine/issues/4772
   let flushLogger = liftIO $ FL.flushLogStr $ _lcLoggerSet loggerCtx
   HasuraApp app cacheRef cacheInitTime shutdownApp <- flip onException flushLogger $
@@ -387,7 +389,7 @@ runAsAdmin
   -> m (Either QErr a)
 runAsAdmin pool sqlGenCtx httpManager m = do
   let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
-      pgCtx = PGExecCtx pool Q.Serializable
+      pgCtx = mkPGExecCtx Q.Serializable pool
   runExceptT $ peelRun runCtx pgCtx Q.ReadWrite m
 
 execQuery
