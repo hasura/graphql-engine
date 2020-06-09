@@ -142,7 +142,7 @@ export const getInsertDownQuery = (
     return value;
   });
 
-  let whereString = "";
+  let whereString = '';
 
   if (numberOfColumns > 1) {
     const butlast = numberOfColumns - 1;
@@ -553,19 +553,19 @@ export const generateCreateEventTriggerQuery = (
         state.webhook.type === 'env' ? state.webhook.value.trim() : null,
       insert: state.operations.insert
         ? {
-          columns: '*',
-        }
+            columns: '*',
+          }
         : null,
       update: state.operations.update
         ? {
-          columns: state.operationColumns.map(c => c.name),
-          payload: state.operationColumns.map(c => c.name),
-        }
+            columns: state.operationColumns.map(c => c.name),
+            payload: state.operationColumns.map(c => c.name),
+          }
         : null,
       delete: state.operations.delete
         ? {
-          columns: '*',
-        }
+            columns: '*',
+          }
         : null,
       enable_manual: state.operations.enable_manual,
       retry_conf: state.retryConf,
