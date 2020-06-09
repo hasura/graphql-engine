@@ -412,12 +412,13 @@
   <!-- Local storage -->
   <script type="text/javascript">
     $(document).ready( function() {
-      const bannerStripeConsent = window.localStorage.getItem("hasuraCon2020BannerStripeConsent")
-      if (bannerStripeConsent !== "yes") {
+      const bannerLocalStorageKey = 'remoteJoinsWebinarBannerDismissed';	    
+      const bannerDismissed = window.localStorage.getItem(bannerLocalStorageKey)
+      if (bannerDismissed !== "yes") {
         $('#banner').removeClass("hideClass");
       }
       $('#banner-close').click(function(e){
-        window.localStorage.setItem('hasuraCon2020BannerStripeConsent', 'yes');
+        window.localStorage.setItem(bannerLocalStorageKey, 'yes');
         $('#banner').hide();
       });
     });
