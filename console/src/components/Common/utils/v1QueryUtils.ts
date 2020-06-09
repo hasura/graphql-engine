@@ -98,14 +98,14 @@ export const getDropPermissionQuery = (
   };
 };
 
-export const getInsertQuery = (
+export const getInsertUpQuery = (
   tableDef: TableDefinition,
-  insertObject: object
+  insertion: object
 ) => {
-  const queryCols = Object.keys(insertObject);
+  const queryCols = Object.keys(insertion);
   const colString = queryCols.join(',');
 
-  const queryValues = Object.values(insertObject);
+  const queryValues = Object.values(insertion);
   const modifiedValues = queryValues.map(value => {
     // currently, only modifying for string data,
     // unsure of how it is for other types.
@@ -121,6 +121,44 @@ export const getInsertQuery = (
     type: 'run_sql',
     args: {
       sql: `INSERT into ${tableDef.schema}.${tableDef.name} (${colString}) values (${valueString})`,
+    },
+  };
+};
+
+export const getInsertDownQuery = (
+  tableDef: TableDefinition,
+  insertion: object
+) => {
+  const queryCols = Object.keys(insertion);
+  const numberOfColumns = queryCols.length;
+  const queryValues = Object.values(insertion);
+  const modifiedValues = queryValues.map(value => {
+    // currently, only modifying for string data,
+    // unsure of how it is for other types.
+    if (typeof value === 'string') {
+      return `'${value}'`;
+    }
+
+    return value;
+  });
+
+  let whereString = "";
+
+  if (numberOfColumns > 1) {
+    const butlast = numberOfColumns - 1;
+    queryCols.slice(0, butlast).forEach((col, index) => {
+      whereString += ` ${col} = ${modifiedValues[index]} AND`;
+    });
+
+    whereString += ` ${queryCols[butlast]} = ${modifiedValues[butlast]}`;
+  } else {
+    whereString = `${queryCols[0]} = ${modifiedValues[0]}`;
+  }
+
+  return {
+    type: 'run_sql',
+    args: {
+      sql: `DELETE from ${tableDef.schema}.${tableDef.name} WHERE${whereString};`,
     },
   };
 };
@@ -515,19 +553,19 @@ export const generateCreateEventTriggerQuery = (
         state.webhook.type === 'env' ? state.webhook.value.trim() : null,
       insert: state.operations.insert
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       update: state.operations.update
         ? {
-            columns: state.operationColumns.map(c => c.name),
-            payload: state.operationColumns.map(c => c.name),
-          }
+          columns: state.operationColumns.map(c => c.name),
+          payload: state.operationColumns.map(c => c.name),
+        }
         : null,
       delete: state.operations.delete
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       enable_manual: state.operations.enable_manual,
       retry_conf: state.retryConf,

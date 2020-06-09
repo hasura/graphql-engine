@@ -41,9 +41,9 @@ class InsertItem extends Component {
   }
 
   toggleMigrationCheckBox = () => {
-    this.setState(prevState => ({
-      isMigrationChecked: !prevState.isMigrationChecked,
-    }));
+    this.setState({
+      isMigrationChecked: !this.state.isMigrationChecked,
+    });
   };
 
   render() {
@@ -285,6 +285,7 @@ class InsertItem extends Component {
                   dispatch={dispatch}
                   isEnum={currentTable.is_enum}
                 />
+                {/* This should be rendering only on cli-mode? */}
                 <label className={styles.labelText}>
                   <input
                     type="checkbox"

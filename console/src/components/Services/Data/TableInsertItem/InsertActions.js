@@ -10,7 +10,8 @@ import dataHeaders from '../Common/Headers';
 import { getEnumColumnMappings } from '../../../Common/utils/pgUtils';
 import {
   getEnumOptionsQuery,
-  getInsertQuery,
+  getInsertUpQuery,
+  getInsertDownQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { makeMigrationCall, setTable } from '../DataActions';
 
@@ -27,15 +28,20 @@ const I_FETCH_ENUM_OPTIONS_ERROR = 'InsertItem/I_FETCH_ENUM_ERROR';
 const Open = () => ({ type: _OPEN });
 const Close = () => ({ type: _CLOSE });
 
-// insert helper
-const createInsertMigration = (dispatch, getState, tableInfo, insertObj) => {
-  const upQuery = getInsertQuery(
+// insertItem helper
+const createInsertMigration = (dispatch, getState, tableInfo, insertedData) => {
+  const upQuery = getInsertUpQuery(
     { name: tableInfo.name, schema: tableInfo.schema },
-    insertObj
+    insertedData
   );
+  const downQuery = getInsertDownQuery(
+    { name: tableInfo.name, schema: tableInfo.schema },
+    insertedData
+  );
+
   const migrationName = `insert_into_${tableInfo.name}`;
   const customOnSuccess = () => {
-    // NOTE: maybe unnecessary.
+    // maybe unnecessary.
     dispatch(setTable(tableInfo.name));
   };
   const customOnError = () => {};
@@ -47,7 +53,7 @@ const createInsertMigration = (dispatch, getState, tableInfo, insertObj) => {
     dispatch,
     getState,
     [upQuery],
-    null,
+    [downQuery],
     migrationName,
     customOnSuccess,
     customOnError,
@@ -110,12 +116,16 @@ const insertItem = (tableName, colValues, isMigration = false) => {
         error: { message: 'Not valid JSON' },
       });
     }
+    let returning = [];
+    if (isMigration) {
+      returning = columns.map(col => col.column_name);
+    }
     const reqBody = {
       type: 'insert',
       args: {
         table: { name: tableName, schema: getState().tables.currentSchema },
         objects: [insertObject],
-        returning: [],
+        returning,
       },
     };
     const options = {
@@ -137,11 +147,12 @@ const insertItem = (tableName, colValues, isMigration = false) => {
         );
 
         if (isMigration) {
+          const insertedData = data.returning[0];
           createInsertMigration(
             dispatch,
             getState,
             { name: tableName, schema: currentSchema },
-            insertObject
+            insertedData
           );
         }
       },
