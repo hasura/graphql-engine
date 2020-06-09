@@ -29,7 +29,7 @@
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if not is_landing_page else '' }}{% endblock %}">
     <div class="main_container_wrapper">
       {% include 'pages/loading.html' %}
-      <div id="banner" class="bannerStripWrapper hideClass">
+      <div id="banner" class="bannerStripWrapper hide">
         <div class='bannerInnerWrapper displayFlex'>
           <a
             href="https://hasura.io/events/data-federation-hasura-graphql/#webinar-register"
@@ -409,13 +409,14 @@
       $('.supportBtn').on('click', supportBtnHandler);
     });
   </script>
+
   <!-- Local storage -->
   <script type="text/javascript">
     $(document).ready( function() {
       const bannerLocalStorageKey = 'remoteJoinsWebinarBannerDismissed';	    
-      const bannerDismissed = window.localStorage.getItem(bannerLocalStorageKey)
+      const bannerDismissed = window.localStorage.getItem(bannerLocalStorageKey);
       if (bannerDismissed !== "yes") {
-        $('#banner').removeClass("hideClass");
+        $('#banner').removeClass("hide");
       }
       $('#banner-close').click(function(e){
         window.localStorage.setItem(bannerLocalStorageKey, 'yes');
@@ -423,10 +424,11 @@
       });
     });
   </script>
+
   <!--Hamburger menu-->
   <script type="text/javascript">
     function openMenu() {
-      var x = document.getElementById("navbar")
+      var x = document.getElementById("navbar");
       if (x.className === "topnav") {
         x.className += " responsive"
       } else {

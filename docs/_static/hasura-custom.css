@@ -77,9 +77,6 @@ ul {
   width: 100%;
   /* height: calc(100vh - 60px); */
 }
-.hideClass {
-  display: none;
-}
 .subscribe-form-wrapper {
   border-radius: 2px;
   background-color: #1bd5c8;
@@ -209,12 +206,10 @@ ul {
   margin-right: 16px;
   width: 32px;
 }
-.bannerStripWrapper .displayFlex a:hover, .bannerStripWrapper .displayFlex a:focus
-{
+.bannerStripWrapper .displayFlex a:hover, .bannerStripWrapper .displayFlex a:focus {
   text-decoration: none;
 }
-.bannerStripWrapper .closeBanner
-{
+.bannerStripWrapper .closeBanner {
   cursor: pointer;
   text-align: right;
   display: flex;
