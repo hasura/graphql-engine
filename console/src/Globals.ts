@@ -1,3 +1,4 @@
+/* eslint no-underscore-dangle: 0 */
 import { SERVER_CONSOLE_MODE } from './constants';
 import { getFeaturesCompatibility } from './helpers/versionUtils';
 import { stripTrailingSlash } from './components/Common/utils/urlUtils';
@@ -6,10 +7,34 @@ import { isEmpty } from './components/Common/utils/jsUtils';
 // TODO: move this section to a more appropriate location
 /* set helper tools into window */
 import sqlFormatter from './helpers/sql-formatter.min';
-import hljs from './helpers/highlight.min';
+
+const hljs = require('./helpers/highlight.min');
+
+declare global {
+  interface Window {
+    __env: {
+      nodeEnv: string;
+      apiHost: string;
+      apiPort: string;
+      dataApiUrl: string;
+      urlPrefix: string;
+      adminSecret: string;
+      isAdminSecretSet: boolean;
+      consoleMode: string;
+      enableTelemetry: boolean;
+      assetsPath: string;
+      serverVersion: string;
+      consolePath: string;
+      cliUUID: string;
+    };
+    sqlFormatter: unknown;
+    hljs: unknown;
+  }
+  const CONSOLE_ASSET_VERSION: string;
+}
 
 if (
-  window &&
+  (window as Window) &&
   typeof window === 'object' &&
   !window.sqlFormatter &&
   !window.hljs
@@ -43,7 +68,7 @@ const globals = {
     : null,
   cliUUID: window.__env.cliUUID,
   hasuraUUID: '',
-  telemetryNotificationShown: '',
+  telemetryNotificationShown: false,
   isProduction,
 };
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
@@ -58,11 +83,12 @@ if (globals.consoleMode === SERVER_CONSOLE_MODE) {
         currentUrl.lastIndexOf(consolePath)
       );
 
-      globals.urlPrefix =
-        currentPath.slice(0, currentPath.lastIndexOf(consolePath)) + '/console';
+      globals.urlPrefix = `${currentPath.slice(
+        0,
+        currentPath.lastIndexOf(consolePath)
+      )}/console`;
     } else {
-      const windowHostUrl =
-        window.location.protocol + '//' + window.location.host;
+      const windowHostUrl = `${window.location.protocol}//${window.location.host}`;
 
       globals.dataApiUrl = windowHostUrl;
     }
