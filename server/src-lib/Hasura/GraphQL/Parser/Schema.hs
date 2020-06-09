@@ -16,6 +16,7 @@ module Hasura.GraphQL.Parser.Schema (
   , eqNonNullableType
   , eqTypeInfo
   , discardNullability
+  , getObjType
 
   , EnumValueInfo(..)
   , InputFieldInfo(..)
@@ -45,7 +46,10 @@ import qualified Data.HashMap.Strict.Extended  as Map
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Functor.Classes
-import           Language.GraphQL.Draft.Syntax (Description (..), Name (..), Value (..), Directive(..))
+import           Language.GraphQL.Draft.Syntax (Description (..), Name (..), Value (..), Directive(..), SchemaDocument)
+
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.List.NonEmpty            as NE
 
 class HasName a where
   getName :: a -> Name
@@ -323,6 +327,10 @@ eqTypeInfo (TIInputObject fields1) (TIInputObject fields2) = fields1 == fields2
 eqTypeInfo (TIObject fields1)      (TIObject fields2)      = fields1 == fields2
 eqTypeInfo _                       _                       = False
 
+getObjType :: SomeTypeInfo -> Maybe [Definition FieldInfo]
+getObjType (SomeTypeInfo (TIObject obj)) = Just obj
+getObjType _ = Nothing
+
 data SomeTypeInfo = forall k. SomeTypeInfo (TypeInfo k)
 
 instance Eq SomeTypeInfo where
@@ -440,7 +448,6 @@ data Schema = Schema
   , sDirectives       :: [Directive Void]
   }
 
-
 -- | Recursively collects all type definitions accessible from the given value.
 collectTypeDefinitions
   :: (HasTypeDefinitions a, MonadError ConflictingDefinitions m)
@@ -512,3 +519,67 @@ instance HasTypeDefinitions FieldInfo where
   accumulateTypeDefinitions (FieldInfo args t) = do
     accumulateTypeDefinitions args
     accumulateTypeDefinitions t
+
+instance HasTypeDefinitions G.TypeDefinition where
+  accumulateTypeDefinitions  = \case
+    G.TypeDefinitionScalar (G.ScalarTypeDefinition description name _) ->
+      accumulateTypeDefinitions (mkDefinition name description TIScalar)
+    G.TypeDefinitionEnum (G.EnumTypeDefinition description name _ values) ->
+      let enumValDefns = map (\(G.EnumValueDefinition enumDesc enumName _) ->
+                                (mkDefinition (G.unEnumValue enumName) enumDesc EnumValueInfo))
+                         $ values
+      in
+      accumulateTypeDefinitions (mkDefinition name description $ TIEnum $ NE.fromList enumValDefns)
+    G.TypeDefinitionInterface _ -> pure () -- TODO
+    G.TypeDefinitionUnion _ -> pure () -- TODO
+    G.TypeDefinitionInputObject (G.InputObjectTypeDefinition description name _ valueDefns) ->
+      let resolveValType valType defaultVal =
+            case valType of
+              G.TypeNamed _ name' ->
+                case G.isNullable valType of
+                  True -> IFOptional (TNamed $ mkDefinition name' Nothing TIScalar) defaultVal
+                  False -> IFRequired $ TNamed $ mkDefinition name' Nothing TIScalar
+              G.TypeList _ valType' ->
+                resolveValType valType' defaultVal
+
+          mkInputFieldInfo (G.InputValueDefinition desc valName valType defaultVal) =
+            mkDefinition valName desc $ resolveValType valType defaultVal
+
+          inputFieldInfos = map mkInputFieldInfo $ valueDefns
+      in
+      accumulateTypeDefinitions (mkDefinition name description $ TIInputObject inputFieldInfos)
+
+
+    G.TypeDefinitionObject (G.ObjectTypeDefinition description name _ _ fieldsDefns) ->
+      let resolveValType valType =
+            case convertGTypeToType valType of
+              Nullable t -> IFOptional t Nothing
+              NonNullable t -> IFRequired t
+
+          mkInputFieldInfo (G.InputValueDefinition desc valName valType _) =
+            mkDefinition valName desc $ resolveValType valType
+
+          inputFieldInfos valueDefns = map mkInputFieldInfo $ valueDefns
+
+          fieldDefnToFieldInfoDefn (G.FieldDefinition desc fieldName args fieldType _) =
+            mkDefinition fieldName desc $ FieldInfo (inputFieldInfos args) $ convertGTypeToType fieldType
+      in
+      accumulateTypeDefinitions (mkDefinition name description $
+                                 TIObject (map fieldDefnToFieldInfoDefn fieldsDefns))
+
+instance HasTypeDefinitions SchemaDocument where
+  accumulateTypeDefinitions (G.SchemaDocument typeDefs) =
+    accumulateTypeDefinitions typeDefs
+
+-- this function is wrong, it assumes that every named type is a scalar one
+convertGTypeToType :: G.GType -> Type 'Both
+convertGTypeToType gType =
+  case gType of
+    G.TypeNamed _ name ->
+      case G.isNullable gType of
+        True -> Nullable $ TNamed $ mkDefinition name Nothing TIScalar
+        False -> NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
+    G.TypeList _ gType' ->
+      case G.isNullable gType of
+        True -> Nullable $ TList $ convertGTypeToType gType'
+        False -> NonNullable $ TList $ convertGTypeToType gType'

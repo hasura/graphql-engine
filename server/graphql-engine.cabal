@@ -355,7 +355,7 @@ library
                      -- , Hasura.GraphQL.Resolve.Insert
                      -- , Hasura.GraphQL.Resolve.Mutation
                      -- , Hasura.GraphQL.Resolve.Select
-                     -- , Hasura.GraphQL.RemoteServer
+                     , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Logging
 

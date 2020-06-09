@@ -7,6 +7,7 @@ import           Data.FileEmbed                (embedStringFile)
 import           Data.Foldable                 (foldlM)
 import           Hasura.HTTP
 import           Hasura.Prelude
+import           Data.Void                     (Void)
 
 import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as BL
@@ -21,6 +22,7 @@ import           Hasura.RQL.DDL.Headers        (makeHeadersFromConf)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils           (httpExceptToJSON)
 import           Hasura.Server.Version         (HasVersion)
+import           Hasura.GraphQL.Parser.Schema
 
 import qualified Hasura.GraphQL.Schema         as GS
 
@@ -28,11 +30,11 @@ introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
 
 fetchRemoteSchema
-  :: (HasVersion, MonadIO m, MonadError QErr m)
+  :: (HasVersion, MonadIO m, MonadError ConflictingDefinitions m, MonadError QErr m)
   => HTTP.Manager
   -> RemoteSchemaName
   -> RemoteSchemaInfo
-  -> m GC.RemoteGCtx
+  -> m Schema
 fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) = do
   headers <- makeHeadersFromConf headerConf
   let hdrsWithDefaults = addDefaultHeaders headers
@@ -56,18 +58,17 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
     either (remoteSchemaErr . T.pack) return $ J.eitherDecode respData
   let (sDoc, qRootN, mRootN, sRootN) =
         fromIntrospection introspectRes
-  typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
-     VT.TLRemoteType name def
+  typMap <- collectTypeDefinitions sDoc
   let mQrTyp = Map.lookup qRootN typMap
       mMrTyp = maybe Nothing (`Map.lookup` typMap) mRootN
       mSrTyp = maybe Nothing (`Map.lookup` typMap) sRootN
   qrTyp <- liftMaybe noQueryRoot mQrTyp
-  let mRmQR = VT.getObjTyM qrTyp
-      mRmMR = join $ VT.getObjTyM <$> mMrTyp
-      mRmSR = join $ VT.getObjTyM <$> mSrTyp
-  rmQR <- liftMaybe (err400 Unexpected "query root has to be an object type") mRmQR
-  return $ GC.RemoteGCtx typMap rmQR mRmMR mRmSR
-
+  rmQR <- liftMaybe (err400 Unexpected "query root has to be an object type") $ getObjType (dInfo qrTyp)
+  let queryRoot = Nullable $
+                   TNamed $ mkDefinition $$(G.litName "query_root") Nothing $ TIObject rmQR
+      mutationRoot = mkRoot $$(G.litName "mutation_root") $ mMrTyp
+      subscriptionRoot = mkRoot $$(G.litName "subscription_root") $ mSrTyp
+  return $ Schema Nothing typMap queryRoot mutationRoot subscriptionRoot []
   where
     noQueryRoot = err400 Unexpected "query root not found in remote schema"
     remoteSchemaErr :: (MonadError QErr m) => T.Text -> m a
@@ -92,88 +93,94 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
       Right a -> J.object ["response" J..= (a :: J.Value)]
       Left _  -> J.object ["raw_body" J..= bsToTxt (BL.toStrict bs)]
 
-mergeSchemas
-  :: (MonadError QErr m)
-  => RemoteSchemaMap
-  -> GS.GCtxMap
-  -- the merged GCtxMap and the default GCtx without roles
-  -> m (GS.GCtxMap, GS.GCtx)
-mergeSchemas rmSchemaMap gCtxMap = do
-  def <- mkDefaultRemoteGCtx remoteSchemas
-  merged <- mergeRemoteSchema gCtxMap def
-  return (merged, def)
-  where
-    remoteSchemas = map rscGCtx $ Map.elems rmSchemaMap
+    mkRoot :: G.Name -> Maybe (Definition SomeTypeInfo) -> Maybe (Type 'Output)
+    mkRoot rootName rootTypeMap = do
+      rootObjType <- getObjType . dInfo <$> rootTypeMap
+      Nullable . TNamed . mkDefinition rootName Nothing . TIObject <$> rootObjType
 
-mkDefaultRemoteGCtx
-  :: (MonadError QErr m)
-  => [GC.RemoteGCtx] -> m GS.GCtx
-mkDefaultRemoteGCtx =
-  foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GC.emptyGCtx
+-- mergeSchemas
+--   :: (MonadError QErr m)
+--   => RemoteSchemaMap
+--   -> GS.GCtxMap
+--   -- the merged GCtxMap and the default GCtx without roles
+--   -> m (GS.GCtxMap, GS.GCtx)
+-- mergeSchemas rmSchemaMap gCtxMap = do
+--   def <- mkDefaultRemoteGCtx remoteSchemas
+--   merged <- mergeRemoteSchema gCtxMap def
+--   return (merged, def)
+--   where
+--     remoteSchemas = map rscGCtx $ Map.elems rmSchemaMap
 
--- merge a remote schema `gCtx` into current `gCtxMap`
-mergeRemoteSchema
-  :: (MonadError QErr m)
-  => GS.GCtxMap
-  -> GS.GCtx
-  -> m GS.GCtxMap
-mergeRemoteSchema ctxMap mergedRemoteGCtx = do
-  res <- forM (Map.toList ctxMap) $ \(role, gCtx) -> do
-    updatedGCtx <- mergeGCtx gCtx mergedRemoteGCtx
-    return (role, updatedGCtx)
-  return $ Map.fromList res
+-- mkDefaultRemoteGCtx
+--   :: (MonadError QErr m)
+--   => [GC.RemoteGCtx] -> m GS.GCtx
+-- mkDefaultRemoteGCtx =
+--   foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GC.emptyGCtx
 
-mergeGCtx
-  :: (MonadError QErr m)
-  => GS.GCtx
-  -> GS.GCtx
-  -> m GS.GCtx
-mergeGCtx gCtx rmMergedGCtx = do
-  let rmTypes = GS._gTypes rmMergedGCtx
-      hsraTyMap = GS._gTypes gCtx
-  GS.checkSchemaConflicts gCtx rmMergedGCtx
-  let newQR = mergeQueryRoot gCtx rmMergedGCtx
-      newMR = mergeMutRoot gCtx rmMergedGCtx
-      newSR = mergeSubRoot gCtx rmMergedGCtx
-      newTyMap = mergeTyMaps hsraTyMap rmTypes newQR newMR
-      updatedGCtx = gCtx { GS._gTypes = newTyMap
-                         , GS._gQueryRoot = newQR
-                         , GS._gMutRoot = newMR
-                         , GS._gSubRoot = newSR
-                         }
-  return updatedGCtx
+-- -- merge a remote schema `gCtx` into current `gCtxMap`
+-- mergeRemoteSchema
+--   :: (MonadError QErr m)
+--   => GS.GCtxMap
+--   -> GS.GCtx
+--   -> m GS.GCtxMap
+-- mergeRemoteSchema ctxMap mergedRemoteGCtx = do
+--   res <- forM (Map.toList ctxMap) $ \(role, gCtx) -> do
+--     updatedGCtx <- mergeGCtx gCtx mergedRemoteGCtx
+--     return (role, updatedGCtx)
+--   return $ Map.fromList res
 
-convRemoteGCtx :: GC.RemoteGCtx -> GS.GCtx
-convRemoteGCtx rmGCtx =
-  GC.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
-               , GS._gQueryRoot = GC._rgQueryRoot rmGCtx
-               , GS._gMutRoot   = GC._rgMutationRoot rmGCtx
-               , GS._gSubRoot   = GC._rgSubscriptionRoot rmGCtx
-               }
+-- mergeGCtx
+--   :: (MonadError QErr m)
+--   => GS.GCtx
+--   -> GS.GCtx
+--   -> m GS.GCtx
+-- mergeGCtx gCtx rmMergedGCtx = do
+--   let rmTypes = GS._gTypes rmMergedGCtx
+--       hsraTyMap = GS._gTypes gCtx
+--   GS.checkSchemaConflicts gCtx rmMergedGCtx
+--   let newQR = mergeQueryRoot gCtx rmMergedGCtx
+--       newMR = mergeMutRoot gCtx rmMergedGCtx
+--       newSR = mergeSubRoot gCtx rmMergedGCtx
+--       newTyMap = mergeTyMaps hsraTyMap rmTypes newQR newMR
+--       updatedGCtx = gCtx { GS._gTypes = newTyMap
+--                          , GS._gQueryRoot = newQR
+--                          , GS._gMutRoot = newMR
+--                          , GS._gSubRoot = newSR
+--                          }
+--   return updatedGCtx
+
+-- convRemoteGCtx :: GC.RemoteGCtx -> GS.GCtx
+-- convRemoteGCtx rmGCtx =
+--   GC.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
+--                , GS._gQueryRoot = GC._rgQueryRoot rmGCtx
+--                , GS._gMutRoot   = GC._rgMutationRoot rmGCtx
+--                , GS._gSubRoot   = GC._rgSubscriptionRoot rmGCtx
+--                }
 
 
-mergeQueryRoot :: GS.GCtx -> GS.GCtx -> VT.ObjTyInfo
-mergeQueryRoot a b = GS._gQueryRoot a <> GS._gQueryRoot b
+-- mergeQueryRoot :: GS.GCtx -> GS.GCtx -> VT.ObjTyInfo
+-- mergeQueryRoot a b = GS._gQueryRoot a <> GS._gQueryRoot b
 
-mergeMutRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
-mergeMutRoot a b = GS._gMutRoot a <> GS._gMutRoot b
+-- mergeMutRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
+-- mergeMutRoot a b = GS._gMutRoot a <> GS._gMutRoot b
 
-mergeSubRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
-mergeSubRoot a b = GS._gSubRoot a <> GS._gSubRoot b
+-- mergeSubRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
+-- mergeSubRoot a b = GS._gSubRoot a <> GS._gSubRoot b
 
-mergeTyMaps
-  :: VT.TypeMap
-  -> VT.TypeMap
-  -> VT.ObjTyInfo
-  -> Maybe VT.ObjTyInfo
-  -> VT.TypeMap
-mergeTyMaps hTyMap rmTyMap newQR newMR =
-  let newTyMap  = hTyMap <> rmTyMap
-      newTyMap' =
-        Map.insert (G.NamedType "query_root") (VT.TIObj newQR) newTyMap
-  in maybe newTyMap' (\mr -> Map.insert
-                              (G.NamedType "mutation_root")
-                              (VT.TIObj mr) newTyMap') newMR
+-- mergeTyMaps
+--   :: VT.TypeMap
+--   -> VT.TypeMap
+--   -> VT.ObjTyInfo
+--   -> Maybe VT.ObjTyInfo
+
+--   -> VT.TypeMap
+-- mergeTyMaps hTyMap rmTyMap newQR newMR =
+--   let newTyMap  = hTyMap <> rmTyMap
+--       newTyMap' =
+--         Map.insert (G.NamedType "query_root") (VT.TIObj newQR) newTyMap
+--   in maybe newTyMap' (\mr -> Map.insert
+--                               (G.NamedType "mutation_root")
+--                               (VT.TIObj mr) newTyMap') newMR
 
 
 -- parsing the introspection query result
@@ -209,8 +216,7 @@ instance J.FromJSON (FromIntrospection G.ObjectTypeDefinition) where
     fields     <- o .:? "fields"
     interfaces <- o .:? "interfaces"
     when (kind /= "OBJECT") $ kindErr kind "object"
-    let implIfaces = map (G.NamedType . G._itdName) $
-                     maybe [] (fmap fromIntrospection) interfaces
+    let implIfaces = maybe [] pure $ interfaces
         flds = maybe [] (fmap fromIntrospection) fields
         desc' = fmap fromIntrospection desc
         r = G.ObjectTypeDefinition desc' name implIfaces [] flds
@@ -236,8 +242,7 @@ instance J.FromJSON (FromIntrospection G.GType) where
       ("NON_NULL", _, Just typ) -> return $ mkNotNull (fromIntrospection typ)
       ("NON_NULL", _, Nothing)  -> pErr "NON_NULL should have `ofType`"
       ("LIST", _, Just typ)     ->
-        return $ G.TypeList (G.Nullability True)
-                 (G.ListType $ fromIntrospection typ)
+        return $ G.TypeList (G.Nullability True) (fromIntrospection typ)
       ("LIST", _, Nothing)      -> pErr "LIST should have `ofType`"
       (_, Just name, _)         -> return $ G.TypeNamed (G.Nullability True) name
       _                         -> pErr $ "kind: " <> kind <> " should have name"
@@ -247,7 +252,6 @@ instance J.FromJSON (FromIntrospection G.GType) where
       mkNotNull typ = case typ of
         G.TypeList _ ty -> G.TypeList (G.Nullability False) ty
         G.TypeNamed _ n -> G.TypeNamed (G.Nullability False) n
-
 
 instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
   parseJSON = J.withObject "InputValueDefinition" $ \o -> do
@@ -260,9 +264,10 @@ instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
         r = G.InputValueDefinition desc' name (fromIntrospection _type) defVal'
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection G.ValueConst) where
-   parseJSON = J.withText "defaultValue" $ \t -> fmap FromIntrospection
-     $ either (fail . T.unpack) return $ G.parseValueConst t
+instance J.FromJSON (FromIntrospection (G.Value Void)) where
+   parseJSON = J.withText "Value Void" $ \t ->
+     let parseValueConst = G.runParser G.value
+     in fmap FromIntrospection $ either (fail . T.unpack) return $ parseValueConst t
 
 instance J.FromJSON (FromIntrospection G.InterfaceTypeDefinition) where
   parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do
@@ -282,8 +287,8 @@ instance J.FromJSON (FromIntrospection G.UnionTypeDefinition) where
     name  <- o .:  "name"
     desc  <- o .:? "description"
     possibleTypes <- o .: "possibleTypes"
-    let memberTys = map (G.NamedType . G._otdName) $
-                    fmap fromIntrospection possibleTypes
+    possibleTypes' <- mapM (maybe (fail $ "not a valid GraphQL name")  (pure . FromIntrospection)) possibleTypes
+    let memberTys = fmap fromIntrospection $ possibleTypes'
         desc' = fmap fromIntrospection desc
     when (kind /= "UNION") $ kindErr kind "union"
     let r = G.UnionTypeDefinition desc' name [] memberTys
@@ -340,9 +345,9 @@ instance J.FromJSON (FromIntrospection G.TypeDefinition) where
     return $ FromIntrospection r
 
 type IntrospectionResult = ( G.SchemaDocument
-                           , G.NamedType
-                           , Maybe G.NamedType
-                           , Maybe G.NamedType
+                           , G.Name
+                           , Maybe G.Name
+                           , Maybe G.Name
                            )
 
 instance J.FromJSON (FromIntrospection IntrospectionResult) where
