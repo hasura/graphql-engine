@@ -70,13 +70,25 @@ export const testSessVariable = () => {
   trackFunctionRequest(getTrackFnPayload(fN), ResultType.SUCCESS);
   cy.wait(1500);
   cy.visit(`data/schema/public/functions/${fN}/modify`);
-  cy.wait(1500);
-  cy.get(getElementFromAlias(`${fN}-session-argument-btn`)).click();
-  cy.wait(1000);
+  cy.get(getElementFromAlias(`${fN}-session-argument-btn`), {
+    timeout: 5000,
+  }).click();
+
+  // invalid data should fail
+  cy.get(getElementFromAlias(`${fN}-edit-sessvar-function-field`))
+    .clear()
+    .type('invalid');
+  cy.get(getElementFromAlias(`${fN}-session-argument-save`)).click();
+  cy.get('.notification-error', { timeout: 5000 })
+    .should('be.visible')
+    .and('contain', 'Updating Session argument variable failed');
+
+  cy.get(getElementFromAlias(`${fN}-session-argument-btn`), {
+    timeout: 1000,
+  }).click();
   cy.get(getElementFromAlias(`${fN}-edit-sessvar-function-field`))
     .clear()
     .type('hasura_session');
-  cy.wait(1000);
   cy.get(getElementFromAlias(`${fN}-session-argument-save`)).click();
   cy.wait(2000);
   cy.get(getElementFromAlias(fN)).should('be.visible');
@@ -105,9 +117,7 @@ export const deleteCustomFunction = () => {
   setPromptValue(getCustomFunctionName(1));
 
   cy.get(getElementFromAlias('custom-function-edit-delete-btn')).click();
-  cy.window()
-    .its('prompt')
-    .should('be.called');
+  cy.window().its('prompt').should('be.called');
   cy.wait(5000);
   cy.get(getElementFromAlias('delete-confirmation-error')).should('not.exist');
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
