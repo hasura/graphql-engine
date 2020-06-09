@@ -77,9 +77,6 @@ ul {
   width: 100%;
   /* height: calc(100vh - 60px); */
 }
-.hideClass {
-  display: none;
-}
 .subscribe-form-wrapper {
   border-radius: 2px;
   background-color: #1bd5c8;
@@ -162,10 +159,14 @@ ul {
   color: #1cd3c6 !important;
 }
 .bannerStripWrapper {
-  background-color: #3D1BB7;
+  /* background-color: #3D1BB7; */
+  background-color: #4262d2;
   box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.4);
   position: relative;
+  min-height: 56px;
   max-height: 56px;
+  display: flex;
+  align-items: center;
 }
 .bannerStripWrapper .bannerInnerWrapper {
   padding: 0 15px;
@@ -174,7 +175,7 @@ ul {
 {
   display: flex;
   align-items: center;
-  justify-content: center;
+  width: 100%;
 }
 .bannerStripWrapper .displayFlex a {
   flex: 1;
@@ -205,12 +206,10 @@ ul {
   margin-right: 16px;
   width: 32px;
 }
-.bannerStripWrapper .displayFlex a:hover, .bannerStripWrapper .displayFlex a:focus
-{
+.bannerStripWrapper .displayFlex a:hover, .bannerStripWrapper .displayFlex a:focus {
   text-decoration: none;
 }
-.bannerStripWrapper .closeBanner
-{
+.bannerStripWrapper .closeBanner {
   cursor: pointer;
   text-align: right;
   display: flex;
@@ -221,10 +220,11 @@ ul {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: rgba(61,27,183,.8);
-  img {
-    margin-right: 0;
-  }
+
+  /* background-color: rgba(61,27,183,.8); */
+}
+.bannerStripWrapper .closeBanner img {
+  margin-right: 0;
 }
 .bannerStripWrapper .bannerStrip .bodyTextSmall
 {
@@ -233,23 +233,21 @@ ul {
   text-align: left;
   padding-top: 0;
   letter-spacing: normal;
-  font-weight: 500;
+  font-weight: 600;
   display: inline-block;
   line-height: 17px;
   color: #fff;
   padding-bottom: 0;
   padding-right: 10px;
 }
-.bannerStripWrapper .bannerStrip .bodyTextSmall .textColor {
-  color: #fff;
+.bannerStripWrapper .bannerStrip .bodyTextSmall .fontNormal {
+  font-weight: 400;
 }
-.bannerStripWrapper .bannerStrip .bodyTextSmall .textColor img {
-  display: inline-block;
-  transition: 200ms;
-  margin-left: 5px;
+.bannerStripWrapper .bannerStrip .bodyTextSmall .mLeft15 {
+  margin-left: 15px;
 }
-.bannerStripWrapper .bannerStrip .bodyTextSmall .textColor:hover img {
-  transform: translateX(4px);
+.bannerStripWrapper .bannerStrip .bodyTextSmall .underLine {
+  text-decoration: underline;
 }
 .content_inner_wrapper {
   width: 75% !important;
@@ -1127,7 +1125,7 @@ article ol ol {
 }
 @media (min-width: 768px) and (max-width: 1200px) {
   .bannerStripWrapper {
-    padding-left: 4vw;
+    /* padding-left: 4vw; */
   }
   .bannerStripWrapper .bannerStripImg {
     display: none;

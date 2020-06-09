@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Connect } from 'react-redux';
 import Helmet from 'react-helmet';
 
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
@@ -10,9 +11,16 @@ import requestAction from '../../../../utils/requestAction';
 import { showErrorNotification } from '../../Common/Notification';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { versionGT } from '../../../../helpers/versionUtils';
+import { ReduxState, ConnectInjectedProps } from '../../../../types';
 
-class About extends Component {
-  state = {
+type AboutState = {
+  consoleAssetVersion?: string;
+  pgVersion: string | null;
+};
+
+class About extends Component<ConnectInjectedProps & StateProps> {
+  // had to add this here as the state type is not being read properly if added above.
+  state: AboutState = {
     consoleAssetVersion: globals.consoleAssetVersion,
     pgVersion: null,
   };
@@ -22,7 +30,7 @@ class About extends Component {
       const { dispatch, dataHeaders } = this.props;
 
       const url = Endpoints.query;
-      const options = {
+      const options: RequestInit = {
         method: 'POST',
         credentials: globalCookiePolicy,
         headers: dataHeaders,
@@ -30,12 +38,12 @@ class About extends Component {
       };
 
       dispatch(requestAction(url, options)).then(
-        data => {
+        (data: Record<'result', Array<unknown[]>>) => {
           this.setState({
             pgVersion: data.result[1][0],
           });
         },
-        error => {
+        (error: Error) => {
           dispatch(
             showErrorNotification('Failed fetching PG version', null, error)
           );
@@ -74,10 +82,7 @@ class About extends Component {
         updateLinks = (
           <span className={styles.add_mar_left_mid}>
             <a
-              href={
-                'https://github.com/hasura/graphql-engine/releases/tag/' +
-                latestStableServerVersion
-              }
+              href={`https://github.com/hasura/graphql-engine/releases/tag/${latestStableServerVersion}`}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -138,7 +143,7 @@ class About extends Component {
         className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
       >
         <div className={styles.subHeader}>
-          <Helmet title={'About | Hasura'} />
+          <Helmet title="About | Hasura" />
           <h2 className={styles.headerText}>About</h2>
           <div className={styles.add_mar_top}>{getServerVersionSection()}</div>
           <div className={styles.add_mar_top}>
@@ -154,7 +159,7 @@ class About extends Component {
   }
 }
 
-const mapStateToProps = state => {
+const mapStateToProps = (state: ReduxState) => {
   return {
     dataHeaders: state.tables.dataHeaders,
     serverVersion: state.main.serverVersion,
@@ -162,6 +167,8 @@ const mapStateToProps = state => {
   };
 };
 
-const aboutConnector = connect => connect(mapStateToProps)(About);
+type StateProps = ReturnType<typeof mapStateToProps>;
+
+const aboutConnector = (connect: Connect) => connect(mapStateToProps)(About);
 
 export default aboutConnector;
