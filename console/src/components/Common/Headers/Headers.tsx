@@ -17,10 +17,15 @@ export const defaultHeader: Header = {
 
 interface HeadersListProps extends React.ComponentProps<'div'> {
   headers: Header[];
+  disabled?: boolean;
   setHeaders: (h: Header[]) => void;
 }
 
-const Headers: React.FC<HeadersListProps> = ({ headers, setHeaders }) => {
+const Headers: React.FC<HeadersListProps> = ({
+  headers,
+  setHeaders,
+  disabled = false,
+}) => {
   return (
     <React.Fragment>
       {headers.map(({ name, value, type }, i) => {
@@ -60,6 +65,7 @@ const Headers: React.FC<HeadersListProps> = ({ headers, setHeaders }) => {
               onChange={setHeaderKey}
               placeholder="key"
               className={`form-control ${styles.add_mar_right} ${styles.headerInputWidth}`}
+              disabled={disabled}
             />
             <div className={styles.headerInputWidth}>
               <DropdownButton
@@ -77,6 +83,7 @@ const Headers: React.FC<HeadersListProps> = ({ headers, setHeaders }) => {
                 id={`header-value-${i}`}
                 inputPlaceHolder={type === 'env' ? 'HEADER_FROM_ENV' : 'value'}
                 testId={`header-value-${i}`}
+                disabled={disabled}
               />
             </div>
             {i < headers.length - 1 ? (

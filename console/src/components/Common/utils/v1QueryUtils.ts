@@ -55,8 +55,8 @@ export type Header = {
 
 export const getRunSqlQuery = (
   sql: string,
-  shouldCascade: boolean,
-  readOnly: boolean
+  shouldCascade?: boolean,
+  readOnly?: boolean
 ) => {
   return {
     type: 'run_sql',

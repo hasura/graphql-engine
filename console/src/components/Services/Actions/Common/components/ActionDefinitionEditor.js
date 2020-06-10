@@ -16,6 +16,7 @@ const ActionDefinitionEditor = ({
   placeholder,
   error,
   timer,
+  readOnlyMode,
 }) => {
   const onChangeWithError = v => {
     if (timer) {
@@ -82,6 +83,7 @@ const ActionDefinitionEditor = ({
           height="200px"
           mode="graphqlschema"
           width="600px"
+          readOnly={readOnlyMode}
         />
       </div>
     </div>
