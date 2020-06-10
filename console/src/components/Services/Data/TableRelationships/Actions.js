@@ -216,32 +216,30 @@ const manualRelRSchemaChanged = rSchema => ({
 const saveRenameRelationship = (oldName, newName, tableName, callback) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const migrateUp = [
-      {
-        type: 'rename_relationship',
-        args: {
-          table: {
-            name: tableName,
-            schema: currentSchema,
-          },
-          name: oldName,
-          new_name: newName,
+    const migrateUp = {
+      type: 'rename_relationship',
+      args: {
+        table: {
+          name: tableName,
+          schema: currentSchema,
         },
+        name: oldName,
+        new_name: newName,
       },
-    ];
-    const migrateDown = [
-      {
-        type: 'rename_relationship',
-        args: {
-          table: {
-            name: tableName,
-            schema: currentSchema,
-          },
-          name: newName,
-          new_name: oldName,
+    };
+
+    const migrateDown = {
+      type: 'rename_relationship',
+      args: {
+        table: {
+          name: tableName,
+          schema: currentSchema,
         },
+        name: newName,
+        new_name: oldName,
       },
-    ];
+    };
+
     const migration = new Migration();
     migration.add(migrateUp, migrateDown);
     // Apply migrations
