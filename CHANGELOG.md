@@ -96,7 +96,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: add new sidebar icon that separates enums from tables (fix #4984) (#4992)
 - console: fix "Cannot read property 'foldable'" runtime error in `Browse Rows` page (fix #4907) (#5016)
 - console: respect read-only mode in actions pages (fix #4656) (#4764)
-- console: feature allow console users to set session argument as sql function argument (#4499)
+- console: allow configuring session_argument for custom functions (close #4499) (#4922)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
