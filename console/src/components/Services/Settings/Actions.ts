@@ -259,8 +259,8 @@ export const loadInconsistentObjects = (
 
     const loadQuery = shouldReloadMetadata
       ? getReloadCacheAndGetInconsistentObjectsQuery(
-        shouldReloadRemoteSchemas !== false
-      )
+          shouldReloadRemoteSchemas !== false
+        )
       : inconsistentObjectsQuery;
 
     dispatch({ type: LOADING_METADATA });
@@ -536,7 +536,7 @@ export const addAllowedQueries = (
   return (
     dispatch: ThunkDispatch<any, any, AnyAction>,
     getState: () => AppState
-  ): void | Promise<void> =>  {
+  ): void | Promise<void> => {
     if (queries.length === 0) {
       return dispatch(showErrorNotification('No queries found'));
     }
@@ -553,7 +553,8 @@ export const addAllowedQueries = (
         headers,
         body: JSON.stringify(addQuery),
       })
-    ).then((): void => {
+    ).then(
+      (): void => {
         dispatch(
           showSuccessNotification(
             `${queries.length > 1 ? 'Queries' : 'Query'} added to allow-list`
@@ -561,7 +562,8 @@ export const addAllowedQueries = (
         );
         dispatch({ type: ADD_ALLOWED_QUERIES, data: queries });
         callback();
-      }, (error: Error): void => {
+      },
+      (error: Error): void => {
         console.error(error);
         dispatch(
           showErrorNotification(
