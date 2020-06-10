@@ -26,7 +26,12 @@ class ReloadMetadata extends Component {
   };
 
   render() {
-    const { dispatch } = this.props;
+    const {
+      dispatch,
+      btnTooltipMessage,
+      tooltipStyle,
+      showReloadRemoteSchemas = true,
+    } = this.props;
     const { isReloading, shouldReloadRemoteSchemas } = this.state;
 
     const reloadMetadataAndLoadInconsistentMetadata = e => {
@@ -53,7 +58,7 @@ class ReloadMetadata extends Component {
 
     const buttonText = isReloading ? 'Reloading' : 'Reload';
     return (
-      <div className={`${metaDataStyles.display_flex}`}>
+      <>
         <Button
           data-test="data-reload-metadata"
           color="white"
@@ -64,21 +69,28 @@ class ReloadMetadata extends Component {
         >
           {this.props.buttonText || buttonText}
         </Button>
-        <label
-          onChange={this.toggleShouldReloadRemoteSchemas}
-          className={`${metaDataStyles.cursorPointer} ${metaDataStyles.add_mar_right_small}`}
-          disabled={this.state.isReloading}
-        >
-          <input
-            type="checkbox"
-            checked={shouldReloadRemoteSchemas}
-            readOnly
-            className={`${metaDataStyles.add_mar_right_small} ${metaDataStyles.cursorPointer}`}
-          />
-          Reload all remote schemas
-        </label>
-        <Tooltip message="Check this if you have inconsistent remote schemas or if your remote schema has changed." />
-      </div>
+        {btnTooltipMessage && (
+          <Tooltip message={btnTooltipMessage} tooltipStyle={tooltipStyle} />
+        )}
+        {showReloadRemoteSchemas && (
+          <>
+            <label
+              className={`${metaDataStyles.cursorPointer} ${metaDataStyles.add_mar_right_small} ${metaDataStyles.add_mar_left_small}`}
+              disabled={this.state.isReloading}
+            >
+              <input
+                type="checkbox"
+                onChange={this.toggleShouldReloadRemoteSchemas}
+                checked={shouldReloadRemoteSchemas}
+                readOnly
+                className={`${metaDataStyles.add_mar_right_small} ${metaDataStyles.cursorPointer}`}
+              />
+              Reload all remote schemas
+            </label>
+            <Tooltip message="Check this if you have inconsistent remote schemas or if your remote schema has changed." />
+          </>
+        )}
+      </>
     );
   }
 }

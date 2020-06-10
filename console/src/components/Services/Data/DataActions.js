@@ -1,3 +1,4 @@
+import React from 'react';
 import sanitize from 'sanitize-filename';
 
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
@@ -13,6 +14,8 @@ import { getAllUnTrackedRelations } from './TableRelationships/Actions';
 import {
   showErrorNotification,
   showSuccessNotification,
+  getErrorMessage,
+  showNotification,
 } from '../Common/Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
@@ -28,6 +31,8 @@ import {
   fetchTrackedTableListQuery,
   fetchTrackedTableRemoteRelationshipQuery,
   mergeLoadSchemaData,
+  cascadeUpQueries,
+  getDependencyError,
 } from './utils';
 
 import _push from './push';
@@ -526,7 +531,8 @@ const makeMigrationCall = (
   requestMsg,
   successMsg,
   errorMsg,
-  shouldSkipSchemaReload
+  shouldSkipSchemaReload,
+  isRetry
 ) => {
   const upQuery = {
     type: 'bulk',
@@ -574,10 +580,53 @@ const makeMigrationCall = (
     }
     customOnSuccess(data, globals.consoleMode, currMigrationMode);
   };
+  const retryMigration = (err = {}, errMsg = '') => {
+    dispatch(
+      showNotification(
+        {
+          title: errMsg,
+          level: 'error',
+          message: (
+            <p>
+              {getErrorMessage('', err)}
+              <br />
+              <br />
+              Do you want to drop the dependent items as well?
+            </p>
+          ),
+          autoDismiss: 0,
+          action: {
+            label: 'Continue',
+            callback: () =>
+              makeMigrationCall(
+                dispatch,
+                getState,
+                cascadeUpQueries(upQueries), // cascaded new up queries
+                downQueries,
+                migrationName,
+                customOnSuccess,
+                customOnError,
+                requestMsg,
+                successMsg,
+                errorMsg,
+                shouldSkipSchemaReload,
+                true // prevent further retry
+              ),
+          },
+        },
+        'error'
+      )
+    );
+  };
 
   const onError = err => {
-    customOnError(err);
+    if (!isRetry) {
+      const dependecyError = getDependencyError(err);
+      if (dependecyError) return retryMigration(dependecyError, errorMsg);
+    }
+
     dispatch(handleMigrationErrors(errorMsg, err));
+    customOnError(err);
   };
 
   dispatch({ type: MAKE_REQUEST });
