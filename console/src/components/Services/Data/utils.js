@@ -20,6 +20,7 @@ export const DATE = 'date';
 export const TIMETZ = 'timetz';
 export const BOOLEAN = 'boolean';
 export const TEXT = 'text';
+export const ARRAY = 'ARRAY';
 
 export const getPlaceholder = type => {
   switch (type) {
@@ -36,6 +37,8 @@ export const getPlaceholder = type => {
       return '{"name": "foo"} or [12, "bar"]';
     case BOOLEAN:
       return '';
+    case ARRAY:
+      return '{"value1", "value2"}';
     default:
       return type;
   }
