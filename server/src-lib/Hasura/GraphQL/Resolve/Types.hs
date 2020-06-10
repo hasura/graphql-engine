@@ -8,10 +8,9 @@ import           Control.Lens.TH
 import           Hasura.Prelude
 
 import qualified Data.Aeson                          as J
-import qualified Data.Aeson.Casing                   as J
-import qualified Data.Aeson.TH                       as J
 import qualified Data.HashMap.Strict                 as Map
 import qualified Data.Sequence                       as Seq
+import qualified Data.Sequence.NonEmpty              as NESeq
 import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
@@ -31,17 +30,17 @@ import           Hasura.SQL.Value
 
 import qualified Hasura.SQL.DML                      as S
 
-type NodeSelectMap = Map.HashMap G.NamedType SelOpCtx
+type NodeSelectMap = Map.HashMap G.NamedType (SelOpCtx, PrimaryKeyColumns)
 
 data QueryCtx
   = QCNodeSelect !NodeSelectMap
   | QCSelect !SelOpCtx
-  | QCSelectConnection !(NonEmpty PGColumnInfo) !SelOpCtx
+  | QCSelectConnection !PrimaryKeyColumns !SelOpCtx
   | QCSelectPkey !SelPkOpCtx
   | QCSelectAgg !SelOpCtx
   | QCFuncQuery !FuncQOpCtx
   | QCFuncAggQuery !FuncQOpCtx
-  | QCFuncConnection !(NonEmpty PGColumnInfo) !FuncQOpCtx
+  | QCFuncConnection !PrimaryKeyColumns !FuncQOpCtx
   | QCAsyncActionFetch !ActionSelectOpContext
   | QCAction !ActionExecutionContext
   deriving (Show, Eq)
@@ -144,7 +143,7 @@ type PGColGNameMap = Map.HashMap G.Name PGColumnInfo
 data RelationshipFieldKind
   = RFKAggregate
   | RFKSimple
-  | RFKConnection !(NonEmpty PGColumnInfo)
+  | RFKConnection !PrimaryKeyColumns
   deriving (Show, Eq)
 
 data RelationshipField
@@ -184,7 +183,7 @@ data ResolveField
   | RFRelationship !RelationshipField
   | RFComputedField !ComputedField
   | RFRemoteRelationship !RemoteFieldInfo
-  | RFNodeId !QualifiedTable !(NonEmpty PGColumnInfo)
+  | RFNodeId !QualifiedTable !PrimaryKeyColumns
   deriving (Show, Eq)
 
 type FieldMap = Map.HashMap (G.NamedType, G.Name) ResolveField
@@ -262,12 +261,47 @@ data InputFunctionArgument
   | IFAUnknown !FunctionArgItem -- ^ Unknown value, need to be parsed
   deriving (Show, Eq)
 
+{- Note [Relay Node Id]
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The 'Node' interface in Relay schema has exactly one field which returns
+a non-null 'ID' value. Each table object type in Relay schema should implement
+'Node' interface to provide global object identification.
+See https://relay.dev/graphql/objectidentification.htm for more details.
+
+To identify each row in a table, we need to encode the table information
+(schema and name) and primary key column values in the 'Node' id.
+
+Node id data:
+-------------
+We are using JSON format for encoding and decoding the node id. The JSON
+schema looks like following
+
+'["<table-schema>", "<table-name>", "column-1", "column-2", ... "column-n"]'
+
+It is represented in the type @'NodeIdData'.
+
+The stringified JSON is Base64 encoded and sent to client. Also the same
+base64 encoded JSON string is accepted for 'node' field resolver's 'id' input.
+-}
+
+-- | The Relay 'Node' inteface's 'id' field value.
+-- See Note [Relay Node id].
 data NodeIdData
   = NodeIdData
   { _nidTable   :: !QualifiedTable
-  , _nidColumns :: !(Map.HashMap PGCol J.Value)
+  , _nidColumns :: !(NESeq.NESeq J.Value)
   } deriving (Show, Eq)
-$(J.deriveFromJSON (J.aesonDrop 4 J.snakeCase) ''NodeIdData)
+
+instance J.FromJSON NodeIdData where
+  parseJSON v = do
+    valueList <- J.parseJSON v
+    case valueList of
+      (schemaValue:(nameValue:(firstColumn:remainingColumns))) ->
+        NodeIdData <$>
+          (QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
+          <*> pure (NESeq.NESeq (firstColumn, Seq.fromList remainingColumns))
+      _ -> fail "expecting at least 3 items"
 
 -- template haskell related
 $(makePrisms ''ResolveField)

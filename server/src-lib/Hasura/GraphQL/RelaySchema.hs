@@ -421,5 +421,9 @@ mkNodeQueryRootFields roleName relayTables =
             , spiRequiredHeaders perm
             )
           adminPermDetails = (noFilter, Nothing, [])
-      in (mkTableTy tableName,) . mkSelectOpCtx tableName allColumns
-         <$> bool permDetailsM (Just adminPermDetails) (isAdmin roleName)
+      in (mkTableTy tableName,) <$>
+         ((,) <$>
+           (mkSelectOpCtx tableName allColumns <$>
+            bool permDetailsM (Just adminPermDetails) (isAdmin roleName)
+           ) <*> (table ^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
+         )
