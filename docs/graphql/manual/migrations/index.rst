@@ -81,8 +81,8 @@ Reference documentation
   :hidden:
 
   Basics <basics>
-  Migrations setup <migrations-setup>
-  Manage metadata <manage-metadata>
+  Setting up migrations <migrations-setup>
+  Managing metadata <manage-metadata>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>
   Upgrading to config v2 <upgrade-v2>

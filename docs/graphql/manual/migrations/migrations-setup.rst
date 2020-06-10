@@ -2,10 +2,10 @@
    :description: Migrations setup for an existing Hasura instance
    :keywords: hasura, docs, migration, setup, existing Hasura
 
-.. _migrations_existing_hasura:
+.. _migrations_setup:
 
-Migrations for an existing database and Hasura instance
-=======================================================
+Setting up Hasura migrations
+============================
 
 .. contents:: Table of contents
   :backlinks: none
