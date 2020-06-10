@@ -78,6 +78,8 @@ Read more about the session argument for computed fields in the [docs](https://h
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
 - console: add a checkbox to flag an insertion as a migration on the schema page (#1766)
+- console: provide option to cascade metadata on dependency conflicts on console (fix #1593)
+- console: fix enum tables reload data button UI (#4647)
 - console: allow entering big int values in the console (close #3667) (#4775)
 - console: add support for subscriptions analyze in API explorer (close #2541) (#2541)
 - console: avoid count queries for large tables (#4692)
@@ -94,6 +96,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: add help button and move about page to settings (#4848)
 - console: add new sidebar icon that separates enums from tables (fix #4984) (#4992)
 - console: fix "Cannot read property 'foldable'" runtime error in `Browse Rows` page (fix #4907) (#5016)
+- console: respect read-only mode in actions pages (fix #4656) (#4764)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
