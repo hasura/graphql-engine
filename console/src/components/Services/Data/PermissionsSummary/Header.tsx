@@ -1,18 +1,18 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
 import styles from './PermissionsSummary.scss';
 
 type HeaderProps = {
   content: string;
   selectable: boolean;
-  isSelected: boolean;
-  onClick: () => void;
-  actionButtons: Array<HTMLButtonElement>;
-  key: string | null;
+  isSelected?: boolean;
+  onClick?: () => void;
+  actionButtons?: Array<ReactElement>;
+  key?: string | null;
 };
 
 type HeaderContentProps = {
   content: string;
-  actionButtons: Array<HTMLButtonElement>;
+  actionButtons: Array<ReactElement>;
 };
 
 const HeaderContent: React.FC<HeaderContentProps> = ({
@@ -46,7 +46,7 @@ const Header: React.FC<HeaderProps> = ({
   selectable,
   isSelected,
   onClick,
-  actionButtons,
+  actionButtons = [],
   key,
 }) => {
   const selectableClassName = selectable ? styles.cursorPointer : '';

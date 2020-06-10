@@ -38,6 +38,7 @@ import {
 } from './utils';
 
 import Header from './Header';
+import RolesHeader from './RolesHeader';
 
 class PermissionsSummary extends Component {
   initState = {
@@ -207,96 +208,46 @@ class PermissionsSummary extends Component {
       };
     };
 
-    const getRolesHeaders = (selectable = true, selectedFirst = false) => {
-      const rolesHeaders = [];
+    const copyOnClick = (e, role) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-      if (!allRoles.length) {
-        rolesHeaders.push(<Header content="No roles" selectable={false} />);
-      } else {
-        allRoles.forEach(role => {
-          const isCurrRole = currRole === role;
+      this.setState({
+        copyState: {
+          ...copyState,
+          copyFromRole: role,
+          copyFromTable: currTable ? getTableNameWithSchema(currTable) : 'all',
+          copyFromAction: currRole ? 'all' : currAction,
+        },
+      });
+    };
 
-          const setRole = () => {
-            this.setState({ currRole: isCurrRole ? null : role });
-            window.scrollTo(0, 0);
-          };
+    const deleteOnClick = (e, role) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-          const getCopyBtn = () => {
-            const copyOnClick = e => {
-              e.preventDefault();
-              e.stopPropagation();
+      const deleteConfirmed = getConfirmation(
+        `You want to delete permissions for the role: ${role}?`,
+        true,
+        role
+      );
 
-              this.setState({
-                copyState: {
-                  ...copyState,
-                  copyFromRole: role,
-                  copyFromTable: currTable
-                    ? getTableNameWithSchema(currTable)
-                    : 'all',
-                  copyFromAction: currRole ? 'all' : currAction,
-                },
-              });
-            };
-
-            return (
-              <Button
-                color="white"
-                size="xs"
-                onClick={copyOnClick}
-                title="Copy permissions"
-              >
-                {getActionIcon('fa-copy')}
-              </Button>
-            );
-          };
-
-          const getDeleteBtn = () => {
-            const deleteOnClick = e => {
-              e.preventDefault();
-              e.stopPropagation();
-
-              const deleteConfirmed = getConfirmation(
-                `You want to delete permissions for the role: ${role}?`,
-                true,
-                role
-              );
-
-              if (deleteConfirmed) {
-                dispatch(deleteRoleGlobally(role));
-              }
-            };
-
-            return (
-              <Button
-                color="white"
-                size="xs"
-                onClick={deleteOnClick}
-                title="Delete Permissions"
-              >
-                {getActionIcon('fa-trash')}
-              </Button>
-            );
-          };
-
-          const roleHeader = (
-            <Header
-              content={role}
-              selectable={selectable}
-              isSelected={isCurrRole}
-              onClick={setRole}
-              actionButtons={[getCopyBtn(), getDeleteBtn()]}
-            />
-          );
-
-          if (selectedFirst && isCurrRole) {
-            rolesHeaders.unshift(roleHeader);
-          } else {
-            rolesHeaders.push(roleHeader);
-          }
-        });
+      if (deleteConfirmed) {
+        dispatch(deleteRoleGlobally(role));
       }
+    };
 
-      return rolesHeaders;
+    const setRole = (role, isCurrRole) => {
+      this.setState({ currRole: isCurrRole ? null : role });
+      window.scrollTo(0, 0);
+    };
+
+    const defaultRolesHeaderProps = {
+      allRoles,
+      currentRole: currRole,
+      onCopyClick: copyOnClick,
+      onDeleteClick: deleteOnClick,
+      setRole,
     };
 
     const getRolesCells = (table, roleCellRenderer) => {
@@ -625,7 +576,7 @@ class PermissionsSummary extends Component {
             <thead>
               <tr>
                 {getActionSelector()}
-                {getRolesHeaders(false)}
+                <RolesHeader selectable={false} {...defaultRolesHeaderProps} />
               </tr>
             </thead>
             <tbody>
@@ -650,7 +601,11 @@ class PermissionsSummary extends Component {
           return (
             <tr>
               {getBackBtn('currRole')}
-              {getRolesHeaders(true, true)}
+              <RolesHeader
+                selectable
+                selectedFirst
+                {...defaultRolesHeaderProps}
+              />
             </tr>
           );
         };
@@ -709,7 +664,7 @@ class PermissionsSummary extends Component {
         return (
           <tr>
             {getActionSelector()}
-            {getRolesHeaders()}
+            <RolesHeader {...defaultRolesHeaderProps} />
           </tr>
         );
       };
