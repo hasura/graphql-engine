@@ -21,6 +21,8 @@ module Hasura.RQL.Types.Common
        , pkConstraint
        , pkColumns
        , ForeignKey(..)
+       , EquatableGType(..)
+       , InpValInfo(..)
        , CustomColumnNames
 
        , NonEmptyText
@@ -55,12 +57,13 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.URL.Template
 import           Instances.TH.Lift             ()
-import           Language.Haskell.TH.Syntax    (Q, TExp, Lift)
+import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Language.Haskell.TH.Syntax    as TH
 import qualified PostgreSQL.Binary.Decoding    as PD
 import qualified Test.QuickCheck               as QC
 
@@ -153,6 +156,7 @@ data RelInfo
   } deriving (Show, Eq, Generic)
 instance NFData RelInfo
 instance Cacheable RelInfo
+instance Hashable RelInfo
 $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName
@@ -160,6 +164,7 @@ newtype FieldName
   deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
            , FromJSONKey, ToJSONKey, Lift, Data, Generic
            , IsString, Arbitrary, NFData, Cacheable
+           , Semigroup
            )
 
 instance IsIden FieldName where
@@ -222,7 +227,7 @@ data PrimaryKey a
   = PrimaryKey
   { _pkConstraint :: !Constraint
   , _pkColumns    :: !(NonEmpty a)
-  } deriving (Show, Eq, Generic)
+  } deriving (Show, Eq, Generic, Foldable)
 instance (NFData a) => NFData (PrimaryKey a)
 instance (Cacheable a) => Cacheable (PrimaryKey a)
 $(makeLenses ''PrimaryKey)
@@ -238,6 +243,24 @@ instance NFData ForeignKey
 instance Hashable ForeignKey
 instance Cacheable ForeignKey
 $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
+
+data InpValInfo
+  = InpValInfo
+  { _iviDesc   :: !(Maybe G.Description)
+  , _iviName   :: !G.Name
+  , _iviDefVal :: !(Maybe G.ValueConst)
+  , _iviType   :: !G.GType
+  } deriving (Show, Eq, TH.Lift, Generic)
+instance Cacheable InpValInfo
+
+instance EquatableGType InpValInfo where
+  type EqProps InpValInfo = (G.Name, G.GType)
+  getEqProps ity = (,) (_iviName ity) (_iviType ity)
+
+-- | Typeclass for equating relevant properties of various GraphQL types defined below
+class EquatableGType a where
+  type EqProps a
+  getEqProps :: a -> EqProps a
 
 type CustomColumnNames = HM.HashMap PGCol G.Name
 

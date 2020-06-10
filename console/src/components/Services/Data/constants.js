@@ -45,3 +45,93 @@ export const Reals = ['float4', 'float8', 'numeric'];
 export const Numerics = [...Integers, ...Reals];
 
 export const defaultDataTypeToCast = 'text';
+
+// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/index.html#error-codes
+export const ERROR_CODES = {
+  postgresError: {
+    code: 'postgres-error',
+    httpCode: '500',
+  },
+  permissionDenied: {
+    code: 'permission-denied',
+    httpCode: '400',
+  },
+  notExists: {
+    code: 'not-exists',
+
+    httpCode: '400',
+  },
+  alreadyTracked: {
+    code: 'already-tracked',
+    httpCode: '400',
+  },
+  accessDenied: {
+    code: 'access-denied',
+
+    httpCode: '400',
+  },
+  notSupported: {
+    code: 'not-supported',
+    httpCode: '400',
+  },
+  alreadyExists: {
+    code: 'already-exists',
+    httpCode: '400',
+  },
+  invalidJson: {
+    code: 'invalid-json',
+    httpCode: '400',
+  },
+  invalidHeaders: {
+    code: 'invalid-headers',
+    httpCode: '400',
+  },
+  dependencyError: {
+    code: 'dependency-error',
+    httpCode: '400',
+  },
+  parseFailed: {
+    code: 'parse-failed',
+    httpCode: '400',
+  },
+  alreadyInitialised: {
+    code: 'already-initialised',
+
+    httpCode: '400',
+  },
+  constraintError: {
+    code: 'constraint-error',
+    httpCode: '400',
+  },
+  permissionError: {
+    code: 'permission-error',
+
+    httpCode: '400',
+  },
+  unexpectedPayload: {
+    code: 'unexpected-payload',
+    httpCode: '400',
+  },
+  invalidParams: {
+    code: 'invalid-params',
+    httpCode: '400',
+  },
+  ' ': {
+    code: ' ',
+    description: ' <name> is relationship',
+    httpCode: '400',
+  },
+  unexpected: {
+    code: 'unexpected',
+    httpCode: '500',
+  },
+  notFound: {
+    code: 'not-found',
+    ERRORS: ['No such resource exists'],
+    httpCode: '404',
+  },
+  // todo update this, this happens on bulk request failed
+  dataApiError: {
+    code: 'data_api_error',
+  },
+};

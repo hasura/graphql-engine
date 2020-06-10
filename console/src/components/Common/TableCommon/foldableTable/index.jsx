@@ -47,7 +47,7 @@ export default ReactTable => {
       };
     }
 
-    componentWillReceiveProps(newProps) {
+    UNSAFE_componentWillReceiveProps(newProps) {
       if (this.state.resized !== newProps.resized) {
         this.setState({ resized: newProps.resized });
       }
@@ -194,7 +194,7 @@ export default ReactTable => {
     };
 
     applyFoldableForColumns = columns => {
-      return columns.map((col, index) => {
+      return columns.filter(Boolean).map((col, index) => {
         if (!col.foldable) return col;
 
         //If col don't have id then generate id based on index
