@@ -402,10 +402,11 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                       ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
         eventTriggerConfToOrdJSON :: EventTriggerConf -> AO.Value
-        eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers) =
+        eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers comment) =
           AO.object $ [ ("name", AO.toOrdered name)
                       , ("definition", AO.toOrdered definition)
                       , ("retry_conf", AO.toOrdered retryConf)
+                      , ("comment", AO.toOrdered comment)
                       ] <> catMaybes [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook
                                      , maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv
                                      , headers >>= listToMaybeOrdPair "headers" AO.toOrdered

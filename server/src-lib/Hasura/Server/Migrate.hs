@@ -297,7 +297,7 @@ migrations dryRun =
         ALTER TABLE hdb_catalog.event_triggers
         ADD COLUMN configuration JSON |] () False
       eventTriggers <- map uncurryEventTrigger <$> Q.listQ [Q.sql|
-        SELECT e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
+        SELECT e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json, e.comment
         FROM hdb_catalog.event_triggers e |] () False
       forM_ eventTriggers updateEventTrigger3To4
       Q.unitQ [Q.sql|
@@ -307,11 +307,12 @@ migrations dryRun =
         DROP COLUMN webhook,
         DROP COLUMN num_retries,
         DROP COLUMN retry_interval,
+        DROP COLUMN comment,
         DROP COLUMN headers |] () False
       where
-        uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) =
-          EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers
-        updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _) = Q.unitQ [Q.sql|
+        uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers, comment) =
+          EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers comment
+        updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _ _) = Q.unitQ [Q.sql|
                                              UPDATE hdb_catalog.event_triggers
                                              SET
                                              configuration = $1
