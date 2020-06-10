@@ -77,129 +77,201 @@ The following are examples of using the equality operators on different types.
 
 Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      author(
-        where: {id: {_eq: 3}}
-      ) {
-        id
-        name
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 3,
-            "name": "Sidney"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          author(
+            where: {id: {_eq: 3}}
+          ) {
+            id
+            name
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "author": [
+              {
+                "id": 3,
+                "name": "Sidney"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { author( where: {id: {_eq: 3}}) { id name}}"
       }
-    }
+
 
 **Example: String or Text**
 
 Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      author(
-        where: {name: {_eq: "Sidney"}}
-      ) {
-        id
-        name
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 3,
-            "name": "Sidney"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          author(
+            where: {name: {_eq: "Sidney"}}
+          ) {
+            id
+            name
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "author": [
+              {
+                "id": 3,
+                "name": "Sidney"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { author( where: {name: {_eq: \"Sidney\"}}) { id name }}"
       }
-    }
+
 
 **Example: Boolean**
 
 Fetch a list of articles that have not been published (``is_published`` is a boolean field):
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      article(
-        where: {is_published: {_eq: false}}
-      ) {
-        id
-        title
-        is_published
-      }
-    }
-  :response:
-    {
-      "data": {
-        "article": [
-          {
-            "id": 5,
-            "title": "ut blandit",
-            "is_published": false
-          },
-          {
-            "id": 8,
-            "title": "donec semper sapien",
-            "is_published": false
-          },
-          {
-            "id": 10,
-            "title": "dui proin leo",
-            "is_published": false
-          },
-          {
-            "id": 14,
-            "title": "congue etiam justo",
-            "is_published": false
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          article(
+            where: {is_published: {_eq: false}}
+          ) {
+            id
+            title
+            is_published
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "article": [
+              {
+                "id": 5,
+                "title": "ut blandit",
+                "is_published": false
+              },
+              {
+                "id": 8,
+                "title": "donec semper sapien",
+                "is_published": false
+              },
+              {
+                "id": 10,
+                "title": "dui proin leo",
+                "is_published": false
+              },
+              {
+                "id": 14,
+                "title": "congue etiam justo",
+                "is_published": false
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { article( where: {is_published: {_eq: false}}) { id title is_published }}"
       }
-    }
 
 
 **Example: Date (works with Time, Timezone, etc.)**
 
 Fetch a list of articles that were published on a certain date (``published_on`` is a Date field):
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      article(
-        where: {published_on: {_eq: "2017-05-26"}}
-      ) {
-        id
-        title
-        published_on
-      }
-    }
-  :response:
-    {
-      "data": {
-        "article": [
-          {
-            "id": 3,
-            "title": "amet justo morbi",
-            "published_on": "2017-05-26"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          article(
+            where: {published_on: {_eq: "2017-05-26"}}
+          ) {
+            id
+            title
+            published_on
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "article": [
+              {
+                "id": 3,
+                "title": "amet justo morbi",
+                "published_on": "2017-05-26"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { article(where: {published_on: {_eq: \"2017-05-26\"}}) { id title published_on }}"
       }
-    }
+        
 
 Greater than or less than operators (_gt, _lt, _gte, _lte)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -217,72 +289,106 @@ The following are examples of using these operators on different types:
 
 Fetch a list of articles rated 4 or more (``rating`` is an integer field):
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      article(
-        where: {rating: {_gte: 4}}
-      ) {
-        id
-        title
-        rating
-      }
-    }
-  :response:
-    {
-      "data": {
-        "article": [
-          {
-            "id": 3,
-            "title": "amet justo morbi",
-            "rating": 4
-          },
-          {
-            "id": 7,
-            "title": "nisl duis ac",
-            "rating": 4
-          },
-          {
-            "id": 17,
-            "title": "montes nascetur ridiculus",
-            "rating": 5
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          article(
+            where: {rating: {_gte: 4}}
+          ) {
+            id
+            title
+            rating
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "article": [
+              {
+                "id": 3,
+                "title": "amet justo morbi",
+                "rating": 4
+              },
+              {
+                "id": 7,
+                "title": "nisl duis ac",
+                "rating": 4
+              },
+              {
+                "id": 17,
+                "title": "montes nascetur ridiculus",
+                "rating": 5
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { article(where: {rating: {_gte: 4}}) { id title rating }}"
       }
-    }
 
 **Example: String or Text**
 
 Fetch a list of authors whose names begin with M or any letter that follows M *(essentially, a filter based on a
 dictionary sort)*:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      author(
-        where: {name: {_gt: "M"}}
-      ) {
-        id
-        name
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 3,
-            "name": "Sidney"
-          },
-          {
-            "id": 9,
-            "name": "Ninnetta"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          author(
+            where: {name: {_gt: "M"}}
+          ) {
+            id
+            name
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "author": [
+              {
+                "id": 3,
+                "name": "Sidney"
+              },
+              {
+                "id": 9,
+                "name": "Ninnetta"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { author(where: {name: {_gt: \"M\"}}) { id name }}"
       }
-    }
 
 **Example: Date (works with Time, Timezone, etc.)**
 

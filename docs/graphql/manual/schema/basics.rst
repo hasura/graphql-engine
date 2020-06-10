@@ -178,7 +178,7 @@ Here are a couple of examples of GraphQL requests:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: Via console 
 
     .. graphiql::
       :view_only:
