@@ -9,7 +9,7 @@ import { WebSocketLink } from 'apollo-link-ws';
 import { parse } from 'graphql';
 import { execute } from 'apollo-link';
 
-import { getHeadersAsJSON } from './utils';
+import { getHeadersAsJSON, getGraphQLEndpoint } from './utils';
 import { saveAppState, clearState } from '../../AppState.js';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../constants';
 
@@ -43,6 +43,18 @@ const CREATE_WEBSOCKET_CLIENT = 'ApiExplorer/CREATE_WEBSOCKET_CLIENT';
 
 const FOCUS_ROLE_HEADER = 'ApiExplorer/FOCUS_ROLE_HEADER';
 const UNFOCUS_ROLE_HEADER = 'ApiExplorer/UNFOCUS_ROLE_HEADER';
+
+const SET_LOADING = 'ApiExplorer/SET_LOADING';
+export const setLoading = isLoading => ({
+  type: SET_LOADING,
+  data: isLoading,
+});
+
+const SWITCH_GRAPHIQL_MODE = 'ApiExplorer/SWITCH_GRAPHIQL_MODE';
+export const switchGraphiQLMode = mode => ({
+  type: SWITCH_GRAPHIQL_MODE,
+  mode,
+});
 
 const clearHistory = () => {
   return {
@@ -88,8 +100,9 @@ const getChangedHeaders = (headers, changedHeaderDetails) => {
   return nonEmptyHeaders;
 };
 
-const verifyJWTToken = token => dispatch => {
-  const url = Endpoints.graphQLUrl;
+const verifyJWTToken = token => (dispatch, getState) => {
+  const { mode: graphiqlMode } = getState().apiexplorer;
+  const url = getGraphQLEndpoint(graphiqlMode);
   const body = {
     query: '{ __type(name: "dummy") {name}}',
     variables: null,
@@ -199,10 +212,11 @@ const graphQLFetcherFinal = (graphQLParams, url, headers) => {
 };
 
 /* Analyse Fetcher */
-const analyzeFetcher = (url, headers) => {
+const analyzeFetcher = (headers, mode) => {
   return query => {
     const editedQuery = {
       query,
+      is_relay: mode === 'relay',
     };
 
     const user = {
@@ -227,7 +241,7 @@ const analyzeFetcher = (url, headers) => {
 
     editedQuery.user = user;
 
-    return fetch(`${url}/explain`, {
+    return fetch(`${Endpoints.graphQLUrl}/explain`, {
       method: 'post',
       headers: reqHeaders,
       body: JSON.stringify(editedQuery),
@@ -618,6 +632,16 @@ const apiExplorerReducer = (state = defaultState, action) => {
             headersInitialised: true,
           },
         },
+      };
+    case SWITCH_GRAPHIQL_MODE:
+      return {
+        ...state,
+        mode: action.mode,
+      };
+    case SET_LOADING:
+      return {
+        ...state,
+        loading: action.data,
       };
     default:
       return state;

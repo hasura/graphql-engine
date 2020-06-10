@@ -4,7 +4,7 @@ import Helmet from 'react-helmet';
 import HandlerEditor from '../Common/components/HandlerEditor';
 import KindEditor from '../Common/components/KindEditor';
 import ActionDefinitionEditor from '../Common/components/ActionDefinitionEditor';
-import HeadersConfEditor from '../Common/components/HeaderConfEditor';
+import HeaderConfEditor from '../Common/components/HeaderConfEditor';
 import TypeDefinitionEditor from '../Common/components/TypeDefinitionEditor';
 import Button from '../../../Common/Button';
 import { getModifyState } from './utils';
@@ -28,6 +28,7 @@ const ActionEditor = ({
   isFetching,
   headers,
   forwardClientHeaders,
+  readOnlyMode,
   ...modifyProps
 }) => {
   const { handler, kind, actionDefinition, typeDefinition } = modifyProps;
@@ -103,6 +104,7 @@ const ActionEditor = ({
         onChange={actionDefinitionOnChange}
         timer={actionDefinitionTimer}
         placeholder={''}
+        readOnlyMode={readOnlyMode}
       />
       <hr />
       <TypeDefinitionEditor
@@ -111,10 +113,12 @@ const ActionEditor = ({
         onChange={typeDefinitionOnChange}
         timer={typeDefinitionTimer}
         placeholder={''}
+        readOnlyMode={readOnlyMode}
       />
       <hr />
       <HandlerEditor
         value={handler}
+        disabled={readOnlyMode}
         onChange={handlerOnChange}
         placeholder="action handler"
         className={styles.add_mar_bottom_mid}
@@ -127,37 +131,43 @@ const ActionEditor = ({
             value={kind}
             onChange={kindOnChange}
             className={styles.add_mar_bottom_mid}
+            disabled={readOnlyMode}
           />
           <hr />
         </React.Fragment>
       )}
-      <HeadersConfEditor
+      <HeaderConfEditor
         forwardClientHeaders={forwardClientHeaders}
         toggleForwardClientHeaders={toggleForwardClientHeaders}
         headers={headers}
         setHeaders={setHeaders}
+        disabled={readOnlyMode}
       />
       <hr />
       <div className={styles.display_flex}>
-        <Button
-          color="yellow"
-          size="sm"
-          type="submit"
-          onClick={onSave}
-          disabled={!allowSave}
-          className={styles.add_mar_right}
-        >
-          Save
-        </Button>
-        <Button
-          color="red"
-          size="sm"
-          type="submit"
-          onClick={onDelete}
-          disabled={isFetching}
-        >
-          Delete
-        </Button>
+        {!readOnlyMode && (
+          <React.Fragment>
+            <Button
+              color="yellow"
+              size="sm"
+              type="submit"
+              onClick={onSave}
+              disabled={!allowSave}
+              className={styles.add_mar_right}
+            >
+              Save
+            </Button>
+            <Button
+              color="red"
+              size="sm"
+              type="submit"
+              onClick={onDelete}
+              disabled={isFetching}
+            >
+              Delete
+            </Button>
+          </React.Fragment>
+        )}
       </div>
     </div>
   );
