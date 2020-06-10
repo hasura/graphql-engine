@@ -56,59 +56,100 @@ Insert a single object
 ----------------------
 **Example:** Insert a new ``article`` object and return the inserted article object in the response:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_single_article {
-      insert_article_one(
-        object: {
-          title: "Article 1",
-          content: "Sample article content",
-          author_id: 3
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation insert_single_article {
+          insert_article_one(
+            object: {
+              title: "Article 1",
+              content: "Sample article content",
+              author_id: 3
+            }
+          ) {
+            id
+            title
+          }
         }
-      ) {
-        id
-        title
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_article_one": {
-          "id": 21,
-          "title": "Article 1"
+      :response:
+        {
+          "data": {
+            "insert_article_one": {
+              "id": 21,
+              "title": "Article 1"
+            }
+          }
         }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation insert_single_article { insert_article_one(object: { title: \"Article 1\", content: \"Sample article content\", author_id: 3 }) { id title }}"
       }
-    }
 
 Using variables:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_single_article($object: article_insert_input! ) {
-      insert_article_one(object: $object) {
-        id
-        title
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_article_one": {
-          "id": 21,
-          "title": "Article 1"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation insert_single_article($object: article_insert_input! ) {
+          insert_article_one(object: $object) {
+            id
+            title
+          }
         }
+      :response:
+        {
+          "data": {
+            "insert_article_one": {
+              "id": 21,
+              "title": "Article 1"
+            }
+          }
+        }
+      :variables:
+        {
+          "object": {
+            "title": "Article 1",
+            "content": "Sample article content",
+            "author_id": 3
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation insert_single_article($object: article_insert_input! ) { insert_article_one(object: $object) { id title }}",
+          "variables": {
+              "object": {
+                  "title": "Article 1",
+                  "content": "Sample article content",
+                  "author_id": 3
+              }
+          }
       }
-    }
-  :variables:
-    {
-      "object": {
-        "title": "Article 1",
-        "content": "Sample article content",
-        "author_id": 3
-      }
-    }
 
 .. admonition:: Supported from
 
@@ -119,142 +160,207 @@ Insert multiple objects of the same type in the same mutation
 -------------------------------------------------------------
 **Example:** Insert 2 new ``article`` objects and return both the article objects in the response:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_multiple_articles {
-      insert_article(
-        objects: [
-          {
-            title: "Article 2",
-            content: "Sample article content",
-            author_id: 4
-          },
-          {
-            title: "Article 3",
-            content: "Sample article content",
-            author_id: 5
-          }
-        ]
-      ) {
-        returning {
-          id
-          title
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_article": {
-          "affected_rows": 2,
-          "returning": [
-            {
-              "id": 22,
-              "title": "Article 2"
-            },
-            {
-              "id": 23,
-              "title": "Article 3"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation insert_multiple_articles {
+          insert_article(
+            objects: [
+              {
+                title: "Article 2",
+                content: "Sample article content",
+                author_id: 4
+              },
+              {
+                title: "Article 3",
+                content: "Sample article content",
+                author_id: 5
+              }
+            ]
+          ) {
+            returning {
+              id
+              title
             }
-          ]
+          }
         }
+      :response:
+        {
+          "data": {
+            "insert_article": {
+              "affected_rows": 2,
+              "returning": [
+                {
+                  "id": 22,
+                  "title": "Article 2"
+                },
+                {
+                  "id": 23,
+                  "title": "Article 3"
+                }
+              ]
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation insert_multiple_articles { insert_article(objects: [{ title: \"Article 2\", content: \"Sample article content\", author_id: 4 }, { title: \"Article 3\", content: \"Sample article content\", author_id: 5 }]) { returning { id title }}}"
       }
-    }
 
 Using variables:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_multiple_articles($objects: [article_insert_input!]! ) {
-      insert_article(objects: $objects) {
-        returning {
-          id
-          title
-        }
-      }
-    }
-  :response:
-    {
-        "data": {
-          "insert_article": {
-            "affected_rows": 2,
-            "returning": [
-              {
-                "id": 22,
-                "title": "Article 2"
-              },
-              {
-                "id": 23,
-                "title": "Article 3"
-              }
-            ]
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation insert_multiple_articles($objects: [article_insert_input!]! ) {
+          insert_article(objects: $objects) {
+            returning {
+              id
+              title
+            }
           }
         }
-      }
-  :variables:
-    {
-      "objects": [
+      :response:
         {
-          "title": "Article 2",
-          "content": "Sample article content",
-          "author_id": 4
-        },
+            "data": {
+              "insert_article": {
+                "affected_rows": 2,
+                "returning": [
+                  {
+                    "id": 22,
+                    "title": "Article 2"
+                  },
+                  {
+                    "id": 23,
+                    "title": "Article 3"
+                  }
+                ]
+              }
+            }
+          }
+      :variables:
         {
-          "title": "Article 3",
-          "content": "Sample article content",
-          "author_id": 5
+          "objects": [
+            {
+              "title": "Article 2",
+              "content": "Sample article content",
+              "author_id": 4
+            },
+            {
+              "title": "Article 3",
+              "content": "Sample article content",
+              "author_id": 5
+            }
+          ]
         }
-      ]
-    }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation insert_multiple_articles($objects: [article_insert_input!]! ) { insert_article(objects: $objects) { returning { id title }}}",
+          "variables": {
+              "objects": [
+                  {
+                      "title": "Article 2",
+                      "content": "Sample article content",
+                      "author_id": 4
+                  },
+                  {
+                      "title": "Article 3",
+                      "content": "Sample article content",
+                      "author_id": 5
+                  }
+              ]
+          }
+      }
 
 
 Insert an object and get a nested object in response
 ----------------------------------------------------
 **Example:** Insert a new ``article`` object and return the inserted article object with its author in the response:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_article {
-      insert_article(
-        objects: [
-          {
-            title: "Article 1",
-            content: "Sample article content",
-            author_id: 3
-          }
-        ]
-      ) {
-        returning {
-          id
-          title
-          author {
-            id
-            name
-          }
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_article": {
-          "affected_rows": 1,
-          "returning": [
-            {
-              "id": 21,
-              "title": "Article 1",
-              "author": {
-                "id": 3,
-                "name": "Sidney"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation insert_article {
+          insert_article(
+            objects: [
+              {
+                title: "Article 1",
+                content: "Sample article content",
+                author_id: 3
+              }
+            ]
+          ) {
+            returning {
+              id
+              title
+              author {
+                id
+                name
               }
             }
-          ]
+          }
         }
+      :response:
+        {
+          "data": {
+            "insert_article": {
+              "affected_rows": 1,
+              "returning": [
+                {
+                  "id": 21,
+                  "title": "Article 1",
+                  "author": {
+                    "id": 3,
+                    "name": "Sidney"
+                  }
+                }
+              ]
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation insert_article { insert_article(objects: [{ title: \"Article 1\", content: \"Sample article content\", author_id: 3 }]) { returning { id title author { id name }}}}"
       }
-    }
 
 .. _nested_inserts:
 
@@ -269,82 +375,99 @@ Let's say an ``author`` has an ``object relationship`` called ``address`` to the
 
 **Example:** Insert an ``author`` along with their ``address`` and a few ``articles``.
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insertData {
-      insert_authors
-        (objects: [
-          {
-            name: "John",
-            address: {
-              data: {
-                location: "San Francisco"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation insertData {
+          insert_authors
+            (objects: [
+              {
+                name: "John",
+                address: {
+                  data: {
+                    location: "San Francisco"
+                  }
+                },
+                articles: {
+                  data: [
+                    {
+                      title: "GraphQL Guide",
+                      content: "Let's see what we can do with GraphQL"
+                    },
+                    {
+                      title: "Authentication Guide",
+                      content: "Let's look at best practices for authentication"
+                    }
+                  ]
+                }
               }
-            },
-            articles: {
-              data: [
+            ]
+          ) {
+            affected_rows
+            returning {
+              id
+              name
+              address_id
+              address {
+                id
+                location
+              }
+              articles {
+                id
+                title
+                author_id
+              }
+            }
+          }
+        }
+      :response:
+        {
+          "data": {
+            "insert_authors": {
+              "affected_rows": 4,
+              "returning": [
                 {
-                  title: "GraphQL Guide",
-                  content: "Let's see what we can do with GraphQL"
-                },
-                {
-                  title: "Authentication Guide",
-                  content: "Let's look at best practices for authentication"
+                  "id": 26,
+                  "name": "John",
+                  "address_id": 27,
+                  "address": {
+                    "id": 27,
+                    "location": "San Francisco"
+                  },            
+                  "articles": [
+                    {
+                      "id": 28,
+                      "title": "GraphQL Guide",
+                      "author_id": 26
+                    },
+                    {
+                      "id": 29,
+                      "title": "Authentication Guide",
+                      "author_id": 26,
+                    }
+                  ]
                 }
               ]
             }
           }
-        ]
-      ) {
-        affected_rows
-        returning {
-          id
-          name
-          address_id
-          address {
-            id
-            location
-          }
-          articles {
-            id
-            title
-            author_id
-          }
         }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation insertData { insert_authors(objects: [{ name: \"John\", address: { data: { location: \"San Francisco\" }}, articles: { data: [{ title: \"GraphQL Guide\", content: \"Let's see what we can do with GraphQL\" }, { title: \"Authentication Guide\", content: \"Let's look at best practices for authentication\" }]}}]) { affected_rows returning { id name address_id address { id location } articles { id title author_id }}}}"
       }
-    }
-  :response:
-    {
-      "data": {
-        "insert_authors": {
-          "affected_rows": 4,
-          "returning": [
-            {
-              "id": 26,
-              "name": "John",
-              "address_id": 27,
-              "address": {
-                "id": 27,
-                "location": "San Francisco"
-              },            
-              "articles": [
-                {
-                  "id": 28,
-                  "title": "GraphQL Guide",
-                  "author_id": 26
-                },
-                {
-                  "id": 29,
-                  "title": "Authentication Guide",
-                  "author_id": 26,
-                }
-              ]
-            }
-          ]
-        }
-      }
-    }
 
 **How it works**
 
@@ -370,85 +493,102 @@ a bridge table ``article_tags``.
 
 **Example:** Insert an ``article`` along with a few ``tags``.
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insertArticle {
-      insert_articles(objects: [
-        {
-          title: "How to make fajitas",
-          content: "Guide on making the best fajitas in the world",
-          author_id: 3,
-          article_tags: {
-            data: [
-              {
-                tag: {
-                  data: {
-                    label: "Recipes"
-                  },
-                  on_conflict: {
-                    constraint: tags_label_key,
-                    update_columns: [label]
-                  }
-                }
-              },
-              {
-                tag: {
-                  data: {
-                    label: "Cooking"
-                  },
-                  on_conflict: {
-                    constraint: tags_label_key,
-                    update_columns: [label]
-                  }
-                }
-              }  
-            ]
-          }
-        }
-      ]) {
-        affected_rows
-        returning {
-          id
-          title
-          content
-          author_id
-          article_tags {
-            tag {
-              label
-            }
-          }
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_articles": {
-          "affected_rows": 5,
-          "returning": [
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation insertArticle {
+          insert_articles(objects: [
             {
-              "author_id": 3,
-              "article_tags": [
-                {
-                  "tag": {
-                    "label": "Recipes"
-                  }
-                },
-                {
-                  "tag": {
-                    "label": "Cooking"
-                  }
-                }
-              ],
-              "content": "Guide on making the best fajitas in the world",
-              "id": 34,
-              "title": "How to make fajitas"
+              title: "How to make fajitas",
+              content: "Guide on making the best fajitas in the world",
+              author_id: 3,
+              article_tags: {
+                data: [
+                  {
+                    tag: {
+                      data: {
+                        label: "Recipes"
+                      },
+                      on_conflict: {
+                        constraint: tags_label_key,
+                        update_columns: [label]
+                      }
+                    }
+                  },
+                  {
+                    tag: {
+                      data: {
+                        label: "Cooking"
+                      },
+                      on_conflict: {
+                        constraint: tags_label_key,
+                        update_columns: [label]
+                      }
+                    }
+                  }  
+                ]
+              }
             }
-          ]
+          ]) {
+            affected_rows
+            returning {
+              id
+              title
+              content
+              author_id
+              article_tags {
+                tag {
+                  label
+                }
+              }
+            }
+          }
         }
+      :response:
+        {
+          "data": {
+            "insert_articles": {
+              "affected_rows": 5,
+              "returning": [
+                {
+                  "author_id": 3,
+                  "article_tags": [
+                    {
+                      "tag": {
+                        "label": "Recipes"
+                      }
+                    },
+                    {
+                      "tag": {
+                        "label": "Cooking"
+                      }
+                    }
+                  ],
+                  "content": "Guide on making the best fajitas in the world",
+                  "id": 34,
+                  "title": "How to make fajitas"
+                }
+              ]
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation insertArticle { insert_articles(objects: [{ title: \"How to make fajitas\", content: \"Guide on making the best fajitas in the world\", author_id: 3, article_tags: { data: [{ tag: { data: { label: \"Recipes\" }, on_conflict: { constraint: tags_label_key, update_columns: [label] }}}, { tag: { data: { label: \"Cooking\" }, on_conflict: { constraint: tags_label_key, update_columns: [label] }}}]}}]) { affected_rows returning { id title content author_id article_tags { tag { label }}}}}"
       }
-    }
 
 **How it works**
 
@@ -478,57 +618,83 @@ Insert an object with a JSONB field
 -----------------------------------
 **Example:** Insert a new ``author`` object with a JSONB ``address`` field:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_author($address: jsonb) {
-      insert_author (
-        objects: [
-          {
-            name: "Ash",
-            address: $address
-          }
-        ]
-      ) {
-        affected_rows
-        returning {
-          id
-          name
-          address
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_author": {
-          "affected_rows": 1,
-          "returning": [
-            {
-              "id": 1,
-              "name": "Ash",
-              "address": {
-                "city": "Bengaluru",
-                "phone": "9090909090",
-                "state": "Karnataka",
-                "pincode": 560095,
-                "street_address": "161, 19th Main Road, Koramangala 6th Block"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation insert_author($address: jsonb) {
+          insert_author (
+            objects: [
+              {
+                name: "Ash",
+                address: $address
               }
+            ]
+          ) {
+            affected_rows
+            returning {
+              id
+              name
+              address
             }
-          ]
+          }
         }
+      :response:
+        {
+          "data": {
+            "insert_author": {
+              "affected_rows": 1,
+              "returning": [
+                {
+                  "id": 1,
+                  "name": "Ash",
+                  "address": {
+                    "city": "Bengaluru",
+                    "phone": "9090909090",
+                    "state": "Karnataka",
+                    "pincode": 560095,
+                    "street_address": "161, 19th Main Road, Koramangala 6th Block"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      :variables:
+        {
+          "address": {
+            "street_address": "161, 19th Main Road, Koramangala 6th Block",
+            "city": "Bengaluru",
+            "phone": "9090909090",
+            "state": "Karnataka",
+            "pincode": 560095
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation insert_author($address: jsonb) { insert_author (objects: [{ name: \"Ash\", address: $address }]) { affected_rows returning { id name address }}}",
+          "variables": {
+              "address": {
+                  "street_address": "161, 19th Main Road, Koramangala 6th Block",
+                  "city": "Bengaluru",
+                  "phone": "9090909090",
+                  "state": "Karnataka",
+                  "pincode": 560095
+              }
+          }
       }
-    }
-  :variables:
-    {
-      "address": {
-        "street_address": "161, 19th Main Road, Koramangala 6th Block",
-        "city": "Bengaluru",
-        "phone": "9090909090",
-        "state": "Karnataka",
-        "pincode": 560095
-      }
-    }
 
 Insert an object with an ARRAY field
 ------------------------------------
@@ -537,84 +703,121 @@ To insert fields of array types, you currently have to pass them as a `Postgres 
 
 **Example:** Insert a new ``author`` with a text array ``emails`` field:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_author {
-      insert_author (
-        objects: [
-          {
-            name: "Ash",
-            emails: "{ash@ash.com, ash123@ash.com}"
-          }
-        ]
-      ) {
-        affected_rows
-        returning {
-          id
-          name
-          emails
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_author": {
-          "affected_rows": 1,
-          "returning": [
-            {
-              "id": 1,
-              "name": "Ash",
-              "emails": ["ash@ash.com", "ash123@ash.com"]
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation insert_author {
+          insert_author (
+            objects: [
+              {
+                name: "Ash",
+                emails: "{ash@ash.com, ash123@ash.com}"
+              }
+            ]
+          ) {
+            affected_rows
+            returning {
+              id
+              name
+              emails
             }
-          ]
+          }
         }
+      :response:
+        {
+          "data": {
+            "insert_author": {
+              "affected_rows": 1,
+              "returning": [
+                {
+                  "id": 1,
+                  "name": "Ash",
+                  "emails": ["ash@ash.com", "ash123@ash.com"]
+                }
+              ]
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation insert_author { insert_author (objects: [{ name: \"Ash\", emails: \"{ash@ash.com, ash123@ash.com}\" }]) { affected_rows returning { id name emails }}}"
       }
-    }
 
 
 Using variables:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_author($emails: _text) {
-      insert_author (
-        objects: [
-          {
-            name: "Ash",
-            emails: $emails
-          }
-        ]
-      ) {
-        affected_rows
-        returning {
-          id
-          name
-          emails
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_author": {
-          "affected_rows": 1,
-          "returning": [
-            {
-              "id": 1,
-              "name": "Ash",
-              "emails": ["ash@ash.com", "ash123@ash.com"]
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation insert_author($emails: _text) {
+          insert_author (
+            objects: [
+              {
+                name: "Ash",
+                emails: $emails
+              }
+            ]
+          ) {
+            affected_rows
+            returning {
+              id
+              name
+              emails
             }
-          ]
+          }
         }
+      :response:
+        {
+          "data": {
+            "insert_author": {
+              "affected_rows": 1,
+              "returning": [
+                {
+                  "id": 1,
+                  "name": "Ash",
+                  "emails": ["ash@ash.com", "ash123@ash.com"]
+                }
+              ]
+            }
+          }
+        }
+      :variables:
+        {
+          "emails": "{ash@ash.com, ash123@ash.com}"
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation insert_author($emails: _text) { insert_author (objects: [{ name: \"Ash\", emails: $emails }]) { affected_rows returning { id name emails }}}",
+          "variables": {
+              "emails": "{ash@ash.com, ash123@ash.com}"
+          }
       }
-    }
-  :variables:
-    {
-      "emails": "{ash@ash.com, ash123@ash.com}"
-    }
 
 Set a field to its default value during insert
 ----------------------------------------------
@@ -624,39 +827,56 @@ To set a field to its ``default`` value, just omit it from the input object, irr
 
 **Example:** If the default value of ``id`` is set to auto-incrementing integer, there's no need to pass the ``id`` field to the input object:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_article_with_def_id {
-      insert_article(
-        objects: [
-          {
-            title: "Article 1",
-            content: "Sample article content",
-            author_id: 3
-          }
-        ]
-      ) {
-        returning {
-          id
-          title
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_article": {
-          "affected_rows": 1,
-          "returning": [
-            {
-              "id": 21,
-              "title": "Article 1"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation insert_article_with_def_id {
+          insert_article(
+            objects: [
+              {
+                title: "Article 1",
+                content: "Sample article content",
+                author_id: 3
+              }
+            ]
+          ) {
+            returning {
+              id
+              title
             }
-          ]
+          }
         }
+      :response:
+        {
+          "data": {
+            "insert_article": {
+              "affected_rows": 1,
+              "returning": [
+                {
+                  "id": 21,
+                  "title": "Article 1"
+                }
+              ]
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation insert_article_with_def_id { insert_article(objects: [{ title: \"Article 1\", content: \"Sample article content\", author_id: 3 }]) { returning { id title }}}"
       }
-    }
 
 Set a field to NULL during insert
 ---------------------------------
@@ -667,71 +887,105 @@ just omit it from the input object.
 **Example:** If ``age`` is a nullable field, to set it to ``null``, either don't pass the age field to the input object
 or pass it as ``null``:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_author_with_null_age {
-      insert_author(
-        objects: [
-          {
-            name: "Jeff",
-          }
-        ]
-      ) {
-        returning {
-          id
-          name
-          age
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_author": {
-          "returning": [
-            {
-                "id": 11,
-                "name": "Jeff",
-                "age": null
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation insert_author_with_null_age {
+          insert_author(
+            objects: [
+              {
+                name: "Jeff"
+              }
+            ]
+          ) {
+            returning {
+              id
+              name
+              age
             }
-          ]
+          }
         }
+      :response:
+        {
+          "data": {
+            "insert_author": {
+              "returning": [
+                {
+                    "id": 11,
+                    "name": "Jeff",
+                    "age": null
+                }
+              ]
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation insert_author_with_null_age { insert_author(objects: [{ name: \"Jeff\"}]) { returning { id name age }}}"
       }
-    }
 
 OR
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_author_with_null_age {
-      insert_author(
-        objects: [
-          {
-            name: "Jeff",
-            age: null
-          }
-        ]
-      ) {
-        returning {
-          id
-          name
-          age
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_author": {
-          "returning": [
-            {
-                "id": 11,
-                "name": "Jeff",
-                "age": null
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation insert_author_with_null_age {
+          insert_author(
+            objects: [
+              {
+                name: "Jeff",
+                age: null
+              }
+            ]
+          ) {
+            returning {
+              id
+              name
+              age
             }
-          ]
+          }
         }
+      :response:
+        {
+          "data": {
+            "insert_author": {
+              "returning": [
+                {
+                    "id": 11,
+                    "name": "Jeff",
+                    "age": null
+                }
+              ]
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation insert_author_with_null_age { insert_author(objects: [{ name: \"Jeff\", age: null }]) { returning { id name age }}}"
       }
-    }
