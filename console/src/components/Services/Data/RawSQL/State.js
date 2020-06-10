@@ -11,6 +11,7 @@ const defaultState = {
   isMigrationChecked: false,
   isTableTrackChecked: false,
   showTrackTable: false,
+  statementTimeout: null,
 };
 
 export default defaultState;

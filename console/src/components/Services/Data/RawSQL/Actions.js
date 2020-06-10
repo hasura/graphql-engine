@@ -23,6 +23,7 @@ const SET_SQL = 'RawSQL/SET_SQL';
 const SET_CASCADE_CHECKED = 'RawSQL/SET_CASCADE_CHECKED';
 const SET_MIGRATION_CHECKED = 'RawSQL/SET_MIGRATION_CHECKED';
 const SET_TRACK_TABLE_CHECKED = 'RawSQL/SET_TRACK_TABLE_CHECKED';
+const SET_STATEMENT_TIMEOUT = 'RawSQL/SET_STATEMENT_TIMEOUT';
 const REQUEST_SUCCESS = 'RawSQL/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'RawSQL/REQUEST_ERROR';
 
@@ -174,6 +175,9 @@ const rawSQLReducer = (state = defaultState, action) => {
         isTableTrackChecked: action.data,
         showTrackTable: action.data,
       };
+    case SET_STATEMENT_TIMEOUT:
+      return { ...state, statementTimeout: action.data };
+
     case MAKING_REQUEST:
       return {
         ...state,
@@ -228,6 +232,7 @@ export {
   SET_CASCADE_CHECKED,
   SET_MIGRATION_CHECKED,
   SET_TRACK_TABLE_CHECKED,
+  SET_STATEMENT_TIMEOUT,
   modalOpen,
   modalClose,
 };

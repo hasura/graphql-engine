@@ -5,6 +5,7 @@ import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 import Modal from '../../../Common/Modal/Modal';
 import Button from '../../../Common/Button/Button';
+import styles from '../../Actions/Common/components/Styles.scss';
 import { parseCreateSQL } from './utils';
 import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
 
@@ -16,6 +17,7 @@ import {
   SET_CASCADE_CHECKED,
   SET_MIGRATION_CHECKED,
   SET_TRACK_TABLE_CHECKED,
+  SET_STATEMENT_TIMEOUT,
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
@@ -113,6 +115,12 @@ const RawSQL = ({
     <Tooltip id="tooltip-tracktable">
       If you are creating a table/view/function, checking this will also expose
       them over the GraphQL API
+    </Tooltip>
+  );
+
+  const statementTimeoutTip = (
+    <Tooltip id="tooltip-statement-timeout">
+      Abort queries that take longer than the specified time
     </Tooltip>
   );
 
@@ -441,6 +449,38 @@ const RawSQL = ({
     return migrationSection;
   };
 
+  function getStatementTimeoutSection() {
+    const dispatchSetStatementTimeout = value => {
+      const timeoutInSeconds = Number(value.trim());
+
+      if (isNaN(timeoutInSeconds) || timeoutInSeconds <= 0) return;
+
+      dispatch({
+        type: SET_STATEMENT_TIMEOUT,
+        data: timeoutInSeconds,
+      });
+    };
+    return (
+      <div className={styles.add_mar_top}>
+        <label>
+          Statement timeout(seconds)
+          <OverlayTrigger placement="right" overlay={statementTimeoutTip}>
+            <i
+              className={`${styles.add_mar_left_small} fa fa-info-circle`}
+              aria-hidden="true"
+            />
+          </OverlayTrigger>
+          <input
+            min={0}
+            type="number"
+            className={`${styles.inline_block} ${styles.add_mar_left_small}`}
+            onChange={event => dispatchSetStatementTimeout(event.target.value)}
+          />
+        </label>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
@@ -467,6 +507,7 @@ const RawSQL = ({
           {getTrackThisSection()}
           {getMetadataCascadeSection()}
           {getMigrationSection()}
+          {getStatementTimeoutSection()}
           <Button
             type="submit"
             className={styles.add_mar_top}
