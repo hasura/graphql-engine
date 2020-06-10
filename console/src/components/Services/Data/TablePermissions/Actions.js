@@ -658,7 +658,6 @@ const permChangePermissions = changeType => {
     );
 
     const migration = new Migration();
-    auto;
     if (query === 'select' && !limitEnabled) {
       delete permissionsState[query].limit;
     }
