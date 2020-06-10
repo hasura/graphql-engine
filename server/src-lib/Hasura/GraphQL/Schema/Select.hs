@@ -442,7 +442,7 @@ pageInfoObj =
 {-
 type tableConnection {
   cursor: String!
-  node: table
+  node: table!
 }
 -}
 mkTableEdgeObj
@@ -453,8 +453,8 @@ mkTableEdgeObj tn =
   where
     cursor = mkHsraObjFldInfo Nothing "cursor" Map.empty $
              G.toGT $ G.toNT stringScalar
-    node = mkHsraObjFldInfo Nothing "node" Map.empty $ G.toGT $
-           mkTableTy tn
+    node = mkHsraObjFldInfo Nothing "node" Map.empty $
+           G.toGT $ G.toNT $ mkTableTy tn
 
 {-
 table_by_pk(
