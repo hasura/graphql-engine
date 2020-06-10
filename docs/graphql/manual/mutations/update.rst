@@ -67,48 +67,83 @@ row object or ``null`` if the row does not exist.
 
 **Example:** Update an article where ``id`` is ``1``:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_an_article {
-      update_article_by_pk (
-        pk_columns: {id: 1}
-        _set: { is_published: true }
-      ) {
-        id
-        is_published
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_article_by_pk": {
-          "id": 1,
-          "is_published": true
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation update_an_article {
+          update_article_by_pk (
+            pk_columns: {id: 1}
+            _set: { is_published: true }
+          ) {
+            id
+            is_published
+          }
         }
+      :response:
+        {
+          "data": {
+            "update_article_by_pk": {
+              "id": 1,
+              "is_published": true
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation update_an_article { update_article_by_pk (pk_columns: {id: 1} _set: { is_published: true }) { id is_published }}"
       }
-    }
+
 
 **Example:** Update a non-existent article:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_an_article {
-      update_article_by_pk (
-        pk_columns: {id: 100}
-        _set: { is_published: true }
-      ) {
-        id
-        is_published
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation update_an_article {
+          update_article_by_pk (
+            pk_columns: {id: 100}
+            _set: { is_published: true }
+          ) {
+            id
+            is_published
+          }
+        }
+      :response:
+        {
+          "data": {
+            "update_article_by_pk": null
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation update_an_article { update_article_by_pk (pk_columns: {id: 100} _set: { is_published: true }) { id is_published }}"
       }
-    }
-  :response:
-    {
-      "data": {
-        "update_article_by_pk": null
-      }
-    }
 
 .. admonition:: Supported from
 
@@ -120,182 +155,262 @@ Update objects based on their fields
 ------------------------------------
 **Example:** Update the ``rating`` and ``is_published`` of articles with a low ``rating``:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_article {
-      update_article(
-        where: {rating: {_lte: 2}},
-        _set: {
-          rating: 1,
-          is_published: false
-        }
-      ) {
-        affected_rows
-        returning {
-          id
-          title
-          content
-          rating
-          is_published
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_article": {
-          "affected_rows": 2,
-          "returning": [
-            {
-              "id": 3,
-              "title": "article 3",
-              "content": "lorem ipsum dolor sit amet",
-              "rating": 1,
-              "is_published": false
-            },
-            {
-              "id": 6,
-              "title": "article 6",
-              "content": "lorem ipsum dolor sit amet",
-              "rating": 1,
-              "is_published": false
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation update_article {
+          update_article(
+            where: {rating: {_lte: 2}},
+            _set: {
+              rating: 1,
+              is_published: false
             }
-          ]
+          ) {
+            affected_rows
+            returning {
+              id
+              title
+              content
+              rating
+              is_published
+            }
+          }
         }
+      :response:
+        {
+          "data": {
+            "update_article": {
+              "affected_rows": 2,
+              "returning": [
+                {
+                  "id": 3,
+                  "title": "article 3",
+                  "content": "lorem ipsum dolor sit amet",
+                  "rating": 1,
+                  "is_published": false
+                },
+                {
+                  "id": 6,
+                  "title": "article 6",
+                  "content": "lorem ipsum dolor sit amet",
+                  "rating": 1,
+                  "is_published": false
+                }
+              ]
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation update_article { update_article(where: {rating: {_lte: 2}}, _set: { rating: 1, is_published: false }) { affected_rows returning { id title content rating is_published }}}"
       }
-    }
 
 Using variables:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_article($rating: Int, $changes: article_set_input) {
-      update_article(
-        where: {rating: {_lte: $rating}},
-        _set: $changes
-      ) {
-        affected_rows
-        returning {
-          id
-          title
-          content
-          rating
-          is_published
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_article": {
-          "affected_rows": 2,
-          "returning": [
-            {
-              "id": 3,
-              "title": "article 3",
-              "content": "lorem ipsum dolor sit amet",
-              "rating": 1,
-              "is_published": false
-            },
-            {
-              "id": 6,
-              "title": "article 6",
-              "content": "lorem ipsum dolor sit amet",
-              "rating": 1,
-              "is_published": false
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation update_article($rating: Int, $changes: article_set_input) {
+          update_article(
+            where: {rating: {_lte: $rating}},
+            _set: $changes
+          ) {
+            affected_rows
+            returning {
+              id
+              title
+              content
+              rating
+              is_published
             }
-          ]
+          }
         }
+      :response:
+        {
+          "data": {
+            "update_article": {
+              "affected_rows": 2,
+              "returning": [
+                {
+                  "id": 3,
+                  "title": "article 3",
+                  "content": "lorem ipsum dolor sit amet",
+                  "rating": 1,
+                  "is_published": false
+                },
+                {
+                  "id": 6,
+                  "title": "article 6",
+                  "content": "lorem ipsum dolor sit amet",
+                  "rating": 1,
+                  "is_published": false
+                }
+              ]
+            }
+          }
+        }
+      :variables:
+        {
+          "rating": 2,
+          "changes": {
+            "rating": 1,
+            "is_published": false,
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation update_article($rating: Int, $changes: article_set_input) { update_article(where: {rating: {_lte: $rating}}, _set: $changes) { affected_rows returning { id title content rating is_published }}}",
+          "variables": {
+              "rating": 2,
+              "changes": {
+                  "rating": 1,
+                  "is_published": false
+              }
+          }
       }
-    }
-  :variables:
-    {
-      "rating": 2,
-      "changes": {
-        "rating": 1,
-        "is_published": false,
-      }
-    }
 
 OR
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_article($ratingLimit: Int, $rating: Int, $isPublished: Boolean) {
-      update_article(
-        where: {rating: {_lte: $ratingLimit}},
-        _set: {
-          rating: $rating,
-          is_published: $isPublished,
-        }
-      ) {
-        affected_rows
-        returning {
-          id
-          title
-          content
-          rating
-          is_published
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_article": {
-          "affected_rows": 2,
-          "returning": [
-            {
-              "id": 3,
-              "title": "article 3",
-              "content": "lorem ipsum dolor sit amet",
-              "rating": 1,
-              "is_published": false
-            },
-            {
-              "id": 6,
-              "title": "article 6",
-              "content": "lorem ipsum dolor sit amet",
-              "rating": 1,
-              "is_published": false
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation update_article($ratingLimit: Int, $rating: Int, $isPublished: Boolean) {
+          update_article(
+            where: {rating: {_lte: $ratingLimit}},
+            _set: {
+              rating: $rating,
+              is_published: $isPublished
             }
-          ]
+          ) {
+            affected_rows
+            returning {
+              id
+              title
+              content
+              rating
+              is_published
+            }
+          }
         }
+      :response:
+        {
+          "data": {
+            "update_article": {
+              "affected_rows": 2,
+              "returning": [
+                {
+                  "id": 3,
+                  "title": "article 3",
+                  "content": "lorem ipsum dolor sit amet",
+                  "rating": 1,
+                  "is_published": false
+                },
+                {
+                  "id": 6,
+                  "title": "article 6",
+                  "content": "lorem ipsum dolor sit amet",
+                  "rating": 1,
+                  "is_published": false
+                }
+              ]
+            }
+          }
+        }
+      :variables:
+        {
+          "ratingLimit": 2,
+          "rating": 1,
+          "isPublished": false
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation update_article($ratingLimit: Int, $rating: Int, $isPublished: Boolean) { update_article(where: {rating: {_lte: $ratingLimit}}, _set: { rating: $rating, is_published: $isPublished }) { affected_rows returning { id title content rating is_published }}}",
+          "variables": {
+              "ratingLimit": 2,
+              "rating": 1,
+              "isPublished": false
+          }
       }
-    }
-  :variables:
-    {
-      "ratingLimit": 2,
-      "rating": 1,
-      "isPublished": false
-    }
 
 Update objects based on nested objects' fields
 ----------------------------------------------
 **Example:** Reset the ``rating`` of all articles authored by "Sidney":
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_ratings {
-      update_article(
-        where: {author: {name: {_eq: "Sidney"}}},
-        _set: {rating: null}
-      ) {
-        affected_rows
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_article": {
-          "affected_rows": 3
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation update_ratings {
+          update_article(
+            where: {author: {name: {_eq: "Sidney"}}},
+            _set: {rating: null}
+          ) {
+            affected_rows
+          }
         }
+      :response:
+        {
+          "data": {
+            "update_article": {
+              "affected_rows": 3
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation update_ratings { update_article(where: {author: {name: {_eq: \"Sidney\"}}}, _set: {rating: null}) { affected_rows }}"
       }
-    }
 
 Update all objects
 ------------------
@@ -305,25 +420,42 @@ evaluates to ``true`` for all objects.
 
 **Example:** Reset rating of all articles:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation reset_rating {
-      update_article (
-        where: {}
-        _set: { rating: null }
-      ) {
-        affected_rows
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_article": {
-          "affected_rows": 20
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation reset_rating {
+          update_article (
+            where: {}
+            _set: { rating: null }
+          ) {
+            affected_rows
+          }
         }
+      :response:
+        {
+          "data": {
+            "update_article": {
+              "affected_rows": 20
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation reset_rating { update_article (where: {} _set: { rating: null }) { affected_rows }}"
       }
-    }
 
 Increment **int** columns
 -------------------------
@@ -331,33 +463,50 @@ You can increment an ``int`` column with a given value using the ``_inc`` operat
 
 **Example:** Increment the ``likes`` of an article by 2:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_likes {
-      update_article(
-        where: {id: {_eq: 1}},
-        _inc: {likes: 2}  # initial value: 1
-      ) {
-        affected_rows
-        returning {
-          id
-          likes
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_article": {
-          "affected_rows": 1,
-          "returning": {
-            "id": 1,
-            "likes": 3
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation update_likes {
+          update_article(
+            where: {id: {_eq: 1}},
+            _inc: {likes: 2}  # initial value: 1
+          ) {
+            affected_rows
+            returning {
+              id
+              likes
+            }
           }
         }
+      :response:
+        {
+          "data": {
+            "update_article": {
+              "affected_rows": 1,
+              "returning": {
+                "id": 1,
+                "likes": 3
+              }
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation update_likes { update_article(where: {id: {_eq: 1}}, _inc: {likes: 2}) { affected_rows returning { id likes }}}"
       }
-    }
 
 Update **jsonb** columns
 ------------------------
@@ -395,40 +544,62 @@ Since the input is a json value, it should be provided through a variable.
 
 **Example:** Append the json ``{"key1": "value1"}`` to the ``jsonb`` column ``extra_info`` of the ``article`` table:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_extra_info($value: jsonb) {
-      update_article(
-        where: {id: {_eq: 1}},
-        _append: {extra_info: $value}  # initial value: {"key": "value"}
-      ) {
-        affected_rows
-        returning {
-          id
-          extra_info
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_article": {
-          "affected_rows": 1,
-          "returning": {
-            "id": 1,
-            "extra_info": {
-              "key": "value",
-              "key1": "value1"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation update_extra_info($value: jsonb) {
+          update_article(
+            where: {id: {_eq: 1}},
+            _append: {extra_info: $value}  # initial value: {"key": "value"}
+          ) {
+            affected_rows
+            returning {
+              id
+              extra_info
             }
           }
         }
+      :response:
+        {
+          "data": {
+            "update_article": {
+              "affected_rows": 1,
+              "returning": {
+                "id": 1,
+                "extra_info": {
+                  "key": "value",
+                  "key1": "value1"
+                }
+              }
+            }
+          }
+        }
+      :variables:
+        {
+          "value": { "key1": "value1" }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation update_extra_info($value: jsonb) { update_article(where: {id: {_eq: 1}}, _append: {extra_info: $value}) { affected_rows returning { id extra_info }}}",
+          "variables": {
+              "value": {
+                  "key1": "value1"
+              }
+          }
       }
-    }
-  :variables:
-    {
-      "value": { "key1": "value1" }
-    }
 
 Prepend a json to a jsonb column
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -438,41 +609,63 @@ Since the input is a json value, it should be provided through a variable.
 
 **Example:** Prepend the json ``{"key0": "value0"}`` to the ``jsonb`` column ``extra_info`` of the ``article`` table:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_extra_info($value: jsonb) {
-      update_article(
-        where: {id: {_eq: 1}},
-        _prepend: {extra_info: $value}  # initial value "{"key": "value", "key1": "value1"}"
-      ) {
-        affected_rows
-        returning {
-          id
-          extra_info
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_article": {
-          "affected_rows": 1,
-          "returning": {
-            "id": 1,
-            "extra_info": {
-              "key0": "value0",
-              "key": "value",
-              "key1": "value1"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation update_extra_info($value: jsonb) {
+          update_article(
+            where: {id: {_eq: 1}},
+            _prepend: {extra_info: $value}  # initial value "{"key": "value", "key1": "value1"}"
+          ) {
+            affected_rows
+            returning {
+              id
+              extra_info
             }
           }
         }
+      :response:
+        {
+          "data": {
+            "update_article": {
+              "affected_rows": 1,
+              "returning": {
+                "id": 1,
+                "extra_info": {
+                  "key0": "value0",
+                  "key": "value",
+                  "key1": "value1"
+                }
+              }
+            }
+          }
+        }
+      :variables:
+        {
+          "value": { "key0": "value0" }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation update_extra_info($value: jsonb) { update_article(where: {id: {_eq: 1}}, _prepend: {extra_info: $value}) { affected_rows returning { id extra_info }}}",
+          "variables": {
+              "value": {
+                  "key0": "value0"
+              }
+          }
       }
-    }
-  :variables:
-    {
-      "value": { "key0": "value0" }
-    }
 
 Delete a top-level key from a jsonb column
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -482,36 +675,53 @@ The input value should be a ``String``.
 
 **Example:** Delete the key ``key`` in the ``jsonb`` column ``extra_info`` of the ``article`` table:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_extra_info {
-      update_article(
-        where: {id: {_eq: 1}},
-        _delete_key: {extra_info: "key"}  # initial value "{"key0": "value0, "key": "value", "key1": "value1"}"
-      ) {
-        affected_rows
-        returning {
-          id
-          extra_info
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_article": {
-          "affected_rows": 1,
-          "returning": {
-            "id": 1,
-            "extra_info": {
-              "key0": "value0",
-              "key1": "value1"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation update_extra_info {
+          update_article(
+            where: {id: {_eq: 1}},
+            _delete_key: {extra_info: "key"}  # initial value "{"key0": "value0, "key": "value", "key1": "value1"}"
+          ) {
+            affected_rows
+            returning {
+              id
+              extra_info
             }
           }
         }
+      :response:
+        {
+          "data": {
+            "update_article": {
+              "affected_rows": 1,
+              "returning": {
+                "id": 1,
+                "extra_info": {
+                  "key0": "value0",
+                  "key1": "value1"
+                }
+              }
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation update_extra_info { update_article(where: {id: {_eq: 1}}, _delete_key: {extra_info: \"key\"}) { affected_rows returning { id extra_info }}}"
       }
-    }
 
 Delete an element from a jsonb column storing a json array
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -523,33 +733,50 @@ The input value should be an ``Int``.
 **Example:** Delete the element at position 2 in the array value of the ``jsonb`` column ``extra_info``
 of the ``article`` table:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_extra_info {
-      update_article(
-        where: {id: {_eq: 1}},
-        _delete_elem: {extra_info: 2}  # initial value "["a", "b", "c"]"
-      ) {
-        affected_rows
-        returning {
-          id
-          extra_info
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_article": {
-          "affected_rows": 1,
-          "returning": {
-            "id": 1,
-            "extra_info": ["a", "b"]
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation update_extra_info {
+          update_article(
+            where: {id: {_eq: 1}},
+            _delete_elem: {extra_info: 2}  # initial value "["a", "b", "c"]"
+          ) {
+            affected_rows
+            returning {
+              id
+              extra_info
+            }
           }
         }
+      :response:
+        {
+          "data": {
+            "update_article": {
+              "affected_rows": 1,
+              "returning": {
+                "id": 1,
+                "extra_info": ["a", "b"]
+              }
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation update_extra_info { update_article(where: {id: {_eq: 1}}, _delete_elem: {extra_info: 2} ) { affected_rows returning { id extra_info }}}"
       }
-    }
 
 Delete an element at a specific path in a jsonb column
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -559,37 +786,54 @@ The input value should be a ``String Array``.
 
 **Example:** Delete element at json path ``name.last`` in the ``jsonb`` column ``extra_info`` of the author table:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation update_extra_info {
-      update_author(
-        where: {id: {_eq: 1}},
-        _delete_at_path: {extra_info: ["name", "first"]}  # initial value "{"name": {"first": "first_name", "last": "last_name"}}"
-      ) {
-        affected_rows
-        returning {
-          id
-          extra_info
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation update_extra_info {
+          update_author(
+            where: {id: {_eq: 1}},
+            _delete_at_path: {extra_info: ["name", "first"]}  # initial value "{"name": {"first": "first_name", "last": "last_name"}}"
+          ) {
+            affected_rows
+            returning {
+              id
+              extra_info
+            }
+          }
         }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "update_author": {
-          "affected_rows": 1,
-          "returning": {
-            "id": 1,
-            "extra_info": {
-              "name": {
-                "last": "last_name"
+      :response:
+        {
+          "data": {
+            "update_author": {
+              "affected_rows": 1,
+              "returning": {
+                "id": 1,
+                "extra_info": {
+                  "name": {
+                    "last": "last_name"
+                  }
+                }
               }
             }
           }
         }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation update_extra_info { update_author(where: {id: {_eq: 1}}, _delete_at_path: {extra_info: [\"name\", \"first\"]}) { affected_rows returning { id extra_info }}}"
       }
-    }
 
 Replace all nested array objects of an object
 ---------------------------------------------
@@ -599,44 +843,64 @@ one to delete all the existing objects and one to add a list of new nested objec
 
 **Example:** Replace all articles of an author with a new list:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation updateAuthorArticles($author_id: Int!) {
-      delete_articles(
-        where: {author_id: {_eq: $author_id}}
-      ) {
-        affected_rows
-      }
-      insert_articles(
-        objects: [
-          {
-            author_id: $author_id,
-            title: "title",
-            content: "some content"
-          },
-          {
-            author_id: $author_id,
-            title: "another title",
-            content: "some other content"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation updateAuthorArticles($author_id: Int!) {
+          delete_articles(
+            where: {author_id: {_eq: $author_id}}
+          ) {
+            affected_rows
           }
-        ]
-      ) {
-        affected_rows
-      }
-    }
-  :response:
-    {
-      "data": {
-        "delete_article_tags": {
-          "affected_rows": 3
-        },
-        "insert_article_tags": {
-          "affected_rows": 2
+          insert_articles(
+            objects: [
+              {
+                author_id: $author_id,
+                title: "title",
+                content: "some content"
+              },
+              {
+                author_id: $author_id,
+                title: "another title",
+                content: "some other content"
+              }
+            ]
+          ) {
+            affected_rows
+          }
         }
+      :response:
+        {
+          "data": {
+            "delete_article_tags": {
+              "affected_rows": 3
+            },
+            "insert_article_tags": {
+              "affected_rows": 2
+            }
+          }
+        }
+      :variables:
+        {
+          "author_id": 21
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation updateAuthorArticles($author_id: Int!) { delete_articles(where: {author_id: {_eq: $author_id}}) { affected_rows } insert_articles(objects: [{ author_id: $author_id, title: \"title\", content: \"some content\" }, { author_id: $author_id, title: \"another title\", content: \"some other content\" }]) { affected_rows }}",
+          "variables": {
+              "author_id": 21
+          }
       }
-    }
-  :variables:
-    {
-      "author_id": 21
-    }

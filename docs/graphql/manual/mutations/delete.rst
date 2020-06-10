@@ -61,49 +61,83 @@ row object or ``null`` if the row does not exist.
 
 **Example:** Delete an article where ``id`` is ``1``:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation delete_an_object {
-      delete_article_by_pk (
-        id: 1
-      ) {
-        id
-        title
-        user_id
-      }
-    }
-  :response:
-    {
-      "data": {
-        "delete_article_by_pk": {
-          "id": 1,
-          "title": "Article 1",
-          "user_id": 1
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation delete_an_object {
+          delete_article_by_pk (
+            id: 1
+          ) {
+            id
+            title
+            user_id
+          }
         }
+      :response:
+        {
+          "data": {
+            "delete_article_by_pk": {
+              "id": 1,
+              "title": "Article 1",
+              "user_id": 1
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation delete_an_object { delete_article_by_pk (id: 1) { id title user_id }}"
       }
-    }
 
 **Example:** Delete a non-existent article:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation delete_an_object {
-      delete_article_by_pk (
-        id: 100
-      ) {
-        id
-        title
-        user_id
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation delete_an_object {
+          delete_article_by_pk (
+            id: 100
+          ) {
+            id
+            title
+            user_id
+          }
+        }
+      :response:
+        {
+          "data": {
+            "delete_article_by_pk": null
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation delete_an_object { delete_article_by_pk (id: 100) { id title user_id }}"
       }
-    }
-  :response:
-    {
-      "data": {
-        "delete_article_by_pk": null
-      }
-    }
 
 .. admonition:: Supported from
 
@@ -115,48 +149,82 @@ Delete objects based on an their fields
 ---------------------------------------
 **Example:** Delete all articles rated less than 3:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation delete_low_rated_articles {
-      delete_article(
-        where: {rating: {_lt: 3}}
-      ) {
-        affected_rows
-      }
-    }
-  :response:
-    {
-      "data": {
-        "delete_low_rated_articles": {
-          "affected_rows": 8
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation delete_low_rated_articles {
+          delete_article(
+            where: {rating: {_lt: 3}}
+          ) {
+            affected_rows
+          }
         }
+      :response:
+        {
+          "data": {
+            "delete_low_rated_articles": {
+              "affected_rows": 8
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation delete_low_rated_articles { delete_article(where: {rating: {_lt: 3}}) { affected_rows }}"
       }
-    }
 
 
 Delete objects based on nested objects' fields
 ----------------------------------------------
 **Example:** Delete all articles written by a particular author:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation delete_authors_articles {
-      delete_article(
-        where: {author: {name: {_eq: "Corny"}}}
-      ) {
-        affected_rows
-      }
-    }
-  :response:
-    {
-      "data": {
-        "delete_authors_articles": {
-          "affected_rows": 2
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation delete_authors_articles {
+          delete_article(
+            where: {author: {name: {_eq: "Corny"}}}
+          ) {
+            affected_rows
+          }
         }
+      :response:
+        {
+          "data": {
+            "delete_authors_articles": {
+              "affected_rows": 2
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation delete_authors_articles { delete_article(where: {author: {name: {_eq: \"Corny\"}}}) { affected_rows }}"
       }
-    }
 
 Delete all objects
 ------------------
@@ -166,21 +234,38 @@ evaluates to ``true`` for all objects.
 
 **Example:** Delete all articles:
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation delete_all_articles {
-      delete_article (
-        where: {}
-      ) {
-        affected_rows
-      }
-    }
-  :response:
-    {
-      "data": {
-        "delete_article": {
-          "affected_rows": 20
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation delete_all_articles {
+          delete_article (
+            where: {}
+          ) {
+            affected_rows
+          }
         }
+      :response:
+        {
+          "data": {
+            "delete_article": {
+              "affected_rows": 20
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "mutation delete_all_articles { delete_article (where: {}) { affected_rows }}"
       }
-    }
