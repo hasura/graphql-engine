@@ -75,7 +75,7 @@ const getNotificationDetails = (
   );
 };
 export const getErrorMessage = (
-  message: string | null,
+  message?: string | null,
   error?: Record<string, any>
 ) => {
   let notificationMessage;

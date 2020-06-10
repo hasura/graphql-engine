@@ -6,7 +6,7 @@ import { clearIntrospectionSchemaCache } from '../RemoteSchema/graphqlUtils';
 import globals from '../../../Globals';
 import endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import defaultState from './State';
-import { filterInconsistentMetadataObjects } from './utils';
+import { filterInconsistentMetadataObjects, MetadataObject } from './utils';
 import {
   makeMigrationCall,
   setConsistentFunctions,
@@ -199,7 +199,7 @@ export const replaceMetadataFromFile = (
   dispatch(replaceMetadata(parsedFileContent, onSuccess, onError));
 };
 
-const handleInconsistentObjects = (inconsistentObjects: object[]) => {
+const handleInconsistentObjects = (inconsistentObjects: MetadataObject[]) => {
   return (
     dispatch: ThunkDispatch<any, any, AnyAction>,
     getState: () => AppState
@@ -782,18 +782,18 @@ type MetadataReducerAction = {
 export type AppState = {
   tables: {
     dataHeaders: HeadersInit;
-    allSchemas: object[];
-    trackedFunctions: object[];
+    allSchemas: MetadataObject[];
+    trackedFunctions: MetadataObject[];
   };
   remoteSchemas: {
     listData: {
-      remoteSchemas: object[];
+      remoteSchemas: MetadataObject[];
     };
   };
   metadata: SettingsState;
   actions: {
     common: {
-      actions: object[];
+      actions: MetadataObject[];
     };
   };
 };
