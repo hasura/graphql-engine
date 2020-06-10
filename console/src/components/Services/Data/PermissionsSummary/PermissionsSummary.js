@@ -37,6 +37,8 @@ import {
   getPermissionRowAccessSummary,
 } from './utils';
 
+import Header from './Header';
+
 class PermissionsSummary extends Component {
   initState = {
     currRole: null,
@@ -186,52 +188,6 @@ class PermissionsSummary extends Component {
       );
     };
 
-    const getHeader = (
-      content,
-      selectable,
-      isSelected,
-      onClick,
-      actionBtns = [],
-      key = null
-    ) => {
-      const getContents = () => {
-        let headerContent;
-
-        if (!actionBtns.length) {
-          headerContent = content;
-        } else {
-          headerContent = (
-            <div
-              className={`${styles.actionCell} ${styles.display_flex} ${styles.flex_space_between}`}
-            >
-              <div>{content}</div>
-              <div
-                className={`${styles.tableHeaderActions} ${styles.display_flex}`}
-              >
-                {actionBtns.map((actionBtn, i) => (
-                  <div key={`${content}-action-btn-${i}`}>{actionBtn}</div>
-                ))}
-              </div>
-            </div>
-          );
-        }
-
-        return headerContent;
-      };
-
-      return (
-        <th
-          key={key || content}
-          onClick={selectable ? onClick : null}
-          className={`${selectable ? styles.cursorPointer : ''} ${
-            isSelected ? styles.selected : ''
-          }`}
-        >
-          {getContents()}
-        </th>
-      );
-    };
-
     const getCellOnClick = (table, role, action) => {
       return () => {
         dispatch(
@@ -255,7 +211,7 @@ class PermissionsSummary extends Component {
       const rolesHeaders = [];
 
       if (!allRoles.length) {
-        rolesHeaders.push(getHeader('No roles', false));
+        rolesHeaders.push(<Header content="No roles" selectable={false} />);
       } else {
         allRoles.forEach(role => {
           const isCurrRole = currRole === role;
@@ -322,10 +278,15 @@ class PermissionsSummary extends Component {
             );
           };
 
-          const roleHeader = getHeader(role, selectable, isCurrRole, setRole, [
-            getCopyBtn(),
-            getDeleteBtn(),
-          ]);
+          const roleHeader = (
+            <Header
+              content={role}
+              selectable={selectable}
+              isSelected={isCurrRole}
+              onClick={setRole}
+              actionButtons={[getCopyBtn(), getDeleteBtn()]}
+            />
+          );
 
           if (selectedFirst && isCurrRole) {
             rolesHeaders.unshift(roleHeader);
@@ -395,7 +356,9 @@ class PermissionsSummary extends Component {
 
       if (!currSchemaTrackedTables.length) {
         tablesRows.push(
-          <tr key={'No tables'}>{getHeader('No tables', false)}</tr>
+          <tr key={'No tables'}>
+            <Header content="No tables" selectable={false} />
+          </tr>
         );
       } else {
         currSchemaTrackedTables.forEach((table, i) => {
@@ -414,13 +377,15 @@ class PermissionsSummary extends Component {
               });
             };
 
-            return getHeader(
-              displayTableName(table),
-              selectable,
-              isCurrTable,
-              setTable,
-              [],
-              tableName
+            return (
+              <Header
+                content={displayTableName(table)}
+                selectable={selectable}
+                isSelected={isCurrTable}
+                onClick={setTable}
+                actionButtons={[]}
+                key={tableName}
+              />
             );
           };
 
