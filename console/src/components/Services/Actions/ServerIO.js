@@ -63,7 +63,7 @@ import {
   setRequestFailure as setPermRequestFailure,
 } from './Permissions/reducer';
 import { findAction, getActionPermissions } from './utils';
-import { getActionPermissionQueries } from './Permissions/utils';
+import { getActionPermissionMigration } from './Permissions/utils';
 import Migration from '../../../utils/migration/Migration';
 
 export const fetchActions = () => {
@@ -589,7 +589,7 @@ export const saveActionPermission = (successCb, errorCb) => (
     findAction(allActions, currentAction)
   );
 
-  const { upQueries, downQueries } = getActionPermissionQueries(
+  const migration = getActionPermissionMigration(
     permissionEdit,
     allPermissions,
     currentAction
@@ -619,8 +619,8 @@ export const saveActionPermission = (successCb, errorCb) => (
   makeMigrationCall(
     dispatch,
     getState,
-    upQueries,
-    downQueries,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
