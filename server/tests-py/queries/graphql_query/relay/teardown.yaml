@@ -4,5 +4,6 @@ args:
   args:
     cascade: true
     sql: |
+      DROP VIEW article_view;
       DROP TABLE article;
       DROP TABLE author;

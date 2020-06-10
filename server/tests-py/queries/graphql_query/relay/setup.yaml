@@ -51,6 +51,11 @@ args:
         3
       );
 
+      -- Create article view for testing https://github.com/hasura/graphql-engine/issues/5020
+      CREATE VIEW article_view AS (
+      SELECT * FROM article
+      );
+
 # Track tables and define relationships
 - type: track_table
   args:
@@ -60,6 +65,11 @@ args:
 - type: track_table
   args:
     name: article
+    schema: public
+
+- type: track_table
+  args:
+    name: article_view
     schema: public
 
 - type: create_object_relationship
@@ -77,3 +87,13 @@ args:
       foreign_key_constraint_on:
         table: article
         column: author_id
+
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles_view
+    using:
+      manual_configuration:
+        remote_table: article_view
+        column_mapping:
+          id: author_id

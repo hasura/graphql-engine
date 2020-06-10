@@ -666,6 +666,9 @@ class TestRelayQueries:
     def test_author_connection(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/basic/author_connection.yaml', transport)
 
+    def test_author_with_articles_view_connection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/basic/author_with_articles_view_connection.yaml', transport)
+
     def test_node(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/basic/node.yaml', transport)
 

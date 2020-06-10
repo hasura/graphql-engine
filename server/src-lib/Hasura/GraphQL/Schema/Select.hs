@@ -166,36 +166,44 @@ object_relationship: remote_table
 
 -}
 mkRelationshipField
-  :: Bool
-  -> RelInfo
-  -> Bool
-  -> Maybe (NonEmpty PGColumnInfo)
-  -> Bool
-  -> [ObjFldInfo]
-mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isRelay maybePkCols isNullable =
-  case rTy of
-    ArrRel -> bool [arrRelFld] ([arrRelFld, aggArrRelFld] <> connFields) allowAgg
-    ObjRel -> [objRelFld]
+  :: Bool -> RelationshipFieldInfo -> [ObjFldInfo]
+mkRelationshipField isRelay fieldInfo =
+  if | not isRelay -> mkFields False
+     | isRelay && isJust maybePkey -> mkFields True
+     | otherwise -> []
   where
-    objRelFld = mkHsraObjFldInfo (Just "An object relationship")
-      (mkRelName rn) Map.empty objRelTy
-    objRelTy = bool (G.toGT $ G.toNT relTabTy) (G.toGT relTabTy) isObjRelNullable
-    isObjRelNullable = isManual || isNullable
-    relTabTy = mkTableTy remTab
+    mkFields includeConnField =
+      let boolGuard a = bool Nothing (Just a)
+      in case relType of
+           ArrRel -> arrRelFld : catMaybes
+                     [ boolGuard aggArrRelFld allowAgg
+                     , boolGuard arrConnFld includeConnField
+                     ]
+           ObjRel -> [objRelFld]
+
+    RelationshipFieldInfo relInfo allowAgg _ _ _ maybePkey isNullable = fieldInfo
+    RelInfo relName relType _ remoteTable isManual = relInfo
+
+    remTabTy = mkTableTy remoteTable
+
+    objRelFld =
+      mkHsraObjFldInfo (Just "An object relationship")
+      (mkRelName relName) Map.empty $
+      bool (G.toGT . G.toNT) G.toGT (isManual || isNullable) remTabTy
 
     arrRelFld =
-      mkHsraObjFldInfo (Just "An array relationship") (mkRelName rn)
-      (fromInpValL $ mkSelArgs remTab) $
-      G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy remTab
+      mkHsraObjFldInfo (Just "An array relationship") (mkRelName relName)
+      (fromInpValL $ mkSelArgs remoteTable) $
+      G.toGT $ G.toNT $ G.toLT $ G.toNT remTabTy
 
-    connFields = if isNothing maybePkCols || not isRelay then [] else pure $
-      mkHsraObjFldInfo Nothing (mkConnectionRelName rn)
-      (fromInpValL $ mkConnectionArgs remTab) $
-      G.toGT $ G.toNT $ mkTableConnectionTy remTab
+    arrConnFld =
+      mkHsraObjFldInfo (Just "An array relationship connection") (mkConnectionRelName relName)
+      (fromInpValL $ mkConnectionArgs remoteTable) $
+      G.toGT $ G.toNT $ mkTableConnectionTy remoteTable
 
     aggArrRelFld = mkHsraObjFldInfo (Just "An aggregated array relationship")
-      (mkAggRelName rn) (fromInpValL $ mkSelArgs remTab) $
-      G.toGT $ G.toNT $ mkTableAggTy remTab
+      (mkAggRelName relName) (fromInpValL $ mkSelArgs remoteTable) $
+      G.toGT $ G.toNT $ mkTableAggTy remoteTable
 
 mkTableObjectDescription :: QualifiedTable -> Maybe PGDescription -> G.Description
 mkTableObjectDescription tn pgDescription =
@@ -205,12 +213,9 @@ mkTableObjectFields :: Bool -> [SelField] -> [ObjFldInfo]
 mkTableObjectFields isRelay =
   concatMap \case
     SFPGColumn info -> pure $ mkPGColFld info
-    SFRelationship info -> mkRelationshipField' info
+    SFRelationship info -> mkRelationshipField isRelay info
     SFComputedField info -> pure $ mkComputedFieldFld info
     SFRemoteRelationship info -> pure $ mkRemoteRelationshipFld info
-  where
-    mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ maybePkCols isNullable) =
-      mkRelationshipField allowAgg relInfo isRelay maybePkCols isNullable
 
 {-
 type table {

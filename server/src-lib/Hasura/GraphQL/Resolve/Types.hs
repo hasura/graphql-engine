@@ -150,7 +150,7 @@ data RelationshipFieldKind
 data RelationshipField
   = RelationshipField
   { _rfInfo       :: !RelInfo
-  , _rfIsAgg      :: !RelationshipFieldKind
+  , _rfKind       :: !RelationshipFieldKind
   , _rfCols       :: !PGColGNameMap
   , _rfPermFilter :: !AnnBoolExpPartialSQL
   , _rfPermLimit  :: !(Maybe Int)
