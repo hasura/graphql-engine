@@ -567,6 +567,21 @@ instance HasTypeDefinitions G.TypeDefinition where
       accumulateTypeDefinitions (mkDefinition name description $
                                  TIObject (map fieldDefnToFieldInfoDefn fieldsDefns))
 
+{-
+
+HashMap Name SyntacticTypeDefinition -- fields are specified by names
+HashMap Name TypeDefinitionAST -- fields are specified by TypeDefinitionAST's
+
+G.TypeDefinitionObject (G.ObjectTypeDefinition _ "article" _ _ [G.FieldDefinition _ "author" [G.TypeNamed _ "author"] _type []])
+
+type article {
+  author author
+}
+type author {
+  name text
+  id int
+}
+-}
 instance HasTypeDefinitions SchemaDocument where
   accumulateTypeDefinitions (G.SchemaDocument typeDefs) =
     accumulateTypeDefinitions typeDefs

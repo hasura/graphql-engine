@@ -30,11 +30,11 @@ introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
 
 fetchRemoteSchema
-  :: (HasVersion, MonadIO m, MonadError ConflictingDefinitions m, MonadError QErr m)
+  :: (HasVersion, MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -> RemoteSchemaName
   -> RemoteSchemaInfo
-  -> m Schema
+  -> m IntrospectionResult
 fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) = do
   headers <- makeHeadersFromConf headerConf
   let hdrsWithDefaults = addDefaultHeaders headers
@@ -54,8 +54,9 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
       statusCode = resp ^. Wreq.responseStatus . Wreq.statusCode
   when (statusCode /= 200) $ throwNon200 statusCode respData
 
-  introspectRes :: (FromIntrospection IntrospectionResult) <-
+  (FromIntrospection introspectRes) :: (FromIntrospection IntrospectionResult) <-
     either (remoteSchemaErr . T.pack) return $ J.eitherDecode respData
+{-
   let (sDoc, qRootN, mRootN, sRootN) =
         fromIntrospection introspectRes
   typMap <- collectTypeDefinitions sDoc
@@ -64,11 +65,12 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
       mSrTyp = maybe Nothing (`Map.lookup` typMap) sRootN
   qrTyp <- liftMaybe noQueryRoot mQrTyp
   rmQR <- liftMaybe (err400 Unexpected "query root has to be an object type") $ getObjType (dInfo qrTyp)
-  let queryRoot = Nullable $
-                   TNamed $ mkDefinition $$(G.litName "query_root") Nothing $ TIObject rmQR
+  let queryRoot = Nullable $ TNamed $ mkDefinition $$(G.litName "query_root") Nothing $ TIObject rmQR
       mutationRoot = mkRoot $$(G.litName "mutation_root") $ mMrTyp
       subscriptionRoot = mkRoot $$(G.litName "subscription_root") $ mSrTyp
   return $ Schema Nothing typMap queryRoot mutationRoot subscriptionRoot []
+  -}
+  return introspectRes
   where
     noQueryRoot = err400 Unexpected "query root not found in remote schema"
     remoteSchemaErr :: (MonadError QErr m) => T.Text -> m a
@@ -345,8 +347,8 @@ instance J.FromJSON (FromIntrospection G.TypeDefinition) where
     return $ FromIntrospection r
 
 type IntrospectionResult = ( G.SchemaDocument
-                           , G.Name
-                           , Maybe G.Name
+                           , G.Name -- query_root
+                           , Maybe G.Name -- mutation_root
                            , Maybe G.Name
                            )
 
