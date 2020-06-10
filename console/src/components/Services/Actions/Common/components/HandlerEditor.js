@@ -5,7 +5,7 @@ import Tooltip from './Tooltip';
 const editorLabel = 'Handler';
 const editorTooltip = 'The HTTP handler for the action';
 
-const HandlerEditor = ({ value, onChange, className }) => {
+const HandlerEditor = ({ value, onChange, className, disabled = false }) => {
   return (
     <div className={className || ''}>
       <h2
@@ -19,6 +19,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
         />
       </h2>
       <input
+        disabled={disabled}
         type="text"
         value={value}
         onChange={onChange}

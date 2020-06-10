@@ -20,6 +20,7 @@ module Hasura.Logging
   , mkLoggerCtx
   , cleanLoggerCtx
   , eventTriggerLogType
+  , scheduledTriggerLogType
   , EnabledLogTypes (..)
   , defaultEnabledEngineLogTypes
   , isEngineLogTypeEnabled
@@ -66,6 +67,7 @@ data instance EngineLogType Hasura
   | ELTWebhookLog
   | ELTQueryLog
   | ELTStartup
+  | ELTLivequeryPollerLog
   -- internal log types
   | ELTInternal !InternalLogTypes
   deriving (Show, Eq, Generic)
@@ -74,27 +76,30 @@ instance Hashable (EngineLogType Hasura)
 
 instance J.ToJSON (EngineLogType Hasura) where
   toJSON = \case
-    ELTHttpLog      -> "http-log"
+    ELTHttpLog -> "http-log"
     ELTWebsocketLog -> "websocket-log"
-    ELTWebhookLog   -> "webhook-log"
-    ELTQueryLog     -> "query-log"
-    ELTStartup      -> "startup"
-    ELTInternal t   -> J.toJSON t
+    ELTWebhookLog -> "webhook-log"
+    ELTQueryLog -> "query-log"
+    ELTStartup -> "startup"
+    ELTLivequeryPollerLog -> "livequery-poller-log"
+    ELTInternal t -> J.toJSON t
 
 instance J.FromJSON (EngineLogType Hasura) where
   parseJSON = J.withText "log-type" $ \s -> case T.toLower $ T.strip s of
-    "startup"       -> return ELTStartup
-    "http-log"      -> return ELTHttpLog
-    "webhook-log"   -> return ELTWebhookLog
+    "startup" -> return ELTStartup
+    "http-log" -> return ELTHttpLog
+    "webhook-log" -> return ELTWebhookLog
     "websocket-log" -> return ELTWebsocketLog
-    "query-log"     -> return ELTQueryLog
-    _               -> fail $ "Valid list of comma-separated log types: "
-                       <> BLC.unpack (J.encode userAllowedLogTypes)
+    "query-log" -> return ELTQueryLog
+    "livequery-poller-log" -> return ELTLivequeryPollerLog
+    _ -> fail $ "Valid list of comma-separated log types: "
+         <> BLC.unpack (J.encode userAllowedLogTypes)
 
 data InternalLogTypes
  = ILTUnstructured
  -- ^ mostly for debug logs - see @debugT@, @debugBS@ and @debugLBS@ functions
  | ILTEventTrigger
+ | ILTScheduledTrigger
  | ILTWsServer
  -- ^ internal logs for the websocket server
  | ILTPgClient
@@ -111,6 +116,7 @@ instance J.ToJSON InternalLogTypes where
   toJSON = \case
     ILTUnstructured -> "unstructured"
     ILTEventTrigger -> "event-trigger"
+    ILTScheduledTrigger -> "scheduled-trigger"
     ILTWsServer -> "ws-server"
     ILTPgClient -> "pg-client"
     ILTMetadata -> "metadata"
@@ -146,6 +152,7 @@ userAllowedLogTypes =
   , ELTWebhookLog
   , ELTWebsocketLog
   , ELTQueryLog
+  , ELTLivequeryPollerLog
   ]
 
 data LogLevel
@@ -267,3 +274,6 @@ mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = Logge
 
 eventTriggerLogType :: EngineLogType Hasura
 eventTriggerLogType = ELTInternal ILTEventTrigger
+
+scheduledTriggerLogType :: EngineLogType Hasura
+scheduledTriggerLogType = ELTInternal ILTScheduledTrigger
