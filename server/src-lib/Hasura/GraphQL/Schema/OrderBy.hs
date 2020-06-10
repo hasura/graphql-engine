@@ -52,7 +52,7 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
         FIColumn columnInfo -> do
           let fieldName = pgiName columnInfo
           pure $ P.fieldOptional fieldName Nothing orderByOperator
-            `mapField` (pure . mkOrderByItemG (RQL.AOCPG $ pgiColumn columnInfo))
+            <&> fmap (pure . mkOrderByItemG (RQL.AOCPG $ pgiColumn columnInfo)) . join
         FIRelationship relationshipInfo -> do
           let remoteTable = riRTable relationshipInfo
           fieldName <- MaybeT $ pure $ G.mkName $ relNameToTxt $ riName relationshipInfo
@@ -61,13 +61,15 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
           case riType relationshipInfo of
             ObjRel -> do
               otherTableParser <- lift $ orderByExp remoteTable perms
-              pure $ P.fieldOptional fieldName Nothing otherTableParser `mapField`
-                map (fmap $ RQL.AOCObj relationshipInfo newPerms)
+              pure $ do
+                otherTableOrderBy <- join <$> P.fieldOptional fieldName Nothing (P.nullable otherTableParser)
+                pure $ fmap (map $ fmap $ RQL.AOCObj relationshipInfo newPerms) otherTableOrderBy
             ArrRel -> do
               let aggregateFieldName = fieldName <> $$(G.litName "_aggregate")
               aggregationParser <- lift $ orderByAggregation remoteTable perms
-              pure $ P.fieldOptional aggregateFieldName Nothing aggregationParser `mapField`
-                map (fmap $ RQL.AOCAgg relationshipInfo newPerms)
+              pure $ do
+                aggregationOrderBy <- join <$> P.fieldOptional aggregateFieldName Nothing (P.nullable aggregationParser)
+                pure $ fmap (map $ fmap $ RQL.AOCAgg relationshipInfo newPerms) aggregationOrderBy
         FIComputedField _ -> empty
 
 
@@ -96,7 +98,7 @@ orderByAggregation table selectPermissions = do
       aggFields   = fmap (concat . catMaybes . concat) $ sequenceA $ catMaybes
         [ -- count
           Just $ P.fieldOptional $$(G.litName "count") Nothing orderByOperator
-            <&> pure . fmap (pure . mkOrderByItemG RQL.AAOCount)
+            <&> pure . fmap (pure . mkOrderByItemG RQL.AAOCount) . join
         , -- operators on numeric columns
           if null numColumns then Nothing else Just $
           for numericAggOperators \operator ->
@@ -113,7 +115,7 @@ orderByAggregation table selectPermissions = do
     mkField :: PGColumnInfo -> InputFieldsParser n (Maybe (PGCol, OrderInfo))
     mkField columnInfo =
       P.fieldOptional (pgiName columnInfo) (pgiDescription columnInfo) orderByOperator
-        `mapField` (pgiColumn columnInfo,)
+        <&> fmap (pgiColumn columnInfo,) . join
 
     parseOperator
       :: G.Name
@@ -139,9 +141,9 @@ orderByAggregation table selectPermissions = do
 
 
 
-orderByOperator :: MonadParse m => Parser 'Both m OrderInfo
+orderByOperator :: MonadParse m => Parser 'Both m (Maybe OrderInfo)
 orderByOperator =
-  P.enum $$(G.litName "order_by") (Just "column ordering options") $ NE.fromList
+  P.nullable $ P.enum $$(G.litName "order_by") (Just "column ordering options") $ NE.fromList
     [ ( define $$(G.litName "asc") "in ascending order, nulls last"
       , (SQL.OTAsc, SQL.NLast)
       )
