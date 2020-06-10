@@ -9,6 +9,7 @@ module Hasura.GraphQL.Context
   , QueryRootField
   , MutationDB(..)
   , MutationRootField
+  , SubscriptionRootField
   ) where
 
 import           Hasura.Prelude
@@ -66,3 +67,5 @@ data MutationDB v
   | MDBDelete (RQL.AnnDelG    v)
 
 type MutationRootField v = RootField (MutationDB v) Void J.Value
+
+type SubscriptionRootField v = RootField (QueryDB v) Void Void

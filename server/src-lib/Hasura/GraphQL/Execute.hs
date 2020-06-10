@@ -207,7 +207,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       case queryParts of
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          (queryTx, plan, genSql) <-
+          (queryTx, plan, genSql, _unprepared) <-
             EQ.convertQuerySelSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ QueryExecutionPlan $ NESeq.singleton $ ExecStepDB (queryTx, genSql)
@@ -216,7 +216,20 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
           queryTx <- EM.convertMutationSelectionSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ MutationExecutionPlan $ NESeq.singleton $ ExecStepDB queryTx
-        _ -> _
+        G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs _ selSet -> do
+          inlinedSelSet <- EI.inlineSelectionSet fragments selSet
+          -- Parse as query to check correctness
+          (_queryTx, _plan, _genSql, unpreparedAST) <-
+            EQ.convertQuerySelSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
+          noIntrospectionAST <- for unpreparedAST $ \case
+            C.RFDB x -> pure $ C.RFDB x
+            C.RFRemote _ -> throw400 NotSupported "Remote calls not supported over subscriptions"
+            C.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
+          -- TODO we should check that there's only one root field (unless the appropriate directive is set)
+          (lqOp, plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo noIntrospectionAST
+          -- getSubsOpM pgExecCtx userInfo inlinedSelSet
+          return $ SubscriptionExecutionPlan $ NESeq.singleton $ ExecStepDB lqOp
+
       -- forM partialExecPlan $ \(gCtx, rootSelSet) ->
       --   case rootSelSet of
       --     VQ.RMutation selSet ->
@@ -230,37 +243,24 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       --       traverse_ (addPlanToCache . EP.RPSubs) plan
       --       return $ ExOpSubs lqOp
 
--- getSubsOpM
---   :: ( MonadError QErr m
---      , MonadReader r m
---      , Has SQLGenCtx r
---      , Has UserInfo r
---      , MonadIO m
---      )
---   => PGExecCtx
---   -> G.Selection G.Name
---   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
--- getSubsOpM pgExecCtx fld =
---   case VQ._fName fld of
---     "__typename" ->
---       _throwVE "you cannot create a subscription on '__typename' field"
---     _            -> do
---       (astUnresolved, finalReusability) <- runReusabilityTWith initialReusability $
---         GR.queryFldToPGAST fld
---       let varTypes = finalReusability ^? _Reusable
---       EL.buildLiveQueryPlan pgExecCtx (VQ._fAlias fld) astUnresolved varTypes
---
--- getSubsOp
---   :: ( MonadError QErr m
---      , MonadIO m
---      )
---   => PGExecCtx
---   -> SQLGenCtx
---   -> UserInfo
---   -> G.Selection G.Name
---   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
--- getSubsOp pgExecCtx sqlGenCtx userInfo fld =
---   runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx queryReusability fld
+{-
+getSubsOpM
+  :: ( MonadError QErr m
+     , MonadIO m
+     )
+  => PGExecCtx
+  -> UserInfo
+  -> G.SelectionSet G.NoFragments G.Name
+  -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
+getSubsOpM pgExecCtx userInfo flds =
+  case G._fName flds of
+    "__typename" ->
+      _throwVE "you cannot create a subscription on '__typename' field"
+    _            -> do
+      (astUnresolved, finalReusability) <- _queryFldToPGAST fld
+      let varTypes = finalReusability ^? _Reusable
+      EL.buildLiveQueryPlan pgExecCtx userInfo (G._fAlias fld) astUnresolved varTypes
+-}
 
 execRemoteGQ
   :: ( HasVersion

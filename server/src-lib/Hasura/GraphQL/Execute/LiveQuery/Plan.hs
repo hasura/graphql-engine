@@ -5,7 +5,7 @@
 module Hasura.GraphQL.Execute.LiveQuery.Plan
   ( MultiplexedQuery
   , mkMultiplexedQuery
-  , resolveMultiplexedValue
+--  , resolveMultiplexedValue
 
   , CohortId
   , newCohortId
@@ -33,25 +33,31 @@ import qualified Data.Text                              as T
 import qualified Data.UUID.V4                           as UUID
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.Sequence                          as Seq
 
 -- remove these when array encoding is merged
 import qualified Database.PG.Query.PTI                  as PTI
 import qualified PostgreSQL.Binary.Encoding             as PE
 
 import           Control.Lens
-import           Data.Has
 import           Data.UUID                              (UUID)
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.RQL.DML.Select                  as DS
 import qualified Hasura.SQL.DML                         as S
+--import qualified Hasura.GraphQL.Execute.Query           as GEQ
 
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Parser.Column
+import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.GraphQL.Execute.Query
 import           Hasura.RQL.Types
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.GraphQL.Context
 
 -- -------------------------------------------------------------------------------------------------
 -- Multiplexed queries
@@ -59,34 +65,59 @@ import           Hasura.SQL.Value
 newtype MultiplexedQuery = MultiplexedQuery { unMultiplexedQuery :: Q.Query }
   deriving (Show, Eq, Hashable, J.ToJSON)
 
-mkMultiplexedQuery :: Q.Query -> MultiplexedQuery
-mkMultiplexedQuery baseQuery =
-  MultiplexedQuery . Q.fromText $ foldMap Q.getQueryText [queryPrefix, baseQuery, querySuffix]
+toSQLSelect :: SubscriptionRootField S.SQLExp -> S.Select
+toSQLSelect = \case
+  RFDB (QDBPrimaryKey s)  -> DS.mkSQLSelect DS.JASSingleObject s
+  RFDB (QDBSimple s)      -> DS.mkSQLSelect DS.JASMultipleRows s
+  RFDB (QDBAggregation s) -> DS.mkAggSelect s
+  RFRemote x -> case x of
+  RFRaw x -> case x of
+  -- QRFActionSelect s -> DS.mkSQLSelect DS.JASSingleObject s
+  -- QRFActionExecuteObject s -> DS.mkSQLSelect DS.JASSingleObject s
+  -- QRFActionExecuteList s -> DS.mkSQLSelect DS.JASSingleObject s
+
+mkMultiplexedQuery :: Map.HashMap G.Name (SubscriptionRootField S.SQLExp) -> MultiplexedQuery
+mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
+  { S.selExtr =
+    -- SELECT _subs.result_id, _fld_resp.root AS result
+    [ S.Extractor (mkQualIden (Iden "_subs") (Iden "result_id")) Nothing
+    , S.Extractor (mkQualIden (Iden "_fld_resp") (Iden "root")) (Just . S.Alias $ Iden "result") ]
+  , S.selFrom = Just $ S.FromExp [S.FIJoin $
+      S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)]
+  }
   where
-    queryPrefix =
-      [Q.sql|
-        select
-          _subs.result_id, _fld_resp.root as result
-          from
-            unnest(
-              $1::uuid[], $2::json[]
-            ) _subs (result_id, result_vars)
-          left outer join lateral
-            (
-        |]
+    -- FROM unnest($1::uuid[], $2::json[]) _subs (result_id, result_vars)
+    subsInputFromItem = S.FIUnnest
+      [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
+      (S.Alias $ Iden "_subs")
+      [S.SEIden $ Iden "result_id", S.SEIden $ Iden "result_vars"]
 
-    querySuffix =
-      [Q.sql|
-            ) _fld_resp ON ('true')
-        |]
+    -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
+    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.Alias $ Iden "_fld_resp")
+    selectRootFields = S.mkSelect
+      { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Iden "root")]
+      , S.selFrom = Just . S.FromExp $
+          flip map (Map.toList rootFields) $ \(fieldAlias, resolvedAST) ->
+            S.mkSelFromItem (toSQLSelect resolvedAST) (S.Alias $ aliasToIden fieldAlias)
+      }
 
+    -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
+    rootFieldsJsonAggregate = S.SEFnApp "json_build_object" rootFieldsJsonPairs Nothing
+    rootFieldsJsonPairs = flip concatMap (Map.keys rootFields) $ \fieldAlias ->
+      [ S.SELit (G.unName fieldAlias)
+      , mkQualIden (aliasToIden fieldAlias) (Iden "root") ]
+
+    mkQualIden prefix = S.SEQIden . S.QIden (S.QualIden prefix Nothing) -- TODO fix this Nothing of course
+    aliasToIden = Iden . G.unName
+
+-- TODO fix this comment
 -- | Resolves an 'GR.UnresolvedVal' by converting 'GR.UVPG' values to SQL expressions that refer to
 -- the @result_vars@ input object, collecting variable values along the way.
 resolveMultiplexedValue
-  :: (MonadState (HashMap G.Name (WithScalarType PGScalarValue), Seq (WithScalarType PGScalarValue)) m)
+  :: (MonadState (HashMap G.Name PGColumnValue, Seq PGColumnValue) m)
   => UnpreparedValue -> m S.SQLExp
 resolveMultiplexedValue = \case
-  UVParameter PGColumnValue{ pcvValue = colVal } _ -> do
+  UVParameter colVal varM -> do
     varJsonPath <- case _varM of
       Just varName -> do
         modifying _1 $ Map.insert varName colVal
@@ -95,16 +126,18 @@ resolveMultiplexedValue = \case
         syntheticVarIndex <- gets (length . snd)
         modifying _2 (|> colVal)
         pure ["synthetic", T.pack $ show syntheticVarIndex]
-    pure $ fromResVars (PGTypeScalar $ pstType colVal) varJsonPath
-  UVSessionVar ty sessVar -> pure $ fromResVars ty ["session", T.toLower sessVar]
+    pure $ fromResVars (PGTypeScalar $ pstType $ pcvValue colVal) varJsonPath
+  UVSessionVar ty sessVar -> pure $ fromResVars ty ["session", _sessionVariableToText sessVar]
   UVLiteral sqlExp -> pure sqlExp
   UVSession -> pure $ fromResVars (PGTypeScalar PGJSON) ["session"]
   where
-    fromResVars ty jPath =
-      flip S.SETyAnn (S.mkTypeAnn ty) $ S.SEOpApp (S.SQLOp "#>>")
+    fromResVars pgType jPath = addTypeAnnotation pgType $ S.SEOpApp (S.SQLOp "#>>")
       [ S.SEQIden $ S.QIden (S.QualIden (Iden "_subs") Nothing) (Iden "result_vars")
       , S.SEArray $ map S.SELit jPath
       ]
+    addTypeAnnotation pgType = flip S.SETyAnn (S.mkTypeAnn pgType) . case pgType of
+      PGTypeScalar scalarType -> withConstructorFn scalarType
+      PGTypeArray _           -> id
 
 newtype CohortId = CohortId { unCohortId :: UUID }
   deriving (Show, Eq, Hashable, J.ToJSON, Q.FromCol)
@@ -227,7 +260,6 @@ data LiveQueryPlan
 data ParameterizedLiveQueryPlan
   = ParameterizedLiveQueryPlan
   { _plqpRole  :: !RoleName
-  , _plqpAlias :: !G.Name
   , _plqpQuery :: !MultiplexedQuery
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ParameterizedLiveQueryPlan)
@@ -236,7 +268,7 @@ data ReusableLiveQueryPlan
   = ReusableLiveQueryPlan
   { _rlqpParameterizedPlan       :: !ParameterizedLiveQueryPlan
   , _rlqpSyntheticVariableValues :: !ValidatedSyntheticVariables
-  , _rlqpQueryVariableTypes      :: !(HashMap G.Name PGColumnType)
+  , _rlqpQueryVariableTypes      :: (HashMap G.Name PGColumnType)
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 
@@ -244,23 +276,64 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 -- possible.
 buildLiveQueryPlan
   :: ( MonadError QErr m
-     , MonadReader r m
-     , Has UserInfo r
      , MonadIO m
      )
   => PGExecCtx
-  -> G.Name
-  -> G.SelectionSet G.FragmentSpread G.Name
+  -> UserInfo
+  -> InsOrdHashMap G.Name (SubscriptionRootField UnpreparedValue)
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
-buildLiveQueryPlan pgExecCtx fieldAlias astUnresolved = do
-  _
-  -- userInfo <- asks getter
-  --
+buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
+  -- ((resolvedASTs, (queryVariableValues, syntheticVariableValues)), finalReusability) <-
+  --   GV.runReusabilityTWith initialReusability . flip runStateT mempty $
+  --     fmap Map.fromList . for (toList fields) $ \field -> case GV._fName field of
+  --       "__typename" -> throwVE "you cannot create a subscription on '__typename' field"
+  --       _ -> do
+  --         unresolvedAST <- GR.queryFldToPGAST field actionExecutioner
+  --         resolvedAST <- GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
+
+  --         let (_, remoteJoins) = GR.toPGQuery resolvedAST
+  --         -- Reject remote relationships in subscription live query
+  --         when (remoteJoins /= mempty) $
+  --              throw400 NotSupported
+  --                      "Remote relationships are not allowed in subscriptions"
+  --         pure (GV._fAlias field, resolvedAST)
+
+  -- Transform the RQL AST into a prepared SQL query
+{-  preparedAST <- for unpreparedAST \unpreparedQuery -> do
+    (preparedQuery, PlanningSt _ planVars planVals)
+      <- flip runStateT initPlanningSt
+      $  traverseSubscriptionRootField prepareWithPlan unpreparedQuery
+    pure $! irToRootFieldPlan planVars planVals preparedQuery
+-}
+  (preparedAST, (queryVariableValues, querySyntheticVariableValues)) <- flip runStateT (_bla, Seq.empty) $
+    for unpreparedAST \unpreparedQuery -> do
+    traverseQueryRootField resolveMultiplexedValue unpreparedQuery
+
+
+
+  let multiplexedQuery = mkMultiplexedQuery $ OMap.toHashMap preparedAST
+      roleName = userRole userInfo
+      parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery
+
+  -- We need to ensure that the values provided for variables are correct according to Postgres.
+  -- Without this check an invalid value for a variable for one instance of the subscription will
+  -- take down the entire multiplexed query.
+  validatedQueryVars <- validateVariables pgExecCtx $ fmap pcvValue queryVariableValues
+  validatedSyntheticVars <- validateVariables pgExecCtx $ map pcvValue $ toList querySyntheticVariableValues
+
+  let -- TODO validatedQueryVars validatedSyntheticVars
+      cohortVariables = CohortVariables (userVars userInfo) validatedQueryVars validatedSyntheticVars
+
+      plan = LiveQueryPlan parameterizedPlan cohortVariables
+      -- varTypes = finalReusability ^? GV._Reusable
+      reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars <$> _varTypes
+  pure (plan, reusablePlan)
+
   -- (astResolved, (queryVariableValues, syntheticVariableValues)) <- flip runStateT mempty $
-  --   GR.traverseQueryRootFldAST resolveMultiplexedValue astUnresolved
-  -- let pgQuery = mkMultiplexedQuery $ GR.toPGQuery astResolved
+  --   GEQ.traverseSubscriptionRootField resolveMultiplexedValue _astUnresolved
+  -- let pgQuery = mkMultiplexedQuery $ _toPGQuery astResolved
   --     parameterizedPlan = ParameterizedLiveQueryPlan (userRole userInfo) fieldAlias pgQuery
-  --
+
   -- -- We need to ensure that the values provided for variables
   -- -- are correct according to Postgres. Without this check
   -- -- an invalid value for a variable for one instance of the
@@ -269,7 +342,7 @@ buildLiveQueryPlan pgExecCtx fieldAlias astUnresolved = do
   -- validatedSyntheticVars <- validateVariables pgExecCtx (toList syntheticVariableValues)
   -- let cohortVariables = CohortVariables (userVars userInfo) validatedQueryVars validatedSyntheticVars
   --     plan = LiveQueryPlan parameterizedPlan cohortVariables
-  --     reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars <$> varTypes
+  --     reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars <$> _varTypes
   -- pure (plan, reusablePlan)
 
 reuseLiveQueryPlan

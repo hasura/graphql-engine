@@ -32,7 +32,7 @@ import           Hasura.GraphQL.Execute.LiveQuery.Poll
 
 -- | The top-level datatype that holds the state for all active live queries.
 --
--- NOTE!: This must be kept consistent with a websocket connection's 'OperationMap', in 'onClose' 
+-- NOTE!: This must be kept consistent with a websocket connection's 'OperationMap', in 'onClose'
 -- and 'onStart'.
 data LiveQueriesState
   = LiveQueriesState
@@ -102,12 +102,12 @@ addLiveQuery logger lqState plan onResultAction = do
   where
     LiveQueriesState lqOpts pgExecCtx lqMap = lqState
     LiveQueriesOptions batchSize refetchInterval = lqOpts
-    LiveQueryPlan (ParameterizedLiveQueryPlan role alias query) cohortKey = plan
+    LiveQueryPlan (ParameterizedLiveQueryPlan role query) cohortKey = plan
 
     handlerId = PollerKey role query
 
     addToCohort sinkId handlerC =
-      TMap.insert (Subscriber alias onResultAction) sinkId $ _cNewSubscribers handlerC
+      TMap.insert (Subscriber onResultAction) sinkId $ _cNewSubscribers handlerC
 
     addToPoller sinkId responseId handler = do
       newCohort <- Cohort responseId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new

@@ -4,6 +4,8 @@ module Hasura.GraphQL.Execute.Query
   , ReusableQueryPlan
   , GeneratedSqlMap
   , PreparedSql(..)
+  , traverseQueryRootField -- for live query planning
+  , irToRootFieldPlan
   ) where
 
 import qualified Data.Aeson                             as J
@@ -24,6 +26,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Monad
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
@@ -142,11 +145,11 @@ irToRootFieldPlan vars prepped = \case
   RFRaw s                 -> RFPRaw $ LBS.toStrict $ J.encode s
 
 traverseQueryRootField
-  :: forall f a b
+  :: forall f a b c d
    . Applicative f
   => (a -> f b)
-  -> QueryRootField a
-  -> f (QueryRootField b)
+  -> RootField (QueryDB a) c d
+  -> f (RootField (QueryDB b) c d)
 traverseQueryRootField f =
   traverseDB f'
   where
@@ -163,7 +166,7 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
+  -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap, (InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
@@ -179,7 +182,7 @@ convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
 
   -- Build and return an executable action from the generated SQL
   (tx, sql) <- mkCurPlanTx usrVars (OMap.toList queryPlans)
-  pure (tx, Nothing, sql) -- FIXME ReusableQueryPlan
+  pure (tx, Nothing, sql, unpreparedQueries) -- FIXME ReusableQueryPlan
   where
     reportParseErrors errs = case NE.head errs of
       -- TODO: Our error reporting machinery doesn’t currently support reporting
