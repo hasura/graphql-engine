@@ -1,0 +1,54 @@
+description: Get 2nd page of articles with 3 items as user role
+url: /v1/relay
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '2'
+query:
+  query: |
+    query {
+      article_connection(
+        first: 3
+        after: "eyJpZCIgOiA0fQ=="
+      ){
+        pageInfo{
+          startCursor
+          endCursor
+          hasPreviousPage
+          hasNextPage
+        }
+        edges{
+          cursor
+          node{
+            id
+            title
+            content
+            is_published
+            author_id
+          }
+        }
+      }
+    }
+response:
+  data:
+    article_connection:
+      pageInfo:
+        startCursor: eyJpZCIgOiA1fQ==
+        endCursor: eyJpZCIgOiA2fQ==
+        hasPreviousPage: true
+        hasNextPage: false
+      edges:
+      - cursor: eyJpZCIgOiA1fQ==
+        node:
+          id: WyJwdWJsaWMiLCAiYXJ0aWNsZSIsIDVd
+          title: Article 5
+          content: Sample article content 5
+          is_published: false
+          author_id: 2
+      - cursor: eyJpZCIgOiA2fQ==
+        node:
+          id: WyJwdWJsaWMiLCAiYXJ0aWNsZSIsIDZd
+          title: Article 6
+          content: Sample article content 6
+          is_published: true
+          author_id: 3

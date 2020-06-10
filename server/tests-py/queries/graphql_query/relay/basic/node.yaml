@@ -5,8 +5,9 @@ query:
   variables:
     author_id: WyJwdWJsaWMiLCJhdXRob3IiLDJdCg==
     article_id: WyJwdWJsaWMiLCJhcnRpY2xlIiwzXQo=
+    non_exist_article_id: WyJwdWJsaWMiLCJhcnRpY2xlIiwxMDBdCg==
   query: |
-    query nodeQuery($author_id: ID!, $article_id: ID!){
+    query nodeQuery($author_id: ID!, $article_id: ID!, $non_exist_article_id: ID!){
       author_node: node(id: $author_id){
         __typename
         ... on author{
@@ -41,6 +42,12 @@ query:
           }
         }
       }
+      non_exist_article: node(id: $non_exist_article_id){
+        ... on article{
+          title
+          content
+        }
+      }
     }
 response:
   data:
@@ -65,3 +72,4 @@ response:
       content: Sample article content 3
       author:
         name: Author 1
+    non_exist_article: null

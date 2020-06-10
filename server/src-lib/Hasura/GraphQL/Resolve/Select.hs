@@ -766,7 +766,7 @@ resolveNodeId
   => Field -> m NodeIdData
 resolveNodeId field =
   withPathK "selectionSet" $ fieldAsPath field $
-  getArg (_fArguments field) "id" >>= asPGColText >>=
+  withArg (_fArguments field) "id" $ asPGColText >=>
   either (throwInvalidNodeId . T.pack) pure . J.eitherDecode . base64Decode
 
 convertNodeSelect
@@ -796,8 +796,12 @@ convertNodeSelect selOpCtx pkeyColumns columnValues field =
     pkeyColumnValues <- alignPkeyColumnValues
     unresolvedPkeyValues <- flip Map.traverseWithKey pkeyColumnValues $
       \columnInfo jsonValue ->
-        (,columnInfo) . UVPG . AnnPGVal Nothing False <$>
-        parsePGScalarValue (pgiType columnInfo) jsonValue
+        let modifyErrFn t = "value of column " <> pgiColumn columnInfo
+                             <<> " in node id: " <> t
+        in modifyErr modifyErrFn $
+           (,columnInfo) . UVPG . AnnPGVal Nothing False <$>
+           parsePGScalarValue (pgiType columnInfo) jsonValue
+
     -- Generate the bool expression from the primary key column values
     let pkeyBoolExp = BoolAnd $ flip map (Map.elems unresolvedPkeyValues) $
           \(unresolvedValue, columnInfo) -> (BoolFld . AVCol columnInfo) [AEQ True unresolvedValue]

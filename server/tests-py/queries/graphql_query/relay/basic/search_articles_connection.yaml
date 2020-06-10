@@ -1,0 +1,33 @@
+description: Query search_articles function with edges
+url: /v1/relay
+status: 200
+query:
+  query: |
+    query {
+      search_articles_connection(args: {search: "6"}){
+        edges{
+          cursor
+          node{
+            id
+            title
+            content
+            author{
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+response:
+  data:
+    search_articles_connection:
+      edges:
+      - cursor: eyJpZCIgOiA2fQ==
+        node:
+          id: WyJwdWJsaWMiLCAiYXJ0aWNsZSIsIDZd
+          title: Article 6
+          content: Sample article content 6
+          author:
+            id: WyJwdWJsaWMiLCAiYXV0aG9yIiwgM10=
+            name: Author 3

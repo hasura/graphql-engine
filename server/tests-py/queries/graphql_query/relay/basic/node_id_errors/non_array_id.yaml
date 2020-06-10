@@ -1,4 +1,4 @@
-description: Query node interface with invalid node id
+description: Query node interface with id as non array JSON string
 url: /v1/relay
 status: 200
 query:
@@ -14,7 +14,7 @@ query:
 response:
   errors:
   - extensions:
-      path: $.selectionSet.node
+      path: $.selectionSet.node.args.id
       code: validation-failed
     message: 'the node id is invalid: Error in $: parsing [] failed, expected Array,
       but encountered Object'

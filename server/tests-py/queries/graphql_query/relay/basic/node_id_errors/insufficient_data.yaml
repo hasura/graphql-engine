@@ -1,0 +1,21 @@
+description: Query node interface with insufficient items in node id json array
+url: /v1/relay
+status: 200
+query:
+  query: |
+    query {
+      node(id: "WyJwdWJsaWMiLCAidXNlciJdCg=="){
+        ... on user{
+          first_name
+          last_name
+          age
+          address
+        }
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: $.selectionSet.node.args.id
+      code: validation-failed
+    message: 'the node id is invalid: Error in $: expecting at least 3 items'

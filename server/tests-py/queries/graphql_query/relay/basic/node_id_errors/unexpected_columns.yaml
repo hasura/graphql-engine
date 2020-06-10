@@ -1,0 +1,21 @@
+description: Query node interface with an unexpected column value in node id json array
+url: /v1/relay
+status: 200
+query:
+  query: |
+    query {
+      node(id: "WyJwdWJsaWMiLCAidXNlciIsICJmaXJzdF8yIiwgImxhc3RfMiIsIDJdCg=="){
+        ... on user{
+          first_name
+          last_name
+          age
+          address
+        }
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: "$.selectionSet.node"
+      code: validation-failed
+    message: 'the node id is invalid: unexpected column values [2]'
