@@ -47,9 +47,13 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Long:         "Create sql and yaml files required for a migration",
 		Example:      migrateCreateCmdExamples,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		Args:         cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.name = args[0]
+			if len(args) > 0 {
+				opts.name = args[0]
+			} else {
+				opts.name = "sql_migration"
+			}
 			opts.EC.Spin("Creating migration files...")
 			version, err := opts.run()
 			opts.EC.Spinner.Stop()
@@ -206,13 +210,13 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		}
 	}
 
-	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version == cli.V1 {
+	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version == cli.V1 && !(o.flags.Changed("up-sql") && o.flags.Changed("down-sql")) {
 		// Set empty data for [up|down].yaml
 		createOptions.MetaUp = []byte(`[]`)
 		createOptions.MetaDown = []byte(`[]`)
 	}
 
-	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version != cli.V1 {
+	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version != cli.V1 && !(o.flags.Changed("up-sql") && o.flags.Changed("down-sql")) {
 		// Set empty data for [up|down].sql
 		createOptions.SQLUp = []byte(``)
 		createOptions.SQLDown = []byte(``)
