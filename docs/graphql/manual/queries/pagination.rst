@@ -29,88 +29,122 @@ Limit results
 -------------
 **Example:** Fetch the first 5 authors from the list of all authors:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      author(
-        limit: 5
-      ) {
-        id
-        name
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 1,
-            "name": "Justin"
-          },
-          {
-            "id": 2,
-            "name": "Beltran"
-          },
-          {
-            "id": 3,
-            "name": "Sidney"
-          },
-          {
-            "id": 4,
-            "name": "Anjela"
-          },
-          {
-            "id": 5,
-            "name": "Amii"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          author(
+            limit: 5
+          ) {
+            id
+            name
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "author": [
+              {
+                "id": 1,
+                "name": "Justin"
+              },
+              {
+                "id": 2,
+                "name": "Beltran"
+              },
+              {
+                "id": 3,
+                "name": "Sidney"
+              },
+              {
+                "id": 4,
+                "name": "Anjela"
+              },
+              {
+                "id": 5,
+                "name": "Amii"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { author(limit: 5) { id name }}"
       }
-    }
 
 Limit results from an offset
 ----------------------------
 **Example:** Fetch 5 authors from the list of all authors, starting with the 6th one:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      author(
-        limit: 5,
-        offset:5
-      ) {
-        id
-        name
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 6,
-            "name": "Corny"
-          },
-          {
-            "id": 7,
-            "name": "Berti"
-          },
-          {
-            "id": 8,
-            "name": "April"
-          },
-          {
-            "id": 9,
-            "name": "Ninnetta"
-          },
-          {
-            "id": 10,
-            "name": "Lyndsay"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          author(
+            limit: 5,
+            offset:5
+          ) {
+            id
+            name
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "author": [
+              {
+                "id": 6,
+                "name": "Corny"
+              },
+              {
+                "id": 7,
+                "name": "Berti"
+              },
+              {
+                "id": 8,
+                "name": "April"
+              },
+              {
+                "id": 9,
+                "name": "Ninnetta"
+              },
+              {
+                "id": 10,
+                "name": "Lyndsay"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { author(limit: 5, offset: 5) { id name }}"
       }
-    }
 
 .. _nested_paginate:
 
@@ -118,85 +152,102 @@ Limit results in a nested object
 --------------------------------
 **Example:** Fetch a list of authors and a list of their first 2 articles:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      author {
-        id
-        name
-        articles (
-          limit: 2
-          offset: 0
-        ) {
-          id
-          title
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          author {
+            id
+            name
+            articles (
+              limit: 2
+              offset: 0
+            ) {
+              id
+              title
+            }
+          }
         }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 1,
-            "name": "Justin",
-            "articles": [
-              {
-                "id": 15,
-                "title": "vel dapibus at"
-              },
-              {
-                "id": 16,
-                "title": "sem duis aliquam"
-              }
-            ]
-          },
-          {
-            "id": 2,
-            "name": "Beltran",
-            "articles": [
-              {
-                "id": 2,
-                "title": "a nibh"
-              },
-              {
-                "id": 9,
-                "title": "sit amet"
-              }
-            ]
-          },
-          {
-            "id": 3,
-            "name": "Sidney",
-            "articles": [
-              {
-                "id": 6,
-                "title": "sapien ut"
-              },
-              {
-                "id": 11,
-                "title": "turpis eget"
-              }
-            ]
-          },
-          {
-            "id": 4,
-            "name": "Anjela",
-            "articles": [
+      :response:
+        {
+          "data": {
+            "author": [
               {
                 "id": 1,
-                "title": "sit amet"
+                "name": "Justin",
+                "articles": [
+                  {
+                    "id": 15,
+                    "title": "vel dapibus at"
+                  },
+                  {
+                    "id": 16,
+                    "title": "sem duis aliquam"
+                  }
+                ]
+              },
+              {
+                "id": 2,
+                "name": "Beltran",
+                "articles": [
+                  {
+                    "id": 2,
+                    "title": "a nibh"
+                  },
+                  {
+                    "id": 9,
+                    "title": "sit amet"
+                  }
+                ]
               },
               {
                 "id": 3,
-                "title": "amet justo morbi"
+                "name": "Sidney",
+                "articles": [
+                  {
+                    "id": 6,
+                    "title": "sapien ut"
+                  },
+                  {
+                    "id": 11,
+                    "title": "turpis eget"
+                  }
+                ]
+              },
+              {
+                "id": 4,
+                "name": "Anjela",
+                "articles": [
+                  {
+                    "id": 1,
+                    "title": "sit amet"
+                  },
+                  {
+                    "id": 3,
+                    "title": "amet justo morbi"
+                  }
+                ]
               }
             ]
           }
-        ]
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { author { id name articles (limit: 2 offset: 0) { id title }}}"
       }
-    }
 
 Keyset cursor based pagination
 ------------------------------
@@ -211,45 +262,62 @@ position of the row in the dataset as done by ``offset``, and that duplicate rec
 **For example**, consider the following query to fetch a list of authors with a ``where`` clause used in place of
 ``offset``:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      author(
-        limit: 5,
-        where: { id: {_gt: 5} }
-      ) {
-        id
-        name
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 6,
-            "name": "Corny"
-          },
-          {
-            "id": 7,
-            "name": "Berti"
-          },
-          {
-            "id": 8,
-            "name": "April"
-          },
-          {
-            "id": 9,
-            "name": "Ninnetta"
-          },
-          {
-            "id": 10,
-            "name": "Lyndsay"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          author(
+            limit: 5,
+            where: { id: {_gt: 5} }
+          ) {
+            id
+            name
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "author": [
+              {
+                "id": 6,
+                "name": "Corny"
+              },
+              {
+                "id": 7,
+                "name": "Berti"
+              },
+              {
+                "id": 8,
+                "name": "April"
+              },
+              {
+                "id": 9,
+                "name": "Ninnetta"
+              },
+              {
+                "id": 10,
+                "name": "Lyndsay"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { author(limit: 5, where: { id: {_gt: 5} }) { id name }}"
       }
-    }
 
 Here we are fetching authors where the value of ``id`` is greater than 5. This will always skip the previously fetched
 results which would have been ids 1 to 5, ensuring no duplicate results. Column ``id`` is acting as the cursor here,
@@ -278,48 +346,65 @@ the number of pages based on the limit that is set.
 **Example:** Fetch a list of articles where a certain condition is true and get their count. Then limit the number of
 articles to return.
 
-.. graphiql::
-  :view_only:
-  :query:
-    query articles ($where: articles_bool_exp!) {
-      articles_aggregate(where: $where) {
-        aggregate {
-          totalCount: count
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query articles ($where: articles_bool_exp!) {
+          articles_aggregate(where: $where) {
+            aggregate {
+              totalCount: count
+            }
+          }
+          articles (where: $where limit: 4) {
+            id
+            title
+          }
         }
-      }
-      articles (where: $where limit: 4) {
-        id
-        title
-      }
-    }
-  :response:
-    {
-      "data": {
-        "articles_aggregate": {
-          "aggregate": {
-            "totalCount": 8
+      :response:
+        {
+          "data": {
+            "articles_aggregate": {
+              "aggregate": {
+                "totalCount": 8
+              }
+            },
+            "articles": [
+              {
+                "id": 33,
+                "title": "How to make fajitas"
+              },
+              {
+                "id": 31,
+                "title": "How to make fajitas"
+              },
+              {
+                "id": 32,
+                "title": "How to make fajitas"
+              },
+              {
+                "id": 2,
+                "title": "How to climb mount everest"
+              }
+            ]
           }
-        },
-        "articles": [
-          {
-            "id": 33,
-            "title": "How to make fajitas"
-          },
-          {
-            "id": 31,
-            "title": "How to make fajitas"
-          },
-          {
-            "id": 32,
-            "title": "How to make fajitas"
-          },
-          {
-            "id": 2,
-            "title": "How to climb mount everest"
-          }
-        ]
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query articles ($where: articles_bool_exp!) { articles_aggregate(where: $where) { aggregate { totalCount: count }} articles (where: $where limit: 4) { id title }}"
       }
-    }
 
 .. admonition:: Caveat
 

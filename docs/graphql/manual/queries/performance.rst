@@ -211,11 +211,34 @@ Whenever there is a sequential scan, it can be optimized by adding an index.
 
   .. tab:: Console
 
-      An index can be added in the ``SQL -> Data`` tab in the Hasura console:
+   An index can be added in the ``SQL -> Data`` tab in the Hasura console:
+
+  .. tab:: CLI
+
+   :ref:`Create a migration manually <manual_migrations>` and add your create index statement to it.
+
+   Then apply the migration by running:
+
+   .. code-block:: bash
+
+      hasura migrate apply  
 
   .. tab:: API
 
-      An index can be added via the :ref:`run_sql <run_sql>` metadata API.
+   You can add a view by making an API call to the :ref:`run_sql API <run_sql>`:
+
+   .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+            "type": "run_sql",
+            "args": {
+               "sql": "<create index statement>"
+            }
+      }
 
 The following statement sets an index on ``name`` in the ``authors`` table.
 

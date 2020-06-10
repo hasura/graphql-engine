@@ -394,45 +394,62 @@ dictionary sort)*:
 
 Fetch a list of articles that were published on or after date "01/01/2018":
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      article(
-        where: {published_on: {_gte: "2018-01-01"}}
-      ) {
-        id
-        title
-        published_on
-      }
-    }
-  :response:
-    {
-      "data": {
-        "article": [
-          {
-            "id": 2,
-            "title": "a nibh",
-            "published_on": "2018-06-10"
-          },
-          {
-            "id": 6,
-            "title": "sapien ut",
-            "published_on": "2018-01-08"
-          },
-          {
-            "id": 13,
-            "title": "vulputate elementum",
-            "published_on": "2018-03-10"
-          },
-          {
-            "id": 15,
-            "title": "vel dapibus at",
-            "published_on": "2018-01-02"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          article(
+            where: {published_on: {_gte: "2018-01-01"}}
+          ) {
+            id
+            title
+            published_on
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "article": [
+              {
+                "id": 2,
+                "title": "a nibh",
+                "published_on": "2018-06-10"
+              },
+              {
+                "id": 6,
+                "title": "sapien ut",
+                "published_on": "2018-01-08"
+              },
+              {
+                "id": 13,
+                "title": "vulputate elementum",
+                "published_on": "2018-03-10"
+              },
+              {
+                "id": 15,
+                "title": "vel dapibus at",
+                "published_on": "2018-01-02"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { article(where: {published_on: {_gte: \"2018-01-01\"}}) { id title published_on }}"
       }
-    }
 
 List based search operators (_in, _nin)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -449,84 +466,118 @@ The following are examples of using these operators on different types:
 
 Fetch a list of articles rated 1, 3 or 5:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      article(
-        where: {rating: {_in: [1,3,5]}}
-      ) {
-        id
-        title
-        rating
-      }
-    }
-  :response:
-    {
-      "data": {
-        "article": [
-          {
-            "id": 1,
-            "title": "sit amet",
-            "rating": 1
-          },
-          {
-            "id": 2,
-            "title": "a nibh",
-            "rating": 3
-          },
-          {
-            "id": 6,
-            "title": "sapien ut",
-            "rating": 1
-          },
-          {
-            "id": 17,
-            "title": "montes nascetur ridiculus",
-            "rating": 5
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          article(
+            where: {rating: {_in: [1,3,5]}}
+          ) {
+            id
+            title
+            rating
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "article": [
+              {
+                "id": 1,
+                "title": "sit amet",
+                "rating": 1
+              },
+              {
+                "id": 2,
+                "title": "a nibh",
+                "rating": 3
+              },
+              {
+                "id": 6,
+                "title": "sapien ut",
+                "rating": 1
+              },
+              {
+                "id": 17,
+                "title": "montes nascetur ridiculus",
+                "rating": 5
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { article(where: {rating: {_in: [1,3,5]}}) { id title rating }}"
       }
-    }
 
 **Example: String or Text**
 
 Fetch a list of those authors whose names are NOT part of a list:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      author(
-        where: {name: {_nin: ["Justin","Sidney","April"]}}
-      ) {
-        id
-        name
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 2,
-            "name": "Beltran"
-          },
-          {
-            "id": 4,
-            "name": "Anjela"
-          },
-          {
-            "id": 5,
-            "name": "Amii"
-          },
-          {
-            "id": 6,
-            "name": "Corny"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          author(
+            where: {name: {_nin: ["Justin","Sidney","April"]}}
+          ) {
+            id
+            name
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "author": [
+              {
+                "id": 2,
+                "name": "Beltran"
+              },
+              {
+                "id": 4,
+                "name": "Anjela"
+              },
+              {
+                "id": 5,
+                "name": "Amii"
+              },
+              {
+                "id": 6,
+                "name": "Corny"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { author(where: {name: {_nin: [\"Justin\",\"Sidney\",\"April\"]}}) { id name }}"
       }
-    }
 
 Text search or pattern matching operators (_like, _similar, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -540,34 +591,51 @@ For more details on text search operators and Postgres equivalents, refer to the
 
 Fetch a list of articles whose titles contain the word “amet”:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      article(
-        where: {title: {_like: "%amet%"}}
-      ) {
-        id
-        title
-      }
-    }
-  :response:
-    {
-    "data": {
-      "article": [
-        {
-          "id": 1,
-          "title": "sit amet"
-        },
-        {
-          "id": 3,
-          "title": "amet justo morbi"
-        },
-        {
-          "id": 9,
-          "title": "sit amet"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          article(
+            where: {title: {_like: "%amet%"}}
+          ) {
+            id
+            title
+          }
         }
-      ]
+      :response:
+        {
+        "data": {
+          "article": [
+            {
+              "id": 1,
+              "title": "sit amet"
+            },
+            {
+              "id": 3,
+              "title": "amet justo morbi"
+            },
+            {
+              "id": 9,
+              "title": "sit amet"
+            }
+          ]
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { article(where: {title: {_like: \"%amet%\"}}) { id title }}"
+      }
 
 .. note::
 
@@ -578,40 +646,57 @@ Fetch a list of articles whose titles contain the word “amet”:
 
 Fetch a list of authors whose names begin with A or C:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      author(
-        where: {name: {_similar: "(A|C)%"}}
-      ) {
-        id
-        name
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 4,
-            "name": "Anjela"
-          },
-          {
-            "id": 5,
-            "name": "Amii"
-          },
-          {
-            "id": 6,
-            "name": "Corny"
-          },
-          {
-            "id": 8,
-            "name": "April"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          author(
+            where: {name: {_similar: "(A|C)%"}}
+          ) {
+            id
+            name
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "author": [
+              {
+                "id": 4,
+                "name": "Anjela"
+              },
+              {
+                "id": 5,
+                "name": "Amii"
+              },
+              {
+                "id": 6,
+                "name": "Corny"
+              },
+              {
+                "id": 8,
+                "name": "April"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { author(where: {name: {_similar: \"(A|C)%\"}}) {id name }}"
       }
-    }
 
 .. note::
 
@@ -629,81 +714,116 @@ For more details on JSONB operators and Postgres equivalents, refer to the :ref:
 
 Fetch all authors living within a particular pincode (present in ``address`` JSONB column):
 
-.. graphiql::
-  :view_only:
-  :query:
-    query get_authors_in_pincode ($jsonFilter: jsonb){
-      author(
-        where: {
-          address: {_contains: $jsonFilter }
-        }
-      ) {
-        id
-        name
-        address
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 1,
-            "name": "Ash",
-            "address": {
-              "street_address": "161, 19th Main Road, Koramangala 6th Block",
-              "city": "Bengaluru",
-              "state": "Karnataka",
-              "pincode": 560095,
-              "phone": "9090909090",
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query get_authors_in_pincode ($jsonFilter: jsonb){
+          author(
+            where: {
+              address: {_contains: $jsonFilter }
             }
+          ) {
+            id
+            name
+            address
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "author": [
+              {
+                "id": 1,
+                "name": "Ash",
+                "address": {
+                  "street_address": "161, 19th Main Road, Koramangala 6th Block",
+                  "city": "Bengaluru",
+                  "state": "Karnataka",
+                  "pincode": 560095,
+                  "phone": "9090909090",
+                }
+              }
+            ]
+          }
+        }
+      :variables:
+        {
+          "jsonFilter": {
+            "pincode": 560095
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query get_authors_in_pincode ($jsonFilter: jsonb){ author(where: { address: {_contains: $jsonFilter }}) { id name address }}",
+          "variables": { "jsonFilter": { "pincode": 560095 }}
       }
-    }
-  :variables:
-    {
-      "jsonFilter": {
-        "pincode": 560095
-      }
-    }
 
 **Example: _has_key**
 
 Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query get_authors_if_phone {
-      author(
-        where: {
-          address: {_has_key: "phone" }
-        }
-      ) {
-        id
-        name
-        address
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 1,
-            "name": "Ash",
-            "address": {
-              "street_address": "161, 19th Main Road, Koramangala 6th Block",
-              "city": "Bengaluru",
-              "state": "Karnataka",
-              "pincode": 560095,
-              "phone": "9090909090"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query get_authors_if_phone {
+          author(
+            where: {
+              address: {_has_key: "phone" }
             }
+          ) {
+            id
+            name
+            address
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "author": [
+              {
+                "id": 1,
+                "name": "Ash",
+                "address": {
+                  "street_address": "161, 19th Main Road, Koramangala 6th Block",
+                  "city": "Bengaluru",
+                  "state": "Karnataka",
+                  "pincode": 560095,
+                  "phone": "9090909090"
+                }
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query get_authors_if_phone { author(where: { address: {_has_key: \"phone\" }}) { id name address }}"
       }
-    }
 
 
 PostGIS spatial relationship operators (_st_contains, _st_crosses, etc.)
@@ -724,99 +844,172 @@ Use JSON representation (see `GeoJSON <https://tools.ietf.org/html/rfc7946>`_) o
 
 Fetch a list of geometry values which are within the given ``polygon`` value:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query geom_table($polygon: geometry){
-      geom_table(
-        where: {geom_col: {_st_within: $polygon}}
-      ){
-        id
-        geom_col
-      }
-    }
-  :response:
-    {
-      "data": {
-        "geom_table": [
-          {
-            "id": 1,
-            "geom_col": {
-              "type": "Point",
-              "coordinates": [
-                1,
-                2
-              ]
-            }
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query geom_table($polygon: geometry){
+          geom_table(
+            where: {geom_col: {_st_within: $polygon}}
+          ){
+            id
+            geom_col
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "geom_table": [
+              {
+                "id": 1,
+                "geom_col": {
+                  "type": "Point",
+                  "coordinates": [
+                    1,
+                    2
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      :variables:
+        {
+          "polygon": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [ 0, 0 ],
+                [ 0, 2 ],
+                [ 2, 2 ],
+                [ 2, 0 ],
+                [ 0, 0 ]
+              ]
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query geom_table($polygon: geometry){ geom_table(where: {geom_col: {_st_within: $polygon}}){ id geom_col }}",
+          "variables": {
+              "polygon": {
+                  "type": "Polygon",
+                  "coordinates": [
+                      [
+                          [
+                              0,
+                              0
+                          ],
+                          [
+                              0,
+                              2
+                          ],
+                          [
+                              2,
+                              2
+                          ],
+                          [
+                              2,
+                              0
+                          ],
+                          [
+                              0,
+                              0
+                          ]
+                      ]
+                  ]
+              }
+          }
       }
-    }
-  :variables:
-    {
-      "polygon": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [ 0, 0 ],
-            [ 0, 2 ],
-            [ 2, 2 ],
-            [ 2, 0 ],
-            [ 0, 0 ]
-          ]
-        ]
-      }
-    }
 
 **Example: _st_d_within**
 
 Fetch a list of ``geometry`` values which are 3 units from given ``point`` value:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query geom_table($point: geometry){
-      geom_table(
-        where: {geom_col: {_st_d_within: {distance: 3, from: $point}}}
-      ){
-        id
-        geom_col
-      }
-    }
-  :response:
-    {
-      "data": {
-        "geom_table": [
-          {
-            "id": 1,
-            "geom_col": {
-              "type": "Point",
-              "coordinates": [
-                1,
-                2
-              ]
-            }
-          },
-          {
-            "id": 2,
-            "geom_col": {
-              "type": "Point",
-              "coordinates": [
-                3,
-                0
-              ]
-            }
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query geom_table($point: geometry){
+          geom_table(
+            where: {geom_col: {_st_d_within: {distance: 3, from: $point}}}
+          ){
+            id
+            geom_col
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "geom_table": [
+              {
+                "id": 1,
+                "geom_col": {
+                  "type": "Point",
+                  "coordinates": [
+                    1,
+                    2
+                  ]
+                }
+              },
+              {
+                "id": 2,
+                "geom_col": {
+                  "type": "Point",
+                  "coordinates": [
+                    3,
+                    0
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      :variables:
+        {
+          "point": {
+            "type": "Point",
+            "coordinates": [ 0, 0 ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query geom_table($point: geometry){ geom_table(where: {geom_col: {_st_d_within: {distance: 3, from: $point}}}){ id geom_col }}",
+          "variables": {
+              "point": {
+                  "type": "Point",
+                  "coordinates": [
+                      0,
+                      0
+                  ]
+              }
+          }
       }
-    }
-  :variables:
-    {
-      "point": {
-        "type": "Point",
-        "coordinates": [ 0, 0 ]
-      }
-    }
 
 Filter or check for null values (_is_null)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -829,45 +1022,62 @@ For more details on the ``_is_null`` operator and Postgres equivalent, refer to 
 
 Fetch a list of articles that have a value in the ``published_on`` field:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      article(
-        where: {published_on: {_is_null: false}}
-      ) {
-        id
-        title
-        published_on
-      }
-    }
-  :response:
-    {
-      "data": {
-        "article": [
-          {
-            "id": 1,
-            "title": "sit amet",
-            "published_on": "2017-08-09"
-          },
-          {
-            "id": 2,
-            "title": "a nibh",
-            "published_on": "2018-06-10"
-          },
-          {
-            "id": 3,
-            "title": "amet justo morbi",
-            "published_on": "2017-05-26"
-          },
-          {
-            "id": 4,
-            "title": "vestibulum ac est",
-            "published_on": "2017-03-05"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          article(
+            where: {published_on: {_is_null: false}}
+          ) {
+            id
+            title
+            published_on
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "article": [
+              {
+                "id": 1,
+                "title": "sit amet",
+                "published_on": "2017-08-09"
+              },
+              {
+                "id": 2,
+                "title": "a nibh",
+                "published_on": "2018-06-10"
+              },
+              {
+                "id": 3,
+                "title": "amet justo morbi",
+                "published_on": "2017-05-26"
+              },
+              {
+                "id": 4,
+                "title": "vestibulum ac est",
+                "published_on": "2017-03-05"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { article(where: {published_on: {_is_null: false}}) { id title published_on }}"
       }
-    }
 
 Intersect operators on RASTER columns (_st_intersects_rast, etc)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -888,35 +1098,54 @@ Executes the following SQL function:
 
    boolean ST_Intersects( raster <raster-col> , raster <raster-value> );
 
+.. rst-class:: api_tabs
+.. tabs::
 
-.. graphiql::
-  :view_only:
-  :query:
-   query getIntersectingValues ($rast: raster){
-     dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){
-       rid
-       rast
-     }
-   }
-  :response:
-   {
-     "data": {
-       "dummy_rast": [
-         {
-           "rid": 1,
-           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
-         },
-         {
-           "rid": 2,
-           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
-         }
-       ]
-     }
-   }
-  :variables:
-   {
-     "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
-   }
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query getIntersectingValues ($rast: raster){
+          dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){
+            rid
+            rast
+          }
+        }
+      :response:
+        {
+          "data": {
+            "dummy_rast": [
+              {
+                "rid": 1,
+                "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+              },
+              {
+                "rid": 2,
+                "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+              }
+            ]
+          }
+        }
+      :variables:
+        {
+          "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query getIntersectingValues ($rast: raster){ dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){ rid rast }}",
+          "variables": {
+              "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
+          }
+      }
 
 **Example: _st_intersects_geom_nband**
 
@@ -928,47 +1157,78 @@ Executes the following SQL function:
 
    boolean ST_Intersects( raster <raster-col> , geometry geommin , integer nband=NULL );
 
+.. rst-class:: api_tabs
+.. tabs::
 
-.. graphiql::
-  :view_only:
-  :query:
-    query getIntersectingValues ($point: geometry!){
-      dummy_rast(where: {rast: {_st_intersects_geom_nband: {geommin: $point}}}){
-        rid
-        rast
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query getIntersectingValues ($point: geometry!){
+          dummy_rast(where: {rast: {_st_intersects_geom_nband: {geommin: $point}}}){
+            rid
+            rast
+          }
+        }
+      :response:
+        {
+          "data": {
+            "dummy_rast": [
+              {
+                "rid": 1,
+                "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+              },
+              {
+                "rid": 2,
+                "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+              }
+            ]
+          }
+        }
+      :variables:
+        {
+          "point": {
+            "type": "Point",
+            "coordinates": [
+              1,
+              2
+            ],
+            "crs": {
+              "type": "name",
+              "properties": {
+                "name": "urn:ogc:def:crs:EPSG::4326"
+              }
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query getIntersectingValues ($point: geometry!){ dummy_rast(where: {rast: {_st_intersects_geom_nband: {geommin: $point}}}){ rid rast }}",
+          "variables": {
+              "point": {
+                  "type": "Point",
+                  "coordinates": [
+                      1,
+                      2
+                  ],
+                  "crs": {
+                      "type": "name",
+                      "properties": {
+                          "name": "urn:ogc:def:crs:EPSG::4326"
+                      }
+                  }
+              }
+          }
       }
-    }
-  :response:
-   {
-     "data": {
-       "dummy_rast": [
-         {
-           "rid": 1,
-           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
-         },
-         {
-           "rid": 2,
-           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
-         }
-       ]
-     }
-   }
-  :variables:
-   {
-     "point": {
-       "type": "Point",
-       "coordinates": [
-         1,
-         2
-       ],
-       "crs": {
-         "type": "name",
-         "properties": {
-           "name": "urn:ogc:def:crs:EPSG::4326"
-         }
-       }
-     }
-   }
 
 **Example: _st_intersects_nband_geom**
 
@@ -980,47 +1240,78 @@ Executes the following SQL function:
 
    boolean ST_Intersects( raster <raster-col> , integer nband , geometry geommin );
 
+.. rst-class:: api_tabs
+.. tabs::
 
-.. graphiql::
-  :view_only:
-  :query:
-    query getIntersectingValues ($point: geometry!){
-      dummy_rast(where: {rast: {_st_intersects_nband_geom: {nband: 5 geommin: $point}}}){
-        rid
-        rast
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query getIntersectingValues ($point: geometry!){
+          dummy_rast(where: {rast: {_st_intersects_nband_geom: {nband: 5 geommin: $point}}}){
+            rid
+            rast
+          }
+        }
+      :response:
+        {
+          "data": {
+            "dummy_rast": [
+              {
+                "rid": 1,
+                "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+              },
+              {
+                "rid": 2,
+                "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+              }
+            ]
+          }
+        }
+      :variables:
+        {
+          "point": {
+            "type": "Point",
+            "coordinates": [
+              1,
+              2
+            ],
+            "crs": {
+              "type": "name",
+              "properties": {
+                "name": "urn:ogc:def:crs:EPSG::4326"
+              }
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query getIntersectingValues ($point: geometry!){ dummy_rast(where: {rast: {_st_intersects_nband_geom: {nband: 5 geommin: $point}}}){ rid rast }}",
+          "variables": {
+              "point": {
+                  "type": "Point",
+                  "coordinates": [
+                      1,
+                      2
+                  ],
+                  "crs": {
+                      "type": "name",
+                      "properties": {
+                          "name": "urn:ogc:def:crs:EPSG::4326"
+                      }
+                  }
+              }
+          }
       }
-    }
-  :response:
-   {
-     "data": {
-       "dummy_rast": [
-         {
-           "rid": 1,
-           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
-         },
-         {
-           "rid": 2,
-           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
-         }
-       ]
-     }
-   }
-  :variables:
-   {
-     "point": {
-       "type": "Point",
-       "coordinates": [
-         1,
-         2
-       ],
-       "crs": {
-         "type": "name",
-         "properties": {
-           "name": "urn:ogc:def:crs:EPSG::4326"
-         }
-       }
-     }
-   }
 
 Filter based on failure of some criteria (_not)
 -----------------------------------------------
@@ -1032,56 +1323,73 @@ filter set for a condition.
 
 Fetch all authors who don't have any published articles:
 
-.. graphiql::
-  :view_only:
-  :query:
-    {
-      author(
-        where: {
-          _not: {
-            articles: { is_published: {_eq: true} }
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        {
+          author(
+            where: {
+              _not: {
+                articles: { is_published: {_eq: true} }
+              }
+            }) {
+            id
+            name
+            articles {
+              title
+              is_published
+            }
           }
-        }) {
-        id
-        name
-        articles {
-          title
-          is_published
         }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 7,
-            "name": "Berti",
-            "articles": [
+      :response:
+        {
+          "data": {
+            "author": [
               {
-                "title": "ipsum primis in",
-                "is_published": false
-              }
-            ]
-          },
-          {
-            "id": 9,
-            "name": "Ninnetta",
-            "articles": []
-          },
-          {
-            "id": 10,
-            "name": "Lyndsay",
-            "articles": [
+                "id": 7,
+                "name": "Berti",
+                "articles": [
+                  {
+                    "title": "ipsum primis in",
+                    "is_published": false
+                  }
+                ]
+              },
               {
-                "title": "dui proin leo",
-                "is_published": false
+                "id": 9,
+                "name": "Ninnetta",
+                "articles": []
+              },
+              {
+                "id": 10,
+                "name": "Lyndsay",
+                "articles": [
+                  {
+                    "title": "dui proin leo",
+                    "is_published": false
+                  }
+                ]
               }
             ]
           }
-        ]
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "{ author(where: { _not: { articles: { is_published: {_eq: true} }}}) { id name articles { title is_published }}}"
       }
-    }
 
 Using multiple filters in the same query (_and, _or)
 ----------------------------------------------------
@@ -1097,51 +1405,68 @@ results based on more than one criteria.
 
 Fetch a list of articles published in a specific time-frame (for example: in year 2017):
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      article (
-        where: {
-          _and: [
-            { published_on: {_gte: "2017-01-01"}},
-            { published_on: {_lte: "2017-12-31"}}
-          ]
-        }
-      )
-      {
-        id
-        title
-        published_on
-      }
-    }
-  :response:
-    {
-      "data": {
-        "article": [
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          article (
+            where: {
+              _and: [
+                { published_on: {_gte: "2017-01-01"}},
+                { published_on: {_lte: "2017-12-31"}}
+              ]
+            }
+          )
           {
-            "id": 1,
-            "title": "sit amet",
-            "published_on": "2017-08-09"
-          },
-          {
-            "id": 3,
-            "title": "amet justo morbi",
-            "published_on": "2017-05-26"
-          },
-          {
-            "id": 4,
-            "title": "vestibulum ac est",
-            "published_on": "2017-03-05"
-          },
-          {
-            "id": 9,
-            "title": "sit amet",
-            "published_on": "2017-05-16"
+            id
+            title
+            published_on
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "article": [
+              {
+                "id": 1,
+                "title": "sit amet",
+                "published_on": "2017-08-09"
+              },
+              {
+                "id": 3,
+                "title": "amet justo morbi",
+                "published_on": "2017-05-26"
+              },
+              {
+                "id": 4,
+                "title": "vestibulum ac est",
+                "published_on": "2017-03-05"
+              },
+              {
+                "id": 9,
+                "title": "sit amet",
+                "published_on": "2017-05-16"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { article (where: { _and: [{ published_on: {_gte: \"2017-01-01\"}}, { published_on: {_lte: \"2017-12-31\"}}]}) { id title published_on }}"
       }
-    }
 
 .. note::
 
@@ -1152,56 +1477,73 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
 
 Fetch a list of articles rated more than 4 or published after "01/01/2018":
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      article (
-        where: {
-          _or: [
-            {rating: {_gte: 4}},
-            {published_on: {_gte: "2018-01-01"}}
-          ]
-        }
-      )
-      {
-        id
-        title
-        rating
-        published_on
-      }
-    }
-  :response:
-    {
-      "data": {
-        "article": [
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          article (
+            where: {
+              _or: [
+                {rating: {_gte: 4}},
+                {published_on: {_gte: "2018-01-01"}}
+              ]
+            }
+          )
           {
-            "id": 2,
-            "title": "a nibh",
-            "rating": 3,
-            "published_on": "2018-06-10"
-          },
-          {
-            "id": 3,
-            "title": "amet justo morbi",
-            "rating": 4,
-            "published_on": "2017-05-26"
-          },
-          {
-            "id": 6,
-            "title": "sapien ut",
-            "rating": 1,
-            "published_on": "2018-01-08"
-          },
-          {
-            "id": 7,
-            "title": "nisl duis ac",
-            "rating": 4,
-            "published_on": "2016-07-09"
+            id
+            title
+            rating
+            published_on
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "article": [
+              {
+                "id": 2,
+                "title": "a nibh",
+                "rating": 3,
+                "published_on": "2018-06-10"
+              },
+              {
+                "id": 3,
+                "title": "amet justo morbi",
+                "rating": 4,
+                "published_on": "2017-05-26"
+              },
+              {
+                "id": 6,
+                "title": "sapien ut",
+                "rating": 1,
+                "published_on": "2018-01-08"
+              },
+              {
+                "id": 7,
+                "title": "nisl duis ac",
+                "rating": 4,
+                "published_on": "2016-07-09"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { article (where: { _or: [ {rating: {_gte: 4}}, {published_on: {_gte: \"2018-01-01\"}}]}) { id title rating published_on }}"
       }
-    }
 
 .. note::
 
@@ -1220,51 +1562,68 @@ The ``where`` argument can be used in **array relationships** as well to filter 
 
 Fetch all authors with only their 5 rated articles:
 
-.. graphiql::
-  :view_only:
-  :query:
-    {
-      author {
-        id
-        name
-        articles(where: {rating: {_eq: 5}}) {
-          title
-          rating
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        {
+          author {
+            id
+            name
+            articles(where: {rating: {_eq: 5}}) {
+              title
+              rating
+            }
+          }
         }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 1,
-            "name": "Justin",
-            "articles": []
-          },
-          {
-            "id": 2,
-            "name": "Beltran",
-            "articles": []
-          },
-          {
-            "id": 5,
-            "name": "Amii",
-            "articles": [
+      :response:
+        {
+          "data": {
+            "author": [
               {
-                "title": "montes nascetur ridiculus",
-                "rating": 5
+                "id": 1,
+                "name": "Justin",
+                "articles": []
+              },
+              {
+                "id": 2,
+                "name": "Beltran",
+                "articles": []
+              },
+              {
+                "id": 5,
+                "name": "Amii",
+                "articles": [
+                  {
+                    "title": "montes nascetur ridiculus",
+                    "rating": 5
+                  }
+                ]
+              },
+              {
+                "id": 6,
+                "name": "Corny",
+                "articles": []
               }
             ]
-          },
-          {
-            "id": 6,
-            "name": "Corny",
-            "articles": []
           }
-        ]
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "{ author { id name articles(where: {rating: {_eq: 5}}) { title rating }}}"
       }
-    }
 
 
 Filter based on nested objects' fields
@@ -1301,66 +1660,83 @@ Fetch if the single nested object defined via an object relationship satisfies a
 
 Fetch all articles whose author's name starts with "A":
 
-.. graphiql::
-  :view_only:
-  :query:
-    {
-      article (
-        where: {
-          author: {
-            name: { _similar: "A%"}
-          }
-        }
-      ) {
-        id
-        title
-        author {
-          name
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "article": [
-          {
-            "id": 1,
-            "title": "sit amet",
-            "author": {
-              "name": "Anjela"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        {
+          article (
+            where: {
+              author: {
+                name: { _similar: "A%"}
+              }
             }
-          },
-          {
-            "id": 3,
-            "title": "amet justo morbi",
-            "author": {
-              "name": "Anjela"
-            }
-          },
-          {
-            "id": 4,
-            "title": "vestibulum ac est",
-            "author": {
-              "name": "Amii"
-            }
-          },
-          {
-            "id": 12,
-            "title": "volutpat quam pede",
-            "author": {
-              "name": "Amii"
-            }
-          },
-          {
-            "id": 13,
-            "title": "vulputate elementum",
-            "author": {
-              "name": "April"
+          ) {
+            id
+            title
+            author {
+              name
             }
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "article": [
+              {
+                "id": 1,
+                "title": "sit amet",
+                "author": {
+                  "name": "Anjela"
+                }
+              },
+              {
+                "id": 3,
+                "title": "amet justo morbi",
+                "author": {
+                  "name": "Anjela"
+                }
+              },
+              {
+                "id": 4,
+                "title": "vestibulum ac est",
+                "author": {
+                  "name": "Amii"
+                }
+              },
+              {
+                "id": 12,
+                "title": "volutpat quam pede",
+                "author": {
+                  "name": "Amii"
+                }
+              },
+              {
+                "id": 13,
+                "title": "vulputate elementum",
+                "author": {
+                  "name": "April"
+                }
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "{ article (where: { author: { name: { _similar: \"A%\"}}}) { id title author { name }}}"
       }
-    }
 
 
 Fetch if **any** of the nested objects defined via an array relationship satisfy a condition
@@ -1370,76 +1746,93 @@ Fetch if **any** of the nested objects defined via an array relationship satisfy
 
 Fetch all authors which have written at least one article which is rated 1:
 
-.. graphiql::
-  :view_only:
-  :query:
-    {
-      author(
-        where: {
-          articles: {rating: {_eq: 1}}
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        {
+          author(
+            where: {
+              articles: {rating: {_eq: 1}}
+            }
+          ) {
+            id
+            name
+            articles {
+              title
+              rating
+            }
+          }
         }
-      ) {
-        id
-        name
-        articles {
-          title
-          rating
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 1,
-            "name": "Justin",
-            "articles": [
+      :response:
+        {
+          "data": {
+            "author": [
               {
-                "title": "sem duis aliquam",
-                "rating": 1
+                "id": 1,
+                "name": "Justin",
+                "articles": [
+                  {
+                    "title": "sem duis aliquam",
+                    "rating": 1
+                  },
+                  {
+                    "title": "vel dapibus at",
+                    "rating": 4
+                  }
+                ]
               },
               {
-                "title": "vel dapibus at",
-                "rating": 4
-              }
-            ]
-          },
-          {
-            "id": 4,
-            "name": "Anjela",
-            "articles": [
-              {
-                "title": "sit amet",
-                "rating": 1
+                "id": 4,
+                "name": "Anjela",
+                "articles": [
+                  {
+                    "title": "sit amet",
+                    "rating": 1
+                  },
+                  {
+                    "title": "amet justo morbi",
+                    "rating": 4
+                  }
+                ]
               },
               {
-                "title": "amet justo morbi",
-                "rating": 4
-              }
-            ]
-          },
-          {
-            "id": 3,
-            "name": "Sidney",
-            "articles": [
-              {
-                "title": "sapien ut",
-                "rating": 1
-              },
-              {
-                "title": "turpis eget",
-                "rating": 3
-              },
-              {
-                "title": "congue etiam justo",
-                "rating": 4
+                "id": 3,
+                "name": "Sidney",
+                "articles": [
+                  {
+                    "title": "sapien ut",
+                    "rating": 1
+                  },
+                  {
+                    "title": "turpis eget",
+                    "rating": 3
+                  },
+                  {
+                    "title": "congue etiam justo",
+                    "rating": 4
+                  }
+                ]
               }
             ]
           }
-        ]
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "{ author(where: { articles: {rating: {_eq: 1}}}) { id name articles { title rating }}}"
       }
-    }
 
 Fetch if **all** of the nested objects defined via an array relationship satisfy a condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1462,84 +1855,101 @@ For example:
 
 Fetch all authors which have all of their articles published i.e. have ``{is_published {_eq: true}``.
 
-.. graphiql::
-  :view_only:
-  :query:
-    {
-      author (
-        where: {
-          _not: {
-            articles: {is_published: {_neq: true}}
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        {
+          author (
+            where: {
+              _not: {
+                articles: {is_published: {_neq: true}}
+              }
+            }
+          ) {
+            id
+            name
+            articles {
+              title
+              is_published
+            }
           }
         }
-      ) {
-        id
-        name
-        articles {
-          title
-          is_published
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 1,
-            "name": "Justin",
-            "articles": [
+      :response:
+        {
+          "data": {
+            "author": [
               {
-                "title": "vel dapibus at",
-                "is_published": true
+                "id": 1,
+                "name": "Justin",
+                "articles": [
+                  {
+                    "title": "vel dapibus at",
+                    "is_published": true
+                  },
+                  {
+                    "title": "sem duis aliquam",
+                    "is_published": true
+                  }
+                ]
               },
               {
-                "title": "sem duis aliquam",
-                "is_published": true
-              }
-            ]
-          },
-          {
-            "id": 2,
-            "name": "Beltran",
-            "articles": [
-              {
-                "title": "a nibh",
-                "is_published": true
+                "id": 2,
+                "name": "Beltran",
+                "articles": [
+                  {
+                    "title": "a nibh",
+                    "is_published": true
+                  },
+                  {
+                    "title": "sit amet",
+                    "is_published": true
+                  }
+                ]
               },
               {
-                "title": "sit amet",
-                "is_published": true
-              }
-            ]
-          },
-          {
-            "id": 4,
-            "name": "Anjela",
-            "articles": [
-              {
-                "title": "sit amet",
-                "is_published": true
-              }
-            ]
-          },
-          {
-            "id": 8,
-            "name": "April",
-            "articles": [
-              {
-                "title": "vulputate elementum",
-                "is_published": true
+                "id": 4,
+                "name": "Anjela",
+                "articles": [
+                  {
+                    "title": "sit amet",
+                    "is_published": true
+                  }
+                ]
               },
               {
-                "title": "eu nibh",
-                "is_published": true
+                "id": 8,
+                "name": "April",
+                "articles": [
+                  {
+                    "title": "vulputate elementum",
+                    "is_published": true
+                  },
+                  {
+                    "title": "eu nibh",
+                    "is_published": true
+                  }
+                ]
               }
             ]
           }
-        ]
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "{ author (where: { _not: { articles: {is_published: {_neq: true}}}}) { id name articles { title is_published }}}"
       }
-    }
 
 
 Fetch if **none** of the nested objects defined via an array relationship satisfy a condition
@@ -1563,52 +1973,69 @@ For example,
 
 Fetch all authors which have none of their articles published i.e. have ``{is_published {_eq: true}``:
 
-.. graphiql::
-  :view_only:
-  :query:
-    {
-      author (
-        where: {
-          _not: {
-            articles: {is_published: {_eq: true}}
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        {
+          author (
+            where: {
+              _not: {
+                articles: {is_published: {_eq: true}}
+              }
+            }
+          ) {
+            id
+            name
+            articles {
+              title
+              is_published
+            }
           }
         }
-      ) {
-        id
-        name
-        articles {
-          title
-          is_published
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 7,
-            "name": "Berti",
-            "articles": [
+      :response:
+        {
+          "data": {
+            "author": [
               {
-                "title": "ipsum primis in",
-                "is_published": false
-              }
-            ]
-          },
-          {
-            "id": 10,
-            "name": "Lyndsay",
-            "articles": [
+                "id": 7,
+                "name": "Berti",
+                "articles": [
+                  {
+                    "title": "ipsum primis in",
+                    "is_published": false
+                  }
+                ]
+              },
               {
-                "title": "dui proin leo",
-                "is_published": false
+                "id": 10,
+                "name": "Lyndsay",
+                "articles": [
+                  {
+                    "title": "dui proin leo",
+                    "is_published": false
+                  }
+                ]
               }
             ]
           }
-        ]
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "{ author (where: { _not: { articles: {is_published: {_eq: true}}}}) { id name articles { title is_published }}}"
       }
-    }
 
 Fetch if nested object(s) exist/do not exist
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1621,99 +2048,133 @@ achieved by using the expression ``{}`` which evaluates to ``true`` if any objec
 
 Fetch all authors which have at least one article written by them:
 
-.. graphiql::
-  :view_only:
-  :query:
-    {
-      author (
-        where: {
-          articles: {}
-        }
-      ) {
-        id
-        name
-        articles_aggregate {
-          aggregate {
-            count
-          }
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 1,
-            "name": "Justin",
-            "articles_aggregate": {
-              "aggregate": {
-                "count": 2
-              }
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        {
+          author (
+            where: {
+              articles: {}
             }
-          },
-          {
-            "id": 4,
-            "name": "Anjela",
-            "articles_aggregate": {
-              "aggregate": {
-                "count": 1
+          ) {
+            id
+            name
+            articles_aggregate {
+              aggregate {
+                count
               }
             }
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "author": [
+              {
+                "id": 1,
+                "name": "Justin",
+                "articles_aggregate": {
+                  "aggregate": {
+                    "count": 2
+                  }
+                }
+              },
+              {
+                "id": 4,
+                "name": "Anjela",
+                "articles_aggregate": {
+                  "aggregate": {
+                    "count": 1
+                  }
+                }
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "{ author (where: { articles: {}}) { id name articles_aggregate { aggregate { count }}}}"
       }
-    }
 
 **Example where nested object(s) do not exist:**
 
 Fetch all authors which have not written any articles:
 
-.. graphiql::
-  :view_only:
-  :query:
-    {
-      author (
-        where: {
-          _not: {
-            articles: {}
-          }
-        }
-      ) {
-        id
-        name
-        articles_aggregate {
-          aggregate {
-            count
-          }
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author": [
-          {
-            "id": 2,
-            "name": "Beltran",
-            "articles_aggregate": {
-              "aggregate": {
-                "count": 0
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        {
+          author (
+            where: {
+              _not: {
+                articles: {}
               }
             }
-          },
-          {
-            "id": 3,
-            "name": "Sidney",
-            "articles_aggregate": {
-              "aggregate": {
-                "count": 0
+          ) {
+            id
+            name
+            articles_aggregate {
+              aggregate {
+                count
               }
             }
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "author": [
+              {
+                "id": 2,
+                "name": "Beltran",
+                "articles_aggregate": {
+                  "aggregate": {
+                    "count": 0
+                  }
+                }
+              },
+              {
+                "id": 3,
+                "name": "Sidney",
+                "articles_aggregate": {
+                  "aggregate": {
+                    "count": 0
+                  }
+                }
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "{ author (where: { _not: { articles: {}}}) { id name articles_aggregate { aggregate { count }}}}"
       }
-    }
 
 Cast a field to a different type before filtering (_cast)
 ---------------------------------------------------------
@@ -1730,89 +2191,168 @@ Casting using ``_cast`` corresponds directly to
 Filtering using ``_st_d_within`` over large distances can be inaccurate for location data stored in
 ``geometry`` columns. For accurate queries, cast the field to ``geography`` before comparing:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query cities_near($point: geography!, $distance: Float!) {
-      cities(
-        where: {location: {
-          _cast: {geography: {
-            _st_d_within: {from: $point, distance: $distance}
-          }}
-        }}
-      ) {
-        name
-      }
-    }
-  :response:
-    {
-      "data": {
-        "cities": [
-          {
-            "name": "London"
-          },
-          {
-            "name": "Paris"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query cities_near($point: geography!, $distance: Float!) {
+          cities(
+            where: {location: {
+              _cast: {geography: {
+                _st_d_within: {from: $point, distance: $distance}
+              }}
+            }}
+          ) {
+            name
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "cities": [
+              {
+                "name": "London"
+              },
+              {
+                "name": "Paris"
+              }
+            ]
+          }
+        }
+      :variables:
+        {
+          "point": {
+            "type": "Point",
+            "coordinates": [1, 50]
+          },
+          "distance": 1000000
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query cities_near($point: geography!, $distance: Float!) { cities(where: {location: { _cast: {geography: { _st_d_within: {from: $point, distance: $distance}}}}}) { name }}",
+          "variables": {
+              "point": {
+                  "type": "Point",
+                  "coordinates": [
+                      1,
+                      50
+                  ]
+              },
+              "distance": 1000000
+          }
       }
-    }
-  :variables:
-    {
-      "point": {
-        "type": "Point",
-        "coordinates": [1, 50]
-      },
-      "distance": 1000000
-    }
 
 **Example: cast ``geography`` to ``geometry``**
 
 Columns of type ``geography`` are more accurate, but they don’t support as many operations as
 ``geometry``. Cast to ``geometry`` to use those operations in a filter:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query cities_inside($polygon: geometry) {
-      cities(
-        where: {location: {
-          _cast: {geometry: {
-            _st_within: $polygon
-          }}
-        }}
-      ) {
-        name
-      }
-    }
-  :response:
-    {
-      "data": {
-        "cities": [
-          {
-            "name": "New York"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query cities_inside($polygon: geometry) {
+          cities(
+            where: {location: {
+              _cast: {geometry: {
+                _st_within: $polygon
+              }}
+            }}
+          ) {
+            name
           }
-        ]
-      }
-    }
-  :variables:
-    {
-      "polygon": {
-        "type": "Polygon",
-        "crs": {
-          "type": "name",
-          "properties": { "name": "EPSG:4326" }
-        },
-        "coordinates": [
-          [
-            [-75, 40],
-            [-74, 40],
-            [-74, 41],
-            [-75, 41],
-            [-75, 40]
-          ]
-        ]
-      }
+        }
+      :response:
+        {
+          "data": {
+            "cities": [
+              {
+                "name": "New York"
+              }
+            ]
+          }
+        }
+      :variables:
+        {
+          "polygon": {
+            "type": "Polygon",
+            "crs": {
+              "type": "name",
+              "properties": { "name": "EPSG:4326" }
+            },
+            "coordinates": [
+              [
+                [-75, 40],
+                [-74, 40],
+                [-74, 41],
+                [-75, 41],
+                [-75, 40]
+              ]
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "query": "query cities_inside($polygon: geometry) { cities(where: {location: { _cast: {geometry: { _st_within: $polygon }}}}) { name }}",
+        "variables": {
+            "polygon": {
+                "type": "Polygon",
+                "crs": {
+                    "type": "name",
+                    "properties": {
+                        "name": "EPSG:4326"
+                    }
+                },
+                "coordinates": [
+                    [
+                        [
+                            -75,
+                            40
+                        ],
+                        [
+                            -74,
+                            40
+                        ],
+                        [
+                            -74,
+                            41
+                        ],
+                        [
+                            -75,
+                            41
+                        ],
+                        [
+                            -75,
+                            40
+                        ]
+                    ]
+                ]
+            }
+        }
     }
 
 .. note::

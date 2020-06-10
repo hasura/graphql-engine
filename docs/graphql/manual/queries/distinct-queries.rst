@@ -44,46 +44,62 @@ Fetch results with distinct values of a particular field
 
 **For example**, fetch the employee with the highest salary from each department:
 
-.. graphiql::
-   :view_only:
-   :query:
-      query {
-        employee (
-          distinct_on: [department]
-          order_by: [
-            {department: asc},
-            {salary: desc}
-          ]
-        ) {
-          id
-          name
-          department
-          salary
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+          query {
+            employee (
+              distinct_on: [department]
+              order_by: [
+                {department: asc},
+                {salary: desc}
+              ]
+            ) {
+              id
+              name
+              department
+              salary
+            }
+          }
+      :response:
+        {
+          "data": {
+            "employee": [
+              {
+                "id": 5,
+                "name": "Kamila",
+                "department": "Engineering",
+                "salary": 4325
+              },
+              {
+                "id": 4,
+                "name": "Damien",
+                "department": "Product",
+                "salary": 3124
+              },
+              {
+                "id": 7,
+                "name": "Rickard",
+                "department": "Services",
+                "salary": 2223
+              }
+            ]
+          }
         }
+        
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query { employee (distinct_on: [department] order_by: [{ department: asc }, { salary: desc }]) { id name department salary }}"
       }
-   :response:
-     {
-       "data": {
-         "employee": [
-           {
-             "id": 5,
-             "name": "Kamila",
-             "department": "Engineering",
-             "salary": 4325
-           },
-           {
-             "id": 4,
-             "name": "Damien",
-             "department": "Product",
-             "salary": 3124
-           },
-           {
-             "id": 7,
-             "name": "Rickard",
-             "department": "Services",
-             "salary": 2223
-           }
-         ]
-       }
-     }
-     

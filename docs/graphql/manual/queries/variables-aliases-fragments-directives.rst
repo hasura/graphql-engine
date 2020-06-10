@@ -19,36 +19,56 @@ In order to make a query re-usable, it can be made dynamic by using variables.
 
 **Example:** Fetch an author by their ``author_id``:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query getArticles($author_id: Int!) {
-      articles(
-        where: { author_id: { _eq: $author_id } }
-      ) {
-        id
-        title
-      }
-    }
-  :response:
-    {
-      "data": {
-        "articles": [
-          {
-            "id": 15,
-            "title": "How to climb Mount Everest"
-          },
-          {
-            "id": 6,
-            "title": "How to be successful on broadway"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query getArticles($author_id: Int!) {
+          articles(
+            where: { author_id: { _eq: $author_id } }
+          ) {
+            id
+            title
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "articles": [
+              {
+                "id": 15,
+                "title": "How to climb Mount Everest"
+              },
+              {
+                "id": 6,
+                "title": "How to be successful on broadway"
+              }
+            ]
+          }
+        }
+      :variables:
+        {
+          "author_id": 1
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query getArticles($author_id: Int!) { articles(where: { author_id: { _eq: $author_id } }) { id title }}",
+          "variables": {
+              "author_id": 1
+          }
       }
-    }
-  :variables:
-    {
-      "author_id": 1
-    }
 
 .. admonition:: Variables and performance
 
@@ -62,64 +82,81 @@ fetching the same type of objects with different arguments in the same query.
 
 **Example:** First, fetch all articles. Second, fetch the two top-rated articles. Third, fetch the worst-rated article:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query getArticles {
-      articles {
-        title
-        rating
-      }
-      topTwoArticles: articles(
-        order_by: {rating: desc},
-        limit: 2
-      ) {
-        title
-        rating
-      }
-      worstArticle: articles(
-        order_by: {rating: asc},
-        limit: 1
-      ) {
-        title
-        rating
-      }
-    }
-  :response:
-    {
-      "data": {
-        "articles": [
-          {
-            "title": "How to climb Mount Everest",
-            "rating": 4
-          },
-          {
-            "title": "How to be successful on broadway",
-            "rating": 20
-          },
-          {
-            "title": "How to make fajitas",
-            "rating": 6
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query getArticles {
+          articles {
+            title
+            rating
           }
-        ],
-        "topTwoArticles": [
-          {
-            "title": "How to be successful on broadway",
-            "rating": 20
-          },
-          {
-            "title": "How to make fajitas",
-            "rating": 6
+          topTwoArticles: articles(
+            order_by: {rating: desc},
+            limit: 2
+          ) {
+            title
+            rating
           }
-        ],
-        "worstArticle": [
-          {
-            "title": "How to climb Mount Everest",
-            "rating": 4
+          worstArticle: articles(
+            order_by: {rating: asc},
+            limit: 1
+          ) {
+            title
+            rating
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "articles": [
+              {
+                "title": "How to climb Mount Everest",
+                "rating": 4
+              },
+              {
+                "title": "How to be successful on broadway",
+                "rating": 20
+              },
+              {
+                "title": "How to make fajitas",
+                "rating": 6
+              }
+            ],
+            "topTwoArticles": [
+              {
+                "title": "How to be successful on broadway",
+                "rating": 20
+              },
+              {
+                "title": "How to make fajitas",
+                "rating": 6
+              }
+            ],
+            "worstArticle": [
+              {
+                "title": "How to climb Mount Everest",
+                "rating": 4
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query getArticles { articles { title rating } topTwoArticles: articles(order_by: {rating: desc}, limit: 2) { title rating } worstArticle: articles(order_by: {rating: asc}, limit: 1) { title rating }}"
       }
-    }
 
 Using fragments
 ---------------
@@ -129,53 +166,70 @@ can then be used to represent the defined set.
 
 **Example:** Creating a fragment for a set of ``article`` fields (``id`` and ``title``) and using it in a query:
 
-.. graphiql::
-  :view_only:
-  :query:
-    fragment articleFields on articles {
-      id
-      title
-    }
-    query getArticles {
-      articles {
-        ...articleFields
-      }
-      topTwoArticles: articles(
-        order_by: {rating: desc},
-        limit: 2
-      ) {
-        ...articleFields
-      }
-    }
-  :response:
-    {
-      "data": {
-        "articles": [
-          {
-            "id": 3,
-            "title": "How to make fajitas"
-          },
-          {
-            "id": 15,
-            "title": "How to climb Mount Everest"
-          },
-          {
-            "id": 6,
-            "title": "How to be successful on broadway"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        fragment articleFields on articles {
+          id
+          title
+        }
+        query getArticles {
+          articles {
+            ...articleFields
           }
-        ],
-        "topTwoArticles": [
-          {
-            "id": 6,
-            "title": "How to be successful on broadway"
-          },
-          {
-            "id": 3,
-            "title": "How to make fajitas"
+          topTwoArticles: articles(
+            order_by: {rating: desc},
+            limit: 2
+          ) {
+            ...articleFields
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "articles": [
+              {
+                "id": 3,
+                "title": "How to make fajitas"
+              },
+              {
+                "id": 15,
+                "title": "How to climb Mount Everest"
+              },
+              {
+                "id": 6,
+                "title": "How to be successful on broadway"
+              }
+            ],
+            "topTwoArticles": [
+              {
+                "id": 6,
+                "title": "How to be successful on broadway"
+              },
+              {
+                "id": 3,
+                "title": "How to make fajitas"
+              }
+            ]
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "fragment articleFields on articles { id title } query getArticles { articles { ...articleFields } topTwoArticles: articles(order_by: { rating: desc }, limit: 2) { ...articleFields }}"
       }
-    }
 
 Using directives
 ----------------
@@ -190,70 +244,110 @@ With ``@include(if: Boolean)``, it is possible to include a field in the query r
 
 **Example:** The query result includes the field ``publisher``, as ``$with_publisher`` is set to ``true``:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query getArticles($with_publisher: Boolean!) {
-      articles {
-        title
-        publisher @include(if: $with_publisher)
-      }
-    }
-  :response:
-    {
-      "data": {
-        "articles": [
-          {
-            "title": "How to climb Mount Everest",
-            "publisher": "Mountain World"
-          },
-          {
-            "title": "How to be successful on broadway",
-            "publisher": "Broadway World"
-          },
-          {
-            "title": "How to make fajitas",
-            "publisher": "Fajita World"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query getArticles($with_publisher: Boolean!) {
+          articles {
+            title
+            publisher @include(if: $with_publisher)
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "articles": [
+              {
+                "title": "How to climb Mount Everest",
+                "publisher": "Mountain World"
+              },
+              {
+                "title": "How to be successful on broadway",
+                "publisher": "Broadway World"
+              },
+              {
+                "title": "How to make fajitas",
+                "publisher": "Fajita World"
+              }
+            ]
+          }
+        }
+      :variables:
+        {
+          "with_publisher": true
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query getArticles($with_publisher: Boolean!) { articles { title publisher @include(if: $with_publisher)}}",
+          "variables": {
+              "with_publisher": true
+          }
       }
-    }
-  :variables:
-    {
-      "with_publisher": true
-    }
 
 **Example:** The query result doesn't include the field ``publisher``, as ``$with_publisher`` is set to ``false``:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query getArticles($with_publisher: Boolean!) {
-      articles {
-        title
-        publisher @include(if: $with_publisher)
-      }
-    }
-  :response:
-    {
-      "data": {
-        "articles": [
-          {
-            "title": "How to climb Mount Everest"
-          },
-          {
-            "title": "How to be successful on broadway"
-          },
-          {
-            "title": "How to make fajitas"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query getArticles($with_publisher: Boolean!) {
+          articles {
+            title
+            publisher @include(if: $with_publisher)
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "articles": [
+              {
+                "title": "How to climb Mount Everest"
+              },
+              {
+                "title": "How to be successful on broadway"
+              },
+              {
+                "title": "How to make fajitas"
+              }
+            ]
+          }
+        }
+      :variables:
+        {
+          "with_publisher": false
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query getArticles($with_publisher: Boolean!) { articles { title publisher @include(if: $with_publisher)}}",
+          "variables": {
+            "with_publisher": false
+          }
       }
-    }
-  :variables:
-    {
-      "with_publisher": false
-    }
 
 @skip(if: Boolean)
 ^^^^^^^^^^^^^^^^^^
@@ -262,67 +356,107 @@ With ``@skip(if: Boolean)``, it is possible to exclude (skip) a field in the que
 
 **Example:** The query result doesn't include the field ``publisher``, as ``$with_publisher`` is set to ``true``:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query getArticles($with_publisher: Boolean!) {
-      articles {
-        title
-        publisher @skip(if: $with_publisher)
-      }
-    }
-  :response:
-    {
-      "data": {
-        "articles": [
-          {
-            "title": "How to climb Mount Everest"
-          },
-          {
-            "title": "How to be successful on broadway"
-          },
-          {
-            "title": "How to make fajitas"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query getArticles($with_publisher: Boolean!) {
+          articles {
+            title
+            publisher @skip(if: $with_publisher)
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "articles": [
+              {
+                "title": "How to climb Mount Everest"
+              },
+              {
+                "title": "How to be successful on broadway"
+              },
+              {
+                "title": "How to make fajitas"
+              }
+            ]
+          }
+        }
+      :variables:
+        {
+          "with_publisher": true
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query getArticles($with_publisher: Boolean!) { articles { title publisher @skip(if: $with_publisher)}}",
+          "variables": {
+              "with_publisher": true
+          }
       }
-    }
-  :variables:
-    {
-      "with_publisher": true
-    }
 
 **Example:** The query result includes the field ``publisher``, as ``$with_publisher`` is set to ``false``:
 
-.. graphiql::
-  :view_only:
-  :query:
-    query getArticles($with_publisher: Boolean!) {
-      articles {
-        title
-        publisher @skip(if: $with_publisher)
-      }
-    }
-  :response:
-    {
-      "data": {
-        "articles": [
-          {
-            "title": "How to climb Mount Everest",
-            "publisher": "Mountain World"
-          },
-          {
-            "title": "How to be successful on broadway",
-            "publisher": "Broadway World"
-          },
-          {
-            "title": "How to make fajitas",
-            "publisher": "Fajita World"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query getArticles($with_publisher: Boolean!) {
+          articles {
+            title
+            publisher @skip(if: $with_publisher)
           }
-        ]
+        }
+      :response:
+        {
+          "data": {
+            "articles": [
+              {
+                "title": "How to climb Mount Everest",
+                "publisher": "Mountain World"
+              },
+              {
+                "title": "How to be successful on broadway",
+                "publisher": "Broadway World"
+              },
+              {
+                "title": "How to make fajitas",
+                "publisher": "Fajita World"
+              }
+            ]
+          }
+        }
+      :variables:
+        {
+          "with_publisher": false
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "query getArticles($with_publisher: Boolean!) { articles { title publisher @skip(if: $with_publisher)}}",
+          "variables": {
+              "with_publisher": false
+          }
       }
-    }
-  :variables:
-    {
-      "with_publisher": false
-    }
