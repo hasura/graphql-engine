@@ -153,5 +153,5 @@ export const persistGraphiQLMode = mode => {
 };
 
 export const getPersistedGraphiQLMode = () => {
-  return window.localStorage.getItem('ApiExplorer:GraphiQLMode');
+  return window.localStorage.getItem('ApiExplorer:GraphiQLMode') || 'graphql';
 };
