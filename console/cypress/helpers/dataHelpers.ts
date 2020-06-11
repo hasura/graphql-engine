@@ -97,6 +97,43 @@ export const testCustomFunctionSQL = (i: number) => {
   };
 };
 
+export const testCustomFunctionSQLWithSessArg = (
+  name = 'customFunctionWithSessionArg'
+) => {
+  return {
+    type: 'bulk',
+    args: [
+      {
+        type: 'run_sql',
+        args: {
+          sql: `CREATE OR REPLACE FUNCTION ${name}(
+            hasura_session json, name text
+          ) RETURNS SETOF text_result LANGUAGE sql STABLE AS $$
+          SELECT
+            q.*
+          FROM
+            (
+              VALUES
+                (hasura_session ->> 'x-hasura-role')
+            ) q $$`,
+          cascade: false,
+        },
+      },
+    ],
+  };
+};
+export const getTrackFnPayload = (name = 'customfunctionwithsessionarg') => ({
+  type: 'bulk',
+  args: [
+    {
+      type: 'track_function',
+      args: {
+        name,
+        schema: 'public',
+      },
+    },
+  ],
+});
 export const createTable = () => {
   return {
     type: 'bulk',
@@ -119,16 +156,38 @@ export const createTable = () => {
     ],
   };
 };
-
-export const dropTable = () => {
+export const createTableSessVar = () => {
   return {
     type: 'bulk',
     args: [
       {
         type: 'run_sql',
         args: {
-          sql: 'DROP table post;',
+          sql: `CREATE TABLE text_result(
+              result text
+            );`,
           cascade: false,
+        },
+      },
+      {
+        type: 'add_existing_table_or_view',
+        args: {
+          name: 'text_result',
+          schema: 'public',
+        },
+      },
+    ],
+  };
+};
+export const dropTable = (table = 'post', cascade = false) => {
+  return {
+    type: 'bulk',
+    args: [
+      {
+        type: 'run_sql',
+        args: {
+          sql: `DROP table ${table}${cascade ? ' CASCADE;' : ';'}`,
+          cascade,
         },
       },
     ],
