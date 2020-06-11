@@ -11,6 +11,7 @@ module Hasura.Prelude
   , afold
   , bsToTxt
   , txtToBs
+  , base64Decode
   , spanMaybeM
   -- * Efficient coercions
   , coerce
@@ -66,6 +67,9 @@ import           Test.QuickCheck.Arbitrary.Generic as M
 import           Text.Read                         as M (readEither, readMaybe)
 
 import qualified Data.ByteString                   as B
+import qualified Data.ByteString.Lazy              as BL
+
+import qualified Data.ByteString.Base64.Lazy       as Base64
 import           Data.Coerce
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.Set                          as Set
@@ -105,6 +109,11 @@ bsToTxt = TE.decodeUtf8With TE.lenientDecode
 
 txtToBs :: Text -> B.ByteString
 txtToBs = TE.encodeUtf8
+
+base64Decode :: Text -> BL.ByteString
+base64Decode =
+  Base64.decodeLenient . BL.fromStrict . txtToBs
+
 
 -- Like 'span', but monadic and with a function that produces 'Maybe' instead of 'Bool'
 spanMaybeM
