@@ -97,7 +97,6 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix "Cannot read property 'foldable'" runtime error in `Browse Rows` page (fix #4907) (#5016)
 - console: respect read-only mode in actions pages (fix #4656) (#4764)
 - console: fix listen update column config selection for event trigger (close #5042) (#5043)
-- console: default graphiql mode to graphql (#5061)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
