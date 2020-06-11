@@ -33,7 +33,7 @@ const migrateCreateCmdExamples = `  # Setup migration files for the first time b
   hasura migrate create init --sql-from-server --schema myschema1,myschema2
   
   # Create up and down migrations based on SQL statements
-  hasura migrate create --up-sql "CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL);"  --down-sql "DROP TABLE article;"
+  hasura migrate create migration-name --up-sql "CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL);"  --down-sql "DROP TABLE article;"
 `
 
 func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -47,13 +47,9 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Long:         "Create sql and yaml files required for a migration",
 		Example:      migrateCreateCmdExamples,
 		SilenceUsage: true,
-		Args:         cobra.MaximumNArgs(1),
+		Args:         cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) > 0 {
-				opts.name = args[0]
-			} else {
-				opts.name = "sql_migration"
-			}
+			opts.name = args[0]
 			opts.EC.Spin("Creating migration files...")
 			version, err := opts.run()
 			opts.EC.Spinner.Stop()
@@ -198,15 +194,14 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 
 	// create pure sql based migrations here
 	if o.flags.Changed("up-sql") && o.flags.Changed("down-sql") {
-		errUpSQL := createOptions.SetSQLUp(o.upSQL)
-		errDownSQL := createOptions.SetSQLDown(o.downSQL)
-
-		if errUpSQL != nil {
-			return 0, errors.Wrap(errUpSQL, "up migration with SQL string could not be created")
+		err = createOptions.SetSQLUp(o.upSQL)
+		if err != nil {
+			return 0, errors.Wrap(err, "up migration with SQL string could not be created")
 		}
 
-		if errDownSQL != nil {
-			return 0, errors.Wrap(errDownSQL, "down migration with SQL string could not be created")
+		err = createOptions.SetSQLDown(o.downSQL)
+		if err != nil {
+			return 0, errors.Wrap(err, "down migration with SQL string could not be created")
 		}
 	}
 
