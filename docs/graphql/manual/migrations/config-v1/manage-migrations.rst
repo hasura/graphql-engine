@@ -184,7 +184,7 @@ If you now open the console of the new instance, you can see that the three tabl
 
 .. thumbnail:: /img/graphql/manual/migrations/tracked-tables.png
    :alt: Tracked tables from Hasura migrations
-   :width: 40%
+   :width: 30%
 
 Step 7: Check the status of migrations
 --------------------------------------

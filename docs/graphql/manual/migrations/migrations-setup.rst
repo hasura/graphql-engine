@@ -257,7 +257,7 @@ been created and are tracked:
 
 .. thumbnail:: /img/graphql/manual/migrations/tracked-tables.png
    :alt: Tracked tables from Hasura migrations
-   :width: 40%
+   :width: 30%
 
 Step 8: Check the status of migrations
 --------------------------------------
