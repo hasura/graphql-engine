@@ -239,6 +239,7 @@ scalar name description representation = Parser
         _      -> typeMismatch name "an integer" v
       SRFloat -> case v of
         VFloat a -> pure a
+        VInt   a -> pure $ fromIntegral a
         _        -> typeMismatch name "a float" v
       SRString -> case v of
         VString a -> pure a
