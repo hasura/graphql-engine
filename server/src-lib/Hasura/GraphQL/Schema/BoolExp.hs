@@ -223,9 +223,9 @@ geographyWithinDistanceInput = do
   booleanParser   <- P.column (PGColumnScalar PGBoolean)   (G.Nullability False)
   floatParser     <- P.column (PGColumnScalar PGFloat)     (G.Nullability False)
   pure $ P.object $$(G.litName "st_d_within_geography_input") Nothing $
-    DWithinGeogOp <$> (mkParameter <$> P.field $$(G.litName "distance")     Nothing floatParser)
-                  <*> (mkParameter <$> P.field $$(G.litName "from")         Nothing geographyParser)
-                  <*> (mkParameter <$> P.field $$(G.litName "use_spheroid") Nothing booleanParser)
+    DWithinGeogOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
+                  <*> (mkParameter <$> P.field $$(G.litName "from")     Nothing geographyParser)
+                  <*> (mkParameter <$> P.fieldWithDefault $$(G.litName "use_spheroid") Nothing (G.VBoolean True) booleanParser)
 
 geometryWithinDistanceInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)
