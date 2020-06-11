@@ -13,6 +13,7 @@ import _push from '../push';
 import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { makeRequest } from '../../RemoteSchema/Actions';
+import Migration from '../../../../utils/migration/Migration';
 
 /* Constants */
 
@@ -121,11 +122,15 @@ const deleteFunctionSql = () => {
     const sqlDropFunction =
       'DROP FUNCTION ' + functionNameWithSchema + functionArgString;
 
-    const sqlUpQueries = [getRunSqlQuery(sqlDropFunction)];
+    const migration = new Migration();
 
-    const sqlDownQueries = [];
     if (functionDefinition && functionDefinition.length > 0) {
-      sqlDownQueries.push(getRunSqlQuery(functionDefinition));
+      migration.add(
+        getRunSqlQuery(sqlDropFunction),
+        getRunSqlQuery(functionDefinition)
+      );
+    } else {
+      migration.add(getRunSqlQuery(sqlDropFunction)); // TODO Down queries
     }
 
     // Apply migrations
@@ -145,8 +150,8 @@ const deleteFunctionSql = () => {
     dispatch({ type: DELETING_CUSTOM_FUNCTION });
     return dispatch(
       makeRequest(
-        sqlUpQueries,
-        sqlDownQueries,
+        migration.upMigration,
+        migration.downMigration,
         migrationName,
         customOnSuccess,
         customOnError,
@@ -184,18 +189,9 @@ const unTrackCustomFunction = () => {
       },
     };
 
-    const upQueryArgs = [];
-    upQueryArgs.push(payload);
-    const downQueryArgs = [];
-    downQueryArgs.push(downPayload);
-    const upQuery = {
-      type: 'bulk',
-      args: upQueryArgs,
-    };
-    const downQuery = {
-      type: 'bulk',
-      args: downQueryArgs,
-    };
+    const migration = new Migration();
+    migration.add(payload, downPayload);
+
     const requestMsg = 'Deleting custom function...';
     const successMsg = 'Custom function deleted successfully';
     const errorMsg = 'Delete custom function failed';
@@ -214,8 +210,8 @@ const unTrackCustomFunction = () => {
     dispatch({ type: UNTRACKING_CUSTOM_FUNCTION });
     return dispatch(
       makeRequest(
-        upQuery.args,
-        downQuery.args,
+        migration.upMigration,
+        migration.downMigration,
         migrationName,
         customOnSuccess,
         customOnError,

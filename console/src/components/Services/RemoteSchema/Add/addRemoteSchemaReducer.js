@@ -15,6 +15,7 @@ import { appPrefix } from '../constants';
 
 import globals from '../../../../Globals';
 import { clearIntrospectionSchemaCache } from '../graphqlUtils';
+import Migration from '../../../../utils/migration/Migration';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -187,19 +188,8 @@ const addRemoteSchema = () => {
       },
     };
 
-    const upQueryArgs = [];
-    upQueryArgs.push(payload);
-    const downQueryArgs = [];
-    downQueryArgs.push(downPayload);
-    const upQuery = {
-      type: 'bulk',
-      args: upQueryArgs,
-    };
-
-    const downQuery = {
-      type: 'bulk',
-      args: downQueryArgs,
-    };
+    const migration = new Migration();
+    migration.add(payload, downPayload);
 
     const requestMsg = 'Adding remote schema...';
     const successMsg = 'Remote schema added successfully';
@@ -223,8 +213,8 @@ const addRemoteSchema = () => {
     dispatch({ type: ADDING_REMOTE_SCHEMA });
     return dispatch(
       makeRequest(
-        upQuery.args,
-        downQuery.args,
+        migration.upMigration,
+        migration.downMigration,
         migrationName,
         customOnSuccess,
         customOnError,
@@ -269,18 +259,9 @@ const deleteRemoteSchema = () => {
       ...currState.editState.originalHeaders,
     ];
 
-    const upQueryArgs = [];
-    upQueryArgs.push(payload);
-    const downQueryArgs = [];
-    downQueryArgs.push(downPayload);
-    const upQuery = {
-      type: 'bulk',
-      args: upQueryArgs,
-    };
-    const downQuery = {
-      type: 'bulk',
-      args: downQueryArgs,
-    };
+    const migration = new Migration();
+    migration.add(payload, downPayload);
+
     const requestMsg = 'Deleting remote schema...';
     const successMsg = 'Remote schema deleted successfully';
     const errorMsg = 'Delete remote schema failed';
@@ -301,8 +282,8 @@ const deleteRemoteSchema = () => {
     dispatch({ type: DELETING_REMOTE_SCHEMA });
     return dispatch(
       makeRequest(
-        upQuery.args,
-        downQuery.args,
+        migration.upMigration,
+        migration.downMigration,
         migrationName,
         customOnSuccess,
         customOnError,
@@ -319,8 +300,7 @@ const modifyRemoteSchema = () => {
     const currState = getState().remoteSchemas.addData;
     const remoteSchemaName = currState.name.trim().replace(/ +/g, '');
     // const url = Endpoints.getSchema;
-    const upQueryArgs = [];
-    const downQueryArgs = [];
+    const migration = new Migration();
     const migrationName = 'update_remote_schema_' + remoteSchemaName;
     const deleteRemoteSchemaUp = {
       type: 'remove_remote_schema',
@@ -360,8 +340,7 @@ const modifyRemoteSchema = () => {
         ...resolveObj,
       },
     };
-    upQueryArgs.push(deleteRemoteSchemaUp);
-    upQueryArgs.push(createRemoteSchemaUp);
+    migration.add(deleteRemoteSchemaUp, createRemoteSchemaUp);
 
     // Delete the new one and create the old one
     const deleteRemoteSchemaDown = {
@@ -398,19 +377,8 @@ const modifyRemoteSchema = () => {
         ...resolveDownObj,
       },
     };
-
-    downQueryArgs.push(deleteRemoteSchemaDown);
-    downQueryArgs.push(createRemoteSchemaDown);
+    migration.add(deleteRemoteSchemaDown, createRemoteSchemaDown);
     // End of down
-
-    const upQuery = {
-      type: 'bulk',
-      args: upQueryArgs,
-    };
-    const downQuery = {
-      type: 'bulk',
-      args: downQueryArgs,
-    };
 
     const requestMsg = 'Modifying remote schema...';
     const successMsg = 'Remote schema modified';
@@ -433,8 +401,8 @@ const modifyRemoteSchema = () => {
     dispatch({ type: MODIFYING_REMOTE_SCHEMA });
     return dispatch(
       makeRequest(
-        upQuery.args,
-        downQuery.args,
+        migration.upMigration,
+        migration.downMigration,
         migrationName,
         customOnSuccess,
         customOnError,
