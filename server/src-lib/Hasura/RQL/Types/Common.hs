@@ -57,7 +57,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.URL.Template
 import           Instances.TH.Lift             ()
-import           Language.Haskell.TH.Syntax    (Q, TExp, Lift)
+import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
@@ -156,6 +156,7 @@ data RelInfo
   } deriving (Show, Eq, Generic)
 instance NFData RelInfo
 instance Cacheable RelInfo
+instance Hashable RelInfo
 $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName
@@ -163,6 +164,7 @@ newtype FieldName
   deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
            , FromJSONKey, ToJSONKey, Lift, Data, Generic
            , IsString, Arbitrary, NFData, Cacheable
+           , Semigroup
            )
 
 instance IsIden FieldName where
@@ -225,7 +227,7 @@ data PrimaryKey a
   = PrimaryKey
   { _pkConstraint :: !Constraint
   , _pkColumns    :: !(NonEmpty a)
-  } deriving (Show, Eq, Generic)
+  } deriving (Show, Eq, Generic, Foldable)
 instance (NFData a) => NFData (PrimaryKey a)
 instance (Cacheable a) => Cacheable (PrimaryKey a)
 $(makeLenses ''PrimaryKey)

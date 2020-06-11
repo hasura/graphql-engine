@@ -56,7 +56,9 @@ const OperationEditor = (props: OperationEditorProps) => {
     readOnly: boolean
   ) => (
     <div className={styles.modifyOps}>
-      <div className={styles.modifyOpsCollapsedContent}>
+      <div
+        className={`${styles.modifyOpsCollapsedContent} ${styles.add_mar_bottom_mid}`}
+      >
         <div className={`col-md-12 ${styles.padd_remove}`}>
           <Operations
             selectedOperations={ops}
@@ -73,29 +75,32 @@ const OperationEditor = (props: OperationEditorProps) => {
           {ops.update ? (
             opCols.map(col => {
               const toggle = () => {
-                const newCols = opCols.map(oc => {
-                  return {
-                    ...oc,
-                    enabled: col.name === oc.name ? !oc.enabled : oc.enabled,
-                  };
-                });
-                setOperationColumns(newCols);
+                if (!readOnly) {
+                  const newCols = opCols.map(oc => {
+                    return {
+                      ...oc,
+                      enabled: col.name === oc.name ? !oc.enabled : oc.enabled,
+                    };
+                  });
+                  setOperationColumns(newCols);
+                }
               };
               return (
-                <div
-                  className={`${styles.opsCheckboxWrapper} ${styles.columnListElement} ${styles.padd_remove}`}
+                <label
+                  className={`${styles.opsCheckboxWrapper} ${styles.columnListElement} ${styles.padd_remove} ${styles.cursorPointer}`}
                   key={col.name}
+                  onChange={toggle}
                 >
                   <input
                     type="checkbox"
-                    className={styles.opsCheckboxDisabled}
+                    className={`${styles.opsCheckboxDisabled} ${styles.cursorPointer}`}
                     checked={col.enabled}
-                    onChange={toggle}
                     disabled={readOnly}
+                    readOnly
                   />
                   {col.name}
                   <small className={styles.addPaddSmall}> ({col.type})</small>
-                </div>
+                </label>
               );
             })
           ) : (
