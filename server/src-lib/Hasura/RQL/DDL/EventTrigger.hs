@@ -130,7 +130,7 @@ addEventTriggerToCatalog qt etc = do
          [Q.sql|
            INSERT into hdb_catalog.event_triggers
                        (name, type, schema_name, table_name, configuration, comment)
-           VALUES ($1, 'table', $2, $3, $4 $5)
+           VALUES ($1, 'table', $2, $3, $4, $5)
          |] (name, sn, tn, Q.AltJ $ toJSON etc) False
   where
     QualifiedObject sn tn = qt
