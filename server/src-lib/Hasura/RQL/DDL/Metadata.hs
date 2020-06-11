@@ -341,7 +341,7 @@ fetchMetadata = do
 
     fetchTables =
       Q.listQ [Q.sql|
-                SELECT table_schema, table_name, is_enum, configuration::json
+                SELECT table_schema, table_name, is_enum, configuration::json, comment
                 FROM hdb_catalog.hdb_table
                  WHERE is_system_defined = 'false'
                 ORDER BY table_schema ASC, table_name ASC

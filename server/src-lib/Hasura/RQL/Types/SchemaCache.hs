@@ -3,6 +3,7 @@
 {-# OPTIONS_GHC -Wwarn=redundant-constraints #-}
 
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Hasura.RQL.Types.SchemaCache
   ( SchemaCache(..)

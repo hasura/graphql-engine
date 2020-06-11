@@ -130,11 +130,11 @@ addEventTriggerToCatalog qt etc = do
          [Q.sql|
            INSERT into hdb_catalog.event_triggers
                        (name, type, schema_name, table_name, configuration, comment)
-           VALUES ($1, 'table', $2, $3, $4)
+           VALUES ($1, 'table', $2, $3, $4 $5)
          |] (name, sn, tn, Q.AltJ $ toJSON etc) False
   where
     QualifiedObject sn tn = qt
-    (EventTriggerConf name _ _ _ _ _ comment) = etc
+    (EventTriggerConf name _ _ _ _ _ _) = etc
 
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
 delEventTriggerFromCatalog trn = do
@@ -218,7 +218,7 @@ subTableP2Setup qt (EventTriggerConf name def webhook webhookFromEnv rconf mhead
   let headerConfs = fromMaybe [] mheaders
   webhookInfo <- getWebhookInfoFromConf webhookConf
   headerInfos <- getHeaderInfosFromConf headerConfs
-  let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos
+  let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos comment
       tabDep = SchemaDependency (SOTable qt) DRParent
   pure (eTrigInfo, tabDep:getTrigDefDeps qt def)
 
@@ -342,7 +342,7 @@ getEventTriggerDef
 getEventTriggerDef triggerName = do
   (sn, tn, Q.AltJ etc) <- Q.getRow <$> Q.withQE defaultTxErrorHandler
     [Q.sql|
-     SELECT e.schema_name, e.table_name, e.configuration::json
+     SELECT e.schema_name, e.table_name, e.configuration::json, e.comment
      FROM hdb_catalog.event_triggers e where e.name = $1
            |] (Identity triggerName) False
   return (QualifiedObject sn tn, etc)
