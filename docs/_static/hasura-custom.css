@@ -580,6 +580,7 @@ article ol ol {
   font-weight: 600;
   color: #001934;
   margin-left: 20px;
+  cursor: pointer;
 }
 /*** Mobile only END ***/
 
@@ -776,6 +777,7 @@ article ol ol {
   position: absolute;
   right: 10px;
   top: 10px;
+  cursor: pointer;
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper h3 {
   padding-top: 10px;
@@ -1310,6 +1312,7 @@ article ol ol {
 	 position: absolute;
 	 right: 0;
 	 top: 13px;
+   cursor: pointer;
 }
  .navBarToggle .iconBar {
 	 display: block;
