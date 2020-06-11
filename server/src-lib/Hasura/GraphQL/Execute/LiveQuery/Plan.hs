@@ -44,6 +44,7 @@ import           Control.Lens
 import           Data.UUID                              (UUID)
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.RQL.DML.Select                  as DS
 import qualified Hasura.SQL.DML                         as S
 --import qualified Hasura.GraphQL.Execute.Query           as GEQ
@@ -118,7 +119,7 @@ resolveMultiplexedValue
   => UnpreparedValue -> m S.SQLExp
 resolveMultiplexedValue = \case
   UVParameter colVal varM -> do
-    varJsonPath <- case fmap getName varM of
+    varJsonPath <- case fmap PS.getName varM of
       Just varName -> do
         modifying _1 $ Map.insert varName colVal
         pure ["query", G.unName varName]
