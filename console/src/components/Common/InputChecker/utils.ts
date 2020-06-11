@@ -1,4 +1,4 @@
-const intChecker = val => {
+const intChecker = (val: string) => {
   const rVal = parseInt(val, 10);
 
   if (!rVal) {
@@ -6,11 +6,12 @@ const intChecker = val => {
   }
   return rVal;
 };
-const boolChecker = val => {
-  let rVal = '';
+
+const boolChecker = (val: string) => {
+  let rVal: boolean | null;
   if (val === 'true') {
     rVal = true;
-  } else if (rVal === 'false') {
+  } else if (val === 'false') {
     rVal = false;
   } else {
     rVal = null;
@@ -22,7 +23,7 @@ const boolChecker = val => {
   return rVal;
 };
 
-const jsonChecker = val => {
+const jsonChecker = (val: string) => {
   try {
     JSON.parse(val);
   } catch (e) {
@@ -40,13 +41,16 @@ const typeChecker = {
   jsonb: jsonChecker,
 };
 
-const inputChecker = (type, value) => {
+type InputType = keyof typeof typeChecker;
+const inputChecker = (type: string, value: string) => {
   // Checks the input against the intended type
   // and returns the value or error
   return new Promise((resolve, reject) => {
     try {
       if (type in typeChecker) {
-        resolve(typeChecker[type](value));
+        // as it's available in the object, the type can be added here explicitly without issues
+        const inputType = type as InputType;
+        resolve(typeChecker[inputType](value));
         return;
       }
       resolve(value);

@@ -1,19 +1,30 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 
 import { inputChecker } from './utils';
 
-class InputChecker extends Component {
-  constructor() {
-    super();
-    this.state = {
-      isError: false,
-      errorMessage: '',
-    };
+type Props = {
+  type: string;
+  value: string;
+  placeholder: string;
+  disabled: boolean;
+  title: string;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  'data-test': string;
+};
 
-    this.onBlur = this.onBlur.bind(this);
-  }
-  onBlur(e) {
+type State = {
+  isError: boolean;
+  errorMessage: string;
+};
+
+class InputChecker extends Component<Props, State> {
+  state = {
+    isError: false,
+    errorMessage: '',
+  };
+
+  onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const val = e.target.value;
     if (!val) {
       this.setState({
@@ -35,7 +46,7 @@ class InputChecker extends Component {
           errorMessage: r.message,
         });
       });
-  }
+  };
   render() {
     const { value, onChange, placeholder, disabled, title } = this.props;
 
@@ -46,7 +57,7 @@ class InputChecker extends Component {
     return (
       <input
         {...this.props}
-        className={'input-sm form-control'}
+        className="input-sm form-control"
         style={this.state.isError ? style : {}}
         placeholder={placeholder || 'new input'}
         value={value}
@@ -59,14 +70,5 @@ class InputChecker extends Component {
     );
   }
 }
-
-InputChecker.propTypes = {
-  type: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onBlur: PropTypes.func.isRequired,
-  placeholder: PropTypes.string,
-  disabled: PropTypes.bool,
-};
 
 export default InputChecker;
