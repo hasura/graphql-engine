@@ -44,7 +44,7 @@ const CREATE_WEBSOCKET_CLIENT = 'ApiExplorer/CREATE_WEBSOCKET_CLIENT';
 const FOCUS_ROLE_HEADER = 'ApiExplorer/FOCUS_ROLE_HEADER';
 const UNFOCUS_ROLE_HEADER = 'ApiExplorer/UNFOCUS_ROLE_HEADER';
 
-let WEBSOCKET_SUBSCRIPTION_CLIENT;
+let websocketSubscriptionClient;
 
 const getSubscriptionInstance = (url, headers) => {
   return new SubscriptionClient(url, {
@@ -178,14 +178,14 @@ const createWsClient = (url, headers) => {
   const headersFinal = getHeadersAsJSON(headers);
   const graphqlUrl = `${websocketProtocol}://${url.split('//')[1]}`;
 
-  if (!WEBSOCKET_SUBSCRIPTION_CLIENT) {
-    WEBSOCKET_SUBSCRIPTION_CLIENT = getSubscriptionInstance(
+  if (!websocketSubscriptionClient) {
+    websocketSubscriptionClient = getSubscriptionInstance(
       graphqlUrl,
       headersFinal
     );
   }
 
-  return WEBSOCKET_SUBSCRIPTION_CLIENT;
+  return websocketSubscriptionClient;
 };
 
 const graphqlSubscriber = (graphQLParams, url, headers) => {
