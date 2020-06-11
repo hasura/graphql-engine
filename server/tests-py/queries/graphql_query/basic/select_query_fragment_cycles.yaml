@@ -25,6 +25,6 @@ query:
 response:
   errors:
   - extensions:
-      path: $.selectionSet.author.selectionSet.authorFragment.selectionSet.articles.selectionSet.articleFragment.selectionSet.author.selectionSet.authorFragment
+      path: $.selectionSet.author.selectionSet.authorFragment.selectionSet.articles.selectionSet.articleFragment.selectionSet.author.selectionSet
       code: validation-failed
     message: cannot spread fragment "authorFragment" within itself via articleFragment,authorFragment

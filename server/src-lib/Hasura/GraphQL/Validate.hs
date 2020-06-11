@@ -1,8 +1,8 @@
 module Hasura.GraphQL.Validate
   ( validateGQ
   , showVars
-  , RootSelSet(..)
-  , SelSet
+  , RootSelectionSet(..)
+  , SelectionSet(..)
   , Field(..)
   , getTypedOp
   , QueryParts(..)
@@ -15,6 +15,7 @@ module Hasura.GraphQL.Validate
   , isQueryInAllowlist
 
   , unValidateArgsMap
+  , unValidateSelectionSet
   , unValidateField
   ) where
 
@@ -27,24 +28,24 @@ import qualified Data.Aeson                             as A
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.HashSet                           as HS
-import qualified Data.Sequence                          as Seq
 import qualified Data.Text                              as T
 import qualified Data.UUID                              as UUID
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
+import           Hasura.GraphQL.NormalForm
+import           Hasura.GraphQL.Resolve.InputValue      (annInpValueToJson)
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Context
-import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Time
 import           Hasura.SQL.Value
-import           Hasura.RQL.DML.Select.Types
-import           Hasura.GraphQL.Resolve.InputValue      (annInpValueToJson)
 
 data QueryParts
   = QueryParts
@@ -149,19 +150,12 @@ validateFrag
 validateFrag (G.FragmentDefinition n onTy dirs selSet) = do
   unless (null dirs) $ throwVE
     "unexpected directives at fragment definition"
-  tyInfo <- getTyInfoVE onTy
-  objTyInfo <- onNothing (getObjTyM tyInfo) $ throwVE
-    "fragments can only be defined on object types"
-  return $ FragDef n objTyInfo selSet
-
-data RootSelSet
-  = RQuery !SelSet
-  | RMutation !SelSet
-  | RSubscription !SelSet
-  deriving (Show, Eq)
+  fragmentTypeInfo <- getFragmentTyInfo onTy
+  return $ FragDef n fragmentTypeInfo selSet
 
 validateGQ
-  :: (MonadError QErr m, MonadReader GCtx m, MonadReusability m) => QueryParts -> m RootSelSet
+  :: (MonadError QErr m, MonadReader GCtx m, MonadReusability m)
+  => QueryParts -> m RootSelectionSet
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   ctx <- ask
 
@@ -177,19 +171,19 @@ validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   -- build a validation ctx
   let valCtx = ValidationCtx (_gTypes ctx) annVarVals annFragDefs
 
-  selSet <- flip runReaderT valCtx $ denormSelSet [] opRoot $
+  selSet <- flip runReaderT valCtx $ parseObjectSelectionSet valCtx opRoot $
             G._todSelectionSet opDef
 
   case G._todType opDef of
     G.OperationTypeQuery -> return $ RQuery selSet
     G.OperationTypeMutation -> return $ RMutation selSet
     G.OperationTypeSubscription ->
-      case selSet of
-        Seq.Empty       -> throw500 "empty selset for subscription"
-        (_ Seq.:<| rst) -> do
+      case OMap.toList $ unAliasedFields $ unObjectSelectionSet selSet of
+        []             -> throw500 "empty selset for subscription"
+        (_:rst) -> do
           -- As an internal testing feature, we support subscribing to multiple
           -- selection sets.  First check if the corresponding directive is set.
-          let multipleAllowed = elem (G.Directive "_multiple_top_level_fields" []) (G._todDirectives opDef)
+          let multipleAllowed = G.Directive "_multiple_top_level_fields" [] `elem` G._todDirectives opDef
           unless (multipleAllowed || null rst) $
             throwVE "subscriptions must select one top level field"
           return $ RSubscription selSet
@@ -230,12 +224,31 @@ unValidateArgsMap argsMap =
   . Map.toList $ argsMap
 
 -- | Convert the validated field to GraphQL parser AST field
-unValidateField :: Field -> G.Field
-unValidateField (Field alias name _ argsMap selSet _) =
+unValidateField :: G.Alias -> Field -> G.Field
+unValidateField alias (Field name _ argsMap selSet) =
   let args = map (\(n, inpVal) -> G.Argument n $ unValidateInpVal inpVal) $
              Map.toList argsMap
-      sels = map (G.SelectionField . unValidateField) $ toList selSet
-  in G.Field (Just alias) name args [] sels
+  in G.Field (Just alias) name args [] $ unValidateSelectionSet selSet
+
+-- | Convert the validated selection set to GraphQL parser AST selection set
+unValidateSelectionSet :: SelectionSet -> G.SelectionSet
+unValidateSelectionSet = \case
+  SelectionSetObject selectionSet -> fromSelectionSet selectionSet
+  SelectionSetInterface selectionSet -> fromScopedSelectionSet selectionSet
+  SelectionSetUnion selectionSet -> fromScopedSelectionSet selectionSet
+  SelectionSetNone -> mempty
+  where
+    fromAliasedFields :: (IsField f) => AliasedFields f -> G.SelectionSet
+    fromAliasedFields =
+      map (G.SelectionField . uncurry unValidateField) .
+      OMap.toList . fmap toField . unAliasedFields
+    fromSelectionSet =
+      fromAliasedFields . unObjectSelectionSet
+    toInlineSelection typeName =
+      G.SelectionInlineFragment . G.InlineFragment (Just typeName) mempty .
+      fromSelectionSet
+    fromScopedSelectionSet (ScopedSelectionSet base specific) =
+      map (uncurry toInlineSelection) (Map.toList specific) <> fromAliasedFields base
 
 -- | Get the variable definition and it's value (if exists)
 unValidateInpVariable :: AnnInpVal -> Maybe [(G.VariableDefinition,A.Value)]
