@@ -32,6 +32,7 @@ import           Data.Aeson
 import           Data.List                                (nub)
 
 import qualified Hasura.GraphQL.Context                   as GC
+import qualified Hasura.GraphQL.RelaySchema               as Relay
 import qualified Hasura.GraphQL.Schema                    as GS
 import qualified Hasura.GraphQL.Validate.Types            as VT
 import qualified Hasura.Incremental                       as Inc
@@ -47,8 +48,8 @@ import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
-import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.RemoteSchema
+import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Cache.Dependencies
 import           Hasura.RQL.DDL.Schema.Cache.Fields
@@ -178,6 +179,9 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
                                     , _boRemoteRelationshipTypes resolvedOutputs
                                     )
 
+  -- Step 4: Build the relay GraphQL schema
+  relayGQLSchema <- bindA -< Relay.mkRelayGCtxMap (_boTables resolvedOutputs) (_boFunctions resolvedOutputs)
+
   returnA -< SchemaCache
     { scTables = _boTables resolvedOutputs
     , scActions = _boActions resolvedOutputs
@@ -187,6 +191,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     , scCustomTypes = _boCustomTypes resolvedOutputs
     , scGCtxMap = gqlSchema
     , scDefaultRemoteGCtx = remoteGQLSchema
+    , scRelayGCtxMap = relayGQLSchema
     , scDepMap = resolvedDependencies
     , scInconsistentObjs =
         inconsistentObjects <> dependencyInconsistentObjects <> toList gqlSchemaInconsistentObjects

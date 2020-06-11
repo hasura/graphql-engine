@@ -217,6 +217,7 @@ data SchemaCache
   , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
+  , scRelayGCtxMap      :: !GC.GCtxMap
   , scDepMap            :: !DepMap
   , scInconsistentObjs  :: ![InconsistentMetadata]
   , scCronTriggers      :: !(M.HashMap TriggerName CronTriggerInfo)

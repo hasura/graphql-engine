@@ -14,7 +14,7 @@ import { trackRuntimeError } from '../../../telemetry';
 */
 
 export interface ButtonProps extends React.ComponentProps<'button'> {
-  size: string;
+  size?: string;
   color?: 'yellow' | 'red' | 'green' | 'gray' | 'white' | 'black';
 }
 
