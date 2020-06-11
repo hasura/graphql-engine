@@ -1207,6 +1207,9 @@ article ol ol {
     .bannerStripWrapper .bannerStrip .bodyTextSmall {
       padding-left: 0;
     }
+    .bannerStripWrapper .bannerStrip .bodyTextSmall .mLeft15 {
+      margin-left: 5px;
+    }
   #sidebar {
     top: 170px;
     height: calc(100% - 170px);
