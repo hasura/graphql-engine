@@ -87,6 +87,7 @@ import {
   updateFilterTypeLabel,
   getDefaultFilterType,
   getUpdateTooltip,
+  getQuerySingleRowMutation,
 } from './utils';
 import PermButtonSection from './PermButtonsSection';
 
@@ -410,12 +411,12 @@ class Permissions extends Component {
                       (!permissions.columns ||
                         (!permissions.columns.includes('*') &&
                           permissions.columns.length !==
-                            tableSchema.columns.length))) ||
+                          tableSchema.columns.length))) ||
                     (checkComputedFields &&
                       (!permissions.computed_fields ||
                         (!permissions.computed_fields.includes('*') &&
                           permissions.computed_fields.length !==
-                            groupedComputedFields.scalar.length)))
+                          groupedComputedFields.scalar.length)))
                   ) {
                     _permission = permissionsSymbols.partialAccess;
                   } else {
@@ -715,7 +716,7 @@ class Permissions extends Component {
             const isSelected =
               !permissionsState.custom_checked[filterType] &&
               getPermissionRowAccessSummary(filterString[filterType]) ===
-                'without any checks';
+              'without any checks';
 
             // Add allow all option
             let allowAllQueryInfo = '';
@@ -892,6 +893,24 @@ class Permissions extends Component {
           </Tooltip>
         );
 
+        const getSingleRowPermissionsNote = () => {
+          let singleRowPermissionsNote;
+
+          const singleRowMutation = getQuerySingleRowMutation(query);
+
+          if(singleRowMutation) {
+            singleRowPermissionsNote = (
+              <span>
+                The single row mutation <b>{singleRowMutation}</b> shares the returning
+                type with the query field. Hence if no <b>select</b> permissions are defined,
+                the <b>{singleRowMutation}</b> field will also be omitted from the GraphQL schema.
+              </span>
+            )
+          }
+
+          return singleRowPermissionsNote;
+        };
+
         const getUpdateFilterOptions = (filterType, disabled = false) => {
           return (
             <div
@@ -937,6 +956,7 @@ class Permissions extends Component {
                 )}
               </div>
               <div className={styles.add_mar_top}>{getLimitSection()}</div>
+              <div className={styles.add_mar_top}>{getSingleRowPermissionsNote()}</div>
             </div>
           </CollapsibleToggle>
         );
