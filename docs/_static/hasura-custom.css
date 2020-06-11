@@ -1258,9 +1258,6 @@ article ol ol {
   border: 1px solid #1CD3C6;
   color: #001934;
 }
-.gitHubBtnSmallMobile {
-	 display: none !important;
-}
  .visibleMobile {
 	 display: none;
 }
@@ -1343,7 +1340,6 @@ article ol ol {
 }
  .headerWrapper .navLeft .twitterBtn img, .headerWrapper .navLeft .discordBtn img {
 	 width: 12px;
-
 }
  .headerWrapper .navLeft .twitterBtn:hover, .headerWrapper .navLeft .discordBtn:hover {
 	 opacity: 1;
@@ -1356,14 +1352,48 @@ article ol ol {
 	 width: 10px;
 }
  .headerWrapper .navLeft .gitHubBtn {
-	 height: 20px;
-	 padding-top: 4px;
-	 opacity: 0.8;
-	 color: #fff;
+   margin-top: 8px;
+   opacity: .8;
+   border-radius: 4px;
+   color: #001934;
+   border: solid 1px #d1d2d3;
+   font-family: 'Poppins';
+   font-size: 11px;
+   font-weight: 600;
+   display: flex;
+   align-items: center;
+   height: 18px;
+   text-decoration: none;
 }
- .headerWrapper .navLeft .gitHubBtn .gitHubStats {
-	 color: #fff;
-}
+ .headerWrapper .navLeft .gitHubBtn .gitHubStars {
+   display: flex;
+   align-items: center;
+   padding-left: 4px;
+   background-color: #f1f5f8;
+   height: 18px;
+ }
+ .headerWrapper .navLeft .gitHubBtn .gitHubStars img {
+   width: 12px;
+ }
+ .headerWrapper .navLeft .gitHubBtn .gitHubStars span {
+   line-height: 8px;
+   margin-top: 0px;
+   padding-right: 4px;
+   padding: 4px;
+ }
+ .headerWrapper .navLeft .gitHubBtn .gitHubCount {
+   border-left: 1px solid #d1d2d3;
+   height: 10px;
+   padding: 4px;
+   line-height: 8px;
+   display: flex;
+   margin-top: 0px;
+   align-items: center;
+   background-color: #fff;
+ }
+ .headerWrapper .navLeft .gitHubBtn:hover {
+   opacity: 1;
+ }
 .headerWrapper .navBlueBG .navBarUL {
   padding-left: 0;
   margin: 0 0;
@@ -1378,6 +1408,9 @@ article ol ol {
    margin: 0 0;
    letter-spacing: -.48px;
 }
+.versionTxt {
+  position: relative;
+}
 .versionTxt select {
   border-radius: 8px;
   background-color: rgba(255, 255, 255, .24);
@@ -1386,9 +1419,32 @@ article ol ol {
   font-size: 12px;
   font-weight: 600;
   color: #ffffff;
+  border: 1px solid #ddd;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 48px;
+  padding: 0 4px;
+  height: 22px;
+  z-index: 1;
+}
+.versionTxt:after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #fff;
+  position: absolute;
+  right: 20px;
+  top: 10px;
+  z-index: -1;
 }
 .versionTxt select:focus {
   outline: none;
+}
+.versionTxt select::-moz-focus-inner, .versionTxt select option::-moz-focus-inner {
+  border: 0;
 }
  .headerWrapper .navBlueBG .navBarUL li a:hover, .headerWrapper .navWhiteBG .navBarUL li a:hover {
 	 text-decoration: none;
@@ -1431,9 +1487,16 @@ article ol ol {
 		 display: block;
      z-index: 10;
 	}
-	 .headerWrapper .brand {
-		 padding: 8px 0;
-	}
+  .headerWrapper .navLeft .brand {
+    margin-top: 3px;
+    padding: 8px 0;
+  }
+  .headerWrapper .navLeft .gitHubBtn {
+    margin-top: 4px;
+  }
+  .headerWrapper .navLeft .twitterBtn, .headerWrapper .navLeft .discordBtn {
+    margin-top: 4px;
+  }
 	 .headerWrapper .topnav .visibleMobile .navBarULMobile {
 		 padding: 10px 15px;
 		 background-color: #001934;
@@ -1469,33 +1532,41 @@ article ol ol {
 	}
 }
  @media (max-width: 767px) {
-   .versionTxt select {
-     margin-right: 0;
-     margin-left: 8px;
-   }
-	 .headerSticky {
-		 position: static;
-	}
-	 .headerWrapper {
-		 display: block;
-     z-index: 10;
-	}
-	 .headerWrapper .brand {
-		 padding: 8px 0;
-	}
-	 .headerWrapper .topnav .visibleMobile .navBarULMobile {
+  .versionTxt select {
+    margin-right: 0;
+    margin-left: 8px;
+  }
+  .headerSticky {
+    position: static;
+  }
+  .headerWrapper {
+    display: block;
+    z-index: 10;
+  }
+  .headerWrapper .navLeft .brand {
+    padding: 8px 0;
+    margin-top: 0px;
+    margin-right: 16px;
+  }
+  .headerWrapper .navLeft .twitterBtn, .headerWrapper .navLeft .discordBtn {
+    margin-top: 4px;
+  }
+  .headerWrapper .navLeft .gitHubBtn {
+    margin-top: 4px;
+  }
+	.headerWrapper .topnav .visibleMobile .navBarULMobile {
 		 padding: 10px 15px;
 		 background-color: #001934;
 		 border-top: 1px solid rgba(255, 255, 255, .6);
 		 border-bottom: 1px solid rgba(255, 255, 255, .6);
 	}
-	 .headerWrapper .topnav .visibleMobile .navBarULMobile li {
-		 font-size: 15px;
-		 font-family: 'Poppins';
-		 list-style-type: none;
-		 font-weight: 600;
-		 text-transform: uppercase;
-		 padding: 10px 0;
+   .headerWrapper .topnav .visibleMobile .navBarULMobile li {
+  	 font-size: 15px;
+  	 font-family: 'Poppins';
+  	 list-style-type: none;
+  	 font-weight: 600;
+  	 text-transform: uppercase;
+  	 padding: 10px 0;
 	}
 	 .headerWrapper .topnav .visibleMobile .navBarULMobile li a {
 		 color: rgba(255, 255, 255, .6);
@@ -1516,12 +1587,9 @@ article ol ol {
 		 display: none;
 	}
 }
- @media (max-width: 400px) {
-	 .gitHubBtn {
+ @media (max-width: 359px) {
+	 .headerWrapper .navLeft .gitHubBtn {
 		 display: none;
-	}
-	 .gitHubBtnSmallMobile {
-		 display: block !important;
 	}
 }
  @media (max-width: 320px) {

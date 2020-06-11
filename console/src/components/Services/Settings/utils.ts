@@ -5,18 +5,50 @@ export const permissionTypes = [
   'delete_permission',
 ];
 
-export const getTableNameFromDef = def => {
-  if (def.constructor.name === 'Object') {
-    return def.name;
+export type MetadataObject = {
+  name: string;
+  function_name: string;
+  type:
+    | 'table'
+    | 'array_relation'
+    | 'object_relation'
+    | 'function'
+    | 'event_trigger'
+    | 'remote_schema'
+    | 'action';
+  definition: {
+    name: string;
+    role: string;
+    table: {
+      name: string;
+    };
+    configuration: {
+      name: string;
+    };
+  };
+  table_name: string;
+  relationships: Array<{ rel_name: string }>;
+  permissions: Array<{ role_name: string }>;
+};
+
+export const getTableNameFromDef = (
+  def:
+    | {
+        name: string;
+      }
+    | string
+) => {
+  if (typeof def === 'string') {
+    return def;
   }
-  return def;
+  return def.name;
 };
 
 const filterInconsistentMetadataObject = (
-  objects,
-  inconsistentObject,
-  type
-) => {
+  objects: MetadataObject[],
+  inconsistentObject: MetadataObject,
+  type: string
+): MetadataObject[] => {
   switch (type) {
     case 'tables':
       const schemas = objects;
@@ -108,10 +140,10 @@ const filterInconsistentMetadataObject = (
 };
 
 export const filterInconsistentMetadataObjects = (
-  metadataObjects,
-  inconsistentObjects,
-  type
-) => {
+  metadataObjects: MetadataObject[],
+  inconsistentObjects: MetadataObject[],
+  type: string
+): MetadataObject[] => {
   let filteredMetadataObjects = JSON.parse(JSON.stringify(metadataObjects));
 
   inconsistentObjects.forEach(object => {
