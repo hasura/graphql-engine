@@ -1,2 +1,4 @@
-export actionsReducer from './reducer';
-export getActionsRouter from './Router';
+import actionsReducer from './reducer';
+import getActionsRouter from './Router';
+
+export { actionsReducer, getActionsRouter }; 

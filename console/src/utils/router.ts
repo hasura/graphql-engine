@@ -1,3 +1,5 @@
+import { EnterHook, RouterState, RedirectFunction } from "react-router";
+
 /**
  * The function makes a wrapper 'onEnter' function which iterates over all the hooks which are passed to it.
  * A hook function can have upto 3 arguments. If the third argument is not supplied the code assumes the
@@ -6,11 +8,11 @@
  * @param  {Array[function]} An array of functions which needs to be called onEnter.
  * @return {function}       A function which wraps all the other hooks function.
  */
-export const composeOnEnterHooks = hooks => {
+export const composeOnEnterHooks = (hooks: EnterHook[]) => {
   // The below is the wrapper function which will be given back to the call.
-  return (nextState, replaceState, finalCallback) => {
+  return (nextState: RouterState, replaceState: RedirectFunction, finalCallback: VoidFunction) => {
     // Internal recursive function which will be called with all the hooks, or a subset of the hooks.
-    const executeRemainingHooks = remainingHooks => {
+    const executeRemainingHooks = (remainingHooks: EnterHook[]) => {
       // if I got no more hooks then call the finalCallback
       if (remainingHooks.length === 0) {
         return finalCallback();
@@ -18,13 +20,13 @@ export const composeOnEnterHooks = hooks => {
       const nextHook = remainingHooks[0];
       // if the function has 3 or more argument then it assumes the 3 argument is a callback to the next hook.
       if (nextHook.length >= 3) {
-        nextHook.call(this, nextState, replaceState, () => {
+        nextHook(nextState, replaceState, () => {
           // subset of hooks with the current hook removed.
           executeRemainingHooks(remainingHooks.slice(1));
         });
       } else {
         // the other block
-        nextHook.call(this, nextState, replaceState);
+        nextHook(nextState, replaceState);
         executeRemainingHooks(remainingHooks.slice(1));
       }
     };
@@ -42,7 +44,7 @@ export const composeOnEnterHooks = hooks => {
  * @param  {String} componentPath the path of the component in the system. The component is expected to have a default.
  * @return {function}               the closure function which is used.
  */
-export const asyncComponent = componentPath => {
+export const asyncComponent = (componentPath: string) => {
   const asyncRoutFunc = `(function (location, callback) {
     require.ensure([], (function (require) {
       callback(null, require("${componentPath}"));

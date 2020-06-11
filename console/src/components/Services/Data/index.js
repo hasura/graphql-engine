@@ -5,32 +5,32 @@
  *
  */
 
-export dataPageConnector from './DataPageContainer';
-export PageContainer from './DataSubSidebar';
-export viewTableConnector from './TableBrowseRows/ViewTable';
-export addExistingTableViewConnector from './Add/AddExistingTableView';
-export addTableConnector from './Add/AddTable';
-export rawSQLConnector from './RawSQL/RawSQL';
-export permissionsSummaryConnector from './PermissionsSummary/PermissionsSummary';
-export insertItemConnector from './TableInsertItem/InsertItem';
-export editItemConnector from './TableBrowseRows/EditItem';
-export modifyTableConnector from './TableModify/ModifyTable';
-export modifyViewConnector from './TableModify/ModifyView';
-export relationshipsConnector from './TableRelationships/Relationships';
-export relationshipsViewConnector from './TableRelationships/RelationshipsView';
-export permissionsConnector from './TablePermissions/Permissions';
-export schemaConnector from './Schema/Schema';
-export migrationsConnector from './Migrations/Migrations';
+import dataPageConnector from './DataPageContainer';
+import PageContainer from './DataSubSidebar';
+import viewTableConnector from './TableBrowseRows/ViewTable';
+import addExistingTableViewConnector from './Add/AddExistingTableView';
+import addTableConnector from './Add/AddTable';
+import rawSQLConnector from './RawSQL/RawSQL';
+import permissionsSummaryConnector from './PermissionsSummary/PermissionsSummary';
+import insertItemConnector from './TableInsertItem/InsertItem';
+import editItemConnector from './TableBrowseRows/EditItem';
+import modifyTableConnector from './TableModify/ModifyTable';
+import modifyViewConnector from './TableModify/ModifyView';
+import relationshipsConnector from './TableRelationships/Relationships';
+import relationshipsViewConnector from './TableRelationships/RelationshipsView';
+import permissionsConnector from './TablePermissions/Permissions';
+import schemaConnector from './Schema/Schema';
+import migrationsConnector from './Migrations/Migrations';
 
-export dataRouterUtils from './DataRouter';
+import dataRouterUtils from './DataRouter';
 
-export dataReducer from './DataReducer';
+import dataReducer from './DataReducer';
 
 /* Function component */
 
-export functionWrapperConnector from './Function/FunctionWrapper';
-export ModifyCustomFunction from './Function/Modify/ModifyCustomFunction';
-export PermissionCustomFunction from './Function/Permission/Permission';
+import functionWrapperConnector from './Function/FunctionWrapper';
+import ModifyCustomFunction from './Function/Modify/ModifyCustomFunction';
+import PermissionCustomFunction from './Function/Permission/Permission';
 
 /*
 export Logs from './Logs/Logs';
@@ -39,3 +39,27 @@ export CreateTemplate from './QueryTemplates/CreateTemplate';
 export ListTemplates from './QueryTemplates/ListTemplates';
 export ViewTemplate from './QueryTemplates/ViewTemplate';
 */
+
+export { 
+	dataPageConnector,
+	PageContainer,
+	viewTableConnector,
+	addExistingTableViewConnector,
+	addTableConnector,
+	rawSQLConnector,
+	permissionsSummaryConnector,
+	insertItemConnector,
+	editItemConnector,
+	modifyTableConnector,
+	modifyViewConnector,
+	relationshipsConnector,
+	relationshipsViewConnector,
+	permissionsConnector,
+	schemaConnector,
+	migrationsConnector,
+	dataRouterUtils,
+	dataReducer,
+	functionWrapperConnector,
+	ModifyCustomFunction,
+	PermissionCustomFunction
+};

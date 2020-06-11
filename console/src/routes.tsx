@@ -1,17 +1,17 @@
 import React from 'react';
-import { Route, IndexRoute, IndexRedirect } from 'react-router';
+import { Route, IndexRoute, IndexRedirect, EnterHook } from 'react-router';
 
 import { connect } from 'react-redux';
 
 import globals from './Globals';
 
-import { App, Main, PageNotFound } from 'components';
+import { App, Main, PageNotFound } from './components';
 
 import validateLogin from './utils/validateLogin';
 
 import { requireAsyncGlobals } from './components/App/Actions';
 
-import { composeOnEnterHooks } from 'utils/router';
+import { composeOnEnterHooks } from './utils/router';
 
 import { loadMigrationStatus } from './components/Main/Actions';
 
@@ -38,12 +38,14 @@ import aboutConnector from './components/Services/Settings/About/About';
 
 import { showErrorNotification } from './components/Services/Common/Notification';
 import { CLI_CONSOLE_MODE } from './constants';
-import UIKit from './components/UIKit/';
+import UIKit from './components/UIKit';
 import { Heading } from './components/UIKit/atoms';
+import { ReduxState, ReplaceRouterState } from './types';
 
-const routes = store => {
+
+const routes = (store: any) => {
   // load hasuractl migration status
-  const requireMigrationStatus = (nextState, replaceState, cb) => {
+  const requireMigrationStatus = (nextState: any, replaceState: any, cb: any) => {
     const { dispatch } = store;
 
     if (globals.consoleMode === CLI_CONSOLE_MODE) {
@@ -51,7 +53,7 @@ const routes = store => {
         () => {
           cb();
         },
-        r => {
+        (r: Record<string, any>) => {
           if (r.code === 'data_api_error') {
             dispatch(showErrorNotification('Error', null, r));
           } else {
@@ -106,13 +108,13 @@ const routes = store => {
       onEnter={composeOnEnterHooks([
         validateLogin(store),
         requireAsyncGlobals(store),
-      ])}
+      ]) as EnterHook}
     >
       <Route path="login" component={generatedLoginConnector(connect)} />
       <Route
         path=""
         component={Main}
-        onEnter={composeOnEnterHooks([requireSchema, requireMigrationStatus])}
+        onEnter={composeOnEnterHooks([requireSchema, requireMigrationStatus]) as EnterHook}
       >
         <Route path="">
           <IndexRoute component={generatedApiExplorer(connect)} />
@@ -148,8 +150,8 @@ const routes = store => {
           {uiKitRouter}
         </Route>
       </Route>
-      <Route path="404" component={PageNotFound} status="404" />
-      <Route path="*" component={PageNotFound} status="404" />
+      <Route path="404" component={PageNotFound} />
+      <Route path="*" component={PageNotFound} />
     </Route>
   );
 };
