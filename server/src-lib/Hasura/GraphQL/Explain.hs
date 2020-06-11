@@ -119,7 +119,7 @@ explainField userInfo gCtx sqlGenCtx actionExecuter fld =
     orderByCtx = _gOrdByCtx gCtx
 
 explainGQLQuery
-  :: (MonadError QErr m, MonadIO m, HasVersion, E.MonadGQLSystemAuthz m)
+  :: (MonadError QErr m, MonadIO m, HasVersion, E.MonadGQLAuthorization m)
   => PGExecCtx
   -> SchemaCache
   -> SQLGenCtx
@@ -132,7 +132,7 @@ explainGQLQuery
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL hdrs ip actionExecuter (GQLExplain query userVarsRaw) = do
   userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
   -- NOTE: previously 'E.getExecPlanPartial' would perform allow-list checking. This has been moved
-  -- into a separate `E.MonadGQLSystemAuthz` class. Hence, now E.authorizeGQLApi is called enforce
+  -- into a separate `E.MonadGQLAuthorization` class. Hence, now E.authorizeGQLApi is called enforce
   -- the GraphQL API authorization check
   reqParsed <- E.authorizeGQLApi userInfo (hdrs, ip) enableAL sc query
                >>= flip onLeft throwError

@@ -36,7 +36,7 @@ import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
-import           Hasura.GraphQL.Execute                 (MonadGQLSystemAuthz (..),
+import           Hasura.GraphQL.Execute                 (MonadGQLAuthorization (..),
                                                          checkQueryInAllowlist)
 import           Hasura.GraphQL.Resolve.Action          (asyncActionsProcessor)
 import           Hasura.GraphQL.Transport.HTTP.Protocol (toParsed)
@@ -212,7 +212,7 @@ runHGEServer
      , MetadataApiAuthorization m
      , HttpLog m
      , ConsoleRenderer m
-     , MonadGQLSystemAuthz m
+     , MonadGQLAuthorization m
      , MonadConfigApiHandler m
      )
   => ServeOptions impl
@@ -435,7 +435,7 @@ instance ConsoleRenderer AppM where
   renderConsole path authMode enableTelemetry consoleAssetsDir =
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
 
-instance MonadGQLSystemAuthz AppM where
+instance MonadGQLAuthorization AppM where
   authorizeGQLApi userInfo _ enableAL sc query = runExceptT $ do
     req <- toParsed query
     checkQueryInAllowlist enableAL userInfo req sc

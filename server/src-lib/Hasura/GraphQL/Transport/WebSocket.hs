@@ -93,7 +93,7 @@ data WsClientState
   , wscsReqHeaders   :: ![H.Header]
   -- ^ headers from the client (in conn params) to forward to the remote schema
   , wscsIpAddress    :: !IpAddress
-  -- ^ IP address required for 'MonadGQLSystemAuthz'
+  -- ^ IP address required for 'MonadGQLAuthorization'
   }
 
 data WSConnData
@@ -293,7 +293,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAdress = do
             <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
 onStart
-  :: forall m. (HasVersion, MonadIO m, E.MonadGQLSystemAuthz m)
+  :: forall m. (HasVersion, MonadIO m, E.MonadGQLAuthorization m)
   => WSServerEnv -> WSConn -> StartMsg -> m ()
 onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   timerTot <- startTimer
@@ -471,7 +471,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     catchAndIgnore m = void $ runExceptT m
 
 onMessage
-  :: (HasVersion, MonadIO m, UserAuthentication m, E.MonadGQLSystemAuthz m)
+  :: (HasVersion, MonadIO m, UserAuthentication m, E.MonadGQLAuthorization m)
   => AuthMode
   -> WSServerEnv
   -> WSConn -> BL.ByteString -> m ()
@@ -640,7 +640,7 @@ createWSServerApp
      , MC.MonadBaseControl IO m
      , LA.Forall (LA.Pure m)
      , UserAuthentication m
-     , E.MonadGQLSystemAuthz m
+     , E.MonadGQLAuthorization m
      )
   => AuthMode
   -> WSServerEnv

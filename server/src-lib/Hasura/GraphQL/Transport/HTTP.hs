@@ -35,7 +35,7 @@ runGQBatched
      , MonadIO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
-     , E.MonadGQLSystemAuthz m
+     , E.MonadGQLAuthorization m
      )
   => RequestId
   -> ResponseInternalErrorsConfig

@@ -18,7 +18,7 @@ module Hasura.GraphQL.Execute
 
   , ExecutionCtx(..)
 
-  , MonadGQLSystemAuthz(..)
+  , MonadGQLAuthorization(..)
   , checkQueryInAllowlist
   ) where
 
@@ -88,7 +88,7 @@ data ExecutionCtx
 -- 'RQL.Permissions' layer. This enforces some system specific authorization (like enforcing
 -- allow-lists)
 -- | System Authorization for the GraphQL API
-class Monad m => MonadGQLSystemAuthz m where
+class Monad m => MonadGQLAuthorization m where
   authorizeGQLApi
     :: UserInfo
     -> ([HTTP.Header], IpAddress)
@@ -100,11 +100,11 @@ class Monad m => MonadGQLSystemAuthz m where
     -- ^ the unparsed GraphQL query string (and related values)
     -> m (Either QErr GQLReqParsed)
 
-instance MonadGQLSystemAuthz m => MonadGQLSystemAuthz (ExceptT e m) where
+instance MonadGQLAuthorization m => MonadGQLAuthorization (ExceptT e m) where
   authorizeGQLApi ui det enableAL sc req =
     lift $ authorizeGQLApi ui det enableAL sc req
 
-instance MonadGQLSystemAuthz m => MonadGQLSystemAuthz (ReaderT r m) where
+instance MonadGQLAuthorization m => MonadGQLAuthorization (ReaderT r m) where
   authorizeGQLApi ui det enableAL sc req =
     lift $ authorizeGQLApi ui det enableAL sc req
 

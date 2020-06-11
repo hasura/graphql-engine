@@ -329,7 +329,7 @@ v1QueryHandler query = do
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
 v1Alpha1GQHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLSystemAuthz m)
+  :: (HasVersion, MonadIO m, E.MonadGQLAuthorization m)
   => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
@@ -351,12 +351,12 @@ v1Alpha1GQHandler query = do
     GH.runGQBatched requestId responseErrorsConfig userInfo ipAddress reqHeaders query
 
 v1GQHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLSystemAuthz m)
+  :: (HasVersion, MonadIO m, E.MonadGQLAuthorization m)
   => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler
 
 gqlExplainHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLSystemAuthz m)
+  :: (HasVersion, MonadIO m, E.MonadGQLAuthorization m)
   => GE.GQLExplain GH.GQLReqUnparsed -> Handler m (HttpResponse EncJSON)
 gqlExplainHandler query = do
   onlyAdmin
@@ -484,7 +484,7 @@ mkWaiApp
      , HttpLog m
      , UserAuthentication m
      , MetadataApiAuthorization m
-     , E.MonadGQLSystemAuthz m
+     , E.MonadGQLAuthorization m
      , MonadConfigApiHandler m
      )
   => Q.TxIsolation
@@ -588,7 +588,7 @@ httpApp
      , HttpLog m
      , UserAuthentication m
      , MetadataApiAuthorization m
-     , E.MonadGQLSystemAuthz m
+     , E.MonadGQLAuthorization m
      , MonadConfigApiHandler m
      )
   => CorsConfig
