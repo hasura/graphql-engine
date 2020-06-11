@@ -97,6 +97,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: add new sidebar icon that separates enums from tables (fix #4984) (#4992)
 - console: fix "Cannot read property 'foldable'" runtime error in `Browse Rows` page (fix #4907) (#5016)
 - console: respect read-only mode in actions pages (fix #4656) (#4764)
+- console: fix listen update column config selection for event trigger (close #5042) (#5043)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
@@ -112,6 +113,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
 - docs: add page for procuring custom docker images and binaries (#4828)
 - docs: add content on how to secure action handlers and other actions docs improvements (#4743)
+- docs: add page on setting up v2 migrations (close #4746) (#4898)
 - docs: make header common with other hasura.io/ pages (#4957)
 - install manifests: update all install manifests to enable dev mode by default (close #4599) (#4716)
 
