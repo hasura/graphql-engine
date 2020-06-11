@@ -6,7 +6,7 @@ import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton'
 import { ordinalColSort } from '../utils';
 
 import { insertItem, I_RESET, fetchEnumOptions } from './InsertActions';
-import { setTable, fetchGeneratedColumnsInfo } from '../DataActions';
+import { setTable } from '../DataActions';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 import styles from '../../../Common/TableCommon/Table.scss';
@@ -19,10 +19,9 @@ class InsertItem extends Component {
   }
 
   componentDidMount() {
-    const { tableName, currentSchema, dispatch } = this.props;
+    const { tableName, dispatch } = this.props;
     dispatch(setTable(tableName));
     dispatch(fetchEnumOptions());
-    dispatch(fetchGeneratedColumnsInfo(tableName, currentSchema));
   }
 
   componentWillUnmount() {
@@ -52,7 +51,6 @@ class InsertItem extends Component {
       count,
       dispatch,
       enumOptions,
-      generatedColumns,
     } = this.props;
 
     const currentTable = findTable(
@@ -119,7 +117,6 @@ class InsertItem extends Component {
           clone={clone}
           onChange={onChange}
           onFocus={onFocus}
-          generatedColumns={generatedColumns}
         />
       );
     });
@@ -256,7 +253,6 @@ const mapStateToProps = (state, ownProps) => {
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
-    generatedColumns: state.tables.generatedColumns,
   };
 };
 

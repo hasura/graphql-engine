@@ -13,7 +13,6 @@ import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { fetchEnumOptions } from './EditActions';
 import { TableRow } from '../Common/Components/TableRow';
-import { fetchGeneratedColumnsInfo } from '../DataActions';
 
 class EditItem extends Component {
   constructor() {
@@ -22,9 +21,7 @@ class EditItem extends Component {
   }
 
   componentDidMount() {
-    const { tableName, currentSchema, dispatch } = this.props;
-    dispatch(fetchEnumOptions());
-    dispatch(fetchGeneratedColumnsInfo(tableName, currentSchema));
+    this.props.dispatch(fetchEnumOptions());
   }
 
   render() {
@@ -41,7 +38,6 @@ class EditItem extends Component {
       count,
       dispatch,
       enumOptions,
-      generatedColumns,
     } = this.props;
 
     // check if item exists
@@ -89,7 +85,6 @@ class EditItem extends Component {
           enumOptions={enumOptions}
           index={i}
           prevValue={prevValue}
-          generatedColumns={generatedColumns}
         />
       );
     });
@@ -203,7 +198,6 @@ const mapStateToProps = (state, ownProps) => {
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
-    generatedColumns: state.tables.generatedColumns,
   };
 };
 

@@ -787,23 +787,6 @@ WHERE
 export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
-export const getGeneratedColumnsInfo = (schemaName, tableName) => {
-  return {
-    type: 'run_sql',
-    args: {
-      sql: `
-SELECT
-	column_name,
-	is_generated
-FROM
-	INFORMATION_SCHEMA.COLUMNS
-WHERE
-	table_name = '${tableName}' AND table_schema = '${schemaName}';
-  `,
-    },
-  };
-};
-
 export const cascadeUpQueries = (upQueries = []) =>
   upQueries.map((i = {}) => {
     if (i.type === 'run_sql' || i.type === 'untrack_table') {

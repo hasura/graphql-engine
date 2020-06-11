@@ -19,7 +19,6 @@ export interface TableRowProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>, val: unknown) => void;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   prevValue?: unknown;
-  generatedColumns: string[];
 }
 
 export const TableRow: React.FC<TableRowProps> = ({
@@ -31,21 +30,23 @@ export const TableRow: React.FC<TableRowProps> = ({
   index,
   clone,
   prevValue,
-  generatedColumns = [],
 }) => {
   const {
     column_name: colName,
     is_nullable,
     is_identity,
     column_default,
+    is_generated,
   } = column;
   const hasDefault = column_default ? column_default.trim() !== '' : false;
-  const isIdentity = is_identity ? is_identity !== 'NO' : false;
+  const isIdentity = is_identity && is_identity !== 'NO';
   const isAutoIncrement = !!isColumnAutoIncrement(column);
-  const isGenerated =
-    generatedColumns.length > 0 && generatedColumns.includes(colName);
-  const isNullable = is_nullable ? is_nullable !== 'NO' && !isGenerated : false;
-  const isDisabled = isAutoIncrement || isGenerated;
+  const isGenerated = !!(is_generated && is_generated !== 'NEVER');
+  const isNullable =
+    is_nullable && is_nullable !== 'NO' && !isGenerated && !isIdentity;
+  const isDisabled = !!(isAutoIncrement || isGenerated || isIdentity);
+
+  const isEditing = prevValue !== undefined;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -84,7 +85,7 @@ export const TableRow: React.FC<TableRowProps> = ({
           }}
           name={`${colName}-value`}
           defaultChecked={prevValue ? true : !hasDefault && !isNullable}
-          disabled={isDisabled}
+          disabled={!!isDisabled}
         />
         <TypedInput
           inputRef={(node: HTMLInputElement) => {
@@ -106,8 +107,8 @@ export const TableRow: React.FC<TableRowProps> = ({
           ref={node => {
             setRef('nullNode', node);
           }}
-          disabled={!isNullable || isGenerated}
-          defaultChecked={prevValue ? prevValue === null : isNullable}
+          disabled={!isNullable}
+          defaultChecked={prevValue ? prevValue === null : !!isNullable}
           name={`${colName}-value`}
           data-test={`nullable-radio-${index}`}
         />
@@ -120,12 +121,8 @@ export const TableRow: React.FC<TableRowProps> = ({
             setRef('defaultNode', node);
           }}
           name={`${colName}-value`}
-          disabled={isDisabled || (!hasDefault && !isIdentity)}
-          defaultChecked={
-            prevValue !== undefined
-              ? false
-              : isGenerated || isIdentity || hasDefault
-          }
+          disabled={isDisabled}
+          defaultChecked={isEditing ? isGenerated : isIdentity || hasDefault}
           data-test={`typed-input-default-${index}`}
         />
         <span className={styles.radioSpan}>Default</span>
