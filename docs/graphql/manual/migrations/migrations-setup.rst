@@ -28,7 +28,7 @@ Let's say we have the following two tables in our schema:
     author (id uuid, name text, rating integer)
     article (id uuid, title text, content text, author_id uuid)
 
-Now we want to set up migrations for starting with this schema.
+Now we want to set up migrations starting with this schema.
 
 Step 0: Disable console on the server
 -------------------------------------
