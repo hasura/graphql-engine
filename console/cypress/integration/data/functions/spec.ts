@@ -69,7 +69,9 @@ export const deleteCustomFunction = () => {
   setPromptValue(getCustomFunctionName(1));
 
   cy.get(getElementFromAlias('custom-function-edit-delete-btn')).click();
-  cy.window().its('prompt').should('be.called');
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(5000);
   cy.get(getElementFromAlias('delete-confirmation-error')).should('not.exist');
   cy.url().should('eq', `${baseUrl}/data/schema/public`);

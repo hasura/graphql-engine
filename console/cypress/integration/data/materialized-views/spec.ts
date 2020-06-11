@@ -98,7 +98,12 @@ export const passVAddDataarticle = (
     .find('input')
     .last()
     .type('{selectall}{del}');
-  cy.get('label').contains('id').next().find('input').last().type(`${data[0]}`);
+  cy.get('label')
+    .contains('id')
+    .next()
+    .find('input')
+    .last()
+    .type(`${data[0]}`);
   cy.get('label')
     .contains('title')
     .next()
@@ -166,7 +171,12 @@ export const passVAddDataauthor = (
     .find('input')
     .last()
     .type('{selectall}{del}');
-  cy.get('label').contains('id').next().find('input').last().type(`${data[0]}`);
+  cy.get('label')
+    .contains('id')
+    .next()
+    .find('input')
+    .last()
+    .type(`${data[0]}`);
   cy.get('label')
     .contains('name')
     .next()
@@ -197,7 +207,12 @@ export const passVAddDatacomment = (
     .find('input')
     .last()
     .type('{selectall}{del}');
-  cy.get('label').contains('id').next().find('input').last().type(`${data[0]}`);
+  cy.get('label')
+    .contains('id')
+    .next()
+    .find('input')
+    .last()
+    .type(`${data[0]}`);
   cy.get('label')
     .contains('user_id')
     .next()
@@ -245,7 +260,9 @@ export const passVAddDatacomment = (
 const checkQuerySuccess = () => {
   // Expect only 4 rows i.e. expect fifth element to not exist
   cy.get('[role=gridcell]').contains(userId);
-  cy.get('[role=row]').eq(2).should('not.exist');
+  cy.get('[role=row]')
+    .eq(2)
+    .should('not.exist');
 };
 
 export const passVAddData = () => {
@@ -292,7 +309,9 @@ export const passVFilterQueryEq = () => {
     .last()
     .select('$eq');
   // Type value as `filter-text`
-  cy.get("input[placeholder='-- value --']").last().type(`${userId}`);
+  cy.get("input[placeholder='-- value --']")
+    .last()
+    .type(`${userId}`);
   // Run query
   cy.get(getElementFromAlias('run-query')).click();
   cy.wait(5000);
@@ -306,7 +325,12 @@ const checkOrder = (order: string) => {
   if (order === 'asc') {
     curElement.each(($el, index) => {
       if (index === 1) {
-        cy.wrap($el).find('[role=gridcell]').first().next().next().contains(2);
+        cy.wrap($el)
+          .find('[role=gridcell]')
+          .first()
+          .next()
+          .next()
+          .contains(2);
       }
       if (index === 2) {
         cy.wrap($el)
@@ -320,7 +344,12 @@ const checkOrder = (order: string) => {
   } else {
     curElement.each(($el, index) => {
       if (index === 2) {
-        cy.wrap($el).find('[role=gridcell]').first().next().next().contains(2);
+        cy.wrap($el)
+          .find('[role=gridcell]')
+          .first()
+          .next()
+          .next()
+          .contains(2);
       }
       if (index === 1) {
         cy.wrap($el)
@@ -353,7 +382,10 @@ export const passVAscendingSort = () => {
 
 export const passModifyMaterializedView = () => {
   cy.get(getElementFromAlias('table-modify')).click();
-  cy.get('button').contains('Modify').last().click();
+  cy.get('button')
+    .contains('Modify')
+    .last()
+    .click();
   cy.url().should('eq', `${baseUrl}/data/sql`);
 };
 
@@ -402,7 +434,9 @@ export const passVDeleteMaterializedView = () => {
   cy.get(getElementFromAlias('table-modify')).click();
   setPromptValue('author_average_rating_vt');
   cy.get(getElementFromAlias('delete-view')).click();
-  cy.window().its('prompt').should('be.called');
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   // cy.get('.notification-error');
   validateView('author_average_rating_vt', ResultType.FAILURE);
@@ -413,7 +447,9 @@ export const deleteTable = (name: string) => {
   cy.get(getElementFromAlias('table-modify')).click();
   setPromptValue(name);
   cy.get(getElementFromAlias('delete-table')).click();
-  cy.window().its('prompt').should('be.called');
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
   validateCT(name, ResultType.FAILURE);
   cy.wait(7000);
