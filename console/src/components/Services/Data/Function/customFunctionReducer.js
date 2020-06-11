@@ -324,6 +324,7 @@ const updateSessVar = session_argument => {
     };
     const retrackPayloadDown = {
       type: 'track_function',
+      version: 2,
       args: {
         function: {
           name: functionName,
