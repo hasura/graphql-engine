@@ -1,6 +1,5 @@
-@import url('https://fonts.googleapis.com/css?family=Gudea');
 @import url('https://fonts.googleapis.com/css?family=Khula:400,700');
-@import url('https://fonts.googleapis.com/css?family=Poppins:300,400,500,600&display=swap');
+
 html {
   background-color: #f8f8f8 !important;
 }
@@ -13,9 +12,24 @@ html {
   background: #b2d7fe !important;
 }
 
+/* override djangosite.css */
+body, p, #docs-content, #sidebar,
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Open Sans', Helvetica, Arial, sans-serif;
+}
+
+body, p, #docs-content, #sidebar {
+  font-size: 18px;
+}
+
+form input[type="search"], form input[type="text"],
+form input[type="email"], form input[type="password"],
+form input[type="number"], form input[type="url"],
+form input[type="submit"], form textarea {
+  font-size: 16px;
+}
+
 body {
-  font-family: 'Gudea' !important;
-  font-size: 16px !important;
   color: #333 !important;
   min-width: 100%;
   overflow-y: auto;
@@ -36,8 +50,6 @@ h3 {
 }
 
 p {
-  font-family: 'Gudea';
-  font-size: 16px;
   color: #333;
   line-height: 1.7;
 }
@@ -47,12 +59,7 @@ code,
 kbd,
 pre,
 samp {
-  font-size: 15px !important;
-}
-
-ol,
-ul {
-  font-family: 'Gudea';
+  font-size: 18px;
 }
 
 .inline-block {
@@ -72,7 +79,6 @@ ul {
 
 .content_wrapper {
   display: flex;
-  font-family: 'Gudea';
   margin: auto;
   width: 100%;
   /* height: calc(100vh - 60px); */
@@ -87,8 +93,6 @@ ul {
   align-items: center;
 }
 #mc_embed_signup .subscribe-form-content {
-  font-family: 'Gudea';
-  font-size: 18px;
   font-weight: bold;
   color: #001934;
   padding-right: 40px;
@@ -124,7 +128,6 @@ ul {
   padding: 0 16px !important;
   height: 32px !important;
   width: calc(100% - 32px) !important;
-  font-size: 13px !important;
 }
 .input-box input:-webkit-autofill, .input-box input:-webkit-autofill {
   -webkit-animation-name: autofill;
@@ -159,7 +162,6 @@ ul {
   background-color: rgba(0, 25, 52, .9) !important;
   border: 1px solid rgba(0, 25, 52, .9) !important;
   color: #1ad7ca !important;
-  font-size: 13px !important;
   font-weight: bold !important;
   height: 34px !important;
 }
@@ -179,7 +181,6 @@ ul {
   background-color: #001934;
   padding: 8px 12px !important;
   border-radius: 4px;
-  font-family: 'Gudea';
   font-size: 14px !important;
   font-weight: normal;
   position: absolute;
@@ -265,8 +266,6 @@ ul {
 }
 .bannerStripWrapper .bannerStrip .bodyTextSmall
 {
-  font-family: 'Poppins';
-  font-size: 18px;
   text-align: left;
   padding-top: 0;
   letter-spacing: normal;
@@ -306,20 +305,19 @@ ul {
 }
 
 [role="main"] h2 {
-  font-size: 24px !important;
+  font-size: 26px !important;
 }
 
 [role="main"] h3 {
-  font-size: 20px !important;
+  font-size: 24px !important;
 }
 
 [role="main"] h4 {
-  font-size: 18px !important;
+  font-size: 20px !important;
 }
 
 #docs-content,
 #docs-header {
-  font-size: 16px !important;
   margin-left: 40px; margin-right: 40px;
 }
 
@@ -575,8 +573,6 @@ article ol ol {
   color: #1CD3C6;
 }
 #nav_tree_icon .docs-menu {
-  font-family: 'Poppins';
-  font-size: 14px;
   font-weight: 600;
   color: #001934;
   margin-left: 20px;
@@ -595,7 +591,6 @@ article ol ol {
   position: absolute;
   top: 13px;
   left: 10px;
-  font-size: 18px;
   color: #1CD3C6;
   cursor: pointer;
   z-index: 1;
@@ -608,7 +603,6 @@ article ol ol {
   display: block;
   width: 100%;
   padding: 6px 12px;
-  font-size: 18px;
   line-height: 1.42857143;
   color: #333;
   background-color: #fff;
@@ -661,24 +655,12 @@ article ol ol {
 
 /*** Table of contents END ***/
 
-/*** toctree ***/
-
-.toctree-wrapper {
-  font-family: 'Gudea';
-}
-
-/*** toctree END ***/
-
 /*** Feedback section ***/
 
 .feedback_wrapper {
   background-color: #eee;
   padding: 20px;
   margin: 20px 0;
-}
-
-.feedback_wrapper .feedback {
-  position: relative;
 }
 
 .feedback_wrapper .feedback .display_inl {
@@ -688,18 +670,13 @@ article ol ol {
 .feedback_wrapper .feedback .actions {
   width: 21px;
   cursor: pointer;
-}
-
-.feedback_wrapper .feedback .actions.thumb_up {
-  position: absolute;
-  top: 1px;
-  left: 170px;
+  margin-left: 15px;
+  position: relative;
+  top: 2px;
 }
 
 .feedback_wrapper .feedback .actions.thumb_down {
-  position: absolute;
-  left: 210px;
-  top: 4px;
+  top: 5px;
 }
 
 .feedback_wrapper .thumb_up:hover svg path {
@@ -721,9 +698,8 @@ article ol ol {
   color: #000;
   border-radius: 5px;
   border: 1px solid #1CD3C6;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  font-family: 'Gudea';
 }
 
 #feedback_box {
@@ -736,6 +712,7 @@ article ol ol {
 /*** Footer ***/
 
 .footer-hasura-custom {
+  font-size: 16px;
   text-align: center;
   background-color: #eee;
   margin: 20px 0;
@@ -760,8 +737,6 @@ article ol ol {
 #sidebar {
   background-color: #001934;
   width: 24% !important;
-  font-family: 'Gudea' !important;
-  font-size: 16px;
   height: 100vh;
   overflow-y: auto;
   padding-left: 15px !important;
@@ -806,7 +781,7 @@ article ol ol {
   /* color: #fff; */
   color: rgba(214,214,214,1);
   text-decoration: none;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 #sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a code {
@@ -839,7 +814,6 @@ article ol ol {
 }
 
 #sidebar .sphinxsidebar .sphinxsidebarwrapper .header_main_logo .version_txt {
-  font-family: 'Gudea';
   color: rgba(255,198,39,1);
   margin-top: 6px;
   margin-left: 10px;
@@ -853,7 +827,6 @@ article ol ol {
   background-color: transparent;
   border: 0;
   color: #FFF;
-// color: #000;
   font-size: 18px;
 
   -moz-appearance: none;
@@ -890,11 +863,6 @@ article ol ol {
   margin-left: calc(24vw - 240px);
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper .current {
-  font-family: 'Gudea';
-  font-size: 16px;
-}
-
 #sidebar .sphinxsidebar .sphinxsidebarwrapper a.current.reference.internal {
   color: #1CD3C6 !important;
 }
@@ -927,6 +895,10 @@ article ol ol {
 
 .graphiql.with-vars .graphiql-container {
   min-height: 375px;
+}
+
+.graphiql .graphiql-container .CodeMirror {
+  font-size: 18px;
 }
 
 .graphiql .topBarWrap {
@@ -976,8 +948,8 @@ article ol ol {
 }
 
 .graphiql .variable-editor .variable-editor-title {
-  line-height: 12px;
-  font-size: 13px;
+  line-height: 18px;
+  font-size: 16px;
   padding: 2px 10px;
 }
 
@@ -1162,9 +1134,12 @@ article ol ol {
     min-width: calc(166% + 10px);  /* 1 / width(input_search_box) + 10px */
   }
 }
-@media (min-width: 768px) and (max-width: 1200px) {
+@media (min-width: 768px) and (max-width: 1385px) {
   .bannerStripWrapper {
     /* padding-left: 4vw; */
+  }
+  .bannerStripWrapper .bannerStrip .bodyTextSmall {
+    line-height: 21px;
   }
   .bannerStripWrapper .bannerStripImg {
     display: none;
@@ -1275,7 +1250,6 @@ article ol ol {
 }
 .commonBtn {
   border-radius: 5px;
-  font-family: 'Poppins';
   font-size: 15px;
   font-weight: 500;
   position: relative;
@@ -1444,8 +1418,7 @@ article ol ol {
   margin: 0 0;
 }
  .headerWrapper .navBlueBG .navBarUL li, .headerWrapper .navWhiteBG .navBarUL li {
-	 font-size: 15px;
-	 font-family: 'Poppins';
+   font-size: 16px;
 	 list-style-type: none;
 	 display: inline-block;
 	 padding: 10px 6px;
@@ -1460,8 +1433,7 @@ article ol ol {
   border-radius: 8px;
   background-color: rgba(255, 255, 255, .24);
   margin-right: 12px;
-  font-family: 'Poppins';
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: #ffffff;
   border: 1px solid #ddd;
@@ -1534,12 +1506,9 @@ article ol ol {
 	}
   .headerWrapper .navLeft .brand {
     margin-top: 3px;
-    padding: 8px 0;
+    padding: 5px 0;
   }
-  .headerWrapper .navLeft .gitHubBtn {
-    margin-top: 4px;
-  }
-  .headerWrapper .navLeft .twitterBtn, .headerWrapper .navLeft .discordBtn {
+  .headerWrapper .navLeft .socialBtn {
     margin-top: 4px;
   }
 	 .headerWrapper .topnav .visibleMobile .navBarULMobile {
@@ -1550,8 +1519,6 @@ article ol ol {
      margin-top: 0;
 	}
 	 .headerWrapper .topnav .visibleMobile .navBarULMobile li {
-		 font-size: 15px;
-		 font-family: 'Poppins';
 		 list-style-type: none;
 		 font-weight: 600;
 		 text-transform: uppercase;
@@ -1589,14 +1556,11 @@ article ol ol {
     z-index: 10;
   }
   .headerWrapper .navLeft .brand {
-    padding: 8px 0;
+    padding: 5px 0;
     margin-top: 0px;
     margin-right: 16px;
   }
-  .headerWrapper .navLeft .twitterBtn, .headerWrapper .navLeft .discordBtn {
-    margin-top: 4px;
-  }
-  .headerWrapper .navLeft .gitHubBtn {
+  .headerWrapper .navLeft .socialBtn {
     margin-top: 4px;
   }
 	.headerWrapper .topnav .visibleMobile .navBarULMobile {
@@ -1605,13 +1569,11 @@ article ol ol {
 		 border-top: 1px solid rgba(255, 255, 255, .6);
 		 border-bottom: 1px solid rgba(255, 255, 255, .6);
 	}
-   .headerWrapper .topnav .visibleMobile .navBarULMobile li {
-  	 font-size: 15px;
-  	 font-family: 'Poppins';
-  	 list-style-type: none;
-  	 font-weight: 600;
-  	 text-transform: uppercase;
-  	 padding: 10px 0;
+	 .headerWrapper .topnav .visibleMobile .navBarULMobile li {
+		 list-style-type: none;
+		 font-weight: 600;
+		 text-transform: uppercase;
+		 padding: 10px 0;
 	}
 	 .headerWrapper .topnav .visibleMobile .navBarULMobile li a {
 		 color: rgba(255, 255, 255, .6);

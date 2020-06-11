@@ -4,7 +4,7 @@
   {% set is_landing_page = true %}
 {%- endif %}
 
-{% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css'] %}
+{% set css_files = css_files + ['_static/djangosite.css', '_static/hasura-custom.css'] %}
 
 {%- if is_landing_page %}
   {% set css_files = css_files + ['_static/landing.css'] %}
@@ -68,16 +68,16 @@
                 </a>
               </div>
               <a href="https://discordapp.com/invite/hasura" target="_blank" rel="noopener noreferrer">
-                <div class="discordBtn">
+                <div class="socialBtn discordBtn">
                   <img src="{{ pathto('_images/layout/discord-brands-block.svg', 1) }}" alt="Discord"/>
                 </div>
               </a>
               <a href="https://twitter.com/hasurahq" target="_blank" rel="noopener noreferrer">
-                <div class="twitterBtn">
+                <div class="socialBtn twitterBtn">
                   <img src="{{ pathto('_images/layout/twitter-brands-block.svg', 1) }}" alt="Twitter"/>
                 </div>
               </a>
-              <a class='gitHubBtn hide' href="https://github.com/hasura/graphql-engine/" target="_blank" rel="noopener noreferrer">
+              <a class='socialBtn gitHubBtn hide' href="https://github.com/hasura/graphql-engine/" target="_blank" rel="noopener noreferrer">
                 <div class='gitHubStars'>
                   <img src="{{ pathto('_images/layout/github-header.svg', 1) }}" alt='Github'/>
                   <span>Star</span>
@@ -616,12 +616,12 @@
       };
 
       const handleThumbUpClick = function(e) {
-        sendFeedback('positive', 'Great to hear that. Would you like to share any other feedback:');
+        sendFeedback('positive', 'Great to hear that! If you have any other feedback, please share here:');
       };
       $('.thumb_up').on('click', handleThumbUpClick);
 
       const handleThumbDownClick = function(e) {
-        sendFeedback('negative', 'Sorry to hear that. Could you please tell us what you were looking for:');
+        sendFeedback('negative', 'Sorry to hear that. Please tell us what you were looking for:');
       };
       $('.thumb_down').on('click', handleThumbDownClick);
 
