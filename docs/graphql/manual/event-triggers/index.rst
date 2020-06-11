@@ -42,5 +42,5 @@ Events can be of the following types:
    payload
    serverless
    samples
-   Invoke trigger via console <invoke-trigger-console>
+   Invoke trigger manually <invoke-trigger-manually>
    clean-up

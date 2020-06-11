@@ -14,11 +14,20 @@ Creating an event trigger
 
 Event triggers can be created using the Hasura console or metadata APIs.
 
-Open the Hasura console, head to the ``Events`` tab and click on the ``Create`` button to open the
-page below:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. thumbnail:: /img/graphql/manual/event-triggers/create-event-trigger.png
-   :alt: Create an event trigger
+   .. tab:: Via console
+
+      Open the Hasura console, head to the ``Events`` tab and click on the ``Create`` button to open the
+      page below:
+
+      .. thumbnail:: /img/graphql/manual/event-triggers/create-event-trigger.png
+         :alt: Create an event trigger
+
+   .. tab:: Via API
+
+      Make a request to the :ref:`create_event_trigger<create_event_trigger>` API.
 
 Parameters
 ----------
@@ -44,8 +53,17 @@ before using it for this configuration*).
 Advanced Settings
 -----------------
 
-.. thumbnail:: /img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
-   :alt: Advanced settings for event triggers
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Via console
+
+      .. thumbnail:: /img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
+         :alt: Advanced settings for event triggers
+
+   .. tab:: Via API
+
+      You can configure advanced settings via the :ref:`create_event_trigger<create_event_trigger>` API.
 
 Listen columns for update
 ^^^^^^^^^^^^^^^^^^^^^^^^^
