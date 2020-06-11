@@ -42,7 +42,7 @@
                   <img src="{{ pathto('_images/layout/hasura-con.svg', 1) }}" alt="Hasura con 2020"/>
                 </div>
                 <div class="bodyTextSmall">
-                  Hasura Con: <span class='fontNormal'>Our free online conference on Pushing the boundaries of GraphQL<span class='mLeft15'>·</span></span><span class='underLine mLeft15'>Register now</span>
+                  Hasura Con: <span class='fontNormal'>Our free online conference on pushing the boundaries of GraphQL<span class='mLeft15'>·</span></span><span class='underLine mLeft15'>Register now</span>
                 </div>
               </div>
             </div>
@@ -89,16 +89,16 @@
             </div>
             <div class="navBlueBG">
               <ul class="navBarUL">
+                <!-- <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                  {%- if version == '1.0' %}
+                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.x</option>
+                  {%- else -%}
+                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.x</option>
+                  {% endif %}
+                </select> -->
+
+                <li>v1.x</li>
                 <li class='navListActive'>
-                  <span class="versionTxt">
-                    <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
-                      {%- if version == '1.0' %}
-                        <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.x</option>
-                      {%- else -%}
-                        <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.x</option>
-                      {% endif %}
-                    </select>
-                  </span>
                   <a href="/docs/">Docs</a>
                 </li>
                 <li>
@@ -146,7 +146,7 @@
             </div>
             <div class='navBlueBG'>
               <span class="navBarToggle"
-                onclick="openMenu()"
+                onclick="toggleMenu()"
               >
                 <span class="iconBar"></span>
                 <span class="iconBar"></span>
@@ -158,58 +158,57 @@
                 <ul class="navBarULMobile">
                   <li>
                     <a href="/docs/"
-                      onclick="openMenu()"
-                    >
-                      Docs
-                    </a>
+                      onclick="toggleMenu()"
+                    >Docs</a>
                     <span class="versionTxt">
-                      <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                      v1.x
+                      <!-- <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
                         {%- if version == '1.0' %}
                           <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.x</option>
                         {%- else -%}
                           <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.x</option>
                         {% endif %}
-                      </select>
+                      </select> -->
                     </span>
                   </li>
                   <li>
                     <a href='https://hasura.io/blog/'
-                      onclick="openMenu()"
+                      onclick="toggleMenu()"
                     >
                       Blog
                     </a>
                   </li>
                   <li>
                     <a href='https://hasura.io/learn/'
-                      onclick="openMenu()"
+                      onclick="toggleMenu()"
                     >
                       Tutorials
                     </a>
                   </li>
                   <li>
                     <a href="https://hasura.io/enterprise/"
-                      onclick="openMenu()"
+                      onclick="toggleMenu()"
                     >
                       Enterprise
                     </a>
                   </li>
                   <li>
                     <a href="https://hasura.io/hasura-pro/"
-                      onclick="openMenu()"
+                      onclick="toggleMenu()"
                     >
                       Hasura Pro
                     </a>
                   </li>
                   <li>
                     <a href="https://hasura.io/pricing/"
-                      onclick="openMenu()"
+                      onclick="toggleMenu()"
                     >
                       Pricing
                     </a>
                   </li>
                   <li>
                     <a href='https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html'
-                      onclick="openMenu()"
+                      onclick="toggleMenu()"
                     >
                       <button class='commonBtn navBtnHome'>
                         Get Started
@@ -218,7 +217,7 @@
                   </li>
                   <li>
                     <a href="https://calendly.com/hasura/prod-expert-call"
-                      onclick="openMenu()"
+                      onclick="toggleMenu()"
                     >
                       <button class="commonBtn navBtnContactHome">
                         Talk to a Product Expert
@@ -340,7 +339,7 @@
               <div class="subscribe-form-wrapper">
                 <div id="mc_embed_signup">
                   <div class="subscribe-form-content">
-                    Stay up to date with product & security updates
+                    Stay up to date with product & security news
                   </div>
                   <form action="https://hasura.us13.list-manage.com/subscribe/post?u=9b63e92a98ecdc99732456b0e&amp;id=f5c4f66bcf" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate post-subscription-form mailchimp-form" target="_blank" rel="noopener" novalidate>
                       <div class="full-width">
@@ -438,8 +437,8 @@
 
   <!--Hamburger menu-->
   <script type="text/javascript">
-    function openMenu() {
-      var x = document.getElementById("navbar");
+    function toggleMenu() {
+      var x = document.getElementById("navbar")
       if (x.className === "topnav") {
         x.className += " responsive"
       } else {

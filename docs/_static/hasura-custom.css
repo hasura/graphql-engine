@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css?family=Khula:400,700');
+@import url('https://fonts.googleapis.com/css?family=Poppins:300,400,500,600&display=swap');
 
 html {
   background-color: #f8f8f8 !important;
@@ -122,7 +123,7 @@ samp {
   margin: 0 0 !important;
   border-radius: 5px !important;
   border: solid 1px #001934 !important;
-  background-color: transparent !important;
+  background-color: #fff;
   color: #001934 !important;
   opacity: .8 !important;
   padding: 0 16px !important;
@@ -266,6 +267,7 @@ samp {
 }
 .bannerStripWrapper .bannerStrip .bodyTextSmall
 {
+  font-family: Poppins;
   text-align: left;
   padding-top: 0;
   letter-spacing: normal;
@@ -1285,7 +1287,7 @@ article ol ol {
 	 display: none;
 	 position: absolute;
 	 right: 0;
-	 top: 13px;
+	 top: 16px;
    cursor: pointer;
 }
  .navBarToggle .iconBar {
@@ -1381,7 +1383,7 @@ article ol ol {
    font-weight: 600;
    display: flex;
    align-items: center;
-   height: 18px;
+   height: 20px;
    text-decoration: none;
 }
  .headerWrapper .navLeft .gitHubBtn .gitHubStars {
@@ -1389,7 +1391,7 @@ article ol ol {
    align-items: center;
    padding-left: 4px;
    background-color: #f1f5f8;
-   height: 18px;
+   height: 20px;
  }
  .headerWrapper .navLeft .gitHubBtn .gitHubStars img {
    width: 12px;
@@ -1402,7 +1404,7 @@ article ol ol {
  }
  .headerWrapper .navLeft .gitHubBtn .gitHubCount {
    border-left: 1px solid #d1d2d3;
-   height: 10px;
+   height: 12px;
    padding: 4px;
    line-height: 8px;
    display: flex;
@@ -1415,7 +1417,7 @@ article ol ol {
  }
 .headerWrapper .navBlueBG .navBarUL {
   padding-left: 0;
-  margin: 0 0;
+  margin: 2px 0 0;
 }
  .headerWrapper .navBlueBG .navBarUL li, .headerWrapper .navWhiteBG .navBarUL li {
    font-size: 16px;
@@ -1426,8 +1428,12 @@ article ol ol {
    margin: 0 0;
    letter-spacing: -.48px;
 }
+.headerWrapper .navBlueBG .navBarUL li, .versionTxt {
+  color: #1CD3C6;
+}
 .versionTxt {
-  position: relative;
+  font-size: 13px;
+  vertical-align: top;
 }
 .versionTxt select {
   border-radius: 8px;
@@ -1503,20 +1509,17 @@ article ol ol {
 		 position: relative;
 		 display: block;
      z-index: 10;
-	}
-  .headerWrapper .navLeft .brand {
-    margin-top: 3px;
-    padding: 5px 0;
   }
-  .headerWrapper .navLeft .socialBtn {
-    margin-top: 4px;
+  .headerWrapper .navLeft {
+    padding-top: 5px;
   }
 	 .headerWrapper .topnav .visibleMobile .navBarULMobile {
 		 padding: 10px 15px;
 		 background-color: #001934;
-		 border-top: 1px solid rgba(255, 255, 255, .6);
 		 border-bottom: 1px solid rgba(255, 255, 255, .6);
      margin-top: 0;
+     position: relative;
+     bottom: 1px;
 	}
 	 .headerWrapper .topnav .visibleMobile .navBarULMobile li {
 		 list-style-type: none;
@@ -1555,19 +1558,18 @@ article ol ol {
     display: block;
     z-index: 10;
   }
-  .headerWrapper .navLeft .brand {
-    padding: 5px 0;
-    margin-top: 0px;
-    margin-right: 16px;
+  .headerWrapper .navLeft {
+    padding-top: 5px;
   }
-  .headerWrapper .navLeft .socialBtn {
-    margin-top: 4px;
+  .headerWrapper .navLeft .brand {
+    margin-right: 16px;
   }
 	.headerWrapper .topnav .visibleMobile .navBarULMobile {
 		 padding: 10px 15px;
 		 background-color: #001934;
-		 border-top: 1px solid rgba(255, 255, 255, .6);
-		 border-bottom: 1px solid rgba(255, 255, 255, .6);
+     border-bottom: 1px solid rgba(255, 255, 255, .6);
+     position: relative;
+     bottom: 11px;
 	}
 	 .headerWrapper .topnav .visibleMobile .navBarULMobile li {
 		 list-style-type: none;
