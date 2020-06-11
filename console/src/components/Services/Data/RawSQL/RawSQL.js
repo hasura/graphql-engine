@@ -3,13 +3,16 @@ import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
 import 'brace/mode/sql';
+
 import Modal from '../../../Common/Modal/Modal';
 import Button from '../../../Common/Button/Button';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import Alert from '../../../Common/Alert';
+
 import { parseCreateSQL } from './utils';
 import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
 
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 import {
   executeSQL,
   SET_SQL,
@@ -25,7 +28,6 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
-import Alert from '../../../Common/Alert';
 
 /**
  * # RawSQL React FC
@@ -92,29 +94,6 @@ const RawSQL = ({
   }, [sql]);
 
   /* hooks - end */
-
-  const cascadeTip = (
-    <Tooltip id="tooltip-cascade">
-      Cascade actions on all dependent metadata references, like relationships
-      and permissions
-    </Tooltip>
-  );
-  const migrationTip = (
-    <Tooltip id="tooltip-migration">
-      Create a migration file with the SQL statement
-    </Tooltip>
-  );
-  const migrationNameTip = (
-    <Tooltip id="tooltip-migration">
-      Name of the generated migration file. Default: 'run_sql_migration'
-    </Tooltip>
-  );
-  const trackTableTip = () => (
-    <Tooltip id="tooltip-tracktable">
-      If you are creating a table/view/function, checking this will also expose
-      them over the GraphQL API
-    </Tooltip>
-  );
 
   const submitSQL = () => {
     // set SQL to LS
@@ -318,12 +297,7 @@ const RawSQL = ({
           />
           Cascade metadata
         </label>
-        <OverlayTrigger placement="right" overlay={cascadeTip}>
-          <i
-            className={`${styles.add_mar_left_small} fa fa-info-circle`}
-            aria-hidden="true"
-          />
-        </OverlayTrigger>
+        <Tooltip message={"Cascade actions on all dependent metadata references, like relationships and permissions"}/>
       </div>
     );
   };
@@ -349,12 +323,9 @@ const RawSQL = ({
           />
           Track this
         </label>
-        <OverlayTrigger placement="right" overlay={trackTableTip()}>
-          <i
-            className={`${styles.add_mar_left_small} fa fa-info-circle`}
-            aria-hidden="true"
-          />
-        </OverlayTrigger>
+        <Tooltip message={"If you are creating tables, views or functions, checking this will also expose them over the GraphQL API as top level fields"}/>
+        &nbsp;
+        <KnowMoreLink text={"See supported functions requirements"} href={"https://hasura.io/docs/1.0/graphql/manual/schema/custom-functions.html#supported-sql-functions"} />
       </div>
     );
   };
@@ -383,12 +354,7 @@ const RawSQL = ({
             />
             This is a migration
           </label>
-          <OverlayTrigger placement="right" overlay={migrationTip}>
-            <i
-              className={`${styles.add_mar_left_small} fa fa-info-circle`}
-              aria-hidden="true"
-            />
-          </OverlayTrigger>
+          <Tooltip message={"Create a migration file with the SQL statement"}/>
         </div>
       );
     };
@@ -407,12 +373,7 @@ const RawSQL = ({
                 id="migration-name"
                 type="text"
               />
-              <OverlayTrigger placement="right" overlay={migrationNameTip}>
-                <i
-                  className={`${styles.add_mar_left_small} fa fa-info-circle`}
-                  aria-hidden="true"
-                />
-              </OverlayTrigger>
+              <Tooltip message={"Name of the generated migration file. Default: 'run_sql_migration'"}/>
               <div
                 className={styles.add_mar_top_small + ' ' + styles.text_gray}
               >
