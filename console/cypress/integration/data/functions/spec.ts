@@ -6,6 +6,9 @@ import {
   testCustomFunctionSQL,
   createTable,
   dropTable,
+  createTableSessVar,
+  testCustomFunctionSQLWithSessArg,
+  getTrackFnPayload,
 } from '../../../helpers/dataHelpers';
 
 import {
@@ -14,6 +17,8 @@ import {
   validateCFunc,
   validateUntrackedFunc,
   ResultType,
+  createFunctionRequest,
+  trackFunctionRequest,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
@@ -53,6 +58,49 @@ export const trackFunction = () => {
   validateCFunc(getCustomFunctionName(1), getSchema(), ResultType.SUCCESS);
   cy.wait(5000);
 };
+export const testSessVariable = () => {
+  // Round about way to create a function
+  const fN = 'customFunctionWithSessionArg'.toLowerCase(); // for reading
+  dataRequest(createTableSessVar(), ResultType.SUCCESS);
+  createFunctionRequest(
+    testCustomFunctionSQLWithSessArg(fN),
+    ResultType.SUCCESS
+  );
+  cy.wait(1500);
+  trackFunctionRequest(getTrackFnPayload(fN), ResultType.SUCCESS);
+  cy.wait(1500);
+  cy.visit(`data/schema/public/functions/${fN}/modify`);
+  cy.get(getElementFromAlias(`${fN}-session-argument-btn`), {
+    timeout: 5000,
+  }).click();
+
+  // invalid data should fail
+  cy.get(getElementFromAlias(`${fN}-edit-sessvar-function-field`))
+    .clear()
+    .type('invalid');
+  cy.get(getElementFromAlias(`${fN}-session-argument-save`)).click();
+  cy.get('.notification-error', { timeout: 5000 })
+    .should('be.visible')
+    .and('contain', 'Updating Session argument variable failed');
+
+  cy.get(getElementFromAlias(`${fN}-session-argument-btn`), {
+    timeout: 1000,
+  }).click();
+  cy.get(getElementFromAlias(`${fN}-edit-sessvar-function-field`))
+    .clear()
+    .type('hasura_session');
+  cy.get(getElementFromAlias(`${fN}-session-argument-save`)).click();
+  cy.wait(2000);
+  cy.get(getElementFromAlias(fN)).should('be.visible');
+  cy.visit(`data/schema/public/functions/${fN}/modify`);
+  cy.wait(3000);
+  cy.get(getElementFromAlias(`${fN}-session-argument`)).should(
+    'contain',
+    'hasura_session'
+  );
+  dropTableRequest(dropTable('text_result', true), ResultType.SUCCESS);
+  cy.wait(2000);
+};
 
 export const verifyPermissionTab = () => {
   cy.get(getElementFromAlias('functions-data-permissions')).click();
@@ -69,9 +117,7 @@ export const deleteCustomFunction = () => {
   setPromptValue(getCustomFunctionName(1));
 
   cy.get(getElementFromAlias('custom-function-edit-delete-btn')).click();
-  cy.window()
-    .its('prompt')
-    .should('be.called');
+  cy.window().its('prompt').should('be.called');
   cy.wait(5000);
   cy.get(getElementFromAlias('delete-confirmation-error')).should('not.exist');
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
