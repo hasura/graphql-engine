@@ -58,7 +58,7 @@ import {
 } from './Modify/reducer';
 
 import {
-  makeRequest as makePermRequest,
+  makePermRequest,
   setRequestSuccess as setPermRequestSuccess,
   setRequestFailure as setPermRequestFailure,
 } from './Permissions/reducer';

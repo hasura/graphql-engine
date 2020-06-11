@@ -182,7 +182,6 @@ const makeRequest = (
       if (globals.consoleMode === CLI_CONSOLE_MODE) {
         dispatch(loadMigrationStatus()); // don't call for server mode
       }
-      // dispatch(loadTriggers());
       if (successMsg) {
         dispatch(showSuccessNotification(successMsg));
       }
