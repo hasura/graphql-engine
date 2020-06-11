@@ -9,16 +9,16 @@ import (
 	"github.com/hasura/graphql-engine/cli/seed"
 )
 
-type seedApplyOptions struct {
-	ec *cli.ExecutionContext
+type SeedApplyOptions struct {
+	EC *cli.ExecutionContext
 
 	// seed file to apply
-	fileNames []string
+	FileNames []string
 }
 
 func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
-	opts := seedApplyOptions{
-		ec: ec,
+	opts := SeedApplyOptions{
+		EC: ec,
 	}
 	cmd := &cobra.Command{
 		Use:   "apply",
@@ -33,25 +33,25 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.ec.Spin("Applying seeds...")
-			err := opts.run()
-			opts.ec.Spinner.Stop()
+			opts.EC.Spin("Applying seeds...")
+			err := opts.Run()
+			opts.EC.Spinner.Stop()
 			if err != nil {
 				return err
 			}
-			opts.ec.Logger.Info("Seeds planted")
+			opts.EC.Logger.Info("Seeds planted")
 			return nil
 		},
 	}
-	cmd.Flags().StringArrayVarP(&opts.fileNames, "file", "f", []string{}, "seed file to apply")
+	cmd.Flags().StringArrayVarP(&opts.FileNames, "file", "f", []string{}, "seed file to apply")
 	return cmd
 }
 
-func (o *seedApplyOptions) run() error {
-	migrateDriver, err := migrate.NewMigrate(ec, true)
+func (o *SeedApplyOptions) Run() error {
+	migrateDriver, err := migrate.NewMigrate(o.EC, true)
 	if err != nil {
 		return err
 	}
 	fs := afero.NewOsFs()
-	return seed.ApplySeedsToDatabase(ec, fs, migrateDriver, o.fileNames)
+	return seed.ApplySeedsToDatabase(o.EC, fs, migrateDriver, o.FileNames)
 }

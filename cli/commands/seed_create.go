@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"bytes"
+
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
@@ -11,21 +13,21 @@ import (
 	"github.com/hasura/graphql-engine/cli/seed"
 )
 
-type seedNewOptions struct {
-	ec *cli.ExecutionContext
+type SeedNewOptions struct {
+	EC *cli.ExecutionContext
 
 	// filename for the new seed file
-	seedname string
+	SeedName string
 	// table name if seed file has to be created from a database table
-	fromTableNames []string
+	FromTableNames []string
 
 	// seed file that was created
-	filePath string
+	FilePath string
 }
 
 func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
-	opts := seedNewOptions{
-		ec: ec,
+	opts := SeedNewOptions{
+		EC: ec,
 	}
 	cmd := &cobra.Command{
 		Use:   "create seed_name",
@@ -44,48 +46,50 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.seedname = args[0]
-			err := opts.run()
+			opts.SeedName = args[0]
+			err := opts.Run()
 			if err != nil {
 				return err
 			}
-			ec.Logger.WithField("file", opts.filePath).Info("created seed file successfully")
+			ec.Logger.WithField("file", opts.FilePath).Info("created seed file successfully")
 			return nil
 		},
 	}
 
-	cmd.Flags().StringArrayVar(&opts.fromTableNames, "from-table", []string{}, "name of table from which seed file has to be initialized")
+	cmd.Flags().StringArrayVar(&opts.FromTableNames, "from-table", []string{}, "name of table from which seed file has to be initialized")
 
 	return cmd
 }
 
-func (o *seedNewOptions) run() error {
+func (o *SeedNewOptions) Run() error {
 	createSeedOpts := seed.CreateSeedOpts{
-		UserProvidedSeedName: o.seedname,
-		DirectoryPath:        o.ec.SeedsDirectory,
+		UserProvidedSeedName: o.SeedName,
+		DirectoryPath:        o.EC.SeedsDirectory,
 	}
 
 	// If we are initializing from a database table
 	// create a hasura client and add table name opts
-	if len(o.fromTableNames) > 0 {
-		migrateDriver, err := migrate.NewMigrate(ec, true)
-		if err != nil {
-			return errors.Wrap(err, "cannot initialize migrate driver")
-		}
-		// Send the query
-		body, err := migrateDriver.ExportDataDump(o.fromTableNames)
-		if err != nil {
-			return errors.Wrap(err, "exporting seed data")
-		}
+	if createSeedOpts.Data == nil {
+		if len(o.FromTableNames) > 0 {
+			migrateDriver, err := migrate.NewMigrate(ec, true)
+			if err != nil {
+				return errors.Wrap(err, "cannot initialize migrate driver")
+			}
+			// Send the query
+			body, err := migrateDriver.ExportDataDump(o.FromTableNames)
+			if err != nil {
+				return errors.Wrap(err, "exporting seed data")
+			}
 
-		createSeedOpts.Data = body
-	} else {
-		const defaultText = ""
-		data, err := editor.CaptureInputFromEditor(editor.GetPreferredEditorFromEnvironment, defaultText, "*.sql")
-		if err != nil {
-			return errors.Wrap(err, "cannot find default editor from env")
+			createSeedOpts.Data = bytes.NewReader(body)
+		} else {
+			const defaultText = ""
+			data, err := editor.CaptureInputFromEditor(editor.GetPreferredEditorFromEnvironment, defaultText, "*.sql")
+			if err != nil {
+				return errors.Wrap(err, "cannot find default editor from env")
+			}
+			createSeedOpts.Data = bytes.NewReader(data)
 		}
-		createSeedOpts.Data = data
 	}
 
 	fs := afero.NewOsFs()
@@ -94,7 +98,7 @@ func (o *seedNewOptions) run() error {
 		return errors.Wrap(err, "failed to create seed file")
 	}
 
-	o.filePath = *filepath
+	o.FilePath = *filepath
 
 	return nil
 }
