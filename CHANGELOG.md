@@ -77,7 +77,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - server: fix importing of allow list query from metadata (fix #4687)
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
-- console: fix down migration of a renamed column fails (fix #3503)
+- console: fix down migration of a renamed column fails (close #3503) (#4790)
 - console: provide option to cascade metadata on dependency conflicts on console (fix #1593)
 - console: fix enum tables reload data button UI (#4647)
 - console: allow entering big int values in the console (close #3667) (#4775)
