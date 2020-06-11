@@ -7,7 +7,10 @@ import { escapeRegExp } from '../utils';
 import { UNSAFE_keys } from '../../../Common/utils/tsUtils';
 
 type FilterType = 'check' | 'filter';
-type BaseQueryType = 'select' | 'update' | 'insert' | 'delete';
+export type BaseQueryType = 'select' | 'update' | 'insert' | 'delete';
+export interface FilterState {
+  [key: string]: BaseQueryType;
+}
 
 type DisplayQueryType =
   | Exclude<BaseQueryType, 'update'>

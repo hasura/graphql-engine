@@ -10,8 +10,8 @@ import styles from './CollapsibleToggle.scss';
  */
 
 interface CollapsibleToggleProps {
-  title: string;
-  isOpen: boolean;
+  title: React.ReactNode;
+  isOpen?: boolean;
   toggleHandler?: () => void;
   testId: string;
   useDefaultTitleStyle?: boolean;
@@ -40,7 +40,7 @@ class CollapsibleToggle extends React.Component<
     const { isOpen, toggleHandler } = nextProps;
 
     if (toggleHandler) {
-      this.setState({ isOpen, toggleHandler });
+      this.setState({ isOpen: !!isOpen, toggleHandler });
     }
   }
 
@@ -83,9 +83,9 @@ class CollapsibleToggle extends React.Component<
         >
           <span className={styles.collapsibleIndicatorWrapper}>
             <i
-              className={`fa fa-chevron-right ${
-                styles.collapsibleIndicator
-              } ${isOpen && styles.collapsibleIndicatorOpen}`}
+              className={`fa fa-chevron-right ${styles.collapsibleIndicator} ${
+                isOpen && styles.collapsibleIndicatorOpen
+              }`}
             />
           </span>
 
