@@ -340,7 +340,6 @@ const modifyRemoteSchema = () => {
         ...resolveObj,
       },
     };
-    migration.add(deleteRemoteSchemaUp, createRemoteSchemaUp);
 
     // Delete the new one and create the old one
     const deleteRemoteSchemaDown = {
@@ -377,7 +376,10 @@ const modifyRemoteSchema = () => {
         ...resolveDownObj,
       },
     };
-    migration.add(deleteRemoteSchemaDown, createRemoteSchemaDown);
+    // old schema
+    migration.add(deleteRemoteSchemaUp, createRemoteSchemaDown);
+    // new schema
+    migration.add(createRemoteSchemaUp, deleteRemoteSchemaDown);
     // End of down
 
     const requestMsg = 'Modifying remote schema...';
