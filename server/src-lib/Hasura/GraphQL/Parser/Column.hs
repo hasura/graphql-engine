@@ -88,9 +88,31 @@ column columnType (Nullability isNullable) =
       PGVarchar -> pure (PGValVarchar <$> string)
       PGJSON    -> pure (PGValJSON  . Q.JSON  <$> json)
       PGJSONB   -> pure (PGValJSONB . Q.JSONB <$> json)
-      _         -> do
+      -- WIP NOTE
+      --
+      -- Similarly to what was done before, we are re-using the FromJSON instance
+      -- of all other scalar types to parse an incoming input value, which means
+      -- we need to first transform it back into json.
+      --
+      -- Pros:
+      --   This avoids having to write two parsers for each type: if the JSON
+      --   parser is sound, so will this one, and it avoids the risk of having
+      --   two separate ways of parsing a value in the codebase, which could
+      --   lead to inconsistencies.
+      --
+      -- Cons:
+      --   This might make error messages weird / inconsistent, if for instance
+      --   something goes wrong when converting the graphql input to JSON. It
+      --   might also have a slight performance cost, we will need to check. And
+      --   finally, while not the most important criterion, it *feels* wrong.
+      _  -> do
         name <- mkColumnTypeName columnType
-        pure (PGValUnknown <$> scalar name Nothing SRString) -- FIXME: is SRString right?
+        pure $ Parser
+          { pType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
+          , pParser =
+              graphQLToJSON >=>
+              either (parseError . qeError) pure . runAesonParser (parsePGValue scalarType)
+          }
     PGColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (M.toList enumValues) of
         Just enumValuesList -> do

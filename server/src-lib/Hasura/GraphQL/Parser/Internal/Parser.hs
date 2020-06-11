@@ -259,20 +259,9 @@ string = scalar $$(litName "String") Nothing SRString
 
 json :: MonadParse m => Parser 'Both m A.Value
 json = Parser
-  { pType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
-  , pParser = valueToJSON
+  { pType = NonNullable $ TNamed $ mkDefinition $$(litName "JSON") Nothing TIScalar
+  , pParser = graphQLToJSON
   }
-  where
-    name = $$(litName "JSON")
-    valueToJSON = peelVariable >=> \case
-      VInt i              -> pure $ A.toJSON i
-      VFloat f            -> pure $ A.toJSON f
-      VString t           -> pure $ A.toJSON t
-      VBoolean b          -> pure $ A.toJSON b
-      VEnum (EnumValue n) -> pure $ A.toJSON n
-      VList values        -> A.toJSON <$> traverse valueToJSON values
-      VObject objects     -> A.toJSON <$> traverse valueToJSON objects
-      input               -> typeMismatch name "a json value" input
 
 enum
   :: MonadParse m
@@ -596,8 +585,22 @@ subselection_
 subselection_ name description bodyParser =
   snd <$> subselection name description (pure ()) bodyParser
 
+
 -- -----------------------------------------------------------------------------
--- internal helpers
+-- helpers
+
+graphQLToJSON :: MonadParse m => Value Variable -> m A.Value
+graphQLToJSON = peelVariable >=> \case
+  VNull               -> pure A.Null
+  VInt i              -> pure $ A.toJSON i
+  VFloat f            -> pure $ A.toJSON f
+  VString t           -> pure $ A.toJSON t
+  VBoolean b          -> pure $ A.toJSON b
+  VEnum (EnumValue n) -> pure $ A.toJSON n
+  VList values        -> A.toJSON <$> traverse graphQLToJSON values
+  VObject objects     -> A.toJSON <$> traverse graphQLToJSON objects
+  -- this should not be possible, as we peel any variable first
+  VVariable _         -> error "FIMXE: this should be a 500 with a descriptive message"
 
 peelVariable :: MonadParse m => Value Variable -> m (Value Variable)
 peelVariable (VVariable (Variable { vValue })) = markNotReusable $> literal vValue
