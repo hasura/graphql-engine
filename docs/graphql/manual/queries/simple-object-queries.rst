@@ -65,7 +65,7 @@ Fetch list of objects
       X-Hasura-Role: admin
 
       {
-          "query": "query { article { id title author_id } }"
+          "query": "query { author { id name }}"
       }
 
 
