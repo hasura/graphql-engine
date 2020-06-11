@@ -45,7 +45,7 @@ import { ReduxState, ReplaceRouterState } from './types';
 
 const routes = (store: any) => {
   // load hasuractl migration status
-  const requireMigrationStatus = (nextState: any, replaceState: any, cb: any) => {
+  const requireMigrationStatus = (nextState: unknown, replaceState: unknown, cb: any) => {
     const { dispatch } = store;
 
     if (globals.consoleMode === CLI_CONSOLE_MODE) {
