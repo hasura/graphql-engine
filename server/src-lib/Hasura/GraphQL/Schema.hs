@@ -83,18 +83,26 @@ query' allTables stringifyNum = do
   pure $ concat $ catMaybes selectExpParsers
   where toQrf = fmap . fmap . fmap
 
--- | Parse query-type GraphQL requests without introspection (should be unused;
--- just here for completeness)
+-- | Parse query-type GraphQL requests without introspection
 query
+  :: forall m n
+   . (MonadSchema n m, MonadError QErr m)
+  => G.Name
+  -> HashSet QualifiedTable
+  -> Bool
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+query name allTables stringifyNum = do
+  queryFieldsParser <- query' allTables stringifyNum
+  pure $ P.selectionSet name Nothing queryFieldsParser
+    <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+
+subscription
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
   => HashSet QualifiedTable
   -> Bool
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-query allTables stringifyNum = do
-  queryFieldsParser <- query' allTables stringifyNum
-  pure $ P.selectionSet $$(G.litName "query_root") Nothing queryFieldsParser
-    <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+subscription allTables stringifyNum = query $$(G.litName "subscription_root") allTables stringifyNum
 
 -- | Prepare the parser for query-type GraphQL requests, but with introspection
 -- for queries, mutations and subscriptions (TODO) built in.
@@ -107,6 +115,7 @@ queryWithIntrospection
 queryWithIntrospection allTables stringifyNum = do
   fakeQueryFP <- query' allTables stringifyNum
   mutationP <- mutation allTables stringifyNum
+  subscriptionP <- subscription allTables stringifyNum
   let
     name = $$(G.litName "query_root")
     description = Nothing
@@ -120,14 +129,15 @@ queryWithIntrospection allTables stringifyNum = do
       Right tps -> pure tps
   allQueryTypes <- collectTypes fakeQueryType
   allMutationTypes <- collectTypes (P.pType mutationP)
-  let allTypes = Map.union allQueryTypes allMutationTypes
+  allSubscriptionTypes <- collectTypes (P.pType subscriptionP)
+  let allTypes = Map.unions [allQueryTypes, allMutationTypes, allSubscriptionTypes]
       fakeSchema = Schema
         { sDescription = Nothing
         , sTypes = allTypes
         , sQueryType = fakeQueryType
         , sMutationType = Just $ P.pType mutationP
-        -- TODO add subscriptions into introspection when they're done
-        , sSubscriptionType = Nothing
+        -- TODO make sure NOT to expose remote schemata via subscription introspection (when remote schemata are implemented)
+        , sSubscriptionType = Just $ P.pType subscriptionP
         , sDirectives = []
         }
   let realQueryFields =

@@ -118,7 +118,7 @@ resolveMultiplexedValue
   => UnpreparedValue -> m S.SQLExp
 resolveMultiplexedValue = \case
   UVParameter colVal varM -> do
-    varJsonPath <- case _varM of
+    varJsonPath <- case fmap getName varM of
       Just varName -> do
         modifying _1 $ Map.insert varName colVal
         pure ["query", G.unName varName]
@@ -305,7 +305,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
       $  traverseSubscriptionRootField prepareWithPlan unpreparedQuery
     pure $! irToRootFieldPlan planVars planVals preparedQuery
 -}
-  (preparedAST, (queryVariableValues, querySyntheticVariableValues)) <- flip runStateT (_bla, Seq.empty) $
+  (preparedAST, (queryVariableValues, querySyntheticVariableValues)) <- flip runStateT (mempty, Seq.empty) $
     for unpreparedAST \unpreparedQuery -> do
     traverseQueryRootField resolveMultiplexedValue unpreparedQuery
 
