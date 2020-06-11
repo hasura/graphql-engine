@@ -152,10 +152,10 @@ create_scheduled_event
                "key1": "value1",
                "key2": "value2"
            },
-           "headers" : {
+           "headers" : [{
                "name":"header-key",
                "value":"header-value"
-           },
+           }],
            "comment":"sample scheduled event comment"
        }
    }

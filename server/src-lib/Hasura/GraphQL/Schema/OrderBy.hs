@@ -3,7 +3,7 @@ module Hasura.GraphQL.Schema.OrderBy
   , ordByEnumTy
   , mkOrdByInpObj
   , mkTabAggOrdByInpObj
-  , mkTabAggOpOrdByInpObjs
+  , mkTabAggregateOpOrdByInpObjs
   ) where
 
 import qualified Data.HashMap.Strict           as Map
@@ -48,8 +48,8 @@ ordByEnumTy =
         )
       ]
 
-mkTabAggOpOrdByTy :: QualifiedTable -> G.Name -> G.NamedType
-mkTabAggOpOrdByTy tn op =
+mkTabAggregateOpOrdByTy :: QualifiedTable -> G.Name -> G.NamedType
+mkTabAggregateOpOrdByTy tn op =
   G.NamedType $ qualObjectToName tn <> "_" <> op <> "_order_by"
 
 {-
@@ -60,14 +60,14 @@ input table_<op>_order_by {
 }
 -}
 
-mkTabAggOpOrdByInpObjs
+mkTabAggregateOpOrdByInpObjs
   :: QualifiedTable
   -> ([PGColumnInfo], [G.Name])
   -> ([PGColumnInfo], [G.Name])
   -> [InpObjTyInfo]
-mkTabAggOpOrdByInpObjs tn (numCols, numAggOps) (compCols, compAggOps) =
-  mapMaybe (mkInpObjTyM numCols) numAggOps
-  <> mapMaybe (mkInpObjTyM compCols) compAggOps
+mkTabAggregateOpOrdByInpObjs tn (numCols, numericAggregateOps) (compCols, compareAggregateOps) =
+  mapMaybe (mkInpObjTyM numCols) numericAggregateOps
+  <> mapMaybe (mkInpObjTyM compCols) compareAggregateOps
   where
 
     mkDesc (G.Name op) =
@@ -75,7 +75,7 @@ mkTabAggOpOrdByInpObjs tn (numCols, numAggOps) (compCols, compAggOps) =
 
     mkInpObjTyM cols op = bool (Just $ mkInpObjTy cols op) Nothing $ null cols
     mkInpObjTy cols op =
-      mkHsraInpTyInfo (Just $ mkDesc op) (mkTabAggOpOrdByTy tn op) $
+      mkHsraInpTyInfo (Just $ mkDesc op) (mkTabAggregateOpOrdByTy tn op) $
       fromInpValL $ map mkColInpVal cols
 
     mkColInpVal ci = InpValInfo Nothing (pgiName ci) Nothing $ G.toGT
@@ -97,17 +97,17 @@ mkTabAggOrdByInpObj
   -> ([PGColumnInfo], [G.Name])
   -> ([PGColumnInfo], [G.Name])
   -> InpObjTyInfo
-mkTabAggOrdByInpObj tn (numCols, numAggOps) (compCols, compAggOps) =
+mkTabAggOrdByInpObj tn (numCols, numericAggregateOps) (compCols, compareAggregateOps) =
   mkHsraInpTyInfo (Just desc) (mkTabAggOrdByTy tn) $ fromInpValL $
   numOpOrdBys <> compOpOrdBys <> [countInpVal]
   where
     desc = G.Description $
       "order by aggregate values of table " <>> tn
 
-    numOpOrdBys = bool (map mkInpValInfo numAggOps) [] $ null numCols
-    compOpOrdBys = bool (map mkInpValInfo compAggOps) [] $ null compCols
+    numOpOrdBys = bool (map mkInpValInfo numericAggregateOps) [] $ null numCols
+    compOpOrdBys = bool (map mkInpValInfo compareAggregateOps) [] $ null compCols
     mkInpValInfo op = InpValInfo Nothing op Nothing $ G.toGT $
-                     mkTabAggOpOrdByTy tn op
+                     mkTabAggregateOpOrdByTy tn op
 
     countInpVal = InpValInfo Nothing "count" Nothing $ G.toGT ordByTy
 
@@ -132,14 +132,14 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
   where
     inpObjTy =
       mkHsraInpTyInfo (Just desc) namedTy $ fromInpValL $
-      map mkColOrdBy pgColFlds <> map mkObjRelOrdBy objRels
-      <> mapMaybe mkArrRelAggOrdBy arrRels
+      map mkColOrdBy pgColumnFields <> map mkObjRelOrdBy objRels
+      <> mapMaybe mkArrayAggregateSelectOrdBy arrRels
 
     namedTy = mkOrdByTy tn
     desc = G.Description $
       "ordering options when selecting data from " <>> tn
 
-    pgColFlds = getPGColumnFields selFlds
+    pgColumnFields = getPGColumnFields selFlds
     relFltr ty = flip filter (getRelationshipFields selFlds) $
                  \rf -> riType (_rfiInfo rf) == ty
     objRels = relFltr ObjRel
@@ -152,7 +152,7 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
       in InpValInfo Nothing (mkRelName $ riName ri) Nothing $
          G.toGT $ mkOrdByTy $ riRTable ri
 
-    mkArrRelAggOrdBy relationshipField =
+    mkArrayAggregateSelectOrdBy relationshipField =
       let ri = _rfiInfo relationshipField
           isAggAllowed = _rfiAllowAgg relationshipField
           ivi = InpValInfo Nothing (mkAggRelName $ riName ri) Nothing $
@@ -161,7 +161,7 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
 
     ordByCtx = Map.singleton namedTy $ Map.fromList $
                colOrdBys <> relOrdBys <> arrRelOrdBys
-    colOrdBys = map (pgiName &&& OBIPGCol) pgColFlds
+    colOrdBys = map (pgiName &&& OBIPGCol) pgColumnFields
     relOrdBys = flip map objRels $
                 \relationshipField ->
                   let ri = _rfiInfo relationshipField
@@ -171,7 +171,7 @@ mkOrdByInpObj tn selFlds = (inpObjTy, ordByCtx)
                      )
 
     arrRelOrdBys = flip mapMaybe arrRels $
-                   \(RelationshipFieldInfo ri isAggAllowed colGNameMap fltr _ _) ->
+                   \(RelationshipFieldInfo ri isAggAllowed colGNameMap fltr _ _ _) ->
                      let obItem = ( mkAggRelName $ riName ri
                                   , OBIAgg ri colGNameMap fltr
                                   )

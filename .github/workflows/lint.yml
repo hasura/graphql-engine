@@ -1,4 +1,4 @@
-name: lint
+name: console lint
 on:
   pull_request:
     paths:
@@ -13,10 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Use Node.js 8.x
+      - name: Use Node.js 12
         uses: actions/setup-node@v1
         with:
-          node-version: 8.x
+          node-version: 12.x
 
       - name: Install
         working-directory: ${{env.working-directory}}
