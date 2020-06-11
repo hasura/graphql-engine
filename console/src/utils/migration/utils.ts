@@ -267,8 +267,6 @@ export const getColumnUpdateMigration = (
   const migrationName = `alter_table_${currentSchema}_${tableName}_alter_column_${colName}`;
   return {
     migrationName,
-    upMigration: migration.upMigration,
-    downMigration: migration.downMigration,
     migration,
   };
 };
