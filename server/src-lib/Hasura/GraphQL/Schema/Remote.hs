@@ -9,7 +9,6 @@ import           Hasura.GraphQL.Parser               as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 
 import           Hasura.GraphQL.Parser          (FieldParser, Kind (..), Parser)
-import qualified GHC.Base                            as B
 
 remoteFieldFullSchema
   :: forall n m
@@ -61,7 +60,7 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name _inte
               G.TypeList (Nullability False) gType'' ->
                 pure . addNonNullableList =<< convertType gType''
       in convertType gType
-  subFieldParsers <- B.mapM convert subFields
+  subFieldParsers <- traverse convert subFields
   pure $ () <$ (P.selectionSet name description subFieldParsers)
 
 remoteSchemaInputObject
