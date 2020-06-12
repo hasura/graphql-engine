@@ -1,15 +1,6 @@
 import React, { ReactElement } from 'react';
 import styles from './PermissionsSummary.scss';
 
-type HeaderProps = {
-  content: string;
-  selectable: boolean;
-  isSelected?: boolean;
-  onClick?: () => void;
-  actionButtons?: Array<ReactElement>;
-  key?: string | null;
-};
-
 type HeaderContentProps = {
   content: string;
   actionButtons: Array<ReactElement>;
@@ -19,26 +10,29 @@ const HeaderContent: React.FC<HeaderContentProps> = ({
   content,
   actionButtons,
 }) => {
-  let headerContent = <></>;
-
-  if (!actionButtons.length) {
-    headerContent = <>{content}</>;
-  } else {
-    headerContent = (
-      <div
-        className={`${styles.actionCell} ${styles.display_flex} ${styles.flex_space_between}`}
-      >
-        <div>{content}</div>
-        <div className={`${styles.tableHeaderActions} ${styles.display_flex}`}>
-          {actionButtons.map((actionButton, i) => (
-            <div key={`${content}-action-btn-${i}`}>{actionButton}</div>
-          ))}
-        </div>
+  return actionButtons.length ? (
+    <div
+      className={`${styles.actionCell} ${styles.display_flex} ${styles.flex_space_between}`}
+    >
+      <div>{content}</div>
+      <div className={`${styles.tableHeaderActions} ${styles.display_flex}`}>
+        {actionButtons.map((actionButton, i) => (
+          <div key={`${content}-action-btn-${i}`}>{actionButton}</div>
+        ))}
       </div>
-    );
-  }
+    </div>
+  ) : (
+    <>{content}</>
+  );
+};
 
-  return headerContent;
+type HeaderProps = {
+  content: string;
+  selectable: boolean;
+  isSelected?: boolean;
+  onClick?: () => void;
+  actionButtons?: Array<ReactElement>;
+  key?: string | null;
 };
 
 const Header: React.FC<HeaderProps> = ({
