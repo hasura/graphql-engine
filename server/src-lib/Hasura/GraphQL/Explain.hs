@@ -29,15 +29,17 @@ import qualified Hasura.GraphQL.Execute.LiveQuery       as E
 import qualified Hasura.GraphQL.Resolve                 as RS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
+import qualified Hasura.GraphQL.Validate.SelectionSet   as GV
 import qualified Hasura.SQL.DML                         as S
 
 data GQLExplain a
   = GQLExplain
-  { _gqeQuery :: !a -- !GH.GQLReqParsed
-  , _gqeUser  :: !(Maybe (Map.HashMap Text Text))
+  { _gqeQuery   :: !GH.GQLReqUnparsed
+  , _gqeUser    :: !(Maybe (Map.HashMap Text Text))
+  , _gqeIsRelay :: !(Maybe Bool)
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True}
   ''GQLExplain
  )
 
@@ -105,6 +107,8 @@ explainField userInfo gCtx sqlGenCtx actionExecuter fld =
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo) unresolvedAST
       let (query, remoteJoins) = RS.toPGQuery resolvedAST
           txtSQL = Q.getQueryText query
+          -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+          -- query, resulting in potential privilege escalation:
           withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
       -- Reject if query contains any remote joins
       when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
@@ -129,7 +133,8 @@ explainGQLQuery
   -> QueryActionExecuter
   -> GQLExplain GH.GQLReqUnparsed
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx enableAL hdrs ip actionExecuter (GQLExplain query userVarsRaw) = do
+explainGQLQuery pgExecCtx sc sqlGenCtx enableAL hdrs ip actionExecuter (GQLExplain query userVarsRaw maybeIsRelay) = do
+  -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
   userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
   -- NOTE: previously 'E.getExecPlanPartial' would perform allow-list checking. This has been moved
   -- into a separate `E.MonadGQLAuthorization` class. Hence, now E.authorizeGQLApi is called enforce
@@ -137,21 +142,23 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL hdrs ip actionExecuter (GQLExpla
   reqParsed <- E.authorizeGQLApi userInfo (hdrs, ip) enableAL sc query
                >>= flip onLeft throwError
   (execPlan, queryReusability) <- runReusabilityT $
-    E.getExecPlanPartial userInfo sc reqParsed
+    E.getExecPlanPartial userInfo sc queryType reqParsed
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet) ->
       return (gCtx, rootSelSet)
-    E.GExPRemote _ _  ->
+    E.GExPRemote{}  ->
       throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
     GV.RQuery selSet ->
-      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx actionExecuter)
-      (toList selSet)
+      runInTx $ encJFromJValue . map snd <$>
+        GV.traverseObjectSelectionSet selSet (explainField userInfo gCtx sqlGenCtx actionExecuter)
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
-    GV.RSubscription rootField -> do
-      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter rootField
+    GV.RSubscription fields -> do
+      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo
+                     queryReusability actionExecuter fields
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
+    queryType = bool E.QueryHasura E.QueryRelay $ fromMaybe False maybeIsRelay
     sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly

@@ -4,12 +4,12 @@ import           Hasura.Prelude
 
 import           Control.Lens               ((^..))
 import           Data.Aeson
+import           Data.Aeson.Internal
 import           Data.Char
 import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
 import           System.Environment
 import           System.Exit
 import           System.Process
-import           Data.Aeson.Internal
 import           Data.Bits                 (shift, (.&.))
 import           Data.ByteString.Char8     (ByteString)
 import           Data.Word                 (Word32)
@@ -26,6 +26,7 @@ import qualified Data.Text                  as T
 import qualified Data.Text.IO               as TI
 import qualified Data.UUID                  as UUID
 import qualified Data.UUID.V4               as UUID
+import qualified Data.Vector                as V
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified Network.HTTP.Client        as HC
 import qualified Network.HTTP.Types         as HTTP
@@ -33,8 +34,7 @@ import qualified Network.Wreq               as Wreq
 import qualified Text.Regex.TDFA            as TDFA
 import qualified Text.Regex.TDFA.ReadRegex  as TDFA
 import qualified Text.Regex.TDFA.TDFA       as TDFA
-import qualified Data.Vector                as V
-import qualified Network.Wai               as Wai
+import qualified Network.Wai                as Wai
 
 import           Hasura.RQL.Instances       ()
 

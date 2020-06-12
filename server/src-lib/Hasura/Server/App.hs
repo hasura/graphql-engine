@@ -330,8 +330,8 @@ v1QueryHandler query = do
 
 v1Alpha1GQHandler
   :: (HasVersion, MonadIO m, E.MonadGQLAuthorization m)
-  => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
-v1Alpha1GQHandler query = do
+  => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
+v1Alpha1GQHandler queryType query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
   ipAddress <- asks hcSourceIpAddress
@@ -348,12 +348,18 @@ v1Alpha1GQHandler query = do
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
                 (lastBuiltSchemaCache sc) scVer manager enableAL
   flip runReaderT execCtx $
-    GH.runGQBatched requestId responseErrorsConfig userInfo ipAddress reqHeaders query
+    GH.runGQBatched requestId responseErrorsConfig userInfo ipAddress reqHeaders queryType query
 
 v1GQHandler
   :: (HasVersion, MonadIO m, E.MonadGQLAuthorization m)
+  => GH.GQLBatchedReqs GH.GQLQueryText
+  -> Handler m (HttpResponse EncJSON)
+v1GQHandler = v1Alpha1GQHandler E.QueryHasura
+
+v1GQRelayHandler
+  :: (HasVersion, MonadIO m, E.MonadGQLAuthorization m)
   => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
-v1GQHandler = v1Alpha1GQHandler
+v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 
 gqlExplainHandler
   :: (HasVersion, MonadIO m, E.MonadGQLAuthorization m)
@@ -642,10 +648,13 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     when enableGraphQL $ do
       Spock.post "v1alpha1/graphql" $ spockAction GH.encodeGQErr id $
-        mkPostHandler $ mkAPIRespHandler v1Alpha1GQHandler
+        mkPostHandler $ mkAPIRespHandler $ v1Alpha1GQHandler E.QueryHasura
 
       Spock.post "v1/graphql" $ spockAction GH.encodeGQErr allMod200 $
         mkPostHandler $ mkAPIRespHandler v1GQHandler
+
+      Spock.post "v1/relay" $ spockAction GH.encodeGQErr allMod200 $
+        mkPostHandler $ mkAPIRespHandler v1GQRelayHandler
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       Spock.get "dev/ekg" $ spockAction encodeQErr id $
