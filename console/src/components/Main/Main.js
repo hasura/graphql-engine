@@ -606,15 +606,7 @@ class Main extends React.Component {
                   'fa-plug',
                   tooltips.remoteSchema,
                   '/remote-schemas/manage/schemas'
-                )}
-                {/*                {getSidebarItem(
-                  'Events',
-                  'fa-cloud',
-                  tooltips.events,
-                  '/events/manage/triggers'
-                )}
-                {' '}
-*/}{' '}
+                )}{' '}
                 {getSidebarItem(
                   'Events',
                   'fa-cloud',
