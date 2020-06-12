@@ -1,0 +1,13 @@
+type: create_remote_relationship
+args:
+  name: messagesMultiRes
+  table: profiles
+  hasura_fields:
+    - name
+  remote_schema: my-remote-schema
+  remote_field:
+    messages:
+      arguments:
+        where:
+          name:
+            eq: "$name"

@@ -10,6 +10,8 @@ module Hasura.GraphQL.Resolve.InputValue
   , asPGColumnValueM
   , asPGColumnValue
 
+  , asScalarValM
+  , asScalarVal
   , asEnumVal
   , asEnumValM
   , withObject
@@ -22,12 +24,15 @@ module Hasura.GraphQL.Resolve.InputValue
   , parseMany
   , asPGColText
   , asPGColTextM
+  , annInpValueToJson
   ) where
 
 import           Hasura.Prelude
 
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Text.Builder                  as TB
 
+import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.Aeson                     as J
 import qualified Hasura.RQL.Types               as RQL
 
 import           Hasura.GraphQL.Resolve.Context
@@ -120,6 +125,19 @@ asPGColumnValue v = do
 openInputValue :: (MonadReusability m) => AnnInpVal -> m AnnGValue
 openInputValue v = when (isJust $ _aivVariable v) markNotReusable $> _aivValue v
 
+asScalarValM :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> PGScalarType -> m (Maybe PGScalarValue)
+asScalarValM v tp = openInputValue v >>= \case
+  AGScalar tp' vM ->
+    if tp == tp'
+    then pure vM
+    else tyMismatch "scalar" v
+  _ -> tyMismatch "scalar" v
+
+asScalarVal :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> PGScalarType -> m PGScalarValue
+asScalarVal v tp = asScalarValM v tp >>= \case
+  Just val -> pure val
+  Nothing -> throw500 $ "unexpected null for ty " <> TB.run (toSQL tp)
+
 -- | Note: only handles “synthetic” enums (see 'EnumValuesInfo'). Enum table references are handled
 -- by 'asPGColumnType' and its variants.
 asEnumVal :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m (G.NamedType, G.EnumValue)
@@ -197,3 +215,13 @@ asPGColTextM :: (MonadReusability m, MonadError QErr m) => AnnInpVal -> m (Maybe
 asPGColTextM val = do
   pgColValM <- traverse openOpaqueValue =<< asPGColumnValueM val
   traverse onlyText (pstValue . _apvValue <$> pgColValM)
+
+annInpValueToJson :: AnnInpVal -> J.Value
+annInpValueToJson annInpValue =
+  case _aivValue annInpValue of
+    AGScalar _ pgColumnValueM -> maybe J.Null pgScalarValueToJson pgColumnValueM
+    AGEnum _ enumValue        -> case enumValue of
+      AGESynthetic enumValueM   -> J.toJSON enumValueM
+      AGEReference _ enumValueM -> J.toJSON enumValueM
+    AGObject _ objectM        -> J.toJSON $ fmap (fmap annInpValueToJson) objectM
+    AGArray _ valuesM         -> J.toJSON $ fmap (fmap annInpValueToJson) valuesM

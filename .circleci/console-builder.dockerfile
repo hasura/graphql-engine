@@ -1,4 +1,4 @@
-FROM node:8
+FROM node:12
 
 ARG gcloud_version="207.0.0"
 

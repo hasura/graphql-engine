@@ -29,7 +29,7 @@ class ViewTable extends Component {
     this.getInitialData(this.props.tableName);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.tableName !== this.props.tableName) {
       this.getInitialData(nextProps.tableName);
     }
@@ -110,6 +110,7 @@ class ViewTable extends Component {
       triggeredFunction,
       location,
       estimatedCount,
+      isCountEstimated,
     } = this.props;
 
     // check if table exists
@@ -161,7 +162,8 @@ class ViewTable extends Component {
     // Choose the right nav bar header thing
     const header = (
       <TableHeader
-        count={count}
+        count={isCountEstimated ? estimatedCount : count}
+        isCountEstimated={isCountEstimated}
         dispatch={dispatch}
         table={tableSchema}
         tabName="browse"

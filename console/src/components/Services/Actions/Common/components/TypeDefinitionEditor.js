@@ -3,7 +3,7 @@ import { parse as sdlParse } from 'graphql/language/parser';
 import styles from './Styles.scss';
 import Tooltip from './Tooltip';
 import CrossIcon from '../../../../Common/Icons/Cross';
-import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
+import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 // import CopyIcon from '../../../../Common/Icons/Copy';
 // import Modal from '../../../../Common/Modal/Modal';
 // import CloneTypeModal from './CloneTypeModal';
@@ -13,7 +13,7 @@ const editorLabel = 'New types definition';
 const editorTooltip =
   'You can define new GraphQL types that you can use in the action definition above';
 
-const ActionDefinitionEditor = ({
+const TypeDefinitionEditor = ({
   value,
   onChange,
   className,
@@ -24,6 +24,7 @@ const ActionDefinitionEditor = ({
   tooltip = editorTooltip,
   editorHeight = '200px',
   editorWidth = '600px',
+  readOnlyMode,
 }) => {
   // const [modalOpen, setModalState] = React.useState(false);
   // const toggleModal = () => setModalState(!modalOpen);
@@ -101,17 +102,19 @@ const ActionDefinitionEditor = ({
             
           */}
         </div>
-        <SDLEditor
+        <AceEditor
           name="sdl-editor"
+          mode="graphqlschema"
           value={value}
           onChange={onChangeWithError}
           placeholder={placeholder}
           height={editorHeight}
           width={editorWidth}
+          readOnly={readOnlyMode}
         />
       </div>
     </div>
   );
 };
 
-export default ActionDefinitionEditor;
+export default TypeDefinitionEditor;
