@@ -8,3 +8,6 @@ export * from './Tooltip';
 export * from './SwitchButton';
 export * from './RadioButton';
 export * from './Checkbox';
+export * from './Badge';
+export * from './Flex';
+export * from './Box';

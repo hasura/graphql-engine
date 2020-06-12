@@ -12,8 +12,6 @@ import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
 
 import logo from './images/white-logo.svg';
-import pixHeart from './images/pix-heart.svg';
-import close from './images/x-circle.svg';
 import monitoring from './images/monitoring.svg';
 import rate from './images/rate.svg';
 import regression from './images/regression.svg';
@@ -21,6 +19,8 @@ import management from './images/management.svg';
 import allow from './images/allow-listing.svg';
 import read from './images/read-replica.svg';
 import arrowForwardRed from './images/arrow_forward-red.svg';
+
+import LoveSection from './LoveSection';
 
 import styles from './Main.scss';
 
@@ -37,12 +37,7 @@ import {
   redirectToMetadataStatus,
 } from '../Services/Settings/Actions';
 
-import {
-  getLoveConsentState,
-  setLoveConsentState,
-  getProClickState,
-  setProClickState,
-} from './utils';
+import { getProClickState, setProClickState } from './utils';
 
 import { checkStableVersion, versionGT } from '../../helpers/versionUtils';
 import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
@@ -61,7 +56,6 @@ class Main extends React.Component {
 
     this.state = {
       updateNotificationVersion: null,
-      loveConsentState: getLoveConsentState(),
       proClickState: getProClickState(),
       isPopUpOpen: false,
     };
@@ -165,16 +159,6 @@ class Main extends React.Component {
     if (this.props.metadata.inconsistentObjects.length > 0) {
       this.props.dispatch(redirectToMetadataStatus());
     }
-  }
-
-  closeLoveIcon() {
-    const s = {
-      isDismissed: true,
-    };
-    setLoveConsentState(s);
-    this.setState({
-      loveConsentState: { ...getLoveConsentState() },
-    });
   }
 
   updateLocalStorageState() {
@@ -370,122 +354,6 @@ class Main extends React.Component {
       }
 
       return updateNotificationHtml;
-    };
-
-    const getLoveSection = () => {
-      let loveSectionHtml = null;
-
-      if (!this.state.loveConsentState.isDismissed) {
-        loveSectionHtml = [
-          <div
-            key="main_love_1"
-            className={styles.shareSection + ' dropdown-toggle'}
-            aria-expanded="false"
-            onClick={this.handleDropdownToggle.bind(this)}
-          >
-            <img
-              className={'img-responsive'}
-              src={pixHeart}
-              alt={'pix Heart'}
-            />
-            {/* <i className={styles.heart + ' fa fa-heart'} /> */}
-          </div>,
-          <ul
-            key="main_love_2"
-            className={'dropdown-menu ' + styles.dropdown_menu}
-          >
-            <div className={styles.dropdown_menu_container}>
-              <div className={styles.closeDropDown}>
-                <i
-                  className="fa fa-close"
-                  onClick={this.closeLoveIcon.bind(this)}
-                />
-                {/*
-                        <img
-                          className={'img-responsive'}
-                          src={closeIcon}
-                          alt={'closeIcon'}
-                          onClick={this.closeLoveIcon.bind(this)}
-                        />
-                        */}
-              </div>
-              {/*
-                      <div className={styles.arrow_up_dropdown} />
-                      <div className={styles.graphqlHeartText}>
-                        Love GraphQL Engine? Shout it from the rooftops!
-                        <br />
-                        Or just spread the word{' '}
-                        <span role="img" aria-label="smile">
-                          😊
-                        </span>
-                      </div>
-                      */}
-              <div className={styles.displayFlex}>
-                <li className={styles.pixelText1}>
-                  Roses are red, <br />
-                  Violets are blue;
-                  <br />
-                  Star us on GitHub,
-                  <br />
-                  To make our <i className={'fa fa-heart'} /> go wooooo!
-                </li>
-                <li className={'dropdown-item'}>
-                  <a
-                    href="https://github.com/hasura/graphql-engine"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <div className={styles.socialIcon}>
-                      <img
-                        className="img img-responsive"
-                        src={`${globals.assetsPath}/common/img/githubicon.png`}
-                        alt={'GitHub'}
-                      />
-                    </div>
-                    <div className={styles.pixelText}>
-                      <i className="fa fa-star" />
-                      &nbsp; Star
-                    </div>
-                  </a>
-                  {/*
-                          <div className={styles.gitHubBtn}>
-                            <iframe
-                              title="github"
-                              src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
-                              frameBorder="0"
-                              scrolling="0"
-                              width="100px"
-                              height="30px"
-                            />
-                          </div>
-                          */}
-                </li>
-                <li className={'dropdown-item '}>
-                  <a
-                    href="https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com/hasura/graphql-engine%0A"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <div className={styles.socialIcon}>
-                      <img
-                        className="img img-responsive"
-                        src={`${globals.assetsPath}/common/img/twittericon.png`}
-                        alt={'Twitter'}
-                      />
-                    </div>
-                    <div className={styles.pixelText}>
-                      <i className="fa fa-twitter" />
-                      &nbsp; Tweet
-                    </div>
-                  </a>
-                </li>
-              </div>
-            </div>
-          </ul>,
-        ];
-      }
-
-      return loveSectionHtml;
     };
 
     const getSidebarItem = (
@@ -786,7 +654,7 @@ class Main extends React.Component {
               >
                 <div className={styles.headerRightNavbarBtn}>HELP</div>
               </a>
-              {getLoveSection()}
+              <LoveSection />
             </div>
           </div>
 
