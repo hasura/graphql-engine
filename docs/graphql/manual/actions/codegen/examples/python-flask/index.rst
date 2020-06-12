@@ -2,10 +2,10 @@
    :description: Codegen for Hasura actions in Python & Flask
    :keywords: hasura, docs, actions, codegen, guide, python, flask
 
-.. _actions_codegen_python:
+.. _actions_codegen_python_flask:
 
-GraphQL API with Python & Flask
-===============================
+GraphQL API with Python & Flask: JWT authentication
+===================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,9 +15,15 @@ GraphQL API with Python & Flask
 Introduction
 ------------
 
-In this example, we will discuss how to utilize Actions and Codegen to build a Python Flask API for JWT Authentication.
+In this example, we will discuss how to use Hasura actions and codegen to build a Python & Flask API for JWT authentication.
 
-Our Action types will be two methods, ``Signup`` and ``Login``, that return a ``CreateUserOutput`` and ``JsonWebToken``. For this example, we are assuming a ``User`` table with fields ``email`` and ``password``:
+We assume a ``user`` table with fields ``email`` and ``password``.
+
+We define two custom mutations: 
+
+1. ``Login``: returns a ``JsonWebToken``
+
+2. ``Signup``: returns a ``CreateUserOutput``
 
 .. code-block:: graphql
 
@@ -29,43 +35,42 @@ Our Action types will be two methods, ``Signup`` and ``Login``, that return a ``
     Signup (email: String! password: String!): CreateUserOutput
   }
 
+  type JsonWebToken {
+    token : String!
+  }
+
   type CreateUserOutput {
     id : Int!
     email : String!
     password : String!
   }
 
-  type JsonWebToken {
-    token : String!
-  }
+Create action definition & custom types
+---------------------------------------
 
-Create Action Definitions
---------------------------
+Let's start by defining the action for ``Signup``:
 
-Start by creating the Signup Action type definitions in the Console:
+.. thumbnail:: ../../../../../../img/graphql/manual/actions/python-flask-signup-types.png
+        :width: 100%
+        :alt: Python Flask signup types
+        :class: no-shadow
 
-.. image:: python-flask-signup-types.png
-  :width: 900px
-  :alt: python-flask-signup-types
-  :class: no-shadow
+Codegen overview
+----------------
 
-If we check the "Codegen" tab, we can see that a nice scaffold has been generated for us from these GraphQL types:
-
-
-.. image:: python-flask-signup-codegen-1.png  
-  :scale: 100%
-  :alt: python-flask-signup-codegen1
-
-.. image:: python-flask-signup-codegen-types.png
-  :scale: 100%
-  :alt: python-flask-signup-codegen-types
+If we check the ``Codegen`` tab, we can see that a nice scaffold has been generated for us from the GraphQL types we defined.
 
 You may notice a couple of things about the generated code:
 
-* The generated handler function returns a Dataclass instance of the auto-generated type matching it's expected return type
+* The generated handler function returns a ``dataclass`` instance of the auto-generated type matching it's expected return type
 * There is a ``RequestMixin`` Dataclass which provides some utility functions that all other classes inherit from
 
 Let's walk through the boilerplate and see what's happening.
+
+``Signup.py``
+
+Here we have the base handler method for the generated action. The route name will match the name of the action, and so will the function name.
+Our codegen module generates new GraphQL Types for the input arguments to all action queries/mutations, and from that we generate language-specific types.
 
 .. code-block:: python
 
@@ -84,16 +89,14 @@ Let's walk through the boilerplate and see what's happening.
   if __name__ == '__main__':
     app.run(debug = True, host = '0.0.0.0')
 
-Here we have the base handler method for the Action generated. The route name will match the name of your Action, and so will the function name.
-Our codegen module generates new GraphQL Types for the input arguments to all Action queries/mutations, and from that we generate language-specific types.
-
-This is where ``SignupArgs`` comes from -- It's a Python Dataclass that matches the shape of your mutation argument input. With it, on the ``RequestMixin``
-we provide a method ``.from_request()`` which can take a JSON object from HTTP request body and convert it to an instance of the class. So we invoke that
+This is where ``SignupArgs`` comes from - it's a Python dataclass that matches the shape of your mutation argument input. With it, on the ``RequestMixin``
+we provide a method ``.from_request()`` which can take a JSON object from the HTTP request body and convert it to an instance of the class. So we invoke that
 generic method and convert it for convenience.
 
-Finally, we know from the schema that the return type needs to be a ```CreateUserOutput```, so we leave an empty instance there and call
+Finally, we know from the schema that the return type needs to be a ``CreateUserOutput``, so we leave an empty instance there and call
 the ``.to_json()`` helper method we define on all ``RequestMixin`` objects.
 
+``SignupTypes.py``
 
 .. code-block:: python
 
@@ -126,12 +129,12 @@ the ``.to_json()`` helper method we define on all ``RequestMixin`` objects.
     email: str
     password: str
 
-Overview of Action Handler Implementation
------------------------------------------
+Action handler implementation for signup
+----------------------------------------
 
-Now we need to implement the business logic for ``Signup``. Our Action will do the following:
+Now we need to implement the business logic for ``Signup``. Our action will do the following:
 
-* Recieve the Action ``email`` and ``password`` arguments on ``request``, and pass those values to ``SignupArgs.from_request()``
+* Recieve the action arguments ``email`` and ``password`` on ``request``, and pass those values to ``SignupArgs.from_request()``
 * Convert the plaintext password input into a hashed secure password with Argon2
 * Send a mutation to Hasura to save the newly created user with the hashed password
 * Return the created user object to signal success, or else error
@@ -147,10 +150,10 @@ Our ``requirements.txt`` will now look like: ::
 
 On to the implementation.
 
-Signup Handler & Password Hashing
-----------------------------------
+Signup handler & password hashing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For password hashing, the ``argon2`` API is minimal and straightforward: an instance of a password hasher is created with ``PasswordHasher()``, which has methods ``.hash(password)``, ``.verify(hashed_password, password)``, and `.check_needs_rehash(hashed_password)`.
+For password hashing, the ``argon2`` API is minimal and straightforward: an instance of a password hasher is created with ``PasswordHasher()``, which has methods ``.hash(password)``, ``.verify(hashed_password, password)``, and ``.check_needs_rehash(hashed_password)``.
 
 In our signup handler, the first thing we'll do is convert the Action input password to a secure hash:
 
@@ -164,8 +167,8 @@ In our signup handler, the first thing we'll do is convert the Action input pass
       args = AuthArgs.from_request(request.get_json())
       hashed_password = Password.hash(args.password)
 
-Creating the GraphQL Request Client
------------------------------------
+Creating the GraphQL request client
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Next, since we have the user's email and hashed password, we need to send a request to Hasura to save them in the database. For that, we'll need a request client implementation:
 
@@ -200,7 +203,7 @@ Next, since we have the user's email and hashed password, we need to send a requ
           {"email": email, "password": password},
       )
 
-Here we create a utility class for handling our Hasura operations. It takes an URL and headers object as initialization options, and exposes a method ``.run_query()`` for performing GraphQL requests. We create the query function for saving our user in the Signup action as a class method as well.
+Here we create a utility class for handling our Hasura operations. It takes an URL and headers object as initialization options, and exposes a method ``.run_query()`` for performing GraphQL requests. We create the query function for saving our user in the ``Signup`` action as a class method as well.
 
 We can instantiate the ``Client`` like this:
 
@@ -211,7 +214,7 @@ We can instantiate the ``Client`` like this:
 
   client = Client(url=HASURA_URL, headers=HASURA_HEADERS)
 
-Now, in our ``signup`` Action handler, we need to call ``client.create_user()`` with the input email and the hashed password value to save them, then return the result:
+Now, in our ``Signup`` action handler, we need to call ``client.create_user()`` with the input email and the hashed password value to save them, then return the result:
 
 .. code-block:: python
 
@@ -228,17 +231,17 @@ Now, in our ``signup`` Action handler, we need to call ``client.create_user()`` 
 
 To test this out, send an HTTP request to your Flask API at ``/signup`` with an email and password. You should get a successful response like this:
 
-.. image:: python-flask-signup-request.png
-  :width: 800px
-  :alt: python-flask-signup-request
-  :class: no-shadow
+.. thumbnail:: ../../../../../../img/graphql/manual/actions/python-flask-signup-request.png
+        :width: 100%
+        :alt: Python Flask signup request
+        :class: no-shadow
 
-Now our Signup Action is functional! The last piece is create the Login handler, which will do a password comparison, and then return a signed JWT if successful.
+Now our ``Signup`` Action is functional! The last piece is create the Login handler, which will do a password comparison, and then return a signed JWT if successful.
 
-Login Handler & JWT Token
---------------------------
+Action handler implementation for login
+---------------------------------------
 
-The first thing we need a new request method on our ``Client`` class to find a user by email, so that we can look them up to compare password. Under ``create_user``, create a new method:
+The first thing we need is a new request method on our ``Client`` class to find a user by email, so that we can look them up to compare the password. Under ``create_user``, create a new method:
 
 .. code-block:: python
 
@@ -273,7 +276,7 @@ We also need to check to see if the password needs to be updated and re-hashed b
       except VerifyMismatchError:
           return { "message": "Invalid credentials" }, 401
 
-Here is what the implementation of ``generate_token()``, ``rehash_and_save_password_if_needed()``, and look like:
+Here is what the implementation of ``generate_token()`` and ``rehash_and_save_password_if_needed()`` can look like:
 
 .. code-block:: python
 
@@ -329,47 +332,56 @@ And finally, ``client.update_password()``:
       {"id": id, "password": password},
   )
 
-Testing out the Handler Routes
--------------------------------
+Testing out the handler routes
+------------------------------
 
-Now, if we send a request to ``/login`` using our email and password from ``/signup``, we should successful get a signed JWT, and decoding the JWT should return the correct information:
+Now, if we send a request to ``/login`` using our email and password from ``/signup``, we should successfully get a signed JWT, and decoding the JWT should return the correct information:
 
-.. image:: python-request-login.png  
-  :scale: 90%
-  :alt: python-request-login
+.. thumbnail:: ../../../../../../img/graphql/manual/actions/python-request-login.png  
+        :width: 90%
+        :alt: Python flask request login
+        :class: no-shadow
 
-.. image:: python-flask-jwt-decode.png
-  :scale: 80%
-  :alt: python-flask-jwt-decode
+.. thumbnail:: ../../../../../../img/graphql/manual/actions/python-flask-jwt-decode.png
+        :width: 80%
+        :alt: Python flask jwt decode
+        :class: no-shadow
 
-
-Calling the Finished Actions
------------------------------
+Calling the finished actions
+----------------------------
 
 Now we can call our finished Action from Hasura's API, and validate our responses:
 
-.. figure:: signup-mutation.png
-  :width: 90 %
-  :align: center
+Signup Mutation
+^^^^^^^^^^^^^^^
 
-  Signup Mutation
+.. thumbnail:: ../../../../../../img/graphql/manual/actions/signup-mutation.png
+        :width: 80%
+        :alt: Signup mutation
+        :class: no-shadow
 
-.. figure:: signup-mutation-duplicate.png
-  :width: 110 %
-  :align: center
+Signup Mutation Error
+^^^^^^^^^^^^^^^^^^^^^
 
-  Signup Mutation Error
+.. thumbnail:: ../../../../../../img/graphql/manual/actions/signup-mutation-duplicate.png
+        :width: 80%
+        :alt: Signup mutation error
+        :class: no-shadow  
 
-.. figure:: login-query.png
-  :width: 90 %
-  :align: center
+Login Query
+^^^^^^^^^^^
 
-  Login Query
+.. thumbnail:: ../../../../../../img/graphql/manual/actions/login-query.png
+        :width: 80%
+        :alt: Login query
+        :class: no-shadow  
 
-.. figure:: login-query-bad-password.png
-  :width: 110 %
-  :align: center
+Login Query Error
+^^^^^^^^^^^^^^^^^
 
-  Login Query Error
+.. thumbnail:: ../../../../../../img/graphql/manual/actions/login-query-bad-password.png
+        :width: 80%
+        :alt: Login query error
+        :class: no-shadow  
 
   

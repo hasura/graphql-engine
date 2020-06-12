@@ -109,12 +109,13 @@ Generating handler code for your action
 Codegen for your framework
 --------------------------
 
-Hasura provides codegen for the following frameworks:
+As of now, Hasura provides codegen for a few frameworks (``nodejs-express``,
+``typescript-zeit``, etc). We will continue adding them to the documentation.
 
 .. toctree::
   :maxdepth: 1
 
-  Python <python/index>
+  Codegen examples <examples/index>
 
 If you wish to build a code generator for your framework
 `read the contrib guide <https://github.com/hasura/codegen-builder-contrib/>`_.
