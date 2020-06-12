@@ -12,6 +12,7 @@ import {
   checkIfTable,
   getFunctionSchema,
 } from '../../Common/utils/pgUtils';
+import { isEmpty } from '../../Common/utils/jsUtils';
 import {
   getFunctionModifyRoute,
   getSchemaAddTableRoute,
@@ -170,7 +171,7 @@ class DataSubSidebar extends React.Component {
 
       childList = [...tableLinks, ...functionLinks];
 
-      if (childList.length === 0) {
+      if (isEmpty(childList)) {
         childList = [
           <li className={styles.noChildren} key="no-tables-1">
             <i>No tables/views/functions available</i>
