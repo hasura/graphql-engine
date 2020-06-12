@@ -18,8 +18,21 @@ Introduction
 Access control rules in Hasura are defined at a role, table and action (*insert, update, select, delete*)
 level granularity:
 
-.. thumbnail:: /img/graphql/manual/auth/permission-rule-granularity.png
-   :alt: Access control rules in Hasura
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Via console
+
+      .. thumbnail:: /img/graphql/manual/auth/permission-rule-granularity.png
+         :alt: Access control rules in Hasura
+
+   .. tab:: Via CLI
+
+      You can add permissions in the ``tables.yaml`` file inside the ``metadata`` directory.
+
+   .. tab:: Via API      
+
+      You can add permissions by using the :ref:`permissions metadata API <api_permission>`.
 
 Requests to Hasura should contain the reserved session variable ``X-Hasura-Role`` to indicate the requesting
 user's role, and the table and action information is inferred from the request itself. This information is used
@@ -202,10 +215,70 @@ This permission rule reads as "*if there exists a row in the table* ``users`` *w
 Column-level permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Column-level permissions determine access to columns in the rows that are accessible based on row-level
-permissions. These permissions are simple selections:
+permissions. 
 
-.. thumbnail:: /img/graphql/manual/auth/column-level-permissions.png
-   :alt: Column level permissions
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Via console
+
+      These permissions are simple selections on the Hasura console:
+
+      .. thumbnail:: /img/graphql/manual/auth/column-level-permissions.png
+         :alt: Column level permissions
+
+   .. tab:: Via CLI
+
+      You can set column-level permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 7-9
+
+            - table:
+               schema: public
+               name: author
+            select_permissions:
+            - role: user
+               permission:
+                  columns:
+                  - id
+                  - name
+
+      Then apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: Via API
+
+      You can set column-level permissions when :ref:`creating permissions <api_permission>`:
+
+      .. code-block:: http
+         :emphasize-lines: 11
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {    
+            "type" : "create_select_permission",
+            "args" : {
+               "table" : "article",
+               "role" : "user",
+               "permission" : {
+                     "columns" : ["title","author_id"],
+                     "filter" : {
+                        "$or" : [
+                           { "author_id" : "X-Hasura-User-Id" },
+                           { "is_published" : true }
+                        ]
+                     },
+                     "limit": 10,
+                     "allow_aggregations": true
+               }
+            }
+         }
 
 In this example, the role ``author`` has only partial access to columns of the accessible rows for
 the ``select`` operation.
@@ -218,8 +291,70 @@ Row fetch limit
 In the case of ``select`` operations, the number of rows to be returned in the response can be limited
 using this configuration:
 
-.. thumbnail:: /img/graphql/manual/auth/limit-rows-for-select.png
-   :alt: Row fetch limit
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Via console
+
+      .. thumbnail:: /img/graphql/manual/auth/limit-rows-for-select.png
+         :alt: Row fetch limit
+
+   .. tab:: Via CLI
+
+      You can set a row fetch limit for a table in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 13
+
+            - table:
+               schema: public
+               name: author
+            select_permissions:
+            - role: user
+               permission:
+                  columns:
+                  - id
+                  - name
+                  filter:
+                  user_id:
+                     _gt: 10
+                  limit: 20
+
+      Then apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: Via API
+
+      You can a row fetch limit for a table when :ref:`creating permissions <api_permission>`
+
+      .. code-block:: http
+         :emphasize-lines: 18
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type" : "create_select_permission",
+            "args" : {
+               "table" : "article",
+               "role" : "user",
+               "permission" : {
+                     "columns" : "*",
+                     "filter" : {
+                        "$or" : [
+                           { "author_id" : "X-Hasura-User-Id" },
+                           { "is_published" : true }
+                        ]
+                     },
+                     "limit": 10,
+                     "allow_aggregations": true
+               }
+            }
+         }
 
 In the above example, this configuration  restricts the number of accessible rows (*based on the rule*:
 ``{"id":{"_eq":"X-Hasura-User-Id"}}``) to 20.
@@ -232,8 +367,67 @@ Aggregation queries permissions
 In the case of ``select`` operations, access to :ref:`aggregation queries <aggregation_queries>`
 can be restricted for a given role using this configuration.
 
-.. thumbnail:: /img/graphql/manual/auth/aggregation-query-permissions.png
-   :alt: Aggregation queries permissions
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Via console
+
+      .. thumbnail:: /img/graphql/manual/auth/aggregation-query-permissions.png
+         :alt: Aggregation queries permissions
+
+   .. tab:: Via CLI
+
+      You can allow aggregation query permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 10
+
+            - table:
+               schema: public
+               name: author
+            select_permissions:
+            - role: user
+               permission:
+                  columns:
+                  - id
+                  - name
+                  allow_aggregations: true
+
+      Then apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: Via API
+
+      You can allow aggregation query permissions when :ref:`creating permissions <api_permission>`
+
+      .. code-block:: http
+         :emphasize-lines: 19
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type" : "create_select_permission",
+            "args" : {
+               "table" : "article",
+               "role" : "user",
+               "permission" : {
+                     "columns" : "*",
+                     "filter" : {
+                        "$or" : [
+                           { "author_id" : "X-Hasura-User-Id" },
+                           { "is_published" : true }
+                        ]
+                     },
+                     "limit": 10,
+                     "allow_aggregations": true
+               }
+            }
+         }
 
 In the above example, the role ``user`` is allowed to make aggregation queries.
 

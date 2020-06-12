@@ -80,18 +80,95 @@ Head to the ``GraphiQL`` tab in your console and try out the below query:
 You'll see that this results in a response that contains all the authors because by default the GraphQL
 query is accepted with **admin** permissions.
 
-.. thumbnail:: /img/graphql/manual/auth/fetch-authors.png
-   :alt: Run a query without access control
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. thumbnail:: /img/graphql/manual/auth/fetch-authors.png
+      :alt: Run a query without access control
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "query": "{ author { id name }}"
+      }
 
 Define access control rules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now let's define an access control rule for the ``author`` table for a role ``users``. Head to the
-**Permissions** section of the table (``Data`` --> <table> --> ``Permissions`` tab) and define permissions
-as shown below:
+Now let's define an access control rule for the ``author`` table for a role ``users``. 
 
-.. thumbnail:: /img/graphql/manual/auth/permission-basics-simple-example.png
-   :alt: Define access control rules
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    Head to the
+    **Permissions** section of the table (``Data`` --> <table> --> ``Permissions`` tab) and define permissions
+    as shown below:
+
+    .. thumbnail:: /img/graphql/manual/auth/permission-basics-simple-example.png
+      :alt: Define access control rules
+
+  .. tab:: Via CLI
+
+    You can add permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+       :emphasize-lines: 4-12
+
+        - table:
+            schema: public
+            name: author
+          select_permissions:
+          - role: user
+            permission:
+              columns:
+              - id
+              - name
+              filter:
+                id:
+                  _eq: X-Hasura-User-Id
+
+    Then apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
+  .. tab:: Via API
+
+    You can add select permissions by using the :ref:`create_select_permission API <create_select_permission>` API:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+          "type" : "create_select_permission",
+          "args" : {
+              "table" : "author",
+              "role" : "user",
+              "permission" : {
+                  "columns" : [
+                    "id",
+                    "name"
+                  ],
+                  "filter" : {
+                      "id" : "X-Hasura-User-Id"
+                  }
+              }
+          }
+      }
 
 This permission rule reads as: "*For the role* ``user`` *, table* ``author`` *and operation* ``select``/``query``,
 allow access to those rows where the value in the ``id`` *column is the same as the value in the*
@@ -103,8 +180,26 @@ Let's run the same query as above but now with the ``X-Hasura-Role`` and ``X-Has
 variables also included to indicate role and user information. These session variables are passed in
 the ``Request Headers`` section of ``GraphiQL`` as highlighted below:
 
-.. thumbnail:: /img/graphql/manual/auth/permission-basics-query-with-access-control.png
-   :alt: Run a query with access control
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    .. thumbnail:: /img/graphql/manual/auth/permission-basics-query-with-access-control.png
+      :alt: Run a query with access control
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: user
+      X-Hasura-User-Id: 4
+
+      {
+          "query": "{ author { id name }}"
+      }
 
 As you can see, the results are now filtered based on the access control rule for the role ``user``
 (*since that is the role indicated by the* ``X-Hasura-Role`` *session variable*) and the results are
