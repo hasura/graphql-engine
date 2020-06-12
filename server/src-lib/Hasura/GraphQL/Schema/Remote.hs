@@ -6,25 +6,62 @@ import           Language.GraphQL.Draft.Syntax       as G
 import qualified Data.List.NonEmpty                  as NE
 
 import           Hasura.GraphQL.Parser               as P
+import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 
 import           Hasura.GraphQL.Parser          (FieldParser, Kind (..), Parser)
+
+remoteFieldFullSchema
+  :: forall n
+   . MonadParse n
+  => SchemaDocument
+  -> G.Name
+  -> Parser 'Output n (G.SelectionSet NoFragments Variable)
+remoteFieldFullSchema sdoc name =
+  let fieldObjectType = case lookupType sdoc name of
+                          Just (G.TypeDefinitionObject o) -> o
+                          _ -> _errorNoSuchObjectInSchema
+      fieldParser = remoteSchemaObject sdoc fieldObjectType
+  in unsafeRawParser (pType fieldParser)
+
+{-
+query {
+  currentWeather (city:"berlin") {
+    temperature
+  }
+}
+-}
 
 remoteSchemaObject
   :: forall n
    . MonadParse n
   => SchemaDocument
   -> G.ObjectTypeDefinition
-  -> Parser 'Output n () -- (G.SelectionSet NoFragments Variable)
-remoteSchemaObject schemaDoc (G.ObjectTypeDefinition description name _ _ subFields) =
+  -> Parser 'Output n ()
+remoteSchemaObject schemaDoc (G.ObjectTypeDefinition description name _interfaces _directives subFields) =
   let
     convert :: G.FieldDefinition -> FieldParser n ()
     convert (G.FieldDefinition _ _ argsDefinition gType _) =
-      -- TODO add directives
-      case gType of
-        G.TypeNamed (Nullability True) fieldTypeName ->
-          remoteFieldFromName schemaDoc name fieldTypeName argsDefinition
+      let
+        addNullableList :: FieldParser n () -> FieldParser n ()
+        addNullableList (P.FieldParser (Definition name desc un (FieldInfo args typ)) parser)
+          = P.FieldParser (Definition name desc un (FieldInfo args (Nullable (TList typ)))) parser
+        addNonNullableList :: FieldParser n () -> FieldParser n ()
+        addNonNullableList (P.FieldParser (Definition name desc un (FieldInfo args typ)) parser)
+          = P.FieldParser (Definition name desc un (FieldInfo args (NonNullable (TList typ)))) parser
+        -- TODO add directives, deprecation
+        convertType :: G.GType -> FieldParser n ()
+        convertType gType' =
+          case gType' of
+            G.TypeNamed (Nullability True) fieldTypeName ->
+              P.nullableField $ remoteFieldFromName schemaDoc name fieldTypeName argsDefinition
+            G.TypeList (Nullability True) gType'' ->
+              addNullableList $ convertType gType''
+            G.TypeNamed (Nullability False) fieldTypeName ->
+              P.nonNullableField $ remoteFieldFromName schemaDoc name fieldTypeName argsDefinition
+            G.TypeList (Nullability False) gType'' ->
+              addNonNullableList $ convertType gType''
+      in convertType gType
   in
-    -- TODO return the parsed selection set.
     () <$ (P.selectionSet name description $ map convert subFields)
 
 remoteSchemaInputObject
@@ -62,40 +99,34 @@ remoteFieldFromName sdoc fieldName fieldTypeName argsDefns =
     Just typeDef -> remoteField sdoc fieldName argsDefns typeDef
 
 inputValueDefinitionParser
-  :: (MonadParse n)
+  :: forall n
+   . MonadParse n
   => G.SchemaDocument
   -> G.InputValueDefinition
   -> InputFieldsParser n ()
-inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType maybeDefaultVal)  =
-  case maybeDefaultVal of
-    Nothing ->
-      case fieldType of
-        G.TypeNamed _ typeName ->
-          case lookupType schemaDoc typeName of
-            Nothing -> _throwNotFoundNameInSchemaDoc
-            Just typeDef ->
-              case typeDef of
-                G.TypeDefinitionScalar _ -> field name desc $ remoteFieldScalarParser name
-                G.TypeDefinitionEnum defn -> field name desc $ remoteFieldEnumParser name defn
-                G.TypeDefinitionObject _ -> _throwInvalidKindError
-                G.TypeDefinitionInputObject defn -> field name desc $ remoteSchemaInputObject schemaDoc defn
-                G.TypeDefinitionUnion _ -> _throwInvalidKindError
-                G.TypeDefinitionInterface _ -> _throwInvalidKindError
-        G.TypeList _ _ -> _todo
-    Just defaultVal ->
-      case fieldType of
-        G.TypeNamed _ typeName ->
-          case lookupType schemaDoc typeName of
-            Nothing -> _throwNotFoundNameInSchemaDoc
-            Just typeDef ->
-              case typeDef of
-                G.TypeDefinitionScalar _ -> fieldWithDefault name desc defaultVal $ remoteFieldScalarParser name
-                G.TypeDefinitionEnum defn -> fieldWithDefault name desc defaultVal $ remoteFieldEnumParser name defn
-                G.TypeDefinitionObject _ -> _throwInvalidKindError
-                G.TypeDefinitionInputObject defn -> fieldWithDefault name desc defaultVal $ remoteSchemaInputObject schemaDoc defn
-                G.TypeDefinitionUnion _ -> _throwInvalidKindError
-                G.TypeDefinitionInterface _ -> _throwInvalidKindError
-        G.TypeList _ _ -> _todo
+inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType maybeDefaultVal) =
+  let fieldConstructor :: forall k . 'Input <: k => Parser k n () -> InputFieldsParser n ()
+      fieldConstructor = case maybeDefaultVal of
+        Nothing -> field name desc
+        Just defaultVal -> fieldWithDefault name desc defaultVal
+      buildField
+        :: G.GType
+        -> (forall k . 'Input <: k => Parser k n () -> InputFieldsParser n ())
+        -> InputFieldsParser n ()
+      buildField fieldType' fieldConstructor' = case fieldType' of
+       G.TypeNamed _ typeName ->
+         case lookupType schemaDoc typeName of
+           Nothing -> _throwNotFoundNameInSchemaDoc
+           Just typeDef ->
+             case typeDef of
+               G.TypeDefinitionScalar _ -> fieldConstructor' $ remoteFieldScalarParser name
+               G.TypeDefinitionEnum defn -> fieldConstructor' $ remoteFieldEnumParser name defn
+               G.TypeDefinitionObject _ -> _throwInvalidKindError
+               G.TypeDefinitionInputObject defn -> fieldConstructor' $ remoteSchemaInputObject schemaDoc defn
+               G.TypeDefinitionUnion _ -> _throwInvalidKindError
+               G.TypeDefinitionInterface _ -> _throwInvalidKindError
+       G.TypeList _ subType -> buildField subType (fieldConstructor' . void . P.list)
+  in buildField fieldType fieldConstructor
 
 argumentsParser
   :: (MonadParse n)
@@ -112,34 +143,20 @@ remoteField
   -> G.Name
   -> G.ArgumentsDefinition
   -> G.TypeDefinition
-  -> FieldParser n ()-- TODO return something useful, maybe?
+  -> FieldParser n () -- TODO return something useful, maybe?
 remoteField sdoc fieldName argsDefn typeDefn =
-  -- TODO add arguments and directives
+  -- TODO add directives
   let argsParser = argumentsParser argsDefn sdoc
   in
     case typeDefn of
     G.TypeDefinitionObject objTypeDefn -> do
       P.subselection fieldName (G._otdDescription objTypeDefn) argsParser $ remoteSchemaObject sdoc objTypeDefn
       pure ()
-    G.TypeDefinitionScalar (G.ScalarTypeDefinition desc _ _) ->
-      P.selection fieldName desc argsParser $
-        case G.unName fieldName of
-          "Boolean" -> P.boolean $> ()
-          "Int" -> P.int $> ()
-          "Float" -> P.float $> ()
-          "String" -> P.string $> ()
-            --        _ -> P.selection_ fieldName desc $                          TODO: Unknown Scalar
-
-    G.TypeDefinitionEnum (G.EnumTypeDefinition desc _ _ valueDefns) ->
-      let enumValDefns = map (\(G.EnumValueDefinition enumDesc enumName _) ->
-                                ((mkDefinition (G.unEnumValue enumName) enumDesc EnumValueInfo),()))
-                         $ valueDefns
-      in
-        P.selection fieldName desc argsParser $ P.enum fieldName desc $ NE.fromList enumValDefns
-
-    G.TypeDefinitionInputObject inpObjTypDefn@(G.InputObjectTypeDefinition desc name directives valueDefns) ->
-      -- not needed,as it is an input type, but handle it properly
-      _todo
+    G.TypeDefinitionScalar scalarTypeDefn@(G.ScalarTypeDefinition desc _ _) ->
+      P.selection fieldName desc argsParser $ remoteFieldScalarParser fieldName
+    G.TypeDefinitionEnum enumTypeDefn@(G.EnumTypeDefinition desc _ _ valueDefns) ->
+      P.selection fieldName desc argsParser $ remoteFieldEnumParser fieldName enumTypeDefn
+    _ -> _errorInputTypeInOutputPosition
 
 remoteFieldScalarParser
   :: MonadParse n

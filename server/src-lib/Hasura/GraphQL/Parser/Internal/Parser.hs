@@ -299,10 +299,21 @@ nonNullableType = \case
   NonNullable t -> NonNullable t
   Nullable t    -> NonNullable t
 
+-- | Decorate a type as NON_NULL
+nullableType :: forall k . Type k -> Type k
+nullableType = \case
+  NonNullable t -> Nullable t
+  Nullable t    -> Nullable t
+
 -- | Decorate a schema field as NON_NULL
 nonNullableField :: forall m a . FieldParser m a -> FieldParser m a
 nonNullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
   (FieldParser (Definition n u d (FieldInfo as (nonNullableType t))) p)
+
+-- | Decorate a schema field as NULL
+nullableField :: forall m a . FieldParser m a -> FieldParser m a
+nullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
+  (FieldParser (Definition n u d (FieldInfo as (nullableType t))) p)
 {-
 field = field
   { fDefinition = (fDefinition field)
