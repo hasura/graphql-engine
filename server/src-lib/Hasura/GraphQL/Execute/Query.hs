@@ -14,7 +14,7 @@ import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.IntMap                            as IntMap
-import qualified Data.Sequence.NonEmpty                 as NE
+import qualified Data.Sequence.NonEmpty                 as NESeq
 import qualified Data.TByteString                       as TBS
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -135,14 +135,11 @@ getNextArgNum = do
 irToRootFieldPlan
   :: PlanVariables
   -> PrepArgMap
-  -> QueryRootField S.SQLExp -> RootFieldPlan
+  -> QueryDB S.SQLExp -> PGPlan
 irToRootFieldPlan vars prepped = \case
-  RFDB (QDBSimple s)      -> RFPPostgres $ PGPlan (DS.selectQuerySQL DS.JASMultipleRows s) vars prepped
-  RFDB (QDBPrimaryKey s)  -> RFPPostgres $ PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped
-  RFDB (QDBAggregation s) -> RFPPostgres $ PGPlan (DS.selectAggQuerySQL s) vars prepped
-  RFRemote s -> case s of -- Remote calls not supported at the moment
-  -- TODO avoid converting to/from strict/lazy bytestrings
-  RFRaw s                 -> RFPRaw $ LBS.toStrict $ J.encode s
+  QDBSimple s      -> PGPlan (DS.selectQuerySQL DS.JASMultipleRows s) vars prepped
+  QDBPrimaryKey s  -> PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped
+  QDBAggregation s -> PGPlan (DS.selectAggQuerySQL s) vars prepped
 
 traverseQueryRootField
   :: forall f a b c d
@@ -160,13 +157,17 @@ traverseQueryRootField f =
       QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggSel f s
 
 convertQuerySelSet
-  :: MonadError QErr m
+  :: forall m
+   . MonadError QErr m
   => GQLContext
   -> UserVars
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap, (InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  -> m ( ExecutionPlan (LazyRespTx, GeneratedSqlMap) (G.Name, RemoteCall) (G.Name, J.Value)
+       , Maybe ReusableQueryPlan
+       , InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
+       )
 convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
@@ -178,13 +179,38 @@ convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
     (preparedQuery, PlanningSt _ planVars planVals)
       <- flip runStateT initPlanningSt
       $  traverseQueryRootField prepareWithPlan unpreparedQuery
-    pure $! irToRootFieldPlan planVars planVals preparedQuery
+    traverseDB (pure . irToRootFieldPlan planVars planVals) preparedQuery
 
-  -- Build and return an executable action from the generated SQL
-  (tx, sql) <- mkCurPlanTx usrVars (OMap.toList queryPlans)
-  pure (tx, Nothing, sql, unpreparedQueries) -- FIXME ReusableQueryPlan
+  -- This monster makes sure that consecutive database operation get executed together
+  let collect :: ExecutionPlan (NESeq.NESeq (G.Name, RootFieldPlan)) (G.Name, RemoteCall) (G.Name, J.Value)
+              -> G.Name
+              -> RootField PGPlan RemoteCall J.Value
+              -> ExecutionPlan (NESeq.NESeq (G.Name, RootFieldPlan)) (G.Name, RemoteCall) (G.Name, J.Value)
+      collect (plans NESeq.:||> ExecStepDB dbs) name (RFDB db)
+        = (plans NESeq.:||> ExecStepDB (dbs NESeq.|> (name, RFPPostgres db)))
+      collect plans                             name (RFRemote x)
+        = plans NESeq.|>    ExecStepRemote (name, x)
+      collect plans                             name (RFRaw    x)
+        = plans NESeq.|>    ExecStepRaw    (name, x)
+      collect1 :: ExecutionPlan (NESeq.NESeq (G.Name, RootFieldPlan)) (G.Name, RemoteCall) (G.Name, J.Value)
+      collect1 = NESeq.singleton $ case head (OMap.toList queryPlans) of
+        (name, RFDB db) -> ExecStepDB $ NESeq.singleton (name, RFPPostgres db)
+        (name, RFRemote rem) -> ExecStepRemote (name, rem)
+        (name, RFRaw raw) -> ExecStepRaw (name, raw)
+      -- TODO rather than this fromlist tolist mess, pass non-empty insertion ordered hash maps
+      collectedPlans :: ExecutionPlan (NESeq.NESeq (G.Name, RootFieldPlan)) (G.Name, RemoteCall) (G.Name, J.Value)
+      collectedPlans = OMap.foldlWithKey' collect collect1 $ OMap.fromList $ tail $ OMap.toList queryPlans
+      -- This is where PGPlans get converted to LazyRespTx's
+      dbTx :: ExecutionStep (NESeq.NESeq (G.Name, RootFieldPlan)) b c
+           -> m (ExecutionStep (LazyRespTx, GeneratedSqlMap) b c)
+      dbTx (ExecStepDB   seq) = ExecStepDB <$> mkCurPlanTx usrVars (toList seq)
+      dbTx (ExecStepRemote z) = pure (ExecStepRemote z)
+      dbTx (ExecStepRaw    z) = pure (ExecStepRaw    z)
+  executionPlan <- traverse dbTx collectedPlans
+
+  pure (executionPlan, Nothing, unpreparedQueries) -- FIXME ReusableQueryPlan
   where
-    reportParseErrors errs = case NE.head errs of
+    reportParseErrors errs = case NESeq.head errs of
       -- TODO: Our error reporting machinery doesn’t currently support reporting
       -- multiple errors at once, so we’re throwing away all but the first one
       -- here. It would be nice to report all of them!

@@ -2,6 +2,9 @@ module Hasura.GraphQL.Execute.Prepare
   ( PlanVariables
   , PrepArgMap
   , PlanningSt(..)
+  , RemoteCall
+  , ExecutionPlan
+  , ExecutionStep(..)
   , initPlanningSt
   , runPlan
   , prepareWithPlan
@@ -11,14 +14,17 @@ module Hasura.GraphQL.Execute.Prepare
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.IntMap                   as IntMap
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.IntMap                            as IntMap
+import qualified Data.Text                              as T
+import qualified Database.PG.Query                      as Q
+import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Data.Aeson                             as J
+import qualified Data.Sequence.NonEmpty                 as NESeq
+import qualified Network.HTTP.Client                    as HTTP
 
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.SQL.DML                         as S
+import qualified Hasura.Logging                         as L
 
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema  (getName)
@@ -33,6 +39,21 @@ type PlanVariables = Map.HashMap G.Name Int
 -- prepared argument and not the binary encoding in PG format
 type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 
+-- | Full execution plan to process one GraphQL query.  Contains a mixture of
+-- things to run on the database and things to run on remote schemata.
+type ExecutionPlan db remote raw = NESeq.NESeq (ExecutionStep db remote raw)
+
+type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.FragmentSpread G.Name)
+
+-- | One execution step to processing a GraphQL query (e.g. one root field).
+-- Polymorphic to allow the SQL to be generated in stages.
+data ExecutionStep db remote raw
+  = ExecStepDB db
+  -- ^ A query to execute against the database
+  | ExecStepRemote remote -- !RemoteSchemaInfo !(G.Selection G.NoFragments G.Name)
+  -- ^ A query to execute against a remote schema
+  | ExecStepRaw raw
+  -- ^ Output a plain JSON object
 
 data PlanningSt
   = PlanningSt

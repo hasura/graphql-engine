@@ -22,6 +22,7 @@ import           Data.HashMap.Strict.InsOrd    (InsOrdHashMap)
 import qualified Hasura.RQL.DML.Delete.Types   as RQL
 import qualified Hasura.RQL.DML.Select.Types   as RQL
 import qualified Hasura.RQL.DML.Update.Types   as RQL
+import qualified Hasura.RQL.Types.RemoteSchema as RQL
 
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Insert  (AnnMultiInsert)
@@ -59,13 +60,18 @@ data QueryDB v
   | QDBPrimaryKey  (RQL.AnnSimpleSelG v)
   | QDBAggregation (RQL.AnnAggSelG    v)
 
-type QueryRootField v = RootField (QueryDB v) Void J.Value
+-- TODO this should maybe take a G.Field rather than a
+-- G.TypedOperationDefinition -- the operation would get built when we pass to
+-- the execution phase.
+type RemoteField = (RQL.RemoteSchemaInfo, G.TypedOperationDefinition G.FragmentSpread G.Name)
+
+type QueryRootField v = RootField (QueryDB v) RemoteField J.Value
 
 data MutationDB v
   = MDBInsert (AnnMultiInsert v)
   | MDBUpdate (RQL.AnnUpdG    v)
   | MDBDelete (RQL.AnnDelG    v)
 
-type MutationRootField v = RootField (MutationDB v) Void J.Value
+type MutationRootField v = RootField (MutationDB v) RemoteField J.Value
 
 type SubscriptionRootField v = RootField (QueryDB v) Void Void

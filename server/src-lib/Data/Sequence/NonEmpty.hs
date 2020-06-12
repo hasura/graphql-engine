@@ -1,5 +1,10 @@
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE ViewPatterns    #-}
+
 module Data.Sequence.NonEmpty
   ( NESeq
+  , pattern (:<||)
+  , pattern (:||>)
   , (<|)
   , (|>)
   , singleton
@@ -20,7 +25,7 @@ infixl 5 |>
 data NESeq a = NESeq
   { head :: a
   , tail :: Seq.Seq a
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor, Traversable)
 
 instance Semigroup (NESeq a) where
   NESeq x xs <> NESeq y ys = NESeq x (xs Seq.>< y Seq.<| ys)
@@ -50,3 +55,19 @@ v <| NESeq h l = NESeq v (h Seq.<| l)
 
 toSeq :: NESeq a -> Seq.Seq a
 toSeq (NESeq v l) = v Seq.<| l
+
+pattern (:<||) :: a -> Seq.Seq a -> NESeq a
+pattern x :<|| xs = NESeq x xs
+{-# COMPLETE (:<||) #-}
+
+unsnoc :: NESeq a -> (Seq.Seq a, a)
+unsnoc (x :<|| (xs Seq.:|> y)) = (x Seq.:<| xs, y)
+unsnoc (x :<|| Seq.Empty     ) = (Seq.Empty   , x)
+{-# INLINE unsnoc #-}
+
+pattern (:||>) :: Seq.Seq a -> a -> NESeq a
+pattern xs :||> x <- (unsnoc->(!xs, x))
+  where
+    (x Seq.:<| xs) :||> y = x :<|| (xs Seq.:|> y)
+    Seq.Empty      :||> y = y :<|| Seq.Empty
+{-# COMPLETE (:||>) #-}

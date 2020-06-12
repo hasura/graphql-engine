@@ -1,10 +1,5 @@
 module Hasura.GraphQL.Execute
-  ( ExecutionPlan
-
-  -- , ExecPlanPartial
-  -- , getExecPlanPartial
-
-  , ExecutionStep(..)
+  ( EPr.ExecutionStep(..)
   , ResolvedExecutionPlan(..)
   , getResolvedExecPlan
   , execRemoteGQ
@@ -51,6 +46,7 @@ import           Hasura.Server.Version                  (HasVersion)
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
+import qualified Hasura.GraphQL.Execute.Prepare         as EPr
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Execute.Mutation        as EM
 import qualified Hasura.GraphQL.Execute.Inline          as EI
@@ -58,19 +54,7 @@ import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 
--- | Full execution plan to process one GraphQL query.  Contains a mixture of
--- things to run on the database and things to run on remote schemata.
-type ExecutionPlan db remote raw = NESeq.NESeq (ExecutionStep db remote raw)
-
--- | One execution step to processing a GraphQL query (e.g. one root field).
--- Polymorphic to allow the SQL to be generated in stages.
-data ExecutionStep db remote raw
-  = ExecStepDB db
-  -- ^ A query to execute against the database
-  | ExecStepRemote remote -- !RemoteSchemaInfo !(G.Selection G.NoFragments G.Name)
-  -- ^ A query to execute against a remote schema
-  | ExecStepRaw raw
-  -- ^ Output a plain JSON object
+type QueryParts = G.TypedOperationDefinition G.FragmentSpread G.Name
 
 -- | Execution context
 data ExecutionCtx
@@ -84,8 +68,6 @@ data ExecutionCtx
   , _ecxHttpManager     :: !HTTP.Manager
   , _ecxEnableAllowList :: !Bool
   }
-
-type QueryParts = G.TypedOperationDefinition G.FragmentSpread G.Name
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -153,15 +135,13 @@ getExecPlanPartial userInfo sc enableAL req = do
           _throwVE $ "exactly one operation has to be present " <>
           "in the document when operationName is not specified"
 
-type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.FragmentSpread G.Name)
-
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan
-  = QueryExecutionPlan (ExecutionPlan (LazyRespTx, EQ.GeneratedSqlMap) RemoteCall J.Value)
+  = QueryExecutionPlan (EPr.ExecutionPlan (LazyRespTx, EQ.GeneratedSqlMap) (G.Name, EPr.RemoteCall) (G.Name, J.Value))
   -- ^ query execution; remote schemata and introspection possible (TODO implement remote)
-  | MutationExecutionPlan (ExecutionPlan LazyRespTx RemoteCall J.Value)
+  | MutationExecutionPlan (EPr.ExecutionPlan LazyRespTx (G.Name, EPr.RemoteCall) (G.Name, J.Value))
   -- ^ mutation execution; only __typename introspection supported (TODO implement remote)
-  | SubscriptionExecutionPlan (ExecutionPlan EL.LiveQueryPlan Void Void)
+  | SubscriptionExecutionPlan (EPr.ExecutionPlan EL.LiveQueryPlan Void Void)
   -- ^ live query execution; remote schemata and introspection not supported
 
 getResolvedExecPlan
@@ -207,28 +187,28 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       case queryParts of
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          (queryTx, plan, genSql, _unprepared) <-
+          (execPlan, plan, _unprepared) <-
             EQ.convertQuerySelSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
-          return $ QueryExecutionPlan $ NESeq.singleton $ ExecStepDB (queryTx, genSql)
+          return $ QueryExecutionPlan $ execPlan
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           queryTx <- EM.convertMutationSelectionSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
-          return $ MutationExecutionPlan $ NESeq.singleton $ ExecStepDB queryTx
+          return $ MutationExecutionPlan $ NESeq.singleton $ EPr.ExecStepDB queryTx
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs _ selSet -> do
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           -- Parse as query to check correctness
-          (_queryTx, _plan, _genSql, unpreparedAST) <-
+          (_execPlan, _plan, unpreparedAST) <-
             EQ.convertQuerySelSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
-          noIntrospectionAST <- for unpreparedAST $ \case
+          validSubscriptionAST <- for unpreparedAST $ \case
             C.RFDB x -> pure $ C.RFDB x
             C.RFRemote _ -> throw400 NotSupported "Remote calls not supported over subscriptions"
             C.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
           -- TODO we should check that there's only one root field (unless the appropriate directive is set)
-          (lqOp, plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo noIntrospectionAST
+          (lqOp, plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
           -- getSubsOpM pgExecCtx userInfo inlinedSelSet
-          return $ SubscriptionExecutionPlan $ NESeq.singleton $ ExecStepDB lqOp
+          return $ SubscriptionExecutionPlan $ NESeq.singleton $ EPr.ExecStepDB lqOp
 
       -- forM partialExecPlan $ \(gCtx, rootSelSet) ->
       --   case rootSelSet of

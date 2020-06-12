@@ -47,14 +47,14 @@ runGQ reqId userInfo reqHdrs req = do
           E.ExecStepDB txGenSql -> do
             (telemTimeIO, telemQueryType, resp) <- runQueryDB reqId req userInfo txGenSql
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp Nothing))
-          E.ExecStepRemote (rsi, opDef) ->
+          E.ExecStepRemote (_name, (rsi, opDef)) ->
             runRemoteGQ telemCacheHit rsi opDef
       E.MutationExecutionPlan mutationPlan -> do
         case NESeq.head mutationPlan of
           E.ExecStepDB tx -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId req userInfo tx
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp Nothing))
-          E.ExecStepRemote (rsi, opDef) ->
+          E.ExecStepRemote (_name, (rsi, opDef)) ->
             runRemoteGQ telemCacheHit rsi opDef
       E.SubscriptionExecutionPlan _sub -> do
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
