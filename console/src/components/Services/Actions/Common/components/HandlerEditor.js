@@ -28,7 +28,9 @@ const HandlerEditor = ({ value, onChange, className, disabled = false }) => {
       />
       <br />
       <small>
-        Note: You can use an env var to template the handler URL if you have different URLs for multiple environments. e.g. <i>{'{{ACTION_BASE_URL}}/handler'}</i>
+        Note: You can use an env var to template the handler URL if you have
+        different URLs for multiple environments. e.g.{' '}
+        <i>{'{{ACTION_BASE_URL}}/handler'}</i>
       </small>
     </div>
   );

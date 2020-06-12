@@ -181,7 +181,8 @@ class DataSubSidebar extends React.Component {
       return childList;
     };
 
-    const tablesViewsFunctionsCount = filteredTableList.length + filteredFunctionsList.length;
+    const tablesViewsFunctionsCount =
+      filteredTableList.length + filteredFunctionsList.length;
 
     return (
       <LeftSubSidebar

@@ -297,7 +297,11 @@ const RawSQL = ({
           />
           Cascade metadata
         </label>
-        <Tooltip message={"Cascade actions on all dependent metadata references, like relationships and permissions"} />
+        <Tooltip
+          message={
+            'Cascade actions on all dependent metadata references, like relationships and permissions'
+          }
+        />
       </div>
     );
   };
@@ -323,9 +327,18 @@ const RawSQL = ({
           />
           Track this
         </label>
-        <Tooltip message={"If you are creating tables, views or functions, checking this will also expose them over the GraphQL API as top level fields"} />
+        <Tooltip
+          message={
+            'If you are creating tables, views or functions, checking this will also expose them over the GraphQL API as top level fields'
+          }
+        />
         &nbsp;
-        <KnowMoreLink text={"See supported functions requirements"} href={"https://hasura.io/docs/1.0/graphql/manual/schema/custom-functions.html#supported-sql-functions"} />
+        <KnowMoreLink
+          text={'See supported functions requirements'}
+          href={
+            'https://hasura.io/docs/1.0/graphql/manual/schema/custom-functions.html#supported-sql-functions'
+          }
+        />
       </div>
     );
   };
@@ -354,7 +367,7 @@ const RawSQL = ({
             />
             This is a migration
           </label>
-          <Tooltip message={"Create a migration file with the SQL statement"} />
+          <Tooltip message={'Create a migration file with the SQL statement'} />
         </div>
       );
     };
@@ -373,7 +386,11 @@ const RawSQL = ({
                 id="migration-name"
                 type="text"
               />
-              <Tooltip message={"Name of the generated migration file. Default: 'run_sql_migration'"} />
+              <Tooltip
+                message={
+                  "Name of the generated migration file. Default: 'run_sql_migration'"
+                }
+              />
               <div
                 className={styles.add_mar_top_small + ' ' + styles.text_gray}
               >
