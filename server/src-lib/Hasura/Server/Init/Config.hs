@@ -37,7 +37,7 @@ data RawServeOptions impl
   , rsoHost                :: !(Maybe HostPreference)
   , rsoConnParams          :: !RawConnParams
   , rsoTxIso               :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret         :: !(Maybe AdminSecret)
+  , rsoAdminSecret         :: !(Maybe AdminSecretHash)
   , rsoAuthHook            :: !RawAuthHook
   , rsoJwtSecret           :: !(Maybe JWTConfig)
   , rsoUnAuthRole          :: !(Maybe RoleName)
@@ -79,7 +79,7 @@ data ServeOptions impl
   , soHost                         :: !HostPreference
   , soConnParams                   :: !Q.ConnParams
   , soTxIso                        :: !Q.TxIsolation
-  , soAdminSecret                  :: !(Maybe AdminSecret)
+  , soAdminSecret                  :: !(Maybe AdminSecretHash)
   , soAuthHook                     :: !(Maybe AuthHook)
   , soJwtSecret                    :: !(Maybe JWTConfig)
   , soUnAuthRole                   :: !(Maybe RoleName)
@@ -217,8 +217,8 @@ instance FromEnv AuthHookType where
 instance FromEnv Int where
   fromEnv = maybe (Left "Expecting Int value") Right . readMaybe
 
-instance FromEnv AdminSecret where
-  fromEnv = Right . AdminSecret . T.pack
+instance FromEnv AdminSecretHash where
+  fromEnv = Right . hashAdminSecret . T.pack
 
 instance FromEnv RoleName where
   fromEnv string = case mkRoleName (T.pack string) of

@@ -22,6 +22,15 @@ modifying SQL statements, as YAML files. These files are called migrations and
 they can be applied and rolled back step-by-step. These files can be version
 controlled and can be used with your CI/CD system to make incremental updates.
 
+Let's say we have the following two tables in our schema:
+
+.. code-block:: sql
+
+    author (id uuid, name text, rating integer)
+    article (id uuid, title text, content text, author_id uuid)
+
+Now we want to set up migrations starting with this schema.
+
 Step 0: Disable the console on the server
 -----------------------------------------
 
@@ -51,12 +60,14 @@ Follow the instructions in :ref:`install_hasura_cli`.
 Step 2: Set up a project directory
 ----------------------------------
 
-Execute the command below. For the endpoint referred here, let's say you've
+For the endpoint referred here, let's say you've
 deployed the GraphQL engine on Heroku, then this endpoint is:
-``https://my-graphql.herokuapp.com``. In case you've deployed this using Docker,
-the URL might be ``http://xx.xx.xx.xx:8080``. This endpoint should not contain
+``https://my-graphql.herokuapp.com``. In case you've deployed Hasura using Docker,
+the URL might be ``http://xx.xx.xx.xx:8080``. This endpoint should **not** contain
 the ``v1/graphql`` API path. It should just be the hostname and any
 sub-path if it is configured that way. 
+
+Let's set up a project directory by executing the following command:
 
 .. code-block:: bash
 
@@ -66,7 +77,9 @@ sub-path if it is configured that way.
 
 This will create a new directory called ``my-project`` with a ``config.yaml``
 file and a ``migrations`` directory. This directory structure is mandatory to use
-Hasura migrations. You can commit this directory to version control.
+Hasura migrations. 
+
+These directories can be committed to version control.
 
 .. note::
 
@@ -78,7 +91,7 @@ Hasura migrations. You can commit this directory to version control.
 Step 3: Initialize the migrations (optional)
 --------------------------------------------
 
-In case you have already setup your database we will need to initialize our
+If you have previously set up your database, you need to initialize your
 migrations with the current state of the database.
 
 Create a migration called ``init`` by exporting the current Postgres schema and
@@ -87,20 +100,27 @@ metadata from the server:
 .. code-block:: bash
 
    # (available after version v1.0.0-alpha45)
-   # create migration files (note that this will only export public schema from postgres)
+   # create migration files (note that this will only export the public schema from postgres)
    hasura migrate create "init" --from-server
 
    # note down the version
+
    # mark the migration as applied on this server
    hasura migrate apply --version "<version>" --skip-execution
 
 
-This command will create a new "migration" under the ``migrations`` directory
+This command will create a new migration under the ``migrations`` directory
 with the file name as ``<timestamp(version)>_init.up.yaml``. This file will
 contain the required information to reproduce the current state of the server
-including the Postgres (public) schema and Hasura metadata. The apply command
-will mark this migration as "applied" on the server. If you'd like to read more
+including the Postgres (public) schema and Hasura metadata. If you'd like to read more
 about the format of migration files, check out the :ref:`migration_file_format_v1`.
+
+The apply command will mark this migration as "applied" on the server. 
+
+.. note::
+
+   From version ``v1.0.0`` and higher, a directory is created for each migration with the name format ``timestamp_name``.
+   The directory contains four files: ``up.sql``, ``up.yaml``, ``down.sql`` and ``down.yaml``.
 
 .. note::
 
@@ -132,6 +152,14 @@ Step 5: Add a new table and see how a migration is added
 As you use the Hasura console UI to make changes to your schema, migration files
 are automatically generated in the ``migrations/`` directory in your project.
 
+Let's add the following table to our schema:
+
+.. code-block:: sql
+
+    address (id uuid, street text, zip text, city text, country text)
+
+In the migrations directory, you should now see a new migration created for the above statement.
+
 .. note::
 
    Migrations are only created when using the console through CLI.
@@ -151,6 +179,12 @@ In case you need an automated way of applying the migrations, take a look at the
 :ref:`CLI-Migrations <auto_apply_migrations_v1>` Docker image, which can start the
 GraphQL engine after automatically applying the migrations which are
 mounted into a directory.
+
+If you now open the console of the new instance, you can see that the three tables have been created and are tracked:
+
+.. thumbnail:: /img/graphql/manual/migrations/tracked-tables.png
+   :alt: Tracked tables from Hasura migrations
+   :width: 30%
 
 Step 7: Check the status of migrations
 --------------------------------------
@@ -186,4 +220,4 @@ issue.
 
 If ``DATABASE STATUS`` indicates ``Not Present``, it denotes that there are new
 migration versions in the local directory which are not applied on the database
-yet. Executing a ``migrate apply`` would take care of such scenarios.
+yet. Executing a ``migrate apply`` will resolve this.

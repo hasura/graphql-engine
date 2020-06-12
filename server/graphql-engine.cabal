@@ -244,6 +244,7 @@ library
                      -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
                      , Data.Parser.JSONPath
+                     , Hasura.Server.Auth.JWT
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Run
@@ -261,7 +262,6 @@ library
                      , Hasura.Incremental.Internal.Dependency
                      , Hasura.Incremental.Internal.Rule
 
-                     , Hasura.Server.Auth.JWT
                      , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware
                      , Hasura.Server.CheckUpdates
@@ -434,7 +434,9 @@ test-suite graphql-engine-tests
     , hspec-core >=2.6.1 && <3
     , hspec-expectations-lifted
     , http-client
+    , http-types
     , http-client-tls
+    , jose
     , lifted-base
     , monad-control
     , mtl
@@ -460,6 +462,7 @@ test-suite graphql-engine-tests
     Hasura.RQL.MetadataSpec
     Hasura.Server.MigrateSpec
     Hasura.Server.TelemetrySpec
+    Hasura.Server.AuthSpec
 
 -- Benchmarks related to caching (e.g. the plan cache).
 --
