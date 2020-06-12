@@ -12,7 +12,7 @@ import {
 
 export const StyledHeading = styled.h1<
   TypographyProps & ColorProps & SpaceProps
->`
+  >`
     ${typography}
     ${color}
     ${space}
@@ -20,7 +20,7 @@ export const StyledHeading = styled.h1<
 
 export const StyledText = styled.p<
   TypographyProps & ColorProps & SpaceProps & BorderProps
->`
+  >`
     ${typography}
     ${color}
     ${space}
@@ -29,9 +29,10 @@ export const StyledText = styled.p<
 
 export const StyledTextLink = styled.a<
   TypographyProps & ColorProps & SpaceProps & BorderProps
->`
+  >`
   &&& {
     text-decoration: none;
+    color: inherit;
   }
 
   cursor: pointer;

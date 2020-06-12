@@ -7,6 +7,7 @@ export const Heading = StyledHeading;
 
 Heading.defaultProps = {
   color: 'black.text',
+  fontWeight: 'bold',
 };
 
 /**
@@ -24,6 +25,7 @@ export type TextProps = {
   mt: keyof Theme['space'];
   mr: keyof Theme['space'];
   ml: keyof Theme['space'];
+  color: string;
 };
 
 export const Text: React.FC<TextProps> = props => {
@@ -64,6 +66,7 @@ Text.defaultProps = {
   mt: 'zero',
   mr: 'zero',
   ml: 'zero',
+  color: 'black.text',
 };
 
 type TextLinkProps = {
