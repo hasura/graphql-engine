@@ -78,7 +78,7 @@ const triggersInit = (dispatch: Dispatch): EnterHook => {
 const getTriggersRouter = (
   connect: Connect,
   store: ReduxStore,
-  composeOnEnterHooks: (hooks: EnterHook[]) => EnterHook
+  composeOnEnterHooks: (hooks: EnterHook[]) => any
 ) => {
   return (
     <Route

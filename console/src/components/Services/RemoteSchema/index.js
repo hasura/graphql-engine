@@ -1,9 +1,19 @@
-export remoteSchemaPageConnector from './RemoteSchemaPageContainer';
-export landingConnector from './Landing/RemoteSchema';
-export addConnector from './Add/Add';
-export editConnector from './Edit/Edit';
-export viewConnector from './Edit/View';
+import remoteSchemaPageConnector from './RemoteSchemaPageContainer';
+import landingConnector from './Landing/RemoteSchema';
+import addConnector from './Add/Add';
+import editConnector from './Edit/Edit';
+import viewConnector from './Edit/View';
 
-export getRemoteSchemaRouter from './RemoteSchemaRouter';
+import getRemoteSchemaRouter from './RemoteSchemaRouter';
 
-export remoteSchemaReducer from './remoteSchemaReducer';
+import remoteSchemaReducer from './remoteSchemaReducer';
+
+export {
+	remoteSchemaPageConnector,
+	landingConnector,
+	addConnector,
+	editConnector,
+	viewConnector,
+	getRemoteSchemaRouter,
+	remoteSchemaReducer
+}
