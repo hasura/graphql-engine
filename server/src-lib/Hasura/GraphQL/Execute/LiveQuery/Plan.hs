@@ -340,6 +340,8 @@ explainLiveQueryPlan :: (MonadTx m, MonadIO m) => LiveQueryPlan -> m LiveQueryPl
 explainLiveQueryPlan plan = do
   let parameterizedPlan = _lqpParameterizedPlan plan
       queryText = Q.getQueryText . unMultiplexedQuery $ _plqpQuery parameterizedPlan
+      -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+      -- query, maybe resulting in privilege escalation:
       explainQuery = Q.fromText $ "EXPLAIN (FORMAT TEXT) " <> queryText
   cohortId <- newCohortId
   explanationLines <- map runIdentity <$> executeQuery explainQuery [(cohortId, _lqpVariables plan)]
