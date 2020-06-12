@@ -135,8 +135,62 @@ Using boolean expressions
 The following is an example of a simple boolean expression to restrict access for ``select`` to rows where
 the value in the ``id`` column is greater than 10:
 
-.. thumbnail:: /img/graphql/manual/auth/simple-boolean-expression.png
-   :alt: Using boolean expressions to build rules
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Via console
+
+      .. thumbnail:: /img/graphql/manual/auth/simple-boolean-expression.png
+         :alt: Using boolean expressions to build rules
+
+   .. tab:: Via CLI
+
+      You can define permissions using boolean expressions in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 9-10
+
+            - table:
+                  schema: public
+                  name: author
+               select_permissions:
+               - role: user
+                  permission:
+                     columns: []
+                     filter:
+                     id:
+                        _gt: 10
+
+      Then apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: Via API
+
+      You can define permissions using boolean expressions when :ref:`creating permissions <api_permission>`:
+
+      .. code-block:: http
+         :emphasize-lines: 13
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type": "create_select_permission",
+            "args": {
+               "table": "author",
+               "role": "user",
+               "permission": {
+                     "columns": "*",
+                     "filter": {
+                        "id": {"_gt": 10}
+                     }
+               }
+            }
+         }
 
 You can construct more complex boolean expressions using the ``_and``, ``_or`` and ``not`` operators:
 
@@ -161,8 +215,62 @@ to construct a rule to restrict access for ``select`` to rows in the ``articles`
 ``id`` column is equal to the value in the session variable (*assuming this variable is being used to indicate
 the author's ID*):
 
-.. thumbnail:: /img/graphql/manual/auth/session-variables-in-permissions-simple-example.png
-   :alt: Using session variables to build rules
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Via console
+
+      .. thumbnail:: /img/graphql/manual/auth/session-variables-in-permissions-simple-example.png
+         :alt: Using session variables to build rules
+
+   .. tab:: Via CLI
+
+      You can define session variables in permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 10-12
+
+            - table:
+                  schema: public
+                  name: article
+               select_permissions:
+               - role: author
+                  permission:
+                     columns:
+                     - title
+                     - content
+                     filter:
+                        id:
+                           _eq: X-Hasura-User-Id
+
+      Then apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: Via API
+
+      You can define session variables in permissions tables when :ref:`creating permissions <api_permission>`:
+
+      .. code-block:: http
+         :emphasize-lines: 12
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type": "create_select_permission",
+            "args": {
+               "table": "article",
+               "role": "author",
+               "permission": {
+                  "columns" : "*",
+                     "filter": { "id": "X-Hasura-User-Id" }
+               }
+            }
+         }
 
 .. _relationships-in-permissions:
 
@@ -177,8 +285,67 @@ called ``agent`` (*an author can have an agent*) and we want to allow users with
 the details of the authors who they manage in ``authors`` table. We can define the following permission rule
 that uses the aforementioned object relationship:
 
-.. thumbnail:: /img/graphql/manual/auth/nested-object-permission-simple-example.png
-   :alt: Using a nested object to build rules
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Via console
+
+      .. thumbnail:: /img/graphql/manual/auth/nested-object-permission-simple-example.png
+         :alt: Using a nested object to build rules
+
+   .. tab:: Via CLI
+
+      You add permissions using relationships or nested objects in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 4-11
+
+            - table:
+                  schema: public
+                  name: author
+               select_permissions:
+               - role: agent
+                  permission:
+                     columns: []
+                     filter:
+                     agent:
+                        agent_id:
+                           _eq: X-Hasura-User-Id
+
+      Then apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: Via API
+
+      You add permissions using relationships or nested objects when :ref:`creating permissions <api_permission>`:
+
+      .. code-block:: http
+         :emphasize-lines: 9-19
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+            {
+               "type": "create_select_permission",
+               "args": {
+                  "table": "author",
+                  "role": "agent",
+                  "permission": {
+                     "columns": "*",
+                     "filter": {
+                        "agent": {
+                           "agent_id": {
+                                 "_eq": "X-Hasura-User-Id"
+                           }
+                        }
+                     }
+                  }
+               }
+            }
 
 This permission rule reads as "*if the author's agent's*  ``id``  *is the same as the requesting user's*
 ``id`` *, allow access to the author's details*."
@@ -204,8 +371,85 @@ our table.
 column in the ``users`` table is set to ``true``. Let's assume the user's id is passed in the ``X-Hasura-User-ID``
 session variable.
 
-.. thumbnail:: /img/graphql/manual/auth/exists-permission-example.png
-   :alt: Use an unrelated table to build rules
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Via console
+
+      .. thumbnail:: /img/graphql/manual/auth/exists-permission-example.png
+         :alt: Use an unrelated table to build rules
+
+   .. tab:: Via CLI
+
+      You can set permissions using unrelated tables in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 4-17
+
+            - table:
+                  schema: public
+                  name: article
+               insert_permissions:
+               - role: user
+                  permission:
+                     check:
+                     _exists:
+                        _where:
+                           _and:
+                           - id:
+                              _eq: X-Hasura-User-Id
+                           - allow_article_create:
+                              _eq: true
+                        _table:
+                           schema: public
+                           name: users
+                     columns:
+                     - content
+                     - id
+                     - title
+
+      Then apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: Via API
+
+      You can set permissions for unrelated tables when :ref:`creating permissions <api_permission>`:
+
+      .. code-block:: http
+         :emphasize-lines: 12-26
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type": "create_select_permission",
+            "args": {
+               "table": "article",
+               "role": "user",
+               "permission": {
+                  "columns": "*",
+                  "filter": {
+                     "$exists": {
+                        "_table": "users",
+                        "_where": {
+                           "$and": [
+                              {
+                                 "id": "X-Hasura-User-Id"
+                              },
+                              {
+                                 "allow_article_create": true
+                              }
+                           ]
+                        }
+                     }
+                  }
+               }
+            }
+         }
 
 This permission rule reads as "*if there exists a row in the table* ``users`` *whose*  ``id``  *is the same as the requesting user's*
 ``id`` *and has the* ``allow_article_create`` *column set to true, allow access to insert articles*."
