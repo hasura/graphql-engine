@@ -4,16 +4,7 @@ import { css } from 'styled-components';
 import globals from '../../Globals';
 import pixHeart from './images/pix-heart.svg';
 import consoleLogo from './images/console-logo.svg';
-import arrowForwardRed from './images/arrow_forward-red.svg';
-import {
-  Icon,
-  Box,
-  Flex,
-  Heading,
-  TextLink,
-  Text,
-  Badge,
-} from '../UIKit/atoms';
+import { Icon, Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import styles from './Main.scss';
 
 // eslint-disable-next-line no-unused-vars
@@ -160,13 +151,7 @@ const NewLoveSection = ({ toggleDropdown }) => (
       }
     `}
   >
-    <Flex
-      justifyContent="space-between"
-      px="25px"
-      py="22px"
-      borderBottom={1}
-      bg="#f8f8f8"
-    >
+    <Flex justify="space-between" borderBottom={1} bg="#f8f8f8">
       <Heading as="h2" color="#000" fontSize="20px">
         Latest updates
         <img src={consoleLogo} alt="hasura-console" id="console-logo" />
@@ -191,12 +176,12 @@ const NewLoveSection = ({ toggleDropdown }) => (
           badge={badge}
         />
       ))}
-    <Flex px="25px" py="20px" color="red.primary">
-      <TextLink href="#" id="update-link">
+    {/* <Flex px="25px" py="20px" color="red.primary">
+      <TextLink href="#" id="update-link" color="red.primary">
         View all updates{' '}
         <img className={styles.arrow} src={arrowForwardRed} alt={'Arrow'} />
       </TextLink>
-    </Flex>
+    </Flex> */}
   </Box>
 );
 
