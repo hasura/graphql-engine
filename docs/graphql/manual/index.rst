@@ -2,9 +2,9 @@
    :description: Hasura GraphQL engine documentation
    :keywords: hasura, docs, manual, graphql engine
 
-.. title:: Hasura GraphQL engine Documentation
+.. title:: Hasura GraphQL Engine Documentation
 
-Hasura GraphQL engine documentation
+Hasura GraphQL Engine Documentation
 ===================================
 
 .. contents:: Table of contents
@@ -32,7 +32,7 @@ The Hasura GraphQL engine lets you set up a GraphQL server and event triggers ov
   Deploying <deployment/index>
   hasura-cli/index
   API Reference <api-reference/index>
-  How it works <how-it-works/index>
+  How It Works <how-it-works/index>
   Troubleshooting <troubleshooting/index>
   guides/index
   security-disclosure/index

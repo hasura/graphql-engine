@@ -7,6 +7,11 @@
 Bypassing Hasura's authorization system for remote schema queries
 -----------------------------------------------------------------
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 It might be necessary sometimes to bypass Hasura's authorization system (calling
 the configured webhook, or validating the JWT), for queries that are for a
 remote GraphQL server.

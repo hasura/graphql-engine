@@ -7,6 +7,11 @@
 Points to remember
 ------------------
 
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
 Remote schema fields nomenclature
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

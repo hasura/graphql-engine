@@ -4,10 +4,15 @@
 
 .. _adding_schema:
 
-Adding a remote schema  
+Adding a remote schema
 ----------------------
 
-Follow the steps below to add a "remote schema" to the Hasura GraphQL engine.
+Follow the steps below to add a remote schema to the Hasura GraphQL engine.
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
 
 Step 1: Write a custom GraphQL server
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -4,7 +4,7 @@
 
 .. _getting_started:
 
-Getting started
+Getting Started
 ===============
 
 .. contents:: Table of contents

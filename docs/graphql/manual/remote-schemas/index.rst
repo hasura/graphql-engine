@@ -4,7 +4,7 @@
 
 .. _remote_schemas:
 
-Remote schemas
+Remote Schemas
 ==============
 
 .. contents:: Table of contents
