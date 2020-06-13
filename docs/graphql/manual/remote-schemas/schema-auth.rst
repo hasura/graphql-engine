@@ -11,7 +11,7 @@ Hasura will forward the resolved ``x-hasura-*`` values as headers to your remote
 schema. You can use this information to apply authorization rules in your
 server. You don't have to redo authentication in your remote schema server.
 
-You can also configure Hasura to have (as shown :ref:`above <merge_remote_schema>`):
+You can also configure Hasura to have (as shown :ref:`here <merge_remote_schema>`):
 
 1. static header values that are sent to the remote server
 2. forward all headers from the client (like ``Authorization``, ``Cookie`` headers etc.)

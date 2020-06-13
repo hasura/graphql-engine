@@ -44,7 +44,7 @@ Extending the auto-generated GraphQL schema fields
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For some use cases, you may need to extend the GraphQL schema fields exposed by the Hasura GraphQL engine
-(*and not merely augment as we have done above*) with a custom schema/server. To support them, you can use
+(and not merely augment as we have done :ref:`here <merge_remote_schema>`) with a custom schema/server. To support them, you can use
 community tooling to write your own client-facing GraphQL gateway that interacts with the GraphQL engine.
 
 .. note::
