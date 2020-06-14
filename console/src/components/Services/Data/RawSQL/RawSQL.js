@@ -452,9 +452,9 @@ const RawSQL = ({
     const dispatchSetStatementTimeout = value => {
       const timeoutInSeconds = Number(value.trim());
 
-      if (isNaN(timeoutInSeconds) || timeoutInSeconds <= 0) return;
-
-      dispatch(setRawSqlTimeout(timeoutInSeconds));
+      isNaN(timeoutInSeconds) || timeoutInSeconds <= 0
+        ? dispatch(setRawSqlTimeout(0))
+        : dispatch(setRawSqlTimeout(timeoutInSeconds));
     };
     return (
       <div className={styles.add_mar_top}>
