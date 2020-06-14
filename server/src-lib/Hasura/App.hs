@@ -217,10 +217,13 @@ runHGEServer
      )
   => ServeOptions impl
   -> InitCtx
+  -> Maybe PGExecCtx
+  -- ^ An optional specialized pg exection context for executing queries
+  -- and mutations
   -> UTCTime
   -- ^ start time
   -> m ()
-runHGEServer ServeOptions{..} InitCtx{..} initTime = do
+runHGEServer ServeOptions{..} InitCtx{..} pgExecCtx initTime = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -248,6 +251,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
              sqlGenCtx
              soEnableAllowlist
              _icPgPool
+             pgExecCtx
              _icConnInfo
              _icHttpManager
              authMode

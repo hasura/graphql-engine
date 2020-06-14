@@ -495,6 +495,7 @@ mkWaiApp
   -> SQLGenCtx
   -> Bool
   -> Q.PGPool
+  -> Maybe PGExecCtx
   -> Q.ConnInfo
   -> HTTP.Manager
   -> AuthMode
@@ -508,14 +509,14 @@ mkWaiApp
   -> E.PlanCacheOptions
   -> ResponseInternalErrorsConfig
   -> m HasuraApp
-mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg enableConsole consoleAssetsDir
+mkWaiApp isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig = do
 
     (planCache, schemaCacheRef, cacheBuiltTime) <- migrateAndInitialiseSchemaCache
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
-        pgExecCtx = mkPGExecCtx isoLevel pool
+        pgExecCtx = fromMaybe (mkPGExecCtx isoLevel pool) pgExecCtxCustom
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx
     wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
