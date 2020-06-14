@@ -148,7 +148,7 @@ the value in the ``id`` column is greater than 10:
       You can define permissions using boolean expressions in the ``tables.yaml`` file inside the ``metadata`` directory:
 
       .. code-block:: yaml
-         :emphasize-lines: 9-10
+         :emphasize-lines: 8-10
 
             - table:
                   schema: public
@@ -172,7 +172,7 @@ the value in the ``id`` column is greater than 10:
       You can define permissions using boolean expressions when :ref:`creating permissions <api_permission>`:
 
       .. code-block:: http
-         :emphasize-lines: 13
+         :emphasize-lines: 12-14
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
@@ -184,10 +184,10 @@ the value in the ``id`` column is greater than 10:
                "table": "author",
                "role": "user",
                "permission": {
-                     "columns": "*",
-                     "filter": {
-                        "id": {"_gt": 10}
-                     }
+                  "columns": "*",
+                  "filter": {
+                     "id": {"_gt": 10}
+                  }
                }
             }
          }
@@ -201,8 +201,76 @@ You can construct more complex boolean expressions using the ``_and``, ``_or`` a
 the value in the ``id`` column is greater than 10 **and** the value in the ``name`` column starts with "a"
 or "A":
 
-.. thumbnail:: /img/graphql/manual/auth/composite-boolean-expression.png
-   :alt: Example of a rule with the _and operator
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Via console
+
+      .. thumbnail:: /img/graphql/manual/auth/composite-boolean-expression.png
+         :alt: Example of a rule with the _and operator
+
+   .. tab:: Via CLI
+
+      You can define permissions using the ``_and`` operator in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 8-13
+
+            - table:
+                  schema: public
+                  name: author
+               select_permissions:
+               - role: user
+                  permission:
+                     columns: []
+                     filter:
+                     _and:
+                     - id:
+                           _gt: 10
+                     - name:
+                           _ilike: a%
+
+      Then apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: Via API
+
+      You can define permissions using the ``_and`` operator when :ref:`creating permissions <api_permission>`:
+
+      .. code-block:: http
+         :emphasize-lines: 12-25
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type": "create_select_permission",
+            "args": {
+               "table": "author",
+               "role": "user",
+               "permission": {
+                  "columns": "*",
+                  "filter": {
+                     "$and": [
+                        {
+                           "id": {
+                              "_gt": 10
+                           }
+                        },
+                        {
+                           "name": {
+                              "_ilike": "a%"
+                           }
+                        }
+                     ]
+                  }
+               }
+            }
+         }
 
 Using session variables
 ***********************
@@ -254,7 +322,7 @@ the author's ID*):
       You can define session variables in permissions tables when :ref:`creating permissions <api_permission>`:
 
       .. code-block:: http
-         :emphasize-lines: 12
+         :emphasize-lines: 12-14
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
@@ -266,8 +334,10 @@ the author's ID*):
                "table": "article",
                "role": "author",
                "permission": {
-                  "columns" : "*",
-                     "filter": { "id": "X-Hasura-User-Id" }
+                  "columns": "*",
+                  "filter": {
+                     "id": "X-Hasura-User-Id"
+                  }
                }
             }
          }
@@ -298,7 +368,7 @@ that uses the aforementioned object relationship:
       You add permissions using relationships or nested objects in the ``tables.yaml`` file inside the ``metadata`` directory:
 
       .. code-block:: yaml
-         :emphasize-lines: 4-11
+         :emphasize-lines: 8-11
 
             - table:
                   schema: public
@@ -323,7 +393,7 @@ that uses the aforementioned object relationship:
       You add permissions using relationships or nested objects when :ref:`creating permissions <api_permission>`:
 
       .. code-block:: http
-         :emphasize-lines: 9-19
+         :emphasize-lines: 12-18
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
@@ -384,7 +454,7 @@ session variable.
       You can set permissions using unrelated tables in the ``tables.yaml`` file inside the ``metadata`` directory:
 
       .. code-block:: yaml
-         :emphasize-lines: 4-17
+         :emphasize-lines: 7-17
 
             - table:
                   schema: public
@@ -476,17 +546,23 @@ permissions.
       You can set column-level permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
 
       .. code-block:: yaml
-         :emphasize-lines: 7-9
+         :emphasize-lines: 7-11
 
             - table:
-               schema: public
-               name: author
-            select_permissions:
-            - role: user
-               permission:
-                  columns:
-                  - id
-                  - name
+                  schema: public
+                  name: article
+               select_permissions:
+               - role: author
+                  permission:
+                     columns:
+                     - author_id
+                     - id
+                     - content
+                     - title
+                     filter:
+                     author_id:
+                        _eq: X-Hasura-User-Id
+
 
       Then apply the metadata by running:
 
@@ -499,27 +575,27 @@ permissions.
       You can set column-level permissions when :ref:`creating permissions <api_permission>`:
 
       .. code-block:: http
-         :emphasize-lines: 11
+         :emphasize-lines: 11-16
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
-         {    
-            "type" : "create_select_permission",
-            "args" : {
-               "table" : "article",
-               "role" : "user",
-               "permission" : {
-                     "columns" : ["title","author_id"],
-                     "filter" : {
-                        "$or" : [
-                           { "author_id" : "X-Hasura-User-Id" },
-                           { "is_published" : true }
-                        ]
-                     },
-                     "limit": 10,
-                     "allow_aggregations": true
+         {
+            "type": "create_select_permission",
+            "args": {
+               "table": "article",
+               "role": "author",
+               "permission": {
+                  "columns": [
+                     "id",
+                     "title",
+                     "content",
+                     "author_id"
+                  ],
+                  "filter": {
+                     "author_id": "X-Hasura-User-Id"
+                  }
                }
             }
          }
@@ -575,30 +651,29 @@ using this configuration:
       You can a row fetch limit for a table when :ref:`creating permissions <api_permission>`
 
       .. code-block:: http
-         :emphasize-lines: 18
+         :emphasize-lines: 17
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type" : "create_select_permission",
-            "args" : {
-               "table" : "article",
-               "role" : "user",
-               "permission" : {
-                     "columns" : "*",
-                     "filter" : {
-                        "$or" : [
-                           { "author_id" : "X-Hasura-User-Id" },
-                           { "is_published" : true }
-                        ]
-                     },
-                     "limit": 10,
-                     "allow_aggregations": true
+            "type": "create_select_permission",
+            "args": {
+               "table": "author",
+               "role": "user",
+               "permission": {
+                  "columns": "*",
+                  "filter": {
+                     "id": {
+                        "_gt": 10
+                     }
+                  },
+                  "limit": 20
                }
             }
          }
+
 
 In the above example, this configuration  restricts the number of accessible rows (*based on the rule*:
 ``{"id":{"_eq":"X-Hasura-User-Id"}}``) to 20.
@@ -648,27 +723,26 @@ can be restricted for a given role using this configuration.
       You can allow aggregation query permissions when :ref:`creating permissions <api_permission>`
 
       .. code-block:: http
-         :emphasize-lines: 19
+         :emphasize-lines: 18
 
          POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type" : "create_select_permission",
-            "args" : {
-               "table" : "article",
-               "role" : "user",
-               "permission" : {
-                     "columns" : "*",
-                     "filter" : {
-                        "$or" : [
-                           { "author_id" : "X-Hasura-User-Id" },
-                           { "is_published" : true }
-                        ]
-                     },
-                     "limit": 10,
-                     "allow_aggregations": true
+            "type": "create_select_permission",
+            "args": {
+               "table": "author",
+               "role": "user",
+               "permission": {
+                  "columns": [
+                     "id",
+                     "name"
+                  ],
+                  "filter": {
+                     "id": "X-Hasura-User-Id"
+                  },
+                  "allow_aggregations": true
                }
             }
          }
