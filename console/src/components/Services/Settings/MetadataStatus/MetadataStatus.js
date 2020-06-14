@@ -41,6 +41,11 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               definition = `relationship of table "${getTableNameFromDef(
                 ico.definition.table
               )}"`;
+            } else if (ico.type === 'remote_relationship') {
+              name = ico.definition.name;
+              definition = `relationship between table "${getTableNameFromDef(
+                ico.definition.table
+              )}" and remote schema "${ico.definition.remote_schema}"`;
             } else if (permissionTypes.includes(ico.type)) {
               name = `${ico.definition.role}-permission`;
               definition = `${ico.type} on table "${getTableNameFromDef(
@@ -59,8 +64,10 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               )}"`;
             } else if (ico.type === 'remote_schema') {
               name = ico.definition.name;
-              let url = `"${ico.definition.definition.url ||
-                ico.definition.definition.url_from_env}"`;
+              let url = `"${
+                ico.definition.definition.url ||
+                ico.definition.definition.url_from_env
+              }"`;
               if (ico.definition.definition.url_from_env) {
                 url = `the url from the value of env var ${url}`;
               }
@@ -206,9 +213,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
       <div
         className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${metaDataStyles.metadata_wrapper} container-fluid`}
       >
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-          Hasura Metadata Status
-        </h2>
+        <h2 className={styles.headerText}>Hasura Metadata Status</h2>
         {content()}
       </div>
     </div>

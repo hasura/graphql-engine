@@ -319,8 +319,8 @@ v1QueryHandler query = do
 
 v1Alpha1GQHandler
   :: (HasVersion, MonadIO m)
-  => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
-v1Alpha1GQHandler query = do
+  => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
+v1Alpha1GQHandler queryType query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
@@ -335,12 +335,19 @@ v1Alpha1GQHandler query = do
   responseErrorsConfig <- scResponseInternalErrorsConfig . hcServerCtx <$> ask
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
                 (lastBuiltSchemaCache sc) scVer manager enableAL
-  flip runReaderT execCtx $ GH.runGQBatched requestId responseErrorsConfig userInfo reqHeaders query
+  flip runReaderT execCtx $
+    GH.runGQBatched requestId responseErrorsConfig userInfo reqHeaders queryType query
 
 v1GQHandler
   :: (HasVersion, MonadIO m)
+  => GH.GQLBatchedReqs GH.GQLQueryText
+  -> Handler m (HttpResponse EncJSON)
+v1GQHandler = v1Alpha1GQHandler E.QueryHasura
+
+v1GQRelayHandler
+  :: (HasVersion, MonadIO m)
   => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
-v1GQHandler = v1Alpha1GQHandler
+v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 
 gqlExplainHandler :: (HasVersion, MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
 gqlExplainHandler query = do
@@ -604,15 +611,19 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
                       (scAuthMode serverCtx)
                       (scEnableAllowlist serverCtx)
                       (EL._lqsOptions $ scLQState serverCtx)
+                      consoleAssetsDir
 
           return $ JSONResp $ HttpResponse res []
 
     when enableGraphQL $ do
       Spock.post "v1alpha1/graphql" $ spockAction GH.encodeGQErr id $
-        mkPostHandler $ mkAPIRespHandler v1Alpha1GQHandler
+        mkPostHandler $ mkAPIRespHandler $ v1Alpha1GQHandler E.QueryHasura
 
       Spock.post "v1/graphql" $ spockAction GH.encodeGQErr allMod200 $
         mkPostHandler $ mkAPIRespHandler v1GQHandler
+
+      Spock.post "v1/relay" $ spockAction GH.encodeGQErr allMod200 $
+        mkPostHandler $ mkAPIRespHandler v1GQRelayHandler
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       Spock.get "dev/ekg" $ spockAction encodeQErr id $

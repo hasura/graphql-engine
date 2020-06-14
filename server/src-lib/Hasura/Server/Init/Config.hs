@@ -9,7 +9,6 @@ import qualified Data.Text                        as T
 import qualified Database.PG.Query                as Q
 
 import           Data.Char                        (toLower)
-import           Data.Time.Clock.Units            (milliseconds)
 import           Network.Wai.Handler.Warp         (HostPreference)
 
 import qualified Hasura.Cache                     as Cache
@@ -38,7 +37,7 @@ data RawServeOptions impl
   , rsoHost                :: !(Maybe HostPreference)
   , rsoConnParams          :: !RawConnParams
   , rsoTxIso               :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret         :: !(Maybe AdminSecret)
+  , rsoAdminSecret         :: !(Maybe AdminSecretHash)
   , rsoAuthHook            :: !RawAuthHook
   , rsoJwtSecret           :: !(Maybe JWTConfig)
   , rsoUnAuthRole          :: !(Maybe RoleName)
@@ -80,7 +79,7 @@ data ServeOptions impl
   , soHost                         :: !HostPreference
   , soConnParams                   :: !Q.ConnParams
   , soTxIso                        :: !Q.TxIsolation
-  , soAdminSecret                  :: !(Maybe AdminSecret)
+  , soAdminSecret                  :: !(Maybe AdminSecretHash)
   , soAuthHook                     :: !(Maybe AuthHook)
   , soJwtSecret                    :: !(Maybe JWTConfig)
   , soUnAuthRole                   :: !(Maybe RoleName)
@@ -218,8 +217,8 @@ instance FromEnv AuthHookType where
 instance FromEnv Int where
   fromEnv = maybe (Left "Expecting Int value") Right . readMaybe
 
-instance FromEnv AdminSecret where
-  fromEnv = Right . AdminSecret . T.pack
+instance FromEnv AdminSecretHash where
+  fromEnv = Right . hashAdminSecret . T.pack
 
 instance FromEnv RoleName where
   fromEnv string = case mkRoleName (T.pack string) of
@@ -254,7 +253,7 @@ instance FromEnv L.LogLevel where
   fromEnv = readLogLevel
 
 instance FromEnv Cache.CacheSize where
-  fromEnv = Cache.mkCacheSize
+  fromEnv = Cache.parseCacheSize
 
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 

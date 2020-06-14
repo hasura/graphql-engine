@@ -21,12 +21,12 @@ The idea is that your auth server will return JWT tokens, which are decoded and
 verified by the GraphQL engine, to authorize and get metadata about the request
 (``x-hasura-*`` values).
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/jwt-auth.png
+.. thumbnail:: /img/graphql/manual/auth/jwt-auth.png
    :alt: Authentication using JWT
 
 The JWT is decoded, the signature is verified, then it is asserted that the
-current role of the user (if specified in the request) is in the list of allowed roles.
-If the current role is not specified in the request, then the default role is applied.
+requested role of the user (if specified in the request) is in the list of allowed roles.
+If the desired role is not specified in the request, then the default role is applied.
 If the authorization passes, then all of the ``x-hasura-*`` values in the claim
 are used for the permissions system.
 
@@ -60,7 +60,7 @@ the following:
 1. A ``x-hasura-default-role`` field : indicating the default role of that user i.e. the role that will be
    used in case ``x-hasura-role`` header is not passed.
 2. A ``x-hasura-allowed-roles`` field : a list of allowed roles for the user i.e. acceptable values of the
-   ``x-hasura-role`` header.
+   ``x-hasura-role`` header. The ``x-hasura-default-role`` specified should be a member of this list.
 
 The claims in the JWT can have other ``x-hasura-*`` fields where their values
 can only be strings. You can use these ``x-hasura-*`` fields in your
@@ -543,7 +543,7 @@ https://hasura.io/jwt-config.
 The config generated from this page can be directly pasted in yaml files and command line arguments as it takes
 care of escaping new lines.
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
+.. thumbnail:: /img/graphql/manual/auth/jwt-config-generated.png
    :width: 75%
    :alt: Generating JWT config
 

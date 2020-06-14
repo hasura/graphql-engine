@@ -305,10 +305,6 @@ table tbody tr th {
   }
 }
 
-.apiExplorerFlex {
-  display: flex;
-}
-
 .collectionWrapper {
   padding-top: 25px;
   background-color: #f8f8f8;
@@ -375,54 +371,6 @@ input {
 
 .header_path_input:focus {
   box-shadow: none;
-}
-
-.ApiExplorerTable {
-  margin-bottom: 0;
-
-  thead {
-    tr {
-      th {
-        border-bottom: 0;
-        padding: 8px;
-      }
-
-      .ApiExplorerTableSuccess {
-        background-color: #fff;
-      }
-
-      .ApiExplorerTableDefault {
-        background-color: #f3f3f3;
-      }
-
-      td {
-        padding: 8px;
-        width: 50%;
-      }
-    }
-  }
-
-  tbody {
-    tr {
-      th {
-        border-bottom: 0;
-        padding: 8px;
-      }
-
-      td {
-        padding: 8px;
-        width: 50%;
-      }
-
-      .ApiExplorerTableSuccess {
-        background-color: #fff;
-      }
-
-      .ApiExplorerTableDefault {
-        background-color: #f3f3f3;
-      }
-    }
-  }
 }
 
 .padd_left_remove {
@@ -528,6 +476,10 @@ input {
 
 .add_pad_right {
   padding-right: 15px;
+}
+
+.addPadding20Px {
+  padding: 20px;
 }
 
 .width_auto {
@@ -1311,12 +1263,6 @@ code {
   display: block;
   top: 0;
   z-index: 11;
-
-  .stickySeparator {
-    padding-top: 60px;
-    margin-left: -15px;
-    margin-right: -15px;
-  }
 }
 
 .fixed_header_internal_link {
@@ -1326,9 +1272,8 @@ code {
   visibility: hidden;
 }
 
-// keep graphiql in viewport
-.graphQLHeight {
-  height: calc(100vh - 370px);
+.height100 {
+  height: 100%;
 }
 
 .button_mar_right {
@@ -1395,6 +1340,19 @@ code {
   cursor: not-allowed;
 }
 
+.wd300Px {
+  width: 300px;
+}
+
+.overflowAuto {
+  overflow: auto;
+}
+
+.tooltip {
+  cursor: pointer;
+  color: #4d4d4d;
+}
+
 .hiddenMoreWidth {
   width: 300px;
 }
@@ -1415,8 +1373,14 @@ code {
 .textAlignRight {
   text-align: right;
 }
+
+.flexColumn {
+  display: flex;
+  flex-direction: column;
+}
+
 /* container height subtracting top header and bottom scroll bar */
-$mainContainerHeight: calc(100vh - 50px - 25px);
+$mainContainerHeight: calc(100vh - 50px - 20px);
 
 /* Min container width below which horizontal scroll will appear */
 $minContainerWidth: 1200px;

@@ -48,6 +48,7 @@ func (o *helpOptions) run() {
 				NewMigrateCmd(o.EC),
 				NewMetadataCmd(o.EC),
 				NewConsoleCmd(o.EC),
+				NewActionsCmd(o.EC),
 			},
 		},
 		{
@@ -55,6 +56,9 @@ func (o *helpOptions) run() {
 			Commands: []*cobra.Command{
 				NewCompletionCmd(o.EC),
 				NewVersionCmd(o.EC),
+				NewPluginsCmd(o.EC),
+				NewScriptsCmd(o.EC),
+				NewUpdateCLICmd(o.EC),
 			},
 		},
 	}

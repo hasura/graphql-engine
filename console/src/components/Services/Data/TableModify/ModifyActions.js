@@ -8,7 +8,6 @@ import {
   LOAD_SCHEMA,
 } from '../DataActions';
 import _push from '../push';
-import { SET_SQL } from '../RawSQL/Actions';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -55,14 +54,12 @@ import {
   getUntrackTableQuery,
   getTrackTableQuery,
 } from '../../../Common/utils/v1QueryUtils';
-
 import {
   fetchColumnCastsQuery,
   convertArrayToJson,
   sanitiseRootFields,
   sanitiseColumnNames,
 } from './utils';
-
 import {
   getSchemaBaseRoute,
   getTableModifyRoute,
@@ -73,6 +70,7 @@ const DELETE_PK_WARNING =
 
 const VIEW_DEF_REQUEST_SUCCESS = 'ModifyTable/VIEW_DEF_REQUEST_SUCCESS';
 const VIEW_DEF_REQUEST_ERROR = 'ModifyTable/VIEW_DEF_REQUEST_ERROR';
+const SET_VIEW_DEF_SQL = 'ModifyTable/SET_VIEW_DEF_SQL';
 
 const SAVE_NEW_TABLE_NAME = 'ModifyTable/SAVE_NEW_TABLE_NAME';
 
@@ -84,8 +82,8 @@ const REMOVE_PRIMARY_KEY = 'ModifyTable/REMOVE_PRIMARY_KEY';
 const RESET_PRIMARY_KEY = 'ModifyTable/RESET_PRIMARY_KEY';
 const SET_PRIMARY_KEYS = 'ModifyTable/SET_PRIMARY_KEYS';
 
-const SET_COLUMN_EDIT = 'ModifyTable/SET_COLUMN_EDIT;';
-const RESET_COLUMN_EDIT = 'ModifyTable/RESET_COLUMN_EDIT;';
+const SET_COLUMN_EDIT = 'ModifyTable/SET_COLUMN_EDIT';
+const RESET_COLUMN_EDIT = 'ModifyTable/RESET_COLUMN_EDIT';
 const EDIT_COLUMN = 'ModifyTable/EDIT_COLUMN';
 
 const SET_FOREIGN_KEYS = 'ModifyTable/SET_FOREIGN_KEYS';
@@ -967,7 +965,7 @@ WHERE c.relname = '${viewName}'
             ' AS \n' +
             finalDef;
         }
-        dispatch({ type: SET_SQL, data: runSqlDef });
+        dispatch({ type: SET_VIEW_DEF_SQL, data: runSqlDef });
       },
       err => {
         dispatch(
@@ -1461,7 +1459,7 @@ const isColumnUnique = (tableSchema, colName) => {
     tableSchema.unique_constraints.filter(
       constraint =>
         constraint.columns.includes(colName) && constraint.columns.length === 1
-    ).length !== 0
+    ).length > 0
   );
 };
 
@@ -1469,6 +1467,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
   // eslint-disable-line no-unused-vars
   return (dispatch, getState) => {
     const columnEdit = getState().tables.modify.columnEdit[colName];
+
     const { tableName } = columnEdit;
     const colType = columnEdit.type;
     const nullable = columnEdit.isNullable;
@@ -1483,7 +1482,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const table = findTable(getState().tables.allSchemas, tableDef);
 
     // check if column type has changed before making it part of the migration
-    const originalColType = column.data_type; // "value"
+    const originalColType = column.udt_name; // "value"
     const originalColDefault = column.column_default || ''; // null or "value"
     const originalColComment = column.comment || ''; // null or "value"
     const originalColNullable = column.is_nullable; // "YES" or "NO"
@@ -2368,6 +2367,7 @@ export {
   FETCH_COLUMN_TYPE_CASTS_FAIL,
   VIEW_DEF_REQUEST_SUCCESS,
   VIEW_DEF_REQUEST_ERROR,
+  SET_VIEW_DEF_SQL,
   SET_COLUMN_EDIT,
   TABLE_COMMENT_EDIT,
   TABLE_COMMENT_INPUT_EDIT,

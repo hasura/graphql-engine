@@ -7,13 +7,16 @@ module Hasura.GraphQL.Resolve.Types
 import           Control.Lens.TH
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict            as Map
-import qualified Data.Sequence                  as Seq
-import qualified Data.Text                      as T
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.Aeson                          as J
+import qualified Data.Aeson.Casing                   as J
+import qualified Data.Aeson.TH                       as J
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.Sequence                       as Seq
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DDL.Headers         (HeaderConf)
+import           Hasura.RQL.DDL.Headers              (HeaderConf)
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
@@ -21,18 +24,24 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.SQL.DML                 as S
+import qualified Hasura.SQL.DML                      as S
+
+type NodeSelectMap = Map.HashMap G.NamedType SelOpCtx
 
 data QueryCtx
-  = QCSelect !SelOpCtx
+  = QCNodeSelect !NodeSelectMap
+  | QCSelect !SelOpCtx
+  | QCSelectConnection !(NonEmpty PGColumnInfo) !SelOpCtx
   | QCSelectPkey !SelPkOpCtx
   | QCSelectAgg !SelOpCtx
   | QCFuncQuery !FuncQOpCtx
   | QCFuncAggQuery !FuncQOpCtx
+  | QCFuncConnection !(NonEmpty PGColumnInfo) !FuncQOpCtx
   | QCAsyncActionFetch !ActionSelectOpContext
   | QCAction !ActionExecutionContext
   deriving (Show, Eq)
@@ -65,6 +74,8 @@ data SelOpCtx
   , _socFilter  :: !AnnBoolExpPartialSQL
   , _socLimit   :: !(Maybe Int)
   } deriving (Show, Eq)
+
+type PGColArgMap = Map.HashMap G.Name PGColumnInfo
 
 data SelPkOpCtx
   = SelPkOpCtx
@@ -130,10 +141,16 @@ data ActionSelectOpContext
 -- used in resolvers
 type PGColGNameMap = Map.HashMap G.Name PGColumnInfo
 
+data RelationshipFieldKind
+  = RFKAggregate
+  | RFKSimple
+  | RFKConnection !(NonEmpty PGColumnInfo)
+  deriving (Show, Eq)
+
 data RelationshipField
   = RelationshipField
   { _rfInfo       :: !RelInfo
-  , _rfIsAgg      :: !Bool
+  , _rfIsAgg      :: !RelationshipFieldKind
   , _rfCols       :: !PGColGNameMap
   , _rfPermFilter :: !AnnBoolExpPartialSQL
   , _rfPermLimit  :: !(Maybe Int)
@@ -166,6 +183,8 @@ data ResolveField
   = RFPGColumn !PGColumnInfo
   | RFRelationship !RelationshipField
   | RFComputedField !ComputedField
+  | RFRemoteRelationship !RemoteFieldInfo
+  | RFNodeId !QualifiedTable !(NonEmpty PGColumnInfo)
   deriving (Show, Eq)
 
 type FieldMap = Map.HashMap (G.NamedType, G.Name) ResolveField
@@ -210,8 +229,6 @@ data InsCtx
 
 type InsCtxMap = Map.HashMap QualifiedTable InsCtx
 
-type PGColArgMap = Map.HashMap G.Name PGColumnInfo
-
 data AnnPGVal
   = AnnPGVal
   { _apvVariable   :: !(Maybe G.Variable)
@@ -244,6 +261,13 @@ data InputFunctionArgument
   = IFAKnown !FunctionArgName !UnresolvedVal -- ^ Known value
   | IFAUnknown !FunctionArgItem -- ^ Unknown value, need to be parsed
   deriving (Show, Eq)
+
+data NodeIdData
+  = NodeIdData
+  { _nidTable   :: !QualifiedTable
+  , _nidColumns :: !(Map.HashMap PGCol J.Value)
+  } deriving (Show, Eq)
+$(J.deriveFromJSON (J.aesonDrop 4 J.snakeCase) ''NodeIdData)
 
 -- template haskell related
 $(makePrisms ''ResolveField)

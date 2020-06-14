@@ -1,0 +1,35 @@
+- description: Rename the table which is used in creating the remote relationship
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: ALTER TABLE profiles rename to user_profiles
+
+- description: Check if the remote relationship works after renaming the table
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      user_profiles:
+        - id: 1
+          messagesNestedArgs:
+            - id: 1
+              msg: You win!
+        - id: 2
+          messagesNestedArgs: []
+        - id: 3
+          messagesNestedArgs:
+            - id: 3
+              msg: Another alice
+  query:
+    query: |
+      query {
+        user_profiles {
+          id
+          messagesNestedArgs(where: { name: { eq:  "alice" } }) {
+            id
+            msg
+          }
+        }
+      }

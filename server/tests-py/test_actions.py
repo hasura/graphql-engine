@@ -2,17 +2,34 @@
 
 import pytest
 import time
+import subprocess
 
 from validate import check_query_f, check_query, get_conf_f
+from remote_server import NodeGraphQL
 
 """
 TODO:- Test Actions metadata
 """
 
+@pytest.fixture(scope="module")
+def graphql_service():
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/actions_remote_join_schema.js"])
+    svc.start()
+    yield svc
+    svc.stop()
+
+
 use_action_fixtures = pytest.mark.usefixtures(
     "actions_fixture",
     'per_class_db_schema_for_mutation_tests',
     'per_method_db_data_for_mutation_tests'
+)
+
+use_action_fixtures_with_remote_joins = pytest.mark.usefixtures(
+    "graphql_service",
+    "actions_fixture",
+    "per_class_db_schema_for_mutation_tests",
+    "per_method_db_data_for_mutation_tests"
 )
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
@@ -63,6 +80,16 @@ class TestActionsSync:
 
     def test_mirror_action_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_success.yaml')
+
+@use_action_fixtures_with_remote_joins
+class TestActionsSyncWithRemoteJoins:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/actions/sync/remote_joins'
+
+    def test_action_with_remote_joins(self,hge_ctx):
+        check_query_f(hge_ctx,self.dir() + '/action_with_remote_joins.yaml')
 
 # Check query with admin secret tokens
 def check_query_secret(hge_ctx, f):
