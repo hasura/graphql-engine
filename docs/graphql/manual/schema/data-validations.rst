@@ -85,10 +85,10 @@ Let's say we have a table:
       X-Hasura-Role: admin
 
       {
-          "type": "run_sql",
-          "args": {
-              "sql": "ALTER TABLE author ADD CONSTRAINT authors_rating_check CHECK (rating > 0 AND rating <= 10);"
-          }
+        "type": "run_sql",
+        "args": {
+          "sql": "ALTER TABLE author ADD CONSTRAINT authors_rating_check CHECK (rating > 0 AND rating <= 10);"
+        }
       }
 
 If someone now tries to add an author with a rating of ``11``, the following

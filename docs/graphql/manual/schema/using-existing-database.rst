@@ -219,10 +219,10 @@ To track a foreign-key between two tables in the database:
                "table": "<table name>",
                "name": "<relationship name>",
                "using": {
-                     "foreign_key_constraint_on" : {
-                        "table" : "<reference table name>",
-                        "column" : "<reference key>"
-                     }
+                  "foreign_key_constraint_on" : {
+                     "table" : "<reference table name>",
+                     "column" : "<reference key>"
+                  }
                }
             }
          }
@@ -301,7 +301,7 @@ To track all the foreign-keys of all tables in the database:
                "table": "<table name>",
                "name": "<relationship name>",
                "using": {
-                     "foreign_key_constraint_on": "<reference key>"
+                  "foreign_key_constraint_on": "<reference key>"
                }
             }
          }
