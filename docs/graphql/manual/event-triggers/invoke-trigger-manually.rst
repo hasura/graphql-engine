@@ -36,7 +36,7 @@ Invoke event trigger manually
 
       When creating an event trigger over the :ref:`create_event_trigger` API, you can set the argument ``enable_manual`` to true.
 
-      Then you can use the :ref:`invoke_event_trigger` API to invoke triggers manually.
+      Then you can use the :ref:`invoke_event_trigger` API to invoke triggers manually:
 
       .. code-block:: http
 

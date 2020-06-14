@@ -33,7 +33,7 @@ create_event_trigger
            "name": "sample_trigger",
            "table": {
               "name": "users",
-              "schema": "public",
+              "schema": "public"
            },
            "webhook": "https://httpbin.org/post",
            "insert": {

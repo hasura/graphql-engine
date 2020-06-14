@@ -25,9 +25,59 @@ Event triggers can be created using the Hasura console or metadata APIs.
       .. thumbnail:: /img/graphql/manual/event-triggers/create-event-trigger.png
          :alt: Create an event trigger
 
+   .. tab:: Via CLI
+
+      You can add an event triggers in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 4-14
+
+         - table:
+            schema: public
+            name: author
+         event_triggers:
+         - name: my_special_trigger
+            definition:
+               enable_manual: false
+               insert:
+               columns: '*'
+            retry_conf:
+               num_retries: 0
+               interval_sec: 10
+               timeout_sec: 60
+            webhook: https://httpbin.org/post
+
+      Then apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
    .. tab:: Via API
 
-      Make a request to the :ref:`create_event_trigger<create_event_trigger>` API.
+      Add an event trigger by using the :ref:`create_event_trigger<create_event_trigger>` API.
+
+      .. code-block:: http
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type" : "create_event_trigger",
+            "args" : {
+               "name": "sample_trigger",
+               "table": {
+                  "name": "author",
+                  "schema": "public"
+               },
+               "webhook": "https://httpbin.org/post",
+               "insert": {
+                     "columns": "*",
+                     "payload": ["name"]
+               }
+            }
+         }
 
 Parameters
 ----------
@@ -61,9 +111,62 @@ Advanced Settings
       .. thumbnail:: /img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
          :alt: Advanced settings for event triggers
 
+   .. tab:: Via CLI
+
+      You can configure advanced settings for event triggers in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 10-13
+
+         - table:
+            schema: public
+            name: author
+         event_triggers:
+         - name: my_special_trigger
+            definition:
+               enable_manual: false
+               insert:
+               columns: '*'
+            retry_conf:
+               num_retries: 0
+               interval_sec: 10
+               timeout_sec: 60
+            webhook: https://httpbin.org/post
+
    .. tab:: Via API
 
       You can configure advanced settings via the :ref:`create_event_trigger<create_event_trigger>` API.
+
+      .. code-block:: http
+         :emphasize-lines: 21-25
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type": "create_event_trigger",
+            "args": {
+               "name": "sample_trigger",
+               "table": {
+                  "name": "author",
+                  "schema": "public"
+               },
+               "webhook": "https://httpbin.org/post",
+               "insert": {
+                  "columns": "*",
+                  "payload": [
+                     "name"
+                  ]
+               },
+               "replace": false,
+               "retry_conf": {
+                  "num_retries": 0,
+                  "interval_sec": 10,
+                  "timeout_sec": 60
+               }
+            }
+         }
 
 Listen columns for update
 ^^^^^^^^^^^^^^^^^^^^^^^^^
