@@ -23,6 +23,7 @@ const clearText = () => {
   });
   cy.wait(2000); // ace editor textarea doesn't expose the value to check, so wait
 };
+
 export const passCreateTable = () => {
   prevStr = 'CREATE TABLE Apic_test_table_rsql (id serial PRIMARY KEY);';
   cy.get('textarea').type(prevStr, { force: true });
@@ -70,6 +71,7 @@ export const delTestTables = () => {
   cy.get(getElementFromAlias('raw-sql-migration-check')).uncheck();
   cy.get(getElementFromAlias('run-sql')).click();
   cy.get(getElementFromAlias('not-migration-confirm')).click();
+  cy.get(getElementFromAlias('raw-sql-statement-timeout')).type('20', { force: true });
   cy.wait(5000);
   // cy.visit(`${baseUrl}/data/schema/public`);
   // cy.get(getElementFromAlias('add-track-table-Apic_test_table_rsql')).click();

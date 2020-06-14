@@ -470,6 +470,7 @@ const RawSQL = ({
             min={0}
             type="number"
             className={`${styles.inline_block} ${styles.add_mar_left_small}`}
+            data-test="raw-sql-statement-timeout"
             onChange={event => dispatchSetStatementTimeout(event.target.value)}
           />
         </label>
