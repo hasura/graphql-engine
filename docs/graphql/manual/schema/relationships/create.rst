@@ -71,10 +71,10 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``article`
       X-Hasura-Role: admin
 
       {
-          "type": "run_sql",
-          "args": {
-              "sql": "ALTER TABLE article ADD FOREIGN KEY (author_id) REFERENCES author(id);"
-          }
+        "type": "run_sql",
+        "args": {
+          "sql": "ALTER TABLE article ADD FOREIGN KEY (author_id) REFERENCES author(id);"
+        }
       }
 
 Step 2: Create an object relationship
@@ -130,14 +130,14 @@ Each article has one author. This is an ``object relationship``.
       X-Hasura-Role: admin
 
       {
-          "type": "create_object_relationship",
-          "args": {
-              "table": "article",
-              "name": "author",
-              "using": {
-                  "foreign_key_constraint_on": "author_id"
-              }
+        "type": "create_object_relationship",
+        "args": {
+          "table": "article",
+          "name": "author",
+          "using": {
+            "foreign_key_constraint_on": "author_id"
           }
+        }
       }
 
 We can now run a nested object query that is based on this ``object relationship``.
@@ -268,17 +268,17 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
       X-Hasura-Role: admin
 
       {
-          "type": "create_array_relationship",
-          "args": {
-              "table": "author",
-              "name": "articles",
-              "using": {
-                  "foreign_key_constraint_on" : {
-                      "table" : "article",
-                      "column" : "author_id"
-                  }
-              }
+        "type": "create_array_relationship",
+        "args": {
+          "table": "author",
+          "name": "articles",
+          "using": {
+            "foreign_key_constraint_on" : {
+              "table" : "article",
+              "column" : "author_id"
+            }
           }
+        }
       }
 
 Fetch a list of authors and a nested list of each author's articles:
@@ -456,19 +456,19 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
       X-Hasura-Role: admin
 
       {
-          "type": "create_object_relationship",
-          "args": {
-              "table": "author",
-              "name": "avg_rating",
-              "using": {
-                  "manual_configuration": {
-                      "remote_table": "author_average_rating",
-                      "column_mapping": {
-                          "id": "author_id"
-                      }
-                  }
+        "type": "create_object_relationship",
+        "args": {
+          "table": "author",
+          "name": "avg_rating",
+          "using": {
+            "manual_configuration": {
+              "remote_table": "author_average_rating",
+              "column_mapping": {
+                "id": "author_id"
               }
+            }
           }
+        }
       }
 
 We can now run a nested object query that is based on this ``object relationship``.

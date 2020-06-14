@@ -95,10 +95,10 @@ Edit the ``created_at`` field and set its default value as the SQL function ``no
       X-Hasura-Role: admin
 
       {
-          "type": "run_sql",
-          "args": {
-              "sql": "ALTER TABLE article ALTER COLUMN created_at SET DEFAULT now();"
-          }
+        "type": "run_sql",
+        "args": {
+          "sql": "ALTER TABLE article ALTER COLUMN created_at SET DEFAULT now();"
+        }
       }
     
 

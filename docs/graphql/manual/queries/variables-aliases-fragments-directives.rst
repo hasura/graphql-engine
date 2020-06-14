@@ -64,10 +64,10 @@ In order to make a query re-usable, it can be made dynamic by using variables.
       X-Hasura-Role: admin
 
       {
-          "query": "query getArticles($author_id: Int!) { articles(where: { author_id: { _eq: $author_id } }) { id title }}",
-          "variables": {
-              "author_id": 1
-          }
+        "query": "query getArticles($author_id: Int!) { articles(where: { author_id: { _eq: $author_id } }) { id title }}",
+        "variables": {
+          "author_id": 1
+        }
       }
 
 .. admonition:: Variables and performance
@@ -155,7 +155,7 @@ fetching the same type of objects with different arguments in the same query.
       X-Hasura-Role: admin
 
       {
-          "query": "query getArticles { articles { title rating } topTwoArticles: articles(order_by: {rating: desc}, limit: 2) { title rating } worstArticle: articles(order_by: {rating: asc}, limit: 1) { title rating }}"
+        "query": "query getArticles { articles { title rating } topTwoArticles: articles(order_by: {rating: desc}, limit: 2) { title rating } worstArticle: articles(order_by: {rating: asc}, limit: 1) { title rating }}"
       }
 
 Using fragments
@@ -228,7 +228,7 @@ can then be used to represent the defined set.
       X-Hasura-Role: admin
 
       {
-          "query": "fragment articleFields on articles { id title } query getArticles { articles { ...articleFields } topTwoArticles: articles(order_by: { rating: desc }, limit: 2) { ...articleFields }}"
+        "query": "fragment articleFields on articles { id title } query getArticles { articles { ...articleFields } topTwoArticles: articles(order_by: { rating: desc }, limit: 2) { ...articleFields }}"
       }
 
 Using directives
@@ -291,10 +291,10 @@ With ``@include(if: Boolean)``, it is possible to include a field in the query r
       X-Hasura-Role: admin
 
       {
-          "query": "query getArticles($with_publisher: Boolean!) { articles { title publisher @include(if: $with_publisher)}}",
-          "variables": {
-              "with_publisher": true
-          }
+        "query": "query getArticles($with_publisher: Boolean!) { articles { title publisher @include(if: $with_publisher)}}",
+        "variables": {
+          "with_publisher": true
+        }
       }
 
 **Example:** The query result doesn't include the field ``publisher``, as ``$with_publisher`` is set to ``false``:
@@ -343,10 +343,10 @@ With ``@include(if: Boolean)``, it is possible to include a field in the query r
       X-Hasura-Role: admin
 
       {
-          "query": "query getArticles($with_publisher: Boolean!) { articles { title publisher @include(if: $with_publisher)}}",
-          "variables": {
-            "with_publisher": false
-          }
+        "query": "query getArticles($with_publisher: Boolean!) { articles { title publisher @include(if: $with_publisher)}}",
+        "variables": {
+          "with_publisher": false
+        }
       }
 
 @skip(if: Boolean)
@@ -400,10 +400,10 @@ With ``@skip(if: Boolean)``, it is possible to exclude (skip) a field in the que
       X-Hasura-Role: admin
 
       {
-          "query": "query getArticles($with_publisher: Boolean!) { articles { title publisher @skip(if: $with_publisher)}}",
-          "variables": {
-              "with_publisher": true
-          }
+        "query": "query getArticles($with_publisher: Boolean!) { articles { title publisher @skip(if: $with_publisher)}}",
+        "variables": {
+          "with_publisher": true
+        }
       }
 
 **Example:** The query result includes the field ``publisher``, as ``$with_publisher`` is set to ``false``:
@@ -455,8 +455,8 @@ With ``@skip(if: Boolean)``, it is possible to exclude (skip) a field in the que
       X-Hasura-Role: admin
 
       {
-          "query": "query getArticles($with_publisher: Boolean!) { articles { title publisher @skip(if: $with_publisher)}}",
-          "variables": {
-              "with_publisher": false
-          }
+        "query": "query getArticles($with_publisher: Boolean!) { articles { title publisher @skip(if: $with_publisher)}}",
+        "variables": {
+          "with_publisher": false
+        }
       }

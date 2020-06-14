@@ -127,7 +127,7 @@ violated, update the ``content`` column of the existing article:
       X-Hasura-Role: admin
 
       {
-          "query": "mutation upsert_article { insert_article (objects: [{ title: \"Article 1\", content: \"Article 1 content\", published_on: \"2018-10-12\" }], on_conflict: { constraint: article_title_key, update_columns: [content]}) { returning { id title content published_on }}}"
+        "query": "mutation upsert_article { insert_article (objects: [{ title: \"Article 1\", content: \"Article 1 content\", published_on: \"2018-10-12\" }], on_conflict: { constraint: article_title_key, update_columns: [content]}) { returning { id title content published_on }}}"
       }
 
 Note that the ``published_on`` column is left unchanged as it wasn't present in ``update_columns``.
@@ -197,7 +197,7 @@ value is lesser than the new value:
       X-Hasura-Role: admin
 
       {
-          "query": "mutation upsert_article { insert_article (objects: [{ title: \"Article 2\", published_on: \"2018-10-12\" }], on_conflict: { constraint: article_title_key, update_columns: [published_on], where: { published_on: {_lt: \"2018-10-12\"}}}) { returning { id title published_on }}}"
+        "query": "mutation upsert_article { insert_article (objects: [{ title: \"Article 2\", published_on: \"2018-10-12\" }], on_conflict: { constraint: article_title_key, update_columns: [published_on], where: { published_on: {_lt: \"2018-10-12\"}}}) { returning { id title published_on }}}"
       }
 
 Ignore request on conflict
@@ -246,7 +246,7 @@ ignore the request.
       X-Hasura-Role: admin
 
       {
-          "query": "mutation upsert_author { insert_author(objects: [{ name: \"John\" }], on_conflict: { constraint: author_name_key, update_columns: [] }) { affected_rows }}"
+        "query": "mutation upsert_author { insert_author(objects: [{ name: \"John\" }], on_conflict: { constraint: author_name_key, update_columns: [] }) { affected_rows }}"
       }
 
 In this case, the insert mutation is ignored because there is a conflict and ``update_columns`` is empty.
@@ -307,7 +307,7 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
       X-Hasura-Role: admin
 
       {
-          "query": "mutation upsert_author_article { insert_author(objects: [{ name: \"John\", articles: { data: [{ title: \"Article 3\", content: \"Article 3 content\" }], on_conflict: { constraint: article_title_key, update_columns: [content] }}}]) { affected_rows }}"
+        "query": "mutation upsert_author_article { insert_author(objects: [{ name: \"John\", articles: { data: [{ title: \"Article 3\", content: \"Article 3 content\" }], on_conflict: { constraint: article_title_key, update_columns: [content] }}}]) { affected_rows }}"
       }
 
 

@@ -95,7 +95,7 @@ Insert a single object
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insert_single_article { insert_article_one(object: { title: \"Article 1\", content: \"Sample article content\", author_id: 3 }) { id title }}"
+        "query": "mutation insert_single_article { insert_article_one(object: { title: \"Article 1\", content: \"Sample article content\", author_id: 3 }) { id title }}"
       }
 
 Using variables:
@@ -141,14 +141,14 @@ Using variables:
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insert_single_article($object: article_insert_input! ) { insert_article_one(object: $object) { id title }}",
-          "variables": {
-              "object": {
-                  "title": "Article 1",
-                  "content": "Sample article content",
-                  "author_id": 3
-              }
+        "query": "mutation insert_single_article($object: article_insert_input! ) { insert_article_one(object: $object) { id title }}",
+        "variables": {
+          "object": {
+            "title": "Article 1",
+            "content": "Sample article content",
+            "author_id": 3
           }
+        }
       }
 
 .. admonition:: Supported from
@@ -217,7 +217,7 @@ Insert multiple objects of the same type in the same mutation
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insert_multiple_articles { insert_article(objects: [{ title: \"Article 2\", content: \"Sample article content\", author_id: 4 }, { title: \"Article 3\", content: \"Sample article content\", author_id: 5 }]) { returning { id title }}}"
+        "query": "mutation insert_multiple_articles { insert_article(objects: [{ title: \"Article 2\", content: \"Sample article content\", author_id: 4 }, { title: \"Article 3\", content: \"Sample article content\", author_id: 5 }]) { returning { id title }}}"
       }
 
 Using variables:
@@ -281,21 +281,21 @@ Using variables:
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insert_multiple_articles($objects: [article_insert_input!]! ) { insert_article(objects: $objects) { returning { id title }}}",
-          "variables": {
-              "objects": [
-                  {
-                      "title": "Article 2",
-                      "content": "Sample article content",
-                      "author_id": 4
-                  },
-                  {
-                      "title": "Article 3",
-                      "content": "Sample article content",
-                      "author_id": 5
-                  }
-              ]
-          }
+        "query": "mutation insert_multiple_articles($objects: [article_insert_input!]! ) { insert_article(objects: $objects) { returning { id title }}}",
+        "variables": {
+          "objects": [
+            {
+              "title": "Article 2",
+              "content": "Sample article content",
+              "author_id": 4
+            },
+            {
+              "title": "Article 3",
+              "content": "Sample article content",
+              "author_id": 5
+            }
+          ]
+        }
       }
 
 
@@ -359,7 +359,7 @@ Insert an object and get a nested object in response
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insert_article { insert_article(objects: [{ title: \"Article 1\", content: \"Sample article content\", author_id: 3 }]) { returning { id title author { id name }}}}"
+        "query": "mutation insert_article { insert_article(objects: [{ title: \"Article 1\", content: \"Sample article content\", author_id: 3 }]) { returning { id title author { id name }}}}"
       }
 
 .. _nested_inserts:
@@ -466,7 +466,7 @@ Let's say an ``author`` has an ``object relationship`` called ``address`` to the
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insertData { insert_authors(objects: [{ name: \"John\", address: { data: { location: \"San Francisco\" }}, articles: { data: [{ title: \"GraphQL Guide\", content: \"Let's see what we can do with GraphQL\" }, { title: \"Authentication Guide\", content: \"Let's look at best practices for authentication\" }]}}]) { affected_rows returning { id name address_id address { id location } articles { id title author_id }}}}"
+        "query": "mutation insertData { insert_authors(objects: [{ name: \"John\", address: { data: { location: \"San Francisco\" }}, articles: { data: [{ title: \"GraphQL Guide\", content: \"Let's see what we can do with GraphQL\" }, { title: \"Authentication Guide\", content: \"Let's look at best practices for authentication\" }]}}]) { affected_rows returning { id name address_id address { id location } articles { id title author_id }}}}"
       }
 
 **How it works**
@@ -587,7 +587,7 @@ a bridge table ``article_tags``.
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insertArticle { insert_articles(objects: [{ title: \"How to make fajitas\", content: \"Guide on making the best fajitas in the world\", author_id: 3, article_tags: { data: [{ tag: { data: { label: \"Recipes\" }, on_conflict: { constraint: tags_label_key, update_columns: [label] }}}, { tag: { data: { label: \"Cooking\" }, on_conflict: { constraint: tags_label_key, update_columns: [label] }}}]}}]) { affected_rows returning { id title content author_id article_tags { tag { label }}}}}"
+        "query": "mutation insertArticle { insert_articles(objects: [{ title: \"How to make fajitas\", content: \"Guide on making the best fajitas in the world\", author_id: 3, article_tags: { data: [{ tag: { data: { label: \"Recipes\" }, on_conflict: { constraint: tags_label_key, update_columns: [label] }}}, { tag: { data: { label: \"Cooking\" }, on_conflict: { constraint: tags_label_key, update_columns: [label] }}}]}}]) { affected_rows returning { id title content author_id article_tags { tag { label }}}}}"
       }
 
 **How it works**
@@ -684,16 +684,16 @@ Insert an object with a JSONB field
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insert_author($address: jsonb) { insert_author (objects: [{ name: \"Ash\", address: $address }]) { affected_rows returning { id name address }}}",
-          "variables": {
-              "address": {
-                  "street_address": "161, 19th Main Road, Koramangala 6th Block",
-                  "city": "Bengaluru",
-                  "phone": "9090909090",
-                  "state": "Karnataka",
-                  "pincode": 560095
-              }
+        "query": "mutation insert_author($address: jsonb) { insert_author (objects: [{ name: \"Ash\", address: $address }]) { affected_rows returning { id name address }}}",
+        "variables": {
+          "address": {
+            "street_address": "161, 19th Main Road, Koramangala 6th Block",
+            "city": "Bengaluru",
+            "phone": "9090909090",
+            "state": "Karnataka",
+            "pincode": 560095
           }
+        }
       }
 
 Insert an object with an ARRAY field
@@ -753,7 +753,7 @@ To insert fields of array types, you currently have to pass them as a `Postgres 
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insert_author { insert_author (objects: [{ name: \"Ash\", emails: \"{ash@ash.com, ash123@ash.com}\" }]) { affected_rows returning { id name emails }}}"
+        "query": "mutation insert_author { insert_author (objects: [{ name: \"Ash\", emails: \"{ash@ash.com, ash123@ash.com}\" }]) { affected_rows returning { id name emails }}}"
       }
 
 
@@ -813,10 +813,10 @@ Using variables:
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insert_author($emails: _text) { insert_author (objects: [{ name: \"Ash\", emails: $emails }]) { affected_rows returning { id name emails }}}",
-          "variables": {
-              "emails": "{ash@ash.com, ash123@ash.com}"
-          }
+        "query": "mutation insert_author($emails: _text) { insert_author (objects: [{ name: \"Ash\", emails: $emails }]) { affected_rows returning { id name emails }}}",
+        "variables": {
+          "emails": "{ash@ash.com, ash123@ash.com}"
+        }
       }
 
 Set a field to its default value during insert
@@ -875,7 +875,7 @@ To set a field to its ``default`` value, just omit it from the input object, irr
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insert_article_with_def_id { insert_article(objects: [{ title: \"Article 1\", content: \"Sample article content\", author_id: 3 }]) { returning { id title }}}"
+        "query": "mutation insert_article_with_def_id { insert_article(objects: [{ title: \"Article 1\", content: \"Sample article content\", author_id: 3 }]) { returning { id title }}}"
       }
 
 Set a field to NULL during insert
@@ -934,7 +934,7 @@ or pass it as ``null``:
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insert_author_with_null_age { insert_author(objects: [{ name: \"Jeff\"}]) { returning { id name age }}}"
+        "query": "mutation insert_author_with_null_age { insert_author(objects: [{ name: \"Jeff\"}]) { returning { id name age }}}"
       }
 
 OR
@@ -987,5 +987,5 @@ OR
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insert_author_with_null_age { insert_author(objects: [{ name: \"Jeff\", age: null }]) { returning { id name age }}}"
+        "query": "mutation insert_author_with_null_age { insert_author(objects: [{ name: \"Jeff\", age: null }]) { returning { id name age }}}"
       }

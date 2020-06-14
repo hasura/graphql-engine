@@ -58,12 +58,12 @@ To rename a relationship:
       X-Hasura-Role: admin
 
       {
-          "type": "rename_relationship",
-          "args": {
-              "table": "article",
-              "name": "article_details",
-              "new_name": "article_detail"
-          }
+        "type": "rename_relationship",
+        "args": {
+          "table": "article",
+          "name": "article_details",
+          "new_name": "article_detail"
+        }
       }
 
 .. note::

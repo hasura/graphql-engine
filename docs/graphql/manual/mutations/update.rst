@@ -103,7 +103,7 @@ row object or ``null`` if the row does not exist.
       X-Hasura-Role: admin
 
       {
-          "query": "mutation update_an_article { update_article_by_pk (pk_columns: {id: 1} _set: { is_published: true }) { id is_published }}"
+        "query": "mutation update_an_article { update_article_by_pk (pk_columns: {id: 1} _set: { is_published: true }) { id is_published }}"
       }
 
 
@@ -142,7 +142,7 @@ row object or ``null`` if the row does not exist.
       X-Hasura-Role: admin
 
       {
-          "query": "mutation update_an_article { update_article_by_pk (pk_columns: {id: 100} _set: { is_published: true }) { id is_published }}"
+        "query": "mutation update_an_article { update_article_by_pk (pk_columns: {id: 100} _set: { is_published: true }) { id is_published }}"
       }
 
 .. admonition:: Supported from
@@ -215,7 +215,7 @@ Update objects based on their fields
       X-Hasura-Role: admin
 
       {
-          "query": "mutation update_article { update_article(where: {rating: {_lte: 2}}, _set: { rating: 1, is_published: false }) { affected_rows returning { id title content rating is_published }}}"
+        "query": "mutation update_article { update_article(where: {rating: {_lte: 2}}, _set: { rating: 1, is_published: false }) { affected_rows returning { id title content rating is_published }}}"
       }
 
 Using variables:
@@ -285,14 +285,14 @@ Using variables:
       X-Hasura-Role: admin
 
       {
-          "query": "mutation update_article($rating: Int, $changes: article_set_input) { update_article(where: {rating: {_lte: $rating}}, _set: $changes) { affected_rows returning { id title content rating is_published }}}",
-          "variables": {
-              "rating": 2,
-              "changes": {
-                  "rating": 1,
-                  "is_published": false
-              }
+        "query": "mutation update_article($rating: Int, $changes: article_set_input) { update_article(where: {rating: {_lte: $rating}}, _set: $changes) { affected_rows returning { id title content rating is_published }}}",
+        "variables": {
+          "rating": 2,
+          "changes": {
+            "rating": 1,
+            "is_published": false
           }
+        }
       }
 
 OR
@@ -363,12 +363,12 @@ OR
       X-Hasura-Role: admin
 
       {
-          "query": "mutation update_article($ratingLimit: Int, $rating: Int, $isPublished: Boolean) { update_article(where: {rating: {_lte: $ratingLimit}}, _set: { rating: $rating, is_published: $isPublished }) { affected_rows returning { id title content rating is_published }}}",
-          "variables": {
-              "ratingLimit": 2,
-              "rating": 1,
-              "isPublished": false
-          }
+        "query": "mutation update_article($ratingLimit: Int, $rating: Int, $isPublished: Boolean) { update_article(where: {rating: {_lte: $ratingLimit}}, _set: { rating: $rating, is_published: $isPublished }) { affected_rows returning { id title content rating is_published }}}",
+        "variables": {
+          "ratingLimit": 2,
+          "rating": 1,
+          "isPublished": false
+        }
       }
 
 Update objects based on nested objects' fields
@@ -409,7 +409,7 @@ Update objects based on nested objects' fields
       X-Hasura-Role: admin
 
       {
-          "query": "mutation update_ratings { update_article(where: {author: {name: {_eq: \"Sidney\"}}}, _set: {rating: null}) { affected_rows }}"
+        "query": "mutation update_ratings { update_article(where: {author: {name: {_eq: \"Sidney\"}}}, _set: {rating: null}) { affected_rows }}"
       }
 
 Update all objects
@@ -454,7 +454,7 @@ evaluates to ``true`` for all objects.
       X-Hasura-Role: admin
 
       {
-          "query": "mutation reset_rating { update_article (where: {} _set: { rating: null }) { affected_rows }}"
+        "query": "mutation reset_rating { update_article (where: {} _set: { rating: null }) { affected_rows }}"
       }
 
 Increment **int** columns
@@ -505,7 +505,7 @@ You can increment an ``int`` column with a given value using the ``_inc`` operat
       X-Hasura-Role: admin
 
       {
-          "query": "mutation update_likes { update_article(where: {id: {_eq: 1}}, _inc: {likes: 2}) { affected_rows returning { id likes }}}"
+        "query": "mutation update_likes { update_article(where: {id: {_eq: 1}}, _inc: {likes: 2}) { affected_rows returning { id likes }}}"
       }
 
 Update **jsonb** columns
@@ -593,12 +593,12 @@ Since the input is a json value, it should be provided through a variable.
       X-Hasura-Role: admin
 
       {
-          "query": "mutation update_extra_info($value: jsonb) { update_article(where: {id: {_eq: 1}}, _append: {extra_info: $value}) { affected_rows returning { id extra_info }}}",
-          "variables": {
-              "value": {
-                  "key1": "value1"
-              }
+        "query": "mutation update_extra_info($value: jsonb) { update_article(where: {id: {_eq: 1}}, _append: {extra_info: $value}) { affected_rows returning { id extra_info }}}",
+        "variables": {
+          "value": {
+            "key1": "value1"
           }
+        }
       }
 
 Prepend a json to a jsonb column
@@ -659,12 +659,12 @@ Since the input is a json value, it should be provided through a variable.
       X-Hasura-Role: admin
 
       {
-          "query": "mutation update_extra_info($value: jsonb) { update_article(where: {id: {_eq: 1}}, _prepend: {extra_info: $value}) { affected_rows returning { id extra_info }}}",
-          "variables": {
-              "value": {
-                  "key0": "value0"
-              }
+        "query": "mutation update_extra_info($value: jsonb) { update_article(where: {id: {_eq: 1}}, _prepend: {extra_info: $value}) { affected_rows returning { id extra_info }}}",
+        "variables": {
+          "value": {
+            "key0": "value0"
           }
+        }
       }
 
 Delete a top-level key from a jsonb column
@@ -720,7 +720,7 @@ The input value should be a ``String``.
       X-Hasura-Role: admin
 
       {
-          "query": "mutation update_extra_info { update_article(where: {id: {_eq: 1}}, _delete_key: {extra_info: \"key\"}) { affected_rows returning { id extra_info }}}"
+        "query": "mutation update_extra_info { update_article(where: {id: {_eq: 1}}, _delete_key: {extra_info: \"key\"}) { affected_rows returning { id extra_info }}}"
       }
 
 Delete an element from a jsonb column storing a json array
@@ -775,7 +775,7 @@ of the ``article`` table:
       X-Hasura-Role: admin
 
       {
-          "query": "mutation update_extra_info { update_article(where: {id: {_eq: 1}}, _delete_elem: {extra_info: 2} ) { affected_rows returning { id extra_info }}}"
+        "query": "mutation update_extra_info { update_article(where: {id: {_eq: 1}}, _delete_elem: {extra_info: 2} ) { affected_rows returning { id extra_info }}}"
       }
 
 Delete an element at a specific path in a jsonb column
@@ -832,7 +832,7 @@ The input value should be a ``String Array``.
       X-Hasura-Role: admin
 
       {
-          "query": "mutation update_extra_info { update_author(where: {id: {_eq: 1}}, _delete_at_path: {extra_info: [\"name\", \"first\"]}) { affected_rows returning { id extra_info }}}"
+        "query": "mutation update_extra_info { update_author(where: {id: {_eq: 1}}, _delete_at_path: {extra_info: [\"name\", \"first\"]}) { affected_rows returning { id extra_info }}}"
       }
 
 Replace all nested array objects of an object
@@ -899,8 +899,8 @@ one to delete all the existing objects and one to add a list of new nested objec
       X-Hasura-Role: admin
 
       {
-          "query": "mutation updateAuthorArticles($author_id: Int!) { delete_articles(where: {author_id: {_eq: $author_id}}) { affected_rows } insert_articles(objects: [{ author_id: $author_id, title: \"title\", content: \"some content\" }, { author_id: $author_id, title: \"another title\", content: \"some other content\" }]) { affected_rows }}",
-          "variables": {
-              "author_id": 21
-          }
+        "query": "mutation updateAuthorArticles($author_id: Int!) { delete_articles(where: {author_id: {_eq: $author_id}}) { affected_rows } insert_articles(objects: [{ author_id: $author_id, title: \"title\", content: \"some content\" }, { author_id: $author_id, title: \"another title\", content: \"some other content\" }]) { affected_rows }}",
+        "variables": {
+          "author_id": 21
+        }
       }

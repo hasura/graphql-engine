@@ -64,16 +64,16 @@ Expose columns with a different name in the GraphQL API
       X-Hasura-Role: admin
 
       {
-          "type": "track_table",
-          "version": 2,
-          "args": {
-              "table": "author",
-              "configuration": {
-                  "custom_column_names": {
-                      "addr": "address"
-                  }
-              }
+        "type": "track_table",
+        "version": 2,
+        "args": {
+          "table": "author",
+          "configuration": {
+            "custom_column_names": {
+              "addr": "address"
+            }
           }
+        }
       }
 
     2. using the :ref:`set_table_custom_fields` API to set the :ref:`CustomColumnNames`:
@@ -85,14 +85,14 @@ Expose columns with a different name in the GraphQL API
       X-Hasura-Role: admin
 
       {
-          "type": "set_table_custom_fields",
-          "version": 2,
-          "args": {
-              "table": "author",
-              "custom_column_names": {
-                  "addr": "address"
-              }
+        "type": "set_table_custom_fields",
+        "version": 2,
+        "args": {
+          "table": "author",
+          "custom_column_names": {
+            "addr": "address"
           }
+        }
       }
 
 Expose table root fields with a different name in the GraphQL API
@@ -142,17 +142,17 @@ Expose table root fields with a different name in the GraphQL API
       X-Hasura-Role: admin
 
       {
-          "type": "track_table",
-          "version": 2,
-          "args": {
-              "table": "author",
-              "configuration": {
-                  "custom_root_fields": {
-                      "select": "authors",
-                      "select_by_pk": "author"
-                  }
-              }
+        "type": "track_table",
+        "version": 2,
+        "args": {
+          "table": "author",
+          "configuration": {
+            "custom_root_fields": {
+              "select": "authors",
+              "select_by_pk": "author"
+            }
           }
+        }
       }
 
     2. using the :ref:`set_table_custom_fields` API to set the :ref:`custom_root_fields` names

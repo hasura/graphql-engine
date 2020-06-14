@@ -65,7 +65,7 @@ Fetch list of objects
       X-Hasura-Role: admin
 
       {
-          "query": "query { author { id name }}"
+        "query": "query { author { id name }}"
       }
 
 
@@ -106,7 +106,7 @@ Fetch an object using its primary key
       X-Hasura-Role: admin
 
       {
-          "query": "query { author_by_pk(id: 1) { id name } }"
+        "query": "query { author_by_pk(id: 1) { id name } }"
       }
 
 Fetch value from JSON/JSONB column at particular path
@@ -156,7 +156,7 @@ address column:
       X-Hasura-Role: admin
 
       {
-          "query": "query { author_by_pk(id: 1) { id name address city: address(path: \"$.city\") phone: address(path: \"$.phone_num.[0]\")}}"
+        "query": "query { author_by_pk(id: 1) { id name address city: address(path: \"$.city\") phone: address(path: \"$.phone_num.[0]\")}}"
       }
 
 See the :ref:`API reference <SimpleObject>` for more details.

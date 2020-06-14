@@ -216,21 +216,21 @@ Adding a computed field to a table
       X-Hasura-Role: admin
 
       {
-          "type": "add_computed_field",
-          "args": {
-              "table": {
-                  "name": "author",
-                  "schema": "public"
-              },
-              "name": "full_name",
-              "definition": {
-                  "function": {
-                      "name": "author_full_name",
-                      "schema": "public"
-                  },
-                  "table_argument": "author_row"
-              }
+        "type": "add_computed_field",
+        "args": {
+          "table": {
+            "name": "author",
+            "schema": "public"
+          },
+          "name": "full_name",
+          "definition": {
+            "function": {
+              "name": "author_full_name",
+              "schema": "public"
+            },
+            "table_argument": "author_row"
           }
+        }
       }
 
 Computed fields permissions

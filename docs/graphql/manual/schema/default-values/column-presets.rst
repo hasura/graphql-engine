@@ -89,18 +89,18 @@ Step 1: Configure a column preset
       X-Hasura-Role: admin
 
       {
-          "type" : "create_insert_permission",
-          "args" : {
-              "table" : "article",
-              "role" : "user",
-              "permission" : {
-                  "check" : {},
-                  "set":{
-                      "id":"X-Hasura-User-Id"
-                  },
-                  "columns":["title","content", "rating"]
-              }
+        "type" : "create_insert_permission",
+        "args" : {
+          "table" : "article",
+          "role" : "user",
+          "permission" : {
+            "check" : {},
+            "set":{
+              "id":"X-Hasura-User-Id"
+            },
+            "columns":["title","content", "rating"]
           }
+        }
       }
 
 .. note::

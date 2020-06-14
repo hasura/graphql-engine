@@ -83,7 +83,7 @@ author.
       X-Hasura-Role: admin
 
       {
-          "query": "query { article { id title author { name }}}"
+        "query": "query { article { id title author { name }}}"
       }
 
 Fetch nested objects using an array relationship
@@ -174,7 +174,7 @@ articles.
       X-Hasura-Role: admin
 
       {
-          "query": "query { author { id name articles { id title }}}"
+        "query": "query { author { id name articles { id title }}}"
       }
 
 

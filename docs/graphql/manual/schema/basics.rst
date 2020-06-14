@@ -99,10 +99,10 @@ Create tables
       X-Hasura-Role: admin
 
       {
-          "type": "run_sql",
-          "args": {
-              "sql": "CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));"
-          }
+        "type": "run_sql",
+        "args": {
+          "sql": "CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));"
+        }
       }
 
     To track the table and expose it over the GraphQL API, make the following API call to the :ref:`track_table API <track_table>`:
@@ -114,11 +114,11 @@ Create tables
       X-Hasura-Role: admin
 
       {
-          "type": "track_table",
-          "args": {
-              "schema": "public",
-              "name": "article"
-          }
+        "type": "track_table",
+        "args": {
+          "schema": "public",
+          "name": "article"
+        }
       }
 
 

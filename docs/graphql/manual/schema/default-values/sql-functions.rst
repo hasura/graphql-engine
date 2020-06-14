@@ -72,10 +72,10 @@ Modify the table ``sql_function_table`` and make its ``output`` column nullable.
       X-Hasura-Role: admin
 
       {
-          "type": "run_sql",
-          "args": {
-              "sql": "ALTER TABLE sql_function_table ALTER COLUMN output DROP NOT NULL;"
-          }
+        "type": "run_sql",
+        "args": {
+          "sql": "ALTER TABLE sql_function_table ALTER COLUMN output DROP NOT NULL;"
+        }
       }
 
 Step 2: Create a trigger
@@ -127,10 +127,10 @@ the ``output`` field whenever an insert or update is made to the ``sql_function_
       X-Hasura-Role: admin
 
       {
-          "type": "run_sql",
-          "args": {
-              "sql": "<above SQL>"
-          }
+        "type": "run_sql",
+        "args": {
+          "sql": "<above SQL>"
+        }
       }
 
 Step 3: Run an insert mutation

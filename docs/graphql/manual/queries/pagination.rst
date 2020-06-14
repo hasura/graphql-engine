@@ -82,7 +82,7 @@ Limit results
       X-Hasura-Role: admin
 
       {
-          "query": "query { author(limit: 5) { id name }}"
+        "query": "query { author(limit: 5) { id name }}"
       }
 
 Limit results from an offset
@@ -143,7 +143,7 @@ Limit results from an offset
       X-Hasura-Role: admin
 
       {
-          "query": "query { author(limit: 5, offset: 5) { id name }}"
+        "query": "query { author(limit: 5, offset: 5) { id name }}"
       }
 
 .. _nested_paginate:
@@ -246,7 +246,7 @@ Limit results in a nested object
       X-Hasura-Role: admin
 
       {
-          "query": "query { author { id name articles (limit: 2 offset: 0) { id title }}}"
+        "query": "query { author { id name articles (limit: 2 offset: 0) { id title }}}"
       }
 
 Keyset cursor based pagination
@@ -316,7 +316,7 @@ position of the row in the dataset as done by ``offset``, and that duplicate rec
       X-Hasura-Role: admin
 
       {
-          "query": "query { author(limit: 5, where: { id: {_gt: 5} }) { id name }}"
+        "query": "query { author(limit: 5, where: { id: {_gt: 5} }) { id name }}"
       }
 
 Here we are fetching authors where the value of ``id`` is greater than 5. This will always skip the previously fetched
@@ -403,7 +403,7 @@ articles to return.
       X-Hasura-Role: admin
 
       {
-          "query": "query articles ($where: articles_bool_exp!) { articles_aggregate(where: $where) { aggregate { totalCount: count }} articles (where: $where limit: 4) { id title }}"
+        "query": "query articles ($where: articles_bool_exp!) { articles_aggregate(where: $where) { aggregate { totalCount: count }} articles (where: $where limit: 4) { id title }}"
       }
 
 .. admonition:: Caveat

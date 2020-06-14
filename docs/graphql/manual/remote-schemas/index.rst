@@ -125,12 +125,6 @@ To merge your remote schema with the GraphQL engine's auto-generated schema:
               "name": "my-remote-schema",
               "definition": {
                   "url": "https://business-logic.domain/graphql",
-                  "headers": [
-                      {
-                          "name": "X-Server-Request-From",
-                          "value": "Hasura"
-                      }
-                  ],
                   "forward_client_headers": true,
                   "timeout_seconds": 60
               }

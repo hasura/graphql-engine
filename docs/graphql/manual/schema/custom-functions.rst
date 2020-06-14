@@ -84,10 +84,10 @@ Creating & exposing SQL functions
       X-Hasura-Role: admin
 
       {
-          "type": "run_sql",
-          "args": {
-              "sql": "<create function statement>"
-          }
+        "type": "run_sql",
+        "args": {
+          "sql": "<create function statement>"
+        }
       }
 
     To track the function and expose it over the GraphQL API, make the following API call to the :ref:`track_function API <track_function>`:
@@ -99,11 +99,11 @@ Creating & exposing SQL functions
       X-Hasura-Role: admin
 
       {
-          "type": "track_function",
-          "args": {
-              "schema": "public",
-              "name": "<name of function>"
-          }
+        "type": "track_function",
+        "args": {
+          "schema": "public",
+          "name": "<name of function>"
+        }
       }
 
 .. note::

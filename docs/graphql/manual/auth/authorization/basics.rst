@@ -97,7 +97,7 @@ query is accepted with **admin** permissions.
       X-Hasura-Role: admin
 
       {
-          "query": "{ author { id name }}"
+        "query": "{ author { id name }}"
       }
 
 Define access control rules
@@ -198,7 +198,7 @@ the ``Request Headers`` section of ``GraphiQL`` as highlighted below:
       X-Hasura-User-Id: 4
 
       {
-          "query": "{ author { id name }}"
+        "query": "{ author { id name }}"
       }
 
 As you can see, the results are now filtered based on the access control rule for the role ``user``

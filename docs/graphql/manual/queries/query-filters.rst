@@ -114,7 +114,7 @@ Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
       X-Hasura-Role: admin
 
       {
-          "query": "query { author( where: {id: {_eq: 3}}) { id name}}"
+        "query": "query { author( where: {id: {_eq: 3}}) { id name}}"
       }
 
 
@@ -159,7 +159,7 @@ Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
       X-Hasura-Role: admin
 
       {
-          "query": "query { author( where: {name: {_eq: \"Sidney\"}}) { id name }}"
+        "query": "query { author( where: {name: {_eq: \"Sidney\"}}) { id name }}"
       }
 
 
@@ -171,7 +171,6 @@ Fetch a list of articles that have not been published (``is_published`` is a boo
 .. tabs::
 
   .. tab:: Via console
-
 
     .. graphiql::
       :view_only:
@@ -222,7 +221,7 @@ Fetch a list of articles that have not been published (``is_published`` is a boo
       X-Hasura-Role: admin
 
       {
-          "query": "query { article( where: {is_published: {_eq: false}}) { id title is_published }}"
+        "query": "query { article( where: {is_published: {_eq: false}}) { id title is_published }}"
       }
 
 
@@ -269,7 +268,7 @@ Fetch a list of articles that were published on a certain date (``published_on``
       X-Hasura-Role: admin
 
       {
-          "query": "query { article(where: {published_on: {_eq: \"2017-05-26\"}}) { id title published_on }}"
+        "query": "query { article(where: {published_on: {_eq: \"2017-05-26\"}}) { id title published_on }}"
       }
         
 
@@ -338,7 +337,7 @@ Fetch a list of articles rated 4 or more (``rating`` is an integer field):
       X-Hasura-Role: admin
 
       {
-          "query": "query { article(where: {rating: {_gte: 4}}) { id title rating }}"
+        "query": "query { article(where: {rating: {_gte: 4}}) { id title rating }}"
       }
 
 **Example: String or Text**
@@ -387,7 +386,7 @@ dictionary sort)*:
       X-Hasura-Role: admin
 
       {
-          "query": "query { author(where: {name: {_gt: \"M\"}}) { id name }}"
+        "query": "query { author(where: {name: {_gt: \"M\"}}) { id name }}"
       }
 
 **Example: Date (works with Time, Timezone, etc.)**
@@ -448,7 +447,7 @@ Fetch a list of articles that were published on or after date "01/01/2018":
       X-Hasura-Role: admin
 
       {
-          "query": "query { article(where: {published_on: {_gte: \"2018-01-01\"}}) { id title published_on }}"
+        "query": "query { article(where: {published_on: {_gte: \"2018-01-01\"}}) { id title published_on }}"
       }
 
 List based search operators (_in, _nin)
@@ -520,7 +519,7 @@ Fetch a list of articles rated 1, 3 or 5:
       X-Hasura-Role: admin
 
       {
-          "query": "query { article(where: {rating: {_in: [1,3,5]}}) { id title rating }}"
+        "query": "query { article(where: {rating: {_in: [1,3,5]}}) { id title rating }}"
       }
 
 **Example: String or Text**
@@ -576,7 +575,7 @@ Fetch a list of those authors whose names are NOT part of a list:
       X-Hasura-Role: admin
 
       {
-          "query": "query { author(where: {name: {_nin: [\"Justin\",\"Sidney\",\"April\"]}}) { id name }}"
+        "query": "query { author(where: {name: {_nin: [\"Justin\",\"Sidney\",\"April\"]}}) { id name }}"
       }
 
 Text search or pattern matching operators (_like, _similar, etc.)
@@ -634,7 +633,7 @@ Fetch a list of articles whose titles contain the word “amet”:
       X-Hasura-Role: admin
 
       {
-          "query": "query { article(where: {title: {_like: \"%amet%\"}}) { id title }}"
+        "query": "query { article(where: {title: {_like: \"%amet%\"}}) { id title }}"
       }
 
 .. note::
@@ -695,7 +694,7 @@ Fetch a list of authors whose names begin with A or C:
       X-Hasura-Role: admin
 
       {
-          "query": "query { author(where: {name: {_similar: \"(A|C)%\"}}) {id name }}"
+        "query": "query { author(where: {name: {_similar: \"(A|C)%\"}}) {id name }}"
       }
 
 .. note::
@@ -767,8 +766,12 @@ Fetch all authors living within a particular pincode (present in ``address`` JSO
       X-Hasura-Role: admin
 
       {
-          "query": "query get_authors_in_pincode ($jsonFilter: jsonb){ author(where: { address: {_contains: $jsonFilter }}) { id name address }}",
-          "variables": { "jsonFilter": { "pincode": 560095 }}
+        "query": "query get_authors_in_pincode ($jsonFilter: jsonb){ author(where: { address: {_contains: $jsonFilter }}) { id name address }}",
+        "variables": {
+          "jsonFilter": {
+            "pincode": 560095
+          }
+        }
       }
 
 **Example: _has_key**
@@ -822,7 +825,7 @@ Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
       X-Hasura-Role: admin
 
       {
-          "query": "query get_authors_if_phone { author(where: { address: {_has_key: \"phone\" }}) { id name address }}"
+        "query": "query get_authors_if_phone { author(where: { address: {_has_key: \"phone\" }}) { id name address }}"
       }
 
 
@@ -903,36 +906,36 @@ Fetch a list of geometry values which are within the given ``polygon`` value:
       X-Hasura-Role: admin
 
       {
-          "query": "query geom_table($polygon: geometry){ geom_table(where: {geom_col: {_st_within: $polygon}}){ id geom_col }}",
-          "variables": {
-              "polygon": {
-                  "type": "Polygon",
-                  "coordinates": [
-                      [
-                          [
-                              0,
-                              0
-                          ],
-                          [
-                              0,
-                              2
-                          ],
-                          [
-                              2,
-                              2
-                          ],
-                          [
-                              2,
-                              0
-                          ],
-                          [
-                              0,
-                              0
-                          ]
-                      ]
-                  ]
-              }
+        "query": "query geom_table($polygon: geometry){ geom_table(where: {geom_col: {_st_within: $polygon}}){ id geom_col }}",
+        "variables": {
+          "polygon": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  2
+                ],
+                [
+                  2,
+                  2
+                ],
+                [
+                  2,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
           }
+        }
       }
 
 **Example: _st_d_within**
@@ -999,16 +1002,16 @@ Fetch a list of ``geometry`` values which are 3 units from given ``point`` value
       X-Hasura-Role: admin
 
       {
-          "query": "query geom_table($point: geometry){ geom_table(where: {geom_col: {_st_d_within: {distance: 3, from: $point}}}){ id geom_col }}",
-          "variables": {
-              "point": {
-                  "type": "Point",
-                  "coordinates": [
-                      0,
-                      0
-                  ]
-              }
+        "query": "query geom_table($point: geometry){ geom_table(where: {geom_col: {_st_d_within: {distance: 3, from: $point}}}){ id geom_col }}",
+        "variables": {
+          "point": {
+            "type": "Point",
+            "coordinates": [
+              0,
+              0
+            ]
           }
+        }
       }
 
 Filter or check for null values (_is_null)
@@ -1076,7 +1079,7 @@ Fetch a list of articles that have a value in the ``published_on`` field:
       X-Hasura-Role: admin
 
       {
-          "query": "query { article(where: {published_on: {_is_null: false}}) { id title published_on }}"
+        "query": "query { article(where: {published_on: {_is_null: false}}) { id title published_on }}"
       }
 
 Intersect operators on RASTER columns (_st_intersects_rast, etc)
@@ -1141,10 +1144,10 @@ Executes the following SQL function:
       X-Hasura-Role: admin
 
       {
-          "query": "query getIntersectingValues ($rast: raster){ dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){ rid rast }}",
-          "variables": {
-              "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
-          }
+        "query": "query getIntersectingValues ($rast: raster){ dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){ rid rast }}",
+        "variables": {
+          "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
+        }
       }
 
 **Example: _st_intersects_geom_nband**
@@ -1212,22 +1215,22 @@ Executes the following SQL function:
       X-Hasura-Role: admin
 
       {
-          "query": "query getIntersectingValues ($point: geometry!){ dummy_rast(where: {rast: {_st_intersects_geom_nband: {geommin: $point}}}){ rid rast }}",
-          "variables": {
-              "point": {
-                  "type": "Point",
-                  "coordinates": [
-                      1,
-                      2
-                  ],
-                  "crs": {
-                      "type": "name",
-                      "properties": {
-                          "name": "urn:ogc:def:crs:EPSG::4326"
-                      }
-                  }
+        "query": "query getIntersectingValues ($point: geometry!){ dummy_rast(where: {rast: {_st_intersects_geom_nband: {geommin: $point}}}){ rid rast }}",
+        "variables": {
+          "point": {
+            "type": "Point",
+            "coordinates": [
+              1,
+              2
+            ],
+            "crs": {
+              "type": "name",
+              "properties": {
+                "name": "urn:ogc:def:crs:EPSG::4326"
               }
+            }
           }
+        }
       }
 
 **Example: _st_intersects_nband_geom**
@@ -1295,22 +1298,22 @@ Executes the following SQL function:
       X-Hasura-Role: admin
 
       {
-          "query": "query getIntersectingValues ($point: geometry!){ dummy_rast(where: {rast: {_st_intersects_nband_geom: {nband: 5 geommin: $point}}}){ rid rast }}",
-          "variables": {
-              "point": {
-                  "type": "Point",
-                  "coordinates": [
-                      1,
-                      2
-                  ],
-                  "crs": {
-                      "type": "name",
-                      "properties": {
-                          "name": "urn:ogc:def:crs:EPSG::4326"
-                      }
-                  }
+        "query": "query getIntersectingValues ($point: geometry!){ dummy_rast(where: {rast: {_st_intersects_nband_geom: {nband: 5 geommin: $point}}}){ rid rast }}",
+        "variables": {
+          "point": {
+            "type": "Point",
+            "coordinates": [
+              1,
+              2
+            ],
+            "crs": {
+              "type": "name",
+              "properties": {
+                "name": "urn:ogc:def:crs:EPSG::4326"
               }
+            }
           }
+        }
       }
 
 Filter based on failure of some criteria (_not)
@@ -1388,7 +1391,7 @@ Fetch all authors who don't have any published articles:
       X-Hasura-Role: admin
 
       {
-          "query": "{ author(where: { _not: { articles: { is_published: {_eq: true} }}}) { id name articles { title is_published }}}"
+        "query": "{ author(where: { _not: { articles: { is_published: {_eq: true} }}}) { id name articles { title is_published }}}"
       }
 
 Using multiple filters in the same query (_and, _or)
@@ -1465,7 +1468,7 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
       X-Hasura-Role: admin
 
       {
-          "query": "query { article (where: { _and: [{ published_on: {_gte: \"2017-01-01\"}}, { published_on: {_lte: \"2017-12-31\"}}]}) { id title published_on }}"
+        "query": "query { article (where: { _and: [{ published_on: {_gte: \"2017-01-01\"}}, { published_on: {_lte: \"2017-12-31\"}}]}) { id title published_on }}"
       }
 
 .. note::
@@ -1542,7 +1545,7 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
       X-Hasura-Role: admin
 
       {
-          "query": "query { article (where: { _or: [ {rating: {_gte: 4}}, {published_on: {_gte: \"2018-01-01\"}}]}) { id title rating published_on }}"
+        "query": "query { article (where: { _or: [ {rating: {_gte: 4}}, {published_on: {_gte: \"2018-01-01\"}}]}) { id title rating published_on }}"
       }
 
 .. note::
@@ -1622,7 +1625,7 @@ Fetch all authors with only their 5 rated articles:
       X-Hasura-Role: admin
 
       {
-          "query": "{ author { id name articles(where: {rating: {_eq: 5}}) { title rating }}}"
+        "query": "{ author { id name articles(where: {rating: {_eq: 5}}) { title rating }}}"
       }
 
 
@@ -1735,7 +1738,7 @@ Fetch all articles whose author's name starts with "A":
       X-Hasura-Role: admin
 
       {
-          "query": "{ article (where: { author: { name: { _similar: \"A%\"}}}) { id title author { name }}}"
+        "query": "{ article (where: { author: { name: { _similar: \"A%\"}}}) { id title author { name }}}"
       }
 
 
@@ -1831,7 +1834,7 @@ Fetch all authors which have written at least one article which is rated 1:
       X-Hasura-Role: admin
 
       {
-          "query": "{ author(where: { articles: {rating: {_eq: 1}}}) { id name articles { title rating }}}"
+        "query": "{ author(where: { articles: {rating: {_eq: 1}}}) { id name articles { title rating }}}"
       }
 
 Fetch if **all** of the nested objects defined via an array relationship satisfy a condition
@@ -1948,7 +1951,7 @@ Fetch all authors which have all of their articles published i.e. have ``{is_pub
       X-Hasura-Role: admin
 
       {
-          "query": "{ author (where: { _not: { articles: {is_published: {_neq: true}}}}) { id name articles { title is_published }}}"
+        "query": "{ author (where: { _not: { articles: {is_published: {_neq: true}}}}) { id name articles { title is_published }}}"
       }
 
 
@@ -2034,7 +2037,7 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
       X-Hasura-Role: admin
 
       {
-          "query": "{ author (where: { _not: { articles: {is_published: {_eq: true}}}}) { id name articles { title is_published }}}"
+        "query": "{ author (where: { _not: { articles: {is_published: {_eq: true}}}}) { id name articles { title is_published }}}"
       }
 
 Fetch if nested object(s) exist/do not exist
@@ -2106,7 +2109,7 @@ Fetch all authors which have at least one article written by them:
       X-Hasura-Role: admin
 
       {
-          "query": "{ author (where: { articles: {}}) { id name articles_aggregate { aggregate { count }}}}"
+        "query": "{ author (where: { articles: {}}) { id name articles_aggregate { aggregate { count }}}}"
       }
 
 **Example where nested object(s) do not exist:**
@@ -2173,7 +2176,7 @@ Fetch all authors which have not written any articles:
       X-Hasura-Role: admin
 
       {
-          "query": "{ author (where: { _not: { articles: {}}}) { id name articles_aggregate { aggregate { count }}}}"
+        "query": "{ author (where: { _not: { articles: {}}}) { id name articles_aggregate { aggregate { count }}}}"
       }
 
 Cast a field to a different type before filtering (_cast)
@@ -2241,17 +2244,17 @@ Filtering using ``_st_d_within`` over large distances can be inaccurate for loca
       X-Hasura-Role: admin
 
       {
-          "query": "query cities_near($point: geography!, $distance: Float!) { cities(where: {location: { _cast: {geography: { _st_d_within: {from: $point, distance: $distance}}}}}) { name }}",
-          "variables": {
-              "point": {
-                  "type": "Point",
-                  "coordinates": [
-                      1,
-                      50
-                  ]
-              },
-              "distance": 1000000
-          }
+        "query": "query cities_near($point: geography!, $distance: Float!) { cities(where: {location: { _cast: {geography: { _st_d_within: {from: $point, distance: $distance}}}}}) { name }}",
+        "variables": {
+          "point": {
+            "type": "Point",
+            "coordinates": [
+              1,
+              50
+            ]
+          },
+          "distance": 1000000
+        }
       }
 
 **Example: cast ``geography`` to ``geometry``**
@@ -2319,41 +2322,41 @@ Columns of type ``geography`` are more accurate, but they don’t support as man
       {
         "query": "query cities_inside($polygon: geometry) { cities(where: {location: { _cast: {geometry: { _st_within: $polygon }}}}) { name }}",
         "variables": {
-            "polygon": {
-                "type": "Polygon",
-                "crs": {
-                    "type": "name",
-                    "properties": {
-                        "name": "EPSG:4326"
-                    }
-                },
-                "coordinates": [
-                    [
-                        [
-                            -75,
-                            40
-                        ],
-                        [
-                            -74,
-                            40
-                        ],
-                        [
-                            -74,
-                            41
-                        ],
-                        [
-                            -75,
-                            41
-                        ],
-                        [
-                            -75,
-                            40
-                        ]
-                    ]
+          "polygon": {
+            "type": "Polygon",
+            "crs": {
+                "type": "name",
+                "properties": {
+                    "name": "EPSG:4326"
+                }
+            },
+            "coordinates": [
+              [
+                [
+                  -75,
+                  40
+                ],
+                [
+                  -74,
+                  40
+                ],
+                [
+                  -74,
+                  41
+                ],
+                [
+                  -75,
+                  41
+                ],
+                [
+                  -75,
+                  40
                 ]
-            }
+              ]
+            ]
+          }
         }
-    }
+      }
 
 .. note::
 

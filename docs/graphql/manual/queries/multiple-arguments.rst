@@ -133,5 +133,5 @@ of publication:
       X-Hasura-Role: admin
 
       {
-          "query": "query { author { id name articles(where: { is_published: { _eq: true }}, order_by: { published_on: desc }, limit: 2) { id title is_published published_on }}}"
+        "query": "query { author { id name articles(where: { is_published: { _eq: true }}, order_by: { published_on: desc }, limit: 2) { id title is_published published_on }}}"
       }

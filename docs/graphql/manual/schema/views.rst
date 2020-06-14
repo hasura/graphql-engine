@@ -76,10 +76,10 @@ Creating & exposing views
       X-Hasura-Role: admin
 
       {
-          "type": "run_sql",
-          "args": {
-              "sql": "<create view statement>"
-          }
+        "type": "run_sql",
+        "args": {
+          "sql": "<create view statement>"
+        }
       }
 
     To track the view and expose it over the GraphQL API, make the following API call to the :ref:`track_table API <track_table>`:
@@ -91,11 +91,11 @@ Creating & exposing views
       X-Hasura-Role: admin
 
       {
-          "type": "track_table",
-          "args": {
-              "schema": "public",
-              "name": "<name of view>"
-          }
+        "type": "track_table",
+        "args": {
+          "schema": "public",
+          "name": "<name of view>"
+        }
       }
 
 Use cases

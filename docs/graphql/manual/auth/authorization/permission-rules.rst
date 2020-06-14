@@ -409,7 +409,7 @@ that uses the aforementioned object relationship:
                      "filter": {
                         "agent": {
                            "agent_id": {
-                                 "_eq": "X-Hasura-User-Id"
+                              "_eq": "X-Hasura-User-Id"
                            }
                         }
                      }

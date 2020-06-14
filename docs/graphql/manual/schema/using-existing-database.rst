@@ -62,11 +62,11 @@ To track a table or a view:
       X-Hasura-Role: admin
 
       {
-            "type": "track_table",
-            "args": {
-               "schema": "public",
-               "name": "<table name>"
-            }
+         "type": "track_table",
+         "args": {
+            "schema": "public",
+            "name": "<table name>"
+         }
       }
 
 To track all tables and views present in the database:
@@ -110,11 +110,11 @@ To track all tables and views present in the database:
       X-Hasura-Role: admin
 
       {
-            "type": "track_table",
-            "args": {
-               "schema": "public",
-               "name": "article"
-            }
+         "type": "track_table",
+         "args": {
+            "schema": "public",
+            "name": "article"
+         }
       }
 
    To automate this, add the tables in a loop through a script.
@@ -198,7 +198,7 @@ To track a foreign-key between two tables in the database:
                "table": "<table name>",
                "name": "<relationship name>",
                "using": {
-                     "foreign_key_constraint_on": "<reference key>"
+                  "foreign_key_constraint_on": "<reference key>"
                }
             }
          }
@@ -322,10 +322,10 @@ To track all the foreign-keys of all tables in the database:
                "table": "<table name>",
                "name": "<relationship name>",
                "using": {
-                     "foreign_key_constraint_on" : {
-                        "table" : "<reference table name>",
-                        "column" : "<reference key>"
-                     }
+                  "foreign_key_constraint_on" : {
+                     "table" : "<reference table name>",
+                     "column" : "<reference key>"
+                  }
                }
             }
          }

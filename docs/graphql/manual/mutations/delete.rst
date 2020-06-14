@@ -98,7 +98,7 @@ row object or ``null`` if the row does not exist.
       X-Hasura-Role: admin
 
       {
-          "query": "mutation delete_an_object { delete_article_by_pk (id: 1) { id title user_id }}"
+        "query": "mutation delete_an_object { delete_article_by_pk (id: 1) { id title user_id }}"
       }
 
 **Example:** Delete a non-existent article:
@@ -136,7 +136,7 @@ row object or ``null`` if the row does not exist.
       X-Hasura-Role: admin
 
       {
-          "query": "mutation delete_an_object { delete_article_by_pk (id: 100) { id title user_id }}"
+        "query": "mutation delete_an_object { delete_article_by_pk (id: 100) { id title user_id }}"
       }
 
 .. admonition:: Supported from
@@ -182,7 +182,7 @@ Delete objects based on an their fields
       X-Hasura-Role: admin
 
       {
-          "query": "mutation delete_low_rated_articles { delete_article(where: {rating: {_lt: 3}}) { affected_rows }}"
+        "query": "mutation delete_low_rated_articles { delete_article(where: {rating: {_lt: 3}}) { affected_rows }}"
       }
 
 
@@ -223,7 +223,7 @@ Delete objects based on nested objects' fields
       X-Hasura-Role: admin
 
       {
-          "query": "mutation delete_authors_articles { delete_article(where: {author: {name: {_eq: \"Corny\"}}}) { affected_rows }}"
+        "query": "mutation delete_authors_articles { delete_article(where: {author: {name: {_eq: \"Corny\"}}}) { affected_rows }}"
       }
 
 Delete all objects
@@ -267,5 +267,5 @@ evaluates to ``true`` for all objects.
       X-Hasura-Role: admin
 
       {
-          "query": "mutation delete_all_articles { delete_article (where: {}) { affected_rows }}"
+        "query": "mutation delete_all_articles { delete_article (where: {}) { affected_rows }}"
       }

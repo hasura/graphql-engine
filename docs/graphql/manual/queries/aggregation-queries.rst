@@ -141,7 +141,7 @@ Fetch aggregated data of an object
       X-Hasura-Role: admin
 
       {
-          "query": "query { article_aggregate { aggregate { count sum { rating } avg { rating } max { rating }} nodes { id title rating }}}"
+        "query": "query { article_aggregate { aggregate { count sum { rating } avg { rating } max { rating }} nodes { id title rating }}}"
       }
 
 .. _nested_aggregate:
@@ -227,5 +227,5 @@ and articles.
       X-Hasura-Role: admin
 
       {
-          "query": "query { author (where: {id: {_eq: 1}}) { id name articles_aggregate { aggregate { count avg { rating } max { rating }} nodes { id title rating }}}}"
+        "query": "query { author (where: {id: {_eq: 1}}) { id name articles_aggregate { aggregate { count avg { rating } max { rating }} nodes { id title rating }}}}"
       }

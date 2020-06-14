@@ -169,10 +169,10 @@ Suppose we have the following table:
       X-Hasura-Role: admin
 
       {
-          "type": "run_sql",
-          "args": {
-              "sql": "<SQL statement>"
-          }
+        "type": "run_sql",
+        "args": {
+          "sql": "<SQL statement>"
+        }
       }
 
 .. code-block:: plpgsql
@@ -297,18 +297,18 @@ Now, we can create a role ``user`` and add the following rule:
       X-Hasura-Role: admin
 
       {
-          "type": "create_insert_permission",
-          "args": {
-              "table": "article",
-              "role": "user",
-              "permission": {
-                  "check": {
-                      "title": {
-                          "_ne": ""
-                      }
-                  }
+        "type": "create_insert_permission",
+        "args": {
+          "table": "article",
+          "role": "user",
+          "permission": {
+            "check": {
+              "title": {
+                "_ne": ""
               }
+            }
           }
+        }
       }
 
 If we try to insert an article with ``title = ""``, we will get a ``permission-error``:
@@ -399,18 +399,18 @@ Now, we can create a role ``user`` and add the following rule:
       X-Hasura-Role: admin
 
       {
-          "type": "create_insert_permission",
-          "args": {
-              "table": "article",
-              "role": "user",
-              "permission": {
-                  "check": {
-                      "author": {
-                          "is_active": true
-                      }
-                  }
+        "type": "create_insert_permission",
+        "args": {
+          "table": "article",
+          "role": "user",
+          "permission": {
+            "check": {
+              "author": {
+                "is_active": true
               }
+            }
           }
+        }
       }
 
 If we try to insert an article for an author for whom ``is_active = false``, we

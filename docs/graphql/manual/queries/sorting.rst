@@ -97,7 +97,7 @@ Sorting objects
       X-Hasura-Role: admin
 
       {
-          "query": "query { author (order_by: {name: asc}) { id name }}"
+        "query": "query { author (order_by: {name: asc}) { id name }}"
       }
 
 .. _nested_sort:
@@ -196,7 +196,7 @@ their rating:
       X-Hasura-Role: admin
 
       {
-          "query": "query { author (order_by: {name: asc}) { id name articles(order_by: {rating: desc}) { id title rating }}}"
+        "query": "query { author (order_by: {name: asc}) { id name articles(order_by: {rating: desc}) { id title rating }}}"
       }
 
 Sorting based on nested object's fields
@@ -274,7 +274,7 @@ For object relationships only columns can be used for sorting.
       X-Hasura-Role: admin
 
       {
-          "query": "query { article (order_by: {author: {id: desc}}) { id rating published_on author { id name }}}"
+        "query": "query { article (order_by: {author: {id: desc}}) { id rating published_on author { id name }}}"
       }
 
 For array relationships
@@ -350,7 +350,7 @@ For array relationships only aggregates can be used for sorting.
       X-Hasura-Role: admin
 
       {
-          "query": "query { author (order_by: { articles_aggregate: {count: desc}}) { id name articles_aggregate { aggregate{ count }}}}"
+        "query": "query { author (order_by: { articles_aggregate: {count: desc}}) { id name articles_aggregate { aggregate{ count }}}}"
       }
 
 **Example:** Fetch a list of authors sorted in increasing order of their highest article rating:
@@ -463,7 +463,7 @@ For array relationships only aggregates can be used for sorting.
       X-Hasura-Role: admin
 
       {
-          "query": "query { author(order_by: { articles_aggregate: { max: { rating: asc_nulls_last }}}) { id name articles_aggregate { aggregate { max { rating }}}}}"
+        "query": "query { author(order_by: { articles_aggregate: { max: { rating: asc_nulls_last }}}) { id name articles_aggregate { aggregate { max { rating }}}}}"
       }
 
 Sorting by multiple fields
@@ -528,5 +528,5 @@ date (ascending with nulls first):
       X-Hasura-Role: admin
 
       {
-          "query": "query { article (order_by: [{ rating: desc }, { published_on: asc_nulls_first }]) { id rating published_on }}"
+        "query": "query { article (order_by: [{ rating: desc }, { published_on: asc_nulls_first }]) { id rating published_on }}"
       }

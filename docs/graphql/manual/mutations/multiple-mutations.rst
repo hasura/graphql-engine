@@ -78,7 +78,7 @@ Run multiple top level mutations in the same request
       X-Hasura-Role: admin
 
       {
-          "query": "mutation reset_author { delete_article (where: {author_id: {_eq: 6}}) { affected_rows } update_author (where: {id: {_eq: 6}} _set: {name: \"Cory\"}) { returning { id name articles { id title }}}}"
+        "query": "mutation reset_author { delete_article (where: {author_id: {_eq: 6}}) { affected_rows } update_author (where: {id: {_eq: 6}} _set: {name: \"Cory\"}) { returning { id name articles { id title }}}}"
       }
 
 Insert an object and a nested object in the same mutation
@@ -150,5 +150,5 @@ in the response:
       X-Hasura-Role: admin
 
       {
-          "query": "mutation insert_article { insert_article(objects: [{ title: \"Article 1\", content: \"Sample article content\", author: { data: { name: \"Cory\" }}}]) { affected_rows returning { id title author { id name }}}}"
+        "query": "mutation insert_article { insert_article(objects: [{ title: \"Article 1\", content: \"Sample article content\", author: { data: { name: \"Cory\" }}}]) { affected_rows returning { id title author { id name }}}}"
       }

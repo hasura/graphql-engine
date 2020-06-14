@@ -101,5 +101,5 @@ Fetch results with distinct values of a particular field
       X-Hasura-Role: admin
 
       {
-          "query": "query { employee (distinct_on: [department] order_by: [{ department: asc }, { salary: desc }]) { id name department salary }}"
+        "query": "query { employee (distinct_on: [department] order_by: [{ department: asc }, { salary: desc }]) { id name department salary }}"
       }

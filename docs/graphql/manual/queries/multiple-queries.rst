@@ -76,5 +76,5 @@ Run multiple top level queries in the same request
       X-Hasura-Role: admin
 
       {
-          "query": "query { author(limit: 2) { id name } article(limit: 2) { id title }}"
+        "query": "query { author(limit: 2) { id name } article(limit: 2) { id title }}"
       }

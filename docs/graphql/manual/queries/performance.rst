@@ -234,10 +234,10 @@ Whenever there is a sequential scan, it can be optimized by adding an index.
       X-Hasura-Role: admin
 
       {
-            "type": "run_sql",
-            "args": {
-               "sql": "<create index statement>"
-            }
+         "type": "run_sql",
+         "args": {
+            "sql": "<create index statement>"
+         }
       }
 
 The following statement sets an index on ``name`` in the ``authors`` table.
