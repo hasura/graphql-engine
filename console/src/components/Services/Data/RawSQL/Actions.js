@@ -1,4 +1,7 @@
-import { RAW_SQL_STATEMENT_TIMEOUT, setLocalStorageItem } from '../../../Common/utils/localStorageUtils';
+import {
+  LS_RAW_SQL_STATEMENT_TIMEOUT,
+  setLocalStorageItem,
+} from '../../../Common/utils/localStorageUtils';
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import {
@@ -164,10 +167,7 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
 
 export const setRawSqlTimeout = timeoutInSeconds => {
   return dispatch => {
-    setLocalStorageItem(
-      RAW_SQL_STATEMENT_TIMEOUT,
-      timeoutInSeconds
-    );
+    setLocalStorageItem(LS_RAW_SQL_STATEMENT_TIMEOUT, timeoutInSeconds);
     dispatch({
       type: SET_STATEMENT_TIMEOUT,
       data: timeoutInSeconds,
