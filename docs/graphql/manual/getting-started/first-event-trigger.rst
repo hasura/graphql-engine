@@ -78,10 +78,10 @@ Let's add the following table:
          X-Hasura-Role: admin
 
          {
-         "type": "run_sql",
-         "args": {
-            "sql": "CREATE TABLE profile(id serial NOT NULL, name text NOT NULL);"
-         }
+            "type": "run_sql",
+            "args": {
+               "sql": "CREATE TABLE profile(id serial NOT NULL, name text NOT NULL);"
+            }
          }
 
       To track the table and expose it over the GraphQL API, use the :ref:`track_table API <track_table>`:

@@ -207,6 +207,46 @@ For your action, add a header that will act as an action secret.
      Save the changes and run ``hasura metadata apply`` to set the
      headers.
 
+  .. tab:: Via API
+
+    Headers can be set when creating :ref:`creating <create_actions>` or :ref:`updating <update_action>` an action via the metadata API.
+
+    .. code-block:: http
+      :emphasize-lines: 12-17
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "create_action",
+        "args": {
+          "name": "addNumbers",
+          "definition": {
+            "kind": "synchronous",
+            "type": "query",
+            "headers": [
+              {
+                "name": "ACTION_SECRET",
+                "value_from_env": "ACTION_SECRET_ENV"
+              }
+            ],
+            "arguments": [
+              {
+                "name": "numbers",
+                "type": "[Int]!"
+              }
+            ],
+            "output_type": "AddResult",
+            "handler": "https://hasura-actions-demo.glitch.me/addNumbers"
+          }
+        }
+      }
+
+    .. note::
+
+      Before creating an action via the :ref:`create_action metadata API <create_actions>`, all custom types need to be defined via the :ref:`set_custom_types metadata API <set_custom_types>`.
+
 
 This secret is only known by Hasura and is passed to your endpoint with every call,
 thus making sure only Hasura can successfully authenticate with the action handler.

@@ -488,11 +488,96 @@ returns an object of type ``AuthorOutput``:
 
   .. tab:: Via CLI
 
-    TODO
+    An action can be created by adding it to the ``actions.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+
+        actions:
+          - name: InsertAuthor
+            definition:
+              kind: synchronous
+              handler: http://host.docker.internal:3000
+          custom_types:
+            enums: []
+            input_objects:
+            - name: AuthorInput
+            objects:
+            - name: AddResult
+            - name: UpdatedAuthor
+            - name: AuthorOutput
+            scalars: []
+
+    Then apply the metadata by running:
+
+    .. code-block:: bash
+
+        hasura metadata apply
 
   .. tab:: Via API
 
-    TODO  
+    It is essential that the custom types used in the action are defined *beforehand* via the :ref:`set_custom_types metadata API <set_custom_types>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "set_custom_types",
+        "args": {
+          "scalars": [],
+          "enums": [],
+          "input_objects": [],
+          "objects": [
+            {
+              "name": "LoginResponse",
+              "fields": [
+                {
+                  "name": "accessToken",
+                  "type": "String!"
+                }
+              ]
+            }
+          ]
+        }
+      }
+
+    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_actions>`:
+
+    .. code-block:: http
+
+        POST /v1/query HTTP/1.1
+        Content-Type: application/json
+        X-Hasura-Role: admin
+
+        {
+          "type": "create_action",
+          "args": {
+            "name": "InsertAuthor",
+            "type": "mutation",
+            "definition": {
+                "kind": "synchronous",
+                "arguments": [
+                  {
+                    "name": "name",
+                    "type": "String!"
+                  },
+                  {
+                    "name": "rating",
+                    "type": "Int!"
+                  },
+                  {
+                    "name": "is_active",
+                    "type": "Boolean!"
+                  }
+                ],
+                "output_type": "AuthorOutput",
+                "handler": "https://action.my_app.com/create-user"
+              }
+          }
+        }
+ 
 
 The business logic of an action - in our case the author validation - happens in the :ref:`action handler <action_handlers>`
 which is an HTTP webhook which contains the code to call the external service.

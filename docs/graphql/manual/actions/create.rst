@@ -70,6 +70,9 @@ Setup
      Run ``hasura metadata export`` so that you get server's metadata into the
      ``metadata/`` directory.
 
+  .. tab:: Via API
+
+    There is no setup required for defining actions via the :ref:`actions metadata API <api_actions>`.
 
 Mutation type action
 --------------------
@@ -140,6 +143,67 @@ in the GraphQL schema.
           accessToken: String!
         }
 
+  .. tab:: Via API
+
+    It is essential that the custom types used in the action are defined *beforehand* via the :ref:`set_custom_types metadata API <set_custom_types>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "set_custom_types",
+        "args": {
+          "scalars": [],
+          "enums": [],
+          "input_objects": [],
+          "objects": [
+            {
+              "name": "LoginResponse",
+              "fields": [
+                {
+                  "name": "accessToken",
+                  "type": "String!"
+                }
+              ]
+            }
+          ]
+        }
+      }
+
+    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_actions>`:
+
+    .. code-block:: http
+
+        POST /v1/query HTTP/1.1
+        Content-Type: application/json
+        X-Hasura-Role: admin
+
+        {
+          "type": "create_action",
+          "args": {
+            "name": "Login",
+            "definition": {
+              "kind": "synchronous",
+              "type": "mutation",
+              "arguments": [
+                {
+                  "name": "username",
+                  "type": "String!"
+                },
+                {
+                  "name": "password",
+                  "type": "String!"
+                }
+              ],
+              "output_type": "LoginResponse",
+              "handler": "https://hasura-actions-demo.glitch.me/login"
+            }
+          }
+        }
+
 The above definition means:
 
 * This action will be available in your GraphQL schema as a mutation called ``login``.
@@ -189,11 +253,14 @@ Now, set the handler for the action:
 
   .. tab:: CLI
 
-     Go to ``metadata/actions.yaml``. You must see a handler like ``http://localhost:3000``
-     or ``http://host.docker.internal:3000`` under the action named ``login``.
-     This is a default value taken from ``config.yaml``.
+    Go to ``metadata/actions.yaml``. You must see a handler like ``http://localhost:3000`` or ``http://host.docker.internal:3000`` under the action named ``login``. This is a default value taken from ``config.yaml``. 
+    Update the ``handler`` to the above endpoint.
 
-     Update the ``handler`` to the above endpoint.
+  .. tab:: Via API
+
+    The action handler must be set when creating an action via the Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_actions>`.
+
+    It can be updated later by using the :ref:`update_action metadata API <update_action>`.
 
 .. admonition:: URL templating
 
@@ -213,34 +280,56 @@ Finally, to save the action:
 
   .. tab:: Console
 
-     Hit ``Create``.
+    Hit ``Create``.
 
   .. tab:: CLI
 
-     Run ``hasura metadata apply``.
+    Run ``hasura metadata apply``.
 
+  .. tab:: Via API
+
+    An action will be created when sending a request to the :ref:`create_action metadata API <create_actions>`.
 
 Step 4: Try it out
 ~~~~~~~~~~~~~~~~~~
 
-In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
+Now let's try out our new action.
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation {
-      login (username: "jondoe", password: "mysecretpassword") {
-        accessToken
-      }
-    }
-  :response:
-    {
-      "data": {
-        "login": {
-          "accessToken": "Ew8jkGCNDGAo7p35RV72e0Lk3RGJoJKB"
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Via console
+
+    In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation {
+          login (username: "jondoe", password: "mysecretpassword") {
+            accessToken
+          }
         }
+      :response:
+        {
+          "data": {
+            "login": {
+              "accessToken": "Ew8jkGCNDGAo7p35RV72e0Lk3RGJoJKB"
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "query": "mutation { Login (username: \"jondoe\", password: \"mysecretpassword\") { accessToken }}"
       }
-    }
 
 And that's it. You have extended your Hasura schema with a new mutation.
 
@@ -314,6 +403,63 @@ the GraphQL schema.
           sum: Int
         }
 
+  .. tab:: Via API
+
+    It is essential that the custom types used in the action are defined *beforehand* via the :ref:`set_custom_types metadata API <set_custom_types>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "set_custom_types",
+        "args": {
+          "scalars": [],
+          "enums": [],
+          "input_objects": [],
+          "objects": [
+            {
+              "name": "AddResult",
+              "fields": [
+                {
+                  "name": "sum",
+                  "type": "Int!"
+                }
+              ]
+            }
+          ]
+        }
+      }
+
+    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_actions>`:
+
+    .. code-block:: http
+
+        POST /v1/query HTTP/1.1
+        Content-Type: application/json
+        X-Hasura-Role: admin
+
+        {
+          "type":"create_action",
+            "args": {
+              "name":"addNumbers",
+              "definition": {
+                "kind":"synchronous",
+                "type": "query",
+                "arguments":[
+                  {
+                    "name":"numbers",
+                    "type":"[Int]!"
+                  }
+                ],
+                "output_type":"AddResult",
+                "handler":"https://hasura-actions-demo.glitch.me/addNumbers"
+            }
+          }
+        }
+
 The above definition means:
 
 * This action will be available in your GraphQL schema as a query called ``addNumbers``
@@ -372,6 +518,12 @@ Now, set the handler for the action:
 
      Update the ``handler`` to the above endpoint.
 
+  .. tab:: Via API
+
+    The action handler must be set when creating an action via the Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_actions>`.
+
+    It can be updated later by using the :ref:`update_action metadata API <update_action>`.
+
 .. admonition:: URL templating
 
   To manage handler endpoints across environments it is possible to template
@@ -396,27 +548,50 @@ Finally, to save the action:
 
      Run ``hasura metadata apply``.
 
+  .. tab:: Via API
+
+    An action will be created when sending a request to the :ref:`create_action metadata API <create_actions>`.
+
 
 Step 4: Try it out
 ~~~~~~~~~~~~~~~~~~
 
-In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
+Now let's try out our new action.
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      addNumbers(numbers: [1, 2, 3, 4]) {
-        sum
-      }
-    }
-  :response:
-    {
-      "data": {
-        "addNumbers": {
-          "sum": 10
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          addNumbers(numbers: [1, 2, 3, 4]) {
+            sum
+          }
         }
+      :response:
+        {
+          "data": {
+            "addNumbers": {
+              "sum": 10
+            }
+          }
+        }
+
+  .. tab:: Via API
+
+    .. code-block:: http
+
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "query": "query { addNumbers(numbers: [1, 2, 3, 4]) { sum }}"
       }
-    }
 
 And that's it. You have extended your Hasura schema with a new query.
