@@ -142,6 +142,7 @@ hasura seed apply --file 1234_add_some_seed_data.sql
 - server: avoid loss of precision when passing values in scientific notation (fix #4733)
 - server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
 - server: fix importing of allow list query from metadata (fix #4687)
+- server: add new `--conn-lifetime` and `HASURA_GRAPHQL_PG_CONN_LIFETIME` options for expiring connections after some amount of active time (#5087)
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
 - console: allow entering big int values in the console (close #3667) (#4775)
