@@ -5,7 +5,6 @@ import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 import Modal from '../../../Common/Modal/Modal';
 import Button from '../../../Common/Button/Button';
-import styles from '../../Actions/Common/components/Styles.scss';
 import { parseCreateSQL } from './utils';
 import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
 
@@ -17,7 +16,7 @@ import {
   SET_CASCADE_CHECKED,
   SET_MIGRATION_CHECKED,
   SET_TRACK_TABLE_CHECKED,
-  SET_STATEMENT_TIMEOUT,
+  setRawSqlTimeout,
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
@@ -455,10 +454,7 @@ const RawSQL = ({
 
       if (isNaN(timeoutInSeconds) || timeoutInSeconds <= 0) return;
 
-      dispatch({
-        type: SET_STATEMENT_TIMEOUT,
-        data: timeoutInSeconds,
-      });
+      dispatch(setRawSqlTimeout(timeoutInSeconds));
     };
     return (
       <div className={styles.add_mar_top}>

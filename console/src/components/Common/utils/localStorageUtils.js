@@ -10,3 +10,5 @@ export const setLocalStorageItem = (key, value) => {
 
 export const LS_VERSION_UPDATE_CHECK_LAST_CLOSED =
   'versionUpdateCheck: lastClosed';
+
+export const RAW_SQL_STATEMENT_TIMEOUT = 'rawSqlStatementTimeout';

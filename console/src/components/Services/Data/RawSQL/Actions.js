@@ -1,3 +1,4 @@
+import { RAW_SQL_STATEMENT_TIMEOUT, setLocalStorageItem } from '../../../Common/utils/localStorageUtils';
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import {
@@ -159,6 +160,19 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
       dispatch({ type: REQUEST_ERROR, data: 'server-connection-failed' });
     }
   );
+};
+
+export const setRawSqlTimeout = timeoutInSeconds => {
+  return dispatch => {
+    setLocalStorageItem(
+      RAW_SQL_STATEMENT_TIMEOUT,
+      timeoutInSeconds
+    );
+    dispatch({
+      type: SET_STATEMENT_TIMEOUT,
+      data: timeoutInSeconds,
+    });
+  };
 };
 
 const rawSQLReducer = (state = defaultState, action) => {

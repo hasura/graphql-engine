@@ -1,3 +1,5 @@
+import { getLocalStorageItem, RAW_SQL_STATEMENT_TIMEOUT } from '../../../Common/utils/localStorageUtils';
+
 const defaultState = {
   sql: '',
   ongoingRequest: false,
@@ -11,7 +13,7 @@ const defaultState = {
   isMigrationChecked: false,
   isTableTrackChecked: false,
   showTrackTable: false,
-  statementTimeout: null,
+  statementTimeout: Number(getLocalStorageItem(RAW_SQL_STATEMENT_TIMEOUT)) || null,
 };
 
 export default defaultState;
