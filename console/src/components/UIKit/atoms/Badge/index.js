@@ -29,7 +29,13 @@ export const Badge = props => {
     );
   }
 
-  return <StyledBadge {...props} />;
+  return (
+    type && (
+      <StyledBadge {...props} bg="#001934" color="white">
+        {type}
+      </StyledBadge>
+    )
+  );
 };
 
 Badge.defaultProps = {

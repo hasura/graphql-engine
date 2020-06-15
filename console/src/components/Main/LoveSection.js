@@ -39,6 +39,8 @@ const Update = ({ title, time, description, badge }) => (
   </Box>
 );
 
+const NoNotification = () => <p>This is a text field</p>;
+
 const Notifications = ({ data }) => (
   <Box
     className="dropdown-menu"
@@ -76,30 +78,34 @@ const Notifications = ({ data }) => (
         <img src={consoleLogo} alt="hasura-console" id="console-logo" />
       </Heading>
     </Flex>
-    {data && data.length
-      ? data.map(({ title, time, description, badge }) => (
-          <Update
-            key={title}
-            title={title}
-            time={time}
-            description={description}
-            badge={badge}
-          />
-        ))
-      : 'No Notifications!'}
+    {data.length ? (
+      data.map(({ title, time, description, ...props }) => (
+        <Update
+          key={title}
+          title={title}
+          time={time}
+          description={description}
+          badge={props.badge ? props.badge : null}
+        />
+      ))
+    ) : (
+      <NoNotification />
+    )}
   </Box>
 );
 
-// TODO: handle case where information is not avaialble...check the response type correctly
+const getCurrentDate = () => {
+  return new Date(Date.now()).toLocaleString().split(', ')[0];
+};
 
 const LoveSection = () => {
   const [open, toggleLove] = useState(false);
   const [notificationData, setData] = useState([
     {
-      title: 'No Notifications yet!',
-      time: 'n/a',
-      description: 'some text here',
-      badge: 'NO',
+      title: 'No New Updates',
+      time: getCurrentDate(),
+      description:
+        "You're all caught up! \n There are no updates available at this point in time.",
     },
   ]);
 
@@ -108,6 +114,7 @@ const LoveSection = () => {
       fetch(Endpoints.checkNotifications)
         .then(response => response.json())
         .then(data => setData(data))
+        // TODO: report error in a better way
         .catch(err => console.error(err));
     }
     document.getElementById('dropdown_wrapper').classList.toggle('open');
