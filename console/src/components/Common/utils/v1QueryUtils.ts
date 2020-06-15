@@ -55,8 +55,8 @@ export type Header = {
 
 export const getRunSqlQuery = (
   sql: string,
-  shouldCascade: boolean,
-  readOnly: boolean
+  shouldCascade?: boolean,
+  readOnly?: boolean
 ) => {
   return {
     type: 'run_sql',
@@ -493,8 +493,12 @@ export const generateCreateEventTriggerQuery = (
         : null,
       update: state.operations.update
         ? {
-            columns: state.operationColumns.map(c => c.name),
-            payload: state.operationColumns.map(c => c.name),
+            columns: state.operationColumns
+              .filter(c => !!c.enabled)
+              .map(c => c.name),
+            payload: state.operationColumns
+              .filter(c => !!c.enabled)
+              .map(c => c.name),
           }
         : null,
       delete: state.operations.delete

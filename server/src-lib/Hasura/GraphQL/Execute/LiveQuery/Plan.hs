@@ -32,6 +32,7 @@ import qualified Data.Aeson.Extended                    as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.ByteString                        as B
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Text                              as T
 import qualified Data.UUID.V4                           as UUID
 import qualified Database.PG.Query                      as Q
@@ -46,15 +47,16 @@ import           Data.Has
 import           Data.UUID                              (UUID)
 
 import qualified Hasura.GraphQL.Resolve                 as GR
-import qualified Hasura.GraphQL.Resolve.Action          as RA
-import qualified Hasura.GraphQL.Resolve.Types           as GR
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
-import qualified Hasura.GraphQL.Validate.Types          as GV
 import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.Db
+import           Hasura.GraphQL.Resolve.Action
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Utils
+import           Hasura.GraphQL.Validate.SelectionSet
+import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.SQL.Error
@@ -67,7 +69,7 @@ import           Hasura.SQL.Value
 newtype MultiplexedQuery = MultiplexedQuery { unMultiplexedQuery :: Q.Query }
   deriving (Show, Eq, Hashable, J.ToJSON)
 
-mkMultiplexedQuery :: Map.HashMap G.Alias GR.QueryRootFldResolved -> MultiplexedQuery
+mkMultiplexedQuery :: OMap.InsOrdHashMap G.Alias GR.QueryRootFldResolved -> MultiplexedQuery
 mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
   { S.selExtr =
     -- SELECT _subs.result_id, _fld_resp.root AS result
@@ -88,13 +90,13 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
     selectRootFields = S.mkSelect
       { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Iden "root")]
       , S.selFrom = Just . S.FromExp $
-          flip map (Map.toList rootFields) $ \(fieldAlias, resolvedAST) ->
-            S.mkSelFromItem (GR.toSQLSelect resolvedAST) (S.Alias $ aliasToIden fieldAlias)
+          flip map (OMap.toList rootFields) $ \(fieldAlias, resolvedAST) ->
+            GR.toSQLFromItem (S.Alias $ aliasToIden fieldAlias) resolvedAST
       }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
     rootFieldsJsonAggregate = S.SEFnApp "json_build_object" rootFieldsJsonPairs Nothing
-    rootFieldsJsonPairs = flip concatMap (Map.keys rootFields) $ \fieldAlias ->
+    rootFieldsJsonPairs = flip concatMap (OMap.keys rootFields) $ \fieldAlias ->
       [ S.SELit (G.unName $ G.unAlias fieldAlias)
       , mkQualIden (aliasToIden fieldAlias) (Iden "root") ]
 
@@ -269,25 +271,26 @@ buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
-     , Has GR.FieldMap r
-     , Has GR.OrdByCtx r
-     , Has GR.QueryCtxMap r
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has QueryCtxMap r
      , Has SQLGenCtx r
-     , HasVersion
      , MonadIO m
+     , HasVersion
      )
   => PGExecCtx
-  -> GV.QueryReusability
-  -> RA.QueryActionExecuter
-  -> GV.SelSet
+  -> QueryReusability
+  -> QueryActionExecuter
+  -> ObjectSelectionSet
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
-buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
-  ((resolvedASTs, (queryVariableValues, syntheticVariableValues)), finalReusability) <-
-    GV.runReusabilityTWith initialReusability . flip runStateT mempty $
-      fmap Map.fromList . for (toList fields) $ \field -> case GV._fName field of
+buildLiveQueryPlan pgExecCtx initialReusability actionExecuter selectionSet = do
+  ((resolvedASTMap, (queryVariableValues, syntheticVariableValues)), finalReusability) <-
+    runReusabilityTWith initialReusability $
+      flip runStateT mempty $ flip OMap.traverseWithKey (unAliasedFields $ unObjectSelectionSet selectionSet) $
+      \_ field -> case GV._fName field of
         "__typename" -> throwVE "you cannot create a subscription on '__typename' field"
         _ -> do
-          unresolvedAST <- GR.queryFldToPGAST field actionExecutioner
+          unresolvedAST <- GR.queryFldToPGAST field actionExecuter
           resolvedAST <- GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
 
           let (_, remoteJoins) = GR.toPGQuery resolvedAST
@@ -295,10 +298,10 @@ buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
           when (remoteJoins /= mempty) $
                throw400 NotSupported
                        "Remote relationships are not allowed in subscriptions"
-          pure (GV._fAlias field, resolvedAST)
+          pure resolvedAST
 
   userInfo <- asks getter
-  let multiplexedQuery = mkMultiplexedQuery resolvedASTs
+  let multiplexedQuery = mkMultiplexedQuery resolvedASTMap
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery
 
@@ -309,7 +312,7 @@ buildLiveQueryPlan pgExecCtx initialReusability actionExecutioner fields = do
   validatedSyntheticVars <- validateVariables pgExecCtx (toList syntheticVariableValues)
   let cohortVariables = CohortVariables (_uiSession userInfo) validatedQueryVars validatedSyntheticVars
       plan = LiveQueryPlan parameterizedPlan cohortVariables
-      varTypes = finalReusability ^? GV._Reusable
+      varTypes = finalReusability ^? _Reusable
       reusablePlan = ReusableLiveQueryPlan parameterizedPlan validatedSyntheticVars <$> varTypes
   pure (plan, reusablePlan)
 
@@ -337,6 +340,8 @@ explainLiveQueryPlan :: (MonadTx m, MonadIO m) => LiveQueryPlan -> m LiveQueryPl
 explainLiveQueryPlan plan = do
   let parameterizedPlan = _lqpParameterizedPlan plan
       queryText = Q.getQueryText . unMultiplexedQuery $ _plqpQuery parameterizedPlan
+      -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+      -- query, maybe resulting in privilege escalation:
       explainQuery = Q.fromText $ "EXPLAIN (FORMAT TEXT) " <> queryText
   cohortId <- newCohortId
   explanationLines <- map runIdentity <$> executeQuery explainQuery [(cohortId, _lqpVariables plan)]
