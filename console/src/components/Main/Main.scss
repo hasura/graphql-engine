@@ -918,8 +918,10 @@
   cursor: pointer;
 
   &:hover {
-    opacity: 0.7;
-    font-weight: 600;
+    span {
+      opacity: 0.7;
+      font-weight: 600;
+    }
   }
 
   .selected {
@@ -1196,6 +1198,49 @@
   top: 2px;
   left: 4px;
   z-index: -1;
+}
+.helpWrapper {
+  position: relative;
+  padding: 12px 15px;
+  .helpPopUpWrapper {
+    position: absolute;
+    box-shadow: 0 3px 20px 0 rgba(0, 0, 0, 0.24);
+    background-color: #ffffff;
+    position: absolute;
+    width: 230px;
+    z-index: 1;
+    top: 60px;
+    right: 0px;
+    text-transform: none;
+    font-size: 15px;
+    color: #303030;
+    font-weight: normal;
+    .helpPopClose {
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      width: 10px;
+      cursor: pointer;
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+    ul {
+      padding-inline-start: 0px;
+      li {
+        padding: 16px 24px;
+        list-style-type: none;
+        font-weight: normal;
+        border-bottom: 1px solid #ddd;
+        &:last-child {
+          border-bottom: 0;
+        }
+        img {
+          margin-left: 8px;
+        }
+      }
+    }
+  }
 }
 /* PRO popup section */
 .proWrapper {

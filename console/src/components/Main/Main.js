@@ -21,6 +21,8 @@ import management from './images/management.svg';
 import allow from './images/allow-listing.svg';
 import read from './images/read-replica.svg';
 import arrowForwardRed from './images/arrow_forward-red.svg';
+import arrowForwardBlock from './images/arrow_forward-block.svg';
+import information from './images/information.svg';
 
 import styles from './Main.scss';
 
@@ -64,6 +66,7 @@ class Main extends React.Component {
       loveConsentState: getLoveConsentState(),
       proClickState: getProClickState(),
       isPopUpOpen: false,
+      isHelpOpen: false,
     };
 
     this.handleBodyClick = this.handleBodyClick.bind(this);
@@ -98,7 +101,9 @@ class Main extends React.Component {
     dispatch(emitProClickedEvent({ open: !this.state.isPopUpOpen }));
     this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
   }
-
+  toggleHelpPopup() {
+    this.setState({isHelpOpen: !this.state.isHelpOpen});
+  }
   setShowUpdateNotification() {
     const {
       latestStableServerVersion,
@@ -637,6 +642,38 @@ class Main extends React.Component {
       return null;
     };
 
+    const renderHelpPopup = () => {
+      const { isHelpOpen } = this.state;
+      if (isHelpOpen) {
+        return (
+          <div className={styles.helpPopUpWrapper}>
+            <img
+              onClick={this.toggleHelpPopup.bind(this)}
+              className={styles.helpPopClose}
+              src={close}
+              alt={'Close'}
+            />
+            <ul>
+              <li>
+                Enable Live Chat
+
+                <ToolTip
+                  id="intercom-information"
+                  placement="bottom"
+                  message="By enabling live chat, we will inable Intercom for you on the console. No other data will be shared with this service. You can always enable & disable this feature as required."
+                >
+                  <img src={information} alt='Information'/>
+                </ToolTip>
+
+              </li>
+              <li>Support Forums <img src={arrowForwardBlock} alt='Arrow'/></li>
+            </ul>
+          </div>
+        );
+      }
+      return null;
+    };
+
     const getVulnerableVersionNotification = () => {
       let vulnerableVersionNotificationHtml = null;
 
@@ -727,7 +764,7 @@ class Main extends React.Component {
                   tooltips.data,
                   getSchemaBaseRoute(currentSchema)
                 )}
-                {getSidebarItem(
+                  {getSidebarItem(
                   'Actions',
                   'fa-cogs',
                   tooltips.actions,
@@ -778,14 +815,14 @@ class Main extends React.Component {
                   {getSettingsSelectedMarker()}
                 </div>
               </Link>
-              <a
-                id="help"
-                href={'https://hasura.io/help'}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className={styles.headerRightNavbarBtn}>HELP</div>
-              </a>
+              <div className={styles.headerRightNavbarBtn + ' ' + styles.helpWrapper}>
+                <span
+                  onClick={this.toggleHelpPopup.bind(this)}
+                >
+                HELP
+                </span>
+                {renderHelpPopup()}
+              </div>
               {getLoveSection()}
             </div>
           </div>
