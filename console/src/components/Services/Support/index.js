@@ -1,1 +1,3 @@
-export {getSupportRouter} from './Router';
+import getSupportRouter from './Router';
+
+export { getSupportRouter };
