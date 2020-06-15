@@ -125,15 +125,15 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	}
 
 	if o.flags.Changed("up-sql") && !o.flags.Changed("down-sql") {
-		return 0, errors.New("up-sql requires a down-sql statement to be present")
+		o.EC.Logger.Warn("you are creating an up migration without a down migration")
 	}
 
 	if o.flags.Changed("down-sql") && !o.flags.Changed("up-sql") {
-		return 0, errors.New("down-sql requires an up-sql statement to be present")
+		o.EC.Logger.Warn("you are creating a down migration without an up migration")
 	}
 
 	var migrateDrv *migrate.Migrate
-	if o.sqlServer || o.metaDataServer || (o.flags.Changed("up-sql") && o.flags.Changed("down-sql")) {
+	if o.sqlServer || o.metaDataServer || o.flags.Changed("up-sql") || o.flags.Changed("down-sql") {
 		migrateDrv, err = migrate.NewMigrate(o.EC, true)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot create migrate instance")
@@ -193,25 +193,27 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	}
 
 	// create pure sql based migrations here
-	if o.flags.Changed("up-sql") && o.flags.Changed("down-sql") {
+	if o.flags.Changed("up-sql") {
 		err = createOptions.SetSQLUp(o.upSQL)
 		if err != nil {
 			return 0, errors.Wrap(err, "up migration with SQL string could not be created")
 		}
+	}
 
+	if o.flags.Changed("down-sql") {
 		err = createOptions.SetSQLDown(o.downSQL)
 		if err != nil {
 			return 0, errors.Wrap(err, "down migration with SQL string could not be created")
 		}
 	}
 
-	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version == cli.V1 && !(o.flags.Changed("up-sql") && o.flags.Changed("down-sql")) {
+	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version == cli.V1 && !o.flags.Changed("up-sql") && !o.flags.Changed("down-sql") {
 		// Set empty data for [up|down].yaml
 		createOptions.MetaUp = []byte(`[]`)
 		createOptions.MetaDown = []byte(`[]`)
 	}
 
-	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version != cli.V1 && !(o.flags.Changed("up-sql") && o.flags.Changed("down-sql")) {
+	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version != cli.V1 && !o.flags.Changed("up-sql") && !o.flags.Changed("down-sql") {
 		// Set empty data for [up|down].sql
 		createOptions.SQLUp = []byte(``)
 		createOptions.SQLDown = []byte(``)
