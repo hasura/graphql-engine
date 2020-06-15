@@ -415,6 +415,7 @@ library
                      , Hasura.SQL.Value
 
                      , Network.URI.Extended
+                     , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom
 
 executable graphql-engine

@@ -10,6 +10,7 @@ import qualified Data.HashMap.Strict                    as Map
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
+import qualified Network.Wai.Extended                   as Wai
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -18,7 +19,6 @@ import           Hasura.GraphQL.Validate.Types          (evalReusabilityT, runRe
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (IpAddress)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
@@ -129,7 +129,7 @@ explainGQLQuery
   -> SQLGenCtx
   -> Bool
   -> [HTTP.Header]
-  -> IpAddress
+  -> Wai.IpAddress
   -> QueryActionExecuter
   -> GQLExplain GH.GQLReqUnparsed
   -> m EncJSON

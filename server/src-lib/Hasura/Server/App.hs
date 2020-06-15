@@ -28,7 +28,7 @@ import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
-import qualified Network.Wai                            as Wai
+import qualified Network.Wai.Extended                   as Wai
 import qualified Network.WebSockets                     as WS
 import qualified System.Metrics                         as EKG
 import qualified System.Metrics.Json                    as EKG
@@ -109,11 +109,11 @@ data ServerCtx
 
 data HandlerCtx
   = HandlerCtx
-  { hcServerCtx  :: !ServerCtx
-  , hcUser       :: !UserInfo
-  , hcReqHeaders :: ![HTTP.Header]
-  , hcRequestId  :: !RequestId
-  , hcSourceIpAddress :: !IpAddress
+  { hcServerCtx       :: !ServerCtx
+  , hcUser            :: !UserInfo
+  , hcReqHeaders      :: ![HTTP.Header]
+  , hcRequestId       :: !RequestId
+  , hcSourceIpAddress :: !Wai.IpAddress
   }
 
 type Handler m = ExceptT QErr (ReaderT HandlerCtx m)
@@ -237,7 +237,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     let headers = Wai.requestHeaders req
         authMode = scAuthMode serverCtx
         manager = scManager serverCtx
-        ipAddress = getSourceFromFallback req
+        ipAddress = Wai.getSourceFromFallback req
 
     requestId <- getRequestId headers
 

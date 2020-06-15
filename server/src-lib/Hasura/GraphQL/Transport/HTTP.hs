@@ -18,7 +18,7 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Init.Config
-import           Hasura.Server.Utils                    (IpAddress, RequestId)
+import           Hasura.Server.Utils                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
@@ -28,6 +28,7 @@ import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
+import qualified Network.Wai.Extended                   as Wai
 
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
 runGQBatched
@@ -40,7 +41,7 @@ runGQBatched
   => RequestId
   -> ResponseInternalErrorsConfig
   -> UserInfo
-  -> IpAddress
+  -> Wai.IpAddress
   -> [HTTP.Header]
   -> E.GraphQLQueryType
   -> GQLBatchedReqs GQLQueryText
