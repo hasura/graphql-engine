@@ -127,3 +127,74 @@ You can create relationships for custom output types by:
 
      Save the changes and run ``hasura metadata apply`` to create the relationship.
 
+  .. tab:: Via API
+
+    Action relationships can be added while creating an action via the :ref:`create_action metadata API <create_actions>`.
+
+    It is essential that the relationships are defined along with all custom types *beforehand* via the :ref:`set_custom_types metadata API <set_custom_types>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "set_custom_types",
+        "args": {
+          "scalars": [],
+          "enums": [],
+          "input_objects": [],
+          "objects": [
+            {
+              "name": "UpdateAuthorOutput",
+              "fields": [
+                {
+                  "name": "author_id",
+                  "type": "Int!"
+                }
+              ],
+              "relationships": [
+                {
+                  "name": "updatedAuthor",
+                  "type": "object",
+                  "remote_table": "author",
+                  "field_mapping": {
+                    "author_id": "id"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+
+    Once the custom types with relationships are defined, we can create an action via the :ref:`create_action metadata API <create_actions>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "create_action",
+        "args": {
+          "name": "updateAuthor",
+          "definition": {
+            "kind": "synchronous",
+            "arguments": [
+              {
+                "name": "username",
+                "type": "String!"
+              },
+              {
+                "name": "email",
+                "type": "String!"
+              }
+            ],
+            "output_type": "UpdateAuthorOutput",
+            "handler": "https://action.my_app.com/create-user"
+          }
+        }
+      }

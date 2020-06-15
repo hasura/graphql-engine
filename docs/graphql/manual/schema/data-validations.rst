@@ -528,14 +528,32 @@ returns an object of type ``AuthorOutput``:
         "args": {
           "scalars": [],
           "enums": [],
-          "input_objects": [],
-          "objects": [
+          "input_objects": [
             {
-              "name": "LoginResponse",
+              "name": "AuthorInput",
               "fields": [
                 {
-                  "name": "accessToken",
+                  "name": "name",
                   "type": "String!"
+                },
+                {
+                  "name": "rating",
+                  "type": "Int!"
+                },
+                {
+                  "name": "is_active",
+                  "type": "Boolean!"
+                }
+              ]
+            }
+          ],
+          "objects": [
+            {
+              "name": "AuthorOutput",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "Int!"
                 }
               ]
             }
