@@ -80,7 +80,7 @@ ul {
 .subscribe-form-wrapper {
   border-radius: 2px;
   background-color: #1bd5c8;
-  padding: 16px;
+  padding: 24px 20px;
 }
 #mc_embed_signup {
   display: flex;
@@ -94,13 +94,25 @@ ul {
   padding-right: 40px;
 }
 #mc_embed_signup form {
+  display: flex !important;
   padding: 0 0 0 0 !important;
   flex: 1 !important;
   position: relative !important;
+  font-size: 16px;
+}
+.full-width {
+  flex: 1;
 }
 .input-box {
-  width: 64%!important;
+  width: 100% !important;
   display: inline-block;
+  position: relative;
+}
+#error-for-mce-EMAIL {
+  position: absolute;
+  bottom: -18px;
+  left: 16px;
+  font-size: 12px !important;
 }
 .input-box input {
   margin: 0 0 !important;
@@ -114,6 +126,27 @@ ul {
   width: calc(100% - 32px) !important;
   font-size: 13px !important;
 }
+.input-box input:-webkit-autofill, .input-box input:-webkit-autofill {
+  -webkit-animation-name: autofill;
+  -webkit-animation-fill-mode: both;
+  -webkit-box-shadow: 0 0 0px 1000px white inset;
+  background-color: transparent;
+  font-size: 16px;
+}
+.input-box input:-webkit-autofill,
+.input-box input:-webkit-autofill:hover,
+.input-box input:-webkit-autofill:focus,
+.input-box input:-webkit-autofill:active  {
+  -webkit-box-shadow: 0 0 0 35px #1bd5c8 inset !important;
+  -webkit-text-fill-color: #001934 !important;
+  font-size: 16px;
+  caret-color: #001934;
+  color: #001934 !important;
+}
+.input-box input:-internal-autofill-selected {
+  color: #001934 !important;
+  font-size: 16px;
+}
 .submit-box {
   width: 31%!important;
   margin-left: 4%;
@@ -123,16 +156,21 @@ ul {
   margin: 0 0 !important;
   width: 100% !important;
   border-radius: 5px !important;
-  background-color: #001934 !important;
-  border: 1px solid #001934 !important;
+  background-color: rgba(0, 25, 52, .9) !important;
+  border: 1px solid rgba(0, 25, 52, .9) !important;
   color: #1ad7ca !important;
   font-size: 13px !important;
   font-weight: bold !important;
   height: 34px !important;
 }
 .submit-box input:hover {
-  background-color: transparent !important;
-  color: #001934 !important;
+  background-color: rgba(0, 25, 52, 1) !important;
+  border: 1px solid rgba(0, 25, 52, 1) !important;
+}
+.submit-box input:disabled {
+  cursor: not-allowed !important;
+  opacity: .6;
+  background-color: rgba(0, 25, 52, .9) !important;
 }
 .submit-box input:focus {
   outline: none;
@@ -149,6 +187,7 @@ ul {
   left: 0;
   width: auto !important;
 }
+
 #mce-responses .error-message a, #mce-responses .success-message a {
   color: #fff !important;
 }
@@ -159,8 +198,7 @@ ul {
   color: #1cd3c6 !important;
 }
 .bannerStripWrapper {
-  /* background-color: #3D1BB7; */
-  background-color: #4262d2;
+  background-color: #3D1BB7;
   box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.4);
   position: relative;
   min-height: 56px;
@@ -220,8 +258,7 @@ ul {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-
-  /* background-color: rgba(61,27,183,.8); */
+  background-color: rgba(61,27,183,.8);
 }
 .bannerStripWrapper .closeBanner img {
   margin-right: 0;
@@ -543,6 +580,7 @@ article ol ol {
   font-weight: 600;
   color: #001934;
   margin-left: 20px;
+  cursor: pointer;
 }
 /*** Mobile only END ***/
 
@@ -739,6 +777,7 @@ article ol ol {
   position: absolute;
   right: 10px;
   top: 10px;
+  cursor: pointer;
 }
 #sidebar .sphinxsidebar .sphinxsidebarwrapper h3 {
   padding-top: 10px;
@@ -1136,6 +1175,9 @@ article ol ol {
   .bannerStripWrapper .closeBanner {
     right: 0;
   }
+  #mc_embed_signup form {
+    padding-top: 10px !important;
+  }
   #mc_embed_signup {
     display: block;
   }
@@ -1167,6 +1209,9 @@ article ol ol {
     .bannerStripWrapper .bannerStrip .bodyTextSmall {
       padding-left: 0;
     }
+    .bannerStripWrapper .bannerStrip .bodyTextSmall .mLeft15 {
+      margin-left: 5px;
+    }
   #sidebar {
     top: 170px;
     height: calc(100% - 170px);
@@ -1178,11 +1223,14 @@ article ol ol {
     padding-right: 0;
     text-align: center;
   }
+  #mc_embed_signup form {
+    padding-top: 10px !important;
+  }
+  .submit-box input {
+    padding: 0 4px !important;
+  }
   #mce-responses .error-message, #mce-responses .success-message {
     top: 34px !important;
-  }
-  .input-box {
-    width: 62%!important;
   }
   #input_search_box {
     flex: 1;
@@ -1230,7 +1278,6 @@ article ol ol {
   font-family: 'Poppins';
   font-size: 15px;
   font-weight: 500;
-  transition: 500ms;
   position: relative;
   padding: 6px 13px;
   line-height: 140%;
@@ -1239,27 +1286,21 @@ article ol ol {
   outline: none;
 }
 .navBtnHome {
-  background-color: #1CD3C6;
-  border: 1px solid #1CD3C6;
+  background-color: rgba(28, 211, 198, .86);
+  border: 1px solid rgba(28, 211, 198, .86);
   color: #001934;
 }
 .navBtnHome:hover {
-  background-color: transparent;
-  border: 1px solid #1CD3C6;
-  color: #1CD3C6;
+  background-color: rgba(28, 211, 198, 1);
+  border: 1px solid rgba(28, 211, 198, 1);
 }
 .navBtnContactHome {
-  background-color: transparent;
+  background-color: #001934;
   border: 1px solid #1CD3C6;
   color: #1CD3C6;
 }
 .navBtnContactHome:hover {
-  background-color: #1CD3C6;
-  border: 1px solid #1CD3C6;
-  color: #001934;
-}
-.gitHubBtnSmallMobile {
-	 display: none !important;
+  background-color: #00244b;
 }
  .visibleMobile {
 	 display: none;
@@ -1271,6 +1312,7 @@ article ol ol {
 	 position: absolute;
 	 right: 0;
 	 top: 13px;
+   cursor: pointer;
 }
  .navBarToggle .iconBar {
 	 display: block;
@@ -1343,7 +1385,6 @@ article ol ol {
 }
  .headerWrapper .navLeft .twitterBtn img, .headerWrapper .navLeft .discordBtn img {
 	 width: 12px;
-
 }
  .headerWrapper .navLeft .twitterBtn:hover, .headerWrapper .navLeft .discordBtn:hover {
 	 opacity: 1;
@@ -1356,14 +1397,48 @@ article ol ol {
 	 width: 10px;
 }
  .headerWrapper .navLeft .gitHubBtn {
-	 height: 20px;
-	 padding-top: 4px;
-	 opacity: 0.8;
-	 color: #fff;
+   margin-top: 8px;
+   opacity: .8;
+   border-radius: 4px;
+   color: #001934;
+   border: solid 1px #d1d2d3;
+   font-family: 'Poppins';
+   font-size: 11px;
+   font-weight: 600;
+   display: flex;
+   align-items: center;
+   height: 18px;
+   text-decoration: none;
 }
- .headerWrapper .navLeft .gitHubBtn .gitHubStats {
-	 color: #fff;
-}
+ .headerWrapper .navLeft .gitHubBtn .gitHubStars {
+   display: flex;
+   align-items: center;
+   padding-left: 4px;
+   background-color: #f1f5f8;
+   height: 18px;
+ }
+ .headerWrapper .navLeft .gitHubBtn .gitHubStars img {
+   width: 12px;
+ }
+ .headerWrapper .navLeft .gitHubBtn .gitHubStars span {
+   line-height: 8px;
+   margin-top: 0px;
+   padding-right: 4px;
+   padding: 4px;
+ }
+ .headerWrapper .navLeft .gitHubBtn .gitHubCount {
+   border-left: 1px solid #d1d2d3;
+   height: 10px;
+   padding: 4px;
+   line-height: 8px;
+   display: flex;
+   margin-top: 0px;
+   align-items: center;
+   background-color: #fff;
+ }
+ .headerWrapper .navLeft .gitHubBtn:hover {
+   opacity: 1;
+ }
 .headerWrapper .navBlueBG .navBarUL {
   padding-left: 0;
   margin: 0 0;
@@ -1378,6 +1453,9 @@ article ol ol {
    margin: 0 0;
    letter-spacing: -.48px;
 }
+.versionTxt {
+  position: relative;
+}
 .versionTxt select {
   border-radius: 8px;
   background-color: rgba(255, 255, 255, .24);
@@ -1386,9 +1464,32 @@ article ol ol {
   font-size: 12px;
   font-weight: 600;
   color: #ffffff;
+  border: 1px solid #ddd;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 48px;
+  padding: 0 4px;
+  height: 22px;
+  z-index: 1;
+}
+.versionTxt:after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #fff;
+  position: absolute;
+  right: 20px;
+  top: 10px;
+  z-index: -1;
 }
 .versionTxt select:focus {
   outline: none;
+}
+.versionTxt select::-moz-focus-inner, .versionTxt select option::-moz-focus-inner {
+  border: 0;
 }
  .headerWrapper .navBlueBG .navBarUL li a:hover, .headerWrapper .navWhiteBG .navBarUL li a:hover {
 	 text-decoration: none;
@@ -1431,9 +1532,16 @@ article ol ol {
 		 display: block;
      z-index: 10;
 	}
-	 .headerWrapper .brand {
-		 padding: 8px 0;
-	}
+  .headerWrapper .navLeft .brand {
+    margin-top: 3px;
+    padding: 8px 0;
+  }
+  .headerWrapper .navLeft .gitHubBtn {
+    margin-top: 4px;
+  }
+  .headerWrapper .navLeft .twitterBtn, .headerWrapper .navLeft .discordBtn {
+    margin-top: 4px;
+  }
 	 .headerWrapper .topnav .visibleMobile .navBarULMobile {
 		 padding: 10px 15px;
 		 background-color: #001934;
@@ -1469,33 +1577,41 @@ article ol ol {
 	}
 }
  @media (max-width: 767px) {
-   .versionTxt select {
-     margin-right: 0;
-     margin-left: 8px;
-   }
-	 .headerSticky {
-		 position: static;
-	}
-	 .headerWrapper {
-		 display: block;
-     z-index: 10;
-	}
-	 .headerWrapper .brand {
-		 padding: 8px 0;
-	}
-	 .headerWrapper .topnav .visibleMobile .navBarULMobile {
+  .versionTxt select {
+    margin-right: 0;
+    margin-left: 8px;
+  }
+  .headerSticky {
+    position: static;
+  }
+  .headerWrapper {
+    display: block;
+    z-index: 10;
+  }
+  .headerWrapper .navLeft .brand {
+    padding: 8px 0;
+    margin-top: 0px;
+    margin-right: 16px;
+  }
+  .headerWrapper .navLeft .twitterBtn, .headerWrapper .navLeft .discordBtn {
+    margin-top: 4px;
+  }
+  .headerWrapper .navLeft .gitHubBtn {
+    margin-top: 4px;
+  }
+	.headerWrapper .topnav .visibleMobile .navBarULMobile {
 		 padding: 10px 15px;
 		 background-color: #001934;
 		 border-top: 1px solid rgba(255, 255, 255, .6);
 		 border-bottom: 1px solid rgba(255, 255, 255, .6);
 	}
-	 .headerWrapper .topnav .visibleMobile .navBarULMobile li {
-		 font-size: 15px;
-		 font-family: 'Poppins';
-		 list-style-type: none;
-		 font-weight: 600;
-		 text-transform: uppercase;
-		 padding: 10px 0;
+   .headerWrapper .topnav .visibleMobile .navBarULMobile li {
+  	 font-size: 15px;
+  	 font-family: 'Poppins';
+  	 list-style-type: none;
+  	 font-weight: 600;
+  	 text-transform: uppercase;
+  	 padding: 10px 0;
 	}
 	 .headerWrapper .topnav .visibleMobile .navBarULMobile li a {
 		 color: rgba(255, 255, 255, .6);
@@ -1516,12 +1632,9 @@ article ol ol {
 		 display: none;
 	}
 }
- @media (max-width: 400px) {
-	 .gitHubBtn {
+ @media (max-width: 359px) {
+	 .headerWrapper .navLeft .gitHubBtn {
 		 display: none;
-	}
-	 .gitHubBtnSmallMobile {
-		 display: block !important;
 	}
 }
  @media (max-width: 320px) {

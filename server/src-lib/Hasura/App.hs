@@ -227,7 +227,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers
 
-  authModeRes <- runExceptT $ mkAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
+  authModeRes <- runExceptT $ setupAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
                               _icHttpManager logger
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
