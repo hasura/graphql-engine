@@ -27,7 +27,4 @@ const getProClickState = () => {
   }
 };
 
-export {
-  getProClickState,
-  setProClickState
-};
+export { getProClickState, setProClickState };
