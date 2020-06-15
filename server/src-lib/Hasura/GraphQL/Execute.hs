@@ -83,14 +83,10 @@ data ExecutionCtx
   , _ecxEnableAllowList :: !Bool
   }
 
--- | Typeclass representing rules/authorization to be enforced on the GraphQL API (over both HTTP & Websockets)
--- TODO: elaborate better. langugage.
--- This is separate from the permissions system. Permissions apply on GraphQL related objects, but
--- this is applicable on other things
--- We are calling this system authorization, in contrast with user authorization. Which is the
--- 'RQL.Permissions' layer. This enforces some system specific authorization (like enforcing
--- allow-lists)
--- | System Authorization for the GraphQL API
+-- | Typeclass representing rules/authorization to be enforced on the GraphQL API (over both HTTP &
+-- Websockets) This is like a system authorization on the GraphQL API. System authorization /is in
+-- contrast/ with user authorization (on the GraphQL API) which is achieved by using RQL
+-- permissions. Enforcing allow-lists is an example of system authorization on GraphQL.
 class Monad m => MonadGQLAuthorization m where
   authorizeGQLApi
     :: UserInfo
@@ -326,9 +322,6 @@ resolveMutSelSet
      )
   => VQ.ObjectSelectionSet
   -> m (LazyRespTx, HTTP.ResponseHeaders)
--- =======
---   -> m (LazyRespTx, N.ResponseHeaders)
--- >>>>>>> master
 resolveMutSelSet fields = do
   aliasedTxs <- traverseObjectSelectionSet fields $ \fld ->
     case VQ._fName fld of
@@ -355,11 +348,6 @@ getMutOp
   -> [HTTP.Header]
   -> VQ.ObjectSelectionSet
   -> m (LazyRespTx, HTTP.ResponseHeaders)
--- =======
---   -> [N.Header]
---   -> VQ.ObjectSelectionSet
---   -> m (LazyRespTx, N.ResponseHeaders)
--- >>>>>>> master
 getMutOp ctx sqlGenCtx userInfo manager reqHeaders selSet =
   peelReaderT $ resolveMutSelSet selSet
   where
