@@ -45,7 +45,7 @@ To track a table or a view:
          schema: public
          name: <table name>
 
-   Then apply the metadata by running:
+   Apply the metadata by running:
 
    .. code-block:: bash
 
@@ -53,7 +53,7 @@ To track a table or a view:
 
   .. tab:: Via API
 
-   To track a table and expose it over the GraphQL API, make the following API call to the :ref:`track_table API <track_table>`:
+   To track a table and expose it over the GraphQL API, use the :ref:`track_table metadata API <track_table>`:
 
    .. code-block:: http
 
@@ -93,7 +93,7 @@ To track all tables and views present in the database:
 
    To automate this, add the tables in a loop through a script.
 
-   Then apply the metadata by running:
+   Apply the metadata by running:
 
    .. code-block:: bash
 
@@ -101,7 +101,7 @@ To track all tables and views present in the database:
 
   .. tab:: Via API 
 
-   To track all tables and expose them over the GraphQL API, use the :ref:`track_table API <track_table>`:
+   To track all tables and expose them over the GraphQL API, use the :ref:`track_table metadata API <track_table>`:
 
    .. code-block:: http
 
@@ -174,7 +174,7 @@ To track a foreign-key between two tables in the database:
                      schema: public
                      name: <reference table name>
 
-      Then apply the metadata by running:
+      Apply the metadata by running:
 
       .. code-block:: bash
 
@@ -184,7 +184,7 @@ To track a foreign-key between two tables in the database:
 
       **Object relationship**
 
-      You can create an object relationship by using the :ref:`create_object_relationship API <create_object_relationship>`:
+      You can create an object relationship by using the :ref:`create_object_relationship metadata API <create_object_relationship>`:
 
       .. code-block:: http
 
@@ -205,7 +205,7 @@ To track a foreign-key between two tables in the database:
 
       **Array relationship**
 
-      You can create an array relationship by using the :ref:`create_array_relationship API <create_array_relationship>`:
+      You can create an array relationship by using the :ref:`create_array_relationship metadata API <create_array_relationship>`:
 
       .. code-block:: http
 
@@ -275,7 +275,7 @@ To track all the foreign-keys of all tables in the database:
 
       To automate this, add the relationships in a loop through a script.
 
-      Then apply the metadata by running:
+      Apply the metadata by running:
 
       .. code-block:: bash
 
@@ -287,7 +287,7 @@ To track all the foreign-keys of all tables in the database:
 
       **Object relationship**
 
-      You can create an object relationship by using the :ref:`create_object_relationship API <create_object_relationship>`:
+      You can create an object relationship by using the :ref:`create_object_relationship metadata API <create_object_relationship>`:
 
       .. code-block:: http
 
@@ -308,7 +308,7 @@ To track all the foreign-keys of all tables in the database:
 
       **Array relationship**
 
-      You can create an array relationship by using the :ref:`create_array_relationship API <create_array_relationship>`:
+      You can create an array relationship by using the :ref:`create_array_relationship metadata API <create_array_relationship>`:
 
       .. code-block:: http
 

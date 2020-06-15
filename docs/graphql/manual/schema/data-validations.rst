@@ -61,14 +61,14 @@ Let's say we have a table:
 
   .. tab:: Via CLI
 
-    You can :ref:`create a migration manually <manual_migrations>` with the following statement:
+    :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
 
     .. code-block:: sql
 
       ALTER TABLE author
       ADD CONSTRAINT authors_rating_check CHECK (rating > 0 AND rating <= 10);
 
-    Then apply the migration by running:
+    Apply the migration by running:
 
     .. code-block:: bash
 
@@ -76,7 +76,7 @@ Let's say we have a table:
 
   .. tab:: Via API
 
-    You can add a check constraint by making an API call to the :ref:`run_sql API <run_sql>`:
+    You can add a check constraint by using the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 
@@ -149,10 +149,10 @@ Suppose we have the following table:
 
   .. tab:: Via CLI
 
-    You can :ref:`create a migration manually <manual_migrations>` and add your `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
+    :ref:`Create a migration manually <manual_migrations>` and add your `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
     and your `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ to it.
 
-    Then apply the migration by running:
+    Apply the migration by running:
 
     .. code-block:: bash
 
@@ -160,7 +160,7 @@ Suppose we have the following table:
 
   .. tab:: Via API
 
-    You can add a function by making an API call to the :ref:`run_sql API <run_sql>`:
+    You can add a function by using the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 
@@ -280,7 +280,7 @@ Now, we can create a role ``user`` and add the following rule:
                 title:
                   _ne: ''
 
-    After that, apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
@@ -288,7 +288,7 @@ Now, we can create a role ``user`` and add the following rule:
 
   .. tab:: Via API
 
-    You can add column presets by making an API call to the :ref:`create_insert_permission API <create_insert_permission>`:
+    You can add column presets by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
 
     .. code-block:: http
 
@@ -382,7 +382,7 @@ Now, we can create a role ``user`` and add the following rule:
                   is_active:
                     _eq: true
 
-    After that, apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
@@ -390,7 +390,7 @@ Now, we can create a role ``user`` and add the following rule:
 
   .. tab:: Via API
 
-    You can add column presets by making an API call to the :ref:`create_insert_permission API <create_insert_permission>`:
+    You can add column presets by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
 
     .. code-block:: http
 
@@ -507,7 +507,7 @@ returns an object of type ``AuthorOutput``:
             - name: AuthorOutput
             scalars: []
 
-    Then apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 

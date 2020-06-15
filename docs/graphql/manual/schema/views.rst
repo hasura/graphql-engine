@@ -42,9 +42,9 @@ Creating & exposing views
 
   .. tab:: Via CLI
 
-    1. You can :ref:`create a migration manually <manual_migrations>` and add your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__ to it.
+    1. :ref:`Create a migration manually <manual_migrations>` and add your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__ to it.
 
-    2. Then apply the migration by running:
+    2. Apply the migration by running:
 
     .. code-block:: bash
 
@@ -67,7 +67,7 @@ Creating & exposing views
 
   .. tab:: Via API
 
-    You can add a view by making an API call to the :ref:`run_sql API <run_sql>`:
+    You can add a view by using the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 
@@ -82,7 +82,7 @@ Creating & exposing views
         }
       }
 
-    To track the view and expose it over the GraphQL API, make the following API call to the :ref:`track_table API <track_table>`:
+    To track the view and expose it over the GraphQL API, make the following API call to the :ref:`track_table metadata API <track_table>`:
 
     .. code-block:: http
 

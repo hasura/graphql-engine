@@ -217,7 +217,7 @@ Whenever there is a sequential scan, it can be optimized by adding an index.
 
    :ref:`Create a migration manually <manual_migrations>` and add your create index statement to it.
 
-   Then apply the migration by running:
+   Apply the migration by running:
 
    .. code-block:: bash
 

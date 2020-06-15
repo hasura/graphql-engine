@@ -137,7 +137,7 @@ Now let's define an access control rule for the ``author`` table for a role ``us
                 id:
                   _eq: X-Hasura-User-Id
 
-    Then apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
@@ -145,7 +145,7 @@ Now let's define an access control rule for the ``author`` table for a role ``us
 
   .. tab:: Via API
 
-    You can add select permissions by using the :ref:`create_select_permission API <create_select_permission>` API:
+    You can add select permissions by using the :ref:`create_select_permission metadata API <create_select_permission>`:
 
     .. code-block:: http
 

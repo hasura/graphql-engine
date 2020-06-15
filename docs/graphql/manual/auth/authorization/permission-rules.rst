@@ -161,7 +161,7 @@ the value in the ``id`` column is greater than 10:
                      id:
                         _gt: 10
 
-      Then apply the metadata by running:
+      Apply the metadata by running:
 
       .. code-block:: bash
 
@@ -169,7 +169,7 @@ the value in the ``id`` column is greater than 10:
 
    .. tab:: Via API
 
-      You can define permissions using boolean expressions when :ref:`creating permissions <api_permission>`:
+      You can define permissions using boolean expressions when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
          :emphasize-lines: 12-14
@@ -230,7 +230,7 @@ or "A":
                      - name:
                            _ilike: a%
 
-      Then apply the metadata by running:
+      Apply the metadata by running:
 
       .. code-block:: bash
 
@@ -238,7 +238,7 @@ or "A":
 
    .. tab:: Via API
 
-      You can define permissions using the ``_and`` operator when :ref:`creating permissions <api_permission>`:
+      You can define permissions using the ``_and`` operator when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
          :emphasize-lines: 12-25
@@ -311,7 +311,7 @@ the author's ID*):
                         id:
                            _eq: X-Hasura-User-Id
 
-      Then apply the metadata by running:
+      Apply the metadata by running:
 
       .. code-block:: bash
 
@@ -319,7 +319,7 @@ the author's ID*):
 
    .. tab:: Via API
 
-      You can define session variables in permissions tables when :ref:`creating permissions <api_permission>`:
+      You can define session variables in permissions tables when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
          :emphasize-lines: 12-14
@@ -382,7 +382,7 @@ that uses the aforementioned object relationship:
                         agent_id:
                            _eq: X-Hasura-User-Id
 
-      Then apply the metadata by running:
+      Apply the metadata by running:
 
       .. code-block:: bash
 
@@ -390,7 +390,7 @@ that uses the aforementioned object relationship:
 
    .. tab:: Via API
 
-      You add permissions using relationships or nested objects when :ref:`creating permissions <api_permission>`:
+      You add permissions using relationships or nested objects when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
          :emphasize-lines: 12-18
@@ -478,7 +478,7 @@ session variable.
                      - id
                      - title
 
-      Then apply the metadata by running:
+      Apply the metadata by running:
 
       .. code-block:: bash
 
@@ -486,7 +486,7 @@ session variable.
 
    .. tab:: Via API
 
-      You can set permissions for unrelated tables when :ref:`creating permissions <api_permission>`:
+      You can set permissions for unrelated tables when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
          :emphasize-lines: 12-26
@@ -564,7 +564,7 @@ permissions.
                         _eq: X-Hasura-User-Id
 
 
-      Then apply the metadata by running:
+      Apply the metadata by running:
 
       .. code-block:: bash
 
@@ -572,7 +572,7 @@ permissions.
 
    .. tab:: Via API
 
-      You can set column-level permissions when :ref:`creating permissions <api_permission>`:
+      You can set column-level permissions when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
          :emphasize-lines: 11-16
@@ -640,7 +640,7 @@ using this configuration:
                      _gt: 10
                   limit: 20
 
-      Then apply the metadata by running:
+      Apply the metadata by running:
 
       .. code-block:: bash
 
@@ -648,7 +648,7 @@ using this configuration:
 
    .. tab:: Via API
 
-      You can a row fetch limit for a table when :ref:`creating permissions <api_permission>`
+      You can a row fetch limit for a table when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
          :emphasize-lines: 17
@@ -712,7 +712,7 @@ can be restricted for a given role using this configuration.
                   - name
                   allow_aggregations: true
 
-      Then apply the metadata by running:
+      Apply the metadata by running:
 
       .. code-block:: bash
 
@@ -720,7 +720,7 @@ can be restricted for a given role using this configuration.
 
    .. tab:: Via API
 
-      You can allow aggregation query permissions when :ref:`creating permissions <api_permission>`
+      You can allow aggregation query permissions when using the :ref:`permissions metadata API <api_permission>`
 
       .. code-block:: http
          :emphasize-lines: 18

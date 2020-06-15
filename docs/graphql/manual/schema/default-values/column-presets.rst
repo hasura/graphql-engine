@@ -72,7 +72,7 @@ Step 1: Configure a column preset
               columns: []
               backend_only: false
 
-    After that, apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
@@ -80,7 +80,7 @@ Step 1: Configure a column preset
 
   .. tab:: Via API
 
-    You can add column presets by making an API call to the :ref:`create_insert_permission API <create_insert_permission>`:
+    You can add column presets by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
 
     .. code-block:: http
 

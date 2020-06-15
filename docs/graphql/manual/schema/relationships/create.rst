@@ -47,14 +47,14 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``article`
 
   .. tab:: Via CLI
 
-    You can :ref:`create a migration manually <manual_migrations>` with the following statement:
+    :ref:`Create a migration manually <manual_migrations>` with the following statement:
 
     .. code-block:: sql
 
       ALTER TABLE article
       ADD FOREIGN KEY (author_id) REFERENCES author(id);
 
-    Then apply the migration by running:
+    Apply the migration by running:
 
     .. code-block:: bash
 
@@ -62,7 +62,7 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``article`
 
   .. tab:: Via API
 
-    You can add a foreign-key constraint by making an API call to the :ref:`run_sql API <run_sql>`:
+    You can add a foreign-key constraint using the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 
@@ -87,7 +87,7 @@ Each article has one author. This is an ``object relationship``.
 
   .. tab:: Via console
 
-    The console infers this using the foreign-key created above and recommends the potential relationship in the
+    The console infers potential relationships using the foreign-key created above and recommends these in the
     ``Relationships`` tab of the ``article`` table.
 
     Add an ``object relationship`` named ``author`` for the ``article`` table as shown here:
@@ -113,7 +113,7 @@ Each article has one author. This is an ``object relationship``.
             schema: public
             name: author
 
-    After that, apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
@@ -121,7 +121,7 @@ Each article has one author. This is an ``object relationship``.
 
   .. tab:: Via API
 
-    You can create an object relationship by making an API call to the :ref:`create_object_relationship API <create_object_relationship>`:
+    You can create an object relationship by using the :ref:`create_object_relationship metadata API <create_object_relationship>`:
 
     .. code-block:: http
 
@@ -251,7 +251,7 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
                   schema: public
                   name: article
 
-    After that, apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
@@ -259,7 +259,7 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
 
   .. tab:: Via API
 
-    You can create an array relationship by making an API call to the :ref:`create_array_relationship API <create_array_relationship>`:
+    You can create an array relationship by using the :ref:`create_array_relationship metadata API <create_array_relationship>`:
 
     .. code-block:: http
 
@@ -439,7 +439,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
             schema: public
             name: author_average_rating
 
-    After that, apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
@@ -447,7 +447,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
   .. tab:: Via API
 
-    You can a manual relationship by making an API call to the :ref:`create_object_relationship API <create_object_relationship>`:
+    You can add a manual relationship by using to the :ref:`create_object_relationship metadata API <create_object_relationship>`:
 
     .. code-block:: http
 

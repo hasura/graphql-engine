@@ -198,7 +198,7 @@ Adding a computed field to a table
             table_argument: null
           comment: ""
 
-    After that, apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
@@ -206,8 +206,7 @@ Adding a computed field to a table
 
   .. tab:: API
 
-     A computed field can be added to a table using the :ref:`add_computed_field <api_computed_field>`
-     metadata API:
+     A computed field can be added to a table using the :ref:`add_computed_field metadata API <api_computed_field>`:
 
      .. code-block:: http
 

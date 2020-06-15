@@ -40,13 +40,13 @@ Let's add the following table:
 
    .. tab:: Via CLI
 
-      :ref:`Create a migration manually <manual_migrations>` with the following statement:
+      :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
 
       .. code-block:: sql
 
          CREATE TABLE profile(id serial NOT NULL, name text NOT NULL);
 
-      Then apply the migration by running:
+      Apply the migration by running:
 
       .. code-block:: bash
 
@@ -61,7 +61,7 @@ Let's add the following table:
                schema: public
                name: profile
 
-      Then apply the metadata by running:
+      Apply the metadata by running:
 
       .. code-block:: bash
 
@@ -69,7 +69,7 @@ Let's add the following table:
 
    .. tab:: Via API
 
-      Create a table by by using the :ref:`run_sql API <run_sql>`:
+      Create a table by by using the :ref:`run_sql metadata API <run_sql>`:
 
       .. code-block:: http
 
@@ -84,7 +84,7 @@ Let's add the following table:
             }
          }
 
-      To track the table and expose it over the GraphQL API, use the :ref:`track_table API <track_table>`:
+      To track the table and expose it over the GraphQL API, use the :ref:`track_table metadata API <track_table>`:
 
       .. code-block:: http
 
@@ -93,15 +93,15 @@ Let's add the following table:
          X-Hasura-Role: admin
 
          {
-         "type": "track_table",
-         "args": {
-            "schema": "public",
-            "name": "profile"
-         }
+            "type": "track_table",
+            "args": {
+               "schema": "public",
+               "name": "profile"
+            }
          }
 
-Setup an event trigger
-----------------------
+Set up an event trigger
+-----------------------
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -125,28 +125,28 @@ Setup an event trigger
       .. code-block:: yaml
          :emphasize-lines: 4-20
 
-        - table:
-            schema: public
-            name: profile
-         event_triggers:
-         - name: echo
-            definition:
-               enable_manual: false
-               insert:
-               columns: '*'
-               delete:
-               columns: '*'
-               update:
-               columns:
-               - id
-               - name
-            retry_conf:
-               num_retries: 0
-               interval_sec: 10
-               timeout_sec: 60
-            webhook: https://httpbin.org/post
+         - table:
+               schema: public
+               name: profile
+            event_triggers:
+            - name: echo
+               definition:
+                  enable_manual: false
+                  insert:
+                  columns: '*'
+                  delete:
+                  columns: '*'
+                  update:
+                  columns:
+                  - id
+                  - name
+               retry_conf:
+                  num_retries: 0
+                  interval_sec: 10
+                  timeout_sec: 60
+               webhook: https://httpbin.org/post
 
-      Then apply the metadata by running:
+      Apply the metadata by running:
 
       .. code-block:: bash
 
@@ -154,7 +154,7 @@ Setup an event trigger
 
    .. tab:: Via API
 
-      Add an event trigger by using the :ref:`create_event_trigger<create_event_trigger>` API.
+      Add an event trigger by using the :ref:`create_event_trigger metadata API <create_event_trigger>`.
 
       .. code-block:: http
 
@@ -183,7 +183,7 @@ Setup an event trigger
             }
          }
 
-This sets up our webhook ``https://httpbin.org/post`` to receive database changes on an insert, update and delete on
+This sets up our webhook ``https://httpbin.org/post`` to receive database changes on an insert, update and delete on the
 ``profile`` table.
 
 

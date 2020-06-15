@@ -38,55 +38,23 @@ Edit the ``created_at`` field and set its default value as the SQL function ``no
     .. thumbnail:: /img/graphql/manual/schema/add-default-value.png
       :alt: Modify the table in the console
 
-    .. admonition:: To set an auto-incrementing default value
-
-      To set a default value as an auto-incrementing integer you first need to set up a ``sequence`` which will be the
-      source of our default value.
-
-      Let's say we have a field called ``roll_number`` which we would like to be set by default as an auto-incremented
-      integer.
-
-      Head to ``Data -> SQL`` and run the following SQL command to create a new sequence.
-
-      .. code-block:: SQL
-
-        CREATE SEQUENCE roll_number_seq;
-
-      Now set the default value of the ``roll_number`` field as ``nextval('roll_number_seq')``.
-
   .. tab:: Via CLI
 
-    You can :ref:`create a migration manually <manual_migrations>` with the following statement:
+    :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
 
     .. code-block:: SQL
 
       ALTER TABLE ONLY "public"."article" ALTER COLUMN "created_at" SET DEFAULT now();
 
-    Then apply the migration by running:
+    Apply the migration by running:
 
     .. code-block:: bash
 
       hasura migrate apply
 
-    .. admonition:: To set an auto-incrementing default value
-
-      To set a default value as an auto-incrementing integer you first need to set up a ``sequence`` which will be the
-      source of our default value.
-
-      Let's say we have a field called ``roll_number`` which we would like to be set by default as an auto-incremented
-      integer.
-
-      :ref:`Create a migration manually <manual_migrations>` with the following statement:
-
-      .. code-block:: SQL
-
-        CREATE SEQUENCE roll_number_seq;
-
-      Now set the default value of the ``roll_number`` field as ``nextval('roll_number_seq')``.
-
   .. tab:: Via API
 
-    You can add a default value by making an API call to the :ref:`run_sql API <run_sql>`:
+    You can add a default value by using the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 
@@ -101,6 +69,21 @@ Edit the ``created_at`` field and set its default value as the SQL function ``no
         }
       }
     
+.. admonition:: To set an auto-incrementing default value
+
+      To set a default value as an auto-incrementing integer you first need to set up a ``sequence`` which will be the
+      source of our default value.
+
+      Let's say we have a field called ``roll_number`` which we would like to be set by default as an auto-incremented
+      integer.
+
+      Run the following SQL command to create a new sequence.
+
+      .. code-block:: SQL
+
+        CREATE SEQUENCE roll_number_seq;
+
+      Now set the default value of the ``roll_number`` field as ``nextval('roll_number_seq')``.
 
 Step 2: Run an insert mutation
 ------------------------------

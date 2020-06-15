@@ -162,7 +162,7 @@ we need to tell Hasura that this table represents an enum.
             name: user_role
           is_enum: true
 
-    Then apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
@@ -172,7 +172,7 @@ we need to tell Hasura that this table represents an enum.
 
     A table can be set as an enum via the following 2 methods:
 
-    1. Passing ``true`` for the ``is_enum`` option of the :ref:`track_table` API while tracking a table:
+    1. Passing ``true`` for the ``is_enum`` option of the :ref:`track_table metadata API <track_table>` while tracking a table:
 
     .. code-block:: http
       :emphasize-lines: 10
@@ -190,7 +190,7 @@ we need to tell Hasura that this table represents an enum.
         }
       }
 
-    2. Using the :ref:`set_table_is_enum` API to change whether or not an already-tracked table should be used as an enum:
+    2. Using the :ref:`set_table_is_enum metadata API<set_table_is_enum>` to change whether or not an already-tracked table should be used as an enum:
 
     .. code-block:: http
       :emphasize-lines: 6-13

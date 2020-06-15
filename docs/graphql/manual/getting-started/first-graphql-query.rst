@@ -39,13 +39,13 @@ Let's add the following table:
 
   .. tab:: Via CLI
 
-    :ref:`Create a migration manually <manual_migrations>` with the following statement:
+    :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
 
     .. code-block:: sql
 
       CREATE TABLE profile(id serial NOT NULL, name text NOT NULL);
 
-    Then apply the migration by running:
+    Apply the migration by running:
 
     .. code-block:: bash
 
@@ -60,7 +60,7 @@ Let's add the following table:
             schema: public
             name: profile
 
-    Then apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
@@ -68,7 +68,7 @@ Let's add the following table:
 
   .. tab:: Via API
 
-    Create a table by using the :ref:`run_sql API <run_sql>`:
+    Create a table by using the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 
@@ -83,7 +83,7 @@ Let's add the following table:
         }
       }
 
-    To track the table and expose it over the GraphQL API, make the following API call to the :ref:`track_table API <track_table>`:
+    To track the table and expose it over the GraphQL API, make the following API call to the :ref:`track_table metadata API <track_table>`:
 
     .. code-block:: http
 

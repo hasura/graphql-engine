@@ -48,9 +48,6 @@ Create tables
     Open the Hasura console and head to the ``Data`` tab and click the ``Create Table`` button to open up an interface to
     create tables.
 
-    As soon as a table is created, the corresponding GraphQL schema types and query/mutation resolvers will be
-    automatically generated.
-
     For example, here is the schema for the ``article`` table in this interface:
 
     .. thumbnail:: /img/graphql/manual/schema/create-table-graphql.png
@@ -58,13 +55,13 @@ Create tables
 
   .. tab:: Via CLI
 
-    You can :ref:`create a migration manually <manual_migrations>` with the following statement:
+    :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
 
     .. code-block:: sql
 
       CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));
 
-    Then apply the migration by running:
+    Apply the migration by running:
 
     .. code-block:: bash
 
@@ -82,7 +79,7 @@ Create tables
             schema: public
             name: article
 
-    Then apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
@@ -90,7 +87,7 @@ Create tables
 
   .. tab:: Via API
 
-    You can create a table by making an API call to the :ref:`run_sql API <run_sql>`:
+    You can create a table by making an API call to the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 
@@ -105,7 +102,7 @@ Create tables
         }
       }
 
-    To track the table and expose it over the GraphQL API, make the following API call to the :ref:`track_table API <track_table>`:
+    To track the table and expose it over the GraphQL API, make the following API call to the :ref:`track_table metadata API <track_table>`:
 
     .. code-block:: http
 
@@ -121,6 +118,7 @@ Create tables
         }
       }
 
+As soon as a table is created, the corresponding GraphQL schema types and query/mutation resolvers will be automatically generated.
 
 The following object type and query/mutation fields are generated for the ``article`` table we just created:
 

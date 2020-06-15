@@ -49,13 +49,13 @@ Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 
   .. tab:: Via CLI
 
-    You can :ref:`create a migration manually <manual_migrations>` with the following statement:
+    :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
 
     .. code-block:: SQL
 
       ALTER TABLE "public"."sql_function_table" ALTER COLUMN "output" DROP NOT NULL;
 
-    Then apply the migration by running:
+    Apply the migration by running:
 
     .. code-block:: bash
 
@@ -63,7 +63,7 @@ Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 
   .. tab:: Via API
 
-    You can modify a table column by making an API call to the :ref:`run_sql API <run_sql>`:
+    You can modify a table column by using the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 
@@ -108,9 +108,9 @@ the ``output`` field whenever an insert or update is made to the ``sql_function_
 
   .. tab:: Via CLI
 
-    You can :ref:`create a migration manually <manual_migrations>` with above SQL.
+    :ref:`Create a migration manually <manual_migrations>` and add the above SQL to it.
 
-    Then apply the migration by running:
+    Apply the migration by running:
 
     .. code-block:: bash
 
@@ -118,7 +118,7 @@ the ``output`` field whenever an insert or update is made to the ``sql_function_
 
   .. tab:: Via API
 
-    You can create a trigger by making an API call to the :ref:`run_sql API <run_sql>`:
+    You can create a trigger by using the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 

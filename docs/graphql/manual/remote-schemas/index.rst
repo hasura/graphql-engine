@@ -103,7 +103,7 @@ To merge your remote schema with the GraphQL engine's auto-generated schema:
             timeout_seconds: 60
             forward_client_headers: true
 
-    Then apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
@@ -111,7 +111,7 @@ To merge your remote schema with the GraphQL engine's auto-generated schema:
 
   .. tab:: Via API
 
-    You can add a remote schema by using the :ref:`add_remote_schema API <add_remote_schema>`:
+    You can add a remote schema by using the :ref:`add_remote_schema metadata API <add_remote_schema>`:
 
     .. code-block:: http
 

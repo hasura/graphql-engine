@@ -41,7 +41,7 @@ To rename a relationship:
             schema: public
             name: author
 
-    After that, apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
@@ -49,7 +49,7 @@ To rename a relationship:
 
   .. tab:: Via API
 
-    You can rename a relationship by making an API call to the :ref:`rename_relationship API <rename_relationship>`:
+    You can rename a relationship by using the :ref:`rename_relationship metadata API <rename_relationship>`:
 
     .. code-block:: http
 

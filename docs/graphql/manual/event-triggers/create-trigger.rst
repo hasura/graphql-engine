@@ -47,7 +47,7 @@ Event triggers can be created using the Hasura console or metadata APIs.
                timeout_sec: 60
             webhook: https://httpbin.org/post
 
-      Then apply the metadata by running:
+      Apply the metadata by running:
 
       .. code-block:: bash
 
@@ -55,7 +55,7 @@ Event triggers can be created using the Hasura console or metadata APIs.
 
    .. tab:: Via API
 
-      Add an event trigger by using the :ref:`create_event_trigger<create_event_trigger>` API.
+      Add an event trigger by using the :ref:`create_event_trigger metadata API<create_event_trigger>`.
 
       .. code-block:: http
 
@@ -133,9 +133,15 @@ Advanced Settings
                timeout_sec: 60
             webhook: https://httpbin.org/post
 
+      Apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
    .. tab:: Via API
 
-      You can configure advanced settings via the :ref:`create_event_trigger<create_event_trigger>` API.
+      You can configure advanced settings via the :ref:`create_event_trigger metadata API<create_event_trigger>`.
 
       .. code-block:: http
          :emphasize-lines: 21-25

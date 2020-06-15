@@ -45,7 +45,7 @@ Expose columns with a different name in the GraphQL API
             custom_column_names:
               addr: address
 
-    After that, apply the metadata by running:
+    Apply the metadata by running:
 
     .. code-block:: bash
 
