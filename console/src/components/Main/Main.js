@@ -666,7 +666,7 @@ class Main extends React.Component {
                 </ToolTip>
 
               </li>
-              <li>Support Forums <img src={arrowForwardBlock} alt='Arrow'/></li>
+              <li><Link to='/support/forum/'>Support Forums <img src={arrowForwardBlock} alt='Arrow'/></Link></li>
             </ul>
           </div>
         );

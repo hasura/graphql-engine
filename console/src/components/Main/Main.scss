@@ -1206,19 +1206,18 @@
     position: absolute;
     box-shadow: 0 3px 20px 0 rgba(0, 0, 0, 0.24);
     background-color: #ffffff;
-    position: absolute;
     width: 230px;
     z-index: 1;
     top: 60px;
-    right: 0px;
+    right: 10px;
     text-transform: none;
     font-size: 15px;
     color: #303030;
     font-weight: normal;
     .helpPopClose {
+      position: absolute;
       top: 10px;
       right: 10px;
-      cursor: pointer;
       width: 10px;
       cursor: pointer;
       &:hover {
@@ -1234,6 +1233,13 @@
         border-bottom: 1px solid #ddd;
         &:last-child {
           border-bottom: 0;
+        }
+        a {
+          color: #303030;
+          text-decoration: none;
+          &:hover {
+            text-decoration: underline;
+          }
         }
         img {
           margin-left: 8px;

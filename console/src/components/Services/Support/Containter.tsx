@@ -1,24 +1,29 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link, RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
-import { RightContainer } from '../../Common/Layout/RightContainer/RightContainer';
+
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 // import LeftSidebar from './Sidebar';
+
 import { MapStateToProps } from '../../../types';
 
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
 import styles from '../../Common/TableCommon/Table.scss';
-
 interface Props extends InjectedProps {}
 
 const Container: React.FC<Props> = props => {
-  const { children } = props;
+  const {
+    children,
+  } = props;
 
   const sidebarContent = (
     <ul>
-      <li role="presentation" className={styles.active}>
-        <Link className={styles.linkBorder} to="/support/forum">
+      <li
+        role="presentation"
+        className={styles.active}
+      >
+        <Link className={styles.linkBorder} to={'/support/forum'}>
           Support Forums
         </Link>
       </li>
@@ -31,21 +36,23 @@ const Container: React.FC<Props> = props => {
 
   return (
     <PageContainer helmet={helmetTitle} leftContainer={leftContainer}>
-      <RightContainer>
-        {children}
-      </RightContainer>
+      {children}
     </PageContainer>
   );
 };
 
-const mapStateToProps: MapStateToProps<PropsFromState> = state => {
+
+const mapStateToProps: MapStateToProps<PropsFromState > = (
+  state,
+  ownProps
+) => {
   return {
-    serverVersion: state.main.serverVersion,
+    serverVersion: state.main.serverVersion
   };
 };
 
 type PropsFromState = {
-  serverVersion: string;
+  serverVersion: string
 };
 
 const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
