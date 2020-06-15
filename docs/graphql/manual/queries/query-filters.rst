@@ -912,26 +912,11 @@ Fetch a list of geometry values which are within the given ``polygon`` value:
             "type": "Polygon",
             "coordinates": [
               [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0,
-                  2
-                ],
-                [
-                  2,
-                  2
-                ],
-                [
-                  2,
-                  0
-                ],
-                [
-                  0,
-                  0
-                ]
+                [ 0, 0 ],
+                [ 0, 2 ],
+                [ 2, 2 ],
+                [ 2, 0 ],
+                [ 0, 0 ]
               ]
             ]
           }

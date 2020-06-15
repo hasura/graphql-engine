@@ -47,7 +47,7 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``article`
 
   .. tab:: Via CLI
 
-    :ref:`Create a migration manually <manual_migrations>` with the following statement:
+    :ref:`Create a migration manually <manual_migrations>` and add the following statement to it:
 
     .. code-block:: sql
 
@@ -203,7 +203,7 @@ Fetch a list of articles and each article's author:
       X-Hasura-Role: admin
 
       {
-        "query": "query { article { id title author { id first_name }}}"
+        "query": "query { article { id title author { id name }}}"
       }
 
 Step 3: Create an array relationship
@@ -366,7 +366,7 @@ Fetch a list of authors and a nested list of each author's articles:
       X-Hasura-Role: admin
 
       {
-        "query": "query { article { id title author { id first_name }}}"
+        "query": "query { author { id name articles { id title }}}"
       }
 
 .. _create_manual_relationships:
@@ -447,7 +447,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
   .. tab:: Via API
 
-    You can add a manual relationship by using to the :ref:`create_object_relationship metadata API <create_object_relationship>`:
+    You can add a manual relationship by using the :ref:`create_object_relationship metadata API <create_object_relationship>`:
 
     .. code-block:: http
 

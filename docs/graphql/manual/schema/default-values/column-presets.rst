@@ -51,7 +51,7 @@ Step 1: Configure a column preset
 
   .. tab:: Via CLI
 
-    You can add column presets in the ``tables.yaml`` file inside the ``metadata`` directory:
+    You can set column presets in the ``tables.yaml`` file inside the ``metadata`` directory:
 
     .. code-block:: yaml
        :emphasize-lines: 8-9

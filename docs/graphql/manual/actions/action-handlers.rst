@@ -209,7 +209,7 @@ For your action, add a header that will act as an action secret.
 
   .. tab:: Via API
 
-    Headers can be set when creating :ref:`creating <create_actions>` or :ref:`updating <update_action>` an action via the metadata API.
+    Headers can be set when creating :ref:`creating <create_action>` or :ref:`updating <update_action>` an action via the metadata API.
 
     .. code-block:: http
       :emphasize-lines: 12-17
@@ -245,7 +245,7 @@ For your action, add a header that will act as an action secret.
 
     .. note::
 
-      Before creating an action via the :ref:`create_action metadata API <create_actions>`, all custom types need to be defined via the :ref:`set_custom_types metadata API <set_custom_types>`.
+      Before creating an action via the :ref:`create_action metadata API <create_action>`, all custom types need to be defined via the :ref:`set_custom_types metadata API <set_custom_types>`.
 
 
 This secret is only known by Hasura and is passed to your endpoint with every call,

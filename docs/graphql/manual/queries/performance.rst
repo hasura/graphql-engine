@@ -225,7 +225,7 @@ Whenever there is a sequential scan, it can be optimized by adding an index.
 
   .. tab:: API
 
-   You can add a view by making an API call to the :ref:`run_sql API <run_sql>`:
+   You can add a view by making an API call to the :ref:`run_sql metadata API <run_sql>`:
 
    .. code-block:: http
 

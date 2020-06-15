@@ -193,7 +193,6 @@ we need to tell Hasura that this table represents an enum.
     2. Using the :ref:`set_table_is_enum metadata API<set_table_is_enum>` to change whether or not an already-tracked table should be used as an enum:
 
     .. code-block:: http
-      :emphasize-lines: 6-13
 
       POST /v1/query HTTP/1.1
       Content-Type: application/json

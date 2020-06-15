@@ -160,7 +160,8 @@ Suppose we have the following table:
 
   .. tab:: Via API
 
-    You can add a function by using the :ref:`run_sql metadata API <run_sql>`:
+    You can add a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
+    and a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ by using the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 
@@ -488,30 +489,32 @@ returns an object of type ``AuthorOutput``:
 
   .. tab:: Via CLI
 
-    An action can be created by adding it to the ``actions.yaml`` file inside the ``metadata`` directory:
-
-    .. code-block:: yaml
-
-        actions:
-          - name: InsertAuthor
-            definition:
-              kind: synchronous
-              handler: http://host.docker.internal:3000
-          custom_types:
-            enums: []
-            input_objects:
-            - name: AuthorInput
-            objects:
-            - name: AddResult
-            - name: UpdatedAuthor
-            - name: AuthorOutput
-            scalars: []
-
-    Apply the metadata by running:
+    To create an action, run
 
     .. code-block:: bash
 
-        hasura metadata apply
+      hasura actions create InsertAuthor
+
+    This will open up an editor with ``metadata/actions.graphql``. You can enter
+    the action's mutation definition and the required types in this file. For your
+    ``InsertAuthor`` mutation, replace the content of this file with the following
+    and save:
+
+    .. code-block:: graphql
+
+      type Mutation {
+        InsertAuthor (author: AuthorInput!): AuthorOutput
+      }
+
+      input AuthorInput {
+        name: String!
+        rating: Int!
+        is_active: Boolean!
+      }
+
+      type AuthorOutput {
+        id: Int!
+      }
 
   .. tab:: Via API
 
@@ -561,7 +564,7 @@ returns an object of type ``AuthorOutput``:
         }
       }
 
-    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_actions>`:
+    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_action>`:
 
     .. code-block:: http
 

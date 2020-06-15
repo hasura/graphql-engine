@@ -173,7 +173,7 @@ in the GraphQL schema.
         }
       }
 
-    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_actions>`:
+    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_action>`:
 
     .. code-block:: http
 
@@ -258,7 +258,7 @@ Now, set the handler for the action:
 
   .. tab:: Via API
 
-    The action handler must be set when creating an action via the Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_actions>`.
+    The action handler must be set when creating an action via the :ref:`create_action metadata API <create_action>`.
 
     It can be updated later by using the :ref:`update_action metadata API <update_action>`.
 
@@ -288,7 +288,7 @@ Finally, to save the action:
 
   .. tab:: Via API
 
-    An action will be created when sending a request to the :ref:`create_action metadata API <create_actions>`.
+    An action will be created when sending a request to the :ref:`create_action metadata API <create_action>`.
 
 Step 4: Try it out
 ~~~~~~~~~~~~~~~~~~
@@ -433,7 +433,7 @@ the GraphQL schema.
         }
       }
 
-    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_actions>`:
+    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_action>`:
 
     .. code-block:: http
 
@@ -520,7 +520,7 @@ Now, set the handler for the action:
 
   .. tab:: Via API
 
-    The action handler must be set when creating an action via the Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_actions>`.
+    The action handler must be set when creating an action via the Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_action>`.
 
     It can be updated later by using the :ref:`update_action metadata API <update_action>`.
 
@@ -550,7 +550,7 @@ Finally, to save the action:
 
   .. tab:: Via API
 
-    An action will be created when sending a request to the :ref:`create_action metadata API <create_actions>`.
+    An action will be created when sending a request to the :ref:`create_action metadata API <create_action>`.
 
 
 Step 4: Try it out

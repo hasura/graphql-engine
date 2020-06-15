@@ -129,9 +129,7 @@ You can create relationships for custom output types by:
 
   .. tab:: Via API
 
-    Action relationships can be added while creating an action via the :ref:`create_action metadata API <create_actions>`.
-
-    It is essential that the relationships are defined along with all custom types *beforehand* via the :ref:`set_custom_types metadata API <set_custom_types>`:
+    Action relationships can be added while defining custom types for an action via the :ref:`set_custom_types metadata API <set_custom_types>`:
 
     .. code-block:: http
 
@@ -169,7 +167,7 @@ You can create relationships for custom output types by:
         }
       }
 
-    Once the custom types with relationships are defined, we can create an action via the :ref:`create_action metadata API <create_actions>`:
+    Once the custom types with relationships are defined, we can create an action via the :ref:`create_action metadata API <create_action>`:
 
     .. code-block:: http
 
