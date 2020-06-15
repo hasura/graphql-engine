@@ -10,6 +10,9 @@ import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 
 import           Hasura.GraphQL.Parser          (FieldParser, Kind (..), Parser)
 
+-- | 'remoteFieldFullSchema' takes the 'SchemaDocument' and a 'G.Name' and will
+--   return a 'SelectionSet' parser if the 'G.Name' is found and is a 'TypeDefinitionObject',
+--   otherwise, an error will be thrown.
 remoteFieldFullSchema
   :: forall n m
    . (MonadSchema n m, MonadError Text m)
@@ -25,6 +28,7 @@ remoteFieldFullSchema sdoc name =
   fieldParser <- remoteSchemaObject sdoc fieldObjectType
   pure $ P.unsafeRawParser (P.pType fieldParser)
 
+-- | 'remoteSchemaObject' returns a output parser for a given 'ObjectTypeDefinition'.
 remoteSchemaObject
   :: forall n m
   . (MonadSchema n m, MonadError Text m)
@@ -63,6 +67,7 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name _inte
   subFieldParsers <- traverse convert subFields
   pure $ () <$ (P.selectionSet name description subFieldParsers)
 
+-- | remoteSchemaInputObject returns an input parser for a given 'G.InputObjectTypeDefinition'
 remoteSchemaInputObject
   :: forall n m
   .  (MonadSchema n m, MonadError Text m)
@@ -86,6 +91,8 @@ lookupType (SchemaDocument types) name = find (\tp -> getNamedTyp tp == name) ty
       G.TypeDefinitionEnum t        -> G._etdName t
       G.TypeDefinitionInputObject t -> G._iotdName t
 
+-- | 'remoteFieldFromName' accepts a GraphQL name and searches for its definition
+--   in the 'SchemaDocument'.
 remoteFieldFromName
   :: forall n m
    . (MonadSchema n m, MonadError Text m)
@@ -99,6 +106,9 @@ remoteFieldFromName sdoc fieldName fieldTypeName argsDefns =
     Nothing -> throwError $ "Could not find type with name " <> G.unName fieldName
     Just typeDef -> remoteField sdoc fieldName argsDefns typeDef
 
+-- | 'inputValueDefinitionParser' accepts a 'G.InputValueDefinition' and will return an
+--   'InputFieldsParser' for it. If a non 'Input' GraphQL type is found in the 'type' of
+--    the 'InputValueDefinition' then an error will be thrown.
 inputValueDefinitionParser
   :: forall n m
    . (MonadSchema n m, MonadError Text m)
@@ -139,6 +149,9 @@ argumentsParser
 argumentsParser args schemaDoc = do
   pure () <$ mapM (inputValueDefinitionParser schemaDoc) args
 
+-- | 'remoteField' accepts a 'G.TypeDefinition' and will returns a 'FieldParser' for it.
+--   Note that the 'G.TypeDefinition' should be of the GraphQL 'Output' kind, when an
+--   GraphQL 'Input' kind is provided, then error will be thrown.
 remoteField
   :: forall n m
    . (MonadSchema n m, MonadError Text m)
