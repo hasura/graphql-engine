@@ -1,0 +1,1 @@
+export {getSupportRouter} from './Router';
