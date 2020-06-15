@@ -19,8 +19,56 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Open Sans', Helvetica, Arial, sans-serif;
 }
 
-body, p, #docs-content, #sidebar {
+body, p, #docs-content, #sidebar, #sidebar a,
+tt, code, kbd, pre, samp,
+.graphiql .graphiql-container .CodeMirror {
   font-size: 18px;
+}
+
+[role="main"] {
+  width: 90%;
+  border: none;
+  padding: 1px 15px 0;
+}
+
+[role="main"] h1 {
+  font-size: 32px;
+}
+
+[role="main"] h2 {
+  font-size: 26px;
+}
+
+[role="main"] h3 {
+  font-size: 24px;
+}
+
+[role="main"] h4 {
+  font-size: 20px;
+}
+
+@media (max-width: 1200px) {
+  body, p, #docs-content, #sidebar, #sidebar a,
+  tt, code, kbd, pre, samp,
+  .graphiql .graphiql-container .CodeMirror {
+    font-size: 16px;
+  }
+
+  [role="main"] h1 {
+    font-size: 32px;
+  }
+
+  [role="main"] h2 {
+    font-size: 24px;
+  }
+
+  [role="main"] h3 {
+    font-size: 20px;
+  }
+
+  [role="main"] h4 {
+    font-size: 18px;
+  }
 }
 
 form input[type="search"], form input[type="text"],
@@ -53,14 +101,6 @@ h3 {
 p {
   color: #333;
   line-height: 1.7;
-}
-
-tt,
-code,
-kbd,
-pre,
-samp {
-  font-size: 18px;
 }
 
 .inline-block {
@@ -291,31 +331,6 @@ samp {
   width: 75% !important;
   /* height: 100vh; */
   overflow-y: auto;
-}
-
-[role="main"] {
-  width: 90% !important;
-  /*max-width: 800px !important;*/
-  border: none !important;
-  padding-bottom: 0 !important;
-  padding-left: 15px !important;
-  padding-right: 15px !important;
-}
-
-[role="main"] h1 {
-  font-size: 32px !important;
-}
-
-[role="main"] h2 {
-  font-size: 26px !important;
-}
-
-[role="main"] h3 {
-  font-size: 24px !important;
-}
-
-[role="main"] h4 {
-  font-size: 20px !important;
 }
 
 #docs-content,
@@ -783,7 +798,6 @@ article ol ol {
   /* color: #fff; */
   color: rgba(214,214,214,1);
   text-decoration: none;
-  font-size: 18px;
 }
 
 #sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a code {
@@ -897,10 +911,6 @@ article ol ol {
 
 .graphiql.with-vars .graphiql-container {
   min-height: 375px;
-}
-
-.graphiql .graphiql-container .CodeMirror {
-  font-size: 18px;
 }
 
 .graphiql .topBarWrap {
