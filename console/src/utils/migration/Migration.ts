@@ -32,7 +32,7 @@ export default class Migration {
   UNSAFE_add = (up?: RunSQLQueryType, down?: RunSQLQueryType) => {
     if (up !== undefined && up !== null)
       this.upMigration = [...this.upMigration, up];
-    if (down !== undefined && up !== null)
+    if (down !== undefined && down !== null)
       this.downMigration = [down, ...this.downMigration];
   };
 }
