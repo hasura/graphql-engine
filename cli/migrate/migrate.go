@@ -1842,6 +1842,14 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 	}
 }
 
+func (m *Migrate) ApplySeed(q interface{}) error {
+	return m.databaseDrv.ApplySeed(q)
+}
+
+func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
+	return m.databaseDrv.ExportDataDump(tableNames)
+}
+
 func printDryRunStatus(migrations []*Migration) *bytes.Buffer {
 	out := new(tabwriter.Writer)
 	buf := &bytes.Buffer{}
