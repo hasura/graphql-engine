@@ -564,6 +564,14 @@ onConnInit
   :: (HasVersion, MonadIO m, UserAuthentication m)
   => L.Logger L.Hasura -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
 onConnInit logger manager wsConn authMode connParamsM = do
+  -- TODO: what should be the behaviour of connection_init message when a
+  -- connection is already iniatilized? Currently, we seem to be doing
+  -- something arbitrary which isn't correct. Ideally, we should stick to
+  -- this:
+  --
+  -- > Allow connection_init message only when the connection state is
+  -- 'not initialised'. This means that there is no reason for the
+  -- connection to be in `CSInitError` state.
   connState <- liftIO (STM.readTVarIO (_wscUser $ WS.getData wsConn))
   case getIpAddress connState of
     Left err -> unexpectedInitError err
