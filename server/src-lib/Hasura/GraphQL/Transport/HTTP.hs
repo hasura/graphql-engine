@@ -47,14 +47,8 @@ runGQBatched
   -- ^ the batched request with unparsed GraphQL query
   -> m (HttpResponse EncJSON)
 runGQBatched reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query = do
-  schemaCache <- asks E._ecxSchemaCache
-  enableAL <- asks E._ecxEnableAllowList
   case query of
-    GQLSingleRequest req -> do
-      -- run system authorization on the GraphQL API
-      reqParsed <- E.authorizeGQLApi userInfo (reqHdrs, ipAddress) enableAL schemaCache req
-                   >>= flip onLeft throwError
-      runGQ reqId userInfo reqHdrs queryType (req, reqParsed)
+    GQLSingleRequest req -> runGQ reqId userInfo ipAddress reqHdrs queryType req
     GQLBatchedReqs reqs -> do
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
@@ -65,11 +59,7 @@ runGQBatched reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType que
             . encJFromList
             . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
 
-      -- run system authorization on the GraphQL API
-      reqsParsed <- traverse (E.authorizeGQLApi userInfo (reqHdrs, ipAddress) enableAL schemaCache) reqs
-                    >>= mapM (flip onLeft throwError)
-      -- then run the query
-      fmap removeHeaders $ traverse (try . runGQ reqId userInfo reqHdrs queryType) $ zip reqs reqsParsed
+      fmap removeHeaders $ traverse (try . runGQ reqId userInfo ipAddress reqHdrs queryType) reqs
   where
     try = flip catchError (pure . Left) . fmap Right
 
@@ -80,21 +70,28 @@ runGQ
      , MonadIO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
+     , E.MonadGQLAuthorization m
      )
   => RequestId
   -> UserInfo
+  -> IpAddress
   -> [HTTP.Header]
   -> E.GraphQLQueryType
-  -> (GQLReqUnparsed, GQLReqParsed)
+  -> GQLReqUnparsed
   -> m (HttpResponse EncJSON)
-runGQ reqId userInfo reqHeaders queryType reqs@(reqUnparsed,_) = do
+runGQ reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   -- The response and misc telemetry data:
   let telemTransport = Telem.HTTP
   (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
-    E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer httpManager _ <- ask
+    E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer httpManager enableAL <- ask
+
+    -- run system authorization on the GraphQL API
+    reqParsed <- E.authorizeGQLApi userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
+                 >>= flip onLeft throwError
+
     (telemCacheHit, execPlan) <- E.getResolvedExecPlan pgExecCtx planCache
                                  userInfo sqlGenCtx sc scVer queryType
-                                 httpManager reqHeaders reqs
+                                 httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
       E.GExPHasura resolvedOp -> do
         (telemTimeIO, telemQueryType, respHdrs, resp) <- runHasuraGQ reqId reqUnparsed userInfo resolvedOp

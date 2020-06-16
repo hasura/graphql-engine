@@ -87,6 +87,10 @@ data ExecutionCtx
 -- Websockets) This is like a system authorization on the GraphQL API. System authorization /is in
 -- contrast/ with user authorization (on the GraphQL API) which is achieved by using RQL
 -- permissions. Enforcing allow-lists is an example of system authorization on GraphQL.
+
+-- | NOTE: Limitation: This parses the query, which is not ideal if we already have the query cached.
+-- The parsing happens unnecessary. But getting this to either return a plan or parse was tricky and
+-- complicated.
 class Monad m => MonadGQLAuthorization m where
   authorizeGQLApi
     :: UserInfo
