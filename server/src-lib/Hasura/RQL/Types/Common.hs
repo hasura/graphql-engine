@@ -46,15 +46,16 @@ module Hasura.RQL.Types.Common
 import           Hasura.EncJSON
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.SQL.Types
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.DDL.Headers        ()
+import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Types
 
 
 import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Sequence.NonEmpty
 import           Data.URL.Template
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
@@ -226,7 +227,7 @@ $(deriveJSON (aesonDrop 2 snakeCase) ''Constraint)
 data PrimaryKey a
   = PrimaryKey
   { _pkConstraint :: !Constraint
-  , _pkColumns    :: !(NonEmpty a)
+  , _pkColumns    :: !(NESeq a)
   } deriving (Show, Eq, Generic, Foldable)
 instance (NFData a) => NFData (PrimaryKey a)
 instance (Cacheable a) => Cacheable (PrimaryKey a)
@@ -279,7 +280,7 @@ newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: Dif
 instance FromJSON NonNegativeDiffTime where
   parseJSON = withScientific "NonNegativeDiffTime" $ \t -> do
     case (t > 0) of
-      True -> return $ NonNegativeDiffTime . realToFrac $ t
+      True  -> return $ NonNegativeDiffTime . realToFrac $ t
       False -> fail "negative value not allowed"
 
 newtype ResolvedWebhook

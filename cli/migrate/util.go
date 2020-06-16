@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
+
 	"github.com/hasura/graphql-engine/cli/metadata"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
@@ -172,6 +174,7 @@ func SetMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *Migrate, dir ...st
 		plugins = append(plugins, allowlist.New(ec, metadataDir))
 		plugins = append(plugins, remoteschemas.New(ec, metadataDir))
 		plugins = append(plugins, actions.New(ec, metadataDir))
+		plugins = append(plugins, crontriggers.New(ec, metadataDir))
 	} else {
 		plugins = append(plugins, metadata.New(ec, ec.MigrationDir))
 	}
