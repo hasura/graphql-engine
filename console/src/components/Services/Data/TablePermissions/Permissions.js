@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import AceEditor from 'react-ace';
+import JSONEditor from './JSONEditor';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import InputGroup from 'react-bootstrap/lib/InputGroup';
 import OverlayTrigger from 'react-bootstrap/es/OverlayTrigger';
@@ -9,7 +9,6 @@ import 'brace/theme/github';
 
 import { RESET } from '../TableModify/ModifyActions';
 import {
-  permChangeTypes,
   permOpenEdit,
   permSetFilter,
   permSetFilterSameAs,
@@ -18,7 +17,6 @@ import {
   permAllowAll,
   permCloseEdit,
   permSetRoleName,
-  permChangePermissions,
   // permToggleAllowUpsert,
   permToggleAllowAggregation,
   permToggleModifyLimit,
@@ -81,16 +79,16 @@ import {
   getTableSupportedQueries,
   QUERY_TYPES,
 } from '../../../Common/utils/pgUtils';
-import { showErrorNotification } from '../../Common/Notification';
-import KnowMoreLink from "../../../Common/KnowMoreLink/KnowMoreLink";
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+
 import {
   getFilterQueries,
   replaceLegacyOperators,
-  getAllowedFilterKeys,
   updateFilterTypeLabel,
   getDefaultFilterType,
   getUpdateTooltip,
 } from './utils';
+import PermButtonSection from './PermButtonsSection';
 
 class Permissions extends Component {
   constructor() {
@@ -260,7 +258,7 @@ class Permissions extends Component {
       );
     };
 
-    const getHeader = tableSchema => {
+    const getHeader = (tableSchema) => {
       return (
         <TableHeader
           dispatch={dispatch}
@@ -322,7 +320,7 @@ class Permissions extends Component {
         const rolePermissions = getTablePermissionsByRoles(tableSchema);
 
         const getBulkCheckbox = (role, isNewRole) => {
-          const dispatchBulkSelect = e => {
+          const dispatchBulkSelect = (e) => {
             const isChecked = e.target.checked;
             const selectedRole = e.target.getAttribute('data-role');
             dispatch(permSetBulkSelect(isChecked, selectedRole));
@@ -340,12 +338,13 @@ class Permissions extends Component {
             onChange: dispatchBulkSelect,
             role,
             isNewRole,
-            checked: permissionsState.bulkSelect.filter(e => e === role).length,
+            checked: permissionsState.bulkSelect.filter((e) => e === role)
+              .length,
           };
         };
 
-        const getQueryTypes = role => {
-          const dispatchOpenEdit = queryType => () => {
+        const getQueryTypes = (role) => {
+          const dispatchOpenEdit = (queryType) => () => {
             if (role === '') {
               document.getElementById('new-role-input').focus();
             } else {
@@ -373,7 +372,7 @@ class Permissions extends Component {
             );
           };
 
-          const getRoleQueryPermission = queryType => {
+          const getRoleQueryPermission = (queryType) => {
             let _permission;
 
             if (role === 'admin') {
@@ -433,7 +432,7 @@ class Permissions extends Component {
 
             return _permission;
           };
-          return supportedQueryTypes.map(queryType => {
+          return supportedQueryTypes.map((queryType) => {
             const isEditAllowed = role !== 'admin';
             const isCurrEdit =
               permissionsState.role === role &&
@@ -467,7 +466,7 @@ class Permissions extends Component {
         // add admin to roles
         const _roleList = ['admin'].concat(roleList);
 
-        const _rolePermissions = _roleList.map(r => {
+        const _rolePermissions = _roleList.map((r) => {
           return {
             roleName: r,
             permTypes: getQueryTypes(r),
@@ -482,7 +481,7 @@ class Permissions extends Component {
           isNewRole: true,
         });
 
-        const dispatchRoleNameChange = e => {
+        const dispatchRoleNameChange = (e) => {
           const newRole = e.target.value.trim();
 
           dispatch(permSetRoleName(newRole));
@@ -508,7 +507,7 @@ class Permissions extends Component {
       );
     };
 
-    const getBulkSection = tableSchema => {
+    const getBulkSection = (tableSchema) => {
       const bulkSelectedRoles = permissionsState.bulkSelect;
 
       if (!bulkSelectedRoles.length) {
@@ -516,7 +515,7 @@ class Permissions extends Component {
       }
 
       const getSelectedRoles = () => {
-        return bulkSelectedRoles.map(r => {
+        return bulkSelectedRoles.map((r) => {
           return (
             <span key={r} className={styles.add_pad_right}>
               <b>{r}</b>{' '}
@@ -562,7 +561,7 @@ class Permissions extends Component {
       const query = permissionsState.query;
 
       const rolePermissions = tableSchema.permissions.find(
-        p => p.role_name === permissionsState.role
+        (p) => p.role_name === permissionsState.role
       );
 
       const currQueryPermissions = rolePermissions
@@ -597,12 +596,14 @@ class Permissions extends Component {
         }
 
         let knowMoreHtml;
-        if(knowMoreRef) {
+        if (knowMoreRef) {
           knowMoreHtml = (
-            <span className={`${styles.add_mar_left_small} ${styles.sectionStatus}`}>
-              <KnowMoreLink href={knowMoreRef}/>
+            <span
+              className={`${styles.add_mar_left_small} ${styles.sectionStatus}`}
+            >
+              <KnowMoreLink href={knowMoreRef} />
             </span>
-          )
+          );
         }
 
         return (
@@ -654,10 +655,10 @@ class Permissions extends Component {
             dispatch(permAllowAll(filterType));
           };
 
-          const dispatchFuncSetFilter = filter => {
-            this.setState(prev => ({
-              filterString: {
-                ...prev,
+          const dispatchFuncSetFilter = (filter) => {
+            this.setState((prev) => ({
+              localFilterString: {
+                ...prev.localFilterString,
                 [filterType]: filter,
               },
             }));
@@ -667,7 +668,7 @@ class Permissions extends Component {
             }
           };
 
-          const dispatchSetFilterSameAs = filter => () => {
+          const dispatchSetFilterSameAs = (filter) => () => {
             dispatch(permSetFilterSameAs(JSON.parse(filter), filterType));
           };
 
@@ -684,15 +685,9 @@ class Permissions extends Component {
           );
 
           const selectedValue = (
-            <AceEditor
-              mode="json"
-              value={currentFilterString || filterString[filterType]}
+            <JSONEditor
+              data={filterString[filterType] || currentFilterString}
               onChange={dispatchFuncSetFilter}
-              theme="github"
-              height="5em"
-              maxLines={15}
-              width="100%"
-              showPrintMargin={false}
               key={-3}
             />
           );
@@ -788,7 +783,7 @@ class Permissions extends Component {
           };
 
           const addCustomCheckOption = () => {
-            const loadSchemasFunc = schemaNames => {
+            const loadSchemasFunc = (schemaNames) => {
               dispatch(updateSchemaInfo({ schemas: schemaNames }));
             };
 
@@ -851,7 +846,7 @@ class Permissions extends Component {
         };
 
         const getLimitSection = () => {
-          const dispatchLimit = limit => {
+          const dispatchLimit = (limit) => {
             const parsedLimit = parseInt(limit, 10);
             dispatch(permToggleModifyLimit(parsedLimit));
           };
@@ -878,7 +873,7 @@ class Permissions extends Component {
                     styles.mar_small_left + ' form-control ' + styles.limitInput
                   }
                   value={limitValue}
-                  onChange={e => dispatchLimit(e.target.value)}
+                  onChange={(e) => dispatchLimit(e.target.value)}
                   disabled={noPermissions}
                   title={noPermissions ? noPermissionsMsg : ''}
                   type="number"
@@ -952,7 +947,7 @@ class Permissions extends Component {
         const getColumnList = () => {
           const _columnList = [];
 
-          const dispatchToggleField = fieldType => e => {
+          const dispatchToggleField = (fieldType) => (e) => {
             const fieldName = e.target.value;
             dispatch(permToggleField(fieldType, fieldName));
           };
@@ -988,14 +983,14 @@ class Permissions extends Component {
             );
           };
 
-          tableSchema.columns.forEach(colObj => {
+          tableSchema.columns.forEach((colObj) => {
             const columnName = colObj.column_name;
 
             _columnList.push(getFieldCheckbox('columns', columnName));
           });
 
           if (query === 'select') {
-            groupedComputedFields.scalar.forEach(scalarComputedField => {
+            groupedComputedFields.scalar.forEach((scalarComputedField) => {
               const computedFieldName = getComputedFieldName(
                 scalarComputedField
               );
@@ -1041,13 +1036,13 @@ class Permissions extends Component {
           const dispatchToggleAllColumns = () => {
             const allFields = {};
 
-            allFields.columns = getTableColumns(tableSchema).map(c =>
+            allFields.columns = getTableColumns(tableSchema).map((c) =>
               getColumnName(c)
             );
 
             if (query === 'select') {
-              allFields.computed_fields = groupedComputedFields.scalar.map(cf =>
-                getComputedFieldName(cf)
+              allFields.computed_fields = groupedComputedFields.scalar.map(
+                (cf) => getComputedFieldName(cf)
               );
             }
 
@@ -1192,7 +1187,7 @@ class Permissions extends Component {
       //   );
       // };
 
-      const getPresetsSection = action => {
+      const getPresetsSection = (action) => {
         if (query !== action) {
           return;
         }
@@ -1205,7 +1200,7 @@ class Permissions extends Component {
         const getPresetValues = () => {
           const presetColumns = Object.keys(presets);
 
-          const setPresetValue = e => {
+          const setPresetValue = (e) => {
             // Get the index of the changed value and if both key and value are set create one more object in set
             const inputNode = e.target;
 
@@ -1225,7 +1220,7 @@ class Permissions extends Component {
             });
           };
 
-          const setPresetColumn = e => {
+          const setPresetColumn = (e) => {
             // Get the index of the changed value and if both key and value are set create one more object in set
             const selectNode = e.target;
             const selectedColumn = selectNode.value;
@@ -1250,7 +1245,7 @@ class Permissions extends Component {
             }
           };
 
-          const setPresetType = e => {
+          const setPresetType = (e) => {
             const selectNode = e.target;
 
             const column = selectNode.getAttribute('data-preset-column');
@@ -1265,7 +1260,7 @@ class Permissions extends Component {
             });
           };
 
-          const deletePreset = e => {
+          const deletePreset = (e) => {
             const column = e.target.getAttribute('data-preset-column');
             const index = e.target.getAttribute('data-index-id');
 
@@ -1282,7 +1277,7 @@ class Permissions extends Component {
             });
           };
 
-          const getPresetValueType = preset => {
+          const getPresetValueType = (preset) => {
             let _valueType = '';
 
             if (preset.column || preset.value) {
@@ -1377,7 +1372,7 @@ class Permissions extends Component {
             const presetInputDisabled = !preset.column;
 
             const columnInfo = columns.find(
-              c => getColumnName(c) === preset.column
+              (c) => getColumnName(c) === preset.column
             );
             const columnType = columnInfo ? getColumnType(columnInfo) : '';
 
@@ -1414,7 +1409,7 @@ class Permissions extends Component {
             return _presetInput;
           };
 
-          const getPresetExample = preset => {
+          const getPresetExample = (preset) => {
             let _presetExample;
 
             const presetType = getPresetValueType(preset);
@@ -1525,7 +1520,7 @@ class Permissions extends Component {
           return;
         }
 
-        const handleClick = e => {
+        const handleClick = (e) => {
           dispatch(permToggleAllowAggregation(e.target.checked));
         };
 
@@ -1601,12 +1596,12 @@ class Permissions extends Component {
         const getApplyToList = () => {
           const _applyToListHtml = [];
 
-          const tableOptions = allSchemas.map(schema => schema.table_name);
+          const tableOptions = allSchemas.map((schema) => schema.table_name);
           const actionsList = ['insert', 'select', 'update', 'delete'];
 
           const getApplyToRow = (applyTo, index) => {
             const getSelect = (type, options, value = '') => {
-              const setApplyTo = e => {
+              const setApplyTo = (e) => {
                 dispatch(permSetApplySamePerm(index, type, e.target.value));
               };
 
@@ -1697,7 +1692,7 @@ class Permissions extends Component {
           );
 
           const validApplyToList = permissionsState.applySamePermissions.filter(
-            applyTo => applyTo.table && applyTo.action && applyTo.role
+            (applyTo) => applyTo.table && applyTo.action && applyTo.role
           );
 
           clonePermissionsHtml = (
@@ -1738,93 +1733,6 @@ class Permissions extends Component {
         return clonePermissionsHtml;
       };
 
-      const getButtonsSection = () => {
-        if (readOnlyMode) {
-          return null;
-        }
-
-        const dispatchSavePermissions = () => {
-          const filterKeys = getAllowedFilterKeys(query);
-          const isInvalid = filterKeys.some(key => {
-            if (
-              localFilterString[key] &&
-              !isJsonString(localFilterString[key])
-            ) {
-              return true;
-            }
-            return false;
-          });
-
-          if (isInvalid) {
-            dispatch(
-              showErrorNotification(
-                'Saving permissions failed',
-                'Row permission is not a valid JSON'
-              )
-            );
-            return;
-          }
-
-          dispatch(permChangePermissions(permChangeTypes.save));
-        };
-
-        const dispatchRemoveAccess = () => {
-          const confirmMessage =
-            'This will permanently delete the currently set permissions';
-          const isOk = getConfirmation(confirmMessage);
-          if (isOk) {
-            dispatch(permChangePermissions(permChangeTypes.delete));
-          }
-        };
-
-        const getPermActionButton = (
-          value,
-          color,
-          onClickFn,
-          disabled,
-          title
-        ) => (
-          <Button
-            className={styles.add_mar_right}
-            color={color}
-            size="sm"
-            onClick={onClickFn}
-            disabled={disabled}
-            title={title}
-            data-test={`${value.split(' ').join('-')}-button`}
-          >
-            {value}
-          </Button>
-        );
-        const applySameSelected = permissionsState.applySamePermissions.length;
-
-        const disableSave = applySameSelected || !permsChanged;
-        const disableRemoveAccess = !currQueryPermissions;
-
-        const saveButton = getPermActionButton(
-          'Save Permissions',
-          'yellow',
-          dispatchSavePermissions,
-          disableSave,
-          !permsChanged ? 'No changes made' : ''
-        );
-
-        const removeAccessButton = getPermActionButton(
-          'Delete Permissions',
-          'red',
-          dispatchRemoveAccess,
-          disableRemoveAccess,
-          disableRemoveAccess ? 'No permissions set' : ''
-        );
-
-        return (
-          <div className={styles.add_mar_top + ' ' + styles.add_pad_left}>
-            {saveButton}
-            {removeAccessButton}
-          </div>
-        );
-      };
-
       const getBackendOnlySection = () => {
         if (!isQueryTypeBackendOnlyCompatible(permissionsState.query)) {
           return null;
@@ -1842,14 +1750,21 @@ class Permissions extends Component {
         const backendStatus = isBackendOnly ? 'enabled' : 'disabled';
         return (
           <CollapsibleToggle
-            title={getSectionHeader('Backend only', tooltip, backendStatus, 'https://docs.hasura.io/1.0/graphql/manual/auth/authorization/permission-rules.html#backend-only-inserts')}
+            title={getSectionHeader(
+              'Backend only',
+              tooltip,
+              backendStatus,
+              'https://docs.hasura.io/1.0/graphql/manual/auth/authorization/permission-rules.html#backend-only-inserts'
+            )}
             useDefaultTitleStyle
             testId={'toggle-backend-only'}
           >
             <div
               className={`${styles.editPermsSection} ${styles.display_flex}`}
             >
-              <div className={`${styles.display_flex} ${styles.add_mar_right_mid}`}>
+              <div
+                className={`${styles.display_flex} ${styles.add_mar_right_mid}`}
+              >
                 <Toggle
                   checked={isBackendOnly}
                   onChange={() => dispatch(permToggleBackendOnly())}
@@ -1891,7 +1806,15 @@ class Permissions extends Component {
             {getPresetsSection('insert')}
             {getPresetsSection('update')}
             {getBackendOnlySection()}
-            {getButtonsSection()}
+            <PermButtonSection
+              readOnlyMode={readOnlyMode}
+              query={query}
+              localFilterString={localFilterString}
+              dispatch={dispatch}
+              permissionsState={permissionsState}
+              permsChanged={permsChanged}
+              currQueryPermissions={currQueryPermissions}
+            />
             {getClonePermsSection()}
           </div>
         </div>
@@ -1958,6 +1881,6 @@ const mapStateToProps = (state, ownProps) => ({
   ...state.tables.modify,
 });
 
-const permissionsConnector = connect => connect(mapStateToProps)(Permissions);
+const permissionsConnector = (connect) => connect(mapStateToProps)(Permissions);
 
 export default permissionsConnector;

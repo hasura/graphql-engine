@@ -40,8 +40,8 @@ const AddAction = ({
     };
   }, []);
 
-  const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
-  const kindOnChange = k => dispatch(setActionKind(k));
+  const handlerOnChange = (e) => dispatch(setActionHandler(e.target.value));
+  const kindOnChange = (k) => dispatch(setActionKind(k));
 
   const {
     sdl: typesDefinitionSdl,
@@ -59,12 +59,11 @@ const AddAction = ({
     dispatch(createAction());
   };
 
-  const setHeaders = hs => {
+  const setHeaders = (hs) => {
     dispatch(dispatchNewHeaders(hs));
   };
 
-  const toggleForwardClientHeaders = e => {
-    e.preventDefault();
+  const toggleForwardClientHeaders = () => {
     dispatch(toggleFCH());
   };
 

@@ -26,12 +26,12 @@ export const TypedInput = ({
   const isAutoIncrement = isColumnAutoIncrement(col);
   const placeHolder = hasDefault ? colDefault : getPlaceholder(colType);
   const getDefaultValue = () => {
-    if (prevValue) return prevValue;
+    if (prevValue !== undefined) return prevValue;
     if (clone && colName in clone) return clone[colName];
     return '';
   };
 
-  const onClick = e => {
+  const onClick = (e) => {
     e.target
       .closest('.radio-inline')
       .querySelector('input[type="radio"]').checked = true;
@@ -59,7 +59,7 @@ export const TypedInput = ({
         <option disabled value="">
           -- enum value --
         </option>
-        {enumOptions[colName].map(option => (
+        {enumOptions[colName].map((option) => (
           <option key={option} value={option}>
             {option}
           </option>
@@ -109,7 +109,7 @@ export const TypedInput = ({
 
     case BOOLEAN:
       return (
-        <select {...standardInputProps} defaultValue={placeHolder}>
+        <select {...standardInputProps}>
           <option value="" disabled>
             -- bool --
           </option>

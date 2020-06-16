@@ -8,3 +8,4 @@ declare namespace SvgPanZoom {
 }
 
 declare module 'react-bootstrap/lib/Tooltip';
+declare module 'react-bootstrap/lib/OverlayTrigger';
