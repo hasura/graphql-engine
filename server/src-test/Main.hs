@@ -17,7 +17,7 @@ import qualified Network.HTTP.Client          as HTTP
 import qualified Network.HTTP.Client.TLS      as HTTP
 import qualified Test.Hspec.Runner            as Hspec
 
-import           Hasura.Db                    (PGExecCtx (..))
+import           Hasura.Db                    (mkPGExecCtx)
 import           Hasura.RQL.Types             (SQLGenCtx (..))
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init           (RawConnInfo, mkConnInfo, mkRawConnInfo,
@@ -79,7 +79,7 @@ buildPostgresSpecs pgConnOptions = do
 
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
         let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)
-            pgContext = PGExecCtx pgPool Q.Serializable
+            pgContext = mkPGExecCtx Q.Serializable pgPool
 
             runAsAdmin :: Run a -> IO a
             runAsAdmin =
