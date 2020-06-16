@@ -51,7 +51,14 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return ec.Validate()
+			err = ec.Validate()
+			if err != nil {
+				return err
+			}
+			if cmd.Root().PersistentFlags().Changed("config-file") && ec.Config.Version == cli.V1 {
+				return fmt.Errorf("invalid config version | --config-file flag only supported from config version 2")
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if ec.Config.Version != cli.V1 {

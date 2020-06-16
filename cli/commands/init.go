@@ -58,7 +58,14 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return ec.PluginsConfig.Repo.EnsureCloned()
+			err = ec.PluginsConfig.Repo.EnsureCloned()
+			if err != nil {
+				return err
+			}
+			if cmd.Root().PersistentFlags().Changed("config-file") && opts.Version == cli.V1 {
+				return fmt.Errorf("invalid config version | --config-file flag only supported from config version 2")
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 1 {
@@ -125,7 +132,7 @@ func (o *InitOptions) Run() error {
 			return errors.Wrap(err, "can't initialise hasura project in filesystem root")
 		}
 		// check if the current directory is already a hasura project
-		if err := cli.ValidateDirectory(cwdir); err == nil {
+		if err := cli.CheckDirectoryForFiles(cwdir, cli.ConfigFile); err == nil {
 			return errors.Errorf("current working directory is already a hasura project directory")
 		}
 		o.EC.ExecutionDirectory = cwdir
@@ -221,7 +228,11 @@ func (o *InitOptions) createFiles() error {
 
 	// write the config file
 	o.EC.Config = config
-	o.EC.ConfigFile = filepath.Join(o.EC.ExecutionDirectory, "config.yaml")
+	configFile := "config.yaml"
+	if ec.ConfigFile != "" {
+		configFile = ec.ConfigFile
+	}
+	o.EC.ConfigFile = filepath.Join(o.EC.ExecutionDirectory, configFile)
 	err = o.EC.WriteConfig(nil)
 	if err != nil {
 		return errors.Wrap(err, "cannot write config file")
