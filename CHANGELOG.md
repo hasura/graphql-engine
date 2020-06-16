@@ -65,6 +65,29 @@ Support for this is now added through the `add_computed_field` API.
 
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
+### Manage seed migrations as SQL files
+A new `seeds` command is introduced in CLI, this will allow managing seed migrations as SQL files
+
+#### Creating seed
+```                                                        
+# create a new seed file and use editor to add SQL content
+hasura seed create new_table_seed
+
+# create a new seed by exporting data from tables already present in the database
+hasura seed create table1_seed --from-table table1
+
+# create from data in multiple tables:
+hasura seed create tables_seed --from-table table1 --from-table table2
+```
+#### Applying seed
+```
+# apply all seeds on the database:
+hasura seed apply
+
+# apply only a particular seed
+hasura seed apply --file 1234_add_some_seed_data.sql
+```
+
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
@@ -99,6 +122,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: respect read-only mode in actions pages (fix #4656) (#4764)
 - console: allow configuring session_argument for custom functions (close #4499) (#4922)
 - console: fix listen update column config selection for event trigger (close #5042) (#5043)
+- cli: add new flags `up-sql` and `down-sql` to generate sql based migrations from the CLI (#5026)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
