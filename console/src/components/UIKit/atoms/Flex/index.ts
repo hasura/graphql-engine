@@ -4,22 +4,22 @@ import {
   layout,
   flexbox,
   border,
-  FlexProps,
+  FlexboxProps,
   SpaceProps,
   LayoutProps,
-  BorderStyleProps,
+  BorderProps,
 } from 'styled-system';
 
 import { Box, BoxProps } from '../Box';
 
 interface FlexOwnProps
   extends BoxProps,
-    FlexProps,
-    SpaceProps,
-    LayoutProps,
-    BorderStyleProps {}
+  FlexboxProps,
+  SpaceProps,
+  LayoutProps,
+  BorderProps { }
 
-export const Flex = styled(Box)<FlexOwnProps>`
+export const Flex = styled(Box) <FlexOwnProps>`
   display: flex;
   align-items: center;
   padding: 0.35em;
