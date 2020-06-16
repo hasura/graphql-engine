@@ -362,18 +362,15 @@ v1GQRelayHandler
 v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 
 gqlExplainHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m)
-  => GE.GQLExplain GH.GQLReqUnparsed -> Handler m (HttpResponse EncJSON)
+  :: (HasVersion, MonadIO m)
+  => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
   sc <- getSCFromRef scRef
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
-  enableAL <- scEnableAllowlist . hcServerCtx <$> ask
-  ipAddress <- asks hcSourceIpAddress
-  reqHeaders <- asks hcReqHeaders
-  res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL reqHeaders ipAddress
+  res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx
          (restrictActionExecuter "query actions cannot be explained") query
   return $ HttpResponse res []
 

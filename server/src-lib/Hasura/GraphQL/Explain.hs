@@ -9,8 +9,6 @@ import qualified Data.Aeson.TH                          as J
 import qualified Data.HashMap.Strict                    as Map
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Types                     as HTTP
-import qualified Network.Wai.Extended                   as Wai
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -32,9 +30,9 @@ import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.GraphQL.Validate.SelectionSet   as GV
 import qualified Hasura.SQL.DML                         as S
 
-data GQLExplain a
+data GQLExplain
   = GQLExplain
-  { _gqeQuery   :: !GH.GQLReqUnparsed
+  { _gqeQuery   :: !GH.GQLReqParsed
   , _gqeUser    :: !(Maybe (Map.HashMap Text Text))
   , _gqeIsRelay :: !(Maybe Bool)
   } deriving (Show, Eq)
@@ -123,26 +121,20 @@ explainField userInfo gCtx sqlGenCtx actionExecuter fld =
     orderByCtx = _gOrdByCtx gCtx
 
 explainGQLQuery
-  :: (MonadError QErr m, MonadIO m, HasVersion, E.MonadGQLExecutionCheck m)
+  :: (MonadError QErr m, MonadIO m, HasVersion)
   => PGExecCtx
   -> SchemaCache
   -> SQLGenCtx
-  -> Bool
-  -> [HTTP.Header]
-  -> Wai.IpAddress
   -> QueryActionExecuter
-  -> GQLExplain GH.GQLReqUnparsed
+  -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx enableAL hdrs ip actionExecuter (GQLExplain query userVarsRaw maybeIsRelay) = do
-  -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
+explainGQLQuery pgExecCtx sc sqlGenCtx actionExecuter (GQLExplain query userVarsRaw maybeIsRelay) = do
+  -- NOTE!: we will be executing what follows as though admin role. See e.g.
+  -- notes in explainField:
   userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
-  -- NOTE: previously 'E.getExecPlanPartial' would perform allow-list checking. This has been moved
-  -- into a separate `E.MonadGQLExecutionCheck` class. Hence, now E.allowGQLExecution is called enforce
-  -- the GraphQL API authorization check
-  reqParsed <- E.allowGQLExecution userInfo (hdrs, ip) enableAL sc query
-               >>= flip onLeft throwError
+  -- we don't need to check in allow list as we consider it an admin endpoint
   (execPlan, queryReusability) <- runReusabilityT $
-    E.getExecPlanPartial userInfo sc queryType reqParsed
+    E.getExecPlanPartial userInfo sc queryType query
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet) ->
       return (gCtx, rootSelSet)
