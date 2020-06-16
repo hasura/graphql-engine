@@ -87,7 +87,7 @@ runGQ reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
-    reqParsed <- E.allowGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
+    reqParsed <- E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
                  >>= flip onLeft throwError
 
     (telemCacheHit, execPlan) <- E.getResolvedExecPlan pgExecCtx planCache

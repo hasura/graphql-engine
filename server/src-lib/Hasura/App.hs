@@ -436,7 +436,7 @@ instance ConsoleRenderer AppM where
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
 
 instance MonadGQLExecutionCheck AppM where
-  allowGQLExecution userInfo _ enableAL sc query = runExceptT $ do
+  checkGQLExecution userInfo _ enableAL sc query = runExceptT $ do
     req <- toParsed query
     checkQueryInAllowlist enableAL userInfo req sc
     return req
