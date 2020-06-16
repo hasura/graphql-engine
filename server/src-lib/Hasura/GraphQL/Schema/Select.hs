@@ -13,7 +13,6 @@ module Hasura.GraphQL.Schema.Select
 
 import           Hasura.Prelude
 
-import           Data.Either                           (partitionEithers)
 import           Data.Foldable                         (toList)
 import           Data.Maybe                            (fromJust)
 import           Data.Parser.JSONPath
@@ -513,12 +512,12 @@ the code has a branch to deal with the lack of "args" object and treat everythin
 
 -}
 
--- | Parses the "args" argument of a computed field or a custom
---   function. All arguments to the underlying function are parsed as
---   an "args" object. Named arguments are expected in a field with
---   the same name, while positional arguments are expected in an
---   field named "arg_$n".  Note that collisions are possible, but
---   ignored for now.  (FIXME: link to an issue?)
+-- | Parses the "args" argument of a computed field or a custom function. All
+--   arguments to the underlying sql function are parsed as an "args" object.
+--   Named arguments are expected in a field with the same name, while
+--   positional arguments are expected in an field named "arg_$n".
+--   Note that collisions are possible, but ignored for now.
+--   (FIXME: link to an issue?)
 functionArgs
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedFunction
@@ -527,26 +526,29 @@ functionArgs
 functionArgs functionName (toList -> inputArgs) = P.memoizeOn 'functionArgs functionName $ do
   let objName = fromJust $ G.mkName $ getFunctionTxt (qName functionName) <> "_args"
 
-  -- first, we iterate through the original sql arguments, to find the
-  -- corresponding graphql names at the same time, we create the input field
-  -- parsers
+  -- First, we iterate through the original sql arguments in order, to find the
+  -- corresponding graphql names. At the same time, we create the input field
+  -- parsers.
   (names, argumentParsers) <- fmap unzip $ sequenceA $ snd $ mapAccumL argument 1 inputArgs
   pure $ P.object objName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
 
-    -- after successfully parsing, we create a dictionary of the parsed fields
+    -- After successfully parsing, we create a dictionary of the parsed fields
     -- and we re-iterate through the original list of sql arguments, now with
-    -- the knowledge of their graphql name
+    -- the knowledge of their graphql name.
     let foundArguments = Map.fromList $ catMaybes arguments
         argsWithNames  = zip names inputArgs
 
-    -- all elements (in sql order) that are found in the result map are treated
-    -- as positional arguments whether they were originally named or not
+    -- All elements (in the orignal sql order) that are found in the result map
+    -- are treated as positional arguments, whether they were originally named or
+    -- not.
     (positional, left) <- spanMaybeM (\(name, _) -> pure $ Map.lookup name foundArguments) argsWithNames
 
-    -- if there's anything that's left after a positional argument wasn't found,
-    -- it has to be passed to sqlas a named argument. we fail with a parse error
-    -- if we encounter a positional argument there, as it doesn't have a
-    -- corresponding sql name.
+    -- If there are arguments left, it means we found one that was not passed
+    -- positionally. As a result, any remaining argument will have to be passed
+    -- by name. We fail with a parse error if we encounter a positional sql
+    -- argument (that does not have a name in the sql function), as:
+    --   * only the last positional arguments can be omitted;
+    --   * it has no name we can use.
     named <- Map.fromList . catMaybes <$> traverse (namedArgument foundArguments) left
     pure $ RQL.FunctionArgsExp positional named
 
@@ -578,19 +580,19 @@ functionArgs functionName (toList -> inputArgs) = P.memoizeOn 'functionArgs func
         , parseArgument arg $ getFuncArgNameTxt name
         )
     parseArgument arg name = do
-      columnParser <- P.column (PGColumnScalar $ _qptName $ faType arg) (G.Nullability False)
+      columnParser <- P.column (PGColumnScalar $ _qptName $ faType arg) (G.Nullability True)
       fieldName    <- textToName name
       let argParser = if unHasDefault $ faHasDefault arg
                       then P.fieldOptional  fieldName Nothing columnParser
                       else Just <$> P.field fieldName Nothing columnParser
       pure $ (name, fmap ((name,) . RQL.AEInput . mkParameter) <$> argParser)
 
-    namedArgument dictionary (name, arg) = for (Map.lookup name dictionary) \parsedValue ->
-      case arg of
+    namedArgument dictionary (name, inputArgument) = for (Map.lookup name dictionary) \parsedValue ->
+      case inputArgument of
         IASessionVariables _ -> pure (name, parsedValue)
         IAUserProvided arg   -> case faName arg of
-          Just sqlName -> pure (name, parsedValue)
-          Nothing      -> parseError "Only last set of positional arguments can be omitted"
+          Just _  -> pure (name, parsedValue)
+          Nothing -> parseError "Only last set of positional arguments can be omitted"
 
 
 customSQLFunctionArgs
