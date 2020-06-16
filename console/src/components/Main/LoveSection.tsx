@@ -99,32 +99,32 @@ const getCurrentDate = () => {
 };
 
 const LoveSection = () => {
+  const defaultNotification: UpdateProps = {
+    title: '',
+    time: getCurrentDate(),
+    description:
+      "You're all caught up! \n There are no updates available at this point in time.",
+    badge: 'No Updates',
+  };
   const [open, toggleLove] = useState(false);
-  const [notificationData, setData] = useState([] as Array<UpdateProps>);
+  const [notificationData, setData] = useState([defaultNotification] as Array<UpdateProps>);
 
   useLayoutEffect(() => {
     if (open) {
       fetch(Endpoints.checkNotifications)
         .then(response => response.json())
         .then(data => {
+          console.log(data);
+
           // FIXME: this conditional check
           // until the table is fixed
-          let notifData: Array<UpdateProps> = [];
-          const defaultNotification: UpdateProps = {
-            title: 'No New Updates',
-            time: getCurrentDate(),
-            description:
-              "You're all caught up! \n There are no updates available at this point in time.",
-            badge: '',
-          };
-          if (data.length <= 1) {
-            notifData.push(defaultNotification);
-          } else {
+          if (data.length > 1) {
+            const notifData: Array<UpdateProps> = [];
             // TODO: Process the response here
             // and push to notifData
-            notifData = [];
+            setData(notifData);
           }
-          setData(notifData);
+
         })
         // TODO: report error in a better way
         .catch(err => console.error(err));
