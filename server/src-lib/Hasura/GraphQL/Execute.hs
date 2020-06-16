@@ -16,7 +16,9 @@ module Hasura.GraphQL.Execute
   , EP.dumpPlanCache
 
   , ExecutionCtx(..)
+
   , MonadGQLExecutionCheck(..)
+  , checkQueryInAllowlist
   ) where
 
 import           Hasura.Prelude
@@ -34,6 +36,7 @@ import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 import qualified Network.Wreq                           as Wreq
 import qualified Data.List.NonEmpty                     as NE
+import qualified Data.HashSet                           as HS
 
 import           Control.Exception                      (try)
 import           Control.Lens
@@ -57,6 +60,7 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
                                                          mkSetCookieHeaders)
+import           Hasura.RQL.Types.QueryCollection       (stripTypenames)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
@@ -81,7 +85,7 @@ data ExecutionCtx
 -- before a GraphQL query should be allowed to be executed. In OSS, the safety
 -- check is to check in the query is in the allow list.
 
--- | TODO (depends on query caching): Limitation: This parses the query, which is not ideal if we already
+-- | TODO (from master): Limitation: This parses the query, which is not ideal if we already
 -- have the query cached. The parsing happens unnecessary. But getting this to
 -- either return a plan or parse was tricky and complicated.
 class Monad m => MonadGQLExecutionCheck m where
@@ -108,28 +112,20 @@ getExecPlanPartial
   :: (MonadError QErr m)
   => UserInfo
   -> SchemaCache
-  -> Bool
   -> ET.GraphQLQueryType
   -> GQLReqParsed
   -> m (C.GQLContext, QueryParts)
-getExecPlanPartial userInfo sc enableAL queryType req = do
-  -- check if query is in allowlist
-  when enableAL checkQueryInAllowlist
-
+getExecPlanPartial userInfo sc queryType req = do
   (getGCtx ,) <$> getQueryParts req
   where
     roleName = _uiRole userInfo
 
-    checkQueryInAllowlist =
-      -- only for non-admin roles
-      when (roleName /= adminRoleName) $ do
-        let notInAllowlist =
-              not $ _isQueryInAllowlist (_grQuery req) (scAllowlist sc)
-        when notInAllowlist $ modifyQErr modErr $ throw400 ValidationFailed "query is not allowed"
-
-    modErr e =
-      let msg = "query is not in any of the allowlists"
-      in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
+  --   checkQueryInAllowlist =
+  --     -- only for non-admin roles
+  --     when (roleName /= adminRoleName) $ do
+  --       let notInAllowlist =
+  --             not $ _isQueryInAllowlist (_grQuery req) (scAllowlist sc)
+  --       when notInAllowlist $ modifyQErr modErr $ throw400 ValidationFailed "query is not allowed"
 
     contextMap =
       case queryType of
@@ -194,24 +190,45 @@ validateSubscriptionRootField = \case
   C.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
   C.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
 
+
+checkQueryInAllowlist
+  :: (MonadError QErr m) => Bool -> UserInfo -> GQLReqParsed -> SchemaCache -> m ()
+checkQueryInAllowlist enableAL userInfo req sc =
+  -- only for non-admin roles
+  -- check if query is in allowlist
+  when (enableAL && (_uiRole userInfo /= adminRoleName)) $ do
+    let notInAllowlist =
+          not $ isQueryInAllowlist (_grQuery req) (scAllowlist sc)
+    when notInAllowlist $ modifyQErr modErr $ throw400 ValidationFailed "query is not allowed"
+
+  where
+    modErr e =
+      let msg = "query is not in any of the allowlists"
+      in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
+
+    isQueryInAllowlist q = HS.member gqlQuery
+      where
+        gqlQuery = GQLQuery $ G.ExecutableDocument $ stripTypenames $
+                   unGQLExecDoc q
+
 getResolvedExecPlan
   :: forall m . (HasVersion, MonadError QErr m, MonadIO m)
   => PGExecCtx
   -> EP.PlanCache
   -> UserInfo
   -> SQLGenCtx
-  -> Bool
   -> SchemaCache
   -> SchemaCacheVer
   -> ET.GraphQLQueryType
   -> HTTP.Manager
   -> [HTTP.Header]
-  -> GQLReqUnparsed
+  -> (GQLReqUnparsed, GQLReqParsed)
   -> m (Telem.CacheHit, ResolvedExecutionPlan)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  enableAL sc scVer queryType httpManager reqHeaders reqUnparsed = do
-  planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo)
-           opNameM queryStr queryType planCache
+  sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = do
+
+  planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo) opNameM queryStr
+           queryType planCache
   let usrVars = _uiSession userInfo
   case planM of
     -- plans are only for queries and subscriptions
@@ -229,15 +246,15 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
     --   opNameM queryStr plan planCache
     noExistingPlan :: m ResolvedExecutionPlan
     noExistingPlan = do
-      req <- toParsed reqUnparsed
       -- GraphQL requests may incorporate fragments which insert a pre-defined
       -- part of a GraphQL query. Here we make sure to remember those
       -- pre-defined sections, so that when we encounter a fragment spread
       -- later, we can inline it instead.
+      -- req <- toParsed reqUnparsed
       let takeFragment = \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
           fragments =
-            mapMaybe takeFragment $ unGQLExecDoc $ _grQuery req
-      (gCtx, queryParts) <- getExecPlanPartial userInfo sc enableAL queryType req
+            mapMaybe takeFragment $ unGQLExecDoc $ _grQuery reqParsed
+      (gCtx, queryParts) <- getExecPlanPartial userInfo sc queryType reqParsed
       case queryParts of
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
@@ -326,7 +343,6 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       --       (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability (restrictActionExecuter "query actions cannot be run as a subscription") fld
       --       traverse_ (addPlanToCache . EP.RPSubs) plan
       --       return $ ExOpSubs lqOp
-
 
 execRemoteGQ
   :: ( HasVersion

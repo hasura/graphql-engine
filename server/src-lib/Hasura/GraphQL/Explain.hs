@@ -98,16 +98,16 @@ explainGQLQuery
   :: forall m. (MonadError QErr m, MonadIO m)
   => PGExecCtx
   -> SchemaCache
-  -> Bool
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc enableAL (GQLExplain query userVarsRaw maybeIsRelay) = do
+explainGQLQuery pgExecCtx sc (GQLExplain query userVarsRaw maybeIsRelay) = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
   userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
+  -- we don't need to check in allow list as we consider it an admin endpoint
   let takeFragment =
         \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
       fragments = mapMaybe takeFragment $ GH.unGQLExecDoc $ GH._grQuery query
-  (graphQLContext, queryParts) <- E.getExecPlanPartial userInfo sc enableAL queryType query
+  (graphQLContext, queryParts) <- E.getExecPlanPartial userInfo sc queryType query
   case queryParts of
     G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
       -- (Here the above fragment inlining is actually executed.)

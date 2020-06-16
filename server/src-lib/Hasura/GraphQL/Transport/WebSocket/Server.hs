@@ -44,9 +44,10 @@ import qualified Data.TByteString                     as TBS
 import qualified Data.UUID                            as UUID
 import qualified Data.UUID.V4                         as UUID
 import           Data.Word                            (Word16)
+import           GHC.AssertNF
 import           GHC.Int                              (Int64)
 import           Hasura.Prelude
-import           GHC.AssertNF
+import           Network.Wai.Extended                 (IpAddress)
 import qualified ListT
 import           Network.Wai.Extended                 (IpAddress)
 import qualified Network.WebSockets                   as WS

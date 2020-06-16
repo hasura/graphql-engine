@@ -12,6 +12,7 @@ module Hasura.RQL.Types.QueryCollection
   , ListedQuery(..)
   , getGQLQuery
   , queryWithoutTypeNames
+  , stripTypenames
   ) where
 
 import           Hasura.Incremental            (Cacheable)

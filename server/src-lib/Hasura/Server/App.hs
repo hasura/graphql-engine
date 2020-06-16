@@ -13,7 +13,7 @@ import qualified Data.Text                                 as T
 import qualified Database.PG.Query                         as Q
 import qualified Network.HTTP.Client                       as HTTP
 import qualified Network.HTTP.Types                        as HTTP
-import qualified Network.Wai                               as Wai
+import qualified Network.Wai.Extended                      as Wai
 import qualified Network.WebSockets                        as WS
 import qualified System.Metrics                            as EKG
 import qualified System.Metrics.Json                       as EKG
@@ -48,7 +48,6 @@ import qualified Hasura.Server.API.PGDump                  as PGD
 import qualified Network.Wai.Handler.WebSockets.Custom     as WSC
 
 import           Hasura.EncJSON
--- import           Hasura.GraphQL.Resolve.Action
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..))
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Schema
@@ -66,7 +65,6 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
 import           Hasura.SQL.Types
-
 
 data SchemaCacheRef
   = SchemaCacheRef
@@ -110,10 +108,11 @@ data ServerCtx
 
 data HandlerCtx
   = HandlerCtx
-  { hcServerCtx  :: !ServerCtx
-  , hcUser       :: !UserInfo
-  , hcReqHeaders :: ![HTTP.Header]
-  , hcRequestId  :: !RequestId
+  { hcServerCtx       :: !ServerCtx
+  , hcUser            :: !UserInfo
+  , hcReqHeaders      :: ![HTTP.Header]
+  , hcRequestId       :: !RequestId
+  , hcSourceIpAddress :: !Wai.IpAddress
   }
 
 type Handler m = ExceptT QErr (ReaderT HandlerCtx m)
@@ -210,7 +209,7 @@ setHeader (headerName, headerValue) =
 
 -- | Typeclass representing the metadata API authorization effect
 class MetadataApiAuthorization m where
-  authorizeMetadataApi :: RQLQuery -> UserInfo -> Handler m ()
+  authorizeMetadataApi :: HasVersion => RQLQuery -> UserInfo -> Handler m ()
 
 -- | The config API (/v1alpha1/config) handler
 class Monad m => MonadConfigApiHandler m where
@@ -237,6 +236,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     let headers = Wai.requestHeaders req
         authMode = scAuthMode serverCtx
         manager = scManager serverCtx
+        ipAddress = Wai.getSourceFromFallback req
 
     requestId <- getRequestId headers
 
@@ -244,7 +244,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
                  return userInfoE
 
-    let handlerState = HandlerCtx serverCtx userInfo headers requestId
+    let handlerState = HandlerCtx serverCtx userInfo headers requestId ipAddress
         includeInternal = shouldIncludeInternal (_uiRole userInfo) $
                           scResponseInternalErrorsConfig serverCtx
 
@@ -328,11 +328,13 @@ v1QueryHandler query = do
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
 v1Alpha1GQHandler
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m)
   => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1Alpha1GQHandler queryType query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
+  ipAddress <- asks hcSourceIpAddress
+  requestId <- asks hcRequestId
   manager <- scManager . hcServerCtx <$> ask
   scRef <- scCacheRef . hcServerCtx <$> ask
   (sc, scVer) <- liftIO $ readIORef $ _scrCache scRef
@@ -341,32 +343,33 @@ v1Alpha1GQHandler queryType query = do
   planCache <- scPlanCache . hcServerCtx <$> ask
   enableAL  <- scEnableAllowlist . hcServerCtx <$> ask
   logger    <- scLogger . hcServerCtx <$> ask
-  requestId <- asks hcRequestId
-  responseErrorsConfig <- scResponseInternalErrorsConfig . hcServerCtx <$> ask
+  responseErrorsConfig <- asks (scResponseInternalErrorsConfig . hcServerCtx)
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
                 (lastBuiltSchemaCache sc) scVer manager enableAL
   flip runReaderT execCtx $
-    GH.runGQBatched requestId responseErrorsConfig userInfo reqHeaders queryType query
+    GH.runGQBatched requestId responseErrorsConfig userInfo ipAddress reqHeaders queryType query
 
 v1GQHandler
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m)
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler E.QueryHasura
 
 v1GQRelayHandler
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m)
   => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 
-gqlExplainHandler :: (HasVersion, MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
+gqlExplainHandler
+  :: (HasVersion, MonadIO m)
+  => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
   sc <- getSCFromRef scRef
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
-  enableAL <- scEnableAllowlist . hcServerCtx <$> ask
-  res <- GE.explainGQLQuery pgExecCtx sc enableAL query
+--  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
+  res <- GE.explainGQLQuery pgExecCtx sc query
   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m) => PGD.PGDumpReqBody -> Handler m APIResp

@@ -41,7 +41,8 @@ import           Hasura.EncJSON
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
-import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..))
+import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
+                                                            checkQueryInAllowlist)
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
 import           Hasura.GraphQL.Resolve.Action             (asyncActionsProcessor)
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
@@ -580,15 +581,7 @@ instance ConsoleRenderer AppM where
 instance MonadGQLExecutionCheck AppM where
   checkGQLExecution userInfo _ enableAL sc query = runExceptT $ do
     req <- toParsed query
-
-    -- TODO FIXME (PDV)
-
-    -- The following check is currently done in Execute.hs.  This code is
-    -- commented out in the PDV branch because in the PDV refactor we are so far
-    -- not using MonadGQLExecutionCheck yet. So we should figure out what
-    -- happened on master, and correspondingly re-enable this check here.
-
-    -- checkQueryInAllowlist enableAL userInfo req sc
+    checkQueryInAllowlist enableAL userInfo req sc
     return req
 
 instance MonadConfigApiHandler AppM where
@@ -600,7 +593,6 @@ instance MonadQueryLog AppM where
 
 instance WS.MonadWSLog AppM where
   logWSLog = unLogger
-
 
 --- helper functions ---
 

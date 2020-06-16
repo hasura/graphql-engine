@@ -238,15 +238,6 @@ Date:   Tue Jun 16 23:14:59 2020 +0530
 
     * allow customising PGExecCtx when starting the web server
 
-commit 0cf4cbc5c6dac9c989d8a19fa420583e7774bd78
-Author: Anon Ray <ecthiender@users.noreply.github.com>
-Date:   Tue Jun 16 20:53:06 2020 +0530
-
-    server: refactor GQL execution check and config API (#5094)
-
-    Co-authored-by: Vamshi Surabhi <vamshi@hasura.io>
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
