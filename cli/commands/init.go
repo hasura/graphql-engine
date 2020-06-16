@@ -230,7 +230,7 @@ func (o *InitOptions) createFiles() error {
 	}
 
 	// create migrations directory
-	o.EC.MigrationDir = filepath.Join(o.EC.ExecutionDirectory, "migrations")
+	o.EC.MigrationDir = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultMigrationsDirectory)
 	err = os.MkdirAll(o.EC.MigrationDir, os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "cannot write migration directory")
@@ -238,7 +238,7 @@ func (o *InitOptions) createFiles() error {
 
 	if config.Version == cli.V2 {
 		// create metadata directory
-		o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, "metadata")
+		o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultMetadataDirectory)
 		err = os.MkdirAll(o.EC.MetadataDir, os.ModePerm)
 		if err != nil {
 			return errors.Wrap(err, "cannot write migration directory")
@@ -260,6 +260,13 @@ func (o *InitOptions) createFiles() error {
 				return errors.Wrap(err, "cannot create metadata files")
 			}
 		}
+	}
+
+	// create seeds directory
+	o.EC.SeedsDirectory = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultSeedsDirectory)
+	err = os.MkdirAll(o.EC.SeedsDirectory, os.ModePerm)
+	if err != nil {
+		return errors.Wrap(err, "cannot write seeds directory")
 	}
 	return nil
 }
