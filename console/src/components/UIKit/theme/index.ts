@@ -35,6 +35,7 @@ const colors = {
     original: '#888888',
     tab: '#939390',
     border: '#ededed',
+    notificationCards: '#acacac',
   },
   black: {
     original: '#000',

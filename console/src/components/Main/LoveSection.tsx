@@ -1,39 +1,41 @@
 import React, { useState, useLayoutEffect } from 'react';
 import { css } from 'styled-components';
+import fetch from 'isomorphic-fetch';
 
-import pixHeart from './images/pix-heart.svg';
-import consoleLogo from './images/console-logo.svg';
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import styles from './Main.scss';
-import fetch from 'isomorphic-fetch';
 import Endpoints from '../../Endpoints';
 
-const Update = ({ title, time, description, badge }) => (
+const pixHeart = require('./images/pix-heart.svg');
+const consoleLogo = require('./images/console-logo.svg');
+
+type UpdateProps = {
+  title: string;
+  time: string;
+  description: string;
+  badge: string | null;
+};
+
+const Update: React.FC<UpdateProps> = ({ title, time, description, badge }) => (
   <Box>
     <Flex
-      height="55px"
-      justifyContent="space-between"
+      height={55}
       px="25px"
       pt="5px"
-      borderBottom={'1px solid #e1e1e1'}
+      borderBottom="1px solid #e1e1e1"
+      justifyContent="space-between"
     >
-      <Flex>
+      <Flex justifyContent="space-between">
         <Badge type={badge} mr="12px" />
         <Heading as="h4" color="#1cd3c6" fontSize="16px">
           {title}
         </Heading>
       </Flex>
-      <Text
-        color="#acacac"
-        fontSize="13px"
-        fontWeight="medium"
-        fontFamily="roboto"
-        letterSpacing="0.25px"
-      >
+      <Text color="grey" fontSize={13} fontWeight="medium" type={0}>
         {time}
       </Text>
     </Flex>
-    <Text fontSize="15px" fontWeight="normal" px="25px" py="8px">
+    <Text fontSize={15} fontWeight="normal" px={25} py={8}>
       {description}
     </Text>
   </Box>
@@ -41,18 +43,21 @@ const Update = ({ title, time, description, badge }) => (
 
 const NoNotification = () => <p>This is a text field</p>;
 
-const Notifications = ({ data }) => (
+type NotificationProps = {
+  data: Array<UpdateProps>;
+};
+
+const Notifications: React.FC<NotificationProps> = ({ data }) => (
   <Box
     className="dropdown-menu"
-    border={0}
-    width="520px"
-    boxShadow={3}
-    margin={0}
-    bg="white"
-    padding="0px"
-    left="auto"
     css={css`
+      width: 520px;
+      box-shadow: 3px;
+      margin: 0;
+      padding: 0;
+      background: white;
       text-transform: none;
+      left: auto;
       #close-icon {
         &:hover {
           color: #000 !important;
@@ -72,7 +77,7 @@ const Notifications = ({ data }) => (
       }
     `}
   >
-    <Flex justify="space-between" borderBottom={1} bg="#f8f8f8">
+    <Flex justifyContent="space-between">
       <Heading as="h2" color="#000" fontSize="20px">
         Latest updates
         <img src={consoleLogo} alt="hasura-console" id="console-logo" />
@@ -106,6 +111,7 @@ const LoveSection = () => {
       time: getCurrentDate(),
       description:
         "You're all caught up! \n There are no updates available at this point in time.",
+      badge: '',
     },
   ]);
 
@@ -117,17 +123,22 @@ const LoveSection = () => {
         // TODO: report error in a better way
         .catch(err => console.error(err));
     }
-    document.getElementById('dropdown_wrapper').classList.toggle('open');
+    const dropDown: HTMLElement | null = document.getElementById(
+      'dropdown_wrapper'
+    );
+    if (dropDown) {
+      dropDown.classList.toggle('open');
+    }
   }, [open]);
 
   return (
     <>
       <div
-        className={styles.shareSection + ' dropdown-toggle'}
+        className={`${styles.shareSection} dropdown-toggle`}
         aria-expanded="false"
         onClick={() => toggleLove(!open)}
       >
-        <img className="img-responsive" src={pixHeart} alt={'pix Heart'} />
+        <img className="img-responsive" src={pixHeart} alt="pix Heart" />
       </div>
       <Notifications data={notificationData} />
     </>

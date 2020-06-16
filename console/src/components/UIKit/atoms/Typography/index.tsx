@@ -18,14 +18,16 @@ Heading.defaultProps = {
  *  fontWeight: 'bold'
  */
 export type TextProps = {
-  type: keyof Theme['lineHeights'];
+  type?: keyof Theme['lineHeights'];
   fontWeight: keyof Theme['fontWeights'];
   fontSize: keyof Theme['fontSizes'];
-  mb: keyof Theme['space'];
-  mt: keyof Theme['space'];
-  mr: keyof Theme['space'];
-  ml: keyof Theme['space'];
-  color: string;
+  mb?: keyof Theme['space'];
+  mt?: keyof Theme['space'];
+  mr?: keyof Theme['space'];
+  ml?: keyof Theme['space'];
+  color?: keyof Theme['colors'];
+  px?: keyof Theme['space'];
+  py?: keyof Theme['space'];
 };
 
 export const Text: React.FC<TextProps> = props => {
@@ -66,7 +68,7 @@ Text.defaultProps = {
   mt: 'zero',
   mr: 'zero',
   ml: 'zero',
-  color: 'black.text',
+  color: 'black',
 };
 
 type TextLinkProps = {
