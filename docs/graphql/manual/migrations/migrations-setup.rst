@@ -74,10 +74,8 @@ Let's set up a project directory by executing the following command:
   cd my-project
 
 This will create a new directory called ``my-project`` with a ``config.yaml``
-file, a ``migrations`` directory and a ``metadata`` directory. This directory structure is mandatory to use
-Hasura migrations. 
-
-These directories can be committed to version control.
+file, a ``migrations`` directory and a ``metadata`` directory. This directory structure
+is mandatory to use Hasura migrations.
 
 .. note::
 
@@ -85,6 +83,25 @@ These directories can be committed to version control.
    variable ``HASURA_GRAPHQL_ADMIN_SECRET=<your-admin-secret>`` on your local
    machine and the CLI will use it. You can also use it as a flag to CLI commands:
    ``--admin-secret '<your-admin-secret>'``.
+
+Step 2.1: Set up version control for your project directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The project directory created above can be committed to version control.
+
+Set up version control and commit the project status:
+
+.. code-block:: bash
+
+  # in project dir
+
+  # initialize version control
+  git init
+
+  # commit initial project status
+  git add .
+  git commit -m "hasura project init"
+
 
 .. _migrations_setup_initialize:
 
@@ -143,21 +160,16 @@ This command will export the current Hasura metadata as a bunch of YAML files in
 
 If you'd like to read more about the format of metadata files, check out the :ref:`metadata_format_v2`.
 
-Step 3.3: Set up version control for your project directory
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 3.3: Add a checkpoint
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Set up version control and commit the project status.
+Commit the current project state to version control:
 
 .. code-block:: bash
 
   # in project dir
-
-  # initialize version control
-  git init
-
-  # commit initial project status
   git add .
-  git commit -m "init"
+  git commit -m "initialize migrations and metadata"
 
 
 Step 4: Use the console from the CLI
