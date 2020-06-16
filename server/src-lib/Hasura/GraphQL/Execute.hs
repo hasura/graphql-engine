@@ -157,8 +157,7 @@ getExecPlanPartial
 getExecPlanPartial userInfo sc queryType req = do
   let gCtx = case queryType of
         EQ.QueryHasura -> getGCtx (_uiBackendOnlyFieldAccess userInfo) sc roleName
-        EQ.QueryRelay  -> maybe GC.emptyGCtx _rctxDefault $
-                          Map.lookup roleName (scRelayGCtxMap sc)
+        EQ.QueryRelay  -> fromMaybe GC.emptyGCtx $ Map.lookup roleName $ scRelayGCtxMap sc
 
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
