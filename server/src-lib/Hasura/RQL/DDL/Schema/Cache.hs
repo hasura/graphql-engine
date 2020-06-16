@@ -167,7 +167,9 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     resolveDependencies -< (outputs, unresolvedDependencies)
 
   -- Step 3: Build the GraphQL schema.
-  gqlContext <- bindA -< buildGQLContext (_boTables resolvedOutputs)
+  gqlContext <- bindA -< buildGQLContext
+    (_boTables    resolvedOutputs)
+    (_boFunctions resolvedOutputs)
   -- (remoteSchemaMap, gqlSchema, remoteGQLSchema)
   --   <- _buildGQLSchema -< ( _boTables resolvedOutputs
   --                                   , _boFunctions resolvedOutputs

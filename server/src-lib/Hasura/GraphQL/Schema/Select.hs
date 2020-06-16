@@ -5,6 +5,8 @@ module Hasura.GraphQL.Schema.Select
   ( selectTable
   , selectTableByPk
   , selectTableAggregate
+  , selectFunction
+  , selectFunctionAggregate
   , tableSelectionSet
   ) where
 
@@ -241,6 +243,62 @@ tableSelectionSet table selectPermissions stringifyNum = memoizeOn 'tableSelecti
     <&> parsedSelectionsToFields RQL.FExp
 
 
+-- | User-defined function (AKA custom function)
+selectFunction
+  :: (MonadSchema n m, MonadError QErr m)
+  => FunctionInfo         -- ^ SQL function info
+  -> G.Name               -- ^ field display name
+  -> Maybe G.Description  -- ^ field description, if any
+  -> SelPermInfo          -- ^ select permissions of the target table
+  -> Bool
+  -> m (FieldParser n SelectExp)
+selectFunction function fieldName description selectPermissions stringifyNum = do
+  let table = fiReturnType function
+  tableArgsParser    <- tableArgs table selectPermissions
+  functionArgsParser <- customSQLFunctionArgs function
+  selectionSetParser <- tableSelectionSet table selectPermissions stringifyNum
+  let argsParser = liftA2 (,) functionArgsParser tableArgsParser
+  pure $ P.subselection fieldName description argsParser selectionSetParser
+    <&> \((funcArgs, tableArgs), fields) -> RQL.AnnSelG
+      { RQL._asnFields   = fields
+      , RQL._asnFrom     = RQL.FromFunction (fiName function) funcArgs Nothing
+      , RQL._asnPerm     = tablePermissionsInfo selectPermissions
+      , RQL._asnArgs     = tableArgs
+      , RQL._asnStrfyNum = stringifyNum
+      }
+
+selectFunctionAggregate
+  :: (MonadSchema n m, MonadError QErr m)
+  => FunctionInfo         -- ^ SQL function info
+  -> G.Name               -- ^ field display name
+  -> Maybe G.Description  -- ^ field description, if any
+  -> SelPermInfo          -- ^ select permissions of the target table
+  -> Bool
+  -> m (Maybe (FieldParser n AggSelectExp))
+selectFunctionAggregate function fieldName description selectPermissions stringifyNum = runMaybeT do
+  let table = fiReturnType function
+  guard $ spiAllowAgg selectPermissions
+  tableArgsParser    <- lift $ tableArgs table selectPermissions
+  functionArgsParser <- lift $ customSQLFunctionArgs function
+  aggregateParser    <- lift $ tableAggregationFields table selectPermissions
+  selectionName      <- lift $ qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
+  nodesParser        <- lift $ tableSelectionSet table selectPermissions stringifyNum
+  let argsParser = liftA2 (,) functionArgsParser tableArgsParser
+      aggregationParser = parsedSelectionsToFields RQL.TAFExp <$>
+        P.selectionSet selectionName Nothing
+        [ RQL.TAFNodes <$> P.subselection_ $$(G.litName "nodes") Nothing nodesParser
+        , RQL.TAFAgg <$> P.subselection_ $$(G.litName "aggregate") Nothing aggregateParser
+        ]
+  pure $ P.subselection fieldName description argsParser aggregationParser
+    <&> \((funcArgs, tableArgs), fields) -> RQL.AnnSelG
+      { RQL._asnFields   = fields
+      , RQL._asnFrom     = RQL.FromFunction (fiName function) funcArgs Nothing
+      , RQL._asnPerm     = tablePermissionsInfo selectPermissions
+      , RQL._asnArgs     = tableArgs
+      , RQL._asnStrfyNum = stringifyNum
+      }
+
+
 -- 2. local parsers
 -- Parsers that are used but not exported: sub-components
 -- TODO: write better blurb
@@ -455,14 +513,80 @@ the code has a branch to deal with the lack of "args" object and treat everythin
 
 -}
 
+-- | Parses the "args" argument of a computed field or a custom
+--   function. All arguments to the underlying function are parsed as
+--   an "args" object. Named arguments are expected in a field with
+--   the same name, while positional arguments are expected in an
+--   field named "arg_$n".  Note that collisions are possible, but
+--   ignored for now.  (FIXME: link to an issue?)
+functionArgs
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => QualifiedFunction
+  -> Seq.Seq FunctionInputArgument
+  -> m (Parser 'Input n (RQL.FunctionArgsExpTableRow UnpreparedValue))
+functionArgs functionName inputArgs = P.memoizeOn 'functionArgs functionName $ do
+  let (subtract 1 -> positionalArgsNumber, argsParsers) = mapAccumL createField 1 (toList inputArgs)
+      objName = fromJust $ G.mkName $ getFunctionTxt (qName functionName) <> "_args"
+  argsParser <- sequenceA argsParsers
+  pure $ P.object objName Nothing (sequenceA argsParser) `P.bind` \args -> do
+    -- TODO: check that all omitted arguments (if any) are at the end of positional arguments
+    when False $ parseError "Only last set of positional arguments can be omitted"
+    let (map snd -> positional, Map.fromList -> named) = partitionEithers $ catMaybes args
+    pure $ RQL.FunctionArgsExp positional named
 
--- | Parses the "args" argument of a computed field.
---   All arguments to the underlying function are parsed as an "args"
---   object. Named arguments are expected in a field with the same
---   name, while positional arguments are expected in an field named
---   "arg_$n".
---   Note that collisions are possible, but ignored for now.
---   (FIXME: link to an issue?)
+  where
+    -- This uses Either solely to use partitionEithers.
+    -- Arbitrarily, Left is for positional arguments, and Right for named arguments.
+    createField
+      :: Int
+      -> FunctionInputArgument
+      -> (Int, m (InputFieldsParser n
+                   (Maybe (Either
+                          (Int,  RQL.ArgumentExp UnpreparedValue) -- positional argument
+                          (Text, RQL.ArgumentExp UnpreparedValue) -- named argument
+                          ))))
+    createField positionalIndex (IASessionVariables name) =
+      -- WIP NOTE
+      -- old code seemed to assume that it was possible for the session argument
+      -- to be a positional argument; however, I doubt that it's still possible:
+      --   * the API expects the argument to have a name
+      --   * the console does not support positional session arguments
+      --   * the IASessionVariables constructor takes a FunctionArgName argument
+      -- I am therefore assuming that this is fine, but this will need to be
+      -- double checked
+      ( positionalIndex
+      , pure $ pure $ Just $ Right (getFuncArgNameTxt name, RQL.AEInput P.UVSession)
+      )
+    createField positionalIndex (IAUserProvided arg) = case faName arg of
+      Nothing ->
+        ( positionalIndex + 1
+        , let argName = "arg_" <> T.pack (show positionalIndex)
+          in createField' (Left . (positionalIndex,)) arg argName
+        )
+      Just name ->
+        ( positionalIndex
+        , let nameText = getFuncArgNameTxt name
+          in createField' (Right . (nameText,)) arg nameText
+        )
+    createField' decorate arg name = do
+      columnParser <- P.column (PGColumnScalar $ _qptName $ faType arg) (G.Nullability False)
+      fieldName    <- textToName name
+      let argParser = if unHasDefault $ faHasDefault arg
+                      then P.fieldOptional  fieldName Nothing columnParser
+                      else Just <$> P.field fieldName Nothing columnParser
+      pure $ fmap (decorate . RQL.AEInput . mkParameter) <$> argParser
+
+customSQLFunctionArgs
+  :: (MonadSchema n m, MonadError QErr m)
+  => FunctionInfo
+  -> m (InputFieldsParser n (RQL.FunctionArgsExpTableRow UnpreparedValue))
+customSQLFunctionArgs FunctionInfo{..}
+  | Seq.null fiInputArgs = pure $ pure RQL.emptyFunctionArgsExp
+  | otherwise = do
+    let argsDesc  = G.Description $ "input parameters for function " <>> fiName
+    argsParser <- functionArgs fiName fiInputArgs
+    pure $ P.field $$(G.litName "args") (Just argsDesc) argsParser
+
 computedFieldFunctionArgs
   :: (MonadSchema n m, MonadError QErr m)
   => ComputedFieldFunction
@@ -470,38 +594,17 @@ computedFieldFunctionArgs
 computedFieldFunctionArgs ComputedFieldFunction{..}
   | Seq.null _cffInputArgs = pure $ pure RQL.emptyFunctionArgsExp
   | otherwise = do
-      argsParser <- sequenceA $ snd $ mapAccumL createField (1 :: Int) $ toList _cffInputArgs
       let argsDesc = G.Description $ "input parameters for function " <>> _cffName
-          argsObj  = P.object objName Nothing $ sequenceA argsParser
-          objName  = fromJust $ G.mkName $ getFunctionTxt (qName $ _cffName) <> "_args"
-      pure $ P.field $$(G.litName "args") (Just argsDesc) argsObj <&> \args ->
-        let (positional, Map.fromList -> named) = partitionEithers $ catMaybes args
-            tableRowArg = RQL.AETableRow Nothing
-        in case _cffTableArgument of
-          FTAFirst -> RQL.FunctionArgsExp (tableRowArg:positional) named
-          FTANamed argName index ->
-            RQL.insertFunctionArg argName index tableRowArg $
-              RQL.FunctionArgsExp positional named
+      argsParser <- functionArgs _cffName $ IAUserProvided <$> _cffInputArgs
+      pure $ P.field $$(G.litName "args") (Just argsDesc) argsParser <&> addTableRowArgument
   where
-    -- This uses Either solely to use partitionEithers.
-    -- Arbitrarily, Left is for positional fields, and Right for named fields.
-    createField positionalIndex arg = case faName arg of
-      Nothing   -> ( positionalIndex + 1
-                   , fmap (fmap Left) <$> createField' arg ("arg_" <> T.pack (show positionalIndex))
-                   )
-      Just name -> ( positionalIndex
-                   , let nameText = getFuncArgNameTxt name
-                     in fmap (fmap $ Right . (nameText, )) <$> createField' arg nameText
-                   )
-    createField' arg name = do
-      columnParser <- P.column (PGColumnScalar $ _qptName $ faType arg) (G.Nullability False)
-      let fieldName  = fromJust $ G.mkName name
-          -- ^ FIXME: there probably is a better way than using fromJust
-          -- can we safely assume all field names are GraphQL-compatible? If not, why?
-          argParser = if unHasDefault $ faHasDefault arg
-                      then P.fieldOptional  fieldName Nothing columnParser
-                      else Just <$> P.field fieldName Nothing columnParser
-      pure $ fmap (RQL.AEInput . mkParameter) <$> argParser
+    addTableRowArgument (RQL.FunctionArgsExp positional named) = case _cffTableArgument of
+      FTAFirst -> RQL.FunctionArgsExp (tableRowArgument : positional) named
+      FTANamed argName index ->
+        RQL.insertFunctionArg argName index tableRowArgument $
+        RQL.FunctionArgsExp positional named
+    tableRowArgument = RQL.AETableRow Nothing
+
 
 -- FIXME: move to common?
 jsonPathArg :: MonadParse n => PGColumnType -> InputFieldsParser n (Maybe RQL.ColOp)

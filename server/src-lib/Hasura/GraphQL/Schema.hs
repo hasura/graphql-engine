@@ -34,8 +34,9 @@ buildGQLContext
      , MonadError QErr m
      , HasSQLGenCtx m )
   => TableCache
+  -> FunctionCache
   -> m (HashMap RoleName GQLContext)
-buildGQLContext allTables =
+buildGQLContext allTables allFunctions =
   S.toMap allRoles & Map.traverseWithKey \roleName () ->
     buildContextForRole roleName
   where
@@ -43,13 +44,15 @@ buildGQLContext allTables =
     allRoles = S.insert adminRole $ allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded
 
     tableFilter ti = not (isSystemDefined $ _tciSystemDefined ti)
+    functionFilter = not . isSystemDefined . fiSystemDefined
 
     validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
+    validFunctions = Map.elems $ Map.filter functionFilter allFunctions
 
     buildContextForRole roleName = do
       SQLGenCtx{ stringifyNum } <- askSQLGenCtx
       P.runSchemaT roleName allTables $ GQLContext
-        <$> (finalizeParser <$> queryWithIntrospection (S.fromList $ Map.keys validTables) stringifyNum)
+        <$> (finalizeParser <$> queryWithIntrospection (S.fromList $ Map.keys validTables) validFunctions stringifyNum)
         <*> (finalizeParser <$> mutation (S.fromList $ Map.keys validTables) stringifyNum)
 
     finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
@@ -62,10 +65,11 @@ query'
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
   => HashSet QualifiedTable
+  -> [FunctionInfo]
   -> Bool
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-query' allTables stringifyNum = do
-  selectExpParsers <- for (toList allTables) \table -> do
+query' allTables allFunctions stringifyNum = do
+  tableSelectExpParsers <- for (toList allTables) \table -> do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
     for selectPerms \perms -> do
@@ -80,7 +84,21 @@ query' allTables stringifyNum = do
         , toQrf3 (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms stringifyNum
         , toQrf3 (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms stringifyNum
         ]
-  pure $ concat $ catMaybes selectExpParsers
+  functionSelectExpParsers <- for allFunctions \function -> do
+    let targetTable = fiReturnType function
+    selectPerms <- tableSelectPermissions targetTable
+    for selectPerms \perms -> do
+      displayName <- P.qualifiedObjectToName $ fiName function
+      let tableName = getTableTxt $ qName targetTable
+          functionName = getFunctionTxt $ qName $ fiName function
+          functionDesc = G.Description $ "execute function \"" <> functionName <> "\" which returns \"" <> tableName <> "\""
+          aggName = displayName <> $$(G.litName "_aggregate")
+          aggDesc = G.Description $ "execute function \"" <> functionName <> "\" and query aggregates on result of table type \"" <> tableName <> "\""
+      catMaybes <$> sequenceA
+        [ toQrf2 (RFDB . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms stringifyNum
+        , toQrf3 (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms stringifyNum
+        ]
+  pure $ concat $ catMaybes $ tableSelectExpParsers <> functionSelectExpParsers
   where
     -- TODO: this is a terrible name, there must be something better
     toQrf2 :: (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
@@ -93,10 +111,11 @@ query
    . (MonadSchema n m, MonadError QErr m)
   => G.Name
   -> HashSet QualifiedTable
+  -> [FunctionInfo]
   -> Bool
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-query name allTables stringifyNum = do
-  queryFieldsParser <- query' allTables stringifyNum
+query name allTables allFunctions stringifyNum = do
+  queryFieldsParser <- query' allTables allFunctions stringifyNum
   pure $ P.selectionSet name Nothing queryFieldsParser
     <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 
@@ -104,9 +123,11 @@ subscription
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
   => HashSet QualifiedTable
+  -> [FunctionInfo]
   -> Bool
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-subscription allTables stringifyNum = query $$(G.litName "subscription_root") allTables stringifyNum
+subscription allTables allFunctions stringifyNum =
+  query $$(G.litName "subscription_root") allTables allFunctions stringifyNum
 
 -- | Prepare the parser for query-type GraphQL requests, but with introspection
 -- for queries, mutations and subscriptions (TODO) built in.
@@ -114,12 +135,13 @@ queryWithIntrospection
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
   => HashSet QualifiedTable
+  -> [FunctionInfo]
   -> Bool
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-queryWithIntrospection allTables stringifyNum = do
-  fakeQueryFP <- query' allTables stringifyNum
+queryWithIntrospection allTables allFunctions stringifyNum = do
+  fakeQueryFP <- query' allTables allFunctions stringifyNum
   mutationP <- mutation allTables stringifyNum
-  subscriptionP <- subscription allTables stringifyNum
+  subscriptionP <- subscription allTables allFunctions stringifyNum
   let
     name = $$(G.litName "query_root")
     description = Nothing
