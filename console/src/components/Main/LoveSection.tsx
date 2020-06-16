@@ -13,7 +13,7 @@ type UpdateProps = {
   title: string;
   time: string;
   description: string;
-  badge: string | null;
+  badge: string;
 };
 
 const Update: React.FC<UpdateProps> = ({ title, time, description, badge }) => (
@@ -40,8 +40,6 @@ const Update: React.FC<UpdateProps> = ({ title, time, description, badge }) => (
     </Text>
   </Box>
 );
-
-const NoNotification = () => <p>This is a text field</p>;
 
 type NotificationProps = {
   data: Array<UpdateProps>;
@@ -83,19 +81,16 @@ const Notifications: React.FC<NotificationProps> = ({ data }) => (
         <img src={consoleLogo} alt="hasura-console" id="console-logo" />
       </Heading>
     </Flex>
-    {data.length ? (
+    {data.length &&
       data.map(({ title, time, description, ...props }) => (
         <Update
           key={title}
           title={title}
           time={time}
           description={description}
-          badge={props.badge ? props.badge : null}
+          badge={props.badge ? props.badge : ''}
         />
-      ))
-    ) : (
-      <NoNotification />
-    )}
+      ))}
   </Box>
 );
 
@@ -105,21 +100,32 @@ const getCurrentDate = () => {
 
 const LoveSection = () => {
   const [open, toggleLove] = useState(false);
-  const [notificationData, setData] = useState([
-    {
-      title: 'No New Updates',
-      time: getCurrentDate(),
-      description:
-        "You're all caught up! \n There are no updates available at this point in time.",
-      badge: '',
-    },
-  ]);
+  const [notificationData, setData] = useState([] as Array<UpdateProps>);
 
   useLayoutEffect(() => {
     if (open) {
       fetch(Endpoints.checkNotifications)
         .then(response => response.json())
-        .then(data => setData(data))
+        .then(data => {
+          // FIXME: this conditional check
+          // until the table is fixed
+          let notifData: Array<UpdateProps> = [];
+          const defaultNotification: UpdateProps = {
+            title: 'No New Updates',
+            time: getCurrentDate(),
+            description:
+              "You're all caught up! \n There are no updates available at this point in time.",
+            badge: '',
+          };
+          if (data.length <= 1) {
+            notifData.push(defaultNotification);
+          } else {
+            // TODO: Process the response here
+            // and push to notifData
+            notifData = [];
+          }
+          setData(notifData);
+        })
         // TODO: report error in a better way
         .catch(err => console.error(err));
     }

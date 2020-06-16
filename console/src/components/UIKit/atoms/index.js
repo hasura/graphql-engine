@@ -11,3 +11,4 @@ export * from './Checkbox';
 export * from './Badge';
 export * from './Flex';
 export * from './Box';
+export * from './Badge';
