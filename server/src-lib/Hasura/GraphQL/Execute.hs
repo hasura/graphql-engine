@@ -19,7 +19,7 @@ module Hasura.GraphQL.Execute
 
   , ExecutionCtx(..)
 
-  , MonadGQLAuthorization(..)
+  , MonadGQLExecutionCheck(..)
   , checkQueryInAllowlist
   ) where
 
@@ -84,16 +84,17 @@ data ExecutionCtx
   , _ecxEnableAllowList :: !Bool
   }
 
--- | Typeclass representing rules/authorization to be enforced on the GraphQL API (over both HTTP &
--- Websockets) This is like a system authorization on the GraphQL API. System authorization /is in
--- contrast/ with user authorization (on the GraphQL API) which is achieved by using RQL
--- permissions. Enforcing allow-lists is an example of system authorization on GraphQL.
+-- | Typeclass representing rules/authorization to be enforced on the GraphQL
+-- API (over both HTTP & Websockets) This is like a system authorization on the
+-- GraphQL API. System authorization /is in contrast/ with user authorization
+-- (on the GraphQL API) which is achieved by using RQL permissions. Enforcing
+-- allow-lists is an example of system authorization on GraphQL.
 
--- | NOTE: Limitation: This parses the query, which is not ideal if we already have the query cached.
--- The parsing happens unnecessary. But getting this to either return a plan or parse was tricky and
--- complicated.
-class Monad m => MonadGQLAuthorization m where
-  authorizeGQLApi
+-- | NOTE: Limitation: This parses the query, which is not ideal if we already
+-- have the query cached. The parsing happens unnecessary. But getting this to
+-- either return a plan or parse was tricky and complicated.
+class Monad m => MonadGQLExecutionCheck m where
+  allowGQLExecution
     :: UserInfo
     -> ([HTTP.Header], Wai.IpAddress)
     -> Bool
@@ -104,13 +105,13 @@ class Monad m => MonadGQLAuthorization m where
     -- ^ the unparsed GraphQL query string (and related values)
     -> m (Either QErr GQLReqParsed)
 
-instance MonadGQLAuthorization m => MonadGQLAuthorization (ExceptT e m) where
-  authorizeGQLApi ui det enableAL sc req =
-    lift $ authorizeGQLApi ui det enableAL sc req
+instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ExceptT e m) where
+  allowGQLExecution ui det enableAL sc req =
+    lift $ allowGQLExecution ui det enableAL sc req
 
-instance MonadGQLAuthorization m => MonadGQLAuthorization (ReaderT r m) where
-  authorizeGQLApi ui det enableAL sc req =
-    lift $ authorizeGQLApi ui det enableAL sc req
+instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ReaderT r m) where
+  allowGQLExecution ui det enableAL sc req =
+    lift $ allowGQLExecution ui det enableAL sc req
 
 -- Enforces the current limitation
 assertSameLocationNodes

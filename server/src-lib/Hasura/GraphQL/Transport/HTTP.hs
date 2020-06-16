@@ -36,7 +36,7 @@ runGQBatched
      , MonadIO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
-     , E.MonadGQLAuthorization m
+     , E.MonadGQLExecutionCheck m
      )
   => RequestId
   -> ResponseInternalErrorsConfig
@@ -71,11 +71,11 @@ runGQ
      , MonadIO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
-     , E.MonadGQLAuthorization m
+     , E.MonadGQLExecutionCheck m
      )
   => RequestId
   -> UserInfo
-  -> IpAddress
+  -> Wai.IpAddress
   -> [HTTP.Header]
   -> E.GraphQLQueryType
   -> GQLReqUnparsed
@@ -87,7 +87,7 @@ runGQ reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
-    reqParsed <- E.authorizeGQLApi userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
+    reqParsed <- E.allowGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
                  >>= flip onLeft throwError
 
     (telemCacheHit, execPlan) <- E.getResolvedExecPlan pgExecCtx planCache

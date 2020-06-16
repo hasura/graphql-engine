@@ -297,7 +297,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAdress = do
             <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
 onStart
-  :: forall m. (HasVersion, MonadIO m, E.MonadGQLAuthorization m)
+  :: forall m. (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m)
   => WSServerEnv -> WSConn -> StartMsg -> m ()
 onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   timerTot <- startTimer
@@ -320,7 +320,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   requestId <- getRequestId reqHdrs
   (sc, scVer) <- liftIO getSchemaCache
-  reqParsedE <- lift $ E.authorizeGQLApi userInfo (reqHdrs, ipAddress) enableAL sc q
+
+  reqParsedE <- lift $ E.allowGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
   reqParsed <- either (withComplete . preExecErr requestId) return reqParsedE
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
                planCache userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
@@ -482,7 +483,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     catchAndIgnore m = void $ runExceptT m
 
 onMessage
-  :: (HasVersion, MonadIO m, UserAuthentication m, E.MonadGQLAuthorization m)
+  :: (HasVersion, MonadIO m, UserAuthentication m, E.MonadGQLExecutionCheck m)
   => AuthMode
   -> WSServerEnv
   -> WSConn -> BL.ByteString -> m ()
@@ -651,7 +652,7 @@ createWSServerApp
      , MC.MonadBaseControl IO m
      , LA.Forall (LA.Pure m)
      , UserAuthentication m
-     , E.MonadGQLAuthorization m
+     , E.MonadGQLExecutionCheck m
      )
   => AuthMode
   -> WSServerEnv
