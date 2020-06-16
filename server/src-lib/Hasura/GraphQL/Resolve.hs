@@ -115,7 +115,7 @@ queryFldToPGAST fld actionExecuter = do
   userInfo <- asks getter
   case opCtx of
     QCNodeSelect nodeSelectMap -> do
-      NodeIdData table columnValues <- RS.resolveNodeId fld
+      NodeIdV1 (V1NodeId table columnValues) <- RS.resolveNodeId fld
       case Map.lookup (GS.mkTableTy table) nodeSelectMap of
         Nothing       -> throwVE $ "table " <> table <<> " not found"
         Just (selOpCtx, pkeyColumns) -> do

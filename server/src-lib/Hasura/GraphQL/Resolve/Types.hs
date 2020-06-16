@@ -279,7 +279,7 @@ schema looks like following
 
 '[<version-integer>, "<table-schema>", "<table-name>", "column-1", "column-2", ... "column-n"]'
 
-It is represented in the type @'NodeIdData'. The 'version-integer' represents the JSON
+It is represented in the type @'NodeId'. The 'version-integer' represents the JSON
 schema version to enable any backward compatibility if it is broken in upcoming versions.
 
 The stringified JSON is Base64 encoded and sent to client. Also the same
@@ -303,23 +303,29 @@ instance J.FromJSON NodeIdVersion where
       1 -> pure NIVersion1
       _ -> fail $ "expecting version 1 for node id, but got " <> show versionInt
 
--- | The Relay 'Node' inteface's 'id' field value.
--- See Note [Relay Node id].
-data NodeIdData
-  = NodeIdData
+data V1NodeId
+  = V1NodeId
   { _nidTable   :: !QualifiedTable
   , _nidColumns :: !(NESeq.NESeq J.Value)
   } deriving (Show, Eq)
 
-instance J.FromJSON NodeIdData where
+-- | The Relay 'Node' inteface's 'id' field value.
+-- See Note [Relay Node id].
+data NodeId
+  = NodeIdV1 !V1NodeId
+  deriving (Show, Eq)
+
+instance J.FromJSON NodeId where
   parseJSON v = do
     valueList <- J.parseJSON v
     case valueList of
       (idVersion:(schemaValue:(nameValue:(firstColumn:remainingColumns)))) -> do
-        NIVersion1 <- J.parseJSON idVersion
-        NodeIdData <$>
-          (QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
-          <*> pure (NESeq.NESeq (firstColumn, Seq.fromList remainingColumns))
+        versionInt :: Int <- J.parseJSON idVersion
+        case versionInt of
+          1 -> fmap NodeIdV1 $ V1NodeId
+               <$> (QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
+               <*> pure (NESeq.NESeq (firstColumn, Seq.fromList remainingColumns))
+          _ -> fail $ "expecting version 1 for node id, but got " <> show versionInt
       _ -> fail "expecting at least 4 items"
 
 -- template haskell related

@@ -763,7 +763,7 @@ resolveNodeId
   :: ( MonadError QErr m
      , MonadReusability m
      )
-  => Field -> m NodeIdData
+  => Field -> m NodeId
 resolveNodeId field =
   withPathK "selectionSet" $ fieldAsPath field $
   withArg (_fArguments field) "id" $ asPGColText >=>
