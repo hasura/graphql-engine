@@ -25,9 +25,9 @@ response:
       edges:
       - cursor: eyJpZCIgOiA2fQ==
         node:
-          id: WyJwdWJsaWMiLCAiYXJ0aWNsZSIsIDZd
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDZd
           title: Article 6
           content: Sample article content 6
           author:
-            id: WyJwdWJsaWMiLCAiYXV0aG9yIiwgM10=
+            id: WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgM10=
             name: Author 3

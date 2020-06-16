@@ -1,0 +1,20 @@
+description: Query node interface with invalid node id version
+url: /v1/relay
+status: 200
+query:
+  query: |
+    query {
+      node(id: "WzIsICJwdWJsaWMiLCAiYXV0aG9yIiwgMV0K"){
+        __typename
+        ... on author{
+          name
+        }
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: "$.selectionSet.node.args.id"
+      code: validation-failed
+    message: 'the node id is invalid: Error in $: expecting version 1 for node id, but
+      got 2'

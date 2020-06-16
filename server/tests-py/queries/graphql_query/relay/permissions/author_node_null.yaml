@@ -7,7 +7,7 @@ headers:
 query:
   query: |
     query {
-      node(id: "WyJwdWJsaWMiLCAiYXV0aG9yIiwgMl0="){
+      node(id: "WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgMl0K"){
         ... on author{
           name
         }

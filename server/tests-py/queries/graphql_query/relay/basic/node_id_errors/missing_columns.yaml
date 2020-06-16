@@ -4,7 +4,7 @@ status: 200
 query:
   query: |
     query {
-      node(id: "WyJwdWJsaWMiLCAidXNlciIsICJmaXJzdF8yIl0K"){
+      node(id: "WzEsICJwdWJsaWMiLCAidXNlciIsICJmaXJzdF8yIl0K"){
         ... on user{
           first_name
           last_name

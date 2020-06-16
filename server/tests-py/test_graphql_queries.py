@@ -719,6 +719,9 @@ class TestRelayQueriesBasic:
     def test_unexpected_columns(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/node_id_errors/unexpected_columns.yaml', transport)
 
+    def test_invalid_node_id_version(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/invalid_node_id_version.yaml', transport)
+
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
 class TestRelayQueriesPermissions:

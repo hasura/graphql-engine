@@ -34,5 +34,5 @@ response:
       edges:
       - cursor: eyJpZCIgOiAyfQ==
         node:
-          id: WyJwdWJsaWMiLCAiYXV0aG9yIiwgMl0=
+          id: WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgMl0=
           name: Author 2

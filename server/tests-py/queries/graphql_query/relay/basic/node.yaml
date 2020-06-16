@@ -3,9 +3,9 @@ url: /v1/relay
 status: 200
 query:
   variables:
-    author_id: WyJwdWJsaWMiLCJhdXRob3IiLDJdCg==
-    article_id: WyJwdWJsaWMiLCJhcnRpY2xlIiwzXQo=
-    non_exist_article_id: WyJwdWJsaWMiLCJhcnRpY2xlIiwxMDBdCg==
+    author_id: WzEsICJwdWJsaWMiLCJhdXRob3IiLDJdCg==
+    article_id: WzEsInB1YmxpYyIsImFydGljbGUiLDNdCg==
+    non_exist_article_id: WzEsInB1YmxpYyIsImFydGljbGUiLDEwMF0K
   query: |
     query nodeQuery($author_id: ID!, $article_id: ID!, $non_exist_article_id: ID!){
       author_node: node(id: $author_id){
@@ -65,7 +65,7 @@ response:
             title: Article 5
             content: Sample article content 5
     article_node_with_author_id:
-      id: WyJwdWJsaWMiLCAiYXV0aG9yIiwgMl0=
+      id: WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgMl0=
     article_node:
       __typename: article
       title: Article 3

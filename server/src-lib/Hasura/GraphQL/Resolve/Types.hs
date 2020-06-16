@@ -277,13 +277,31 @@ Node id data:
 We are using JSON format for encoding and decoding the node id. The JSON
 schema looks like following
 
-'["<table-schema>", "<table-name>", "column-1", "column-2", ... "column-n"]'
+'[<version-integer>, "<table-schema>", "<table-name>", "column-1", "column-2", ... "column-n"]'
 
-It is represented in the type @'NodeIdData'.
+It is represented in the type @'NodeIdData'. The 'version-integer' represents the JSON
+schema version to enable any backward compatibility if it is broken in upcoming versions.
 
 The stringified JSON is Base64 encoded and sent to client. Also the same
 base64 encoded JSON string is accepted for 'node' field resolver's 'id' input.
 -}
+
+data NodeIdVersion
+  = NIVersion1
+  deriving (Show, Eq)
+
+nodeIdVersionInt :: NodeIdVersion -> Int
+nodeIdVersionInt NIVersion1 = 1
+
+currentNodeIdVersion :: NodeIdVersion
+currentNodeIdVersion = NIVersion1
+
+instance J.FromJSON NodeIdVersion where
+  parseJSON v = do
+    versionInt :: Int <- J.parseJSON v
+    case versionInt of
+      1 -> pure NIVersion1
+      _ -> fail $ "expecting version 1 for node id, but got " <> show versionInt
 
 -- | The Relay 'Node' inteface's 'id' field value.
 -- See Note [Relay Node id].
@@ -297,11 +315,12 @@ instance J.FromJSON NodeIdData where
   parseJSON v = do
     valueList <- J.parseJSON v
     case valueList of
-      (schemaValue:(nameValue:(firstColumn:remainingColumns))) ->
+      (idVersion:(schemaValue:(nameValue:(firstColumn:remainingColumns)))) -> do
+        NIVersion1 <- J.parseJSON idVersion
         NodeIdData <$>
           (QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
           <*> pure (NESeq.NESeq (firstColumn, Seq.fromList remainingColumns))
-      _ -> fail "expecting at least 3 items"
+      _ -> fail "expecting at least 4 items"
 
 -- template haskell related
 $(makePrisms ''ResolveField)

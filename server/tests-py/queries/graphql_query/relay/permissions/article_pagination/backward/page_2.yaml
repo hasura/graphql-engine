@@ -40,14 +40,14 @@ response:
       edges:
       - cursor: eyJpZCIgOiAxfQ==
         node:
-          id: WyJwdWJsaWMiLCAiYXJ0aWNsZSIsIDFd
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDFd
           title: Article 1
           content: Sample article content 1
           is_published: true
           author_id: 1
       - cursor: eyJpZCIgOiAyfQ==
         node:
-          id: WyJwdWJsaWMiLCAiYXJ0aWNsZSIsIDJd
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDJd
           title: Article 2
           content: Sample article content 2
           is_published: true

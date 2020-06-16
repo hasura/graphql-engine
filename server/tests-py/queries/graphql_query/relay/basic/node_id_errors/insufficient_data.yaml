@@ -18,4 +18,4 @@ response:
   - extensions:
       path: $.selectionSet.node.args.id
       code: validation-failed
-    message: 'the node id is invalid: Error in $: expecting at least 3 items'
+    message: 'the node id is invalid: Error in $: expecting at least 4 items'

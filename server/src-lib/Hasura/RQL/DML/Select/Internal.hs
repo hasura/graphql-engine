@@ -6,13 +6,14 @@ module Hasura.RQL.DML.Select.Internal
   )
 where
 
-import           Control.Lens                hiding (op)
+import           Control.Lens                 hiding (op)
 import           Control.Monad.Writer.Strict
 
-import qualified Data.HashMap.Strict         as HM
-import qualified Data.List.NonEmpty          as NE
-import qualified Data.Text                   as T
+import qualified Data.HashMap.Strict          as HM
+import qualified Data.List.NonEmpty           as NE
+import qualified Data.Text                    as T
 
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Types
@@ -21,7 +22,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Rewrite
 import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML              as S
+import qualified Hasura.SQL.DML               as S
 
 -- Conversion of SelectQ happens in 2 Stages.
 -- Stage 1 : Convert input query into an annotated AST
@@ -813,7 +814,8 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
 
       -- See Note [Relay Node id].
       in encodeBase64 $ flip S.SETyAnn S.textTypeAnn $ S.applyJsonBuildArray $
-         [ S.SELit (getSchemaTxt tableSchema)
+         [ S.intToSQLExp $ nodeIdVersionInt currentNodeIdVersion
+         , S.SELit (getSchemaTxt tableSchema)
          , S.SELit (toTxt tableName)
          ] <> map columnInfoToSQLExp (toList pkeyColumns)
 
