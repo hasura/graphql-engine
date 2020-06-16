@@ -17,12 +17,10 @@ import           Data.ByteString               (ByteString)
 import           Network.HTTP.Types            (status500)
 import           Prelude
 
-import           Hasura.Server.Utils           (IpAddress (..), getSourceFromFallback)
-
 import qualified Data.ByteString.Char8         as BC
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.CaseInsensitive          as CI
-import qualified Network.Wai                   as Wai
+import qualified Network.Wai.Extended          as Wai
 import qualified Network.WebSockets            as WS
 import qualified Network.WebSockets.Connection as WS
 import qualified Network.WebSockets.Stream     as WS
@@ -61,7 +59,7 @@ isWebSocketsReq req =
 --     backupApp _ respond = respond $ 'Wai.responseLBS' 'Network.HTTP.Types.status400' [] "Not a WebSocket request"
 -- @
 websocketsOr :: WS.ConnectionOptions
-             -> (IpAddress -> WS.PendingConnection -> IO ())
+             -> (Wai.IpAddress -> WS.PendingConnection -> IO ())
              -> Wai.Application
              -> Wai.Application
 websocketsOr opts app backup req sendResponse =
@@ -76,7 +74,7 @@ websocketsOr opts app backup req sendResponse =
 --
 -- Usually, 'websocketsOr' is more convenient.
 websocketsApp :: WS.ConnectionOptions
-              -> (IpAddress -> WS.PendingConnection -> IO ())
+              -> (Wai.IpAddress -> WS.PendingConnection -> IO ())
               -> Wai.Request
               -> Maybe Wai.Response
 websocketsApp opts app req
@@ -90,8 +88,8 @@ websocketsApp opts app req
                 "The web application attempted to send a WebSockets response, but WebSockets are not supported by your WAI handler."
 
 --------------------------------------------------------------------------------
-getRequestHead :: Wai.Request -> (WS.RequestHead, IpAddress)
-getRequestHead req = (reqHead, getSourceFromFallback req)
+getRequestHead :: Wai.Request -> (WS.RequestHead, Wai.IpAddress)
+getRequestHead req = (reqHead, Wai.getSourceFromFallback req)
   where
     reqHead = WS.RequestHead
       (Wai.rawPathInfo req `BC.append` Wai.rawQueryString req)
@@ -102,8 +100,8 @@ getRequestHead req = (reqHead, getSourceFromFallback req)
 -- | Internal function to run the WebSocket io-streams using the conduit library.
 runWebSockets :: WS.ConnectionOptions
               -> WS.RequestHead
-              -> IpAddress
-              -> (IpAddress -> WS.PendingConnection -> IO a)
+              -> Wai.IpAddress
+              -> (Wai.IpAddress -> WS.PendingConnection -> IO a)
               -> IO ByteString
               -> (ByteString -> IO ())
               -> IO a

@@ -30,6 +30,7 @@ import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
 import qualified Network.WebSockets                          as WS
+import qualified Network.Wai.Extended                        as Wai
 import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent.Extended                 (sleep)
@@ -49,7 +50,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
                                                               resolveUserInfo)
 import           Hasura.Server.Cors
-import           Hasura.Server.Utils                         (IpAddress, RequestId, getRequestId)
+import           Hasura.Server.Utils                         (RequestId, getRequestId)
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
 
@@ -79,7 +80,7 @@ data ErrRespType
   deriving (Show)
 
 data WSConnState
-  = CSNotInitialised !WsHeaders !IpAddress
+  = CSNotInitialised !WsHeaders !Wai.IpAddress
   -- ^ headers and IP address from the client for websockets
   | CSInitError !Text
   | CSInitialised !WsClientState
@@ -92,7 +93,7 @@ data WsClientState
   -- ^ the JWT/token expiry time, if any
   , wscsReqHeaders   :: ![H.Header]
   -- ^ headers from the client (in conn params) to forward to the remote schema
-  , wscsIpAddress    :: !IpAddress
+  , wscsIpAddress    :: !Wai.IpAddress
   -- ^ IP address required for 'MonadGQLAuthorization'
   }
 

@@ -32,6 +32,7 @@ import qualified Data.HashSet                           as Set
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
+import qualified Network.Wai.Extended                   as Wai
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -45,7 +46,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (IpAddress, RequestId)
+import           Hasura.Server.Utils                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
@@ -94,7 +95,7 @@ data ExecutionCtx
 class Monad m => MonadGQLAuthorization m where
   authorizeGQLApi
     :: UserInfo
-    -> ([HTTP.Header], IpAddress)
+    -> ([HTTP.Header], Wai.IpAddress)
     -> Bool
     -- ^ allow list enabled?
     -> SchemaCache

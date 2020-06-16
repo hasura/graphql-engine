@@ -44,7 +44,7 @@ import           Data.Word                            (Word16)
 import           GHC.AssertNF
 import           GHC.Int                              (Int64)
 import           Hasura.Prelude
-import           Hasura.Server.Utils                  (IpAddress)
+import           Network.Wai.Extended                 (IpAddress)
 import qualified ListT
 import qualified Network.WebSockets                   as WS
 import qualified StmContainers.Map                    as STMMap

@@ -12,8 +12,6 @@ module Hasura.Server.Logging
   , HttpLogContext(..)
   , WebHookLog(..)
   , HttpException
-  , getSourceFromFallback
-  , getSource
   , HttpLog (..)
   ) where
 
@@ -25,7 +23,7 @@ import           Data.Int                  (Int64)
 import qualified Data.ByteString.Lazy      as BL
 import qualified Data.Text                 as T
 import qualified Network.HTTP.Types        as HTTP
-import qualified Network.Wai               as Wai
+import qualified Network.Wai.Extended      as Wai
 
 import           Hasura.HTTP
 import           Hasura.Logging
@@ -162,7 +160,7 @@ data HttpInfoLog
   = HttpInfoLog
   { hlStatus      :: !HTTP.Status
   , hlMethod      :: !T.Text
-  , hlSource      :: !IpAddress
+  , hlSource      :: !Wai.IpAddress
   , hlPath        :: !T.Text
   , hlHttpVersion :: !HTTP.HttpVersion
   , hlCompression :: !(Maybe CompressionType)
@@ -174,7 +172,7 @@ instance ToJSON HttpInfoLog where
   toJSON (HttpInfoLog st met src path hv compressTypeM _) =
     object [ "status" .= HTTP.statusCode st
            , "method" .= met
-           , "ip" .= bsToTxt (unIpAddress src)
+           , "ip" .= Wai.showIPAddress src
            , "url" .= path
            , "http_version" .= show hv
            , "content_encoding" .= (compressionTypeToTxt <$> compressTypeM)
@@ -220,7 +218,7 @@ mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = status
              , hlMethod      = bsToTxt $ Wai.requestMethod req
-             , hlSource      = getSourceFromFallback req
+             , hlSource      = Wai.getSourceFromFallback req
              , hlPath        = bsToTxt $ Wai.rawPathInfo req
              , hlHttpVersion = Wai.httpVersion req
              , hlCompression  = compressTypeM
@@ -256,7 +254,7 @@ mkHttpErrorLogContext userInfoM reqId req err query mTiming compressTypeM header
   let http = HttpInfoLog
              { hlStatus      = qeStatus err
              , hlMethod      = bsToTxt $ Wai.requestMethod req
-             , hlSource      = getSourceFromFallback req
+             , hlSource      = Wai.getSourceFromFallback req
              , hlPath        = bsToTxt $ Wai.rawPathInfo req
              , hlHttpVersion = Wai.httpVersion req
              , hlCompression  = compressTypeM
