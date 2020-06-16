@@ -107,7 +107,9 @@ const LoveSection = () => {
     badge: 'No Updates',
   };
   const [open, toggleLove] = useState(false);
-  const [notificationData, setData] = useState([defaultNotification] as Array<UpdateProps>);
+  const [notificationData, setData] = useState([defaultNotification] as Array<
+    UpdateProps
+  >);
 
   useLayoutEffect(() => {
     if (open) {
@@ -124,7 +126,6 @@ const LoveSection = () => {
             // and push to notifData
             setData(notifData);
           }
-
         })
         // TODO: report error in a better way
         .catch(err => console.error(err));
