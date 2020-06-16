@@ -104,15 +104,6 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
     -- the same key.
     -> m (Parser k n b) -> m (Parser k n b)
 
-{-
-type author {
-  articles : [article]
-}
-type article {
-  writtenBy : author
-}
--}
-
 -- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
 -- as the key.
 memoize

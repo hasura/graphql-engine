@@ -1,17 +1,18 @@
-module Hasura.GraphQL.RemoteServer where
+module Hasura.GraphQL.RemoteServer
+  ( fetchRemoteSchema
+  , IntrospectionResult
+  ) where
 
 import           Control.Exception             (try)
 import           Control.Lens                  ((^.))
 import           Data.Aeson                    ((.:), (.:?))
 import           Data.FileEmbed                (embedStringFile)
-import           Data.Foldable                 (foldlM)
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Data.Void                     (Void)
 
 import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Parser as G
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -22,9 +23,6 @@ import           Hasura.RQL.DDL.Headers        (makeHeadersFromConf)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils           (httpExceptToJSON)
 import           Hasura.Server.Version         (HasVersion)
-import           Hasura.GraphQL.Parser.Schema
-
-import qualified Hasura.GraphQL.Schema         as GS
 
 introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
@@ -35,7 +33,7 @@ fetchRemoteSchema
   -> RemoteSchemaName
   -> RemoteSchemaInfo
   -> m IntrospectionResult
-fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) = do
+fetchRemoteSchema manager _name (RemoteSchemaInfo url headerConf _ timeout) = do
   headers <- makeHeadersFromConf headerConf
   let hdrsWithDefaults = addDefaultHeaders headers
 
@@ -56,23 +54,8 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
 
   (FromIntrospection introspectRes) :: (FromIntrospection IntrospectionResult) <-
     either (remoteSchemaErr . T.pack) return $ J.eitherDecode respData
-{-
-  let (sDoc, qRootN, mRootN, sRootN) =
-        fromIntrospection introspectRes
-  typMap <- collectTypeDefinitions sDoc
-  let mQrTyp = Map.lookup qRootN typMap
-      mMrTyp = maybe Nothing (`Map.lookup` typMap) mRootN
-      mSrTyp = maybe Nothing (`Map.lookup` typMap) sRootN
-  qrTyp <- liftMaybe noQueryRoot mQrTyp
-  rmQR <- liftMaybe (err400 Unexpected "query root has to be an object type") $ getObjType (dInfo qrTyp)
-  let queryRoot = Nullable $ TNamed $ mkDefinition $$(G.litName "query_root") Nothing $ TIObject rmQR
-      mutationRoot = mkRoot $$(G.litName "mutation_root") $ mMrTyp
-      subscriptionRoot = mkRoot $$(G.litName "subscription_root") $ mSrTyp
-  return $ Schema Nothing typMap queryRoot mutationRoot subscriptionRoot []
-  -}
   return introspectRes
   where
-    noQueryRoot = err400 Unexpected "query root not found in remote schema"
     remoteSchemaErr :: (MonadError QErr m) => T.Text -> m a
     remoteSchemaErr = throw400 RemoteSchemaError
 
@@ -94,11 +77,6 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
     decodeNon200Resp bs = case J.eitherDecode bs of
       Right a -> J.object ["response" J..= (a :: J.Value)]
       Left _  -> J.object ["raw_body" J..= bsToTxt (BL.toStrict bs)]
-
-    mkRoot :: G.Name -> Maybe (Definition SomeTypeInfo) -> Maybe (Type 'Output)
-    mkRoot rootName rootTypeMap = do
-      rootObjType <- getObjType . dInfo <$> rootTypeMap
-      Nullable . TNamed . mkDefinition rootName Nothing . TIObject <$> rootObjType
 
 -- mergeSchemas
 --   :: (MonadError QErr m)
@@ -381,13 +359,3 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
             , subsRoot
             )
     return $ FromIntrospection r
-
-
-getNamedTyp :: G.TypeDefinition -> G.Name
-getNamedTyp ty = case ty of
-  G.TypeDefinitionScalar t      -> G._stdName t
-  G.TypeDefinitionObject t      -> G._otdName t
-  G.TypeDefinitionInterface t   -> G._itdName t
-  G.TypeDefinitionUnion t       -> G._utdName t
-  G.TypeDefinitionEnum t        -> G._etdName t
-  G.TypeDefinitionInputObject t -> G._iotdName t

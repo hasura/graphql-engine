@@ -299,7 +299,9 @@ nonNullableType = \case
   NonNullable t -> NonNullable t
   Nullable t    -> NonNullable t
 
--- | Decorate a type as NON_NULL
+-- | Decorate a type as NULL.  Note that regardless of what we think, a nullable
+-- value read from the user should be represented by a 'Maybe' Haskell type (or
+-- another kind of partial data).
 nullableType :: forall k . Type k -> Type k
 nullableType = \case
   NonNullable t -> Nullable t

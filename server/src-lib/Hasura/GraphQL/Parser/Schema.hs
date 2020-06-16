@@ -46,10 +46,7 @@ import qualified Data.HashMap.Strict.Extended  as Map
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Functor.Classes
-import           Language.GraphQL.Draft.Syntax (Description (..), Name (..), Value (..), Directive(..), SchemaDocument)
-
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Data.List.NonEmpty            as NE
+import           Language.GraphQL.Draft.Syntax (Description (..), Name (..), Value (..), Directive(..))
 
 class HasName a where
   getName :: a -> Name
@@ -519,82 +516,3 @@ instance HasTypeDefinitions FieldInfo where
   accumulateTypeDefinitions (FieldInfo args t) = do
     accumulateTypeDefinitions args
     accumulateTypeDefinitions t
-
-instance HasTypeDefinitions G.TypeDefinition where
-  accumulateTypeDefinitions  = \case
-    G.TypeDefinitionScalar (G.ScalarTypeDefinition description name _) ->
-      accumulateTypeDefinitions (mkDefinition name description TIScalar)
-    G.TypeDefinitionEnum (G.EnumTypeDefinition description name _ values) ->
-      let enumValDefns = map (\(G.EnumValueDefinition enumDesc enumName _) ->
-                                (mkDefinition (G.unEnumValue enumName) enumDesc EnumValueInfo))
-                         $ values
-      in
-      accumulateTypeDefinitions (mkDefinition name description $ TIEnum $ NE.fromList enumValDefns)
-    G.TypeDefinitionInterface _ -> pure () -- TODO
-    G.TypeDefinitionUnion _ -> pure () -- TODO
-    G.TypeDefinitionInputObject (G.InputObjectTypeDefinition description name _ valueDefns) ->
-      let resolveValType valType defaultVal =
-            case valType of
-              G.TypeNamed _ name' ->
-                case G.isNullable valType of
-                  True -> IFOptional (TNamed $ mkDefinition name' Nothing TIScalar) defaultVal
-                  False -> IFRequired $ TNamed $ mkDefinition name' Nothing TIScalar
-              G.TypeList _ valType' ->
-                resolveValType valType' defaultVal
-
-          mkInputFieldInfo (G.InputValueDefinition desc valName valType defaultVal) =
-            mkDefinition valName desc $ resolveValType valType defaultVal
-
-          inputFieldInfos = map mkInputFieldInfo $ valueDefns
-      in
-      accumulateTypeDefinitions (mkDefinition name description $ TIInputObject inputFieldInfos)
-
-
-    G.TypeDefinitionObject (G.ObjectTypeDefinition description name _ _ fieldsDefns) ->
-      let resolveValType valType =
-            case convertGTypeToType valType of
-              Nullable t -> IFOptional t Nothing
-              NonNullable t -> IFRequired t
-
-          mkInputFieldInfo (G.InputValueDefinition desc valName valType _) =
-            mkDefinition valName desc $ resolveValType valType
-
-          inputFieldInfos valueDefns = map mkInputFieldInfo $ valueDefns
-
-          fieldDefnToFieldInfoDefn (G.FieldDefinition desc fieldName args fieldType _) =
-            mkDefinition fieldName desc $ FieldInfo (inputFieldInfos args) $ convertGTypeToType fieldType
-      in
-      accumulateTypeDefinitions (mkDefinition name description $
-                                 TIObject (map fieldDefnToFieldInfoDefn fieldsDefns))
-
-{-
-
-HashMap Name SyntacticTypeDefinition -- fields are specified by names
-HashMap Name TypeDefinitionAST -- fields are specified by TypeDefinitionAST's
-
-G.TypeDefinitionObject (G.ObjectTypeDefinition _ "article" _ _ [G.FieldDefinition _ "author" [G.TypeNamed _ "author"] _type []])
-
-type article {
-  author author
-}
-type author {
-  name text
-  id int
-}
--}
-instance HasTypeDefinitions SchemaDocument where
-  accumulateTypeDefinitions (G.SchemaDocument typeDefs) =
-    accumulateTypeDefinitions typeDefs
-
--- this function is wrong, it assumes that every named type is a scalar one
-convertGTypeToType :: G.GType -> Type 'Both
-convertGTypeToType gType =
-  case gType of
-    G.TypeNamed _ name ->
-      case G.isNullable gType of
-        True -> Nullable $ TNamed $ mkDefinition name Nothing TIScalar
-        False -> NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
-    G.TypeList _ gType' ->
-      case G.isNullable gType of
-        True -> Nullable $ TList $ convertGTypeToType gType'
-        False -> NonNullable $ TList $ convertGTypeToType gType'
