@@ -643,17 +643,17 @@ parseServerHost = optional $ strOption ( long "server-host" <>
                 help "Host on which graphql-engine will listen (default: *)"
               )
 
-parseAccessKey :: Parser (Maybe AdminSecret)
+parseAccessKey :: Parser (Maybe AdminSecretHash)
 parseAccessKey =
-  optional $ AdminSecret <$>
+  optional $ hashAdminSecret <$>
     strOption ( long "access-key" <>
                 metavar "ADMIN SECRET KEY (DEPRECATED: USE --admin-secret)" <>
                 help (snd adminSecretEnv)
               )
 
-parseAdminSecret :: Parser (Maybe AdminSecret)
+parseAdminSecret :: Parser (Maybe AdminSecretHash)
 parseAdminSecret =
-  optional $ AdminSecret <$>
+  optional $ hashAdminSecret <$>
     strOption ( long "admin-secret" <>
                 metavar "ADMIN SECRET KEY" <>
                 help (snd adminSecretEnv)
