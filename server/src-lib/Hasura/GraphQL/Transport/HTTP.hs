@@ -30,40 +30,6 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
--- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
-runGQBatched
-  :: ( HasVersion
-     , MonadIO m
-     , MonadError QErr m
-     , MonadReader E.ExecutionCtx m
-     , E.MonadGQLExecutionCheck m
-     )
-  => RequestId
-  -> ResponseInternalErrorsConfig
-  -> UserInfo
-  -> Wai.IpAddress
-  -> [HTTP.Header]
-  -> E.GraphQLQueryType
-  -> GQLBatchedReqs GQLQueryText
-  -- ^ the batched request with unparsed GraphQL query
-  -> m (HttpResponse EncJSON)
-runGQBatched reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query = do
-  case query of
-    GQLSingleRequest req -> runGQ reqId userInfo ipAddress reqHdrs queryType req
-    GQLBatchedReqs reqs -> do
-      -- It's unclear what we should do if we receive multiple
-      -- responses with distinct headers, so just do the simplest thing
-      -- in this case, and don't forward any.
-      let includeInternal = shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig
-          removeHeaders =
-            flip HttpResponse []
-            . encJFromList
-            . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
-
-      fmap removeHeaders $ traverse (try . runGQ reqId userInfo ipAddress reqHdrs queryType) reqs
-  where
-    try = flip catchError (pure . Left) . fmap Right
-
 
 -- | Run (execute) a single GraphQL query
 runGQ
@@ -109,6 +75,41 @@ runGQ reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
 
+-- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
+runGQBatched
+  :: ( HasVersion
+     , MonadIO m
+     , MonadError QErr m
+     , MonadReader E.ExecutionCtx m
+     , E.MonadGQLExecutionCheck m
+     )
+  => RequestId
+  -> ResponseInternalErrorsConfig
+  -> UserInfo
+  -> Wai.IpAddress
+  -> [HTTP.Header]
+  -> E.GraphQLQueryType
+  -> GQLBatchedReqs GQLQueryText
+  -- ^ the batched request with unparsed GraphQL query
+  -> m (HttpResponse EncJSON)
+runGQBatched reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query = do
+  case query of
+    GQLSingleRequest req ->
+      runGQ reqId userInfo ipAddress reqHdrs queryType req
+    GQLBatchedReqs reqs -> do
+      -- It's unclear what we should do if we receive multiple
+      -- responses with distinct headers, so just do the simplest thing
+      -- in this case, and don't forward any.
+      let includeInternal = shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig
+          removeHeaders =
+            flip HttpResponse []
+            . encJFromList
+            . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
+
+      removeHeaders <$> traverse (try . runGQ reqId userInfo ipAddress reqHdrs queryType) reqs
+  where
+    try = flip catchError (pure . Left) . fmap Right
+
 
 runHasuraGQ
   :: ( MonadIO m
@@ -117,7 +118,6 @@ runHasuraGQ
      )
   => RequestId
   -> GQLReqUnparsed
-  -- ^ needs the unparsed req for logging
   -> UserInfo
   -> E.ExecOp
   -> m (DiffTime, Telem.QueryType, HTTP.ResponseHeaders, EncJSON)
