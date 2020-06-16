@@ -524,28 +524,38 @@ functionArgs
   => QualifiedFunction
   -> Seq.Seq FunctionInputArgument
   -> m (Parser 'Input n (RQL.FunctionArgsExpTableRow UnpreparedValue))
-functionArgs functionName inputArgs = P.memoizeOn 'functionArgs functionName $ do
-  let (subtract 1 -> positionalArgsNumber, argsParsers) = mapAccumL createField 1 (toList inputArgs)
-      objName = fromJust $ G.mkName $ getFunctionTxt (qName functionName) <> "_args"
-  argsParser <- sequenceA argsParsers
-  pure $ P.object objName Nothing (sequenceA argsParser) `P.bind` \args -> do
-    -- TODO: check that all omitted arguments (if any) are at the end of positional arguments
-    when False $ parseError "Only last set of positional arguments can be omitted"
-    let (map snd -> positional, Map.fromList -> named) = partitionEithers $ catMaybes args
+functionArgs functionName (toList -> inputArgs) = P.memoizeOn 'functionArgs functionName $ do
+  let objName = fromJust $ G.mkName $ getFunctionTxt (qName functionName) <> "_args"
+
+  -- first, we iterate through the original sql arguments, to find the
+  -- corresponding graphql names at the same time, we create the input field
+  -- parsers
+  (names, argumentParsers) <- fmap unzip $ sequenceA $ snd $ mapAccumL argument 1 inputArgs
+  pure $ P.object objName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
+
+    -- after successfully parsing, we create a dictionary of the parsed fields
+    -- and we re-iterate through the original list of sql arguments, now with
+    -- the knowledge of their graphql name
+    let foundArguments = Map.fromList $ catMaybes arguments
+        argsWithNames  = zip names inputArgs
+
+    -- all elements (in sql order) that are found in the result map are treated
+    -- as positional arguments whether they were originally named or not
+    (positional, left) <- spanMaybeM (\(name, _) -> pure $ Map.lookup name foundArguments) argsWithNames
+
+    -- if there's anything that's left after a positional argument wasn't found,
+    -- it has to be passed to sqlas a named argument. we fail with a parse error
+    -- if we encounter a positional argument there, as it doesn't have a
+    -- corresponding sql name.
+    named <- Map.fromList . catMaybes <$> traverse (namedArgument foundArguments) left
     pure $ RQL.FunctionArgsExp positional named
 
   where
-    -- This uses Either solely to use partitionEithers.
-    -- Arbitrarily, Left is for positional arguments, and Right for named arguments.
-    createField
+    argument
       :: Int
       -> FunctionInputArgument
-      -> (Int, m (InputFieldsParser n
-                   (Maybe (Either
-                          (Int,  RQL.ArgumentExp UnpreparedValue) -- positional argument
-                          (Text, RQL.ArgumentExp UnpreparedValue) -- named argument
-                          ))))
-    createField positionalIndex (IASessionVariables name) =
+      -> (Int, m (Text, InputFieldsParser n (Maybe (Text, RQL.ArgumentExp UnpreparedValue))))
+    argument positionalIndex (IASessionVariables name) =
       -- WIP NOTE
       -- old code seemed to assume that it was possible for the session argument
       -- to be a positional argument; however, I doubt that it's still possible:
@@ -553,28 +563,35 @@ functionArgs functionName inputArgs = P.memoizeOn 'functionArgs functionName $ d
       --   * the console does not support positional session arguments
       --   * the IASessionVariables constructor takes a FunctionArgName argument
       -- I am therefore assuming that this is fine, but this will need to be
-      -- double checked
+      -- double checked.
       ( positionalIndex
-      , pure $ pure $ Just $ Right (getFuncArgNameTxt name, RQL.AEInput P.UVSession)
+      , let argName = getFuncArgNameTxt name
+        in pure (argName, pure $ Just (argName, RQL.AEInput P.UVSession))
       )
-    createField positionalIndex (IAUserProvided arg) = case faName arg of
+    argument positionalIndex (IAUserProvided arg) = case faName arg of
       Nothing ->
         ( positionalIndex + 1
-        , let argName = "arg_" <> T.pack (show positionalIndex)
-          in createField' (Left . (positionalIndex,)) arg argName
+        , parseArgument arg $ "arg_" <> T.pack (show positionalIndex)
         )
       Just name ->
         ( positionalIndex
-        , let nameText = getFuncArgNameTxt name
-          in createField' (Right . (nameText,)) arg nameText
+        , parseArgument arg $ getFuncArgNameTxt name
         )
-    createField' decorate arg name = do
+    parseArgument arg name = do
       columnParser <- P.column (PGColumnScalar $ _qptName $ faType arg) (G.Nullability False)
       fieldName    <- textToName name
       let argParser = if unHasDefault $ faHasDefault arg
                       then P.fieldOptional  fieldName Nothing columnParser
                       else Just <$> P.field fieldName Nothing columnParser
-      pure $ fmap (decorate . RQL.AEInput . mkParameter) <$> argParser
+      pure $ (name, fmap ((name,) . RQL.AEInput . mkParameter) <$> argParser)
+
+    namedArgument dictionary (name, arg) = for (Map.lookup name dictionary) \parsedValue ->
+      case arg of
+        IASessionVariables _ -> pure (name, parsedValue)
+        IAUserProvided arg   -> case faName arg of
+          Just sqlName -> pure (name, parsedValue)
+          Nothing      -> parseError "Only last set of positional arguments can be omitted"
+
 
 customSQLFunctionArgs
   :: (MonadSchema n m, MonadError QErr m)
