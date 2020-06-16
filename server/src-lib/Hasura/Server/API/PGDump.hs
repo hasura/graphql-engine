@@ -81,6 +81,7 @@ execPGDump b ci = do
       , "SET default_tablespace = '';"
       , "SET default_with_oids = false;"
       , "SET default_table_access_method = heap;"
+      , "SET extra_float_digits = 3;"
       , "CREATE SCHEMA public;"
       , "COMMENT ON SCHEMA public IS 'standard public schema';"
       ]
