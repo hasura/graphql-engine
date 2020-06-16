@@ -600,7 +600,7 @@ DeletePermission
 drop_delete_permission
 ----------------------
 
-A drop delete permission is used to drop an existing delete permission for a role on a table.
+The ``drop_delete_permission`` API is used to drop an existing delete permission for a role on a table.
 
 An example:
 
