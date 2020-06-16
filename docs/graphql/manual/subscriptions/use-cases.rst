@@ -87,7 +87,8 @@ Now we can use the following subscription to fetch the latest location of a vehi
 
     .. code-block:: json
 
-      WS /graphql-ws
+      /v1/graphql WS/1.1
+      Content-Type: application/json
       X-Hasura-Role: admin
 
       {
@@ -180,7 +181,8 @@ Now we can use the following subscription to display the latest messages in a ch
 
     .. code-block:: json
 
-      WS /graphql-ws
+      /v1/graphql WS/1.1
+      Content-Type: application/json
       X-Hasura-Role: admin
 
       {
@@ -328,7 +330,8 @@ Now we can use the following subscription to display the latest poll result:
 
     .. code-block:: json
 
-      WS /graphql-ws
+      /v1/graphql WS/1.1
+      Content-Type: application/json
       X-Hasura-Role: admin
 
       {
