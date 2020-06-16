@@ -319,14 +319,16 @@ instance J.FromJSON NodeId where
   parseJSON v = do
     valueList <- J.parseJSON v
     case valueList of
-      (idVersion:(schemaValue:(nameValue:(firstColumn:remainingColumns)))) -> do
-        versionInt :: Int <- J.parseJSON idVersion
-        case versionInt of
-          1 -> fmap NodeIdV1 $ V1NodeId
-               <$> (QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
-               <*> pure (NESeq.NESeq (firstColumn, Seq.fromList remainingColumns))
-          _ -> fail $ "expecting version 1 for node id, but got " <> show versionInt
-      _ -> fail "expecting at least 4 items"
+      []              -> fail "unexpected GUID format, found empty list"
+      J.Number 1:rest -> NodeIdV1 <$> parseNodeIdV1 rest
+      J.Number n:_    -> fail $ "unsupported GUID version: " <> show n
+      _               -> fail "unexpected GUID format, needs to start with a version number"
+    where
+      parseNodeIdV1 (schemaValue:(nameValue:(firstColumn:remainingColumns))) =
+        V1NodeId
+        <$> (QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
+        <*> pure (NESeq.NESeq (firstColumn, Seq.fromList remainingColumns))
+      parseNodeIdV1 _ = fail "GUID version 1: expecting schema name, table name and at least one column value"
 
 -- template haskell related
 $(makePrisms ''ResolveField)
