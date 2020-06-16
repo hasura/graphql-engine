@@ -47,7 +47,6 @@ import           Data.Word                            (Word16)
 import           GHC.AssertNF
 import           GHC.Int                              (Int64)
 import           Hasura.Prelude
-import           Network.Wai.Extended                 (IpAddress)
 import qualified ListT
 import           Network.Wai.Extended                 (IpAddress)
 import qualified Network.WebSockets                   as WS

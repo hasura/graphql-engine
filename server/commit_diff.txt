@@ -226,18 +226,6 @@ Date:   Fri Jun 19 12:12:32 2020 +0530
 
     * expose various modules and functions for pro
 
-commit 6fc404329ad2a2408e9fee0fad4b45e54fb98b87
-Author: Vamshi Surabhi <0x777@users.noreply.github.com>
-Date:   Tue Jun 16 23:14:59 2020 +0530
-
-    generalize query execution logic on Postgres (#5110)
-
-    * generalize PGExecCtx to support specialized functions for various operations
-
-    * fix tests compilation
-
-    * allow customising PGExecCtx when starting the web server
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>

@@ -47,6 +47,7 @@ import qualified Hasura.Logging                            as L
 import qualified Hasura.Server.API.PGDump                  as PGD
 import qualified Network.Wai.Handler.WebSockets.Custom     as WSC
 
+import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..))
 import           Hasura.HTTP
@@ -601,7 +602,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     -- Health check endpoint
     Spock.get "healthz" $ do
       sc <- getSCFromRef $ scCacheRef serverCtx
-      dbOk <- checkDbConnection
+      dbOk <- liftIO $ _pecCheckHealth $ scPGExecCtx serverCtx
       if dbOk
         then Spock.setStatus HTTP.status200 >> (Spock.text $ if null (scInconsistentObjs sc)
                                                  then "OK"
@@ -691,14 +692,6 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     enableMetadata = isMetadataEnabled serverCtx
     enablePGDump = isPGDumpEnabled serverCtx
     enableConfig = isConfigEnabled serverCtx
-
-    checkDbConnection = do
-      e <- liftIO $ runExceptT $ runQueryTx (scPGExecCtx serverCtx) select1Query
-      pure $ isRight e
-      where
-        select1Query :: (MonadTx m) => m Int
-        select1Query =   liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-                         [Q.sql| SELECT 1 |] () False
 
     serveApiConsole = do
       -- redirect / to /console

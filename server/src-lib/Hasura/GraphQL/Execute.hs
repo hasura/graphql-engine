@@ -60,7 +60,6 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
                                                          mkSetCookieHeaders)
-import           Hasura.RQL.Types.QueryCollection       (stripTypenames)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
