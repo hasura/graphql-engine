@@ -35,7 +35,14 @@ args:
     - num_smallint: 12345
       num_integer: 12345
       num_bigint: 12345
-      num_real: 12345.67
-      num_double: 12345.67
+      num_real: 500002
+      num_double: 500000000000002
+      num_money: 12345.67
+      num_numeric: 12345.67
+    - num_smallint: 12345
+      num_integer: 12345
+      num_bigint: 12345
+      num_real: 500002
+      num_double: 500000000000002
       num_money: 12345.67
       num_numeric: 12345.67
