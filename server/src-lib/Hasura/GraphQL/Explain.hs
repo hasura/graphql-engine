@@ -105,6 +105,8 @@ explainField userInfo gCtx sqlGenCtx actionExecuter fld =
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo) unresolvedAST
       let (query, remoteJoins) = RS.toPGQuery resolvedAST
           txtSQL = Q.getQueryText query
+          -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+          -- query, resulting in potential privilege escalation:
           withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
       -- Reject if query contains any remote joins
       when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
@@ -128,6 +130,7 @@ explainGQLQuery
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query userVarsRaw maybeIsRelay) = do
+  -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
   userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
   (execPlan, queryReusability) <- runReusabilityT $
     E.getExecPlanPartial userInfo sc queryType enableAL query
