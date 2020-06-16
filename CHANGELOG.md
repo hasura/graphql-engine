@@ -85,7 +85,7 @@ hasura seed create tables_seed --from-table table1 --from-table table2
 hasura seed apply
 
 # apply only a particular seed
-hasura seed apply --file seeds/1234_add_some_seed_data.sql
+hasura seed apply --file 1234_add_some_seed_data.sql
 ```
 
 ### Bug fixes and improvements
