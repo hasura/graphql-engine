@@ -120,11 +120,12 @@ const Add: React.FC<Props> = props => {
           className={`${styles.padd_remove} ${styles.columnListElement}`}
         >
           <div className="checkbox ">
-            <label>
+            <label className={styles.cursorPointer}>
               <input
                 type="checkbox"
                 checked={colEnabled}
                 onChange={handleToggleColumn}
+                className={styles.cursorPointer}
               />
               {colName}
               <small> ({colType})</small>

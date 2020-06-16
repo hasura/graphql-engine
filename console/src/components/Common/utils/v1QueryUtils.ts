@@ -558,8 +558,12 @@ export const generateCreateEventTriggerQuery = (
         : null,
       update: state.operations.update
         ? {
-            columns: state.operationColumns.map(c => c.name),
-            payload: state.operationColumns.map(c => c.name),
+            columns: state.operationColumns
+              .filter(c => !!c.enabled)
+              .map(c => c.name),
+            payload: state.operationColumns
+              .filter(c => !!c.enabled)
+              .map(c => c.name),
           }
         : null,
       delete: state.operations.delete

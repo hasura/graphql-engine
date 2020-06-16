@@ -4,5 +4,5 @@ args:
   args:
     cascade: true
     sql: |
-      DROP TABLE article;
+      DROP TABLE article CASCADE;
       DROP TABLE author;
