@@ -501,7 +501,7 @@ fieldSelection fieldInfo selectPermissions stringifyNum = do
 
 -- | Parses the arguments to the underlying sql function of a computed field or
 --   a custom function. All arguments to the underlying sql function are parsed
---   as an "args" object.  Named arguments are expected in a field with the same
+--   as an "args" object. Named arguments are expected in a field with the same
 --   name, while positional arguments are expected in an field named "arg_$n".
 --   Note that collisions are possible, but ignored for now, if a named argument
 --   is also named "arg_$n". (FIXME: link to an issue?)
@@ -535,7 +535,7 @@ functionArgs functionName (toList -> inputArgs) = do
          -- no args field.
          pure $ pure defaultArguments
      | otherwise -> do
-         -- There are user-provided arguments: we need to parse an args object
+         -- There are user-provided arguments: we need to parse an args object.
          argumentParsers <- sequenceA $ optional <> mandatory
          let objectName   = fromJust $ G.mkName $ getFunctionTxt (qName functionName) <> "_args"
              fieldName    = $$(G.litName "args")
@@ -563,8 +563,8 @@ functionArgs functionName (toList -> inputArgs) = do
 
          -- If all fields are optional, the object itself is optional.
          pure $ if null mandatory
-         then P.fieldOptional fieldName (Just fieldDesc) objectParser <&> fromMaybe defaultArguments
-         else P.field fieldName (Just fieldDesc) objectParser
+                then P.fieldOptional fieldName (Just fieldDesc) objectParser <&> fromMaybe defaultArguments
+                else P.field fieldName (Just fieldDesc) objectParser
 
   where
     splitArguments
