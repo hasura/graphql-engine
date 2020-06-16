@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
+
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
 	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
@@ -251,6 +253,7 @@ func (o *InitOptions) createFiles() error {
 		plugins = append(plugins, allowlist.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, remoteschemas.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, actions.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, crontriggers.New(o.EC, o.EC.MetadataDir))
 		for _, plg := range plugins {
 			err := plg.CreateFiles()
 			if err != nil {

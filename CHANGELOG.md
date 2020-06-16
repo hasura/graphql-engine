@@ -122,6 +122,7 @@ hasura seed apply --file seeds/1234_add_some_seed_data.sql
 - console: respect read-only mode in actions pages (fix #4656) (#4764)
 - console: allow configuring session_argument for custom functions (close #4499) (#4922)
 - console: fix listen update column config selection for event trigger (close #5042) (#5043)
+- cli: add new flags `up-sql` and `down-sql` to generate sql based migrations from the CLI (#5026)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
