@@ -14,12 +14,12 @@ import { Box, BoxProps } from '../Box';
 
 interface FlexOwnProps
   extends BoxProps,
-  FlexboxProps,
-  SpaceProps,
-  LayoutProps,
-  BorderProps { }
+    FlexboxProps,
+    SpaceProps,
+    LayoutProps,
+    BorderProps {}
 
-export const Flex = styled(Box) <FlexOwnProps>`
+export const Flex = styled(Box)<FlexOwnProps>`
   display: flex;
   align-items: center;
   padding: 0.35em;
