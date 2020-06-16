@@ -477,7 +477,7 @@ UpdatePermission
 drop_update_permission
 ----------------------
 
-A drop update permission is used to drop an existing update permission for a role on a table.
+The ``drop_update_permission`` API is used to drop an existing update permission for a role on a table.
 
 An example:
 
