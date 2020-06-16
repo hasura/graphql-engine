@@ -94,7 +94,7 @@ value will be set automatically by Postgres.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -129,7 +129,7 @@ value will be set automatically by Postgres.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

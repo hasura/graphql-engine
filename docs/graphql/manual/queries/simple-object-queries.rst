@@ -21,7 +21,7 @@ Fetch list of objects
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -56,7 +56,7 @@ Fetch list of objects
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -76,7 +76,7 @@ Fetch an object using its primary key
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -97,7 +97,7 @@ Fetch an object using its primary key
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -117,7 +117,7 @@ address column:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -147,7 +147,7 @@ address column:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

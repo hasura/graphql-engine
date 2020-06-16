@@ -298,7 +298,7 @@ Now let's try out our new action.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
 
@@ -319,7 +319,7 @@ Now let's try out our new action.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -561,7 +561,7 @@ Now let's try out our new action.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
 
@@ -582,7 +582,7 @@ Now let's try out our new action.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

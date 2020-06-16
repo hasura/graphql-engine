@@ -64,7 +64,7 @@ row object or ``null`` if the row does not exist.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -89,7 +89,7 @@ row object or ``null`` if the row does not exist.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -106,7 +106,7 @@ row object or ``null`` if the row does not exist.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -127,7 +127,7 @@ row object or ``null`` if the row does not exist.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -152,7 +152,7 @@ Delete objects based on an their fields
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -173,7 +173,7 @@ Delete objects based on an their fields
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -193,7 +193,7 @@ Delete objects based on nested objects' fields
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -214,7 +214,7 @@ Delete objects based on nested objects' fields
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -237,7 +237,7 @@ evaluates to ``true`` for all objects.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -258,7 +258,7 @@ evaluates to ``true`` for all objects.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

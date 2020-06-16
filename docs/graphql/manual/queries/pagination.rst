@@ -32,7 +32,7 @@ Limit results
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -73,7 +73,7 @@ Limit results
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -92,7 +92,7 @@ Limit results from an offset
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -134,7 +134,7 @@ Limit results from an offset
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -155,7 +155,7 @@ Limit results in a nested object
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -237,7 +237,7 @@ Limit results in a nested object
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -265,7 +265,7 @@ position of the row in the dataset as done by ``offset``, and that duplicate rec
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -307,7 +307,7 @@ position of the row in the dataset as done by ``offset``, and that duplicate rec
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -349,7 +349,7 @@ articles to return.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -394,7 +394,7 @@ articles to return.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

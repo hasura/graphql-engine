@@ -22,7 +22,7 @@ In order to make a query re-usable, it can be made dynamic by using variables.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -55,7 +55,7 @@ In order to make a query re-usable, it can be made dynamic by using variables.
           "author_id": 1
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -85,7 +85,7 @@ fetching the same type of objects with different arguments in the same query.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -146,7 +146,7 @@ fetching the same type of objects with different arguments in the same query.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -169,7 +169,7 @@ can then be used to represent the defined set.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -219,7 +219,7 @@ can then be used to represent the defined set.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -247,7 +247,7 @@ With ``@include(if: Boolean)``, it is possible to include a field in the query r
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -282,7 +282,7 @@ With ``@include(if: Boolean)``, it is possible to include a field in the query r
           "with_publisher": true
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -302,7 +302,7 @@ With ``@include(if: Boolean)``, it is possible to include a field in the query r
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -334,7 +334,7 @@ With ``@include(if: Boolean)``, it is possible to include a field in the query r
           "with_publisher": false
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -359,7 +359,7 @@ With ``@skip(if: Boolean)``, it is possible to exclude (skip) a field in the que
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -391,7 +391,7 @@ With ``@skip(if: Boolean)``, it is possible to exclude (skip) a field in the que
           "with_publisher": true
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -411,7 +411,7 @@ With ``@skip(if: Boolean)``, it is possible to exclude (skip) a field in the que
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -446,7 +446,7 @@ With ``@skip(if: Boolean)``, it is possible to exclude (skip) a field in the que
           "with_publisher": false
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

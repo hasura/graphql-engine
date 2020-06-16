@@ -83,12 +83,12 @@ query is accepted with **admin** permissions.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. thumbnail:: /img/graphql/manual/auth/fetch-authors.png
       :alt: Run a query without access control
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

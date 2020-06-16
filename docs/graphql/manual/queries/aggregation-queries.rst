@@ -34,7 +34,7 @@ Fetch aggregated data of an object
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -132,7 +132,7 @@ Fetch aggregated data of an object
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -156,7 +156,7 @@ and articles.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -218,7 +218,7 @@ and articles.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

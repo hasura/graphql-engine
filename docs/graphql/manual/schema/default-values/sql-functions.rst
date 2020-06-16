@@ -142,7 +142,7 @@ value (output="YABBA DABBA DOO!") will be set automatically.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -173,7 +173,7 @@ value (output="YABBA DABBA DOO!") will be set automatically.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

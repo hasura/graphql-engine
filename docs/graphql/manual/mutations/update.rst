@@ -70,7 +70,7 @@ row object or ``null`` if the row does not exist.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -94,7 +94,7 @@ row object or ``null`` if the row does not exist.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -112,7 +112,7 @@ row object or ``null`` if the row does not exist.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -133,7 +133,7 @@ row object or ``null`` if the row does not exist.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -158,7 +158,7 @@ Update objects based on their fields
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -206,7 +206,7 @@ Update objects based on their fields
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -223,7 +223,7 @@ Using variables:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -276,7 +276,7 @@ Using variables:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -300,7 +300,7 @@ OR
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -354,7 +354,7 @@ OR
           "isPublished": false
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -378,7 +378,7 @@ Update objects based on nested objects' fields
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -400,7 +400,7 @@ Update objects based on nested objects' fields
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -423,7 +423,7 @@ evaluates to ``true`` for all objects.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -445,7 +445,7 @@ evaluates to ``true`` for all objects.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -466,7 +466,7 @@ You can increment an ``int`` column with a given value using the ``_inc`` operat
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -496,7 +496,7 @@ You can increment an ``int`` column with a given value using the ``_inc`` operat
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -547,7 +547,7 @@ Since the input is a json value, it should be provided through a variable.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -584,7 +584,7 @@ Since the input is a json value, it should be provided through a variable.
           "value": { "key1": "value1" }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -612,7 +612,7 @@ Since the input is a json value, it should be provided through a variable.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -650,7 +650,7 @@ Since the input is a json value, it should be provided through a variable.
           "value": { "key0": "value0" }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -678,7 +678,7 @@ The input value should be a ``String``.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -711,7 +711,7 @@ The input value should be a ``String``.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -736,7 +736,7 @@ of the ``article`` table:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -766,7 +766,7 @@ of the ``article`` table:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -789,7 +789,7 @@ The input value should be a ``String Array``.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -823,7 +823,7 @@ The input value should be a ``String Array``.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -846,7 +846,7 @@ one to delete all the existing objects and one to add a list of new nested objec
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -890,7 +890,7 @@ one to delete all the existing objects and one to add a list of new nested objec
           "author_id": 21
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

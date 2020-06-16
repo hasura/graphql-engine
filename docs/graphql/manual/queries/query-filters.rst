@@ -80,7 +80,7 @@ Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -105,7 +105,7 @@ Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -125,7 +125,7 @@ Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -150,7 +150,7 @@ Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -170,7 +170,7 @@ Fetch a list of articles that have not been published (``is_published`` is a boo
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -212,7 +212,7 @@ Fetch a list of articles that have not been published (``is_published`` is a boo
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -232,7 +232,7 @@ Fetch a list of articles that were published on a certain date (``published_on``
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -259,7 +259,7 @@ Fetch a list of articles that were published on a certain date (``published_on``
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -291,7 +291,7 @@ Fetch a list of articles rated 4 or more (``rating`` is an integer field):
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -328,7 +328,7 @@ Fetch a list of articles rated 4 or more (``rating`` is an integer field):
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -348,7 +348,7 @@ dictionary sort)*:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -377,7 +377,7 @@ dictionary sort)*:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -396,7 +396,7 @@ Fetch a list of articles that were published on or after date "01/01/2018":
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -438,7 +438,7 @@ Fetch a list of articles that were published on or after date "01/01/2018":
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -468,7 +468,7 @@ Fetch a list of articles rated 1, 3 or 5:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -510,7 +510,7 @@ Fetch a list of articles rated 1, 3 or 5:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -529,7 +529,7 @@ Fetch a list of those authors whose names are NOT part of a list:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -566,7 +566,7 @@ Fetch a list of those authors whose names are NOT part of a list:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -593,7 +593,7 @@ Fetch a list of articles whose titles contain the word “amet”:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -624,7 +624,7 @@ Fetch a list of articles whose titles contain the word “amet”:
             }
           ]
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -648,7 +648,7 @@ Fetch a list of authors whose names begin with A or C:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -685,7 +685,7 @@ Fetch a list of authors whose names begin with A or C:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -716,7 +716,7 @@ Fetch all authors living within a particular pincode (present in ``address`` JSO
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -757,7 +757,7 @@ Fetch all authors living within a particular pincode (present in ``address`` JSO
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -781,7 +781,7 @@ Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -816,7 +816,7 @@ Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -851,7 +851,7 @@ Fetch a list of geometry values which are within the given ``polygon`` value:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -897,7 +897,7 @@ Fetch a list of geometry values which are within the given ``polygon`` value:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -930,7 +930,7 @@ Fetch a list of ``geometry`` values which are 3 units from given ``point`` value
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -978,7 +978,7 @@ Fetch a list of ``geometry`` values which are 3 units from given ``point`` value
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -1013,7 +1013,7 @@ Fetch a list of articles that have a value in the ``published_on`` field:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -1055,7 +1055,7 @@ Fetch a list of articles that have a value in the ``published_on`` field:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -1089,7 +1089,7 @@ Executes the following SQL function:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -1120,7 +1120,7 @@ Executes the following SQL function:
           "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -1148,7 +1148,7 @@ Executes the following SQL function:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -1191,7 +1191,7 @@ Executes the following SQL function:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -1231,7 +1231,7 @@ Executes the following SQL function:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -1274,7 +1274,7 @@ Executes the following SQL function:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -1314,7 +1314,7 @@ Fetch all authors who don't have any published articles:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -1367,7 +1367,7 @@ Fetch all authors who don't have any published articles:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -1396,7 +1396,7 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -1444,7 +1444,7 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -1468,7 +1468,7 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -1521,7 +1521,7 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -1553,7 +1553,7 @@ Fetch all authors with only their 5 rated articles:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -1601,7 +1601,7 @@ Fetch all authors with only their 5 rated articles:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -1651,7 +1651,7 @@ Fetch all articles whose author's name starts with "A":
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -1714,7 +1714,7 @@ Fetch all articles whose author's name starts with "A":
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -1737,7 +1737,7 @@ Fetch all authors which have written at least one article which is rated 1:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -1810,7 +1810,7 @@ Fetch all authors which have written at least one article which is rated 1:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -1846,7 +1846,7 @@ Fetch all authors which have all of their articles published i.e. have ``{is_pub
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -1927,7 +1927,7 @@ Fetch all authors which have all of their articles published i.e. have ``{is_pub
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -1964,7 +1964,7 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -2013,7 +2013,7 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -2039,7 +2039,7 @@ Fetch all authors which have at least one article written by them:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -2085,7 +2085,7 @@ Fetch all authors which have at least one article written by them:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -2104,7 +2104,7 @@ Fetch all authors which have not written any articles:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -2152,7 +2152,7 @@ Fetch all authors which have not written any articles:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -2182,7 +2182,7 @@ Filtering using ``_st_d_within`` over large distances can be inaccurate for loca
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -2220,7 +2220,7 @@ Filtering using ``_st_d_within`` over large distances can be inaccurate for loca
           "distance": 1000000
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -2250,7 +2250,7 @@ Columns of type ``geography`` are more accurate, but they don’t support as man
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -2296,7 +2296,7 @@ Columns of type ``geography`` are more accurate, but they don’t support as man
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

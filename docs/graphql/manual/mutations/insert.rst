@@ -59,7 +59,7 @@ Insert a single object
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -86,7 +86,7 @@ Insert a single object
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -103,7 +103,7 @@ Using variables:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -132,7 +132,7 @@ Using variables:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -163,7 +163,7 @@ Insert multiple objects of the same type in the same mutation
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -208,7 +208,7 @@ Insert multiple objects of the same type in the same mutation
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -225,7 +225,7 @@ Using variables:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -272,7 +272,7 @@ Using variables:
           ]
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -306,7 +306,7 @@ Insert an object and get a nested object in response
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -350,7 +350,7 @@ Insert an object and get a nested object in response
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -378,7 +378,7 @@ Let's say an ``author`` has an ``object relationship`` called ``address`` to the
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -457,7 +457,7 @@ Let's say an ``author`` has an ``object relationship`` called ``address`` to the
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -496,7 +496,7 @@ a bridge table ``article_tags``.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -578,7 +578,7 @@ a bridge table ``article_tags``.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -621,7 +621,7 @@ Insert an object with a JSONB field
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -675,7 +675,7 @@ Insert an object with a JSONB field
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -706,7 +706,7 @@ To insert fields of array types, you currently have to pass them as a `Postgres 
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -744,7 +744,7 @@ To insert fields of array types, you currently have to pass them as a `Postgres 
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -762,7 +762,7 @@ Using variables:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -804,7 +804,7 @@ Using variables:
           "emails": "{ash@ash.com, ash123@ash.com}"
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -830,7 +830,7 @@ To set a field to its ``default`` value, just omit it from the input object, irr
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -866,7 +866,7 @@ To set a field to its ``default`` value, just omit it from the input object, irr
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -890,7 +890,7 @@ or pass it as ``null``:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -925,7 +925,7 @@ or pass it as ``null``:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -942,7 +942,7 @@ OR
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -978,7 +978,7 @@ OR
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

@@ -47,7 +47,7 @@ Fetch results with distinct values of a particular field
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -92,7 +92,7 @@ Fetch results with distinct values of a particular field
           }
         }
         
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

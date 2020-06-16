@@ -75,7 +75,7 @@ violated, update the ``content`` column of the existing article:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -118,7 +118,7 @@ violated, update the ``content`` column of the existing article:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -145,7 +145,7 @@ value is lesser than the new value:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -188,7 +188,7 @@ value is lesser than the new value:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -210,7 +210,7 @@ ignore the request.
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -237,7 +237,7 @@ ignore the request.
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -261,7 +261,7 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -298,7 +298,7 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

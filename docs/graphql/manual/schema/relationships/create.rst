@@ -147,7 +147,7 @@ Fetch a list of articles and each article's author:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -194,7 +194,7 @@ Fetch a list of articles and each article's author:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -286,7 +286,7 @@ Fetch a list of authors and a nested list of each author's articles:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     Make the following GraphQL query on the Hasura console:
 
@@ -357,7 +357,7 @@ Fetch a list of authors and a nested list of each author's articles:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -478,7 +478,7 @@ Fetch a list of authors with the average rating of their articles:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -521,7 +521,7 @@ Fetch a list of authors with the average rating of their articles:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

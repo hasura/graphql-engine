@@ -119,12 +119,12 @@ Head to the ``GraphiQL`` tab in the console and try running the following query:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Via console
+  .. tab:: GraphiQL
 
     .. thumbnail:: /img/graphql/manual/getting-started/profile-query.png
       :alt: Try out a query
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 

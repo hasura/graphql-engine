@@ -26,7 +26,7 @@ Run multiple top level mutations in the same request
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -69,7 +69,7 @@ Run multiple top level mutations in the same request
             }
           }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
@@ -92,7 +92,7 @@ in the response:
 .. rst-class:: api_tabs
 .. tabs::
 
-  .. tab:: Console
+  .. tab:: GraphiQL
 
     .. graphiql::
       :view_only:
@@ -141,7 +141,7 @@ in the response:
           }
         }
 
-  .. tab:: Via API
+  .. tab:: API
 
     .. code-block:: http
 
