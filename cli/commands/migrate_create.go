@@ -32,7 +32,7 @@ const migrateCreateCmdExamples = `  # Setup migration files for the first time b
   # Take pg_dump from server and save it as a migration and specify the schemas to include
   hasura migrate create init --sql-from-server --schema myschema1,myschema2
   
-  # Create up and down migrations based on SQL statements
+  # Create up and down SQL migrations, providing contents as flags
   hasura migrate create migration-name --up-sql "CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL);"  --down-sql "DROP TABLE article;"
 `
 
