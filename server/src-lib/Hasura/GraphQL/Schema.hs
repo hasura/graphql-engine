@@ -76,12 +76,16 @@ query' allTables stringifyNum = do
           pkName = displayName <> $$(G.litName "_by_pk")
           pkDesc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName table) <> "\" using primary key columns"
       catMaybes <$> sequenceA
-        [ toQrf (RFDB . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms stringifyNum
-        , toQrf (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms stringifyNum
-        , toQrf (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms stringifyNum
+        [ toQrf2 (RFDB . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms stringifyNum
+        , toQrf3 (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms stringifyNum
+        , toQrf3 (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms stringifyNum
         ]
   pure $ concat $ catMaybes selectExpParsers
-  where toQrf = fmap . fmap . fmap
+  where
+    -- TODO: this is a terrible name, there must be something better
+    toQrf2 :: (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
+    toQrf2 f = fmap $ Just . fmap f
+    toQrf3 f = fmap $ fmap $ fmap f
 
 -- | Parse query-type GraphQL requests without introspection
 query

@@ -72,10 +72,10 @@ selectTable
   -> Maybe G.Description  -- ^ field description, if any
   -> SelPermInfo          -- ^ select permissions of the table
   -> Bool
-  -> m (Maybe (FieldParser n SelectExp))
-selectTable table fieldName description selectPermissions stringifyNum = runMaybeT do
-  tableArgsParser    <- lift $ tableArgs table selectPermissions
-  selectionSetParser <- lift $ tableSelectionSet table selectPermissions stringifyNum
+  -> m (FieldParser n SelectExp)
+selectTable table fieldName description selectPermissions stringifyNum = do
+  tableArgsParser    <- tableArgs table selectPermissions
+  selectionSetParser <- tableSelectionSet table selectPermissions stringifyNum
   pure $ P.subselection fieldName description tableArgsParser selectionSetParser
     <&> \(args, fields) -> RQL.AnnSelG
       { RQL._asnFields   = fields
@@ -418,7 +418,7 @@ fieldSelection fieldInfo selectPermissions stringifyNum = do
             ArrRel -> "An array relationship"
       remotePerms      <- MaybeT $ tableSelectPermissions otherTable
       relFieldName     <- lift $ textToName $ relNameToTxt relName
-      otherTableParser <- MaybeT $ (if nullable then id else fmap (fmap P.nonNullableField)) $
+      otherTableParser <- lift $ (if nullable then id else fmap P.nonNullableField) $
         selectTable otherTable relFieldName desc remotePerms stringifyNum
       let field = otherTableParser <&> \selectExp ->
             let annotatedRelationship = RQL.AnnRelG relName colMapping selectExp
