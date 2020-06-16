@@ -9,7 +9,7 @@ import Select, {
 
 import { isArray, isObject } from '../utils/jsUtils';
 
-type Option = { label: string; value: string };
+const { Option } = components;
 
 const CustomOption: React.FC<OptionProps<OptionTypeBase>> = props => {
   return (
@@ -17,12 +17,14 @@ const CustomOption: React.FC<OptionProps<OptionTypeBase>> = props => {
       title={props.data.description || ''}
       data-test={`data_test_column_type_value_${props.data.value}`}
     >
-      <components.Option {...props} />
+      <Option {...props} />
     </div>
   );
 };
 
-type Props = {
+type Option = { label: string; value: string };
+
+export interface SearchableSelectProps {
   options: OptionTypeBase | ReactText[];
   onChange: (value: ValueType<OptionTypeBase> | string) => void;
   value?: Option | string;
@@ -32,8 +34,8 @@ type Props = {
   filterOption: 'prefix' | 'fulltext';
   isCreatable?: boolean;
   createNewOption?: (v: string) => ValueType<OptionTypeBase>;
-};
-const SearchableSelect: React.FC<Props> = ({
+}
+const SearchableSelect: React.FC<SearchableSelectProps> = ({
   options,
   onChange,
   value,

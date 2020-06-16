@@ -10,16 +10,16 @@ type Option = {
   colIdentifier: number;
 };
 
-type Props = {
+export interface ColumnTypeSelectorProps {
   options: Array<{ label: string; options?: Option[] }>;
   onChange: (option: any) => void;
   value: Option | string;
   bsClass: string;
   styleOverrides: Record<string, any>;
   colIdentifier: number;
-};
+}
 
-export const ColumnTypeSelector: React.FC<Props> = ({
+export const ColumnTypeSelector: React.FC<ColumnTypeSelectorProps> = ({
   options,
   onChange,
   value,

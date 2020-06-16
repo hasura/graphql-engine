@@ -10,7 +10,7 @@ import {
   editColumn,
   isColumnUnique,
 } from '../TableModify/ModifyActions';
-import { ordinalColSort } from '../utils';
+import { ordinalColSort, ARRAY } from '../utils';
 import { defaultDataTypeToCast } from '../constants';
 
 import {
@@ -59,7 +59,7 @@ const ColumnEditorList = ({
    * */
   return columns.map((col, i) => {
     const colName = col.column_name;
-    const isArrayDataType = col.data_type === 'ARRAY';
+    const isArrayDataType = col.data_type === ARRAY;
 
     const getDisplayName = () => {
       if (isArrayDataType) {

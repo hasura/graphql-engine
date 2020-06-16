@@ -5,6 +5,7 @@ import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/Custo
 import { getValidAlterOptions, convertToArrayOptions } from './utils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
+import { ARRAY } from '../utils';
 
 const ColumnEditor = ({
   onSubmit,
@@ -31,7 +32,7 @@ const ColumnEditor = ({
     );
   };
   let columnTypePG = getColumnType();
-  if (columnProperties.display_type_name === 'ARRAY') {
+  if (columnProperties.display_type_name === ARRAY) {
     columnTypePG = columnTypePG.replace('_', '') + '[]';
   }
 
