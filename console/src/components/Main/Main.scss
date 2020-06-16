@@ -1206,7 +1206,7 @@
     position: absolute;
     box-shadow: 0 3px 20px 0 rgba(0, 0, 0, 0.24);
     background-color: #ffffff;
-    width: 230px;
+    width: 250px;
     z-index: 1;
     top: 60px;
     right: 10px;
@@ -1226,24 +1226,35 @@
     }
     ul {
       padding-inline-start: 0px;
+      margin-bottom: 0;
       li {
         padding: 16px 24px;
         list-style-type: none;
         font-weight: normal;
         border-bottom: 1px solid #ddd;
+        display: flex;
+        align-items: center;
+        .liveChatModeToggle {
+          margin-left: 16px;
+        }
         &:last-child {
           border-bottom: 0;
+        }
+        img {
+          margin-left: 8px;
+          transition: 200ms;
         }
         a {
           color: #303030;
           text-decoration: none;
           &:hover {
-            text-decoration: underline;
+            text-decoration: none;
+            img {
+              transform: translateX(4px);
+            }
           }
         }
-        img {
-          margin-left: 8px;
-        }
+
       }
     }
   }

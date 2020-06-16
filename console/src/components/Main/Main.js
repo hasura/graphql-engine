@@ -7,7 +7,7 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import * as tooltips from './Tooltips';
 import globals from '../../Globals';
 import { getPathRoot } from '../Common/utils/urlUtils';
-
+import Toggle from '../Common/Toggle/Toggle';
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
 
@@ -67,6 +67,7 @@ class Main extends React.Component {
       proClickState: getProClickState(),
       isPopUpOpen: false,
       isHelpOpen: false,
+      isChatOpen: false,
     };
 
     this.handleBodyClick = this.handleBodyClick.bind(this);
@@ -104,6 +105,24 @@ class Main extends React.Component {
   toggleHelpPopup() {
     this.setState({isHelpOpen: !this.state.isHelpOpen});
   }
+  toggleLiveChatMode() {
+    this.setState({isChatOpen: !this.state.isChatOpen});
+    if (!this.state.isChatOpen) {
+      if ( window.Intercom ) {
+        window.Intercom('boot', {
+           app_id: 'rucirpb3'
+        });
+      }
+    } else {
+      if ( window.Intercom ) {
+        const interCom = window.Intercom
+        const hideIntercom = () => {
+          return interCom("shutdown")
+        }
+        hideIntercom()
+      }
+    }
+  };
   setShowUpdateNotification() {
     const {
       latestStableServerVersion,
@@ -664,7 +683,16 @@ class Main extends React.Component {
                 >
                   <img src={information} alt='Information'/>
                 </ToolTip>
-
+                <div
+                  className={styles.liveChatModeToggle + ' ' + styles.cursorPointer}
+                >
+                  <Toggle
+                    checked={this.state.isChatOpen}
+                    className={`${styles.display_flex}`}
+                    onChange={this.toggleLiveChatMode.bind(this)}
+                    icons={false}
+                  />
+                </div>
               </li>
               <li><Link to='/support/forum/'>Support Forums <img src={arrowForwardBlock} alt='Arrow'/></Link></li>
             </ul>
