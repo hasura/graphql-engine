@@ -15,6 +15,8 @@ import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 
+import qualified Data.Aeson                             as J
+import qualified Data.HashMap.Strict                    as Map
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Query           as EQ
@@ -49,6 +51,10 @@ runGQ reqId userInfo reqHdrs req = do
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp Nothing))
           E.ExecStepRemote (_name, (rsi, opDef)) ->
             runRemoteGQ telemCacheHit rsi opDef
+          E.ExecStepRaw (name, json) -> do
+            (telemTimeIO, obj) <- withElapsedTime $ do
+              return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
+            return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj Nothing))
       E.MutationExecutionPlan mutationPlan -> do
         case NESeq.head mutationPlan of
           E.ExecStepDB tx -> do
@@ -56,6 +62,10 @@ runGQ reqId userInfo reqHdrs req = do
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp Nothing))
           E.ExecStepRemote (_name, (rsi, opDef)) ->
             runRemoteGQ telemCacheHit rsi opDef
+          E.ExecStepRaw (name, json) -> do
+            (telemTimeIO, obj) <- withElapsedTime $ do
+              return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
+            return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj Nothing))
       E.SubscriptionExecutionPlan _sub -> do
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
 {-

@@ -321,6 +321,9 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             runLazyTx' pgExecCtx tx
         E.ExecStepRemote (_name, (rsi, opDef)) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
+        E.ExecStepRaw (name, json) ->
+          execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local Nothing requestId q $
+          return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
     E.MutationExecutionPlan mutationPlan -> do
       case NESeq.head mutationPlan of
         E.ExecStepDB tx ->
@@ -328,6 +331,9 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo tx
         E.ExecStepRemote (_name, (rsi, opDef)) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
+        E.ExecStepRaw (name, json) ->
+          execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local Nothing requestId q $
+          return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
     E.SubscriptionExecutionPlan subscriptionPlan ->
       case NESeq.head subscriptionPlan of
         E.ExecStepDB lqOp -> do
@@ -340,6 +346,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
             STMMap.insert (lqId, _grOperationName q) opId opMap
           logOpEv ODStarted (Just requestId)
+        E.ExecStepRemote x -> case x of -- remote subscriptions not allowed
+        E.ExecStepRaw x -> case x of -- introspection not allowed
 
   -- case execPlan of
   --   E.GExPHasura resolvedOp ->
@@ -348,10 +356,10 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   --     runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
   where
     telemTransport = Telem.HTTP
-    execQueryOrMut timerTot telemQueryType telemCacheHit telemLocality genSql requestId q action = do
+    execQueryOrMut timerTot telemQueryType telemCacheHit telemLocality genSql requestId q' action = do
       logOpEv ODStarted (Just requestId)
       -- log the generated SQL and the graphql query
-      L.unLogger logger $ QueryLog q genSql requestId
+      L.unLogger logger $ QueryLog q' genSql requestId
       (withElapsedTime $ liftIO $ runExceptT action) >>= \case
         (_,      Left err) -> postExecErr requestId err
         (telemTimeIO_DT, Right encJson) -> do
