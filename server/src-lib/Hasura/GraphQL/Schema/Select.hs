@@ -499,93 +499,102 @@ fieldSelection fieldInfo selectPermissions stringifyNum = do
       maybeToList <$> computedField computedFieldInfo selectPermissions stringifyNum
 
 
-
-{- WIP notes on computed field
-
-if the underlying function has no args         => no "args" argument
-if the underlying function has at least one    => "args" object argument
-
-if the function's return type is a JSON scalar => "path" string argument for JSON colop
-if it's a set of table field                   => table selection arguments (where, limit, offset, order_by, distinct_on)
-
-the code has a branch to deal with the lack of "args" object and treat everything as positional, but GraphiQL doesn't seem to allow it? Is it for some other cases where we parse function arguments?
-
--}
-
--- | Parses the "args" argument of a computed field or a custom function. All
---   arguments to the underlying sql function are parsed as an "args" object.
---   Named arguments are expected in a field with the same name, while
---   positional arguments are expected in an field named "arg_$n".
---   Note that collisions are possible, but ignored for now.
---   (FIXME: link to an issue?)
+-- | Parses the arguments to the underlying sql function of a computed field or
+--   a custom function. All arguments to the underlying sql function are parsed
+--   as an "args" object.  Named arguments are expected in a field with the same
+--   name, while positional arguments are expected in an field named "arg_$n".
+--   Note that collisions are possible, but ignored for now, if a named argument
+--   is also named "arg_$n". (FIXME: link to an issue?)
+--
+--   Depending on the arguments the SQL function requires, there are three possible outcomes:
+--   1. if the function requires no argument, or if its only argument is the session argument,
+--      the args object will NOT be part of the schema;
+--   2. if all non-session arguments have a default value, then the args object will be in
+--      the schema as an optional field
+--   3. otherwise, if there is at least one field that doesn't have a default value, the
+--      args object will be a required field.
 functionArgs
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedFunction
   -> Seq.Seq FunctionInputArgument
-  -> m (Parser 'Input n (RQL.FunctionArgsExpTableRow UnpreparedValue))
-functionArgs functionName (toList -> inputArgs) = P.memoizeOn 'functionArgs functionName $ do
-  let objName = fromJust $ G.mkName $ getFunctionTxt (qName functionName) <> "_args"
-
+  -> m (InputFieldsParser n (RQL.FunctionArgsExpTableRow UnpreparedValue))
+functionArgs functionName (toList -> inputArgs) = do
   -- First, we iterate through the original sql arguments in order, to find the
   -- corresponding graphql names. At the same time, we create the input field
-  -- parsers.
-  (names, argumentParsers) <- fmap unzip $ sequenceA $ snd $ mapAccumL argument 1 inputArgs
-  pure $ P.object objName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
+  -- parsers, in three groups: session argument, optional arguments, and
+  -- mandatory arguments.
+  let (names, session, optional, mandatory) = mconcat $ snd $ mapAccumL splitArguments 1 inputArgs
+      defaultArguments = RQL.FunctionArgsExp (snd <$> session) Map.empty
 
-    -- After successfully parsing, we create a dictionary of the parsed fields
-    -- and we re-iterate through the original list of sql arguments, now with
-    -- the knowledge of their graphql name.
-    let foundArguments = Map.fromList $ catMaybes arguments
-        argsWithNames  = zip names inputArgs
+  if | length session > 1 -> do
+         -- We somehow found more than one session argument; this should never
+         -- happen and is an error on our side.
+         error "there shouldn't be more than one session argument" -- FIXME: make it a 500
+     | null optional && null mandatory -> do
+         -- There are no user-provided arguments to the function: there will be
+         -- no args field.
+         pure $ pure defaultArguments
+     | otherwise -> do
+         -- There are user-provided arguments: we need to parse an args object
+         argumentParsers <- sequenceA $ optional <> mandatory
+         let objectName   = fromJust $ G.mkName $ getFunctionTxt (qName functionName) <> "_args"
+             fieldName    = $$(G.litName "args")
+             fieldDesc    = G.Description $ "input parameters for function " <>> functionName
+             objectParser = P.object objectName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
+               -- After successfully parsing, we create a dictionary of the parsed fields
+               -- and we re-iterate through the original list of sql arguments, now with
+               -- the knowledge of their graphql name.
+               let foundArguments = Map.fromList $ catMaybes arguments <> session
+                   argsWithNames  = zip names inputArgs
 
-    -- All elements (in the orignal sql order) that are found in the result map
-    -- are treated as positional arguments, whether they were originally named or
-    -- not.
-    (positional, left) <- spanMaybeM (\(name, _) -> pure $ Map.lookup name foundArguments) argsWithNames
+               -- All elements (in the orignal sql order) that are found in the result map
+               -- are treated as positional arguments, whether they were originally named or
+               -- not.
+               (positional, left) <- spanMaybeM (\(name, _) -> pure $ Map.lookup name foundArguments) argsWithNames
 
-    -- If there are arguments left, it means we found one that was not passed
-    -- positionally. As a result, any remaining argument will have to be passed
-    -- by name. We fail with a parse error if we encounter a positional sql
-    -- argument (that does not have a name in the sql function), as:
-    --   * only the last positional arguments can be omitted;
-    --   * it has no name we can use.
-    named <- Map.fromList . catMaybes <$> traverse (namedArgument foundArguments) left
-    pure $ RQL.FunctionArgsExp positional named
+               -- If there are arguments left, it means we found one that was not passed
+               -- positionally. As a result, any remaining argument will have to be passed
+               -- by name. We fail with a parse error if we encounter a positional sql
+               -- argument (that does not have a name in the sql function), as:
+               --   * only the last positional arguments can be omitted;
+               --   * it has no name we can use.
+               named <- Map.fromList . catMaybes <$> traverse (namedArgument foundArguments) left
+               pure $ RQL.FunctionArgsExp positional named
+
+         -- If all fields are optional, the object itself is optional.
+         pure $ if null mandatory
+         then P.fieldOptional fieldName (Just fieldDesc) objectParser <&> fromMaybe defaultArguments
+         else P.field fieldName (Just fieldDesc) objectParser
 
   where
-    argument
+    splitArguments
       :: Int
       -> FunctionInputArgument
-      -> (Int, m (Text, InputFieldsParser n (Maybe (Text, RQL.ArgumentExp UnpreparedValue))))
-    argument positionalIndex (IASessionVariables name) =
-      -- WIP NOTE
-      -- old code seemed to assume that it was possible for the session argument
-      -- to be a positional argument; however, I doubt that it's still possible:
-      --   * the API expects the argument to have a name
-      --   * the console does not support positional session arguments
-      --   * the IASessionVariables constructor takes a FunctionArgName argument
-      -- I am therefore assuming that this is fine, but this will need to be
-      -- double checked.
-      ( positionalIndex
-      , let argName = getFuncArgNameTxt name
-        in pure (argName, pure $ Just (argName, RQL.AEInput P.UVSession))
-      )
-    argument positionalIndex (IAUserProvided arg) = case faName arg of
-      Nothing ->
-        ( positionalIndex + 1
-        , parseArgument arg $ "arg_" <> T.pack (show positionalIndex)
-        )
-      Just name ->
-        ( positionalIndex
-        , parseArgument arg $ getFuncArgNameTxt name
-        )
+      -> (Int, ( [Text] -- graphql names, in order
+               , [(Text, RQL.ArgumentExp UnpreparedValue)] -- session argument
+               , [m (InputFieldsParser n (Maybe (Text, RQL.ArgumentExp UnpreparedValue)))] -- optional argument
+               , [m (InputFieldsParser n (Maybe (Text, RQL.ArgumentExp UnpreparedValue)))] -- mandatory argument
+               )
+         )
+    splitArguments positionalIndex (IASessionVariables name) =
+      let argName = getFuncArgNameTxt name
+      in (positionalIndex, ([argName], [(argName, RQL.AEInput P.UVSession)], [], []))
+    splitArguments positionalIndex (IAUserProvided arg) =
+      let (argName, newIndex) = case faName arg of
+                                  Nothing   -> ("arg_" <> T.pack (show positionalIndex), positionalIndex + 1)
+                                  Just name -> (getFuncArgNameTxt name, positionalIndex)
+      in if unHasDefault $ faHasDefault arg
+         then (newIndex, ([argName], [], [parseArgument arg argName], []))
+         else (newIndex, ([argName], [], [], [parseArgument arg argName]))
+
+    parseArgument :: FunctionArg -> Text -> m (InputFieldsParser n (Maybe (Text, RQL.ArgumentExp UnpreparedValue)))
     parseArgument arg name = do
       columnParser <- P.column (PGColumnScalar $ _qptName $ faType arg) (G.Nullability True)
       fieldName    <- textToName name
       let argParser = if unHasDefault $ faHasDefault arg
                       then P.fieldOptional  fieldName Nothing columnParser
                       else Just <$> P.field fieldName Nothing columnParser
-      pure $ (name, fmap ((name,) . RQL.AEInput . mkParameter) <$> argParser)
+      pure $ argParser `mapField` ((name,) . RQL.AEInput . mkParameter)
 
     namedArgument dictionary (name, inputArgument) = for (Map.lookup name dictionary) \parsedValue ->
       case inputArgument of
@@ -599,23 +608,14 @@ customSQLFunctionArgs
   :: (MonadSchema n m, MonadError QErr m)
   => FunctionInfo
   -> m (InputFieldsParser n (RQL.FunctionArgsExpTableRow UnpreparedValue))
-customSQLFunctionArgs FunctionInfo{..}
-  | Seq.null fiInputArgs = pure $ pure RQL.emptyFunctionArgsExp
-  | otherwise = do
-    let argsDesc  = G.Description $ "input parameters for function " <>> fiName
-    argsParser <- functionArgs fiName fiInputArgs
-    pure $ P.field $$(G.litName "args") (Just argsDesc) argsParser
+customSQLFunctionArgs FunctionInfo{..} = functionArgs fiName fiInputArgs
 
 computedFieldFunctionArgs
   :: (MonadSchema n m, MonadError QErr m)
   => ComputedFieldFunction
   -> m (InputFieldsParser n (RQL.FunctionArgsExpTableRow UnpreparedValue))
-computedFieldFunctionArgs ComputedFieldFunction{..}
-  | Seq.null _cffInputArgs = pure $ pure RQL.emptyFunctionArgsExp
-  | otherwise = do
-      let argsDesc = G.Description $ "input parameters for function " <>> _cffName
-      argsParser <- functionArgs _cffName $ IAUserProvided <$> _cffInputArgs
-      pure $ P.field $$(G.litName "args") (Just argsDesc) argsParser <&> addTableRowArgument
+computedFieldFunctionArgs ComputedFieldFunction{..} =
+  functionArgs _cffName (IAUserProvided <$> _cffInputArgs) <&> fmap addTableRowArgument
   where
     addTableRowArgument (RQL.FunctionArgsExp positional named) = case _cffTableArgument of
       FTAFirst -> RQL.FunctionArgsExp (tableRowArgument : positional) named
