@@ -282,6 +282,9 @@ tableArgs table selectPermissions = do
     -- itself as an int, but also accepts strings, to replicate the old
     -- behaviour, a much better approach would be to use custom scalar types.
 
+    -- TODO: distinct_on must be validated ungainst order_by
+    -- the check at Resolve/Select.hs:152 must be ported here
+
     pure $ RQL.TableArgs
       { RQL._taWhere    = whereF
       , RQL._taOrderBy  = nonEmpty . concat =<< orderBy
