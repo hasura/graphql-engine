@@ -68,3 +68,91 @@ export const getActionsBaseRoute = () => {
 export const getActionsCreateRoute = () => {
   return `${getActionsBaseRoute()}/add`;
 };
+
+// Events route utils
+
+export const eventsPrefix = 'events';
+export const scheduledEventsPrefix = 'cron';
+export const adhocEventsPrefix = 'one-off-scheduled-events';
+export const dataEventsPrefix = 'data';
+export const routeType = 'absolute' | 'relative';
+
+export const getSTRoute = (type, relativeRoute) => {
+  if (type === 'relative') {
+    return `${relativeRoute}`;
+  }
+  return `/${eventsPrefix}/${scheduledEventsPrefix}/${relativeRoute}`;
+};
+export const getETRoute = (type, relativeRoute) => {
+  if (type === 'relative') {
+    return `${relativeRoute}`;
+  }
+  return `/${eventsPrefix}/${dataEventsPrefix}/${relativeRoute}`;
+};
+export const getAdhocEventsRoute = (type, relativeRoute) => {
+  if (type === 'relative') {
+    return `${relativeRoute}`;
+  }
+  return `/${eventsPrefix}/${adhocEventsPrefix}/${relativeRoute}`;
+};
+
+export const isDataEventsRoute = route => {
+  return route.includes(`/${eventsPrefix}/${dataEventsPrefix}`);
+};
+export const isScheduledEventsRoute = route => {
+  return route.includes(`/${eventsPrefix}/${scheduledEventsPrefix}`);
+};
+export const isAdhocScheduledEventRoute = route => {
+  return route.includes(`/${eventsPrefix}/${adhocEventsPrefix}`);
+};
+export const getAddSTRoute = type => {
+  return getSTRoute(type, 'add');
+};
+export const getScheduledEventsLandingRoute = type => {
+  return getSTRoute(type, 'manage');
+};
+export const getSTModifyRoute = (stName, type) => {
+  return getSTRoute(type, `${stName}/modify`);
+};
+export const getSTPendingEventsRoute = (stName, type) => {
+  return getSTRoute(type, `${stName}/pending`);
+};
+export const getSTProcessedEventsRoute = (stName, type) => {
+  return getSTRoute(type, `${stName}/processed`);
+};
+export const getSTInvocationLogsRoute = (stName, type) => {
+  return getSTRoute(type, `${stName}/logs`);
+};
+export const getAddETRoute = type => {
+  return getETRoute(type, 'add');
+};
+export const getDataEventsLandingRoute = type => {
+  return getETRoute(type, 'manage');
+};
+export const getETModifyRoute = (etName, type) => {
+  return getETRoute(type, `${etName}/modify`);
+};
+export const getETPendingEventsRoute = (etName, type) => {
+  return getETRoute(type, `${etName}/pending`);
+};
+export const getETProcessedEventsRoute = (etName, type) => {
+  return getETRoute(type, `${etName}/processed`);
+};
+export const getETInvocationLogsRoute = (etName, type) => {
+  return getETRoute(type, `${etName}/logs`);
+};
+export const getAddAdhocEventRoute = type => {
+  return getAdhocEventsRoute(type, 'add');
+};
+export const getAdhocEventsLogsRoute = type => {
+  return getAdhocEventsRoute(type, 'logs');
+};
+export const getAdhocPendingEventsRoute = type => {
+  return getAdhocEventsRoute(type, 'pending');
+};
+export const getAdhocProcessedEventsRoute = type => {
+  return getAdhocEventsRoute(type, 'processed');
+};
+export const getAdhocEventsInfoRoute = type => {
+  return getAdhocEventsRoute(type, 'info');
+};

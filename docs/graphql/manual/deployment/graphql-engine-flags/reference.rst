@@ -130,7 +130,7 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - N/A
      - ``HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE``
-     - Max event threads
+     - Maximum number of concurrent http workers delivering events at any time (default: 100)
 
    * - N/A
      - ``HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL``

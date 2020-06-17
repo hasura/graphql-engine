@@ -469,7 +469,7 @@ or not.
 
 The validation process looks as follows:
 
-.. thumbnail:: /img/graphql/manual/schema/actions-data-validation.png
+.. thumbnail:: /img/graphql/manual/schema/diagram-actions-data-validation.png
    :alt: validation using actions: article not blacklisted
    :width: 60%
 

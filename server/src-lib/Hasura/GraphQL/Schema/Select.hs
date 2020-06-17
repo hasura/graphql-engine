@@ -1,16 +1,23 @@
 module Hasura.GraphQL.Schema.Select
   ( mkTableObj
+  , mkRelayTableObj
   , mkTableAggObj
   , mkSelColumnTy
-  , mkTableAggFldsObj
-  , mkTableColAggFldsObj
+  , mkTableAggregateFieldsObj
+  , mkTableColAggregateFieldsObj
+  , mkTableEdgeObj
+  , pageInfoObj
+  , mkTableConnectionObj
+  , mkTableConnectionTy
 
   , mkSelFld
   , mkAggSelFld
   , mkSelFldPKey
+  , mkSelFldConnection
 
   , mkRemoteRelationshipName
   , mkSelArgs
+  , mkConnectionArgs
   ) where
 
 import qualified Data.HashMap.Strict           as Map
@@ -40,11 +47,11 @@ mkSelColumnInpTy :: QualifiedTable -> G.NamedType
 mkSelColumnInpTy tn =
   G.NamedType $ qualObjectToName tn <> "_select_column"
 
-mkTableAggFldsTy :: QualifiedTable -> G.NamedType
-mkTableAggFldsTy = addTypeSuffix "_aggregate_fields" . mkTableTy
+mkTableAggregateFieldsTy :: QualifiedTable -> G.NamedType
+mkTableAggregateFieldsTy = addTypeSuffix "_aggregate_fields" . mkTableTy
 
-mkTableColAggFldsTy :: G.Name -> QualifiedTable -> G.NamedType
-mkTableColAggFldsTy op tn =
+mkTableColAggregateFieldsTy :: G.Name -> QualifiedTable -> G.NamedType
+mkTableColAggregateFieldsTy op tn =
   G.NamedType $ qualObjectToName tn <> "_" <> op <> "_fields"
 
 mkTableByPkName :: QualifiedTable -> G.Name
@@ -79,6 +86,7 @@ mkComputedFieldFld field =
       in (inputParams, G.toGT $ mkScalarTy scalarTy)
     CFTTable computedFieldtable ->
       let table = _cftTable computedFieldtable
+      -- TODO: connection stuff
       in ( fromInpValL $ maybeToList maybeFunctionInputArg <> mkSelArgs table
          , G.toGT $ G.toLT $ G.toNT $ mkTableTy table
          )
@@ -118,6 +126,30 @@ mkSelArgs tn =
     orderByDesc = "sort the rows by one or more columns"
     distinctDesc = "distinct select on columns"
 
+-- distinct_on: [table_select_column!]
+-- where: table_bool_exp
+-- order_by: table_order_by
+-- first: Int
+-- after: String
+-- last: Int
+-- before: String
+mkConnectionArgs :: QualifiedTable -> [InpValInfo]
+mkConnectionArgs tn =
+  [ InpValInfo (Just whereDesc) "where" Nothing $ G.toGT $ mkBoolExpTy tn
+  , InpValInfo (Just orderByDesc) "order_by" Nothing $ G.toGT $ G.toLT $ G.toNT $
+    mkOrdByTy tn
+  , InpValInfo (Just distinctDesc) "distinct_on" Nothing $ G.toGT $ G.toLT $
+    G.toNT $ mkSelColumnInpTy tn
+  , InpValInfo Nothing "first" Nothing $ G.toGT $ mkScalarTy PGInteger
+  , InpValInfo Nothing "after" Nothing $ G.toGT $ mkScalarTy PGText
+  , InpValInfo Nothing "last" Nothing $ G.toGT $ mkScalarTy PGInteger
+  , InpValInfo Nothing "before" Nothing $ G.toGT $ mkScalarTy PGText
+  ]
+  where
+    whereDesc   = "filter the rows returned"
+    orderByDesc = "sort the rows by one or more columns"
+    distinctDesc = "distinct select on columns"
+
 {-
 
 array_relationship(
@@ -134,27 +166,56 @@ object_relationship: remote_table
 
 -}
 mkRelationshipField
-  :: Bool
-  -> RelInfo
-  -> Bool
-  -> [ObjFldInfo]
-mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
-  ArrRel -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
-  ObjRel -> [objRelFld]
+  :: Bool -> RelationshipFieldInfo -> [ObjFldInfo]
+mkRelationshipField isRelay fieldInfo =
+  if | not isRelay -> mkFields False
+     | isRelay && isJust maybePkey -> mkFields True
+     | otherwise -> []
   where
-    objRelFld = mkHsraObjFldInfo (Just "An object relationship")
-      (mkRelName rn) Map.empty objRelTy
-    objRelTy = bool (G.toGT $ G.toNT relTabTy) (G.toGT relTabTy) isObjRelNullable
-    isObjRelNullable = isManual || isNullable
-    relTabTy = mkTableTy remTab
+    mkFields includeConnField =
+      let boolGuard a = bool Nothing (Just a)
+      in case relType of
+           ArrRel -> arrRelFld : catMaybes
+                     [ boolGuard aggArrRelFld allowAgg
+                     , boolGuard arrConnFld includeConnField
+                     ]
+           ObjRel -> [objRelFld]
+
+    RelationshipFieldInfo relInfo allowAgg _ _ _ maybePkey isNullable = fieldInfo
+    RelInfo relName relType _ remoteTable isManual = relInfo
+
+    remTabTy = mkTableTy remoteTable
+
+    objRelFld =
+      mkHsraObjFldInfo (Just "An object relationship")
+      (mkRelName relName) Map.empty $
+      bool (G.toGT . G.toNT) G.toGT (isManual || isNullable) remTabTy
 
     arrRelFld =
-      mkHsraObjFldInfo (Just "An array relationship") (mkRelName rn)
-      (fromInpValL $ mkSelArgs remTab) arrRelTy
-    arrRelTy = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy remTab
+      mkHsraObjFldInfo (Just "An array relationship") (mkRelName relName)
+      (fromInpValL $ mkSelArgs remoteTable) $
+      G.toGT $ G.toNT $ G.toLT $ G.toNT remTabTy
+
+    arrConnFld =
+      mkHsraObjFldInfo (Just "An array relationship connection") (mkConnectionRelName relName)
+      (fromInpValL $ mkConnectionArgs remoteTable) $
+      G.toGT $ G.toNT $ mkTableConnectionTy remoteTable
+
     aggArrRelFld = mkHsraObjFldInfo (Just "An aggregated array relationship")
-      (mkAggRelName rn) (fromInpValL $ mkSelArgs remTab) $
-      G.toGT $ G.toNT $ mkTableAggTy remTab
+      (mkAggRelName relName) (fromInpValL $ mkSelArgs remoteTable) $
+      G.toGT $ G.toNT $ mkTableAggTy remoteTable
+
+mkTableObjectDescription :: QualifiedTable -> Maybe PGDescription -> G.Description
+mkTableObjectDescription tn pgDescription =
+  mkDescriptionWith pgDescription $ "columns and relationships of " <>> tn
+
+mkTableObjectFields :: Bool -> [SelField] -> [ObjFldInfo]
+mkTableObjectFields isRelay =
+  concatMap \case
+    SFPGColumn info -> pure $ mkPGColFld info
+    SFRelationship info -> mkRelationshipField isRelay info
+    SFComputedField info -> pure $ mkComputedFieldFld info
+    SFRemoteRelationship info -> pure $ mkRemoteRelationshipFld info
 
 {-
 type table {
@@ -169,18 +230,30 @@ mkTableObj
   -> Maybe PGDescription
   -> [SelField]
   -> ObjTyInfo
-mkTableObj tn descM allowedFlds =
-  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName flds) TLHasuraType
+mkTableObj tn descM allowedFields =
+  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName fields) TLHasuraType
   where
-    flds = flip concatMap allowedFlds $ \case
-      SFPGColumn info -> pure $ mkPGColFld info
-      SFRelationship info -> mkRelationshipField' info
-      SFComputedField info -> pure $ mkComputedFieldFld info
-      SFRemoteRelationship info -> pure $ mkRemoteRelationshipFld info
+    fields = mkTableObjectFields False allowedFields
+    desc = mkTableObjectDescription tn descM
 
-    mkRelationshipField' (RelationshipFieldInfo relInfo allowAgg _ _ _ isNullable) =
-      mkRelationshipField allowAgg relInfo isNullable
-    desc = mkDescriptionWith descM $ "columns and relationships of " <>> tn
+mkRelayTableObj
+  :: QualifiedTable
+  -> Maybe PGDescription
+  -> [SelField]
+  -> ObjTyInfo
+mkRelayTableObj tn descM allowedFields =
+  mkObjTyInfo (Just desc) (mkTableTy tn) Set.empty (mapFromL _fiName fields) TLHasuraType
+  where
+    fields =
+      let idColumnFilter = \case
+            SFPGColumn columnInfo -> (/=) "id" $ pgiName columnInfo
+            _                     -> True
+      in (:) nodeIdField $ mkTableObjectFields True $
+             -- Remove "id" column
+             filter idColumnFilter allowedFields
+
+    nodeIdField = mkHsraObjFldInfo Nothing "id" mempty nodeIdType
+    desc = mkTableObjectDescription tn descM
 
 mkRemoteRelationshipName :: RemoteRelationshipName -> G.Name
 mkRemoteRelationshipName =
@@ -211,7 +284,7 @@ mkTableAggObj tn =
       "aggregated selection of " <>> tn
 
     aggFld = mkHsraObjFldInfo Nothing "aggregate" Map.empty $ G.toGT $
-             mkTableAggFldsTy tn
+             mkTableAggregateFieldsTy tn
     nodesFld = mkHsraObjFldInfo Nothing "nodes" Map.empty $ G.toGT $
                G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
 
@@ -228,13 +301,13 @@ type table_aggregate_fields{
   min: table_min_fields
 }
 -}
-mkTableAggFldsObj
+mkTableAggregateFieldsObj
   :: QualifiedTable
   -> ([PGColumnInfo], [G.Name])
   -> ([PGColumnInfo], [G.Name])
   -> ObjTyInfo
-mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps) =
-  mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) Set.empty $ mapFromL _fiName $
+mkTableAggregateFieldsObj tn (numCols, numericAggregateOps) (compCols, compareAggregateOps) =
+  mkHsraObjTyInfo (Just desc) (mkTableAggregateFieldsTy tn) Set.empty $ mapFromL _fiName $
   countFld : (numFlds <> compFlds)
   where
     desc = G.Description $
@@ -250,11 +323,11 @@ mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps) =
     distinctInpVal = InpValInfo Nothing "distinct" Nothing $ G.toGT $
                      mkScalarTy PGBoolean
 
-    numFlds = bool (map mkColOpFld numAggOps) [] $ null numCols
-    compFlds = bool (map mkColOpFld compAggOps) [] $ null compCols
+    numFlds = bool (map mkColumnOpFld numericAggregateOps) [] $ null numCols
+    compFlds = bool (map mkColumnOpFld compareAggregateOps) [] $ null compCols
 
-    mkColOpFld op = mkHsraObjFldInfo Nothing op Map.empty $ G.toGT $
-                    mkTableColAggFldsTy op tn
+    mkColumnOpFld op = mkHsraObjFldInfo Nothing op Map.empty $ G.toGT $
+                    mkTableColAggregateFieldsTy op tn
 
 {-
 type table_<agg-op>_fields{
@@ -263,14 +336,14 @@ type table_<agg-op>_fields{
    .        .
 }
 -}
-mkTableColAggFldsObj
+mkTableColAggregateFieldsObj
   :: QualifiedTable
   -> G.Name
   -> (PGColumnType -> G.NamedType)
   -> [PGColumnInfo]
   -> ObjTyInfo
-mkTableColAggFldsObj tn op f cols =
-  mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $ mapFromL _fiName $
+mkTableColAggregateFieldsObj tn op f cols =
+  mkHsraObjTyInfo (Just desc) (mkTableColAggregateFieldsTy op tn) Set.empty $ mapFromL _fiName $
   map mkColObjFld cols
   where
     desc = G.Description $ "aggregate " <> G.unName op <> " on columns"
@@ -295,6 +368,93 @@ mkSelFld mCustomName tn =
     fldName = fromMaybe (qualObjectToName tn) mCustomName
     args    = fromInpValL $ mkSelArgs tn
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
+
+{-
+
+table(
+  where: table_bool_exp
+  limit: Int
+  offset: Int
+):  tableConnection!
+
+-}
+
+mkSelFldConnection :: Maybe G.Name -> QualifiedTable -> ObjFldInfo
+mkSelFldConnection mCustomName tn =
+  mkHsraObjFldInfo (Just desc) fldName args ty
+  where
+    desc    = G.Description $ "fetch data from the table: " <>> tn
+    fldName = fromMaybe (qualObjectToName tn <> "_connection") mCustomName
+    args    = fromInpValL $ mkConnectionArgs tn
+    ty      = G.toGT $ G.toNT $ mkTableConnectionTy tn
+
+{-
+type tableConnection {
+  pageInfo: PageInfo!
+  edges: [tableEdge!]!
+}
+-}
+mkTableConnectionObj
+  :: QualifiedTable -> ObjTyInfo
+mkTableConnectionObj tn =
+  mkHsraObjTyInfo (Just desc) (mkTableConnectionTy tn) Set.empty $ mapFromL _fiName
+  [pageInfoFld, edgesFld]
+  where
+    desc = G.Description $ "A Relay Connection object on " <>> tn
+    pageInfoFld = mkHsraObjFldInfo Nothing "pageInfo" Map.empty $
+                  G.toGT $ G.toNT pageInfoTy
+    edgesFld = mkHsraObjFldInfo Nothing "edges" Map.empty $ G.toGT $
+               G.toNT $ G.toLT $ G.toNT $ mkTableEdgeTy tn
+
+booleanScalar :: G.NamedType
+booleanScalar = G.NamedType "Boolean"
+
+stringScalar :: G.NamedType
+stringScalar = G.NamedType "String"
+
+pageInfoTyName :: G.Name
+pageInfoTyName = "PageInfo"
+
+pageInfoTy :: G.NamedType
+pageInfoTy = G.NamedType pageInfoTyName
+{-
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPrevousPage: Boolean!
+  startCursor: String!
+  endCursor: String!
+}
+-}
+pageInfoObj :: ObjTyInfo
+pageInfoObj =
+  mkHsraObjTyInfo Nothing pageInfoTy Set.empty $ mapFromL _fiName
+  [hasNextPage, hasPreviousPage, startCursor, endCursor]
+  where
+    hasNextPage = mkHsraObjFldInfo Nothing "hasNextPage" Map.empty $
+                  G.toGT $ G.toNT booleanScalar
+    hasPreviousPage = mkHsraObjFldInfo Nothing "hasPreviousPage" Map.empty $
+                      G.toGT $ G.toNT booleanScalar
+    startCursor = mkHsraObjFldInfo Nothing "startCursor" Map.empty $
+                  G.toGT $ G.toNT stringScalar
+    endCursor = mkHsraObjFldInfo Nothing "endCursor" Map.empty $
+                G.toGT $ G.toNT stringScalar
+
+{-
+type tableConnection {
+  cursor: String!
+  node: table!
+}
+-}
+mkTableEdgeObj
+  :: QualifiedTable -> ObjTyInfo
+mkTableEdgeObj tn =
+  mkHsraObjTyInfo Nothing (mkTableEdgeTy tn) Set.empty $ mapFromL _fiName
+  [cursor, node]
+  where
+    cursor = mkHsraObjFldInfo Nothing "cursor" Map.empty $
+             G.toGT $ G.toNT stringScalar
+    node = mkHsraObjFldInfo Nothing "node" Map.empty $
+           G.toGT $ G.toNT $ mkTableTy tn
 
 {-
 table_by_pk(

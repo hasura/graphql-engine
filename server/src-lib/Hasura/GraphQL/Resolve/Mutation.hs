@@ -33,7 +33,7 @@ import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Select       (processTableSelectionSet)
-import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal             (currentSession, sessVarFromCurrentSetting)
 import           Hasura.RQL.DML.Mutation             (MutationRemoteJoinCtx)
@@ -46,15 +46,16 @@ resolveMutationFields
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => G.NamedType -> SelSet -> m (RR.MutFldsG UnresolvedVal)
+  => G.NamedType -> ObjectSelectionSet -> m (RR.MutFldsG UnresolvedVal)
 resolveMutationFields ty selSet = fmap (map (first FieldName)) $
-  withSelSet selSet $ \fld -> case _fName fld of
+  traverseObjectSelectionSet selSet $ \fld -> case _fName fld of
     "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
     "affected_rows" -> return RR.MCount
     "returning"     -> do
-      annFlds <- processTableSelectionSet (_fType fld) $ _fSelSet fld
+      annFlds <- asObjectSelectionSet (_fSelSet fld)
+                 >>= processTableSelectionSet (_fType fld)
       annFldsResolved <- traverse
-        (traverse (RS.traverseAnnFld convertPGValueToTextValue)) annFlds
+        (traverse (RS.traverseAnnField convertPGValueToTextValue)) annFlds
       return $ RR.MRet annFldsResolved
     G.Name t        -> throw500 $ "unexpected field in mutation resp : " <> t
   where
@@ -327,8 +328,9 @@ mutationFieldsResolver
      , Has OrdByCtx r, Has SQLGenCtx r
      )
   => Field -> m (RR.MutationOutputG UnresolvedVal)
-mutationFieldsResolver field =
-  RR.MOutMultirowFields <$> resolveMutationFields (_fType field) (_fSelSet field)
+mutationFieldsResolver field = do
+  asObjectSelectionSet (_fSelSet field) >>= \selSet ->
+    RR.MOutMultirowFields <$> resolveMutationFields (_fType field) selSet
 
 tableSelectionAsMutationOutput
   :: ( MonadReusability m, MonadError QErr m
@@ -337,7 +339,8 @@ tableSelectionAsMutationOutput
      )
   => Field -> m (RR.MutationOutputG UnresolvedVal)
 tableSelectionAsMutationOutput field =
-  RR.MOutSinglerowObject <$> processTableSelectionSet (_fType field) (_fSelSet field)
+  asObjectSelectionSet (_fSelSet field) >>= \selSet ->
+  RR.MOutSinglerowObject <$> processTableSelectionSet (_fType field) selSet
 
 -- | build mutation response for empty objects
 buildEmptyMutResp :: RR.MutationOutput -> EncJSON

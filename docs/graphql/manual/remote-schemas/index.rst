@@ -28,11 +28,6 @@ This is what Hasura running with "Remote schemas" looks like:
    :width: 55%
    :alt: Architecture of Hasura with remote schemas
 
-.. note::
-
-  This is a new feature under active development. Please do give us feedback, bug-reports and ask us questions on
-  our `discord <https://discord.gg/vBPpJkS>`__ or on `github <https://github.com/hasura/graphql-engine>`__.
-
 Use cases
 ---------
 

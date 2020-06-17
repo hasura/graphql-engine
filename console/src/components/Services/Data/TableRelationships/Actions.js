@@ -24,16 +24,8 @@ export const REL_SELECTION_CHANGED = 'ModifyTable/REL_SELECTION_CHANGED';
 export const MANUAL_REL_NAME_CHANGED = 'ModifyTable/MANUAL_REL_NAME_CHANGED';
 export const REL_NAME_CHANGED = 'ModifyTable/REL_NAME_CHANGED';
 export const REL_ADD_NEW_CLICKED = 'ModifyTable/REL_ADD_NEW_CLICKED';
-export const FETCHING_REMOTE_RELATIONSHIPS =
-  'ModifyTable/FETCHING_REMOTE_RELATIONSHIPS';
-export const FETCHED_REMOTE_RELATIONSHIPS =
-  'ModifyTable/FETCHED_REMOTE_RELATIONSHIPS';
 
 export const SET_REMOTE_RELATIONSHIPS = 'ModifyTable/SET_REMOTE_RELATIONSHIPS';
-export const INTROSPECTING_REMOTE_SCHEMA =
-  'ModifyTable/INTROSPECTING_REMOTE_SCHEMA';
-export const INTROSPECTION_ERROR = 'ModifyTable/INTROSPECTION_ERROR';
-export const INTROSPECTION_SUCCESSFUL = 'ModifyTable/SET_INTROSPECTION_SCHEMA';
 
 export const defaultRemoteRelationship = {
   name: '',
@@ -54,8 +46,7 @@ export const saveRemoteRelationship = (
         showErrorNotification(
           gqlRelErrorNotif[0],
           gqlRelErrorNotif[1],
-          gqlRelErrorNotif[2],
-          gqlRelErrorNotif[3]
+          gqlRelErrorNotif[2]
         )
       );
     }
@@ -94,7 +85,9 @@ export const saveRemoteRelationship = (
     }
 
     // Apply migrations
-    const migrationName = `table_${table.name}_create_remote_relationship_${state.name}`;
+    const migrationName = `table_${table.name}_${
+      isNew ? 'create' : 'update'
+    }_remote_relationship_${state.name}`;
 
     const requestMsg = `${
       isNew ? 'Creating' : 'Updating'

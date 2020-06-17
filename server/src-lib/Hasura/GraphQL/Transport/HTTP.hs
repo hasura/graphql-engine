@@ -1,10 +1,15 @@
-{-# LANGUAGE RecordWildCards #-}
+-- | Execution of GraphQL queries over HTTP transport
 module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   , runGQBatched
+  -- * imported from HTTP.Protocol; required by pro
+  , GQLReq(..)
+  , GQLReqUnparsed
+  , GQLReqParsed
+  , GQLExecDoc(..)
+  , OperationName(..)
+  , GQLQueryText(..)
   ) where
-
-import qualified Network.HTTP.Types                     as N
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
@@ -23,34 +28,45 @@ import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
+import qualified Network.Wai.Extended                   as Wai
 
+
+-- | Run (execute) a single GraphQL query
 runGQ
   :: ( HasVersion
      , MonadIO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
+     , E.MonadGQLExecutionCheck m
      )
   => RequestId
   -> UserInfo
-  -> [N.Header]
-  -> GQLReq GQLQueryText
+  -> Wai.IpAddress
+  -> [HTTP.Header]
+  -> E.GraphQLQueryType
+  -> GQLReqUnparsed
   -> m (HttpResponse EncJSON)
-runGQ reqId userInfo reqHdrs req = do
+runGQ reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   -- The response and misc telemetry data:
   let telemTransport = Telem.HTTP
   (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
     E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer httpManager enableAL <- ask
+
+    -- run system authorization on the GraphQL API
+    reqParsed <- E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
+                 >>= flip onLeft throwError
+
     (telemCacheHit, execPlan) <- E.getResolvedExecPlan pgExecCtx planCache
-                                 userInfo sqlGenCtx enableAL sc scVer httpManager reqHdrs req
+                                 userInfo sqlGenCtx sc scVer queryType
+                                 httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
       E.GExPHasura resolvedOp -> do
-        (telemTimeIO, telemQueryType, respHdrs, resp) <- runHasuraGQ reqId req userInfo resolvedOp
+        (telemTimeIO, telemQueryType, respHdrs, resp) <- runHasuraGQ reqId reqUnparsed userInfo resolvedOp
         return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
       E.GExPRemote rsi opDef  -> do
         let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
-                            | otherwise = Telem.Query
-
-        (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi $ G._todType opDef
+                           | otherwise = Telem.Query
+        (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHeaders reqUnparsed rsi $ G._todType opDef
         pure (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
 
   let telemTimeIO = convertDuration telemTimeIO_DT
@@ -59,23 +75,28 @@ runGQ reqId userInfo reqHdrs req = do
   Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
 
+-- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
 runGQBatched
   :: ( HasVersion
      , MonadIO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
+     , E.MonadGQLExecutionCheck m
      )
   => RequestId
   -> ResponseInternalErrorsConfig
   -> UserInfo
-  -> [N.Header]
+  -> Wai.IpAddress
+  -> [HTTP.Header]
+  -> E.GraphQLQueryType
   -> GQLBatchedReqs GQLQueryText
+  -- ^ the batched request with unparsed GraphQL query
   -> m (HttpResponse EncJSON)
-runGQBatched reqId responseErrorsConfig userInfo reqHdrs reqs =
-  case reqs of
+runGQBatched reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query = do
+  case query of
     GQLSingleRequest req ->
-      runGQ reqId userInfo reqHdrs req
-    GQLBatchedReqs batch -> do
+      runGQ reqId userInfo ipAddress reqHdrs queryType req
+    GQLBatchedReqs reqs -> do
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
       -- in this case, and don't forward any.
@@ -84,8 +105,11 @@ runGQBatched reqId responseErrorsConfig userInfo reqHdrs reqs =
             flip HttpResponse []
             . encJFromList
             . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
-          try = flip catchError (pure . Left) . fmap Right
-      removeHeaders <$> traverse (try . runGQ reqId userInfo reqHdrs) batch
+
+      removeHeaders <$> traverse (try . runGQ reqId userInfo ipAddress reqHdrs queryType) reqs
+  where
+    try = flip catchError (pure . Left) . fmap Right
+
 
 runHasuraGQ
   :: ( MonadIO m
@@ -105,7 +129,7 @@ runHasuraGQ reqId query userInfo resolvedOp = do
     E.ExOpQuery tx genSql -> do
       -- log the generated SQL and the graphql query
       L.unLogger logger $ QueryLog query genSql reqId
-      ([],) <$> runLazyTx' pgExecCtx tx
+      ([],) <$> runQueryTx pgExecCtx tx
 
     E.ExOpMutation respHeaders tx -> do
       -- log the graphql query

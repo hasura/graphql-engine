@@ -4,6 +4,7 @@ module Hasura.GraphQL.Execute.Query
   , ReusableQueryPlan
   , GeneratedSqlMap
   , PreparedSql(..)
+  , GraphQLQueryType(..)
   ) where
 
 import qualified Data.Aeson                             as J
@@ -23,7 +24,7 @@ import           Data.Has
 import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
-import qualified Hasura.GraphQL.Validate.Field          as V
+import qualified Hasura.GraphQL.Validate.SelectionSet   as V
 import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.EncJSON
@@ -199,14 +200,14 @@ convertQuerySelSet
   => HTTP.Manager
   -> [N.Header]
   -> QueryReusability
-  -> V.SelSet
+  -> V.ObjectSelectionSet
   -> QueryActionExecuter
   -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
-convertQuerySelSet manager reqHdrs initialReusability fields actionRunner = do
+convertQuerySelSet manager reqHdrs initialReusability selSet actionRunner = do
   userInfo <- asks getter
   (fldPlans, finalReusability) <- runReusabilityTWith initialReusability $
-    forM (toList fields) $ \fld -> do
-      fldPlan <- case V._fName fld of
+    fmap (map (\(a, b) -> (G.Alias $ G.Name a, b))) $ V.traverseObjectSelectionSet selSet $ \fld ->
+      case V._fName fld of
         "__type"     -> fldPlanFromJ <$> R.typeR fld
         "__schema"   -> fldPlanFromJ <$> R.schemaR fld
         "__typename" -> pure $ fldPlanFromJ queryRootNamedType
@@ -216,7 +217,7 @@ convertQuerySelSet manager reqHdrs initialReusability fields actionRunner = do
             R.traverseQueryRootFldAST prepareWithPlan unresolvedAst
           let (query, remoteJoins) = R.toPGQuery q
           pure . RFPPostgres $ PGPlan query vars prepped remoteJoins
-      pure (V._fAlias fld, fldPlan)
+      -- pure (V._fAlias fld, fldPlan)
   let varTypes = finalReusability ^? _Reusable
       reusablePlan = ReusableQueryPlan <$> varTypes <*> pure fldPlans
   (tx, sql) <- mkCurPlanTx manager reqHdrs userInfo fldPlans
@@ -293,3 +294,15 @@ mkGeneratedSqlMap resolved =
                 RRRaw _  -> Nothing
                 RRSql ps -> Just ps
     in (alias, res)
+
+-- The GraphQL Query type
+data GraphQLQueryType
+  = QueryHasura
+  | QueryRelay
+  deriving (Show, Eq, Ord, Generic)
+instance Hashable GraphQLQueryType
+
+instance J.ToJSON GraphQLQueryType where
+  toJSON = \case
+    QueryHasura -> "hasura"
+    QueryRelay  -> "relay"
