@@ -14,6 +14,8 @@ import {
   getEnumColumnMappings,
 } from '../../../Common/utils/pgUtils';
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
+import { ARRAY } from '../utils';
+import { isStringArray } from '../../../Common/utils/jsUtils';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';
 const E_ONGOING_REQ = 'EditItem/E_ONGOING_REQ';
@@ -78,6 +80,14 @@ const editItem = (tableName, colValues) => {
               ' :: could not read ' +
               colValue +
               ' as a valid JSON object/array';
+          }
+        } else if (colType === ARRAY && isStringArray(colValue)) {
+          try {
+            const arr = JSON.parse(colValue);
+            _setObject[colName] = `{${arr.join(',')}}`;
+          } catch {
+            errorMessage =
+              colName + ' :: could not read ' + colValue + ' as a valid array';
           }
         } else {
           _setObject[colName] = colValue;
