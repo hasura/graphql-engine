@@ -678,6 +678,7 @@ createWSServerApp
      , MC.MonadBaseControl IO m
      , LA.Forall (LA.Pure m)
      , UserAuthentication m
+     , WS.MonadWSLog m
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
      )
