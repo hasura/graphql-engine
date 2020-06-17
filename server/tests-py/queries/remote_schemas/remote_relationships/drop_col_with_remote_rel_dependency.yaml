@@ -1,0 +1,44 @@
+- description: Add a new column to the table and create a remote relationship using this column
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: ALTER TABLE profiles add column profile_id int
+
+- description: Create a remote relationship with the new column
+  url: /v1/query
+  status: 200
+  query:
+    type: create_remote_relationship
+    args:
+      name: messagesNestedArgs
+      table: profiles
+      hasura_fields:
+        - profile_id
+      remote_schema: my-remote-schema
+      remote_field:
+        messages:
+          arguments:
+            where:
+              id:
+                eq: "$profile_id"
+
+- description: Drop the column which was used to create the remote relationship, it should drop the column along with the dependent remote relationship when cascaded
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: ALTER TABLE profiles drop column profile_id
+      cascade: true
+
+- description: Check if the remote relationship was dropped
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: SELECT * from hdb_catalog.hdb_remote_relationship
+           where table_schema = 'public' and table_name = 'profiles' and remote_relationship_name = 'messagesNestedArgs'
+  response: []

@@ -3,6 +3,8 @@ import {
   checkFeatureSupport,
 } from '../../../helpers/versionUtils';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
+import { isJsonString } from '../../Common/utils/jsUtils';
+import { ERROR_CODES } from './constants';
 
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
@@ -521,11 +523,51 @@ FROM (
   );
 };
 
+const generateWhereObject = options => {
+  const where = {};
+  if (options.schemas) {
+    options.schemas.forEach(s => {
+      if (!where.$and) where.$and = [];
+
+      where.$and.push({
+        table_schema: s,
+      });
+    });
+  }
+  if (options.tables) {
+    options.tables.forEach(t => {
+      if (!where.$and) where.$and = [];
+      where.$and.push({
+        table_schema: t.table_schema,
+        table_name: t.table_name,
+      });
+    });
+  }
+  return where;
+};
+
+export const fetchTrackedTableRemoteRelationshipQuery = options => {
+  const query = {
+    type: 'select',
+    args: {
+      table: {
+        schema: 'hdb_catalog',
+        name: 'hdb_remote_relationship',
+      },
+      columns: ['*.*', 'remote_relationship_name'],
+      where: generateWhereObject(options),
+      order_by: [{ column: 'remote_relationship_name', type: 'asc' }],
+    },
+  };
+  return query;
+};
+
 export const mergeLoadSchemaData = (
   infoSchemaTableData,
   hdbTableData,
   fkData,
-  refFkData
+  refFkData,
+  remoteRelData
 ) => {
   const _mergedTableData = [];
 
@@ -551,6 +593,7 @@ export const mergeLoadSchemaData = (
     let _uniqueConstraints = [];
     let _fkConstraints = [];
     let _refFkConstraints = [];
+    let _remoteRelationships = [];
     let _isEnum = false;
     let _checkConstraints = [];
     let _configuration = {};
@@ -575,6 +618,11 @@ export const mergeLoadSchemaData = (
           fk.ref_table_table_schema === _tableSchema &&
           fk.ref_table === _tableName
       );
+
+      _remoteRelationships = remoteRelData.filter(
+        rel =>
+          rel.table_schema === _tableSchema && rel.table_name === _tableName
+      );
     }
 
     const _mergedInfo = {
@@ -593,6 +641,7 @@ export const mergeLoadSchemaData = (
       foreign_key_constraints: _fkConstraints,
       opp_foreign_key_constraints: _refFkConstraints,
       view_info: _viewInfo,
+      remote_relationships: _remoteRelationships,
       is_enum: _isEnum,
       configuration: _configuration,
       computed_fields: _computed_fields,
@@ -737,3 +786,32 @@ WHERE
 
 export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
+
+export const cascadeUpQueries = (upQueries = []) =>
+  upQueries.map((i = {}) => {
+    if (i.type === 'run_sql' || i.type === 'untrack_table') {
+      return {
+        ...i,
+        args: {
+          ...i.args,
+          cascade: true,
+        },
+      };
+    }
+    return i;
+  });
+
+export const getDependencyError = (err = {}) => {
+  if (err.code == ERROR_CODES.dependencyError.code) {
+    // direct dependency error
+    return err;
+  } else if (err.code == ERROR_CODES.dataApiError.code) {
+    // message is coming as error, further parssing willbe based on message key
+    const actualError = isJsonString(err.message)
+      ? JSON.parse(err.message)
+      : {};
+    if (actualError.code == ERROR_CODES.dependencyError.code) {
+      return { ...actualError, message: actualError.error };
+    }
+  }
+};

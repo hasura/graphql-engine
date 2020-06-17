@@ -2,18 +2,63 @@
 
 ## Next release
 
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+
+## `v1.3.0-beta.2`
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: few relay fixes (fix #5020, #5037, #5046) (#5013)
+- server: raise error on startup when `--unauthorized-role` is ignored (#4736)
+- server: fix bug which arises when renaming/dropping a column on a remote relationship (#5005, #5119)
+- console: provide option to cascade metadata on dependency conflicts on console (fix #1593)
+- console: fix enum tables reload data button UI (#4647)
+- console: fix "Cannot read property 'foldable'" runtime error in Browse Rows page (fix #4907) (#5016)
+- console: respect read-only mode in actions pages (fix #4656) (#4764)
+- console: allow configuring session_argument for custom functions (close #4499) (#4922)
+- console: fix listen update column config selection for event trigger (close #5042) (#5043)
+- cli: add new flags up-sql and down-sql to generate sql based migrations from the CLI (#5026)
+- docs: add page on setting up v2 migrations (close #4746) (#4898)
+
+## `v1.3.0-beta.1`
+
+### Relay
+
+The Hasura GraphQL Engine serves [Relay](https://relay.dev/en/) schema for Postgres tables which has a primary key defined.
+
+The Relay schema can be accessed through `/v1/relay` endpoint.
+
+[Add docs links][add console screenshot for relay toggle]
+
+### Remote Joins
+
+Remote Joins extend the concept of joining data across tables, to being able to join data across tables and remote schemas.
+
+It works similar to table relationships. Head to the `Relationship` tab in your table page and define a remote relationship:
+
+1. give a name for the relationship
+2. select the remote schema
+3. give the join configuration from table columns to remote schema fields.
+
+[Add docs links][add console screenshot]
+
 ### Scheduled Triggers
 
 A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron based or timestamp based.
 
-A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to  generate an end-of-day sales report every weekday at 9pm.
+A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to generate an end-of-day sales report every weekday at 9pm.
 
 You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience.
 
-<Add docs links>
+[Add docs links][add console screenshot]
 
 (close #1914)
-
 
 ### Allow access to session variables by computed fields (fix #3846)
 
@@ -46,20 +91,46 @@ Support for this is now added through the `add_computed_field` API.
 
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
+### Manage seed migrations as SQL files
+A new `seeds` command is introduced in CLI, this will allow managing seed migrations as SQL files
+
+#### Creating seed
+```                                                        
+# create a new seed file and use editor to add SQL content
+hasura seed create new_table_seed
+
+# create a new seed by exporting data from tables already present in the database
+hasura seed create table1_seed --from-table table1
+
+# create from data in multiple tables:
+hasura seed create tables_seed --from-table table1 --from-table table2
+```
+#### Applying seed
+```
+# apply all seeds on the database:
+hasura seed apply
+
+# apply only a particular seed
+hasura seed apply --file 1234_add_some_seed_data.sql
+```
+
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
+
 - server: fix explain queries with role permissions (fix #4816)
 - server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
-
 - server: fixes an issue where introspection queries with variables would fail because of caching (fix #4547)
 - server: avoid loss of precision when passing values in scientific notation (fix #4733)
 - server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
 - server: fix importing of allow list query from metadata (fix #4687)
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
+- console: allow entering big int values in the console (close #3667) (#4775)
+- console: add support for subscriptions analyze in API explorer (close #2541) (#2541)
 - console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
+- console: fix regression in editing permissions manually (fix #4683) (#4826)
 - console: allow modifying default value for PK (fix #4075) (#4679)
 - console: fix checkbox for forwarding client headers in actions (#4595)
 - console: re-enable foreign tables to be listed as views (fix #4714) (#4742)
@@ -67,7 +138,14 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix inconsistency between selected rows state and displayed rows (fix #4654) (#4673)
 - console: fix displaying boolean values in `Edit Row` tab (#4682)
 - console: fix underscores not being displayed on raw sql page (close #4754) (#4799)
+- console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
+- console: add help button and move about page to settings (#4848)
+- console: add new sidebar icon that separates enums from tables (fix #4984) (#4992)
 - cli: list all available commands in root command help (fix #4623) (#4628)
+- cli: fix bug with squashing event triggers (close #4883)
+- cli: add support for skipping execution while generating migrations through the migrate REST API
+- cli: add dry run flag in hasura migrate apply command (fix #3128) (#3499)
+- cli: load assets from server when HASURA_GRAPHQL_CONSOLE_ASSETS_DIR is set (close #3382)
 - docs: add section on actions vs. remote schemas to actions documentation (#4284)
 - docs: fix wrong info about excluding scheme in CORS config (#4685)
 - docs: add single object mutations docs (close #4622) (#4625)
@@ -78,6 +156,8 @@ Read more about the session argument for computed fields in the [docs](https://h
 - docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
 - docs: add page for procuring custom docker images and binaries (#4828)
 - docs: add content on how to secure action handlers and other actions docs improvements (#4743)
+- docs: make header common with other hasura.io/ pages (#4957)
+- install manifests: update all install manifests to enable dev mode by default (close #4599) (#4716)
 
 ## `v1.2.0`
 
@@ -272,6 +352,7 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
+- server: make the graceful shutdown logic customizable (graceful shutdown on the SIGTERM signal continues to be the default)
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
 
 ## `v1.2.0-beta.4`

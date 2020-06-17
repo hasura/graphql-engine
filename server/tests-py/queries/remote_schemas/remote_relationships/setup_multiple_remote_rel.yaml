@@ -1,0 +1,67 @@
+type: bulk
+args:
+# from setup_remote_rel_basic:
+- type: create_remote_relationship
+  args:
+    name: remoteUser
+    table: profiles
+    hasura_fields:
+      - id
+    remote_schema: my-remote-schema
+    remote_field:
+      user:
+        arguments:
+          user_id: "$id"
+
+# from server/tests-py/queries/remote_schemas/remote_relationships/setup_remote_rel_array.yaml 
+- type: create_remote_relationship
+  args:
+    name: messagesNestedArr
+    table: profiles
+    hasura_fields:
+      - name
+    remote_schema: my-remote-schema
+    remote_field:
+      messages:
+        arguments:
+          includes:
+            name: ["$name"]
+
+- type: create_remote_relationship
+  args:
+    name: some_constant_text
+    table: profiles
+    hasura_fields:
+      # TODO we should probably raise an error for these unused fields:
+      - id
+      - name
+    remote_schema: my-remote-schema
+    remote_field:
+      user:
+        arguments:
+          user_id: 999
+        field:
+          gimmeText:
+            arguments:
+              text: constant text
+
+# Note: purposely closed over no hasura fields to make sure our mapping isn't
+# off in code that resolves/reassembles.
+- type: create_remote_relationship
+  args:
+    name: some_more_constant_text
+    table: profiles
+    hasura_fields: []
+    # hasura_fields:
+    # - id
+    remote_schema: my-remote-schema
+    remote_field:
+      user:
+        arguments:
+          user_id: 999
+        field:
+          gimmeText:
+            arguments:
+              text: more constant text
+
+# TODO add top-level thang with NO arguments (hello:)

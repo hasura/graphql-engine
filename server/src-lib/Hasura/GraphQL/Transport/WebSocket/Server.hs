@@ -25,6 +25,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , shutdown
 
   , MonadWSLog (..)
+  , HasuraServerApp
   ) where
 
 import qualified Control.Concurrent.Async             as A
@@ -45,6 +46,7 @@ import           GHC.AssertNF
 import           GHC.Int                              (Int64)
 import           Hasura.Prelude
 import qualified ListT
+import           Network.Wai.Extended                 (IpAddress)
 import qualified Network.WebSockets                   as WS
 import qualified StmContainers.Map                    as STMMap
 import qualified System.IO.Error                      as E
@@ -214,7 +216,7 @@ data AcceptWith a
   , _awOnJwtExpiry :: !(WSConn a -> IO ())
   }
 
-type OnConnH m a    = WSId -> WS.RequestHead -> m (Either WS.RejectRequest (AcceptWith a))
+type OnConnH m a    = WSId -> WS.RequestHead -> IpAddress -> m (Either WS.RejectRequest (AcceptWith a))
 type OnCloseH m a   = WSConn a -> m ()
 type OnMessageH m a = WSConn a -> BL.ByteString -> m ()
 
@@ -225,23 +227,25 @@ data WSHandlers m a
   , _hOnClose   :: OnCloseH m a
   }
 
+-- | aka generalized 'WS.ServerApp' over @m@, which takes an IPAddress
+type HasuraServerApp m = IpAddress -> WS.PendingConnection -> m ()
+
 createServerApp
   :: (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m), MonadWSLog m)
   => WSServer a
   -- user provided handlers
   -> WSHandlers m a
   -- aka WS.ServerApp
-  -> WS.PendingConnection
-  -> m ()
+  -> HasuraServerApp m
 {-# INLINE createServerApp #-}
-createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !pendingConn = do
+createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !ipAddress !pendingConn = do
   wsId <- WSId <$> liftIO UUID.nextRandom
   logWSLog logger $ WSLog wsId EConnectionRequest Nothing
   status <- liftIO $ STM.readTVarIO serverStatus
   case status of
     AcceptingConns _ -> logUnexpectedExceptions $ do
       let reqHead = WS.pendingRequest pendingConn
-      onConnRes <- _hOnConn wsHandlers wsId reqHead
+      onConnRes <- _hOnConn wsHandlers wsId reqHead ipAddress
       either (onReject wsId) (onAccept wsId) onConnRes
 
     ShuttingDown ->
