@@ -38,7 +38,7 @@ export const getPlaceholder = type => {
     case BOOLEAN:
       return '';
     case ARRAY:
-      return '{"value1", "value2"}';
+      return '{"foo", "bar"} or ["foo", "bar"]';
     default:
       return type;
   }

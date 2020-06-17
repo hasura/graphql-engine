@@ -37,7 +37,6 @@ const setup = () => {
 export const runInsertBrowseTests = () => {
   describe('Table: Browse and Insert', () => {
     it('Create a table with fields of all data types', passBICreateTable);
-    it('Handle array data types', passArrayDataType);
     it('Search for tables', passSearchTables);
     it('Check Insert Route', checkInsertRoute);
     it('Fails when entered wrong data type', failBIWrongDataType);
@@ -54,6 +53,7 @@ export const runInsertBrowseTests = () => {
     it('Delete the row', passDeleteRow);
     it('Bulk delete rows', passBulkDeleteRows);
     it('Bulk delete all rows', passBulkDeleteAllRows);
+    it('Handle array data types', passArrayDataType);
     it('Check view relationship', checkViewRelationship);
     it('Delete test table', deleteBITestTable);
   });
