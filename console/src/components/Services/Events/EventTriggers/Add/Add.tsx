@@ -360,7 +360,7 @@ type PropsFromState = {
 
 const mapStateToProps: MapStateToProps<PropsFromState> = state => {
   return {
-    allSchemas: state.tables.allSchemas,
+    allSchemas: state.tables.allSchemas as Table[],
     schemaList: state.tables.schemaList,
     readOnlyMode: state.main.readOnlyMode,
   };

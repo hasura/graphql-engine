@@ -146,7 +146,7 @@ const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
 
   return {
     currentTrigger,
-    allSchemas: state.tables.allSchemas,
+    allSchemas: state.tables.allSchemas as Table[],
     readOnlyMode: state.main.readOnlyMode,
   };
 };
