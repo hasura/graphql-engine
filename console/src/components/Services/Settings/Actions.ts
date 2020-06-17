@@ -211,7 +211,7 @@ const handleInconsistentObjects = (inconsistentObjects: MetadataObject[]) => {
     dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
     getState: GetReduxState
   ) => {
-    const allSchemas = getState().tables.allSchemas;
+    const allSchemas = getState().tables.allSchemas as MetadataObject[];
     const functions = getState().tables.trackedFunctions;
     const remoteSchemas = getState().remoteSchemas.listData.remoteSchemas;
     const actions = getState().actions.common.actions;
