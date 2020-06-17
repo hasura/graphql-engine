@@ -102,63 +102,31 @@ export const getInsertUpQuery = (
   tableDef: TableDefinition,
   insertion: object
 ) => {
-  const queryCols = Object.keys(insertion);
-  const colString = queryCols.join(',');
-
-  const queryValues = Object.values(insertion);
-  const modifiedValues = queryValues.map(value => {
-    // currently, only modifying for string data,
-    // unsure of how it is for other types.
-    if (typeof value === 'string') {
-      return `'${value}'`;
-    }
-
-    return value;
-  });
-  const valueString = modifiedValues.join(',');
-
   return {
-    type: 'run_sql',
+    type: 'insert',
     args: {
-      sql: `INSERT into ${tableDef.schema}.${tableDef.name} (${colString}) values (${valueString})`,
+      table: tableDef,
+      returning: [],
+      object: insertion,
     },
   };
 };
 
+type DeleteObject = {
+  id: number;
+};
+
 export const getInsertDownQuery = (
   tableDef: TableDefinition,
-  insertion: object
+  insertion: DeleteObject
 ) => {
-  const queryCols = Object.keys(insertion);
-  const numberOfColumns = queryCols.length;
-  const queryValues = Object.values(insertion);
-  const modifiedValues = queryValues.map(value => {
-    // currently, only modifying for string data,
-    // unsure of how it is for other types.
-    if (typeof value === 'string') {
-      return `'${value}'`;
-    }
-
-    return value;
-  });
-
-  let whereString = '';
-
-  if (numberOfColumns > 1) {
-    const butlast = numberOfColumns - 1;
-    queryCols.slice(0, butlast).forEach((col, index) => {
-      whereString += ` ${col} = ${modifiedValues[index]} AND`;
-    });
-
-    whereString += ` ${queryCols[butlast]} = ${modifiedValues[butlast]}`;
-  } else {
-    whereString = `${queryCols[0]} = ${modifiedValues[0]}`;
-  }
+  const { id } = insertion;
 
   return {
-    type: 'run_sql',
+    type: 'delete',
     args: {
-      sql: `DELETE from ${tableDef.schema}.${tableDef.name} WHERE${whereString};`,
+      table: tableDef,
+      where: { id },
     },
   };
 };

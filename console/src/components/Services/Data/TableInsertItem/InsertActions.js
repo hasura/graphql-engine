@@ -13,7 +13,7 @@ import {
   getInsertUpQuery,
   getInsertDownQuery,
 } from '../../../Common/utils/v1QueryUtils';
-import { makeMigrationCall, setTable } from '../DataActions';
+import { makeMigrationCall } from '../DataActions';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
 const I_RESET = 'InsertItem/I_RESET';
@@ -40,10 +40,8 @@ const createInsertMigration = (dispatch, getState, tableInfo, insertedData) => {
   );
 
   const migrationName = `insert_into_${tableInfo.name}`;
-  const customOnSuccess = () => {
-    // maybe unnecessary.
-    dispatch(setTable(tableInfo.name));
-  };
+  // FIXME: they're only stubs at the moment.
+  const customOnSuccess = () => {};
   const customOnError = () => {};
   const requestMessage = 'Creating Insert Migration';
   const successMessage = 'Created Insert Migration!';
