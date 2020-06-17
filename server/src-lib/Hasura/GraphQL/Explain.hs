@@ -27,15 +27,17 @@ import qualified Hasura.GraphQL.Execute.LiveQuery       as E
 import qualified Hasura.GraphQL.Resolve                 as RS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
+import qualified Hasura.GraphQL.Validate.SelectionSet   as GV
 import qualified Hasura.SQL.DML                         as S
 
 data GQLExplain
   = GQLExplain
-  { _gqeQuery :: !GH.GQLReqParsed
-  , _gqeUser  :: !(Maybe (Map.HashMap Text Text))
+  { _gqeQuery   :: !GH.GQLReqParsed
+  , _gqeUser    :: !(Maybe (Map.HashMap Text Text))
+  , _gqeIsRelay :: !(Maybe Bool)
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True}
   ''GQLExplain
  )
 
@@ -99,10 +101,15 @@ explainField userInfo gCtx sqlGenCtx actionExecuter fld =
     _            -> do
       unresolvedAST <-
         runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-        evalReusabilityT $ RS.queryFldToPGAST fld actionExecuter
+          evalReusabilityT $ RS.queryFldToPGAST fld actionExecuter
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo) unresolvedAST
-      let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
+      let (query, remoteJoins) = RS.toPGQuery resolvedAST
+          txtSQL = Q.getQueryText query
+          -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+          -- query, resulting in potential privilege escalation:
           withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
+      -- Reject if query contains any remote joins
+      when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
       planLines <- liftTx $ map runIdentity <$>
                      Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
       return $ FieldPlan fName (Just txtSQL) $ Just planLines
@@ -114,32 +121,36 @@ explainField userInfo gCtx sqlGenCtx actionExecuter fld =
     orderByCtx = _gOrdByCtx gCtx
 
 explainGQLQuery
-  :: (MonadError QErr m, MonadIO m,HasVersion)
+  :: (MonadError QErr m, MonadIO m, HasVersion)
   => PGExecCtx
   -> SchemaCache
   -> SQLGenCtx
-  -> Bool
   -> QueryActionExecuter
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query userVarsRaw) = do
+explainGQLQuery pgExecCtx sc sqlGenCtx actionExecuter (GQLExplain query userVarsRaw maybeIsRelay) = do
+  -- NOTE!: we will be executing what follows as though admin role. See e.g.
+  -- notes in explainField:
   userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
+  -- we don't need to check in allow list as we consider it an admin endpoint
   (execPlan, queryReusability) <- runReusabilityT $
-    E.getExecPlanPartial userInfo sc enableAL query
+    E.getExecPlanPartial userInfo sc queryType query
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet) ->
       return (gCtx, rootSelSet)
-    E.GExPRemote _ _  ->
+    E.GExPRemote{}  ->
       throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
     GV.RQuery selSet ->
-      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx actionExecuter)
-      (toList selSet)
+      runInTx $ encJFromJValue . map snd <$>
+        GV.traverseObjectSelectionSet selSet (explainField userInfo gCtx sqlGenCtx actionExecuter)
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
-    GV.RSubscription rootField -> do
-      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter rootField
+    GV.RSubscription fields -> do
+      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo
+                     queryReusability actionExecuter fields
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
+    queryType = bool E.QueryHasura E.QueryRelay $ fromMaybe False maybeIsRelay
     sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly
