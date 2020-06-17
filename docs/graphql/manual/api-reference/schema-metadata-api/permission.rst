@@ -166,7 +166,7 @@ InsertPermission
 drop_insert_permission
 ----------------------
 
-A drop insert permission is used to drop an existing insert permission for a role on a table.
+The ``drop_insert_permission`` API is used to drop an existing insert permission for a role on a table.
 
 An example:
 
@@ -318,7 +318,7 @@ SelectPermission
 drop_select_permission
 ----------------------
 
-A drop select permission is used to drop an existing select permission for a role on a table.
+The ``drop_select_permission`` is used to drop an existing select permission for a role on a table.
 
 An example:
 

@@ -55,7 +55,7 @@ API Reference - Mutation
      - ConflictClause_
      - Converts *insert* to *upsert* by handling conflict
 
-**E.g. INSERT**:
+**Example: INSERT**
 
 .. code-block:: graphql
 
@@ -76,7 +76,7 @@ API Reference - Mutation
       }
     }
 
-**E.g. UPSERT**:
+**Example: UPSERT**
 
 .. code-block:: graphql
 
@@ -140,7 +140,7 @@ API Reference - Mutation
      - ConflictClause_
      - Converts *insert* to *upsert* by handling conflict
 
-**E.g. INSERT ONE**:
+**Example: INSERT ONE**
 
 .. code-block:: graphql
 
@@ -220,7 +220,7 @@ API Reference - Mutation
      - deleteAtPathArgExp_
      - Element at path to be deleted in the value of JSONB columns in the table
 
-**E.g. UPDATE BY PK**:
+**Example: UPDATE BY PK**
 
 .. code-block:: graphql
 
@@ -303,7 +303,7 @@ API Reference - Mutation
      - MutationResponse_
      - Object to be returned after mutation succeeds
 
-**E.g. UPDATE**:
+**Example: UPDATE**
 
 .. code-block:: graphql
 
@@ -347,7 +347,7 @@ API Reference - Mutation
      - Value
      - Name of the auto-generated delete mutation field, e.g. *delete_author_by_pk*
 
-**E.g. DELETE BY PK**:
+**Example: DELETE BY PK**
 
 .. code-block:: graphql
 
@@ -398,7 +398,7 @@ API Reference - Mutation
      - MutationResponse_
      - Object to be returned after mutation succeeds
 
-**E.g. DELETE**:
+**Example: DELETE**
 
 .. code-block:: graphql
 
@@ -436,7 +436,7 @@ Mutation response
       }
     }
 
-E.g.:
+**Example**
 
 .. code-block:: graphql
 
@@ -473,7 +473,7 @@ E.g.:
     ]
     # no nested objects
 
-E.g.:
+**Example**
 
 .. code-block:: graphql
 
@@ -512,7 +512,7 @@ E.g.:
     }
 
 
-E.g.:
+**Example**
 
 .. code-block:: graphql
 
@@ -543,7 +543,7 @@ table has *update* permissions defined.
       where: table_bool_exp
     }
 
-E.g.:
+**Example**
 
 .. code-block:: graphql
 
@@ -567,7 +567,7 @@ The ``pk_columns`` argument is used to identify an object by its primary key col
       column-2: value-2
     }
 
-E.g.:
+**Example**
 
 .. code-block:: graphql
 
@@ -712,7 +712,7 @@ Operator
      ..
    }
 
-E.g.
+**Example**
 
 .. code-block:: json
 
@@ -734,7 +734,7 @@ E.g.
      ..
    }
 
-E.g.
+**Example**
 
 .. code-block:: json
 
