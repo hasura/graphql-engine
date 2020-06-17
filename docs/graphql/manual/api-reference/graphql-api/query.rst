@@ -54,7 +54,7 @@ API Reference - Query / Subscription
       }
     }
 
-**Example: Subscription**:
+**Example: Subscription**
 
 .. code-block:: graphql
 

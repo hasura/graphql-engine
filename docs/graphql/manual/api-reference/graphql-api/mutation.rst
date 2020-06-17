@@ -55,7 +55,7 @@ API Reference - Mutation
      - ConflictClause_
      - Converts *insert* to *upsert* by handling conflict
 
-**Example: INSERT**
+**Example: Insert**
 
 .. code-block:: graphql
 
@@ -76,7 +76,7 @@ API Reference - Mutation
       }
     }
 
-**Example: UPSERT**
+**Example: Upsert**
 
 .. code-block:: graphql
 
@@ -140,7 +140,7 @@ API Reference - Mutation
      - ConflictClause_
      - Converts *insert* to *upsert* by handling conflict
 
-**Example: INSERT ONE**
+**Example: Insert One**
 
 .. code-block:: graphql
 
@@ -220,7 +220,7 @@ API Reference - Mutation
      - deleteAtPathArgExp_
      - Element at path to be deleted in the value of JSONB columns in the table
 
-**Example: UPDATE BY PK**
+**Example: Update by PK**
 
 .. code-block:: graphql
 
@@ -303,7 +303,7 @@ API Reference - Mutation
      - MutationResponse_
      - Object to be returned after mutation succeeds
 
-**Example: UPDATE**
+**Example: Update**
 
 .. code-block:: graphql
 
@@ -347,7 +347,7 @@ API Reference - Mutation
      - Value
      - Name of the auto-generated delete mutation field, e.g. *delete_author_by_pk*
 
-**Example: DELETE BY PK**
+**Example: Delete by PK**
 
 .. code-block:: graphql
 
@@ -398,7 +398,7 @@ API Reference - Mutation
      - MutationResponse_
      - Object to be returned after mutation succeeds
 
-**Example: DELETE**
+**Example: Delete**
 
 .. code-block:: graphql
 
@@ -602,6 +602,17 @@ AndExp
     }
 
 
+**Example**
+
+.. code-block:: graphql
+
+  _and: [
+    {
+      rating: {_gt: 5}}, 
+      {updated_at: {_gt: "2019-01-01"}
+    }
+  ]
+
 OrExp
 #####
 
@@ -610,6 +621,17 @@ OrExp
     {
       _or: [BoolExp_]
     }
+
+**Example**
+
+.. code-block:: graphql
+
+  _or: [
+    {
+      rating: {_is_null: true}}, 
+      {rating: {_lt: 4}
+    }
+  ]
 
 NotExp
 ######
@@ -620,6 +642,13 @@ NotExp
       _not: BoolExp_
     }
 
+**Example**
+
+.. code-block:: graphql
+
+  _not: {
+    title: {_eq: ""}
+  }
 
 TrueExp
 #######
@@ -627,6 +656,12 @@ TrueExp
 .. parsed-literal::
 
     {}
+
+**Example**
+
+.. code-block:: graphql
+
+  {rating: {}}
 
 ColumnExp
 #########
@@ -636,6 +671,12 @@ ColumnExp
     {
       field-name: {Operator_: Value }
     }
+
+**Example**
+
+.. code-block:: graphql
+
+  {rating: {_eq: 5}}
 
 Operator
 ########
