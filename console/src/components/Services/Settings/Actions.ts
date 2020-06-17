@@ -787,22 +787,3 @@ type MetadataReducerAction = {
     | typeof DELETE_ALLOW_LIST;
   data: Array<Query> | Query | string | Array<object> | UpdateAllowedQuery;
 };
-
-export type AppState = {
-  tables: {
-    dataHeaders: HeadersInit;
-    allSchemas: MetadataObject[];
-    trackedFunctions: MetadataObject[];
-  };
-  remoteSchemas: {
-    listData: {
-      remoteSchemas: MetadataObject[];
-    };
-  };
-  metadata: SettingsState;
-  actions: {
-    common: {
-      actions: MetadataObject[];
-    };
-  };
-};
