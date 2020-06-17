@@ -54,6 +54,7 @@ import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates             (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
+import           Hasura.Server.Migrate                  (migrateCatalog)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
@@ -149,8 +150,8 @@ initialiseCtx hgeCmd rci = do
   instanceId <- liftIO generateInstanceId
   connInfo <- liftIO procConnInfo
   latch <- liftIO newShutdownLatch
-  (loggers, pool) <- case hgeCmd of
-    -- for server command generate a proper pool
+  (loggers, pool, sqlGenCtx) <- case hgeCmd of
+    -- for the @serve@ command generate a regular PG pool
     HCServe so@ServeOptions{..} -> do
       l@(Loggers _ logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
       -- log serve options
@@ -158,14 +159,15 @@ initialiseCtx hgeCmd rci = do
       -- log postgres connection info
       unLogger logger $ connInfoToLog connInfo
       pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
-      pure (l, pool)
+      pure (l, pool, SQLGenCtx soStringifyNum)
 
-    -- for other commands generate a minimal pool
+    -- for other commands generate a minimal PG pool
     _ -> do
       l@(Loggers _ _ pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       pool <- getMinimalPool pgLogger connInfo
-      pure (l, pool)
+      pure (l, pool, SQLGenCtx False)
 
+  migrateCatalogSchema (_lsLogger loggers) pool httpManager sqlGenCtx
   pure (InitCtx httpManager instanceId loggers connInfo pool latch, initTime)
   where
     procConnInfo =
@@ -180,6 +182,25 @@ initialiseCtx hgeCmd rci = do
       let logger = mkLogger loggerCtx
           pgLogger = mkPGLogger logger
       return $ Loggers loggerCtx logger pgLogger
+
+    -- initialize or migrate @hdb_catalog@ schema
+    migrateCatalogSchema logger pool httpManager sqlGenCtx = do
+      let pgExecCtx = mkPGExecCtx Q.Serializable pool
+          adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+      currentTime <- liftIO Clock.getCurrentTime
+      initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite $
+        migrateCatalog currentTime
+
+      migrationResult <-
+        initialiseResult `onLeft` \err -> do
+          unLogger logger StartupLog
+            { slLogLevel = LevelError
+            , slKind = "db_migrate"
+            , slInfo = A.toJSON err
+            }
+          liftIO exitFailure
+      unLogger logger migrationResult
+
 
 -- | Run a transaction and if an error is encountered, log the error and abort the program
 runTxIO :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO a

@@ -34,8 +34,6 @@ import qualified Database.PG.Query.Connection  as Q
 import qualified Language.Haskell.TH.Lib       as TH
 import qualified Language.Haskell.TH.Syntax    as TH
 
-import           Control.Lens                  (view, _2)
-import           Control.Monad.Unique
 import           Data.Time.Clock               (UTCTime)
 
 import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
@@ -45,7 +43,6 @@ import           Hasura.Server.Init            (DowngradeOptions (..))
 import           Hasura.RQL.Types
 import           Hasura.Server.Logging         (StartupLog (..))
 import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
-import           Hasura.Server.Version         (HasVersion)
 import           Hasura.SQL.Types
 import           System.Directory              (doesFileExist)
 
@@ -86,15 +83,12 @@ data MigrationPair m = MigrationPair
 
 migrateCatalog
   :: forall m
-   . ( HasVersion
-     , MonadIO m
+   . ( MonadIO m
      , MonadTx m
-     , MonadUnique m
-     , HasHttpManager m
-     , HasSQLGenCtx m
      )
   => UTCTime
-  -> m (MigrationResult, RebuildableSchemaCache m)
+  -- -> m (MigrationResult, RebuildableSchemaCache m)
+  -> m MigrationResult
 migrateCatalog migrationTime = do
   doesSchemaExist (SchemaName "hdb_catalog") >>= \case
     False -> initialize True
@@ -103,7 +97,7 @@ migrateCatalog migrationTime = do
       True  -> migrateFrom =<< getCatalogVersion
   where
     -- initializes the catalog, creating the schema if necessary
-    initialize :: Bool -> m (MigrationResult, RebuildableSchemaCache m)
+    initialize :: Bool -> m MigrationResult
     initialize createSchema =  do
       liftTx $ Q.catchE defaultTxErrorHandler $
         when createSchema $ do
@@ -120,9 +114,10 @@ migrateCatalog migrationTime = do
           <> "PostgreSQL server. Please make sure this extension is available."
 
       runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
-      schemaCache <- buildCacheAndRecreateSystemMetadata
+      -- schemaCache <- buildCacheAndRecreateSystemMetadata
       updateCatalogVersion
-      pure (MRInitialized, schemaCache)
+      -- pure (MRInitialized, schemaCache)
+      pure MRInitialized
       where
         needsPGCryptoError e@(Q.PGTxErr _ _ _ err) =
           case err of
@@ -142,11 +137,13 @@ migrateCatalog migrationTime = do
               <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
 
     -- migrates an existing catalog to the latest version from an existing verion
-    migrateFrom :: T.Text -> m (MigrationResult, RebuildableSchemaCache m)
+    -- migrateFrom :: T.Text -> m (MigrationResult, RebuildableSchemaCache m)
+    migrateFrom :: T.Text -> m MigrationResult
     migrateFrom previousVersion
       | previousVersion == latestCatalogVersionString = do
-          schemaCache <- buildRebuildableSchemaCache
-          pure (MRNothingToDo, schemaCache)
+          -- schemaCache <- buildRebuildableSchemaCache
+          -- pure (MRNothingToDo, schemaCache)
+          pure MRNothingToDo
       | [] <- neededMigrations =
           throw400 NotSupported $
             "Cannot use database previously used with a newer version of graphql-engine (expected"
@@ -154,16 +151,12 @@ migrateCatalog migrationTime = do
               <> " is " <> previousVersion <> ")."
       | otherwise = do
           traverse_ (mpMigrate . snd) neededMigrations
-          schemaCache <- buildCacheAndRecreateSystemMetadata
+          -- schemaCache <- buildCacheAndRecreateSystemMetadata
           updateCatalogVersion
-          pure (MRMigrated previousVersion, schemaCache)
+          -- pure (MRMigrated previousVersion, schemaCache)
+          pure $ MRMigrated previousVersion
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
-
-    buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
-    buildCacheAndRecreateSystemMetadata = do
-      schemaCache <- buildRebuildableSchemaCache
-      view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
 
     updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 

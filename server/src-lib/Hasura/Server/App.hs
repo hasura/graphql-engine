@@ -11,7 +11,7 @@ import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Aeson                             hiding (json)
 import           Data.Int                               (Int64)
 import           Data.IORef
-import           Data.Time.Clock                        (UTCTime, getCurrentTime)
+import           Data.Time.Clock                        (UTCTime)
 import           Data.Time.Clock.POSIX                  (getPOSIXTime)
 import           Network.Mime                           (defaultMimeLookup)
 import           System.Exit                            (exitFailure)
@@ -50,7 +50,7 @@ import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware               (corsMiddleware)
-import           Hasura.Server.Migrate                  (migrateCatalog)
+import           Hasura.Server.Migrate                  (recreateSystemMetadata)
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
@@ -512,7 +512,7 @@ mkWaiApp
 mkWaiApp isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig = do
 
-    (planCache, schemaCacheRef, cacheBuiltTime) <- migrateAndInitialiseSchemaCache
+    (planCache, schemaCacheRef, cacheBuiltTime) <- initialiseSchemaCache
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
@@ -560,30 +560,33 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager 
     getTimeMs :: IO Int64
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
-    migrateAndInitialiseSchemaCache :: m (E.PlanCache, SchemaCacheRef, Maybe UTCTime)
-    migrateAndInitialiseSchemaCache = do
+    buildCacheAndRecreateSystemMetadata :: Run (RebuildableSchemaCache Run)
+    buildCacheAndRecreateSystemMetadata = do
+      schemaCache <- buildRebuildableSchemaCache
+      view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
+
+    initialiseSchemaCache :: m (E.PlanCache, SchemaCacheRef, Maybe UTCTime)
+    initialiseSchemaCache = do
       let pgExecCtx = mkPGExecCtx Q.Serializable pool
           adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
-      currentTime <- liftIO getCurrentTime
       initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite do
-        (,) <$> migrateCatalog currentTime <*> liftTx fetchLastUpdate
+        (,) <$> buildCacheAndRecreateSystemMetadata <*> liftTx fetchLastUpdate
 
-      ((migrationResult, schemaCache), lastUpdateEvent) <-
+      (schemaCache, lastUpdateEvent) <-
         initialiseResult `onLeft` \err -> do
           L.unLogger logger StartupLog
             { slLogLevel = L.LevelError
-            , slKind = "db_migrate"
+            , slKind = "initialize_cache"
             , slInfo = toJSON err
             }
           liftIO exitFailure
-      L.unLogger logger migrationResult
 
       cacheLock <- liftIO $ newMVar ()
       cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
       planCache <- liftIO $ E.initPlanCache planCacheOptions
       let cacheRef = SchemaCacheRef cacheLock cacheCell (E.clearPlanCache planCache)
-
       pure (planCache, cacheRef, view _2 <$> lastUpdateEvent)
+
 
 httpApp
   :: ( HasVersion
