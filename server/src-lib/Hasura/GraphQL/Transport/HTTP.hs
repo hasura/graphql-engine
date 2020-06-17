@@ -1,4 +1,5 @@
 -- | Execution of GraphQL queries over HTTP transport
+{-# LANGUAGE RecordWildCards #-}
 module Hasura.GraphQL.Transport.HTTP
   ( runGQ
   , runGQBatched
@@ -12,7 +13,7 @@ module Hasura.GraphQL.Transport.HTTP
   ) where
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.Prelude
@@ -24,7 +25,6 @@ import           Hasura.Session
 
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
-import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
@@ -38,6 +38,7 @@ runGQ
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
      , E.MonadGQLExecutionCheck m
+     , MonadQueryLog m
      )
   => RequestId
   -> UserInfo
@@ -82,6 +83,7 @@ runGQBatched
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
      , E.MonadGQLExecutionCheck m
+     , MonadQueryLog m
      )
   => RequestId
   -> ResponseInternalErrorsConfig
@@ -115,6 +117,7 @@ runHasuraGQ
   :: ( MonadIO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
+     , MonadQueryLog m
      )
   => RequestId
   -> GQLReqUnparsed
@@ -124,22 +127,37 @@ runHasuraGQ
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runHasuraGQ reqId query userInfo resolvedOp = do
+-- <<<<<<< HEAD
+--   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
+--   logQuery' logger
+--   (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ case resolvedOp of
+--     E.ExOpQuery tx _ -> do
+--       ([],) <$> runLazyTx' pgExecCtx tx
+-- =======
   (E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _) <- ask
+  logQuery' logger
   (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ case resolvedOp of
-    E.ExOpQuery tx genSql -> do
+    E.ExOpQuery tx _genSql -> do
       -- log the generated SQL and the graphql query
-      L.unLogger logger $ QueryLog query genSql reqId
+      -- L.unLogger logger $ QueryLog query genSql reqId
       ([],) <$> runQueryTx pgExecCtx tx
 
     E.ExOpMutation respHeaders tx -> do
-      -- log the graphql query
-      L.unLogger logger $ QueryLog query Nothing reqId
       (respHeaders,) <$> runLazyTx pgExecCtx Q.ReadWrite (withUserInfo userInfo tx)
 
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"
+
   (respHdrs, resp) <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
       telemQueryType = case resolvedOp of E.ExOpMutation{} -> Telem.Mutation ; _ -> Telem.Query
   return (telemTimeIO, telemQueryType, respHdrs, json)
+
+  where
+    logQuery' logger = case resolvedOp of
+      -- log the generated SQL and the graphql query
+      E.ExOpQuery _ genSql -> logQueryLog logger query genSql reqId
+      -- log the graphql query
+      E.ExOpMutation _ _   -> logQueryLog logger query Nothing reqId
+      E.ExOpSubs _         -> return ()

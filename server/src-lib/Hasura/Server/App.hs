@@ -48,6 +48,7 @@ import           Hasura.Server.Auth                     (AuthMode (..), UserAuth
 import           Hasura.Server.Compression
 import           Hasura.Server.Cors
 import           Hasura.Server.Init
+import           Hasura.GraphQL.Logging                 (MonadQueryLog(..))
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware               (corsMiddleware)
 import           Hasura.Server.Migrate                  (recreateSystemMetadata)
@@ -329,7 +330,12 @@ v1QueryHandler query = do
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
 v1Alpha1GQHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m)
+-- <<<<<<< HEAD
+--   :: (HasVersion, MonadIO m, MonadQueryLog m)
+--   => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
+-- v1Alpha1GQHandler query = do
+-- =======
+  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m)
   => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1Alpha1GQHandler queryType query = do
   userInfo <- asks hcUser
@@ -351,13 +357,16 @@ v1Alpha1GQHandler queryType query = do
     GH.runGQBatched requestId responseErrorsConfig userInfo ipAddress reqHeaders queryType query
 
 v1GQHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m)
+-- <<<<<<< HEAD
+--   :: (HasVersion, MonadIO m, MonadQueryLog m)
+-- =======
+  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m)
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler E.QueryHasura
 
 v1GQRelayHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m)
+  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m)
   => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 
@@ -485,6 +494,7 @@ mkWaiApp
      , LA.Forall (LA.Pure m)
      , ConsoleRenderer m
      , HttpLog m
+     , MonadQueryLog m
      , UserAuthentication m
      , MetadataApiAuthorization m
      , E.MonadGQLExecutionCheck m
@@ -598,6 +608,7 @@ httpApp
      , MetadataApiAuthorization m
      , E.MonadGQLExecutionCheck m
      , MonadConfigApiHandler m
+     , MonadQueryLog m
      )
   => CorsConfig
   -> ServerCtx
