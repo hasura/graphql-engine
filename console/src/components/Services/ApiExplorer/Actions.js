@@ -44,6 +44,20 @@ const CREATE_WEBSOCKET_CLIENT = 'ApiExplorer/CREATE_WEBSOCKET_CLIENT';
 const FOCUS_ROLE_HEADER = 'ApiExplorer/FOCUS_ROLE_HEADER';
 const UNFOCUS_ROLE_HEADER = 'ApiExplorer/UNFOCUS_ROLE_HEADER';
 
+let websocketSubscriptionClient;
+
+const getSubscriptionInstance = (url, headers) => {
+  return new SubscriptionClient(url, {
+    connectionParams: {
+      headers: {
+        ...headers,
+      },
+      lazy: true,
+    },
+    reconnect: true,
+  });
+};
+
 const SET_LOADING = 'ApiExplorer/SET_LOADING';
 export const setLoading = isLoading => ({
   type: SET_LOADING,
@@ -163,15 +177,15 @@ const createWsClient = (url, headers) => {
   const websocketProtocol = gqlUrl.protocol === 'https:' ? 'wss' : 'ws';
   const headersFinal = getHeadersAsJSON(headers);
   const graphqlUrl = `${websocketProtocol}://${url.split('//')[1]}`;
-  const client = new SubscriptionClient(graphqlUrl, {
-    connectionParams: {
-      headers: {
-        ...headersFinal,
-      },
-    },
-    reconnect: true,
-  });
-  return client;
+
+  if (!websocketSubscriptionClient) {
+    websocketSubscriptionClient = getSubscriptionInstance(
+      graphqlUrl,
+      headersFinal
+    );
+  }
+
+  return websocketSubscriptionClient;
 };
 
 const graphqlSubscriber = (graphQLParams, url, headers) => {
