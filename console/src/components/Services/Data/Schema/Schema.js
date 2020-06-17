@@ -58,12 +58,11 @@ const OpenCreateSection = React.forwardRef(
     <div className={styles.display_inline + ' ' + styles.add_mar_left}>
       <div className={styles.display_inline}>
         <input
-          id="schema-name-input"
           type="text"
           value={value}
           onChange={handleInputChange}
           placeholder="schema_name"
-          className={'form-control input-sm ' + styles.display_inline}
+          className={`form-control input-sm ${styles.display_inline}`}
           ref={ref}
         />
       </div>
@@ -109,7 +108,7 @@ const CreateSchemaSection = React.forwardRef(
       <div className={`${styles.display_flex}`}>
         {createSchemaOpen ? (
           <OpenCreateSection
-            schemaNameInputRef={ref}
+            ref={ref}
             value={schemaNameEdit}
             handleInputChange={handleSchemaNameChange}
             handleCreate={handleCreateClick}
