@@ -19,6 +19,7 @@ import {
   passDeleteRow,
   passBulkDeleteRows,
   passBulkDeleteAllRows,
+  passArrayDataType,
 } from './spec';
 
 import { setMetaData } from '../../validators/validators';
@@ -36,6 +37,7 @@ const setup = () => {
 export const runInsertBrowseTests = () => {
   describe('Table: Browse and Insert', () => {
     it('Create a table with fields of all data types', passBICreateTable);
+    it('Handle array data types', passArrayDataType);
     it('Search for tables', passSearchTables);
     it('Check Insert Route', checkInsertRoute);
     it('Fails when entered wrong data type', failBIWrongDataType);
