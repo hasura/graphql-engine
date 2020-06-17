@@ -12,6 +12,7 @@ import {
   getColumnType,
   getTableColumn,
   getEnumColumnMappings,
+  arrayToPostgresArray,
 } from '../../../Common/utils/pgUtils';
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
 import { ARRAY } from '../utils';
@@ -84,7 +85,7 @@ const editItem = (tableName, colValues) => {
         } else if (colType === ARRAY && isStringArray(colValue)) {
           try {
             const arr = JSON.parse(colValue);
-            _setObject[colName] = `{${arr.join(',')}}`;
+            _setObject[colName] = arrayToPostgresArray(arr);
           } catch {
             errorMessage =
               colName + ' :: could not read ' + colValue + ' as a valid array';
