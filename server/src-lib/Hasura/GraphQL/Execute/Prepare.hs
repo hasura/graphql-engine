@@ -39,9 +39,10 @@ type PlanVariables = Map.HashMap G.Name Int
 -- prepared argument and not the binary encoding in PG format
 type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 
--- | Full execution plan to process one GraphQL query.  Contains a mixture of
--- things to run on the database and things to run on remote schemata.
-type ExecutionPlan db remote raw = NESeq.NESeq (ExecutionStep db remote raw)
+-- | Full execution plan to process one GraphQL query.  Once we work on
+-- heterogeneous execution this will contain a mixture of things to run on the
+-- database and things to run on remote schemata.
+type ExecutionPlan db remote raw = ExecutionStep db remote raw
 
 type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.FragmentSpread G.Name)
 

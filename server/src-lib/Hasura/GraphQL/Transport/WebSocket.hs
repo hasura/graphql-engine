@@ -31,7 +31,6 @@ import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
 import qualified Network.WebSockets                          as WS
 import qualified StmContainers.Map                           as STMMap
-import qualified Data.Sequence.NonEmpty                      as NESeq
 
 import           Control.Concurrent.Extended                 (sleep)
 import           Control.Exception.Lifted
@@ -315,7 +314,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   case execPlan of
     E.QueryExecutionPlan queryPlan -> do
-      case NESeq.head queryPlan of
+      case queryPlan of
         E.ExecStepDB (tx, genSql) ->
           execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local (Just genSql) requestId q $
             runLazyTx' pgExecCtx tx
@@ -325,7 +324,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local Nothing requestId q $
           return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
     E.MutationExecutionPlan mutationPlan -> do
-      case NESeq.head mutationPlan of
+      case mutationPlan of
         E.ExecStepDB tx ->
           execQueryOrMut timerTot Telem.Mutation telemCacheHit Telem.Local Nothing requestId q $
             runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo tx
@@ -335,7 +334,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local Nothing requestId q $
           return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
     E.SubscriptionExecutionPlan subscriptionPlan ->
-      case NESeq.head subscriptionPlan of
+      case subscriptionPlan of
         E.ExecStepDB lqOp -> do
           -- log the graphql query
           L.unLogger logger $ QueryLog q Nothing requestId

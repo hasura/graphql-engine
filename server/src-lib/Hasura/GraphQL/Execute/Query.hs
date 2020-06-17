@@ -14,6 +14,7 @@ import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.IntMap                            as IntMap
+import qualified Data.Sequence                          as Seq
 import qualified Data.Sequence.NonEmpty                 as NESeq
 import qualified Data.TByteString                       as TBS
 import qualified Database.PG.Query                      as Q
@@ -182,34 +183,23 @@ convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
     traverseDB (pure . irToRootFieldPlan planVars planVals) preparedQuery
 
   -- This monster makes sure that consecutive database operation get executed together
-  let collect :: ExecutionPlan (NESeq.NESeq (G.Name, RootFieldPlan)) (G.Name, RemoteCall) (G.Name, J.Value)
-              -> G.Name
-              -> RootField PGPlan RemoteCall J.Value
-              -> ExecutionPlan (NESeq.NESeq (G.Name, RootFieldPlan)) (G.Name, RemoteCall) (G.Name, J.Value)
-      collect (plans NESeq.:||> ExecStepDB dbs) name (RFDB db)
-        = (plans NESeq.:||> ExecStepDB (dbs NESeq.|> (name, RFPPostgres db)))
-      collect plans                             name (RFRemote x)
-        = plans NESeq.|>    ExecStepRemote (name, x)
-      collect (plans NESeq.:||> ExecStepDB dbs) name (RFRaw raw)
-        = (plans NESeq.:||> ExecStepDB (dbs NESeq.|> (name, RFPRaw $ LBS.toStrict $ J.encode raw)))
-      collect plans                             name (RFRaw    x)
-        = plans NESeq.|>    ExecStepRaw    (name, x)
-      collect1 :: ExecutionPlan (NESeq.NESeq (G.Name, RootFieldPlan)) (G.Name, RemoteCall) (G.Name, J.Value)
-      collect1 = NESeq.singleton $ case head (OMap.toList queryPlans) of
-        (name, RFDB db) -> ExecStepDB $ NESeq.singleton (name, RFPPostgres db)
-        (name, RFRemote rem) -> ExecStepRemote (name, rem)
-        (name, RFRaw raw) -> ExecStepDB $ NESeq.singleton (name, RFPRaw $ LBS.toStrict $ J.encode raw)
-      -- TODO rather than this fromlist tolist mess, pass non-empty insertion ordered hash maps
-      collectedPlans :: ExecutionPlan (NESeq.NESeq (G.Name, RootFieldPlan)) (G.Name, RemoteCall) (G.Name, J.Value)
-      collectedPlans = OMap.foldlWithKey' collect collect1 $ OMap.fromList $ tail $ OMap.toList queryPlans
-      -- This is where PGPlans get converted to LazyRespTx's
-      dbTx :: ExecutionStep (NESeq.NESeq (G.Name, RootFieldPlan)) b c
-           -> m (ExecutionStep (LazyRespTx, GeneratedSqlMap) b c)
-      dbTx (ExecStepDB   seq) = ExecStepDB <$> mkCurPlanTx usrVars (toList seq)
-      dbTx (ExecStepRemote z) = pure (ExecStepRemote z)
-      dbTx (ExecStepRaw    z) = pure (ExecStepRaw    z)
-  executionPlan <- traverse dbTx collectedPlans
-
+  let dbPlans :: Seq.Seq (G.Name, RootFieldPlan)
+      remotePlans :: Seq.Seq (G.Name, RemoteCall)
+      (dbPlans, remotePlans) = OMap.foldlWithKey' collectPlan (Seq.Empty, Seq.Empty) queryPlans
+      collectPlan
+        :: (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteCall))
+        -> G.Name
+        -> RootField PGPlan RemoteCall J.Value
+        -> (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteCall))
+      collectPlan (seqDB, seqRemote) name (RFRemote rem) = (seqDB, seqRemote Seq.:|> (name, rem))
+      collectPlan (seqDB, seqRemote) name (RFDB db)      = (seqDB Seq.:|> (name, RFPPostgres db), seqRemote)
+      collectPlan (seqDB, seqRemote) name (RFRaw r)      =
+        (seqDB Seq.:|> (name, RFPRaw $ LBS.toStrict $ J.encode r), seqRemote)
+  executionPlan <- case (dbPlans, remotePlans) of
+    (Seq.Empty, Seq.Empty) -> throw500 "Unexpected empty execution plan for query"
+    (dbs, Seq.Empty) -> ExecStepDB <$> mkCurPlanTx usrVars (toList dbs)
+    (Seq.Empty, _) -> throw400 NotSupported "Remote schemata are not supported"
+    _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemata not supported"
   pure (executionPlan, Nothing, unpreparedQueries) -- FIXME ReusableQueryPlan
   where
     reportParseErrors errs = case NESeq.head errs of

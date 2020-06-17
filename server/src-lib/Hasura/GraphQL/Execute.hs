@@ -195,7 +195,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           queryTx <- EM.convertMutationSelectionSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
-          return $ MutationExecutionPlan $ NESeq.singleton $ EPr.ExecStepDB queryTx
+          return $ MutationExecutionPlan $ EPr.ExecStepDB queryTx
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs _ selSet -> do
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           -- Parse as query to check correctness
@@ -208,7 +208,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
           -- TODO we should check that there's only one root field (unless the appropriate directive is set)
           (lqOp, plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
           -- getSubsOpM pgExecCtx userInfo inlinedSelSet
-          return $ SubscriptionExecutionPlan $ NESeq.singleton $ EPr.ExecStepDB lqOp
+          return $ SubscriptionExecutionPlan $ EPr.ExecStepDB lqOp
 
       -- forM partialExecPlan $ \(gCtx, rootSelSet) ->
       --   case rootSelSet of

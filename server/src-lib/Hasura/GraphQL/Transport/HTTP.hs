@@ -23,7 +23,6 @@ import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Data.Sequence.NonEmpty                 as NESeq
 
 runGQ
   :: ( HasVersion
@@ -45,7 +44,7 @@ runGQ reqId userInfo reqHdrs req = do
                 userInfo sqlGenCtx enableAL sc scVer httpManager reqHdrs req
     case execPlan of
       E.QueryExecutionPlan queryPlan -> do
-        case NESeq.head queryPlan of
+        case queryPlan of
           E.ExecStepDB txGenSql -> do
             (telemTimeIO, telemQueryType, resp) <- runQueryDB reqId req userInfo txGenSql
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp Nothing))
@@ -56,7 +55,7 @@ runGQ reqId userInfo reqHdrs req = do
               return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
             return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj Nothing))
       E.MutationExecutionPlan mutationPlan -> do
-        case NESeq.head mutationPlan of
+        case mutationPlan of
           E.ExecStepDB tx -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId req userInfo tx
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp Nothing))
