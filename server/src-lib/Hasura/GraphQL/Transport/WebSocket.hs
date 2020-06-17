@@ -41,10 +41,6 @@ import           GHC.AssertNF
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
--- =======
--- import           Hasura.GraphQL.Logging
-
--- >>>>>>> master
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
@@ -299,10 +295,6 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAdress = do
             <> "CORS on websocket connections, then you can use the flag --ws-read-cookie or "
             <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
--- <<<<<<< HEAD
-
--- onStart :: forall m. (HasVersion, MonadIO m, MonadQueryLog m) => WSServerEnv -> WSConn -> StartMsg -> m ()
--- =======
 onStart
   :: forall m. (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m)
   => WSServerEnv -> WSConn -> StartMsg -> m ()
@@ -479,13 +471,6 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     -- on change, send message on the websocket
     liveQOnChange :: LQ.OnChange
--- <<<<<<< HEAD
---     liveQOnChange (GQSuccess (LQ.LiveQueryResponse bs dTime)) =
---       sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRHasura $ GQSuccess bs) $
---         LQ.LiveQueryMetadata dTime
---     liveQOnChange resp = sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $
---       LQ._lqrPayload <$> resp
--- =======
     liveQOnChange = \case
       GQSuccess (LQ.LiveQueryResponse bs dTime) ->
         sendMsgWithMetadata wsConn
@@ -498,9 +483,6 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     catchAndIgnore m = void $ runExceptT m
 
 onMessage
--- <<<<<<< HEAD
---   :: (HasVersion, MonadIO m, UserAuthentication m, MonadQueryLog m)
--- =======
   :: (HasVersion, MonadIO m, UserAuthentication m, E.MonadGQLExecutionCheck m, MonadQueryLog m)
   => AuthMode
   -> WSServerEnv

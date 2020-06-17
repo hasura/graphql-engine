@@ -404,34 +404,6 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opType = do
   execCtx <- ask
   let logger  = _ecxLogger execCtx
       manager = _ecxHttpManager execCtx
--- <<<<<<< HEAD
---       opTy    = G._todType opDef
---   when (opTy == G.OperationTypeSubscription) $
---     throw400 NotSupported "subscription to remote server is not supported"
---   confHdrs <- makeHeadersFromConf hdrConf
---   let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
---       -- filter out duplicate headers
---       -- priority: conf headers > resolved userinfo vars > client headers
---       hdrMaps    = [ Map.fromList confHdrs
---                    , Map.fromList userInfoToHdrs
---                    , Map.fromList clientHdrs
---                    ]
---       headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
---       finalHeaders = addDefaultHeaders headers
---   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
---   initReq <- either httpThrow pure initReqE
---   let req = initReq
---            { HTTP.method = "POST"
---            , HTTP.requestHeaders = finalHeaders
---            , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
---            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
---            }
-
---   logQueryLog logger q Nothing reqId
---   (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req manager
---   resp <- either httpThrow return res
---   let !httpResp = HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) $ mkSetCookieHeaders resp
--- =======
   -- L.unLogger logger $ QueryLog q Nothing reqId
   logQueryLog logger q Nothing reqId
   (time, respHdrs, resp) <- execRemoteGQ' manager userInfo reqHdrs q rsi opType

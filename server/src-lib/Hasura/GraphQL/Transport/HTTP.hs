@@ -127,13 +127,6 @@ runHasuraGQ
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runHasuraGQ reqId query userInfo resolvedOp = do
--- <<<<<<< HEAD
---   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
---   logQuery' logger
---   (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ case resolvedOp of
---     E.ExOpQuery tx _ -> do
---       ([],) <$> runLazyTx' pgExecCtx tx
--- =======
   (E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _) <- ask
   logQuery' logger
   (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ case resolvedOp of
