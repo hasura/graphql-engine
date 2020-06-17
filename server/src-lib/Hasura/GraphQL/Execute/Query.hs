@@ -190,13 +190,15 @@ convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
         = (plans NESeq.:||> ExecStepDB (dbs NESeq.|> (name, RFPPostgres db)))
       collect plans                             name (RFRemote x)
         = plans NESeq.|>    ExecStepRemote (name, x)
+      collect (plans NESeq.:||> ExecStepDB dbs) name (RFRaw raw)
+        = (plans NESeq.:||> ExecStepDB (dbs NESeq.|> (name, RFPRaw $ LBS.toStrict $ J.encode raw)))
       collect plans                             name (RFRaw    x)
         = plans NESeq.|>    ExecStepRaw    (name, x)
       collect1 :: ExecutionPlan (NESeq.NESeq (G.Name, RootFieldPlan)) (G.Name, RemoteCall) (G.Name, J.Value)
       collect1 = NESeq.singleton $ case head (OMap.toList queryPlans) of
         (name, RFDB db) -> ExecStepDB $ NESeq.singleton (name, RFPPostgres db)
         (name, RFRemote rem) -> ExecStepRemote (name, rem)
-        (name, RFRaw raw) -> ExecStepRaw (name, raw)
+        (name, RFRaw raw) -> ExecStepDB $ NESeq.singleton (name, RFPRaw $ LBS.toStrict $ J.encode raw)
       -- TODO rather than this fromlist tolist mess, pass non-empty insertion ordered hash maps
       collectedPlans :: ExecutionPlan (NESeq.NESeq (G.Name, RootFieldPlan)) (G.Name, RemoteCall) (G.Name, J.Value)
       collectedPlans = OMap.foldlWithKey' collect collect1 $ OMap.fromList $ tail $ OMap.toList queryPlans
