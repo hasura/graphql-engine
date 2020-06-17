@@ -585,6 +585,14 @@ The ``pk_columns`` argument is used to identify an object by its primary key col
 
     where: BoolExp_
 
+**Example**
+
+.. code-block:: graphql
+
+  where: {
+    rating: {_eq: 5}
+  }
+
 BoolExp
 *******
 
@@ -607,10 +615,8 @@ AndExp
 .. code-block:: graphql
 
   _and: [
-    {
-      rating: {_gt: 5}}, 
-      {updated_at: {_gt: "2019-01-01"}
-    }
+    {rating: {_gt: 5}}, 
+    {updated_at: {_gt: "2019-01-01"}}
   ]
 
 OrExp
@@ -627,10 +633,8 @@ OrExp
 .. code-block:: graphql
 
   _or: [
-    {
-      rating: {_is_null: true}}, 
-      {rating: {_lt: 4}
-    }
+    {rating: {_is_null: true}}, 
+    {rating: {_lt: 4}}
   ]
 
 NotExp

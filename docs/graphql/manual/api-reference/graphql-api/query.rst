@@ -725,6 +725,32 @@ CastExp
 
     {type-name: {Operator_: Value}}
 
+*Example*
+
+.. code-block:: graphql
+
+  query MyQuery($coordinate: geography!) {
+    postgis_test_table(
+      where: {
+        geometry_column: {
+          _cast: {
+            geography: { _st_d_within: { distance: 1000000, from: $coordinate } }
+          }
+        }
+      }
+    ) {
+      id
+    }
+  }
+  
+  Variables:
+  {
+    "coordinate": {
+      "type": "Point",
+      "coordinates": [ 2.5559, 49.0083 ]
+    }
+  }
+
 .. note::
 
    Currently, only casting between ``geometry`` and ``geography`` types is allowed.
