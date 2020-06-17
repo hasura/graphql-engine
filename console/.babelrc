@@ -8,7 +8,6 @@
     "babel-plugin-styled-components",
     "transform-react-remove-prop-types",
     "@babel/plugin-proposal-class-properties",
-    "@babel/plugin-proposal-export-default-from",
     "@babel/plugin-proposal-nullish-coalescing-operator",
     "extract-hoc/babel",
     "react-hot-loader/babel",
