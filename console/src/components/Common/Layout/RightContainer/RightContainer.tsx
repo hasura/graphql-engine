@@ -17,5 +17,5 @@ const RightContainer: React.FC = ({ children }) => {
 };
 
 const rightContainerConnector = (connect: Connect) => connect()(RightContainer);
-export {RightContainer}
+export { RightContainer };
 export default rightContainerConnector;

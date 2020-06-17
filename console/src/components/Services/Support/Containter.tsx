@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, RouteComponentProps } from 'react-router';
+import { Link } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
@@ -10,20 +10,16 @@ import { MapStateToProps } from '../../../types';
 
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
 import styles from '../../Common/TableCommon/Table.scss';
+
 interface Props extends InjectedProps {}
 
 const Container: React.FC<Props> = props => {
-  const {
-    children,
-  } = props;
+  const { children } = props;
 
   const sidebarContent = (
     <ul>
-      <li
-        role="presentation"
-        className={styles.active}
-      >
-        <Link className={styles.linkBorder} to={'/support/forum'}>
+      <li role="presentation" className={styles.active}>
+        <Link className={styles.linkBorder} to="/support/forum">
           Support Forums
         </Link>
       </li>
@@ -41,18 +37,14 @@ const Container: React.FC<Props> = props => {
   );
 };
 
-
-const mapStateToProps: MapStateToProps<PropsFromState > = (
-  state,
-  ownProps
-) => {
+const mapStateToProps: MapStateToProps<PropsFromState> = state => {
   return {
-    serverVersion: state.main.serverVersion
+    serverVersion: state.main.serverVersion,
   };
 };
 
 type PropsFromState = {
-  serverVersion: string
+  serverVersion: string;
 };
 
 const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);

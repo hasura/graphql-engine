@@ -29,7 +29,7 @@ import generatedVoyagerConnector from './components/Services/VoyagerView/Voyager
 
 import generatedLoginConnector from './components/Login/Login';
 
-import {getSupportRouter} from './components/Services/Support';
+import { getSupportRouter } from './components/Services/Support';
 import settingsContainer from './components/Services/Settings/Container';
 import metadataOptionsConnector from './components/Services/Settings/MetadataOptions/MetadataOptions';
 import metadataStatusConnector from './components/Services/Settings/MetadataStatus/MetadataStatus';

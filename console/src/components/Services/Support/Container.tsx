@@ -31,9 +31,7 @@ const Container: React.FC<Props> = props => {
 
   return (
     <PageContainer helmet={helmetTitle} leftContainer={leftContainer}>
-      <RightContainer>
-        {children}
-      </RightContainer>
+      <RightContainer>{children}</RightContainer>
     </PageContainer>
   );
 };

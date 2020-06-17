@@ -103,26 +103,38 @@ class Main extends React.Component {
     this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
   }
   toggleHelpPopup() {
-    this.setState({isHelpOpen: !this.state.isHelpOpen});
+    this.setState({ isHelpOpen: !this.state.isHelpOpen });
   }
   toggleLiveChatMode() {
-    this.setState({isChatOpen: !this.state.isChatOpen});
+    this.setState({ isChatOpen: !this.state.isChatOpen });
     if (!this.state.isChatOpen) {
-      if ( window.Intercom ) {
+      // to do
+      if (window.Intercom) {
         window.Intercom('boot', {
-           app_id: 'rucirpb3'
+          app_id: 'rucirpb3',
         });
       }
+      const head = document.getElementsByTagName('head')[0];
+      const script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.onload = () => {
+        window.Intercom('boot', {
+          app_id: 'rucirpb3',
+        });
+      };
+      // this token shouldn't be here I guess
+      script.src = `https://widget.intercom.io/widget/rucirpb3`;
+      head.appendChild(script);
     } else {
-      if ( window.Intercom ) {
-        const interCom = window.Intercom
+      if (window.Intercom) {
+        const interCom = window.Intercom;
         const hideIntercom = () => {
-          return interCom("shutdown")
-        }
-        hideIntercom()
+          return interCom('shutdown');
+        };
+        hideIntercom();
       }
     }
-  };
+  }
   setShowUpdateNotification() {
     const {
       latestStableServerVersion,
@@ -675,16 +687,17 @@ class Main extends React.Component {
             <ul>
               <li>
                 Enable Live Chat
-
                 <ToolTip
                   id="intercom-information"
                   placement="bottom"
                   message="By enabling live chat, we will inable Intercom for you on the console. No other data will be shared with this service. You can always enable & disable this feature as required."
                 >
-                  <img src={information} alt='Information'/>
+                  <img src={information} alt="Information" />
                 </ToolTip>
                 <div
-                  className={styles.liveChatModeToggle + ' ' + styles.cursorPointer}
+                  className={
+                    styles.liveChatModeToggle + ' ' + styles.cursorPointer
+                  }
                 >
                   <Toggle
                     checked={this.state.isChatOpen}
@@ -694,7 +707,11 @@ class Main extends React.Component {
                   />
                 </div>
               </li>
-              <li><Link to='/support/forum/'>Support Forums <img src={arrowForwardBlock} alt='Arrow'/></Link></li>
+              <li>
+                <Link to="/support/forum/">
+                  Support Forums <img src={arrowForwardBlock} alt="Arrow" />
+                </Link>
+              </li>
             </ul>
           </div>
         );
@@ -792,7 +809,7 @@ class Main extends React.Component {
                   tooltips.data,
                   getSchemaBaseRoute(currentSchema)
                 )}
-                  {getSidebarItem(
+                {getSidebarItem(
                   'Actions',
                   'fa-cogs',
                   tooltips.actions,
@@ -843,12 +860,12 @@ class Main extends React.Component {
                   {getSettingsSelectedMarker()}
                 </div>
               </Link>
-              <div className={styles.headerRightNavbarBtn + ' ' + styles.helpWrapper}>
-                <span
-                  onClick={this.toggleHelpPopup.bind(this)}
-                >
-                HELP
-                </span>
+              <div
+                className={
+                  styles.headerRightNavbarBtn + ' ' + styles.helpWrapper
+                }
+              >
+                <span onClick={this.toggleHelpPopup.bind(this)}>HELP</span>
                 {renderHelpPopup()}
               </div>
               {getLoveSection()}
