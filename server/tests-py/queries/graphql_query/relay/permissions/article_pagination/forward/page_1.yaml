@@ -1,0 +1,60 @@
+description: Get 1st page of articles with 3 items as user role
+url: /v1/relay
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '2'
+query:
+  query: |
+    query {
+      article_connection(
+        first: 3
+      ){
+        pageInfo{
+          startCursor
+          endCursor
+          hasPreviousPage
+          hasNextPage
+        }
+        edges{
+          cursor
+          node{
+            id
+            title
+            content
+            is_published
+            author_id
+          }
+        }
+      }
+    }
+response:
+  data:
+    article_connection:
+      pageInfo:
+        startCursor: eyJpZCIgOiAxfQ==
+        endCursor: eyJpZCIgOiA0fQ==
+        hasPreviousPage: false
+        hasNextPage: true
+      edges:
+      - cursor: eyJpZCIgOiAxfQ==
+        node:
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDFd
+          title: Article 1
+          content: Sample article content 1
+          is_published: true
+          author_id: 1
+      - cursor: eyJpZCIgOiAyfQ==
+        node:
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDJd
+          title: Article 2
+          content: Sample article content 2
+          is_published: true
+          author_id: 1
+      - cursor: eyJpZCIgOiA0fQ==
+        node:
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDRd
+          title: Article 4
+          content: Sample article content 4
+          is_published: true
+          author_id: 2
