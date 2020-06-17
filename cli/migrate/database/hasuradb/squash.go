@@ -17,6 +17,102 @@ import (
 
 type CustomQuery linq.Query
 
+func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) error {
+	remoteRelationshipTransition := transition.New(&remoteRelationshipConfig{})
+	remoteRelationshipTransition.Initial("new")
+	remoteRelationshipTransition.State("created")
+	remoteRelationshipTransition.State("updated")
+	remoteRelationshipTransition.State("deleted")
+
+	remoteRelationshipTransition.Event(createRemoteRelationship).To("created").From("new", "deleted")
+	remoteRelationshipTransition.Event(updateRemoteRelationship).To("updated").From("new", "created", "updated", "deleted")
+	remoteRelationshipTransition.Event(deleteRemoteRelationship).To("deleted").From("new", "created", "updated")
+
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		g := item.(linq.Group)
+		if g.Key == nil {
+			// ignore this because this is the default value for the key
+			continue
+		}
+		key, ok := g.Key.(remoteRelationshipMap)
+		if !ok {
+			continue
+		}
+		cfg := remoteRelationshipConfig{
+			tableName:  key.tableName,
+			schemaName: key.schemaName,
+			name:       key.name,
+		}
+		prevElems := make([]*list.Element, 0)
+		for _, val := range g.Group {
+			// possible inputs
+			// 1. create, update, update .....
+			// 2. create, update, update .........., delete
+			// 3. update, update, update ..........
+			// 4. update, update, ...., delete
+			// 5. update, update, ...., delete, create
+			element := val.(*list.Element)
+			switch obj := element.Value.(type) {
+			case *createRemoteRelationshipInput:
+				err := remoteRelationshipTransition.Trigger(createRemoteRelationship, &cfg, nil)
+				if err != nil {
+					return errors.Wrapf(err, "error squashing: %v", obj.Name)
+				}
+				prevElems = append(prevElems, element)
+			case *updateRemoteRelationshipInput:
+				if len(prevElems) != 0 {
+					if _, ok := prevElems[0].Value.(*createRemoteRelationshipInput); ok {
+						squashList.Remove(prevElems[0])
+						prevElems = prevElems[:0]
+						err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
+						if err != nil {
+							return errors.Wrapf(err, "error squashing: %v", obj.Name)
+						}
+
+						element.Value = obj.createRemoteRelationshipInput
+						prevElems = append(prevElems, element)
+						err = remoteRelationshipTransition.Trigger(createRemoteRelationship, &cfg, nil)
+						if err != nil {
+							return errors.Wrapf(err, "error squashing: %v", obj.Name)
+						}
+						continue
+					}
+
+					for _, e := range prevElems {
+						squashList.Remove(e)
+					}
+					prevElems = prevElems[:0]
+					err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
+					if err != nil {
+						return errors.Wrapf(err, "error squashing: %v", obj.Name)
+					}
+
+				}
+
+				prevElems = append(prevElems, element)
+				err := remoteRelationshipTransition.Trigger(updateRemoteRelationship, &cfg, nil)
+				if err != nil {
+					return errors.Wrapf(err, "error squashing: %v", obj.Name)
+				}
+			case *deleteRemoteRelationshipInput:
+				if cfg.GetState() == "created" {
+					prevElems = append(prevElems, element)
+				}
+				err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				for _, e := range prevElems {
+					squashList.Remove(e)
+				}
+				prevElems = prevElems[:0]
+			}
+		}
+	}
+	return nil
+}
 func (q CustomQuery) MergeEventTriggers(squashList *database.CustomList) error {
 	eventTriggerTransition := transition.New(&eventTriggerConfig{})
 	eventTriggerTransition.Initial("new")
@@ -95,7 +191,6 @@ func (q CustomQuery) MergeRelationships(squashList *database.CustomList) error {
 	relationshipTransition.Event("drop_relationship").To("dropped").From("new", "created")
 
 	next := q.Iterate()
-
 	for item, ok := next(); ok; item, ok = next() {
 		g := item.(linq.Group)
 		if g.Key == nil {
@@ -440,6 +535,21 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 					return fmt.Errorf("cannot set table %s on schema %s has a enum when it is untracked", tblCfg.name, tblCfg.schema)
 				}
 				prevElems = append(prevElems, element)
+			case *createRemoteRelationshipInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot create remote relationship on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
+			case *deleteRemoteRelationshipInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot delete remote relationship on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
+			case *updateRemoteRelationshipInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot update remote relationship on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
 			}
 		}
 	}
@@ -616,13 +726,13 @@ func (q CustomQuery) MergeAllowLists(squashList *database.CustomList) error {
 		for _, val := range g.Group {
 			element := val.(*list.Element)
 			switch element.Value.(type) {
-			case *addRemoteSchemaInput:
+			case *addCollectionToAllowListInput:
 				err := allowListTransition.Trigger("add_collection_to_allowlist", &alCfg, nil)
 				if err != nil {
 					return err
 				}
 				prevElems = append(prevElems, element)
-			case *removeRemoteSchemaInput:
+			case *dropCollectionFromAllowListInput:
 				if alCfg.GetState() == "added" {
 					prevElems = append(prevElems, element)
 				}
@@ -720,32 +830,9 @@ func (q CustomQuery) MergeQueryCollections(squashList *database.CustomList) erro
 	return nil
 }
 
-type customList struct {
-	*list.List
-}
-
-func (c *customList) Iterate() linq.Iterator {
-	length := c.Len()
-	var prevElem *list.Element
-	i := 0
-	return func() (item interface{}, ok bool) {
-		if length == 0 {
-			return
-		}
-
-		if i == 0 {
-			prevElem = c.Front()
-			i++
-		} else {
-			prevElem = prevElem.Next()
-			if prevElem == nil {
-				return
-			}
-		}
-		return prevElem, true
-	}
-}
-
+// PushList will read migration from source
+// for an sql migration it'll append it to the LinkedList
+// for a meta migration it'll append after some processing
 func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.CustomList) error {
 	migr, err := ioutil.ReadAll(migration)
 	if err != nil {
@@ -799,17 +886,40 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 					}
 				}
 				l.PushBack(actionType)
+			case *createRemoteRelationshipInput, *updateRemoteRelationshipInput:
+				if v.Type == updateRemoteRelationship {
+					createRemoteRelationship, ok := v.Args.(*createRemoteRelationshipInput)
+					if !ok {
+						continue
+					}
+					o := &updateRemoteRelationshipInput{
+						createRemoteRelationship,
+					}
+					l.PushBack(o)
+				}
+				if v.Type == createRemoteRelationship {
+					o, ok := v.Args.(*createRemoteRelationshipInput)
+					if !ok {
+						break
+					}
+					l.PushBack(o)
+				}
 			default:
 				l.PushBack(actionType)
 			}
 		}
 	default:
-		return fmt.Errorf("Invalid migration file type")
+		return fmt.Errorf("invalid migration file type")
 	}
 	return nil
 }
 
 func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
+	// get all event triggers groups
+	// ie let's say I have 2 event triggers named
+	// trigger1 and trigger2
+	// then I'll have two groups each containing elements
+	// corresponding to each trigger
 	eventTriggersGroup := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) string {
 			switch args := element.Value.(type) {
@@ -828,6 +938,37 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
+	remoteRelationShipsGroup := CustomQuery(linq.FromIterable(l).GroupByT(
+		func(element *list.Element) interface{} {
+			switch args := element.Value.(type) {
+			case *createRemoteRelationshipInput:
+				return remoteRelationshipMap{
+					tableName:  args.Table.Name,
+					schemaName: args.Table.Schema,
+					name:       args.Name,
+				}
+			case *updateRemoteRelationshipInput:
+				return remoteRelationshipMap{
+					tableName:  args.Table.Name,
+					schemaName: args.Table.Schema,
+					name:       args.Name,
+				}
+			case *deleteRemoteRelationshipInput:
+				return remoteRelationshipMap{
+					tableName:  args.Table.Name,
+					schemaName: args.Table.Schema,
+					name:       args.Name,
+				}
+			}
+			return nil
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err = remoteRelationShipsGroup.MergeRemoteRelationships(l)
+	if err != nil {
+		ret <- err
+	}
 	relationshipsGroup := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
@@ -1280,6 +1421,12 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			q.Type = addComputedField
 		case *dropComputedFieldInput:
 			q.Type = dropComputedField
+		case *createRemoteRelationshipInput:
+			q.Type = createRemoteRelationship
+		case *updateRemoteRelationshipInput:
+			q.Type = updateRemoteRelationship
+		case *deleteRemoteRelationshipInput:
+			q.Type = deleteRemoteRelationship
 		case *RunSQLInput:
 			ret <- []byte(args.SQL)
 			continue

@@ -121,19 +121,20 @@ explainField userInfo gCtx sqlGenCtx actionExecuter fld =
     orderByCtx = _gOrdByCtx gCtx
 
 explainGQLQuery
-  :: (MonadError QErr m, MonadIO m,HasVersion)
+  :: (MonadError QErr m, MonadIO m, HasVersion)
   => PGExecCtx
   -> SchemaCache
   -> SQLGenCtx
-  -> Bool
   -> QueryActionExecuter
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query userVarsRaw maybeIsRelay) = do
-  -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
+explainGQLQuery pgExecCtx sc sqlGenCtx actionExecuter (GQLExplain query userVarsRaw maybeIsRelay) = do
+  -- NOTE!: we will be executing what follows as though admin role. See e.g.
+  -- notes in explainField:
   userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
+  -- we don't need to check in allow list as we consider it an admin endpoint
   (execPlan, queryReusability) <- runReusabilityT $
-    E.getExecPlanPartial userInfo sc queryType enableAL query
+    E.getExecPlanPartial userInfo sc queryType query
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet) ->
       return (gCtx, rootSelSet)
