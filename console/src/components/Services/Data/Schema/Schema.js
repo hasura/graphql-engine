@@ -93,7 +93,7 @@ const ClosedCreateSection = ({ onClick }) => (
   </Button>
 );
 
-const CreateSchemaButton = React.forwardRef(
+const CreateSchemaSection = React.forwardRef(
   ({
     ref,
     schema,
@@ -302,7 +302,7 @@ class Schema extends Component {
             <div
               className={`${styles.display_inline} ${styles.add_mar_left_mid}`}
             >
-              <CreateSchemaButton
+              <CreateSchemaSection
                 ref={this.schemaNameInputRef}
                 schema={currentSchema}
                 migrationMode={migrationMode}
