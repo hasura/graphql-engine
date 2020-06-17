@@ -34,6 +34,7 @@ const TableColumnDefault = ({
         placeholder={getPlaceholder(column)}
         id={`col-default-value-${i}`}
         data-test={testId}
+        spellCheck={false}
       />
     );
   };
