@@ -52,6 +52,5 @@ a union of top-level nodes from each of the sub-schemas.
  
    adding-schema
    schema-points
-   remote-joins
    schema-auth
    bypass-auth
