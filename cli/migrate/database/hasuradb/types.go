@@ -62,6 +62,25 @@ type updateRemoteRelationshipInput struct {
 	*createRemoteRelationshipInput
 }
 
+type createCronTriggerInput struct {
+	Name              string
+	Webhook           string
+	Schedule          string
+	Payload           interface{}
+	Headers           interface{}
+	RetryConf         RetryConfigST
+	IncludeInMetadata bool
+	Comment           string
+	Replace           bool
+}
+
+type RetryConfigST struct {
+	NumRetries           int
+	RetryIntervalSeconds int
+	TimeoutSeconds       int
+	ToleranceSeconds     int
+}
+
 func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 	type t newHasuraIntefaceQuery
 	var q t
