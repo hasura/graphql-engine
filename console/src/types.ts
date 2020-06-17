@@ -6,12 +6,19 @@ import { Table, Schema } from './components/Common/utils/pgUtils';
 import { EventsState } from './components/Services/Events/state';
 import { RAEvents } from './components/Services/Events/types';
 import { TelemetryState } from './telemetry/state';
+import { MetadataObject } from './components/Services/Settings/utils';
 
 // Redux Utils
 export type ReduxState = {
+  actions: {
+    common: {
+      actions: MetadataObject[];
+    };
+  };
   tables: {
     schemaList: Schema[];
-    allSchemas: Table[];
+    allSchemas: Table[] | MetadataObject[];
+    trackedFunctions: MetadataObject[];
     dataHeaders: Record<string, string>;
   };
   events: EventsState;
@@ -21,6 +28,11 @@ export type ReduxState = {
     latestStableServerVersion: string;
   };
   telemetry: TelemetryState;
+  remoteSchemas: {
+    listData: {
+      remoteSchemas: MetadataObject[];
+    };
+  };
 };
 
 export type ReduxAction = RAEvents | RouterAction;

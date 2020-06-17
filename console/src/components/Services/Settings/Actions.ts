@@ -27,6 +27,7 @@ import {
   inconsistentObjectsQuery,
   resetMetadataQuery,
 } from '../../Common/utils/v1QueryUtils';
+import { GetReduxState, ReduxState } from '../../../types';
 
 const LOAD_INCONSISTENT_OBJECTS = 'Metadata/LOAD_INCONSISTENT_OBJECTS';
 const LOADING_METADATA = 'Metadata/LOADING_METADATA';
@@ -64,9 +65,12 @@ const getReloadCacheAndGetInconsistentObjectsQuery = (
   ],
 });
 
-export const exportMetadata = (successCb: Function, errorCb: Function) => (
-  dispatch: ThunkDispatch<any, any, AnyAction>,
-  getState: () => AppState
+export const exportMetadata = (
+  successCb: (oldMetadata: object) => void,
+  errorCb: (e: Error) => void
+) => (
+  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+  getState: GetReduxState
 ) => {
   const { dataHeaders } = getState().tables;
 
@@ -92,8 +96,8 @@ export const replaceMetadata = (
   successCb: Function,
   errorCb: Function
 ) => (
-  dispatch: ThunkDispatch<any, any, AnyAction>,
-  getState: () => AppState
+  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+  getState: GetReduxState
 ) => {
   const exportSuccessCb = (oldMetadata: object) => {
     const upQuery = generateReplaceMetadataQuery(newMetadata);
@@ -140,9 +144,12 @@ export const replaceMetadata = (
   dispatch(exportMetadata(exportSuccessCb, exportErrorCb));
 };
 
-export const resetMetadata = (successCb: Function, errorCb: Function) => (
-  dispatch: ThunkDispatch<any, any, AnyAction>,
-  getState: () => AppState
+export const resetMetadata = (
+  successCb: () => void,
+  errorCb: (e: Error) => void
+) => (
+  dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+  getState: GetReduxState
 ) => {
   const headers = getState().tables.dataHeaders;
 
@@ -172,9 +179,9 @@ export const resetMetadata = (successCb: Function, errorCb: Function) => (
 
 export const replaceMetadataFromFile = (
   fileContent: string,
-  successCb: Function,
-  errorCb: (err?: Error) => {}
-) => (dispatch: ThunkDispatch<any, any, AnyAction>) => {
+  successCb: () => void,
+  errorCb: (err?: Error) => void
+) => (dispatch: ThunkDispatch<ReduxState, {}, AnyAction>) => {
   let parsedFileContent;
   try {
     parsedFileContent = JSON.parse(fileContent);
@@ -201,8 +208,8 @@ export const replaceMetadataFromFile = (
 
 const handleInconsistentObjects = (inconsistentObjects: MetadataObject[]) => {
   return (
-    dispatch: ThunkDispatch<any, any, AnyAction>,
-    getState: () => AppState
+    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    getState: GetReduxState
   ) => {
     const allSchemas = getState().tables.allSchemas;
     const functions = getState().tables.trackedFunctions;
@@ -250,8 +257,8 @@ export const loadInconsistentObjects = (
   failureCb?: Function
 ) => {
   return (
-    dispatch: ThunkDispatch<any, any, AnyAction>,
-    getState: () => AppState
+    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    getState: GetReduxState
   ) => {
     const headers = getState().tables.dataHeaders;
 
@@ -304,8 +311,8 @@ export const reloadRemoteSchema = (
   failureCb?: Function
 ) => {
   return (
-    dispatch: ThunkDispatch<any, any, AnyAction>,
-    getState: () => AppState
+    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    getState: GetReduxState
   ) => {
     const headers = getState().tables.dataHeaders;
 
@@ -348,7 +355,7 @@ export const reloadMetadata = (
   successCb?: Function,
   failureCb?: Function
 ) => {
-  return (dispatch: ThunkDispatch<any, any, AnyAction>) => {
+  return (dispatch: ThunkDispatch<ReduxState, {}, AnyAction>) => {
     return dispatch(
       loadInconsistentObjects(
         {
@@ -367,8 +374,8 @@ export const dropInconsistentObjects = (
   failureCb: Function
 ) => {
   return (
-    dispatch: ThunkDispatch<any, any, AnyAction>,
-    getState: () => AppState
+    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    getState: GetReduxState
   ) => {
     const headers = getState().tables.dataHeaders;
     dispatch({ type: DROP_INCONSISTENT_METADATA });
@@ -411,7 +418,7 @@ export const isMetadataStatusPage = () => {
 };
 
 export const redirectToMetadataStatus = () => {
-  return (dispatch: ThunkDispatch<any, any, AnyAction>) => {
+  return (dispatch: ThunkDispatch<ReduxState, {}, AnyAction>) => {
     return dispatch(
       push(`${globals.urlPrefix}/settings/metadata-status?is_redirected=true`)
     );
@@ -497,8 +504,8 @@ const updateAllowedQueryQuery = (queryName: string, newQuery: Query) => ({
 
 export const loadAllowedQueries = () => {
   return (
-    dispatch: ThunkDispatch<any, any, AnyAction>,
-    getState: () => AppState
+    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    getState: GetReduxState
   ) => {
     const headers = getState().tables.dataHeaders;
 
@@ -534,8 +541,8 @@ export const addAllowedQueries = (
   callback: Function
 ): Function => {
   return (
-    dispatch: ThunkDispatch<any, any, AnyAction>,
-    getState: () => AppState
+    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    getState: GetReduxState
   ): void | Promise<void> => {
     if (queries.length === 0) {
       return dispatch(showErrorNotification('No queries found'));
@@ -579,8 +586,8 @@ export const addAllowedQueries = (
 
 export const deleteAllowList = () => {
   return (
-    dispatch: ThunkDispatch<any, any, AnyAction>,
-    getState: () => AppState
+    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    getState: GetReduxState
   ) => {
     const headers = getState().tables.dataHeaders;
 
@@ -613,8 +620,8 @@ export const deleteAllowList = () => {
 
 export const deleteAllowedQuery = (queryName: string, isLastQuery: boolean) => {
   return (
-    dispatch: ThunkDispatch<any, any, AnyAction>,
-    getState: () => AppState
+    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    getState: GetReduxState
   ) => {
     const headers = getState().tables.dataHeaders;
 
@@ -649,8 +656,8 @@ export const deleteAllowedQuery = (queryName: string, isLastQuery: boolean) => {
 
 export const updateAllowedQuery = (queryName: string, newQuery: Query) => {
   return (
-    dispatch: ThunkDispatch<any, any, AnyAction>,
-    getState: () => AppState
+    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    getState: GetReduxState
   ) => {
     const headers = getState().tables.dataHeaders;
 
