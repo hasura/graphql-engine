@@ -25,7 +25,7 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
--- import           Hasura.RQL.DDL.RemoteSchema
+import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
@@ -81,9 +81,9 @@ data RQLQueryV1
   | RQBulk ![RQLQuery]
 
   -- schema-stitching, custom resolver related
-  -- | RQAddRemoteSchema !AddRemoteSchemaQuery
-  -- | RQRemoveRemoteSchema !RemoteSchemaNameQuery
-  -- | RQReloadRemoteSchema !RemoteSchemaNameQuery
+  | RQAddRemoteSchema !AddRemoteSchemaQuery
+  | RQRemoveRemoteSchema !RemoteSchemaNameQuery
+  | RQReloadRemoteSchema !RemoteSchemaNameQuery
 
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
@@ -243,9 +243,9 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQDelete _                      -> False
   RQCount _                       -> False
 
-  -- RQAddRemoteSchema _             -> True
-  -- RQRemoveRemoteSchema _          -> True
-  -- RQReloadRemoteSchema _          -> True
+  RQAddRemoteSchema _             -> True
+  RQRemoveRemoteSchema _          -> True
+  RQReloadRemoteSchema _          -> True
 
   RQCreateEventTrigger _          -> True
   RQDeleteEventTrigger _          -> True
@@ -368,9 +368,9 @@ runQueryM rq = withPathK "args" $ case rq of
       RQDelete q                   -> runDelete q
       RQCount  q                   -> runCount q
 
-      -- RQAddRemoteSchema    q       -> runAddRemoteSchema q
-      -- RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q
-      -- RQReloadRemoteSchema q       -> runReloadRemoteSchema q
+      RQAddRemoteSchema    q       -> runAddRemoteSchema q
+      RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q
+      RQReloadRemoteSchema q       -> runReloadRemoteSchema q
 
       RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
@@ -449,9 +449,9 @@ requiresAdmin = \case
     RQDelete _                      -> False
     RQCount  _                      -> False
 
-    -- RQAddRemoteSchema    _          -> True
-    -- RQRemoveRemoteSchema _          -> True
-    -- RQReloadRemoteSchema _          -> True
+    RQAddRemoteSchema    _          -> True
+    RQRemoveRemoteSchema _          -> True
+    RQReloadRemoteSchema _          -> True
 
     RQCreateEventTrigger _          -> True
     RQDeleteEventTrigger _          -> True

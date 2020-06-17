@@ -49,7 +49,7 @@ runGQ reqId userInfo reqHdrs req = do
           E.ExecStepDB txGenSql -> do
             (telemTimeIO, telemQueryType, resp) <- runQueryDB reqId req userInfo txGenSql
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp []))
-          E.ExecStepRemote (_name, (rsi, opDef)) ->
+          E.ExecStepRemote (_name, (rsi, opDef, _varValsM)) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do
             (telemTimeIO, obj) <- withElapsedTime $ do
@@ -60,7 +60,7 @@ runGQ reqId userInfo reqHdrs req = do
           E.ExecStepDB tx -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId req userInfo tx
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp []))
-          E.ExecStepRemote (_name, (rsi, opDef)) ->
+          E.ExecStepRemote (_name, (rsi, opDef, _varValsM)) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do
             (telemTimeIO, obj) <- withElapsedTime $ do

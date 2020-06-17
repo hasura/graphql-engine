@@ -189,9 +189,16 @@ convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
       collectPlan
         :: (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteCall))
         -> G.Name
-        -> RootField PGPlan RemoteCall J.Value
+        -> RootField PGPlan RemoteField J.Value
         -> (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteCall))
-      collectPlan (seqDB, seqRemote) name (RFRemote rem) = (seqDB, seqRemote Seq.:|> (name, rem))
+      collectPlan (seqDB, seqRemote) name (RFRemote (remInfo, remField)) =
+        let (remOp, varValsM) =
+              buildTypedOperation
+              G.OperationTypeQuery
+              varDefs
+              [G.SelectionField remField]
+              varValsM
+        in (seqDB, seqRemote Seq.:|> (name, (remInfo, remOp, varValsM)))
       collectPlan (seqDB, seqRemote) name (RFDB db)      = (seqDB Seq.:|> (name, RFPPostgres db), seqRemote)
       collectPlan (seqDB, seqRemote) name (RFRaw r)      =
         (seqDB Seq.:|> (name, RFPRaw $ LBS.toStrict $ J.encode r), seqRemote)

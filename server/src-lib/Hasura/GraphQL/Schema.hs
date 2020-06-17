@@ -5,6 +5,7 @@ module Hasura.GraphQL.Schema
 import           Hasura.Prelude
 
 import qualified Data.Aeson                            as J
+import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashMap.Strict.Extended          as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
 import qualified Data.HashSet                          as S
@@ -22,6 +23,7 @@ import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schem
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Introspect
 import           Hasura.GraphQL.Schema.Mutation
+import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
@@ -35,8 +37,9 @@ buildGQLContext
      , HasSQLGenCtx m )
   => TableCache
   -> FunctionCache
+  -> HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
   -> m (HashMap RoleName GQLContext)
-buildGQLContext allTables allFunctions =
+buildGQLContext allTables allFunctions allRemoteSchemata =
   S.toMap allRoles & Map.traverseWithKey \roleName () ->
     buildContextForRole roleName
   where
@@ -49,10 +52,20 @@ buildGQLContext allTables allFunctions =
     validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
     validFunctions = Map.elems $ Map.filter functionFilter allFunctions
 
+    allRemoteParsers ::
+      m (HashMap RemoteSchemaName
+         ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+         , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+         , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]))
+    allRemoteParsers = P.runSchemaT _roleName _allTables do
+      traverse (buildRemoteParser . fst) allRemoteSchemata
+
     buildContextForRole roleName = do
       SQLGenCtx{ stringifyNum } <- askSQLGenCtx
+      remotes <- allRemoteParsers
+      let queryRemotes = concat $ map (\(q,m,s)->q) $ Map.elems remotes
       P.runSchemaT roleName allTables $ GQLContext
-        <$> (finalizeParser <$> queryWithIntrospection (S.fromList $ Map.keys validTables) validFunctions stringifyNum)
+        <$> (finalizeParser <$> queryWithIntrospection (S.fromList $ Map.keys validTables) validFunctions queryRemotes stringifyNum)
         <*> (finalizeParser <$> mutation (S.fromList $ Map.keys validTables) stringifyNum)
 
     finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
@@ -66,9 +79,10 @@ query'
    . (MonadSchema n m, MonadError QErr m)
   => HashSet QualifiedTable
   -> [FunctionInfo]
+  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> Bool
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-query' allTables allFunctions stringifyNum = do
+query' allTables allFunctions allRemotes stringifyNum = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
@@ -98,12 +112,13 @@ query' allTables allFunctions stringifyNum = do
         [ toQrf2 (RFDB . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms stringifyNum
         , toQrf3 (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms stringifyNum
         ]
-  pure $ concat $ catMaybes $ tableSelectExpParsers <> functionSelectExpParsers
+  pure $ concat $ catMaybes $ tableSelectExpParsers <> functionSelectExpParsers <> conv allRemotes
   where
     -- TODO: this is a terrible name, there must be something better
     toQrf2 :: (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
     toQrf2 f = fmap $ Just . fmap f
     toQrf3 f = fmap $ fmap $ fmap f
+    conv fps = [Just $ fmap (fmap RFRemote) fps]
 
 -- | Parse query-type GraphQL requests without introspection
 query
@@ -112,10 +127,11 @@ query
   => G.Name
   -> HashSet QualifiedTable
   -> [FunctionInfo]
+  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> Bool
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-query name allTables allFunctions stringifyNum = do
-  queryFieldsParser <- query' allTables allFunctions stringifyNum
+query name allTables allFunctions allRemotes stringifyNum = do
+  queryFieldsParser <- query' allTables allFunctions allRemotes stringifyNum
   pure $ P.selectionSet name Nothing queryFieldsParser
     <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 
@@ -127,7 +143,7 @@ subscription
   -> Bool
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 subscription allTables allFunctions stringifyNum =
-  query $$(G.litName "subscription_root") allTables allFunctions stringifyNum
+  query $$(G.litName "subscription_root") allTables allFunctions [] stringifyNum
 
 -- | Prepare the parser for query-type GraphQL requests, but with introspection
 -- for queries, mutations and subscriptions (TODO) built in.
@@ -136,10 +152,11 @@ queryWithIntrospection
    . (MonadSchema n m, MonadError QErr m)
   => HashSet QualifiedTable
   -> [FunctionInfo]
+  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> Bool
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-queryWithIntrospection allTables allFunctions stringifyNum = do
-  fakeQueryFP <- query' allTables allFunctions stringifyNum
+queryWithIntrospection allTables allFunctions allRemotes stringifyNum = do
+  fakeQueryFP <- query' allTables allFunctions allRemotes stringifyNum
   mutationP <- mutation allTables stringifyNum
   subscriptionP <- subscription allTables allFunctions stringifyNum
   let

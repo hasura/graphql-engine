@@ -46,6 +46,7 @@ module Hasura.RQL.Types.SchemaCache
   , isMutable
   , mutableView
 
+  , IntrospectionResult
   , RemoteSchemaCtx(..)
   , RemoteSchemaMap
 
@@ -141,6 +142,7 @@ import           Data.Aeson.TH
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
 import qualified Data.Text                         as T
+import qualified Language.GraphQL.Draft.Syntax     as G
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . sort . map reportSchemaObj
@@ -159,11 +161,17 @@ mkComputedFieldDep reason tn computedField =
 
 type WithDeps a = (a, [SchemaDependency])
 
+type IntrospectionResult = ( G.SchemaDocument
+                           , G.Name -- query_root
+                           , Maybe G.Name -- mutation_root
+                           , Maybe G.Name
+                           )
+
 data RemoteSchemaCtx
   = RemoteSchemaCtx
-  { rscName :: !RemoteSchemaName
-  -- , rscGCtx :: !GC.RemoteGCtx
-  , rscInfo :: !RemoteSchemaInfo
+  { rscName  :: !RemoteSchemaName
+  , rscIntro :: !IntrospectionResult
+  , rscInfo  :: !RemoteSchemaInfo
   } deriving (Show, Eq)
 
 instance ToJSON RemoteSchemaCtx where

@@ -31,20 +31,20 @@ import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.List                                (nub)
 
-import qualified Hasura.GraphQL.Schema                    as GS
+-- import qualified Hasura.GraphQL.Schema                    as GS
 import qualified Hasura.Incremental                       as Inc
-import qualified Language.GraphQL.Draft.Syntax            as G
+-- import qualified Language.GraphQL.Draft.Syntax            as G
 
 import           Hasura.Db
 -- import           Hasura.GraphQL.RemoteServer
 -- import           Hasura.GraphQL.Schema.CustomTypes
-import           Hasura.GraphQL.Utils                     (showNames)
+-- import           Hasura.GraphQL.Utils                     (showNames)
 -- import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 -- import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
--- import           Hasura.RQL.DDL.RemoteSchema
+import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Cache.Dependencies
@@ -170,6 +170,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
   gqlContext <- bindA -< buildGQLContext
     (_boTables    resolvedOutputs)
     (_boFunctions resolvedOutputs)
+    (_boRemoteSchemas resolvedOutputs)
   -- (remoteSchemaMap, gqlSchema, remoteGQLSchema)
   --   <- _buildGQLSchema -< ( _boTables resolvedOutputs
   --                                   , _boFunctions resolvedOutputs
@@ -283,13 +284,13 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
-      -- remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, remoteSchemas)
+      remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, remoteSchemas)
 
       returnA -< BuildOutputs
         { _boTables = tableCache
         -- , _boActions = actionCache
         , _boFunctions = functionCache
-        -- , _boRemoteSchemas = remoteSchemaMap
+        , _boRemoteSchemas = remoteSchemaMap
         , _boAllowlist = allowList
         -- , _boCustomTypes = resolvedCustomTypes
         }
@@ -357,22 +358,22 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
               liftTx $ delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
               mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
 
-    -- buildRemoteSchemas
-    --   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-    --      , Inc.ArrowCache m arr , MonadIO m, HasHttpManager m )
-    --   => ( Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey)
-    --      , [AddRemoteSchemaQuery]
-    --      ) `arr` HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
-    -- buildRemoteSchemas =
-    --   buildInfoMapPreservingMetadata _arsqName mkRemoteSchemaMetadataObject buildRemoteSchema
-    --   where
-    --     -- We want to cache this call because it fetches the remote schema over HTTP, and we don’t
-    --     -- want to re-run that if the remote schema definition hasn’t changed.
-    --     buildRemoteSchema = Inc.cache proc (invalidationKeys, remoteSchema) -> do
-    --       Inc.dependOn -< Inc.selectKeyD (_arsqName remoteSchema) invalidationKeys
-    --       (| withRecordInconsistency (liftEitherA <<< bindA -<
-    --            runExceptT $ addRemoteSchemaP2Setup remoteSchema)
-    --        |) (mkRemoteSchemaMetadataObject remoteSchema)
+    buildRemoteSchemas
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
+         , Inc.ArrowCache m arr , MonadIO m, HasHttpManager m )
+      => ( Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey)
+         , [AddRemoteSchemaQuery]
+         ) `arr` HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
+    buildRemoteSchemas =
+      buildInfoMapPreservingMetadata _arsqName mkRemoteSchemaMetadataObject buildRemoteSchema
+      where
+        -- We want to cache this call because it fetches the remote schema over HTTP, and we don’t
+        -- want to re-run that if the remote schema definition hasn’t changed.
+        buildRemoteSchema = Inc.cache proc (invalidationKeys, remoteSchema) -> do
+          Inc.dependOn -< Inc.selectKeyD (_arsqName remoteSchema) invalidationKeys
+          (| withRecordInconsistency (liftEitherA <<< bindA -<
+               runExceptT $ addRemoteSchemaP2Setup remoteSchema)
+           |) (mkRemoteSchemaMetadataObject remoteSchema)
 
     -- -- Builds the GraphQL schema and merges in remote schemas. This function is kind of gross, as
     -- -- it’s possible for the remote schema merging to fail, at which point we have to mark them

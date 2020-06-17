@@ -196,7 +196,7 @@ instance J.FromJSON (FromIntrospection G.ObjectTypeDefinition) where
     fields     <- o .:? "fields"
     interfaces <- o .:? "interfaces"
     when (kind /= "OBJECT") $ kindErr kind "object"
-    let implIfaces = maybe [] pure $ interfaces
+    let implIfaces = fromMaybe [] interfaces
         flds = maybe [] (fmap fromIntrospection) fields
         desc' = fmap fromIntrospection desc
         r = G.ObjectTypeDefinition desc' name implIfaces [] flds
@@ -323,12 +323,6 @@ instance J.FromJSON (FromIntrospection G.TypeDefinition) where
         G.TypeDefinitionInputObject . fromIntrospection <$> J.parseJSON (J.Object o)
       _ -> pErr $ "unknown kind: " <> kind
     return $ FromIntrospection r
-
-type IntrospectionResult = ( G.SchemaDocument
-                           , G.Name -- query_root
-                           , Maybe G.Name -- mutation_root
-                           , Maybe G.Name
-                           )
 
 instance J.FromJSON (FromIntrospection IntrospectionResult) where
   parseJSON = J.withObject "SchemaDocument" $ \o -> do

@@ -5,6 +5,7 @@ module Hasura.GraphQL.Context
   , ParserFn
   , RootField(..)
   , traverseDB
+  , RemoteField
   , QueryDB(..)
   , QueryRootField
   , MutationDB(..)
@@ -63,7 +64,7 @@ data QueryDB v
 -- TODO this should maybe take a G.Field rather than a
 -- G.TypedOperationDefinition -- the operation would get built when we pass to
 -- the execution phase.
-type RemoteField = (RQL.RemoteSchemaInfo, G.TypedOperationDefinition G.FragmentSpread G.Name)
+type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments Variable)
 
 type QueryRootField v = RootField (QueryDB v) RemoteField J.Value
 

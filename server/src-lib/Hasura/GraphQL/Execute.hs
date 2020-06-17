@@ -372,7 +372,7 @@ execRemoteGQ
   -> [N.Header]
   -> GQLReqUnparsed
   -> RemoteSchemaInfo
-  -> G.TypedOperationDefinition G.FragmentSpread G.Name
+  -> G.TypedOperationDefinition G.NoFragments G.Name
   -> m (DiffTime, HttpResponse EncJSON)
   -- ^ Also returns time spent in http request, for telemetry.
 execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do

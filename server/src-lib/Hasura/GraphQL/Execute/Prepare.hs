@@ -9,6 +9,7 @@ module Hasura.GraphQL.Execute.Prepare
   , runPlan
   , prepareWithPlan
   , withUserVars
+  , buildTypedOperation
   ) where
 
 
@@ -20,14 +21,13 @@ import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Data.Aeson                             as J
-import qualified Data.Sequence.NonEmpty                 as NESeq
-import qualified Network.HTTP.Client                    as HTTP
+import qualified Data.HashSet                           as Set
 
 import qualified Hasura.SQL.DML                         as S
-import qualified Hasura.Logging                         as L
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
 import           Hasura.GraphQL.Parser.Column
-import           Hasura.GraphQL.Parser.Schema  (getName)
+import           Hasura.GraphQL.Parser.Schema
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 import           Hasura.RQL.Types
@@ -44,7 +44,7 @@ type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 -- database and things to run on remote schemata.
 type ExecutionPlan db remote raw = ExecutionStep db remote raw
 
-type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.FragmentSpread G.Name)
+type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.NoFragments G.Name, Maybe GH.VariableValues)
 
 -- | One execution step to processing a GraphQL query (e.g. one root field).
 -- Polymorphic to allow the SQL to be generated in stages.
@@ -119,3 +119,34 @@ getNextArgNum = do
   PlanningSt curArgNum vars prepped <- get
   put $ PlanningSt (curArgNum + 1) vars prepped
   return curArgNum
+
+unresolveVariables
+  :: forall fragments
+   . Functor fragments
+  => G.SelectionSet fragments Variable
+  -> G.SelectionSet fragments G.Name
+unresolveVariables =
+  fmap (fmap (getName . vInfo))
+
+collectVariables
+  :: forall fragments var
+   . (Foldable fragments, Hashable var, Eq var)
+  => G.SelectionSet fragments var
+  -> Set.HashSet var
+collectVariables =
+  Set.unions . fmap (foldMap Set.singleton)
+
+buildTypedOperation
+  :: forall frag
+   . (Functor frag, Foldable frag)
+  => G.OperationType
+  -> [G.VariableDefinition]
+  -> G.SelectionSet frag Variable
+  -> Maybe GH.VariableValues
+  -> (G.TypedOperationDefinition frag G.Name, Maybe GH.VariableValues)
+buildTypedOperation tp varDefs selSet varValsM =
+  let unresolvedSelSet = unresolveVariables selSet
+      requiredVars = collectVariables unresolvedSelSet
+      restrictedDefs = filter (\varDef -> G._vdName varDef `Set.member` requiredVars) varDefs
+      restrictedValsM = flip Map.intersection (Set.toMap requiredVars) <$> varValsM
+  in (G.TypedOperationDefinition tp Nothing restrictedDefs [] unresolvedSelSet, restrictedValsM)
