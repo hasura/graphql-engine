@@ -55,6 +55,9 @@ const fetchRemoteSchemas = () => {
         const { inconsistentObjects } = getState().metadata;
 
         if (inconsistentObjects.length > 0) {
+          // TODO: no more filtering. Show an icon next to those
+          // Check what this method is doing and based on that render
+          // the appropriate remote schemas
           consistentRemoteSchemas = filterInconsistentMetadataObjects(
             data,
             inconsistentObjects,
