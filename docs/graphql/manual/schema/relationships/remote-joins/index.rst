@@ -4,7 +4,7 @@
 
 .. _remote_joins:
 
-Remote Joins & Relationships
+Remote joins & relationships
 ============================
 
 .. contents:: Table of contents

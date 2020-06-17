@@ -83,3 +83,4 @@ The following guides will help you model the different types of table relationsh
   create
   rename
   Database modelling <database-modelling/index>
+  Remote joins & relationships <remote-joins/index>
