@@ -124,7 +124,7 @@
     "@types/react-hot-loader": "4.1.1",
     "@types/react-notification-system-redux": "1.1.6",
     "@types/react-redux": "7.1.7",
-    "@types/react-router": "^3.0.8",
+    "@types/react-router": "3.0.22",
     "@types/react-router-redux": "4.0.44",
     "@types/react-toggle": "4.0.2",
     "@types/redux-devtools": "3.0.47",

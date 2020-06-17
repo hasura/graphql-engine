@@ -129,6 +129,16 @@ func TestCommands(t *testing.T) {
 		t.Run("metadata commands", func(t *testing.T) {
 			v2.TestMetadataCmd(t, ec)
 		})
+
+		skip(t)
+		t.Run("seed create command", func(t *testing.T) {
+			v2.TestSeedsCreateCmd(t, ec)
+		})
+
+		skip(t)
+		t.Run("seed apply commands", func(t *testing.T) {
+			v2.TestSeedsApplyCmd(t, ec)
+		})
 	})
 }
 
