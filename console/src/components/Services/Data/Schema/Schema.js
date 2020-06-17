@@ -39,6 +39,112 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import RawSqlButton from '../Common/Components/RawSqlButton';
+import styles from '../../../Common/Common.scss';
+
+const SchemaPermissionsButton = ({ schema }) => (
+  <Link to={getSchemaPermissionsRoute(schema)}>
+    <Button
+      color="white"
+      size="xs"
+      className={`${styles.add_mar_left_mid} ${styles.schemaBtnMarginLeft}`}
+    >
+      Show Permissions Summary
+    </Button>
+  </Link>
+);
+
+const OpenCreateSection = React.forwardRef(
+  ({ ref, value, handleInputChange, handleCreate, handleCancelCreate }) => (
+    <div className={styles.display_inline + ' ' + styles.add_mar_left}>
+      <div className={styles.display_inline}>
+        <input
+          id="schema-name-input"
+          type="text"
+          value={value}
+          onChange={handleInputChange}
+          placeholder="schema_name"
+          className={'form-control input-sm ' + styles.display_inline}
+          ref={ref}
+        />
+      </div>
+      <Button
+        color="white"
+        size="xs"
+        onClick={handleCreate}
+        className={styles.add_mar_left_mid}
+      >
+        Create
+      </Button>
+      <Button
+        color="white"
+        size="xs"
+        onClick={handleCancelCreate}
+        className={styles.add_mar_left_mid}
+      >
+        Cancel
+      </Button>
+    </div>
+  )
+);
+
+const ClosedCreateSection = ({ onClick }) => (
+  <Button color="white" size="xs" onClick={onClick} title="Create new schema">
+    Create
+  </Button>
+);
+
+const CreateSchemaButton = React.forwardRef(
+  ({
+    ref,
+    schema,
+    migrationMode,
+    createSchemaOpen,
+    schemaNameEdit,
+    handleCancelCreateNewSchema,
+    handleCreateNewClick,
+    handleSchemaNameChange,
+    handleCreateClick,
+  }) =>
+    migrationMode && (
+      <div className={`${styles.display_flex}`}>
+        {createSchemaOpen ? (
+          <OpenCreateSection
+            schemaNameInputRef={ref}
+            value={schemaNameEdit}
+            handleInputChange={handleSchemaNameChange}
+            handleCreate={handleCreateClick}
+            handleCancelCreate={handleCancelCreateNewSchema}
+          />
+        ) : (
+          <ClosedCreateSection onClick={handleCreateNewClick} />
+        )}
+        <SchemaPermissionsButton schema={schema} />
+      </div>
+    )
+);
+
+const DeleteSchemaButton = ({ dispatch, migrationMode }) => {
+  const successCb = () => {
+    dispatch(updateCurrentSchema('public'));
+  };
+
+  const handleDelete = () => {
+    dispatch(deleteCurrentSchema(successCb));
+  };
+
+  return (
+    migrationMode && (
+      <Button
+        color="white"
+        size="xs"
+        onClick={handleDelete}
+        title="Delete current schema"
+      >
+        Delete
+      </Button>
+    )
+  );
+};
 
 class Schema extends Component {
   constructor(props) {
@@ -54,7 +160,43 @@ class Schema extends Component {
     this.props.dispatch(
       updateSchemaInfo({ schemas: [this.props.currentSchema] })
     );
+
+    this.schemaNameInputRef = React.createRef(null);
   }
+
+  cancelCreateNewSchema = () => {
+    this.setState({
+      createSchemaOpen: false,
+    });
+  };
+
+  onCreateNewClick = () => {
+    this.setState({ createSchemaOpen: true });
+  };
+
+  onChangeSchemaName = e => {
+    this.setState({ schemaNameEdit: e.target.value });
+  };
+
+  handleCreateClick = () => {
+    const schemaName = this.state.schemaNameEdit.trim();
+
+    if (!schemaName) {
+      this.schemaNameInputRef.current.focus();
+      return;
+    }
+
+    const successCb = () => {
+      this.props.dispatch(updateCurrentSchema(schemaName));
+
+      this.setState({
+        schemaNameEdit: '',
+        createSchemaOpen: false,
+      });
+    };
+
+    this.props.dispatch(createNewSchema(schemaName, successCb));
+  };
 
   render() {
     const {
@@ -70,13 +212,9 @@ class Schema extends Component {
       trackedFunctions,
     } = this.props;
 
-    const styles = require('../../../Common/Common.scss');
-
     const handleSchemaChange = e => {
       dispatch(updateCurrentSchema(e.target.value));
     };
-
-    /***********/
 
     const _getTrackableFunctions = () => {
       const trackedFuncNames = trackedFunctions.map(fn => getFunctionName(fn));
@@ -103,8 +241,6 @@ class Schema extends Component {
         </div>
       );
     };
-
-    /***********/
 
     const allUntrackedTables = getUntrackedTables(
       getSchemaTables(schema, currentSchema)
@@ -144,157 +280,39 @@ class Schema extends Component {
         ));
       };
 
-      const getCreateSchemaSection = () => {
-        let createSchemaSection = null;
-
-        if (migrationMode) {
-          const { createSchemaOpen, schemaNameEdit } = this.state;
-
-          const handleCreateNewClick = () => {
-            this.setState({ createSchemaOpen: true });
-          };
-
-          const handleSchemaNameChange = e => {
-            this.setState({ schemaNameEdit: e.target.value });
-          };
-
-          const handleCreateClick = () => {
-            const schemaName = schemaNameEdit.trim();
-
-            if (!schemaName) {
-              document.getElementById('schema-name-input').focus();
-              return;
-            }
-
-            const successCb = () => {
-              dispatch(updateCurrentSchema(schemaName));
-
-              this.setState({
-                schemaNameEdit: '',
-                createSchemaOpen: false,
-              });
-            };
-
-            dispatch(createNewSchema(schemaName, successCb));
-          };
-
-          const handleCancelCreateNewSchema = () => {
-            this.setState({
-              createSchemaOpen: false,
-            });
-          };
-
-          const closedCreateSection = (
-            <Button
-              color="white"
-              size="xs"
-              onClick={handleCreateNewClick}
-              title="Create new schema"
-            >
-              <i className="fa fa-plus" aria-hidden="true" />
-            </Button>
-          );
-
-          const openCreateSection = (
-            <div className={styles.display_inline + ' ' + styles.add_mar_left}>
-              <div className={styles.display_inline}>
-                <input
-                  id="schema-name-input"
-                  type="text"
-                  value={schemaNameEdit}
-                  onChange={handleSchemaNameChange}
-                  placeholder="schema_name"
-                  className={'form-control input-sm ' + styles.display_inline}
-                />
-              </div>
-              <Button
-                color="white"
-                size="xs"
-                onClick={handleCreateClick}
-                className={styles.add_mar_left_mid}
-              >
-                Create
-              </Button>
-              <Button
-                color="white"
-                size="xs"
-                onClick={handleCancelCreateNewSchema}
-                className={styles.add_mar_left_mid}
-              >
-                Cancel
-              </Button>
-            </div>
-          );
-
-          createSchemaSection = (
-            <div className={`${styles.display_flex}`}>
-              {createSchemaOpen ? openCreateSection : closedCreateSection}
-              <Link to={getSchemaPermissionsRoute(currentSchema)}>
-                <Button
-                  color="white"
-                  size="xs"
-                  className={styles.add_mar_left_mid}
-                >
-                  Schema permissions summary
-                </Button>
-              </Link>
-            </div>
-          );
-        }
-
-        return createSchemaSection;
-      };
-
-      const getDeleteSchemaBtn = () => {
-        let deleteSchemaBtn = null;
-
-        if (migrationMode) {
-          const handleDelete = () => {
-            const successCb = () => {
-              dispatch(updateCurrentSchema('public'));
-            };
-
-            dispatch(deleteCurrentSchema(successCb));
-          };
-
-          deleteSchemaBtn = (
-            <Button
-              color="white"
-              size="xs"
-              onClick={handleDelete}
-              title="Delete current schema"
-            >
-              <i className="fa fa-trash" aria-hidden="true" />
-            </Button>
-          );
-        }
-
-        return deleteSchemaBtn;
-      };
-
       return (
         <div className={styles.add_mar_top}>
           <div className={styles.display_inline}>Current Postgres schema</div>
           <div className={styles.display_inline}>
             <select
               onChange={handleSchemaChange}
-              className={
-                styles.add_mar_left_mid +
-                ' ' +
-                styles.width_auto +
-                ' form-control'
-              }
+              className={`${styles.add_mar_left_mid} ${styles.width_auto} form-control`}
               value={currentSchema}
             >
               {getSchemaOptions()}
             </select>
           </div>
-          <div className={styles.display_inline + ' ' + styles.add_mar_left}>
-            <div className={styles.display_inline}>{getDeleteSchemaBtn()}</div>
+          <div className={`${styles.display_inline} ${styles.add_mar_left}`}>
+            <div className={styles.display_inline}>
+              <DeleteSchemaButton
+                dispatch={dispatch}
+                migrationMode={migrationMode}
+              />
+            </div>
             <div
               className={`${styles.display_inline} ${styles.add_mar_left_mid}`}
             >
-              {getCreateSchemaSection()}
+              <CreateSchemaButton
+                ref={this.schemaNameInputRef}
+                schema={currentSchema}
+                migrationMode={migrationMode}
+                schemaNameEdit={this.state.schemaNameEdit}
+                createSchemaOpen={this.state.createSchemaOpen}
+                handleCancelCreateNewSchema={this.cancelCreateNewSchema}
+                handleCreateNewClick={this.onCreateNewClick}
+                handleSchemaNameChange={this.onChangeSchemaName}
+                handleCreateClick={this.handleCreateClick}
+              />
             </div>
           </div>
         </div>
