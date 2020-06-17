@@ -102,7 +102,9 @@ const TableColumn = props => {
         <ColumnTypeSelector
           options={columnDataTypes}
           onChange={handleColTypeChange}
-          value={column.type && columnTypeValueMap[column.type]}
+          value={
+            (column.type && columnTypeValueMap[column.type]) || column.type
+          }
           colIdentifier={i}
           bsClass={`col-type-${i} add_table_column_selector`}
           styleOverrides={customSelectBoxStyles}
