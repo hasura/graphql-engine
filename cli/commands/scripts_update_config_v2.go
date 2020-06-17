@@ -151,12 +151,13 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 						}
 						fileCfg.Migrations.Migrations[version][source.Up] = &source.Migration{}
 					} else {
-						upByt, err := ioutil.ReadFile(upMigration.Raw)
+						filePath := filepath.Join(ec.MigrationDir, upMigration.Raw)
+						upByt, err := ioutil.ReadFile(filePath)
 						if err != nil {
 							return errors.Wrap(err, "error in reading up.sql")
 						}
 						upByt = append(upByt, sqlUp.Bytes()...)
-						err = ioutil.WriteFile(upMigration.Raw, upByt, os.ModePerm)
+						err = ioutil.WriteFile(filePath, upByt, os.ModePerm)
 						if err != nil {
 							return errors.Wrap(err, "error in writing up.sql")
 						}
@@ -224,12 +225,13 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 						}
 						fileCfg.Migrations.Migrations[version][source.Down] = &source.Migration{}
 					} else {
-						downByt, err := ioutil.ReadFile(downMigration.Raw)
+						filePath := filepath.Join(ec.MigrationDir, downMigration.Raw)
+						downByt, err := ioutil.ReadFile(filePath)
 						if err != nil {
 							return errors.Wrap(err, "error in reading down.sql")
 						}
 						downByt = append(sqlDown.Bytes(), downByt...)
-						err = ioutil.WriteFile(downMigration.Raw, downByt, os.ModePerm)
+						err = ioutil.WriteFile(filePath, downByt, os.ModePerm)
 						if err != nil {
 							return errors.Wrap(err, "error in writing down.sql")
 						}
