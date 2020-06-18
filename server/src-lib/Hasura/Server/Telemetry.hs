@@ -10,10 +10,10 @@ module Hasura.Server.Telemetry
   )
   where
 
-import           Control.Exception     (try)
+import           Control.Exception                (try)
 import           Control.Lens
 import           Data.List
-import           Data.Text.Conversions (UTF8 (..), decodeText)
+import           Data.Text.Conversions            (UTF8 (..), decodeText)
 
 import           Hasura.HTTP
 import           Hasura.Logging
@@ -24,17 +24,17 @@ import           Hasura.Server.Telemetry.Counters
 import           Hasura.Server.Version
 
 import qualified CI
-import qualified Control.Concurrent.Extended   as C
-import qualified Data.Aeson                    as A
-import qualified Data.Aeson.Casing             as A
-import qualified Data.Aeson.TH                 as A
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Text                     as T
-import qualified Network.HTTP.Client           as HTTP
-import qualified Network.HTTP.Types            as HTTP
-import qualified Network.Wreq                  as Wreq
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Control.Concurrent.Extended      as C
+import qualified Data.Aeson                       as A
+import qualified Data.Aeson.Casing                as A
+import qualified Data.Aeson.TH                    as A
+import qualified Data.ByteString.Lazy             as BL
+import qualified Data.HashMap.Strict              as Map
+import qualified Data.Text                        as T
+import qualified Language.GraphQL.Draft.Syntax    as G
+import qualified Network.HTTP.Client              as HTTP
+import qualified Network.HTTP.Types               as HTTP
+import qualified Network.Wreq                     as Wreq
 
 data RelationshipMetric
   = RelationshipMetric
@@ -64,14 +64,14 @@ $(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''ActionMetric)
 
 data Metrics
   = Metrics
-  { _mtTables        :: !Int
-  , _mtViews         :: !Int
-  , _mtEnumTables    :: !Int
-  , _mtRelationships :: !RelationshipMetric
-  , _mtPermissions   :: !PermissionMetric
-  , _mtEventTriggers :: !Int
-  , _mtRemoteSchemas :: !Int
-  , _mtFunctions     :: !Int
+  { _mtTables         :: !Int
+  , _mtViews          :: !Int
+  , _mtEnumTables     :: !Int
+  , _mtRelationships  :: !RelationshipMetric
+  , _mtPermissions    :: !PermissionMetric
+  , _mtEventTriggers  :: !Int
+  , _mtRemoteSchemas  :: !Int
+  , _mtFunctions      :: !Int
   , _mtServiceTimings :: !ServiceTimingMetrics
   , _mtActions        :: !ActionMetric
   } deriving (Show, Eq)
@@ -163,7 +163,9 @@ computeMetrics sc _mtServiceTimings =
                     $ Map.map _tiEventTriggerInfoMap userTables
       _mtRemoteSchemas   = Map.size $ scRemoteSchemas sc
       _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) $ scFunctions sc
-      _mtActions = computeActionsMetrics (scActions sc) (snd . scCustomTypes $ sc)
+
+      -- FIXME:
+      _mtActions = ActionMetric 0 0 0 0 -- computeActionsMetrics (scActions sc) (snd . scCustomTypes $ sc)
 
   in Metrics{..}
 
@@ -177,24 +179,24 @@ computeMetrics sc _mtServiceTimings =
     permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
-computeActionsMetrics :: ActionCache -> AnnotatedObjects -> ActionMetric
-computeActionsMetrics ac ao = ActionMetric syncActionsLen asyncActionsLen typeRelationships customTypesLen
-  where actions = Map.elems ac
-        syncActionsLen  = length . filter ((==ActionSynchronous) . _adKind . _aiDefinition) $ actions
-        asyncActionsLen = (length actions) - syncActionsLen
+-- computeActionsMetrics :: ActionCache -> AnnotatedObjects -> ActionMetric
+-- computeActionsMetrics ac ao = ActionMetric syncActionsLen asyncActionsLen typeRelationships customTypesLen
+--   where actions = Map.elems ac
+--         syncActionsLen  = length . filter ((==ActionSynchronous) . _adKind . _aiDefinition) $ actions
+--         asyncActionsLen = (length actions) - syncActionsLen
 
-        outputTypesLen = length . nub . (map (_adOutputType . _aiDefinition)) $ actions
-        inputTypesLen = length . nub . concat . (map ((map _argType) . _adArguments . _aiDefinition)) $ actions
-        customTypesLen = inputTypesLen + outputTypesLen
+--         outputTypesLen = length . nub . (map (_adOutputType . _aiDefinition)) $ actions
+--         inputTypesLen = length . nub . concat . (map ((map _argType) . _adArguments . _aiDefinition)) $ actions
+--         customTypesLen = inputTypesLen + outputTypesLen
 
-        typeRelationships = length . nub . concat . map ((getActionTypeRelationshipNames ao) . _aiDefinition) $ actions
+--         typeRelationships = length . nub . concat . map ((getActionTypeRelationshipNames ao) . _aiDefinition) $ actions
 
-        -- gives the count of relationships associated with an action
-        getActionTypeRelationshipNames :: AnnotatedObjects -> ResolvedActionDefinition -> [RelationshipName]
-        getActionTypeRelationshipNames annotatedObjs actionDefn =
-          let typeName = G.getBaseType $ unGraphQLType $ _adOutputType actionDefn
-              annotatedObj = Map.lookup (ObjectTypeName typeName) annotatedObjs
-          in maybe [] (Map.keys . _aotRelationships) annotatedObj
+--         -- gives the count of relationships associated with an action
+--         getActionTypeRelationshipNames :: AnnotatedObjects -> ResolvedActionDefinition -> [RelationshipName]
+--         getActionTypeRelationshipNames annotatedObjs actionDefn =
+--           let typeName = G.getBaseType $ unGraphQLType $ _adOutputType actionDefn
+--               annotatedObj = Map.lookup (ObjectTypeName typeName) annotatedObjs
+--           in maybe [] (Map.keys . _aotRelationships) annotatedObj
 
 -- | Logging related
 
