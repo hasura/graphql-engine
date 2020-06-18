@@ -175,12 +175,7 @@ initialiseCtx hgeCmd rci = do
       pool <- getMinimalPool pgLogger connInfo
       pure (l, pool, SQLGenCtx False)
 
-  -- If an exception is encountered in 'mkWaiApp', flush the log buffer and
-  -- rethrow If we do not flush the log buffer on exception, then log lines
-  -- written in 'mkWaiApp' may be missed
-  -- See: https://github.com/hasura/graphql-engine/issues/4772
-  let flushLogger = liftIO $ FL.flushLogStr $ _lcLoggerSet $ _lsLoggerCtx loggers
-  res <- flip onException flushLogger $
+  res <- flip onException (flushLogger (_lsLoggerCtx loggers)) $
     migrateCatalogSchema (_lsLogger loggers) pool httpManager sqlGenCtx
   pure (InitCtx httpManager instanceId loggers connInfo pool latch res, initTime)
   where
@@ -241,6 +236,13 @@ waitForShutdown = C.takeMVar . unShutdownLatch
 shutdownGracefully :: InitCtx -> IO ()
 shutdownGracefully = flip C.putMVar () . unShutdownLatch . _icShutdownLatch
 
+-- | If an exception is encountered , flush the log buffer and
+-- rethrow If we do not flush the log buffer on exception, then log lines
+-- may be missed
+-- See: https://github.com/hasura/graphql-engine/issues/4772
+flushLogger :: (MonadIO m) => LoggerCtx impl -> m ()
+flushLogger loggerCtx = liftIO $ FL.flushLogStr $ _lcLoggerSet loggerCtx
+
 runHGEServer
   :: ( HasVersion
      , MonadIO m
@@ -281,12 +283,7 @@ runHGEServer ServeOptions{..} InitCtx{..} pgExecCtx initTime = do
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
 
-  -- If an exception is encountered in 'mkWaiApp', flush the log buffer and
-  -- rethrow If we do not flush the log buffer on exception, then log lines
-  -- written in 'mkWaiApp' may be missed
-  -- See: https://github.com/hasura/graphql-engine/issues/4772
-  let flushLogger = liftIO $ FL.flushLogStr $ _lcLoggerSet loggerCtx
-  HasuraApp app cacheRef cacheInitTime shutdownApp <- flip onException flushLogger $
+  HasuraApp app cacheRef cacheInitTime shutdownApp <- flip onException (flushLogger loggerCtx) $
     mkWaiApp soTxIso
              logger
              sqlGenCtx
