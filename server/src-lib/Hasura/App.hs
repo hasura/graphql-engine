@@ -3,6 +3,7 @@
 module Hasura.App where
 
 import           Control.Concurrent.STM.TVar               (readTVarIO)
+import           Control.Lens                              (view, _2)
 import           Control.Monad.Base
 import           Control.Monad.Catch                       (MonadCatch, MonadThrow, onException)
 import           Control.Monad.Stateless
@@ -43,6 +44,7 @@ import           Hasura.GraphQL.Resolve.Action             (asyncActionsProcesso
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
 import           Hasura.Logging
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.Types                          (CacheRWM, Code (..), HasHttpManager,
                                                             HasSQLGenCtx, HasSystemDefined,
                                                             QErr (..), SQLGenCtx (..),
@@ -50,13 +52,14 @@ import           Hasura.RQL.Types                          (CacheRWM, Code (..),
                                                             buildSchemaCacheStrict, decodeValue,
                                                             throw400, withPathK)
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.API.Query                   (requiresAdmin, runQueryM)
+import           Hasura.Server.API.Query                   (fetchLastUpdate, requiresAdmin,
+                                                            runQueryM)
 import           Hasura.Server.App
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates                (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Migrate                     (MigrationResult, migrateCatalog)
+import           Hasura.Server.Migrate                     (migrateCatalog)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
@@ -123,6 +126,7 @@ data InitCtx
   , _icConnInfo      :: !Q.ConnInfo
   , _icPgPool        :: !Q.PGPool
   , _icShutdownLatch :: !ShutdownLatch
+  , _icSchemaCache   :: !(RebuildableSchemaCache Run, Maybe UTCTime)
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -143,7 +147,7 @@ newtype AppM a = AppM { unAppM :: IO a }
 -- this exists as a separate function because the context (logger, http manager, pg pool) can be
 -- used by other functions as well
 initialiseCtx
-  :: MonadIO m
+  :: (HasVersion, MonadIO m, MonadCatch m)
   => HGECommand Hasura
   -> RawConnInfo
   -> m (InitCtx, UTCTime)
@@ -171,8 +175,14 @@ initialiseCtx hgeCmd rci = do
       pool <- getMinimalPool pgLogger connInfo
       pure (l, pool, SQLGenCtx False)
 
-  migrateCatalogSchema (_lsLogger loggers) pool httpManager sqlGenCtx
-  pure (InitCtx httpManager instanceId loggers connInfo pool latch, initTime)
+  -- If an exception is encountered in 'mkWaiApp', flush the log buffer and
+  -- rethrow If we do not flush the log buffer on exception, then log lines
+  -- written in 'mkWaiApp' may be missed
+  -- See: https://github.com/hasura/graphql-engine/issues/4772
+  let flushLogger = liftIO $ FL.flushLogStr $ _lcLoggerSet $ _lsLoggerCtx loggers
+  res <- flip onException flushLogger $
+    migrateCatalogSchema (_lsLogger loggers) pool httpManager sqlGenCtx
+  pure (InitCtx httpManager instanceId loggers connInfo pool latch res, initTime)
   where
     procConnInfo =
       either (printErrExit . ("Fatal Error : " <>)) return $ mkConnInfo rci
@@ -188,15 +198,18 @@ initialiseCtx hgeCmd rci = do
       return $ Loggers loggerCtx logger pgLogger
 
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
-migrateCatalogSchema :: MonadIO m => Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx -> m MigrationResult
+migrateCatalogSchema
+  :: (HasVersion, MonadIO m)
+  => Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx
+  -> m (RebuildableSchemaCache Run, Maybe UTCTime)
 migrateCatalogSchema logger pool httpManager sqlGenCtx = do
   let pgExecCtx = mkPGExecCtx Q.Serializable pool
       adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   currentTime <- liftIO Clock.getCurrentTime
   initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite $
-    migrateCatalog currentTime
+    (,) <$> migrateCatalog currentTime <*> liftTx fetchLastUpdate
 
-  migrationResult <-
+  ((migrationResult, schemaCache), lastUpdateEvent) <-
     initialiseResult `onLeft` \err -> do
       unLogger logger StartupLog
         { slLogLevel = LevelError
@@ -205,8 +218,7 @@ migrateCatalogSchema logger pool httpManager sqlGenCtx = do
         }
       liftIO exitFailure
   unLogger logger migrationResult
-  return migrationResult
-
+  return (schemaCache, view _2 <$> lastUpdateEvent)
 
 -- | Run a transaction and if an error is encountered, log the error and abort the program
 runTxIO :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO a
@@ -293,6 +305,7 @@ runHGEServer ServeOptions{..} InitCtx{..} pgExecCtx initTime = do
              soLiveQueryOpts
              soPlanCacheOptions
              soResponseInternalErrorsConfig
+             _icSchemaCache
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
