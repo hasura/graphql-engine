@@ -112,7 +112,7 @@ Using variables:
 
 .. note:: 
 
-   ``insert_<object>_one`` will **only** be available if you have select permissions on the table, as it returns the updated row.
+   ``insert_<object>_one`` will **only** be available if you have select permissions on the table, as it returns the inserted row.
 
 .. admonition:: Supported from
 
