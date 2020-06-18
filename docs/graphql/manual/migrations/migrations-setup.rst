@@ -55,6 +55,8 @@ Step 1: Install the Hasura CLI
 
 Follow the instructions in :ref:`Installing the Hasura CLI <install_hasura_cli>`.
 
+.. _migrations_project_init:
+
 Step 2: Set up a project directory
 ----------------------------------
 
@@ -102,8 +104,7 @@ Set up version control and commit the project status:
   git add .
   git commit -m "hasura project init"
 
-
-.. _migrations_setup_initialize:
+.. _migrations_initialize:
 
 Step 3: Initialize the migrations and metadata as per your current state
 ------------------------------------------------------------------------
@@ -170,7 +171,10 @@ Commit the current project state to version control:
   # in project dir
   git add .
   git commit -m "initialize migrations and metadata"
+  
+.. note::
 
+  The version control set up should typically be done right after :ref:`Step 2 <migrations_project_init>`
 
 Step 4: Use the console from the CLI
 ------------------------------------
@@ -235,17 +239,13 @@ Commit the project status into version control.
 
 .. code-block:: bash
 
-  # initialize version control if not done already
-  git init
-
-  # commit project status
+  # in project dir
   git add .
   git commit -m "<feature-name>"
 
 .. note::
 
-   The version control set up should typically be done right after :ref:`Step 3 <migrations_setup_initialize>`
-
+  The version control set up should typically be done right after :ref:`Step 2 <migrations_project_init>`
 
 Step 7: Apply the migrations and metadata on another instance of the GraphQL engine
 -----------------------------------------------------------------------------------
