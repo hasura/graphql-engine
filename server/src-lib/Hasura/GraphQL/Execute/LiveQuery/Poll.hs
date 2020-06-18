@@ -408,7 +408,7 @@ pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap = do
     -- concurrently process each batch
     batchesDetails <- A.forConcurrently cohortBatches $ \cohorts -> do
       (queryExecutionTime, mxRes) <- withElapsedTime $
-        runExceptT $ runLazyTx' pgExecCtx $
+        runExceptT $ runQueryTx pgExecCtx $
           executeMultiplexedQuery pgQuery $ over (each._2) _csVariables cohorts
 
       let lqMeta = LiveQueryMetadata $ convertDuration queryExecutionTime

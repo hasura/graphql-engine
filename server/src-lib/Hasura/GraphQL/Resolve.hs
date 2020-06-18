@@ -71,7 +71,7 @@ traverseQueryRootFldAST f = \case
   QRFActionSelect s        -> QRFActionSelect <$> DS.traverseAnnSimpleSelect f s
   QRFActionExecuteObject s -> QRFActionExecuteObject <$> DS.traverseAnnSimpleSelect f s
   QRFActionExecuteList s   -> QRFActionExecuteList <$> DS.traverseAnnSimpleSelect f s
-  QRFConnection s   -> QRFConnection <$> DS.traverseConnectionSelect f s
+  QRFConnection s          -> QRFConnection <$> DS.traverseConnectionSelect f s
 
 toPGQuery :: QueryRootFldResolved -> (Q.Query, Maybe RR.RemoteJoins)
 toPGQuery = \case
@@ -115,12 +115,12 @@ queryFldToPGAST fld actionExecuter = do
   userInfo <- asks getter
   case opCtx of
     QCNodeSelect nodeSelectMap -> do
-      NodeIdData table pkeyColumnValues <- RS.resolveNodeId fld
+      NodeIdV1 (V1NodeId table columnValues) <- RS.resolveNodeId fld
       case Map.lookup (GS.mkTableTy table) nodeSelectMap of
         Nothing       -> throwVE $ "table " <> table <<> " not found"
-        Just selOpCtx -> do
+        Just (selOpCtx, pkeyColumns) -> do
           validateHdrs userInfo (_socHeaders selOpCtx)
-          QRFNode <$> RS.convertNodeSelect selOpCtx pkeyColumnValues fld
+          QRFNode <$> RS.convertNodeSelect selOpCtx pkeyColumns columnValues fld
     QCSelect ctx -> do
       validateHdrs userInfo (_socHeaders ctx)
       QRFSimple <$> RS.convertSelect ctx fld
@@ -150,9 +150,11 @@ queryFldToPGAST fld actionExecuter = do
              DS.JASMultipleRows -> QRFActionExecuteList
              DS.JASSingleObject -> QRFActionExecuteObject
       f <$> actionExecuter (RA.resolveActionQuery fld ctx (_uiSession userInfo))
-    QCSelectConnection pk ctx ->
+    QCSelectConnection pk ctx -> do
+      validateHdrs userInfo (_socHeaders ctx)
       QRFConnection <$> RS.convertConnectionSelect pk ctx fld
-    QCFuncConnection pk ctx ->
+    QCFuncConnection pk ctx -> do
+      validateHdrs userInfo (_fqocHeaders ctx)
       QRFConnection <$> RS.convertConnectionFuncQuery pk ctx fld
 
 mutFldToTx

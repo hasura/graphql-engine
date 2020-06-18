@@ -194,7 +194,7 @@ data AnnFieldG v
   | AFArrayRelation !(ArraySelectG v)
   | AFComputedField !(ComputedFieldSelect v)
   | AFRemote !RemoteSelect
-  | AFNodeId !QualifiedTable !(NonEmpty PGColumnInfo)
+  | AFNodeId !QualifiedTable !(PrimaryKeyColumns)
   | AFExpression !T.Text
   deriving (Show, Eq)
 
@@ -446,7 +446,7 @@ traverseConnectionSplit f (ConnectionSplit k v ob) =
 
 data ConnectionSelect v
   = ConnectionSelect
-  { _csPrimaryKeyColumns :: !(NE.NonEmpty PGColumnInfo)
+  { _csPrimaryKeyColumns :: !PrimaryKeyColumns
   , _csSplit             :: !(Maybe (NE.NonEmpty (ConnectionSplit v)))
   , _csSlice             :: !(Maybe ConnectionSlice)
   , _csSelect            :: !(AnnSelectG (ConnectionFields v) v)
