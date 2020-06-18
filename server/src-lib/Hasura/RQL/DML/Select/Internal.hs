@@ -6,13 +6,14 @@ module Hasura.RQL.DML.Select.Internal
   )
 where
 
-import           Control.Lens                hiding (op)
+import           Control.Lens                 hiding (op)
 import           Control.Monad.Writer.Strict
 
-import qualified Data.HashMap.Strict         as HM
-import qualified Data.List.NonEmpty          as NE
-import qualified Data.Text                   as T
+import qualified Data.HashMap.Strict          as HM
+import qualified Data.List.NonEmpty           as NE
+import qualified Data.Text                    as T
 
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Types
@@ -21,7 +22,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Rewrite
 import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML              as S
+import qualified Hasura.SQL.DML               as S
 
 -- Conversion of SelectQ happens in 2 Stages.
 -- Stage 1 : Convert input query into an annotated AST
@@ -805,18 +806,18 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
       Nothing                     -> sqlExp
       Just (ColumnOp opText cExp) -> S.mkSQLOpExp opText sqlExp cExp
 
-    mkNodeId :: QualifiedTable -> NonEmpty PGColumnInfo -> S.SQLExp
+    mkNodeId :: QualifiedTable -> PrimaryKeyColumns -> S.SQLExp
     mkNodeId (QualifiedObject tableSchema tableName) pkeyColumns =
-      let tableObjectExp = S.applyJsonBuildObj
-                           [ S.SELit "schema"
-                           , S.SELit (getSchemaTxt tableSchema)
-                           , S.SELit "name"
-                           , S.SELit (toTxt tableName)
-                           ]
-      in encodeBase64 $ flip S.SETyAnn S.textTypeAnn $ S.applyJsonBuildObj
-         [ S.SELit "table", tableObjectExp
-         , S.SELit "columns", mkPrimaryKeyColumnsObjectExp sourcePrefix pkeyColumns
-         ]
+      let columnInfoToSQLExp pgColumnInfo =
+            toJSONableExp False (pgiType pgColumnInfo) False $
+            S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ pgiColumn pgColumnInfo
+
+      -- See Note [Relay Node id].
+      in encodeBase64 $ flip S.SETyAnn S.textTypeAnn $ S.applyJsonBuildArray $
+         [ S.intToSQLExp $ nodeIdVersionInt currentNodeIdVersion
+         , S.SELit (getSchemaTxt tableSchema)
+         , S.SELit (toTxt tableName)
+         ] <> map columnInfoToSQLExp (toList pkeyColumns)
 
 injectJoinCond :: S.BoolExp       -- ^ Join condition
                -> S.BoolExp -- ^ Where condition
@@ -1013,15 +1014,6 @@ pageInfoSelectAliasIden = Iden "__page_info"
 cursorsSelectAliasIden :: Iden
 cursorsSelectAliasIden = Iden "__cursors_select"
 
-mkPrimaryKeyColumnsObjectExp :: Iden -> NonEmpty PGColumnInfo -> S.SQLExp
-mkPrimaryKeyColumnsObjectExp sourcePrefix primaryKeyColumns =
-  S.applyJsonBuildObj $ flip concatMap (toList primaryKeyColumns) $
-  \pgColumnInfo ->
-    [ S.SELit $ getPGColTxt $ pgiColumn pgColumnInfo
-    , toJSONableExp False (pgiType pgColumnInfo) False $
-      S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ pgiColumn pgColumnInfo
-    ]
-
 encodeBase64 :: S.SQLExp -> S.SQLExp
 encodeBase64 =
   removeNewline . bytesToBase64Text . convertToBytes
@@ -1058,7 +1050,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
         Nothing ->
           -- Extract primary key columns from base select along with cursor expression.
           -- Those columns are required to perform connection split via a WHERE clause.
-          mkCursorExtractor (mkPrimaryKeyColumnsObjectExp thisPrefix primaryKeyColumns) : primaryKeyColumnExtractors
+          mkCursorExtractor primaryKeyColumnsObjectExp : primaryKeyColumnExtractors
       orderByExp = _ssOrderBy selectSource
   (topExtractorExp, exps) <- flip runStateT [] $ processFields orderByExp
   let topExtractor = S.Extractor topExtractorExp $ Just $ S.Alias fieldIden
@@ -1075,6 +1067,14 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
     fieldIden = toIden fieldAlias
     thisPrefix = _pfThis sourcePrefixes
     permLimitSubQuery = PLSQNotRequired
+
+    primaryKeyColumnsObjectExp =
+      S.applyJsonBuildObj $ flip concatMap (toList primaryKeyColumns) $
+      \pgColumnInfo ->
+        [ S.SELit $ getPGColTxt $ pgiColumn pgColumnInfo
+        , toJSONableExp False (pgiType pgColumnInfo) False $
+          S.mkQIdenExp (mkBaseTableAlias thisPrefix) $ pgiColumn pgColumnInfo
+        ]
 
     primaryKeyColumnExtractors =
       flip map (toList primaryKeyColumns) $
