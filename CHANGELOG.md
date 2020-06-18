@@ -7,6 +7,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
 
 ## `v1.3.0-beta.2`
 
@@ -141,7 +142,6 @@ hasura seed apply --file 1234_add_some_seed_data.sql
 - console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
 - console: add help button and move about page to settings (#4848)
 - console: add new sidebar icon that separates enums from tables (fix #4984) (#4992)
-- console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
