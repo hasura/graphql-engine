@@ -84,8 +84,9 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = execWriterT 
       [ $$(G.litName "Int")
       , $$(G.litName "Float")
       , $$(G.litName "String")
-      , $$(G.litName "Boolean") ]
-      , $$(G.litName "ID") ]
+      , $$(G.litName "Boolean")
+      , $$(G.litName "ID")
+      ]
 
     validateEnum
       :: (MonadValidate [CustomTypeValidationError] m)

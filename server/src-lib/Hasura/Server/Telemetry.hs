@@ -166,7 +166,7 @@ computeMetrics sc _mtServiceTimings =
       _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) $ scFunctions sc
 
       -- FIXME:
-      _mtActions = ActionMetric 0 0 0 0 -- computeActionsMetrics (scActions sc) (snd . scCustomTypes $ sc)
+      _mtActions = ActionMetric 0 0 0 0 0 -- computeActionsMetrics (scActions sc) (snd . scCustomTypes $ sc)
 
   in Metrics{..}
 

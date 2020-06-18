@@ -30,7 +30,7 @@ import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Monad
-import           Hasura.GraphQL.Resolve.Action
+-- import           Hasura.GraphQL.Resolve.Action
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types

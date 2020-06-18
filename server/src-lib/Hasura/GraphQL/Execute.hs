@@ -43,7 +43,7 @@ import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
                                                          mkSetCookieHeaders)
 import           Hasura.Server.Version                  (HasVersion)
-import           Hasura.GraphQL.Resolve.Action
+-- import           Hasura.GraphQL.Resolve.Action
 
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.Inline          as EI
@@ -366,8 +366,6 @@ getSubsOpM pgExecCtx initialReusability fld actionExecuter =
         GR.queryFldToPGAST fld actionExecuter
       let varTypes = finalReusability ^? _Reusable
       EL.buildLiveQueryPlan pgExecCtx (VQ._fAlias fld) astUnresolved varTypes
--}
-
 getSubsOp
   :: ( MonadError QErr m
      , MonadIO m
@@ -383,7 +381,7 @@ getSubsOp
   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
 getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter fld =
   runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx queryReusability fld actionExecuter
->>>>>>> 5116e16e1... server(actions): add support for queries (close #4032) (#4309)
+-}
 
 execRemoteGQ
   :: ( HasVersion
