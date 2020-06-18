@@ -44,6 +44,8 @@ import {
   setLoveConsentState,
   getProClickState,
   setProClickState,
+  startIntercom,
+  closeIntercom,
 } from './utils';
 
 import { checkStableVersion, versionGT } from '../../helpers/versionUtils';
@@ -100,41 +102,20 @@ class Main extends React.Component {
   toggleProPopup() {
     const { dispatch } = this.props;
     dispatch(emitProClickedEvent({ open: !this.state.isPopUpOpen }));
-    this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
+    this.setState(prev => ({ isPopUpOpen: !prev.isPopUpOpen }));
   }
-  toggleHelpPopup() {
-    this.setState({ isHelpOpen: !this.state.isHelpOpen });
-  }
+
+  toggleHelpPopup = () => {
+    this.setState(prev => ({ isHelpOpen: !prev.isHelpOpen }));
+  };
+
   toggleLiveChatMode() {
-    this.setState({ isChatOpen: !this.state.isChatOpen });
-    if (!this.state.isChatOpen) {
-      // to do
-      if (window.Intercom) {
-        window.Intercom('boot', {
-          app_id: 'rucirpb3',
-        });
-      }
-      const head = document.getElementsByTagName('head')[0];
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.onload = () => {
-        window.Intercom('boot', {
-          app_id: 'rucirpb3',
-        });
-      };
-      // this token shouldn't be here I guess
-      script.src = `https://widget.intercom.io/widget/rucirpb3`;
-      head.appendChild(script);
-    } else {
-      if (window.Intercom) {
-        const interCom = window.Intercom;
-        const hideIntercom = () => {
-          return interCom('shutdown');
-        };
-        hideIntercom();
-      }
-    }
+    const nextChatStateOpen = !this.state.isChatOpen;
+    this.setState({ isChatOpen: nextChatStateOpen });
+
+    return nextChatStateOpen ? startIntercom() : closeIntercom();
   }
+
   setShowUpdateNotification() {
     const {
       latestStableServerVersion,
@@ -677,13 +658,11 @@ class Main extends React.Component {
       const { isHelpOpen } = this.state;
       if (isHelpOpen) {
         return (
-          <div className={styles.helpPopUpWrapper}>
-            <img
-              onClick={this.toggleHelpPopup.bind(this)}
-              className={styles.helpPopClose}
-              src={close}
-              alt={'Close'}
-            />
+          <div
+            onClick={this.toggleHelpPopup}
+            className={styles.helpPopUpWrapper}
+          >
+            <img className={styles.helpPopClose} src={close} alt={'Close'} />
             <ul>
               <li>
                 Enable Live Chat
@@ -865,7 +844,7 @@ class Main extends React.Component {
                   styles.headerRightNavbarBtn + ' ' + styles.helpWrapper
                 }
               >
-                <span onClick={this.toggleHelpPopup.bind(this)}>HELP</span>
+                <span onClick={this.toggleHelpPopup}>HELP</span>
                 {renderHelpPopup()}
               </div>
               {getLoveSection()}

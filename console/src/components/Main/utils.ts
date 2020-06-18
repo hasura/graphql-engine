@@ -1,3 +1,28 @@
+const INTERCOM_ID = 'rucirpb3';
+export const INTERCOM_URL = `https://widget.intercom.io/widget/${INTERCOM_ID}`;
+
+export const bootIntercom = () => {
+  if (!window.Intercom) return;
+  window.Intercom!('boot', {
+    app_id: INTERCOM_ID,
+  });
+};
+
+export const closeIntercom = () => {
+  if (window.Intercom) window.Intercom('shutdown');
+};
+
+export const startIntercom = () => {
+  if (window.Intercom) bootIntercom();
+
+  const head = document.getElementsByTagName('head')[0];
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.onload = bootIntercom;
+  script.src = INTERCOM_URL;
+  head.appendChild(script);
+};
+
 const loveConsentState = 'console:loveIcon';
 const proClickState = 'console:pro';
 const defaultState = {
