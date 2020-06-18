@@ -1,11 +1,10 @@
 import React from 'react';
 
-const styles = require('./Support.scss');
-
-const discord = require('./images/discord.svg');
-const docs = require('./images/docs.svg');
-const stackOverflow = require('./images/stack-overflow.svg');
-const github = require('./images/github.svg');
+import styles from './Support.scss';
+import discord from './images/discord.svg';
+import docs from './images/docs.svg';
+import stackOverflow from './images/stack-overflow.svg';
+import github from './images/github.svg';
 
 const supportListState = [
   {
@@ -40,12 +39,7 @@ const HelpPage = () => {
   const supportList = supportListState.map((list, index) => {
     return (
       <div
-        className={
-          'col-md-6 col-sm-6 col-xs-12 ' +
-          styles.padd_remove +
-          ' ' +
-          styles.supportDisplay
-        }
+        className={`col-md-6 col-sm-6 col-xs-12 ${styles.padd_remove} ${styles.supportDisplay}`}
       >
         <a
           key={index}
@@ -75,7 +69,7 @@ const HelpPage = () => {
         <h2 className={`${styles.headerText} ${styles.inline_block}`}>
           Support Forums
         </h2>
-        <div className={styles.descriptionText + ' ' + styles.wd60}>
+        <div className={`${styles.descriptionText} ${styles.wd60}`}>
           If you need any help with developing on Hasura, you can check out
           these various Hasura forums. Our community members include some very
           experienced engineers from some of the world’s most exciting
@@ -83,7 +77,7 @@ const HelpPage = () => {
           long time.
         </div>
         <div className={styles.supportWrapper}>{supportList}</div>
-        <div className={styles.descriptionText + ' ' + styles.wd60}>
+        <div className={`${styles.descriptionText} ${styles.wd60}`}>
           If you want to talk to our Product Specialists, please email us at{' '}
           <a href="mailto:support@hasura.io">support@hasura.io</a> or{' '}
           <a

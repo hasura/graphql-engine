@@ -12,3 +12,8 @@ declare namespace React {
     css?: import('styled-components').CSSProp;
   }
 }
+
+declare module '*.svg' {
+  const content: string;
+  export default content;
+}
