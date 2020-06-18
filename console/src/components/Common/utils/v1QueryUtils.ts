@@ -112,21 +112,44 @@ export const getInsertUpQuery = (
   };
 };
 
-type DeleteObject = {
+type DeleteObjectWithId = {
   id: number;
+};
+
+type PrimaryKeyInfo = {
+  table_name: string;
+  table_schema: string;
+  constraint_name: string;
+  columns: Array<string>;
 };
 
 export const getInsertDownQuery = (
   tableDef: TableDefinition,
-  insertion: DeleteObject
+  insertion: unknown,
+  primaryKeyInfo: PrimaryKeyInfo
 ) => {
-  const { id } = insertion;
+  let whereClause = {};
+  const isIDPresent = (insertion as DeleteObjectWithId)?.id;
+
+  if (!isIDPresent) {
+    const primaryKeys = primaryKeyInfo.columns;
+    if (primaryKeys.length) {
+      const chosenKey = primaryKeys[0];
+      whereClause = { [chosenKey]: (insertion as any)[chosenKey] };
+    } else {
+      // this should never the case since a primary key is
+      // required for creating a table
+      return null;
+    }
+  } else {
+    whereClause = { id: (insertion as DeleteObjectWithId).id };
+  }
 
   return {
     type: 'delete',
     args: {
       table: tableDef,
-      where: { id },
+      where: whereClause,
     },
   };
 };

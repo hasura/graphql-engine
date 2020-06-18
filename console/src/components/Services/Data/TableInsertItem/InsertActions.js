@@ -29,23 +29,30 @@ const Open = () => ({ type: _OPEN });
 const Close = () => ({ type: _CLOSE });
 
 // insertItem helper
-const createInsertMigration = (dispatch, getState, tableInfo, insertedData) => {
+const createInsertMigration = (
+  dispatch,
+  getState,
+  tableInfo,
+  insertedData,
+  primaryKeyInfo
+) => {
   const upQuery = getInsertUpQuery(
     { name: tableInfo.name, schema: tableInfo.schema },
     insertedData
   );
   const downQuery = getInsertDownQuery(
     { name: tableInfo.name, schema: tableInfo.schema },
-    insertedData
+    insertedData,
+    primaryKeyInfo
   );
 
   const migrationName = `insert_into_${tableInfo.name}`;
   // FIXME: they're only stubs at the moment.
   const customOnSuccess = () => {};
   const customOnError = () => {};
-  const requestMessage = 'Creating Insert Migration';
-  const successMessage = 'Created Insert Migration!';
-  const errorMessage = 'Error in creating Insert Migration';
+  const requestMessage = 'Creating migration';
+  const successMessage = 'Created migration!';
+  const errorMessage = 'Error in creating migration';
 
   makeMigrationCall(
     dispatch,
@@ -71,9 +78,10 @@ const insertItem = (tableName, colValues, isMigration = false) => {
     const insertObject = {};
     const state = getState();
     const { currentSchema } = state.tables;
-    const columns = state.tables.allSchemas.find(
+    const currentTableInfo = state.tables.allSchemas.find(
       t => t.table_name === tableName && t.table_schema === currentSchema
-    ).columns;
+    );
+    const columns = currentTableInfo.columns;
     let error = false;
     let errorMessage = '';
     Object.keys(colValues).map(colName => {
@@ -137,20 +145,21 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       requestAction(url, options, I_REQUEST_SUCCESS, I_REQUEST_ERROR)
     ).then(
       data => {
-        dispatch(
-          showSuccessNotification(
-            'Inserted!',
-            'Affected rows: ' + data.affected_rows
-          )
-        );
-
         if (isMigration) {
           const insertedData = data.returning[0];
           createInsertMigration(
             dispatch,
             getState,
             { name: tableName, schema: currentSchema },
-            insertedData
+            insertedData,
+            currentTableInfo.primary_key
+          );
+        } else {
+          dispatch(
+            showSuccessNotification(
+              'Inserted!',
+              'Affected rows: ' + data.affected_rows
+            )
           );
         }
       },
