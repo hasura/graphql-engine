@@ -47,7 +47,6 @@ const createInsertMigration = (
   );
 
   const migrationName = `insert_into_${tableInfo.name}`;
-  // FIXME: they're only stubs at the moment.
   const customOnSuccess = () => {};
   const customOnError = () => {};
   const requestMessage = 'Creating migration';
