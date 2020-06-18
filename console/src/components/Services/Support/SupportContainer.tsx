@@ -4,30 +4,27 @@ import { connect, ConnectedProps } from 'react-redux';
 import { RightContainer } from '../../Common/Layout/RightContainer/RightContainer';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
-// import LeftSidebar from './Sidebar';
-import { MapStateToProps } from '../../../types';
+import { ReduxState } from '../../../types';
 
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
 import styles from '../../Common/TableCommon/Table.scss';
 
-interface Props extends InjectedProps {}
+const helmetTitle = 'Support Forums | Hasura';
 
-const SupportContainer: React.FC<Props> = props => {
+const SupportContainer: React.FC<InjectedProps> = props => {
   const { children } = props;
 
-  const sidebarContent = (
-    <ul>
-      <li role="presentation" className={styles.active}>
-        <Link className={styles.linkBorder} to="/support/forum">
-          Support Forums
-        </Link>
-      </li>
-    </ul>
+  const leftContainer = (
+    <LeftContainer>
+      <ul>
+        <li role="presentation" className={styles.active}>
+          <Link className={styles.linkBorder} to="/support/forum">
+            Support Forums
+          </Link>
+        </li>
+      </ul>
+    </LeftContainer>
   );
-
-  const helmetTitle = 'Support Forums | Hasura';
-
-  const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 
   return (
     <PageContainer helmet={helmetTitle} leftContainer={leftContainer}>
@@ -36,20 +33,14 @@ const SupportContainer: React.FC<Props> = props => {
   );
 };
 
-const mapStateToProps: MapStateToProps<PropsFromState> = state => {
-  return {
+const connector = connect(
+  (state: ReduxState) => ({
     serverVersion: state.main.serverVersion,
-  };
-};
-
-type PropsFromState = {
-  serverVersion: string;
-};
-
-const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
+  }),
+  mapDispatchToPropsEmpty
+);
 
 type InjectedProps = ConnectedProps<typeof connector>;
-
 const ConnectedSupportContainer = connector(SupportContainer);
 
 export default ConnectedSupportContainer;
