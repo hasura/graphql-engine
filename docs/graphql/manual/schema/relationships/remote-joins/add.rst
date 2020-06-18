@@ -37,7 +37,7 @@ In the section opened by the above step, fill out these fields and click "Save":
 
 .. thumbnail:: /img/graphql/manual/remote-joins/define.png
    :alt: Defining the relationship
-   :width: 650px
+   :width: 800px
 
 In this example, we've added a remote schema which is a wrapper around `Auth0 <https://auth0.com/>`__'s REST API (see example 
 `here <https://github.com/tirumaraiselvan/auth0-graphql-server>`__).

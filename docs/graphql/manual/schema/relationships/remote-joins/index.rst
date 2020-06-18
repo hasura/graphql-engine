@@ -27,38 +27,13 @@ Because Hasura is meant to be a GraphQL server that you can expose directly to y
    :maxdepth: 1
  
    add
+   action
 
 
 
 TODO:
 -----
 
-
---
-
-Join REST API with table (Action relationship)
-
-1. Create Action
-[img]
-2. Go to the relationship tab of the Action
-[img]
-3. Join id of the action's returned type to the id of the table
-[img]
-4. GraphiQL
-[img of mutation with joined fields in return]
-- if table is joined with a remote schema, you can get those fields too
-[img of fields from remote schema]
-
---
-
-Check out voyager to see your entire API graph
-
---
-
-Permissions
-^^^^^^^^^^^
-
---
 
 Performance
 ^^^^^^^^^^^
