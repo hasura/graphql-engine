@@ -6,10 +6,11 @@ import styles from './PermissionsSummary.scss';
 type IconButtonProps = {
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   icon: string;
+  title: string;
 };
 
-const IconButton: React.FC<IconButtonProps> = ({ onClick, icon }) => (
-  <Button color="white" size="xs" onClick={onClick} title="Copy permissions">
+const IconButton: React.FC<IconButtonProps> = ({ onClick, icon, title }) => (
+  <Button color="white" size="xs" onClick={onClick} title={title}>
     <i className={`fa ${icon} ${styles.actionIcon}`} aria-hidden="true" />
   </Button>
 );
@@ -51,10 +52,15 @@ const RolesHeader: React.FC<RolesHeaderProps> = ({
             isSelected={currentRole === role}
             onClick={() => setRole(role, currentRole === role)}
             actionButtons={[
-              <IconButton icon="fa-copy" onClick={e => onCopyClick(e, role)} />,
+              <IconButton
+                icon="fa-copy"
+                onClick={e => onCopyClick(e, role)}
+                title="Copy Permissions"
+              />,
               <IconButton
                 icon="fa-trash"
                 onClick={e => onDeleteClick(e, role)}
+                title="Delete Role Permissions"
               />,
             ]}
           />
