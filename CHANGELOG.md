@@ -7,6 +7,8 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
+- console: allow configurable statement_timeout on console raw sql page (close #4998) (#5045)
 
 ## `v1.3.0-beta.2`
 
@@ -145,7 +147,6 @@ hasura seed apply --file 1234_add_some_seed_data.sql
 - console: respect read-only mode in actions pages (fix #4656) (#4764)
 - console: allow configuring session_argument for custom functions (close #4499) (#4922)
 - console: fix listen update column config selection for event trigger (close #5042) (#5043)
-- console: allow configurable statement_timeout on console raw sql page (close #4998) (#5045)
 - cli: add new flags `up-sql` and `down-sql` to generate sql based migrations from the CLI (#5026)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)

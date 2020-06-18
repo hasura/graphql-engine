@@ -19,7 +19,7 @@ const defaultState = {
   isMigrationChecked: false,
   isTableTrackChecked: false,
   showTrackTable: false,
-  statementTimeout: persistedStatementTimeout || null,
+  statementTimeout: persistedStatementTimeout || 10,
 };
 
 export default defaultState;
