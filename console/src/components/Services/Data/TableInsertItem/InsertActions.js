@@ -7,12 +7,17 @@ import {
   showSuccessNotification,
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
-import { getEnumColumnMappings } from '../../../Common/utils/pgUtils';
+import {
+  getEnumColumnMappings,
+  arrayToPostgresArray,
+} from '../../../Common/utils/pgUtils';
 import {
   getEnumOptionsQuery,
   getInsertUpQuery,
   getInsertDownQuery,
 } from '../../../Common/utils/v1QueryUtils';
+import { ARRAY } from '../utils';
+import { isStringArray } from '../../../Common/utils/jsUtils';
 import { makeMigrationCall } from '../DataActions';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
@@ -108,6 +113,17 @@ const insertItem = (tableName, colValues, isMigration = false) => {
             colValues[colName] +
             ' as a valid JSON object/array';
           error = true;
+        }
+      } else if (colType === ARRAY && isStringArray(colValues[colName])) {
+        try {
+          const arr = JSON.parse(colValues[colName]);
+          insertObject[colName] = arrayToPostgresArray(arr);
+        } catch {
+          errorMessage =
+            colName +
+            ' :: could not read ' +
+            colValues[colName] +
+            ' as a valid array';
         }
       } else {
         insertObject[colName] = colValues[colName];
