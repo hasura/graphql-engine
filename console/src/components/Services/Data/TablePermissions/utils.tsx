@@ -142,3 +142,16 @@ export const getAllowedFilterKeys = (query: BaseQueryType) => {
       return ['filter'];
   }
 };
+
+export const getQuerySingleRowMutation = (query: BaseQueryType) => {
+  switch (query) {
+    case 'insert':
+      return 'insert_one';
+    case 'update':
+      return 'update_by_pk';
+    case 'delete':
+      return 'delete_by_pk';
+    default:
+      return '';
+  }
+};
