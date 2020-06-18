@@ -56,7 +56,7 @@ import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates                (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Migrate                     (migrateCatalog)
+import           Hasura.Server.Migrate                     (MigrationResult, migrateCatalog)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
@@ -187,23 +187,25 @@ initialiseCtx hgeCmd rci = do
           pgLogger = mkPGLogger logger
       return $ Loggers loggerCtx logger pgLogger
 
-    -- initialize or migrate @hdb_catalog@ schema
-    migrateCatalogSchema logger pool httpManager sqlGenCtx = do
-      let pgExecCtx = mkPGExecCtx Q.Serializable pool
-          adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
-      currentTime <- liftIO Clock.getCurrentTime
-      initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite $
-        migrateCatalog currentTime
+-- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
+migrateCatalogSchema :: MonadIO m => Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx -> m MigrationResult
+migrateCatalogSchema logger pool httpManager sqlGenCtx = do
+  let pgExecCtx = mkPGExecCtx Q.Serializable pool
+      adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+  currentTime <- liftIO Clock.getCurrentTime
+  initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite $
+    migrateCatalog currentTime
 
-      migrationResult <-
-        initialiseResult `onLeft` \err -> do
-          unLogger logger StartupLog
-            { slLogLevel = LevelError
-            , slKind = "db_migrate"
-            , slInfo = A.toJSON err
-            }
-          liftIO exitFailure
-      unLogger logger migrationResult
+  migrationResult <-
+    initialiseResult `onLeft` \err -> do
+      unLogger logger StartupLog
+        { slLogLevel = LevelError
+        , slKind = "db_migrate"
+        , slInfo = A.toJSON err
+        }
+      liftIO exitFailure
+  unLogger logger migrationResult
+  return migrationResult
 
 
 -- | Run a transaction and if an error is encountered, log the error and abort the program

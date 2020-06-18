@@ -121,8 +121,13 @@ sendMsgWithMetadata wsConn msg (LQ.LiveQueryMetadata execTime) =
   liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo
   where
     bs = encodeServerMsg msg
+    (msgType, operationId) = case msg of
+      (SMData (DataMsg opId _)) -> (Just SMT_GQL_DATA, Just opId)
+      _                         -> (Nothing, Nothing)
     wsInfo = Just $! WS.WSEventInfo
-      { WS._wseiQueryExecutionTime = Just $! realToFrac execTime
+      { WS._wseiEventType = msgType
+      , WS._wseiOperationId = operationId
+      , WS._wseiQueryExecutionTime = Just $! realToFrac execTime
       , WS._wseiResponseSize = Just $! BL.length bs
       }
 
