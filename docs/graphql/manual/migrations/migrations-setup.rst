@@ -161,8 +161,8 @@ This command will export the current Hasura metadata as a bunch of YAML files in
 
 If you'd like to read more about the format of metadata files, check out the :ref:`metadata_format_v2`.
 
-Step 3.3: Add a checkpoint
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 3.3: Add a checkpoint to version control
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Commit the current project state to version control:
 
@@ -209,8 +209,8 @@ The related metadata changes will automatically be exported into the ``metadata`
 
    Migrations are only created when using the console through the CLI.
 
-Step 6: Squash migrations and add checkpoints
----------------------------------------------
+Step 6: Squash migrations and add checkpoints to version control
+----------------------------------------------------------------
 
 As you keep using the console via the CLI to make changes to the schema, new
 migration files will keep getting generated and the metadata files will keep getting
