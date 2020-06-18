@@ -1,11 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
-
+import { RightContainer } from '../../Common/Layout/RightContainer/RightContainer';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 // import LeftSidebar from './Sidebar';
-
 import { MapStateToProps } from '../../../types';
 
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
@@ -13,7 +12,7 @@ import styles from '../../Common/TableCommon/Table.scss';
 
 interface Props extends InjectedProps {}
 
-const Container: React.FC<Props> = props => {
+const SupportContainer: React.FC<Props> = props => {
   const { children } = props;
 
   const sidebarContent = (
@@ -32,7 +31,7 @@ const Container: React.FC<Props> = props => {
 
   return (
     <PageContainer helmet={helmetTitle} leftContainer={leftContainer}>
-      {children}
+      <RightContainer>{children}</RightContainer>
     </PageContainer>
   );
 };
@@ -51,6 +50,6 @@ const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
 
 type InjectedProps = ConnectedProps<typeof connector>;
 
-const ContainerConnector = connector(Container);
+const ConnectedSupportContainer = connector(SupportContainer);
 
-export default ContainerConnector;
+export default ConnectedSupportContainer;

@@ -36,7 +36,7 @@ const supportListState = [
     link: 'https://github.com/hasura/graphql-engine/',
   },
 ];
-const Support = () => {
+const HelpPage = () => {
   const supportList = supportListState.map((list, index) => {
     return (
       <div
@@ -99,4 +99,4 @@ const Support = () => {
     </div>
   );
 };
-export default Support;
+export default HelpPage;

@@ -29,7 +29,6 @@ import generatedVoyagerConnector from './components/Services/VoyagerView/Voyager
 
 import generatedLoginConnector from './components/Login/Login';
 
-import { getSupportRouter } from './components/Services/Support';
 import settingsContainer from './components/Services/Settings/Container';
 import metadataOptionsConnector from './components/Services/Settings/MetadataOptions/MetadataOptions';
 import metadataStatusConnector from './components/Services/Settings/MetadataStatus/MetadataStatus';
@@ -41,6 +40,8 @@ import { showErrorNotification } from './components/Services/Common/Notification
 import { CLI_CONSOLE_MODE } from './constants';
 import UIKit from './components/UIKit/';
 import { Heading } from './components/UIKit/atoms';
+import ConnectedSupportContainer from './components/Services/Support/SupportContainer';
+import HelpPage from './components/Services/Support/HelpPage';
 
 const routes = store => {
   // load hasuractl migration status
@@ -72,7 +73,6 @@ const routes = store => {
 
     return;
   };
-  const supportRouter = getSupportRouter(connect, store, composeOnEnterHooks);
   const _dataRouterUtils = dataRouterUtils(connect, store, composeOnEnterHooks);
   const requireSchema = _dataRouterUtils.requireSchema;
   const dataRouter = _dataRouterUtils.makeDataRouter;
@@ -147,7 +147,9 @@ const routes = store => {
           {actionsRouter}
           {eventsRouter}
           {uiKitRouter}
-          {supportRouter}
+          <Route path="support" component={ConnectedSupportContainer}>
+            <Route path="forum" component={HelpPage} />
+          </Route>
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />
