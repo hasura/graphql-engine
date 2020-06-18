@@ -51,7 +51,6 @@ import           Control.Arrow.Extended
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Aeson.Types
-import           Text.Show              (Show (..))
 
 import qualified Data.Text              as T
 import qualified Database.PG.Query      as Q
@@ -99,6 +98,8 @@ data Code
   | InvalidCustomTypes
   -- Actions Webhook code
   | ActionWebhookCode !Text
+  -- Custom code for extending this sum-type easily
+  | CustomCode !Text
   deriving (Eq)
 
 instance Show Code where
@@ -139,6 +140,7 @@ instance Show Code where
     StartFailed           -> "start-failed"
     InvalidCustomTypes    -> "invalid-custom-types"
     ActionWebhookCode t   -> T.unpack t
+    CustomCode t          -> T.unpack t
 
 data QErr
   = QErr

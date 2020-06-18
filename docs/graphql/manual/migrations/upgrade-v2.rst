@@ -24,8 +24,8 @@ directories in the Hasura project. Metadata is managed in its separate
 managed via :ref:`migration files <migration_file_format_v2>` that are now in
 ``SQL`` format.
 
-Changes to exising workflows
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changes needed in existing workflows
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Due to the above mentioned changes, any workflows that involve applying migrations
 have an additional step of applying metadata as well.
@@ -36,10 +36,18 @@ For example,
   to be followed by a ``hasura metadata apply`` command.
 
 - if the ``cli-migrations`` Docker image is used for :ref:`auto applying migrations <auto_apply_migrations>`
-  at server start, now the ``/metadata`` directory will also have to be mounted
+  at server start, now you will have to use the ``cli-migrations-v2`` image and
+  the ``/metadata`` directory will also have to be mounted along with the ``/migrations``
+  directory
 
 Upgrade steps
 -------------
+
+Step 0: Take a backup
+^^^^^^^^^^^^^^^^^^^^^
+
+It is recommended that you take a backup of your Hasura project before attempting
+to upgrade to ``config v2``
 
 Step 1: Upgrade to the latest CLI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
