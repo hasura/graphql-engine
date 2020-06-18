@@ -31,6 +31,8 @@ Examples:
 |           | user's data                       |                                       |
 +-----------+-----------------------------------+---------------------------------------+
 
+See :ref:`this page <permission_rules>` on how to configure permission rules.
+
 .. admonition:: Role-based schemas
 
   For every role that you create, Hasura automatically publishes a different GraphQL schema that represents the
