@@ -227,7 +227,7 @@ class PermissionsSummary extends Component {
       e.stopPropagation();
 
       const deleteConfirmed = getConfirmation(
-        `This will delete permissions for the role: ${role}?`,
+        `This will delete permissions for the role: ${role}`,
         true,
         role
       );
