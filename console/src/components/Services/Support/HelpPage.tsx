@@ -6,6 +6,13 @@ import docs from './images/docs.svg';
 import stackOverflow from './images/stack-overflow.svg';
 import github from './images/github.svg';
 
+const CHECK_FORUMS = `
+If you need any help with developing on Hasura, you can check out
+these various Hasura forums. Our community members include some very
+experienced engineers from some of the world’s most exciting
+companies, and many of them have been using Hasura in Production for a
+long time.`;
+
 const supportListState = [
   {
     brand: discord,
@@ -36,31 +43,6 @@ const supportListState = [
   },
 ];
 const HelpPage = () => {
-  const supportList = supportListState.map((list, index) => {
-    return (
-      <div
-        className={`col-md-6 col-sm-6 col-xs-12 ${styles.padd_remove} ${styles.supportDisplay}`}
-      >
-        <a
-          key={index}
-          href={list.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.supportFlex}
-        >
-          <div className={styles.supportList}>
-            <div className={styles.supportBrand}>
-              <img src={list.brand} alt={list.title} />
-            </div>
-            <div className={styles.supportContainer}>
-              <div className={styles.title}>{list.title}</div>
-              <div className={styles.descriptionText}>{list.description}</div>
-            </div>
-          </div>
-        </a>
-      </div>
-    );
-  });
   return (
     <div
       className={`${styles.padd_left_remove} ${styles.supportForumWrapper} container-fluid ${styles.padd_top}`}
@@ -70,13 +52,37 @@ const HelpPage = () => {
           Support Forums
         </h2>
         <div className={`${styles.descriptionText} ${styles.wd60}`}>
-          If you need any help with developing on Hasura, you can check out
-          these various Hasura forums. Our community members include some very
-          experienced engineers from some of the world’s most exciting
-          companies, and many of them have been using Hasura in Production for a
-          long time.
+          {CHECK_FORUMS}
         </div>
-        <div className={styles.supportWrapper}>{supportList}</div>
+        <div className={styles.supportWrapper}>
+          {supportListState.map((list, index) => {
+            return (
+              <div
+                className={`col-md-6 col-sm-6 col-xs-12 ${styles.padd_remove} ${styles.supportDisplay}`}
+              >
+                <a
+                  key={index}
+                  href={list.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.supportFlex}
+                >
+                  <div className={styles.supportList}>
+                    <div className={styles.supportBrand}>
+                      <img src={list.brand} alt={list.title} />
+                    </div>
+                    <div className={styles.supportContainer}>
+                      <div className={styles.title}>{list.title}</div>
+                      <div className={styles.descriptionText}>
+                        {list.description}
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            );
+          })}
+        </div>
         <div className={`${styles.descriptionText} ${styles.wd60}`}>
           If you want to talk to our Product Specialists, please email us at{' '}
           <a href="mailto:support@hasura.io">support@hasura.io</a> or{' '}
