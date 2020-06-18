@@ -110,6 +110,10 @@ Using variables:
       }
     }
 
+.. note:: 
+
+   ``insert_<object>_one`` will **only** be available if you have select permissions on the table, as it returns the updated row.
+
 .. admonition:: Supported from
 
    The ``insert_<object>_one`` mutation is supported in versions ``v1.2.0``
