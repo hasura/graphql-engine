@@ -119,4 +119,4 @@ If your table has an existing remote relationship, here you can also get the fie
       }
     }
 
-In the :ref:`Adding a remote relationship <add_remote_relationship>` section, we joined our ``users`` table with a remote `Auth0 <https://auth0.com/>`__ schema. Here, we're able to get the Auth0 profile data of the user returned from our action.
+In the :ref:`add_remote_relationship` section, we joined our ``users`` table with a remote `Auth0 <https://auth0.com/>`__ schema. Here, we're able to get the Auth0 profile data of the user returned from our action.

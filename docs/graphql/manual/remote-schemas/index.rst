@@ -51,6 +51,4 @@ a union of top-level nodes from each of the sub-schemas.
    :maxdepth: 1
  
    adding-schema
-   schema-points
    schema-auth
-   bypass-auth

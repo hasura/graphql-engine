@@ -15,7 +15,7 @@ Architecture of remote joins
 Security
 ^^^^^^^^
 
-Hasura's :ref:`authorization model <authorization>` gives you role-based access control. This extends to actions and remote schemas. In actions, you can go to the "Permissions" tab and choose which fields to expose for which roles. In remote schemas, Hasura will forward your session variables to your custom authorization implementation. More fine-grained role-based exposure of remote schema fields is in the works.
+Hasura's :ref:`authorization model <authorization>` gives you role-based access control. This extends to actions and remote schemas. In actions, you can go to the "Permissions" tab and choose which fields to expose for which roles. In remote schemas, Hasura will :ref:`forward <schema_auth>` your session variables to your custom authorization implementation. More fine-grained role-based exposure of remote schema fields is in the works.
 
 Performance
 ^^^^^^^^^^^
