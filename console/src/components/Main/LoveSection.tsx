@@ -5,9 +5,8 @@ import fetch from 'isomorphic-fetch';
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import styles from './Main.scss';
 import Endpoints from '../../Endpoints';
-
-const pixHeart = require('./images/pix-heart.svg');
-const consoleLogo = require('./images/console-logo.svg');
+import PixelHeart from './images/components/pixelHeart';
+import ConsoleLogo from './images/components/consoleLogo';
 
 type UpdateProps = {
   title: string;
@@ -78,7 +77,7 @@ const Notifications: React.FC<NotificationProps> = ({ data }) => (
     <Flex justifyContent="space-between">
       <Heading as="h2" color="#000" fontSize="20px">
         Latest updates
-        <img src={consoleLogo} alt="hasura-console" id="console-logo" />
+        <ConsoleLogo id="console-logo" />
       </Heading>
     </Flex>
     {data.length &&
@@ -145,7 +144,7 @@ const LoveSection = () => {
         aria-expanded="false"
         onClick={() => toggleLove(!open)}
       >
-        <img className="img-responsive" src={pixHeart} alt="pix Heart" />
+        <PixelHeart className="img-responsive" />
       </div>
       <Notifications data={notificationData} />
     </>
