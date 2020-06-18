@@ -5,7 +5,7 @@
 .. _remote_joins_architecture:
 
 Architecture of remote joins
-----------------------------
+============================
 
 .. contents:: Table of contents
   :backlinks: none

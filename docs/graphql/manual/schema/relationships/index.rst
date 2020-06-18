@@ -76,6 +76,13 @@ The following guides will help you model the different types of table relationsh
 - :ref:`one_to_many_modelling`
 - :ref:`many_to_many_modelling`
 
+Remote joins
+------------
+
+- :ref:`add_remote_relationship`
+- :ref:`add_action_relationship`
+- :ref:`remote_joins_architecture`
+
 .. toctree::
   :maxdepth: 1
   :hidden:
@@ -83,4 +90,6 @@ The following guides will help you model the different types of table relationsh
   create
   rename
   Database modelling <database-modelling/index>
-  Remote joins & relationships <remote-joins/index>
+  remote
+  action
+  architecture

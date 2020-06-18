@@ -4,8 +4,8 @@
 
 .. _add_action_relationship:
 
-Adding an action relationship
------------------------------
+Action relationships
+====================
 
 :ref:`Actions <actions>` are a way to extend Hasura’s schema with custom business logic using custom queries and mutations. They can be used to call a REST endpoint from Hasura as a resolver for custom types. They are especially useful for setting up serverless functions as resolvers.
 
