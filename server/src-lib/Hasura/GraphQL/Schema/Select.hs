@@ -507,10 +507,12 @@ fieldSelection fieldInfo selectPermissions stringifyNum = do
 --   is also named "arg_$n". (FIXME: link to an issue?)
 --
 --   Depending on the arguments the SQL function requires, there are three possible outcomes:
---   1. if the function requires no argument, or if its only argument is the session argument,
---      the args object will NOT be part of the schema;
+--   1. if the function requires no argument, or if its only argument is not
+--      user-provided (the session argument in the case of custom functions, the
+--      table row argument in the case of computed fields), the args object will
+--      NOT be part of the schema;
 --   2. if all non-session arguments have a default value, then the args object will be in
---      the schema as an optional field
+--      the schema as an optional field;
 --   3. otherwise, if there is at least one field that doesn't have a default value, the
 --      args object will be a required field.
 functionArgs
@@ -617,11 +619,9 @@ computedFieldFunctionArgs
 computedFieldFunctionArgs ComputedFieldFunction{..} =
   functionArgs _cffName (IAUserProvided <$> _cffInputArgs) <&> fmap addTableRowArgument
   where
-    addTableRowArgument (RQL.FunctionArgsExp positional named) = case _cffTableArgument of
-      FTAFirst -> RQL.FunctionArgsExp (tableRowArgument : positional) named
-      FTANamed argName index ->
-        RQL.insertFunctionArg argName index tableRowArgument $
-        RQL.FunctionArgsExp positional named
+    addTableRowArgument args@(RQL.FunctionArgsExp positional named) = case _cffTableArgument of
+      FTAFirst               -> RQL.FunctionArgsExp (tableRowArgument : positional) named
+      FTANamed argName index -> RQL.insertFunctionArg argName index tableRowArgument args
     tableRowArgument = RQL.AETableRow Nothing
 
 
