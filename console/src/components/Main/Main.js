@@ -62,15 +62,11 @@ class Main extends React.Component {
       isDropdownOpen: false,
     };
 
-    this.handleBodyClick = this.handleBodyClick.bind(this);
+    this.dropdownRef = React.createRef(null);
   }
 
   componentDidMount() {
     const { dispatch } = this.props;
-
-    document
-      .querySelector('body')
-      .addEventListener('click', this.handleBodyClick);
 
     dispatch(loadServerVersion()).then(() => {
       dispatch(featureCompatibilityInit());
@@ -139,20 +135,11 @@ class Main extends React.Component {
     }
   }
 
-  handleBodyClick(e) {
-    const heartDropDown = document.getElementById('dropdown_wrapper');
-    const heartDropDownOpen = document.querySelectorAll(
-      '#dropdown_wrapper.open'
-    );
-
-    if (
-      heartDropDown &&
-      !heartDropDown.contains(e.target) &&
-      heartDropDownOpen.length !== 0
-    ) {
-      heartDropDown.classList.remove('open');
-    }
-  }
+  closeDropdown = () => {
+    this.setState({
+      isDropdownOpen: false,
+    });
+  };
 
   toggleDropDown = e => {
     e.preventDefault();
@@ -627,6 +614,7 @@ class Main extends React.Component {
               className={`${styles.clusterInfoWrapper} ${
                 this.state.isDropdownOpen ? 'open' : ''
               }`}
+              ref={this.dropdownRef}
             >
               {getAdminSecretSection()}
               <div
@@ -658,7 +646,11 @@ class Main extends React.Component {
               >
                 <div className={styles.headerRightNavbarBtn}>HELP</div>
               </a>
-              <LoveSection onClickLoveSection={this.toggleDropDown} />
+              <LoveSection
+                ref={this.dropdownRef}
+                onClickLoveSection={this.toggleDropDown}
+                onClickBody={this.closeDropdown}
+              />
             </div>
           </div>
 

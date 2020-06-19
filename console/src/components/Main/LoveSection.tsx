@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { connect } from 'react-redux';
 import { css } from 'styled-components';
 
@@ -7,6 +7,7 @@ import { ConsoleNotification } from './ConsoleNotification';
 import styles from './Main.scss';
 import PixelHeart from './images/components/PixelHeart';
 import ConsoleLogo from './images/components/ConsoleLogo';
+import { useOnClickOutside } from './utils';
 
 const getDateString = (date: string | number | Date) => {
   return new Date(date).toLocaleString().split(', ')[0];
@@ -105,23 +106,26 @@ const Notifications: React.FC<NotificationProps> = ({ data }) => (
 type LoveSectionProps = {
   consoleNotifications: Array<ConsoleNotification>;
   onClickLoveSection: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onClickBody: () => void;
 };
 
-const LoveSection: React.FC<LoveSectionProps> = ({
-  consoleNotifications,
-  onClickLoveSection,
-}) => (
+type Ref = HTMLElement
+
+const LoveSection = forwardRef<Ref, LoveSectionProps>((props, ref) => {
+  useOnClickOutside((ref as React.RefObject<Ref>), () => props.onClickBody());
+  return (
     <>
       <div
         className={`${styles.shareSection} dropdown-toggle`}
         aria-expanded="false"
-        onClick={onClickLoveSection}
+        onClick={props.onClickLoveSection}
       >
         <PixelHeart className="img-responsive" width={32} height={20} />
       </div>
-      <Notifications data={consoleNotifications} />
+      <Notifications data={props.consoleNotifications} />
     </>
   );
+});
 
 interface NotificationData {
   main: {
