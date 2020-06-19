@@ -522,11 +522,14 @@ TrueExp
 .. code-block:: graphql
 
   query {
-    article(where: {is_published: {}}) {
-      title
-      content
+    author(where: {articles: {}}) {
+      name
     }
   }
+
+.. note::
+
+  ``{}`` evaluates to true whenever an object exists (even if it's ``null``).
 
 ColumnExp
 #########
@@ -867,6 +870,7 @@ Order by type for ``article`` table:
 .. _OrderByEnum:
 
 OrderByEnum
+###########
 
 .. code-block:: graphql
 

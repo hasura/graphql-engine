@@ -665,7 +665,11 @@ TrueExp
 
 .. code-block:: graphql
 
-  {rating: {}}
+  author(where: {articles: {}})
+
+.. note::
+
+  ``{}`` evaluates to true whenever an object exists (even if it's ``null``).
 
 ColumnExp
 #########
