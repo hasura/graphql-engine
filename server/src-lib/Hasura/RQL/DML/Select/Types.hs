@@ -17,7 +17,6 @@ import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.Table
 import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
 

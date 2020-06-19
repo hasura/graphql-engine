@@ -86,7 +86,7 @@ toJValue = \case
     throwVE "variables are not allowed in scalars"
   G.VInt i                        -> return $ J.toJSON i
   G.VFloat f                      -> return $ J.toJSON f
-  G.VString (G.StringValue t)     -> return $ J.toJSON t
+  G.VString _ (G.StringValue t)   -> return $ J.toJSON t
   G.VBoolean b                    -> return $ J.toJSON b
   G.VNull                         -> return J.Null
   G.VEnum (G.EnumValue n)         -> return $ J.toJSON n
@@ -126,7 +126,7 @@ valueParser =
     pScalar (G.VInt v)        = pVal $ J.Number $ fromIntegral v
     pScalar (G.VFloat v)      = pVal $ J.Number $ fromFloatDigits v
     pScalar (G.VBoolean b)    = pVal $ J.Bool b
-    pScalar (G.VString sv)    = pVal $ J.String $ G.unStringValue sv
+    pScalar (G.VString _ sv)  = pVal $ J.String $ G.unStringValue sv
     pScalar (G.VEnum _)       = throwVE "unexpected enum for a scalar"
     pScalar v                 = pVal =<< toJValue v
 

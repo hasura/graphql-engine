@@ -55,7 +55,7 @@ resolveVariables definitions jsonValues selSet = do
 jsonToGqlValue :: MonadError QErr m => J.Value -> m (G.Value a)
 jsonToGqlValue J.Null         = pure $ G.VNull
 jsonToGqlValue (J.Bool val)   = pure $ G.VBoolean val
-jsonToGqlValue (J.String val) = pure $ G.VString val
+jsonToGqlValue (J.String val) = pure $ G.VString G.ExternalValue val
 jsonToGqlValue (J.Number val)
   | Just intVal <- toBoundedInteger val = pure $ G.VInt intVal
   | floatVal <- toRealFloat val         = pure $ G.VFloat floatVal

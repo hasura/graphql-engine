@@ -14,8 +14,8 @@ import           Data.Aeson                    (Value)
 import           Data.Functor.Classes          (Eq1 (..), Eq2 (..))
 import           Data.GADT.Compare
 import           Data.Int
-import           Data.Set                      (Set)
 import           Data.Scientific               (Scientific)
+import           Data.Set                      (Set)
 import           Data.Vector                   (Vector)
 import           Data.Void                     (Void)
 import           GHC.Generics                  ((:*:) (..), (:+:) (..), Generic (..), K1 (..),
@@ -204,6 +204,7 @@ instance (Cacheable (a b), Cacheable b) => Cacheable (G.InlineFragment a b)
 instance (Cacheable (a b), Cacheable b) => Cacheable (G.OperationDefinition a b)
 instance (Cacheable (a b), Cacheable b) => Cacheable (G.Selection a b)
 instance (Cacheable (a b), Cacheable b) => Cacheable (G.TypedOperationDefinition a b)
+instance Cacheable G.Origin
 instance Cacheable a => Cacheable (G.Value a)
 
 deriving instance Cacheable G.Description

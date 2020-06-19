@@ -242,8 +242,8 @@ scalar name description representation = Parser
         VInt   a -> pure $ fromIntegral a
         _        -> typeMismatch name "a float" v
       SRString -> case v of
-        VString a -> pure a
-        _         -> typeMismatch name "a string" v
+        VString _ a -> pure a
+        _           -> typeMismatch name "a string" v
   }
 
 boolean :: MonadParse m => Parser 'Both m Bool
@@ -272,16 +272,20 @@ enum
   -> Parser 'Both m a
 enum name description values = Parser
   { pType = NonNullable $ TNamed $ mkDefinition name description $ TIEnum (fst <$> values)
-  , pParser = peelVariable >=> \case
-      VEnum (EnumValue value) -> case M.lookup value valuesMap of
-        Just result -> pure result
-        Nothing -> parseError $ "expected one of the values "
-          <> englishList "or" (dquoteTxt . dName . fst <$> values) <> "for type "
-          <> name <<> ", but found " <>> value
-      other -> typeMismatch name "an enum value" other
+  , pParser = peelVariable >=> \value -> case value of
+      VString origin stringValue -> case (origin, mkName stringValue) of
+        (ExternalValue, Just enumValue) -> validate enumValue
+        _ -> typeMismatch name "an enum value" value
+      VEnum (EnumValue enumValue) -> validate enumValue
+      _ -> typeMismatch name "an enum value" value
   }
   where
     valuesMap = M.fromList $ over (traverse._1) dName $ toList values
+    validate value = case M.lookup value valuesMap of
+      Just result -> pure result
+      Nothing -> parseError $ "expected one of the values "
+        <> englishList "or" (dquoteTxt . dName . fst <$> values) <> "for type "
+        <> name <<> ", but found " <>> value
 
 nullable :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m (Maybe a)
 nullable parser = gcastWith (inputParserInput @k) Parser
@@ -611,7 +615,7 @@ graphQLToJSON = peelVariable >=> \case
   VNull               -> pure A.Null
   VInt i              -> pure $ A.toJSON i
   VFloat f            -> pure $ A.toJSON f
-  VString t           -> pure $ A.toJSON t
+  VString _ t         -> pure $ A.toJSON t
   VBoolean b          -> pure $ A.toJSON b
   VEnum (EnumValue n) -> pure $ A.toJSON n
   VList values        -> A.toJSON <$> traverse graphQLToJSON values
@@ -635,7 +639,7 @@ describeValueWith describeVariable = \case
   VVariable var -> describeVariable var
   VInt _ -> "an integer"
   VFloat _ -> "a float"
-  VString _ -> "a string"
+  VString _ _ -> "a string"
   VBoolean _ -> "a boolean"
   VNull -> "null"
   VEnum _ -> "an enum value"

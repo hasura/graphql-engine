@@ -95,7 +95,7 @@ instance ToJSON RemoteFieldInfo where
         \case
           (G.VInt i) -> toJSON i
           (G.VFloat f) -> toJSON f
-          (G.VString s) -> toJSON s
+          (G.VString _ s) -> toJSON s
           (G.VBoolean b) -> toJSON b
           G.VNull -> Null
           (G.VEnum s) -> toJSON s
@@ -134,7 +134,7 @@ instance ToJSON RemoteArguments where
           (G.VVariable v) -> toJSON ("$" <> G.unName v)
           (G.VInt i) -> toJSON i
           (G.VFloat f) -> toJSON f
-          (G.VString s) -> toJSON s
+          (G.VString _ s) -> toJSON s
           (G.VBoolean b) -> toJSON b
           G.VNull -> Null
           (G.VEnum s) -> toJSON s
@@ -152,7 +152,7 @@ instance FromJSON RemoteArguments where
           traverse
           (\(key, value) -> do
               name <- case G.mkName key of
-                Nothing -> fail $ T.unpack key <> " is an invalid key name"
+                Nothing    -> fail $ T.unpack key <> " is an invalid key name"
                 Just name' -> pure name'
               parsedValue <- parseValueAsGValue value
               pure (name,parsedValue))
@@ -171,9 +171,9 @@ instance FromJSON RemoteArguments where
                 | T.null rest -> fail "Invalid variable name."
                 | otherwise ->
                     case G.mkName rest of
-                      Nothing -> fail "Invalid variable name."
+                      Nothing    -> fail "Invalid variable name."
                       Just name' -> pure $ G.VVariable name'
-              _ -> pure (G.VString text)
+              _ -> pure (G.VString G.ExternalValue text)
           Number !val
             | Just intVal <- toBoundedInteger val -> pure $ G.VInt intVal
             | floatVal <- toRealFloat val         -> pure $ G.VFloat floatVal

@@ -32,6 +32,7 @@ instance (NFData (a b), NFData b) => NFData (G.InlineFragment a b)
 instance (NFData (a b), NFData b) => NFData (G.OperationDefinition a b)
 instance (NFData (a b), NFData b) => NFData (G.Selection a b)
 instance (NFData (a b), NFData b) => NFData (G.TypedOperationDefinition a b)
+instance NFData G.Origin
 instance NFData a => NFData (G.Value a)
 
 deriving instance NFData G.Description
