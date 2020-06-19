@@ -30,6 +30,7 @@ import {
   loadLatestServerVersion,
   featureCompatibilityInit,
   emitProClickedEvent,
+  setNotificationData,
 } from './Actions';
 
 import {
@@ -58,6 +59,7 @@ class Main extends React.Component {
       updateNotificationVersion: null,
       proClickState: getProClickState(),
       isPopUpOpen: false,
+      isDropdownOpen: false,
     };
 
     this.handleBodyClick = this.handleBodyClick.bind(this);
@@ -85,6 +87,7 @@ class Main extends React.Component {
     });
 
     dispatch(fetchServerConfig());
+    dispatch(setNotificationData());
   }
 
   toggleProPopup() {
@@ -151,9 +154,13 @@ class Main extends React.Component {
     }
   }
 
-  handleDropdownToggle() {
-    document.getElementById('dropdown_wrapper').classList.toggle('open');
-  }
+  toggleDropDown = e => {
+    e.preventDefault();
+
+    this.setState({
+      isDropdownOpen: !this.state.isDropdownOpen,
+    });
+  };
 
   handleMetadataRedirect() {
     if (this.props.metadata.inconsistentObjects.length > 0) {
@@ -615,7 +622,12 @@ class Main extends React.Component {
                 )}
               </ul>
             </div>
-            <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
+            <div
+              id="dropdown_wrapper"
+              className={`${styles.clusterInfoWrapper} ${
+                this.state.isDropdownOpen ? 'open' : ''
+              }`}
+            >
               {getAdminSecretSection()}
               <div
                 className={
@@ -646,7 +658,7 @@ class Main extends React.Component {
               >
                 <div className={styles.headerRightNavbarBtn}>HELP</div>
               </a>
-              <LoveSection />
+              <LoveSection onClickLoveSection={this.toggleDropDown} />
             </div>
           </div>
 
