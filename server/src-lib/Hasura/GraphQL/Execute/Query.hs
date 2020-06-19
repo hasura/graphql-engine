@@ -205,7 +205,6 @@ convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
         (seqDB Seq.:|> (name, RFPRaw $ LBS.toStrict $ J.encode r), seqRemote)
 
   executionPlan <- case (dbPlans, remoteFields) of
-    (Seq.Empty, Seq.Empty) -> throw500 "Unexpected empty execution plan for query"
     (dbs, Seq.Empty) -> ExecStepDB <$> mkCurPlanTx usrVars (toList dbs)
     (Seq.Empty, remotes@(firstRemote Seq.:<| _)) -> do
       let (remoteOperation, varValsM) =

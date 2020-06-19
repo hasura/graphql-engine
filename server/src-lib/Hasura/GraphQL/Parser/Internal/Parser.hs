@@ -480,8 +480,6 @@ selectionSet name description parsers = Parser
   { pType = Nullable $ TNamed $ mkDefinition name description $
       TIObject $ map fDefinition parsers
   , pParser = \input -> do
-      fields <- collectFields name input
-
       -- Not all fields have a selection set, but if they have one, it
       -- must contain at least one field. The GraphQL parser returns a
       -- list to represent this: an empty list indicates there was no
@@ -492,9 +490,10 @@ selectionSet name description parsers = Parser
       -- set or not; but if we're in this function, it means that yes:
       -- this field needs a selection set, and if none was provided,
       -- we must fail.
-      when (OMap.null fields) $
+      when (null input) $
         parseError $ "missing selection set for " <>> name
 
+      fields <- collectFields name input
       for fields \selectionField@Field{ _fName, _fAlias } -> if
         | _fName == $$(litName "__typename") ->
             pure $ SelectTypename name
