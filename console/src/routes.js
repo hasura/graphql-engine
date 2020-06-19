@@ -148,7 +148,7 @@ const routes = store => {
           {eventsRouter}
           {uiKitRouter}
           <Route path="support" component={SupportContainer}>
-            <Route path="forum" component={HelpPage} />
+            <Route path="forums" component={HelpPage} />
           </Route>
         </Route>
       </Route>

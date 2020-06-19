@@ -23,6 +23,24 @@ export const startIntercom = () => {
   head.appendChild(script);
 };
 
+const chatState = 'console:chatEnabled';
+
+export const persistChatState = (isEnabled: boolean) => {
+  window.localStorage.setItem(chatState, String(isEnabled));
+};
+
+export const getPersistedChatState = () => {
+  const state = window.localStorage.getItem(chatState);
+  try {
+    if (state) {
+      return JSON.parse(state);
+    }
+    return false;
+  } catch {
+    return false;
+  }
+};
+
 const loveConsentState = 'console:loveIcon';
 const proClickState = 'console:pro';
 const defaultState = {

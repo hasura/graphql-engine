@@ -7,21 +7,33 @@ import information from './images/information.svg';
 import close from './images/x-circle.svg';
 import ToolTip from '../Common/Tooltip/Tooltip';
 import Toggle from '../Common/Toggle/Toggle';
-import { closeIntercom, startIntercom } from './utils';
+import {
+  closeIntercom,
+  startIntercom,
+  persistChatState,
+  getPersistedChatState,
+} from './utils';
 import { useToggle } from '../../hooks/useToggle';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 
 export const HelpPopup: React.FC = () => {
   const [isPopupOpen, togglePopupOpen] = useToggle(false);
-  const [isChatOpen, toggleChatOpen] = useToggle(false);
+  const [isChatOpen, toggleChatOpen, setChatOpen] = useToggle(false);
 
-  const popupRef = useRef<HTMLDivElement>(null);
-  useOnClickOutside(popupRef, togglePopupOpen);
+  useEffect(() => {
+    const chatState = getPersistedChatState();
+    setChatOpen(chatState);
+  }, []);
 
   useEffect(() => {
     if (isChatOpen) startIntercom();
     else closeIntercom();
+
+    persistChatState(isChatOpen);
   }, [isChatOpen]);
+
+  const popupRef = useRef<HTMLDivElement>(null);
+  useOnClickOutside(popupRef, togglePopupOpen);
 
   return (
     <>
@@ -51,7 +63,7 @@ export const HelpPopup: React.FC = () => {
               </div>
             </li>
             <li>
-              <Link to="/support/forum/">
+              <Link to="/support/forums/">
                 Support Forums <img src={arrowForwardBlock} alt="Arrow" />
               </Link>
             </li>
