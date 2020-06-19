@@ -123,8 +123,9 @@ const defaultNotification: UpdateProps = {
 const erroredNotification: UpdateProps = {
   subject: 'Error in Fetching Notifications',
   created_at: '',
-  content: "There was an error in fetching notifications. Try again in some time.",
-  type: 'error'
+  content:
+    'There was an error in fetching notifications. Try again in some time.',
+  type: 'error',
 };
 
 const LoveSection = () => {

@@ -6,7 +6,7 @@ interface BadgeProps {
   type: string;
 }
 
-interface ExtendedBadgeProps extends BadgeProps, StyledOwnBadgeProps { }
+interface ExtendedBadgeProps extends BadgeProps, StyledOwnBadgeProps {}
 
 export const Badge: React.FC<ExtendedBadgeProps> = ({
   type = '',
@@ -36,7 +36,7 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
     );
   }
 
-  if (type === "error") {
+  if (type === 'error') {
     return (
       <StyledBadge {...props} bg="#E52D2D" color="white">
         error
