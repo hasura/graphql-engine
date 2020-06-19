@@ -1,0 +1,75 @@
+description: Query the relay Node interface
+url: /v1/relay
+status: 200
+query:
+  variables:
+    author_id: WzEsICJwdWJsaWMiLCJhdXRob3IiLDJdCg==
+    article_id: WzEsInB1YmxpYyIsImFydGljbGUiLDNdCg==
+    non_exist_article_id: WzEsInB1YmxpYyIsImFydGljbGUiLDEwMF0K
+  query: |
+    query nodeQuery($author_id: ID!, $article_id: ID!, $non_exist_article_id: ID!){
+      author_node: node(id: $author_id){
+        __typename
+        ... on author{
+          name
+          articles_connection{
+            edges{
+              cursor
+              node{
+                title
+                content
+              }
+            }
+          }
+        }
+      }
+
+      article_node_with_author_id: node(id: $author_id){
+        id
+        ... on article{
+          title
+          content
+        }
+      }
+
+      article_node: node(id: $article_id){
+        __typename
+        ... on article{
+          title
+          content
+          author{
+            name
+          }
+        }
+      }
+      non_exist_article: node(id: $non_exist_article_id){
+        ... on article{
+          title
+          content
+        }
+      }
+    }
+response:
+  data:
+    author_node:
+      __typename: author
+      name: Author 2
+      articles_connection:
+        edges:
+        - cursor: eyJpZCIgOiA0fQ==
+          node:
+            title: Article 4
+            content: Sample article content 4
+        - cursor: eyJpZCIgOiA1fQ==
+          node:
+            title: Article 5
+            content: Sample article content 5
+    article_node_with_author_id:
+      id: WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgMl0=
+    article_node:
+      __typename: article
+      title: Article 3
+      content: Sample article content 3
+      author:
+        name: Author 1
+    non_exist_article: null

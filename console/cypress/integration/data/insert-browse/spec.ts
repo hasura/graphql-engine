@@ -55,9 +55,7 @@ const clickSaveOrInsert = (firstIndex: number, currentIndex: number) => {
 const checkQuerySuccess = () => {
   // Expect only 4 rows i.e. expect fifth element to not exist
   cy.get('[role=gridcell]').contains('filter-text');
-  cy.get('[role=row]')
-    .eq(2)
-    .should('not.exist');
+  cy.get('[role=row]').eq(2).should('not.exist');
 };
 
 const checkOrder = (order: string) => {
@@ -178,11 +176,7 @@ export const passBIInsert20Rows = () => {
       );
       cy.get(getElementFromAlias(`typed-input-${textIndex}`))
         .type('{selectall}{del}')
-        .type(
-          Math.random()
-            .toString(36)
-            .substring(7)
-        );
+        .type(Math.random().toString(36).substring(7));
       cy.get(
         getElementFromAlias(`typed-input-default-${textIndex + 1}`)
       ).check();
@@ -266,9 +260,7 @@ export const passBIFilterQueryEq = () => {
   // Select operator as `eq`
   cy.get(getElementFromAlias('filter-op-0')).select('$eq');
   // Type value as "filter-text"
-  cy.get("input[placeholder='-- value --']")
-    .last()
-    .type('filter-text');
+  cy.get("input[placeholder='-- value --']").last().type('filter-text');
   // Run query
   cy.get(getElementFromAlias('run-query')).click();
   cy.wait(2000);
@@ -291,9 +283,7 @@ export const deleteBITestTable = () => {
   // Click on delete
   cy.get(getElementFromAlias('delete-table')).click();
   // Confirm
-  cy.window()
-    .its('prompt')
-    .should('be.called');
+  cy.window().its('prompt').should('be.called');
   cy.wait(7000);
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
@@ -307,9 +297,7 @@ export const deleteBITestTable = () => {
   // Click on delete
   cy.get(getElementFromAlias('delete-table')).click();
   // Confirm
-  cy.window()
-    .its('prompt')
-    .should('be.called');
+  cy.window().its('prompt').should('be.called');
   cy.wait(7000);
   // Match the URL
   cy.url().should('eq', `${baseUrl}/data/schema/public`);
@@ -323,9 +311,7 @@ export const deleteBITestTable = () => {
   // Click on delete
   cy.get(getElementFromAlias('delete-table')).click();
   // Confirm
-  cy.window()
-    .its('prompt')
-    .should('be.called');
+  cy.window().its('prompt').should('be.called');
   cy.wait(7000);
 
   // Match the URL
@@ -435,9 +421,7 @@ export const checkViewRelationship = () => {
   // Add relationship
   cy.get(getElementFromAlias('table-relationships')).click();
   cy.get(getElementFromAlias('obj-rel-add-0')).click();
-  cy.get(getElementFromAlias('suggested-rel-name'))
-    .clear()
-    .type('someRel');
+  cy.get(getElementFromAlias('suggested-rel-name')).clear().type('someRel');
   cy.get(getElementFromAlias('obj-rel-save-0')).click();
   cy.wait(2000);
   // Insert a row
@@ -448,15 +432,10 @@ export const checkViewRelationship = () => {
   cy.get(getElementFromAlias('table-browse-rows')).click();
   cy.wait(1000);
   cy.get('.rt-table').within(() => {
-    cy.get('a')
-      .contains('View')
-      .click();
+    cy.get('a').contains('View').click();
     cy.wait(1000);
   });
-  cy.get('a')
-    .contains('Close')
-    .first()
-    .click();
+  cy.get('a').contains('Close').first().click();
 };
 
 export const passDeleteRow = () => {
@@ -505,4 +484,28 @@ export const passBulkDeleteAllRows = () => {
   });
   cy.get(getElementFromAlias('table-browse-rows')).contains('(8)');
   cy.wait(14000);
+};
+
+export const passArrayDataType = () => {
+  // create new column
+  cy.get(getElementFromAlias('table-modify')).click();
+  cy.wait(1000);
+  cy.get(getElementFromAlias('column-name')).type('array_column');
+  cy.get(getElementFromAlias('col-type-0'))
+    .children('div')
+    .click()
+    .find('input')
+    .type('text[]', { force: true });
+  cy.get(getElementFromAlias('add-column-button')).click();
+
+  // insert new row
+  cy.get(getElementFromAlias('table-insert-rows')).click();
+  cy.wait(1000);
+  cy.get(getElementFromAlias('typed-input-11')).type('["a", "b"]');
+  cy.get(getElementFromAlias('insert-save-button')).click();
+
+  // go to browse rows and check if row was added
+  cy.get(getElementFromAlias('table-browse-rows')).click();
+  cy.wait(1000);
+  cy.get(getElementFromAlias('table-browse-rows')).contains('(9)');
 };

@@ -107,7 +107,7 @@ before.
    importing the metadata.
 
 
-.. _reload_metadata_manual:
+.. _reload_metadata_manual_v1:
 
 Reloading Hasura metadata
 -------------------------

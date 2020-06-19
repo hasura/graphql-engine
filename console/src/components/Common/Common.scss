@@ -478,6 +478,10 @@ input {
   padding-right: 15px;
 }
 
+.addPadding20Px {
+  padding: 20px;
+}
+
 .width_auto {
   width: auto;
 }
@@ -1259,12 +1263,6 @@ code {
   display: block;
   top: 0;
   z-index: 11;
-
-  .stickySeparator {
-    padding-top: 60px;
-    margin-left: -15px;
-    margin-right: -15px;
-  }
 }
 
 .fixed_header_internal_link {
@@ -1352,7 +1350,7 @@ code {
 
 .tooltip {
   cursor: pointer;
-  color: #4D4D4D;
+  color: #4d4d4d;
 }
 
 .hiddenMoreWidth {

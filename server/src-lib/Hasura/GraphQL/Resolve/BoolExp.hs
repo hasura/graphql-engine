@@ -171,6 +171,8 @@ parseColExp nt n val = do
           "computed fields are not allowed in bool_exp"
     RFRemoteRelationship _ -> throw500
           "remote relationships are not allowed in bool_exp"
+    RFNodeId _ _      -> throw500
+      "node id is not allowed in bool_exp"
 
 parseBoolExp
   :: ( MonadReusability m
