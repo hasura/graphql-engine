@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
-import { RightContainer } from '../../Common/Layout/RightContainer/RightContainer';
+import { RightContainer } from '../../Common/Layout/RightContainer';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import { ReduxState } from '../../../types';
@@ -18,7 +18,7 @@ const SupportContainer: React.FC<InjectedProps> = props => {
     <LeftContainer>
       <ul>
         <li role="presentation" className={styles.active}>
-          <Link className={styles.linkBorder} to="/support/forum">
+          <Link className={styles.linkBorder} to="/support/forum/">
             Support Forums
           </Link>
         </li>

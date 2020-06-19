@@ -1,7 +1,6 @@
 import React from 'react';
 import { Connect } from 'react-redux';
 import { Route, IndexRedirect, EnterHook, RouterState } from 'react-router';
-import rightContainerConnector from '../../Common/Layout/RightContainer/RightContainer';
 import Container from './Container';
 import { fetchTriggers } from './ServerIO';
 import globals from '../../../Globals';
@@ -52,6 +51,7 @@ import {
   AdhocEventLogs,
   AdhocEventsInfo,
 } from './AdhocEvents';
+import { RightContainer } from '../../Common/Layout/RightContainer';
 
 const triggersInit = (dispatch: Dispatch): EnterHook => {
   return (
@@ -87,10 +87,7 @@ const getTriggersRouter = (
       onEnter={composeOnEnterHooks([triggersInit(store.dispatch)])}
     >
       <IndexRedirect to={dataEventsPrefix} />
-      <Route
-        path={dataEventsPrefix}
-        component={rightContainerConnector(connect)}
-      >
+      <Route path={dataEventsPrefix} component={RightContainer}>
         <IndexRedirect to={getDataEventsLandingRoute('relative')} />
         <Route path={getAddETRoute('relative')} component={AddEventTrigger} />
         <Route
@@ -114,10 +111,7 @@ const getTriggersRouter = (
           component={EventTriggerLanding}
         />
       </Route>
-      <Route
-        path={scheduledEventsPrefix}
-        component={rightContainerConnector(connect)}
-      >
+      <Route path={scheduledEventsPrefix} component={RightContainer}>
         <IndexRedirect to={getScheduledEventsLandingRoute('relative')} />
         <Route
           path={getAddSTRoute('relative')}
@@ -144,10 +138,7 @@ const getTriggersRouter = (
           component={ScheduledTriggeModify}
         />
       </Route>
-      <Route
-        path={adhocEventsPrefix}
-        component={rightContainerConnector(connect)}
-      >
+      <Route path={adhocEventsPrefix} component={RightContainer}>
         <IndexRedirect to={getAdhocEventsInfoRoute('relative')} />
         <Route
           path={getAddAdhocEventRoute('relative')}

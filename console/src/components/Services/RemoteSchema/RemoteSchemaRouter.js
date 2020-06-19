@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Route, IndexRedirect } from 'react-router';
-import { rightContainerConnector } from '../../Common/Layout';
+import { RightContainer } from '../../Common/Layout/RightContainer';
 import globals from '../../../Globals';
 import {
   remoteSchemaPageConnector,
@@ -95,7 +95,7 @@ const getRemoteSchemaRouter = (connect, store, composeOnEnterHooks) => {
       onChange={fetchInitialData(store)}
     >
       <IndexRedirect to="manage" />
-      <Route path="manage" component={rightContainerConnector(connect)}>
+      <Route path="manage" component={RightContainer}>
         <IndexRedirect to="schemas" />
         <Route path="schemas" component={landingConnector(connect)} />
         <Route path="add" component={addConnector(connect)} />

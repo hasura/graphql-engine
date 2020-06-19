@@ -1,5 +1,4 @@
 import React from 'react';
-import { Connect } from 'react-redux';
 import styles from './RightContainer.scss';
 
 const RightContainer: React.FC = ({ children }) => {
@@ -16,6 +15,4 @@ const RightContainer: React.FC = ({ children }) => {
   );
 };
 
-const rightContainerConnector = (connect: Connect) => connect()(RightContainer);
-export { RightContainer };
-export default rightContainerConnector;
+export default RightContainer;

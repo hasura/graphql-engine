@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, IndexRedirect } from 'react-router';
-import { rightContainerConnector } from '../../Common/Layout';
+import { RightContainer } from '../../Common/Layout/RightContainer';
 import Container from './Containers/Main';
 import { fetchActions } from './ServerIO';
 import globals from '../../../Globals';
@@ -36,7 +36,7 @@ const getActionsRouter = (connect, store, composeOnEnterHooks) => {
       onChange={actionsInit(store)}
     >
       <IndexRedirect to="manage" />
-      <Route path="manage" component={rightContainerConnector(connect)}>
+      <Route path="manage" component={RightContainer}>
         <IndexRedirect to="actions" />
         <Route path="actions" component={ActionsLandingPage(connect)} />
         <Route path="add" component={AddAction(connect)} />
@@ -51,7 +51,7 @@ const getActionsRouter = (connect, store, composeOnEnterHooks) => {
           component={ActionPermissions(connect)}
         />
       </Route>
-      <Route path="types" component={rightContainerConnector(connect)}>
+      <Route path="types" component={RightContainer}>
         <IndexRedirect to="manage" />
         <Route path="manage" component={TypesManage(connect)} />
         <Route path="relationships" component={TypesRelationships(connect)} />
