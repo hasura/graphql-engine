@@ -9,20 +9,20 @@ import {
   SpaceProps,
   LayoutProps,
   BorderProps,
-  ColorProps
+  ColorProps,
 } from 'styled-system';
 
 import { Box, BoxProps } from '../Box';
 
 interface FlexOwnProps
   extends BoxProps,
-  FlexboxProps,
-  SpaceProps,
-  LayoutProps,
-  BorderProps,
-  ColorProps { }
+    FlexboxProps,
+    SpaceProps,
+    LayoutProps,
+    BorderProps,
+    ColorProps {}
 
-export const Flex = styled(Box) <FlexOwnProps>`
+export const Flex = styled(Box)<FlexOwnProps>`
   display: flex;
   align-items: center;
   ${color}

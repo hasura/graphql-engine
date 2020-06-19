@@ -338,4 +338,4 @@ export const theme = {
 };
 
 type _Theme = typeof theme;
-export interface Theme extends _Theme { }
+export interface Theme extends _Theme {}

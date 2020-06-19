@@ -35,12 +35,7 @@ const Update: React.FC<UpdateProps> = ({
 
   return (
     <Box>
-      <Flex
-        height={55}
-        px="25px"
-        pt="5px"
-        justifyContent="space-between"
-      >
+      <Flex height={55} px="25px" pt="5px" justifyContent="space-between">
         <Flex justifyContent="space-between" bg="white">
           <Badge type={type} mr="12px" />
           <Heading as="h4" color="#1cd3c6" fontSize="16px">
