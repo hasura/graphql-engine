@@ -8,6 +8,7 @@
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
+- console: add `<3 hasura` section to view updates and notifications from Hasura (#5070)
 
 ## `v1.3.0-beta.2`
 
@@ -127,7 +128,6 @@ hasura seed apply --file 1234_add_some_seed_data.sql
 - server: fix importing of allow list query from metadata (fix #4687)
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
-- console: add `<3 hasura` section to view updates and notifications from Hasura (#5070)
 - console: allow entering big int values in the console (close #3667) (#4775)
 - console: add support for subscriptions analyze in API explorer (close #2541) (#2541)
 - console: avoid count queries for large tables (#4692)
