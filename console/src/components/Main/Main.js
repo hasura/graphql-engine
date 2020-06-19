@@ -7,7 +7,6 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import * as tooltips from './Tooltips';
 import globals from '../../Globals';
 import { getPathRoot } from '../Common/utils/urlUtils';
-import Toggle from '../Common/Toggle/Toggle';
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
 
@@ -21,8 +20,6 @@ import management from './images/management.svg';
 import allow from './images/allow-listing.svg';
 import read from './images/read-replica.svg';
 import arrowForwardRed from './images/arrow_forward-red.svg';
-import arrowForwardBlock from './images/arrow_forward-block.svg';
-import information from './images/information.svg';
 
 import styles from './Main.scss';
 
@@ -44,8 +41,6 @@ import {
   setLoveConsentState,
   getProClickState,
   setProClickState,
-  startIntercom,
-  closeIntercom,
 } from './utils';
 
 import { checkStableVersion, versionGT } from '../../helpers/versionUtils';
@@ -58,6 +53,7 @@ import {
 import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 import { Icon } from '../UIKit/atoms/Icon';
+import { HelpPopup } from './HelpPopup';
 
 class Main extends React.Component {
   constructor(props) {
@@ -68,8 +64,6 @@ class Main extends React.Component {
       loveConsentState: getLoveConsentState(),
       proClickState: getProClickState(),
       isPopUpOpen: false,
-      isHelpOpen: false,
-      isChatOpen: false,
     };
 
     this.handleBodyClick = this.handleBodyClick.bind(this);
@@ -103,17 +97,6 @@ class Main extends React.Component {
     const { dispatch } = this.props;
     dispatch(emitProClickedEvent({ open: !this.state.isPopUpOpen }));
     this.setState(prev => ({ isPopUpOpen: !prev.isPopUpOpen }));
-  }
-
-  toggleHelpPopup = () => {
-    this.setState(prev => ({ isHelpOpen: !prev.isHelpOpen }));
-  };
-
-  toggleLiveChatMode() {
-    const nextChatStateOpen = !this.state.isChatOpen;
-    this.setState({ isChatOpen: nextChatStateOpen });
-
-    return nextChatStateOpen ? startIntercom() : closeIntercom();
   }
 
   setShowUpdateNotification() {
@@ -654,50 +637,6 @@ class Main extends React.Component {
       return null;
     };
 
-    const renderHelpPopup = () => {
-      const { isHelpOpen } = this.state;
-      if (isHelpOpen) {
-        return (
-          <div
-            onClick={this.toggleHelpPopup}
-            className={styles.helpPopUpWrapper}
-          >
-            <img className={styles.helpPopClose} src={close} alt={'Close'} />
-            <ul>
-              <li>
-                Enable Live Chat
-                <ToolTip
-                  id="intercom-information"
-                  placement="bottom"
-                  message="By enabling live chat, we will inable Intercom for you on the console. No other data will be shared with this service. You can always enable & disable this feature as required."
-                >
-                  <img src={information} alt="Information" />
-                </ToolTip>
-                <div
-                  className={
-                    styles.liveChatModeToggle + ' ' + styles.cursorPointer
-                  }
-                >
-                  <Toggle
-                    checked={this.state.isChatOpen}
-                    className={`${styles.display_flex}`}
-                    onChange={this.toggleLiveChatMode.bind(this)}
-                    icons={false}
-                  />
-                </div>
-              </li>
-              <li>
-                <Link to="/support/forum/">
-                  Support Forums <img src={arrowForwardBlock} alt="Arrow" />
-                </Link>
-              </li>
-            </ul>
-          </div>
-        );
-      }
-      return null;
-    };
-
     const getVulnerableVersionNotification = () => {
       let vulnerableVersionNotificationHtml = null;
 
@@ -844,8 +783,7 @@ class Main extends React.Component {
                   styles.headerRightNavbarBtn + ' ' + styles.helpWrapper
                 }
               >
-                <span onClick={this.toggleHelpPopup}>HELP</span>
-                {renderHelpPopup()}
+                <HelpPopup />
               </div>
               {getLoveSection()}
             </div>
