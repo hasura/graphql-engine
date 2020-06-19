@@ -35,6 +35,7 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
+import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.SQL.Types
 
 newtype CatalogForeignKey
@@ -173,6 +174,7 @@ data CatalogMetadata
   , _cmComputedFields       :: ![CatalogComputedField]
   , _cmCustomTypes          :: !CatalogCustomTypes
   , _cmActions              :: ![CatalogAction]
+  , _cmRemoteRelationships  :: ![RemoteRelationship]
   } deriving (Show, Eq, Generic)
 instance NFData CatalogMetadata
 instance Cacheable CatalogMetadata

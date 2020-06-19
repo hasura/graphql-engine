@@ -34,7 +34,7 @@ data RemoteSchemaInfo
   , rsFwdClientHeaders :: !Bool
   , rsTimeoutSeconds   :: !Int
   } deriving (Show, Eq, Lift, Generic)
-
+instance Cacheable RemoteSchemaInfo
 instance Hashable RemoteSchemaInfo
 
 $(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''RemoteSchemaInfo)

@@ -278,6 +278,7 @@ library
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.RemoteSchema
+                     , Hasura.RQL.Types.RemoteRelationship
                      , Hasura.RQL.DDL.ComputedField
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.Types.CustomTypes
