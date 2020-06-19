@@ -61,8 +61,6 @@ class Main extends React.Component {
       isPopUpOpen: false,
       isDropdownOpen: false,
     };
-
-    this.dropdownRef = React.createRef(null);
   }
 
   componentDidMount() {
@@ -135,20 +133,6 @@ class Main extends React.Component {
     }
   }
 
-  closeDropdown = () => {
-    this.setState({
-      isDropdownOpen: false,
-    });
-  };
-
-  toggleDropDown = e => {
-    e.preventDefault();
-
-    this.setState({
-      isDropdownOpen: !this.state.isDropdownOpen,
-    });
-  };
-
   handleMetadataRedirect() {
     if (this.props.metadata.inconsistentObjects.length > 0) {
       this.props.dispatch(redirectToMetadataStatus());
@@ -180,6 +164,19 @@ class Main extends React.Component {
     );
     this.setState({ updateNotificationVersion: null });
   }
+
+  closeDropDown = () => {
+    this.setState({
+      isDropdownOpen: false,
+    });
+  };
+
+  toggleDropDown = e => {
+    e.preventDefault();
+    this.setState({
+      isDropdownOpen: !this.state.isDropdownOpen,
+    });
+  };
 
   render() {
     const {
@@ -614,7 +611,6 @@ class Main extends React.Component {
               className={`${styles.clusterInfoWrapper} ${
                 this.state.isDropdownOpen ? 'open' : ''
               }`}
-              ref={this.dropdownRef}
             >
               {getAdminSecretSection()}
               <div
@@ -647,9 +643,8 @@ class Main extends React.Component {
                 <div className={styles.headerRightNavbarBtn}>HELP</div>
               </a>
               <LoveSection
-                ref={this.dropdownRef}
-                onClickLoveSection={this.toggleDropDown}
-                onClickBody={this.closeDropdown}
+                closeDropDown={this.closeDropDown}
+                toggleDropDown={this.toggleDropDown}
               />
             </div>
           </div>

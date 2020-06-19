@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
 import { css } from 'styled-components';
 
@@ -105,27 +105,32 @@ const Notifications: React.FC<NotificationProps> = ({ data }) => (
 
 type LoveSectionProps = {
   consoleNotifications: Array<ConsoleNotification>;
-  onClickLoveSection: (e: React.MouseEvent<HTMLDivElement>) => void;
-  onClickBody: () => void;
+  toggleDropDown: (e: React.MouseEvent<HTMLDivElement>) => void;
+  closeDropDown: () => void;
 };
 
-type Ref = HTMLElement
+const LoveSection: React.FC<LoveSectionProps> = ({
+  consoleNotifications,
+  toggleDropDown,
+  closeDropDown,
+}) => {
+  const dropDownRef = React.useRef(null);
+  useOnClickOutside(dropDownRef, () => closeDropDown());
 
-const LoveSection = forwardRef<Ref, LoveSectionProps>((props, ref) => {
-  useOnClickOutside((ref as React.RefObject<Ref>), () => props.onClickBody());
   return (
     <>
       <div
         className={`${styles.shareSection} dropdown-toggle`}
         aria-expanded="false"
-        onClick={props.onClickLoveSection}
+        onClick={toggleDropDown}
+        ref={dropDownRef}
       >
         <PixelHeart className="img-responsive" width={32} height={20} />
       </div>
-      <Notifications data={props.consoleNotifications} />
+      <Notifications data={consoleNotifications} />
     </>
   );
-});
+};
 
 interface NotificationData {
   main: {
