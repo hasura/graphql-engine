@@ -778,13 +778,7 @@ class Main extends React.Component {
                   {getSettingsSelectedMarker()}
                 </div>
               </Link>
-              <div
-                className={
-                  styles.headerRightNavbarBtn + ' ' + styles.helpWrapper
-                }
-              >
-                <HelpPopup />
-              </div>
+              <HelpPopup />
               {getLoveSection()}
             </div>
           </div>

@@ -36,8 +36,11 @@ export const HelpPopup: React.FC = () => {
   useOnClickOutside(popupRef, togglePopupOpen);
 
   return (
-    <>
-      <span onClick={togglePopupOpen}>HELP</span>
+    <div
+      onClick={togglePopupOpen}
+      className={`${styles.headerRightNavbarBtn} ${styles.helpWrapper}`}
+    >
+      HELP
       {isPopupOpen && (
         <div className={styles.helpPopUpWrapper} ref={popupRef}>
           <img className={styles.helpPopClose} src={close} alt="Close" />
@@ -70,6 +73,6 @@ export const HelpPopup: React.FC = () => {
           </ul>
         </div>
       )}
-    </>
+    </div>
   );
 };
