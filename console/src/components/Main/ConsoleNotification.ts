@@ -14,14 +14,12 @@ export const defaultNotification: ConsoleNotification = {
   content:
     "You're all caught up! \n There are no updates available at this point in time.",
   type: 'No Updates',
-  is_active: true,
 };
 
 export const errorNotification: ConsoleNotification = {
   subject: 'Error in Fetching Notifications',
-  created_at: '',
+  created_at: Date.now(),
   content:
     'There was an error in fetching notifications. Try again in some time.',
   type: 'error',
-  is_active: true,
 };

@@ -17,7 +17,7 @@ const Update: React.FC<ConsoleNotification> = ({
   created_at,
   content,
   type,
-  is_active = false,
+  is_active = true,
 }) => {
   if (!is_active) {
     return null;
@@ -111,17 +111,17 @@ const LoveSection: React.FC<LoveSectionProps> = ({
   consoleNotifications,
   onClickLoveSection,
 }) => (
-  <>
-    <div
-      className={`${styles.shareSection} dropdown-toggle`}
-      aria-expanded="false"
-      onClick={onClickLoveSection}
-    >
-      <PixelHeart className="img-responsive" width={32} height={20} />
-    </div>
-    <Notifications data={consoleNotifications} />
-  </>
-);
+    <>
+      <div
+        className={`${styles.shareSection} dropdown-toggle`}
+        aria-expanded="false"
+        onClick={onClickLoveSection}
+      >
+        <PixelHeart className="img-responsive" width={32} height={20} />
+      </div>
+      <Notifications data={consoleNotifications} />
+    </>
+  );
 
 interface NotificationData {
   main: {
