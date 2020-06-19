@@ -40,7 +40,7 @@ import { showErrorNotification } from './components/Services/Common/Notification
 import { CLI_CONSOLE_MODE } from './constants';
 import UIKit from './components/UIKit/';
 import { Heading } from './components/UIKit/atoms';
-import ConnectedSupportContainer from './components/Services/Support/SupportContainer';
+import { SupportContainer } from './components/Services/Support/SupportContainer';
 import HelpPage from './components/Services/Support/HelpPage';
 
 const routes = store => {
@@ -147,7 +147,7 @@ const routes = store => {
           {actionsRouter}
           {eventsRouter}
           {uiKitRouter}
-          <Route path="support" component={ConnectedSupportContainer}>
+          <Route path="support" component={SupportContainer}>
             <Route path="forum" component={HelpPage} />
           </Route>
         </Route>
