@@ -12,6 +12,7 @@ import {
   checkIfTable,
   getFunctionSchema,
 } from '../../Common/utils/pgUtils';
+import { isEmpty } from '../../Common/utils/jsUtils';
 import {
   getFunctionModifyRoute,
   getSchemaAddTableRoute,
@@ -91,7 +92,7 @@ class DataSubSidebar extends React.Component {
 
       const currentLocation = location.pathname;
 
-      let tableLinks;
+      let tableLinks = [];
       if (filteredTableList && filteredTableList.length) {
         const filteredTablesObject = {};
         filteredTableList.forEach(t => {
@@ -134,20 +135,9 @@ class DataSubSidebar extends React.Component {
             </li>
           );
         });
-      } else {
-        tableLinks = [
-          <li className={styles.noChildren} key="no-tables-1">
-            <i>No tables/views available</i>
-          </li>,
-        ];
       }
 
-      const dividerHr = [
-        <li key={'fn-divider-1'}>
-          <hr className={styles.tableFunctionDivider} />
-        </li>,
-      ];
-
+      let functionLinks = [];
       if (filteredFunctionsList && filteredFunctionsList.length > 0) {
         const filteredFunctionsObject = {};
         filteredFunctionsList.forEach(f => {
@@ -156,7 +146,7 @@ class DataSubSidebar extends React.Component {
 
         const sortedFunctionNames = Object.keys(filteredFunctionsObject).sort();
 
-        const functionLinks = sortedFunctionNames.map((funcName, i) => {
+        functionLinks = sortedFunctionNames.map((funcName, i) => {
           const func = filteredFunctionsObject[funcName];
 
           const isActive =
@@ -177,31 +167,29 @@ class DataSubSidebar extends React.Component {
             </li>
           );
         });
+      }
 
-        childList = [...tableLinks, ...dividerHr, ...functionLinks];
-      } else if (
-        trackedFunctions.length > 0 &&
-        filteredFunctionsList.length === 0
-      ) {
-        const noFunctionsMsg = [
-          <li className={styles.noChildren} key="no-fns-1">
-            <i>No matching functions available</i>
+      childList = [...tableLinks, ...functionLinks];
+
+      if (isEmpty(childList)) {
+        childList = [
+          <li className={styles.noChildren} key="no-tables-1">
+            <i>No tables/views/functions available</i>
           </li>,
         ];
-
-        childList = [...tableLinks, ...dividerHr, ...noFunctionsMsg];
-      } else {
-        childList = [...tableLinks];
       }
 
       return childList;
     };
 
+    const tablesViewsFunctionsCount =
+      filteredTableList.length + filteredFunctionsList.length;
+
     return (
       <LeftSubSidebar
         showAddBtn={migrationMode}
         searchInput={getSearchInput()}
-        heading={`Tables (${trackedTablesInSchema.length})`}
+        heading={`Tables/Views/Functions (${tablesViewsFunctionsCount})`}
         addLink={getSchemaAddTableRoute(currentSchema)}
         addLabel={'Add Table'}
         addTestString={'sidebar-add-table'}
