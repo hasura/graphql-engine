@@ -208,7 +208,7 @@ export const saveComputedField = (
     getDropComputedFieldQuery(tableDef, computedFieldName)
   );
 
-  const migrationName = `save_computed_field_${computedField.table_schema}_${computedField.table_name}_${computedFieldName}`;
+  const migrationName = `save_computed_field_${table.table_schema}_${table.table_name}_${computedFieldName}`;
   const requestMsg = 'Saving computed field...';
   const successMsg = 'Saving computed field successful';
   const errorMsg = 'Saving computed field failed';

@@ -14,6 +14,7 @@ import {
 import {
   isColTypeString,
   isPostgresFunction,
+  isTypeCast,
 } from '../../components/Services/Data/utils';
 import gqlPattern from '../../components/Services/Data/Common/GraphQLValidation';
 import { sqlEscapeText } from '../../components/Common/utils/sqlUtils';
@@ -151,11 +152,15 @@ export const getColumnUpdateMigration = (
   }
 
   const colDefaultWithQuotes =
-    isColTypeString(colType) && !isPostgresFunction(colDefault)
+    isColTypeString(colType) &&
+    !isPostgresFunction(colDefault) &&
+    !isTypeCast(colDefault)
       ? `'${colDefault}'`
       : colDefault;
   const originalColDefaultWithQuotes =
-    isColTypeString(colType) && !isPostgresFunction(originalColDefault)
+    isColTypeString(colType) &&
+    !isPostgresFunction(originalColDefault) &&
+    !isTypeCast(colDefault)
       ? `'${originalColDefault}'`
       : originalColDefault;
 
