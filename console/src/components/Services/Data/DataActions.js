@@ -533,6 +533,7 @@ const makeMigrationCall = (
   successMsg,
   errorMsg,
   shouldSkipSchemaReload,
+  skipExecution = false,
   isRetry
 ) => {
   const upQuery = {
@@ -550,6 +551,7 @@ const makeMigrationCall = (
     name: sanitize(migrationName),
     up: upQuery.args,
     down: downQuery.args,
+    skip_execution: skipExecution,
   };
 
   const currMigrationMode = getState().main.migrationMode;

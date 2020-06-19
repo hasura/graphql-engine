@@ -88,7 +88,9 @@ export const saveRemoteRelationship = (
     );
 
     // Apply migrations
-    const migrationName = `table_${table.name}_create_remote_relationship_${state.name}`;
+    const migrationName = `table_${table.name}_${
+      isNew ? 'create' : 'update'
+    }_remote_relationship_${state.name}`;
 
     const requestMsg = `${
       isNew ? 'Creating' : 'Updating'

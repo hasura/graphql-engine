@@ -5,6 +5,7 @@ module Hasura.Session
   , isAdmin
   , roleNameToTxt
   , SessionVariable
+  , SessionVariableValue
   , mkSessionVariable
   , SessionVariables
   , sessionVariableToText

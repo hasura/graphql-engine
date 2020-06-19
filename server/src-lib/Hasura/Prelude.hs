@@ -57,7 +57,7 @@ import           Data.Sequence                     as M (Seq)
 import           Data.String                       as M (IsString)
 import           Data.Text                         as M (Text)
 import           Data.These                        as M (These (..), fromThese, mergeThese,
-                                                         mergeTheseWith, these)
+                                                         mergeTheseWith, partitionThese, these)
 import           Data.Time.Clock.Units
 import           Data.Traversable                  as M (for)
 import           Data.Word                         as M (Word64)

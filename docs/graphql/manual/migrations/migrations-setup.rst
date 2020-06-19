@@ -55,6 +55,8 @@ Step 1: Install the Hasura CLI
 
 Follow the instructions in :ref:`Installing the Hasura CLI <install_hasura_cli>`.
 
+.. _migrations_project_init:
+
 Step 2: Set up a project directory
 ----------------------------------
 
@@ -74,10 +76,8 @@ Let's set up a project directory by executing the following command:
   cd my-project
 
 This will create a new directory called ``my-project`` with a ``config.yaml``
-file, a ``migrations`` directory and a ``metadata`` directory. This directory structure is mandatory to use
-Hasura migrations. 
-
-These directories can be committed to version control.
+file, a ``migrations`` directory and a ``metadata`` directory. This directory structure
+is mandatory to use Hasura migrations.
 
 .. note::
 
@@ -86,7 +86,25 @@ These directories can be committed to version control.
    machine and the CLI will use it. You can also use it as a flag to CLI commands:
    ``--admin-secret '<your-admin-secret>'``.
 
-.. _migrations_setup_initialize:
+Step 2.1: Set up version control for your project directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The project directory created above can be committed to version control.
+
+Set up version control and commit the project status:
+
+.. code-block:: bash
+
+  # in project dir
+
+  # initialize version control
+  git init
+
+  # commit initial project status
+  git add .
+  git commit -m "hasura project init"
+
+.. _migrations_initialize:
 
 Step 3: Initialize the migrations and metadata as per your current state
 ------------------------------------------------------------------------
@@ -143,22 +161,20 @@ This command will export the current Hasura metadata as a bunch of YAML files in
 
 If you'd like to read more about the format of metadata files, check out the :ref:`metadata_format_v2`.
 
-Step 3.3: Set up version control for your project directory
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 3.3: Add a checkpoint to version control
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Set up version control and commit the project status.
+Commit the current project state to version control:
 
 .. code-block:: bash
 
   # in project dir
-
-  # initialize version control
-  git init
-
-  # commit initial project status
   git add .
-  git commit -m "init"
+  git commit -m "initialize migrations and metadata"
+  
+.. note::
 
+  The version control set up should typically be done right after :ref:`Step 2 <migrations_project_init>`
 
 Step 4: Use the console from the CLI
 ------------------------------------
@@ -193,8 +209,8 @@ The related metadata changes will automatically be exported into the ``metadata`
 
    Migrations are only created when using the console through the CLI.
 
-Step 6: Squash migrations and add checkpoints
----------------------------------------------
+Step 6: Squash migrations and add checkpoints to version control
+----------------------------------------------------------------
 
 As you keep using the console via the CLI to make changes to the schema, new
 migration files will keep getting generated and the metadata files will keep getting
@@ -223,17 +239,13 @@ Commit the project status into version control.
 
 .. code-block:: bash
 
-  # initialize version control if not done already
-  git init
-
-  # commit project status
+  # in project dir
   git add .
   git commit -m "<feature-name>"
 
 .. note::
 
-   The version control set up should typically be done right after :ref:`Step 3 <migrations_setup_initialize>`
-
+  The version control set up should typically be done right after :ref:`Step 2 <migrations_project_init>`
 
 Step 7: Apply the migrations and metadata on another instance of the GraphQL engine
 -----------------------------------------------------------------------------------
