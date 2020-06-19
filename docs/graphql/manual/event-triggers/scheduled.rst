@@ -38,7 +38,7 @@ In the form opened by the above step, fill out these fields and click ``Create``
 
 - **Name**: Create a name for the cron trigger.
 - **Webhook**: Enter the HTTP endpoint that should be triggered.
-- **Cron schedule**: Enter a schedule for the cron. You can use the link provided to help `build a cron expression <https://crontab.guru/#*_*_*_*_*>`__, or use the ``Frequently used crons`` dropdown as a shortcut.
+- **Cron schedule**: Enter a schedule for the cron. You can use the link provided to help `build a cron expression <https://crontab.guru/#*_*_*_*_*>`__, or use the ``Frequently used crons`` dropdown as a shortcut. Cron events are created based on the UTC timezone.
 - **Payload**: The JSON payload which will be sent to the webhook.
 
 .. thumbnail:: /img/graphql/manual/event-triggers/define-cron.png
