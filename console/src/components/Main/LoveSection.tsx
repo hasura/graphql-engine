@@ -1,44 +1,65 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { css } from 'styled-components';
 import fetch from 'isomorphic-fetch';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import styles from './Main.scss';
 import Endpoints from '../../Endpoints';
-import PixelHeart from './images/components/pixelHeart';
-import ConsoleLogo from './images/components/consoleLogo';
+import PixelHeart from './images/components/PixelHeart';
+import ConsoleLogo from './images/components/ConsoleLogo';
 
-type UpdateProps = {
-  title: string;
-  time: string;
-  description: string;
-  badge: string;
+const getDateString = (date: string | number | Date) => {
+  return new Date(date).toLocaleString().split(', ')[0];
 };
 
-const Update: React.FC<UpdateProps> = ({ title, time, description, badge }) => (
-  <Box>
-    <Flex
-      height={55}
-      px="25px"
-      pt="5px"
-      borderBottom="1px solid #e1e1e1"
-      justifyContent="space-between"
-    >
-      <Flex justifyContent="space-between">
-        <Badge type={badge} mr="12px" />
-        <Heading as="h4" color="#1cd3c6" fontSize="16px">
-          {title}
-        </Heading>
+type UpdateProps = {
+  subject: string;
+  created_at: string;
+  content: string;
+  type: string;
+  id?: number;
+  is_active?: boolean;
+  external_link?: string;
+};
+
+const Update: React.FC<UpdateProps> = ({
+  subject,
+  created_at,
+  content,
+  type,
+  is_active,
+}) => {
+  if (!is_active) {
+    return null;
+  }
+
+  return (
+    <Box>
+      <Flex
+        height={55}
+        px="25px"
+        pt="5px"
+        justifyContent="space-between"
+      >
+        <Flex justifyContent="space-between" bg="white">
+          <Badge type={type} mr="12px" />
+          <Heading as="h4" color="#1cd3c6" fontSize="16px">
+            {subject}
+          </Heading>
+        </Flex>
+        <Text color="grey" fontSize={13} fontWeight="bold">
+          {created_at}
+        </Text>
       </Flex>
-      <Text color="grey" fontSize={13} fontWeight="medium" type={0}>
-        {time}
-      </Text>
-    </Flex>
-    <Text fontSize={15} fontWeight="normal" px={25} py={8}>
-      {description}
-    </Text>
-  </Box>
-);
+      <Flex borderBottom="1px solid #f7f7f7">
+        <Text fontSize={15} fontWeight="normal" px={15} py={4}>
+          {content}
+        </Text>
+        {/* TODO: add support for external links */}
+      </Flex>
+    </Box>
+  );
+};
 
 type NotificationProps = {
   data: Array<UpdateProps>;
@@ -47,6 +68,7 @@ type NotificationProps = {
 const Notifications: React.FC<NotificationProps> = ({ data }) => (
   <Box
     className="dropdown-menu"
+    // TODO: remove these inline styles
     css={css`
       width: 520px;
       box-shadow: 3px;
@@ -74,59 +96,71 @@ const Notifications: React.FC<NotificationProps> = ({ data }) => (
       }
     `}
   >
-    <Flex justifyContent="space-between">
+    <Flex justifyContent="space-between" px={20} py={3}>
       <Heading as="h2" color="#000" fontSize="20px">
         Latest updates
         <ConsoleLogo id="console-logo" />
       </Heading>
     </Flex>
     {data.length &&
-      data.map(({ title, time, description, ...props }) => (
+      data.map(({ subject, created_at, content, is_active, ...props }) => (
         <Update
-          key={title}
-          title={title}
-          time={time}
-          description={description}
-          badge={props.badge ? props.badge : ''}
+          key={props.id}
+          subject={subject}
+          created_at={getDateString(created_at)}
+          content={content}
+          type={props.type ? props.type : ''}
+          is_active={is_active}
+          external_link={props.external_link ? props.external_link : ''}
         />
       ))}
   </Box>
 );
 
-const getCurrentDate = () => {
-  return new Date(Date.now()).toLocaleString().split(', ')[0];
+const defaultNotification: UpdateProps = {
+  subject: '',
+  created_at: getDateString(Date.now()),
+  content:
+    "You're all caught up! \n There are no updates available at this point in time.",
+  type: 'No Updates',
 };
 
 const LoveSection = () => {
-  const defaultNotification: UpdateProps = {
-    title: '',
-    time: getCurrentDate(),
-    description:
-      "You're all caught up! \n There are no updates available at this point in time.",
-    badge: 'No Updates',
-  };
   const [open, toggleLove] = useState(false);
   const [notificationData, setData] = useState([defaultNotification] as Array<
     UpdateProps
   >);
 
-  useLayoutEffect(() => {
+  const reqBody = {
+    args: {
+      limit: 5,
+      table: 'console_notification',
+      where: null,
+      offset: null,
+      columns: ['*'],
+      order_by: [
+        {
+          type: 'desc',
+          column: ['id'],
+        },
+      ],
+    },
+    type: 'select',
+  };
+
+  useEffect(() => {
     if (open) {
-      fetch(Endpoints.checkNotifications)
+      fetch(Endpoints.checkNotifications, {
+        method: 'POST',
+        body: JSON.stringify(reqBody),
+      })
         .then(response => response.json())
         .then(data => {
-          console.log(data);
-
-          // FIXME: this conditional check
-          // until the table is fixed
-          if (data.length > 1) {
-            const notifData: Array<UpdateProps> = [];
-            // TODO: Process the response here
-            // and push to notifData
-            setData(notifData);
+          if (data.length) {
+            setData(data);
           }
         })
-        // TODO: report error in a better way
+        // FIXME: report error in a better way
         .catch(err => console.error(err));
     }
     const dropDown: HTMLElement | null = document.getElementById(
@@ -142,9 +176,10 @@ const LoveSection = () => {
       <div
         className={`${styles.shareSection} dropdown-toggle`}
         aria-expanded="false"
+        // TODO: use state instead of classnames for toggling
         onClick={() => toggleLove(!open)}
       >
-        <PixelHeart className="img-responsive" />
+        <PixelHeart className="img-responsive" width={32} height={20} />
       </div>
       <Notifications data={notificationData} />
     </>
