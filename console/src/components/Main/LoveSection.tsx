@@ -120,6 +120,13 @@ const defaultNotification: UpdateProps = {
   type: 'No Updates',
 };
 
+const erroredNotification: UpdateProps = {
+  subject: 'Error in Fetching Notifications',
+  created_at: '',
+  content: "There was an error in fetching notifications. Try again in some time.",
+  type: 'error'
+};
+
 const LoveSection = () => {
   const [open, toggleLove] = useState(false);
   const [notificationData, setData] = useState([defaultNotification] as Array<
@@ -155,8 +162,10 @@ const LoveSection = () => {
             setData(data);
           }
         })
-        // FIXME: report error in a better way
-        .catch(err => console.error(err));
+        .catch(err => {
+          console.error(err);
+          setData([erroredNotification]);
+        });
     }
     const dropDown: HTMLElement | null = document.getElementById(
       'dropdown_wrapper'
