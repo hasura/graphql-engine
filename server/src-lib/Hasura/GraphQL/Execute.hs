@@ -137,9 +137,9 @@ getExecPlanPartial userInfo sc enableAL req = do
 
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan
-  = QueryExecutionPlan (EPr.ExecutionPlan (LazyRespTx, EQ.GeneratedSqlMap) (G.Name, EPr.RemoteCall) (G.Name, J.Value))
+  = QueryExecutionPlan (EPr.ExecutionPlan (LazyRespTx, EQ.GeneratedSqlMap) EPr.RemoteCall (G.Name, J.Value))
   -- ^ query execution; remote schemata and introspection possible (TODO implement remote)
-  | MutationExecutionPlan (EPr.ExecutionPlan LazyRespTx (G.Name, EPr.RemoteCall) (G.Name, J.Value))
+  | MutationExecutionPlan (EPr.ExecutionPlan LazyRespTx EPr.RemoteCall (G.Name, J.Value))
   -- ^ mutation execution; only __typename introspection supported (TODO implement remote)
   | SubscriptionExecutionPlan (EPr.ExecutionPlan EL.LiveQueryPlan Void Void)
   -- ^ live query execution; remote schemata and introspection not supported
@@ -214,7 +214,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
             EQ.convertQuerySelSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
           validSubscriptionAST <- for unpreparedAST $ \case
             C.RFDB x -> pure $ C.RFDB x
-            C.RFRemote _ -> throw400 NotSupported "Remote calls not supported over subscriptions"
+            C.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
             C.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
           -- TODO we should check that there's only one root field (unless the appropriate directive is set)
           (lqOp, plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST

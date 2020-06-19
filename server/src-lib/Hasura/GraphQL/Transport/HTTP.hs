@@ -18,7 +18,6 @@ import           Hasura.Server.Version                  (HasVersion)
 
 import qualified Data.Aeson                             as J
 import qualified Data.HashMap.Strict                    as Map
-import qualified Data.Sequence.NonEmpty                 as NESeq
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Query           as EQ
@@ -50,7 +49,7 @@ runGQ reqId userInfo reqHdrs req = do
           E.ExecStepDB txGenSql -> do
             (telemTimeIO, telemQueryType, resp) <- runQueryDB reqId req userInfo txGenSql
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp []))
-          E.ExecStepRemote (_name, (rsi, opDef, _varValsM)) ->
+          E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do
             (telemTimeIO, obj) <- withElapsedTime $ do
@@ -61,7 +60,7 @@ runGQ reqId userInfo reqHdrs req = do
           E.ExecStepDB tx -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId req userInfo tx
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp []))
-          E.ExecStepRemote (_name, (rsi, opDef, _varValsM)) ->
+          E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do
             (telemTimeIO, obj) <- withElapsedTime $ do

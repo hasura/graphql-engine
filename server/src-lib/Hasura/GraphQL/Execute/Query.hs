@@ -167,7 +167,7 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m ( ExecutionPlan (LazyRespTx, GeneratedSqlMap) (G.Name, RemoteCall) (G.Name, J.Value)
+  -> m ( ExecutionPlan (LazyRespTx, GeneratedSqlMap) RemoteCall (G.Name, J.Value)
        , Maybe ReusableQueryPlan
        , InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
        )
@@ -186,28 +186,37 @@ convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
 
   -- This monster makes sure that consecutive database operation get executed together
   let dbPlans :: Seq.Seq (G.Name, RootFieldPlan)
-      remotePlans :: Seq.Seq (G.Name, RemoteCall)
-      (dbPlans, remotePlans) = OMap.foldlWithKey' collectPlan (Seq.Empty, Seq.Empty) queryPlans
+      remoteFields :: Seq.Seq (G.Name, RemoteField)
+      (dbPlans, remoteFields) = OMap.foldlWithKey' collectPlan (Seq.Empty, Seq.Empty) queryPlans
+
       collectPlan
-        :: (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteCall))
+        :: (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteField))
         -> G.Name
         -> RootField PGPlan RemoteField J.Value
-        -> (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteCall))
-      collectPlan (seqDB, seqRemote) name (RFRemote (remInfo, remField)) =
-        let (remOp, varValsM) =
-              buildTypedOperation
-              G.OperationTypeQuery
-              varDefs
-              [G.SelectionField remField]
-              varValsM
-        in (seqDB, seqRemote Seq.:|> (name, (remInfo, remOp, varValsM)))
-      collectPlan (seqDB, seqRemote) name (RFDB db)      = (seqDB Seq.:|> (name, RFPPostgres db), seqRemote)
+        -> (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteField))
+
+      collectPlan (seqDB, seqRemote) name (RFRemote rem) =
+        (seqDB, seqRemote Seq.:|> (name, rem))
+
+      collectPlan (seqDB, seqRemote) name (RFDB db)      =
+        (seqDB Seq.:|> (name, RFPPostgres db), seqRemote)
+
       collectPlan (seqDB, seqRemote) name (RFRaw r)      =
         (seqDB Seq.:|> (name, RFPRaw $ LBS.toStrict $ J.encode r), seqRemote)
-  executionPlan <- case (dbPlans, remotePlans) of
+
+  executionPlan <- case (dbPlans, remoteFields) of
     (Seq.Empty, Seq.Empty) -> throw500 "Unexpected empty execution plan for query"
     (dbs, Seq.Empty) -> ExecStepDB <$> mkCurPlanTx usrVars (toList dbs)
-    (Seq.Empty, _) -> throw400 NotSupported "Remote schemata are not supported"
+    (Seq.Empty, remotes@(firstRemote Seq.:<| _)) -> do
+      let (remoteOperation, varValsM) =
+            buildTypedOperation
+            G.OperationTypeQuery
+            varDefs
+            (map (G.SelectionField . snd . snd) $ toList remotes)
+            varValsM
+      if all (\remote' -> fst (snd firstRemote) == fst (snd remote')) remotes
+        then return $ ExecStepRemote (fst (snd firstRemote), remoteOperation, varValsM)
+        else throw400 NotSupported "Mixed remote schemata are not supported"
     _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemata not supported"
   pure (executionPlan, Nothing, unpreparedQueries) -- FIXME ReusableQueryPlan
   where

@@ -318,7 +318,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepDB (tx, genSql) ->
           execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local (Just genSql) requestId q $
             runLazyTx' pgExecCtx tx
-        E.ExecStepRemote (_name, (rsi, opDef, _varValsM)) ->
+        E.ExecStepRemote (rsi, opDef, _varValsM) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
         E.ExecStepRaw (name, json) ->
           execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local Nothing requestId q $
@@ -328,7 +328,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepDB tx ->
           execQueryOrMut timerTot Telem.Mutation telemCacheHit Telem.Local Nothing requestId q $
             runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo tx
-        E.ExecStepRemote (_name, (rsi, opDef, _varValsM)) ->
+        E.ExecStepRemote (rsi, opDef, _varValsM) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
         E.ExecStepRaw (name, json) ->
           execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local Nothing requestId q $
