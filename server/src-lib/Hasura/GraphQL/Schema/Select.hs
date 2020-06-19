@@ -498,6 +498,37 @@ fieldSelection fieldInfo selectPermissions stringifyNum = do
     FIComputedField computedFieldInfo ->
       maybeToList <$> computedField computedFieldInfo selectPermissions stringifyNum
 
+{-
+   FIRemoteRelationship remoteInfo -> do
+      fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteInfo
+      let argumentsParser = sequenceA $ for (toList $ _rfiParamMap remoteInfo) \(name, inpValInfo) ->
+        -- TODO: based on GType information and the presence (or lack thereof) of as default argument
+        -- we should choose between P.field, P.fieldWithDefaut, P.fieldOptional
+        P.field name (_iviDesc inpValInfo) $ remoteArgument $ _iviType inpValInfo
+      -- FIXME: what about the selection set here???
+      P.selection fieldName (pgiDescription columnInfo) argumentsParser _selectionSet
+        <&> \args -> RQL.AFRemote $ RQL.RemoteSelect
+          { _rselArgs          = args
+          , _rselSelection     = undefined
+          , _rselHasuraColumns = _rfiHasuraFields remoteInfo
+          , _rselFieldCall     = _rfiRemoteFields remoteInfo
+          , _rselRemoteSchema  = _rfiRemoteSchema remoteInfo
+          }
+
+-- TODO: check nullability
+-- TODO: what _rfaVariable is supposed to be / do we need to pass unprocessed JSON here?
+remoteArgument
+  :: MonadParse m
+  => G.Type
+  -> Parser 'Input m RemoteFieldArgument
+remoteArgument argType = Parser
+  { pType = argType
+  , pParser value = pure $ RemoteFieldArgument
+    { _rfaArgument = G.Argument value
+    , _rfaVariable = Nothing
+    }
+  }
+-}
 
 -- | Parses the arguments to the underlying sql function of a computed field or
 --   a custom function. All arguments to the underlying sql function are parsed
