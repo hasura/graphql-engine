@@ -53,7 +53,7 @@ In the section opened by the above step, fill out these fields and click "Save":
    :width: 800px
 
 In this example, we've added a remote schema which is a wrapper around `Auth0 <https://auth0.com/>`__'s REST API (see example 
-`here <https://github.com/tirumaraiselvan/auth0-graphql-server>`__).
+`here <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/auth0-wrapper>`__).
 
 1. We name the relationship ``auth0_profile``.
 2. We select the ``auth0`` schema that we've added.
