@@ -35,7 +35,7 @@ const colors = {
     original: '#888888',
     tab: '#939390',
     border: '#ededed',
-    notificationCards: '#acacac',
+    notificationCard: '#acacac',
   },
   black: {
     original: '#000',
@@ -338,4 +338,4 @@ export const theme = {
 };
 
 type _Theme = typeof theme;
-export interface Theme extends _Theme {}
+export interface Theme extends _Theme { }
