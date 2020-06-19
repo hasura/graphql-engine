@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { connect } from 'react-redux';
 import { css } from 'styled-components';
-import fetch from 'isomorphic-fetch';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
+import { ConsoleNotification } from './ConsoleNotification';
 import styles from './Main.scss';
-import Endpoints from '../../Endpoints';
 import PixelHeart from './images/components/PixelHeart';
 import ConsoleLogo from './images/components/ConsoleLogo';
 
@@ -12,22 +12,12 @@ const getDateString = (date: string | number | Date) => {
   return new Date(date).toLocaleString().split(', ')[0];
 };
 
-type UpdateProps = {
-  subject: string;
-  created_at: string;
-  content: string;
-  type: string;
-  id?: number;
-  is_active?: boolean;
-  external_link?: string;
-};
-
-const Update: React.FC<UpdateProps> = ({
+const Update: React.FC<ConsoleNotification> = ({
   subject,
   created_at,
   content,
   type,
-  is_active,
+  is_active = false,
 }) => {
   if (!is_active) {
     return null;
@@ -57,7 +47,7 @@ const Update: React.FC<UpdateProps> = ({
 };
 
 type NotificationProps = {
-  data: Array<UpdateProps>;
+  data: Array<ConsoleNotification>;
 };
 
 const Notifications: React.FC<NotificationProps> = ({ data }) => (
@@ -112,83 +102,37 @@ const Notifications: React.FC<NotificationProps> = ({ data }) => (
   </Box>
 );
 
-const defaultNotification: UpdateProps = {
-  subject: '',
-  created_at: getDateString(Date.now()),
-  content:
-    "You're all caught up! \n There are no updates available at this point in time.",
-  type: 'No Updates',
+type LoveSectionProps = {
+  consoleNotifications: Array<ConsoleNotification>;
+  onClickLoveSection: (e: React.MouseEvent<HTMLDivElement>) => void;
 };
 
-const erroredNotification: UpdateProps = {
-  subject: 'Error in Fetching Notifications',
-  created_at: '',
-  content:
-    'There was an error in fetching notifications. Try again in some time.',
-  type: 'error',
-};
+const LoveSection: React.FC<LoveSectionProps> = ({
+  consoleNotifications,
+  onClickLoveSection,
+}) => (
+  <>
+    <div
+      className={`${styles.shareSection} dropdown-toggle`}
+      aria-expanded="false"
+      onClick={onClickLoveSection}
+    >
+      <PixelHeart className="img-responsive" width={32} height={20} />
+    </div>
+    <Notifications data={consoleNotifications} />
+  </>
+);
 
-const LoveSection = () => {
-  const [open, toggleLove] = useState(false);
-  const [notificationData, setData] = useState([defaultNotification] as Array<
-    UpdateProps
-  >);
-
-  const reqBody = {
-    args: {
-      limit: 5,
-      table: 'console_notification',
-      where: null,
-      offset: null,
-      columns: ['*'],
-      order_by: [
-        {
-          type: 'desc',
-          column: ['id'],
-        },
-      ],
-    },
-    type: 'select',
+interface NotificationData {
+  main: {
+    consoleNotifications: Array<ConsoleNotification>;
   };
+}
 
-  useEffect(() => {
-    if (open) {
-      fetch(Endpoints.checkNotifications, {
-        method: 'POST',
-        body: JSON.stringify(reqBody),
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.length) {
-            setData(data);
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          setData([erroredNotification]);
-        });
-    }
-    const dropDown: HTMLElement | null = document.getElementById(
-      'dropdown_wrapper'
-    );
-    if (dropDown) {
-      dropDown.classList.toggle('open');
-    }
-  }, [open]);
+function mapStateToProps(state: NotificationData) {
+  return {
+    consoleNotifications: state.main.consoleNotifications,
+  };
+}
 
-  return (
-    <>
-      <div
-        className={`${styles.shareSection} dropdown-toggle`}
-        aria-expanded="false"
-        // TODO: use state instead of classnames for toggling
-        onClick={() => toggleLove(!open)}
-      >
-        <PixelHeart className="img-responsive" width={32} height={20} />
-      </div>
-      <Notifications data={notificationData} />
-    </>
-  );
-};
-
-export default LoveSection;
+export default connect(mapStateToProps)(LoveSection);

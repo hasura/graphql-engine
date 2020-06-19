@@ -1,3 +1,8 @@
+import {
+  ConsoleNotification,
+  defaultNotification,
+} from './ConsoleNotification';
+
 export interface MainState {
   migrationError: unknown | null;
   hasuractlEnv: unknown | null;
@@ -26,6 +31,7 @@ export interface MainState {
     isFetching: boolean;
   };
   featuresCompatibility: object;
+  consoleNotifications: Array<ConsoleNotification>;
 }
 
 const defaultState: MainState = {
@@ -56,6 +62,7 @@ const defaultState: MainState = {
     isFetching: false,
   },
   featuresCompatibility: {},
+  consoleNotifications: [defaultNotification],
 };
 
 export default defaultState;

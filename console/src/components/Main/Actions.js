@@ -4,6 +4,7 @@ import requestAction from '../../utils/requestAction';
 import requestActionPlain from '../../utils/requestActionPlain';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import { getFeaturesCompatibility } from '../../helpers/versionUtils';
+import { defaultNotification, errorNotification } from './ConsoleNotification';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -12,6 +13,10 @@ const SET_SERVER_VERSION_ERROR = 'Main/SET_SERVER_VERSION_ERROR';
 const SET_LATEST_SERVER_VERSION_SUCCESS =
   'Main/SET_LATEST_SERVER_VERSION_SUCCESS';
 const SET_LATEST_SERVER_VERSION_ERROR = 'Main/SET_LATEST_SERVER_VERSION_ERROR';
+const SET_CONSOLE_NOTIFICATIONS = 'Main/SET_CONSOLE_NOTIFICATION';
+const SET_DEFAULT_CONSOLE_NOTIFICATION =
+  'Main/SET_DEFAULT_CONSOLE_NOTIFICATION';
+const SET_ERROR_CONSOLE_NOTIFICATION = 'Main/SET_ERROR_CONSOLE_NOTIFICATION';
 const UPDATE_MIGRATION_STATUS_SUCCESS = 'Main/UPDATE_MIGRATION_STATUS_SUCCESS';
 const UPDATE_MIGRATION_STATUS_ERROR = 'Main/UPDATE_MIGRATION_STATUS_ERROR';
 const HASURACTL_URL_ENV = 'Main/HASURACTL_URL_ENV';
@@ -34,6 +39,51 @@ const FETCHING_SERVER_CONFIG = 'Main/FETCHING_SERVER_CONFIG';
 const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
 const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 /* End */
+
+const setNotificationData = () => dispatch => {
+  const url = Endpoints.consoleNotifications;
+  const requestBody = {
+    args: {
+      limit: 5,
+      table: 'console_notification',
+      where: null,
+      offset: null,
+      columns: ['*'],
+      order_by: [
+        {
+          type: 'desc',
+          column: ['id'],
+        },
+      ],
+    },
+    type: 'select',
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(requestBody),
+    headers: { 'content-type': 'application/json' },
+  };
+  return dispatch(requestAction(url, options))
+    .then(data => {
+      if (data.length) {
+        dispatch({ type: SET_CONSOLE_NOTIFICATIONS, data });
+        return;
+      }
+
+      dispatch({
+        type: SET_DEFAULT_CONSOLE_NOTIFICATION,
+        data: [defaultNotification],
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      dispatch({
+        type: SET_ERROR_CONSOLE_NOTIFICATION,
+        data: [errorNotification],
+      });
+    });
+};
+
 const SET_FEATURES_COMPATIBILITY = 'Main/SET_FEATURES_COMPATIBILITY';
 const setFeaturesCompatibility = data => ({
   type: SET_FEATURES_COMPATIBILITY,
@@ -318,6 +368,13 @@ const mainReducer = (state = defaultState, action) => {
         ...state,
         featuresCompatibility: { ...action.data },
       };
+    case SET_CONSOLE_NOTIFICATIONS:
+    case SET_DEFAULT_CONSOLE_NOTIFICATION:
+    case SET_ERROR_CONSOLE_NOTIFICATION:
+      return {
+        ...state,
+        consoleNotifications: action.data,
+      };
     default:
       return state;
   }
@@ -341,4 +398,5 @@ export {
   featureCompatibilityInit,
   RUN_TIME_ERROR,
   registerRunTimeError,
+  setNotificationData,
 };
