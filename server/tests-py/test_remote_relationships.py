@@ -113,6 +113,12 @@ class TestDeleteRemoteRelationship:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'delete_remote_rel.yaml')
         assert st_code == 200, resp
 
+    def test_deleting_column_with_remote_relationship_dependency(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'drop_col_with_remote_rel_dependency.yaml')
+
+    def test_deleting_table_with_remote_relationship_dependency(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'drop_table_with_remote_rel_dependency.yaml')
+
 @use_test_fixtures
 class TestUpdateRemoteRelationship:
     @classmethod
