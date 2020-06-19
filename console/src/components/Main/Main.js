@@ -53,7 +53,7 @@ import {
 import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 import { Icon } from '../UIKit/atoms/Icon';
-import { HelpPopup } from './HelpPopup';
+import { Help } from './Help';
 
 class Main extends React.Component {
   constructor(props) {
@@ -778,7 +778,7 @@ class Main extends React.Component {
                   {getSettingsSelectedMarker()}
                 </div>
               </Link>
-              <HelpPopup />
+              <Help />
               {getLoveSection()}
             </div>
           </div>

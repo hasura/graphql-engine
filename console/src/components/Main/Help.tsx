@@ -16,7 +16,7 @@ import {
 import { useToggle } from '../../hooks/useToggle';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 
-export const HelpPopup: React.FC = () => {
+export const Help: React.FC = () => {
   const [isPopupOpen, togglePopupOpen] = useToggle(false);
   const [isChatOpen, toggleChatOpen, setChatOpen] = useToggle(false);
 
