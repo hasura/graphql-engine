@@ -300,11 +300,13 @@ library
 
                      -- exposed for Pro
                      , Hasura.GraphQL.Execute
+                     , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Execute.LiveQuery
 --                     , Hasura.GraphQL.Validate
                      , Hasura.GraphQL.Transport.HTTP
                      , Hasura.GraphQL.Transport.WebSocket.Protocol
                      , Hasura.GraphQL.Transport.WebSocket.Server
+                     , Hasura.GraphQL.Logging
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Run
@@ -319,6 +321,9 @@ library
 
                      , Data.Aeson.Ordered
                      , Data.TByteString
+
+                     , Network.Wai.Extended
+                     , Control.Concurrent.Extended
 
   other-modules:       Hasura.Incremental.Select
                      , Hasura.Incremental.Internal.Cache
@@ -411,7 +416,6 @@ library
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute.Inline
                      , Hasura.GraphQL.Execute.Plan
-                     , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Execute.Mutation
                      , Hasura.GraphQL.Execute.Resolve
@@ -433,7 +437,6 @@ library
                      -- , Hasura.GraphQL.Resolve.Select
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
-                     , Hasura.GraphQL.Logging
 
                      , Hasura.GraphQL.Parser
                      , Hasura.GraphQL.Parser.Class
@@ -460,8 +463,6 @@ library
                      , Hasura.Eventing.ScheduledTrigger
                      , Hasura.Eventing.Common
 
-                     , Network.Wai.Extended
-                     , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
                      , Data.GADT.Compare.Extended
@@ -482,7 +483,6 @@ library
                      , Hasura.SQL.Value
 
                      , Network.URI.Extended
-                     , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom
 
 executable graphql-engine

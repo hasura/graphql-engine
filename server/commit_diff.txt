@@ -207,25 +207,6 @@ Date:   Tue Jun 23 20:51:34 2020 +0530
 
     Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
 
-commit a7a60c2dfe42f9257d57d748a231bd47b164337b
-Author: Anon Ray <ecthiender@users.noreply.github.com>
-Date:   Fri Jun 19 12:12:32 2020 +0530
-
-    server: changes catalog initialization and logging for pro customization (#5139)
-
-    * new typeclass to abstract the logic of QueryLog-ing
-
-    * abstract the logic of logging websocket-server logs
-
-      introduce a MonadWSLog typeclass
-
-    * move catalog initialization to init step
-
-      expose a helper function to migrate catalog
-      create schema cache in initialiseCtx
-
-    * expose various modules and functions for pro
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>

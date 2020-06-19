@@ -27,6 +27,7 @@ import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
 import qualified Database.PG.Query                           as Q
 import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified ListT
 import qualified Network.HTTP.Client                         as H
 import qualified Network.HTTP.Types                          as H
 import qualified Network.Wai.Extended                        as Wai
@@ -36,11 +37,10 @@ import qualified StmContainers.Map                           as STMMap
 import           Control.Concurrent.Extended                 (sleep)
 import           Control.Exception.Lifted
 import           Data.String
-import           GHC.AssertNF
-import qualified ListT
+-- import           GHC.AssertNF
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
@@ -121,8 +121,13 @@ sendMsgWithMetadata wsConn msg (LQ.LiveQueryMetadata execTime) =
   liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo
   where
     bs = encodeServerMsg msg
+    (msgType, operationId) = case msg of
+      (SMData (DataMsg opId _)) -> (Just SMT_GQL_DATA, Just opId)
+      _                         -> (Nothing, Nothing)
     wsInfo = Just $! WS.WSEventInfo
-      { WS._wseiQueryExecutionTime = Just $! realToFrac execTime
+      { WS._wseiEventType = msgType
+      , WS._wseiOperationId = operationId
+      , WS._wseiQueryExecutionTime = Just $! realToFrac execTime
       , WS._wseiResponseSize = Just $! BL.length bs
       }
 
@@ -326,8 +331,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                planCache userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
 
   (telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
-  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx
-                planCache sc scVer httpMgr enableAL
+  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache sc scVer httpMgr enableAL
 
   case execPlan of
     E.QueryExecutionPlan queryPlan -> do
@@ -354,7 +358,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       case subscriptionPlan of
         E.ExecStepDB lqOp -> do
           -- log the graphql query
-          L.unLogger logger $ QueryLog q Nothing requestId
+          logQueryLog logger q Nothing requestId
           let subscriberMetadata = LQ.mkSubscriberMetadata $ J.object
                                    [ "websocket_id" J..= WS.getWSId wsConn
                                    , "operation_id" J..= opId
@@ -362,7 +366,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           -- NOTE!: we mask async exceptions higher in the call stack, but it's
           -- crucial we don't lose lqId after addLiveQuery returns successfully.
           !lqId <- liftIO $ LQ.addLiveQuery logger subscriberMetadata lqMap lqOp liveQOnChange
-          let !opName = _grOperationName q
+          -- let !opName = _grOperationName q -- TODO: uncomment this
           -- liftIO $ $assertNFHere $! (lqId, opName)  -- so we don't write thunks to mutable vars
           liftIO $ STM.atomically $
             -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
@@ -381,7 +385,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     execQueryOrMut timerTot telemQueryType telemCacheHit telemLocality genSql requestId q' action = do
       logOpEv ODStarted (Just requestId)
       -- log the generated SQL and the graphql query
-      L.unLogger logger $ QueryLog q' genSql requestId
+      logQueryLog logger q' genSql requestId
       (withElapsedTime $ liftIO $ runExceptT action) >>= \case
         (_,      Left err) -> postExecErr requestId err
         (telemTimeIO_DT, Right encJson) -> do
@@ -405,7 +409,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
         -- log the graphql query
-        L.unLogger logger $ QueryLog query Nothing reqId
+        -- L.unLogger logger $ QueryLog query Nothing reqId
+        logQueryLog logger query Nothing reqId
         let subscriberMetadata = LQ.mkSubscriberMetadata $ J.object
                                  [ "websocket_id" J..= WS.getWSId wsConn
                                  , "operation_id" J..= opId
@@ -426,8 +431,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         execQueryOrMut telemQueryType genSql action = do
           logOpEv ODStarted (Just reqId)
           -- log the generated SQL and the graphql query
-          L.unLogger logger $ QueryLog query genSql reqId
-          (withElapsedTime $ liftIO $ runExceptT action) >>= \case
+          logQueryLog logger query genSql reqId
+          (withElapsedTime $ runExceptT action) >>= \case
             (_,      Left err) -> postExecErr reqId err
             (telemTimeIO_DT, Right encJson) -> do
               -- Telemetry. NOTE: don't time network IO:

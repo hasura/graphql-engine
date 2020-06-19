@@ -26,7 +26,6 @@ import           Control.Monad.Stateless
 import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson                                hiding (json)
-import           Data.Either                               (isRight)
 import           Data.Int                                  (Int64)
 import           Data.IORef
 import           Data.Time.Clock                           (UTCTime)
@@ -329,7 +328,7 @@ v1QueryHandler query = do
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
 v1Alpha1GQHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m)
+  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m)
   => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1Alpha1GQHandler queryType query = do
   userInfo <- asks hcUser
@@ -351,13 +350,13 @@ v1Alpha1GQHandler queryType query = do
     GH.runGQBatched requestId responseErrorsConfig userInfo ipAddress reqHeaders queryType query
 
 v1GQHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m)
+  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m)
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler E.QueryHasura
 
 v1GQRelayHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m)
+  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m)
   => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 

@@ -19,6 +19,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , WSServer
   , WSEventInfo(..)
   , WSQueueResponse(..)
+  , ServerMsgType(..)
   , createWSServer
   , closeAll
   , createServerApp
@@ -30,30 +31,31 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , WSLog(..)
   ) where
 
-import qualified Control.Concurrent.Async             as A
-import qualified Control.Concurrent.Async.Lifted.Safe as LA
-import qualified Control.Concurrent.STM               as STM
+import qualified Control.Concurrent.Async                    as A
+import qualified Control.Concurrent.Async.Lifted.Safe        as LA
+import qualified Control.Concurrent.STM                      as STM
 import           Control.Exception.Lifted
-import qualified Control.Monad.Trans.Control          as MC
-import qualified Data.Aeson                           as J
-import qualified Data.Aeson.Casing                    as J
-import qualified Data.Aeson.TH                        as J
-import qualified Data.ByteString.Lazy                 as BL
+import qualified Control.Monad.Trans.Control                 as MC
+import qualified Data.Aeson                                  as J
+import qualified Data.Aeson.Casing                           as J
+import qualified Data.Aeson.TH                               as J
+import qualified Data.ByteString.Lazy                        as BL
 import           Data.String
-import qualified Data.TByteString                     as TBS
-import qualified Data.UUID                            as UUID
-import qualified Data.UUID.V4                         as UUID
-import           Data.Word                            (Word16)
+import qualified Data.TByteString                            as TBS
+import qualified Data.UUID                                   as UUID
+import qualified Data.UUID.V4                                as UUID
+import           Data.Word                                   (Word16)
 import           GHC.AssertNF
-import           GHC.Int                              (Int64)
+import           GHC.Int                                     (Int64)
 import           Hasura.Prelude
 import qualified ListT
-import           Network.Wai.Extended                 (IpAddress)
-import qualified Network.WebSockets                   as WS
-import qualified StmContainers.Map                    as STMMap
-import qualified System.IO.Error                      as E
+import           Network.Wai.Extended                        (IpAddress)
+import qualified Network.WebSockets                          as WS
+import qualified StmContainers.Map                           as STMMap
+import qualified System.IO.Error                             as E
 
-import qualified Hasura.Logging                       as L
+import           Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId, ServerMsgType (..))
+import qualified Hasura.Logging                              as L
 
 newtype WSId
   = WSId { unWSId :: UUID.UUID }
@@ -83,7 +85,9 @@ $(J.deriveToJSON
 -- extra websocket event info
 data WSEventInfo
   = WSEventInfo
-  { _wseiQueryExecutionTime :: !(Maybe Double)
+  { _wseiEventType          :: !(Maybe ServerMsgType)
+  , _wseiOperationId        :: !(Maybe OperationId)
+  , _wseiQueryExecutionTime :: !(Maybe Double)
   , _wseiResponseSize       :: !(Maybe Int64)
   } deriving (Show, Eq)
 $(J.deriveToJSON
@@ -91,7 +95,6 @@ $(J.deriveToJSON
                    , J.omitNothingFields = True
                    }
   ''WSEventInfo)
-
 
 data WSLog
   = WSLog
