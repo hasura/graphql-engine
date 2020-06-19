@@ -8,7 +8,7 @@
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
-- console: add ability to delete a role globally (close #3353) (#4987)
+- console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
 
 ## `v1.3.0-beta.2`
 
