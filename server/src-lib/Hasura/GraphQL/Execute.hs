@@ -390,6 +390,7 @@ execRemoteGQ
      , MonadIO m
      , MonadError QErr m
      , MonadReader ExecutionCtx m
+     , MonadQueryLog m
      )
   => RequestId
   -> UserInfo
@@ -403,7 +404,8 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opType = do
   execCtx <- ask
   let logger  = _ecxLogger execCtx
       manager = _ecxHttpManager execCtx
-  L.unLogger logger $ QueryLog q Nothing reqId
+  -- L.unLogger logger $ QueryLog q Nothing reqId
+  logQueryLog logger q Nothing reqId
   (time, respHdrs, resp) <- execRemoteGQ' manager userInfo reqHdrs q rsi opType
   let !httpResp = HttpResponse (encJFromLBS resp) respHdrs
   return (time, httpResp)

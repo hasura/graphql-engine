@@ -252,11 +252,13 @@ library
 
                      -- exposed for Pro
                      , Hasura.GraphQL.Execute
+                     , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Execute.LiveQuery
                      , Hasura.GraphQL.Validate
                      , Hasura.GraphQL.Transport.HTTP
                      , Hasura.GraphQL.Transport.WebSocket.Protocol
                      , Hasura.GraphQL.Transport.WebSocket.Server
+                     , Hasura.GraphQL.Logging
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Run
@@ -271,6 +273,9 @@ library
 
                      , Data.Aeson.Ordered
                      , Data.TByteString
+
+                     , Network.Wai.Extended
+                     , Control.Concurrent.Extended
 
   other-modules:       Hasura.Incremental.Select
                      , Hasura.Incremental.Internal.Cache
@@ -372,7 +377,6 @@ library
                      , Hasura.GraphQL.Validate.InputValue
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute.Plan
-                     , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Execute.LiveQuery.Options
                      , Hasura.GraphQL.Execute.LiveQuery.Plan
                      , Hasura.GraphQL.Execute.LiveQuery.Poll
@@ -390,13 +394,11 @@ library
                      , Hasura.GraphQL.Resolve.Select
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
-                     , Hasura.GraphQL.Logging
 
                      , Hasura.Eventing.HTTP
                      , Hasura.Eventing.EventTrigger
                      , Hasura.Eventing.ScheduledTrigger
 
-                     , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
                      , Data.List.Extended
@@ -415,7 +417,6 @@ library
                      , Hasura.SQL.Value
 
                      , Network.URI.Extended
-                     , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom
 
 executable graphql-engine
