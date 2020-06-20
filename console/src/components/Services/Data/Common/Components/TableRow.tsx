@@ -7,6 +7,49 @@ import {
 import styles from '../../../../Common/TableCommon/Table.scss';
 import { TypedInput } from './TypedInput';
 
+const getColumnInfo = (col: TableColumn, prevValue?: unknown) => {
+  const isEditing = prevValue !== undefined;
+
+  const hasDefault = col.column_default
+    ? col.column_default.trim() !== ''
+    : false;
+
+  const isAutoIncrement = !!isColumnAutoIncrement(col);
+  const isIdentity = col.is_identity ? col.is_identity !== 'NO' : false;
+  const isGenerated = col.is_generated ? col.is_generated !== 'NEVER' : false;
+  const isNullable = col.is_nullable ? col.is_nullable !== 'NO' : false;
+  const identityGeneration = col.identity_generation;
+
+  const isDisabled = isAutoIncrement || isGenerated || isIdentity;
+
+  let columnValueType;
+  switch (true) {
+    case !isEditing && (isIdentity || hasDefault || isGenerated):
+    case identityGeneration === 'ALWAYS':
+      columnValueType = 'default';
+      break;
+
+    case prevValue === null:
+    case !prevValue && isNullable:
+      columnValueType = 'null';
+      break;
+    default:
+      columnValueType = 'value';
+      break;
+  }
+
+  return {
+    colName: col.column_name,
+    isDisabled,
+    isNullable,
+    hasDefault,
+    isIdentity,
+    isGenerated,
+    identityGeneration,
+    columnValueType,
+  };
+};
+
 export interface TableRowProps {
   column: TableColumn;
   setRef: (
@@ -32,28 +75,18 @@ export const TableRow: React.FC<TableRowProps> = ({
   prevValue,
 }) => {
   const {
-    column_name: colName,
-    is_nullable,
-    is_identity,
-    column_default,
-    is_generated,
-  } = column;
-  const hasDefault = column_default ? column_default.trim() !== '' : false;
-  const isIdentity = is_identity && is_identity !== 'NO';
-  const isAutoIncrement = !!isColumnAutoIncrement(column);
-  const isGenerated = !!(is_generated && is_generated !== 'NEVER');
-  const isNullable =
-    is_nullable && is_nullable !== 'NO' && !isGenerated && !isIdentity;
-  const isDisabled = !!(isAutoIncrement || isGenerated || isIdentity);
-
-  const isEditing = prevValue !== undefined;
+    colName,
+    isDisabled,
+    isNullable,
+    hasDefault,
+    columnValueType,
+  } = getColumnInfo(column, prevValue);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     val: string
   ) => {
-    if (isDisabled) return;
-    if (!isNullable && !hasDefault) return;
+    if (isDisabled || isNullable || hasDefault) return;
 
     if (onChange) {
       onChange(e, val);
@@ -61,8 +94,7 @@ export const TableRow: React.FC<TableRowProps> = ({
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (isDisabled) return;
-    if (!isNullable && !hasDefault) return;
+    if (isDisabled || isNullable || hasDefault) return;
 
     if (onFocus) {
       onFocus(e);
@@ -84,8 +116,8 @@ export const TableRow: React.FC<TableRowProps> = ({
             setRef('insertRadioNode', node);
           }}
           name={`${colName}-value`}
-          defaultChecked={prevValue ? true : !hasDefault && !isNullable}
-          disabled={!!isDisabled}
+          defaultChecked={columnValueType === 'value'}
+          disabled={isDisabled}
         />
         <TypedInput
           inputRef={(node: HTMLInputElement) => {
@@ -108,7 +140,7 @@ export const TableRow: React.FC<TableRowProps> = ({
             setRef('nullNode', node);
           }}
           disabled={!isNullable}
-          defaultChecked={prevValue ? prevValue === null : !!isNullable}
+          defaultChecked={columnValueType === 'null'}
           name={`${colName}-value`}
           data-test={`nullable-radio-${index}`}
         />
@@ -122,7 +154,7 @@ export const TableRow: React.FC<TableRowProps> = ({
           }}
           name={`${colName}-value`}
           disabled={isDisabled}
-          defaultChecked={isEditing ? isGenerated : isIdentity || hasDefault}
+          defaultChecked={columnValueType === 'default'}
           data-test={`typed-input-default-${index}`}
         />
         <span className={styles.radioSpan}>Default</span>

@@ -388,7 +388,13 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
         name: 'columns',
         schema: 'information_schema',
       },
-      columns: ['column_name', 'table_name', 'is_generated', 'is_identity'],
+      columns: [
+        'column_name',
+        'table_name',
+        'is_generated',
+        'is_identity',
+        'identity_generation',
+      ],
       where: {
         table_schema: {
           $eq: schemaName,
@@ -411,18 +417,27 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
           .filter(
             info => info.is_generated !== 'NEVER' || info.is_identity !== 'NO'
           )
-          .forEach(({ column_name, table_name, is_generated, is_identity }) => {
-            columnsInfo = {
-              ...columnsInfo,
-              [table_name]: {
-                ...columnsInfo[table_name],
-                [column_name]: {
-                  is_generated,
-                  is_identity,
+          .forEach(
+            ({
+              column_name,
+              table_name,
+              is_generated,
+              is_identity,
+              identity_generation,
+            }) => {
+              columnsInfo = {
+                ...columnsInfo,
+                [table_name]: {
+                  ...columnsInfo[table_name],
+                  [column_name]: {
+                    is_generated,
+                    is_identity,
+                    identity_generation,
+                  },
                 },
-              },
-            };
-          });
+              };
+            }
+          );
         dispatch({
           type: SET_ADDITIONAL_COLUMNS_INFO,
           data: columnsInfo,

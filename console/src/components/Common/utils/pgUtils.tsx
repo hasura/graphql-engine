@@ -32,6 +32,7 @@ export interface TableColumn extends BaseTableColumn {
   is_generated?: string;
   is_nullable?: string;
   is_identity?: string;
+  identity_generation?: 'ALWAYS' | 'BY DEFAULT' | null;
 }
 
 export type ForeignKeyConstraint = {
