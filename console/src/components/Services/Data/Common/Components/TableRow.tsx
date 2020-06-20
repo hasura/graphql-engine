@@ -153,7 +153,7 @@ export const TableRow: React.FC<TableRowProps> = ({
             setRef('defaultNode', node);
           }}
           name={`${colName}-value`}
-          disabled={isDisabled}
+          disabled={!hasDefault}
           defaultChecked={columnValueType === 'default'}
           data-test={`typed-input-default-${index}`}
         />
