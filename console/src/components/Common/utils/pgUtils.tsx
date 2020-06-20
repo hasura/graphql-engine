@@ -292,6 +292,10 @@ export const isColumnAutoIncrement = (column: TableColumn) => {
   );
 };
 
+export const arrayToPostgresArray = (arr: unknown[]) => {
+  return `{${arr.join(',')}}`;
+};
+
 /** * Table/View relationship utils ** */
 
 export const getTableRelationships = (table: Table) => {

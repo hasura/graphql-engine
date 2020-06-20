@@ -34,23 +34,40 @@ mkNodeInterface relayTableNames =
         let description = G.Description "A globally unique identifier"
         in mkHsraObjFldInfo (Just description) "id" mempty nodeIdType
 
+-- | Relay schema should contain tables and relationships (whose remote tables)
+-- with a mandatory primary key
+tablesWithOnlyPrimaryKey :: TableCache -> TableCache
+tablesWithOnlyPrimaryKey tableCache =
+  flip Map.mapMaybe tableCache $ \tableInfo ->
+    tableInfo ^. tiCoreInfo.tciPrimaryKey *>
+    Just (infoWithPrimaryKeyRelations tableInfo)
+  where
+    infoWithPrimaryKeyRelations =
+      tiCoreInfo.tciFieldInfoMap %~ Map.mapMaybe (_FIRelationship %%~ withPrimaryKey)
+
+    withPrimaryKey relInfo =
+      let remoteTable = riRTable relInfo
+          maybePrimaryKey =
+            (tableCache ^. at remoteTable) >>= (^. tiCoreInfo.tciPrimaryKey)
+      in maybePrimaryKey *> Just relInfo
+
 mkRelayGCtxMap
   :: forall m. (MonadError QErr m)
-  => TableCache -> FunctionCache -> m GCtxMap
+  => TableCache -> FunctionCache -> m RelayGCtxMap
 mkRelayGCtxMap tableCache functionCache = do
-  typesMapL <- mapM (mkRelayGCtxMapTable tableCache functionCache) relayTables
+  typesMapL <- mapM (mkRelayGCtxMapTable relayTableCache functionCache) relayTables
   typesMap <- combineTypes typesMapL
   let gCtxMap  = flip Map.map typesMap $
                  \(ty, flds, insCtx) -> mkGCtx ty flds insCtx
-  pure $ Map.map (flip RoleContext Nothing) gCtxMap
+  pure gCtxMap
   where
+    relayTableCache = tablesWithOnlyPrimaryKey tableCache
     relayTables =
-      filter (tableFltr . _tiCoreInfo) $ Map.elems tableCache
+      filter (tableFltr . _tiCoreInfo) $ Map.elems relayTableCache
 
     tableFltr ti =
       not (isSystemDefined $ _tciSystemDefined ti)
       && isValidObjectName (_tciName ti)
-      && isJust (_tciPrimaryKey ti)
 
     combineTypes
       :: [Map.HashMap RoleName (TyAgg, RootFields, InsCtxMap)]
@@ -59,9 +76,10 @@ mkRelayGCtxMap tableCache functionCache = do
       let listMap = foldr (Map.unionWith (++) . Map.map pure) mempty maps
       flip Map.traverseWithKey listMap $ \roleName typeList -> do
         let relayTableNames = map (_tciName . _tiCoreInfo) relayTables
-            tyAgg = addTypeInfoToTyAgg
-                    (TIIFace $ mkNodeInterface relayTableNames) $
-                    mconcat $ map (^. _1) typeList
+            tyAgg = foldr addTypeInfoToTyAgg (mconcat $ map (^. _1) typeList)
+                    [ TIIFace $ mkNodeInterface relayTableNames
+                    , TIObj pageInfoObj
+                    ]
             insCtx = mconcat $ map (^. _3) typeList
         rootFields <- combineRootFields roleName $ map (^. _2) typeList
         pure (tyAgg, rootFields, insCtx)
@@ -251,7 +269,7 @@ mkRelayTyAggRole tn descM insPermM selPermM updColsM delPermM pkeyCols constrain
                            )
         in case riType relInfo of
           ObjRel -> [relFld]
-          ArrRel -> bool [relFld] ([relFld, aggRelFld] <> maybe [] pure maybeConnFld) allowAgg
+          ArrRel -> bool [relFld] ([relFld, aggRelFld] <> catMaybes [maybeConnFld]) allowAgg
       SFComputedField cf -> pure
         ( (ty, mkComputedFieldName $ _cfName cf)
         , RFComputedField cf
@@ -403,5 +421,9 @@ mkNodeQueryRootFields roleName relayTables =
             , spiRequiredHeaders perm
             )
           adminPermDetails = (noFilter, Nothing, [])
-      in (mkTableTy tableName,) . mkSelectOpCtx tableName allColumns
-         <$> bool permDetailsM (Just adminPermDetails) (isAdmin roleName)
+      in (mkTableTy tableName,) <$>
+         ((,) <$>
+           (mkSelectOpCtx tableName allColumns <$>
+            bool permDetailsM (Just adminPermDetails) (isAdmin roleName)
+           ) <*> (table ^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
+         )

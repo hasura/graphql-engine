@@ -46,6 +46,7 @@ import {
   getRelationshipRefTable,
   getTableName,
   getTableSchema,
+  arrayToPostgresArray,
 } from '../../../Common/utils/pgUtils';
 import { updateSchemaInfo } from '../DataActions';
 import {
@@ -234,6 +235,12 @@ const ViewRows = ({
         pkClause[k.column_name] = row[k.column_name];
       });
     }
+
+    Object.keys(pkClause).forEach(key => {
+      if (Array.isArray(pkClause[key])) {
+        pkClause[key] = arrayToPostgresArray(pkClause[key]);
+      }
+    });
 
     return pkClause;
   };
