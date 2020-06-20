@@ -4,7 +4,7 @@ import { LocalAdhocEventState } from '../../Services/Events/AdhocEvents/Add/stat
 import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
 import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationships/RemoteRelationships/utils';
 import { transformHeaders } from '../Headers/utils';
-import { generateTableDef } from './pgUtils';
+import { generateTableDef, arrayToPostgresArray } from './pgUtils';
 import { Nullable } from './tsUtils';
 
 // TODO add type for the where clause
@@ -112,9 +112,9 @@ export const getInsertUpQuery = (
   };
 };
 
-type DeleteObjectWithId = {
-  id: number;
-};
+interface ColumnType {
+  column_name: string;
+}
 
 type PrimaryKeyInfo = {
   table_name: string;
@@ -126,24 +126,27 @@ type PrimaryKeyInfo = {
 export const getInsertDownQuery = (
   tableDef: TableDefinition,
   insertion: Record<string, any>,
-  primaryKeyInfo: PrimaryKeyInfo
+  primaryKeyInfo: PrimaryKeyInfo,
+  columns: Array<ColumnType>
 ) => {
-  let whereClause = {};
-  const isIDPresent = (insertion as DeleteObjectWithId)?.id;
+  const whereClause: any = {};
 
-  if (!isIDPresent) {
-    const primaryKeys = primaryKeyInfo.columns;
-    if (primaryKeys.length) {
-      const chosenKey = primaryKeys[0];
-      whereClause = { [chosenKey]: insertion[chosenKey] };
-    } else {
-      // this should never the case since a primary key is
-      // required for creating a table
-      return null;
-    }
+  const hasPrimaryKeys = primaryKeyInfo?.columns;
+  if (hasPrimaryKeys) {
+    primaryKeyInfo.columns.forEach(key => {
+      whereClause[key] = insertion[key];
+    });
   } else {
-    whereClause = { id: (insertion as DeleteObjectWithId).id };
+    columns.forEach(col => {
+      whereClause[col.column_name] = insertion[col.column_name];
+    });
   }
+
+  Object.keys(whereClause).forEach(key => {
+    if (Array.isArray(whereClause[key])) {
+      whereClause[key] = arrayToPostgresArray(whereClause[key]);
+    }
+  });
 
   return {
     type: 'delete',
@@ -544,23 +547,23 @@ export const generateCreateEventTriggerQuery = (
         state.webhook.type === 'env' ? state.webhook.value.trim() : null,
       insert: state.operations.insert
         ? {
-          columns: '*',
-        }
+            columns: '*',
+          }
         : null,
       update: state.operations.update
         ? {
-          columns: state.operationColumns
-            .filter(c => !!c.enabled)
-            .map(c => c.name),
-          payload: state.operationColumns
-            .filter(c => !!c.enabled)
-            .map(c => c.name),
-        }
+            columns: state.operationColumns
+              .filter(c => !!c.enabled)
+              .map(c => c.name),
+            payload: state.operationColumns
+              .filter(c => !!c.enabled)
+              .map(c => c.name),
+          }
         : null,
       delete: state.operations.delete
         ? {
-          columns: '*',
-        }
+            columns: '*',
+          }
         : null,
       enable_manual: state.operations.enable_manual,
       retry_conf: state.retryConf,

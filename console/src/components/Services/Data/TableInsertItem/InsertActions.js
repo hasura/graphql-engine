@@ -39,7 +39,8 @@ const createInsertMigration = (
   getState,
   tableInfo,
   insertedData,
-  primaryKeyInfo
+  primaryKeyInfo,
+  columns
 ) => {
   const upQuery = getInsertUpQuery(
     { name: tableInfo.name, schema: tableInfo.schema },
@@ -48,7 +49,8 @@ const createInsertMigration = (
   const downQuery = getInsertDownQuery(
     { name: tableInfo.name, schema: tableInfo.schema },
     insertedData,
-    primaryKeyInfo
+    primaryKeyInfo,
+    columns
   );
 
   const migrationName = `insert_into_${tableInfo.name}`;
@@ -167,7 +169,8 @@ const insertItem = (tableName, colValues, isMigration = false) => {
             getState,
             { name: tableName, schema: currentSchema },
             insertedData,
-            currentTableInfo.primary_key
+            currentTableInfo.primary_key,
+            columns
           );
         } else {
           dispatch(
