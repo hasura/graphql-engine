@@ -1,26 +1,26 @@
 module Network.Wai.Extended
   ( module Wai
   , getSourceFromFallback
-  , IpAddress
+  , IpAddress (..)
   , showIPAddress
   ) where
 
-import qualified Data.ByteString.Char8     as BS
-import qualified Data.Text.Encoding        as TE
-import qualified Data.Text.Encoding.Error  as TE
+import qualified Data.ByteString.Char8    as BS
+import qualified Data.Text.Encoding       as TE
+import qualified Data.Text.Encoding.Error as TE
 
+import           Data.List                (find)
+import           Data.Maybe               (fromMaybe)
+import           Data.Text                (Text)
 import           Prelude
-import           Data.Maybe                (fromMaybe)
-import           Data.List                 (find)
-import           Data.Text                 (Text)
 
-import           Data.Bits                 (shift, (.&.))
-import           Data.ByteString.Char8     (ByteString)
-import           Data.Word                 (Word32)
-import           Network.Socket            (SockAddr (..))
-import           Network.Wai               as Wai
-import           System.ByteOrder          (ByteOrder (..), byteOrder)
-import           Text.Printf               (printf)
+import           Data.Bits                (shift, (.&.))
+import           Data.ByteString.Char8    (ByteString)
+import           Data.Word                (Word32)
+import           Network.Socket           (SockAddr (..))
+import           Network.Wai              as Wai
+import           System.ByteOrder         (ByteOrder (..), byteOrder)
+import           Text.Printf              (printf)
 
 -- | IP Address related code
 
