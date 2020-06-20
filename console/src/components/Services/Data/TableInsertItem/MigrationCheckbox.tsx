@@ -12,10 +12,10 @@ const MigrationCheckBox: React.FC<MigrationCheckBoxProps> = ({
   isChecked,
   onChange,
 }) => {
-  const isConsoleMode = globals.consoleMode === CLI_CONSOLE_MODE;
+  const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
   return (
     <>
-      {isConsoleMode && (
+      {isCLIMode && (
         <label className={styles.labelText}>
           <input
             type="checkbox"
