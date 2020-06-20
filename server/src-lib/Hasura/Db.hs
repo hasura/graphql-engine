@@ -8,8 +8,9 @@ module Hasura.Db
   , LazyTx
 
   , PGExecCtx(..)
+  , mkPGExecCtx
   , runLazyTx
-  , runLazyTx'
+  , runQueryTx
   , withUserInfo
   , sessionInfoJsonExp
 
@@ -23,6 +24,7 @@ import           Control.Lens
 import           Control.Monad.Trans.Control  (MonadBaseControl (..))
 import           Control.Monad.Unique
 import           Control.Monad.Validate
+import           Data.Either                  (isRight)
 
 import qualified Data.Aeson.Extended          as J
 import qualified Database.PG.Query            as Q
@@ -39,9 +41,34 @@ import qualified Hasura.SQL.DML               as S
 
 data PGExecCtx
   = PGExecCtx
-  { _pecPool        :: !Q.PGPool
-  , _pecTxIsolation :: !Q.TxIsolation
+  { _pecRunReadOnly  :: (forall a. Q.TxE QErr a -> ExceptT QErr IO a)
+  -- ^ Run a Q.ReadOnly transaction
+  , _pecRunReadNoTx  :: (forall a. Q.TxE QErr a -> ExceptT QErr IO a)
+  -- ^ Run a read only statement without an explicit transaction block
+  , _pecRunReadWrite :: (forall a. Q.TxE QErr a -> ExceptT QErr IO a)
+  -- ^ Run a Q.ReadWrite transaction
+  , _pecCheckHealth  :: (IO Bool)
+  -- ^ Checks the health of this execution context
   }
+
+-- | Creates a Postgres execution context for a single Postgres master pool
+mkPGExecCtx :: Q.TxIsolation -> Q.PGPool -> PGExecCtx
+mkPGExecCtx isoLevel pool =
+  PGExecCtx
+  { _pecRunReadOnly = (Q.runTx pool (isoLevel, Just Q.ReadOnly))
+  , _pecRunReadNoTx = (Q.runTx' pool)
+  , _pecRunReadWrite = (Q.runTx pool (isoLevel, Just Q.ReadWrite))
+  , _pecCheckHealth = checkDbConnection
+  }
+  where
+    checkDbConnection = do
+      e <- liftIO $ runExceptT $ Q.runTx' pool select1Query
+      pure $ isRight e
+      where
+        select1Query :: Q.TxE QErr Int
+        select1Query =
+          runIdentity . Q.getRow <$>
+          Q.withQE defaultTxErrorHandler [Q.sql| SELECT 1 |] () False
 
 class (MonadError QErr m) => MonadTx m where
   liftTx :: Q.TxE QErr a -> m a
@@ -55,14 +82,16 @@ instance (Monoid w, MonadTx m) => MonadTx (WriterT w m) where
 instance (MonadTx m) => MonadTx (ValidateT e m) where
   liftTx = lift . liftTx
 
--- | Like 'Q.TxE', but defers acquiring a Postgres connection until the first execution of 'liftTx'.
--- If no call to 'liftTx' is ever reached (i.e. a successful result is returned or an error is
--- raised before ever executing a query), no connection is ever acquired.
+-- | Like 'Q.TxE', but defers acquiring a Postgres connection until the first
+-- execution of 'liftTx'.  If no call to 'liftTx' is ever reached (i.e. a
+-- successful result is returned or an error is raised before ever executing a
+-- query), no connection is ever acquired.
 --
--- This is useful for certain code paths that only conditionally need database access. For example,
--- although most queries will eventually hit Postgres, introspection queries or queries that
--- exclusively use remote schemas never will; using 'LazyTx' keeps those branches from unnecessarily
--- allocating a connection.
+-- This is useful for certain code paths that only conditionally need database
+-- access. For example, although most queries will eventually hit Postgres,
+-- introspection queries or queries that exclusively use remote schemas never
+-- will; using 'LazyTx' keeps those branches from unnecessarily allocating a
+-- connection.
 data LazyTx e a
   = LTErr !e
   | LTNoTx !a
@@ -84,17 +113,22 @@ runLazyTx
   => PGExecCtx
   -> Q.TxAccess
   -> LazyTx QErr a -> ExceptT QErr m a
-runLazyTx (PGExecCtx pgPool txIso) txAccess = \case
+runLazyTx pgExecCtx txAccess = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ Q.runTx pgPool (txIso, Just txAccess) tx
+  LTTx tx  ->
+    case txAccess of
+      Q.ReadOnly  -> ExceptT <$> liftIO $ runExceptT $ _pecRunReadOnly pgExecCtx tx
+      Q.ReadWrite -> ExceptT <$> liftIO $ runExceptT $ _pecRunReadWrite pgExecCtx tx
 
-runLazyTx'
+-- | This runs the given set of statements (Tx) without wrapping them in BEGIN
+-- and COMMIT. This should only be used for running a single statement query!
+runQueryTx
   :: MonadIO m => PGExecCtx -> LazyTx QErr a -> ExceptT QErr m a
-runLazyTx' (PGExecCtx pgPool _) = \case
+runQueryTx pgExecCtx = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ Q.runTx' pgPool tx
+  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ _pecRunReadNoTx pgExecCtx tx
 
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON

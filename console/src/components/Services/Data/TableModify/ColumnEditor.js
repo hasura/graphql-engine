@@ -1,10 +1,11 @@
 import React from 'react';
 
-import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
-import { getValidAlterOptions } from './utils';
+import { getValidAlterOptions, convertToArrayOptions } from './utils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
+import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
+import { ARRAY } from '../utils';
 
 const ColumnEditor = ({
   onSubmit,
@@ -15,7 +16,7 @@ const ColumnEditor = ({
   alterTypeOptions,
   defaultOptions,
 }) => {
-  const colName = columnProperties.name;
+  const { name: colName, isArrayDataType } = columnProperties;
 
   if (!selectedProperties[colName]) {
     return null;
@@ -30,7 +31,10 @@ const ColumnEditor = ({
       selectedProperties[colName].type
     );
   };
-  const columnTypePG = getColumnType();
+  let columnTypePG = getColumnType();
+  if (columnProperties.display_type_name === ARRAY) {
+    columnTypePG = columnTypePG.replace('_', '') + '[]';
+  }
 
   const customSelectBoxStyles = {
     dropdownIndicator: {
@@ -47,10 +51,15 @@ const ColumnEditor = ({
     },
   };
 
-  const { alterOptions, alterOptionsValueMap } = getValidAlterOptions(
+  // eslint-disable-next-line prefer-const
+  let { alterOptions, alterOptionsValueMap } = getValidAlterOptions(
     alterTypeOptions,
     colName
   );
+
+  if (isArrayDataType) {
+    alterOptions = convertToArrayOptions(alterOptions);
+  }
 
   const updateColumnName = e => {
     dispatch(editColumn(colName, 'name', e.target.value));
@@ -134,14 +143,13 @@ const ColumnEditor = ({
         <div className={`${styles.display_flex} form-group`}>
           <label className={'col-xs-4'}>Type</label>
           <div className="col-xs-6">
-            <SearchableSelectBox
+            <ColumnTypeSelector
               options={alterOptions}
               onChange={updateColumnType}
-              value={columnTypePG && alterOptionsValueMap[columnTypePG]}
+              value={alterOptionsValueMap[columnTypePG] || columnTypePG}
+              colIdentifier={0}
               bsClass={`col-type-${0} modify_select`}
               styleOverrides={customSelectBoxStyles}
-              filterOption={'prefix'}
-              placeholder="column_type"
             />
           </div>
         </div>
