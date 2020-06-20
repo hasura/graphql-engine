@@ -106,6 +106,10 @@ updateCronTriggerInCatalog CronTriggerMetadata {..} = liftTx $ do
     DELETE FROM hdb_catalog.hdb_cron_events
     WHERE trigger_name = $1 AND scheduled_time > now() AND tries = 0
    |] (Identity ctName) False
+  -- create the next 100 cron events, as the future events were deleted
+  currentTime <- liftIO C.getCurrentTime
+  let scheduleTimes = generateScheduleTimes currentTime 100 ctSchedule
+  insertCronEvents $ map (CronEventSeed ctName) scheduleTimes
 
 runDeleteCronTrigger :: (CacheRWM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
 runDeleteCronTrigger (ScheduledTriggerName stName) = do
