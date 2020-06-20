@@ -125,7 +125,7 @@ type PrimaryKeyInfo = {
 
 export const getInsertDownQuery = (
   tableDef: TableDefinition,
-  insertion: unknown,
+  insertion: Record<string, any>,
   primaryKeyInfo: PrimaryKeyInfo
 ) => {
   let whereClause = {};
@@ -135,7 +135,7 @@ export const getInsertDownQuery = (
     const primaryKeys = primaryKeyInfo.columns;
     if (primaryKeys.length) {
       const chosenKey = primaryKeys[0];
-      whereClause = { [chosenKey]: (insertion as any)[chosenKey] };
+      whereClause = { [chosenKey]: insertion[chosenKey] };
     } else {
       // this should never the case since a primary key is
       // required for creating a table
@@ -544,23 +544,23 @@ export const generateCreateEventTriggerQuery = (
         state.webhook.type === 'env' ? state.webhook.value.trim() : null,
       insert: state.operations.insert
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       update: state.operations.update
         ? {
-            columns: state.operationColumns
-              .filter(c => !!c.enabled)
-              .map(c => c.name),
-            payload: state.operationColumns
-              .filter(c => !!c.enabled)
-              .map(c => c.name),
-          }
+          columns: state.operationColumns
+            .filter(c => !!c.enabled)
+            .map(c => c.name),
+          payload: state.operationColumns
+            .filter(c => !!c.enabled)
+            .map(c => c.name),
+        }
         : null,
       delete: state.operations.delete
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       enable_manual: state.operations.enable_manual,
       retry_conf: state.retryConf,
