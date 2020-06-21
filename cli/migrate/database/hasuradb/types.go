@@ -63,22 +63,26 @@ type updateRemoteRelationshipInput struct {
 }
 
 type createCronTriggerInput struct {
-	Name              string
-	Webhook           string
-	Schedule          string
-	Payload           interface{}
-	Headers           interface{}
-	RetryConf         RetryConfigST
-	IncludeInMetadata bool
-	Comment           string
-	Replace           bool
+	Name              string        `json:"name,omitempty" yaml:"name,omitempty"`
+	Webhook           string        `json:"webhook,omitempty" yaml:"webhook,omitempty"`
+	Schedule          string        `json:"schedule,omitempty" yaml:"schedule,omitempty"`
+	Payload           interface{}   `json:"payload,omitempty" yaml:"payload,omitempty"`
+	Headers           interface{}   `json:"headers,omitempty" yaml:"headers,omitempty"`
+	RetryConf         RetryConfigST `json:"retry_conf,omitempty" yaml:"retry_conf,omitempty"`
+	IncludeInMetadata *bool         `json:"include_in_metadata,omitempty" yaml:"include_in_metadata,omitempty"`
+	Comment           string        `json:"comment,omitempty" yaml:"comment,omitempty"`
+	Replace           *bool         `json:"replace,omitempty" yaml:"replace,omitempty"`
 }
 
 type RetryConfigST struct {
-	NumRetries           int
-	RetryIntervalSeconds int
-	TimeoutSeconds       int
-	ToleranceSeconds     int
+	NumRetries           int `json:"num_retries,omitempty" yaml:"num_retries,omitempty"`
+	RetryIntervalSeconds int `json:"retry_interval_seconds,omitempty" yaml:"retry_interval_seconds,omitempty"`
+	TimeoutSeconds       int `json:"timeout_seconds,omitempty" yaml:"timeout_seconds,omitempty"`
+	ToleranceSeconds     int `json:"tolerance_seconds,omitempty" yaml:"tolerance_seconds,omitempty"`
+}
+
+type deleteCronTriggerInput struct {
+	Name string `json:"name" yaml:"name"`
 }
 
 func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
@@ -172,6 +176,10 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		q.Args = &createRemoteRelationshipInput{}
 	case updateRemoteRelationship:
 		q.Args = &createRemoteRelationshipInput{}
+	case createCronTrigger:
+		q.Args = &createCronTriggerInput{}
+	case deleteCronTrigger:
+		q.Args = &deleteCronTriggerInput{}
 	default:
 		return fmt.Errorf("cannot squash type %s", q.Type)
 	}
@@ -332,6 +340,8 @@ const (
 	createRemoteRelationship                 = "create_remote_relationship"
 	updateRemoteRelationship                 = "update_remote_relationship"
 	deleteRemoteRelationship                 = "delete_remote_relationship"
+	createCronTrigger                        = "create_cron_trigger"
+	deleteCronTrigger                        = "delete_cron_trigger"
 )
 
 type tableMap struct {
@@ -989,5 +999,9 @@ type allowListConfig struct {
 
 type remoteRelationshipConfig struct {
 	tableName, schemaName, name string
+	transition.Transition
+}
+type cronTriggerConfig struct {
+	name string
 	transition.Transition
 }

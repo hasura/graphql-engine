@@ -17,6 +17,75 @@ import (
 
 type CustomQuery linq.Query
 
+func (q CustomQuery) MergeCronTriggers(squashList *database.CustomList) error {
+	cronTriggersTransition := transition.New(&eventTriggerConfig{})
+	cronTriggersTransition.Initial("new")
+	cronTriggersTransition.State("created")
+	cronTriggersTransition.State("deleted")
+
+	cronTriggersTransition.Event(createCronTrigger).To("created").From("new", "deleted")
+	cronTriggersTransition.Event(deleteCronTrigger).To("deleted").From("new", "created")
+
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		var wasCreated bool
+		g := item.(linq.Group)
+		if g.Key == "" {
+			continue
+		}
+		key := g.Key.(string)
+		cfg := cronTriggerConfig{
+			name: key,
+		}
+		prevElems := make([]*list.Element, 0)
+		for _, val := range g.Group {
+			element := val.(*list.Element)
+			switch obj := element.Value.(type) {
+			case *createCronTriggerInput:
+				if obj.Replace != nil {
+					if *obj.Replace {
+						for _, e := range prevElems {
+							squashList.Remove(e)
+						}
+						prevElems = prevElems[:0]
+						err := cronTriggersTransition.Trigger(deleteCronTrigger, &cfg, nil)
+						if err != nil {
+							return err
+						}
+						obj.Replace = nil
+					}
+				} else {
+					wasCreated = true
+				}
+				err := cronTriggersTransition.Trigger(createCronTrigger, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				prevElems = append(prevElems, element)
+			case *deleteCronTriggerInput:
+				if wasCreated {
+					// if this is true it means that a trigger was created
+					// which means their is no point in keeping the delete event trigger around
+					//
+					// otherwise it means that it was only updated so we have to keep
+					// the delete trigger migration
+					prevElems = append(prevElems, element)
+				}
+				err := cronTriggersTransition.Trigger(deleteCronTrigger, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				// drop previous elements
+				for _, e := range prevElems {
+					squashList.Remove(e)
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) error {
 	remoteRelationshipTransition := transition.New(&remoteRelationshipConfig{})
 	remoteRelationshipTransition.Initial("new")
@@ -915,6 +984,24 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 }
 
 func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
+	cronTriggersGroup := CustomQuery(linq.FromIterable(l).GroupByT(
+		func(element *list.Element) string {
+			switch args := element.Value.(type) {
+			case *createCronTriggerInput:
+				return args.Name
+			case *deleteCronTriggerInput:
+				return args.Name
+			}
+			return ""
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err := cronTriggersGroup.MergeCronTriggers(l)
+	if err != nil {
+		ret <- err
+	}
+
 	// get all event triggers groups
 	// ie let's say I have 2 event triggers named
 	// trigger1 and trigger2
@@ -933,7 +1020,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			return element
 		},
 	))
-	err := eventTriggersGroup.MergeEventTriggers(l)
+	err = eventTriggersGroup.MergeEventTriggers(l)
 	if err != nil {
 		ret <- err
 	}
@@ -1427,6 +1514,10 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			q.Type = updateRemoteRelationship
 		case *deleteRemoteRelationshipInput:
 			q.Type = deleteRemoteRelationship
+		case *createCronTriggerInput:
+			q.Type = createCronTrigger
+		case *deleteCronTriggerInput:
+			q.Type = deleteCronTrigger
 		case *RunSQLInput:
 			ret <- []byte(args.SQL)
 			continue
