@@ -311,8 +311,8 @@ migrations dryRun =
         DROP COLUMN headers |] () False
       where
         uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers, comment) =
-          EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers comment
-        updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _ _) = Q.unitQ [Q.sql|
+          EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers
+        updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _) = Q.unitQ [Q.sql|
                                              UPDATE hdb_catalog.event_triggers
                                              SET
                                              configuration = $1

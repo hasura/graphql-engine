@@ -209,7 +209,6 @@ data EventTriggerConf
   , etcWebhookFromEnv :: !(Maybe T.Text)
   , etcRetryConf      :: !RetryConf
   , etcHeaders        :: !(Maybe [HeaderConf])
-  , etcComment        :: !(Maybe Text)
   } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerConf)

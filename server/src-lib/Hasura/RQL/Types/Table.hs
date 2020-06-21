@@ -295,7 +295,6 @@ data EventTriggerInfo
    , etiHeaders     :: ![EventHeaderInfo]
    -- ^ Custom headers can be added to an event trigger. Each webhook request will have these
    -- headers added.
-   , etiComment     :: !(Maybe Text)
    } deriving (Show, Eq, Generic)
 instance NFData EventTriggerInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
