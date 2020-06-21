@@ -96,7 +96,6 @@
   "devDependencies": {
     "@babel/core": "7.9.6",
     "@babel/plugin-proposal-class-properties": "7.8.3",
-    "@babel/plugin-proposal-export-default-from": "7.8.3",
     "@babel/plugin-proposal-nullish-coalescing-operator": "7.10.1",
     "@babel/preset-env": "7.9.5",
     "@babel/preset-react": "7.9.4",
@@ -125,8 +124,9 @@
     "@types/react-hot-loader": "4.1.1",
     "@types/react-notification-system-redux": "1.1.6",
     "@types/react-redux": "7.1.7",
-    "@types/react-router": "3.0.22",
+    "@types/react-router": "3.0.8",
     "@types/react-router-redux": "4.0.44",
+    "@types/react-select": "3.0.12",
     "@types/react-toggle": "4.0.2",
     "@types/redux-devtools": "3.0.47",
     "@types/redux-devtools-dock-monitor": "1.1.33",

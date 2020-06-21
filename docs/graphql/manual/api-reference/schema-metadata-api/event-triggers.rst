@@ -76,7 +76,7 @@ Args syntax
      - Description
    * - name
      - true
-     - TriggerName_
+     - :ref:`TriggerName <TriggerName>`
      - Name of the event trigger
    * - table
      - true
@@ -155,7 +155,7 @@ Args syntax
      - Description
    * - name
      - true
-     - TriggerName_
+     - :ref:`TriggerName <TriggerName>`
      - Name of the event trigger
 
 
@@ -234,7 +234,7 @@ Args syntax
      - Description
    * - name
      - true
-     - TriggerName_
+     - :ref:`TriggerName <TriggerName>`
      - Name of the event trigger
    * - payload
      - true

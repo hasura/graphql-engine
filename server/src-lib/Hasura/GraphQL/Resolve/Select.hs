@@ -19,12 +19,14 @@ import           Data.Parser.JSONPath
 import           Hasura.Prelude
 
 import qualified Data.Aeson                           as J
+import qualified Data.Aeson.Extended                  as J
 import qualified Data.Aeson.Internal                  as J
 import qualified Data.ByteString.Lazy                 as BL
 import qualified Data.HashMap.Strict                  as Map
 import qualified Data.HashMap.Strict.InsOrd           as OMap
 import qualified Data.List.NonEmpty                   as NE
 import qualified Data.Sequence                        as Seq
+import qualified Data.Sequence.NonEmpty               as NESeq
 import qualified Data.Text                            as T
 import qualified Language.GraphQL.Draft.Syntax        as G
 
@@ -517,7 +519,7 @@ fromConnectionField
      , Has OrdByCtx r, Has SQLGenCtx r
      )
   => RS.SelectFromG UnresolvedVal
-  -> NonEmpty PGColumnInfo
+  -> PrimaryKeyColumns
   -> AnnBoolExpPartialSQL
   -> Maybe Int
   -> Field -> m (RS.ConnectionSelect UnresolvedVal)
@@ -539,7 +541,7 @@ parseConnectionArgs
      ( MonadReusability m, MonadError QErr m, MonadReader r m
      , Has FieldMap r, Has OrdByCtx r
      )
-  => NonEmpty PGColumnInfo
+  => PrimaryKeyColumns
   -> ArgsMap
   -> m ( SelectArgs
        , Maybe RS.ConnectionSlice
@@ -587,7 +589,7 @@ parseConnectionArgs pKeyColumns args = do
       cursorValue <- either (const throwInvalidCursor) pure $
                       J.eitherDecode cursorSplit
       case maybeOrderBys of
-        Nothing -> forM pKeyColumns $
+        Nothing -> forM (NESeq.toNonEmpty pKeyColumns) $
           \pgColumnInfo -> do
             let columnJsonPath = [J.Key $ getPGColTxt $ pgiColumn pgColumnInfo]
             pgColumnValue <- maybe throwInvalidCursor pure $ iResultToMaybe $
@@ -648,7 +650,7 @@ convertConnectionSelect
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => NonEmpty PGColumnInfo -> SelOpCtx -> Field -> m (RS.ConnectionSelect UnresolvedVal)
+  => PrimaryKeyColumns -> SelOpCtx -> Field -> m (RS.ConnectionSelect UnresolvedVal)
 convertConnectionSelect pkCols opCtx fld =
   withPathK "selectionSet" $
   fromConnectionField (RS.FromTable qt) pkCols permFilter permLimit fld
@@ -746,7 +748,7 @@ convertConnectionFuncQuery
      , Has OrdByCtx r
      , Has SQLGenCtx r
      )
-  => NonEmpty PGColumnInfo -> FuncQOpCtx -> Field -> m (RS.ConnectionSelect UnresolvedVal)
+  => PrimaryKeyColumns -> FuncQOpCtx -> Field -> m (RS.ConnectionSelect UnresolvedVal)
 convertConnectionFuncQuery pkCols funcOpCtx fld =
   withPathK "selectionSet" $ fieldAsPath fld $ do
     selectFrom <- makeFunctionSelectFrom qf argSeq fld
@@ -754,32 +756,33 @@ convertConnectionFuncQuery pkCols funcOpCtx fld =
   where
     FuncQOpCtx qf argSeq _ _ permFilter permLimit = funcOpCtx
 
+throwInvalidNodeId :: MonadError QErr m => Text -> m a
+throwInvalidNodeId t = throwVE $ "the node id is invalid: " <> t
+
 resolveNodeId
-  :: forall m. ( MonadError QErr m
-               , MonadReusability m
-               )
-  => Field -> m NodeIdData
+  :: ( MonadError QErr m
+     , MonadReusability m
+     )
+  => Field -> m NodeId
 resolveNodeId field =
-  withPathK "selectionSet" $ fieldAsPath field $ do
-    nodeIdText <- asPGColText =<< getArg (_fArguments field) "id"
-    either (const throwInvalidNodeId) pure $
-      J.eitherDecode $ base64Decode nodeIdText
-  where
-    throwInvalidNodeId = throwVE "the node id is invalid"
+  withPathK "selectionSet" $ fieldAsPath field $
+  withArg (_fArguments field) "id" $ asPGColText >=>
+  either (throwInvalidNodeId . T.pack) pure . J.eitherDecode . base64Decode
 
 convertNodeSelect
-  :: ( MonadReusability m
-     , MonadError QErr m
-     , MonadReader r m
-     , Has FieldMap r
-     , Has OrdByCtx r
-     , Has SQLGenCtx r
-     )
+  :: forall m r. ( MonadReusability m
+                 , MonadError QErr m
+                 , MonadReader r m
+                 , Has FieldMap r
+                 , Has OrdByCtx r
+                 , Has SQLGenCtx r
+                 )
   => SelOpCtx
-  -> Map.HashMap PGCol J.Value
+  -> PrimaryKeyColumns
+  -> NESeq.NESeq J.Value
   -> Field
   -> m (RS.AnnSimpleSelG UnresolvedVal)
-convertNodeSelect selOpCtx pkeyColumnValues field =
+convertNodeSelect selOpCtx pkeyColumns columnValues field =
   withPathK "selectionSet" $ fieldAsPath field $ do
     -- Parse selection set as interface
     ifaceSelectionSet <- asInterfaceSelectionSet $ _fSelSet field
@@ -790,11 +793,15 @@ convertNodeSelect selOpCtx pkeyColumnValues field =
     -- Resolve the table selection set
     annFields <- processTableSelectionSet tableObjectType selSet
     -- Resolve the Node id primary key column values
+    pkeyColumnValues <- alignPkeyColumnValues
     unresolvedPkeyValues <- flip Map.traverseWithKey pkeyColumnValues $
-      \pgColumn jsonValue -> case Map.lookup pgColumn pgColumnMap of
-        Nothing -> throwVE $ "column " <> pgColumn <<> " not found"
-        Just columnInfo -> (,columnInfo) . UVPG . AnnPGVal Nothing False <$>
-                           parsePGScalarValue (pgiType columnInfo) jsonValue
+      \columnInfo jsonValue ->
+        let modifyErrFn t = "value of column " <> pgiColumn columnInfo
+                             <<> " in node id: " <> t
+        in modifyErr modifyErrFn $
+           (,columnInfo) . UVPG . AnnPGVal Nothing False <$>
+           parsePGScalarValue (pgiType columnInfo) jsonValue
+
     -- Generate the bool expression from the primary key column values
     let pkeyBoolExp = BoolAnd $ flip map (Map.elems unresolvedPkeyValues) $
           \(unresolvedValue, columnInfo) -> (BoolFld . AVCol columnInfo) [AEQ True unresolvedValue]
@@ -802,5 +809,19 @@ convertNodeSelect selOpCtx pkeyColumnValues field =
     strfyNum <- stringifyNum <$> asks getter
     pure $ RS.AnnSelectG annFields (RS.FromTable table) tablePerm selectArgs strfyNum
   where
-    SelOpCtx table _ allColumns permFilter permLimit = selOpCtx
-    pgColumnMap = mapFromL pgiColumn $ Map.elems allColumns
+    SelOpCtx table _ _ permFilter permLimit = selOpCtx
+
+    alignPkeyColumnValues :: m (Map.HashMap PGColumnInfo J.Value)
+    alignPkeyColumnValues = do
+        let NESeq.NESeq (firstPkColumn, remainingPkColumns) = pkeyColumns
+            NESeq.NESeq (firstColumnValue, remainingColumns) = columnValues
+            (nonAlignedPkColumns, nonAlignedColumnValues, alignedTuples) =
+              partitionThese $ toList $ align remainingPkColumns remainingColumns
+
+        when (not $ null nonAlignedPkColumns) $ throwInvalidNodeId $
+          "primary key columns " <> dquoteList (map pgiColumn nonAlignedPkColumns) <> " are missing"
+
+        when (not $ null nonAlignedColumnValues) $ throwInvalidNodeId $
+          "unexpected column values " <> J.encodeToStrictText nonAlignedColumnValues
+
+        pure $ Map.fromList $ (firstPkColumn, firstColumnValue):alignedTuples

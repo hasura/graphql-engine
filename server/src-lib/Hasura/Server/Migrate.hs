@@ -37,15 +37,14 @@ import qualified Language.Haskell.TH.Syntax    as TH
 import           Control.Lens                  (view, _2)
 import           Control.Monad.Unique
 import           Data.Time.Clock               (UTCTime)
-
 import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema
 import           Hasura.Server.Init            (DowngradeOptions (..))
 import           Hasura.RQL.Types
 import           Hasura.Server.Logging         (StartupLog (..))
+import           Hasura.Server.Version
 import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
-import           Hasura.Server.Version         (HasVersion)
 import           Hasura.SQL.Types
 import           System.Directory              (doesFileExist)
 
@@ -160,12 +159,12 @@ migrateCatalog migrationTime = do
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
 
+    updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
+
     buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
     buildCacheAndRecreateSystemMetadata = do
       schemaCache <- buildRebuildableSchemaCache
       view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
-
-    updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
     doesSchemaExist schemaName =
       liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
