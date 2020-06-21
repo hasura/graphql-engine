@@ -18,7 +18,7 @@ import (
 type CustomQuery linq.Query
 
 func (q CustomQuery) MergeCronTriggers(squashList *database.CustomList) error {
-	cronTriggersTransition := transition.New(&eventTriggerConfig{})
+	cronTriggersTransition := transition.New(&cronTriggerConfig{})
 	cronTriggersTransition.Initial("new")
 	cronTriggersTransition.State("created")
 	cronTriggersTransition.State("deleted")
@@ -54,6 +54,8 @@ func (q CustomQuery) MergeCronTriggers(squashList *database.CustomList) error {
 							return err
 						}
 						obj.Replace = nil
+					} else {
+						wasCreated = true
 					}
 				} else {
 					wasCreated = true
@@ -617,6 +619,16 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 			case *updateRemoteRelationshipInput:
 				if tblCfg.GetState() == "untracked" {
 					return fmt.Errorf("cannot update remote relationship on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
+			case *createCronTriggerInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot create cron trigger on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
+			case *deleteCronTriggerInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot delete cron trigger on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
 				}
 				prevElems = append(prevElems, element)
 			}

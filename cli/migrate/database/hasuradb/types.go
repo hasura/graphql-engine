@@ -63,9 +63,9 @@ type updateRemoteRelationshipInput struct {
 }
 
 type createCronTriggerInput struct {
-	Name              string        `json:"name,omitempty" yaml:"name,omitempty"`
-	Webhook           string        `json:"webhook,omitempty" yaml:"webhook,omitempty"`
-	Schedule          string        `json:"schedule,omitempty" yaml:"schedule,omitempty"`
+	Name              string        `json:"name" yaml:"name"`
+	Webhook           string        `json:"webhook" yaml:"webhook"`
+	Schedule          string        `json:"schedule" yaml:"schedule"`
 	Payload           interface{}   `json:"payload,omitempty" yaml:"payload,omitempty"`
 	Headers           interface{}   `json:"headers,omitempty" yaml:"headers,omitempty"`
 	RetryConf         RetryConfigST `json:"retry_conf,omitempty" yaml:"retry_conf,omitempty"`
