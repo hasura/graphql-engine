@@ -188,6 +188,8 @@ func (h *HasuraDB) UnLock() error {
 		return nil
 	}
 
+	// TODO: check for flag --log-level debug
+	h.logger.Warn("sending the migrations to hasura")
 	resp, body, err := h.sendv1Query(h.migrationQuery)
 	if err != nil {
 		return err
@@ -241,6 +243,8 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 		return err
 	}
 	body := string(migr[:])
+	// TODO: check for flag --log-level debug
+	h.logger.Warn("reading ", fileType, " migration from ", fileName)
 	switch fileType {
 	case "sql":
 		if body == "" {
