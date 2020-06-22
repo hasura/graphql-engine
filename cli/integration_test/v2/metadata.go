@@ -201,7 +201,14 @@ func TestIncompleteMetadataDir(t *testing.T, ec *cli.ExecutionContext) {
     "args": {}
 }
 `)
-			resp, err := http.Post(url, "application/json", bytes.NewReader(body))
+			req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
+			assert.NoError(t, err)
+			if ec.Config.AdminSecret != "" {
+				req.Header.Set(cli.XHasuraAdminSecret, ec.Config.AdminSecret)
+			}
+			c := http.Client{}
+			resp, err := c.Do(req)
+
 			defer resp.Body.Close()
 			assert.Equal(t, resp.StatusCode, http.StatusOK)
 			got, err := ioutil.ReadAll(resp.Body)
