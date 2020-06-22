@@ -160,7 +160,7 @@ export const getColumnUpdateMigration = (
   const originalColDefaultWithQuotes =
     isColTypeString(colType) &&
     !isPostgresFunction(originalColDefault) &&
-    !isTypeCast(colDefault)
+    !isTypeCast(originalColDefault)
       ? `'${originalColDefault}'`
       : originalColDefault;
 
