@@ -95,10 +95,11 @@ updateCronTriggerInCatalog CronTriggerMetadata {..} = liftTx $ do
         cron_schedule = $3,
         payload = $4,
         retry_conf = $5,
-        include_in_metadata = $6,
-        comment = $7
+        header_conf = $6,
+        include_in_metadata = $7,
+        comment = $8
     WHERE name = $1
-   |] (ctName, Q.AltJ ctWebhook, ctSchedule, Q.AltJ <$> ctPayload, Q.AltJ ctRetryConf
+   |] (ctName, Q.AltJ ctWebhook, ctSchedule, Q.AltJ <$> ctPayload, Q.AltJ ctRetryConf,Q.AltJ ctHeaders
       , ctIncludeInMetadata, ctComment) False
   -- since the cron trigger is updated, clear all its future events which are not retries
   Q.unitQE defaultTxErrorHandler
