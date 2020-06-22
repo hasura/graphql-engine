@@ -196,7 +196,7 @@ instance J.FromJSON (FromIntrospection G.ObjectTypeDefinition) where
     fields     <- o .:? "fields"
     interfaces <- o .:? "interfaces"
     when (kind /= "OBJECT") $ kindErr kind "object"
-    let implIfaces = fromMaybe [] interfaces
+    let implIfaces = map G._itdName $ maybe [] (fmap fromIntrospection) interfaces
         flds = maybe [] (fmap fromIntrospection) fields
         desc' = fmap fromIntrospection desc
         r = G.ObjectTypeDefinition desc' name implIfaces [] flds
@@ -267,11 +267,10 @@ instance J.FromJSON (FromIntrospection G.UnionTypeDefinition) where
     name  <- o .:  "name"
     desc  <- o .:? "description"
     possibleTypes <- o .: "possibleTypes"
-    possibleTypes' <- mapM (maybe (fail $ "not a valid GraphQL name")  (pure . FromIntrospection)) possibleTypes
-    let memberTys = fmap fromIntrospection $ possibleTypes'
+    let possibleTypes' = map G._otdName $ fmap fromIntrospection possibleTypes
         desc' = fmap fromIntrospection desc
     when (kind /= "UNION") $ kindErr kind "union"
-    let r = G.UnionTypeDefinition desc' name [] memberTys
+    let r = G.UnionTypeDefinition desc' name [] possibleTypes'
     return $ FromIntrospection r
 
 instance J.FromJSON (FromIntrospection G.EnumTypeDefinition) where

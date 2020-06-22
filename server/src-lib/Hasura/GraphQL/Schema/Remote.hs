@@ -209,7 +209,9 @@ remoteField sdoc fieldName argsDefn typeDefn = do
       P.selection fieldName desc argsParser <$> remoteFieldScalarParser name'
     G.TypeDefinitionEnum enumTypeDefn@(G.EnumTypeDefinition desc _ _ _) ->
       pure $ P.selection fieldName desc argsParser $ remoteFieldEnumParser fieldName enumTypeDefn
-    _ -> throw500 $ "expected input type, but got output type"
+    --TODO: interfaces and union types, the below error will be thrown until interfaces and
+    -- union types have been implemented
+    _ -> throw500 $ "expected output type, but got input type"
 
 remoteFieldScalarParser
   :: forall m n
@@ -222,8 +224,7 @@ remoteFieldScalarParser name =
     "Int" -> pure $ P.int $> ()
     "Float" -> pure $ P.float $> ()
     "String" -> pure $ P.string $> ()
-    name -> throw500 name
-    --        _ -> TODO: Unknown Scalar
+    name' -> throw500 $ "unknown scalar " <> name' -- TODO: handle this properly
 
 remoteFieldEnumParser
   :: MonadParse n
