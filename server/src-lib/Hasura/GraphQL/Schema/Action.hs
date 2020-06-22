@@ -357,6 +357,7 @@ mkActionsSchema =
       where
         addToStateSync (rootFields, tyAgg) =
           ( addQueryField (first QCAction actionField) rootFields
+          -- Add reused PG scalars to TyAgg
           , addFieldsToTyAgg fields $ addScalarsToTyAgg tyAgg pgScalars
           )
 
@@ -364,19 +365,16 @@ mkActionsSchema =
       Map.alter (Just . addToState . fromMaybe initRoleState) roleName
       where
         addToState (rootFields, tyAgg) =
-          let tyAggWithPgScalars = addScalarsToTyAgg tyAgg pgScalars
+          let rootFieldsWithActionMutation =
+                addMutationField (first MCAction actionField) rootFields
+              -- Add reused PG scalars to TyAgg
+              tyAggWithFieldsAndPgScalars =
+                addFieldsToTyAgg fields $ addScalarsToTyAgg tyAgg pgScalars
           in case queryFieldM of
                Just (fldCtx, fldDefinition, responseTypeInfo) ->
-                 addToStateAsync (fldCtx, fldDefinition)
-                   responseTypeInfo (rootFields, tyAggWithPgScalars)
-               Nothing -> addToStateSync (rootFields, tyAggWithPgScalars)
-        addToStateSync (rootFields, tyAgg) =
-          ( addMutationField (first MCAction actionField) rootFields
-          , addFieldsToTyAgg fields tyAgg
-          )
-        addToStateAsync queryField responseTypeInfo (rootFields, tyAgg) =
-          ( addMutationField (first MCAction actionField) $
-            addQueryField (first QCAsyncActionFetch queryField) rootFields
-          , addTypeInfoToTyAgg responseTypeInfo $
-            addFieldsToTyAgg fields tyAgg
-          )
+                 -- Add async action's query resolver and response type
+                 ( addQueryField (QCAsyncActionFetch fldCtx, fldDefinition)
+                   rootFieldsWithActionMutation
+                 , addTypeInfoToTyAgg responseTypeInfo tyAggWithFieldsAndPgScalars
+                 )
+               Nothing -> (rootFieldsWithActionMutation, tyAggWithFieldsAndPgScalars)
