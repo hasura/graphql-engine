@@ -9,6 +9,7 @@
 
 - console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
 - console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
+- cli: fix plugins install failing due to permission issues on windows (close #5111)
 
 ## `v1.3.0-beta.2`
 
