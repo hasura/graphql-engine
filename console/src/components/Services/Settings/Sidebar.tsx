@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     key: 'allowed-queries',
     link: '/settings/allowed-queries',
     dataTestVal: 'allowed-queries-link',
-    title: 'Allowed Queries',
+    title: 'Allow List',
   });
 
   const adminSecret = getAdminSecret();

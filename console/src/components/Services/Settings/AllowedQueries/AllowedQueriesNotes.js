@@ -25,7 +25,7 @@ class AllowedQueriesNotes extends React.Component {
               className={styles.ul_left_small + ' ' + styles.add_mar_top_small}
             >
               <li>
-                All allowed queries need to have a unique name for reference
+                All allowed requests need to have a unique name for reference
               </li>
             </ul>
           </div>
