@@ -30,13 +30,26 @@ args:
         age INTEGER NOT NULL
       );
 
+
       INSERT INTO author (name) VALUES
         ('Author 1'),
         ('Author 2');
 
+      INSERT INTO article (title, author_id) VALUES
+        ('Lorem ipsum dolor sit amet',  1),
+        ('lolcats: an anthology',       2),
+        ('consectetur adipiscing elit', 1);
+
       INSERT INTO hge_tests.resident (name, age) VALUES
         ('Resident 1', 23),
         ('Resident 2', 31);
+
+
+      CREATE MATERIALIZED VIEW articles AS
+          SELECT article.title, author.name
+          FROM article
+          LEFT JOIN author ON author.id = article.author_id
+      ;
 
       CREATE OR REPLACE FUNCTION test1()
       RETURNS SETOF test2 AS $$

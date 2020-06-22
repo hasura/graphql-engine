@@ -412,6 +412,9 @@ class EvtsWebhookServer(ThreadedHTTPServer):
             sz = sz + 1
         return sz
 
+    def is_queue_empty(self):
+        return self.resp_queue.empty
+
     def teardown(self):
         self.evt_trggr_httpd.shutdown()
         self.evt_trggr_httpd.server_close()
@@ -420,24 +423,36 @@ class EvtsWebhookServer(ThreadedHTTPServer):
         self.evt_trggr_web_server.join()
 
 class HGECtxGQLServer:
-    def __init__(self, hge_urls):
+    def __init__(self, hge_urls, port=5000):
         # start the graphql server
-        self.graphql_server = graphql_server.create_server('127.0.0.1', 5000)
-        self.hge_urls = graphql_server.set_hge_urls(hge_urls)
-        self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
-        self.gql_srvr_thread.start()
+        self.port = port
+        self._hge_urls = hge_urls
+        self.is_running = False
+        self.start_server()
+
+    def start_server(self):
+        if not self.is_running:
+            self.graphql_server = graphql_server.create_server('127.0.0.1', self.port)
+            self.hge_urls = graphql_server.set_hge_urls(self._hge_urls)
+            self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
+            self.gql_srvr_thread.start()
+        self.is_running = True
 
     def teardown(self):
-        graphql_server.stop_server(self.graphql_server)
-        self.gql_srvr_thread.join()
+        self.stop_server()
 
+    def stop_server(self):
+        if self.is_running:
+            graphql_server.stop_server(self.graphql_server)
+            self.gql_srvr_thread.join()
+        self.is_running = False
 
 class HGECtx:
 
     def __init__(self, hge_url, pg_url, config):
 
         self.http = requests.Session()
-        self. hge_key = config.getoption('--hge-key')
+        self.hge_key = config.getoption('--hge-key')
         self.hge_url = hge_url
         self.pg_url = pg_url
         self.hge_webhook = config.getoption('--hge-webhook')
@@ -448,6 +463,8 @@ class HGECtx:
             with open(hge_jwt_key_file) as f:
                 self.hge_jwt_key = f.read()
         self.hge_jwt_conf = config.getoption('--hge-jwt-conf')
+        if self.hge_jwt_conf is not None:
+            self.hge_jwt_conf_dict = json.loads(self.hge_jwt_conf)
         self.webhook_insecure = config.getoption('--test-webhook-insecure')
         self.metadata_disabled = config.getoption('--test-metadata-disabled')
         self.may_skip_test_teardown = False

@@ -18,13 +18,17 @@ spec:
         app: hasura
     spec:
       containers:
-      - image: hasura/graphql-engine:v1.2.0-beta.2
+      - image: hasura/graphql-engine:v1.3.0-beta.1
         imagePullPolicy: IfNotPresent
         name: hasura
         env:
         - name: HASURA_GRAPHQL_DATABASE_URL
           value: postgres://username:password@hostname:port/dbname
+        ## enable the console served by server
         - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+          value: "true"
+        ## enable debugging mode. It is recommended to disable this in production
+        - name: HASURA_GRAPHQL_DEV_MODE
           value: "true"
         ports:
         - containerPort: 8080

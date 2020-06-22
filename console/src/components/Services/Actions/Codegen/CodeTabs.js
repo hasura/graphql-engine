@@ -1,10 +1,11 @@
 import React from 'react';
 import Spinner from '../../../Common/Spinner/Spinner';
-import JSEditor from '../../../Common/AceEditor/JavaScriptEditor';
-import TSEditor from '../../../Common/AceEditor/TypescriptEditor';
+import AceEditor from '../../../Common/AceEditor/BaseEditor';
+import { getLanguageModeFromExtension } from '../../../Common/AceEditor/utils';
 import { getFrameworkCodegen } from './utils';
 import { getFileExtensionFromFilename } from '../../../Common/utils/jsUtils';
 import { Tabs, Tab } from 'react-bootstrap';
+import styles from '../Actions.scss';
 
 const CodeTabs = ({
   framework,
@@ -19,6 +20,7 @@ const CodeTabs = ({
 
   const init = () => {
     setLoading(true);
+    setError(null);
     getFrameworkCodegen(
       framework,
       currentAction.action_name,
@@ -45,35 +47,28 @@ const CodeTabs = ({
     return (
       <div>
         Error generating code.&nbsp;
-        <a onClick={init}>Try again</a>
+        <a onClick={init} className={styles.cursorPointer}>
+          Try again
+        </a>
       </div>
     );
   }
 
   const files = codegenFiles.map(({ name, content }) => {
-    const getFileTab = (component, filename) => {
-      return (
-        <Tab eventKey={filename} title={filename}>
-          {component}
-        </Tab>
-      );
-    };
-
     const editorProps = {
       width: '600px',
       value: content.trim(),
       readOnly: true,
+      mode: getLanguageModeFromExtension(getFileExtensionFromFilename(name)),
     };
-
-    switch (getFileExtensionFromFilename(name)) {
-      case 'ts':
-        return getFileTab(<TSEditor {...editorProps} />, name);
-      default:
-        return getFileTab(<JSEditor {...editorProps} />, name);
-    }
+    return (
+      <Tab eventKey={name} title={name} key={name}>
+        <AceEditor {...editorProps} />
+      </Tab>
+    );
   });
 
-  return <Tabs id="uncontrolled-tab-example">{files} </Tabs>;
+  return <Tabs id="codegen-files-tabs">{files} </Tabs>;
 };
 
 export default CodeTabs;

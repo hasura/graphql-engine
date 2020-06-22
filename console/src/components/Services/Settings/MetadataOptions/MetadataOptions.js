@@ -35,7 +35,7 @@ const MetadataOptions = props => {
           <h4>Reload metadata</h4>
           <div className={styles.content_width}>
             Refresh Hasura metadata, typically required if you have changed the
-            underlying postgres.
+            underlying postgres or if you have updated your remote schemas.
           </div>
         </div>
 
@@ -61,15 +61,12 @@ const MetadataOptions = props => {
 
   return (
     <div
-      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${
-        styles.metadata_wrapper
-      } container-fluid`}
+      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
     >
       <div className={styles.subHeader}>
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-          Hasura Metadata Actions
-        </h2>
-        <div className="clearfix" />
+        <h2 className={styles.headerText}>Hasura Metadata Actions</h2>
+      </div>
+      <div className={styles.add_mar_top}>
         <div className={styles.content_width}>
           Hasura metadata stores information about your tables, relationships,
           permissions, etc. that is used to generate the GraphQL schema and
@@ -82,11 +79,11 @@ const MetadataOptions = props => {
             <i>(Read more)</i>
           </a>
         </div>
+
+        {getMetadataImportExportSection()}
+
+        {getMetadataUpdateSection()}
       </div>
-
-      {getMetadataImportExportSection()}
-
-      {getMetadataUpdateSection()}
     </div>
   );
 };

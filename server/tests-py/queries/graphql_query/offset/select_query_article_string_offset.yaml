@@ -1,0 +1,25 @@
+description: Nested select on article with string offset
+url: /v1/graphql
+status: 200
+response:
+  data:
+    article:
+    - id: 2
+      title: Article 2
+      content: Sample article content 2
+      author:
+        id: 1
+        name: Author 1
+query:
+  query: |
+    query {
+      article(offset: "1", limit: 1, order_by: {id: desc}) {
+        id
+        title
+        content
+        author {
+          id
+          name
+        }
+      }
+    }

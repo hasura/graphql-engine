@@ -41,16 +41,16 @@ replace_metadata
 ``replace_metadata`` is used to replace/import metadata into Hasura. Existing
 metadata will be replaced with the new one.
 
-.. code-block:: none
+.. code-block:: http
 
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
+    POST /v1/query HTTP/1.1
+    Content-Type: application/json
+    X-Hasura-Role: admin
 
-   {
-       "type" : "replace_metadata",
-       "args": <metadata-as-json-object>
-   }
+    {
+        "type" : "replace_metadata",
+        "args": "<metadata-as-json-object>"
+    }
 
 .. _replace_metadata_syntax:
 
@@ -77,8 +77,27 @@ table using ``psql`` and this column should now be added to the GraphQL schema.
 
    {
        "type" : "reload_metadata",
-       "args": {}
+       "args": {
+           "reload_remote_schemas": true
+       }
    }
+
+.. _reload_metadata_args_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - reload_remote_schemas
+     - false
+     - Boolean
+     - If set to ``true``, all remote schemas' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``false``)
 
 .. _clear_metadata:
 
@@ -118,7 +137,7 @@ get_inconsistent_metadata
        "args": {}
    }
 
-Response:-
+Response:
 
 .. code-block:: json
 

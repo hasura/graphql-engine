@@ -12,16 +12,18 @@ Managing Hasura metadata
   :depth: 1
   :local:
 
+Introduction
+------------
+
 If your Postgres schema is already managed with a tool like knex, TypeORM,
 Django/Rails migrations, you will still need a way to export the actions you
 performed on the Hasura console to apply it later on another Hasura instance.
 
 All the actions performed on the console, like tracking tables/views/functions,
 creating relationships, configuring permissions, creating event triggers and remote
-schemas, etc. can be exported as a JSON file which can be version
-controlled. The content of this JSON file is called "Hasura metadata". The
-metadata file can be later imported to another Hasura instance to get the same
-configuration. You can also manually edit the JSON file to add more objects to
+schemas, etc. can be exported as a JSON/yaml metadata file which can be version
+controlled. The metadata file can be later imported to another Hasura instance to get the same
+configuration. You can also manually edit the metadata file to add more objects to
 it and then use it to update the instance.
 
 Exporting Hasura metadata
@@ -30,11 +32,18 @@ Exporting Hasura metadata
 .. rst-class:: api_tabs
 .. tabs::
 
+  .. tab:: CLI
+
+     Metadata can be exported with the :ref:`hasura metadata export <hasura_metadata_export>`
+     command.
+
+     This will export the metadata as yaml files in the ``/metadata`` directory
+
   .. tab:: Console
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. In the Hasura metadata actions page that opens, click on the ``Export Metadata`` button.
-     3. This will prompt a file download for ``metadata.json``. Save the file.
+     3. This will prompt a file download for ``hasura_metadata_<timestamp>.json``. Save the file.
 
   .. tab:: API
 
@@ -45,14 +54,24 @@ Exporting Hasura metadata
 
      .. code-block:: bash
 
-        curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/query -o metadata.json
+        curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/query -o hasura_metadata.json
 
-     This command will create a ``metadata.json`` file.
+     This command will create a ``hasura_metadata.json`` file.
      If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
      admin-only API.
 
-Importing Hasura metadata
--------------------------
+.. note::
+
+  The metadata exported via the **console and API** will be a single JSON file that can be applied
+  via the console or the API only.
+
+  The metadata exported via the **CLI** is broken into multiple YAML files for easier
+  management in version control and CI/CD and can be applied via the CLI or the
+  :ref:`cli-migrations <auto_apply_migrations>` image only.
+
+
+Applying/Importing Hasura metadata
+----------------------------------
 
 You can apply exported metadata from one Hasura GraphQL engine instance to another. You can also apply an older or
 modified version of an instance's metadata onto itself.
@@ -63,11 +82,16 @@ before.
 .. rst-class:: api_tabs
 .. tabs::
 
+  .. tab:: CLI
+
+     Metadata can be applied with the :ref:`hasura metadata apply <hasura_metadata_apply>`
+     command.
+
   .. tab:: Console
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. Click on ``Import Metadata`` button.
-     3. Choose a ``metadata.json`` file that was exported earlier.
+     3. Choose a ``hasura_metadata.json`` file that was exported earlier.
      4. A notification should appear indicating the success or error.
 
   .. tab:: API
@@ -78,9 +102,9 @@ before.
 
      .. code-block:: bash
 
-        curl -d'{"type":"replace_metadata", "args":'$(cat metadata.json)'}' http://localhost:8080/v1/query
+        curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/query
 
-     This command reads the ``metadata.json`` file and makes a POST request to
+     This command reads the ``hasura_metadata.json`` file and makes a POST request to
      replace the metadata.
      If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
      admin-only API.
@@ -103,6 +127,11 @@ when a new column has been added to a table via an external tool such as ``psql`
 
 .. rst-class:: api_tabs
 .. tabs::
+
+  .. tab:: CLI
+
+     Metadata can be reloaded with the :ref:`hasura metadata reload <hasura_metadata_reload>`
+     command.
 
   .. tab:: Console
 
@@ -132,9 +161,7 @@ when a new column has been added to a table via an external tool such as ``psql`
 Managing Hasura metadata in CI/CD
 ---------------------------------
 
-Using tools like ``curl`` you can easily integrate the metadata API requests for the above metadata management
-actions with your CI/CD workflows.
-
 In case you need an automated way of applying/importing the metadata, take a
-look at the :ref:`CLI-Migrations <auto_apply_migrations>` Docker image, which
-can start the GraphQL engine after automatically importing a mounted metadata file.
+look at the :ref:`cli-migrations <auto_apply_migrations>` Docker image, which
+can start the GraphQL engine after automatically importing a mounted metadata
+directory.

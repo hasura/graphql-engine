@@ -1,4 +1,5 @@
 import defaultState from './State';
+import globals from '../../Globals';
 import requestAction from '../../utils/requestAction';
 import requestActionPlain from '../../utils/requestActionPlain';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
@@ -21,6 +22,12 @@ const EXPORT_METADATA_ERROR = 'Main/EXPORT_METADATA_ERROR';
 const UPDATE_ADMIN_SECRET_INPUT = 'Main/UPDATE_ADMIN_SECRET_INPUT';
 const LOGIN_IN_PROGRESS = 'Main/LOGIN_IN_PROGRESS';
 const LOGIN_ERROR = 'Main/LOGIN_ERROR';
+
+const RUN_TIME_ERROR = 'Main/RUN_TIME_ERROR';
+const registerRunTimeError = data => ({
+  type: RUN_TIME_ERROR,
+  data,
+});
 
 /* Server config constants*/
 const FETCHING_SERVER_CONFIG = 'Main/FETCHING_SERVER_CONFIG';
@@ -115,16 +122,19 @@ const fetchServerConfig = () => (dispatch, getState) => {
   });
   return dispatch(requestAction(url, options)).then(
     data => {
-      return dispatch({
+      dispatch({
         type: SERVER_CONFIG_FETCH_SUCCESS,
         data: data,
       });
+      globals.serverConfig = data;
+      return Promise.resolve();
     },
     error => {
-      return dispatch({
+      dispatch({
         type: SERVER_CONFIG_FETCH_FAIL,
         data: error,
       });
+      return Promise.reject();
     }
   );
 };
@@ -273,6 +283,8 @@ const mainReducer = (state = defaultState, action) => {
       return { ...state, loginInProgress: action.data };
     case LOGIN_ERROR:
       return { ...state, loginError: action.data };
+    case RUN_TIME_ERROR: // To trigger telemetry event
+      return state;
     case FETCHING_SERVER_CONFIG:
       return {
         ...state,
@@ -327,4 +339,6 @@ export {
   fetchServerConfig,
   loadLatestServerVersion,
   featureCompatibilityInit,
+  RUN_TIME_ERROR,
+  registerRunTimeError,
 };

@@ -8,22 +8,22 @@ export const convertListToDict = list => {
   const newList = list instanceof Array ? list : [].concat(list);
   return newList.length > 1
     ? newList.reduce((prev, next) => {
-      const accumulator =
+        const accumulator =
           prev instanceof Object
             ? prev
             : {
-              [prev]: 1,
-            };
-      return {
-        ...accumulator,
-        ...{
-          [next]: accumulator[next] ? accumulator[next] + 1 : 1,
-        },
-      };
-    })
+                [prev]: 1,
+              };
+        return {
+          ...accumulator,
+          ...{
+            [next]: accumulator[next] ? accumulator[next] + 1 : 1,
+          },
+        };
+      })
     : {
-      [newList[0]]: 1,
-    };
+        [newList[0]]: 1,
+      };
 };
 
 /**
@@ -37,26 +37,26 @@ export const convertListToDictUsingKV = (keyName, keyValue, list) => {
   // if the list has more than one object then reduce it.
   return list.length > 1
     ? list.reduce((prev, next, index) => {
-      // Initial object for the list.
-      if (index === 1) {
-        const newObj = {};
-        newObj[prev[keyName]] = prev[keyValue];
-        newObj[next[keyName]] = next[keyValue];
-        return newObj;
-      }
-      // Other objects for the list.
-      prev[next[keyName]] = next[keyValue];
-      return prev;
-    })
-    : (() => {
-      return list.length <= 0
-        ? {}
-        : (() => {
+        // Initial object for the list.
+        if (index === 1) {
           const newObj = {};
-          newObj[list[0][keyName]] = list[0][keyValue];
+          newObj[prev[keyName]] = prev[keyValue];
+          newObj[next[keyName]] = next[keyValue];
           return newObj;
-        })();
-    })();
+        }
+        // Other objects for the list.
+        prev[next[keyName]] = next[keyValue];
+        return prev;
+      })
+    : (() => {
+        return list.length <= 0
+          ? {}
+          : (() => {
+              const newObj = {};
+              newObj[list[0][keyName]] = list[0][keyValue];
+              return newObj;
+            })();
+      })();
 };
 
 /**
@@ -79,12 +79,9 @@ const getValueFromObject = (object, name) => {
   // check if the name is present ('as such') in the object.
   if (object && object[name]) {
     return object[name];
-  } else if (object && (name.includes('[') && name.includes(']'))) {
+  } else if (object && name.includes('[') && name.includes(']')) {
     // name is consider as a key followed by array indices.
-    const names = name
-      .split(']')
-      .join('')
-      .split('[');
+    const names = name.split(']').join('').split('[');
     let tempObj = object;
     for (let i = 0; i < names.length; i++) {
       const selector = names[i];

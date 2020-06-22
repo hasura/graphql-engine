@@ -154,18 +154,35 @@ InsertPermission
      - false
      - :ref:`PGColumn` array (or) ``'*'``
      - Can insert into only these columns (or all when ``'*'`` is specified)
-
-
-
-
-
+   * - backend_only
+     - false
+     - Boolean
+     - When set to ``true`` the mutation is accessible only if ``x-hasura-use-backend-only-permissions``
+       session variable exists and is set to ``true`` and request is made with ``x-hasura-admin-secret``
+       set if any auth is configured
 
 .. _drop_insert_permission:
 
 drop_insert_permission
 ----------------------
 
-Drop an existing insert permission for a role on a table.
+The ``drop_insert_permission`` API is used to drop an existing insert permission for a role on a table.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "drop_insert_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user"
+       }
+   }
 
 .. _drop_insert_permission_syntax:
 
@@ -301,7 +318,23 @@ SelectPermission
 drop_select_permission
 ----------------------
 
-Drop an existing select permission for a role on a table.
+The ``drop_select_permission`` is used to drop an existing select permission for a role on a table.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "drop_select_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user"
+       }
+   }
 
 .. _drop_select_permission_syntax:
 
@@ -351,8 +384,13 @@ An example:
                "filter" : {
                    "author_id" : "X-HASURA-USER-ID"
                },
+               "check" : {
+                   "content" : {
+                     "_ne": ""
+                   }
+               },
                "set":{
-                   "id":"X-HASURA-USER-ID"
+                   "updated_at" : "NOW()"
                }
            }
        }
@@ -360,11 +398,13 @@ An example:
 
 This reads as follows - for the ``user`` role:
 
-* Allow updating only those rows where the ``check`` passes i.e. the value of the ``author_id`` column of a row matches the value of the session variable ``X-HASURA-USER-ID`` value.
+* Allow updating only those rows where the ``filter`` passes i.e. the value of the ``author_id`` column of a row matches the value of the session variable ``X-HASURA-USER-ID``.
 
-* If the above ``check`` passes for a given row, allow updating only the ``title``, ``content`` and ``category`` columns (*as specified in the* ``columns`` *key*).
+* If the above ``filter`` passes for a given row, allow updating only the ``title``, ``content`` and ``category`` columns (*as specified in the* ``columns`` *key*).
 
-* When this update happens, the value of the column ``id`` will be automatically ``set`` to the value of the resolved session variable ``X-HASURA-USER-ID``.
+* After the update happens, verify that the ``check`` condition holds for the updated row i.e. that the value in the ``content`` column is not empty.
+
+* When this update happens, the value of the column ``updated_at`` will be automatically ``set`` to the current timestamp.
 
 .. note::
 
@@ -421,7 +461,11 @@ UpdatePermission
    * - filter
      - true
      - :ref:`BoolExp`
-     - Only the rows where this expression holds true are deletable
+     - Only the rows where this precondition holds true are updatable
+   * - check
+     - false
+     - :ref:`BoolExp`
+     - Postcondition which must be satisfied by rows which have been updated
    * - set
      - false
      - :ref:`ColumnPresetExp`
@@ -433,7 +477,23 @@ UpdatePermission
 drop_update_permission
 ----------------------
 
-Drop an existing update permission for a role on a table.
+The ``drop_update_permission`` API is used to drop an existing update permission for a role on a table.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "drop_update_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user"
+       }
+   }
 
 .. _drop_update_permission_syntax:
 
@@ -540,7 +600,23 @@ DeletePermission
 drop_delete_permission
 ----------------------
 
-Drop an existing delete permission for a role on a table.
+The ``drop_delete_permission`` API is used to drop an existing delete permission for a role on a table.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "drop_delete_permission",
+       "args" : {
+           "table" : "article",
+           "role" : "user"
+       }
+   }
 
 .. _drop_delete_permission_syntax:
 

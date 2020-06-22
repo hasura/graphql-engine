@@ -66,7 +66,8 @@ args:
           c41_range_numeric numrange,
           c42_range_timestamp tsrange,
           c43_range_timestamptz tstzrange,
-          c44_xml xml
+          c44_xml xml,
+          c45_money money
       );
 - type: track_table
   args:
@@ -171,6 +172,7 @@ args:
       , c42_range_timestamp
       , c43_range_timestamptz
       , c44_xml
+      , c45_money
       )
       values
       ( 32767                                       -- c1_smallint
@@ -201,8 +203,8 @@ args:
       , '192.168.100.128/25'                        -- c29_cidr
       , '198.24.10.0'                               -- c30_inet
       , '08:00:2b:01:02:03'                         -- c31_macaddr
-      , '{ "a" : "b", "obj": { "c1": "c2" }, "arr": [1, 2, 3] }'                             -- c32_json
-      , '{ "c" : "d", "obj": { "e1": "e2" }, "arr": [4, 5, 6] }'                             -- c33_jsonb
+      , '{ "a" : "b", "obj": { "c1": "c2" }, "arr": [1, 2, 3], "_underscore": 0, "!@#$%^": "special", "translations": { "hello world!": "hi" }, "objs": [{ "你好": "Hello!" }] }' -- c32_json
+      , '{ "c" : "d", "obj": { "e1": "e2" }, "arr": [4, 5, 6], "_underscore": 0, "!@#$%^": "special", "translations": { "hello world!": "hi" }, "objs": [{ "你好": "Hello!" }] }' -- c33_jsonb
       , '{"a","b","c"}'                             -- c34_text_array
       , '{{4,5,6},{7,8,9}}'                         -- c35_integer_2d_array
       , 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'      -- c36_uuid
@@ -214,6 +216,7 @@ args:
       , '[2010-01-01 14:30:00, 2010-01-01 15:30:02)' -- c42_range_timestamp
       , '(2011-02-05T12:03:00+00:00, 2012-03-04T16:40:04+00:00]' -- c43_range_timestamptz
       , '<foo>bar</foo>'                            -- c44_xml
+      ,  123.45                                     -- c45_money
       )
 
 #Insert values
@@ -262,20 +265,14 @@ args:
   args:
     schema: public
     name: user
-# - type: insert
-#   args:
-#     table: user
-#     objects:
-#     - name: User 1
-#       number: '123456789'
-#     - name: User 2
-#       number: '123456780'
-- type: run_sql
+- type: insert
   args:
-    sql: |
-      INSERT INTO "user" (name, number) VALUES
-        ('User 1', '123456789'),
-        ('User 2', '123456780');
+    table: user
+    objects:
+    - name: User 1
+      number: '123456789'
+    - name: User 2
+      number: '123456780'
 
 - type: run_sql
   args:
@@ -289,18 +286,13 @@ args:
   args:
     schema: public
     name: person
-# - type: insert
-#   args:
-#     table: person
-#     objects:
-#     - name: "John\\"
-#     - name: "Clarke"
-#     - name: "clarke"
-- type: run_sql
+- type: insert
   args:
-    sql: |
-      INSERT INTO person (name) VALUES
-        ('John\'), ('Clarke'), ('clarke');
+    table: person
+    objects:
+    - name: "John\\"
+    - name: "Clarke"
+    - name: "clarke"
 
 #Set timezone
 - type: run_sql

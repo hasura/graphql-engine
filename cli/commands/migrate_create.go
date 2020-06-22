@@ -24,7 +24,17 @@ const migrateCreateCmdExamples = `  # Setup migration files for the first time b
   hasura migrate create --admin-secret "<admin-secret>"
 
   # Setup migration files from an instance mentioned by the flag:
-  hasura migrate create init --from-server --endpoint "<endpoint>"`
+  hasura migrate create init --from-server --endpoint "<endpoint>"
+
+  # Take pg_dump of schema and hasura metadata from server while specifying the schemas to include
+  hasura migrate create init --from-server --schema myschema1,myschema2
+
+  # Take pg_dump from server and save it as a migration and specify the schemas to include
+  hasura migrate create init --sql-from-server --schema myschema1,myschema2
+  
+  # Create up and down SQL migrations, providing contents as flags
+  hasura migrate create migration-name --up-sql "CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL);"  --down-sql "DROP TABLE article;"
+`
 
 func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &migrateCreateOptions{
@@ -55,12 +65,14 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	f := migrateCreateCmd.Flags()
 	opts.flags = f
-	f.BoolVar(&opts.fromServer, "from-server", false, "get SQL statements and hasura metadata from the server")
+	f.BoolVar(&opts.fromServer, "from-server", false, "take pg_dump of schema (default: public) and Hasura metadata from the server")
 	f.StringVar(&opts.sqlFile, "sql-from-file", "", "path to an sql file which contains the SQL statements")
-	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "take pg_dump from server and save it as a migration")
-	f.StringArrayVar(&opts.schemaNames, "schema", []string{"public"}, "name of Postgres schema to export as migration")
+	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "take pg_dump from server (default: public) and save it as a migration")
+	f.StringSliceVar(&opts.schemaNames, "schema", []string{"public"}, "name of Postgres schema to export as a migration. provide multiple schemas with a comma separated list e.g. --schema public,user")
 	f.StringVar(&opts.metaDataFile, "metadata-from-file", "", "path to a hasura metadata file to be used for up actions")
 	f.BoolVar(&opts.metaDataServer, "metadata-from-server", false, "take metadata from the server and write it as an up migration file")
+	f.StringVar(&opts.upSQL, "up-sql", "", "sql string/query that is to be used to create an up migration")
+	f.StringVar(&opts.downSQL, "down-sql", "", "sql string/query that is to be used to create a down migration")
 
 	migrateCreateCmd.MarkFlagFilename("sql-from-file")
 	migrateCreateCmd.MarkFlagFilename("metadata-from-file")
@@ -81,6 +93,8 @@ type migrateCreateOptions struct {
 	metaDataFile   string
 	metaDataServer bool
 	schemaNames    []string
+	upSQL          string
+	downSQL        string
 }
 
 func (o *migrateCreateOptions) run() (version int64, err error) {
@@ -105,13 +119,22 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	if o.flags.Changed("metadata-from-file") && o.sqlServer {
 		return 0, errors.New("only one sql type can be set")
 	}
+
 	if o.flags.Changed("metadata-from-file") && o.metaDataServer {
 		return 0, errors.New("only one metadata type can be set")
 	}
 
+	if o.flags.Changed("up-sql") && !o.flags.Changed("down-sql") {
+		o.EC.Logger.Warn("you are creating an up migration without a down migration")
+	}
+
+	if o.flags.Changed("down-sql") && !o.flags.Changed("up-sql") {
+		o.EC.Logger.Warn("you are creating a down migration without an up migration")
+	}
+
 	var migrateDrv *migrate.Migrate
-	if o.sqlServer || o.metaDataServer {
-		migrateDrv, err = newMigrate(o.EC, true)
+	if o.sqlServer || o.metaDataServer || o.flags.Changed("up-sql") || o.flags.Changed("down-sql") {
+		migrateDrv, err = migrate.NewMigrate(o.EC, true)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot create migrate instance")
 		}
@@ -169,13 +192,28 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		}
 	}
 
-	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version == cli.V1 {
+	// create pure sql based migrations here
+	if o.flags.Changed("up-sql") {
+		err = createOptions.SetSQLUp(o.upSQL)
+		if err != nil {
+			return 0, errors.Wrap(err, "up migration with SQL string could not be created")
+		}
+	}
+
+	if o.flags.Changed("down-sql") {
+		err = createOptions.SetSQLDown(o.downSQL)
+		if err != nil {
+			return 0, errors.Wrap(err, "down migration with SQL string could not be created")
+		}
+	}
+
+	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version == cli.V1 && !o.flags.Changed("up-sql") && !o.flags.Changed("down-sql") {
 		// Set empty data for [up|down].yaml
 		createOptions.MetaUp = []byte(`[]`)
 		createOptions.MetaDown = []byte(`[]`)
 	}
 
-	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version != cli.V1 {
+	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version != cli.V1 && !o.flags.Changed("up-sql") && !o.flags.Changed("down-sql") {
 		// Set empty data for [up|down].sql
 		createOptions.SQLUp = []byte(``)
 		createOptions.SQLDown = []byte(``)

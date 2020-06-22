@@ -73,7 +73,14 @@ module.exports = {
         test: /\.scss$/,
         use: [
           MiniCssExtractPlugin.loader,
-          'css-loader?modules&importLoaders=2&sourceMap=false',
+          {
+            loader: 'css-loader',
+            options: {
+              importLoaders: 2,
+              sourceMap: false,
+              modules: {},
+            },
+          },
           'sass-loader?outputStyle=expanded&sourceMap=false&sourceMapContents=false',
         ],
       },
@@ -196,10 +203,11 @@ module.exports = {
         NODE_ENV: JSON.stringify('production'),
       },
       CONSOLE_ASSET_VERSION: Date.now().toString(),
+      'process.hrtime': () => null,
     }),
     new ForkTsCheckerWebpackPlugin({
       compilerOptions: {
-        allowJs: false,
+        allowJs: true,
         checkJs: false,
       },
     }),

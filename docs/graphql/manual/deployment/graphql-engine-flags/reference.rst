@@ -110,8 +110,8 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - ``--cors-domain <DOMAINS>``
      - ``HASURA_GRAPHQL_CORS_DOMAIN``
-     - CSV of list of domains, excluding scheme (http/https) and including port,
-       to allow for CORS. Wildcard domains are allowed.
+     - CSV of list of domains, incuding scheme (http/https) and port, to allow for CORS. Wildcard
+       domains are allowed. (See :ref:`configure-cors`)
 
    * - ``--disable-cors``
      - ``HASURA_GRAPHQL_DISABLE_CORS``
@@ -130,7 +130,7 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - N/A
      - ``HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE``
-     - Max event threads
+     - Maximum number of concurrent http workers delivering events at any time (default: 100)
 
    * - N/A
      - ``HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL``

@@ -7,21 +7,32 @@ import {
   showSuccessNotification,
   showErrorNotification,
 } from '../../Common/Notification';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
+import metaDataStyles from '../Settings.scss';
 
 class ReloadMetadata extends Component {
-  constructor() {
-    super();
-
+  constructor(props) {
+    super(props);
     this.state = {
       isReloading: false,
+      shouldReloadRemoteSchemas: props.shouldReloadRemoteSchemas || false,
     };
   }
 
-  render() {
-    const { dispatch } = this.props;
-    const { isReloading } = this.state;
+  toggleShouldReloadRemoteSchemas = () => {
+    this.setState(state => ({
+      shouldReloadRemoteSchemas: !state.shouldReloadRemoteSchemas,
+    }));
+  };
 
-    const metaDataStyles = require('../Settings.scss');
+  render() {
+    const {
+      dispatch,
+      btnTooltipMessage,
+      tooltipStyle,
+      showReloadRemoteSchemas = true,
+    } = this.props;
+    const { isReloading, shouldReloadRemoteSchemas } = this.state;
 
     const reloadMetadataAndLoadInconsistentMetadata = e => {
       e.preventDefault();
@@ -30,6 +41,7 @@ class ReloadMetadata extends Component {
 
       dispatch(
         reloadMetadata(
+          shouldReloadRemoteSchemas,
           () => {
             dispatch(showSuccessNotification('Metadata reloaded'));
             this.setState({ isReloading: false });
@@ -43,19 +55,42 @@ class ReloadMetadata extends Component {
         )
       );
     };
+
     const buttonText = isReloading ? 'Reloading' : 'Reload';
     return (
-      <div className={metaDataStyles.display_inline}>
+      <>
         <Button
           data-test="data-reload-metadata"
           color="white"
           size="sm"
           disabled={this.state.isReloading}
           onClick={reloadMetadataAndLoadInconsistentMetadata}
+          className={`${metaDataStyles.add_mar_right_mid}`}
         >
           {this.props.buttonText || buttonText}
         </Button>
-      </div>
+        {btnTooltipMessage && (
+          <Tooltip message={btnTooltipMessage} tooltipStyle={tooltipStyle} />
+        )}
+        {showReloadRemoteSchemas && (
+          <>
+            <label
+              className={`${metaDataStyles.cursorPointer} ${metaDataStyles.add_mar_right_small} ${metaDataStyles.add_mar_left_small}`}
+              disabled={this.state.isReloading}
+            >
+              <input
+                type="checkbox"
+                onChange={this.toggleShouldReloadRemoteSchemas}
+                checked={shouldReloadRemoteSchemas}
+                readOnly
+                className={`${metaDataStyles.add_mar_right_small} ${metaDataStyles.cursorPointer}`}
+              />
+              Reload all remote schemas
+            </label>
+            <Tooltip message="Check this if you have inconsistent remote schemas or if your remote schema has changed." />
+          </>
+        )}
+      </>
     );
   }
 }
