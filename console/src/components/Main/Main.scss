@@ -1299,6 +1299,29 @@
   }
 }
 
+.consoleNotificationPanel {
+  width: 520px;
+  box-shadow: 3px;
+  margin: 0;
+  padding: 0;
+  background: white;
+  text-transform: none;
+  left: auto;
+}
+
+.consoleLogoNotifications {
+  margin-top: -3px;
+  margin-left: 8px;
+}
+
+.notificationExternalLink {
+  margin-left: 8px;
+  &:hover {
+    color: #e53935;
+    text-transform: none;
+  }
+}
+
 @media (max-width: 1500px) {
   .header_items {
     width: 52%;

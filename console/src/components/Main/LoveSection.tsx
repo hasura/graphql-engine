@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { css } from 'styled-components';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import { ConsoleNotification } from './ConsoleNotification';
@@ -19,6 +18,7 @@ const Update: React.FC<ConsoleNotification> = ({
   content,
   type,
   is_active = true,
+  ...props
 }) => {
   if (!is_active) {
     return null;
@@ -28,7 +28,7 @@ const Update: React.FC<ConsoleNotification> = ({
     <Box>
       <Flex height={55} px="25px" pt="5px" justifyContent="space-between">
         <Flex justifyContent="space-between" bg="white">
-          <Badge type={type} mr="12px" />
+          {type !== '' ? <Badge type={type} mr="12px" /> : null}
           <Heading as="h4" color="#1cd3c6" fontSize="16px">
             {subject}
           </Heading>
@@ -40,8 +40,8 @@ const Update: React.FC<ConsoleNotification> = ({
       <Flex borderBottom="1px solid #f7f7f7">
         <Text fontSize={15} fontWeight="normal" px={15} py={4}>
           {content}
+          <a href={props.external_link} className={styles.notificationExternalLink}>Click here &rarr;</a>
         </Text>
-        {/* TODO: add support for external links */}
       </Flex>
     </Box>
   );
@@ -51,41 +51,15 @@ type NotificationProps = {
   data: Array<ConsoleNotification>;
 };
 
-const Notifications: React.FC<NotificationProps> = ({ data }) => (
+const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(({ data }, ref) => (
   <Box
-    className="dropdown-menu"
-    // TODO: remove these inline styles
-    css={css`
-      width: 520px;
-      box-shadow: 3px;
-      margin: 0;
-      padding: 0;
-      background: white;
-      text-transform: none;
-      left: auto;
-      #close-icon {
-        &:hover {
-          color: #000 !important;
-        }
-      }
-      #console-logo {
-        width: 20px;
-        margin-top: -3px;
-        margin-left: 8px;
-      }
-      #update-link {
-        border-bottom: 1px solid transparent;
-        &:hover {
-          color: #e53935;
-          border-bottom: 1px solid #e53935;
-        }
-      }
-    `}
+    className={`dropdown-menu ${styles.consoleNotificationPanel}`}
+    ref={ref}
   >
     <Flex justifyContent="space-between" px={20} py={3}>
       <Heading as="h2" color="#000" fontSize="20px">
         Latest updates
-        <ConsoleLogo id="console-logo" />
+        <ConsoleLogo className={styles.consoleLogoNotifications} width={20} />
       </Heading>
     </Flex>
     {data.length &&
@@ -97,11 +71,11 @@ const Notifications: React.FC<NotificationProps> = ({ data }) => (
           content={content}
           type={props.type ? props.type : ''}
           is_active={is_active}
-          external_link={props.external_link ? props.external_link : ''}
+          {...props}
         />
       ))}
   </Box>
-);
+));
 
 type LoveSectionProps = {
   consoleNotifications: Array<ConsoleNotification>;
@@ -115,7 +89,8 @@ const LoveSection: React.FC<LoveSectionProps> = ({
   closeDropDown,
 }) => {
   const dropDownRef = React.useRef(null);
-  useOnClickOutside(dropDownRef, () => closeDropDown());
+  const wrapperRef = React.useRef(null);
+  useOnClickOutside([dropDownRef, wrapperRef], closeDropDown);
 
   return (
     <>
@@ -123,11 +98,11 @@ const LoveSection: React.FC<LoveSectionProps> = ({
         className={`${styles.shareSection} dropdown-toggle`}
         aria-expanded="false"
         onClick={toggleDropDown}
-        ref={dropDownRef}
+        ref={wrapperRef}
       >
         <PixelHeart className="img-responsive" width={32} height={20} />
       </div>
-      <Notifications data={consoleNotifications} />
+      <Notifications data={consoleNotifications} ref={dropDownRef} />
     </>
   );
 };
