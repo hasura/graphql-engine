@@ -50,7 +50,6 @@ import           Control.Arrow.Extended
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Aeson.Types
-import           Text.Show              (Show (..))
 
 import qualified Data.Text              as T
 import qualified Database.PG.Query      as Q

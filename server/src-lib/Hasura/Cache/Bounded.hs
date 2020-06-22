@@ -36,7 +36,7 @@ mkCacheSize v =
   -- NOTE: naively using readMaybe Word16 will silently wrap
   case readMaybe v :: Maybe Natural of
     Just n | n <= max16 && n > 0 -> return (CacheSize $ fromIntegral n)
-    _ -> fail "cache size must be given as a number between 1 and 65535"
+    _ -> throwError "cache size must be given as a number between 1 and 65535"
   where
     max16 = fromIntegral (maxBound :: Word16) :: Natural
 

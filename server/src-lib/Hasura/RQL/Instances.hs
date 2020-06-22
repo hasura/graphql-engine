@@ -43,6 +43,8 @@ deriving instance NFData a => NFData (G.ExecutableDocument a)
 
 instance (TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
   lift m = [| M.fromList $(TH.lift $ M.toList m) |]
+  liftTyped = TH.unsafeTExpCoerce . TH.lift
 
 instance TH.Lift a => TH.Lift (S.HashSet a) where
   lift s = [| S.fromList $(TH.lift $ S.toList s) |]
+  liftTyped = TH.unsafeTExpCoerce . TH.lift

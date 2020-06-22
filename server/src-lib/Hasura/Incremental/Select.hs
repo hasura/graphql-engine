@@ -25,6 +25,7 @@ import           Control.Monad.Unique
 import           Data.GADT.Compare
 import           Data.Kind
 import           Data.Proxy           (Proxy (..))
+import           Data.Type.Equality
 import           GHC.OverloadedLabels (IsLabel (..))
 import           GHC.Records          (HasField (..))
 import           GHC.TypeLits         (KnownSymbol, sameSymbol, symbolVal)

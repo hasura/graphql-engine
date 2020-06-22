@@ -8,7 +8,7 @@ import           Control.Monad                 (foldM)
 import           Criterion.Main
 import           Data.Bits
 import           Data.IORef
-import           Data.List
+import           Data.List                     (sort, foldl', group)
 import           Data.List.Split               (chunksOf)
 import           Data.Ord
 import           Data.Traversable

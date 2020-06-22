@@ -169,10 +169,10 @@ newtype FromIntrospection a
   = FromIntrospection { fromIntrospection :: a }
   deriving (Show, Eq, Generic)
 
-pErr :: (Monad m) => Text -> m a
+pErr :: (MonadFail m) => Text -> m a
 pErr = fail . T.unpack
 
-kindErr :: (Monad m) => Text -> Text -> m a
+kindErr :: (MonadFail m) => Text -> Text -> m a
 kindErr gKind eKind = pErr $ "Invalid `kind: " <> gKind <> "` in " <> eKind
 
 instance J.FromJSON (FromIntrospection G.Description) where

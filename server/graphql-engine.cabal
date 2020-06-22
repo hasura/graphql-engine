@@ -88,14 +88,11 @@ library
                      , http-client-tls
                      , profunctors
                      , deepseq
-                     , dependent-map >=0.3 && <0.4
-                     , dependent-sum >=0.6.2 && <0.7
-                     , primitive
-
-                     -- `these >=1` is split into several different packages, but our current stack
-                     -- resolver has `these <1`; when we upgrade we just need to add an extra
-                     -- dependency on `semialign`
-                     , these >=0.7.1 && <0.8
+                     , dependent-map >=0.4 && <0.5
+                     , dependent-sum >=0.7.1 && <0.8
+                     , exceptions
+                     , these
+                     , semialign
 
                      -- Encoder related
                      , uuid
@@ -195,6 +192,11 @@ library
                      -- testing
                      , QuickCheck
                      , generic-arbitrary
+                     , quickcheck-instances
+
+                     -- 0.6.1 is supposedly not okay for ghc 8.6:
+                     --   https://github.com/nomeata/ghc-heap-view/issues/27
+                     , ghc-heap-view
 
                      , directory
 

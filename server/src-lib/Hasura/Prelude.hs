@@ -21,18 +21,15 @@ module Hasura.Prelude
 import           Control.Applicative               as M (Alternative (..), liftA2)
 import           Control.Arrow                     as M (first, second, (&&&), (***), (<<<), (>>>))
 import           Control.DeepSeq                   as M (NFData, deepseq, force)
-import           Control.Monad                     as M (void, when)
 import           Control.Monad.Base                as M
 import           Control.Monad.Except              as M
-import           Control.Monad.Fail                as M (MonadFail)
 import           Control.Monad.Identity            as M
 import           Control.Monad.Reader              as M
 import           Control.Monad.State.Strict        as M
 import           Control.Monad.Trans.Maybe         as M (MaybeT (..))
 import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..),
                                                          execWriterT, runWriterT)
-import           Data.Align                        as M (Align (align, alignWith))
-import           Data.Align.Key                    as M (AlignWithKey (..))
+import           Data.Align                        as M (Semialign (align, alignWith))
 import           Data.Bool                         as M (bool)
 import           Data.Data                         as M (Data (..))
 import           Data.Either                       as M (lefts, partitionEithers, rights)

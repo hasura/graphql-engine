@@ -14,8 +14,22 @@
 -- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
 packages: .
 
+constraints:
+  -- ensure we don’t end up with a freeze file that forces an incompatible
+  -- version in CI for Setup.hs scripts.
+  setup.Cabal <3.4
+
+allow-newer:
+  -- dependent-map depends on constraints-extras, but its bounds have not yet
+  -- been relaxed for GHC 8.10.
+  constraints-extras-0.3.0.2:base,
+  constraints-extras-0.3.0.2:constraints,
+  constraints-extras-0.3.0.2:template-haskell
+
 package *
   optimization: 2
+  -- For tooling, e.g. 'weeder', and IDE-like stuff:
+  ghc-options: -fwrite-ide-info
 
   haddock-html: true
   haddock-hoogle: true

@@ -25,7 +25,7 @@ import           Data.IORef
 import           Data.Parser.JSONPath
 import           Data.Proxy                            (Proxy (..))
 import           System.IO.Unsafe                      (unsafeInterleaveIO)
-import           Type.Reflection                       (Typeable, typeRep)
+import           Type.Reflection                       ((:~:)(..), Typeable, typeRep)
 
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
