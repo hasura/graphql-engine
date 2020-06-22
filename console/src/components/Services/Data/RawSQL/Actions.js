@@ -54,10 +54,11 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
 
   const schemaChangesUp = [];
 
-  const sql =
-    statementTimeout > 0
-      ? `${getStatementTimeoutSql(statementTimeout)} ${getState().rawSQL.sql}`
-      : getState().rawSQL.sql;
+  const shouldAddStatementTimeout = statementTimeout > 0 && !isMigration;
+
+  const sql = shouldAddStatementTimeout
+    ? `${getStatementTimeoutSql(statementTimeout)} ${getState().rawSQL.sql}`
+    : getState().rawSQL.sql;
 
   schemaChangesUp.push(getRunSqlQuery(sql, isCascadeChecked, readOnlyMode));
   // check if track view enabled
