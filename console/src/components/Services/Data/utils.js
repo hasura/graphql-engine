@@ -818,3 +818,33 @@ export const getDependencyError = (err = {}) => {
     }
   }
 };
+
+/**
+ * # makeMetadataFromTableList
+ *
+ * @param {*} [tableList=[]] table list 
+ * @returns generated metadata
+ */
+export const makeMetadataFromTableList = (tableList = []) => {
+  const tables = tableList.map(({ table_name, table_schema }) => ({
+    table: {
+      schema: table_schema,
+      name: table_name,
+    },
+  }));
+  return {
+    version: 2,
+    tables,
+  };
+};
+
+/**
+ * # isMetadataEmpty
+ *
+ * @param {*} metadata : generated metadata
+ * @returns boolean
+ */
+export const isMetadataEmpty = metadata =>
+  Object.keys(metadata).length === 2 &&
+  metadata.tables &&
+  metadata.tables.length === 0;

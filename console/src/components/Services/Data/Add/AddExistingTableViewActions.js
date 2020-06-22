@@ -13,6 +13,8 @@ import {
   getFunctionModifyRoute,
 } from '../../../Common/utils/routesUtils';
 import { checkIfTable } from '../../../Common/utils/pgUtils';
+import { exportMetadata } from '../../Settings/Actions';
+import { makeMetadataFromTableList, isMetadataEmpty } from '../utils';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -152,10 +154,72 @@ const addExistingFunction = name => {
     );
   };
 };
+const replaceMetadata = (metadata, errorCallback) => {
+  return (dispatch, getState) => {
+    dispatch({ type: MAKING_REQUEST });
+    const currentSchema = getState().tables.currentSchema;
 
-const addAllUntrackedTablesSql = tableList => {
+    const requestBodyUp = {
+      type: 'replace_metadata',
+      args: metadata,
+    };
+    const requestBodyDown = {
+      type: 'replace_metadata',
+      // set default metadata
+      args: {
+        version: 2,
+        tables: [],
+      },
+    };
+    const migrationName =
+      'add_all_existing_table_or_view_by_replace_metadata_' + currentSchema;
+
+    const requestMsg = 'Adding existing table/view...';
+    const successMsg = 'Existing table/view added';
+    const errorMsg = 'Adding existing table/view failed';
+    const customOnSuccess = () => {};
+    const customOnError = err => {
+      dispatch({ type: REQUEST_ERROR, data: err });
+      if (errorCallback) errorCallback();
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [requestBodyUp],
+      [requestBodyDown],
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+const tryMetadataReplace = (dispatch, tableList, retryFn) => {
+  const fallBack = () => dispatch(retryFn(tableList, true));
+  dispatch(
+    exportMetadata(metadata => {
+      if (isMetadataEmpty(metadata)) {
+        // nothing in the metadata
+        //replace tablelist
+        const newMetadata = makeMetadataFromTableList(tableList);
+        if (tableList.length > 0 && newMetadata)
+          return dispatch(replaceMetadata(newMetadata, fallBack));
+      }
+      fallBack();
+    }, fallBack)
+  );
+};
+
+const addAllUntrackedTablesSql = (tableList, skipCheck = false) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
+    if (!skipCheck) {
+      // metadata replace is a fast solution to track all tables, which can be used when there is no exisitng metadata
+      return tryMetadataReplace(dispatch, tableList, addAllUntrackedTablesSql);
+    }
 
     dispatch({ type: MAKING_REQUEST });
     dispatch(showSuccessNotification('Existing table/view added!'));
