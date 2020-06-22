@@ -10,6 +10,7 @@ import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
 
+import StatementTimeout from './StatementTimeout';
 import { parseCreateSQL } from './utils';
 import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
 
@@ -421,32 +422,12 @@ const RawSQL = ({
     return migrationSection;
   };
 
-  function getStatementTimeoutSection() {
-    const dispatchSetStatementTimeout = value => {
-      const timeoutInSeconds = Number(value.trim());
-      const isValidTimeout = timeoutInSeconds > 0 && !isNaN(timeoutInSeconds);
+  const updateStatementTimeout = value => {
+    const timeoutInSeconds = Number(value.trim());
+    const isValidTimeout = timeoutInSeconds > 0 && !isNaN(timeoutInSeconds);
 
-      dispatch(setRawSqlTimeout(isValidTimeout ? timeoutInSeconds : 0));
-    };
-    return (
-      <div className={styles.add_mar_top_small}>
-        <label>
-          Statement timeout (seconds)
-          <Tooltip
-            message={'Abort requests that take longer than the specified time'}
-          />
-          <input
-            min={0}
-            value={statementTimeout || ''}
-            type="number"
-            className={`${styles.inline_block} ${styles.add_mar_left}`}
-            data-test="raw-sql-statement-timeout"
-            onChange={event => dispatchSetStatementTimeout(event.target.value)}
-          />
-        </label>
-      </div>
-    );
-  }
+    dispatch(setRawSqlTimeout(isValidTimeout ? timeoutInSeconds : 0));
+  };
 
   return (
     <div
@@ -474,7 +455,12 @@ const RawSQL = ({
           {getTrackThisSection()}
           {getMetadataCascadeSection()}
           {getMigrationSection()}
-          {getStatementTimeoutSection()}
+
+          <StatementTimeout
+            statementTimeout={statementTimeout}
+            isMigrationChecked={isMigrationChecked}
+            updateStatementTimeout={updateStatementTimeout}
+          />
           <Button
             type="submit"
             className={styles.add_mar_top}
