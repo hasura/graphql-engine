@@ -22,7 +22,7 @@ h1, h2, h3, h4, h5, h6 {
 body, p, #docs-content, #sidebar, #sidebar a,
 tt, code, kbd, pre, pre.literal-block, samp,
 .graphiql .graphiql-container .CodeMirror {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 [role="main"] {
@@ -36,39 +36,15 @@ tt, code, kbd, pre, pre.literal-block, samp,
 }
 
 [role="main"] h2 {
-  font-size: 26px;
+  font-size: 24px;
 }
 
 [role="main"] h3 {
-  font-size: 22px;
-}
-
-[role="main"] h4 {
   font-size: 20px;
 }
 
-@media (max-width: 1200px) {
-  body, p, #docs-content, #sidebar, #sidebar a,
-  tt, code, kbd, pre, pre.literal-block, samp,
-  .graphiql .graphiql-container .CodeMirror {
-    font-size: 16px;
-  }
-
-  [role="main"] h1 {
-    font-size: 32px;
-  }
-
-  [role="main"] h2 {
-    font-size: 24px;
-  }
-
-  [role="main"] h3 {
-    font-size: 20px;
-  }
-
-  [role="main"] h4 {
-    font-size: 18px;
-  }
+[role="main"] h4 {
+  font-size: 18px;
 }
 
 form input[type="search"], form input[type="text"],
@@ -95,7 +71,6 @@ h6 a:visited {
 
 h3 {
   font-weight: 500;
-  margin: 0 !important;
 }
 
 p {
@@ -761,8 +736,8 @@ article ol ol {
   top: 0;
 }
 #sidebar li {
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 #sidebar .closeIcon {
   position: absolute;

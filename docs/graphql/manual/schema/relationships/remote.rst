@@ -30,8 +30,8 @@ After you :ref:`add a remote schema <adding_schema>`, you can create relationshi
 Step 1. Open the remote relationship section
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- From your table, go to the "Relationships" tab.
-- Click the "Add a remote relationship" button.
+- From your table, go to the ``Relationships`` tab.
+- Click the ``Add a remote relationship`` button.
 
 .. thumbnail:: /img/graphql/manual/remote-joins/add.png
    :alt: Opening the remote relationship section
@@ -39,7 +39,7 @@ Step 1. Open the remote relationship section
 Step 2. Define the relationship
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the section opened by the above step, fill out these fields and click "Save":
+In the section opened by the above step, fill out the following fields:
 
 - **Name**: Create a name for the relationship.
 - **Remote Schema**: Select a remote schema among all the ones you've created.

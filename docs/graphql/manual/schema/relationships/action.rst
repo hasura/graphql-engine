@@ -19,8 +19,8 @@ After you :ref:`create <create_actions>` or :ref:`derive <derive_actions>` an ac
 Step 1. Open the action relationship section
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- From your action, go to the "Relationships" tab.
-- Click "Add a relationship".
+- From your action, go to the ``Relationships`` tab.
+- Click ``Add a relationship``.
 
 .. thumbnail:: /img/graphql/manual/remote-joins/action-rel.png
    :alt: Opening the action relationship section
@@ -31,7 +31,7 @@ In this example, we're creating a relationship for the ``createUser`` action.
 Step 2. Define the relationship
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the section opened by the above step, fill out these fields and click "Save":
+In the section opened by the above step, fill out the following fields:
 
 - **Relationship type**: Select a :ref:`type of relationship <relationship_database_modelling>`.
 
