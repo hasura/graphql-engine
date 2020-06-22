@@ -822,7 +822,7 @@ export const getDependencyError = (err = {}) => {
 /**
  * # makeMetadataFromTableList
  *
- * @param {*} [tableList=[]] table list 
+ * @param {*} [tableList=[]] table list
  * @returns generated metadata
  */
 export const makeMetadataFromTableList = (tableList = []) => {
