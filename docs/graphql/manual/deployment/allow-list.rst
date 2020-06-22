@@ -4,28 +4,28 @@
 
 .. _allow_list:
 
-Allow-list for queries
-======================
+Allow-list for requests
+=======================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
-The **Allow-list** is a list of safe queries (*GraphQL queries, mutations or subscriptions*) that is stored by
+The **Allow-list** is a list of safe requests (*GraphQL queries, mutations or subscriptions*) that is stored by
 the GraphQL engine in its metadata. When enabled, it can be used to restrict the GraphQL engine so that it
-executes **only** those queries that are present in the list *(available after version v1.0.0-beta.1)*.
+executes **only** those requests that are present in the list *(available after version v1.0.0-beta.1)*.
 
-Adding or removing a query in allow-list
-----------------------------------------
+Adding or removing a request in allow-list
+------------------------------------------
 
-You can add or remove a query in the allow-list in two ways:
+You can add or remove a request in the allow-list in two ways:
 
-* **Using the console:**  Head to the ``Settings`` (⚙) --> ``Allowed queries`` section in the console. You can
-  add a new query to the allow-list or upload a list of new queries from a file that will be added to the
-  allow-list. You can also see a list of existing queries in the allow-list and delete them individually.
+* **Using the console:**  Head to the ``Settings`` (⚙) --> ``Allow list`` section in the console. You can
+  add a new request to the allow-list or upload a list of new requests from a file that will be added to the
+  allow-list. You can also see a list of existing requests in the allow-list and delete them individually.
 
-  * You can add an individual query, like the one below, manually to the allow-list with a unique name.
+  * You can add an individual request, like the one below, manually to the allow-list with a unique name.
 
     .. code-block:: graphql
 
@@ -39,7 +39,7 @@ You can add or remove a query in the allow-list in two ways:
      }
 
   * You can upload files, like this `sample file <https://gist.github.com/dsandip/8b1b4aa87708289d4c9f8fd9621eb025>`_,
-    to add multiple queries to the allow-list (each query needs to have a name).
+    to add multiple requests to the allow-list (each request needs to have a name).
 
 * **Using metadata APIs:** Queries can be stored in collections and a collection can be added to or removed
   from the allow-list. See :ref:`Collections & Allow-list APIs<api_query_collections>`
@@ -47,7 +47,7 @@ You can add or remove a query in the allow-list in two ways:
 
 .. note::
 
-  * ``__typename`` introspection fields will be ignored when adding queries and comparing them to the allow-list.
+  * ``__typename`` introspection fields will be ignored when adding requests and comparing them to the allow-list.
 
   * Any introspection queries that your client apps require will have to be explicitly added to the allow-list
     to allow running them.
@@ -89,7 +89,7 @@ Recommended usage
 The following are the recommended best practices for enabling/disabling allow-list  based validation:
 
 * **In development instances**: During development or in dev instances, disable allow-list (*default setting*)
-  to allow complete access to the GraphQL schema. Add/remove queries in the allow-list and then export the
+  to allow complete access to the GraphQL schema. Add/remove requests in the allow-list and then export the
   metadata for version-control (*so you can apply it to other instances*).
 
 * **In CI/CD instances**: Enable the allow-list for testing. 

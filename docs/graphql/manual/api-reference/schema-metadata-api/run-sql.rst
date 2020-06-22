@@ -29,7 +29,7 @@ returned.
   authorization mode.
 
   This is deliberate as it is hard to enforce any sort of permissions on arbitrary SQL. If
-  you find yourself in the need of using ``run_sql`` to run custom DML queries,
+  you find yourself in the need of using ``run_sql`` to run custom DML requests,
   consider creating a view. You can now define permissions on that particular view
   for various roles.
 
@@ -37,7 +37,7 @@ Use cases
 ^^^^^^^^^
 
 1. To execute DDL operations that are not supported by the console (e.g. managing indexes).
-2. Run custom DML queries from backend microservices instead of installing libraries to speak to Postgres.
+2. Run custom DML requests from backend microservices instead of installing libraries to speak to Postgres.
 
 An example:
 
