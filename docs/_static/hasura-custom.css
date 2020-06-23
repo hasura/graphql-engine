@@ -756,10 +756,9 @@ article ol ol {
   width: 24% !important;
   height: 100vh;
   overflow-y: auto;
-  padding-left: 15px !important;
+  padding-left: 0 !important;
   position: sticky;
   top: 0;
-  padding-top: 20px;
 }
 #sidebar li {
   margin-top: 10px;
@@ -1619,4 +1618,37 @@ article ol ol {
 .navContainerWrapper {
     width: calc(100% - 30px);
     padding: 0 15px !important;
+}
+
+.tabbarContainerWrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.tabbarContainerWrapper a {
+  display: inline-block;
+  font-size: 16px !important;
+  font-weight: 600;
+  padding: 16px 4px;
+  text-decoration: none;
+}
+
+.tabbarContainerWrapper a:not(:first-child) {
+  margin-left: 2em;
+}
+
+.tabbarContainerWrapper a span {
+  color: rgba(255, 255, 255, .6);
+  cursor: pointer;
+  padding-bottom: 3px;
+  border-bottom: 2px solid transparent;
+}
+
+.tabbarContainerWrapper a:hover span {
+  color: rgba(255, 255, 255, 1);
+}
+
+.tabbarContainerWrapper .tabbarTabActive span {
+  color: rgba(255, 255, 255, 1) !important;
+  border-bottom: 2px solid white !important;
 }
