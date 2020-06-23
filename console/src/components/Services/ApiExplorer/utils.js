@@ -1,3 +1,5 @@
+import endpoints from '../../../Endpoints';
+
 export const getHeadersAsJSON = (headers = []) => {
   const headerJSON = {};
   const nonEmptyHeaders = headers.filter(header => {
@@ -16,3 +18,6 @@ export const isValidGraphQLOperation = operation => {
     operation.name && operation.name.value && operation.operation === 'query'
   );
 };
+
+export const getGraphQLEndpoint = mode =>
+  mode === 'relay' ? endpoints.relayURL : endpoints.graphQLUrl;

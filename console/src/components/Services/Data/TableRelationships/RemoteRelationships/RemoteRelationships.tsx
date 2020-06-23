@@ -3,11 +3,13 @@ import styles from '../../TableModify/ModifyTable.scss';
 import { RemoteRelationshipServer } from './utils';
 import RemoteRelationshipList from './components/RemoteRelationshipList';
 import { fetchRemoteSchemas } from '../../../RemoteSchema/Actions';
+import { Table } from '../../../../Common/utils/pgUtils';
+import { Dispatch } from '../../../../../types';
 
 type Props = {
   relationships: RemoteRelationshipServer[];
-  reduxDispatch: any;
-  table: any;
+  reduxDispatch: Dispatch;
+  table: Table;
   remoteSchemas: string[];
 };
 
@@ -26,14 +28,12 @@ const RemoteRelationships: React.FC<Props> = ({
       <div className={styles.add_mar_bottom}>
         Relationships to remote schemas
       </div>
-      <div>
-        <RemoteRelationshipList
-          relationships={relationships}
-          table={table}
-          remoteSchemas={remoteSchemas}
-          reduxDispatch={reduxDispatch}
-        />
-      </div>
+      <RemoteRelationshipList
+        relationships={relationships}
+        table={table}
+        remoteSchemas={remoteSchemas}
+        reduxDispatch={reduxDispatch}
+      />
     </div>
   );
 };

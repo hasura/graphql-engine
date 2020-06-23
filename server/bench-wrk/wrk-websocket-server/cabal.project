@@ -1,0 +1,5 @@
+packages: .
+
+package wrk-websocket-server
+  ghc-options: -j
+

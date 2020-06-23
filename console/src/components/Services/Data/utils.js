@@ -3,6 +3,8 @@ import {
   checkFeatureSupport,
 } from '../../../helpers/versionUtils';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
+import { isJsonString } from '../../Common/utils/jsUtils';
+import { ERROR_CODES } from './constants';
 
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
@@ -18,6 +20,7 @@ export const DATE = 'date';
 export const TIMETZ = 'timetz';
 export const BOOLEAN = 'boolean';
 export const TEXT = 'text';
+export const ARRAY = 'ARRAY';
 
 export const getPlaceholder = type => {
   switch (type) {
@@ -34,6 +37,8 @@ export const getPlaceholder = type => {
       return '{"name": "foo"} or [12, "bar"]';
     case BOOLEAN:
       return '';
+    case ARRAY:
+      return '{"foo", "bar"} or ["foo", "bar"]';
     default:
       return type;
   }
@@ -784,3 +789,32 @@ WHERE
 
 export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
+
+export const cascadeUpQueries = (upQueries = []) =>
+  upQueries.map((i = {}) => {
+    if (i.type === 'run_sql' || i.type === 'untrack_table') {
+      return {
+        ...i,
+        args: {
+          ...i.args,
+          cascade: true,
+        },
+      };
+    }
+    return i;
+  });
+
+export const getDependencyError = (err = {}) => {
+  if (err.code == ERROR_CODES.dependencyError.code) {
+    // direct dependency error
+    return err;
+  } else if (err.code == ERROR_CODES.dataApiError.code) {
+    // message is coming as error, further parssing willbe based on message key
+    const actualError = isJsonString(err.message)
+      ? JSON.parse(err.message)
+      : {};
+    if (actualError.code == ERROR_CODES.dependencyError.code) {
+      return { ...actualError, message: actualError.error };
+    }
+  }
+};
