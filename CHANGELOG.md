@@ -27,6 +27,7 @@
 - console: fix listen update column config selection for event trigger (close #5042) (#5043)
 - cli: add new flags up-sql and down-sql to generate sql based migrations from the CLI (#5026)
 - docs: add page on setting up v2 migrations (close #4746) (#4898)
+- docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
 
 ## `v1.3.0-beta.1`
 
