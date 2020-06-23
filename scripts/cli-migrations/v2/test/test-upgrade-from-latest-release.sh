@@ -26,7 +26,7 @@ docker cp migrations/. graphql-engine:/hasura-migrations
 # copy metadata directory to /hasura-metadata
 docker cp metadata/. graphql-engine:/hasura-metadata
 # start graphql-engine
-docker-compose up -d --no-recreate graphql-engine
+docker-compose -f docker-compose-latest.yaml up -d --no-recreate graphql-engine
 wait_for_server
 # export metadata and run diff with validation/metadata.json
 docker run --network container:graphql-engine appropriate/curl -s -f   -d'{"type" : "export_metadata", "args" : {} }' localhost:8080/v1/query | jq -j '.' | diff validation/metadata.json -
