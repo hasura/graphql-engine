@@ -1,3 +1,5 @@
+import * as React from 'react';
+
 const proClickState = 'console:pro';
 const defaultProClickState = {
   isProClicked: false,
