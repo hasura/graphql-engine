@@ -27,7 +27,7 @@ After you :ref:`add a remote schema <adding_schema>`, you can create relationshi
   To see example use cases, check out this `blog post <https://hasura.io/blog/remote-joins-a-graphql-api-to-join-database-and-other-data-sources/>`__.
 
 
-Step 1. Open the remote relationship section
+Step 1: Open the remote relationship section
 --------------------------------------------
 
 - From your table, go to the ``Relationships`` tab.
@@ -36,7 +36,7 @@ Step 1. Open the remote relationship section
 .. thumbnail:: /img/graphql/manual/remote-joins/add.png
    :alt: Opening the remote relationship section
 
-Step 2. Define the relationship
+Step 2: Define the relationship
 -------------------------------
 
 In the section opened by the above step, fill out the following fields:
@@ -60,7 +60,7 @@ In this example, we've added a remote schema which is a wrapper around `Auth0 <h
 3. We set up the config to join the ``auth0_id`` input argument of our remote schema field to the ``auth0_id`` column of this table (in this case, the ``users`` table).
 
 
-Step 3. Explore with GraphiQL
+Step 3: Explore with GraphiQL
 -----------------------------
 
 In the GraphiQL tab, test out your remote relationship.

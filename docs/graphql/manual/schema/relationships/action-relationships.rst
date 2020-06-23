@@ -19,7 +19,7 @@ Introduction
 
 After you :ref:`create <create_actions>` or :ref:`derive <derive_actions>` an action, you can create relationships for it.
 
-Step 1. Open the action relationship section
+Step 1: Open the action relationship section
 --------------------------------------------
 
 - From your action, go to the ``Relationships`` tab.
@@ -31,7 +31,7 @@ Step 1. Open the action relationship section
 
 In this example, we're creating a relationship for the ``createUser`` action.
 
-Step 2. Define the relationship
+Step 2: Define the relationship
 -------------------------------
 
 In the section opened by the above step, fill out the following fields:
@@ -53,7 +53,7 @@ In the section opened by the above step, fill out the following fields:
 
 In this example, we're creating a relationship called ``user``, from the ``id`` field returned in the action response, to the ``id`` column of the ``users`` table.
 
-Step 3. Explore with GraphiQL
+Step 3: Explore with GraphiQL
 -----------------------------
 
 In the GraphiQL tab, test out your action relationship.
