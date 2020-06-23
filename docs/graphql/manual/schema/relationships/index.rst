@@ -92,4 +92,4 @@ Remote joins
   Database modelling <database-modelling/index>
   remote-relationships
   action-relationships
-  architecture
+  remote-joins-architecture

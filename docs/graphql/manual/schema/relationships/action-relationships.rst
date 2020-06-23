@@ -15,7 +15,7 @@ Creating action relationships
 Introduction
 ------------
 
-:ref:`Actions <actions>` are a way to extend Hasura’s schema with custom business logic using custom queries and mutations. They can be used to call a REST endpoint from Hasura as a resolver for custom types. They are especially useful for setting up serverless functions as resolvers.
+:ref:`Actions <actions>` are a way to extend Hasura’s schema with custom business logic using custom queries and mutations. The resolvers for these custom fields are written in REST endpoints. They are especially useful for setting up serverless functions as resolvers.
 
 After you :ref:`create <create_actions>` or :ref:`derive <derive_actions>` an action, you can create relationships for it.
 
