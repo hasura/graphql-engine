@@ -7,6 +7,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: fix introspection when multiple actions defined with Postgres scalar types (fix #5166) (#5173)
 - console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
 - console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
 - docs: add page on scheduled triggers (close #4913) (#5141)
@@ -98,7 +99,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 A new `seeds` command is introduced in CLI, this will allow managing seed migrations as SQL files
 
 #### Creating seed
-```                                                        
+```
 # create a new seed file and use editor to add SQL content
 hasura seed create new_table_seed
 
