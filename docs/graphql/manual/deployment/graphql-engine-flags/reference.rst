@@ -51,7 +51,18 @@ Or you can specify the following options *(only via flags)*:
   -u, --user               Database user name
   -p, --password           Password of the user
   -d, --dbname             Database name to connect to
+  -o, --options            PostgreSQL connection options
 
+.. note::
+
+   The default configuration of PostgreSQL 11 and older may result in loss of
+   precision when retrieving IEEE 754 style data, such as ``float4``, ``real``
+   or ``double precision`` values, from the database.  To avoid this, set the
+   ``extra_float_digits`` parameter to 3.  This can be done by passing
+   ``'--options=-c extra_float_digits=3'`` to ``graphql-engine``, or by passing
+   this option as part of the database url:
+
+   ``postgres://admin:mypass@mydomain.com:5432/mydb?options=-c%20extra_float_digits%3D3``
 
 .. _command-flags:
 

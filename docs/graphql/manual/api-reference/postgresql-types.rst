@@ -53,6 +53,11 @@ E.g.
      }
    ]
 
+.. note::
+
+   To avoid loss of data when retrieving IEEE 754 style data from the database,
+   please refer to the :ref:`server_flag_reference`.
+
 .. _Numeric:
 
 Numeric
@@ -327,5 +332,3 @@ E.g. For macaddr type
 .. Note::
 
    You can learn more about PostgreSQL data types `here <https://www.postgresql.org/docs/current/static/datatype.html>`__.
-
-
