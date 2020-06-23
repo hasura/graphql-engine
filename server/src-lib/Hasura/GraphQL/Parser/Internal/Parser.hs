@@ -284,7 +284,7 @@ enum name description values = Parser
     validate value = case M.lookup value valuesMap of
       Just result -> pure result
       Nothing -> parseError $ "expected one of the values "
-        <> englishList "or" (dquoteTxt . dName . fst <$> values) <> "for type "
+        <> englishList "or" (dquoteTxt . dName . fst <$> values) <> " for type "
         <> name <<> ", but found " <>> value
 
 nullable :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m (Maybe a)
