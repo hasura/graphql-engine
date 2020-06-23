@@ -15,7 +15,7 @@ Relay schema
 Introduction
 ------------
 
-The Hasura GraphQL Engine serves a `Relay <https://relay.dev/>`__ schema for Postgres tables which have a primary key defined. The Relay schema can be accessed through the ``/v1/relay`` endpoint.
+The Hasura GraphQL engine serves a `Relay <https://relay.dev/>`__ schema for Postgres tables which have a primary key defined. The Relay schema can be accessed through the ``/v1/relay`` endpoint.
 
 .. thumbnail:: /img/graphql/manual/schema/relay.png
    :alt: Relay API toggle
@@ -38,7 +38,7 @@ Relay's client-side benefits include:
   - Components can only access data they've asked for. This **data masking** prevents implicit data dependency bugs.
   - Components only re-render when the exact data they're using is updated, preventing unnecessary re-renders.
 
-- **Performance**: The Relay compiler composes your GraphQL fragments into optimized and efficient batches to reduce round-trips to the server. The compiler also applies **transforms** to your queries to remove redundancies and shorten query strings, which reduces upload bytes.
+- **Performance**: The Relay compiler composes your GraphQL fragments into optimized and efficient batches to reduce round-trips to the server. The compiler also applies `transforms <https://relay.dev/docs/en/compiler-architecture.html#transforms>`__ to your queries to remove redundancies and shorten query strings, which reduces upload bytes.
 
 - **Strong typing**: The compiler automatically generates Flow (or TypeScript) types, which you can import into your component for type checking in your code editor and during build time.
 
@@ -66,4 +66,10 @@ According to the spec, the server must provide:
 Limitations
 -----------
 
-At this time, Hasura's Relay implementation doesn't cover remote schemas and actions, and doesn't support persisted queries. It supports only Postgres tables with a primary key defined, and custom SQL functions whose returning table has a primary key defined.
+At this time, Hasura's Relay implementation only supports Postgres tables with a primary key defined, and custom SQL functions whose returning table has a primary key defined.
+
+Persisted queries will be supported soon.
+
+.. note::
+
+  Currently, Hasura's Relay schema doesn't expose remote schemas or actions. This will be fixed in future releases.
