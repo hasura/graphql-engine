@@ -742,7 +742,7 @@ const tryMetaDataReplace = (dispatch, trackPayload, retry, consts) => {
   dispatch(
     exportMetadata(metadata => {
       if (hasAnyRelationshipInMetadata(metadata)) return fallback();
-      const newMetaData = makeMetadataWithRltns({...metadata}, trackPayload);
+      const newMetaData = makeMetadataWithRltns({ ...metadata }, trackPayload);
       return dispatch(
         replaceMetadataTrackAllRelationships(
           newMetaData,
