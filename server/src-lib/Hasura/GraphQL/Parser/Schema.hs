@@ -16,6 +16,7 @@ module Hasura.GraphQL.Parser.Schema (
   , eqNonNullableType
   , eqTypeInfo
   , discardNullability
+  , toGraphQLType
 
   , EnumValueInfo(..)
   , InputFieldInfo(..)
@@ -48,7 +49,7 @@ import qualified Data.HashMap.Strict.Extended  as Map
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Functor.Classes
-import           Language.GraphQL.Draft.Syntax (Description (..), Name (..), Value (..), Directive(..))
+import           Language.GraphQL.Draft.Syntax (Description (..), Name (..), Value (..), Nullability(..), GType (..), Directive(..))
 
 class HasName a where
   getName :: a -> Name
@@ -294,6 +295,16 @@ data NonNullableType k
 
 instance Eq (NonNullableType k) where
   (==) = eqNonNullableType
+
+toGraphQLType :: Type k -> GType
+toGraphQLType = \case
+  NonNullable t -> translateWith False t
+  Nullable    t -> translateWith True  t
+  where
+    translateWith nullability = \case
+      TNamed typeInfo -> TypeNamed (Nullability nullability) $ getName typeInfo
+      TList  typeInfo -> TypeList  (Nullability nullability) $ toGraphQLType typeInfo
+
 
 -- | Like '==', but can compare 'NonNullableType's of different kinds.
 eqNonNullableType :: NonNullableType k1 -> NonNullableType k2 -> Bool
