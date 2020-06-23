@@ -197,16 +197,6 @@ Date:   Tue Jun 23 20:35:36 2020 -0400
     GHC should probably also be doubling the stack buffer at each overflow
     or doing something even smarter; the knobs we have aren't so helpful.
 
-commit 6a58c144f540508e3a75c977585577e0b757d550
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Tue Jun 23 20:51:34 2020 +0530
-
-    server: fix updating of headers behaviour in the update cron trigger API and create future events immediately (#5151)
-
-    * server: fix bug to update headers in an existing cron trigger and create future events
-
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
