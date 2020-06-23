@@ -478,7 +478,7 @@ selectionSet
   -> Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
 selectionSet name description parsers = Parser
   { pType = Nullable $ TNamed $ mkDefinition name description $
-      TIObject $ map fDefinition parsers
+      TIObject $ ObjectInfo (map fDefinition parsers) [] -- This object does not implement any interfaces
   , pParser = \input -> do
       -- Not all fields have a selection set, but if they have one, it
       -- must contain at least one field. The GraphQL parser returns a

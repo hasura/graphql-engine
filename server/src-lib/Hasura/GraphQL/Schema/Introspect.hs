@@ -236,16 +236,18 @@ typeField =
       return $
         \case SomeType tp ->
                 case tp of
-                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIObject fields'))) ->
+                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo fields' _interfaces')))) ->
                     J.Array $ V.fromList $ fmap (snd nameAndPrinter) fields'
                   _ -> J.Null
     interfaces :: FieldParser n (SomeType -> J.Value)
-    interfaces = P.subselection_ $$(G.litName "interfaces") Nothing typeField $>
-      \case SomeType tp ->
-              case tp of
-                P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIObject _))) ->
-                  J.Array mempty
-                _ -> J.Null
+    interfaces = do
+      printer <- P.subselection_ $$(G.litName "interfaces") Nothing typeField
+      return $
+        \case SomeType tp ->
+                case tp of
+                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo _fields' interfaces')))) ->
+                    J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIInterface) interfaces'
+                  _ -> J.Null
     possibleTypes :: FieldParser n (SomeType -> J.Value)
     possibleTypes = P.subselection_ $$(G.litName "possibleTypes") Nothing typeField $>
       const J.Null -- We don't support any interfaces or union types.

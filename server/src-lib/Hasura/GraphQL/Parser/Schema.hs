@@ -16,11 +16,13 @@ module Hasura.GraphQL.Parser.Schema (
   , eqNonNullableType
   , eqTypeInfo
   , discardNullability
-  , getObjType
 
   , EnumValueInfo(..)
   , InputFieldInfo(..)
   , FieldInfo(..)
+  , ObjectInfo(..)
+  , InterfaceInfo(..)
+  , UnionInfo(..)
 
   -- * Definitions
   , Definition(..)
@@ -307,11 +309,17 @@ instance HasDefinition (NonNullableType k) (TypeInfo k) where
   definitionLens f (TNamed definition) = TNamed <$> f definition
   definitionLens f (TList t)           = TList <$> definitionLens f t
 
+data ObjectInfo = ObjectInfo [Definition FieldInfo] [Definition InterfaceInfo] deriving (Eq)
+data InterfaceInfo = InterfaceInfo [Definition FieldInfo] [Definition InterfaceInfo] [Definition ObjectInfo] deriving (Eq)
+data UnionInfo = UnionInfo [Definition ObjectInfo] deriving (Eq)
+
 data TypeInfo k where
   TIScalar :: TypeInfo 'Both
   TIEnum :: NonEmpty (Definition EnumValueInfo) -> TypeInfo 'Both
   TIInputObject :: [Definition InputFieldInfo] -> TypeInfo 'Input
-  TIObject :: [Definition FieldInfo] -> TypeInfo 'Output
+  TIObject :: ObjectInfo -> TypeInfo 'Output
+  TIInterface :: InterfaceInfo -> TypeInfo 'Output
+  TIUnion :: UnionInfo -> TypeInfo 'Output
 
 instance Eq (TypeInfo k) where
   (==) = eqTypeInfo
@@ -322,11 +330,9 @@ eqTypeInfo TIScalar                TIScalar                = True
 eqTypeInfo (TIEnum values1)        (TIEnum values2)        = values1 == values2
 eqTypeInfo (TIInputObject fields1) (TIInputObject fields2) = fields1 == fields2
 eqTypeInfo (TIObject fields1)      (TIObject fields2)      = fields1 == fields2
+eqTypeInfo (TIInterface fields1)   (TIInterface fields2)   = fields1 == fields2
+eqTypeInfo (TIUnion fields1)       (TIUnion fields2)       = fields1 == fields2
 eqTypeInfo _                       _                       = False
-
-getObjType :: SomeTypeInfo -> Maybe [Definition FieldInfo]
-getObjType (SomeTypeInfo (TIObject obj)) = Just obj
-getObjType _ = Nothing
 
 data SomeTypeInfo = forall k. SomeTypeInfo (TypeInfo k)
 
@@ -496,10 +502,16 @@ instance HasTypeDefinitions (NonNullableType k) where
 
 instance HasTypeDefinitions (TypeInfo k) where
   accumulateTypeDefinitions = \case
-    TIScalar             -> pure ()
-    TIEnum _             -> pure ()
-    TIInputObject fields -> accumulateTypeDefinitions fields
-    TIObject fields      -> accumulateTypeDefinitions fields
+    TIScalar                                              -> pure ()
+    TIEnum _                                              -> pure ()
+    TIInputObject fields                                  -> accumulateTypeDefinitions fields
+    TIObject (ObjectInfo fields interfaces)               ->
+      accumulateTypeDefinitions fields >> accumulateTypeDefinitions interfaces
+    TIInterface (InterfaceInfo fields interfaces objects) ->
+         accumulateTypeDefinitions fields
+      >> accumulateTypeDefinitions interfaces
+      >> accumulateTypeDefinitions objects
+    TIUnion (UnionInfo objects)                           -> accumulateTypeDefinitions objects
 
 instance HasTypeDefinitions (Definition InputFieldInfo) where
   accumulateTypeDefinitions = accumulateTypeDefinitions . dInfo
@@ -516,3 +528,27 @@ instance HasTypeDefinitions FieldInfo where
   accumulateTypeDefinitions (FieldInfo args t) = do
     accumulateTypeDefinitions args
     accumulateTypeDefinitions t
+
+instance HasTypeDefinitions (Definition ObjectInfo) where
+  accumulateTypeDefinitions = accumulateTypeDefinitions . dInfo
+
+instance HasTypeDefinitions ObjectInfo where
+  accumulateTypeDefinitions (ObjectInfo fields interfaces)
+    =  accumulateTypeDefinitions fields
+    >> accumulateTypeDefinitions interfaces
+
+instance HasTypeDefinitions (Definition InterfaceInfo) where
+  accumulateTypeDefinitions = accumulateTypeDefinitions . dInfo
+
+instance HasTypeDefinitions InterfaceInfo where
+  accumulateTypeDefinitions (InterfaceInfo fields interfaces objects)
+    =  accumulateTypeDefinitions fields
+    >> accumulateTypeDefinitions interfaces
+    >> accumulateTypeDefinitions objects
+
+instance HasTypeDefinitions (Definition UnionInfo) where
+  accumulateTypeDefinitions = accumulateTypeDefinitions . dInfo
+
+instance HasTypeDefinitions UnionInfo where
+  accumulateTypeDefinitions (UnionInfo objects)
+    =  accumulateTypeDefinitions objects

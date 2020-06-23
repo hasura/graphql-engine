@@ -163,7 +163,7 @@ queryWithIntrospection allTables allFunctions allRemotes stringifyNum = do
     name = $$(G.litName "query_root")
     description = Nothing
     fakeQueryType = P.Nullable $ P.TNamed $ P.mkDefinition name description $
-        P.TIObject $ map P.fDefinition fakeQueryFP
+        P.TIObject $ P.ObjectInfo (map P.fDefinition fakeQueryFP) []
     collectTypes :: P.Type 'Output -> m (HashMap G.Name (P.Definition P.SomeTypeInfo))
     collectTypes tp = case P.collectTypeDefinitions tp of
       Left (P.ConflictingDefinitions type1 _) -> throw500 $
