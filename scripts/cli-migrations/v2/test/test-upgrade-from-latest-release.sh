@@ -21,6 +21,10 @@ curl -L https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-m
 sed -i '/hasura\/graphql-engine:/ s/$/.cli-migrations-v2\n    container_name: graphql-engine/' docker-compose-latest.yaml
 # start postgres
 docker-compose -f docker-compose-latest.yaml up --no-start graphql-engine
+# copy migrations directory to /hasura-migrations
+docker cp migrations/. graphql-engine:/hasura-migrations
+# copy metadata directory to /hasura-metadata
+docker cp metadata/. graphql-engine:/hasura-metadata
 # start graphql-engine
 docker-compose -f docker-compose-latest.yaml up -d --no-recreate graphql-engine
 wait_for_server
