@@ -417,6 +417,7 @@ instance Eq FieldInfo where
 
 data Variable = Variable
   { vInfo  :: VariableInfo
+  , vType  :: GType
   , vValue :: Value Void
   -- ^ Note: if the variable was null or was not provided and the field has a
   -- non-null default value, this field contains the default value, not 'VNull'.

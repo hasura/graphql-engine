@@ -44,6 +44,7 @@ resolveVariables definitions jsonValues selSet = do
         { vInfo = if G.isNullable _vdType
             then VIOptional _vdName defaultValue
             else VIRequired _vdName
+        , vType = _vdType
         , vValue = value
         }
 
