@@ -20,6 +20,7 @@
 - server: few relay fixes (fix #5020, #5037, #5046) (#5013)
 - server: raise error on startup when `--unauthorized-role` is ignored (#4736)
 - server: fix bug which arises when renaming/dropping a column on a remote relationship (#5005, #5119)
+- server: unlock locked scheduled events on graceful shutdown
 - console: provide option to cascade metadata on dependency conflicts on console (fix #1593)
 - console: fix enum tables reload data button UI (#4647)
 - console: fix "Cannot read property 'foldable'" runtime error in Browse Rows page (fix #4907) (#5016)
