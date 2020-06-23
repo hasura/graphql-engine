@@ -1,6 +1,6 @@
 .. meta::
    :description: Create a scheduled trigger with Hasura
-   :keywords: hasura, docs, event trigger, scheduled trigger, create
+   :keywords: hasura, docs, cron trigger, scheduled trigger, create
 
 .. _scheduled_triggers:
 
@@ -51,9 +51,9 @@ Let's define the cron trigger.
       - **Cron schedule**: Enter a schedule for the cron. You can use the link next to the field to help `build a cron expression <https://crontab.guru/#*_*_*_*_*>`__, or use the ``Frequently used crons`` dropdown as a shortcut. Cron events are created based on the UTC timezone.
       - **Payload**: The JSON payload which will be sent to the webhook.
 
-      .. thumbnail:: /img/graphql/manual/event-triggers/define-cron.png
+      .. thumbnail:: /img/graphql/manual/event-triggers/define-cron-trigger.png
          :alt: Defining a cron trigger
-         :width: 660px
+         :width: 80%
 
       In this example, we're creating a cron trigger called ``eod_reports``, to trigger the webhook ``https://mywebhook.com/eod``. The cron schedule is set to ``0 22 * * 1-5``, which means "At 22:00 on every day-of-week from Monday through Friday" (you can check this `here <https://crontab.guru/#0_22_*_*_1-5>`__).
 
@@ -114,8 +114,8 @@ If you like, you can also define the following values:
       Expand the ``Advanced`` section.
 
       .. thumbnail:: /img/graphql/manual/event-triggers/advanced-cron.png
-         :alt: Defining advanced options
-         :width: 809px
+         :alt: Defining advanced options for a cron trigger
+         :width: 80%
 
    .. tab:: CLI
 
@@ -175,7 +175,7 @@ Schedule & logs
 Once you've created your cron trigger, you can see ``Pending events``, ``Processed events``, and ``Invocation logs`` in their respective tabs.
 
 .. thumbnail:: /img/graphql/manual/event-triggers/pending-cron.png
-   :alt: The tabs
+   :alt: Schedule and logs for cron triggers
 
 One-off scheduled events
 ------------------------
@@ -193,6 +193,7 @@ Step 1: Navigate to One-off Scheduled Events
 
 .. thumbnail:: /img/graphql/manual/event-triggers/one-off.png
    :alt: Adding a one-off scheduled event
+   :width: 80%
 
 Step 2: Define the scheduled event
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -210,9 +211,9 @@ Define the following values for a scheduled event:
 
       In the form opened by the above step, fill out the following fields:
 
-      .. thumbnail:: /img/graphql/manual/event-triggers/define-one-off.png
+      .. thumbnail:: /img/graphql/manual/event-triggers/define-one-off-event.png
          :alt: Defining the scheduled event
-         :width: 662px
+         :width: 80%
 
    .. tab:: API
 
@@ -228,7 +229,7 @@ Define the following values for a scheduled event:
             "type": "create_scheduled_event",
             "args": {
                "webhook": "https://send-email.com",
-               "schedule_at": "2020-06-18T18:45:00Z",
+               "schedule_at": "2022-06-18T18:45:00Z",
                "payload": { "email": "bob@ross.com" }
             }
          }
@@ -250,8 +251,8 @@ If you like, you can also define advanced values:
       Expand the ``Advanced`` section.
 
       .. thumbnail:: /img/graphql/manual/event-triggers/advanced-one-off.png
-         :alt: Defining advanced options
-         :width: 809px
+         :alt: Defining advanced options for a scheduled event
+         :width: 80%
 
    .. tab:: API
 
@@ -267,7 +268,7 @@ If you like, you can also define advanced values:
             "type": "create_scheduled_event",
             "args": {
                "webhook": "https://send-email.com",
-               "schedule_at": "2020-06-18T18:45:00Z",
+               "schedule_at": "2022-06-18T18:45:00Z",
                "payload": {
                      "email": "bob@ross.com"
                },
@@ -293,4 +294,4 @@ Schedule & logs
 Once you've created your scheduled trigger, you can see ``Pending events``, ``Processed events``, and ``Invocation logs`` in their respective tabs.
 
 .. thumbnail:: /img/graphql/manual/event-triggers/pending-one-off.png
-   :alt: The tabs
+   :alt: Schedule and logs for scheduled events
