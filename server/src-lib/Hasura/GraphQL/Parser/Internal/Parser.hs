@@ -517,7 +517,8 @@ selectionSet name description parsers = Parser
       & M.fromList
 
 -- | An "escape hatch" that doesn't validate anything and just gives the
--- requested selection set
+-- requested selection set.  This is unsafe because it does not check the
+-- selection set for validity.
 unsafeRawParser
   :: forall m
    . MonadParse m
