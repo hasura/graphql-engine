@@ -154,7 +154,7 @@ const addExistingFunction = name => {
     );
   };
 };
-const replaceMetadata = (metadata, errorCallback) => {
+const replaceMetadataTrackAllTables = (metadata, errorCallback) => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
     const currentSchema = getState().tables.currentSchema;
@@ -206,7 +206,7 @@ const tryMetadataReplace = (dispatch, tableList, retryFn) => {
         //replace tablelist
         const newMetadata = makeMetadataFromTableList(tableList);
         if (tableList.length > 0 && newMetadata)
-          return dispatch(replaceMetadata(newMetadata, fallBack));
+          return dispatch(replaceMetadataTrackAllTables(newMetadata, fallBack));
       }
       fallBack();
     }, fallBack)

@@ -375,3 +375,47 @@ export const getRemoteRelConfig = (rel, tableName, styles) => {
     </div>
   );
 };
+
+export const hasAnyRelationshipInMetadata = ({ tables = [] }) => {
+  return tables.find(table => {
+    if (!table.table || Object.keys(table).length > 1) return true;
+  });
+};
+
+const findTableIx = (tables, { name, schema }) =>
+  tables.findIndex(
+    tbl => tbl.table.name === name && tbl.table.schema === schema
+  );
+const getRelationKey = type => {
+  if (type === 'create_array_relationship') return 'array_relationships';
+  if (type === 'create_object_relationship') return 'object_relationships';
+};
+
+const getPrevRelationships = (tables, tableIx, relationshipType) => {
+  let result;
+  try {
+    result = tables[tableIx][relationshipType];
+  } catch (e) {
+    result = [];
+  }
+  return result;
+};
+export const makeMetadataWithRltns = (metadata, trackPayload) => {
+  const result = { ...metadata };
+  trackPayload.forEach(({ upQuery = {} }) => {
+    const { name, using, table } = upQuery.args;
+    const tableIx = findTableIx(result.tables, table);
+    if (tableIx >= 0) {
+      // const metaTable = metadata.tables[tableIx];
+      const relationshipType = getRelationKey(upQuery.type);
+      const prevRel =
+        getPrevRelationships(result.tables, tableIx, relationshipType) || []; // possibility of previous iterations
+
+      result.tables[tableIx] = {
+        ...result.tables[tableIx],
+        [relationshipType]: [...prevRel, { name, using }],
+      };
+    }
+  });
+  return result;
+};
