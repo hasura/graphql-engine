@@ -17,6 +17,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add `--options` command-line flag for passing parameters to PostgreSQL (close #5092)
 - server: few relay fixes (fix #5020, #5037, #5046) (#5013)
 - server: raise error on startup when `--unauthorized-role` is ignored (#4736)
 - server: fix bug which arises when renaming/dropping a column on a remote relationship (#5005, #5119)
@@ -27,6 +28,7 @@
 - console: allow configuring session_argument for custom functions (close #4499) (#4922)
 - console: fix listen update column config selection for event trigger (close #5042) (#5043)
 - cli: add new flags up-sql and down-sql to generate sql based migrations from the CLI (#5026)
+- docs: add instructions on fixing loss of data when using floats (close #5092)
 - docs: add page on setting up v2 migrations (close #4746) (#4898)
 
 ## `v1.3.0-beta.1`
