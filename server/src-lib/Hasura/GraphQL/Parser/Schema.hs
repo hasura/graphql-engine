@@ -320,9 +320,9 @@ instance HasDefinition (NonNullableType k) (TypeInfo k) where
   definitionLens f (TNamed definition) = TNamed <$> f definition
   definitionLens f (TList t)           = TList <$> definitionLens f t
 
-data ObjectInfo = ObjectInfo [Definition FieldInfo] [Definition InterfaceInfo] deriving (Eq)
-data InterfaceInfo = InterfaceInfo [Definition FieldInfo] [Definition InterfaceInfo] [Definition ObjectInfo] deriving (Eq)
-data UnionInfo = UnionInfo [Definition ObjectInfo] deriving (Eq)
+data ObjectInfo = ObjectInfo [Definition FieldInfo] [Definition InterfaceInfo]
+data InterfaceInfo = InterfaceInfo [Definition FieldInfo] [Definition InterfaceInfo] [Definition ObjectInfo]
+data UnionInfo = UnionInfo [Definition ObjectInfo]
 
 data TypeInfo k where
   TIScalar :: TypeInfo 'Both
@@ -340,9 +340,19 @@ eqTypeInfo :: TypeInfo k1 -> TypeInfo k2 -> Bool
 eqTypeInfo TIScalar                TIScalar                = True
 eqTypeInfo (TIEnum values1)        (TIEnum values2)        = values1 == values2
 eqTypeInfo (TIInputObject fields1) (TIInputObject fields2) = fields1 == fields2
-eqTypeInfo (TIObject fields1)      (TIObject fields2)      = fields1 == fields2
-eqTypeInfo (TIInterface fields1)   (TIInterface fields2)   = fields1 == fields2
-eqTypeInfo (TIUnion fields1)       (TIUnion fields2)       = fields1 == fields2
+-- Note that we can't check for equality of the fields and the interfaces since
+-- there may be circularity. So we rather check for equality of names.
+eqTypeInfo (TIObject (ObjectInfo fields1 interfaces1)) (TIObject (ObjectInfo fields2 interfaces2))
+  =  fmap dName fields1     == fmap dName fields2
+  && fmap dName interfaces1 == fmap dName interfaces2
+eqTypeInfo
+  (TIInterface (InterfaceInfo fields1 interfaces1 objects1))
+  (TIInterface (InterfaceInfo fields2 interfaces2 objects2))
+  =  fmap dName fields1     == fmap dName fields2
+  && fmap dName interfaces1 == fmap dName interfaces2
+  && fmap dName objects1    == fmap dName objects2
+eqTypeInfo (TIUnion (UnionInfo objects1))       (TIUnion (UnionInfo objects2))
+  =  fmap dName objects1     == fmap dName objects2
 eqTypeInfo _                       _                       = False
 
 data SomeTypeInfo = forall k. SomeTypeInfo (TypeInfo k)
@@ -542,25 +552,10 @@ instance HasTypeDefinitions FieldInfo where
     accumulateTypeDefinitions t
 
 instance HasTypeDefinitions (Definition ObjectInfo) where
-  accumulateTypeDefinitions = accumulateTypeDefinitions . dInfo
-
-instance HasTypeDefinitions ObjectInfo where
-  accumulateTypeDefinitions (ObjectInfo fields interfaces)
-    =  accumulateTypeDefinitions fields
-    >> accumulateTypeDefinitions interfaces
+  accumulateTypeDefinitions = accumulateTypeDefinitions . fmap TIObject
 
 instance HasTypeDefinitions (Definition InterfaceInfo) where
-  accumulateTypeDefinitions = accumulateTypeDefinitions . dInfo
-
-instance HasTypeDefinitions InterfaceInfo where
-  accumulateTypeDefinitions (InterfaceInfo fields interfaces objects)
-    =  accumulateTypeDefinitions fields
-    >> accumulateTypeDefinitions interfaces
-    >> accumulateTypeDefinitions objects
+  accumulateTypeDefinitions = accumulateTypeDefinitions . fmap TIInterface
 
 instance HasTypeDefinitions (Definition UnionInfo) where
-  accumulateTypeDefinitions = accumulateTypeDefinitions . dInfo
-
-instance HasTypeDefinitions UnionInfo where
-  accumulateTypeDefinitions (UnionInfo objects)
-    =  accumulateTypeDefinitions objects
+  accumulateTypeDefinitions = accumulateTypeDefinitions . fmap TIUnion

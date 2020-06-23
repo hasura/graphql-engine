@@ -145,6 +145,44 @@ subscription
 subscription allTables allFunctions stringifyNum =
   query $$(G.litName "subscription_root") allTables allFunctions [] stringifyNum
 
+
+queryRootFromFields
+  :: forall n
+   . MonadParse n
+  => [P.FieldParser n (QueryRootField UnpreparedValue)]
+  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+queryRootFromFields fps =
+      P.selectionSet $$(G.litName "query_root") Nothing fps
+  <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+
+emptyIntrospection
+  :: forall m n
+   . (MonadSchema n m, MonadError QErr m)
+  => m [P.FieldParser n (QueryRootField UnpreparedValue)]
+emptyIntrospection = do
+  let emptyQueryP = queryRootFromFields @n []
+  introspectionTypes <- collectTypes (P.pType emptyQueryP)
+  let introspectionSchema = Schema
+        { sDescription = Nothing
+        , sTypes = mempty
+        , sQueryType = P.pType (emptyQueryP)
+        , sMutationType = Nothing
+        , sSubscriptionType = Nothing
+        , sDirectives = mempty
+        }
+  return $ fmap (fmap RFRaw) [schema introspectionSchema, typeIntrospection introspectionSchema]
+
+collectTypes
+  :: forall m
+   . MonadError QErr m
+  => P.Type 'Output
+  -> m (HashMap G.Name (P.Definition P.SomeTypeInfo))
+collectTypes tp = case P.collectTypeDefinitions tp of
+  Left (P.ConflictingDefinitions type1 _) -> throw500 $
+    "found conflicting definitions for " <> P.getName type1
+    <<> " when collecting types from the schema"
+  Right tps -> pure tps
+
 -- | Prepare the parser for query-type GraphQL requests, but with introspection
 -- for queries, mutations and subscriptions (TODO) built in.
 queryWithIntrospection
@@ -156,36 +194,34 @@ queryWithIntrospection
   -> Bool
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryWithIntrospection allTables allFunctions allRemotes stringifyNum = do
-  fakeQueryFP <- query' allTables allFunctions allRemotes stringifyNum
+  basicQueryFP <- query' allTables allFunctions allRemotes stringifyNum
   mutationP <- mutation allTables stringifyNum
   subscriptionP <- subscription allTables allFunctions stringifyNum
   let
-    name = $$(G.litName "query_root")
-    description = Nothing
-    fakeQueryType = P.Nullable $ P.TNamed $ P.mkDefinition name description $
-        P.TIObject $ P.ObjectInfo (map P.fDefinition fakeQueryFP) []
-    collectTypes :: P.Type 'Output -> m (HashMap G.Name (P.Definition P.SomeTypeInfo))
-    collectTypes tp = case P.collectTypeDefinitions tp of
-      Left (P.ConflictingDefinitions type1 _) -> throw500 $
-        "found conflicting definitions for " <> P.getName type1
-        <<> " when collecting types from the schema"
-      Right tps -> pure tps
-  allQueryTypes <- collectTypes fakeQueryType
+    basicQueryP = queryRootFromFields basicQueryFP
+  allQueryTypes <- collectTypes (P.pType basicQueryP)
   allMutationTypes <- collectTypes (P.pType mutationP)
   allSubscriptionTypes <- collectTypes (P.pType subscriptionP)
-  let allTypes = Map.unions [allQueryTypes, allMutationTypes, allSubscriptionTypes]
-      fakeSchema = Schema
+  emptyIntro <- emptyIntrospection
+  allIntrospectionTypes <- collectTypes (P.pType (queryRootFromFields emptyIntro))
+  let allTypes = Map.unions
+        [ allQueryTypes
+        , allMutationTypes
+        , allSubscriptionTypes
+        , Map.filterWithKey (\name _info -> name /= $$(G.litName "query_root")) allIntrospectionTypes
+        ]
+      partialSchema = Schema
         { sDescription = Nothing
         , sTypes = allTypes
-        , sQueryType = fakeQueryType
+        , sQueryType = P.pType basicQueryP
         , sMutationType = Just $ P.pType mutationP
         -- TODO make sure NOT to expose remote schemata via subscription introspection (when remote schemata are implemented)
         , sSubscriptionType = Just $ P.pType subscriptionP
         , sDirectives = []
         }
-  let realQueryFields =
-        fakeQueryFP ++ (fmap RFRaw <$> [schema fakeSchema, typeIntrospection fakeSchema])
-  pure $ P.selectionSet name Nothing realQueryFields
+  let partialQueryFields =
+        basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
+  pure $ P.selectionSet $$(G.litName "query_root") Nothing partialQueryFields
     <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 
 mutation
