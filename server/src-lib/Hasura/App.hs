@@ -444,25 +444,22 @@ runHGEServer ServeOptions{..} InitCtx{..} pgExecCtx initTime = do
     runTx pool txLevel tx =
       liftIO $ runExceptT $ Q.runTx pool txLevel tx
 
-    -- | Catches the SIGTERM signal and initiates a graceful shutdown. Graceful shutdown for regular HTTP
-    -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
-    -- We only catch the SIGTERM signal once, that is, if we catch another SIGTERM signal then the process
-    -- is terminated immediately.
-    -- If the user hits CTRL-C (SIGINT), then the process is terminated immediately
-    shutdownHandler :: Loggers
-                    -> IO ()
-                    -> EventEngineCtx
-                    -> LockedScheduledEventsCtx
-                    -> Q.PGPool
-                    -> IO ()
-                    -> IO ()
+    -- | Waits for the shutdown latch 'MVar' to be filled, and then
+    -- shuts down the server and associated resources.
+    -- Structuring things this way lets us decide elsewhere exactly how
+    -- we want to control shutdown.
+    shutdownHandler
+      :: Loggers
+      -> IO ()
+      -> EventEngineCtx
+      -> LockedScheduledEventsCtx
+      -> Q.PGPool
+      -> IO ()
+      -> IO ()
     shutdownHandler (Loggers loggerCtx (Logger logger) _) shutdownApp eeCtx lseCtx pool closeSocket =
-      void $ Signals.installHandler
-        Signals.sigTERM
-        (Signals.CatchOnce shutdownSequence)
-        Nothing
-     where
-      shutdownSequence = do
+      void . Async.async $ do
+        waitForShutdown _icShutdownLatch
+        logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
         shutdownEvents pool (Logger logger) eeCtx
         shutdownScheduledEvents pool (Logger logger) lseCtx
         closeSocket

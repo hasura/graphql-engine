@@ -390,14 +390,14 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
       liftIO $ atomically $ do
         lockedEvents <- readTVar lockedCronEvents
         let ids = map cepId partialCronEvents
-        writeTVar lockedCronEvents $
+        writeTVar lockedCronEvents $!
           Set.union lockedEvents $ Set.fromList ids
 
     removeEventFromLockedEvents :: CronEventId -> IO ()
     removeEventFromLockedEvents eventId =
       liftIO $ atomically $ do
         lockedEvents <- readTVar lockedCronEvents
-        writeTVar lockedCronEvents $ Set.delete eventId lockedEvents
+        writeTVar lockedCronEvents $! Set.delete eventId lockedEvents
 
 processStandAloneEvents
   :: HasVersion
@@ -464,14 +464,14 @@ processStandAloneEvents logger logEnv httpMgr pgpool lockedStandAloneEvents = do
       liftIO $ atomically $ do
         lockedEvents <- readTVar lockedStandAloneEvents
         let ids = map saseId standAloneEvents
-        writeTVar lockedStandAloneEvents $
+        writeTVar lockedStandAloneEvents $!
           Set.union lockedEvents $ Set.fromList ids
 
     removeEventFromLockedEvents :: ScheduledEventId -> IO ()
     removeEventFromLockedEvents eventId =
       liftIO $ atomically $ do
         lockedEvents <- readTVar lockedStandAloneEvents
-        writeTVar lockedStandAloneEvents $ Set.delete eventId lockedEvents
+        writeTVar lockedStandAloneEvents $! Set.delete eventId lockedEvents
 
 processScheduledTriggers
   :: HasVersion
