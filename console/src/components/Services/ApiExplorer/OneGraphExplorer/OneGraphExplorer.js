@@ -109,7 +109,7 @@ class OneGraphExplorer extends React.Component {
           const errorMessage = result.errors[0].message;
           dispatch(
             showErrorNotification(
-              'Introspection schema query failed',
+              'Schema introspection query failed',
               errorMessage
             )
           );
