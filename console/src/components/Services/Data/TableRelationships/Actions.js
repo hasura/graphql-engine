@@ -741,10 +741,8 @@ const tryMetaDataReplace = (dispatch, trackPayload, retry, consts) => {
   const fallback = () => dispatch(retry(trackPayload, true));
   dispatch(
     exportMetadata(metadata => {
-      console.log({metadata})
       if (hasAnyRelationshipInMetadata(metadata)) return fallback();
-      const newMetaData = makeMetadataWithRltns(metadata, trackPayload);
-      console.log({newMetaData,metadata})
+      const newMetaData = makeMetadataWithRltns({...metadata}, trackPayload);
       return dispatch(
         replaceMetadataTrackAllRelationships(
           newMetaData,

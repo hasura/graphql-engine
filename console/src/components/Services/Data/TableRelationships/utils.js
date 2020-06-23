@@ -401,15 +401,15 @@ const getPrevRelationships = (tables, tableIx, relationshipType) => {
   return result;
 };
 export const makeMetadataWithRltns = (metadata, trackPayload) => {
-  const result = { ...metadata };
+  const result = { ...metadata, tables: [...metadata.tables] };
   trackPayload.forEach(({ upQuery = {} }) => {
     const { name, using, table } = upQuery.args;
     const tableIx = findTableIx(result.tables, table);
     if (tableIx >= 0) {
-      // const metaTable = metadata.tables[tableIx];
       const relationshipType = getRelationKey(upQuery.type);
       const prevRel =
-        getPrevRelationships(result.tables, tableIx, relationshipType) || []; // possibility of previous iterations
+        getPrevRelationships([...result.tables], tableIx, relationshipType) ||
+        []; // possibility of previous iterations
 
       result.tables[tableIx] = {
         ...result.tables[tableIx],
