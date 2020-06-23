@@ -196,14 +196,6 @@ Date:   Tue Jun 23 20:51:34 2020 +0530
 
     Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
 
-commit ea2357104977065ae889014a6c09bb58d9fbbe0b
-Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
-Date:   Tue Jun 23 15:35:54 2020 +0530
-
-    fix introspection faling when multiple actions defined with PG scalar types (fix #5166) (#5173)
-
-    Introspection query is failing with `type info not found for xxxx` error message if multiple actions are defined with reused PG scalars. The fix for the same.
-
 commit f8a7312a304e40c1ff632b42f24ab9bd42811d63
 Author: nizar-m <19857260+nizar-m@users.noreply.github.com>
 Date:   Fri Jun 19 22:40:17 2020 +0530
