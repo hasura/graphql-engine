@@ -17,6 +17,7 @@ import { getHeadersAsJSON } from '../utils';
 
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
+import { showErrorNotification } from '../../Common/Notification';
 
 class OneGraphExplorer extends React.Component {
   state = {
@@ -104,6 +105,20 @@ class OneGraphExplorer extends React.Component {
     })
       .then(response => response.json())
       .then(result => {
+        if (result.errors && result.errors.length > 0) {
+          const errorMessage = result.errors[0].message;
+          dispatch(
+            showErrorNotification(
+              'Introspection schema query failed',
+              errorMessage
+            )
+          );
+          this.setState({
+            schema: null,
+            previousIntrospectionHeaders: headers,
+          });
+          return;
+        }
         this.setState({
           schema: buildClientSchema(result.data),
           previousIntrospectionHeaders: headers,
