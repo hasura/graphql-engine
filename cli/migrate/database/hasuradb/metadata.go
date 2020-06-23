@@ -153,7 +153,7 @@ func (h *HasuraDB) BuildMetadata() (yaml.MapSlice, error) {
 		err := plg.Build(&tmpMeta)
 		if err != nil {
 			if os.IsNotExist(errors.Cause(err)) {
-				h.logger.Debugf("metadata file for %s was not found, assuming an empty files", plg.Name())
+				h.logger.Debugf("metadata file for %s was not found, assuming an empty file", plg.Name())
 				continue
 			}
 			return tmpMeta, errors.Wrap(err, fmt.Sprintf("cannot build %s from metadata", plg.Name()))
