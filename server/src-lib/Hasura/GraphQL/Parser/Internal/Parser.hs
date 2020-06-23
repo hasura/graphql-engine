@@ -443,10 +443,7 @@ fieldWithDefault name description defaultValue parser = InputFieldsParser
         -- “derived variable reference” that includes a new default value. But
         -- that would be more complicated, so for now we don’t do that.
         case vInfo of
-          -- FIXME: this cannot work, this is an infinite recursion I
-          -- don't know why this hasn't broken before, or why it is
-          -- that way.
-          VIRequired _   -> parseValue value
+          VIRequired _   -> parseValue $ literal vValue
           VIOptional _ _ -> markNotReusable *> parseValue (literal vValue)
       VNull -> pInputParser parser $ literal defaultValue
       other -> pInputParser parser other
