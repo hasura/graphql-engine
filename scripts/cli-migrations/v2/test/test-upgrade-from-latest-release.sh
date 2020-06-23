@@ -17,7 +17,7 @@ wait_for_server() {
 
 # get previous stable version docker-compose file
 curl -L https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml -o docker-compose-latest.yaml
-sed -i '/hasura\/graphql-engine:/ s/$/.cli-migrations-v2/' docker-compose-latest.yaml
+sed -i '/hasura\/graphql-engine:/ s/$/.cli-migrations-v2\n    container_name: graphql-engine/' docker-compose-latest.yaml
 # start postgres
 docker-compose -f docker-compose-latest.yaml up --no-start graphql-engine
 # copy migrations directory to /hasura-migrations
