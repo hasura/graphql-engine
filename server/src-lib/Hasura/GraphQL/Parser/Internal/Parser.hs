@@ -229,8 +229,8 @@ scalar
   -> ScalarRepresentation a
   -> Parser 'Both m a
 scalar name description representation = Parser
-  { pType = NonNullable $ TNamed $ mkDefinition name description TIScalar
-  , pParser = peelVariable >=> \v -> case representation of
+  { pType = schemaType
+  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \v -> case representation of
       SRBoolean -> case v of
         VBoolean a -> pure a
         _          -> typeMismatch name "a boolean" v
@@ -245,6 +245,8 @@ scalar name description representation = Parser
         VString _ a -> pure a
         _           -> typeMismatch name "a string" v
   }
+  where
+    schemaType = NonNullable $ TNamed $ mkDefinition name description TIScalar
 
 boolean :: MonadParse m => Parser 'Both m Bool
 boolean = scalar $$(litName "Boolean") Nothing SRBoolean
@@ -271,8 +273,8 @@ enum
   -> NonEmpty (Definition EnumValueInfo, a)
   -> Parser 'Both m a
 enum name description values = Parser
-  { pType = NonNullable $ TNamed $ mkDefinition name description $ TIEnum (fst <$> values)
-  , pParser = peelVariable >=> \value -> case value of
+  { pType = schemaType
+  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \value -> case value of
       VString origin stringValue -> case (origin, mkName stringValue) of
         (ExternalValue, Just enumValue) -> validate enumValue
         _ -> typeMismatch name "an enum value" value
@@ -280,6 +282,7 @@ enum name description values = Parser
       _ -> typeMismatch name "an enum value" value
   }
   where
+    schemaType = NonNullable $ TNamed $ mkDefinition name description $ TIEnum (fst <$> values)
     valuesMap = M.fromList $ over (traverse._1) dName $ toList values
     validate value = case M.lookup value valuesMap of
       Just result -> pure result
@@ -289,13 +292,15 @@ enum name description values = Parser
 
 nullable :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m (Maybe a)
 nullable parser = gcastWith (inputParserInput @k) Parser
-  { pType = case pType parser of
-      NonNullable t -> Nullable t
-      Nullable t    -> Nullable t
-  , pParser = peelVariable >=> \case
+  { pType = schemaType
+  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
       VNull -> pure Nothing
       other -> Just <$> pParser parser other
   }
+  where
+    schemaType = case pType parser of
+      NonNullable t -> Nullable t
+      Nullable t    -> Nullable t
 
 -- | Decorate a type as NON_NULL
 nonNullableType :: forall k . Type k -> Type k
@@ -335,8 +340,8 @@ nonNullableParser parser = parser { pType = nonNullableType (pType parser) }
 
 list :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m [a]
 list parser = gcastWith (inputParserInput @k) Parser
-  { pType = NonNullable $ TList $ pType parser
-  , pParser = peelVariable >=> \case
+  { pType = schemaType
+  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
       VList values -> for (zip [0..] values) \(index, value) ->
         withPath (Index index :) $ pParser parser value
       -- List Input Coercion
@@ -353,6 +358,8 @@ list parser = gcastWith (inputParserInput @k) Parser
       VNull -> parseError "expected a list, but found null"
       other -> fmap pure $ withPath (Index 0 :) $ pParser parser other
   }
+  where
+    schemaType = NonNullable $ TList $ pType parser
 
 object
   :: MonadParse m
@@ -361,9 +368,8 @@ object
   -> InputFieldsParser m a
   -> Parser 'Input m a
 object name description parser = Parser
-  { pType = NonNullable $ TNamed $ mkDefinition name description $
-      TIInputObject (ifDefinitions parser)
-  , pParser = peelVariable >=> \case
+  { pType = schemaType
+  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
       VObject fields -> do
         -- check for extraneous fields here, since the InputFieldsParser just
         -- handles parsing the fields it cares about
@@ -374,6 +380,8 @@ object name description parser = Parser
       other -> typeMismatch name "an object" other
   }
   where
+    schemaType = NonNullable $ TNamed $ mkDefinition name description $
+                 TIInputObject (ifDefinitions parser)
     fieldNames = S.fromList (dName <$> ifDefinitions parser)
 
 field
@@ -405,12 +413,15 @@ fieldWithDefault name description defaultValue parser = InputFieldsParser
   { ifDefinitions = [mkDefinition name description $
       IFOptional (discardNullability $ pType parser) (Just defaultValue)]
   , ifParser = M.lookup name >>> withPath (Key (unName name) :) . \case
-      Just value -> parseValue value
+      Just value -> parseValue (toGraphQLType $ pType parser) value
       Nothing    -> pInputParser parser $ literal defaultValue
+      -- FIXME: we use the literal without checking that its value can
+      -- in theory be assigned to the declared type
   }
   where
-    parseValue = \value -> case value of
-      VVariable (Variable { vInfo, vValue }) ->
+    parseValue expectedType value = case value of
+      VVariable (var@Variable { vInfo, vValue }) -> do
+        typeCheck expectedType var
         -- This case is tricky: if we get a nullable variable, we have to
         -- pessimistically mark the query non-reusable, regardless of its
         -- contents. Why? Well, suppose we have a type like
@@ -443,8 +454,8 @@ fieldWithDefault name description defaultValue parser = InputFieldsParser
         -- “derived variable reference” that includes a new default value. But
         -- that would be more complicated, so for now we don’t do that.
         case vInfo of
-          VIRequired _   -> parseValue $ literal vValue
-          VIOptional _ _ -> markNotReusable *> parseValue (literal vValue)
+          VIRequired _   -> parseValue expectedType (literal vValue)
+          VIOptional _ _ -> markNotReusable *> parseValue expectedType (literal vValue)
       VNull -> pInputParser parser $ literal defaultValue
       other -> pInputParser parser other
 
@@ -607,7 +618,7 @@ subselection_ name description bodyParser =
 -- helpers
 
 graphQLToJSON :: MonadParse m => Value Variable -> m A.Value
-graphQLToJSON = peelVariable >=> \case
+graphQLToJSON = peelVariable Nothing >=> \case
   VNull               -> pure A.Null
   VInt i              -> pure $ A.toJSON i
   VFloat f            -> pure $ A.toJSON f
@@ -619,9 +630,18 @@ graphQLToJSON = peelVariable >=> \case
   -- this should not be possible, as we peel any variable first
   VVariable _         -> error "FIMXE: this should be a 500 with a descriptive message"
 
-peelVariable :: MonadParse m => Value Variable -> m (Value Variable)
-peelVariable (VVariable (Variable { vValue })) = markNotReusable $> literal vValue
-peelVariable value                             = pure value
+peelVariable :: MonadParse m => Maybe GType -> Value Variable -> m (Value Variable)
+peelVariable expected (VVariable (var@Variable { vValue })) = do
+  onJust expected \locationType -> typeCheck locationType var
+  pure $ literal vValue
+peelVariable _ value = pure value
+
+typeCheck :: MonadParse m => GType -> Variable -> m ()
+typeCheck expectedType (Variable { vInfo, vType }) =
+  unless (True {-expectedType `accepts` vType -}) $ parseError
+    $ "variable " <> unName (getName vInfo) <> " of type "
+    <> showGT vType <> " is used in position expecting "
+    <> showGT expectedType
 
 typeMismatch :: MonadParse m => Name -> Text -> Value Variable -> m a
 typeMismatch name expected given = parseError $
@@ -641,3 +661,16 @@ describeValueWith describeVariable = \case
   VEnum _ -> "an enum value"
   VList _ -> "a list"
   VObject _ -> "an object"
+
+-- | Checks whether the type of a variable is compatible with the type
+--   at the location at which it is used.
+accepts :: GType -> GType -> Bool
+expected `accepts` actual = case (expected, actual) of
+  (TypeNamed expectedNullability expectedType, TypeNamed actualNullability actualType)
+    -> checkNullability expectedNullability actualNullability && (expectedType == actualType)
+  (TypeList expectedNullability expectedType, TypeList actualNullability actualType)
+    -> checkNullability expectedNullability actualNullability && (expectedType `accepts` actualType)
+  _ -> False
+  where
+    checkNullability (Nullability expectedNullability) (Nullability actualNullability) =
+      expectedNullability || not actualNullability

@@ -135,10 +135,11 @@ column columnType (Nullability isNullable) =
     -- itself and re-parsing each new value, using the saved parser, which
     -- would admittedly be neat. But it’s more complicated, and it isn’t clear
     -- that it would actually be useful, so for now we don’t support it.
-    opaque :: Functor m => Parser 'Both m a -> Parser 'Both m (Opaque a)
+    opaque :: MonadParse m => Parser 'Both m a -> Parser 'Both m (Opaque a)
     opaque parser = parser
       { pParser = \case
-          VVariable Variable{ vInfo, vValue } ->
+          VVariable (var@Variable{ vInfo, vValue }) -> do
+            typeCheck (toGraphQLType $ pType parser) var
             Opaque (Just vInfo) <$> pParser parser (literal vValue)
           value -> Opaque Nothing <$> pParser parser value
       }
