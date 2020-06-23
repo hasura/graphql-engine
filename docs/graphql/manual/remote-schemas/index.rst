@@ -12,6 +12,9 @@ Remote Schemas
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Hasura gives you CRUD + realtime GraphQL APIs with authorization & access control. However, in many cases, you will
 need to write APIs (queries, mutations) that contain custom logic. For example, implementing a payment API, or
 querying data that is not in your database.
@@ -28,7 +31,8 @@ This is what Hasura running with "Remote schemas" looks like:
    :width: 55%
    :alt: Architecture of Hasura with remote schemas
 
-Use cases:
+Use cases
+---------
 
 - Custom business logic, like a payment API
 - Querying data that is not available in your database

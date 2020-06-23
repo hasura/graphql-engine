@@ -12,6 +12,9 @@ Authorization in your remote schema server
   :depth: 2
   :local:
 
+Introduction
+------------
+
 Hasura will forward the resolved ``x-hasura-*`` values as headers to your remote
 schema. You can use this information to apply authorization rules in your
 server. You don't have to redo authentication in your remote schema server.

@@ -4,20 +4,23 @@
 
 .. _add_action_relationship:
 
-Action relationships
-====================
-
-:ref:`Actions <actions>` are a way to extend Hasura’s schema with custom business logic using custom queries and mutations. They can be used to call a REST endpoint from Hasura as a resolver for custom types. They are especially useful for setting up serverless functions as resolvers.
-
-After you :ref:`create <create_actions>` or :ref:`derive <derive_actions>` an action, you can create relationships for it.
+Creating action relationships
+=============================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
+Introduction
+------------
+
+:ref:`Actions <actions>` are a way to extend Hasura’s schema with custom business logic using custom queries and mutations. They can be used to call a REST endpoint from Hasura as a resolver for custom types. They are especially useful for setting up serverless functions as resolvers.
+
+After you :ref:`create <create_actions>` or :ref:`derive <derive_actions>` an action, you can create relationships for it.
+
 Step 1. Open the action relationship section
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------------------
 
 - From your action, go to the ``Relationships`` tab.
 - Click ``Add a relationship``.
@@ -29,7 +32,7 @@ Step 1. Open the action relationship section
 In this example, we're creating a relationship for the ``createUser`` action.
 
 Step 2. Define the relationship
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
 In the section opened by the above step, fill out the following fields:
 
@@ -51,7 +54,7 @@ In the section opened by the above step, fill out the following fields:
 In this example, we're creating a relationship called ``user``, from the ``id`` field returned in the action response, to the ``id`` column of the ``users`` table.
 
 Step 3. Explore with GraphiQL
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
 In the GraphiQL tab, test out your action relationship.
 

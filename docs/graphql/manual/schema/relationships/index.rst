@@ -90,6 +90,6 @@ Remote joins
   create
   rename
   Database modelling <database-modelling/index>
-  remote
-  action
+  remote-relationships
+  action-relationships
   architecture

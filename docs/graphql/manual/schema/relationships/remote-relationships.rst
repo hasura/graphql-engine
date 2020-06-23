@@ -4,31 +4,31 @@
 
 .. _add_remote_relationship:
 
-Remote relationships
-====================
-
-Remote joins extend the concept of joining data across tables, to joining across tables *and* remote data sources. Once you create relationships between types from your database and types created from APIs, you can then "join" them by running GraphQL queries.
-
-These APIs can be custom GraphQL servers you write, 3rd party SaaS APIs, or even other Hasura instances.
-
-Because Hasura is meant to be a GraphQL server that you can expose directly to your apps, Hasura also handles security and authorization while providing remote joins.
-
-.. note::
-  For more use cases, check out this `blog post <https://hasura.io/blog/remote-joins-a-graphql-api-to-join-database-and-other-data-sources/>`__.
-
-
-Adding a remote relationship
-----------------------------
-
-After you :ref:`add a remote schema <adding_schema>`, you can create relationships from your tables to the remote schema.
+Creating remote relationships
+=============================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
+Introduction
+------------
+
+Remote relationships extend the concept of joining data across tables, to joining across tables *and* remote data sources. Once you create relationships between types from your database and types created from APIs, you can then "join" them by running GraphQL queries.
+
+These APIs can be custom GraphQL servers you write, 3rd party SaaS APIs, or even other Hasura instances.
+
+Because Hasura is meant to be a GraphQL server that you can expose directly to your apps, Hasura also handles security and authorization while providing remote joins.
+
+After you :ref:`add a remote schema <adding_schema>`, you can create relationships from your tables to the remote schema.
+
+.. note::
+  To see example use cases, check out this `blog post <https://hasura.io/blog/remote-joins-a-graphql-api-to-join-database-and-other-data-sources/>`__.
+
+
 Step 1. Open the remote relationship section
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------------------
 
 - From your table, go to the ``Relationships`` tab.
 - Click the ``Add a remote relationship`` button.
@@ -37,7 +37,7 @@ Step 1. Open the remote relationship section
    :alt: Opening the remote relationship section
 
 Step 2. Define the relationship
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
 In the section opened by the above step, fill out the following fields:
 
@@ -61,7 +61,7 @@ In this example, we've added a remote schema which is a wrapper around `Auth0 <h
 
 
 Step 3. Explore with GraphiQL
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
 In the GraphiQL tab, test out your remote relationship.
 
