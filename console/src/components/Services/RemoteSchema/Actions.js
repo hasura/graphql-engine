@@ -12,7 +12,7 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import { handleMigrationErrors } from '../../../utils/migration';
 
 import { showSuccessNotification } from '../Common/Notification';
-import { filterInconsistentMetadataObjects } from '../Settings/utils';
+// import { filterInconsistentMetadataObjects } from '../Settings/utils';
 
 /* Action constants */
 
@@ -51,19 +51,19 @@ const fetchRemoteSchemas = () => {
     dispatch({ type: FETCH_REMOTE_SCHEMAS });
     return dispatch(requestAction(url, options)).then(
       data => {
-        let consistentRemoteSchemas = data;
-        const { inconsistentObjects } = getState().metadata;
+        const consistentRemoteSchemas = data;
+        // const { inconsistentObjects } = getState().metadata;
 
-        if (inconsistentObjects.length > 0) {
-          // TODO: no more filtering. Show an icon next to those
-          // Check what this method is doing and based on that render
-          // the appropriate remote schemas
-          consistentRemoteSchemas = filterInconsistentMetadataObjects(
-            data,
-            inconsistentObjects,
-            'remote_schemas'
-          );
-        }
+        // if (inconsistentObjects.length > 0) {
+        //   // TODO: no more filtering. Show an icon next to those
+        //   // Check what this method is doing and based on that render
+        //   // the appropriate remote schemas
+        //   consistentRemoteSchemas = filterInconsistentMetadataObjects(
+        //     data,
+        //     inconsistentObjects,
+        //     'remote_schemas'
+        //   );
+        // }
 
         dispatch({
           type: REMOTE_SCHEMAS_FETCH_SUCCESS,
