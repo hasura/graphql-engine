@@ -31,7 +31,7 @@ Because Hasura is meant to be a GraphQL server that you can expose directly to y
 
 .. .. admonition:: Supported from
   
-..   Remote relationships are supported from versions ``v.1.3.0`` and above.
+..   Remote relationships are supported in versions ``v.1.3.0`` and above.
 
 Step 1: Add a remote schema
 ---------------------------
@@ -88,7 +88,7 @@ For this example, we assume that our schema has a ``users`` table with the field
                     id: $auth0_id
               hasura_fields:
               - auth0_id
-              remote_schema: pokemon
+              remote_schema: auth0
             name: auth0
 
     Apply the metadata by running:
