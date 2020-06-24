@@ -13,7 +13,7 @@ const StatementTimeout = ({
       <label>
         Statement timeout (seconds)
         <ToolTip
-          message={'Abort requests that take longer than the specified time'}
+          message={'Abort statements that take longer than the specified time on Postgres'}
         />
         <input
           disabled={isMigrationChecked}
