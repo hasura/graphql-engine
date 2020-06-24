@@ -242,7 +242,6 @@ func (h HasuraError) Error() string {
 	}
 	var internalError SQLInternalError
 	var internalErrors []SQLInternalError
-	fmt.Printf("%T\n", h.Internal)
 	if v, ok := h.Internal.(map[string]interface{}); ok {
 		err := mapstructure.Decode(v, &internalError)
 		if err == nil {
