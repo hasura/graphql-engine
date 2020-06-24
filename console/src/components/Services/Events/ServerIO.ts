@@ -1,4 +1,4 @@
-import { push } from 'react-router-redux';
+import { push, replace } from 'react-router-redux';
 import {
   fetchEventTriggersQuery,
   fetchScheduledTriggersQuery,
@@ -35,8 +35,14 @@ import {
   EventTrigger,
   EventKind,
   InvocationLog,
+  LOADING_TRIGGERS,
 } from './types';
-import { setScheduledTriggers, setEventTriggers, setTriggers } from './reducer';
+import {
+  setScheduledTriggers,
+  setEventTriggers,
+  setTriggers,
+  setCurrentTrigger,
+} from './reducer';
 import { LocalScheduledTriggerState } from './CronTriggers/state';
 import { LocalAdhocEventState } from './AdhocEvents/Add/state';
 import {
@@ -60,6 +66,8 @@ import Migration from '../../../utils/migration/Migration';
 export const fetchTriggers = (
   kind: Nullable<TriggerKind>
 ): Thunk<Promise<void>> => (dispatch, getState) => {
+  dispatch({ type: LOADING_TRIGGERS });
+
   const bulkQueryArgs = [];
   if (kind) {
     bulkQueryArgs.push(
@@ -218,17 +226,18 @@ export const saveScheduledTrigger = (
   const successMsg = 'Updated scheduled trigger successfully';
 
   const customOnSuccess = () => {
-    if (isRenamed) {
-      const newHref = window.location.href.replace(
-        getSTModifyRoute(existingTrigger.name, 'relative'),
-        getSTModifyRoute(state.name, 'relative')
-      );
-      return window.location.replace(newHref);
-    }
     return dispatch(fetchTriggers('cron'))
       .then(() => {
         if (successCb) {
           successCb();
+        }
+        if (isRenamed) {
+          const newHref = window.location.href.replace(
+            getSTModifyRoute(existingTrigger.name, 'relative'),
+            getSTModifyRoute(state.name, 'relative')
+          );
+          dispatch(replace(newHref));
+          dispatch(setCurrentTrigger(state.name));
         }
       })
       .catch(() => {
