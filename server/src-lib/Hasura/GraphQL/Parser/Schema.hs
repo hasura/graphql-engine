@@ -17,6 +17,8 @@ module Hasura.GraphQL.Parser.Schema (
   , eqTypeInfo
   , discardNullability
   , toGraphQLType
+  , getObjectInfo
+  , getInterfaceInfo
 
   , EnumValueInfo(..)
   , InputFieldInfo(..)
@@ -356,6 +358,20 @@ eqTypeInfo (TIUnion (UnionInfo objects1))       (TIUnion (UnionInfo objects2))
   =  fmap dName objects1     == fmap dName objects2
 eqTypeInfo _                       _                       = False
 
+getObjectInfo :: Type 'Output -> Maybe (Definition ObjectInfo)
+getObjectInfo = traverse getTI . (^.definitionLens)
+  where
+    getTI :: TypeInfo 'Output -> Maybe ObjectInfo
+    getTI (TIObject oi) = Just oi
+    getTI _ = Nothing
+
+getInterfaceInfo :: Type 'Output -> Maybe (Definition InterfaceInfo)
+getInterfaceInfo = traverse getTI . (^.definitionLens)
+  where
+    getTI :: TypeInfo 'Output -> Maybe InterfaceInfo
+    getTI (TIInterface ii) = Just ii
+    getTI _ = Nothing
+
 data SomeTypeInfo = forall k. SomeTypeInfo (TypeInfo k)
 
 instance Eq SomeTypeInfo where
@@ -373,7 +389,7 @@ data Definition a = Definition
   , dDescription :: Maybe Description
   , dInfo        :: ~a
   -- ^ Lazy to allow mutually-recursive type definitions.
-  } deriving (Functor)
+  } deriving (Functor, Foldable, Traversable)
 
 mkDefinition :: Name -> Maybe Description -> a -> Definition a
 mkDefinition name description info = Definition name Nothing description info

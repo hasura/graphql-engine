@@ -482,7 +482,7 @@ selectionSet
   :: MonadParse m
   => Name
   -> Maybe Description
-  -> [FieldParser m a]
+  -> [FieldParser m a] -- TODO add list of interfaces as an argument
   -> Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
 selectionSet name description parsers = Parser
   { pType = Nullable $ TNamed $ mkDefinition name description $
@@ -501,7 +501,7 @@ selectionSet name description parsers = Parser
       when (null input) $
         parseError $ "missing selection set for " <>> name
 
-      fields <- collectFields name input
+      fields <- collectFields [name] input -- TODO use list of interfaces here?
       for fields \selectionField@Field{ _fName, _fAlias } -> if
         | _fName == $$(litName "__typename") ->
             pure $ SelectTypename name
@@ -515,6 +515,47 @@ selectionSet name description parsers = Parser
     parserMap = parsers
       & map (\FieldParser{ fDefinition, fParser } -> (getName fDefinition, fParser))
       & M.fromList
+
+selectionSetInterface
+  :: (MonadParse n, Traversable tObjs, Traversable tIfaces)
+  => Name
+  -> Maybe Description
+  -> [FieldParser n a]
+  -- ^ Fields defined in this interface
+  -> tObjs (Parser 'Output n b)
+  -- ^ Object parsers.  The objects should implement this interface.
+  -> tIfaces (Parser 'Output n c)
+  -- ^ The interfaces that this interface implements (for typing information only).
+  -> Parser 'Output n
+       ( -- For each object or interface, give its parsing
+         tObjs b
+       )
+selectionSetInterface name description fields objectImplementations implementsInterfaces = Parser
+  { pType = Nullable $ TNamed $ mkDefinition name description $
+      TIInterface $ InterfaceInfo (map fDefinition fields) interfaces objects
+  , pParser = \input -> for objectImplementations (($ input) . pParser)
+  }
+  where
+    objects = catMaybes $ toList $ fmap (getObjectInfo . pType) objectImplementations
+    interfaces = catMaybes $ toList $ fmap (getInterfaceInfo . pType) implementsInterfaces
+
+selectionSetUnion
+  :: (MonadParse n, Traversable tObjs)
+  => Name
+  -> Maybe Description
+  -> tObjs (Parser 'Output n b)
+  -- ^ Possible objects
+  -> Parser 'Output n
+       ( -- For each object or interface, give its parsing
+         tObjs b
+       )
+selectionSetUnion name description objectImplementations = Parser
+  { pType = Nullable $ TNamed $ mkDefinition name description $
+      TIUnion $ UnionInfo objects
+  , pParser = \input -> for objectImplementations (($ input) . pParser)
+  }
+  where
+    objects = catMaybes $ toList $ fmap (getObjectInfo . pType) objectImplementations
 
 -- | An "escape hatch" that doesn't validate anything and just gives the
 -- requested selection set.  This is unsafe because it does not check the

@@ -105,6 +105,57 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name _inte
   subFieldParsers <- traverse (remoteField' schemaDoc) subFields
   pure $ () <$ (P.selectionSet name description subFieldParsers)
 
+objectsImplementingInterface
+  :: SchemaDocument
+  -> G.Name
+  -> [G.ObjectTypeDefinition]
+objectsImplementingInterface (SchemaDocument tps) interfaceName = catMaybes $ fmap go tps
+  where
+    go :: TypeDefinition -> Maybe G.ObjectTypeDefinition
+    go (TypeDefinitionObject obj@(G.ObjectTypeDefinition _desc _name interfaces _directives _fields))
+      | interfaceName `elem` interfaces = Just obj
+    go _ = Nothing
+
+interfaceImplementingInterface
+  :: SchemaDocument
+  -> G.Name
+  -> [G.InterfaceTypeDefinition]
+interfaceImplementingInterface (SchemaDocument tps) interfaceName = catMaybes $ fmap go tps
+  where
+    go :: TypeDefinition -> Maybe G.InterfaceTypeDefinition
+    go (TypeDefinitionInterface iface@(G.InterfaceTypeDefinition _desc _name _directives _fields))
+      | interfaceName `elem` [] = Just iface -- TODO where to get the interfaces from? this seems to be an oversight in graphql-parser-hs
+    go _ = Nothing
+
+-- | 'remoteSchemaInterface' returns a output parser for a given 'InterfaceTypeDefinition'.
+remoteSchemaInterface
+  :: forall n m
+  . (MonadSchema n m, MonadError QErr m)
+  => SchemaDocument
+  -> G.InterfaceTypeDefinition
+  -> m (Parser 'Output n ())
+remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name _directives fields) =
+  P.memoizeOn 'remoteSchemaObject defn do
+  subFieldParsers <- traverse (remoteField' schemaDoc) fields
+  objs :: [Parser 'Output n ()] <- traverse (remoteSchemaObject schemaDoc) $
+    objectsImplementingInterface schemaDoc name
+  ifaces :: [Parser 'Output n ()] <- traverse (remoteSchemaInterface schemaDoc) $
+    interfaceImplementingInterface schemaDoc name
+  pure $ () <$ (P.selectionSetInterface name description subFieldParsers objs ifaces)
+
+-- | 'remoteSchemaUnion' returns a output parser for a given 'UnionTypeDefinition'.
+remoteSchemaUnion
+  :: forall n m
+  . (MonadSchema n m, MonadError QErr m)
+  => SchemaDocument
+  -> G.UnionTypeDefinition
+  -> m (Parser 'Output n ())
+remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _directives objectNames) =
+  P.memoizeOn 'remoteSchemaObject defn do
+  objs :: [Parser 'Output n ()] <- traverse (remoteSchemaObject schemaDoc) $
+    catMaybes $ map (lookupObject schemaDoc) objectNames
+  pure $ () <$ (P.selectionSetUnion name description objs)
+
 -- | remoteSchemaInputObject returns an input parser for a given 'G.InputObjectTypeDefinition'
 remoteSchemaInputObject
   :: forall n m
@@ -128,6 +179,15 @@ lookupType (SchemaDocument types) name = find (\tp -> getNamedTyp tp == name) ty
       G.TypeDefinitionUnion t       -> G._utdName t
       G.TypeDefinitionEnum t        -> G._etdName t
       G.TypeDefinitionInputObject t -> G._iotdName t
+
+lookupObject :: SchemaDocument -> G.Name -> Maybe G.ObjectTypeDefinition
+lookupObject (SchemaDocument types) name = go types
+  where
+    go :: [TypeDefinition] -> Maybe G.ObjectTypeDefinition
+    go [] = Nothing
+    go ((G.TypeDefinitionObject t):tps)
+      | G._otdName t == name = Just t
+      | otherwise = go tps
 
 -- | 'remoteFieldFromName' accepts a GraphQL name and searches for its definition
 --   in the 'SchemaDocument'.
@@ -217,8 +277,12 @@ remoteField sdoc fieldName argsDefn typeDefn = do
       P.selection fieldName desc argsParser <$> remoteFieldScalarParser name'
     G.TypeDefinitionEnum enumTypeDefn@(G.EnumTypeDefinition desc _ _ _) ->
       pure $ P.selection fieldName desc argsParser $ remoteFieldEnumParser fieldName enumTypeDefn
-    --TODO: interfaces and union types, the below error will be thrown until interfaces and
-    -- union types have been implemented
+    G.TypeDefinitionInterface ifaceTypeDefn -> do
+      remoteSchemaObj <- remoteSchemaInterface sdoc ifaceTypeDefn
+      pure $ () <$ P.subselection fieldName (G._itdDescription ifaceTypeDefn) argsParser remoteSchemaObj
+    G.TypeDefinitionUnion unionTypeDefn -> do
+      remoteSchemaObj <- remoteSchemaUnion sdoc unionTypeDefn
+      pure $ () <$ P.subselection fieldName (G._utdDescription unionTypeDefn) argsParser remoteSchemaObj
     _ -> throw500 $ "expected output type, but got input type"
 
 remoteFieldScalarParser
@@ -232,6 +296,7 @@ remoteFieldScalarParser name =
     "Int" -> pure $ P.int $> ()
     "Float" -> pure $ P.float $> ()
     "String" -> pure $ P.string $> ()
+    "ID" -> pure $ P.string $> ()
     name' -> throw500 $ "unknown scalar " <> name' -- TODO: handle this properly
 
 remoteFieldEnumParser

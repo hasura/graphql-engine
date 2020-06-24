@@ -215,6 +215,10 @@ typeField =
                   J.String "INPUT_OBJECT"
                 P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIObject _))) ->
                   J.String "OBJECT"
+                P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInterface _))) ->
+                  J.String "INTERFACE"
+                P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIUnion _))) ->
+                  J.String "UNION"
     name :: FieldParser n (SomeType -> J.Value)
     name = P.selection_ $$(G.litName "name") Nothing P.string $>
       \case SomeType tp ->
@@ -238,6 +242,8 @@ typeField =
                 case tp of
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo fields' _interfaces')))) ->
                     J.Array $ V.fromList $ fmap (snd nameAndPrinter) fields'
+                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo fields' _interfaces' _objects')))) ->
+                    J.Array $ V.fromList $ fmap (snd nameAndPrinter) fields'
                   _ -> J.Null
     interfaces :: FieldParser n (SomeType -> J.Value)
     interfaces = do
@@ -247,10 +253,20 @@ typeField =
                 case tp of
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo _fields' interfaces')))) ->
                     J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIInterface) interfaces'
+                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo _fields' interfaces' _objects)))) ->
+                    J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIInterface) interfaces'
                   _ -> J.Null
     possibleTypes :: FieldParser n (SomeType -> J.Value)
-    possibleTypes = P.subselection_ $$(G.litName "possibleTypes") Nothing typeField $>
-      const J.Null -- We don't support any interfaces or union types.
+    possibleTypes = do
+      printer <- P.subselection_ $$(G.litName "possibleTypes") Nothing typeField
+      return $
+        \case SomeType tp ->
+                case tp of
+                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo _fields' _interfaces' objects')))) ->
+                    J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIObject) objects'
+                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIUnion (P.UnionInfo objects')))) ->
+                    J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIObject) objects'
+                  _ -> J.Null
     enumValues :: FieldParser n (SomeType -> J.Value)
     enumValues = do
       nameAndPrinter <- P.subselection $$(G.litName "enumValues") Nothing includeDeprecated enumValue

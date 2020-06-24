@@ -16,6 +16,7 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended          as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
+import qualified Data.Text                             as Text
 
 import           Language.GraphQL.Draft.Syntax
 
@@ -27,13 +28,14 @@ import           Hasura.SQL.Types
 -- | Collects the effective set of fields queried by a selection set by
 -- flattening fragments and merging duplicate fields.
 collectFields
-  :: MonadParse m
-  => Name
-  -- ^ The name of the object type the 'SelectionSet' is selecting against.
+  :: (MonadParse m, Foldable t)
+  => t Name
+  -- ^ The names of the object types and interface types the 'SelectionSet' is
+  -- selecting against.
   -> SelectionSet NoFragments Variable
   -> m (InsOrdHashMap Name (Field NoFragments Variable))
-collectFields objectTypeName selectionSet =
-  mergeFields =<< flattenSelectionSet objectTypeName selectionSet
+collectFields objectTypeNames selectionSet =
+  mergeFields =<< flattenSelectionSet objectTypeNames selectionSet
 
 -- | Flattens inline fragments in a selection set. For example,
 --
@@ -86,12 +88,12 @@ collectFields objectTypeName selectionSet =
 -- This function also applies @\@include@ and @\@skip@ directives, since they
 -- should be applied before fragments are flattened.
 flattenSelectionSet
-  :: MonadParse m
-  => Name
+  :: (MonadParse m, Foldable t)
+  => t Name
   -- ^ The name of the object type the 'SelectionSet' is selecting against.
   -> SelectionSet NoFragments Variable
   -> m [Field NoFragments Variable]
-flattenSelectionSet objectTypeName = fmap concat . traverse flattenSelection
+flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
   where
     -- The easy case: just a single field.
     flattenSelection (SelectionField field) =
@@ -107,7 +109,9 @@ flattenSelectionSet objectTypeName = fmap concat . traverse flattenSelection
         Just typeName
           -- There is a type condition, but it is just the type of the
           -- selection set; the fragment trivially applies.
-          | typeName == objectTypeName -> flattenInlineFragment fragment
+          | typeName `elem` objectTypeNames -> flattenInlineFragment fragment
+
+          -- TODO we are now starting to support interfaces and unions; fix the below
 
           -- Otherwise, the fragment must not apply, because we do not currently
           -- support interfaces or unions. According to the GraphQL spec, it is
@@ -116,10 +120,11 @@ flattenSelectionSet objectTypeName = fmap concat . traverse flattenSelection
           -- http://spec.graphql.org/June2018/#sec-Fragment-spread-is-possible.
           -- Therefore, we raise an error.
           | otherwise -> parseError $ "illegal type condition in fragment; type "
-              <> typeName <<> " is unrelated to type " <>> objectTypeName
+              <> typeName <<> " is unrelated to any of the types " <>
+              Text.intercalate ", " (fmap dquoteTxt (toList objectTypeNames))
 
     flattenInlineFragment InlineFragment{ _ifSelectionSet } =
-      flattenSelectionSet objectTypeName _ifSelectionSet
+      flattenSelectionSet objectTypeNames _ifSelectionSet
 
     applyInclusionDirectives directives continue
       | Just directive <- find ((== $$(litName "include")) . _dName) directives
