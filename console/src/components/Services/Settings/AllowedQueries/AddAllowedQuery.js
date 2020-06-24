@@ -62,7 +62,7 @@ class AddAllowedQuery extends React.Component {
         return (
           <div>
             <div className={styles.add_mar_bottom_mid}>
-              <b>Query name:</b>
+              <b>Operation name:</b>
             </div>
             <input
               type="text"
@@ -88,7 +88,7 @@ class AddAllowedQuery extends React.Component {
         return (
           <div>
             <div className={styles.add_mar_bottom_mid}>
-              <b>Query:</b>
+              <b>Operation:</b>
             </div>
             <AceEditor
               data-test="allowed_operation_add"
