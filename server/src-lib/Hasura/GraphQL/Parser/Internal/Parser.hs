@@ -454,10 +454,10 @@ fieldWithDefault name description defaultValue parser = InputFieldsParser
         -- “derived variable reference” that includes a new default value. But
         -- that would be more complicated, so for now we don’t do that.
         case vInfo of
-          VIRequired _   -> parseValue expectedType (literal vValue)
+          VIRequired _   -> pInputParser parser value
           VIOptional _ _ -> markNotReusable *> parseValue expectedType (literal vValue)
       VNull -> pInputParser parser $ literal defaultValue
-      other -> pInputParser parser other
+      _     -> pInputParser parser value
 
 -- | A nullable field with no default value. If the field is omitted, the
 -- provided parser /will not be called/. This allows a field to distinguish an
