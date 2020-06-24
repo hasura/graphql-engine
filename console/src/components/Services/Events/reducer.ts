@@ -12,6 +12,7 @@ import {
   RASetCurrentTrigger,
   RASetEventTriggers,
   RASetScheduledTriggers,
+  LOADING_TRIGGERS,
 } from './types';
 
 export const setTriggers = (data: Triggers): RASetAllTriggers => ({
@@ -41,6 +42,7 @@ const reducer = (state = defaultState, action: RAEvents) => {
       return {
         ...state,
         triggers: action.data,
+        loading: false,
       };
     case LOADED_SCHEDULED_TRIGGERS:
       return {
@@ -49,6 +51,7 @@ const reducer = (state = defaultState, action: RAEvents) => {
           ...state.triggers,
           scheduled: action.data,
         },
+        loading: false,
       };
     case LOADED_EVENT_TRIGGERS:
       return {
@@ -57,11 +60,17 @@ const reducer = (state = defaultState, action: RAEvents) => {
           ...state.triggers,
           event: action.data,
         },
+        loading: false,
       };
     case SET_CURRENT_TRIGGER:
       return {
         ...state,
         currentTrigger: action.name,
+      };
+    case LOADING_TRIGGERS:
+      return {
+        ...state,
+        loading: true,
       };
     default:
       return state;
