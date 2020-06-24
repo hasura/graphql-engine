@@ -63,22 +63,15 @@ type updateRemoteRelationshipInput struct {
 }
 
 type createCronTriggerInput struct {
-	Name              string        `json:"name" yaml:"name"`
-	Webhook           string        `json:"webhook" yaml:"webhook"`
-	Schedule          string        `json:"schedule" yaml:"schedule"`
-	Payload           interface{}   `json:"payload,omitempty" yaml:"payload,omitempty"`
-	Headers           interface{}   `json:"headers,omitempty" yaml:"headers,omitempty"`
-	RetryConf         RetryConfigST `json:"retry_conf,omitempty" yaml:"retry_conf,omitempty"`
-	IncludeInMetadata *bool         `json:"include_in_metadata,omitempty" yaml:"include_in_metadata,omitempty"`
-	Comment           string        `json:"comment,omitempty" yaml:"comment,omitempty"`
-	Replace           *bool         `json:"replace,omitempty" yaml:"replace,omitempty"`
-}
-
-type RetryConfigST struct {
-	NumRetries           int `json:"num_retries,omitempty" yaml:"num_retries,omitempty"`
-	RetryIntervalSeconds int `json:"retry_interval_seconds,omitempty" yaml:"retry_interval_seconds,omitempty"`
-	TimeoutSeconds       int `json:"timeout_seconds,omitempty" yaml:"timeout_seconds,omitempty"`
-	ToleranceSeconds     int `json:"tolerance_seconds,omitempty" yaml:"tolerance_seconds,omitempty"`
+	Name              string      `json:"name" yaml:"name"`
+	Webhook           string      `json:"webhook" yaml:"webhook"`
+	Schedule          string      `json:"schedule" yaml:"schedule"`
+	Payload           interface{} `json:"payload,omitempty" yaml:"payload,omitempty"`
+	Headers           interface{} `json:"headers,omitempty" yaml:"headers,omitempty"`
+	RetryConf         interface{} `json:"retry_conf,omitempty" yaml:"retry_conf,omitempty"`
+	IncludeInMetadata *bool       `json:"include_in_metadata,omitempty" yaml:"include_in_metadata,omitempty"`
+	Comment           string      `json:"comment,omitempty" yaml:"comment,omitempty"`
+	Replace           *bool       `json:"replace,omitempty" yaml:"replace,omitempty"`
 }
 
 type deleteCronTriggerInput struct {
@@ -684,6 +677,7 @@ type replaceMetadataInput struct {
 	QueryCollections []*createQueryCollectionInput    `json:"query_collections" yaml:"query_collections"`
 	AllowList        []*addCollectionToAllowListInput `json:"allowlist" yaml:"allowlist"`
 	RemoteSchemas    []*addRemoteSchemaInput          `json:"remote_schemas" yaml:"remote_schemas"`
+	CronTriggers     []*createCronTriggerInput        `json:"cron_triggers" yaml:"cron_triggers"`
 }
 
 func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList) {
