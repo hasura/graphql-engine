@@ -1,5 +1,5 @@
-@import "~bootstrap-sass/assets/stylesheets/bootstrap/variables";
-@import "../../Common.scss";
+@import '~bootstrap-sass/assets/stylesheets/bootstrap/variables';
+@import '../../Common.scss';
 
 .container {
 }
@@ -28,8 +28,8 @@
   // background: #444;
   // color: $navbar-inverse-color;
   color: #333;
-  border: 1px solid #E5E5E5;
-  background-color: #F8F8F8;
+  border: 1px solid #e5e5e5;
+  background-color: #f8f8f8;
 
   /*
   a,a:visited {
@@ -66,7 +66,7 @@
       */
 
       a {
-        color: #767E93;
+        color: #767e93;
         word-wrap: break-word;
       }
     }
@@ -75,9 +75,9 @@
       padding: 7px 0;
       // color: $navbar-inverse-link-hover-color;
       transition: color 0.5s;
-      pointer: cursor;
+      cursor: pointer;
     }
-   }
+  }
 }
 
 .main {
@@ -113,7 +113,7 @@
   .sidebarHeading {
     font-weight: bold;
     display: inline-block;
-    color: #767E93;
+    color: #767e93;
     font-size: 15px;
   }
 }
@@ -148,11 +148,16 @@
       padding-left: 5px !important;
       display: initial !important;
 
-      .tableIcon, .functionIcon {
+      .tableIcon,
+      .functionIcon {
         //display: inline;
         margin-right: 5px;
         font-size: 12px;
         width: 12px;
+      }
+
+      .colorRed {
+        color: red;
       }
     }
   }
@@ -160,7 +165,7 @@
   .noChildren {
     font-weight: 400 !important;
     padding-bottom: 10px !important;
-    color: #767E93 !important;
+    color: #767e93 !important;
   }
 
   li:first-child {
@@ -171,7 +176,7 @@
 .activeLink {
   a {
     // border-left: 4px solid #FFC627;
-    color: #FD9540!important;
+    color: #fd9540 !important;
   }
 }
 

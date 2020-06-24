@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import ToolTip from '../../Common/Tooltip/Tooltip';
 
 const RemoteSchemaSubSidebar = ({
   appPrefix,
@@ -16,10 +17,13 @@ const RemoteSchemaSubSidebar = ({
   ...props
 }) => {
   const { inconsistentObjects } = props.metadata;
-  const unifiedList = [].concat(inconsistentObjects, dataList);
+  const inconsistentRemoteSchemas = inconsistentObjects.filter(
+    inconObject => inconObject.type === 'remote_schema'
+  );
+
   function tableSearch(e) {
     const searchTerm = e.target.value;
-    filterItem(unifiedList, searchTerm);
+    filterItem(dataList, searchTerm);
   }
 
   const getSearchInput = () => {
@@ -38,7 +42,7 @@ const RemoteSchemaSubSidebar = ({
     const _dataList = searchQuery ? filtered : dataList;
 
     let childList = [];
-    if (_dataList.length === 0 && inconsistentObjects.length === 0) {
+    if (_dataList.length === 0) {
       childList = (
         <li
           className={styles.noChildren}
@@ -51,11 +55,22 @@ const RemoteSchemaSubSidebar = ({
       if (_dataList.length > 0) {
         childList = _dataList.map((d, i) => {
           let activeTableClass = '';
+          let isSchemaInconsistent = false;
+          let inconsistentCurrentSchema;
+          const filteredList = inconsistentRemoteSchemas.filter(
+            inconObject => inconObject.definition.name === d.name
+          );
+
           if (
             d.name === viewRemoteSchema &&
             location.pathname.includes(viewRemoteSchema)
           ) {
             activeTableClass = styles.activeLink;
+          }
+
+          if (filteredList.length) {
+            isSchemaInconsistent = true;
+            inconsistentCurrentSchema = filteredList[0];
           }
 
           return (
@@ -65,56 +80,27 @@ const RemoteSchemaSubSidebar = ({
               data-test={`remote-schema-sidebar-links-${i + 1}`}
             >
               <Link
-                to={appPrefix + '/manage/' + d.name + '/details'}
+                to={`${appPrefix}/manage/${d.name}/details`}
                 data-test={d.name}
               >
-                <i
-                  className={styles.tableIcon + ' fa fa-code-fork'}
-                  aria-hidden="true"
-                />
+                {isSchemaInconsistent ? (
+                  <ToolTip message={inconsistentCurrentSchema.reason}>
+                    <i
+                      className={`${styles.tableIcon} fa fa-exclamation-triangle ${styles.colorRed}`}
+                      aria-hidden="true"
+                    />
+                  </ToolTip>
+                ) : (
+                  <i
+                    className={`${styles.tableIcon} fa fa-code-fork`}
+                    aria-hidden="true"
+                  />
+                )}
                 {d.name}
               </Link>
             </li>
           );
         });
-      }
-
-      if (inconsistentObjects.length > 0) {
-        const inconChildren = inconsistentObjects.map((d, i) => {
-          let activeTableClass = '';
-          if (
-            d.name === viewRemoteSchema &&
-            location.pathname.includes(viewRemoteSchema)
-          ) {
-            activeTableClass = styles.activeLink;
-          }
-
-          return (
-            <li
-              className={activeTableClass}
-              key={i}
-              data-test={`remote-schema-sidebar-links-${i + 1}`}
-            >
-              <Link
-                to={appPrefix + '/manage/' + d.name + '/details'}
-                data-test={d.name}
-              >
-                <i
-                  className={styles.tableIcon + ' fa fa-exclamation-triangle'}
-                  aria-hidden="true"
-                  title={d.reason}
-                />
-                {d.name}
-              </Link>
-            </li>
-          );
-        });
-
-        if (childList.length) {
-          childList.concat(inconChildren);
-        } else {
-          childList = inconChildren;
-        }
       }
     }
 
