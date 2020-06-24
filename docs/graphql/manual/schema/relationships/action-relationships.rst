@@ -17,9 +17,12 @@ Introduction
 
 :ref:`Actions <actions>` are a way to extend Hasura’s schema with custom business logic using custom queries and mutations. The resolvers for these custom fields are written in REST endpoints. They are especially useful for setting up serverless functions as resolvers.
 
-After you :ref:`create <create_actions>` or :ref:`derive <derive_actions>` an action, you can create relationships for it.
+Step 1: Create an action
+------------------------
 
-Step 1: Open the action relationship section
+First, create an action, either :ref:`from scratch <create_actions>` or :ref:`derive it from an existing mutation <derive_actions>`.
+
+Step 2: Open the action relationship section
 --------------------------------------------
 
 - From your action, go to the ``Relationships`` tab.
@@ -31,10 +34,10 @@ Step 1: Open the action relationship section
 
 In this example, we're creating a relationship for the ``createUser`` action.
 
-Step 2: Define the relationship
+Step 3: Define the relationship
 -------------------------------
 
-In the section opened by the above step, fill out the following fields:
+The following values can be defined for an action relationship:
 
 - **Relationship type**: Select a :ref:`type of relationship <relationship_database_modelling>`.
 
@@ -47,13 +50,86 @@ In the section opened by the above step, fill out the following fields:
 - **From**: Select a field returned in the action response.
 - **To**: Select a column from the reference table to join the field to.
 
-.. thumbnail:: /img/graphql/manual/remote-joins/define-action-rel.png
-   :alt: Defining the relationship
-   :width: 850px
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    In the section opened by the above step, fill out the following fields:
+
+    .. thumbnail:: /img/graphql/manual/remote-joins/define-action-rel.png
+      :alt: Defining the relationship
+      :width: 850px
+
+  .. tab:: CLI
+
+    You can add an action relationship in the ``actions.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+      :emphasize-lines: 4-13
+
+      - custom_types
+        - objects
+          - name: UserOutput
+            relationships:
+            - remote_table:
+                schema: public
+                name: users
+              name: user
+              type: object
+              field_mapping:
+                id: id
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
+  .. tab:: API
+
+    You can create an action relationship when defining custom types via the :ref:`set_custom_types metadata API <set_custom_types>`:
+
+    .. code-block:: http
+      :emphasize-lines: 20-29
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "set_custom_types",
+        "args": {
+          "scalars": [],
+          "enums": [],
+          "input_objects": [],
+          "objects": [
+            {
+              "name": "UserOutput",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "Int!"
+                }
+              ],
+              "relationships": [
+                {
+                  "name": "user",
+                  "type": "object",
+                  "remote_table": "users",
+                  "field_mapping": {
+                    "id": "id"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
 
 In this example, we're creating a relationship called ``user``, from the ``id`` field returned in the action response, to the ``id`` column of the ``users`` table.
 
-Step 3: Explore with GraphiQL
+Step 4: Explore with GraphiQL
 -----------------------------
 
 In the GraphiQL tab, test out your action relationship.
@@ -83,9 +159,7 @@ In the GraphiQL tab, test out your action relationship.
       }
     }
 
-|
-
-If your table has an existing remote relationship, here you can also get the fields from the remote schema.
+If your table has an existing :ref:`remote relationship <add_remote_relationship>`, you can also query the fields from the remote schema.
 
 .. graphiql::
   :view_only:
