@@ -1,6 +1,5 @@
 import React from 'react';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
 
 const StatementTimeout = ({
   isMigrationChecked,
@@ -8,41 +7,25 @@ const StatementTimeout = ({
   updateStatementTimeout,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
-  const statementTimeoutTip = (
-    <Tooltip id="tooltip-statement-timeout">
-      Abort queries that take longer than the specified time
-    </Tooltip>
-  );
-
-  const disabledStatementTimeoutTip = (
-    <Tooltip id="tooltip-statement-timeout">
-      Migrations cannot have a specified timeout
-    </Tooltip>
-  );
 
   return (
-    <div className={styles.add_mar_top}>
+    <div className={styles.add_mar_top_small}>
       <label>
-        Statement timeout(seconds)
-        <OverlayTrigger
-          placement="right"
-          overlay={
-            isMigrationChecked
-              ? disabledStatementTimeoutTip
-              : statementTimeoutTip
-          }
-        >
-          <i
-            className={`${styles.add_mar_left_small} fa fa-info-circle`}
-            aria-hidden="true"
-          />
-        </OverlayTrigger>
+        Statement timeout (seconds)
+        <ToolTip
+          message={'Abort requests that take longer than the specified time'}
+        />
         <input
           disabled={isMigrationChecked}
+          title={
+            isMigrationChecked
+              ? 'Setting statement timeout is not supported for migrations'
+              : ''
+          }
           min={0}
           value={statementTimeout || ''}
           type="number"
-          className={`${styles.inline_block} ${styles.add_mar_left_small}`}
+          className={`${styles.inline_block} ${styles.tableNameInput} ${styles.add_mar_left} form-control`}
           data-test="raw-sql-statement-timeout"
           onChange={event => updateStatementTimeout(event.target.value)}
         />
