@@ -7,6 +7,7 @@ import           Hasura.RQL.Types
 
 import           Language.GraphQL.Draft.Syntax       as G
 import qualified Data.List.NonEmpty                  as NE
+import           Data.Type.Equality
 
 import           Hasura.GraphQL.Parser               as P
 import qualified Hasura.GraphQL.Parser.Combinators   as P
@@ -151,16 +152,23 @@ inputValueDefinitionParser
    . (MonadSchema n m, MonadError QErr m)
   => G.SchemaDocument
   -> G.InputValueDefinition
-  -> m (InputFieldsParser n ())
+  -> m (InputFieldsParser n (G.Value Variable))
 inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType maybeDefaultVal) =
-  let fieldConstructor :: forall k . 'Input <: k => Parser k n () -> InputFieldsParser n ()
-      fieldConstructor = case maybeDefaultVal of
-        Nothing -> field name desc
-        Just defaultVal -> fieldWithDefault name desc defaultVal
+  let fieldConstructor :: forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Value Variable)
+      fieldConstructor parser =
+        let wrappedParser :: Parser k n (Value Variable)
+            wrappedParser =
+              P.Parser
+                { P.pType   = P.pType parser
+                , P.pParser = \value -> P.pParser parser value $> gcastWith (P.inputParserInput @k) value
+                }
+        in case maybeDefaultVal of
+          Nothing -> field name desc wrappedParser
+          Just defaultVal -> fieldWithDefault name desc defaultVal wrappedParser
       buildField
         :: G.GType
-        -> (forall k . 'Input <: k => Parser k n () -> InputFieldsParser n ())
-        -> m (InputFieldsParser n ())
+        -> (forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (G.Value Variable))
+        -> m (InputFieldsParser n (G.Value Variable))
       buildField fieldType' fieldConstructor' = case fieldType' of
        G.TypeNamed _ typeName ->
          case lookupType schemaDoc typeName of
