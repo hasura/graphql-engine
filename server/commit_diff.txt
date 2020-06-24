@@ -162,41 +162,6 @@ Date:   Tue Jun 30 23:53:10 2020 -0400
 
     Also related: #3388 #4077
 
-commit 93104e616f53ed46503577032c9eacf9be31575a
-Merge: 6c689992 1dbe5cd1
-Author: Brandon Simmons <brandon@hasura.io>
-Date:   Fri Jun 26 18:24:53 2020 -0400
-
-    Merge pull request #5214 from jberryman/5190-improve-websockets-idle-memory-v2-only-kc8
-
-    Lower stack chunk size in RTS to reduce thread STACK memory (closes #5190)
-
-commit 1dbe5cd1ab4a68dd2518f9e57a656517f708e900
-Merge: f9b5b838 6c689992
-Author: Brandon Simmons <brandon@hasura.io>
-Date:   Fri Jun 26 15:02:49 2020 -0400
-
-    Merge branch 'master' into 5190-improve-websockets-idle-memory-v2-only-kc8
-
-commit f9b5b8382cbd41a589d1096c720805d3184153d4
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Tue Jun 23 20:35:36 2020 -0400
-
-    Lower stack chunk size in RTS to reduce thread STACK memory (closes #5190)
-
-    This reduces memory consumption for new idle subscriptions significantly
-    (see linked ticket).
-
-    The hypothesis is: we fork a lot of threads per websocket, and some of
-    these use slightly more than the initial 1K stack size, so the first
-    overflow balloons to 32K, when significantly less is required.
-
-    However: running with `+RTS -K1K -xc` did not seem to show evidence of
-    any overflows! So it's a mystery why this improves things.
-
-    GHC should probably also be doubling the stack buffer at each overflow
-    or doing something even smarter; the knobs we have aren't so helpful.
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
