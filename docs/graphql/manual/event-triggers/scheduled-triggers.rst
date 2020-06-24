@@ -19,11 +19,11 @@ Scheduled triggers are used to execute custom business logic at a specific point
 
 .. admonition:: Supported from
   
-  Scheduled triggers are supported in versions ``v1.3.0-beta.1`` and above.
+  Scheduled triggers are supported from versions ``v1.3.0-beta.1`` and above.
 
 .. .. admonition:: Supported from
   
-..   Scheduled triggers are supported in versions ``v.1.3.0`` and above.
+..   Scheduled triggers are supported from versions ``v.1.3.0`` and above.
 
 Cron triggers
 -------------
