@@ -17,6 +17,14 @@ Introduction
 
 Scheduled triggers are used to execute custom business logic at a specific point in time. There are two types of timed events: cron-based or timestamp-based.
 
+.. admonition:: Supported from
+  
+  Scheduled triggers are supported in versions ``v1.3.0-beta.1`` and above.
+
+.. .. admonition:: Supported from
+  
+..   Scheduled triggers are supported in versions ``v.1.3.0`` and above.
+
 Cron triggers
 -------------
 
