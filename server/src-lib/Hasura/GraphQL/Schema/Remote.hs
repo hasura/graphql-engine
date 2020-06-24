@@ -160,7 +160,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
             wrappedParser =
               P.Parser
                 { P.pType   = P.pType parser
-                , P.pParser = \value -> P.pParser parser value $> gcastWith (P.inputParserInput @k) value
+                , P.pParser = \value -> P.pParser parser value $> castWith (P.inputParserInput @k) value
                 }
         in case maybeDefaultVal of
           Nothing -> field name desc wrappedParser
