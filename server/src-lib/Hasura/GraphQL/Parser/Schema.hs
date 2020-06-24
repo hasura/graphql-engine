@@ -34,6 +34,7 @@ module Hasura.GraphQL.Parser.Schema (
   -- * Schemas
   , Schema(..)
   , ConflictingDefinitions(..)
+  , HasTypeDefinitions(..)
   , collectTypeDefinitions
 
   -- * Miscellany

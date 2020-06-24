@@ -172,11 +172,11 @@ emptyIntrospection = do
   return $ fmap (fmap RFRaw) [schema introspectionSchema, typeIntrospection introspectionSchema]
 
 collectTypes
-  :: forall m
-   . MonadError QErr m
-  => P.Type 'Output
+  :: forall m a
+   . (MonadError QErr m, P.HasTypeDefinitions a)
+  => a
   -> m (HashMap G.Name (P.Definition P.SomeTypeInfo))
-collectTypes tp = case P.collectTypeDefinitions tp of
+collectTypes x = case P.collectTypeDefinitions x of
   Left (P.ConflictingDefinitions type1 _) -> throw500 $
     "found conflicting definitions for " <> P.getName type1
     <<> " when collecting types from the schema"
@@ -198,15 +198,15 @@ queryWithIntrospection allTables allFunctions allRemotes stringifyNum = do
   subscriptionP <- subscription allTables allFunctions stringifyNum
   let
     basicQueryP = queryRootFromFields basicQueryFP
-  allQueryTypes <- collectTypes (P.parserType basicQueryP)
-  allMutationTypes <- collectTypes (P.parserType mutationP)
-  allSubscriptionTypes <- collectTypes (P.parserType subscriptionP)
   emptyIntro <- emptyIntrospection
+  allBasicTypes <- collectTypes
+    [ P.parserType basicQueryP
+    , P.parserType mutationP
+    , P.parserType subscriptionP
+    ]
   allIntrospectionTypes <- collectTypes (P.parserType (queryRootFromFields emptyIntro))
   let allTypes = Map.unions
-        [ allQueryTypes
-        , allMutationTypes
-        , allSubscriptionTypes
+        [ allBasicTypes
         , Map.filterWithKey (\name _info -> name /= $$(G.litName "query_root")) allIntrospectionTypes
         ]
       partialSchema = Schema
