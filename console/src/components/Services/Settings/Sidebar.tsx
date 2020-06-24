@@ -18,12 +18,7 @@ type SidebarProps = {
   metadata: Metadata;
 };
 
-type SectionDataKey =
-  | 'actions'
-  | 'status'
-  | 'allowed-queries'
-  | 'logout'
-  | 'about';
+type SectionDataKey = 'actions' | 'status' | 'allow-list' | 'logout' | 'about';
 
 interface SectionData {
   key: SectionDataKey;
@@ -58,9 +53,9 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
   });
 
   sectionsData.push({
-    key: 'allowed-queries',
-    link: '/settings/allowed-queries',
-    dataTestVal: 'allowed-queries-link',
+    key: 'allow-list',
+    link: '/settings/allow-list',
+    dataTestVal: 'allow-list-link',
     title: 'Allow List',
   });
 
