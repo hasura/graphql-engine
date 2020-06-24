@@ -28,7 +28,7 @@ class AllowedQueriesList extends React.Component {
 
     const getQueryList = () => {
       if (allowedQueries.length === 0) {
-        return <div>No queries in allow-list yet</div>;
+        return <div>No operations in allow-list yet</div>;
       }
 
       return allowedQueries.map((query, i) => {
@@ -63,7 +63,7 @@ class AllowedQueriesList extends React.Component {
             <div>
               <div>
                 <div className={styles.add_mar_bottom_mid}>
-                  <b>Query name:</b>
+                  <b>Operation name:</b>
                 </div>
                 <input
                   type="text"
@@ -75,7 +75,7 @@ class AllowedQueriesList extends React.Component {
               </div>
               <div className={styles.add_mar_top}>
                 <div className={styles.add_mar_bottom_mid}>
-                  <b>Query:</b>
+                  <b>Operation:</b>
                 </div>
                 <AceEditor
                   data-test="allowed_query_editor"
@@ -113,7 +113,7 @@ class AllowedQueriesList extends React.Component {
         };
 
         const onDelete = () => {
-          const confirmMessage = `This will delete the query "${queryName}" from the allow-list`;
+          const confirmMessage = `This will delete the operation "${queryName}" from the allow-list`;
           const isOk = getConfirmation(confirmMessage);
           if (isOk) {
             const isLastQuery = allowedQueries.length === 1;
@@ -144,7 +144,7 @@ class AllowedQueriesList extends React.Component {
     const getDeleteAllBtn = () => {
       const handleDeleteAll = () => {
         const confirmMessage =
-          'This will delete all queries from the allow-list';
+          'This will delete all operations from the allow-list';
         const isOk = getConfirmation(confirmMessage, true);
         if (isOk) {
           dispatch(deleteAllowList());
