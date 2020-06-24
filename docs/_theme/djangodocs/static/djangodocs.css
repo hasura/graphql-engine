@@ -35,7 +35,7 @@ a.reference em { font-style: normal; }
 /* a:link, a:visited { color:#ffc757; } */
 
 /*** sidebar **/
-#sidebar div.sphinxsidebarwrapper { font-size:92%; margin-right: 14px; }
+#sidebar div.sphinxsidebarwrapper { font-size:92%; margin: 15px; }
 #sidebar a { font-size: 0.9em; }
 #sidebar ul ul { margin-top:0; margin-bottom:0; }
 #sidebar li { margin-top: 0.2em; margin-bottom: 0.2em; }
