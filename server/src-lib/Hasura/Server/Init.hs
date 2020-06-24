@@ -534,7 +534,7 @@ parseRawConnInfo =
                 )
 
     options = optional $
-      strOption ( long "options" <>
+      strOption ( long "pg-connection-options" <>
                   short 'o' <>
                   metavar "<DATABASE-OPTIONS>" <>
                   help "PostgreSQL options"

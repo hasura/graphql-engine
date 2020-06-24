@@ -17,7 +17,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
-- server: add `--options` command-line flag for passing parameters to PostgreSQL (close #5092)
+- server: add `--pg-connection-options` command-line flag for passing parameters to PostgreSQL (close #5092)
 - server: few relay fixes (fix #5020, #5037, #5046) (#5013)
 - server: raise error on startup when `--unauthorized-role` is ignored (#4736)
 - server: fix bug which arises when renaming/dropping a column on a remote relationship (#5005, #5119)
