@@ -10,7 +10,7 @@ import qualified Data.List.NonEmpty                  as NE
 import           Data.Type.Equality
 
 import           Hasura.GraphQL.Parser               as P
-import qualified Hasura.GraphQL.Parser.Combinators   as P
+import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 
 import           Hasura.GraphQL.Parser          (FieldParser, Kind (..), Parser)
 

@@ -109,7 +109,7 @@ to use the Kind to influence several different things:
   * We use it to determine what a Parser consumes as input. Parsers for input
     types parse GraphQL input values, but Parsers for output types parse
     selection sets. (See Note [The meaning of Parser 'Output] in
-    Hasura.GraphQL.Parser.Combinators for an explanation of why.)
+    Hasura.GraphQL.Parser.Internal.Parser for an explanation of why.)
 
   * We use it to know when to expect a sub-selection set for a field of an
     output object (see Note [The delicate balance of GraphQL kinds]).

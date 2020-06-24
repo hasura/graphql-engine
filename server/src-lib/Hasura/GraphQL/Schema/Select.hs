@@ -32,7 +32,6 @@ import           Hasura.GraphQL.Parser                 (FieldParser, InputFields
                                                         Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column          (qualifiedObjectToName)
-import           Hasura.GraphQL.Parser.Combinators     as P
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
@@ -63,9 +62,6 @@ type AnnotatedField  = RQL.AnnFldG UnpreparedValue
 -- >   col1: col1_type
 -- >   col2: col2_type
 -- > }: [table!]
---
--- Returns Nothing if there is nothing that can be selected
--- with current permissions.
 selectTable
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable       -- ^ qualified name of the table
@@ -478,8 +474,7 @@ fieldSelection fieldInfo selectPermissions stringifyNum = do
             ArrRel -> "An array relationship"
       remotePerms      <- MaybeT $ tableSelectPermissions otherTable
       relFieldName     <- lift $ textToName $ relNameToTxt relName
-      otherTableParser <- lift $ (if nullable then id else fmap P.nonNullableField) $
-        selectTable otherTable relFieldName desc remotePerms stringifyNum
+      otherTableParser <- lift $ selectTable otherTable relFieldName desc remotePerms stringifyNum
       let field = otherTableParser <&> \selectExp ->
             let annotatedRelationship = RQL.AnnRelG relName colMapping selectExp
             in case riType relationshipInfo of

@@ -20,7 +20,7 @@ import qualified Data.HashMap.Strict.InsOrd            as OMap
 import           Language.GraphQL.Draft.Syntax
 
 import           Hasura.GraphQL.Parser.Class
-import {-# SOURCE #-} Hasura.GraphQL.Parser.Combinators (boolean, runParser)
+import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser (boolean, runParser)
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.SQL.Types
 

@@ -15,7 +15,6 @@ import           Control.Lens.Extended
 import           Control.Monad.Unique
 
 import qualified Hasura.GraphQL.Parser                 as P
-import qualified Hasura.GraphQL.Parser.Combinators     as P
 
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),
@@ -161,11 +160,11 @@ emptyIntrospection
   => m [P.FieldParser n (QueryRootField UnpreparedValue)]
 emptyIntrospection = do
   let emptyQueryP = queryRootFromFields @n []
-  introspectionTypes <- collectTypes (P.pType emptyQueryP)
+  introspectionTypes <- collectTypes (P.parserType emptyQueryP)
   let introspectionSchema = Schema
         { sDescription = Nothing
         , sTypes = mempty
-        , sQueryType = P.pType (emptyQueryP)
+        , sQueryType = P.parserType (emptyQueryP)
         , sMutationType = Nothing
         , sSubscriptionType = Nothing
         , sDirectives = mempty
@@ -199,11 +198,11 @@ queryWithIntrospection allTables allFunctions allRemotes stringifyNum = do
   subscriptionP <- subscription allTables allFunctions stringifyNum
   let
     basicQueryP = queryRootFromFields basicQueryFP
-  allQueryTypes <- collectTypes (P.pType basicQueryP)
-  allMutationTypes <- collectTypes (P.pType mutationP)
-  allSubscriptionTypes <- collectTypes (P.pType subscriptionP)
+  allQueryTypes <- collectTypes (P.parserType basicQueryP)
+  allMutationTypes <- collectTypes (P.parserType mutationP)
+  allSubscriptionTypes <- collectTypes (P.parserType subscriptionP)
   emptyIntro <- emptyIntrospection
-  allIntrospectionTypes <- collectTypes (P.pType (queryRootFromFields emptyIntro))
+  allIntrospectionTypes <- collectTypes (P.parserType (queryRootFromFields emptyIntro))
   let allTypes = Map.unions
         [ allQueryTypes
         , allMutationTypes
@@ -213,10 +212,10 @@ queryWithIntrospection allTables allFunctions allRemotes stringifyNum = do
       partialSchema = Schema
         { sDescription = Nothing
         , sTypes = allTypes
-        , sQueryType = P.pType basicQueryP
-        , sMutationType = Just $ P.pType mutationP
+        , sQueryType = P.parserType basicQueryP
+        , sMutationType = Just $ P.parserType mutationP
         -- TODO make sure NOT to expose remote schemata via subscription introspection (when remote schemata are implemented)
-        , sSubscriptionType = Just $ P.pType subscriptionP
+        , sSubscriptionType = Just $ P.parserType subscriptionP
         , sDirectives = []
         }
   let partialQueryFields =

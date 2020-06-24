@@ -1,4 +1,4 @@
-module Hasura.GraphQL.Parser.Combinators where
+module Hasura.GraphQL.Parser.Internal.Parser where
 
 import           Hasura.Prelude
 
