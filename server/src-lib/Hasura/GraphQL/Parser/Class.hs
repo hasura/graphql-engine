@@ -10,7 +10,7 @@ import           Data.Tuple.Extended
 import           GHC.Stack                             (HasCallStack)
 import           Type.Reflection                       (Typeable)
 
-import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser
+import {-# SOURCE #-} Hasura.GraphQL.Parser.Combinators
 import           Hasura.RQL.Types.Permission           (RoleName)
 import           Hasura.RQL.Types.Table                (TableInfo)
 import           Hasura.SQL.Types

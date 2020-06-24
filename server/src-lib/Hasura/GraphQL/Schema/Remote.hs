@@ -9,7 +9,7 @@ import           Language.GraphQL.Draft.Syntax       as G
 import qualified Data.List.NonEmpty                  as NE
 
 import           Hasura.GraphQL.Parser               as P
-import qualified Hasura.GraphQL.Parser.Internal.Parser as P
+import qualified Hasura.GraphQL.Parser.Combinators   as P
 
 import           Hasura.GraphQL.Parser          (FieldParser, Kind (..), Parser)
 

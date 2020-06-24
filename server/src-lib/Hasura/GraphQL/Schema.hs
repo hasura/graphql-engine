@@ -15,7 +15,7 @@ import           Control.Lens.Extended
 import           Control.Monad.Unique
 
 import qualified Hasura.GraphQL.Parser                 as P
-import qualified Hasura.GraphQL.Parser.Internal.Parser as P
+import qualified Hasura.GraphQL.Parser.Combinators     as P
 
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),

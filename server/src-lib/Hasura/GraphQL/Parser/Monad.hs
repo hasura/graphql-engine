@@ -28,7 +28,7 @@ import           System.IO.Unsafe                      (unsafeInterleaveIO)
 import           Type.Reflection                       ((:~:)(..), Typeable, typeRep)
 
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Internal.Parser
+import           Hasura.GraphQL.Parser.Combinators
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission           (RoleName)

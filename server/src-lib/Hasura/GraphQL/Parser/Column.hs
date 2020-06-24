@@ -26,7 +26,7 @@ import           Language.GraphQL.Draft.Syntax         (Description (..), Name, 
 import qualified Hasura.RQL.Types.Column               as RQL
 
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Internal.Parser
+import           Hasura.GraphQL.Parser.Combinators
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
 import           Hasura.RQL.Types.Error
