@@ -40,7 +40,7 @@ class AddAllowedQuery extends React.Component {
           dispatch(addAllowedQueries(fileQueries, isEmptyList, toggle));
         } catch (error) {
           dispatch(
-            showErrorNotification('Uploading queries failed', error.message)
+            showErrorNotification('Uploading operations failed', error.message)
           );
         }
       };
@@ -67,7 +67,7 @@ class AddAllowedQuery extends React.Component {
             <input
               type="text"
               className={'form-control input-sm ' + styles.inline_block}
-              placeholder={'query_name'}
+              placeholder={'operation_name'}
               value={manualQuery.name}
               onChange={handleNameChange}
             />
@@ -91,10 +91,10 @@ class AddAllowedQuery extends React.Component {
               <b>Query:</b>
             </div>
             <AceEditor
-              data-test="allowed_query_add"
+              data-test="allowed_operation_add"
               mode="graphql"
               theme="github"
-              name="allowed_query_add"
+              name="allowed_operation_add"
               value={manualQuery.query}
               minLines={8}
               maxLines={100}
@@ -124,7 +124,7 @@ class AddAllowedQuery extends React.Component {
         <div>
           <div className={styles.add_mar_bottom_mid}>
             <b>Graphql File:</b>
-            <Tooltip message={'.graphql file with queries'} />
+            <Tooltip message={'.graphql file with operations'} />
           </div>
           <input
             type="file"
@@ -138,16 +138,16 @@ class AddAllowedQuery extends React.Component {
     return (
       <div>
         <h4 className={styles.subheading_text}>
-          Add new queries to allow-list
+          Add new operations to allow-list
         </h4>
         <div className={styles.subsection}>
           <div>
             <ExpandableEditor
-              expandButtonText="Add query manually"
+              expandButtonText="Add operation manually"
               editorExpanded={getManualQueryInput}
               collapseCallback={handleManualCollapse}
-              property="add-allowed-query"
-              service="add-allowed-query"
+              property="add-allowed-operation"
+              service="add-allowed-operation"
               saveButtonText="Add"
               saveFunc={handleManualSubmit}
             />
@@ -158,8 +158,8 @@ class AddAllowedQuery extends React.Component {
               expandButtonText="Upload graphql file"
               editorExpanded={getFileUploadInput}
               collapseCallback={handleFileUploadCollapse}
-              property="upload-allowed-queries"
-              service="upload-allowed-queries"
+              property="upload-allowed-operations"
+              service="upload-allowed-operations"
               saveButtonText="Upload"
               saveFunc={handleFileUploadSubmit}
             />

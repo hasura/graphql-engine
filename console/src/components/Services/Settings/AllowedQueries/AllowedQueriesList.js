@@ -69,7 +69,7 @@ class AllowedQueriesList extends React.Component {
                   type="text"
                   className={'form-control input-sm ' + styles.inline_block}
                   value={modifiedQuery.name}
-                  placeholder={'query_name'}
+                  placeholder={'operation_name'}
                   onChange={handleNameChange}
                 />
               </div>
@@ -78,10 +78,10 @@ class AllowedQueriesList extends React.Component {
                   <b>Operation:</b>
                 </div>
                 <AceEditor
-                  data-test="allowed_query_editor"
+                  data-test="allowed_operation_editor"
                   mode="graphql"
                   theme="github"
-                  name="allowed_query_editor"
+                  name="allowed_operation_editor"
                   value={modifiedQuery.query}
                   minLines={8}
                   maxLines={100}
@@ -127,7 +127,7 @@ class AllowedQueriesList extends React.Component {
             <ExpandableEditor
               editorExpanded={queryEditorExpanded}
               property={`query-${i}`}
-              service="modify-allowed-query"
+              service="modify-allowed-operation"
               saveFunc={onSubmit}
               removeFunc={onDelete}
               collapsedClass={styles.display_flex}
