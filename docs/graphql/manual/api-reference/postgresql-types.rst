@@ -56,7 +56,9 @@ E.g.
 .. note::
 
    To avoid loss of data when retrieving IEEE 754 style data from the database,
-   please refer to the :ref:`server_flag_reference`.
+   please refer to the :ref:`server_flag_reference` for instructions on setting
+   the ``extra_float_digits`` parameter, which has a bad default value in
+   PostgreSQL 11 and older.
 
 .. _Numeric:
 
