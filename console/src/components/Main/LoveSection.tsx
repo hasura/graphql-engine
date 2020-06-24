@@ -40,12 +40,13 @@ const Update: React.FC<ConsoleNotification> = ({
       <Flex borderBottom="1px solid #f7f7f7">
         <Text fontSize={15} fontWeight="normal" px={15} py={4}>
           {content}
+          {props.external_link ? 
           <a
             href={props.external_link}
             className={styles.notificationExternalLink}
           >
-            Click here &rarr;
-          </a>
+            Click here &rarr; 
+          </a> : null}
         </Text>
       </Flex>
     </Box>
