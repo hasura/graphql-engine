@@ -531,7 +531,7 @@ Mutation response
 
 **on_conflict** argument
 ^^^^^^^^^^^^^^^^^^^^^^^^
-The conflict clause is used to convert an *insert* query to an *upsert* query. *Upsert* respects the table's *update*
+The conflict clause is used to convert an *insert* mutation to an *upsert* mutation. *Upsert* respects the table's *update*
 permissions before editing an existing row in case of a conflict. Hence the conflict clause is permitted only if a
 table has *update* permissions defined.
 
