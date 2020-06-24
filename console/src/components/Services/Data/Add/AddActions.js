@@ -375,19 +375,18 @@ const createTableSql = () => {
       return;
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
       errorMsg,
-      true
-    );
+      shouldSkipSchemaReload: true,
+    });
   };
 };
 

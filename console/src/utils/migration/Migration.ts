@@ -9,9 +9,13 @@ export interface RunSQLQueryType {
 export default class Migration {
   upMigration: RunSQLQueryType[];
   downMigration: RunSQLQueryType[];
-  constructor() {
-    this.upMigration = [];
-    this.downMigration = [];
+
+  constructor(
+    upMigration: RunSQLQueryType[],
+    downMigration: RunSQLQueryType[]
+  ) {
+    this.upMigration = upMigration || [];
+    this.downMigration = downMigration || [];
   }
 
   hasValue = () => this.upMigration.length > 0;
@@ -26,6 +30,10 @@ export default class Migration {
         getDownQueryComments([up as RunSqlType])[0], // reusing the method which works with array
         ...this.downMigration,
       ];
+  };
+  set = (upMigration: RunSQLQueryType[], downMigration: RunSQLQueryType[]) => {
+    this.upMigration = upMigration;
+    this.downMigration = downMigration;
   };
 
   // this is called when there is only one migration for at that particular index

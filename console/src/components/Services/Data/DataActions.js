@@ -44,6 +44,7 @@ import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
 
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { getDownQueryComments } from '../../../utils/migration/utils';
+import Migration from '../../../utils/migration/Migration';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -521,30 +522,32 @@ const handleMigrationErrors = (title, errorMsg) => dispatch => {
   }
 };
 
-const makeMigrationCall = (
-  dispatch,
-  getState,
-  upQueries,
-  downQueries = [],
-  migrationName,
-  customOnSuccess,
-  customOnError,
-  requestMsg,
-  successMsg,
-  errorMsg,
-  shouldSkipSchemaReload,
-  skipExecution = false,
-  isRetry
-) => {
+const makeMigrationCall = args => {
+  const {
+    dispatch,
+    getState,
+    migration,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg,
+    shouldSkipSchemaReload,
+    skipExecution = false,
+    isRetry = false,
+  } = args;
   const upQuery = {
     type: 'bulk',
-    args: upQueries,
+    args: migration.upMigration,
   };
 
   const downQuery = {
     type: 'bulk',
     args:
-      downQueries.length > 0 ? downQueries : getDownQueryComments(upQueries),
+      migration.downMigration.length > 0
+        ? migration.downMigration
+        : getDownQueryComments(migration.upMigration),
   };
 
   const migrationBody = {
@@ -601,21 +604,18 @@ const makeMigrationCall = (
           autoDismiss: 0,
           action: {
             label: 'Continue',
-            callback: () =>
-              makeMigrationCall(
-                dispatch,
-                getState,
-                cascadeUpQueries(upQueries), // cascaded new up queries
-                downQueries,
-                migrationName,
-                customOnSuccess,
-                customOnError,
-                requestMsg,
-                successMsg,
-                errorMsg,
-                shouldSkipSchemaReload,
-                true // prevent further retry
-              ),
+            callback: () => {
+              const cascadedMigration = new Migration(
+                cascadeUpQueries(migration.upMigration), // cascaded new up queries
+                migration.downMigration
+              );
+
+              makeMigrationCall({
+                ...args,
+                migration: cascadedMigration,
+                isRetry: true, // prevent further retry
+              });
+            },
           },
         },
         'error'

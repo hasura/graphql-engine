@@ -75,18 +75,17 @@ const addExistingTableSql = () => {
       dispatch({ type: REQUEST_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -129,18 +128,17 @@ const addExistingFunction = name => {
       dispatch({ type: REQUEST_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -191,19 +189,18 @@ const addAllUntrackedTablesSql = tableList => {
       dispatch({ type: REQUEST_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
       errorMsg,
-      true
-    );
+      shouldSkipSchemaReload: true,
+    });
   };
 };
 

@@ -306,18 +306,17 @@ const permRemoveRole = (tableSchema, roleName) => {
     };
     const customOnError = () => {};
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -375,18 +374,17 @@ const permRemoveMultipleRoles = tableSchema => {
     };
     const customOnError = () => {};
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -503,18 +501,17 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
     };
     const customOnError = () => {};
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -619,25 +616,23 @@ const copyRolePermissions = (
     };
     const customOnError = () => {};
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
 const deleteRoleGlobally = roleName => {
   return (dispatch, getState) => {
-    const permissionsUpQueries = [];
-    const permissionsDownQueries = [];
+    const migration = new Migration();
 
     const allSchemas = getState().tables.allSchemas;
     const currentSchema = getState().tables.currentSchema;
@@ -666,9 +661,7 @@ const deleteRoleGlobally = roleName => {
             roleName,
             currPermissions
           );
-
-          permissionsUpQueries.push(deleteQuery);
-          permissionsDownQueries.push(createQuery);
+          migration.add(deleteQuery, createQuery);
         }
       });
     });
@@ -686,18 +679,17 @@ const deleteRoleGlobally = roleName => {
     };
     const customOnError = () => {};
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      permissionsUpQueries,
-      permissionsDownQueries,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -797,18 +789,17 @@ const permChangePermissions = changeType => {
     };
     const customOnError = () => {};
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 

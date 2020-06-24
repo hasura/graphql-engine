@@ -111,18 +111,17 @@ export const saveRemoteRelationship = (
     };
 
     // Rename relationship should fetch entire schema info.
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -171,18 +170,17 @@ export const dropRemoteRelationship = (
     };
 
     // Rename relationship should fetch entire schema info.
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -257,18 +255,17 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
     const customOnError = () => {};
 
     // Rename relationship should fetch entire schema info.
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -391,19 +388,18 @@ const deleteRelMigrate = relMeta => (dispatch, getState) => {
   const customOnError = () => {};
 
   // Delete relationship should fetch entire schema info.
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
     errorMsg,
-    true
-  );
+    shouldSkipSchemaReload: true,
+  });
 };
 
 const addRelNewFromStateMigrate = () => (dispatch, getState) => {
@@ -447,19 +443,18 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   const customOnError = () => {};
 
   // Rename relationship should fetch only current table schema info.
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
     errorMsg,
-    true
-  );
+    shouldSkipSchemaReload: true,
+  });
 };
 
 const setManualRelAdd = manualRelAdd => ({
@@ -558,18 +553,17 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
       )
     );
   } else {
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   }
 };
 
@@ -717,19 +711,18 @@ const autoTrackRelations = autoTrackData => (dispatch, getState) => {
   };
   const customOnError = () => {};
 
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
     errorMsg,
-    true
-  );
+    shouldSkipSchemaReload: true,
+  });
 };
 
 const autoAddRelName = obj => (dispatch, getState) => {
@@ -751,18 +744,17 @@ const autoAddRelName = obj => (dispatch, getState) => {
   };
   const customOnError = () => {};
 
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 export {

@@ -217,18 +217,17 @@ export const saveComputedField = (
   };
   const customOnError = () => {};
 
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 export const deleteComputedField = (computedField, table) => (
@@ -255,18 +254,17 @@ export const deleteComputedField = (computedField, table) => (
   const customOnSuccess = () => {};
   const customOnError = () => {};
 
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 export const setCustomRootFields = successCb => (dispatch, getState) => {
@@ -313,18 +311,17 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
     dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
   };
 
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 export const removeCheckConstraint = (constraintName, successCb, errorCb) => (
@@ -376,18 +373,17 @@ export const removeCheckConstraint = (constraintName, successCb, errorCb) => (
     }
     dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
   };
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 const savePrimaryKeys = (tableName, schemaName, constraintName) => {
@@ -476,18 +472,17 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -621,18 +616,17 @@ const saveForeignKeys = (index, tableSchema, columns) => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -674,18 +668,17 @@ const removeForeignKey = (index, tableSchema) => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -750,18 +743,17 @@ const changeTableName = (oldName, newName, isTable, tableType) => {
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -803,18 +795,17 @@ IS ${sqlEscapeText(trigger.comment)};`;
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -844,19 +835,18 @@ const deleteTableSql = tableName => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
       errorMsg,
-      true
-    );
+      shouldSkipSchemaReload: true,
+    });
   };
 };
 
@@ -881,19 +871,18 @@ const untrackTableSql = tableName => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
       errorMsg,
-      true
-    );
+      shouldSkipSchemaReload: true,
+    });
   };
 };
 
@@ -993,18 +982,17 @@ const deleteViewSql = (viewName, viewType) => {
     };
     const customOnError = () => {};
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -1158,18 +1146,17 @@ const deleteColumnSql = (column, tableSchema) => {
     };
     const customOnError = () => {};
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -1289,18 +1276,17 @@ const addColSql = (
     };
     const customOnError = () => {};
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -1344,18 +1330,17 @@ const deleteConstraintSql = (tableName, cName) => {
     const customOnSuccess = () => {};
     const customOnError = () => {};
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -1425,19 +1410,18 @@ const saveTableCommentSql = tableType => {
     };
     const customOnError = () => {};
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
       errorMsg,
-      true
-    );
+      shouldSkipSchemaReload: true,
+    });
   };
 };
 
@@ -1486,18 +1470,17 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const customOnError = () => {};
 
     if (migration.hasValue()) {
-      makeMigrationCall(
+      makeMigrationCall({
         dispatch,
         getState,
-        migration.upMigration,
-        migration.downMigration,
+        migration,
         migrationName,
         customOnSuccess,
         customOnError,
         requestMsg,
         successMsg,
-        errorMsg
-      );
+        errorMsg,
+      });
     } else {
       dispatch(
         showSuccessNotification(
@@ -1595,18 +1578,17 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
 
     const customOnError = () => {};
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -1680,18 +1662,17 @@ export const toggleTableAsEnum = (isEnum, successCallback, failureCallback) => (
     }
   };
 
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 export const saveCheckConstraint = (index, successCb, errorCb) => (
@@ -1774,18 +1755,17 @@ export const saveCheckConstraint = (index, successCb, errorCb) => (
     }
   };
 
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 const saveUniqueKey = (
@@ -1865,18 +1845,17 @@ const saveUniqueKey = (
 
     const customOnError = () => {};
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -1926,18 +1905,17 @@ export const setViewCustomColumnNames = (
     }
   };
 
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 export {

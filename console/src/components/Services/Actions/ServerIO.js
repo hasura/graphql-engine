@@ -219,18 +219,17 @@ export const createAction = () => (dispatch, getState) => {
     dispatch(createActionRequestComplete());
   };
   dispatch(createActionRequestInProgress());
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 export const saveAction = currentAction => (dispatch, getState) => {
@@ -365,18 +364,17 @@ export const saveAction = currentAction => (dispatch, getState) => {
   };
 
   dispatch(modifyActionRequestInProgress());
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 export const deleteAction = currentAction => (dispatch, getState) => {
@@ -413,18 +411,17 @@ export const deleteAction = currentAction => (dispatch, getState) => {
   };
 
   dispatch(modifyActionRequestInProgress());
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 export const addActionRel = (relConfig, successCb, existingRelConfig) => (
@@ -503,18 +500,17 @@ export const addActionRel = (relConfig, successCb, existingRelConfig) => (
     // dispatch(createActionRequestComplete());
   };
   // dispatch(createActionRequestInProgress());
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 export const removeActionRel = (relName, typename, successCb) => (
@@ -562,18 +558,17 @@ export const removeActionRel = (relName, typename, successCb) => (
     // dispatch(createActionRequestComplete());
   };
   // dispatch(createActionRequestInProgress());
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 export const saveActionPermission = (successCb, errorCb) => (
@@ -616,18 +611,17 @@ export const saveActionPermission = (successCb, errorCb) => (
   };
 
   dispatch(makePermRequest());
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };
 
 export const removeActionPermission = (successCb, errorCb) => (
@@ -671,16 +665,15 @@ export const removeActionPermission = (successCb, errorCb) => (
   };
 
   dispatch(makePermRequest());
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };

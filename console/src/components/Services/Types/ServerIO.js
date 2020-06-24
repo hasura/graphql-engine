@@ -88,16 +88,15 @@ export const setCustomGraphQLTypes = (types, successCb, errorCb) => (
     }
   };
 
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
-    errorMsg
-  );
+    errorMsg,
+  });
 };

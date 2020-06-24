@@ -153,19 +153,18 @@ export const addScheduledTrigger = (
     }
   };
 
-  return makeMigrationCall(
+  return makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
     errorMsg,
-    false
-  );
+    shouldSkipSchemaReload: false,
+  });
 };
 
 export const saveScheduledTrigger = (
@@ -252,19 +251,18 @@ export const saveScheduledTrigger = (
     }
   };
 
-  return makeMigrationCall(
+  return makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
     errorMsg,
-    false
-  );
+    shouldSkipSchemaReload: false,
+  });
 };
 
 export const deleteScheduledTrigger = (
@@ -307,19 +305,18 @@ export const deleteScheduledTrigger = (
     }
   };
 
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
     errorMsg,
-    false
-  );
+    shouldSkipSchemaReload: false,
+  });
 };
 
 export const createEventTrigger = (
@@ -361,19 +358,18 @@ export const createEventTrigger = (
       }
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
       errorMsg,
-      true
-    );
+      shouldSkipSchemaReload: true,
+    });
   };
 };
 
@@ -462,19 +458,18 @@ export const modifyEventTrigger = (
     }
   };
 
-  return makeMigrationCall(
+  return makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
     errorMsg,
-    true
-  );
+    shouldSkipSchemaReload: true,
+  });
 };
 
 export const deleteEventTrigger = (
@@ -516,19 +511,18 @@ export const deleteEventTrigger = (
     }
   };
 
-  return makeMigrationCall(
+  return makeMigrationCall({
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
     errorMsg,
-    true
-  );
+    shouldSkipSchemaReload: true,
+  });
 };
 
 export const createScheduledEvent = (

@@ -105,18 +105,17 @@ export const replaceMetadata = (newMetadata, successCb, errorCb) => (
       if (errorCb) errorCb();
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 
   const exportErrorCb = () => {
