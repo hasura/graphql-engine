@@ -621,16 +621,6 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 					return fmt.Errorf("cannot update remote relationship on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
 				}
 				prevElems = append(prevElems, element)
-			case *createCronTriggerInput:
-				if tblCfg.GetState() == "untracked" {
-					return fmt.Errorf("cannot create cron trigger on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
-				}
-				prevElems = append(prevElems, element)
-			case *deleteCronTriggerInput:
-				if tblCfg.GetState() == "untracked" {
-					return fmt.Errorf("cannot delete cron trigger on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
-				}
-				prevElems = append(prevElems, element)
 			}
 		}
 	}
