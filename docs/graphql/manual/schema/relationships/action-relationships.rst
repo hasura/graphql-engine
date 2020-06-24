@@ -63,7 +63,7 @@ The following values can be defined for an action relationship:
 
   .. tab:: CLI
 
-    You can add an action relationship in the ``actions.yaml`` file inside the ``metadata`` directory:
+    You can add an action relationship by adding it to the respective custom type in the ``actions.yaml`` file inside the ``metadata`` directory:
 
     .. code-block:: yaml
       :emphasize-lines: 4-13
