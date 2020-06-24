@@ -143,7 +143,7 @@ func TestCommands(t *testing.T) {
 			v2.TestSeedsApplyCmd(t, ec)
 		})
 	})
-	t.Run("config=v2/incomplete_migration_dir", func(t *testing.T) {
+	t.Run("config=v2/incomplete_metadata_dir", func(t *testing.T) {
 		ec := cli.NewExecutionContext()
 		ec.Config = &cli.Config{}
 		logger, _ := test.NewNullLogger()
