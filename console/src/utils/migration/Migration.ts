@@ -11,11 +11,11 @@ export default class Migration {
   downMigration: RunSQLQueryType[];
 
   constructor(
-    upMigration: RunSQLQueryType[],
-    downMigration: RunSQLQueryType[]
+    upMigration: RunSQLQueryType[] = [],
+    downMigration: RunSQLQueryType[] = []
   ) {
-    this.upMigration = upMigration || [];
-    this.downMigration = downMigration || [];
+    this.upMigration = upMigration;
+    this.downMigration = downMigration;
   }
 
   hasValue = () => this.upMigration.length > 0;
