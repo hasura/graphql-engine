@@ -51,23 +51,9 @@ const fetchRemoteSchemas = () => {
     dispatch({ type: FETCH_REMOTE_SCHEMAS });
     return dispatch(requestAction(url, options)).then(
       data => {
-        const consistentRemoteSchemas = data;
-        // const { inconsistentObjects } = getState().metadata;
-
-        // if (inconsistentObjects.length > 0) {
-        //   // TODO: no more filtering. Show an icon next to those
-        //   // Check what this method is doing and based on that render
-        //   // the appropriate remote schemas
-        //   consistentRemoteSchemas = filterInconsistentMetadataObjects(
-        //     data,
-        //     inconsistentObjects,
-        //     'remote_schemas'
-        //   );
-        // }
-
         dispatch({
           type: REMOTE_SCHEMAS_FETCH_SUCCESS,
-          data: consistentRemoteSchemas,
+          data,
         });
         return Promise.resolve();
       },
