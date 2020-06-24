@@ -342,7 +342,7 @@ getEventTriggerDef
 getEventTriggerDef triggerName = do
   (sn, tn, Q.AltJ etc) <- Q.getRow <$> Q.withQE defaultTxErrorHandler
     [Q.sql|
-     SELECT e.schema_name, e.table_name, e.configuration::json, e.comment
+     SELECT e.schema_name, e.table_name, e.configuration::json
      FROM hdb_catalog.event_triggers e where e.name = $1
            |] (Identity triggerName) False
   return (QualifiedObject sn tn, etc)
