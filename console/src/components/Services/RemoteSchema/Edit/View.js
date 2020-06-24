@@ -18,8 +18,8 @@ import ReloadRemoteSchema from '../../Settings/MetadataOptions/ReloadRemoteSchem
 import { appPrefix } from '../constants';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
-
 import globals from '../../../../Globals';
+import styles from '../RemoteSchema.scss';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -77,8 +77,6 @@ class ViewStitchedSchema extends React.Component {
       // throw a 404 exception
       throw new NotFoundError();
     }
-
-    const styles = require('../RemoteSchema.scss');
 
     const { remoteSchemaName } = this.props.params;
     const { manualUrl, envName, headers, readOnlyMode } = this.props;

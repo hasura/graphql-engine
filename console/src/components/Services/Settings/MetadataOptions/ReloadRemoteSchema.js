@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../../../Common/Button/Button';
-import { reloadRemoteSchema } from '../Actions';
+// import { reloadRemoteSchema } from '../Actions';
 import metaDataStyles from '../Settings.scss';
 
 import {
   showSuccessNotification,
   showErrorNotification,
 } from '../../Common/Notification';
+import { reloadMetadata } from '../Actions';
 
 class ReloadRemoteSchema extends Component {
   constructor() {
@@ -16,27 +17,38 @@ class ReloadRemoteSchema extends Component {
     this.state.isReloading = false;
   }
   render() {
-    const { dispatch, remoteSchemaName } = this.props;
+    const { dispatch } = this.props;
     console.group(this.props);
     const { isReloading } = this.state;
     const reloadRemoteMetadataHandler = () => {
       this.setState({ isReloading: true });
       dispatch(
-        reloadRemoteSchema(
-          remoteSchemaName,
+        // TODO: if the remote schema is within inconsistent objects, it breaks the app
+        // reloadRemoteSchema(
+        //   remoteSchemaName,
+        //   () => {
+        //     dispatch(showSuccessNotification('Remote schema reloaded'));
+        //     this.setState({ isReloading: false });
+        //   },
+        //   error => {
+        //     dispatch(
+        //       showErrorNotification(
+        //         'Error reloading remote schema',
+        //         null,
+        //         error
+        //       )
+        //     );
+        //     this.setState({ isReloading: false });
+        //   }
+        // )
+        reloadMetadata(
+          true,
           () => {
-            dispatch(showSuccessNotification('Remote schema reloaded'));
+            showSuccessNotification('Remote schema reloaded');
             this.setState({ isReloading: false });
           },
-          error => {
-            dispatch(
-              showErrorNotification(
-                'Error reloading remote schema',
-                null,
-                error
-              )
-            );
-            this.setState({ isReloading: false });
+          () => {
+            showErrorNotification('Error reloading remote schema', null);
           }
         )
       );
