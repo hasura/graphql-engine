@@ -111,7 +111,6 @@ instance ToJSON WebHookLog where
            , "message" .= whlMessage whl
            ]
 
-
 class (Monad m) => HttpLog m where
   logHttpError
     :: Logger Hasura
