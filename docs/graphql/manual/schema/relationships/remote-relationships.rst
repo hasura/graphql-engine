@@ -25,9 +25,9 @@ Because Hasura is meant to be a GraphQL server that you can expose directly to y
 
   To see example use cases, check out this `blog post <https://hasura.io/blog/remote-joins-a-graphql-api-to-join-database-and-other-data-sources/>`__.
 
-.. note::
-
-  Remote relationships are currently available in ``v.1.3.0-beta.3``.
+.. admonition:: Supported from
+  
+  Remote relationships are supported in versions ``v1.3.0-beta.1`` and above.
 
 .. .. admonition:: Supported from
   
