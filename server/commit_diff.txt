@@ -178,14 +178,6 @@ Date:   Thu Jun 25 09:03:37 2020 +0530
 
     Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
 
-commit c7ffd882d0e468f64687a9ed07fe930445821c6f
-Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
-Date:   Wed Jun 24 19:25:50 2020 +0530
-
-    fix relay introspection when remote relationships are defined, fix #5144 (#5145)
-
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
 commit 6a58c144f540508e3a75c977585577e0b757d550
 Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
 Date:   Tue Jun 23 20:51:34 2020 +0530

@@ -562,7 +562,7 @@ tableArgs table selectPermissions = do
           initOrdByCols = flip mapMaybe initOrderBys $ \ob ->
             case obiColumn ob of
               RQL.AOCColumn pgCol -> Just $ pgiColumn pgCol
-              _               -> Nothing
+              _                   -> Nothing
           isValid = (colsLen == length initOrdByCols)
                     && all (`elem` initOrdByCols) (toList distinctOnCols)
       unless isValid $ parseError $
@@ -866,42 +866,46 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions = do
       maybeToList <$> computedField computedFieldInfo selectPermissions
 
     FIRemoteRelationship (remoteFieldInfo :: RemoteFieldInfo)  -> do
-      remoteSchemasFieldDefns <- asks $ qcRemoteFields . getter
-      let remoteSchemaName = _rfiRemoteSchemaName remoteFieldInfo
-      fieldDefns <-
-        case Map.lookup remoteSchemaName remoteSchemasFieldDefns of
-          Nothing ->
-            throw500 $ "unexpected: remote schema "
-            <> remoteSchemaName
-            <<> " not found"
-          Just fieldDefns -> pure fieldDefns
+      queryType <- asks $ qcQueryType . getter
+      -- https://github.com/hasura/graphql-engine/issues/5144
+      if queryType == ET.QueryRelay then pure []
+      else do
+        remoteSchemasFieldDefns <- asks $ qcRemoteFields . getter
+        let remoteSchemaName = _rfiRemoteSchemaName remoteFieldInfo
+        fieldDefns <-
+          case Map.lookup remoteSchemaName remoteSchemasFieldDefns of
+            Nothing ->
+              throw500 $ "unexpected: remote schema "
+              <> remoteSchemaName
+              <<> " not found"
+            Just fieldDefns -> pure fieldDefns
 
-      fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteFieldInfo
-      remoteFieldsArgumentsParser <-
-        fmap sequenceA $ for (Map.toList $ _rfiParamMap remoteFieldInfo) $
-        \(name, inpValDefn) ->
-          inputValueDefinitionParser (_rfiSchemaIntrospect remoteFieldInfo) inpValDefn
-          <&> fmap (fmap (\gVal -> RQL.RemoteFieldArgument name gVal))
+        fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteFieldInfo
+        remoteFieldsArgumentsParser <-
+          fmap sequenceA $ for (Map.toList $ _rfiParamMap remoteFieldInfo) $
+          \(name, inpValDefn) ->
+            inputValueDefinitionParser (_rfiSchemaIntrospect remoteFieldInfo) inpValDefn
+            <&> fmap (fmap (\gVal -> RQL.RemoteFieldArgument name gVal))
 
-      -- This selection set parser, should be of the remote node's selection set parser, which comes
-      -- from the fieldCall
-      nestedFieldInfo <- lookupRemoteField fieldDefns $ unRemoteFields $ _rfiRemoteFields remoteFieldInfo
-      let remoteFieldsArgumentsParser' = fmap catMaybes remoteFieldsArgumentsParser
-      case nestedFieldInfo of
-        P.FieldInfo{ P.fType = fieldType } -> do
-          let fieldInfo' = P.FieldInfo
-                { P.fArguments = P.ifDefinitions remoteFieldsArgumentsParser'
-                , P.fType = fieldType }
-          pure $ pure $ P.unsafeRawField (P.mkDefinition fieldName Nothing fieldInfo')
-            `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
-              remoteArgs <- P.ifParser remoteFieldsArgumentsParser' args
-              pure $ RQL.AFRemote $ RQL.RemoteSelect
-                { _rselArgs          = remoteArgs
-                , _rselSelection     = selSet
-                , _rselHasuraColumns = _rfiHasuraFields remoteFieldInfo
-                , _rselFieldCall     = unRemoteFields $ _rfiRemoteFields remoteFieldInfo
-                , _rselRemoteSchema  = _rfiRemoteSchema remoteFieldInfo
-                }
+        -- This selection set parser, should be of the remote node's selection set parser, which comes
+        -- from the fieldCall
+        nestedFieldInfo <- lookupRemoteField fieldDefns $ unRemoteFields $ _rfiRemoteFields remoteFieldInfo
+        let remoteFieldsArgumentsParser' = fmap catMaybes remoteFieldsArgumentsParser
+        case nestedFieldInfo of
+          P.FieldInfo{ P.fType = fieldType } -> do
+            let fieldInfo' = P.FieldInfo
+                  { P.fArguments = P.ifDefinitions remoteFieldsArgumentsParser'
+                  , P.fType = fieldType }
+            pure $ pure $ P.unsafeRawField (P.mkDefinition fieldName Nothing fieldInfo')
+              `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
+                remoteArgs <- P.ifParser remoteFieldsArgumentsParser' args
+                pure $ RQL.AFRemote $ RQL.RemoteSelect
+                  { _rselArgs          = remoteArgs
+                  , _rselSelection     = selSet
+                  , _rselHasuraColumns = _rfiHasuraFields remoteFieldInfo
+                  , _rselFieldCall     = unRemoteFields $ _rfiRemoteFields remoteFieldInfo
+                  , _rselRemoteSchema  = _rfiRemoteSchema remoteFieldInfo
+                  }
 
 -- | Parses the arguments to the underlying sql function of a computed field or
 --   a custom function. All arguments to the underlying sql function are parsed
