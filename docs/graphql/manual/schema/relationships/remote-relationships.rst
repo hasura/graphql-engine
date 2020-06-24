@@ -46,6 +46,7 @@ Step 2: Open the remote relationship section
 
 .. thumbnail:: /img/graphql/manual/remote-joins/add.png
    :alt: Opening the remote relationship section
+   :width: 1000px
 
 Step 3: Define the relationship
 -------------------------------
