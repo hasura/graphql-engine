@@ -41,6 +41,7 @@ Step 1: Navigate to Cron Triggers
 
 .. thumbnail:: /img/graphql/manual/event-triggers/create-cron.png
    :alt: Adding a cron trigger
+   :width: 1000px
 
 Step 2: Define the cron trigger
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -61,7 +62,7 @@ Let's define the cron trigger.
 
       .. thumbnail:: /img/graphql/manual/event-triggers/define-cron-trigger.png
          :alt: Defining a cron trigger
-         :width: 80%
+         :width: 550px
 
       In this example, we're creating a cron trigger called ``eod_reports``, to trigger the webhook ``https://mywebhook.com/eod``. The cron schedule is set to ``0 22 * * 1-5``, which means "At 22:00 on every day-of-week from Monday through Friday" (you can check this `here <https://crontab.guru/#0_22_*_*_1-5>`__).
 
@@ -123,7 +124,7 @@ If you like, you can also define the following values:
 
       .. thumbnail:: /img/graphql/manual/event-triggers/advanced-cron.png
          :alt: Defining advanced options for a cron trigger
-         :width: 80%
+         :width: 700px
 
    .. tab:: CLI
 
@@ -184,6 +185,7 @@ Once you've created your cron trigger, you can see ``Pending events``, ``Process
 
 .. thumbnail:: /img/graphql/manual/event-triggers/pending-cron.png
    :alt: Schedule and logs for cron triggers
+   :width: 1200px
 
 One-off scheduled events
 ------------------------
@@ -201,7 +203,7 @@ Step 1: Navigate to One-off Scheduled Events
 
 .. thumbnail:: /img/graphql/manual/event-triggers/one-off.png
    :alt: Adding a one-off scheduled event
-   :width: 80%
+   :width: 900px
 
 Step 2: Define the scheduled event
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -221,7 +223,7 @@ Define the following values for a scheduled event:
 
       .. thumbnail:: /img/graphql/manual/event-triggers/define-one-off-event.png
          :alt: Defining the scheduled event
-         :width: 80%
+         :width: 550px
 
    .. tab:: API
 
@@ -260,7 +262,7 @@ If you like, you can also define advanced values:
 
       .. thumbnail:: /img/graphql/manual/event-triggers/advanced-one-off.png
          :alt: Defining advanced options for a scheduled event
-         :width: 80%
+         :width: 700px
 
    .. tab:: API
 
@@ -303,3 +305,4 @@ Once you've created your scheduled trigger, you can see ``Pending events``, ``Pr
 
 .. thumbnail:: /img/graphql/manual/event-triggers/pending-one-off.png
    :alt: Schedule and logs for scheduled events
+   :width: 1200px
