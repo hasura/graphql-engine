@@ -66,7 +66,7 @@ The following values can be defined for an action relationship:
     You can add an action relationship by adding it to the respective custom type in the ``actions.yaml`` file inside the ``metadata`` directory:
 
     .. code-block:: yaml
-      :emphasize-lines: 4-13
+      :emphasize-lines: 4-11
 
       - custom_types
         - objects

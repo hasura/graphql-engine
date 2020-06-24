@@ -50,11 +50,11 @@ of sending headers after a query/mutation and hence the ``Set-Cookie`` headers a
 not sent to the client.** Use HTTP transport if your remote servers set cookies.
 
 
-Bypassing Hasura's authorization system for remote schema queries
------------------------------------------------------------------
+Bypassing Hasura's authorization system for remote schema requests
+------------------------------------------------------------------
 
 It might be necessary sometimes to bypass Hasura's authorization system (calling
-the configured webhook, or validating the JWT), for queries that are for a
+the configured webhook, or validating the JWT), for requests that are for a
 remote GraphQL server.
 
 **For example**, you have a remote GraphQL server which does authentication,
