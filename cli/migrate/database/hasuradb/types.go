@@ -815,6 +815,11 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	for _, rs := range rmi.RemoteSchemas {
 		l.PushBack(rs)
 	}
+
+	// track cron triggers
+	for _, ct := range rmi.CronTriggers {
+		l.PushBack(ct)
+	}
 }
 
 type InconsistentMetadata struct {
