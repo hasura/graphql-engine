@@ -3,9 +3,7 @@ import { Triggers } from './types';
 export type EventsState = {
   triggers: Triggers;
   currentTrigger: string;
-  loading: {
-    [component: string]: boolean;
-  };
+  loading: boolean;
   error: {
     [component: string]: any;
   };
@@ -17,7 +15,7 @@ const state: EventsState = {
     event: [],
   },
   currentTrigger: '',
-  loading: {},
+  loading: true,
   error: {},
 };
 
