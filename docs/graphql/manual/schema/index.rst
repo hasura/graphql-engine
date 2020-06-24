@@ -39,3 +39,4 @@ Postgres constructs.
   data-validations
   Using an existing database <using-existing-database>
   Export GraphQL schema <export-graphql-schema>
+  relay-schema
