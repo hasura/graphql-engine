@@ -25,7 +25,7 @@ const hasuraASCIIText = `
 
 var (
 	//IsUpdateCommandEnabled is an ldflag used to disable the automatic updates
-	IsUpdateCommandEnabled bool
+	IsUpdateCommandEnabled string
 )
 
 // ec is the Execution Context for the current run.
@@ -39,7 +39,7 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if IsUpdateCommandEnabled {
+		if IsUpdateCommandEnabled == "true" {
 			if cmd.Use != updateCLICmdUse {
 				if update.ShouldRunCheck(ec.LastUpdateCheckFile) && ec.GlobalConfig.ShowUpdateNotification && !ec.SkipUpdateCheck {
 					u := &updateOptions{
