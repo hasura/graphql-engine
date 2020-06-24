@@ -23,6 +23,11 @@ const hasuraASCIIText = `
 
 `
 
+var (
+	//IsUpdateCommandEnabled is an ldflag used to disable the automatic updates
+	IsUpdateCommandEnabled bool
+)
+
 // ec is the Execution Context for the current run.
 var ec *cli.ExecutionContext
 
@@ -34,14 +39,16 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if cmd.Use != updateCLICmdUse {
-			if update.ShouldRunCheck(ec.LastUpdateCheckFile) && ec.GlobalConfig.ShowUpdateNotification && !ec.SkipUpdateCheck {
-				u := &updateOptions{
-					EC: ec,
-				}
-				err := u.run(true)
-				if err != nil && u.EC.Version.GetCLIVersion() != version.DevVersion {
-					ec.Logger.WithError(err).Warn("auto-update failed, run 'hasura update-cli' to update manually")
+		if IsUpdateCommandEnabled {
+			if cmd.Use != updateCLICmdUse {
+				if update.ShouldRunCheck(ec.LastUpdateCheckFile) && ec.GlobalConfig.ShowUpdateNotification && !ec.SkipUpdateCheck {
+					u := &updateOptions{
+						EC: ec,
+					}
+					err := u.run(true)
+					if err != nil && u.EC.Version.GetCLIVersion() != version.DevVersion {
+						ec.Logger.WithError(err).Warn("auto-update failed, run 'hasura update-cli' to update manually")
+					}
 				}
 			}
 		}
