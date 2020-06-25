@@ -3,13 +3,16 @@ import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
 import 'brace/mode/sql';
+
 import Modal from '../../../Common/Modal/Modal';
 import Button from '../../../Common/Button/Button';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import Alert from '../../../Common/Alert';
+
 import { parseCreateSQL } from './utils';
 import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
 
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 import {
   executeSQL,
   SET_SQL,
@@ -19,13 +22,35 @@ import {
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
-import './AceEditorFix.css';
 import {
   ACE_EDITOR_THEME,
   ACE_EDITOR_FONT_SIZE,
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
+import NotesSection from './molecules/NotesSection';
 
+/**
+ * # RawSQL React FC
+ * ## renders raw SQL page on route `/data/sql`
+ *
+ * @typedef Props
+ * @property {string} sql
+ * @property {string} resultType
+ * @property {array} result
+ * @property {array} resultHeaders
+ * @property {function} dispatch
+ * @property {boolean} ongoingRequest
+ * @property {object} lastError
+ * @property {boolean} lastSuccess
+ * @property {boolean} isModalOpen
+ * @property {boolean} isCascadeChecked
+ * @property {boolean} isMigrationChecked
+ * @property {boolean} isTableTrackChecked
+ * @property {boolean} migrationMode
+ * @property {array} allSchemas
+ *
+ * @param {Props}
+ */
 const RawSQL = ({
   sql,
   resultType,
@@ -52,7 +77,6 @@ const RawSQL = ({
   // set up sqlRef to use in unmount
   const sqlRef = useRef(sql);
 
-  // set SQL from localStorage on mount and write back to localStorage on unmount
   useEffect(() => {
     if (!sql) {
       const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
@@ -60,41 +84,16 @@ const RawSQL = ({
         dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
       }
     }
-
     return () => {
       localStorage.setItem(LS_RAW_SQL_SQL, sqlRef.current);
     };
   }, []);
-
   // set SQL to sqlRef
   useEffect(() => {
     sqlRef.current = sql;
   }, [sql]);
 
   /* hooks - end */
-
-  const cascadeTip = (
-    <Tooltip id="tooltip-cascade">
-      Cascade actions on all dependent metadata references, like relationships
-      and permissions
-    </Tooltip>
-  );
-  const migrationTip = (
-    <Tooltip id="tooltip-migration">
-      Create a migration file with the SQL statement
-    </Tooltip>
-  );
-  const migrationNameTip = (
-    <Tooltip id="tooltip-migration">
-      Name of the generated migration file. Default: 'run_sql_migration'
-    </Tooltip>
-  );
-  const trackTableTip = () => (
-    <Tooltip id="tooltip-tracktable">
-      If you are creating a table/view/function, checking this will also expose
-      them over the GraphQL API
-    </Tooltip>
-  );
 
   const submitSQL = () => {
     // set SQL to LS
@@ -127,34 +126,6 @@ const RawSQL = ({
       dispatch(executeSQL(false, ''));
     }
   };
-
-  let alert = null;
-
-  if (ongoingRequest) {
-    alert = (
-      <div className={`${styles.padd_left_remove} col-xs-12`}>
-        <div className="hidden alert alert-warning" role="alert">
-          Running...
-        </div>
-      </div>
-    );
-  } else if (lastError) {
-    alert = (
-      <div className={`${styles.padd_left_remove} col-xs-12`}>
-        <div className="hidden alert alert-danger" role="alert">
-          Error: {JSON.stringify(lastError)}
-        </div>
-      </div>
-    );
-  } else if (lastSuccess) {
-    alert = (
-      <div className={`${styles.padd_left_remove} col-xs-12`}>
-        <div className="hidden alert alert-success" role="alert">
-          Executed Query
-        </div>
-      </div>
-    );
-  }
 
   const getMigrationWarningModal = () => {
     const onModalClose = () => {
@@ -257,6 +228,8 @@ const RawSQL = ({
             },
           ]}
           onChange={handleSQLChange}
+          // prevents unwanted frequent event triggers
+          debounceChangePeriod={200}
         />
       </div>
     );
@@ -306,25 +279,6 @@ const RawSQL = ({
     return resultTable;
   };
 
-  const getNotesSection = () => {
-    return (
-      <ul>
-        <li>
-          You can create views, alter tables or just about run any SQL
-          statements directly on the database.
-        </li>
-        <li>
-          Multiple SQL statements can be separated by semicolons, <code>;</code>
-          , however, only the result of the last SQL statement will be returned.
-        </li>
-        <li>
-          Multiple SQL statements will be run as a transaction. i.e. if any
-          statement fails, none of the statements will be applied.
-        </li>
-      </ul>
-    );
-  };
-
   const getMetadataCascadeSection = () => {
     return (
       <div className={styles.add_mar_top_small}>
@@ -343,12 +297,11 @@ const RawSQL = ({
           />
           Cascade metadata
         </label>
-        <OverlayTrigger placement="right" overlay={cascadeTip}>
-          <i
-            className={`${styles.add_mar_left_small} fa fa-info-circle`}
-            aria-hidden="true"
-          />
-        </OverlayTrigger>
+        <Tooltip
+          message={
+            'Cascade actions on all dependent metadata references, like relationships and permissions'
+          }
+        />
       </div>
     );
   };
@@ -374,12 +327,18 @@ const RawSQL = ({
           />
           Track this
         </label>
-        <OverlayTrigger placement="right" overlay={trackTableTip()}>
-          <i
-            className={`${styles.add_mar_left_small} fa fa-info-circle`}
-            aria-hidden="true"
-          />
-        </OverlayTrigger>
+        <Tooltip
+          message={
+            'If you are creating tables, views or functions, checking this will also expose them over the GraphQL API as top level fields'
+          }
+        />
+        &nbsp;
+        <KnowMoreLink
+          text={'See supported functions requirements'}
+          href={
+            'https://hasura.io/docs/1.0/graphql/manual/schema/custom-functions.html#supported-sql-functions'
+          }
+        />
       </div>
     );
   };
@@ -408,12 +367,7 @@ const RawSQL = ({
             />
             This is a migration
           </label>
-          <OverlayTrigger placement="right" overlay={migrationTip}>
-            <i
-              className={`${styles.add_mar_left_small} fa fa-info-circle`}
-              aria-hidden="true"
-            />
-          </OverlayTrigger>
+          <Tooltip message={'Create a migration file with the SQL statement'} />
         </div>
       );
     };
@@ -427,25 +381,16 @@ const RawSQL = ({
             <div>
               <label className={styles.add_mar_right}>Migration name:</label>
               <input
-                className={
-                  styles.inline_block +
-                  ' ' +
-                  styles.tableNameInput +
-                  ' ' +
-                  styles.add_mar_right_small +
-                  ' ' +
-                  ' form-control'
-                }
+                className={`${styles.inline_block} ${styles.tableNameInput} ${styles.add_mar_right_small} form-control`}
                 placeholder={'run_sql_migration'}
                 id="migration-name"
                 type="text"
               />
-              <OverlayTrigger placement="right" overlay={migrationNameTip}>
-                <i
-                  className={`${styles.add_mar_left_small} fa fa-info-circle`}
-                  aria-hidden="true"
-                />
-              </OverlayTrigger>
+              <Tooltip
+                message={
+                  "Name of the generated migration file. Default: 'run_sql_migration'"
+                }
+              />
               <div
                 className={styles.add_mar_top_small + ' ' + styles.text_gray}
               >
@@ -474,21 +419,6 @@ const RawSQL = ({
     return migrationSection;
   };
 
-  const getRunButton = () => {
-    return (
-      <Button
-        type="submit"
-        className={styles.add_mar_top}
-        onClick={submitSQL}
-        color="yellow"
-        size="sm"
-        data-test="run-sql"
-      >
-        Run!
-      </Button>
-    );
-  };
-
   return (
     <div
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
@@ -501,26 +431,44 @@ const RawSQL = ({
         <div className="clearfix" />
       </div>
       <div className={styles.add_mar_top}>
-        <div>
-          <div className={`${styles.padd_left_remove} col-xs-8`}>
-            {getNotesSection()}
-          </div>
+        <div className={`${styles.padd_left_remove} col-xs-8`}>
+          <NotesSection />
+        </div>
 
-          <div className={`${styles.padd_left_remove} col-xs-10`}>
-            {getSQLSection()}
-          </div>
+        <div className={`${styles.padd_left_remove} col-xs-10`}>
+          {getSQLSection()}
+        </div>
 
-          <div
-            className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
+        <div
+          className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
+        >
+          {getTrackThisSection()}
+          {getMetadataCascadeSection()}
+          {getMigrationSection()}
+          <Button
+            type="submit"
+            className={styles.add_mar_top}
+            onClick={submitSQL}
+            color="yellow"
+            size="sm"
+            data-test="run-sql"
           >
-            {getTrackThisSection()}
-            {getMetadataCascadeSection()}
-            {getMigrationSection()}
+            Run!
+          </Button>
+        </div>
 
-            {getRunButton()}
+        <div className="hidden col-xs-4">
+          <div className={`${styles.padd_left_remove} col-xs-12`}>
+            {ongoingRequest && <Alert type="warning" text="Running..." />}
+            {lastError && (
+              <Alert
+                type="danger"
+                text={`Error: ${JSON.stringify(lastError)}`}
+              />
+            )}
+            {lastSuccess && <Alert type="success" text="Executed Query" />};
           </div>
         </div>
-        <div className="hidden col-xs-4">{alert}</div>
       </div>
 
       {getMigrationWarningModal()}

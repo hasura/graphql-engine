@@ -1,4 +1,5 @@
 @import '../../../../Common/Common.scss';
+@import '../../../../Common/Layout//ExpandableEditor/Editor.scss';
 
 .modifyWrapper {
   .commonBtn {
@@ -16,7 +17,7 @@
 
     .red_button {
       margin-right: 20px;
-      color: #FFF;
+      color: #fff;
     }
 
     .no_mr_right {

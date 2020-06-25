@@ -1,3 +1,4 @@
+import React from 'react';
 import sanitize from 'sanitize-filename';
 
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
@@ -13,6 +14,8 @@ import { getAllUnTrackedRelations } from './TableRelationships/Actions';
 import {
   showErrorNotification,
   showSuccessNotification,
+  getErrorMessage,
+  showNotification,
 } from '../Common/Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
@@ -26,7 +29,10 @@ import {
   fetchTrackedTableFkQuery,
   fetchTableListQuery,
   fetchTrackedTableListQuery,
+  fetchTrackedTableRemoteRelationshipQuery,
   mergeLoadSchemaData,
+  cascadeUpQueries,
+  getDependencyError,
 } from './utils';
 
 import _push from './push';
@@ -195,6 +201,30 @@ const initQueries = {
   },
 };
 
+export const mergeRemoteRelationshipsWithSchema = (
+  remoteRelationships,
+  table
+) => {
+  return (dispatch, getState) => {
+    const { allSchemas } = getState().tables;
+    const t = allSchemas.find(s => {
+      return s.table_name === table.name && s.table_schema === table.schema;
+    });
+    if (!t) return;
+    const newAllSchemas = allSchemas.filter(
+      s => !(s.table_name === table.name && s.table_schema === table.schema)
+    );
+    newAllSchemas.push({
+      ...t,
+      remote_relationships: remoteRelationships,
+    });
+    dispatch({
+      type: LOAD_SCHEMA,
+      allSchemas: newAllSchemas,
+    });
+  };
+};
+
 const fetchTrackedFunctions = () => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
@@ -290,6 +320,7 @@ const loadSchema = configOptions => {
         fetchTrackedTableListQuery(configOptions), // v1/query
         fetchTrackedTableFkQuery(configOptions),
         fetchTrackedTableReferencedFkQuery(configOptions),
+        fetchTrackedTableRemoteRelationshipQuery(configOptions),
       ],
     };
 
@@ -302,11 +333,17 @@ const loadSchema = configOptions => {
 
     return dispatch(requestAction(url, options)).then(
       data => {
+        const tableList = JSON.parse(data[0].result[1]);
+        const fkList = JSON.parse(data[2].result[1]);
+        const refFkList = JSON.parse(data[3].result[1]);
+        const remoteRelationships = data[4];
+
         const mergedData = mergeLoadSchemaData(
-          JSON.parse(data[0].result[1]),
+          tableList,
           data[1],
-          JSON.parse(data[2].result[1]),
-          JSON.parse(data[3].result[1])
+          fkList,
+          refFkList,
+          remoteRelationships
         );
 
         const { inconsistentObjects } = getState().metadata;
@@ -494,7 +531,9 @@ const makeMigrationCall = (
   requestMsg,
   successMsg,
   errorMsg,
-  shouldSkipSchemaReload
+  shouldSkipSchemaReload,
+  skipExecution = false,
+  isRetry
 ) => {
   const upQuery = {
     type: 'bulk',
@@ -510,6 +549,7 @@ const makeMigrationCall = (
     name: sanitize(migrationName),
     up: upQuery.args,
     down: downQuery.args,
+    skip_execution: skipExecution,
   };
 
   const currMigrationMode = getState().main.migrationMode;
@@ -542,10 +582,53 @@ const makeMigrationCall = (
     }
     customOnSuccess(data, globals.consoleMode, currMigrationMode);
   };
+  const retryMigration = (err = {}, errMsg = '') => {
+    dispatch(
+      showNotification(
+        {
+          title: errMsg,
+          level: 'error',
+          message: (
+            <p>
+              {getErrorMessage('', err)}
+              <br />
+              <br />
+              Do you want to drop the dependent items as well?
+            </p>
+          ),
+          autoDismiss: 0,
+          action: {
+            label: 'Continue',
+            callback: () =>
+              makeMigrationCall(
+                dispatch,
+                getState,
+                cascadeUpQueries(upQueries), // cascaded new up queries
+                downQueries,
+                migrationName,
+                customOnSuccess,
+                customOnError,
+                requestMsg,
+                successMsg,
+                errorMsg,
+                shouldSkipSchemaReload,
+                true // prevent further retry
+              ),
+          },
+        },
+        'error'
+      )
+    );
+  };
 
   const onError = err => {
-    customOnError(err);
+    if (!isRetry) {
+      const dependecyError = getDependencyError(err);
+      if (dependecyError) return retryMigration(dependecyError, errorMsg);
+    }
+
     dispatch(handleMigrationErrors(errorMsg, err));
+    customOnError(err);
   };
 
   dispatch({ type: MAKE_REQUEST });

@@ -40,7 +40,7 @@ the metadata API.
 Schema
 """"""
 
-.. thumbnail:: ../../../img/graphql/manual/engine-internals/hdb_table.jpg
+.. thumbnail:: /img/graphql/manual/engine-internals/hdb_table.jpg
   :width: 30%
   :alt: hdb_table schema
 
@@ -66,7 +66,7 @@ the metadata API.
 Schema
 """"""
 
-.. thumbnail:: ../../../img/graphql/manual/engine-internals/hdb_relationship.jpg
+.. thumbnail:: /img/graphql/manual/engine-internals/hdb_relationship.jpg
   :width: 30%
   :alt: hdb_relationship schema
 
@@ -110,7 +110,7 @@ the metadata API.
 Schema
 """"""
 
-.. thumbnail:: ../../../img/graphql/manual/engine-internals/hdb_permission.jpg
+.. thumbnail:: /img/graphql/manual/engine-internals/hdb_permission.jpg
   :width: 30%
   :alt: hdb_permission schema
 
@@ -129,10 +129,10 @@ Column Definitions
 +---------------------+------------------------------------------------------------------------------------------+
 | perm_def            | Captures information about how the permission is defined.                                |
 |                     |                                                                                          |
-|                     | Whenever a query is made with the above role for the above table GraphQL engine          |
+|                     | Whenever a request is made with the above role for the above table GraphQL engine        |
 |                     | will first validate the requested columns with the columns which the user has access to  |
 |                     | using the ``columns`` key.                                                               |
-|                     | Once the query is validated the appropriate results are returned after applying the      |
+|                     | Once the request is validated the appropriate results are returned after applying the    |
 |                     | filter defined in the ``filter`` key.                                                    |
 |                     |                                                                                          |
 |                     | For example:                                                                             |

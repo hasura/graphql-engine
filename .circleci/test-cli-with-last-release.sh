@@ -33,7 +33,7 @@ PID=$!
 wait_for_port 8080
 
 # test cli
-HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" TEST_TAGS="latest_release" make test
+HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH="/build/_cli_ext_output/manifest-dev.yaml" make test
 
 # kill the running server
 kill -s INT $PID
@@ -47,5 +47,5 @@ PID=$!
 wait_for_port 8080
 
 # test cli
-HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" TEST_TAGS="latest_release" make test
+HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH="/build/_cli_ext_output/manifest-dev.yaml" make test
 kill -s INT $PID

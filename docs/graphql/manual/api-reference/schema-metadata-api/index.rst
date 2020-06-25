@@ -226,6 +226,21 @@ The various types of queries are listed in the following table:
      - 1
      - Invoke a trigger with custom payload
 
+   * - :ref:`create_cron_trigger`
+     - :ref:`create_cron_trigger_args <create_cron_trigger_syntax>`
+     - 1
+     - Create a cron trigger
+
+   * - :ref:`delete_cron_trigger`
+     - :ref:`delete_cron_trigger_args <delete_cron_trigger_syntax>`
+     - 1
+     - Delete an existing cron trigger
+
+   * - :ref:`create_scheduled_event`
+     - :ref:`create_scheduled_event_args <create_scheduled_event_syntax>`
+     - 1
+     - Create a new scheduled event
+
    * - :ref:`add_remote_schema`
      - :ref:`add_remote_schema_args <add_remote_schema_syntax>`
      - 1
@@ -240,6 +255,22 @@ The various types of queries are listed in the following table:
      - :ref:`reload_remote_schema_args <reload_remote_schema_syntax>`
      - 1
      - Reload schema of an existing remote schema
+
+   * - :ref:`create_remote_relationship`
+     - :ref:`create_remote_relationship_args <create_remote_relationship_syntax>`
+     - 1
+     - Create a remote relationship with an existing remote schema
+
+   * - :ref:`update_remote_relationship`
+     - :ref:`update_remote_relationship_args <update_remote_relationship_syntax>`
+     - 1
+     - Update an existing remote relationship
+
+   * - :ref:`delete_remote_relationship`
+     - :ref:`delete_remote_relationship_args <delete_remote_relationship_syntax>`
+     - 1
+     - Delete an existing remote relationship
+
 
    * - :ref:`export_metadata`
      - :ref:`Empty Object`
@@ -426,7 +457,9 @@ See :ref:`server_flag_reference` for info on setting the above flag/env var.
   Permissions <permission>
   Computed Fields <computed-field>
   Event Triggers <event-triggers>
+  Scheduled Triggers <scheduled-triggers>
   Remote Schemas <remote-schemas>
+  Remote Relationships <remote-relationships>
   Query Collections <query-collections>
   Custom Types <custom-types>
   Actions <actions>

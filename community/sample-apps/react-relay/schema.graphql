@@ -1,0 +1,657 @@
+schema {
+  query: query_root
+  mutation: mutation_root
+  subscription: subscription_root
+}
+
+# mutation root
+type mutation_root {
+  # delete data from the table: "restaurants"
+  delete_restaurants(
+    # filter the rows which have to be deleted
+    where: restaurants_bool_exp!
+  ): restaurants_mutation_response
+
+  # delete single row from the table: "restaurants"
+  delete_restaurants_by_pk(id: uuid!): restaurants
+
+  # delete data from the table: "reviews"
+  delete_reviews(
+    # filter the rows which have to be deleted
+    where: reviews_bool_exp!
+  ): reviews_mutation_response
+
+  # delete single row from the table: "reviews"
+  delete_reviews_by_pk(id: uuid!): reviews
+
+  # insert data into the table: "restaurants"
+  insert_restaurants(
+    # the rows to be inserted
+    objects: [restaurants_insert_input!]!
+
+    # on conflict condition
+    on_conflict: restaurants_on_conflict
+  ): restaurants_mutation_response
+
+  # insert a single row into the table: "restaurants"
+  insert_restaurants_one(
+    # the row to be inserted
+    object: restaurants_insert_input!
+
+    # on conflict condition
+    on_conflict: restaurants_on_conflict
+  ): restaurants
+
+  # insert data into the table: "reviews"
+  insert_reviews(
+    # the rows to be inserted
+    objects: [reviews_insert_input!]!
+
+    # on conflict condition
+    on_conflict: reviews_on_conflict
+  ): reviews_mutation_response
+
+  # insert a single row into the table: "reviews"
+  insert_reviews_one(
+    # the row to be inserted
+    object: reviews_insert_input!
+
+    # on conflict condition
+    on_conflict: reviews_on_conflict
+  ): reviews
+
+  # update data of the table: "restaurants"
+  update_restaurants(
+    # sets the columns of the filtered rows to the given values
+    _set: restaurants_set_input
+
+    # filter the rows which have to be updated
+    where: restaurants_bool_exp!
+  ): restaurants_mutation_response
+
+  # update single row of the table: "restaurants"
+  update_restaurants_by_pk(
+    # sets the columns of the filtered rows to the given values
+    _set: restaurants_set_input
+    pk_columns: restaurants_pk_columns_input!
+  ): restaurants
+
+  # update data of the table: "reviews"
+  update_reviews(
+    # sets the columns of the filtered rows to the given values
+    _set: reviews_set_input
+
+    # filter the rows which have to be updated
+    where: reviews_bool_exp!
+  ): reviews_mutation_response
+
+  # update single row of the table: "reviews"
+  update_reviews_by_pk(
+    # sets the columns of the filtered rows to the given values
+    _set: reviews_set_input
+    pk_columns: reviews_pk_columns_input!
+  ): reviews
+}
+
+# An object with globally unique ID
+interface Node {
+  # A globally unique identifier
+  id: ID!
+}
+
+# column ordering options
+enum order_by {
+  # in the ascending order, nulls last
+  asc
+
+  # in the ascending order, nulls first
+  asc_nulls_first
+
+  # in the ascending order, nulls last
+  asc_nulls_last
+
+  # in the descending order, nulls first
+  desc
+
+  # in the descending order, nulls first
+  desc_nulls_first
+
+  # in the descending order, nulls last
+  desc_nulls_last
+}
+
+type PageInfo {
+  endCursor: String!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String!
+}
+
+# query root
+type query_root {
+  node(
+    # A globally unique id
+    id: ID!
+  ): Node
+
+  # fetch data from the table: "restaurants"
+  restaurants_connection(
+    after: String
+    before: String
+
+    # distinct select on columns
+    distinct_on: [restaurants_select_column!]
+    first: Int
+    last: Int
+
+    # sort the rows by one or more columns
+    order_by: [restaurants_order_by!]
+
+    # filter the rows returned
+    where: restaurants_bool_exp
+  ): restaurantsConnection!
+
+  # fetch data from the table: "reviews"
+  reviews_connection(
+    after: String
+    before: String
+
+    # distinct select on columns
+    distinct_on: [reviews_select_column!]
+    first: Int
+    last: Int
+
+    # sort the rows by one or more columns
+    order_by: [reviews_order_by!]
+
+    # filter the rows returned
+    where: reviews_bool_exp
+  ): reviewsConnection!
+}
+
+# columns and relationships of "restaurants"
+type restaurants implements Node {
+  cuisine: String!
+  id: ID!
+  name: String!
+
+  # An array relationship
+  reviews(
+    # distinct select on columns
+    distinct_on: [reviews_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [reviews_order_by!]
+
+    # filter the rows returned
+    where: reviews_bool_exp
+  ): [reviews!]!
+
+  # An aggregated array relationship
+  reviews_aggregate(
+    # distinct select on columns
+    distinct_on: [reviews_select_column!]
+
+    # limit the number of rows returned
+    limit: Int
+
+    # skip the first n rows. Use only with order_by
+    offset: Int
+
+    # sort the rows by one or more columns
+    order_by: [reviews_order_by!]
+
+    # filter the rows returned
+    where: reviews_bool_exp
+  ): reviews_aggregate!
+  reviews_connection(
+    after: String
+    before: String
+
+    # distinct select on columns
+    distinct_on: [reviews_select_column!]
+    first: Int
+    last: Int
+
+    # sort the rows by one or more columns
+    order_by: [reviews_order_by!]
+
+    # filter the rows returned
+    where: reviews_bool_exp
+  ): reviewsConnection!
+}
+
+# aggregated selection of "restaurants"
+type restaurants_aggregate {
+  aggregate: restaurants_aggregate_fields
+  nodes: [restaurants!]!
+}
+
+# aggregate fields of "restaurants"
+type restaurants_aggregate_fields {
+  count(columns: [restaurants_select_column!], distinct: Boolean): Int
+  max: restaurants_max_fields
+  min: restaurants_min_fields
+}
+
+# order by aggregate values of table "restaurants"
+input restaurants_aggregate_order_by {
+  count: order_by
+  max: restaurants_max_order_by
+  min: restaurants_min_order_by
+}
+
+# input type for inserting array relation for remote table "restaurants"
+input restaurants_arr_rel_insert_input {
+  data: [restaurants_insert_input!]!
+  on_conflict: restaurants_on_conflict
+}
+
+# Boolean expression to filter rows from the table "restaurants". All fields are combined with a logical 'AND'.
+input restaurants_bool_exp {
+  _and: [restaurants_bool_exp]
+  _not: restaurants_bool_exp
+  _or: [restaurants_bool_exp]
+  cuisine: String_comparison_exp
+  id: uuid_comparison_exp
+  name: String_comparison_exp
+  reviews: reviews_bool_exp
+}
+
+# unique or primary key constraints on table "restaurants"
+enum restaurants_constraint {
+  # unique or primary key constraint
+  planets_pkey
+}
+
+# input type for inserting data into table "restaurants"
+input restaurants_insert_input {
+  cuisine: String
+  id: uuid
+  name: String
+  reviews: reviews_arr_rel_insert_input
+}
+
+# aggregate max on columns
+type restaurants_max_fields {
+  cuisine: String
+  id: uuid
+  name: String
+}
+
+# order by max() on columns of table "restaurants"
+input restaurants_max_order_by {
+  cuisine: order_by
+  id: order_by
+  name: order_by
+}
+
+# aggregate min on columns
+type restaurants_min_fields {
+  cuisine: String
+  id: uuid
+  name: String
+}
+
+# order by min() on columns of table "restaurants"
+input restaurants_min_order_by {
+  cuisine: order_by
+  id: order_by
+  name: order_by
+}
+
+# response of any mutation on the table "restaurants"
+type restaurants_mutation_response {
+  # number of affected rows by the mutation
+  affected_rows: Int!
+
+  # data of the affected rows by the mutation
+  returning: [restaurants!]!
+}
+
+# input type for inserting object relation for remote table "restaurants"
+input restaurants_obj_rel_insert_input {
+  data: restaurants_insert_input!
+  on_conflict: restaurants_on_conflict
+}
+
+# on conflict condition type for table "restaurants"
+input restaurants_on_conflict {
+  constraint: restaurants_constraint!
+  update_columns: [restaurants_update_column!]!
+  where: restaurants_bool_exp
+}
+
+# ordering options when selecting data from "restaurants"
+input restaurants_order_by {
+  cuisine: order_by
+  id: order_by
+  name: order_by
+  reviews_aggregate: reviews_aggregate_order_by
+}
+
+# primary key columns input for table: "restaurants"
+input restaurants_pk_columns_input {
+  id: uuid!
+}
+
+# select columns of table "restaurants"
+enum restaurants_select_column {
+  # column name
+  cuisine
+
+  # column name
+  id
+
+  # column name
+  name
+}
+
+# input type for updating data in table "restaurants"
+input restaurants_set_input {
+  cuisine: String
+  id: uuid
+  name: String
+}
+
+# update columns of table "restaurants"
+enum restaurants_update_column {
+  # column name
+  cuisine
+
+  # column name
+  id
+
+  # column name
+  name
+}
+
+# A Relay Connection object on "restaurants"
+type restaurantsConnection {
+  edges: [restaurantsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type restaurantsEdge {
+  cursor: String!
+  node: restaurants
+}
+
+# columns and relationships of "reviews"
+type reviews implements Node {
+  body: String!
+  created_at: timestamptz
+  id: ID!
+
+  # An object relationship
+  planet: restaurants!
+  planet_id: uuid!
+}
+
+# aggregated selection of "reviews"
+type reviews_aggregate {
+  aggregate: reviews_aggregate_fields
+  nodes: [reviews!]!
+}
+
+# aggregate fields of "reviews"
+type reviews_aggregate_fields {
+  count(columns: [reviews_select_column!], distinct: Boolean): Int
+  max: reviews_max_fields
+  min: reviews_min_fields
+}
+
+# order by aggregate values of table "reviews"
+input reviews_aggregate_order_by {
+  count: order_by
+  max: reviews_max_order_by
+  min: reviews_min_order_by
+}
+
+# input type for inserting array relation for remote table "reviews"
+input reviews_arr_rel_insert_input {
+  data: [reviews_insert_input!]!
+  on_conflict: reviews_on_conflict
+}
+
+# Boolean expression to filter rows from the table "reviews". All fields are combined with a logical 'AND'.
+input reviews_bool_exp {
+  _and: [reviews_bool_exp]
+  _not: reviews_bool_exp
+  _or: [reviews_bool_exp]
+  body: String_comparison_exp
+  created_at: timestamptz_comparison_exp
+  id: uuid_comparison_exp
+  planet: restaurants_bool_exp
+  planet_id: uuid_comparison_exp
+}
+
+# unique or primary key constraints on table "reviews"
+enum reviews_constraint {
+  # unique or primary key constraint
+  reviews_pkey
+}
+
+# input type for inserting data into table "reviews"
+input reviews_insert_input {
+  body: String
+  created_at: timestamptz
+  id: uuid
+  planet: restaurants_obj_rel_insert_input
+  planet_id: uuid
+}
+
+# aggregate max on columns
+type reviews_max_fields {
+  body: String
+  created_at: timestamptz
+  id: uuid
+  planet_id: uuid
+}
+
+# order by max() on columns of table "reviews"
+input reviews_max_order_by {
+  body: order_by
+  created_at: order_by
+  id: order_by
+  planet_id: order_by
+}
+
+# aggregate min on columns
+type reviews_min_fields {
+  body: String
+  created_at: timestamptz
+  id: uuid
+  planet_id: uuid
+}
+
+# order by min() on columns of table "reviews"
+input reviews_min_order_by {
+  body: order_by
+  created_at: order_by
+  id: order_by
+  planet_id: order_by
+}
+
+# response of any mutation on the table "reviews"
+type reviews_mutation_response {
+  # number of affected rows by the mutation
+  affected_rows: Int!
+
+  # data of the affected rows by the mutation
+  returning: [reviews!]!
+}
+
+# input type for inserting object relation for remote table "reviews"
+input reviews_obj_rel_insert_input {
+  data: reviews_insert_input!
+  on_conflict: reviews_on_conflict
+}
+
+# on conflict condition type for table "reviews"
+input reviews_on_conflict {
+  constraint: reviews_constraint!
+  update_columns: [reviews_update_column!]!
+  where: reviews_bool_exp
+}
+
+# ordering options when selecting data from "reviews"
+input reviews_order_by {
+  body: order_by
+  created_at: order_by
+  id: order_by
+  planet: restaurants_order_by
+  planet_id: order_by
+}
+
+# primary key columns input for table: "reviews"
+input reviews_pk_columns_input {
+  id: uuid!
+}
+
+# select columns of table "reviews"
+enum reviews_select_column {
+  # column name
+  body
+
+  # column name
+  created_at
+
+  # column name
+  id
+
+  # column name
+  planet_id
+}
+
+# input type for updating data in table "reviews"
+input reviews_set_input {
+  body: String
+  created_at: timestamptz
+  id: uuid
+  planet_id: uuid
+}
+
+# update columns of table "reviews"
+enum reviews_update_column {
+  # column name
+  body
+
+  # column name
+  created_at
+
+  # column name
+  id
+
+  # column name
+  planet_id
+}
+
+# A Relay Connection object on "reviews"
+type reviewsConnection {
+  edges: [reviewsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type reviewsEdge {
+  cursor: String!
+  node: reviews
+}
+
+# expression to compare columns of type String. All fields are combined with logical 'AND'.
+input String_comparison_exp {
+  _eq: String
+  _gt: String
+  _gte: String
+  _ilike: String
+  _in: [String!]
+  _is_null: Boolean
+  _like: String
+  _lt: String
+  _lte: String
+  _neq: String
+  _nilike: String
+  _nin: [String!]
+  _nlike: String
+  _nsimilar: String
+  _similar: String
+}
+
+# subscription root
+type subscription_root {
+  node(
+    # A globally unique id
+    id: ID!
+  ): Node
+
+  # fetch data from the table: "restaurants"
+  restaurants_connection(
+    after: String
+    before: String
+
+    # distinct select on columns
+    distinct_on: [restaurants_select_column!]
+    first: Int
+    last: Int
+
+    # sort the rows by one or more columns
+    order_by: [restaurants_order_by!]
+
+    # filter the rows returned
+    where: restaurants_bool_exp
+  ): restaurantsConnection!
+
+  # fetch data from the table: "reviews"
+  reviews_connection(
+    after: String
+    before: String
+
+    # distinct select on columns
+    distinct_on: [reviews_select_column!]
+    first: Int
+    last: Int
+
+    # sort the rows by one or more columns
+    order_by: [reviews_order_by!]
+
+    # filter the rows returned
+    where: reviews_bool_exp
+  ): reviewsConnection!
+}
+
+scalar timestamptz
+
+# expression to compare columns of type timestamptz. All fields are combined with logical 'AND'.
+input timestamptz_comparison_exp {
+  _eq: timestamptz
+  _gt: timestamptz
+  _gte: timestamptz
+  _in: [timestamptz!]
+  _is_null: Boolean
+  _lt: timestamptz
+  _lte: timestamptz
+  _neq: timestamptz
+  _nin: [timestamptz!]
+}
+
+scalar uuid
+
+# expression to compare columns of type uuid. All fields are combined with logical 'AND'.
+input uuid_comparison_exp {
+  _eq: uuid
+  _gt: uuid
+  _gte: uuid
+  _in: [uuid!]
+  _is_null: Boolean
+  _lt: uuid
+  _lte: uuid
+  _neq: uuid
+  _nin: [uuid!]
+}
+

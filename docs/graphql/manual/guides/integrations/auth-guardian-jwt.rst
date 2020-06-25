@@ -61,7 +61,7 @@ Let's say you're using GitHub as the primary login for your Hasura app, and that
 - Add set the user id in the "built-in value" field to ``GITHUB_USER_ID``
 - Click the ``save`` button on the right hand side.
 
-.. thumbnail:: ../../../../img/graphql/manual/guides/auth-guardian-user-id.png
+.. thumbnail:: /img/graphql/manual/guides/auth-guardian-user-id.png
    :alt: Set an AuthGuardian JWT with a user id
 
 Option 2: Set the default Hasura role
@@ -75,7 +75,7 @@ Add a new rule (the ``+`` button in the top-left), and fill it out:
 - Add the default role, e.g. ``user``.
 - Click the ``save`` button on the right hand side.
 
-.. thumbnail:: ../../../../img/graphql/manual/guides/auth-guardian-default-role.png
+.. thumbnail:: /img/graphql/manual/guides/auth-guardian-default-role.png
    :alt: Set an AuthGuardian JWT with default role
 
 .. note::
@@ -91,7 +91,7 @@ Now, you want to restrict access to some data in Hasura so that only you and you
 - Click on "Add" and add an additional role, e.g. ``admin``.
 - Click the ``save`` button on the right hand side.
 
-.. thumbnail:: ../../../../img/graphql/manual/guides/auth-guardian-additional-role.png
+.. thumbnail:: /img/graphql/manual/guides/auth-guardian-additional-role.png
    :alt: Set an AuthGuardian JWT with additional roles
 
 Option 4: Set a session variable
@@ -105,7 +105,7 @@ Let's say we want to restrict access to some super-interesting data in our Hasur
 - Add your session variable name ``is-our-biggest-fan`` and value to JSON ``true``.
 - Click the ``save`` button on the right hand side.
 
-.. thumbnail:: ../../../../img/graphql/manual/guides/auth-guardian-session-variable.png
+.. thumbnail:: /img/graphql/manual/guides/auth-guardian-session-variable.png
    :alt: Set an AuthGuardian JWT with session variables for Hasura to use
 
 .. note::
@@ -140,7 +140,7 @@ The generated config has the following structure:
 
 - Add the generated config as a value for the environment variable ``HASURA_GRAPHQL_JWT_SECRET`` or for the ``--jwt-secret`` server flag.
 
-.. thumbnail:: ../../../../img/graphql/manual/guides/auth-guardian-config-generator.png
+.. thumbnail:: /img/graphql/manual/guides/auth-guardian-config-generator.png
    :alt: AuthGuardian lets you copy/paste the required JWT configuration for either Hasura or Hasura-on-Heroku
 
 Step 4: Test the config and tokens
@@ -152,14 +152,14 @@ When configuring your permissions in Hasura, it's useful to be able to quickly g
 - Paste the copied JWT (or optionally write your own JSON if you want to test alternative scenarios).
 - Copy the signed token and add it as a header in the Hasura console.
 
-.. thumbnail:: ../../../../img/graphql/manual/guides/auth-guardian-generate-test-jwt.png
+.. thumbnail:: /img/graphql/manual/guides/auth-guardian-generate-test-jwt.png
    :alt: Use the JWT-signer form to quickly sign any JSON and test in the Hasura console
 
 - In GraphiQL, try out queries to test that the integration works as expected by adding an ``Authorization`` header, with a value of ``Bearer <the-copied-JWT-text>``. Hasura's GraphiQL will recognize this header, show you its content, and confirm whether it recognizes the JWT as securely signed.
 
-.. thumbnail:: ../../../../img/graphql/manual/guides/auth-guardian-test-jwt.png
+.. thumbnail:: /img/graphql/manual/guides/auth-guardian-test-jwt.png
    :alt: Test AuthGuardian JWT
 
 Next Steps
 ^^^^^^^^^^
-AuthGuardian supports much more, including the ability to eject your rules as a pair of GraphQL query and JavaScript function so you can customize the auth as necessary. To read more about it, please visit the `AuthGuardian docs <https://www.onegraph.com/docs/>`__.
+AuthGuardian supports much more, including the ability to eject your rules as a pair of GraphQL request and JavaScript function so you can customize the auth as necessary. To read more about it, please visit the `AuthGuardian docs <https://www.onegraph.com/docs/>`__.

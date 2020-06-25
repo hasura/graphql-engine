@@ -23,15 +23,10 @@ endpoint to Hasura. Your GraphQL service can be written in any language or frame
 This is what Hasura running with "Remote schemas" looks like:
 
 
-.. thumbnail:: ../../../img/graphql/manual/remote-schemas/remote-schemas-arch.png
+.. thumbnail:: /img/graphql/manual/remote-schemas/remote-schemas-arch.png
    :class: no-shadow
-   :width: 75%
+   :width: 55%
    :alt: Architecture of Hasura with remote schemas
-
-.. note::
-
-  This is a new feature under active development. Please do give us feedback, bug-reports and ask us questions on
-  our `discord <https://discord.gg/vBPpJkS>`__ or on `github <https://github.com/hasura/graphql-engine>`__.
 
 Use cases
 ---------
@@ -76,7 +71,7 @@ To merge your remote schema with the GraphQL engine's auto-generated schema:
 
 Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button.
 
-.. thumbnail:: ../../../img/graphql/manual/business-logic/add-remote-schemas-interface.png
+.. thumbnail:: /img/graphql/manual/business-logic/add-remote-schemas-interface.png
    :alt: Merge remote schema
 
 You need to enter the following information:
@@ -196,11 +191,11 @@ of sending headers after a query/mutation and hence the ``Set-Cookie`` headers a
 not sent to the client.** Use HTTP transport if your remote servers set cookies. 
 
 
-Bypassing Hasura's authorization system for remote schema queries
------------------------------------------------------------------
+Bypassing Hasura's authorization system for remote schema requests
+------------------------------------------------------------------
 
 It might be necessary sometimes to bypass Hasura's authorization system (calling
-the configured webhook, or validating the JWT), for queries that are for a
+the configured webhook, or validating the JWT), for requests that are for a
 remote GraphQL server.
 
 **For example**, you have a remote GraphQL server which does authentication,

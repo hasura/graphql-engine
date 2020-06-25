@@ -13,7 +13,7 @@ Guides: Visual Studio Code Setup
   :local:
 
 
-If you use `Visual Studio code <https://code.visualstudio.com/>`_, the `Apollo GraphQL plugin <https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo>`_ can improve your development experience significantly by enabling a lot of cool features like syntax highlighting for GraphQL, auto completion for GraphQL queries and validating your GraphQL queries against a schema or an endpoint.
+If you use `Visual Studio code <https://code.visualstudio.com/>`_, the `Apollo GraphQL plugin <https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo>`_ can improve your development experience significantly by enabling a lot of cool features like syntax highlighting for GraphQL, auto completion for GraphQL requests and validating your GraphQL requests against a schema or an endpoint.
 
 This guide helps you configure the Apollo GraphQL plugin with Hasura to make your local development easier.
 

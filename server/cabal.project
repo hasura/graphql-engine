@@ -14,8 +14,15 @@
 -- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
 packages: .
 
+constraints:
+  -- ensure we don’t end up with a freeze file that forces an incompatible
+  -- version in CI for Setup.hs scripts.
+  setup.Cabal <3.4
+
 package *
   optimization: 2
+  -- For tooling, e.g. 'weeder', and IDE-like stuff:
+  ghc-options: -fwrite-ide-info
 
   haddock-html: true
   haddock-hoogle: true
@@ -34,9 +41,9 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/hasura/graphql-parser-hs.git
-  tag: 1380495a7b3269b70a7ab3081d745a5f54171a9c
+  tag: f4a093981ca5626982a17c2bfaad047cc0834a81
 
 source-repository-package
   type: git
   location: https://github.com/hasura/ci-info-hs.git
-  tag: 6af5a68450347a02295a9cd050d05a8b2f5c06ab
+  tag: f0b9c67ac385abc117821fa1dfd37e75e5817de6

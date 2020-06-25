@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import AceEditor from 'react-ace';
 import TableHeader from '../TableCommon/TableHeader';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import {
@@ -28,11 +27,13 @@ import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { changeViewRootFields } from '../Common/TooltipMessages';
 import styles from './ModifyTable.scss';
+import ViewDefinitions from './ViewDefinitions';
 
 const ModifyView = props => {
   const {
-    sql,
+    viewDefSql,
     tableName,
+    tableType,
     allSchemas,
     ongoingRequest,
     lastError,
@@ -96,12 +97,6 @@ const ModifyView = props => {
       </div>
     );
   }
-
-  const modifyViewDefinition = viewName => {
-    // fetch the definition
-    dispatch(fetchViewDefinition(viewName, true));
-    // redirect the user to run_sql page and set state
-  };
 
   const getViewColumnsSection = () => {
     const columns = tableSchema.columns.sort(ordinalColSort);
@@ -182,7 +177,6 @@ const ModifyView = props => {
 
   const getViewRootFieldsSection = () => {
     const existingRootFields = getTableCustomRootFields(tableSchema);
-
     return (
       <React.Fragment>
         <h4 className={styles.subheading_text}>
@@ -199,21 +193,6 @@ const ModifyView = props => {
       </React.Fragment>
     );
   };
-
-  const modifyViewOnClick = () => {
-    modifyViewDefinition(tableName);
-  };
-  const modifyBtn = (
-    <Button
-      type="submit"
-      size="xs"
-      className={styles.add_mar_right}
-      onClick={modifyViewOnClick}
-      data-test="modify-view"
-    >
-      Modify
-    </Button>
-  );
 
   const untrackOnclick = () => {
     const confirmMessage = `This will remove the view "${tableName}" from the GraphQL schema`;
@@ -240,7 +219,7 @@ const ModifyView = props => {
     const confirmMessage = `This will permanently delete the view "${tableName}" from the database`;
     const isOk = getConfirmation(confirmMessage, true, tableName);
     if (isOk) {
-      dispatch(deleteViewSql(tableName));
+      dispatch(deleteViewSql(tableName, tableType));
     }
   };
   const deleteBtn = (
@@ -270,27 +249,14 @@ const ModifyView = props => {
           <TableCommentEditor
             tableComment={tableComment}
             tableCommentEdit={tableCommentEdit}
-            isTable={false}
+            tableType={tableType}
             dispatch={dispatch}
           />
           <h4 className={styles.subheading_text}>Columns</h4>
           {getViewColumnsSection()}
           <br />
-          <h4 className={styles.subheading_text}>
-            View Definition:
-            <span className={styles.add_mar_left}>{modifyBtn}</span>
-          </h4>
-          <AceEditor
-            mode="sql"
-            theme="github"
-            value={sql}
-            name="raw_sql"
-            minLines={8}
-            maxLines={100}
-            width="100%"
-            showPrintMargin={false}
-            readOnly
-          />
+          <ViewDefinitions dispatch={dispatch} sql={viewDefSql} />
+
           <hr />
           {getViewRootFieldsSection()}
           {untrackBtn}
@@ -307,6 +273,7 @@ const ModifyView = props => {
 ModifyView.propTypes = {
   sql: PropTypes.string.isRequired,
   tableName: PropTypes.string.isRequired,
+  tableType: PropTypes.string.isRequired,
   allSchemas: PropTypes.array.isRequired,
   currentSchema: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
@@ -319,12 +286,28 @@ ModifyView.propTypes = {
   serverVersion: PropTypes.string,
 };
 
+const findViewType = (currentSchema, viewName, allItems) => {
+  for (const item of allItems) {
+    if (item.table_schema === currentSchema && item.table_name === viewName) {
+      return item.table_type;
+    }
+  }
+  return 'VIEW';
+};
+
 const mapStateToProps = (state, ownProps) => {
+  const tableName = ownProps.params.table;
+  const schemaName = state.tables.currentSchema;
+  const tableType = findViewType(
+    schemaName,
+    tableName,
+    state.tables.allSchemas
+  );
   return {
-    tableName: ownProps.params.table,
+    tableName,
+    tableType,
+    currentSchema: schemaName,
     allSchemas: state.tables.allSchemas,
-    sql: state.rawSQL.sql,
-    currentSchema: state.tables.currentSchema,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,

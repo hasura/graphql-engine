@@ -37,14 +37,7 @@ class InputChecker extends Component {
       });
   }
   render() {
-    const {
-      value,
-      onChange,
-      placeholder,
-      indexId,
-      disabled,
-      title,
-    } = this.props;
+    const { value, onChange, placeholder, disabled, title } = this.props;
 
     const style = {
       border: '1px solid red',
@@ -52,13 +45,13 @@ class InputChecker extends Component {
     };
     return (
       <input
+        {...this.props}
         className={'input-sm form-control'}
         style={this.state.isError ? style : {}}
         placeholder={placeholder || 'new input'}
         value={value}
         onChange={onChange}
         onBlur={this.onBlur}
-        data-index-id={indexId || 0}
         disabled={disabled}
         title={this.state.errorMessage || title}
         data-test={this.props['data-test']}
@@ -73,7 +66,6 @@ InputChecker.propTypes = {
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
   placeholder: PropTypes.string,
-  indexId: PropTypes.number,
   disabled: PropTypes.bool,
 };
 

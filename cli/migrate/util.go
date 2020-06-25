@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
+
 	"github.com/hasura/graphql-engine/cli/metadata"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
@@ -121,12 +123,15 @@ func FilterCustomQuery(u *nurl.URL) *nurl.URL {
 func NewMigrate(ec *cli.ExecutionContext, isCmd bool) (*Migrate, error) {
 	dbURL := GetDataPath(ec)
 	fileURL := GetFilePath(ec.MigrationDir)
-	t, err := New(fileURL.String(), dbURL.String(), isCmd, int(ec.Config.Version), ec.Logger)
+	t, err := New(fileURL.String(), dbURL.String(), isCmd, int(ec.Config.Version), ec.Config.ServerConfig.TLSConfig, ec.Logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create migrate instance")
 	}
 	// Set Plugins
 	SetMetadataPluginsWithDir(ec, t)
+	if ec.Config.Version == cli.V2 {
+		t.EnableCheckMetadataConsistency(true)
+	}
 	return t, nil
 }
 
@@ -169,6 +174,7 @@ func SetMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *Migrate, dir ...st
 		plugins = append(plugins, allowlist.New(ec, metadataDir))
 		plugins = append(plugins, remoteschemas.New(ec, metadataDir))
 		plugins = append(plugins, actions.New(ec, metadataDir))
+		plugins = append(plugins, crontriggers.New(ec, metadataDir))
 	} else {
 		plugins = append(plugins, metadata.New(ec, ec.MigrationDir))
 	}

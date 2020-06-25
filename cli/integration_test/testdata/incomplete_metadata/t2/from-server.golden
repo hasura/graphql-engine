@@ -1,0 +1,49 @@
+{
+  "version": 2,
+  "tables": [],
+  "actions": [
+    {
+      "name": "actionName",
+      "definition": {
+        "handler": "http://localhost:3000",
+        "output_type": "SampleOutput",
+        "arguments": [
+          {
+            "name": "arg1",
+            "type": "SampleInput!"
+          }
+        ],
+        "type": "mutation",
+        "kind": "synchronous"
+      }
+    }
+  ],
+  "custom_types": {
+    "input_objects": [
+      {
+        "name": "SampleInput",
+        "fields": [
+          {
+            "name": "username",
+            "type": "String!"
+          },
+          {
+            "name": "password",
+            "type": "String!"
+          }
+        ]
+      }
+    ],
+    "objects": [
+      {
+        "name": "SampleOutput",
+        "fields": [
+          {
+            "name": "accessToken",
+            "type": "String!"
+          }
+        ]
+      }
+    ]
+  }
+}

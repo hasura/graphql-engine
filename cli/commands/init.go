@@ -2,9 +2,12 @@ package commands
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+
+	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
 
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
@@ -45,6 +48,9 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Create a directory with endpoint and admin secret configured:
   hasura init <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
 
+  # Create a hasura project in the current working directory
+  hasura init .
+
   # See https://hasura.io/docs/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
 		Args:         cobra.MaximumNArgs(1),
@@ -67,12 +73,9 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := initCmd.Flags()
 	f.Var(cli.NewConfigVersionValue(cli.V2, &opts.Version), "version", "config version to be used")
 	f.StringVar(&opts.InitDir, "directory", "", "name of directory where files will be created")
-	f.StringVar(&opts.MetadataDir, "metadata-directory", "metadata", "name of directory where metadata files will be created")
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
-	f.StringVar(&opts.ActionKind, "action-kind", "synchronous", "kind to be used for an action")
-	f.StringVar(&opts.ActionHandler, "action-handler-webhook-baseurl", "http://localhost:3000", "webhook baseurl to be used for an action")
 	f.StringVar(&opts.Template, "install-manifest", "", "install manifest to be cloned")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.MarkDeprecated("directory", "use directory-name argument instead")
@@ -87,16 +90,12 @@ type InitOptions struct {
 	Endpoint    string
 	AdminSecret string
 	InitDir     string
-	MetadataDir string
-
-	ActionKind    string
-	ActionHandler string
 
 	Template string
 }
 
 func (o *InitOptions) Run() error {
-	var dir string
+	var infoMsg string
 	// prompt for init directory if it's not set already
 	if o.InitDir == "" {
 		p := promptui.Prompt{
@@ -108,35 +107,45 @@ func (o *InitOptions) Run() error {
 			return handlePromptError(err)
 		}
 		if strings.TrimSpace(r) != "" {
-			dir = r
+			o.InitDir = r
 		} else {
-			dir = defaultDirectory
+			o.InitDir = defaultDirectory
 		}
-	} else {
-		dir = o.InitDir
 	}
 
-	if o.EC.ExecutionDirectory == "" {
-		o.EC.ExecutionDirectory = dir
-	} else {
-		o.EC.ExecutionDirectory = filepath.Join(o.EC.ExecutionDirectory, dir)
-	}
-
-	var infoMsg string
-
-	// create the execution directory
-	if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
-		return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
-	}
-	err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
+	cwdir, err := os.Getwd()
 	if err != nil {
-		return errors.Wrap(err, "error creating setup directories")
+		return errors.Wrap(err, "error getting current working directory")
 	}
-	infoMsg = fmt.Sprintf(`directory created. execute the following commands to continue:
+	initPath, err := filepath.Abs(o.InitDir)
+	if err != nil {
+		return err
+	}
+	if initPath == cwdir {
+		// check if pwd is filesystem root
+		if err := cli.CheckFilesystemBoundary(cwdir); err != nil {
+			return errors.Wrap(err, "can't initialise hasura project in filesystem root")
+		}
+		// check if the current directory is already a hasura project
+		if err := cli.ValidateDirectory(cwdir); err == nil {
+			return errors.Errorf("current working directory is already a hasura project directory")
+		}
+		o.EC.ExecutionDirectory = cwdir
+		infoMsg = fmt.Sprintf(`hasura project initialised. execute the following command to continue:
+  hasura console
+`)
+	} else {
+		// create execution directory
+		err := o.createExecutionDirectory()
+		if err != nil {
+			return err
+		}
+		infoMsg = fmt.Sprintf(`directory created. execute the following commands to continue:
 
   cd %s
   hasura console
 `, o.EC.ExecutionDirectory)
+	}
 
 	// create template files
 	err = o.createTemplateFiles()
@@ -151,6 +160,26 @@ func (o *InitOptions) Run() error {
 	}
 
 	o.EC.Logger.Info(infoMsg)
+	return nil
+}
+
+//create the execution directory
+func (o *InitOptions) createExecutionDirectory() error {
+	if o.EC.ExecutionDirectory == "" {
+		o.EC.ExecutionDirectory = o.InitDir
+	} else {
+		o.EC.ExecutionDirectory = filepath.Join(o.EC.ExecutionDirectory, o.InitDir)
+	}
+
+	// create the execution directory
+	if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
+		return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
+	}
+	err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
+	if err != nil {
+		return errors.Wrap(err, "error creating setup directories")
+	}
+
 	return nil
 }
 
@@ -175,14 +204,17 @@ func (o *InitOptions) createFiles() error {
 			ServerConfig: cli.ServerConfig{
 				Endpoint: "http://localhost:8080",
 			},
-			MetadataDirectory: o.MetadataDir,
+			MetadataDirectory: "metadata",
 			ActionConfig: &types.ActionExecutionConfig{
-				Kind:                  o.ActionKind,
-				HandlerWebhookBaseURL: o.ActionHandler,
+				Kind:                  "synchronous",
+				HandlerWebhookBaseURL: "http://localhost:3000",
 			},
 		}
 	}
 	if o.Endpoint != "" {
+		if _, err := url.ParseRequestURI(o.Endpoint); err != nil {
+			return errors.Wrap(err, "error validating endpoint URL")
+		}
 		config.ServerConfig.Endpoint = o.Endpoint
 	}
 	if o.AdminSecret != "" {
@@ -198,7 +230,7 @@ func (o *InitOptions) createFiles() error {
 	}
 
 	// create migrations directory
-	o.EC.MigrationDir = filepath.Join(o.EC.ExecutionDirectory, "migrations")
+	o.EC.MigrationDir = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultMigrationsDirectory)
 	err = os.MkdirAll(o.EC.MigrationDir, os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "cannot write migration directory")
@@ -206,7 +238,7 @@ func (o *InitOptions) createFiles() error {
 
 	if config.Version == cli.V2 {
 		// create metadata directory
-		o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, "metadata")
+		o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultMetadataDirectory)
 		err = os.MkdirAll(o.EC.MetadataDir, os.ModePerm)
 		if err != nil {
 			return errors.Wrap(err, "cannot write migration directory")
@@ -221,12 +253,20 @@ func (o *InitOptions) createFiles() error {
 		plugins = append(plugins, allowlist.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, remoteschemas.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, actions.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, crontriggers.New(o.EC, o.EC.MetadataDir))
 		for _, plg := range plugins {
 			err := plg.CreateFiles()
 			if err != nil {
 				return errors.Wrap(err, "cannot create metadata files")
 			}
 		}
+	}
+
+	// create seeds directory
+	o.EC.SeedsDirectory = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultSeedsDirectory)
+	err = os.MkdirAll(o.EC.SeedsDirectory, os.ModePerm)
+	if err != nil {
+		return errors.Wrap(err, "cannot write seeds directory")
 	}
 	return nil
 }

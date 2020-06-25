@@ -26,6 +26,8 @@ import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import styles from '../../../Common/FilterQuery/FilterQuery.scss';
+import { getPersistedPageSize } from './localStorageUtils';
+import { isEmpty } from '../../../Common/utils/jsUtils';
 
 const history = createHistory();
 
@@ -202,9 +204,10 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
 
 class FilterQuery extends Component {
   componentDidMount() {
-    const dispatch = this.props.dispatch;
-    if (!this.props.urlQuery) {
-      dispatch(setDefaultQuery(this.props.curQuery));
+    const { dispatch, tableSchema, curQuery } = this.props;
+    const limit = getPersistedPageSize();
+    if (isEmpty(this.props.urlQuery)) {
+      dispatch(setDefaultQuery({ ...curQuery, limit }));
       return;
     }
 
@@ -239,8 +242,8 @@ class FilterQuery extends Component {
       return { column, type, nulls };
     });
 
-    dispatch(setDefaultQuery({ where, order_by }));
-    dispatch(runQuery(this.props.tableSchema));
+    dispatch(setDefaultQuery({ where, order_by, limit }));
+    dispatch(runQuery(tableSchema));
   }
 
   setParams(query = { filters: [], sorts: [] }) {

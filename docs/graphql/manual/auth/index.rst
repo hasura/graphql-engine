@@ -15,12 +15,12 @@ Authentication & Authorization
 In Hasura, access control or authorization is based on **roles**. Let's take a look at how this works
 when the GraphQL engine receives a request:
 
-.. thumbnail:: ../../../img/graphql/manual/auth/auth-high-level-overview.png
+.. thumbnail:: /img/graphql/manual/auth/auth-high-level-overview.png
    :alt: Authentication and authorization with Hasura
 
 As you can see from this:
 
-- **Authentication** is handled outside Hasura. Hasura delegates authentication and resolution of request
+- **Authentication** is handled outside of Hasura. Hasura delegates authentication and resolution of request
   headers into session variables to your authentication service *(existing or new)*.
 
   Your authentication service is required to pass a user's **role** information in the form of session
@@ -31,8 +31,8 @@ As you can see from this:
   rules for every field in your GraphQL schema *(granular enough to control access to any row or
   column in your database)*.
 
-  Hasura uses the role/user information in the session variables and the actual query itself to validate
-  the query against the rules defined by you. If the query/operation is allowed, it generates an SQL
+  Hasura uses the role/user information in the session variables and the actual request itself to validate
+  the request against the rules defined by you. If the request/operation is allowed, it generates an SQL
   query, which includes the row/column-level constraints from the access control rules, and sends it to
   the database to perform the required operation (*fetch the required rows for queries, insert/edit
   rows for mutations, etc.*).

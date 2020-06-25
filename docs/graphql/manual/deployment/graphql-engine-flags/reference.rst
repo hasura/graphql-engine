@@ -110,8 +110,8 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - ``--cors-domain <DOMAINS>``
      - ``HASURA_GRAPHQL_CORS_DOMAIN``
-     - CSV of list of domains, excluding scheme (http/https) and including port,
-       to allow for CORS. Wildcard domains are allowed.
+     - CSV of list of domains, incuding scheme (http/https) and port, to allow for CORS. Wildcard
+       domains are allowed. (See :ref:`configure-cors`)
 
    * - ``--disable-cors``
      - ``HASURA_GRAPHQL_DISABLE_CORS``
@@ -130,11 +130,11 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - N/A
      - ``HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE``
-     - Max event threads
+     - Maximum number of concurrent http workers delivering events at any time (default: 100)
 
    * - N/A
      - ``HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL``
-     - Interval in milliseconds to sleep before trying to fetch events again after a fetch 
+     - Interval in milliseconds to sleep before trying to fetch events again after a fetch
        returned no events from postgres
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
@@ -144,8 +144,8 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - ``-c, --connections <NO_OF_CONNS>``
      - ``HASURA_GRAPHQL_PG_CONNECTIONS``
-     - Maximum number of Postgres connections that can be opened per stripe (default: 50). 
-       When the maximum is reached we will block until a new connection becomes available, 
+     - Maximum number of Postgres connections that can be opened per stripe (default: 50).
+       When the maximum is reached we will block until a new connection becomes available,
        even if there is capacity in other stripes.
 
    * - ``--timeout <SECONDS>``
@@ -200,6 +200,14 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - ``HASURA_GRAPHQL_LOG_LEVEL``
      - Set the logging level. Default: ``info``. Options: ``debug``, ``info``,
        ``warn``, ``error``.
+
+   * - ``--dev-mode``
+     - ``HASURA_GRAPHQL_DEV_MODE``
+     - Set dev mode for GraphQL requests; include the ``internal`` key in the errors extensions of the response (if required).
+
+   * - ``--admin-internal-errors``
+     - ``HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS``
+     - Include the ``internal`` key in the errors extensions of the response for GraphQL requests with the admin role (if required).
 
 .. note::
 
