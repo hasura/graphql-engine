@@ -140,6 +140,56 @@ func TestCommands(t *testing.T) {
 			v2.TestSeedsApplyCmd(t, ec)
 		})
 	})
+	t.Run("config=v2/incomplete_metadata_dir", func(t *testing.T) {
+		ec := cli.NewExecutionContext()
+		ec.Config = &cli.Config{}
+		logger, _ := test.NewNullLogger()
+		ec.Logger = logger
+		ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
+		ec.Spinner.Writer = ioutil.Discard
+		ec.Viper = viper.New()
+
+		initDir := filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000)))
+		defer os.RemoveAll(initDir)
+
+		// This will prepare the execution context, so no need to run ec.Prepare() on all the other tests
+		t.Run("prepare", func(t *testing.T) {
+			integrationtest.TestPrepare(t, ec)
+		})
+
+		skip(t)
+		// This will init the project dir
+		t.Run("init command", func(t *testing.T) {
+			v2.TestInitCmd(t, ec, initDir)
+		})
+
+		skip(t)
+		// This will validate the project dir
+		t.Run("validate", func(t *testing.T) {
+			integrationtest.TestValidate(t, ec)
+		})
+
+		skip(t)
+		if cliExtManifestFilePath := os.Getenv("HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH"); cliExtManifestFilePath != "" {
+			t.Run("cli-ext-plugin-install", func(t *testing.T) {
+				installOpts := &commands.PluginInstallOptions{
+					EC:           ec,
+					Name:         cli.CLIExtPluginName,
+					ManifestFile: cliExtManifestFilePath,
+				}
+				err := installOpts.Run()
+				if err != nil {
+					t.Fatalf("unable to install %s plugin, got %v", cli.CLIExtPluginName, err)
+				}
+			})
+		}
+
+		skip(t)
+		t.Run("metadata apply", func(t *testing.T) {
+			v2.TestIncompleteMetadataDir(t, ec)
+		})
+
+	})
 }
 
 func skip(t *testing.T) {

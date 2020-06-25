@@ -20,9 +20,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 body, p, #docs-content, #sidebar, #sidebar a,
-tt, code, kbd, pre, samp,
+tt, code, kbd, pre, pre.literal-block, samp,
 .graphiql .graphiql-container .CodeMirror {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 [role="main"] {
@@ -36,39 +36,15 @@ tt, code, kbd, pre, samp,
 }
 
 [role="main"] h2 {
-  font-size: 26px;
-}
-
-[role="main"] h3 {
   font-size: 24px;
 }
 
-[role="main"] h4 {
+[role="main"] h3 {
   font-size: 20px;
 }
 
-@media (max-width: 1200px) {
-  body, p, #docs-content, #sidebar, #sidebar a,
-  tt, code, kbd, pre, samp,
-  .graphiql .graphiql-container .CodeMirror {
-    font-size: 16px;
-  }
-
-  [role="main"] h1 {
-    font-size: 32px;
-  }
-
-  [role="main"] h2 {
-    font-size: 24px;
-  }
-
-  [role="main"] h3 {
-    font-size: 20px;
-  }
-
-  [role="main"] h4 {
-    font-size: 18px;
-  }
+[role="main"] h4 {
+  font-size: 18px;
 }
 
 form input[type="search"], form input[type="text"],
@@ -95,7 +71,6 @@ h6 a:visited {
 
 h3 {
   font-weight: 500;
-  margin: 0 !important;
 }
 
 p {
@@ -756,14 +731,13 @@ article ol ol {
   width: 24% !important;
   height: 100vh;
   overflow-y: auto;
-  padding-left: 15px !important;
+  padding-left: 0 !important;
   position: sticky;
   top: 0;
-  padding-top: 20px;
 }
 #sidebar li {
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 #sidebar .closeIcon {
   position: absolute;
@@ -1619,4 +1593,37 @@ article ol ol {
 .navContainerWrapper {
     width: calc(100% - 30px);
     padding: 0 15px !important;
+}
+
+.tabbarContainerWrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.tabbarContainerWrapper a {
+  display: inline-block;
+  font-size: 16px !important;
+  font-weight: 600;
+  padding: 16px 4px;
+  text-decoration: none;
+}
+
+.tabbarContainerWrapper a:not(:first-child) {
+  margin-left: 2em;
+}
+
+.tabbarContainerWrapper a span {
+  color: rgba(255, 255, 255, .6);
+  cursor: pointer;
+  padding-bottom: 3px;
+  border-bottom: 2px solid transparent;
+}
+
+.tabbarContainerWrapper a:hover span {
+  color: rgba(255, 255, 255, 1);
+}
+
+.tabbarContainerWrapper .tabbarTabActive span {
+  color: rgba(255, 255, 255, 1) !important;
+  border-bottom: 2px solid white !important;
 }

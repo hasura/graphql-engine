@@ -25,7 +25,7 @@ class AllowedQueries extends React.Component {
         className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
       >
         <div className={styles.subHeader}>
-          <h2 className={styles.headerText}>Allowed Queries</h2>
+          <h2 className={styles.headerText}>Allow List</h2>
           <div className={styles.add_mar_top + ' ' + styles.wd60}>
             <AllowedQueriesNotes />
             <hr />

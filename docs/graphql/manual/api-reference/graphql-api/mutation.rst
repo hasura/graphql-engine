@@ -55,7 +55,7 @@ API Reference - Mutation
      - ConflictClause_
      - Converts *insert* to *upsert* by handling conflict
 
-**E.g. INSERT**:
+**Example: Insert**
 
 .. code-block:: graphql
 
@@ -76,7 +76,7 @@ API Reference - Mutation
       }
     }
 
-**E.g. UPSERT**:
+**Example: Upsert**
 
 .. code-block:: graphql
 
@@ -140,7 +140,7 @@ API Reference - Mutation
      - ConflictClause_
      - Converts *insert* to *upsert* by handling conflict
 
-**E.g. INSERT ONE**:
+**Example: Insert One**
 
 .. code-block:: graphql
 
@@ -220,7 +220,7 @@ API Reference - Mutation
      - deleteAtPathArgExp_
      - Element at path to be deleted in the value of JSONB columns in the table
 
-**E.g. UPDATE BY PK**:
+**Example: Update by PK**
 
 .. code-block:: graphql
 
@@ -303,7 +303,7 @@ API Reference - Mutation
      - MutationResponse_
      - Object to be returned after mutation succeeds
 
-**E.g. UPDATE**:
+**Example: Update**
 
 .. code-block:: graphql
 
@@ -347,7 +347,7 @@ API Reference - Mutation
      - Value
      - Name of the auto-generated delete mutation field, e.g. *delete_author_by_pk*
 
-**E.g. DELETE BY PK**:
+**Example: Delete by PK**
 
 .. code-block:: graphql
 
@@ -398,7 +398,7 @@ API Reference - Mutation
      - MutationResponse_
      - Object to be returned after mutation succeeds
 
-**E.g. DELETE**:
+**Example: Delete**
 
 .. code-block:: graphql
 
@@ -436,7 +436,7 @@ Mutation response
       }
     }
 
-E.g.:
+**Example**
 
 .. code-block:: graphql
 
@@ -473,7 +473,7 @@ E.g.:
     ]
     # no nested objects
 
-E.g.:
+**Example**
 
 .. code-block:: graphql
 
@@ -512,7 +512,7 @@ E.g.:
     }
 
 
-E.g.:
+**Example**
 
 .. code-block:: graphql
 
@@ -531,7 +531,7 @@ E.g.:
 
 **on_conflict** argument
 ^^^^^^^^^^^^^^^^^^^^^^^^
-The conflict clause is used to convert an *insert* query to an *upsert* query. *Upsert* respects the table's *update*
+The conflict clause is used to convert an *insert* mutation to an *upsert* mutation. *Upsert* respects the table's *update*
 permissions before editing an existing row in case of a conflict. Hence the conflict clause is permitted only if a
 table has *update* permissions defined.
 
@@ -543,7 +543,7 @@ table has *update* permissions defined.
       where: table_bool_exp
     }
 
-E.g.:
+**Example**
 
 .. code-block:: graphql
 
@@ -567,7 +567,7 @@ The ``pk_columns`` argument is used to identify an object by its primary key col
       column-2: value-2
     }
 
-E.g.:
+**Example**
 
 .. code-block:: graphql
 
@@ -584,6 +584,14 @@ E.g.:
 .. parsed-literal::
 
     where: BoolExp_
+
+**Example**
+
+.. code-block:: graphql
+
+  where: {
+    rating: {_eq: 5}
+  }
 
 BoolExp
 *******
@@ -602,6 +610,15 @@ AndExp
     }
 
 
+**Example**
+
+.. code-block:: graphql
+
+  _and: [
+    {rating: {_gt: 5}}, 
+    {updated_at: {_gt: "2019-01-01"}}
+  ]
+
 OrExp
 #####
 
@@ -610,6 +627,15 @@ OrExp
     {
       _or: [BoolExp_]
     }
+
+**Example**
+
+.. code-block:: graphql
+
+  _or: [
+    {rating: {_is_null: true}}, 
+    {rating: {_lt: 4}}
+  ]
 
 NotExp
 ######
@@ -620,6 +646,13 @@ NotExp
       _not: BoolExp_
     }
 
+**Example**
+
+.. code-block:: graphql
+
+  _not: {
+    title: {_eq: ""}
+  }
 
 TrueExp
 #######
@@ -627,6 +660,16 @@ TrueExp
 .. parsed-literal::
 
     {}
+
+**Example**
+
+.. code-block:: graphql
+
+  author(where: {articles: {}})
+
+.. note::
+
+  ``{}`` evaluates to true whenever an object exists (even if it's ``null``).
 
 ColumnExp
 #########
@@ -636,6 +679,12 @@ ColumnExp
     {
       field-name: {Operator_: Value }
     }
+
+**Example**
+
+.. code-block:: graphql
+
+  {rating: {_eq: 5}}
 
 Operator
 ########
@@ -712,7 +761,7 @@ Operator
      ..
    }
 
-E.g.
+**Example**
 
 .. code-block:: json
 
@@ -734,7 +783,7 @@ E.g.
      ..
    }
 
-E.g.
+**Example**
 
 .. code-block:: json
 
