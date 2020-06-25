@@ -1,27 +1,28 @@
 module Hasura.RQL.DML.Select.Internal
   ( mkSQLSelect
-  , mkAggSelect
+  , mkAggregateSelect
+  , mkConnectionSelect
   , module Hasura.RQL.DML.Select.Types
   )
 where
 
-import           Control.Lens                hiding (op)
-import qualified Data.List                   as L
-import           Instances.TH.Lift           ()
+import           Control.Lens                 hiding (op)
+import           Control.Monad.Writer.Strict
 
-import qualified Data.HashMap.Strict         as HM
-import qualified Data.List.NonEmpty          as NE
-import qualified Data.Text                   as T
+import qualified Data.HashMap.Strict          as HM
+import qualified Data.List.NonEmpty           as NE
+import qualified Data.Text                    as T
 
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
-import           Hasura.SQL.Rewrite          (prefixNumToAliases)
+import           Hasura.SQL.Rewrite
 import           Hasura.SQL.Types
 
-import qualified Hasura.SQL.DML              as S
+import qualified Hasura.SQL.DML               as S
 
 -- Conversion of SelectQ happens in 2 Stages.
 -- Stage 1 : Convert input query into an annotated AST
@@ -30,8 +31,8 @@ import qualified Hasura.SQL.DML              as S
 functionToIden :: QualifiedFunction -> Iden
 functionToIden = Iden . qualObjectToText
 
-selFromToFromItem :: Iden -> SelectFrom -> S.FromItem
-selFromToFromItem pfx = \case
+selectFromToFromItem :: Iden -> SelectFrom -> S.FromItem
+selectFromToFromItem pfx = \case
   FromTable tn -> S.FISimple tn Nothing
   FromIden i   -> S.FIIden i
   FromFunction qf args defListM ->
@@ -40,17 +41,17 @@ selFromToFromItem pfx = \case
 
 -- This function shouldn't be present ideally
 -- You should be able to retrieve this information
--- from the FromItem generated with selFromToFromItem
+-- from the FromItem generated with selectFromToFromItem
 -- however given from S.FromItem is modelled, it is not
 -- possible currently
-selFromToQual :: SelectFrom -> S.Qual
-selFromToQual = \case
+selectFromToQual :: SelectFrom -> S.Qual
+selectFromToQual = \case
   FromTable tn         -> S.QualTable tn
   FromIden i           -> S.QualIden i Nothing
   FromFunction qf _ _  -> S.QualIden (functionToIden qf) Nothing
 
-aggFldToExp :: AggFlds -> S.SQLExp
-aggFldToExp aggFlds = jsonRow
+aggregateFieldToExp :: AggregateFields -> S.SQLExp
+aggregateFieldToExp aggFlds = jsonRow
   where
     jsonRow = S.applyJsonBuildObj (concatMap aggToFlds aggFlds)
     withAls fldName sqlExp = [S.SELit fldName, sqlExp]
@@ -59,25 +60,15 @@ aggFldToExp aggFlds = jsonRow
       AFOp aggOp  -> aggOpToObj aggOp
       AFExp e     -> S.SELit e
 
-    aggOpToObj (AggOp op flds) =
-      S.applyJsonBuildObj $ concatMap (colFldsToExtr op) flds
+    aggOpToObj (AggregateOp opText flds) =
+      S.applyJsonBuildObj $ concatMap (colFldsToExtr opText) flds
 
-    colFldsToExtr op (FieldName t, PCFCol col) =
+    colFldsToExtr opText (FieldName t, PCFCol col) =
       [ S.SELit t
-      , S.SEFnApp op [S.SEIden $ toIden col] Nothing
+      , S.SEFnApp opText [S.SEIden $ toIden col] Nothing
       ]
     colFldsToExtr _ (FieldName t, PCFExp e) =
       [ S.SELit t , S.SELit e]
-
-arrNodeToSelect :: BaseNode -> [S.Extractor] -> S.BoolExp -> S.Select
-arrNodeToSelect bn extrs joinCond =
-  S.mkSelect
-    { S.selExtr = extrs
-    , S.selFrom = Just $ S.FromExp [selFrom]
-    }
-  where
-    selFrom = S.mkSelFromItem (baseNodeToSel joinCond bn) $ S.Alias $
-              _bnPrefix bn
 
 asSingleRowExtr :: S.Alias -> S.SQLExp
 asSingleRowExtr col =
@@ -89,11 +80,12 @@ asSingleRowExtr col =
               ]
 
 withJsonAggExtr
-  :: Bool -> Maybe Int -> Maybe S.OrderByExp -> S.Alias -> S.SQLExp
-withJsonAggExtr subQueryReq permLimitM ordBy alias =
+  :: PermissionLimitSubQuery -> Maybe S.OrderByExp -> S.Alias -> S.SQLExp
+withJsonAggExtr permLimitSubQuery ordBy alias =
   -- if select has aggregations then use subquery to apply permission limit
-  if subQueryReq then maybe simpleJsonAgg withPermLimit permLimitM
-  else simpleJsonAgg
+  case permLimitSubQuery of
+    PLSQRequired permLimit -> withPermLimit permLimit
+    PLSQNotRequired        -> simpleJsonAgg
   where
     simpleJsonAgg = mkSimpleJsonAgg rowIdenExp ordBy
     rowIdenExp = S.SEIden $ S.getAlias alias
@@ -107,7 +99,7 @@ withJsonAggExtr subQueryReq permLimitM ordBy alias =
     withPermLimit limit =
       let subSelect = mkSubSelect limit
           rowIden = S.mkQIdenExp subSelAls alias
-          extr = S.Extractor (mkSimpleJsonAgg rowIden newOrdBy) Nothing
+          extr = S.Extractor (mkSimpleJsonAgg rowIden newOrderBy) Nothing
           fromExp = S.FromExp $ pure $
                     S.mkSelFromItem subSelect $ S.Alias subSelAls
       in S.SESelect $ S.mkSelect { S.selExtr = pure extr
@@ -122,7 +114,7 @@ withJsonAggExtr subQueryReq permLimitM ordBy alias =
       in S.mkSelect { S.selExtr    = jsonRowExtr : obExtrs
                     , S.selFrom    = Just $ S.FromExp $ pure unnestFromItem
                     , S.selLimit   = Just $ S.LimitExp $ S.intToSQLExp limit
-                    , S.selOrderBy = newOrdBy
+                    , S.selOrderBy = newOrderBy
                     }
 
     unnestFromItem =
@@ -131,11 +123,11 @@ withJsonAggExtr subQueryReq permLimitM ordBy alias =
       in S.FIUnnest arrayAggItems (S.Alias unnestTable) $
          rowIdenExp : map S.SEIden newOBAliases
 
-    newOrdBy = bool (Just $ S.OrderByExp newOBItems) Nothing $ null newOBItems
+    newOrderBy = S.OrderByExp <$> NE.nonEmpty newOBItems
 
-    (newOBItems, obCols, newOBAliases) = maybe ([], [], []) transformOrdBy ordBy
-    transformOrdBy (S.OrderByExp l) = unzip3 $
-      flip map (zip l [1..]) $ \(obItem, i::Int) ->
+    (newOBItems, obCols, newOBAliases) = maybe ([], [], []) transformOrderBy ordBy
+    transformOrderBy (S.OrderByExp l) = unzip3 $
+      flip map (zip (toList l) [1..]) $ \(obItem, i::Int) ->
                  let iden = Iden $ "ob_col_" <> T.pack (show i)
                  in ( obItem{S.oColumn = S.SEIden iden}
                     , S.oColumn obItem
@@ -143,45 +135,70 @@ withJsonAggExtr subQueryReq permLimitM ordBy alias =
                     )
 
 asJsonAggExtr
-  :: JsonAggSelect -> S.Alias -> Bool -> Maybe Int -> Maybe S.OrderByExp -> S.Extractor
-asJsonAggExtr jsonAggSelect als subQueryReq permLimit ordByExpM =
+  :: JsonAggSelect -> S.Alias -> PermissionLimitSubQuery -> Maybe S.OrderByExp -> S.Extractor
+asJsonAggExtr jsonAggSelect als permLimitSubQuery ordByExpM =
   flip S.Extractor (Just als) $ case jsonAggSelect of
-    JASMultipleRows -> withJsonAggExtr subQueryReq permLimit ordByExpM als
+    JASMultipleRows -> withJsonAggExtr permLimitSubQuery ordByExpM als
     JASSingleObject -> asSingleRowExtr als
 
 -- array relationships are not grouped, so have to be prefixed by
 -- parent's alias
-mkUniqArrRelAls :: FieldName -> [FieldName] -> Iden
-mkUniqArrRelAls parAls flds =
-  Iden $
-  getFieldNameTxt parAls <> "."
-  <> T.intercalate "." (map getFieldNameTxt flds)
+mkUniqArrayRelationAlias :: FieldName -> [FieldName] -> Iden
+mkUniqArrayRelationAlias parAls flds =
+  let sortedFields = sort flds
+  in Iden $
+     getFieldNameTxt parAls <> "."
+     <> T.intercalate "." (map getFieldNameTxt sortedFields)
 
-mkArrRelTableAls :: Iden -> FieldName -> [FieldName] -> Iden
-mkArrRelTableAls pfx parAls flds =
+mkArrayRelationTableAlias :: Iden -> FieldName -> [FieldName] -> Iden
+mkArrayRelationTableAlias pfx parAls flds =
   pfx <> Iden ".ar." <> uniqArrRelAls
   where
-    uniqArrRelAls = mkUniqArrRelAls parAls flds
+    uniqArrRelAls = mkUniqArrayRelationAlias parAls flds
 
-mkObjRelTableAls :: Iden -> RelName -> Iden
-mkObjRelTableAls pfx relName =
+mkObjectRelationTableAlias :: Iden -> RelName -> Iden
+mkObjectRelationTableAlias pfx relName =
   pfx <> Iden ".or." <> toIden relName
 
-mkComputedFieldTableAls :: Iden -> FieldName -> Iden
-mkComputedFieldTableAls pfx fldAls =
+mkComputedFieldTableAlias :: Iden -> FieldName -> Iden
+mkComputedFieldTableAlias pfx fldAls =
   pfx <> Iden ".cf." <> toIden fldAls
 
-mkBaseTableAls :: Iden -> Iden
-mkBaseTableAls pfx =
+mkBaseTableAlias :: Iden -> Iden
+mkBaseTableAlias pfx =
   pfx <> Iden ".base"
 
-mkBaseTableColAls :: Iden -> PGCol -> Iden
-mkBaseTableColAls pfx pgColumn =
+mkBaseTableColumnAlias :: Iden -> PGCol -> Iden
+mkBaseTableColumnAlias pfx pgColumn =
   pfx <> Iden ".pg." <> toIden pgColumn
 
 mkOrderByFieldName :: RelName -> FieldName
 mkOrderByFieldName relName =
   FieldName $ relNameToTxt relName <> "." <> "order_by"
+
+mkAggregateOrderByAlias :: AnnAggregateOrderBy -> S.Alias
+mkAggregateOrderByAlias = (S.Alias . Iden) . \case
+  AAOCount -> "count"
+  AAOOp opText col -> opText <> "." <> getPGColTxt (pgiColumn col)
+
+mkArrayRelationSourcePrefix
+  :: Iden
+  -> FieldName
+  -> HM.HashMap FieldName [FieldName]
+  -> FieldName
+  -> Iden
+mkArrayRelationSourcePrefix parentSourcePrefix parentFieldName similarFieldsMap fieldName =
+  mkArrayRelationTableAlias parentSourcePrefix parentFieldName $
+  HM.lookupDefault [fieldName] fieldName similarFieldsMap
+
+mkArrayRelationAlias
+  :: FieldName
+  -> HM.HashMap FieldName [FieldName]
+  -> FieldName
+  -> S.Alias
+mkArrayRelationAlias parentFieldName similarFieldsMap fieldName =
+  S.Alias $ mkUniqArrayRelationAlias parentFieldName $
+  HM.lookupDefault [fieldName] fieldName similarFieldsMap
 
 fromTableRowArgs
   :: Iden -> FunctionArgsExpTableRow S.SQLExp -> S.FunctionArgs
@@ -189,67 +206,10 @@ fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
   where
     toFunctionArgs (FunctionArgsExp positional named) =
       S.FunctionArgs positional named
-    toSQLExp (AETableRow Nothing)    = S.SERowIden $ mkBaseTableAls pfx
-    toSQLExp (AETableRow (Just acc)) = S.mkQIdenExp (mkBaseTableAls pfx) acc
+    toSQLExp (AETableRow Nothing)    = S.SERowIden $ mkBaseTableAlias pfx
+    toSQLExp (AETableRow (Just acc)) = S.mkQIdenExp (mkBaseTableAlias pfx) acc
     toSQLExp (AESession s)           = s
     toSQLExp (AEInput s)             = s
-
--- posttgres ignores anything beyond 63 chars for an iden
--- in this case, we'll need to use json_build_object function
--- json_build_object is slower than row_to_json hence it is only
--- used when needed
-buildJsonObject
-  :: Iden -> FieldName -> ArrRelCtx -> Bool
-  -> [(FieldName, AnnFld)] -> (S.Alias, S.SQLExp)
-buildJsonObject pfx parAls arrRelCtx strfyNum flds =
-  if any ( (> 63) . T.length . getFieldNameTxt . fst ) flds
-  then withJsonBuildObj parAls jsonBuildObjExps
-  else withRowToJSON parAls rowToJsonExtrs
-  where
-    jsonBuildObjExps = concatMap (toSQLFld withAlsExp) flds
-    rowToJsonExtrs = map (toSQLFld withAlsExtr) flds
-
-    withAlsExp fldName sqlExp =
-      [S.SELit $ getFieldNameTxt fldName, sqlExp]
-
-    withAlsExtr fldName sqlExp =
-      S.Extractor sqlExp $ Just $ S.toAlias fldName
-
-    toSQLFld :: (FieldName -> S.SQLExp -> f)
-             -> (FieldName, AnnFld) -> f
-    toSQLFld f (fldAls, fld) = f fldAls $ case fld of
-      FCol c      -> toSQLCol c
-      FExp e      -> S.SELit e
-      FObj objSel ->
-        let qual = mkObjRelTableAls pfx $ aarName objSel
-        in S.mkQIdenExp qual fldAls
-      FArr arrSel      ->
-        let arrPfx = _aniPrefix $ mkArrNodeInfo pfx parAls arrRelCtx $
-                                  ANIField (fldAls, arrSel)
-        in S.mkQIdenExp arrPfx fldAls
-      FComputedField (CFSScalar computedFieldScalar) ->
-        fromScalarComputedField computedFieldScalar
-      FComputedField (CFSTable _ _) ->
-        let ccPfx = mkComputedFieldTableAls pfx fldAls
-        in S.mkQIdenExp ccPfx fldAls
-      FRemote _ -> S.SELit "null: remote field selected"
-
-    toSQLCol :: AnnColField -> S.SQLExp
-    toSQLCol (AnnColField col asText colOpM) =
-      toJSONableExp strfyNum (pgiType col) asText $ withColOp colOpM $
-      S.mkQIdenExp (mkBaseTableAls pfx) $ pgiColumn col
-
-    fromScalarComputedField :: ComputedFieldScalarSel S.SQLExp -> S.SQLExp
-    fromScalarComputedField computedFieldScalar =
-      toJSONableExp strfyNum (PGColumnScalar ty) False $ withColOp colOpM $
-      S.SEFunction $ S.FunctionExp fn (fromTableRowArgs pfx args) Nothing
-      where
-        ComputedFieldScalarSel fn args ty colOpM = computedFieldScalar
-
-    withColOp :: Maybe ColOp -> S.SQLExp -> S.SQLExp
-    withColOp colOpM sqlExp = case colOpM of
-      Nothing              -> sqlExp
-      Just (ColOp op cExp) -> S.mkSQLOpExp op sqlExp cExp
 
 -- uses row_to_json to build a json object
 withRowToJSON
@@ -267,423 +227,600 @@ withJsonBuildObj parAls exps =
   where
     jsonRow = S.applyJsonBuildObj exps
 
-mkAggObFld :: AnnAggOrdBy -> FieldName
-mkAggObFld = \case
-  AAOCount     -> FieldName "count"
-  AAOOp op col -> FieldName $ op <> "." <> getPGColTxt col
+-- | Forces aggregation
+withForceAggregation :: S.TypeAnn -> S.SQLExp -> S.SQLExp
+withForceAggregation tyAnn e =
+  -- bool_or to force aggregation
+  S.SEFnApp "coalesce" [e, S.SETyAnn (S.SEUnsafe "bool_or('true')") tyAnn] Nothing
 
-mkAggObExtrAndFlds :: AnnAggOrdBy -> (S.Extractor, AggFlds)
-mkAggObExtrAndFlds annAggOb = case annAggOb of
-  AAOCount       ->
-    ( S.Extractor S.countStar als
-    , [(FieldName "count", AFCount S.CTStar)]
-    )
-  AAOOp op pgColumn ->
-    ( S.Extractor (S.SEFnApp op [S.SEIden $ toIden pgColumn] Nothing) als
-    , [(FieldName op, AFOp $ AggOp op [(fromPGCol pgColumn, PCFCol pgColumn)])]
-    )
+mkAggregateOrderByExtractorAndFields
+  :: AnnAggregateOrderBy -> (S.Extractor, AggregateFields)
+mkAggregateOrderByExtractorAndFields annAggOrderBy =
+  case annAggOrderBy of
+    AAOCount       ->
+      ( S.Extractor S.countStar alias
+      , [(FieldName "count", AFCount S.CTStar)]
+      )
+    AAOOp opText pgColumnInfo ->
+      let pgColumn = pgiColumn pgColumnInfo
+      in ( S.Extractor (S.SEFnApp opText [S.SEIden $ toIden pgColumn] Nothing) alias
+         , [(FieldName opText, AFOp $ AggregateOp opText [(fromPGCol pgColumn, PCFCol pgColumn)])]
+         )
   where
-    als = Just $ S.toAlias $ mkAggObFld annAggOb
+    alias = Just $ mkAggregateOrderByAlias annAggOrderBy
 
-processAnnOrderByItem
-  :: Iden
-  -> FieldName
-  -> ArrRelCtx
-  -> Bool
-  -> AnnOrderByItem
-       -- the extractors which will select the needed columns
-  -> ( (S.Alias, S.SQLExp)
-       -- the sql order by item that is attached to the final select
-     , S.OrderByItem
-       -- extra nodes for order by
-     , OrderByNode
-     )
-processAnnOrderByItem pfx parAls arrRelCtx strfyNum obItemG =
-  ( (obColAls, obColExp)
-  , sqlOrdByItem
-  , relNodeM
-  )
-  where
-    OrderByItemG obTyM annObCol obNullsM = obItemG
-    ((obColAls, obColExp), relNodeM) =
-      processAnnOrderByCol pfx parAls arrRelCtx strfyNum annObCol
-
-    sqlOrdByItem =
-      S.OrderByItem (S.SEIden $ toIden obColAls)
-      (unOrderType <$> obTyM) (unNullsOrder <$> obNullsM)
-
-processAnnOrderByCol
-  :: Iden
-  -> FieldName
-  -> ArrRelCtx
-  -> Bool
-  -> AnnObCol
-       -- the extractors which will select the needed columns
-  -> ( (S.Alias, S.SQLExp)
-       -- extra nodes for order by
-     , OrderByNode
-     )
-processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
-  AOCPG pgColumn ->
-    let
-      qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden pgColumn)
-      obColAls = mkBaseTableColAls pfx pgColumn
-    in ( (S.Alias obColAls, qualCol)
-       , OBNNothing
-       )
+mkAnnOrderByAlias
+  :: Iden -> FieldName -> SimilarArrayFields -> AnnOrderByElementG v -> S.Alias
+mkAnnOrderByAlias pfx parAls similarFields = \case
+  AOCColumn pgColumnInfo ->
+    let pgColumn = pgiColumn pgColumnInfo
+        obColAls = mkBaseTableColumnAlias pfx pgColumn
+    in S.Alias obColAls
   -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
-  AOCObj (RelInfo rn _ colMapping relTab _) relFltr rest ->
-    let relPfx  = mkObjRelTableAls pfx rn
+  AOCObjectRelation relInfo _ rest ->
+    let rn = riName relInfo
+        relPfx  = mkObjectRelationTableAlias pfx rn
         ordByFldName = mkOrderByFieldName rn
-        ((nesAls, nesCol), ordByNode) =
-          processAnnOrderByCol relPfx ordByFldName emptyArrRelCtx strfyNum rest
-        (objNodeM, arrNodeM) = case ordByNode of
-          OBNNothing           -> (Nothing, Nothing)
-          OBNObjNode name node -> (Just (name, node), Nothing)
-          OBNArrNode als node  -> (Nothing, Just (als, node))
-        qualCol = S.mkQIdenExp relPfx nesAls
-        relBaseNode =
-          BaseNode relPfx Nothing (S.FISimple relTab Nothing)
-          (toSQLBoolExp (S.QualTable relTab) relFltr)
-          Nothing Nothing Nothing
-          (HM.singleton nesAls nesCol)
-          (maybe HM.empty (uncurry HM.singleton) objNodeM)
-          (maybe HM.empty (uncurry HM.singleton) arrNodeM)
-          HM.empty
-        relNode = ObjNode colMapping relBaseNode
-    in ( (nesAls, qualCol)
-       , OBNObjNode rn relNode
-       )
-  AOCAgg (RelInfo rn _ colMapping relTab _ ) relFltr annAggOb ->
-    let ArrNodeInfo arrAls arrPfx _ =
-          mkArrNodeInfo pfx parAls arrRelCtx $ ANIAggOrdBy rn
-        fldName = mkAggObFld annAggOb
-        qOrdBy = S.mkQIdenExp arrPfx $ toIden fldName
-        tabFrom = FromTable relTab
-        tabPerm = TablePerm relFltr Nothing
-        (extr, arrFlds) = mkAggObExtrAndFlds annAggOb
-        selFld = TAFAgg arrFlds
-        bn = mkBaseNode False (Prefixes arrPfx pfx) fldName selFld tabFrom
-             tabPerm noTableArgs strfyNum
-        aggNode = ArrNode [extr] colMapping $ mergeBaseNodes bn $
-                  mkEmptyBaseNode arrPfx tabFrom
-        obAls = arrPfx <> Iden "." <> toIden fldName
-    in ( (S.Alias obAls, qOrdBy)
-       , OBNArrNode arrAls aggNode
-       )
+        nesAls = mkAnnOrderByAlias relPfx ordByFldName mempty rest
+    in nesAls
+  AOCArrayAggregation relInfo _ aggOrderBy ->
+    let rn = riName relInfo
+        arrPfx = mkArrayRelationSourcePrefix pfx parAls similarFields $
+                 mkOrderByFieldName rn
+        obAls = arrPfx <> Iden "." <> toIden (mkAggregateOrderByAlias aggOrderBy)
+    in S.Alias obAls
 
-processDistinctOnCol
+processDistinctOnColumns
   :: Iden
   -> NE.NonEmpty PGCol
   -> ( S.DistinctExpr
-     -- additional column extractors
-     , [(S.Alias, S.SQLExp)]
+     , [(S.Alias, S.SQLExp)] -- additional column extractors
      )
-processDistinctOnCol pfx neCols = (distOnExp, colExtrs)
+processDistinctOnColumns pfx neCols = (distOnExp, colExtrs)
   where
     cols = toList neCols
     distOnExp = S.DistinctOn $ map (S.SEIden . toIden . mkQColAls) cols
-    mkQCol c = S.mkQIdenExp (mkBaseTableAls pfx) $ toIden c
-    mkQColAls = S.Alias . mkBaseTableColAls pfx
+    mkQCol c = S.mkQIdenExp (mkBaseTableAlias pfx) $ toIden c
+    mkQColAls = S.Alias . mkBaseTableColumnAlias pfx
     colExtrs = flip map cols $ mkQColAls &&& mkQCol
 
+type SimilarArrayFields = HM.HashMap FieldName [FieldName]
 
-mkEmptyBaseNode :: Iden -> SelectFrom -> BaseNode
-mkEmptyBaseNode pfx selectFrom =
-  BaseNode pfx Nothing fromItem (S.BELit True) Nothing Nothing
-  Nothing selOne HM.empty HM.empty HM.empty
+mkSimilarArrayFields
+  :: Eq v
+  => AnnFieldsG v
+  -> Maybe (NE.NonEmpty (AnnOrderByItemG v))
+  -> SimilarArrayFields
+mkSimilarArrayFields annFields maybeOrderBys =
+  HM.fromList $ flip map allTuples $
+  \(relNameAndArgs, fieldName) -> (fieldName, getSimilarFields relNameAndArgs)
   where
-    selOne = HM.singleton (S.Alias $ pfx <> Iden "__one") (S.SEUnsafe "1")
-    fromItem = selFromToFromItem pfx selectFrom
+    getSimilarFields relNameAndArgs = map snd $ filter ((== relNameAndArgs) . fst) allTuples
+    allTuples = arrayRelationTuples <> aggOrderByRelationTuples
+    arrayRelationTuples =
+      let arrayFields = mapMaybe getAnnArr annFields
+      in flip map arrayFields $
+         \(f, relSel) -> (getArrayRelNameAndSelectArgs relSel, f)
 
-aggSelToArrNode :: Prefixes -> FieldName -> ArrRelAgg -> ArrNode
-aggSelToArrNode pfxs als aggSel =
-  ArrNode [extr] colMapping mergedBN
+    aggOrderByRelationTuples =
+      let mkItem (relName, fieldName) = ( (relName, noSelectArgs)
+                                        , fieldName
+                                        )
+      in map mkItem $ maybe []
+         (mapMaybe (fetchAggOrderByRels . obiColumn) . toList) maybeOrderBys
+
+    fetchAggOrderByRels (AOCArrayAggregation ri _ _) =
+      Just (riName ri, mkOrderByFieldName $ riName ri)
+    fetchAggOrderByRels _               = Nothing
+
+getArrayRelNameAndSelectArgs :: ArraySelectG v -> (RelName, SelectArgsG v)
+getArrayRelNameAndSelectArgs = \case
+  ASSimple r -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
+  ASAggregate r -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
+  ASConnection r -> (aarRelationshipName r, _asnArgs $ _csSelect $ aarAnnSelect r)
+
+getAnnArr :: (a, AnnFieldG v) -> Maybe (a, ArraySelectG v)
+getAnnArr (f, annFld) = case annFld of
+  AFArrayRelation (ASConnection _) -> Nothing
+  AFArrayRelation ar               -> Just (f, ar)
+  _                                -> Nothing
+
+
+withWriteJoinTree
+  :: (MonadWriter JoinTree m)
+  => (JoinTree -> b -> JoinTree)
+  -> m (a, b)
+  -> m a
+withWriteJoinTree joinTreeUpdater action =
+  pass $ do
+    (out, result) <- action
+    let fromJoinTree joinTree =
+          joinTreeUpdater joinTree result
+    pure (out, fromJoinTree)
+
+withWriteObjectRelation
+  :: (MonadWriter JoinTree m)
+  => m ( ObjectRelationSource
+       , HM.HashMap S.Alias S.SQLExp
+       , a
+       )
+  -> m a
+withWriteObjectRelation action =
+  withWriteJoinTree updateJoinTree $ do
+    (source, nodeExtractors, out) <- action
+    pure (out, (source, nodeExtractors))
   where
-    AnnRelG _ colMapping annSel = aggSel
-    AnnSelG aggFlds tabFrm tabPerm tabArgs strfyNum = annSel
-    fldAls = S.Alias $ toIden als
+    updateJoinTree joinTree (source, nodeExtractors) =
+      let selectNode = SelectNode nodeExtractors joinTree
+      in mempty{_jtObjectRelations = HM.singleton source selectNode}
 
-    extr = flip S.Extractor (Just fldAls) $ S.applyJsonBuildObj $
-           concatMap selFldToExtr aggFlds
-
-    permLimit = _tpLimit tabPerm
-    ordBy = _bnOrderBy mergedBN
-
-    allBNs = map mkAggBaseNode aggFlds
-    emptyBN = mkEmptyBaseNode (_pfThis pfxs) tabFrm
-    mergedBN = foldr mergeBaseNodes emptyBN allBNs
-
-    mkAggBaseNode (fn, selFld) =
-      mkBaseNode subQueryReq pfxs fn selFld tabFrm tabPerm tabArgs strfyNum
-
-    selFldToExtr (FieldName t, fld) = (:) (S.SELit t) $ pure $ case fld of
-      TAFAgg flds -> aggFldToExp flds
-      TAFNodes _  ->
-        withJsonAggExtr subQueryReq permLimit ordBy $ S.Alias $ Iden t
-      TAFExp e    ->
-        -- bool_or to force aggregation
-        S.SEFnApp "coalesce"
-        [ S.SELit e , S.SEUnsafe "bool_or('true')::text"] Nothing
-
-    subQueryReq = hasAggFld aggFlds
-
-hasAggFld :: Foldable t => t (a, TableAggFldG v) -> Bool
-hasAggFld = any (isTabAggFld . snd)
+withWriteArrayRelation
+  :: (MonadWriter JoinTree m)
+  => m ( ArrayRelationSource
+       , S.Extractor
+       , HM.HashMap S.Alias S.SQLExp
+       , a
+       )
+  -> m a
+withWriteArrayRelation action =
+  withWriteJoinTree updateJoinTree $ do
+  (source, topExtractor, nodeExtractors, out) <- action
+  pure (out, (source, topExtractor, nodeExtractors))
   where
-    isTabAggFld (TAFAgg _) = True
-    isTabAggFld _          = False
+    updateJoinTree joinTree (source, topExtractor, nodeExtractors) =
+      let arraySelectNode = ArraySelectNode [topExtractor] $
+                            SelectNode nodeExtractors joinTree
+      in mempty{_jtArrayRelations = HM.singleton source arraySelectNode}
 
-mkArrNodeInfo
-  :: Iden
+withWriteArrayConnection
+  :: (MonadWriter JoinTree m)
+  => m ( ArrayConnectionSource
+       , S.Extractor
+       , HM.HashMap S.Alias S.SQLExp
+       , a
+       )
+  -> m a
+withWriteArrayConnection action =
+  withWriteJoinTree updateJoinTree $ do
+  (source, topExtractor, nodeExtractors, out) <- action
+  pure (out, (source, topExtractor, nodeExtractors))
+  where
+    updateJoinTree joinTree (source, topExtractor, nodeExtractors) =
+      let arraySelectNode = ArraySelectNode [topExtractor] $
+                            SelectNode nodeExtractors joinTree
+      in mempty{_jtArrayConnections = HM.singleton source arraySelectNode}
+
+withWriteComputedFieldTableSet
+  :: (MonadWriter JoinTree m)
+  => m ( ComputedFieldTableSetSource
+       , HM.HashMap S.Alias S.SQLExp
+       , a
+       )
+  -> m a
+withWriteComputedFieldTableSet action =
+  withWriteJoinTree updateJoinTree $ do
+    (source, nodeExtractors, out) <- action
+    pure (out, (source, nodeExtractors))
+  where
+    updateJoinTree joinTree (source, nodeExtractors) =
+      let selectNode = SelectNode nodeExtractors joinTree
+      in mempty{_jtComputedFieldTableSets = HM.singleton source selectNode}
+
+
+processAnnSimpleSelect
+  :: forall m. ( MonadReader Bool m
+               , MonadWriter JoinTree m
+               )
+  => SourcePrefixes
   -> FieldName
-  -> ArrRelCtx
-  -> ArrNodeItem
-  -> ArrNodeInfo
-mkArrNodeInfo pfx parAls (ArrRelCtx arrFlds obRels) = \case
-  ANIField aggFld@(fld, annArrSel) ->
-    let (rn, tabArgs) = fetchRNAndTArgs annArrSel
-        similarFlds = getSimilarAggFlds rn tabArgs $ L.delete aggFld
-        similarFldNames = map fst similarFlds
-        similarOrdByFound = rn `elem` obRels && tabArgs == noTableArgs
-        ordByFldName = mkOrderByFieldName rn
-        extraOrdByFlds = bool [] [ordByFldName] similarOrdByFound
-        sortedFlds = L.sort $ fld : (similarFldNames <> extraOrdByFlds)
-        alias = S.Alias $ mkUniqArrRelAls parAls sortedFlds
-        prefix = mkArrRelTableAls pfx parAls sortedFlds
-    in ArrNodeInfo alias prefix $
-       subQueryRequired similarFlds similarOrdByFound
-  ANIAggOrdBy rn ->
-    let similarFlds = map fst $ getSimilarAggFlds rn noTableArgs id
-        ordByFldName = mkOrderByFieldName rn
-        sortedFlds = L.sort $ ordByFldName:similarFlds
-        alias = S.Alias $ mkUniqArrRelAls parAls sortedFlds
-        prefix = mkArrRelTableAls pfx parAls sortedFlds
-    in ArrNodeInfo alias prefix False
+  -> PermissionLimitSubQuery
+  -> AnnSimpleSel
+  -> m ( SelectSource
+       , HM.HashMap S.Alias S.SQLExp
+       )
+processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel = do
+  (selectSource, orderByAndDistinctExtrs, _) <-
+    processSelectParams sourcePrefixes fieldAlias similarArrayFields tableFrom
+    permLimitSubQuery tablePermissions tableArgs
+  annFieldsExtr <- processAnnFields (_pfThis sourcePrefixes) fieldAlias similarArrayFields annSelFields
+  let allExtractors = HM.fromList $ annFieldsExtr : orderByAndDistinctExtrs
+  pure (selectSource, allExtractors)
   where
-    getSimilarAggFlds rn tabArgs f =
-      flip filter (f arrFlds) $ \(_, annArrSel) ->
-        let (lrn, lTabArgs) = fetchRNAndTArgs annArrSel
-        in (lrn == rn) && (lTabArgs == tabArgs)
+    AnnSelectG annSelFields tableFrom tablePermissions tableArgs _ = annSimpleSel
+    similarArrayFields =
+      mkSimilarArrayFields annSelFields $ _saOrderBy tableArgs
 
-    subQueryRequired similarFlds hasSimOrdBy =
-      hasSimOrdBy || any hasAgg similarFlds
+processAnnAggregateSelect
+  :: forall m. ( MonadReader Bool m
+               , MonadWriter JoinTree m
+               )
+  => SourcePrefixes
+  -> FieldName
+  -> AnnAggregateSelect
+  -> m ( SelectSource
+       , HM.HashMap S.Alias S.SQLExp
+       , S.Extractor
+       )
+processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
+  (selectSource, orderByAndDistinctExtrs, _) <-
+    processSelectParams sourcePrefixes fieldAlias similarArrayFields tableFrom
+    permLimitSubQuery tablePermissions tableArgs
+  let thisSourcePrefix = _pfThis sourcePrefixes
+  processedFields <- forM aggSelFields $ \(fieldName, field) ->
+    (fieldName,) <$>
+    case field of
+      TAFAgg aggFields ->
+        pure ( aggregateFieldsToExtractorExps thisSourcePrefix aggFields
+             , aggregateFieldToExp aggFields
+             )
+      TAFNodes annFields -> do
+        annFieldExtr <- processAnnFields thisSourcePrefix fieldName similarArrayFields annFields
+        pure ( [annFieldExtr]
+             , withJsonAggExtr permLimitSubQuery (_ssOrderBy selectSource) $
+               S.Alias $ toIden fieldName
+             )
+      TAFExp e ->
+        pure ( []
+             , withForceAggregation S.textTypeAnn $ S.SELit e
+             )
 
-    hasAgg (_, ASSimple _)                 = False
-    hasAgg (_, ASAgg (AnnRelG _ _ annSel)) = hasAggFld $ _asnFields annSel
+  let topLevelExtractor =
+        flip S.Extractor (Just $ S.Alias $ toIden fieldAlias) $
+        S.applyJsonBuildObj $ flip concatMap (map (second snd) processedFields) $
+        \(FieldName fieldText, fieldExp) -> [S.SELit fieldText, fieldExp]
+      nodeExtractors = HM.fromList $
+        concatMap (fst . snd) processedFields <> orderByAndDistinctExtrs
 
-    fetchRNAndTArgs (ASSimple (AnnRelG rn _ annSel)) =
-      (rn, _asnArgs annSel)
-    fetchRNAndTArgs (ASAgg (AnnRelG rn _ annSel)) =
-      (rn, _asnArgs annSel)
-
-fetchOrdByAggRels
-  :: Maybe (NE.NonEmpty AnnOrderByItem)
-  -> [RelName]
-fetchOrdByAggRels orderByM = fromMaybe [] relNamesM
+  pure (selectSource, nodeExtractors, topLevelExtractor)
   where
-    relNamesM =
-      mapMaybe (fetchAggOrdByRels . obiColumn) . toList <$> orderByM
+    AnnSelectG aggSelFields tableFrom tablePermissions tableArgs _ = annAggSel
+    permLimit = _tpLimit tablePermissions
+    orderBy = _saOrderBy tableArgs
+    permLimitSubQuery = mkPermissionLimitSubQuery permLimit aggSelFields orderBy
+    similarArrayFields = HM.unions $
+      flip map (map snd aggSelFields) $ \case
+        TAFAgg _ -> mempty
+        TAFNodes annFlds ->
+          mkSimilarArrayFields annFlds orderBy
+        TAFExp _ -> mempty
 
-    fetchAggOrdByRels (AOCAgg ri _ _) = Just $ riName ri
-    fetchAggOrdByRels _               = Nothing
-
-mkOrdByItems
-  :: Iden -> FieldName
+mkPermissionLimitSubQuery
+  :: Maybe Int
+  -> TableAggregateFields
   -> Maybe (NE.NonEmpty AnnOrderByItem)
-  -> Bool
-  -> ArrRelCtx
-     -- extractors
-  -> ( [(S.Alias, S.SQLExp)]
-     -- object relation nodes
-     , HM.HashMap RelName ObjNode
-     -- array relation aggregate nodes
-     , HM.HashMap S.Alias ArrNode
-     -- final order by expression
-     , Maybe S.OrderByExp
-     )
-mkOrdByItems pfx fldAls orderByM strfyNum arrRelCtx =
-  (obExtrs, ordByObjsMap, ordByArrsMap, ordByExpM)
+  -> PermissionLimitSubQuery
+mkPermissionLimitSubQuery permLimit aggFields orderBys =
+  case permLimit of
+    Nothing -> PLSQNotRequired
+    Just limit ->
+      if hasAggregateField || hasAggOrderBy then PLSQRequired limit
+      else PLSQNotRequired
   where
-    procAnnOrdBy' = processAnnOrderByItem pfx fldAls arrRelCtx strfyNum
-    procOrdByM =
-      unzip3 . map procAnnOrdBy' . toList <$> orderByM
+    hasAggregateField = flip any (map snd aggFields) $
+      \case
+        TAFAgg _ -> True
+        _        -> False
 
-    obExtrs  = maybe [] (^. _1) procOrdByM
-    ordByExpM  = S.OrderByExp . (^. _2) <$> procOrdByM
+    hasAggOrderBy = case orderBys of
+      Nothing -> False
+      Just l -> flip any (concatMap toList $ toList l) $
+                \case
+                  AOCArrayAggregation{} -> True
+                  _        -> False
 
-    ordByObjs = mapMaybe getOrdByRelNode $ maybe [] (^. _3) procOrdByM
-    ordByObjsMap = HM.fromListWith mergeObjNodes ordByObjs
-
-    ordByAggArrs = mapMaybe getOrdByAggNode $ maybe [] (^. _3) procOrdByM
-    ordByArrsMap = HM.fromListWith mergeArrNodes ordByAggArrs
-
-    getOrdByRelNode (OBNObjNode name node) = Just (name, node)
-    getOrdByRelNode _                      = Nothing
-
-    getOrdByAggNode (OBNArrNode als node) = Just (als, node)
-    getOrdByAggNode _                     = Nothing
-
-mkBaseNode
-  :: Bool
-  -> Prefixes
+processArrayRelation
+  :: forall m. ( MonadReader Bool m
+               , MonadWriter JoinTree m
+               )
+  => SourcePrefixes
   -> FieldName
-  -> TableAggFld
-  -> SelectFrom
-  -> TablePerm
-  -> TableArgs
-  -> Bool
-  -> BaseNode
-mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
-           tablePerm tableArgs strfyNum =
-  BaseNode thisPfx distExprM fromItem finalWhere ordByExpM finalLimit offsetM
-  allExtrs allObjsWithOb allArrsWithOb computedFields
-  where
-    Prefixes thisPfx baseTablepfx = pfxs
-    TablePerm permFilter permLimit = tablePerm
-    TableArgs whereM orderByM inpLimitM offsetM distM = tableArgs
+  -> S.Alias
+  -> ArraySelect
+  -> m ()
+processArrayRelation sourcePrefixes fieldAlias relAlias arrSel =
+  case arrSel of
+    ASSimple annArrRel -> withWriteArrayRelation $ do
+      let AnnRelationSelectG _ colMapping sel = annArrRel
+          permLimitSubQuery =
+            maybe PLSQNotRequired PLSQRequired $ _tpLimit $ _asnPerm sel
+      (source, nodeExtractors) <-
+        processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery sel
+      let topExtr = asJsonAggExtr JASMultipleRows (S.toAlias fieldAlias)
+                    permLimitSubQuery $ _ssOrderBy source
+      pure ( ArrayRelationSource relAlias colMapping source
+           , topExtr
+           , nodeExtractors
+           , ()
+           )
+    ASAggregate aggSel -> withWriteArrayRelation $ do
+      let AnnRelationSelectG _ colMapping sel = aggSel
+      (source, nodeExtractors, topExtr) <-
+        processAnnAggregateSelect sourcePrefixes fieldAlias sel
+      pure ( ArrayRelationSource relAlias colMapping source
+           , topExtr
+           , nodeExtractors
+           , ()
+           )
+    ASConnection connSel -> withWriteArrayConnection $ do
+      let AnnRelationSelectG _ colMapping sel = connSel
+      (source, topExtractor, nodeExtractors) <-
+        processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping sel
+      pure ( source
+           , topExtractor
+           , nodeExtractors
+           , ()
+           )
 
-    -- if sub query is used, then only use input limit
+processSelectParams
+  :: forall m. ( MonadReader Bool m
+               , MonadWriter JoinTree m
+               )
+  => SourcePrefixes
+  -> FieldName
+  -> SimilarArrayFields
+  -> SelectFrom
+  -> PermissionLimitSubQuery
+  -> TablePerm
+  -> SelectArgs
+  -> m ( SelectSource
+       , [(S.Alias, S.SQLExp)]
+       , Maybe S.SQLExp -- Order by cursor
+       )
+processSelectParams sourcePrefixes fieldAlias similarArrFields selectFrom
+                    permLimitSubQ tablePermissions tableArgs = do
+  maybeOrderBy <- mapM
+                  (processOrderByItems thisSourcePrefix fieldAlias similarArrFields)
+                  orderByM
+  let fromItem = selectFromToFromItem (_pfBase sourcePrefixes) selectFrom
+      (maybeDistinct, distinctExtrs) =
+        maybe (Nothing, []) (first Just) $ processDistinctOnColumns thisSourcePrefix <$> distM
+      finalWhere = toSQLBoolExp (selectFromToQual selectFrom) $
+                   maybe permFilter (andAnnBoolExps permFilter) whereM
+      selectSource = SelectSource thisSourcePrefix fromItem maybeDistinct finalWhere
+                     ((^. _2) <$> maybeOrderBy) finalLimit offsetM
+      orderByExtrs = maybe [] (^. _1) maybeOrderBy
+  pure ( selectSource
+       , orderByExtrs <> distinctExtrs
+       , (^. _3) <$> maybeOrderBy
+       )
+  where
+    thisSourcePrefix = _pfThis sourcePrefixes
+    SelectArgs whereM orderByM inpLimitM offsetM distM = tableArgs
+    TablePerm permFilter permLimit = tablePermissions
+    finalLimit =
+    -- if sub query is required, then only use input limit
     --    because permission limit is being applied in subquery
     -- else compare input and permission limits
-    finalLimit =
-      if subQueryReq then inpLimitM
-      else withPermLimit
+      case permLimitSubQ of
+        PLSQRequired _  -> inpLimitM
+        PLSQNotRequired -> compareLimits
 
-    withPermLimit =
+    compareLimits =
       case (inpLimitM, permLimit) of
         (inpLim, Nothing)     -> inpLim
         (Nothing, permLim)    -> permLim
         (Just inp, Just perm) -> Just $ if inp < perm then inp else perm
 
+processOrderByItems
+  :: forall m. ( MonadReader Bool m
+               , MonadWriter JoinTree m
+               )
+  => Iden
+  -> FieldName
+  -> SimilarArrayFields
+  -> NE.NonEmpty AnnOrderByItem
+  -> m ( [(S.Alias, S.SQLExp)] -- Order by Extractors
+       , S.OrderByExp
+       , S.SQLExp -- The cursor expression
+       )
+processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = do
+  orderByItemExps <- forM orderByItems processAnnOrderByItem
+  let orderByExp = S.OrderByExp $ toOrderByExp <$> orderByItemExps
+      orderByExtractors = concat $ toList $ map snd . toList <$> orderByItemExps
+      cursor = mkCursorExp $ toList orderByItemExps
+  pure (orderByExtractors, orderByExp, cursor)
+  where
+    processAnnOrderByItem :: AnnOrderByItem -> m OrderByItemExp
+    processAnnOrderByItem orderByItem =
+      forM orderByItem $ \ordByCol -> (ordByCol,) <$>
+      processAnnOrderByElement sourcePrefix' fieldAlias' ordByCol
 
-    aggOrdByRelNames = fetchOrdByAggRels orderByM
+    processAnnOrderByElement
+      :: Iden -> FieldName -> AnnOrderByElement S.SQLExp -> m (S.Alias, S.SQLExp)
+    processAnnOrderByElement sourcePrefix fieldAlias annObCol = do
+      let ordByAlias = mkAnnOrderByAlias sourcePrefix fieldAlias similarArrayFields annObCol
+      (ordByAlias, ) <$> case annObCol of
+        AOCColumn pgColInfo -> pure $
+          S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ toIden $ pgiColumn pgColInfo
 
-    (allExtrs, allObjsWithOb, allArrsWithOb, computedFields, ordByExpM) =
-      case annSelFlds of
-        TAFNodes flds ->
-          let arrFlds = mapMaybe getAnnArr flds
-              arrRelCtx = mkArrRelCtx arrFlds
-              selExtr = buildJsonObject thisPfx fldAls arrRelCtx strfyNum flds
-              -- all object relationships
-              objNodes = HM.fromListWith mergeObjNodes $
-                        map mkObjItem (mapMaybe getAnnObj flds)
-              -- all array items (array relationships + aggregates)
-              arrNodes = HM.fromListWith mergeArrNodes $
-                         map (mkArrItem arrRelCtx) arrFlds
-              -- all computed fields with table returns
-              computedFieldNodes = HM.fromList $ map mkComputedFieldTable $
-                                   mapMaybe getComputedFieldTable flds
+        AOCObjectRelation relInfo relFilter rest -> withWriteObjectRelation $ do
+          let RelInfo relName _ colMapping relTable _ = relInfo
+              relSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
+              fieldName = mkOrderByFieldName relName
+          (relOrderByAlias, relOrdByExp) <-
+            processAnnOrderByElement relSourcePrefix fieldName rest
+          let selectSource = ObjectSelectSource relSourcePrefix
+                             (S.FISimple relTable Nothing)
+                             (toSQLBoolExp (S.QualTable relTable) relFilter)
+              relSource = ObjectRelationSource relName colMapping selectSource
+          pure ( relSource
+               , HM.singleton relOrderByAlias relOrdByExp
+               , S.mkQIdenExp relSourcePrefix relOrderByAlias
+               )
 
-              (obExtrs, ordByObjs, ordByArrs, obeM)
-                      = mkOrdByItems' arrRelCtx
-              allObjs = HM.unionWith mergeObjNodes objNodes ordByObjs
-              allArrs = HM.unionWith mergeArrNodes arrNodes ordByArrs
+        AOCArrayAggregation relInfo relFilter aggOrderBy -> withWriteArrayRelation $ do
+          let RelInfo relName _ colMapping relTable _ = relInfo
+              fieldName = mkOrderByFieldName relName
+              relSourcePrefix = mkArrayRelationSourcePrefix sourcePrefix fieldAlias
+                                similarArrayFields fieldName
+              relAlias = mkArrayRelationAlias fieldAlias similarArrayFields fieldName
+              (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
+              selectSource = SelectSource relSourcePrefix
+                             (S.FISimple relTable Nothing) Nothing
+                             (toSQLBoolExp (S.QualTable relTable) relFilter)
+                             Nothing Nothing Nothing
+              relSource = ArrayRelationSource relAlias colMapping selectSource
+          pure ( relSource
+               , topExtractor
+               , HM.fromList $ aggregateFieldsToExtractorExps relSourcePrefix fields
+               , S.mkQIdenExp relSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
+               )
 
-          in ( HM.fromList $ selExtr:obExtrs <> distExtrs
-             , allObjs
-             , allArrs
-             , computedFieldNodes
-             , obeM
-             )
-        TAFAgg tabAggs ->
-          let extrs = concatMap (fetchExtrFromAggFld . snd) tabAggs
-              (obExtrs, ordByObjs, ordByArrs, obeM)
-                      = mkOrdByItems' emptyArrRelCtx
-          in ( HM.fromList $ extrs <> obExtrs <> distExtrs
-             , ordByObjs
-             , ordByArrs
-             , HM.empty
-             , obeM
-             )
-        TAFExp _ ->
-          let (obExtrs, ordByObjs, ordByArrs, obeM)
-                      = mkOrdByItems' emptyArrRelCtx
-          in (HM.fromList obExtrs, ordByObjs, ordByArrs, HM.empty, obeM)
+    toOrderByExp :: OrderByItemExp -> S.OrderByItem
+    toOrderByExp orderByItemExp =
+      let OrderByItemG obTyM expAlias obNullsM = fst . snd <$> orderByItemExp
+      in S.OrderByItem (S.SEIden $ toIden expAlias)
+         (unOrderType <$> obTyM) (unNullsOrder <$> obNullsM)
 
-    fetchExtrFromAggFld (AFCount cty) = countTyToExps cty
-    fetchExtrFromAggFld (AFOp aggOp)  = aggOpToExps aggOp
-    fetchExtrFromAggFld (AFExp _)     = []
+    mkCursorExp :: [OrderByItemExp] -> S.SQLExp
+    mkCursorExp orderByItemExps =
+      S.applyJsonBuildObj $ flip concatMap orderByItemExps $
+      \orderByItemExp ->
+        let OrderByItemG _ (annObCol, (_, valExp)) _ = orderByItemExp
+        in annObColToJSONField valExp annObCol
+      where
+        annObColToJSONField valExp = \case
+          AOCColumn pgCol -> [S.SELit $ getPGColTxt $ pgiColumn pgCol, valExp]
+          AOCObjectRelation relInfo _ obCol ->
+            [ S.SELit $ relNameToTxt $ riName relInfo
+            , S.applyJsonBuildObj $ annObColToJSONField valExp obCol
+            ]
+          AOCArrayAggregation relInfo _ aggOrderBy ->
+            [ S.SELit $ relNameToTxt (riName relInfo) <> "_aggregate"
+            , S.applyJsonBuildObj $
+              case aggOrderBy of
+                AAOCount -> [S.SELit "count", valExp]
+                AAOOp opText colInfo ->
+                  [ S.SELit opText
+                  , S.applyJsonBuildObj [S.SELit $ getPGColTxt $ pgiColumn colInfo, valExp]
+                  ]
+            ]
 
-    countTyToExps S.CTStar            = []
-    countTyToExps (S.CTSimple cols)   = colsToExps cols
-    countTyToExps (S.CTDistinct cols) = colsToExps cols
-
+aggregateFieldsToExtractorExps
+  :: Iden -> AggregateFields -> [(S.Alias, S.SQLExp)]
+aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
+  flip concatMap aggregateFields $ \(_, field) ->
+    case field of
+      AFCount cty -> case cty of
+        S.CTStar          -> []
+        S.CTSimple cols   -> colsToExps cols
+        S.CTDistinct cols -> colsToExps cols
+      AFOp aggOp  -> aggOpToExps aggOp
+      AFExp _     -> []
+  where
     colsToExps = mapMaybe (mkColExp . PCFCol)
-
-    aggOpToExps = mapMaybe (mkColExp . snd) . _aoFlds
+    aggOpToExps = mapMaybe (mkColExp . snd) . _aoFields
 
     mkColExp (PCFCol c) =
-      let qualCol = S.mkQIdenExp (mkBaseTableAls thisPfx) (toIden c)
+      let qualCol = S.mkQIdenExp (mkBaseTableAlias sourcePrefix) (toIden c)
           colAls = toIden c
       in Just (S.Alias colAls, qualCol)
     mkColExp _ = Nothing
 
-    finalWhere = toSQLBoolExp tableQual $
-                 maybe permFilter (andAnnBoolExps permFilter) whereM
-    fromItem = selFromToFromItem baseTablepfx selectFrom
-    tableQual = selFromToQual selectFrom
+processAnnFields
+  :: forall m. ( MonadReader Bool m
+               , MonadWriter JoinTree m
+               )
+  => Iden
+  -> FieldName
+  -> SimilarArrayFields
+  -> AnnFields
+  -> m (S.Alias, S.SQLExp)
+processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
+  fieldExps <- forM annFields $ \(fieldName, field) ->
+    (fieldName,) <$>
+    case field of
+      AFExpression t -> pure $ S.SELit t
 
-    mkArrRelCtx arrSels = ArrRelCtx arrSels aggOrdByRelNames
+      AFNodeId tn pKeys -> pure $ mkNodeId tn pKeys
 
-    mkOrdByItems' = mkOrdByItems thisPfx fldAls orderByM strfyNum
+      AFColumn c -> toSQLCol c
 
-    distItemsM = processDistinctOnCol thisPfx <$> distM
-    distExprM = fst <$> distItemsM
-    distExtrs = maybe [] snd distItemsM
+      AFRemote _ -> pure $ S.SELit "null: remote field selected"
 
-    -- process an object relationship
-    mkObjItem (fld, objSel) =
-      let relName = aarName objSel
-          objNodePfx = mkObjRelTableAls thisPfx $ aarName objSel
-          objNode = mkObjNode (Prefixes objNodePfx thisPfx) (fld, objSel)
-      in (relName, objNode)
+      AFObjectRelation objSel -> withWriteObjectRelation $ do
+        let AnnRelationSelectG relName relMapping annObjSel = objSel
+            AnnObjectSelectG objAnnFields tableFrom tableFilter = annObjSel
+            objRelSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
+            sourcePrefixes = mkSourcePrefixes objRelSourcePrefix
+        annFieldsExtr <- processAnnFields (_pfThis sourcePrefixes) fieldName HM.empty objAnnFields
+        let selectSource = ObjectSelectSource (_pfThis sourcePrefixes)
+                           (S.FISimple tableFrom Nothing)
+                           (toSQLBoolExp (S.QualTable tableFrom) tableFilter)
+            objRelSource = ObjectRelationSource relName relMapping selectSource
+        pure ( objRelSource
+             , HM.fromList [annFieldsExtr]
+             , S.mkQIdenExp objRelSourcePrefix fieldName
+             )
 
-    -- process an array/array-aggregate item
-    mkArrItem arrRelCtx (fld, arrSel) =
-      let ArrNodeInfo arrAls arrPfx subQReq =
-            mkArrNodeInfo thisPfx fldAls arrRelCtx $ ANIField (fld, arrSel)
-          arrNode = mkArrNode subQReq (Prefixes arrPfx thisPfx) (fld, arrSel)
-      in (arrAls, arrNode)
+      AFArrayRelation arrSel -> do
+        let arrRelSourcePrefix = mkArrayRelationSourcePrefix sourcePrefix fieldAlias similarArrFields fieldName
+            arrRelAlias = mkArrayRelationAlias fieldAlias similarArrFields fieldName
+        processArrayRelation (mkSourcePrefixes arrRelSourcePrefix) fieldName arrRelAlias arrSel
+        pure $ S.mkQIdenExp arrRelSourcePrefix fieldName
 
-    -- process a computed field, which returns a table
-    mkComputedFieldTable (fld, jsonAggSelect, sel) =
-      let prefixes = Prefixes (mkComputedFieldTableAls thisPfx fld) thisPfx
-          baseNode = annSelToBaseNode False prefixes fld sel
-      in (fld, CFTableNode jsonAggSelect baseNode)
+      AFComputedField (CFSScalar scalar) -> fromScalarComputedField scalar
 
-    getAnnObj (f, annFld) = case annFld of
-      FObj ob -> Just (f, ob)
-      _       -> Nothing
+      AFComputedField (CFSTable selectTy sel) -> withWriteComputedFieldTableSet $ do
+        let computedFieldSourcePrefix =
+              mkComputedFieldTableAlias sourcePrefix fieldName
+        (selectSource, nodeExtractors) <-
+          processAnnSimpleSelect (mkSourcePrefixes computedFieldSourcePrefix)
+          fieldName PLSQNotRequired sel
+        let computedFieldTableSetSource =
+              ComputedFieldTableSetSource fieldName selectTy selectSource
+        pure ( computedFieldTableSetSource
+             , nodeExtractors
+             , S.mkQIdenExp computedFieldSourcePrefix fieldName
+             )
 
-    getAnnArr (f, annFld) = case annFld of
-      FArr ar -> Just (f, ar)
-      _       -> Nothing
-
-    getComputedFieldTable (f, annFld) = case annFld of
-      FComputedField (CFSTable jas sel) -> Just (f, jas, sel)
-      _                                 -> Nothing
-
-annSelToBaseNode :: Bool -> Prefixes -> FieldName -> AnnSimpleSel -> BaseNode
-annSelToBaseNode subQueryReq pfxs fldAls annSel =
-  mkBaseNode subQueryReq pfxs fldAls (TAFNodes selFlds) tabFrm tabPerm tabArgs strfyNum
+  pure $
+    -- posttgres ignores anything beyond 63 chars for an iden
+    -- in this case, we'll need to use json_build_object function
+    -- json_build_object is slower than row_to_json hence it is only
+    -- used when needed
+    if any ( (> 63) . T.length . getFieldNameTxt . fst ) fieldExps then
+      withJsonBuildObj fieldAlias $ concatMap toJsonBuildObjectExps fieldExps
+    else withRowToJSON fieldAlias $ map toRowToJsonExtr fieldExps
   where
-    AnnSelG selFlds tabFrm tabPerm tabArgs strfyNum = annSel
+    mkSourcePrefixes newPrefix = SourcePrefixes newPrefix sourcePrefix
+    toJsonBuildObjectExps (fieldName, fieldExp) =
+      [S.SELit $ getFieldNameTxt fieldName, fieldExp]
 
-mkObjNode :: Prefixes -> (FieldName, ObjSel) -> ObjNode
-mkObjNode pfxs (fldName, AnnRelG _ rMapn rAnnSel) =
-  ObjNode rMapn $ annSelToBaseNode False pfxs fldName rAnnSel
+    toRowToJsonExtr (fieldName, fieldExp) =
+      S.Extractor fieldExp $ Just $ S.toAlias fieldName
 
-mkArrNode :: Bool -> Prefixes -> (FieldName, ArrSel) -> ArrNode
-mkArrNode subQueryReq pfxs (fldName, annArrSel) = case annArrSel of
-  ASSimple annArrRel ->
-    let bn = annSelToBaseNode subQueryReq pfxs fldName $ aarAnnSel annArrRel
-        permLimit = getPermLimit $ aarAnnSel annArrRel
-        extr = asJsonAggExtr JASMultipleRows (S.toAlias fldName) subQueryReq permLimit $
-               _bnOrderBy bn
-    in ArrNode [extr] (aarMapping annArrRel) bn
+    toSQLCol :: AnnColumnField -> m S.SQLExp
+    toSQLCol (AnnColumnField col asText colOpM) = do
+      strfyNum <- ask
+      pure $ toJSONableExp strfyNum (pgiType col) asText $ withColumnOp colOpM $
+             S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ pgiColumn col
 
-  ASAgg annAggSel -> aggSelToArrNode pfxs fldName annAggSel
+    fromScalarComputedField :: ComputedFieldScalarSelect S.SQLExp -> m S.SQLExp
+    fromScalarComputedField computedFieldScalar = do
+      strfyNum <- ask
+      pure $ toJSONableExp strfyNum (PGColumnScalar ty) False $ withColumnOp colOpM $
+             S.SEFunction $ S.FunctionExp fn (fromTableRowArgs sourcePrefix args) Nothing
+      where
+        ComputedFieldScalarSelect fn args ty colOpM = computedFieldScalar
+
+    withColumnOp :: Maybe ColumnOp -> S.SQLExp -> S.SQLExp
+    withColumnOp colOpM sqlExp = case colOpM of
+      Nothing                     -> sqlExp
+      Just (ColumnOp opText cExp) -> S.mkSQLOpExp opText sqlExp cExp
+
+    mkNodeId :: QualifiedTable -> PrimaryKeyColumns -> S.SQLExp
+    mkNodeId (QualifiedObject tableSchema tableName) pkeyColumns =
+      let columnInfoToSQLExp pgColumnInfo =
+            toJSONableExp False (pgiType pgColumnInfo) False $
+            S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ pgiColumn pgColumnInfo
+
+      -- See Note [Relay Node id].
+      in encodeBase64 $ flip S.SETyAnn S.textTypeAnn $ S.applyJsonBuildArray $
+         [ S.intToSQLExp $ nodeIdVersionInt currentNodeIdVersion
+         , S.SELit (getSchemaTxt tableSchema)
+         , S.SELit (toTxt tableName)
+         ] <> map columnInfoToSQLExp (toList pkeyColumns)
 
 injectJoinCond :: S.BoolExp       -- ^ Join condition
                -> S.BoolExp -- ^ Where condition
@@ -696,28 +833,33 @@ mkJoinCond baseTablepfx colMapn =
   foldl' (S.BEBin S.AndOp) (S.BELit True) $ flip map (HM.toList colMapn) $ \(lCol, rCol) ->
     S.BECompare S.SEQ (S.mkQIdenExp baseTablepfx lCol) (S.mkSIdenExp rCol)
 
-baseNodeToSel :: S.BoolExp -> BaseNode -> S.Select
-baseNodeToSel joinCond baseNode =
+generateSQLSelect
+  :: S.BoolExp -- ^ Pre join condition
+  -> SelectSource
+  -> SelectNode
+  -> S.Select
+generateSQLSelect joinCondition selectSource selectNode =
   S.mkSelect
-  { S.selExtr    = [S.Extractor e $ Just a | (a, e) <- HM.toList extrs]
-  , S.selFrom    = Just $ S.FromExp [joinedFrom]
-  , S.selOrderBy = ordByM
-  , S.selLimit   = S.LimitExp . S.intToSQLExp <$> limitM
-  , S.selOffset  = S.OffsetExp <$> offsetM
-  , S.selDistinct = dExp
+  { S.selExtr = [S.Extractor e $ Just a | (a, e) <- HM.toList extractors]
+  , S.selFrom = Just $ S.FromExp [joinedFrom]
+  , S.selOrderBy = maybeOrderby
+  , S.selLimit = S.LimitExp . S.intToSQLExp <$> maybeLimit
+  , S.selOffset = S.OffsetExp <$> maybeOffset
+  , S.selDistinct = maybeDistinct
   }
   where
-    BaseNode pfx dExp fromItem whr ordByM limitM
-             offsetM extrs objRels arrRels computedFields
-             = baseNode
-    -- this is the table which is aliased as "pfx.base"
-    baseSel = S.mkSelect
+    SelectSource sourcePrefix fromItem maybeDistinct whereExp
+      maybeOrderby maybeLimit maybeOffset = selectSource
+    SelectNode extractors joinTree = selectNode
+    JoinTree objectRelations arrayRelations arrayConnections computedFields = joinTree
+    -- this is the table which is aliased as "sourcePrefix.base"
+    baseSelect = S.mkSelect
       { S.selExtr  = [S.Extractor (S.SEStar Nothing) Nothing]
       , S.selFrom  = Just $ S.FromExp [fromItem]
-      , S.selWhere = Just $ injectJoinCond joinCond whr
+      , S.selWhere = Just $ injectJoinCond joinCondition whereExp
       }
-    baseSelAls = S.Alias $ mkBaseTableAls pfx
-    baseFromItem = S.mkSelFromItem baseSel baseSelAls
+    baseSelectAlias = S.Alias $ mkBaseTableAlias sourcePrefix
+    baseFromItem = S.mkSelFromItem baseSelect baseSelectAlias
 
     -- function to create a joined from item from two from items
     leftOuterJoin current new =
@@ -727,54 +869,422 @@ baseNodeToSel joinCond baseNode =
     -- this is the from eexp for the final select
     joinedFrom :: S.FromItem
     joinedFrom = foldl' leftOuterJoin baseFromItem $
-                 map objNodeToFromItem (HM.elems objRels) <>
-                 map arrNodeToFromItem (HM.elems arrRels) <>
-                 map computedFieldNodeToFromItem (HM.toList computedFields)
+                 map objectRelationToFromItem (HM.toList objectRelations) <>
+                 map arrayRelationToFromItem (HM.toList arrayRelations) <>
+                 map arrayConnectionToFromItem (HM.toList arrayConnections) <>
+                 map computedFieldToFromItem (HM.toList computedFields)
 
-    objNodeToFromItem :: ObjNode -> S.FromItem
-    objNodeToFromItem (ObjNode relMapn relBaseNode) =
-      let als = S.Alias $ _bnPrefix relBaseNode
-          sel = baseNodeToSel (mkJoinCond baseSelAls relMapn) relBaseNode
-      in S.mkLateralFromItem sel als
 
-    arrNodeToFromItem :: ArrNode -> S.FromItem
-    arrNodeToFromItem (ArrNode es colMapn bn) =
-      let sel = arrNodeToSelect bn es (mkJoinCond baseSelAls colMapn)
-          als = S.Alias $ _bnPrefix bn
-      in S.mkLateralFromItem sel als
+    objectRelationToFromItem
+      :: (ObjectRelationSource, SelectNode) -> S.FromItem
+    objectRelationToFromItem (objectRelationSource, node) =
+      let ObjectRelationSource _ colMapping objectSelectSource = objectRelationSource
+          alias = S.Alias $ _ossPrefix objectSelectSource
+          source = objectSelectSourceToSelectSource objectSelectSource
+          select = generateSQLSelect (mkJoinCond baseSelectAlias colMapping) source node
+      in S.mkLateralFromItem select alias
 
-    computedFieldNodeToFromItem :: (FieldName, CFTableNode) -> S.FromItem
-    computedFieldNodeToFromItem (fld, CFTableNode jsonAggSelect bn) =
-      let internalSel = baseNodeToSel (S.BELit True) bn
-          als = S.Alias $ _bnPrefix bn
-          extr = asJsonAggExtr jsonAggSelect (S.toAlias fld) False Nothing $
-                 _bnOrderBy bn
-          internalSelFrom = S.mkSelFromItem internalSel als
-          sel = S.mkSelect
-                { S.selExtr = pure extr
-                , S.selFrom = Just $ S.FromExp [internalSelFrom]
+    arrayRelationToFromItem
+      :: (ArrayRelationSource, ArraySelectNode) -> S.FromItem
+    arrayRelationToFromItem (arrayRelationSource, arraySelectNode) =
+      let ArrayRelationSource _ colMapping source = arrayRelationSource
+          alias = S.Alias $ _ssPrefix source
+          select = generateSQLSelectFromArrayNode source arraySelectNode $
+                   mkJoinCond baseSelectAlias colMapping
+      in S.mkLateralFromItem select alias
+
+    arrayConnectionToFromItem
+      :: (ArrayConnectionSource, ArraySelectNode) -> S.FromItem
+    arrayConnectionToFromItem (arrayConnectionSource, arraySelectNode) =
+      let selectWith = connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode
+          alias = S.Alias $ _ssPrefix $ _acsSource arrayConnectionSource
+      in S.FISelectWith (S.Lateral True) selectWith alias
+
+    computedFieldToFromItem
+      :: (ComputedFieldTableSetSource, SelectNode) -> S.FromItem
+    computedFieldToFromItem (computedFieldTableSource, node) =
+      let ComputedFieldTableSetSource fieldName selectTy source = computedFieldTableSource
+          internalSelect = generateSQLSelect (S.BELit True) source node
+          extractor = asJsonAggExtr selectTy (S.toAlias fieldName) PLSQNotRequired $
+                      _ssOrderBy source
+          alias = S.Alias $ _ssPrefix source
+          select = S.mkSelect
+                { S.selExtr = [extractor]
+                , S.selFrom = Just $ S.FromExp [S.mkSelFromItem internalSelect alias]
                 }
-      in S.mkLateralFromItem sel als
+      in S.mkLateralFromItem select alias
 
-mkAggSelect :: AnnAggSel -> S.Select
-mkAggSelect annAggSel =
-  prefixNumToAliases $ arrNodeToSelect bn extr $ S.BELit True
+generateSQLSelectFromArrayNode
+  :: SelectSource
+  -> ArraySelectNode
+  -> S.BoolExp
+  -> S.Select
+generateSQLSelectFromArrayNode selectSource arraySelectNode joinCondition =
+  S.mkSelect
+  { S.selExtr = topExtractors
+  , S.selFrom = Just $ S.FromExp [selectFrom]
+  }
   where
-    aggSel = AnnRelG rootRelName HM.empty annAggSel
-    rootIden = Iden "root"
-    rootPrefix = Prefixes rootIden rootIden
-    ArrNode extr _ bn =
-      aggSelToArrNode rootPrefix (FieldName "root") aggSel
+    ArraySelectNode topExtractors selectNode = arraySelectNode
+    selectFrom = S.mkSelFromItem
+                 (generateSQLSelect joinCondition selectSource selectNode) $
+                 S.Alias $ _ssPrefix selectSource
+
+mkAggregateSelect :: AnnAggregateSelect -> S.Select
+mkAggregateSelect annAggSel =
+  let ((selectSource, nodeExtractors, topExtractor), joinTree) =
+        runWriter $ flip runReaderT strfyNum $
+        processAnnAggregateSelect sourcePrefixes rootFieldName annAggSel
+      selectNode = SelectNode nodeExtractors joinTree
+      arrayNode = ArraySelectNode [topExtractor] selectNode
+  in prefixNumToAliases $
+     generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
+  where
+    strfyNum = _asnStrfyNum annAggSel
+    rootFieldName = FieldName "root"
+    rootIden = toIden rootFieldName
+    sourcePrefixes = SourcePrefixes rootIden rootIden
 
 mkSQLSelect :: JsonAggSelect -> AnnSimpleSel -> S.Select
 mkSQLSelect jsonAggSelect annSel =
-  prefixNumToAliases $ arrNodeToSelect baseNode extrs $ S.BELit True
+  let permLimitSubQuery = PLSQNotRequired
+      ((selectSource, nodeExtractors), joinTree) =
+        runWriter $ flip runReaderT strfyNum $
+        processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery annSel
+      selectNode = SelectNode nodeExtractors joinTree
+      topExtractor = asJsonAggExtr jsonAggSelect rootFldAls permLimitSubQuery
+                     $ _ssOrderBy selectSource
+      arrayNode = ArraySelectNode [topExtractor] selectNode
+  in prefixNumToAliases $
+     generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
   where
-    permLimit = getPermLimit annSel
-    extrs = pure $ asJsonAggExtr jsonAggSelect rootFldAls False permLimit
-            $ _bnOrderBy baseNode
+    strfyNum = _asnStrfyNum annSel
     rootFldIden = toIden rootFldName
-    rootPrefix = Prefixes rootFldIden rootFldIden
-    baseNode = annSelToBaseNode False rootPrefix rootFldName annSel
+    sourcePrefixes = SourcePrefixes rootFldIden rootFldIden
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
+
+mkConnectionSelect :: ConnectionSelect S.SQLExp -> S.SelectWithG S.Select
+mkConnectionSelect connectionSelect =
+  let ((connectionSource, topExtractor, nodeExtractors), joinTree) =
+        runWriter $ flip runReaderT strfyNum $
+        processConnectionSelect sourcePrefixes rootFieldName
+        (S.Alias rootIden) mempty connectionSelect
+      selectNode = ArraySelectNode [topExtractor] $
+                       SelectNode nodeExtractors joinTree
+  in prefixNumToAliasesSelectWith $
+     connectionToSelectWith (S.Alias rootIden) connectionSource selectNode
+  where
+    strfyNum = _asnStrfyNum $ _csSelect connectionSelect
+    rootFieldName = FieldName "root"
+    rootIden = toIden rootFieldName
+    sourcePrefixes = SourcePrefixes rootIden rootIden
+
+-- | First element extractor expression from given record set
+-- For example:- To get first "id" column from given row set,
+-- the function generates the SQL expression AS `(array_agg("id"))[1]`
+mkFirstElementExp :: S.SQLExp -> S.SQLExp
+mkFirstElementExp expIden =
+  -- For Example
+  S.SEArrayIndex (S.SEFnApp "array_agg" [expIden] Nothing) (S.intToSQLExp 1)
+
+-- | Last element extractor expression from given record set.
+-- For example:- To get first "id" column from given row set,
+-- the function generates the SQL expression AS `(array_agg("id"))[array_length(array_agg("id"), 1)]`
+mkLastElementExp :: S.SQLExp -> S.SQLExp
+mkLastElementExp expIden =
+  let arrayExp = S.SEFnApp "array_agg" [expIden] Nothing
+  in S.SEArrayIndex arrayExp $
+     S.SEFnApp "array_length" [arrayExp, S.intToSQLExp 1] Nothing
+
+cursorIden :: Iden
+cursorIden = Iden "__cursor"
+
+startCursorIden :: Iden
+startCursorIden = Iden "__start_cursor"
+
+endCursorIden :: Iden
+endCursorIden = Iden "__end_cursor"
+
+hasPreviousPageIden :: Iden
+hasPreviousPageIden = Iden "__has_previous_page"
+
+hasNextPageIden :: Iden
+hasNextPageIden = Iden "__has_next_page"
+
+pageInfoSelectAliasIden :: Iden
+pageInfoSelectAliasIden = Iden "__page_info"
+
+cursorsSelectAliasIden :: Iden
+cursorsSelectAliasIden = Iden "__cursors_select"
+
+encodeBase64 :: S.SQLExp -> S.SQLExp
+encodeBase64 =
+  removeNewline . bytesToBase64Text . convertToBytes
+  where
+    convertToBytes e =
+      S.SEFnApp "convert_to" [e, S.SELit "UTF8"] Nothing
+    bytesToBase64Text e =
+      S.SEFnApp "encode" [e, S.SELit "base64"] Nothing
+    removeNewline e =
+      S.SEFnApp "regexp_replace" [e, S.SELit "\\n", S.SELit "", S.SELit "g"] Nothing
+
+
+processConnectionSelect
+  :: ( MonadReader Bool m
+     , MonadWriter JoinTree m
+     )
+  => SourcePrefixes
+  -> FieldName
+  -> S.Alias
+  -> HM.HashMap PGCol PGCol
+  -> ConnectionSelect S.SQLExp
+  -> m ( ArrayConnectionSource
+       , S.Extractor
+       , HM.HashMap S.Alias S.SQLExp
+       )
+processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connectionSelect = do
+  (selectSource, orderByAndDistinctExtrs, maybeOrderByCursor) <-
+    processSelectParams sourcePrefixes fieldAlias similarArrayFields selectFrom
+    permLimitSubQuery tablePermissions tableArgs
+
+  let mkCursorExtractor = (S.Alias cursorIden,) . (`S.SETyAnn` S.textTypeAnn)
+      cursorExtractors = case maybeOrderByCursor of
+        Just orderByCursor -> [mkCursorExtractor orderByCursor]
+        Nothing ->
+          -- Extract primary key columns from base select along with cursor expression.
+          -- Those columns are required to perform connection split via a WHERE clause.
+          mkCursorExtractor primaryKeyColumnsObjectExp : primaryKeyColumnExtractors
+      orderByExp = _ssOrderBy selectSource
+  (topExtractorExp, exps) <- flip runStateT [] $ processFields orderByExp
+  let topExtractor = S.Extractor topExtractorExp $ Just $ S.Alias fieldIden
+      allExtractors = HM.fromList $ cursorExtractors <> exps <> orderByAndDistinctExtrs
+      arrayConnectionSource = ArrayConnectionSource relAlias colMapping
+                              (mkSplitBoolExp <$> maybeSplit) maybeSlice selectSource
+  pure ( arrayConnectionSource
+       , topExtractor
+       , allExtractors
+       )
+  where
+    ConnectionSelect primaryKeyColumns maybeSplit maybeSlice select = connectionSelect
+    AnnSelectG fields selectFrom tablePermissions tableArgs _ = select
+    fieldIden = toIden fieldAlias
+    thisPrefix = _pfThis sourcePrefixes
+    permLimitSubQuery = PLSQNotRequired
+
+    primaryKeyColumnsObjectExp =
+      S.applyJsonBuildObj $ flip concatMap (toList primaryKeyColumns) $
+      \pgColumnInfo ->
+        [ S.SELit $ getPGColTxt $ pgiColumn pgColumnInfo
+        , toJSONableExp False (pgiType pgColumnInfo) False $
+          S.mkQIdenExp (mkBaseTableAlias thisPrefix) $ pgiColumn pgColumnInfo
+        ]
+
+    primaryKeyColumnExtractors =
+      flip map (toList primaryKeyColumns) $
+      \pgColumnInfo ->
+        let pgColumn = pgiColumn pgColumnInfo
+        in ( S.Alias $ mkBaseTableColumnAlias thisPrefix pgColumn
+           , S.mkQIdenExp (mkBaseTableAlias thisPrefix) pgColumn
+           )
+
+    mkSplitBoolExp (firstSplit NE.:| rest) =
+      S.BEBin S.OrOp (mkSplitCompareExp firstSplit) $ mkBoolExpFromRest firstSplit rest
+      where
+        mkBoolExpFromRest previousSplit =
+          S.BEBin S.AndOp (mkEqualityCompareExp previousSplit) . \case
+            []                         -> S.BELit False
+            (thisSplit:remainingSplit) -> mkSplitBoolExp (thisSplit NE.:| remainingSplit)
+
+        mkSplitCompareExp (ConnectionSplit kind v (OrderByItemG obTyM obCol _)) =
+          let obAlias = mkAnnOrderByAlias thisPrefix fieldAlias similarArrayFields obCol
+              obTy = maybe S.OTAsc unOrderType obTyM
+              compareOp = case (kind, obTy) of
+                (CSKAfter, S.OTAsc)   -> S.SGT
+                (CSKAfter, S.OTDesc)  -> S.SLT
+                (CSKBefore, S.OTAsc)  -> S.SLT
+                (CSKBefore, S.OTDesc) -> S.SGT
+          in S.BECompare compareOp (S.SEIden $ toIden obAlias) v
+
+        mkEqualityCompareExp (ConnectionSplit _ v orderByItem) =
+          let obAlias = mkAnnOrderByAlias thisPrefix fieldAlias similarArrayFields $
+                        obiColumn orderByItem
+          in S.BECompare S.SEQ (S.SEIden $ toIden obAlias) v
+
+    similarArrayFields = HM.unions $
+      flip map (map snd fields) $ \case
+      ConnectionTypename{} -> mempty
+      ConnectionPageInfo{} -> mempty
+      ConnectionEdges edges -> HM.unions $
+        flip map (map snd edges) $ \case
+        EdgeTypename{} -> mempty
+        EdgeCursor{} -> mempty
+        EdgeNode annFields ->
+          mkSimilarArrayFields annFields $ _saOrderBy tableArgs
+
+    mkSimpleJsonAgg rowExp ob =
+      let jsonAggExp = S.SEFnApp "json_agg" [rowExp] ob
+      in S.SEFnApp "coalesce" [jsonAggExp, S.SELit "[]"] Nothing
+
+    processFields
+      :: ( MonadReader Bool m
+         , MonadWriter JoinTree m
+         , MonadState [(S.Alias, S.SQLExp)] m
+         )
+      => Maybe S.OrderByExp -> m S.SQLExp
+    processFields orderByExp =
+      fmap (S.applyJsonBuildObj . concat) $
+      forM fields $
+        \(FieldName fieldText, field) -> (S.SELit fieldText:) . pure <$>
+        case field of
+          ConnectionTypename t              -> pure $ withForceAggregation S.textTypeAnn $ S.SELit t
+          ConnectionPageInfo pageInfoFields -> pure $ processPageInfoFields pageInfoFields
+          ConnectionEdges edges ->
+            fmap (flip mkSimpleJsonAgg orderByExp . S.applyJsonBuildObj . concat) $ forM edges $
+            \(FieldName edgeText, edge) -> (S.SELit edgeText:) . pure <$>
+            case edge of
+              EdgeTypename t -> pure $ S.SELit t
+              EdgeCursor     -> pure $ encodeBase64 $ S.SEIden (toIden cursorIden)
+              EdgeNode annFields -> do
+                let edgeFieldName = FieldName $
+                      getFieldNameTxt fieldAlias <> "." <> fieldText <> "." <> edgeText
+                    edgeFieldIden = toIden edgeFieldName
+                annFieldsExtrExp <- processAnnFields thisPrefix edgeFieldName similarArrayFields annFields
+                modify' (<> [annFieldsExtrExp])
+                pure $ S.SEIden edgeFieldIden
+
+    processPageInfoFields infoFields =
+      S.applyJsonBuildObj $ flip concatMap infoFields $
+      \(FieldName fieldText, field) -> (:) (S.SELit fieldText) $ pure case field of
+        PageInfoTypename t      -> withForceAggregation S.textTypeAnn $ S.SELit t
+        PageInfoHasNextPage     -> withForceAggregation S.boolTypeAnn $
+          mkSingleFieldSelect (S.SEIden hasNextPageIden) pageInfoSelectAliasIden
+        PageInfoHasPreviousPage -> withForceAggregation S.boolTypeAnn $
+          mkSingleFieldSelect (S.SEIden hasPreviousPageIden) pageInfoSelectAliasIden
+        PageInfoStartCursor     -> withForceAggregation S.textTypeAnn $
+          encodeBase64 $ mkSingleFieldSelect (S.SEIden startCursorIden) cursorsSelectAliasIden
+        PageInfoEndCursor       -> withForceAggregation S.textTypeAnn $
+          encodeBase64 $ mkSingleFieldSelect (S.SEIden endCursorIden) cursorsSelectAliasIden
+      where
+        mkSingleFieldSelect field fromIden = S.SESelect
+          S.mkSelect { S.selExtr = [S.Extractor field Nothing]
+                     , S.selFrom = Just $ S.FromExp [S.FIIden fromIden]
+                     }
+
+connectionToSelectWith
+  :: S.Alias
+  -> ArrayConnectionSource
+  -> ArraySelectNode
+  -> S.SelectWithG S.Select
+connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
+  let extractionSelect = S.mkSelect
+                         { S.selExtr = topExtractors
+                         , S.selFrom = Just $ S.FromExp [S.FIIden finalSelectIden]
+                         }
+  in S.SelectWith fromBaseSelections extractionSelect
+  where
+    ArrayConnectionSource _ columnMapping maybeSplit maybeSlice selectSource =
+      arrayConnectionSource
+    ArraySelectNode topExtractors selectNode = arraySelectNode
+    baseSelectIden = Iden "__base_select"
+    splitSelectIden = Iden "__split_select"
+    sliceSelectIden = Iden "__slice_select"
+    finalSelectIden = Iden "__final_select"
+
+    rowNumberIden = Iden "__row_number"
+    rowNumberExp = S.SEUnsafe "(row_number() over (partition by 1))"
+    startRowNumberIden = Iden "__start_row_number"
+    endRowNumberIden = Iden "__end_row_number"
+
+    startCursorExp = mkFirstElementExp $ S.SEIden cursorIden
+    endCursorExp = mkLastElementExp $ S.SEIden cursorIden
+
+    startRowNumberExp = mkFirstElementExp $ S.SEIden rowNumberIden
+    endRowNumberExp = mkLastElementExp $ S.SEIden rowNumberIden
+
+    fromBaseSelections =
+      let joinCond = mkJoinCond baseSelectAlias columnMapping
+          baseSelectFrom = S.mkSelFromItem
+                           (generateSQLSelect joinCond selectSource selectNode)
+                           $ S.Alias $ _ssPrefix selectSource
+          select =
+            S.mkSelect { S.selExtr = [ S.selectStar
+                                     , S.Extractor rowNumberExp $ Just $ S.Alias rowNumberIden
+                                     ]
+                       , S.selFrom = Just $ S.FromExp [baseSelectFrom]
+                       }
+      in (S.Alias baseSelectIden, select):fromSplitSelection
+
+    mkStarSelect fromIden =
+      S.mkSelect { S.selExtr = [S.selectStar]
+                 , S.selFrom = Just $ S.FromExp [S.FIIden fromIden]
+                 }
+
+    fromSplitSelection = case maybeSplit of
+      Nothing        -> fromSliceSelection baseSelectIden
+      Just splitBool ->
+        let select =
+              (mkStarSelect baseSelectIden){S.selWhere = Just $ S.WhereFrag splitBool}
+        in (S.Alias splitSelectIden, select):fromSliceSelection splitSelectIden
+
+    fromSliceSelection prevSelect = case maybeSlice of
+      Nothing    -> fromFinalSelect prevSelect
+      Just slice ->
+        let select = case slice of
+              SliceFirst limit ->
+                (mkStarSelect prevSelect)
+                {S.selLimit = (Just . S.LimitExp . S.intToSQLExp) limit}
+              SliceLast limit ->
+                let mkRowNumberOrderBy obType =
+                      let orderByItem =
+                            S.OrderByItem (S.SEIden rowNumberIden) (Just obType) Nothing
+                      in S.OrderByExp $ orderByItem NE.:| []
+
+                    sliceLastSelect = (mkStarSelect prevSelect)
+                                      { S.selLimit = (Just . S.LimitExp . S.intToSQLExp) limit
+                                      , S.selOrderBy = Just $ mkRowNumberOrderBy S.OTDesc
+                                      }
+                    sliceLastSelectFrom =
+                      S.mkSelFromItem sliceLastSelect $ S.Alias sliceSelectIden
+                in S.mkSelect { S.selExtr = [S.selectStar]
+                              , S.selFrom = Just $ S.FromExp [sliceLastSelectFrom]
+                              , S.selOrderBy = Just $ mkRowNumberOrderBy S.OTAsc
+                              }
+        in (S.Alias sliceSelectIden, select):fromFinalSelect sliceSelectIden
+
+    fromFinalSelect prevSelect =
+      let select = mkStarSelect prevSelect
+      in (S.Alias finalSelectIden, select):fromCursorSelection
+
+    fromCursorSelection =
+      let extrs = [ S.Extractor startCursorExp $ Just $ S.Alias startCursorIden
+                  , S.Extractor endCursorExp $ Just $ S.Alias endCursorIden
+                  , S.Extractor startRowNumberExp $ Just $ S.Alias startRowNumberIden
+                  , S.Extractor endRowNumberExp $ Just $ S.Alias endRowNumberIden
+                  ]
+          select =
+            S.mkSelect { S.selExtr = extrs
+                       , S.selFrom = Just $ S.FromExp [S.FIIden finalSelectIden]
+                       }
+      in (S.Alias cursorsSelectAliasIden, select):fromPageInfoSelection
+
+    fromPageInfoSelection =
+      let hasPrevPage = S.SEBool $
+            S.mkExists (S.FIIden baseSelectIden) $
+            S.BECompare S.SLT (S.SEIden rowNumberIden) $
+            S.SESelect $ S.mkSelect { S.selFrom = Just $ S.FromExp [S.FIIden cursorsSelectAliasIden]
+                                    , S.selExtr = [S.Extractor (S.SEIden startRowNumberIden) Nothing]
+                                    }
+          hasNextPage = S.SEBool $
+            S.mkExists (S.FIIden baseSelectIden) $
+            S.BECompare S.SGT (S.SEIden rowNumberIden) $
+            S.SESelect $ S.mkSelect { S.selFrom = Just $ S.FromExp [S.FIIden cursorsSelectAliasIden]
+                                    , S.selExtr = [S.Extractor (S.SEIden endRowNumberIden) Nothing]
+                                    }
+
+          select =
+            S.mkSelect { S.selExtr = [ S.Extractor hasPrevPage $ Just $ S.Alias hasPreviousPageIden
+                                     , S.Extractor hasNextPage $ Just $ S.Alias hasNextPageIden
+                                     ]
+                       }
+      in pure (S.Alias pageInfoSelectAliasIden, select)
