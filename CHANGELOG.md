@@ -15,7 +15,7 @@
 
 ### Docs
 
-- docs: add hasura cloud to getting started section (close #5206)
+- docs: add hasura cloud to getting started section (close #5206) (#5208)
 
 ## `v1.3.0-beta.2`
 
