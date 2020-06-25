@@ -20,6 +20,8 @@ Available APIs
 +=================+=========================================+==================+
 | GraphQL         | :ref:`/v1/graphql <graphql_api>`        | Permission rules |
 +-----------------+-----------------------------------------+------------------+
+| Relay           | :ref:`/v1/relay <relay_api>`            | Permission rules |
++-----------------+-----------------------------------------+------------------+
 | Legacy GraphQL  | :ref:`/v1alpha1/graphql <graphql_api>`  | Permission rules |
 +-----------------+-----------------------------------------+------------------+
 | Schema/Metadata | :ref:`/v1/query <schema_metadata_api>`  | Admin only       |
@@ -43,6 +45,15 @@ GraphQL API
 All GraphQL requests for queries, subscriptions and mutations are made to the GraphQL API.
 
 See details at :ref:`api_reference_graphql`.
+
+.. _relay_api:
+
+Relay API
+^^^^^^^^^
+
+Hasura exposes a Relay schema for GraphQL requests for queries, subscriptions and mutations.
+
+See docs at :ref:`relay_schema`.
 
 .. _schema_metadata_api:
 

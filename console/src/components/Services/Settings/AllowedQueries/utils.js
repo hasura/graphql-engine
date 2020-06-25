@@ -50,7 +50,7 @@ export const parseQueryString = queryString => {
   try {
     parsedQueryString = parse(queryString);
   } catch (ex) {
-    throw new Error('Parsing query failed');
+    throw new Error('Parsing operation failed');
   }
 
   const queryDefs = parsedQueryString.definitions.filter(
@@ -63,7 +63,7 @@ export const parseQueryString = queryString => {
 
   queryDefs.forEach(queryDef => {
     if (!queryDef.name) {
-      throw new Error(`Query without name found: ${print(queryDef)}`);
+      throw new Error(`Operation without name found: ${print(queryDef)}`);
     }
 
     const query = {
@@ -80,7 +80,7 @@ export const parseQueryString = queryString => {
   );
   if (duplicateNames.length > 0) {
     throw new Error(
-      `Queries with duplicate names found: ${duplicateNames.join(', ')}`
+      `Operations with duplicate names found: ${duplicateNames.join(', ')}`
     );
   }
 
