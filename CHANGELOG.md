@@ -15,7 +15,6 @@
 - cli: handle missing files during metadata apply (close #5163) (#5170)
 - docs: add page on Relay schema (close #4912) (#5150)
 
-
 ## `v1.3.0-beta.2`
 
 ### Bug fixes and improvements
