@@ -221,6 +221,7 @@ data ScalarRepresentation a where
   SRInt :: ScalarRepresentation Int32
   SRFloat :: ScalarRepresentation Double
   SRString :: ScalarRepresentation Text
+  -- TODO should this have an "others" case?
 
 scalar
   :: MonadParse m
@@ -523,7 +524,7 @@ selectionSetObject name description parsers implementsInterfaces = Parser
       when (null input) $
         parseError $ "missing selection set for " <>> name
 
-      fields <- collectFields [name] input -- TODO use list of interfaces here?
+      fields <- collectFields (name:parsedInterfaceNames) input -- TODO use list of interfaces here?
       for fields \selectionField@Field{ _fName, _fAlias } -> if
         | _fName == $$(litName "__typename") ->
             pure $ SelectTypename name
@@ -537,7 +538,12 @@ selectionSetObject name description parsers implementsInterfaces = Parser
     parserMap = parsers
       & map (\FieldParser{ fDefinition, fParser } -> (getName fDefinition, fParser))
       & M.fromList
-    interfaces = catMaybes $ toList $ fmap (getInterfaceInfo . pType) implementsInterfaces
+    interfaces = catMaybes $ fmap (getInterfaceInfo . pType) implementsInterfaces
+    collectNames :: Definition InterfaceInfo -> [Name]
+    collectNames defIface = (getName defIface :) $ concat $ map collectNames $
+      case dInfo defIface of
+        InterfaceInfo _fields subInterfaces _objs -> subInterfaces
+    parsedInterfaceNames = concat $ fmap collectNames interfaces
 
 selectionSetInterface
   :: (MonadParse n, Traversable tObjs, Traversable tIfaces)
