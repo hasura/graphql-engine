@@ -29,9 +29,14 @@ Now run:
   # create a Hasura project
   hasura init
 
+  # cd into project dir
+
   # Export current Hasura state
   hasura migrate create <init-migration-name> --from-server --endpoint <endpoint>
   hasura metadata export --endpoint <endpoint>
+
+  # mark the init migration as applied on this server
+  hasura migrate apply --version "<init-migration-version>" --skip-execution
 
 Generating migrations
 ---------------------
@@ -83,6 +88,9 @@ the intermediate steps required to reach the final state.
 
   hasura migrate squash --name "<feature-name>" --from <migration-version>
 
+  # mark the squashed migration as applied on this server
+  hasura migrate apply --version "<squash-migration-version>" --skip-execution
+
 Add checkpoints
 ^^^^^^^^^^^^^^^
 
@@ -107,3 +115,38 @@ Applying migrations
     hasura metadata apply --endpoint <server-endpoint>
 
 Your Hasura server should be up and running!
+
+Checking migrations status
+--------------------------
+
+The following command will print out each migration version present in the ``migrations``
+directory along with its name, source status and database status.
+
+.. code-block:: bash
+
+   # in project dir
+   hasura migrate status
+
+For example,
+
+.. code-block:: bash
+
+   $ hasura migrate status
+   VERSION        NAME                           SOURCE STATUS  DATABASE STATUS
+   1590493510167  init                           Present        Present
+   1590497881360  create_table_public_address    Present        Present
+
+Such a migration status indicates that there are 2 migration versions in the
+local directory and both of them are applied on the database.
+
+If ``SOURCE STATUS`` indicates ``Not Present``, it means that the migration
+version is present on the server, but not on the current user's local directory.
+This typically happens if multiple people are collaborating on a project and one
+of the collaborators forgot to pull the latest changes which included the latest
+migration files, or another collaborator forgot to push the latest migration
+files that were applied on the database. Syncing of the files would fix the
+issue.
+
+If ``DATABASE STATUS`` indicates ``Not Present``, it denotes that there are new
+migration versions in the local directory which are not applied on the database
+yet. Executing ``hasura migrate apply`` will resolve this.

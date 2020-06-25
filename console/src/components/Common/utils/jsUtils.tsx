@@ -127,8 +127,21 @@ export const deleteArrayElementAtIndex = (array: unknown[], index: number) => {
   return array.splice(index, 1);
 };
 
+export const getLastArrayElement = (array: unknown[]) => {
+  return array[array.length - 1];
+};
+
 export const arrayDiff = (arr1: unknown[], arr2: unknown[]) => {
   return arr1.filter(v => !arr2.includes(v));
+};
+
+export const isStringArray = (str: string): boolean => {
+  try {
+    const arr = JSON.parse(str);
+    return Array.isArray(arr);
+  } catch {
+    return false;
+  }
 };
 
 /* JSON utils */
