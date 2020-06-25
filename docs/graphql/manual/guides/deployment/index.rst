@@ -12,6 +12,7 @@ Guides: Deployment
   :depth: 1
   :local:
 
+- :ref:`One-click deployment with Heroku <heroku_quickstart>`
 - :ref:`Digital Ocean One-click App on Marketplace <deploy_do_marketplace>`
 - :ref:`Azure Container Instances with Postgres <deploy_azure_ci_pg>`
 - :ref:`Google Cloud Platform with Kubernetes engine and Cloud SQL <deploy_gc_kubernetes>`
@@ -28,6 +29,7 @@ Guides: Deployment
    :titlesonly:
    :hidden:
 
+   Heroku one-click deployment <heroku-quickstart>
    DigitalOcean One-click App on Marketplace <digital-ocean-one-click>
    Azure Container Instances with Postgres <azure-container-instances-postgres>
    Google Cloud Platform with Kubernetes engine and Cloud SQL <google-kubernetes-engine-cloud-sql>
