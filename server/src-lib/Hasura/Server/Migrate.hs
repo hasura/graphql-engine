@@ -8,7 +8,9 @@
 --   3. Create a downgrade script in the @src-rsr/migrations/@ directory with the name
 --      @<new version>_to_<old version>.sql@.
 --   4. If making a new release, add the mapping from application version to catalog
---      schema version in @src-lib/Hasura/Server/Init.hs@.
+--      schema version in @src-rsr/catalog_versions.txt@.
+--   5. If appropriate, add the change to @server/src-rsr/initialise.sql@ for fresh installations
+--      of hasura.
 --
 -- The Template Haskell code in this module will automatically compile the new migration script into
 -- the @graphql-engine@ executable.
@@ -35,15 +37,14 @@ import qualified Language.Haskell.TH.Syntax    as TH
 import           Control.Lens                  (view, _2)
 import           Control.Monad.Unique
 import           Data.Time.Clock               (UTCTime)
-
 import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema
 import           Hasura.Server.Init            (DowngradeOptions (..))
 import           Hasura.RQL.Types
 import           Hasura.Server.Logging         (StartupLog (..))
+import           Hasura.Server.Version
 import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
-import           Hasura.Server.Version         (HasVersion)
 import           Hasura.SQL.Types
 import           System.Directory              (doesFileExist)
 
@@ -75,7 +76,7 @@ instance ToEngineLog MigrationResult Hasura where
     }
 
 -- A migration and (hopefully) also its inverse if we have it.
--- Polymorphic because `m` can be any `MonadTx`, `MonadIO` when 
+-- Polymorphic because `m` can be any `MonadTx`, `MonadIO` when
 -- used in the `migrations` function below.
 data MigrationPair m = MigrationPair
   { mpMigrate :: m ()
@@ -157,13 +158,13 @@ migrateCatalog migrationTime = do
           pure (MRMigrated previousVersion, schemaCache)
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
-        
+
+    updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
+
     buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
     buildCacheAndRecreateSystemMetadata = do
       schemaCache <- buildRebuildableSchemaCache
       view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
-      
-    updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
     doesSchemaExist schemaName =
       liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
@@ -195,29 +196,29 @@ downgradeCatalog opts time = do
     downgradeFrom previousVersion
         | previousVersion == dgoTargetVersion opts = do
             pure MRNothingToDo
-        | otherwise = 
+        | otherwise =
             case neededDownMigrations (dgoTargetVersion opts) of
-              Left reason -> 
+              Left reason ->
                 throw400 NotSupported $
                   "This downgrade path (from "
-                    <> previousVersion <> " to " 
-                    <> dgoTargetVersion opts <> 
+                    <> previousVersion <> " to "
+                    <> dgoTargetVersion opts <>
                     ") is not supported, because "
                     <> reason
               Right path -> do
-                sequence_ path 
+                sequence_ path
                 unless (dgoDryRun opts) do
                   setCatalogVersion (dgoTargetVersion opts) time
                 pure (MRMigrated previousVersion)
-      
+
       where
-        neededDownMigrations newVersion = 
-          downgrade previousVersion newVersion 
+        neededDownMigrations newVersion =
+          downgrade previousVersion newVersion
             (reverse (migrations (dgoDryRun opts)))
 
-        downgrade 
+        downgrade
           :: T.Text
-          -> T.Text 
+          -> T.Text
           -> [(T.Text, MigrationPair m)]
           -> Either T.Text [m ()]
         downgrade lower upper = skipFutureDowngrades where
@@ -235,7 +236,7 @@ downgradeCatalog opts time = do
             | otherwise = skipFutureDowngrades xs
 
           dropOlderDowngrades [] = Left "the target version is unrecognized."
-          dropOlderDowngrades ((x, MigrationPair{ mpDown = Nothing }):_) = 
+          dropOlderDowngrades ((x, MigrationPair{ mpDown = Nothing }):_) =
             Left $ "there is no available migration back to version " <> x <> "."
           dropOlderDowngrades ((x, MigrationPair{ mpDown = Just y }):xs)
             | x == upper = Right [y]
@@ -269,7 +270,7 @@ migrations dryRun =
             if exists
               then [| Just (runTxOrPrint $(Q.sqlFromFile path)) |]
               else [| Nothing |]
-                 
+
           migrationsFromFile = map $ \(to :: Integer) ->
             let from = to - 1
             in [| ( $(TH.lift $ T.pack (show from))
@@ -286,7 +287,7 @@ migrations dryRun =
   where
     runTxOrPrint :: Q.Query -> m ()
     runTxOrPrint
-      | dryRun = 
+      | dryRun =
           liftIO . TIO.putStrLn . Q.getQueryText
       | otherwise = runTx
 
@@ -377,7 +378,8 @@ recreateSystemMetadata = do
         , arrayRel $$(nonEmptyText "check_constraints") $
           manualConfig "hdb_catalog" "hdb_check_constraint" tableNameMapping
         , arrayRel $$(nonEmptyText "unique_constraints") $
-          manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping ]
+          manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping
+        ]
       , table "hdb_catalog" "hdb_primary_key" []
       , table "hdb_catalog" "hdb_foreign_key_constraint" []
       , table "hdb_catalog" "hdb_relationship" []
@@ -385,6 +387,7 @@ recreateSystemMetadata = do
       , table "hdb_catalog" "hdb_computed_field" []
       , table "hdb_catalog" "hdb_check_constraint" []
       , table "hdb_catalog" "hdb_unique_constraint" []
+      , table "hdb_catalog" "hdb_remote_relationship" []
       , table "hdb_catalog" "event_triggers"
         [ arrayRel $$(nonEmptyText "events") $
           manualConfig "hdb_catalog" "event_log" [("name", "trigger_name")] ]
@@ -416,6 +419,25 @@ recreateSystemMetadata = do
           [("role_name", "role_name")]
         , arrayRel $$(nonEmptyText "permissions") $ manualConfig "hdb_catalog" "hdb_permission_agg"
           [("role_name", "role_name")]
+        ]
+      , table "hdb_catalog" "hdb_cron_triggers"
+        [ arrayRel $$(nonEmptyText "cron_events") $ RUFKeyOn $
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_events") "trigger_name"
+        ]
+      , table "hdb_catalog" "hdb_cron_events"
+        [ objectRel $$(nonEmptyText "cron_trigger") $ RUFKeyOn "trigger_name"
+        , arrayRel $$(nonEmptyText "cron_event_logs") $ RUFKeyOn $
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_event_invocation_logs") "event_id"
+        ]
+      , table "hdb_catalog" "hdb_cron_event_invocation_logs"
+        [ objectRel $$(nonEmptyText "cron_event") $ RUFKeyOn "event_id"
+        ]
+      , table "hdb_catalog" "hdb_scheduled_events"
+        [ arrayRel $$(nonEmptyText "scheduled_event_logs") $ RUFKeyOn $
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_scheduled_event_invocation_logs") "event_id"
+        ]
+      , table "hdb_catalog" "hdb_scheduled_event_invocation_logs"
+        [ objectRel $$(nonEmptyText "scheduled_event")  $ RUFKeyOn "event_id"
         ]
       ]
 
