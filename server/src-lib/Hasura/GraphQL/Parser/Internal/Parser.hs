@@ -266,6 +266,18 @@ json = Parser
   , pParser = graphQLToJSON
   }
 
+-- | Explicitly define any desired scalar type.  This is unsafe because it does
+-- not mark queries as unreusable when they should be.
+unsafeRawScalar
+  :: MonadParse n
+  => Name
+  -> Maybe Description
+  -> Parser 'Both n (Value Variable)
+unsafeRawScalar name description = Parser
+  { pType = NonNullable $ TNamed $ mkDefinition name description TIScalar
+  , pParser = pure
+  }
+
 enum
   :: MonadParse m
   => Name
@@ -476,17 +488,27 @@ fieldOptional name description parser = InputFieldsParser
   , ifParser = M.lookup name >>> withPath (Key (unName name) :) . traverse (pInputParser parser)
   }
 
--- Should this rather take a non-empty `FieldParser` list?
--- See also Note [Selectability of tables].
+-- | A variant of 'selectionSetObject' which doesn't implement any interfaces
 selectionSet
   :: MonadParse m
   => Name
   -> Maybe Description
-  -> [FieldParser m a] -- TODO add list of interfaces as an argument
+  -> [FieldParser m a]
   -> Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
-selectionSet name description parsers = Parser
+selectionSet name desc fields = selectionSetObject name desc fields []
+
+-- Should this rather take a non-empty `FieldParser` list?
+-- See also Note [Selectability of tables].
+selectionSetObject
+  :: MonadParse m
+  => Name
+  -> Maybe Description
+  -> [FieldParser m a]
+  -> [Parser 'Output m b] -- ^ Interfaces implemented by this object
+  -> Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
+selectionSetObject name description parsers implementsInterfaces = Parser
   { pType = Nullable $ TNamed $ mkDefinition name description $
-      TIObject $ ObjectInfo (map fDefinition parsers) [] -- This object does not implement any interfaces
+      TIObject $ ObjectInfo (map fDefinition parsers) interfaces
   , pParser = \input -> do
       -- Not all fields have a selection set, but if they have one, it
       -- must contain at least one field. The GraphQL parser returns a
@@ -515,6 +537,7 @@ selectionSet name description parsers = Parser
     parserMap = parsers
       & map (\FieldParser{ fDefinition, fParser } -> (getName fDefinition, fParser))
       & M.fromList
+    interfaces = catMaybes $ toList $ fmap (getInterfaceInfo . pType) implementsInterfaces
 
 selectionSetInterface
   :: (MonadParse n, Traversable tObjs, Traversable tIfaces)

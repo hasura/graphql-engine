@@ -13,12 +13,14 @@ module Hasura.GraphQL.Parser
   , int
   , float
   , string
+  , unsafeRawScalar
 
   , enum
   , nullable
   , list
   , object
   , selectionSet
+  , selectionSetObject
 
   , InputFieldsParser
   , field

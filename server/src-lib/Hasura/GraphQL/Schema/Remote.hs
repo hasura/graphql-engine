@@ -100,10 +100,11 @@ remoteSchemaObject
   => SchemaDocument
   -> G.ObjectTypeDefinition
   -> m (Parser 'Output n ())
-remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name _interfaces _directives subFields) =
+remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name interfaces _directives subFields) =
   P.memoizeOn 'remoteSchemaObject defn do
   subFieldParsers <- traverse (remoteField' schemaDoc) subFields
-  pure $ () <$ (P.selectionSet name description subFieldParsers)
+  implements <- traverse (remoteSchemaInterface schemaDoc) $ catMaybes (map (lookupInterface schemaDoc) interfaces)
+  pure $ () <$ P.selectionSetObject name description subFieldParsers implements
 
 objectsImplementingInterface
   :: SchemaDocument
@@ -184,10 +185,19 @@ lookupObject :: SchemaDocument -> G.Name -> Maybe G.ObjectTypeDefinition
 lookupObject (SchemaDocument types) name = go types
   where
     go :: [TypeDefinition] -> Maybe G.ObjectTypeDefinition
-    go [] = Nothing
     go ((G.TypeDefinitionObject t):tps)
       | G._otdName t == name = Just t
       | otherwise = go tps
+    go _ = Nothing
+
+lookupInterface :: SchemaDocument -> G.Name -> Maybe G.InterfaceTypeDefinition
+lookupInterface (SchemaDocument types) name = go types
+  where
+    go :: [TypeDefinition] -> Maybe G.InterfaceTypeDefinition
+    go ((G.TypeDefinitionInterface t):tps)
+      | G._itdName t == name = Just t
+      | otherwise = go tps
+    go _ = Nothing
 
 -- | 'remoteFieldFromName' accepts a GraphQL name and searches for its definition
 --   in the 'SchemaDocument'.
@@ -237,7 +247,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
              case typeDef of
                G.TypeDefinitionScalar (G.ScalarTypeDefinition _ name' _) ->
                  fieldConstructor' <$> remoteFieldScalarParser name'
-               G.TypeDefinitionEnum defn -> pure $ fieldConstructor' $ remoteFieldEnumParser name defn
+               G.TypeDefinitionEnum defn -> pure $ fieldConstructor' $ remoteFieldEnumParser typeName defn
                G.TypeDefinitionObject _ -> throw500 $ "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
                G.TypeDefinitionInputObject defn ->
                  pure . fieldConstructor' =<< remoteSchemaInputObject schemaDoc defn
@@ -296,8 +306,10 @@ remoteFieldScalarParser name =
     "Int" -> pure $ P.int $> ()
     "Float" -> pure $ P.float $> ()
     "String" -> pure $ P.string $> ()
+    -- TODO IDs are allowed to be numbers, I think. But not floats. See
+    -- http://spec.graphql.org/draft/#sec-ID
     "ID" -> pure $ P.string $> ()
-    name' -> throw500 $ "unknown scalar " <> name' -- TODO: handle this properly
+    name' -> pure $ P.unsafeRawScalar name Nothing $> () -- TODO pass correct description
 
 remoteFieldEnumParser
   :: MonadParse n
