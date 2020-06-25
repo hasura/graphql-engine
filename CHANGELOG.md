@@ -11,6 +11,7 @@
 - console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
 - console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
 - console: fix styling of table row contents on tables on relationship page (#4974)
+- console: add a checkbox to flag an insertion as a migration on the schema page (#1766) (#4933)
 - cli: handle missing files during metadata apply (close #5163) (#5170)
 - docs: add page on Relay schema (close #4912) (#5150)
 
@@ -133,7 +134,6 @@ hasura seed apply --file 1234_add_some_seed_data.sql
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
 - server: fix bug which arises when dropping a column with a remote relationship dependency (fix #5103)
-- console: add a checkbox to flag an insertion as a migration on the schema page (#1766)
 - console: provide option to cascade metadata on dependency conflicts on console (fix #1593)
 - console: fix enum tables reload data button UI (#4647)
 - console: allow entering big int values in the console (close #3667) (#4775)
