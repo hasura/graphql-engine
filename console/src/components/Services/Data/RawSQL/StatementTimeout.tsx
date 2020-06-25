@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { FC } from 'react';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
+import styles from '../../../Common/TableCommon/Table.scss';
 
-const StatementTimeout = ({
+const StatementTimeout: FC<StatementTimeoutProps> = ({
   isMigrationChecked,
   statementTimeout,
   updateStatementTimeout,
 }) => {
-  const styles = require('../../../Common/TableCommon/Table.scss');
 
   return (
     <div className={styles.add_mar_top_small}>
@@ -37,3 +37,9 @@ const StatementTimeout = ({
 };
 
 export default StatementTimeout;
+
+interface StatementTimeoutProps {
+  isMigrationChecked: boolean;
+  statementTimeout: number;
+  updateStatementTimeout: (e: string) => void;
+}
