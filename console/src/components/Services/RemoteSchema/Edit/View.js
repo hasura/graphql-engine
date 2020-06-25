@@ -17,7 +17,7 @@ import ReloadRemoteSchema from '../../Settings/MetadataOptions/ReloadRemoteSchem
 
 import { appPrefix } from '../constants';
 
-import { NotFoundError } from '../../../Error/PageNotFound';
+// import { NotFoundError } from '../../../Error/PageNotFound';
 import globals from '../../../../Globals';
 import styles from '../RemoteSchema.scss';
 
@@ -69,15 +69,6 @@ class ViewStitchedSchema extends React.Component {
   }
 
   render() {
-    const currentRemoteSchema = this.props.allRemoteSchemas.find(
-      r => r.name === this.props.params.remoteSchemaName
-    );
-
-    if (!currentRemoteSchema) {
-      // throw a 404 exception
-      throw new NotFoundError();
-    }
-
     const { remoteSchemaName } = this.props.params;
     const { manualUrl, envName, headers, readOnlyMode } = this.props;
 
@@ -183,12 +174,6 @@ class ViewStitchedSchema extends React.Component {
                     </td>
                   </tr>
                 ) : null}
-                {/*
-                <tr>
-                  <td>Webhook</td>
-                  <td>in-use/bypassed</td>
-                </tr>
-                */}
               </tbody>
             </table>
           </div>

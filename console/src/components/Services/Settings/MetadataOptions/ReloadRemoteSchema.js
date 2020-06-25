@@ -8,7 +8,6 @@ import {
   showSuccessNotification,
   showErrorNotification,
 } from '../../Common/Notification';
-// import { reloadMetadata } from '../Actions';
 
 class ReloadRemoteSchema extends Component {
   constructor() {
@@ -17,15 +16,13 @@ class ReloadRemoteSchema extends Component {
     this.state.isReloading = false;
   }
   render() {
-    const { dispatch } = this.props;
-    console.group(this.props);
+    const { dispatch, remoteSchemaName } = this.props;
     const { isReloading } = this.state;
     const reloadRemoteMetadataHandler = () => {
       this.setState({ isReloading: true });
       dispatch(
-        // TODO: if the remote schema is within inconsistent objects, it breaks the app
         reloadRemoteSchema(
-          this.props.remoteSchemaName,
+          remoteSchemaName,
           () => {
             dispatch(showSuccessNotification('Remote schema reloaded'));
             this.setState({ isReloading: false });
@@ -41,16 +38,6 @@ class ReloadRemoteSchema extends Component {
             this.setState({ isReloading: false });
           }
         )
-        // reloadMetadata(
-        //   true,
-        //   () => {
-        //     showSuccessNotification('Remote schema reloaded');
-        //     this.setState({ isReloading: false });
-        //   },
-        //   () => {
-        //     showErrorNotification('Error reloading remote schema', null);
-        //   }
-        // )
       );
     };
     const buttonText = isReloading ? 'Reloading' : 'Reload';
