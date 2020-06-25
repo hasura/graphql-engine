@@ -7,12 +7,11 @@ const StatementTimeout: FC<StatementTimeoutProps> = ({
   statementTimeout,
   updateStatementTimeout,
 }) => {
-
   return (
     <div className={styles.add_mar_top_small}>
       <label>
         Statement timeout (seconds)
-        <ToolTip message='Abort statements that take longer than the specified time on Postgres' />
+        <ToolTip message="Abort statements that take longer than the specified time on Postgres" />
         <input
           disabled={isMigrationChecked}
           title={
