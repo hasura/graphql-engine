@@ -170,14 +170,6 @@ Date:   Tue Jun 23 20:35:36 2020 -0400
     GHC should probably also be doubling the stack buffer at each overflow
     or doing something even smarter; the knobs we have aren't so helpful.
 
-commit 8b49f472a210960a8ef17a40ee7095062d11e715
-Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
-Date:   Thu Jun 25 09:03:37 2020 +0530
-
-    fix postgres query error for object relationship with permission limit, fix #5148 (#5177)
-
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
 commit 6a58c144f540508e3a75c977585577e0b757d550
 Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
 Date:   Tue Jun 23 20:51:34 2020 +0530
