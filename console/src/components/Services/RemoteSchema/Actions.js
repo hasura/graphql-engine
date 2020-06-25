@@ -1,7 +1,4 @@
-/* */
 import { listState } from './state';
-/* */
-
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import dataHeaders from '../Data/Common/Headers';
@@ -10,9 +7,7 @@ import returnMigrateUrl from '../Data/Common/getMigrateUrl';
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { loadMigrationStatus } from '../../Main/Actions';
 import { handleMigrationErrors } from '../../../utils/migration';
-
 import { showSuccessNotification } from '../Common/Notification';
-// import { filterInconsistentMetadataObjects } from '../Settings/utils';
 
 /* Action constants */
 

@@ -18,7 +18,7 @@ class ReloadRemoteSchema extends Component {
   }
   render() {
     const { dispatch } = this.props;
-    console.group(this.props);
+    // console.group(this.props);
     const { isReloading } = this.state;
     const reloadRemoteMetadataHandler = () => {
       this.setState({ isReloading: true });
