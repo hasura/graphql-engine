@@ -30,7 +30,7 @@ import {
   loadLatestServerVersion,
   featureCompatibilityInit,
   emitProClickedEvent,
-  setNotificationData,
+  fetchNotificationData,
 } from './Actions';
 
 import {
@@ -81,7 +81,7 @@ class Main extends React.Component {
     });
 
     dispatch(fetchServerConfig());
-    dispatch(setNotificationData());
+    dispatch(fetchNotificationData());
   }
 
   toggleProPopup() {
@@ -173,9 +173,9 @@ class Main extends React.Component {
 
   toggleDropDown = e => {
     e.preventDefault();
-    this.setState({
-      isDropdownOpen: !this.state.isDropdownOpen,
-    });
+    this.setState(prevState => ({
+      isDropdownOpen: !prevState.isDropdownOpen,
+    }));
   };
 
   render() {

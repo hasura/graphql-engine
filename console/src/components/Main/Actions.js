@@ -40,7 +40,7 @@ const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
 const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 /* End */
 
-const setNotificationData = () => dispatch => {
+const fetchNotificationData = () => dispatch => {
   const url = Endpoints.consoleNotifications;
   const requestBody = {
     args: {
@@ -398,5 +398,5 @@ export {
   featureCompatibilityInit,
   RUN_TIME_ERROR,
   registerRunTimeError,
-  setNotificationData,
+  fetchNotificationData,
 };

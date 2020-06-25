@@ -1,8 +1,10 @@
+import { AllowedBadges } from '../UIKit/atoms/Badge';
+
 export type ConsoleNotification = {
   subject: string;
   created_at: string | number | Date;
   content: string;
-  type: string;
+  type: AllowedBadges;
   id?: number;
   is_active?: boolean;
   external_link?: string;
@@ -13,7 +15,7 @@ export const defaultNotification: ConsoleNotification = {
   created_at: Date.now(),
   content:
     "You're all caught up! \n There are no updates available at this point in time.",
-  type: 'No Updates',
+  type: 'no updates',
 };
 
 export const errorNotification: ConsoleNotification = {

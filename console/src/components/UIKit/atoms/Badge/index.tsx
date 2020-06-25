@@ -2,8 +2,16 @@ import React from 'react';
 
 import StyledBadge, { StyledOwnBadgeProps } from './Badge';
 
+export type AllowedBadges =
+  | ''
+  | 'error'
+  | 'no updates'
+  | 'community'
+  | 'update'
+  | 'event';
+
 interface BadgeProps {
-  type: string;
+  type: AllowedBadges;
 }
 
 interface ExtendedBadgeProps extends BadgeProps, StyledOwnBadgeProps {}
@@ -12,47 +20,40 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
   type = '',
   ...props
 }) => {
-  if (type === 'event') {
-    return (
-      <StyledBadge {...props} bg="#001934" color="white">
-        events
-      </StyledBadge>
-    );
+  switch (type) {
+    case 'event':
+      return (
+        <StyledBadge {...props} bg="#001934" color="white">
+          events
+        </StyledBadge>
+      );
+    case 'community':
+      return (
+        <StyledBadge {...props} bg="#F33C6C" color="white">
+          community
+        </StyledBadge>
+      );
+    case 'update':
+      return (
+        <StyledBadge {...props} bg="#55DED4" color="#001934">
+          version update
+        </StyledBadge>
+      );
+    case 'error':
+      return (
+        <StyledBadge {...props} bg="#E52D2D" color="white">
+          error
+        </StyledBadge>
+      );
+    case 'no updates':
+      return (
+        <StyledBadge {...props} bg="#001934" color="white">
+          no updates
+        </StyledBadge>
+      );
+    default:
+      return <StyledBadge {...props} color="white" />;
   }
-
-  if (type === 'community') {
-    return (
-      <StyledBadge {...props} bg="#F33C6C" color="white">
-        community
-      </StyledBadge>
-    );
-  }
-
-  if (type === 'update') {
-    return (
-      <StyledBadge {...props} bg="#55DED4" color="#001934">
-        version update
-      </StyledBadge>
-    );
-  }
-
-  if (type === 'error') {
-    return (
-      <StyledBadge {...props} bg="#E52D2D" color="white">
-        error
-      </StyledBadge>
-    );
-  }
-
-  if (type !== '') {
-    return (
-      <StyledBadge {...props} bg="#001934" color="white">
-        {type}
-      </StyledBadge>
-    );
-  }
-
-  return <StyledBadge {...props} color="white" />;
 };
 
 Badge.defaultProps = {

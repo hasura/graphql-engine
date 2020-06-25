@@ -6,7 +6,8 @@ import { ConsoleNotification } from './ConsoleNotification';
 import styles from './Main.scss';
 import PixelHeart from './images/components/PixelHeart';
 import ConsoleLogo from './images/components/ConsoleLogo';
-import { useOnClickOutside } from './utils';
+import useOnClickOutside from '../../hooks/useOnClickOutside';
+import { ReduxState } from '../../types';
 
 const getDateString = (date: string | number | Date) => {
   return new Date(date).toLocaleString().split(', ')[0];
@@ -28,7 +29,7 @@ const Update: React.FC<ConsoleNotification> = ({
     <Box>
       <Flex height={55} px="25px" pt="5px" justifyContent="space-between">
         <Flex justifyContent="space-between" bg="white">
-          {type !== '' ? <Badge type={type} mr="12px" /> : null}
+          {type ? <Badge type={type} mr="12px" /> : null}
           <Heading as="h4" color="#1cd3c6" fontSize="16px">
             {subject}
           </Heading>
@@ -116,13 +117,7 @@ const LoveSection: React.FC<LoveSectionProps> = ({
   );
 };
 
-interface NotificationData {
-  main: {
-    consoleNotifications: Array<ConsoleNotification>;
-  };
-}
-
-function mapStateToProps(state: NotificationData) {
+function mapStateToProps(state: ReduxState) {
   return {
     consoleNotifications: state.main.consoleNotifications,
   };

@@ -6,6 +6,7 @@ import { Table, Schema } from './components/Common/utils/pgUtils';
 import { EventsState } from './components/Services/Events/state';
 import { RAEvents } from './components/Services/Events/types';
 import { TelemetryState } from './telemetry/state';
+import { ConsoleNotification } from './components/Main/ConsoleNotification';
 
 // Redux Utils
 export type ReduxState = {
@@ -19,6 +20,7 @@ export type ReduxState = {
     readOnlyMode: boolean;
     serverVersion: string;
     latestStableServerVersion: string;
+    consoleNotifications: Array<ConsoleNotification>;
   };
   telemetry: TelemetryState;
 };
