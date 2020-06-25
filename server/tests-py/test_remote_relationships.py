@@ -292,3 +292,15 @@ class TestExecutionWithPermissions:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_multiple_remote_rel.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'complex_multiple_joins.yaml')
+
+@use_test_fixtures
+class TestWithRelay:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/remote_relationships/"
+
+    def test_with_relay_fail(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + "with_relay.yaml")
