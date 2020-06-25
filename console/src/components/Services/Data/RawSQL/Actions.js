@@ -1,7 +1,3 @@
-import {
-  LS_RAW_SQL_STATEMENT_TIMEOUT,
-  setLocalStorageItem,
-} from '../../../Common/utils/localStorageUtils';
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import {
@@ -176,15 +172,10 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   );
 };
 
-export const setRawSqlTimeout = timeoutInSeconds => {
-  return dispatch => {
-    setLocalStorageItem(LS_RAW_SQL_STATEMENT_TIMEOUT, timeoutInSeconds);
-    dispatch({
-      type: SET_STATEMENT_TIMEOUT,
-      data: timeoutInSeconds,
-    });
-  };
-};
+export const setRawSqlTimeout = timeoutInSeconds => ({
+  type: SET_STATEMENT_TIMEOUT,
+  data: timeoutInSeconds,
+});
 
 const rawSQLReducer = (state = defaultState, action) => {
   switch (action.type) {

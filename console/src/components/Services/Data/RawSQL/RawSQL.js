@@ -9,6 +9,7 @@ import Button from '../../../Common/Button/Button';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
+import { LS_RAW_SQL_STATEMENT_TIMEOUT, setLocalStorageItem } from '../../../Common/utils/localStorageUtils';
 
 import StatementTimeout from './StatementTimeout';
 import { parseCreateSQL } from './utils';
@@ -425,7 +426,7 @@ const RawSQL = ({
   const updateStatementTimeout = value => {
     const timeoutInSeconds = Number(value.trim());
     const isValidTimeout = timeoutInSeconds > 0 && !isNaN(timeoutInSeconds);
-
+    setLocalStorageItem(LS_RAW_SQL_STATEMENT_TIMEOUT, timeoutInSeconds);
     dispatch(setRawSqlTimeout(isValidTimeout ? timeoutInSeconds : 0));
   };
 
