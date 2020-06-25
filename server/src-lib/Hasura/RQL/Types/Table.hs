@@ -232,7 +232,6 @@ data SelPermInfo
   = SelPermInfo
   { spiCols                 :: !(HS.HashSet PGCol)
   , spiScalarComputedFields :: !(HS.HashSet ComputedFieldName)
-  , spiTable                :: !QualifiedTable
   , spiFilter               :: !AnnBoolExpPartialSQL
   , spiLimit                :: !(Maybe Int)
   , spiAllowAgg             :: !Bool
