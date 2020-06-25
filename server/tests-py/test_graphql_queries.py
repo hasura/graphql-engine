@@ -277,6 +277,9 @@ class TestGraphqlQueryPermissions:
     def test_user_select_unpublished_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_select_query_unpublished_articles.yaml', transport)
 
+    def test_user_select_query_article_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/user_select_query_article_author.yaml', transport)
+
     def test_user_only_other_users_published_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_can_query_other_users_published_articles.yaml', transport)
 
