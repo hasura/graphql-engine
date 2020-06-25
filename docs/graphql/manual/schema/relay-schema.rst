@@ -20,6 +20,14 @@ The Hasura GraphQL engine serves a `Relay <https://relay.dev/>`__ schema for Pos
 .. thumbnail:: /img/graphql/manual/schema/relay.png
    :alt: Relay API toggle
 
+.. admonition:: Supported from
+  
+  Relay is supported from versions ``v1.3.0-beta.1`` and above.
+
+.. .. admonition:: Supported from
+  
+..   Relay is supported from versions ``v.1.3.0`` and above.
+
 What is Relay?
 --------------
 

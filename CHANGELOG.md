@@ -11,6 +11,7 @@
 - console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
 - console: allow configurable statement_timeout on console raw sql page (close #4998) (#5045)
 - console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
+- console: fix styling of table row contents on tables on relationship page (#4974)
 - cli: handle missing files during metadata apply (close #5163) (#5170)
 - docs: add page on Relay schema (close #4912) (#5150)
 

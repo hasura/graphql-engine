@@ -215,7 +215,9 @@ mkTableObjectFields isRelay =
     SFPGColumn info -> pure $ mkPGColFld info
     SFRelationship info -> mkRelationshipField isRelay info
     SFComputedField info -> pure $ mkComputedFieldFld info
-    SFRemoteRelationship info -> pure $ mkRemoteRelationshipFld info
+    SFRemoteRelationship info ->
+      -- https://github.com/hasura/graphql-engine/issues/5144
+      if isRelay then [] else pure $ mkRemoteRelationshipFld info
 
 {-
 type table {
