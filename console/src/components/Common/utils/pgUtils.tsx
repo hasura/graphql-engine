@@ -26,6 +26,13 @@ export interface BaseTableColumn {
   data_type: string;
 }
 
+export interface PrimaryKeyDetails {
+  table_name: string;
+  table_schema: string;
+  constraint_name: string;
+  columns: Array<string>;
+}
+
 export interface TableColumn extends BaseTableColumn {
   column_name: string;
   data_type: string;
@@ -103,6 +110,7 @@ export interface Table extends BaseTable {
   };
   computed_fields: ComputedField[];
   is_enum: boolean;
+  primary_key: PrimaryKeyDetails;
   view_info: {
     is_trigger_insertable_into: 'YES' | 'NO';
     is_insertable_into: 'YES' | 'NO';
@@ -566,21 +574,28 @@ export const getGroupedTableComputedFields = (
   return groupedComputedFields;
 };
 
-// export const getDependentTables = (table) => {
+export const createPKClause = (
+  primaryKeyInfo: PrimaryKeyDetails,
+  insertion: Record<string, any>,
+  columns: Array<BaseTableColumn>
+): Record<string, any> => {
+  const newPKClause: Record<string, any> = {};
+  const hasPrimaryKeys = primaryKeyInfo?.columns;
+  if (hasPrimaryKeys) {
+    primaryKeyInfo.columns.forEach(key => {
+      newPKClause[key] = insertion[key];
+    });
+  } else {
+    columns.forEach(col => {
+      newPKClause[col.column_name] = insertion[col.column_name];
+    });
+  }
 
-//   return [
-//     {
-//       table_schema: table.table_schema,
-//       table_name: table.table_name,
-//     },
-//     ...table.foreign_key_constraints.map(fk_obj => ({
-//       table_name: fk_obj.ref_table,
-//       table_schema: fk_obj.ref_table_table_schema
-//     })),
-//     ...table.opp_foreign_key_constraints.map(fk_obj => ({
-//       table_name: fk_obj.table_name,
-//       table_schema: fk_obj.table_schema,
-//     }))
-//   ]
+  Object.keys(newPKClause).forEach(key => {
+    if (Array.isArray(newPKClause[key])) {
+      newPKClause[key] = arrayToPostgresArray(newPKClause[key]);
+    }
+  });
 
-// };
+  return newPKClause;
+};

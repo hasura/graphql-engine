@@ -4,12 +4,13 @@ import { LocalAdhocEventState } from '../../Services/Events/AdhocEvents/Add/stat
 import { LocalEventTriggerState } from '../../Services/Events/EventTriggers/state';
 import { RemoteRelationshipPayload } from '../../Services/Data/TableRelationships/RemoteRelationships/utils';
 import { transformHeaders } from '../Headers/utils';
-import { generateTableDef, arrayToPostgresArray } from './pgUtils';
+import {
+  generateTableDef,
+  BaseTableColumn,
+  PrimaryKeyDetails,
+  createPKClause,
+} from './pgUtils';
 import { Nullable } from './tsUtils';
-
-// TODO add type for the where clause
-
-// TODO extend all queries with v1 query type
 
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
@@ -112,41 +113,17 @@ export const getInsertUpQuery = (
   };
 };
 
-interface ColumnType {
-  column_name: string;
-}
-
-type PrimaryKeyInfo = {
-  table_name: string;
-  table_schema: string;
-  constraint_name: string;
-  columns: Array<string>;
-};
-
 export const getInsertDownQuery = (
   tableDef: TableDefinition,
   insertion: Record<string, any>,
-  primaryKeyInfo: PrimaryKeyInfo,
-  columns: Array<ColumnType>
+  primaryKeyInfo: PrimaryKeyDetails,
+  columns: Array<BaseTableColumn>
 ) => {
-  const whereClause: any = {};
-
-  const hasPrimaryKeys = primaryKeyInfo?.columns;
-  if (hasPrimaryKeys) {
-    primaryKeyInfo.columns.forEach(key => {
-      whereClause[key] = insertion[key];
-    });
-  } else {
-    columns.forEach(col => {
-      whereClause[col.column_name] = insertion[col.column_name];
-    });
-  }
-
-  Object.keys(whereClause).forEach(key => {
-    if (Array.isArray(whereClause[key])) {
-      whereClause[key] = arrayToPostgresArray(whereClause[key]);
-    }
-  });
+  const whereClause: Record<string, any> = createPKClause(
+    primaryKeyInfo,
+    insertion,
+    columns
+  );
 
   return {
     type: 'delete',

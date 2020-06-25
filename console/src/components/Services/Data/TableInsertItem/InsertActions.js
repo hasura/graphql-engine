@@ -40,7 +40,8 @@ const createInsertMigration = (
   tableInfo,
   insertedData,
   primaryKeyInfo,
-  columns
+  columns,
+  callback
 ) => {
   const upQuery = getInsertUpQuery(
     { name: tableInfo.name, schema: tableInfo.schema },
@@ -54,7 +55,11 @@ const createInsertMigration = (
   );
 
   const migrationName = `insert_into_${tableInfo.name}`;
-  const customOnSuccess = () => {};
+  const customOnSuccess = () => {
+    if (callback) {
+      callback();
+    }
+  };
   const customOnError = () => {};
   const requestMessage = 'Creating migration';
   const successMessage = 'Created migration!';
@@ -170,7 +175,15 @@ const insertItem = (tableName, colValues, isMigration = false) => {
             { name: tableName, schema: currentSchema },
             insertedData,
             currentTableInfo.primary_key,
-            columns
+            columns,
+            () => {
+              dispatch(
+                showSuccessNotification(
+                  'Inserted!',
+                  'Affected rows: ' + data.affected_rows
+                )
+              );
+            }
           );
         } else {
           dispatch(
