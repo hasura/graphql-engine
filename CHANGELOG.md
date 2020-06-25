@@ -14,7 +14,6 @@
 - cli: handle missing files during metadata apply (close #5163) (#5170)
 - docs: add page on Relay schema (close #4912) (#5150)
 
-
 ## `v1.3.0-beta.2`
 
 ### Bug fixes and improvements
@@ -133,8 +132,6 @@ hasura seed apply --file 1234_add_some_seed_data.sql
 - server: fix importing of allow list query from metadata (fix #4687)
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
-- console: provide option to cascade metadata on dependency conflicts on console (fix #1593)
-- console: fix enum tables reload data button UI (#4647)
 - console: allow entering big int values in the console (close #3667) (#4775)
 - console: add support for subscriptions analyze in API explorer (close #2541) (#2541)
 - console: avoid count queries for large tables (#4692)
