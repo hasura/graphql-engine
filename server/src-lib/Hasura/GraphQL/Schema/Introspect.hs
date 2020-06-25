@@ -296,7 +296,7 @@ typeField =
         _ -> J.Null
   in
     applyPrinter <$>
-    P.selectionSetObject
+    P.selectionSet
       $$(G.litName "__Type")
       Nothing
       [ kind
@@ -309,7 +309,6 @@ typeField =
       , inputFields
       , ofType
       ]
-      [] -- TODO set interfaces
 
 {-
 type __InputValue {
@@ -343,7 +342,7 @@ inputValue =
         _ -> J.Null
   in
     applyPrinter <$>
-    P.selectionSetObject
+    P.selectionSet
       $$(G.litName "__InputValue")
       Nothing
       [ name
@@ -351,7 +350,6 @@ inputValue =
       , typeF
       , defaultValue
       ]
-      [] -- TODO set interfaces
 
 {-
 type __EnumValue {
@@ -382,7 +380,7 @@ enumValue =
       const J.Null
   in
     applyPrinter <$>
-    P.selectionSetObject
+    P.selectionSet
       $$(G.litName "__EnumValue")
       Nothing
       [ name
@@ -390,7 +388,6 @@ enumValue =
       , isDeprecated
       , deprecationReason
       ]
-      [] -- TODO set interfaces
 
 {-
 enum __TypeKind {
@@ -462,7 +459,7 @@ fieldField =
       const J.Null
   in
     applyPrinter <$>
-    P.selectionSetObject $$(G.litName "__Field") Nothing
+    P.selectionSet $$(G.litName "__Field") Nothing
     [ name
     , description
     , args
@@ -470,7 +467,6 @@ fieldField =
     , isDeprecated
     , deprecationReason
     ]
-    [] -- TODO set interfaces
 
 {-
 type __Directive {
@@ -505,14 +501,13 @@ directiveSet =
     isRepeatable = P.selection_ $$(G.litName "isRepeatable") Nothing P.string $>
       J.Null
   in
-    J.Null <$ P.selectionSetObject $$(G.litName "__Directive") Nothing
+    J.Null <$ P.selectionSet $$(G.litName "__Directive") Nothing
     [ name
     , description
     , locations
     , args
     , isRepeatable
     ]
-    [] -- TODO set interfaces
 
 {-
 type __Schema {
@@ -567,7 +562,7 @@ schemaSet fakeSchema =
     directives = J.Array mempty <$ P.subselection_ $$(G.litName "directives") Nothing directiveSet
   in
     selectionSetToJSON . fmap (P.handleTypename nameAsJSON) <$>
-    P.selectionSetObject
+    P.selectionSet
       $$(G.litName "__Schema")
       Nothing
       [ description
@@ -577,7 +572,6 @@ schemaSet fakeSchema =
       , subscriptionType
       , directives
       ]
-      [] -- TODO set interfaces
 
 selectionSetToJSON
   :: OMap.InsOrdHashMap G.Name J.Value
