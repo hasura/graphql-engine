@@ -156,16 +156,15 @@ const deleteFunctionSql = () => {
 
     dispatch({ type: DELETING_CUSTOM_FUNCTION });
     return dispatch(
-      makeRequest(
-        migration.upMigration,
-        migration.downMigration,
+      makeRequest({
+        migration,
         migrationName,
         customOnSuccess,
         customOnError,
         requestMsg,
         successMsg,
-        errorMsg
-      )
+        errorMsg,
+      })
     );
   };
 };
@@ -216,16 +215,15 @@ const unTrackCustomFunction = () => {
 
     dispatch({ type: UNTRACKING_CUSTOM_FUNCTION });
     return dispatch(
-      makeRequest(
-        migration.upMigration,
-        migration.downMigration,
+      makeRequest({
+        migration,
         migrationName,
         customOnSuccess,
         customOnError,
         requestMsg,
         successMsg,
-        errorMsg
-      )
+        errorMsg,
+      })
     );
   };
 };
@@ -283,16 +281,10 @@ const updateSessVar = session_argument => {
         schema: currentSchema,
       },
     };
+    const migration = new Migration();
+    migration.add(untrackPayloadUp, retrackPayloadDown);
+    migration.add(retrackPayloadUp, untrackPayloadDown);
 
-    const upQuery = {
-      type: 'bulk',
-      args: [untrackPayloadUp, retrackPayloadUp],
-    };
-
-    const downQuery = {
-      type: 'bulk',
-      args: [untrackPayloadDown, retrackPayloadDown],
-    };
     const requestMsg = 'Updating Session argument variable...';
     const successMsg = 'Session variable argument updated successfully';
     const errorMsg = 'Updating Session argument variable failed';
@@ -306,16 +298,15 @@ const updateSessVar = session_argument => {
 
     dispatch({ type: SESSVAR_CUSTOM_FUNCTION_REQUEST });
     return dispatch(
-      makeRequest(
-        upQuery.args,
-        downQuery.args,
+      makeRequest({
+        migration,
         migrationName,
         customOnSuccess,
         customOnError,
         requestMsg,
         successMsg,
-        errorMsg
-      )
+        errorMsg,
+      })
     );
   };
 };

@@ -133,31 +133,20 @@ const listReducer = (state = listState, action) => {
 };
 
 /* makeRequest function to identify what the current mode is and send normal query or a call */
-const makeRequest = (
-  upQueries,
-  downQueries,
+const makeRequest = ({
+  migration,
   migrationName,
   customOnSuccess,
   customOnError,
   requestMsg,
   successMsg,
-  errorMsg
-) => {
+  errorMsg,
+}) => {
   return (dispatch, getState) => {
-    const upQuery = {
-      type: 'bulk',
-      args: upQueries,
-    };
-
-    const downQuery = {
-      type: 'bulk',
-      args: downQueries,
-    };
-
     const migrationBody = {
       name: migrationName,
-      up: upQuery.args,
-      down: downQuery.args,
+      up: migration.upMigration,
+      down: migration.downMigration,
     };
 
     const currMigrationMode = getState().main.migrationMode;
@@ -166,7 +155,10 @@ const makeRequest = (
 
     let finalReqBody;
     if (globals.consoleMode === SERVER_CONSOLE_MODE) {
-      finalReqBody = upQuery;
+      finalReqBody = {
+        type: 'bulk',
+        args: migration.upMigration,
+      };
     } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
       finalReqBody = migrationBody;
     }

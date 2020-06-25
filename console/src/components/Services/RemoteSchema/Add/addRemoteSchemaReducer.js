@@ -212,16 +212,15 @@ const addRemoteSchema = () => {
     };
     dispatch({ type: ADDING_REMOTE_SCHEMA });
     return dispatch(
-      makeRequest(
-        migration.upMigration,
-        migration.downMigration,
+      makeRequest({
+        migration,
         migrationName,
         customOnSuccess,
         customOnError,
         requestMsg,
         successMsg,
-        errorMsg
-      )
+        errorMsg,
+      })
     );
   };
 };
@@ -281,16 +280,15 @@ const deleteRemoteSchema = () => {
 
     dispatch({ type: DELETING_REMOTE_SCHEMA });
     return dispatch(
-      makeRequest(
-        migration.upMigration,
-        migration.downMigration,
+      makeRequest({
+        migration,
         migrationName,
         customOnSuccess,
         customOnError,
         requestMsg,
         successMsg,
-        errorMsg
-      )
+        errorMsg,
+      })
     );
   };
 };
@@ -402,16 +400,15 @@ const modifyRemoteSchema = () => {
 
     dispatch({ type: MODIFYING_REMOTE_SCHEMA });
     return dispatch(
-      makeRequest(
-        migration.upMigration,
-        migration.downMigration,
+      makeRequest({
+        migration,
         migrationName,
         customOnSuccess,
         customOnError,
         requestMsg,
         successMsg,
-        errorMsg
-      )
+        errorMsg,
+      })
     );
   };
 };
