@@ -32,4 +32,5 @@ the following ways:
   Postgres defaults <postgres-defaults>
   Custom SQL functions/stored procedures <sql-functions>
   Role based column presets <column-presets>
+  Default timestamp values <timestamp-values>
 
