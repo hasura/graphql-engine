@@ -3,6 +3,7 @@ import Manage from './Main';
 const mapStateToProps = state => {
   return {
     allTypes: state.types.types,
+    readOnlyMode: state.main.readOnlyMode,
     ...state.actions.types,
   };
 };

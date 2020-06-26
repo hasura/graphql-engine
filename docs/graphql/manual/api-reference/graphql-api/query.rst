@@ -43,7 +43,7 @@ API Reference - Query / Subscription
      - Argument_
      - One or more of filter criteria, instructions for sort order or pagination
 
-**E.g. QUERY**:
+**Example: Query**
 
 .. code-block:: graphql
 
@@ -54,7 +54,7 @@ API Reference - Query / Subscription
       }
     }
 
-**E.g. SUBSCRIPTION**:
+**Example: Subscription**
 
 .. code-block:: graphql
 
@@ -98,7 +98,7 @@ API Reference - Query / Subscription
      - Value
      - Name of the auto-generated query field, e.g. *article_by_pk*
 
-**E.g. QUERY BY PK**:
+**Example: Query by PK**
 
 .. code-block:: graphql
 
@@ -109,7 +109,7 @@ API Reference - Query / Subscription
       }
     }
 
-**E.g. SUBSCRIPTION BY PK**:
+**Example: Subscription by PK**
 
 .. code-block:: graphql
 
@@ -160,7 +160,7 @@ Simple object
      - Value
      - ``path`` argument of ``json``/``jsonb`` follows simple `JSONPath specification <https://github.com/json-path/JsonPath>`_. However, prefix symbol ``$.`` is optional.
 
-E.g.
+*Example*
 
 .. code-block:: graphql
 
@@ -254,7 +254,7 @@ Aggregate object
 
 (For more details on aggregate functions, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE>`__).
 
-E.g.
+*Example*
 
 .. code-block:: graphql
 
@@ -329,6 +329,17 @@ DistinctOnExp
 
    distinct_on: [ TableSelectColumnEnum_ ]
 
+*Example*
+
+.. code-block:: graphql
+
+  query {
+    article(distinct_on: title) {
+      title
+      content
+    }
+  }
+
 TableSelectColumnEnum
 """""""""""""""""""""
 
@@ -353,6 +364,19 @@ WhereExp
 
    where: BoolExp_
 
+*Example*
+
+.. code-block:: graphql
+
+  query {
+    author(where: {rating: {_gt: 4}}) {
+      name
+      articles {
+        title
+      }
+    }
+  }
+
 BoolExp
 """""""
 
@@ -370,6 +394,17 @@ AndExp
     {
       _and: [BoolExp_]
     }
+    
+*Example*
+
+.. code-block:: graphql
+
+  query {
+    article(where: {_and: [{rating: {_gt: 4}}, {published_on: {_gt: "2018-01-01"}}]}) {
+      title
+      content
+    }
+  }
 
 .. admonition:: Syntactic sugar
 
@@ -404,13 +439,24 @@ OrExp
       _or: [BoolExp_]
     }
 
+*Example*
+
+.. code-block:: graphql
+
+  query {
+    article(where: {_or: [{rating: {_gt: 4}}, {is_published: {_eq: true}}]}) {
+      title
+      content
+    }
+  }
+
 .. note::
 
   The ``_or`` operator expects an array of expressions as input. Passing an object to it will result in the
   behaviour of the ``_and`` operator due to the way `GraphQL list input coercion <https://graphql.github.io/graphql-spec/June2018/#sec-Type-System.List>`_
   behaves.
 
-  **For example:**
+  *Example:*
 
   .. code-block:: graphql
 
@@ -453,12 +499,37 @@ NotExp
       _not: BoolExp_
     }
 
+*Example*
+
+.. code-block:: graphql
+
+  query {
+    article(where: {_not: {title: {_eq: ""}}} ) {
+      title
+      content
+    }
+  }
+
 TrueExp
 #######
 
 .. parsed-literal::
 
     {}
+
+*Example*
+
+.. code-block:: graphql
+
+  query {
+    author(where: {articles: {}}) {
+      name
+    }
+  }
+
+.. note::
+
+  ``{}`` evaluates to true whenever an object exists (even if it's ``null``).
 
 ColumnExp
 #########
@@ -468,6 +539,17 @@ ColumnExp
     {
       field-name : {Operator_: Value }
     }
+
+*Example*
+
+.. code-block:: graphql
+
+  query {
+    article(where: {title: {_eq: "GraphQL Tutorial"}}) {
+      title
+      content
+    }
+  }
 
 .. _Operator:
 
@@ -646,6 +728,32 @@ CastExp
 
     {type-name: {Operator_: Value}}
 
+*Example*
+
+.. code-block:: graphql
+
+  query MyQuery($coordinate: geography!) {
+    postgis_test_table(
+      where: {
+        geometry_column: {
+          _cast: {
+            geography: { _st_d_within: { distance: 1000000, from: $coordinate } }
+          }
+        }
+      }
+    ) {
+      id
+    }
+  }
+  
+  Variables:
+  {
+    "coordinate": {
+      "type": "Point",
+      "coordinates": [ 2.5559, 49.0083 ]
+    }
+  }
+
 .. note::
 
    Currently, only casting between ``geometry`` and ``geography`` types is allowed.
@@ -659,47 +767,92 @@ OrderByExp
 
    order_by: (TableOrderBy_ | [ TableOrderBy_ ])
 
-E.g.
+*Example 1*
 
-.. parsed-literal::
+.. code-block:: graphql
 
-   order_by: {id: desc}
+  query {
+    author(order_by: {rating: desc}) {
+      name
+      rating
+    }
+  }
 
-or
+*Example 2*
 
-.. parsed-literal::
+.. code-block:: graphql
 
-   order_by: [{id: desc}, {author: {id: asc}}]
+  query {
+    article(order_by: [{id: desc}, {author: {id: asc}}]) {
+      title
+      rating
+    }
+  }
 
-or
+*Example 3*
 
-.. parsed-literal::
+.. code-block:: graphql
 
-   order_by: {articles_aggregate: {count: asc}}
+  query {
+    article(order_by: [{id: desc}, {author: {id: asc}}]) {
+      title
+      rating
+    }
+  }
 
 
 TableOrderBy
 """"""""""""
 
-For columns:
+**For columns**
 
 .. parsed-literal::
 
    {column: OrderByEnum_}
 
-For object relations:
+*Example*
+
+.. code-block:: graphql
+
+  query {
+    article(order_by: {rating: asc}) {
+      title
+      content
+    }
+  }
+
+**For object relations**
 
 .. parsed-literal::
    {relation-name: TableOrderBy_}
 
-For array relations aggregate:
+*Example*
+
+.. code-block:: graphql
+
+  query {
+    article(order_by: {author: {rating: desc}}) {
+      title
+      content
+    }
+  }
+
+**For array relations aggregate**
 
 .. parsed-literal::
    {relation-name_aggregate: AggregateOrderBy_}
 
-E.g.
+*Example*
 
-Order by type for "article" table:
+.. code-block:: graphql
+
+  query {
+    author(order_by: {articles_aggregate: {max: {rating: asc}}}) {
+      name
+    }
+  }
+
+Order by type for ``article`` table:
 
 .. code-block:: graphql
 
@@ -712,7 +865,9 @@ Order by type for "article" table:
      author: author_order_by
      #order by using "likes" array relationship aggregates
      likes_aggregate: likes_aggregate_order_by
-   }
+   }  
+
+.. _OrderByEnum:
 
 OrderByEnum
 ###########
@@ -738,15 +893,35 @@ OrderByEnum
 AggregateOrderBy
 ################
 
-Count aggregate
+**Count aggregate**
 
 .. parsed-literal::
    {count: OrderByEnum_}
 
-Operation aggregate
+*Example*
+
+.. code-block:: graphql
+
+  query {
+    author(order_by: {articles_aggregate: {count: desc}}) {
+      name
+    }
+  }
+
+**Operation aggregate**
 
 .. parsed-literal::
    {op_name: TableAggOpOrderBy_}
+
+*Example*
+
+.. code-block:: graphql
+
+  query {
+    author (order_by: {articles_aggregate: {sum: {id: desc}}}) {
+      id
+    }
+  }
 
 Available operations are ``sum``, ``avg``, ``max``, ``min``, ``stddev``, ``stddev_samp``,
 ``stddev_pop``, ``variance``, ``var_samp`` and ``var_pop``.
@@ -766,3 +941,14 @@ PaginationExp
 
    limit: Integer
    [offset: Integer]
+
+*Example*
+
+.. code-block:: graphql
+
+  query {
+    article(limit: 6, offset: 2) {
+      title
+      content
+    }
+  }

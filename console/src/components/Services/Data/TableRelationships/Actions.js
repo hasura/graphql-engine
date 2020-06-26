@@ -3,7 +3,16 @@ import inflection from 'inflection';
 import { makeMigrationCall, updateSchemaInfo } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../../Common/Notification';
+import {
+  getSaveRemoteRelQuery,
+  getDropRemoteRelQuery,
+} from '../../../Common/utils/v1QueryUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 import suggestedRelationshipsRaw from './autoRelations';
+import {
+  getRemoteRelPayload,
+  parseRemoteRelationship,
+} from './RemoteRelationships/utils';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
 export const MANUAL_REL_SET_TYPE = 'ModifyTable/MANUAL_REL_SET_TYPE';
@@ -15,6 +24,171 @@ export const REL_SELECTION_CHANGED = 'ModifyTable/REL_SELECTION_CHANGED';
 export const MANUAL_REL_NAME_CHANGED = 'ModifyTable/MANUAL_REL_NAME_CHANGED';
 export const REL_NAME_CHANGED = 'ModifyTable/REL_NAME_CHANGED';
 export const REL_ADD_NEW_CLICKED = 'ModifyTable/REL_ADD_NEW_CLICKED';
+
+export const SET_REMOTE_RELATIONSHIPS = 'ModifyTable/SET_REMOTE_RELATIONSHIPS';
+
+export const defaultRemoteRelationship = {
+  name: '',
+  remoteSchema: '',
+  remoteField: [],
+};
+
+export const saveRemoteRelationship = (
+  state,
+  existingRel,
+  successCallback,
+  errorCallback
+) => {
+  return (dispatch, getState) => {
+    const isNew = !existingRel;
+    if (!gqlPattern.test(state.name)) {
+      return dispatch(
+        showErrorNotification(
+          gqlRelErrorNotif[0],
+          gqlRelErrorNotif[1],
+          gqlRelErrorNotif[2]
+        )
+      );
+    }
+    if (!state.remoteSchema) {
+      return dispatch(showErrorNotification('Remote schema is required'));
+    }
+    const table = {
+      schema: getState().tables.currentSchema,
+      name: getState().tables.currentTable,
+    };
+
+    const errorMsg = `${
+      isNew ? 'Creating' : 'Updating'
+    } remote relationship failed`;
+
+    let remoteRelQueryArgs;
+    try {
+      remoteRelQueryArgs = getRemoteRelPayload(state);
+    } catch (e) {
+      if (errorCallback) {
+        errorCallback();
+      }
+      return dispatch(showErrorNotification(errorMsg, e.message));
+    }
+
+    const upQuery = [getSaveRemoteRelQuery(remoteRelQueryArgs, !existingRel)];
+    const downQuery = [];
+    if (isNew) {
+      downQuery.push(getDropRemoteRelQuery(state.name, state.table));
+    } else {
+      const downQueryArgs = getSaveRemoteRelQuery(
+        getRemoteRelPayload(parseRemoteRelationship(existingRel)),
+        isNew
+      );
+      downQuery.push(downQueryArgs);
+    }
+
+    // Apply migrations
+    const migrationName = `table_${table.name}_${
+      isNew ? 'create' : 'update'
+    }_remote_relationship_${state.name}`;
+
+    const requestMsg = `${
+      isNew ? 'Creating' : 'Updating'
+    } remote relationship...`;
+    const successMsg = `Successfully ${
+      isNew ? 'created' : 'updated'
+    } remote relationship`;
+
+    const customOnSuccess = () => {
+      if (successCallback) {
+        successCallback();
+      }
+    };
+    const customOnError = () => {
+      if (errorCallback) {
+        errorCallback();
+      }
+    };
+
+    // Rename relationship should fetch entire schema info.
+    makeMigrationCall(
+      dispatch,
+      getState,
+      upQuery,
+      downQuery,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const dropRemoteRelationship = (
+  state,
+  existingRel,
+  successCallback,
+  errorCallback
+) => {
+  return (dispatch, getState) => {
+    if (
+      !getConfirmation('This will permanently delete the remote relationship')
+    ) {
+      if (errorCallback) {
+        errorCallback();
+      }
+      return;
+    }
+
+    const downQuery = [
+      getSaveRemoteRelQuery(
+        getRemoteRelPayload(parseRemoteRelationship(existingRel)),
+        true
+      ),
+    ];
+
+    const table = state.table;
+    const upQuery = [
+      getDropRemoteRelQuery(existingRel.remote_relationship_name, table),
+    ];
+
+    // Apply migrations
+    const migrationName = `table_${table.name}_drop_remote_relationship_${state.name}`;
+
+    const requestMsg = 'Deleting remote relationship...';
+    const successMsg = 'Successfully deleted remote relationship';
+    const errorMsg = 'Deleting remote relationship failed';
+
+    const customOnSuccess = () => {
+      if (successCallback) {
+        successCallback();
+      }
+    };
+    const customOnError = () => {
+      if (errorCallback) {
+        errorCallback();
+      }
+    };
+
+    // Rename relationship should fetch entire schema info.
+    makeMigrationCall(
+      dispatch,
+      getState,
+      upQuery,
+      downQuery,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const setRemoteRelationships = remoteRelationships => ({
+  type: SET_REMOTE_RELATIONSHIPS,
+  remoteRelationships,
+});
 
 const resetRelationshipForm = () => ({ type: REL_RESET });
 const resetManualRelationshipForm = () => ({ type: MANUAL_REL_RESET });

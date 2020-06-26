@@ -29,7 +29,7 @@ PID=$!
 wait_for_port 8080
 
 # test cli
-HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" make test
+HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" 	HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH="/build/_cli_ext_output/manifest-dev.yaml" make test
 kill -s INT $PID
 
 # start graphql-engine with admin secret
@@ -41,5 +41,5 @@ PID=$!
 wait_for_port 8080
 
 # test cli
-HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make test
+HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH="/build/_cli_ext_output/manifest-dev.yaml" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make test
 kill -s INT $PID

@@ -147,6 +147,13 @@ func (m *mockDriver) UpdateSetting(name string, value string) error {
 	return nil
 }
 
+func (m *mockDriver) ApplySeed(interface{}) error {
+	return nil
+}
+func (m *mockDriver) ExportDataDump([]string) ([]byte, error) {
+	return nil, nil
+}
+
 func TestRegisterTwice(t *testing.T) {
 	Register("mock", &mockDriver{})
 
