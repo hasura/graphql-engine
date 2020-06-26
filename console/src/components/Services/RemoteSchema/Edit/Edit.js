@@ -22,6 +22,7 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import styles from '../RemoteSchema.scss';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -49,17 +50,17 @@ class Edit extends React.Component {
     ]);
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     if (
-      nextProps.params.remoteSchemaName !== this.props.params.remoteSchemaName
+      prevProps.params.remoteSchemaName !== this.props.params.remoteSchemaName
     ) {
       Promise.all([
         this.props.dispatch(
-          fetchRemoteSchema(nextProps.params.remoteSchemaName)
+          fetchRemoteSchema(this.props.params.remoteSchemaName)
         ),
         this.props.dispatch({
           type: VIEW_REMOTE_SCHEMA,
-          data: nextProps.params.remoteSchemaName,
+          data: this.props.params.remoteSchemaName,
         }),
       ]);
     }
@@ -119,8 +120,6 @@ class Edit extends React.Component {
       // throw a 404 exception
       throw new NotFoundError();
     }
-
-    const styles = require('../RemoteSchema.scss');
 
     const { isFetching, isRequesting, editState } = this.props;
     const { remoteSchemaName } = this.props.params;

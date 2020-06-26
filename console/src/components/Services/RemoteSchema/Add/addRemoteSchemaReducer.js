@@ -318,7 +318,6 @@ const modifyRemoteSchema = () => {
   return (dispatch, getState) => {
     const currState = getState().remoteSchemas.addData;
     const remoteSchemaName = currState.name.trim().replace(/ +/g, '');
-    // const url = Endpoints.getSchema;
     const upQueryArgs = [];
     const downQueryArgs = [];
     const migrationName = 'update_remote_schema_' + remoteSchemaName;
@@ -345,9 +344,11 @@ const modifyRemoteSchema = () => {
       },
     };
 
-    resolveObj.definition.headers = [
-      ...getReqHeader(getState().remoteSchemas.headerData.headers),
-    ];
+    const requiredHeaders = getReqHeader(
+      getState().remoteSchemas.headerData.headers
+    );
+    resolveObj.definition.headers = requiredHeaders;
+
     if (resolveObj.definition.url) {
       delete resolveObj.definition.url_from_env;
     } else {
