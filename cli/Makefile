@@ -5,6 +5,9 @@ PLUGINS_BRANCH ?= master
 OS ?= linux darwin windows
 OUTPUT_DIR := _output
 
+HAS_GOX := $(shell command -v gox;)
+HAS_PKGER := $(shell command -v pkger;)
+
 # compile assets
 .PHONY: assets
 assets:
@@ -12,9 +15,6 @@ ifndef HAS_PKGER
 	go get github.com/markbates/pkger/cmd/pkger
 endif
 	pkger -o pkg/console/templates/packed -include /pkg/console/templates/gohtml/
-
-HAS_GOX := $(shell command -v gox;)
-HAS_PKGER := $(shell command -v pkger;)
 
 .PHONY: deps
 # get dependencies

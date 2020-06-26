@@ -277,6 +277,9 @@ class TestGraphqlQueryPermissions:
     def test_user_select_unpublished_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_select_query_unpublished_articles.yaml', transport)
 
+    def test_user_select_query_article_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/user_select_query_article_author.yaml', transport)
+
     def test_user_only_other_users_published_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_can_query_other_users_published_articles.yaml', transport)
 
@@ -650,3 +653,108 @@ class TestGraphQLExplain:
         resp_sql = resp_json[0]['sql']
         exp_sql = conf['response'][0]['sql']
         assert resp_sql == exp_sql, resp_json
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestRelayQueriesBasic:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/relay/basic'
+
+    def test_article_connection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/article_connection.yaml', transport)
+
+    def test_author_connection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_connection.yaml', transport)
+
+    def test_author_with_articles_view_connection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_with_articles_view_connection.yaml', transport)
+
+    def test_search_articles_connection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/search_articles_connection.yaml', transport)
+
+    def test_node(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node.yaml', transport)
+
+    def test_only_pageinfo(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/only_pageinfo.yaml', transport)
+
+    # Articles forward pagination
+    def test_article_no_orderby_forward_pagination(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + "/article_pagination_no_orderby/forward", 3)
+
+    # Articles backward pagination
+    def test_article_no_orderby_backward_pagination(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + "/article_pagination_no_orderby/backward", 3)
+
+    # Authors forward pagination
+    def test_author_orderby_articles_aggregate_orderby_forward_pagination(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + "/author_pagination_articles_aggregate_orderby/forward", 2)
+
+    # Authors backward pagination
+    def test_author_orderby_articles_aggregate_orderby_backward_pagination(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + "/author_pagination_articles_aggregate_orderby/backward", 3)
+
+    # Pagination errors
+    def test_first_and_last_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/pagination_errors/first_and_last.yaml", transport)
+
+    def test_after_and_before_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/pagination_errors/after_and_before.yaml", transport)
+
+    # Node id errors
+    def test_insufficient_data(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/insufficient_data.yaml', transport)
+
+    def test_invalid_column_value(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/invalid_column_value.yaml', transport)
+
+    def test_invalid_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/invalid_id.yaml', transport)
+
+    def test_missing_columns(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/missing_columns.yaml', transport)
+
+    def test_non_array_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/non_array_id.yaml', transport)
+
+    def test_unexpected_columns(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/unexpected_columns.yaml', transport)
+
+    def test_invalid_node_id_version(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/invalid_node_id_version.yaml', transport)
+
+    def test_non_integer_version(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/non_integer_version.yaml', transport)
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestRelayQueriesPermissions:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/relay/permissions'
+
+    def test_author_connection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_connection.yaml', transport)
+
+    def test_author_node(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_node.yaml', transport)
+
+    def test_author_node_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_node_null.yaml', transport)
+
+    # Article forward pagination
+    def test_article_pagination_forward(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + '/article_pagination/forward', 2)
+
+    def test_article_pagination_backward(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + '/article_pagination/backward', 2)
+
+
+def _test_relay_pagination(hge_ctx, transport, test_file_prefix, no_of_pages):
+    for i in range(no_of_pages):
+        page_no = i + 1
+        test_file = "page_" + str(page_no) + ".yaml"
+        check_query_f(hge_ctx, test_file_prefix + "/" + test_file, transport)

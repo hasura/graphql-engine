@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import AceEditor from 'react-ace';
+import JSONEditor from './JSONEditor';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import InputGroup from 'react-bootstrap/lib/InputGroup';
 import OverlayTrigger from 'react-bootstrap/es/OverlayTrigger';
@@ -9,7 +9,6 @@ import 'brace/theme/github';
 
 import { RESET } from '../TableModify/ModifyActions';
 import {
-  permChangeTypes,
   permOpenEdit,
   permSetFilter,
   permSetFilterSameAs,
@@ -18,7 +17,6 @@ import {
   permAllowAll,
   permCloseEdit,
   permSetRoleName,
-  permChangePermissions,
   // permToggleAllowUpsert,
   permToggleAllowAggregation,
   permToggleModifyLimit,
@@ -82,16 +80,16 @@ import {
   getTableSupportedQueries,
   QUERY_TYPES,
 } from '../../../Common/utils/pgUtils';
-import { showErrorNotification } from '../../Common/Notification';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
   getFilterQueries,
   replaceLegacyOperators,
-  getAllowedFilterKeys,
   updateFilterTypeLabel,
   getDefaultFilterType,
   getUpdateTooltip,
+  getQuerySingleRowMutation,
 } from './utils';
+import PermButtonSection from './PermButtonsSection';
 
 class Permissions extends Component {
   constructor() {
@@ -659,8 +657,8 @@ class Permissions extends Component {
 
           const dispatchFuncSetFilter = filter => {
             this.setState(prev => ({
-              filterString: {
-                ...prev,
+              localFilterString: {
+                ...prev.localFilterString,
                 [filterType]: filter,
               },
             }));
@@ -687,15 +685,9 @@ class Permissions extends Component {
           );
 
           const selectedValue = (
-            <AceEditor
-              mode="json"
-              value={currentFilterString || filterString[filterType]}
+            <JSONEditor
+              data={filterString[filterType] || currentFilterString}
               onChange={dispatchFuncSetFilter}
-              theme="github"
-              height="5em"
-              maxLines={15}
-              width="100%"
-              showPrintMargin={false}
               key={-3}
             />
           );
@@ -918,6 +910,7 @@ class Permissions extends Component {
         };
 
         const rowSectionTitle = 'Row ' + query + ' permissions';
+        const singleRowMutation = getQuerySingleRowMutation(query);
 
         return (
           <CollapsibleToggle
@@ -946,6 +939,17 @@ class Permissions extends Component {
                 )}
               </div>
               <div className={styles.add_mar_top}>{getLimitSection()}</div>
+              <div className={styles.add_mar_top}>
+                {singleRowMutation && (
+                  <span>
+                    The single row mutation <b>{singleRowMutation}</b> shares
+                    the returning type with the query field. Hence if no{' '}
+                    <b>select</b> permissions are defined, the{' '}
+                    <b>{singleRowMutation}</b> field will also be omitted from
+                    the GraphQL schema.
+                  </span>
+                )}
+              </div>
             </div>
           </CollapsibleToggle>
         );
@@ -1741,93 +1745,6 @@ class Permissions extends Component {
         return clonePermissionsHtml;
       };
 
-      const getButtonsSection = () => {
-        if (readOnlyMode) {
-          return null;
-        }
-
-        const dispatchSavePermissions = () => {
-          const filterKeys = getAllowedFilterKeys(query);
-          const isInvalid = filterKeys.some(key => {
-            if (
-              localFilterString[key] &&
-              !isJsonString(localFilterString[key])
-            ) {
-              return true;
-            }
-            return false;
-          });
-
-          if (isInvalid) {
-            dispatch(
-              showErrorNotification(
-                'Saving permissions failed',
-                'Row permission is not a valid JSON'
-              )
-            );
-            return;
-          }
-
-          dispatch(permChangePermissions(permChangeTypes.save));
-        };
-
-        const dispatchRemoveAccess = () => {
-          const confirmMessage =
-            'This will permanently delete the currently set permissions';
-          const isOk = getConfirmation(confirmMessage);
-          if (isOk) {
-            dispatch(permChangePermissions(permChangeTypes.delete));
-          }
-        };
-
-        const getPermActionButton = (
-          value,
-          color,
-          onClickFn,
-          disabled,
-          title
-        ) => (
-          <Button
-            className={styles.add_mar_right}
-            color={color}
-            size="sm"
-            onClick={onClickFn}
-            disabled={disabled}
-            title={title}
-            data-test={`${value.split(' ').join('-')}-button`}
-          >
-            {value}
-          </Button>
-        );
-        const applySameSelected = permissionsState.applySamePermissions.length;
-
-        const disableSave = applySameSelected || !permsChanged;
-        const disableRemoveAccess = !currQueryPermissions;
-
-        const saveButton = getPermActionButton(
-          'Save Permissions',
-          'yellow',
-          dispatchSavePermissions,
-          disableSave,
-          !permsChanged ? 'No changes made' : ''
-        );
-
-        const removeAccessButton = getPermActionButton(
-          'Delete Permissions',
-          'red',
-          dispatchRemoveAccess,
-          disableRemoveAccess,
-          disableRemoveAccess ? 'No permissions set' : ''
-        );
-
-        return (
-          <div className={styles.add_mar_top + ' ' + styles.add_pad_left}>
-            {saveButton}
-            {removeAccessButton}
-          </div>
-        );
-      };
-
       const getBackendOnlySection = () => {
         if (!isQueryTypeBackendOnlyCompatible(permissionsState.query)) {
           return null;
@@ -1901,7 +1818,15 @@ class Permissions extends Component {
             {getPresetsSection('insert')}
             {getPresetsSection('update')}
             {getBackendOnlySection()}
-            {getButtonsSection()}
+            <PermButtonSection
+              readOnlyMode={readOnlyMode}
+              query={query}
+              localFilterString={localFilterString}
+              dispatch={dispatch}
+              permissionsState={permissionsState}
+              permsChanged={permsChanged}
+              currQueryPermissions={currQueryPermissions}
+            />
             {getClonePermsSection()}
           </div>
         </div>

@@ -42,12 +42,10 @@ const MetadataStatus = ({ dispatch, metadata }) => {
                 ico.definition.table
               )}"`;
             } else if (ico.type === 'remote_relationship') {
-              name = ico.definition.configuration.name;
+              name = ico.definition.name;
               definition = `relationship between table "${getTableNameFromDef(
                 ico.definition.table
-              )}" and remote schema "${
-                ico.definition.configuration.remote_schema
-              }"`;
+              )}" and remote schema "${ico.definition.remote_schema}"`;
             } else if (permissionTypes.includes(ico.type)) {
               name = `${ico.definition.role}-permission`;
               definition = `${ico.type} on table "${getTableNameFromDef(
@@ -66,8 +64,10 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               )}"`;
             } else if (ico.type === 'remote_schema') {
               name = ico.definition.name;
-              let url = `"${ico.definition.definition.url ||
-                ico.definition.definition.url_from_env}"`;
+              let url = `"${
+                ico.definition.definition.url ||
+                ico.definition.definition.url_from_env
+              }"`;
               if (ico.definition.definition.url_from_env) {
                 url = `the url from the value of env var ${url}`;
               }

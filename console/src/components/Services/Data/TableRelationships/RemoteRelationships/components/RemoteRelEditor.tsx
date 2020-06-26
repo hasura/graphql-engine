@@ -22,9 +22,10 @@ import {
   Configuration as ConfigTooltip,
 } from '../Tooltips';
 import Explorer from './Explorer';
+import { Table } from '../../../../../Common/utils/pgUtils';
 
 type Props = {
-  table: any; // use "Table" type after ST is merged
+  table: Table;
   remoteSchemas: string[];
   isLast: boolean;
   state: RemoteRelationship;

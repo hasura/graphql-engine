@@ -7,7 +7,10 @@ import { escapeRegExp } from '../utils';
 import { UNSAFE_keys } from '../../../Common/utils/tsUtils';
 
 type FilterType = 'check' | 'filter';
-type BaseQueryType = 'select' | 'update' | 'insert' | 'delete';
+export type BaseQueryType = 'select' | 'update' | 'insert' | 'delete';
+export interface FilterState {
+  [key: string]: BaseQueryType;
+}
 
 type DisplayQueryType =
   | Exclude<BaseQueryType, 'update'>
@@ -137,5 +140,18 @@ export const getAllowedFilterKeys = (query: BaseQueryType) => {
       return ['filter', 'check'];
     default:
       return ['filter'];
+  }
+};
+
+export const getQuerySingleRowMutation = (query: BaseQueryType) => {
+  switch (query) {
+    case 'insert':
+      return 'insert_one';
+    case 'update':
+      return 'update_by_pk';
+    case 'delete':
+      return 'delete_by_pk';
+    default:
+      return '';
   }
 };
