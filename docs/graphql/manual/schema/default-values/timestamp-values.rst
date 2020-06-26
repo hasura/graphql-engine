@@ -15,7 +15,7 @@ Setting default timestamp values
 Introduction
 ------------
 
-We often need timestamp values in our tables, such as ``created_at`` and ``updated_at``.
+We often need timestamp values in our tables, such as ``created_at`` and ``updated_at`` in order to indicate when an object was created or last updated.
 This page explains how to add these values to your tables. 
 
 Add a default timestamp value
@@ -27,7 +27,7 @@ Add a default timestamp value
   .. tab:: Console
 
     On the Hasura console, click on the ``Modify`` tab of a table. When clicking on the ``+Frequently used columns`` button, 
-    the fields ``created_at`` and ``updated_at`` with type ``Timestamp`` and the SQL function ``now()`` will be suggested. 
+    the fields ``created_at`` and ``updated_at`` with type ``timestamp`` and the SQL function ``now()`` will be suggested. 
 
     .. thumbnail:: /img/graphql/manual/schema/timestamp-values.png
         :alt: Add a timestamp value on the Hasura console

@@ -24,6 +24,7 @@ the following ways:
 - :ref:`Role based column presets <column_presets>`: set up presets, using session variables or fixed values, that are
   applied when a new row is created with a particular :ref:`user role <roles_variables>`.
   E.g. set a ``user_id`` field automatically from a session variable/authorization header.
+- :ref:`Default timestamp values <timestamp_values>`: set up default timestamp values, e.g. ``created_at`` and ``updated_at``.
 
 .. toctree::
   :maxdepth: 1
