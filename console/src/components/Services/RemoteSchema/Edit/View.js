@@ -17,6 +17,50 @@ import styles from '../RemoteSchema.scss';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
+const RefreshTooltip = (
+  <Tooltip id="tooltip-cascade">
+    If your remote schema has changed, you need to refresh the GraphQL Engine
+    metadata to query the modified schema
+  </Tooltip>
+);
+
+const RSHeadersDisplay = ({ data }) =>
+  data.length > 0 ? (
+    <tr>
+      <td>Headers</td>
+      <td>
+        {data &&
+          data
+            .filter(header => !!header.name)
+            .map((header, index) => [
+              <tr key={header}>
+                <td>
+                  {header.name}:{' '}
+                  {header.type === 'static'
+                    ? header.value
+                    : '<' + header.value + '>'}
+                </td>
+              </tr>,
+              index !== data.length - 1 ? <hr /> : null,
+            ])}
+      </td>
+    </tr>
+  ) : null;
+
+const RSReloadSchema = ({ readOnlyMode, remoteSchemaName, ...props }) =>
+  !readOnlyMode && remoteSchemaName ? (
+    <div className={`${styles.commonBtn} ${styles.detailsRefreshButton}`}>
+      <span>
+        <ReloadRemoteSchema {...props} remoteSchemaName={remoteSchemaName} />
+      </span>
+      <span>
+        <OverlayTrigger placement="right" overlay={RefreshTooltip}>
+          <i className="fa fa-question-circle" aria-hidden="true" />
+        </OverlayTrigger>
+      </span>
+    </div>
+  ) : null;
+
 class ViewStitchedSchema extends React.Component {
   componentDidMount() {
     const { remoteSchemaName } = this.props.params;
@@ -29,17 +73,17 @@ class ViewStitchedSchema extends React.Component {
     ]);
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     if (
-      nextProps.params.remoteSchemaName !== this.props.params.remoteSchemaName
+      prevProps.params.remoteSchemaName !== this.props.params.remoteSchemaName
     ) {
       Promise.all([
         this.props.dispatch(
-          fetchRemoteSchema(nextProps.params.remoteSchemaName)
+          fetchRemoteSchema(this.props.params.remoteSchemaName)
         ),
         this.props.dispatch({
           type: VIEW_REMOTE_SCHEMA,
-          data: nextProps.params.remoteSchemaName,
+          data: this.props.params.remoteSchemaName,
         }),
       ]);
     }
@@ -75,21 +119,14 @@ class ViewStitchedSchema extends React.Component {
       },
       {
         title: 'Manage',
-        url: appPrefix + '/' + 'manage',
+        url: `${appPrefix}/manage`,
       },
     ];
 
     if (remoteSchemaName) {
       breadCrumbs.push({
         title: remoteSchemaName.trim(),
-        url:
-          appPrefix +
-          '/' +
-          'manage' +
-          '/' +
-          remoteSchemaName.trim() +
-          '/' +
-          'details',
+        url: `${appPrefix}/manage/${remoteSchemaName.trim()}/details`,
       });
       breadCrumbs.push({
         title: 'details',
@@ -97,33 +134,12 @@ class ViewStitchedSchema extends React.Component {
       });
     }
 
-    const refresh = (
-      <Tooltip id="tooltip-cascade">
-        If your remote schema has changed, you need to refresh the GraphQL
-        Engine metadata to query the modified schema
-      </Tooltip>
-    );
+    let tabInfoCopy = tabInfo;
 
     if (readOnlyMode) {
-      delete tabInfo.modify;
+      const { modify, ...rest } = tabInfoCopy;
+      tabInfoCopy = rest;
     }
-
-    const showReloadRemoteSchema =
-      !readOnlyMode && remoteSchemaName && remoteSchemaName.length > 0 ? (
-        <div className={`${styles.commonBtn} ${styles.detailsRefreshButton}`}>
-          <span>
-            <ReloadRemoteSchema
-              {...this.props}
-              remoteSchemaName={remoteSchemaName}
-            />
-          </span>
-          <span>
-            <OverlayTrigger placement="right" overlay={refresh}>
-              <i className="fa fa-question-circle" aria-hidden="true" />
-            </OverlayTrigger>
-          </span>
-        </div>
-      ) : null;
 
     return (
       <div
@@ -133,7 +149,7 @@ class ViewStitchedSchema extends React.Component {
           appPrefix={appPrefix}
           currentTab="details"
           heading={remoteSchemaName}
-          tabsInfo={tabInfo}
+          tabsInfo={tabInfoCopy}
           breadCrumbs={breadCrumbs}
           baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
         />
@@ -147,31 +163,15 @@ class ViewStitchedSchema extends React.Component {
                   <td>GraphQL Server URL</td>
                   <td>{manualUrl || `<${envName}>`}</td>
                 </tr>
-                {filterHeaders.length > 0 ? (
-                  <tr>
-                    <td>Headers</td>
-                    <td>
-                      {filterHeaders &&
-                        filterHeaders
-                          .filter(k => !!k.name)
-                          .map((h, i) => [
-                            <tr key={i}>
-                              <td>
-                                {h.name} :{' '}
-                                {h.type === 'static'
-                                  ? h.value
-                                  : '<' + h.value + '>'}
-                              </td>
-                            </tr>,
-                            i !== filterHeaders.length - 1 ? <hr /> : null,
-                          ])}
-                    </td>
-                  </tr>
-                ) : null}
+                <RSHeadersDisplay data={filterHeaders} />
               </tbody>
             </table>
           </div>
-          {showReloadRemoteSchema}
+          <RSReloadSchema
+            readOnlyMode={readOnlyMode}
+            remoteSchemaName={remoteSchemaName}
+            {...this.props}
+          />
         </div>
         <br />
         <br />
