@@ -32,6 +32,8 @@ Add a default timestamp value
     .. thumbnail:: /img/graphql/manual/schema/timestamp-values.png
         :alt: Add a timestamp value on the Hasura console
 
+    Click the ``Add column`` button.
+
   .. tab:: CLI
 
     :ref:`Create a migration manually <manual_migrations>` and add the SQL statement to update a table:
