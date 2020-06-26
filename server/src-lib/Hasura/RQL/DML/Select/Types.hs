@@ -6,17 +6,22 @@ module Hasura.RQL.DML.Select.Types where
 import           Data.Aeson.Types
 import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.List.NonEmpty         as NE
-import qualified Data.Sequence              as Seq
-import qualified Data.Text                  as T
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.List.NonEmpty            as NE
+import qualified Data.Sequence                 as Seq
+import qualified Data.Text                     as T
+import qualified Data.Aeson                    as J
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.Prelude
+import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.RemoteRelationship
+import           Hasura.RQL.Types.RemoteSchema
 import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
 
@@ -162,13 +167,29 @@ data AnnColField
   , _acfOp     :: !(Maybe ColOp)
   } deriving (Show, Eq)
 
+data RemoteFieldArgument
+  = RemoteFieldArgument
+  { _rfaArgument :: !(G.Name,G.Value Variable)
+  , _rfaVariable :: !(Maybe [(G.VariableDefinition,J.Value)])
+  } deriving (Eq,Show)
+
+data RemoteSelect
+  = RemoteSelect
+  { _rselArgs          :: ![RemoteFieldArgument]
+  , _rselSelection     :: !(G.SelectionSet G.NoFragments Variable)
+  , _rselHasuraColumns :: !(HashSet PGColumnInfo)
+  , _rselFieldCall     :: !(NonEmpty FieldCall)
+  , _rselRemoteSchema  :: !RemoteSchemaInfo
+  } deriving (Show,Eq)
+
 data AnnFldG v
   = FCol !AnnColField
   | FObj !(ObjSelG v)
   | FArr !(ArrSelG v)
   | FComputedField !(ComputedFieldSel v)
   | FExp !T.Text
-  deriving (Show, Eq)
+  | FRemote !RemoteSelect
+  deriving (Show,Eq)
 
 mkAnnColField :: PGColumnInfo -> Maybe ColOp -> AnnFldG v
 mkAnnColField ci colOpM =

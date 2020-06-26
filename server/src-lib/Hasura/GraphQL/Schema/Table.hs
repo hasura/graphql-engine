@@ -117,7 +117,6 @@ tableDeletePermissions
   -> m (Maybe DelPermInfo)
 tableDeletePermissions table = (_permDel =<<) <$> tablePermissions table
 
-
 tableSelectFields
   :: forall m n. (MonadSchema n m)
   => QualifiedTable
@@ -138,6 +137,7 @@ tableSelectFields table permissions = do
           pure $ Set.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
         CFRSetofTable tableName ->
           isJust <$> tableSelectPermissions tableName
+    canBeSelected (FIRemoteRelationship _) = pure True   -- TODO: Are there permissions for remote join fields?
 
 tableColumns
   :: forall m n. (MonadSchema n m)

@@ -60,8 +60,9 @@ data RemoteFieldInfo
   , _rfiHasuraFields :: !(HashSet PGColumnInfo)
   , _rfiRemoteFields :: !(NonEmpty FieldCall)
   , _rfiRemoteSchema :: !RemoteSchemaInfo
+  , _rfiSchemaDoc    :: G.SchemaDocument
+  -- ^ The schema document is used to make parsers for the arguments and the selection set
   } deriving (Show, Eq, Generic)
-instance Cacheable G.InputValueDefinition -- TODO: should we make a new type to avoid the orphan instance warning?
 instance Cacheable RemoteFieldInfo
 
 instance ToJSON RemoteFieldInfo where

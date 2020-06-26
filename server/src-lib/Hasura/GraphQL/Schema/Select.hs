@@ -23,20 +23,25 @@ import qualified Data.HashSet                          as Set
 import qualified Data.Sequence                         as Seq
 import qualified Data.Text                             as T
 import qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Data.List.NonEmpty                    as NE
 
 import qualified Hasura.GraphQL.Parser                 as P
+import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 import qualified Hasura.RQL.DML.Select                 as RQL
 import qualified Hasura.SQL.DML                        as SQL
 
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..), mkParameter)
+import           Hasura.GraphQL.Parser.Schema          (Variable)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column          (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Table
+import           Hasura.GraphQL.Schema.Remote
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -240,14 +245,14 @@ tableSelectionSet table selectPermissions stringifyNum = memoizeOn 'tableSelecti
 
 -- | User-defined function (AKA custom function)
 selectFunction
-  :: (MonadSchema n m, MonadError QErr m)
+  :: (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
   => FunctionInfo         -- ^ SQL function info
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
   -> SelPermInfo          -- ^ select permissions of the target table
-  -> Bool
   -> m (FieldParser n SelectExp)
-selectFunction function fieldName description selectPermissions stringifyNum = do
+selectFunction function fieldName description selectPermissions = do
+  stringifyNum <- asks qcStringifyNum
   let table = fiReturnType function
   tableArgsParser    <- tableArgs table selectPermissions
   functionArgsParser <- customSQLFunctionArgs function
@@ -443,12 +448,36 @@ tableAggregationFields table selectPermissions = do
       in P.subselection_ operator Nothing subselectionParser
          <&> (RQL.AFOp . RQL.AggOp opText)
 
+lookupRemoteField'
+  :: (MonadSchema n m, MonadError QErr m)
+  => [P.Definition P.FieldInfo]         -- assume this comes from the proper remote schema
+  -> FieldCall
+  -> m P.FieldInfo
+lookupRemoteField' fieldInfos (FieldCall fcName _) =
+  case find ((== fcName) . P.dName) fieldInfos of
+    Nothing -> throw400 RemoteSchemaError $ "field with name " <> fcName <<> " not found"
+    Just (P.Definition _ _ _ fieldInfo) -> pure fieldInfo
+
+lookupRemoteField
+  :: (MonadSchema n m, MonadError QErr m)
+  => [P.Definition P.FieldInfo]
+  -> NonEmpty FieldCall
+  -> m P.FieldInfo
+lookupRemoteField fieldInfos (fieldCall :| rest) =
+  case NE.nonEmpty rest of
+    Nothing -> lookupRemoteField' fieldInfos fieldCall
+    Just rest' -> do
+      (P.FieldInfo _ type') <- lookupRemoteField' fieldInfos fieldCall
+      (P.Definition _ _ _ (P.ObjectInfo objFieldInfos _))
+       <- onNothing (P.getObjectInfo $ type') $
+          throw400 RemoteSchemaError $ "field " <> fcName fieldCall <<> " is expected to be an object"
+      lookupRemoteField objFieldInfos rest'
 
 -- | An individual field of a table
 --
 -- > field_name(arg_name: arg_type, ...): field_type
 fieldSelection
-  :: (MonadSchema n m, MonadError QErr m)
+  :: (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
   => FieldInfo
   -> SelPermInfo
   -> Bool
@@ -493,37 +522,33 @@ fieldSelection fieldInfo selectPermissions stringifyNum = do
     FIComputedField computedFieldInfo ->
       maybeToList <$> computedField computedFieldInfo selectPermissions stringifyNum
 
-{-
-   FIRemoteRelationship remoteInfo -> do
-      fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteInfo
-      let argumentsParser = sequenceA $ for (toList $ _rfiParamMap remoteInfo) \(name, inpValInfo) ->
-        -- TODO: based on GType information and the presence (or lack thereof) of as default argument
-        -- we should choose between P.field, P.fieldWithDefaut, P.fieldOptional
-        P.field name (_iviDesc inpValInfo) $ remoteArgument $ _iviType inpValInfo
-      -- FIXME: what about the selection set here???
-      P.selection fieldName (pgiDescription columnInfo) argumentsParser _selectionSet
-        <&> \args -> RQL.AFRemote $ RQL.RemoteSelect
-          { _rselArgs          = args
-          , _rselSelection     = undefined
-          , _rselHasuraColumns = _rfiHasuraFields remoteInfo
-          , _rselFieldCall     = _rfiRemoteFields remoteInfo
-          , _rselRemoteSchema  = _rfiRemoteSchema remoteInfo
-          }
+    FIRemoteRelationship (remoteFieldInfo :: RemoteFieldInfo)  -> do
+      fieldDefns <- asks qcRemoteFields
+      fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteFieldInfo
+      remoteFieldsArgumentsParser <-
+        fmap sequenceA $ for (Map.toList $ _rfiParamMap remoteFieldInfo) $
+        \(name, inpValDefn) ->
+          inputValueDefinitionParser (_rfiSchemaDoc remoteFieldInfo) inpValDefn
+          -- FIXME: It shouldn't be Nothing below, construct the 'Maybe [(VariableDefinition, A.Value)]'
+          --  and use that!
+          <&> fmap (\gVal -> RQL.RemoteFieldArgument (name, gVal) Nothing)
 
--- TODO: check nullability
--- TODO: what _rfaVariable is supposed to be / do we need to pass unprocessed JSON here?
-remoteArgument
-  :: MonadParse m
-  => G.Type
-  -> Parser 'Input m RemoteFieldArgument
-remoteArgument argType = Parser
-  { pType = argType
-  , pParser value = pure $ RemoteFieldArgument
-    { _rfaArgument = G.Argument value
-    , _rfaVariable = Nothing
-    }
-  }
--}
+      -- This selection set parser, should be of the remote node's selection set parser, which comes
+      -- from the fieldCall
+      (P.FieldInfo _ (fType :: P.Type k)) <- lookupRemoteField fieldDefns $ _rfiRemoteFields remoteFieldInfo
+      case P.subKind @k of
+        P.KRefl -> do
+          --selectionSetParser <- remoteFieldFullSchema (_rfiSchemaDoc remoteFieldInfo) _todo -- There's no gType anymore
+          let fieldParser = P.unsafeRawParser fType
+          pure $
+            pure $ P.subselection fieldName Nothing remoteFieldsArgumentsParser fieldParser
+            <&> \(args,selSet) -> RQL.FRemote $ RQL.RemoteSelect
+            { _rselArgs          = args
+            , _rselSelection     = selSet
+            , _rselHasuraColumns = _rfiHasuraFields remoteFieldInfo
+            , _rselFieldCall     = _rfiRemoteFields remoteFieldInfo
+            , _rselRemoteSchema  = _rfiRemoteSchema remoteFieldInfo
+            }
 
 -- | Parses the arguments to the underlying sql function of a computed field or
 --   a custom function. All arguments to the underlying sql function are parsed

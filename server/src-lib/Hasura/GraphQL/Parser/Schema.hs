@@ -358,10 +358,10 @@ eqTypeInfo (TIUnion (UnionInfo objects1))       (TIUnion (UnionInfo objects2))
   =  fmap dName objects1     == fmap dName objects2
 eqTypeInfo _                       _                       = False
 
-getObjectInfo :: Type 'Output -> Maybe (Definition ObjectInfo)
+getObjectInfo :: Type k -> Maybe (Definition ObjectInfo)
 getObjectInfo = traverse getTI . (^.definitionLens)
   where
-    getTI :: TypeInfo 'Output -> Maybe ObjectInfo
+    getTI :: TypeInfo k -> Maybe ObjectInfo
     getTI (TIObject oi) = Just oi
     getTI _ = Nothing
 
@@ -459,7 +459,7 @@ data Variable = Variable
   , vValue :: Value Void
   -- ^ Note: if the variable was null or was not provided and the field has a
   -- non-null default value, this field contains the default value, not 'VNull'.
-  } deriving (Eq)
+  } deriving (Show,Eq)
 
 data VariableInfo
   = VIRequired Name
@@ -467,7 +467,7 @@ data VariableInfo
   -- value are indistinguishable from variables with a default value of null, so
   -- we don’t distinguish those cases here.
   | VIOptional Name (Value Void)
-  deriving (Eq)
+  deriving (Show,Eq)
 
 instance HasName Variable where
   getName = getName . vInfo

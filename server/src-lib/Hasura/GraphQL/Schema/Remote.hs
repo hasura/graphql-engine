@@ -1,9 +1,13 @@
 module Hasura.GraphQL.Schema.Remote
   ( buildRemoteParser
+  , remoteFieldFullSchema
+  , inputValueDefinitionParser
+  , lookupObject
   ) where
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.RQL.DML.Select.Types
 
 import           Language.GraphQL.Draft.Syntax       as G
 import qualified Data.List.NonEmpty                  as NE
@@ -214,7 +218,7 @@ remoteFieldFromName sdoc fieldName fieldTypeName argsDefns =
     Nothing -> throw500 $ "Could not find type with name " <> G.unName fieldName
     Just typeDef -> remoteField sdoc fieldName argsDefns typeDef
 
--- | 'inputValueDefinitionParser' accepts a 'G.InputValueDefinition' and will return an
+-- | 'inputValuefinitionParser' accepts a 'G.InputValueDefinition' and will return an
 --   'InputFieldsParser' for it. If a non 'Input' GraphQL type is found in the 'type' of
 --    the 'InputValueDefinition' then an error will be thrown.
 inputValueDefinitionParser
@@ -242,7 +246,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
       buildField fieldType' fieldConstructor' = case fieldType' of
        G.TypeNamed _ typeName ->
          case lookupType schemaDoc typeName of
-           Nothing -> throw500 $ "Could not find type with name " <> G.unName typeName
+           Nothing -> throw500 $ "Could not find type with name " <> G.unName typeName -- should it be 400 instead?
            Just typeDef ->
              case typeDef of
                G.TypeDefinitionScalar (G.ScalarTypeDefinition _ name' _) ->

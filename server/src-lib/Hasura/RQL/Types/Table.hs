@@ -88,6 +88,7 @@ import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.Server.Utils            (duplicates, englishList)
 import           Hasura.SQL.Types
 
@@ -160,6 +161,7 @@ data FieldInfo
   = FIColumn !PGColumnInfo
   | FIRelationship !RelInfo
   | FIComputedField !ComputedFieldInfo
+  | FIRemoteRelationship !RemoteFieldInfo
   deriving (Show, Eq, Generic)
 instance Cacheable FieldInfo
 $(deriveToJSON
@@ -176,12 +178,14 @@ fieldInfoName = \case
   FIColumn info -> fromPGCol $ pgiColumn info
   FIRelationship info -> fromRel $ riName info
   FIComputedField info -> fromComputedField $ _cfiName info
+  FIRemoteRelationship info -> fromRemoteRelationship $ _rfiName info
 
 fieldInfoGraphQLName :: FieldInfo -> Maybe G.Name
 fieldInfoGraphQLName = \case
   FIColumn info -> Just $ pgiName info
   FIRelationship info -> G.mkName $ relNameToTxt $ riName info
   FIComputedField info -> G.mkName $ computedFieldNameToText $ _cfiName info
+  FIRemoteRelationship info -> G.mkName $ remoteRelationshipNameToText $ _rfiName info
 
 -- | Returns all the field names created for the given field. Columns, object relationships, and
 -- computed fields only ever produce a single field, but array relationships also contain an
@@ -195,6 +199,7 @@ fieldInfoGraphQLNames info = case info of
       ObjRel -> [name]
       ArrRel -> [name, name <> $$(G.litName "_aggregate")]
   FIComputedField _ -> maybeToList $ fieldInfoGraphQLName info
+  FIRemoteRelationship _ -> maybeToList $ fieldInfoGraphQLName info
 
 getCols :: FieldInfoMap FieldInfo -> [PGColumnInfo]
 getCols = mapMaybe (^? _FIColumn) . M.elems

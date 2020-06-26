@@ -12,6 +12,12 @@ import qualified Hasura.RQL.DML.Select.Types   as RQL
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+data QueryContext =
+  QueryContext
+  { qcStringifyNum :: Bool
+  , qcRemoteFields :: [P.Definition P.FieldInfo]
+  }
+
 textToName :: MonadError QErr m => Text -> m G.Name
 textToName textName = G.mkName textName `onNothing` throw400 ValidationFailed
                       ("cannot include " <> textName <<> " in the GraphQL schema because "

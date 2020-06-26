@@ -179,6 +179,8 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
   --                                   , _boActions resolvedOutputs
   --                                   )
 
+
+
   returnA -< SchemaCache
     { scTables = _boTables resolvedOutputs
     -- TODO this is empty now so that things run.  Of course we should cache the right map of Actions.
@@ -211,14 +213,16 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
       -- relationships and computed fields
       let relationshipsByTable = M.groupOn _crTable relationships
           computedFieldsByTable = M.groupOn (_afcTable . _cccComputedField) computedFields
+          remoteRelationshipsByTable = M.groupOn rtrTable remoteRelationships
       tableCoreInfos <- (tableRawInfos >- returnA)
         >-> (\info -> (info, relationshipsByTable) >- alignExtraTableInfo mkRelationshipMetadataObject)
         >-> (\info -> (info, computedFieldsByTable) >- alignExtraTableInfo mkComputedFieldMetadataObject)
-        >-> (| Inc.keyed (\_ ((tableRawInfo, tableRelationships), tableComputedFields) -> do
+        >-> (\info -> (info, remoteRelationshipsByTable) >- alignExtraTableInfo mkRemoteRelationshipMetadataObject)
+        >-> (| Inc.keyed (\_ (((tableRawInfo, tableRelationships), tableComputedFields), tableRemoteRelationships) -> do
                  let columns = _tciFieldInfoMap tableRawInfo
-                 allFields <- addNonColumnFields -<
-                   (tableRawInfos, columns, tableRelationships, tableComputedFields)
-                 returnA -< tableRawInfo { _tciFieldInfoMap = allFields }) |)
+                 (allFields, typeMap) <- addNonColumnFields -<
+                   (tableRawInfos, columns, M.map fst remoteSchemaMap, tableRelationships, tableComputedFields, tableRemoteRelationships)
+                 returnA -< (tableRawInfo { _tciFieldInfoMap = allFields }, typeMap)) |)
 
       -- permissions and event triggers
       tableCoreInfosDep <- Inc.newDependency -< tableCoreInfos

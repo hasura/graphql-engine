@@ -188,6 +188,16 @@ instance Cacheable G.GType
 instance Cacheable G.Nullability
 instance Cacheable G.OperationType
 instance Cacheable G.VariableDefinition
+instance Cacheable G.InputValueDefinition
+instance Cacheable G.EnumValueDefinition
+instance Cacheable G.FieldDefinition
+instance Cacheable G.ScalarTypeDefinition
+instance Cacheable G.UnionTypeDefinition
+instance Cacheable G.InterfaceTypeDefinition
+instance Cacheable G.EnumTypeDefinition
+instance Cacheable G.InputObjectTypeDefinition
+instance Cacheable G.ObjectTypeDefinition
+instance Cacheable G.TypeDefinition
 instance Cacheable N.URI
 instance Cacheable UT.Variable
 instance Cacheable UT.TemplateItem
@@ -205,11 +215,15 @@ instance (Cacheable (a b), Cacheable b) => Cacheable (G.OperationDefinition a b)
 instance (Cacheable (a b), Cacheable b) => Cacheable (G.Selection a b)
 instance (Cacheable (a b), Cacheable b) => Cacheable (G.TypedOperationDefinition a b)
 instance Cacheable G.Origin
+
 instance Cacheable a => Cacheable (G.Value a)
 
 deriving instance Cacheable G.Description
 deriving instance Cacheable G.EnumValue
 deriving instance Cacheable a => Cacheable (G.ExecutableDocument a)
+
+deriving instance Generic G.SchemaDocument -- TODO: maybe add this in graphql-parser-hs?
+instance Cacheable G.SchemaDocument
 
 class GCacheable f where
   gunchanged :: f p -> f p -> Accesses -> Bool

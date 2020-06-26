@@ -25,6 +25,7 @@ import           Hasura.GraphQL.Schema.Mutation
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
+import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -63,7 +64,7 @@ buildGQLContext allTables allFunctions allRemoteSchemata =
       SQLGenCtx{ stringifyNum } <- askSQLGenCtx
       remotes <- allRemoteParsers
       let queryRemotes = concat $ map (\(q,m,s)->q) $ Map.elems remotes
-      P.runSchemaT roleName allTables $ GQLContext
+      flip runReaderT (QueryContext stringifyNum _remoteFields) $ P.runSchemaT roleName allTables $ GQLContext
         <$> (finalizeParser <$> queryWithIntrospection (S.fromList $ Map.keys validTables) validFunctions queryRemotes stringifyNum)
         <*> (finalizeParser <$> mutation (S.fromList $ Map.keys validTables) stringifyNum)
 
@@ -75,13 +76,12 @@ buildGQLContext allTables allFunctions allRemoteSchemata =
 -- insert the introspection before doing so.
 query'
   :: forall m n
-   . (MonadSchema n m, MonadError QErr m)
+   . (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  -> Bool
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-query' allTables allFunctions allRemotes stringifyNum = do
+query' allTables allFunctions allRemotes = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
@@ -93,9 +93,9 @@ query' allTables allFunctions allRemotes stringifyNum = do
           pkName = displayName <> $$(G.litName "_by_pk")
           pkDesc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName table) <> "\" using primary key columns"
       catMaybes <$> sequenceA
-        [ toQrf2 (RFDB . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms stringifyNum
-        , toQrf3 (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms stringifyNum
-        , toQrf3 (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms stringifyNum
+        [ toQrf2 (RFDB . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
+        , toQrf3 (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
+        , toQrf3 (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
   functionSelectExpParsers <- for allFunctions \function -> do
     let targetTable = fiReturnType function
@@ -108,8 +108,8 @@ query' allTables allFunctions allRemotes stringifyNum = do
           aggName = displayName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "execute function \"" <> functionName <> "\" and query aggregates on result of table type \"" <> tableName <> "\""
       catMaybes <$> sequenceA
-        [ toQrf2 (RFDB . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms stringifyNum
-        , toQrf3 (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms stringifyNum
+        [ toQrf2 (RFDB . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
+        , toQrf3 (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
         ]
   pure $ concat $ catMaybes $ tableSelectExpParsers <> functionSelectExpParsers <> conv allRemotes
   where
@@ -172,9 +172,9 @@ emptyIntrospection = do
   return $ fmap (fmap RFRaw) [schema introspectionSchema, typeIntrospection introspectionSchema]
 
 collectTypes
-  :: forall m a
-   . (MonadError QErr m, P.HasTypeDefinitions a)
-  => a
+  :: forall mq
+   . MonadError QErr m
+  => P.Type 'Output
   -> m (HashMap G.Name (P.Definition P.SomeTypeInfo))
 collectTypes x = case P.collectTypeDefinitions x of
   Left (P.ConflictingDefinitions type1 _) -> throw500 $
@@ -186,11 +186,10 @@ collectTypes x = case P.collectTypeDefinitions x of
 -- for queries, mutations and subscriptions (TODO) built in.
 queryWithIntrospection
   :: forall m n
-   . (MonadSchema n m, MonadError QErr m)
+   . (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-  -> Bool
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryWithIntrospection allTables allFunctions allRemotes stringifyNum = do
   basicQueryFP <- query' allTables allFunctions allRemotes stringifyNum
