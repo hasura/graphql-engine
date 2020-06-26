@@ -31,6 +31,8 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
+	github.com/onsi/ginkgo v1.13.0
+	github.com/onsi/gomega v1.10.1
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/pkg/errors v0.8.1
 	github.com/qor/admin v0.0.0-20191205023516-9032e7fec172 // indirect
@@ -61,6 +63,6 @@ require (
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 	golang.org/x/tools v0.0.0-20200316182129-bd88ce97550a // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1
-	gopkg.in/yaml.v2 v2.2.7
+	gopkg.in/yaml.v2 v2.3.0
 	moul.io/http2curl v1.0.0 // indirect
 )
