@@ -200,6 +200,10 @@ data FieldParser m a = FieldParser
   , fParser     :: Field NoFragments Variable -> m a
   } deriving (Functor)
 
+infixl 1 `bindField`
+bindField :: Monad m => FieldParser m a -> (a -> m b) -> FieldParser m b
+bindField p f = p { fParser = fParser p >=> f }
+
 -- | A single parsed field in a selection set.
 data ParsedSelection a
   -- | An ordinary field.

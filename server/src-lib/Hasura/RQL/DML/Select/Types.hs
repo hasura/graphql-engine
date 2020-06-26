@@ -169,7 +169,8 @@ data AnnColField
 
 data RemoteFieldArgument
   = RemoteFieldArgument
-  { _rfaArgument :: !(G.Name,G.Value Variable)
+  { _rfaName :: !G.Name
+  , _rfaValue :: !(G.Value Variable)
   , _rfaVariable :: !(Maybe [(G.VariableDefinition,J.Value)])
   } deriving (Eq,Show)
 
