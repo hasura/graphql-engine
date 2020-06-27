@@ -136,7 +136,6 @@ data WSConn a
   { _wcConnId    :: !WSId
   , _wcLogger    :: !(L.Logger L.Hasura)
   , _wcConnRaw   :: !WS.Connection
-  , _wcSendQ     :: !(STM.TQueue WSQueueResponse)
   , _wcExtraData :: !a
   }
 
@@ -160,12 +159,11 @@ closeConnWithCode wsConn code bs = do
     WSLog (_wcConnId wsConn) (ECloseSent $ TBS.fromLBS bs) Nothing
   WS.sendCloseCode (_wcConnRaw wsConn) code bs
 
--- writes to a queue instead of the raw connection
--- so that sendMsg doesn't block
-sendMsg :: WSConn a -> WSQueueResponse -> IO ()
-sendMsg wsConn = \ !resp -> do
-  $assertNFHere resp  -- so we don't write thunks to mutable vars
-  STM.atomically $ STM.writeTQueue (_wcSendQ wsConn) resp
+sendMsg :: L.Logger L.Hasura -> WSConn a -> WSQueueResponse -> IO ()
+sendMsg (L.Logger writeLog) WSConn{..} = \WSQueueResponse{..} -> do
+  liftIO $ WS.sendTextData _wcConnRaw _wsqrMessage
+  writeLog $ WSLog _wcConnId (EMessageSent $ TBS.fromLBS _wsqrMessage) _wsqrEventInfo
+
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
 
@@ -277,8 +275,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
     onAccept wsId (AcceptWith a acceptWithParams keepAlive onJwtExpiry) = do
       conn  <- liftIO $ WS.acceptRequestWith pendingConn acceptWithParams
       logWSLog logger $ WSLog wsId EAccepted Nothing
-      sendQ <- liftIO STM.newTQueueIO
-      let !wsConn = WSConn wsId logger conn sendQ a
+      let !wsConn = WSConn wsId logger conn a
       -- TODO there are many thunks here. Difficult to trace how much is retained, and
       --      how much of that would be shared anyway.
       --      Requires a fork of 'wai-websockets' and 'websockets', it looks like.
@@ -319,20 +316,17 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
                 logWSLog logger $ WSLog wsId (EMessageReceived $ TBS.fromLBS msg) Nothing
                 _hOnMessage wsHandlers wsConn msg
 
-          let send = forever $ do
-                WSQueueResponse msg wsInfo <- liftIO $ STM.atomically $ STM.readTQueue sendQ
-                liftIO $ WS.sendTextData conn msg
-                logWSLog logger $ WSLog wsId (EMessageSent $ TBS.fromLBS msg) wsInfo
-
           -- withAsync lets us be very sure that if e.g. an async exception is raised while we're
           -- forking that the threads we launched will be cleaned up. See also below.
           LA.withAsync rcv $ \rcvRef -> do
-          LA.withAsync send $ \sendRef -> do
+          -- TODO consider a more efficient scheme, 
+          --      e.g. https://github.com/hasura/graphql-engine-internal/issues/462
           LA.withAsync (liftIO $ keepAlive wsConn) $ \keepAliveRef -> do
+          -- TODO also try to replace this with 'registerTimeout' or something like above:
           LA.withAsync (liftIO $ onJwtExpiry wsConn) $ \onJwtExpiryRef -> do
 
           -- terminates on WS.ConnectionException and JWT expiry
-          let waitOnRefs = [keepAliveRef, onJwtExpiryRef, rcvRef, sendRef]
+          let waitOnRefs = [keepAliveRef, onJwtExpiryRef, rcvRef]
           -- withAnyCancel re-raises exceptions from forkedThreads, and is guarenteed to cancel in
           -- case of async exceptions raised while blocking here:
           try (LA.waitAnyCancel waitOnRefs) >>= \case

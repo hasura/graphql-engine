@@ -112,13 +112,14 @@ type WSServer = WS.WSServer WSConnData
 
 type WSConn = WS.WSConn WSConnData
 
-sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
-sendMsg wsConn msg =
-  liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse (encodeServerMsg msg) Nothing
+sendMsg :: (MonadIO m) => L.Logger L.Hasura -> WSConn -> ServerMsg -> m ()
+sendMsg logger wsConn msg =
+  liftIO $ WS.sendMsg logger wsConn $ WS.WSQueueResponse (encodeServerMsg msg) Nothing
 
-sendMsgWithMetadata :: (MonadIO m) => WSConn -> ServerMsg -> LQ.LiveQueryMetadata -> m ()
-sendMsgWithMetadata wsConn msg (LQ.LiveQueryMetadata execTime) =
-  liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo
+sendMsgWithMetadata 
+  :: (MonadIO m) => L.Logger L.Hasura -> WSConn -> ServerMsg -> LQ.LiveQueryMetadata -> m ()
+sendMsgWithMetadata logger wsConn msg (LQ.LiveQueryMetadata execTime) =
+  liftIO $ WS.sendMsg logger wsConn $ WS.WSQueueResponse bs wsInfo
   where
     bs = encodeServerMsg msg
     (msgType, operationId) = case msg of
@@ -218,7 +219,7 @@ data WSServerEnv
 
 onConn :: (MonadIO m)
        => L.Logger L.Hasura -> CorsPolicy -> WS.OnConnH m WSConnData
-onConn (L.Logger logger) corsPolicy wsId requestHead ipAdress = do
+onConn loggerH@(L.Logger logger) corsPolicy wsId requestHead ipAdress = do
   res <- runExceptT $ do
     (errType, queryType) <- checkPath
     let reqHdrs = WS.requestHeaders requestHead
@@ -228,7 +229,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAdress = do
 
   where
     keepAliveAction wsConn = liftIO $ forever $ do
-      sendMsg wsConn SMConnKeepAlive
+      sendMsg loggerH wsConn SMConnKeepAlive
       sleep $ seconds 5
 
     tokenExpiryHandler wsConn = do
@@ -415,7 +416,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     sendRemoteResp reqId resp meta =
       case J.eitherDecodeStrict (encJToBS resp) of
         Left e    -> postExecErr reqId $ invalidGqlErr $ T.pack e
-        Right res -> sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRRemote res) meta
+        Right res -> sendMsgWithMetadata logger wsConn (SMData $ DataMsg opId $ GRRemote res) meta
 
     invalidGqlErr err = err500 Unexpected $
       "Failed parsing GraphQL response from remote: " <> err
@@ -440,18 +441,18 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     sendStartErr e = do
       let errFn = getErrFn errRespTy
-      sendMsg wsConn $
+      sendMsg logger wsConn $
         SMErr $ ErrorMsg opId $ errFn False $ err400 StartFailed e
       logOpEv (ODProtoErr e) Nothing
 
     sendCompleted reqId = do
-      liftIO $ sendMsg wsConn (SMComplete $ CompletionMsg opId)
+      sendMsg logger wsConn (SMComplete $ CompletionMsg opId)
       logOpEv ODCompleted reqId
 
     postExecErr reqId qErr = do
       let errFn = getErrFn errRespTy
       logOpEv (ODQueryErr qErr) (Just reqId)
-      sendMsg wsConn $ SMData $
+      sendMsg logger wsConn $ SMData $
         DataMsg opId $ GRHasura $ GQExecError $ pure $ errFn False qErr
 
     -- why wouldn't pre exec error use graphql response?
@@ -461,11 +462,11 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       let err = case errRespTy of
             ERTLegacy           -> errFn False qErr
             ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
-      sendMsg wsConn (SMErr $ ErrorMsg opId err)
+      sendMsg logger wsConn (SMErr $ ErrorMsg opId err)
 
     -- sendSuccResp :: _
     sendSuccResp encJson =
-      sendMsgWithMetadata wsConn
+      sendMsgWithMetadata logger wsConn
         (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ encJToLBS encJson)
 
     withComplete :: ExceptT () m () -> ExceptT () m a
@@ -478,10 +479,10 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     liveQOnChange :: LQ.OnChange
     liveQOnChange = \case
       GQSuccess (LQ.LiveQueryResponse bs dTime) ->
-        sendMsgWithMetadata wsConn
+        sendMsgWithMetadata logger wsConn
         (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ BL.fromStrict bs)
         (LQ.LiveQueryMetadata dTime)
-      resp -> sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $
+      resp -> sendMsg logger wsConn $ SMData $ DataMsg opId $ GRHasura $
         (BL.fromStrict . LQ._lqrPayload) <$> resp
 
     catchAndIgnore :: ExceptT () m () -> m ()
@@ -497,7 +498,7 @@ onMessage authMode serverEnv wsConn msgRaw =
     Left e    -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
       logWSEvent logger wsConn $ EConnErr err
-      sendMsg wsConn $ SMConnErr err
+      sendMsg logger wsConn $ SMConnErr err
 
     Right msg -> case msg of
       CMConnInit params -> onConnInit (_wseLogger serverEnv)
@@ -592,22 +593,22 @@ onConnInit logger manager wsConn authMode connParamsM = do
 
           let connErr = ConnErrMsg $ qeError e
           logWSEvent logger wsConn $ EConnErr connErr
-          sendMsg wsConn $ SMConnErr connErr
+          sendMsg logger wsConn $ SMConnErr connErr
         Right (userInfo, expTimeM) -> do
           let !csInit =  CSInitialised $ WsClientState userInfo expTimeM paramHeaders ipAddress
           liftIO $ do
             $assertNFHere csInit  -- so we don't write thunks to mutable vars
             STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) csInit
 
-          sendMsg wsConn SMConnAck
+          sendMsg logger wsConn SMConnAck
           -- TODO: send it periodically? Why doesn't apollo's protocol use
           -- ping/pong frames of websocket spec?
-          sendMsg wsConn SMConnKeepAlive
+          sendMsg logger wsConn SMConnKeepAlive
   where
     unexpectedInitError e = do
       let connErr = ConnErrMsg e
       logWSEvent logger wsConn $ EConnErr connErr
-      sendMsg wsConn $ SMConnErr connErr
+      sendMsg logger wsConn $ SMConnErr connErr
 
     getIpAddress = \case
       CSNotInitialised _ ip -> return ip
