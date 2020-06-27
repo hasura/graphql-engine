@@ -10,6 +10,7 @@ import {
   ERROR_REQUEST,
   CONNECTION_FAILED,
 } from '../components/App/Actions';
+
 import { globalCookiePolicy } from '../Endpoints';
 
 const requestAction = (

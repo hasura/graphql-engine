@@ -302,7 +302,7 @@ class Main extends React.Component {
 
           this.closeUpdateBanner();
 
-          dispatch(setPreReleaseNotificationOptOutInDB());
+          dispatch(setPreReleaseNotificationOptOutInDB);
         };
 
         return (

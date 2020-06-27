@@ -37,7 +37,7 @@ const App = ({
       telemetry.console_opts &&
       !telemetry.console_opts.telemetryNotificationShown
     ) {
-      dispatch(telemetryNotificationShown());
+      dispatch(telemetryNotificationShown);
       dispatch(showTelemetryNotification());
     }
   }, [telemetry]);
