@@ -42,7 +42,7 @@ The Hasura GraphQL engine needs access to your Postgres database with the follow
   tables/views. This might not be required when you're working with an existing database.
 
 
-Here's a sample SQL block that you can run on your database to create the right credentials:
+Here's a sample SQL block that you can run on your database (as a **superuser**) to create the right credentials for a sample Hasura user:
 
 .. code-block:: sql
 
@@ -66,7 +66,8 @@ Here's a sample SQL block that you can run on your database to create the right 
     ALTER SCHEMA hdb_views OWNER TO hasurauser;
 
     -- grant select permissions on information_schema and pg_catalog. This is
-    -- required for hasura to query list of available tables
+    -- required for hasura to query list of available tables.
+    -- NOTE: these permissions are usually available by default to all users via PUBLIC role
     GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO hasurauser;
     GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO hasurauser;
 
@@ -89,6 +90,32 @@ Here's a sample SQL block that you can run on your database to create the right 
     -- GRANT USAGE ON SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
+    -- GRANT ALL ON ALL FUNCTIONS IN SCHEMA <schema-name> TO hasurauser;
+
+Note for managed databases (AWS RDS, GCP Cloud SQL, etc)
+--------------------------------------------------------
+
+Hasura works out of the box with the default superuser, usually called "postgres", created by most managed cloud database providers. But if you are creating a new user and giving the above privileges, then you may notice that the following commands may throw warnings/errors:
+
+
+.. code-block:: sql
+
+  postgres=> GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO hasurauser;
+  WARNING:  no privileges were granted for "sql_packages"
+  WARNING:  no privileges were granted for "sql_features"
+  WARNING:  no privileges were granted for "sql_implementation_info"
+  ERROR:  permission denied for table sql_parts
+
+  postgres=> GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO hasurauser;
+  ERROR:  permission denied for table pg_statistic
+
+
+You can choose to **ignore** these warnings/errors or skip granting these permission as all users have relevant access to ``information_schema`` and ``pg_catalog`` schemas by default (see keyword `PUBLIC <https://www.postgresql.org/docs/current/sql-grant.html>`__) .
+
+.. admonition:: Google Cloud SQL
+
+   On Google Cloud SQL, running ``ALTER SCHEMA hdb_catalog OWNER TO hasurauser;`` may give you an error ``ERROR:  must be member of role "hasurauser"``. You can fix this by running ``GRANT hasurauser to postgres;`` first, assuming "postgres" is the superuser. 
+
 
 **pgcrypto** in PG search path
 ------------------------------
