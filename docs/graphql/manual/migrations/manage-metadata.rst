@@ -60,6 +60,16 @@ Exporting Hasura metadata
      If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
      admin-only API.
 
+.. note::
+
+  The metadata exported via the **console and API** will be a single JSON file that can be applied
+  via the console or the API only.
+
+  The metadata exported via the **CLI** is broken into multiple YAML files for easier
+  management in version control and CI/CD and can be applied via the CLI or the
+  :ref:`cli-migrations <auto_apply_migrations>` image only.
+
+
 Applying/Importing Hasura metadata
 ----------------------------------
 

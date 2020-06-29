@@ -1,5 +1,6 @@
 import pytest
-from validate import check_query_f
+from validate import check_query_f, check_query, get_conf_f
+from context import PytestConf
 
 # Mark that all tests in this module can be run as server upgrade tests
 pytestmark = pytest.mark.allow_server_upgrade_test
@@ -18,7 +19,7 @@ class TestGraphQLQueryBasic:
 
     def test_select_query_author_with_include_directive(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_include_directive.yaml', transport)
-    
+
     # Can't run server upgrade tests, as this test has a schema change
     @pytest.mark.skip_server_upgrade_test
     def test_select_various_postgres_types(self, hge_ctx, transport):
@@ -276,6 +277,9 @@ class TestGraphqlQueryPermissions:
     def test_user_select_unpublished_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_select_query_unpublished_articles.yaml', transport)
 
+    def test_user_select_query_article_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/user_select_query_article_author.yaml', transport)
+
     def test_user_only_other_users_published_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_can_query_other_users_published_articles.yaml', transport)
 
@@ -388,7 +392,7 @@ class TestGraphQLQueryBoolExpJsonB:
     def dir(cls):
         return 'queries/graphql_query/boolexp/jsonb'
 
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpPostGIS:
 
@@ -606,3 +610,151 @@ class TestGraphQLQueryCaching:
 
     def test_include_directive(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/include_directive.yaml', transport)
+
+    def test_introspection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/introspection.yaml', transport)
+
+@pytest.mark.skipif(
+    not PytestConf.config.getoption("--test-unauthorized-role"),
+    reason="--test-unauthorized-role missing"
+)
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestUnauthorizedRolePermission:
+    @classmethod
+    def dir(cls):
+        return 'queries/unauthorized_role'
+
+    def test_unauth_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
+
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLExplain:
+    @classmethod
+    def dir(cls):
+        return 'queries/explain'
+
+    def test_simple_query(self, hge_ctx):
+        self.with_admin_secret(hge_ctx, self.dir() + '/simple_query.yaml')
+
+    def test_permissions_query(self, hge_ctx):
+        self.with_admin_secret(hge_ctx, self.dir() + '/permissions_query.yaml')
+
+    def with_admin_secret(self, hge_ctx, f):
+        conf = get_conf_f(f)
+        admin_secret = hge_ctx.hge_key
+        headers = {}
+        if admin_secret:
+            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        status_code, resp_json, _ = hge_ctx.anyq(conf['url'], conf['query'], headers)
+        assert status_code == 200, resp_json
+        # Comparing only with generated 'sql' since the 'plan' is not consistent
+        # across all Postgres versions
+        resp_sql = resp_json[0]['sql']
+        exp_sql = conf['response'][0]['sql']
+        assert resp_sql == exp_sql, resp_json
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestRelayQueriesBasic:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/relay/basic'
+
+    def test_article_connection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/article_connection.yaml', transport)
+
+    def test_author_connection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_connection.yaml', transport)
+
+    def test_author_with_articles_view_connection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_with_articles_view_connection.yaml', transport)
+
+    def test_search_articles_connection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/search_articles_connection.yaml', transport)
+
+    def test_node(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node.yaml', transport)
+
+    def test_only_pageinfo(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/only_pageinfo.yaml', transport)
+
+    # Articles forward pagination
+    def test_article_no_orderby_forward_pagination(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + "/article_pagination_no_orderby/forward", 3)
+
+    # Articles backward pagination
+    def test_article_no_orderby_backward_pagination(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + "/article_pagination_no_orderby/backward", 3)
+
+    # Authors forward pagination
+    def test_author_orderby_articles_aggregate_orderby_forward_pagination(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + "/author_pagination_articles_aggregate_orderby/forward", 2)
+
+    # Authors backward pagination
+    def test_author_orderby_articles_aggregate_orderby_backward_pagination(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + "/author_pagination_articles_aggregate_orderby/backward", 3)
+
+    # Pagination errors
+    def test_first_and_last_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/pagination_errors/first_and_last.yaml", transport)
+
+    def test_after_and_before_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/pagination_errors/after_and_before.yaml", transport)
+
+    # Node id errors
+    def test_insufficient_data(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/insufficient_data.yaml', transport)
+
+    def test_invalid_column_value(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/invalid_column_value.yaml', transport)
+
+    def test_invalid_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/invalid_id.yaml', transport)
+
+    def test_missing_columns(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/missing_columns.yaml', transport)
+
+    def test_non_array_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/non_array_id.yaml', transport)
+
+    def test_unexpected_columns(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/unexpected_columns.yaml', transport)
+
+    def test_invalid_node_id_version(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/invalid_node_id_version.yaml', transport)
+
+    def test_non_integer_version(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/node_id_errors/non_integer_version.yaml', transport)
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestRelayQueriesPermissions:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/relay/permissions'
+
+    def test_author_connection(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_connection.yaml', transport)
+
+    def test_author_node(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_node.yaml', transport)
+
+    def test_author_node_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_node_null.yaml', transport)
+
+    # Article forward pagination
+    def test_article_pagination_forward(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + '/article_pagination/forward', 2)
+
+    def test_article_pagination_backward(self, hge_ctx, transport):
+        _test_relay_pagination(hge_ctx, transport, self.dir() + '/article_pagination/backward', 2)
+
+
+def _test_relay_pagination(hge_ctx, transport, test_file_prefix, no_of_pages):
+    for i in range(no_of_pages):
+        page_no = i + 1
+        test_file = "page_" + str(page_no) + ".yaml"
+        check_query_f(hge_ctx, test_file_prefix + "/" + test_file, transport)

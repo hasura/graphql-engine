@@ -17,6 +17,7 @@ import           Hasura.Server.Version
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Database.PG.Query          as Q
+import qualified System.Posix.Signals       as Signals
 
 main :: IO ()
 main = parseArgs >>= unAppM . runApp
@@ -26,7 +27,16 @@ runApp (HGEOptionsG rci hgeCmd) =
   withVersion $$(getVersionFromEnvironment) case hgeCmd of
     HCServe serveOptions -> do
       (initCtx, initTime) <- initialiseCtx hgeCmd rci
-      runHGEServer serveOptions initCtx initTime
+      -- Catches the SIGTERM signal and initiates a graceful shutdown.
+      -- Graceful shutdown for regular HTTP requests is already implemented in
+      -- Warp, and is triggered by invoking the 'closeSocket' callback.
+      -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C
+      -- once again, we terminate the process immediately.
+      _ <- liftIO $ Signals.installHandler
+        Signals.sigTERM
+        (Signals.CatchOnce (shutdownGracefully initCtx))
+        Nothing
+      runHGEServer serveOptions initCtx Nothing initTime
     HCExport -> do
       (initCtx, _) <- initialiseCtx hgeCmd rci
       res <- runTx' initCtx fetchMetadata Q.ReadCommitted

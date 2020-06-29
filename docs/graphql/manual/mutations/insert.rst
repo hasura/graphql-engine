@@ -28,7 +28,7 @@ Auto-generated insert mutation schema
   type article_mutation_response {
     # number of affected rows by the mutation
     affected_rows: Int!
-    #data of the affected rows by the mutation
+    # data of the affected rows by the mutation
     returning: [article!]!
   }
 
@@ -62,7 +62,6 @@ Insert a single object
     mutation insert_single_article {
       insert_article_one(
         object: {
-          id: 21,
           title: "Article 1",
           content: "Sample article content",
           author_id: 3
@@ -105,12 +104,15 @@ Using variables:
   :variables:
     {
       "object": {
-        "id": 21,
         "title": "Article 1",
         "content": "Sample article content",
         "author_id": 3
       }
     }
+
+.. note:: 
+
+   ``insert_<object>_one`` will **only** be available if you have select permissions on the table, as it returns the inserted row.
 
 .. admonition:: Supported from
 
@@ -128,13 +130,11 @@ Insert multiple objects of the same type in the same mutation
       insert_article(
         objects: [
           {
-            id: 22,
             title: "Article 2",
             content: "Sample article content",
             author_id: 4
           },
           {
-            id: 23,
             title: "Article 3",
             content: "Sample article content",
             author_id: 5
@@ -201,13 +201,11 @@ Using variables:
     {
       "objects": [
         {
-          "id": 22,
           "title": "Article 2",
           "content": "Sample article content",
           "author_id": 4
         },
         {
-          "id": 23,
           "title": "Article 3",
           "content": "Sample article content",
           "author_id": 5
@@ -227,7 +225,6 @@ Insert an object and get a nested object in response
       insert_article(
         objects: [
           {
-            id: 21,
             title: "Article 1",
             content: "Sample article content",
             author_id: 3
@@ -283,23 +280,19 @@ Let's say an ``author`` has an ``object relationship`` called ``address`` to the
       insert_authors
         (objects: [
           {
-            id: 26,
             name: "John",
             address: {
               data: {
-                id: 27,
                 location: "San Francisco"
               }
             },
             articles: {
               data: [
                 {
-                  id: 28,
                   title: "GraphQL Guide",
                   content: "Let's see what we can do with GraphQL"
                 },
                 {
-                  id: 29,
                   title: "Authentication Guide",
                   content: "Let's look at best practices for authentication"
                 }
@@ -387,7 +380,6 @@ a bridge table ``article_tags``.
     mutation insertArticle {
       insert_articles(objects: [
         {
-          id: 34,
           title: "How to make fajitas",
           content: "Guide on making the best fajitas in the world",
           author_id: 3,
@@ -497,7 +489,6 @@ Insert an object with a JSONB field
       insert_author (
         objects: [
           {
-            id: 1,
             name: "Ash",
             address: $address
           }
@@ -557,7 +548,6 @@ To insert fields of array types, you currently have to pass them as a `Postgres 
       insert_author (
         objects: [
           {
-            id: 1,
             name: "Ash",
             emails: "{ash@ash.com, ash123@ash.com}"
           }
@@ -597,7 +587,6 @@ Using variables:
       insert_author (
         objects: [
           {
-            id: 1,
             name: "Ash",
             emails: $emails
           }

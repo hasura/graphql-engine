@@ -1,39 +1,8 @@
 -- | Types and functions related to the server initialisation
 {-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -O0 #-}
 module Hasura.Server.Init
-  ( DbUid(..)
-  , getDbId
-
-  , PGVersion(..)
-  , getPgVersion
-
-  , InstanceId(..)
-  , generateInstanceId
-
-  , StartupTimeInfo(..)
-
-  -- * Server command related
-  , parseRawConnInfo
-  , mkRawConnInfo
-  , mkHGEOptions
-  , mkConnInfo
-  , serveOptionsParser
-
-  -- * Downgrade command related
-  , downgradeShortcuts
-  , downgradeOptionsParser
-
-  -- * Help footers
-  , mainCmdFooter
-  , serveCmdFooter
-
-  -- * Startup logs
-  , mkGenericStrLog
-  , mkGenericLog
-  , inconsistentMetadataLog
-  , serveOptsToLog
-  , connInfoToLog
-
+  ( module Hasura.Server.Init
   , module Hasura.Server.Init.Config
   ) where
 
@@ -186,7 +155,7 @@ mkServeOptions rso = do
   enabledLogs <- maybe L.defaultEnabledLogTypes (Set.fromList) <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
-  planCacheOptions <- E.mkPlanCacheOptions <$> withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
+  planCacheOptions <- E.PlanCacheOptions <$> withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
   devMode <- withEnvBool (rsoDevMode rso) $ fst devModeEnv
   adminInternalErrors <- fromMaybe True <$> -- Default to `true` to enable backwards compatibility
                                 withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
@@ -642,17 +611,17 @@ parseServerHost = optional $ strOption ( long "server-host" <>
                 help "Host on which graphql-engine will listen (default: *)"
               )
 
-parseAccessKey :: Parser (Maybe AdminSecret)
+parseAccessKey :: Parser (Maybe AdminSecretHash)
 parseAccessKey =
-  optional $ AdminSecret <$>
+  optional $ hashAdminSecret <$>
     strOption ( long "access-key" <>
                 metavar "ADMIN SECRET KEY (DEPRECATED: USE --admin-secret)" <>
                 help (snd adminSecretEnv)
               )
 
-parseAdminSecret :: Parser (Maybe AdminSecret)
+parseAdminSecret :: Parser (Maybe AdminSecretHash)
 parseAdminSecret =
-  optional $ AdminSecret <$>
+  optional $ hashAdminSecret <$>
     strOption ( long "admin-secret" <>
                 metavar "ADMIN SECRET KEY" <>
                 help (snd adminSecretEnv)
@@ -822,7 +791,7 @@ planCacheSizeEnv =
 parsePlanCacheSize :: Parser (Maybe Cache.CacheSize)
 parsePlanCacheSize =
   optional $
-    option (eitherReader Cache.mkCacheSize)
+    option (eitherReader Cache.parseCacheSize)
     ( long "query-plan-cache-size" <>
       metavar "QUERY_PLAN_CACHE_SIZE" <>
       help (snd planCacheSizeEnv)

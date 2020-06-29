@@ -12,6 +12,7 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
 
@@ -20,6 +21,7 @@ data TableMetadataObjId
   | MTOComputedField !ComputedFieldName
   | MTOPerm !RoleName !PermType
   | MTOTrigger !TriggerName
+  | MTORemoteRelationship !RemoteRelationshipName
   deriving (Show, Eq, Generic)
 instance Hashable TableMetadataObjId
 
@@ -31,6 +33,7 @@ data MetadataObjId
   | MOCustomTypes
   | MOAction !ActionName
   | MOActionPermission !ActionName !RoleName
+  | MOCronTrigger !TriggerName
   deriving (Show, Eq, Generic)
 $(makePrisms ''MetadataObjId)
 instance Hashable MetadataObjId
@@ -40,11 +43,13 @@ moiTypeName = \case
   MOTable _ -> "table"
   MOFunction _ -> "function"
   MORemoteSchema _ -> "remote_schema"
+  MOCronTrigger _ -> "cron_trigger"
   MOTableObj _ tableObjectId -> case tableObjectId of
     MTORel _ relType   -> relTypeToTxt relType <> "_relation"
     MTOPerm _ permType -> permTypeToCode permType <> "_permission"
     MTOTrigger _       -> "event_trigger"
     MTOComputedField _ -> "computed_field"
+    MTORemoteRelationship _ -> "remote_relationship"
   MOCustomTypes -> "custom_types"
   MOAction _ -> "action"
   MOActionPermission _ _ -> "action_permission"
@@ -54,10 +59,12 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
   MOTable name -> dquoteTxt name
   MOFunction name -> dquoteTxt name
   MORemoteSchema name -> dquoteTxt name
+  MOCronTrigger name -> dquoteTxt name
   MOTableObj tableName tableObjectId ->
     let tableObjectName = case tableObjectId of
           MTORel name _         -> dquoteTxt name
           MTOComputedField name -> dquoteTxt name
+          MTORemoteRelationship name -> dquoteTxt name
           MTOPerm name _        -> dquoteTxt name
           MTOTrigger name       -> dquoteTxt name
     in tableObjectName <> " in " <> moiName (MOTable tableName)
