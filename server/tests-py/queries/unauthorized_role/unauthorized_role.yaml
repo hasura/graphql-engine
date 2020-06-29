@@ -1,0 +1,16 @@
+description: Make request with role header value as admin
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: 'admin'
+response:
+  data:
+    user:
+    - id: 3
+query:
+  query: |
+    query {
+      user{
+        id
+      }
+    }

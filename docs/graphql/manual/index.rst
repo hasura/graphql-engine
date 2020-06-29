@@ -36,4 +36,4 @@ The Hasura GraphQL engine lets you set up a GraphQL server and event triggers ov
   How it works <how-it-works/index>
   Troubleshooting <troubleshooting/index>
   guides/index
-  Vulnerability reporting / disclosure <security-disclosure/index>
+  security-disclosure/index

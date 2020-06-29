@@ -1,0 +1,36 @@
+- description: Create a remote relationship with the new column
+  url: /v1/query
+  status: 200
+  query:
+    type: create_remote_relationship
+    args:
+      name: messagesNestedArgs
+      table: profiles
+      hasura_fields:
+        - id
+      remote_schema: my-remote-schema
+      remote_field:
+        messages:
+          arguments:
+            where:
+              id:
+                eq: "$id"
+
+- description: Drop the table, which has a remote relationship dependency
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: DROP TABLE profiles
+      cascade: true
+
+- description: Check if the remote relationship was dropped
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: SELECT * from hdb_catalog.hdb_remote_relationship
+           where table_schema = 'public' and table_name = 'profiles' and remote_relationship_name = 'messagesNestedArgs'
+  response: []

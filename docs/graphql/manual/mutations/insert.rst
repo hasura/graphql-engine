@@ -28,7 +28,7 @@ Auto-generated insert mutation schema
   type article_mutation_response {
     # number of affected rows by the mutation
     affected_rows: Int!
-    #data of the affected rows by the mutation
+    # data of the affected rows by the mutation
     returning: [article!]!
   }
 
@@ -109,6 +109,10 @@ Using variables:
         "author_id": 3
       }
     }
+
+.. note:: 
+
+   ``insert_<object>_one`` will **only** be available if you have select permissions on the table, as it returns the inserted row.
 
 .. admonition:: Supported from
 
