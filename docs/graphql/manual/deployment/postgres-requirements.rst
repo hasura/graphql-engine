@@ -9,7 +9,7 @@ Postgres requirements
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 .. _postgres_version_support:
@@ -86,16 +86,19 @@ Here's a sample SQL block that you can run on your database (as a **superuser**)
     GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO hasurauser;
     GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO hasurauser;
 
-    -- Similarly add this for other schemas, if you have any.
+    -- Similarly add these for other schemas as well, if you have any.
     -- GRANT USAGE ON SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL FUNCTIONS IN SCHEMA <schema-name> TO hasurauser;
 
-Note for managed databases (AWS RDS, GCP Cloud SQL, etc.)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Notes for managed databases (AWS RDS, GCP Cloud SQL, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Hasura works out of the box with the default superuser, usually called "postgres", created by most managed cloud database providers. On some cloud providers like **Google Cloud SQL**, if you are creating a new user and giving the :ref:`above <postgres_permissions>` privileges, then you may notice that the following commands may throw warnings/errors:
+Hasura works out of the box with the default superuser, usually called "postgres", created by most managed cloud database providers.
+
+On some cloud providers, like **Google Cloud SQL**, if you are creating a new user and giving the :ref:`above <postgres_permissions>` privileges, 
+then you may notice that the following commands may throw warnings/errors:
 
 .. code-block:: sql
 
