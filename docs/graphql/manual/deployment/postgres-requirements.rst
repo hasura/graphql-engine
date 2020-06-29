@@ -67,13 +67,13 @@ Here's a sample SQL block that you can run on your database (as a **superuser**)
     ALTER SCHEMA hdb_views OWNER TO hasurauser;
 
     -- grant select permissions on information_schema and pg_catalog. This is
-    -- required for hasura to query list of available tables.
+    -- required for hasura to query the list of available tables.
     -- NOTE: these permissions are usually available by default to all users via PUBLIC grant
     GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO hasurauser;
     GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO hasurauser;
 
-    -- Below permissions are optional. This is dependent on what access to your
-    -- tables/schemas - you want give to hasura. If you want expose the public
+    -- The below permissions are optional. This is dependent on what access to your
+    -- tables/schemas you want give to hasura. If you want expose the public
     -- schema for GraphQL query then give permissions on public schema to the
     -- hasura user.
     -- Be careful to use these in your production db. Consult the postgres manual or
@@ -88,13 +88,13 @@ Here's a sample SQL block that you can run on your database (as a **superuser**)
     GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO hasurauser;
 
     -- Similarly add this for other schemas, if you have any.
-    -- GRANT USAGE ON SCHEMA <schema-name> TO hasurauser;
-    -- GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
-    -- GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
-    -- GRANT ALL ON ALL FUNCTIONS IN SCHEMA <schema-name> TO hasurauser;
+    GRANT USAGE ON SCHEMA <schema-name> TO hasurauser;
+    GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
+    GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
+    GRANT ALL ON ALL FUNCTIONS IN SCHEMA <schema-name> TO hasurauser;
 
-Note for managed databases (AWS RDS, GCP Cloud SQL, etc)
---------------------------------------------------------
+Note for managed databases (AWS RDS, GCP Cloud SQL, etc.)
+---------------------------------------------------------
 
 Hasura works out of the box with the default superuser, usually called "postgres", created by most managed cloud database providers. But if you are creating a new user and giving the :ref:`above <postgres_permissions>` privileges, then you may notice that the following commands may throw warnings/errors:
 
