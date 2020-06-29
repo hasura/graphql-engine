@@ -6,6 +6,7 @@ module Hasura.GraphQL.Execute.Query
   , PreparedSql(..)
   , traverseQueryRootField -- for live query planning
   , irToRootFieldPlan
+  , GraphQLQueryType(..)
   ) where
 
 import qualified Data.Aeson                             as J
@@ -286,3 +287,15 @@ mkGeneratedSqlMap resolved =
                 RRRaw _  -> Nothing
                 RRSql ps -> Just ps
     in (alias, res)
+
+-- graphql-engine supports two GraphQL interfaces: one at v1/graphql, and a Relay one at v1/relay
+data GraphQLQueryType
+  = QueryHasura
+  | QueryRelay
+  deriving (Show, Eq, Ord, Generic)
+instance Hashable GraphQLQueryType
+
+instance J.ToJSON GraphQLQueryType where
+  toJSON = \case
+    QueryHasura -> "hasura"
+    QueryRelay  -> "relay"

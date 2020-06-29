@@ -5,6 +5,7 @@ layer. In contrast with, logging at the HTTP server layer.
 
 module Hasura.GraphQL.Logging
   ( QueryLog(..)
+  , MonadQueryLog(..)
   ) where
 
 import qualified Data.Aeson                             as J
@@ -44,3 +45,20 @@ encodeSql sql =
   jValFromAssocList $ map (\(a, q) -> (G.unName a, fmap J.toJSON q)) sql
   where
     jValFromAssocList xs = J.object $ map (uncurry (J..=)) xs
+
+class Monad m => MonadQueryLog m where
+  logQueryLog
+    :: L.Logger L.Hasura
+    -- ^ logger
+    -> GQLReqUnparsed
+    -- ^ GraphQL request
+    -> (Maybe EQ.GeneratedSqlMap)
+    -- ^ Generated SQL if any
+    -> RequestId
+    -> m ()
+
+instance MonadQueryLog m => MonadQueryLog (ExceptT e m) where
+  logQueryLog l req sqlMap reqId = lift $ logQueryLog l req sqlMap reqId
+
+instance MonadQueryLog m => MonadQueryLog (ReaderT r m) where
+  logQueryLog l req sqlMap reqId = lift $ logQueryLog l req sqlMap reqId

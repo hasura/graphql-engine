@@ -34,15 +34,16 @@ runGQ
   => RequestId
   -> UserInfo
   -> [N.Header]
+  -> E.GraphQLQueryType
   -> GQLReq GQLQueryText
   -> m (HttpResponse EncJSON)
-runGQ reqId userInfo reqHdrs req = do
+runGQ reqId userInfo reqHdrs queryType req = do
   -- The response and misc telemetry data:
   let telemTransport = Telem.HTTP
   (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
     E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer httpManager enableAL <- ask
     (telemCacheHit, execPlan) <- E.getResolvedExecPlan pgExecCtx planCache
-                userInfo sqlGenCtx enableAL sc scVer httpManager reqHdrs req
+                userInfo sqlGenCtx enableAL sc scVer queryType httpManager reqHdrs req
     case execPlan of
       E.QueryExecutionPlan queryPlan -> do
         case queryPlan of
@@ -100,12 +101,13 @@ runGQBatched
   -> ResponseInternalErrorsConfig
   -> UserInfo
   -> [N.Header]
+  -> E.GraphQLQueryType
   -> GQLBatchedReqs GQLQueryText
   -> m (HttpResponse EncJSON)
-runGQBatched reqId responseErrorsConfig userInfo reqHdrs reqs =
-  case reqs of
+runGQBatched reqId responseErrorsConfig userInfo reqHdrs queryType query =
+  case query of
     GQLSingleRequest req ->
-      runGQ reqId userInfo reqHdrs req
+      runGQ reqId userInfo reqHdrs queryType req
     GQLBatchedReqs batch -> do
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
@@ -116,7 +118,7 @@ runGQBatched reqId responseErrorsConfig userInfo reqHdrs reqs =
             . encJFromList
             . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
           try = flip catchError (pure . Left) . fmap Right
-      removeHeaders <$> traverse (try . runGQ reqId userInfo reqHdrs) batch
+      removeHeaders <$> traverse (try . runGQ reqId userInfo reqHdrs queryType) batch
 
 runQueryDB
   :: ( MonadIO m

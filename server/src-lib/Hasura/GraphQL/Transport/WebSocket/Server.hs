@@ -23,6 +23,11 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , closeAll
   , createServerApp
   , shutdown
+
+  , MonadWSLog (..)
+  , HasuraServerApp
+  , WSEvent(..)
+  , WSLog(..)
   ) where
 
 import qualified Control.Concurrent.Async             as A
@@ -39,9 +44,11 @@ import qualified Data.TByteString                     as TBS
 import qualified Data.UUID                            as UUID
 import qualified Data.UUID.V4                         as UUID
 import           Data.Word                            (Word16)
+import           GHC.AssertNF
 import           GHC.Int                              (Int64)
 import           Hasura.Prelude
 import qualified ListT
+import           Network.Wai.Extended                        (IpAddress)
 import qualified Network.WebSockets                   as WS
 import qualified StmContainers.Map                    as STMMap
 import qualified System.IO.Error                      as E
@@ -97,6 +104,17 @@ $(J.deriveToJSON
                    , J.omitNothingFields = True
                    }
   ''WSLog)
+
+class Monad m => MonadWSLog m where
+  -- | Takes WS server log data and logs it
+  -- logWSServer
+  logWSLog :: L.Logger L.Hasura -> WSLog -> m ()
+
+instance MonadWSLog m => MonadWSLog (ExceptT e m) where
+  logWSLog l ws = lift $ logWSLog l ws
+
+instance MonadWSLog m => MonadWSLog (ReaderT r m) where
+  logWSLog l ws = lift $ logWSLog l ws
 
 instance L.ToEngineLog WSLog L.Hasura where
   toEngineLog wsLog =
@@ -194,11 +212,11 @@ data AcceptWith a
   = AcceptWith
   { _awData        :: !a
   , _awReq         :: !WS.AcceptRequest
-  , _awKeepAlive   :: !(Maybe (WSConn a -> IO ()))
-  , _awOnJwtExpiry :: !(Maybe (WSConn a -> IO ()))
+  , _awKeepAlive   :: !(WSConn a -> IO ())
+  , _awOnJwtExpiry :: !(WSConn a -> IO ())
   }
 
-type OnConnH m a    = WSId -> WS.RequestHead -> m (Either WS.RejectRequest (AcceptWith a))
+type OnConnH m a    = WSId -> WS.RequestHead -> IpAddress -> m (Either WS.RejectRequest (AcceptWith a))
 type OnCloseH m a   = WSConn a -> m ()
 type OnMessageH m a = WSConn a -> BL.ByteString -> m ()
 
@@ -209,35 +227,38 @@ data WSHandlers m a
   , _hOnClose   :: OnCloseH m a
   }
 
+-- | aka generalized 'WS.ServerApp' over @m@, which takes an IPAddress
+type HasuraServerApp m = IpAddress -> WS.PendingConnection -> m ()
+
 createServerApp
-  :: (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m))
+  :: (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m), MonadWSLog m)
   => WSServer a
   -- user provided handlers
   -> WSHandlers m a
   -- aka WS.ServerApp
-  -> WS.PendingConnection
-  -> m ()
-createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pendingConn = do
+  -> HasuraServerApp m
+{-# INLINE createServerApp #-}
+createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !ipAddress !pendingConn = do
   wsId <- WSId <$> liftIO UUID.nextRandom
-  writeLog $ WSLog wsId EConnectionRequest Nothing
+  logWSLog logger $ WSLog wsId EConnectionRequest Nothing
   status <- liftIO $ STM.readTVarIO serverStatus
   case status of
     AcceptingConns _ -> logUnexpectedExceptions $ do
       let reqHead = WS.pendingRequest pendingConn
-      onConnRes <- _hOnConn wsHandlers wsId reqHead
+      onConnRes <- _hOnConn wsHandlers wsId reqHead ipAddress
       either (onReject wsId) (onAccept wsId) onConnRes
 
     ShuttingDown ->
       onReject wsId shuttingDownReject
 
   where
-    -- It's not clear what the unexpected exception handling story here should be. So at 
+    -- It's not clear what the unexpected exception handling story here should be. So at
     -- least log properly and re-raise:
     logUnexpectedExceptions = handle $ \(e :: SomeException) -> do
       writeLog $ L.UnstructuredLog L.LevelError $ fromString $
         "Unexpected exception raised in websocket. Please report this as a bug: "<>show e
       throwIO e
-      
+
     shuttingDownReject =
       WS.RejectRequest 503
                         "Service Unavailable"
@@ -246,13 +267,19 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pe
 
     onReject wsId rejectRequest = do
       liftIO $ WS.rejectRequestWith pendingConn rejectRequest
-      writeLog $ WSLog wsId ERejected Nothing
+      logWSLog logger $ WSLog wsId ERejected Nothing
 
-    onAccept wsId (AcceptWith a acceptWithParams keepAliveM onJwtExpiryM) = do
+    onAccept wsId (AcceptWith a acceptWithParams keepAlive onJwtExpiry) = do
       conn  <- liftIO $ WS.acceptRequestWith pendingConn acceptWithParams
-      writeLog $ WSLog wsId EAccepted Nothing
+      logWSLog logger $ WSLog wsId EAccepted Nothing
       sendQ <- liftIO STM.newTQueueIO
-      let wsConn = WSConn wsId logger conn sendQ a
+      let !wsConn = WSConn wsId logger conn sendQ a
+      -- TODO there are many thunks here. Difficult to trace how much is retained, and
+      --      how much of that would be shared anyway.
+      --      Requires a fork of 'wai-websockets' and 'websockets', it looks like.
+      --      Adding `package` stanzas with -Xstrict -XStrictData for those two packages
+      --      helped, cutting the number of thunks approximately in half.
+      -- TODO disabled for now; printing odd errors: liftIO $ $assertNFHere wsConn  -- so we don't write thunks to mutable vars
 
       let whenAcceptingInsertConn = liftIO $ STM.atomically $ do
             status <- STM.readTVar serverStatus
@@ -263,7 +290,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pe
 
       -- ensure we clean up connMap even if an unexpected exception is raised from our worker
       -- threads, or an async exception is raised somewhere in the body here:
-      bracket 
+      bracket
         whenAcceptingInsertConn
         (onConnClose wsConn)
         $ \case
@@ -276,37 +303,31 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pe
         AcceptingConns _ -> do
           let rcv = forever $ do
                 -- Process all messages serially (important!), in a separate thread:
-                msg <- liftIO $ 
+                msg <- liftIO $
                   -- Re-throw "receiveloop: resource vanished (Connection reset by peer)" :
-                  --   https://github.com/yesodweb/wai/blob/master/warp/Network/Wai/Handler/Warp/Recv.hs#L112 
-                  -- as WS exception signaling cleanup below. It's not clear why exactly this gets 
+                  --   https://github.com/yesodweb/wai/blob/master/warp/Network/Wai/Handler/Warp/Recv.hs#L112
+                  -- as WS exception signaling cleanup below. It's not clear why exactly this gets
                   -- raised occasionally; I suspect an equivalent handler is missing from WS itself.
                   -- Regardless this should be safe:
                   handleJust (guard . E.isResourceVanishedError) (\()-> throw WS.ConnectionClosed) $
                     WS.receiveData conn
-                writeLog $ WSLog wsId (EMessageReceived $ TBS.fromLBS msg) Nothing
+                logWSLog logger $ WSLog wsId (EMessageReceived $ TBS.fromLBS msg) Nothing
                 _hOnMessage wsHandlers wsConn msg
 
           let send = forever $ do
                 WSQueueResponse msg wsInfo <- liftIO $ STM.atomically $ STM.readTQueue sendQ
                 liftIO $ WS.sendTextData conn msg
-                writeLog $ WSLog wsId (EMessageSent $ TBS.fromLBS msg) wsInfo
-
-          let withAsyncM mAction cont = case mAction of
-                Nothing -> cont Nothing
-                Just action -> LA.withAsync (liftIO $ action wsConn) $ 
-                  \actRef -> cont $ Just actRef
+                logWSLog logger $ WSLog wsId (EMessageSent $ TBS.fromLBS msg) wsInfo
 
           -- withAsync lets us be very sure that if e.g. an async exception is raised while we're
           -- forking that the threads we launched will be cleaned up. See also below.
           LA.withAsync rcv $ \rcvRef -> do
           LA.withAsync send $ \sendRef -> do
-          withAsyncM keepAliveM $ \keepAliveRefM -> do
-          withAsyncM onJwtExpiryM $ \onJwtExpiryRefM -> do
+          LA.withAsync (liftIO $ keepAlive wsConn) $ \keepAliveRef -> do
+          LA.withAsync (liftIO $ onJwtExpiry wsConn) $ \onJwtExpiryRef -> do
 
           -- terminates on WS.ConnectionException and JWT expiry
-          let waitOnRefs = catMaybes [keepAliveRefM, onJwtExpiryRefM]
-                           <> [rcvRef, sendRef]
+          let waitOnRefs = [keepAliveRef, onJwtExpiryRef, rcvRef, sendRef]
           -- withAnyCancel re-raises exceptions from forkedThreads, and is guarenteed to cancel in
           -- case of async exceptions raised while blocking here:
           try (LA.waitAnyCancel waitOnRefs) >>= \case
@@ -314,18 +335,17 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pe
             -- exceptions; for now handle all ConnectionException by closing
             -- and cleaning up, see: https://github.com/jaspervdj/websockets/issues/48
             Left ( _ :: WS.ConnectionException) -> do
-              writeLog $ WSLog (_wcConnId wsConn) ECloseReceived Nothing
+              logWSLog logger $ WSLog (_wcConnId wsConn) ECloseReceived Nothing
             -- this will happen when jwt is expired
             Right _ -> do
-              writeLog $ WSLog (_wcConnId wsConn) EJwtExpired Nothing
+              logWSLog logger $ WSLog (_wcConnId wsConn) EJwtExpired Nothing
 
     onConnClose wsConn = \case
       ShuttingDown -> pure ()
       AcceptingConns connMap -> do
         liftIO $ STM.atomically $ STMMap.delete (_wcConnId wsConn) connMap
         _hOnClose wsHandlers wsConn
-        writeLog $ WSLog (_wcConnId wsConn) EClosed Nothing
-
+        logWSLog logger $ WSLog (_wcConnId wsConn) EClosed Nothing
 
 shutdown :: WSServer a -> IO ()
 shutdown (WSServer (L.Logger writeLog) serverStatus) = do

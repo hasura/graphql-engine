@@ -37,6 +37,7 @@ import qualified Web.Spock.Core                         as Spock
 
 import           Hasura.EncJSON
 -- import           Hasura.GraphQL.Resolve.Action
+import           Hasura.GraphQL.Logging                    (MonadQueryLog (..))
 import           Hasura.HTTP
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema
@@ -60,8 +61,10 @@ import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Transport.WebSocket     as WS
+import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.API.PGDump               as PGD
+import qualified Network.Wai.Handler.WebSockets.Custom     as WSC
 
 
 data SchemaCacheRef
@@ -316,8 +319,8 @@ v1QueryHandler query = do
 
 v1Alpha1GQHandler
   :: (HasVersion, MonadIO m)
-  => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
-v1Alpha1GQHandler query = do
+  => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
+v1Alpha1GQHandler queryType query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
   manager <- scManager . hcServerCtx <$> ask
@@ -332,12 +335,18 @@ v1Alpha1GQHandler query = do
   responseErrorsConfig <- scResponseInternalErrorsConfig . hcServerCtx <$> ask
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
                 (lastBuiltSchemaCache sc) scVer manager enableAL
-  flip runReaderT execCtx $ GH.runGQBatched requestId responseErrorsConfig userInfo reqHeaders query
+  flip runReaderT execCtx $
+    GH.runGQBatched requestId responseErrorsConfig userInfo reqHeaders queryType query
 
 v1GQHandler
   :: (HasVersion, MonadIO m)
   => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
-v1GQHandler = v1Alpha1GQHandler
+v1GQHandler = v1Alpha1GQHandler E.QueryHasura
+
+v1GQRelayHandler
+  :: (HasVersion, MonadIO m)
+  => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
+v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 
 -- gqlExplainHandler :: (HasVersion, MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
 -- gqlExplainHandler query = do
@@ -446,11 +455,14 @@ mkWaiApp
      ( HasVersion
      , MonadIO m
      , MonadStateless IO m
+     , LA.Forall (LA.Pure m)
      , ConsoleRenderer m
      , HttpLog m
+     , MonadQueryLog m
      , UserAuthentication m
      , MetadataApiAuthorization m
-     , LA.Forall (LA.Pure m)
+     , E.MonadGQLExecutionCheck m
+     , WS.MonadWSLog m
      )
   => Q.TxIsolation
   -> L.Logger L.Hasura
@@ -525,7 +537,7 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
         stopWSServer = WS.stopWSServerApp wsServerEnv
 
     waiApp <- liftWithStateless $ \lowerIO ->
-      pure $ WS.websocketsOr WS.defaultConnectionOptions (lowerIO . wsServerApp) spockApp
+      pure $ WSC.websocketsOr WS.defaultConnectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
 
     return $ HasuraApp waiApp schemaCacheRef cacheBuiltTime stopWSServer
   where
@@ -591,10 +603,13 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     when enableGraphQL $ do
       Spock.post "v1alpha1/graphql" $ spockAction GH.encodeGQErr id $
-        mkPostHandler $ mkAPIRespHandler v1Alpha1GQHandler
+        mkPostHandler $ mkAPIRespHandler $ v1Alpha1GQHandler E.QueryHasura
 
       Spock.post "v1/graphql" $ spockAction GH.encodeGQErr allMod200 $
         mkPostHandler $ mkAPIRespHandler v1GQHandler
+
+      Spock.post "v1/relay" $ spockAction GH.encodeGQErr allMod200 $
+        mkPostHandler $ mkAPIRespHandler v1GQRelayHandler
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       Spock.get "dev/ekg" $ spockAction encodeQErr id $

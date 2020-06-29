@@ -384,6 +384,7 @@ library
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
 
+                     , Network.Wai.Extended
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
@@ -405,6 +406,7 @@ library
                      , Hasura.SQL.Types
                      , Hasura.SQL.Value
                      , Network.URI.Extended
+                     , Network.Wai.Handler.WebSockets.Custom
 
 executable graphql-engine
   import: common-all, common-exe

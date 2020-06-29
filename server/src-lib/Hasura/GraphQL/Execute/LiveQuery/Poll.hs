@@ -79,7 +79,7 @@ data LiveQueryMetadata
 
 data LiveQueryResponse
   = LiveQueryResponse
-  { _lqrPayload       :: !BL.ByteString
+  { _lqrPayload       :: !BS.ByteString
   , _lqrExecutionTime :: !Clock.DiffTime
   }
 
@@ -203,7 +203,7 @@ pushResultToCohort result respHashM (LiveQueryMetadata dTime) cohortSnapshot = d
     pushResultToSubscribers = A.mapConcurrently_ $ \(Subscriber action) ->
       let -- aliasText = G.unName alias
           wrapWithAlias response = LiveQueryResponse
-            { _lqrPayload = encJToLBS response
+            { _lqrPayload = encJToBS response
             , _lqrExecutionTime = dTime
             }
       in action (wrapWithAlias <$> result)

@@ -1,6 +1,7 @@
 module Hasura.GraphQL.Execute
   ( EPr.ExecutionStep(..)
   , ResolvedExecutionPlan(..)
+  , EQ.GraphQLQueryType(..)
   , getResolvedExecPlan
   , execRemoteGQ
   -- , getSubsOp
@@ -13,6 +14,7 @@ module Hasura.GraphQL.Execute
   , EP.dumpPlanCache
 
   , ExecutionCtx(..)
+  , MonadGQLExecutionCheck(..)
   ) where
 
 import           Control.Exception                      (try)
@@ -28,7 +30,8 @@ import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as N
+import qualified Network.HTTP.Types                     as HTTP
+import qualified Network.Wai.Extended                   as Wai
 import qualified Network.Wreq                           as Wreq
 
 import           Hasura.EncJSON
@@ -68,6 +71,33 @@ data ExecutionCtx
   , _ecxHttpManager     :: !HTTP.Manager
   , _ecxEnableAllowList :: !Bool
   }
+
+-- | Typeclass representing safety checks (if any) that need to be performed
+-- before a GraphQL query should be allowed to be executed. In OSS, the safety
+-- check is to check in the query is in the allow list.
+
+-- | TODO: Limitation: This parses the query, which is not ideal if we already
+-- have the query cached. The parsing happens unnecessary. But getting this to
+-- either return a plan or parse was tricky and complicated.
+class Monad m => MonadGQLExecutionCheck m where
+  checkGQLExecution
+    :: UserInfo
+    -> ([HTTP.Header], Wai.IpAddress)
+    -> Bool
+    -- ^ allow list enabled?
+    -> SchemaCache
+    -- ^ needs allow list
+    -> GQLReqUnparsed
+    -- ^ the unparsed GraphQL query string (and related values)
+    -> m (Either QErr GQLReqParsed)
+
+instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ExceptT e m) where
+  checkGQLExecution ui det enableAL sc req =
+    lift $ checkGQLExecution ui det enableAL sc req
+
+instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ReaderT r m) where
+  checkGQLExecution ui det enableAL sc req =
+    lift $ checkGQLExecution ui det enableAL sc req
 
 getExecPlanPartial
   :: (MonadError QErr m)
@@ -164,12 +194,13 @@ getResolvedExecPlan
   -> Bool
   -> SchemaCache
   -> SchemaCacheVer
+  -> EQ.GraphQLQueryType
   -> HTTP.Manager
-  -> [N.Header]
+  -> [HTTP.Header]
   -> GQLReqUnparsed
   -> m (Telem.CacheHit, ResolvedExecutionPlan)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  enableAL sc scVer httpManager reqHeaders reqUnparsed = do
+  enableAL sc scVer queryType httpManager reqHeaders reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
            opNameM queryStr planCache
   let usrVars = userVars userInfo
@@ -389,7 +420,7 @@ execRemoteGQ
      )
   => RequestId
   -> UserInfo
-  -> [N.Header]
+  -> [HTTP.Header]
   -> GQLReqUnparsed
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition G.NoFragments G.Name

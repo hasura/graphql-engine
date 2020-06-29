@@ -33,7 +33,10 @@ import qualified Text.Mustache.Compile                as M
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Events.Lib
+import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
+import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..))
 -- import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
+import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
@@ -54,6 +57,7 @@ import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
 
+import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
 
 printErrExit :: (MonadIO m) => forall a . String -> m a
 printErrExit = liftIO . (>> exitFailure) . putStrLn
@@ -193,11 +197,14 @@ runHGEServer
   :: ( HasVersion
      , MonadIO m
      , MonadStateless IO m
+     , LA.Forall (LA.Pure m)
      , UserAuthentication m
      , MetadataApiAuthorization m
      , HttpLog m
+     , MonadQueryLog m
      , ConsoleRenderer m
-     , LA.Forall (LA.Pure m)
+     , MonadGQLExecutionCheck m
+     , WS.MonadWSLog m
      )
   => ServeOptions impl
   -> InitCtx
@@ -372,6 +379,27 @@ instance MetadataApiAuthorization AppM where
 instance ConsoleRenderer AppM where
   renderConsole path authMode enableTelemetry consoleAssetsDir =
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
+
+instance MonadGQLExecutionCheck AppM where
+  checkGQLExecution userInfo _ enableAL sc query = runExceptT $ do
+    req <- toParsed query
+
+    -- TODO FIXME
+
+    -- The following check is currently done in Execute.hs.  This code is
+    -- commented out in the PDV branch because in the PDV refactor we are so far
+    -- not using MonadGQLExecutionCheck yet. So we should figure out what
+    -- happened on master, and correspondingly re-enable this check here.
+
+    -- checkQueryInAllowlist enableAL userInfo req sc
+    return req
+
+instance MonadQueryLog AppM where
+  logQueryLog logger query genSqlM reqId =
+    unLogger logger $ QueryLog query genSqlM reqId
+
+instance WS.MonadWSLog AppM where
+  logWSLog = unLogger
 
 mkConsoleHTML :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =

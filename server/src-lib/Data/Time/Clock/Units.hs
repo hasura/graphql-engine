@@ -51,6 +51,7 @@ module Data.Time.Clock.Units
   -- * Converting between units
   , Duration(..)
   , fromUnits
+  , convertDuration
   -- * Reexports
   -- | We use 'DiffTime' as the standard type for unit-agnostic duration in our
   -- code. You'll need to convert to a 'NominalDiffTime'  (with 'fromUnits') in
@@ -168,3 +169,6 @@ instance Duration NominalDiffTime where
 -- | Safe conversion between duration units.
 fromUnits :: (Duration x, Duration y)=> x -> y
 fromUnits = fromDiffTime . toDiffTime
+
+convertDuration :: (Duration x, Duration y) => x -> y
+convertDuration = fromUnits
