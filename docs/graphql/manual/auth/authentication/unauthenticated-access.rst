@@ -1,11 +1,11 @@
 .. meta::
-   :description: Manage unauthenticated access in Hasura
-   :keywords: hasura, docs, authentication, auth, unauthenticated access
+   :description: Manage unauthenticated / public access in Hasura
+   :keywords: hasura, docs, authentication, auth, unauthenticated access, public access
 
 .. _unauthenticated_access:
 
-Unauthenticated access
-======================
+Unauthenticated / Public access
+===============================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -21,8 +21,8 @@ It is a common requirement to have requests which are accessible to all users wi
 You can configure Hasura GraphQL engine to allow access to unauthenticated users by defining a specific role
 which will be set for all unauthenticated requests.
 
-Configuring unauthenticated access
-----------------------------------
+Configuring unauthenticated / public access
+-------------------------------------------
 
 Once you have configured authentication, by default Hasura GraphQL engine will reject any unauthenticated request it
 receives.
@@ -32,7 +32,7 @@ Webhooks
 
 For :ref:`webhook authentication <auth_webhooks>`, an unauthenticated request is any request for which the webhook returns a ``401 Unauthorized`` response.
 
-For unauthenticated access, you can return a ``200`` status response with your defined anonymous role, e.g: ``{ "x-hasura-role": "<anonymous role>" }``.
+For unauthenticated access, you can return a ``200`` status response with your defined unauthenticated role, e.g: ``{ "x-hasura-role": "<anonymous-role>" }``.
 
 Once an unauthenticated role is configured, unaunthenticated requests will not be rejected and instead the request will
 be made with the configured role.
