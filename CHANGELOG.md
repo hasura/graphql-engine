@@ -2,6 +2,15 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
+
+
+## `v1.3.0-beta.3`
+
 
 ### Bug fixes and improvements
 
