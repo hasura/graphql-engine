@@ -36,6 +36,7 @@ The Hasura GraphQL engine needs access to your Postgres database with the follow
 
 - (required) Read & write access on 2 schemas: ``hdb_catalog`` and ``hdb_views``.
 - (required) Read access to the ``information_schema`` and ``pg_catalog`` schemas, to query for list of tables.
+  Note that these permissions are usually available by default to all postgres users via `PUBLIC <https://www.postgresql.org/docs/current/sql-grant.html>`_ grant.
 - (required) Read access to the schemas (public or otherwise) if you only want to support queries.
 - (optional) Write access to the schemas if you want to support mutations as well.
 - (optional) To create tables and views via the Hasura console (the admin UI) you'll need the privilege to create
@@ -67,7 +68,7 @@ Here's a sample SQL block that you can run on your database (as a **superuser**)
 
     -- grant select permissions on information_schema and pg_catalog. This is
     -- required for hasura to query list of available tables.
-    -- NOTE: these permissions are usually available by default to all users via PUBLIC role
+    -- NOTE: these permissions are usually available by default to all users via PUBLIC grant
     GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO hasurauser;
     GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO hasurauser;
 
@@ -95,7 +96,7 @@ Here's a sample SQL block that you can run on your database (as a **superuser**)
 Note for managed databases (AWS RDS, GCP Cloud SQL, etc)
 --------------------------------------------------------
 
-Hasura works out of the box with the default superuser, usually called "postgres", created by most managed cloud database providers. But if you are creating a new user and giving the above privileges, then you may notice that the following commands may throw warnings/errors:
+Hasura works out of the box with the default superuser, usually called "postgres", created by most managed cloud database providers. But if you are creating a new user and giving the :ref:`above <postgres_permissions>` privileges, then you may notice that the following commands may throw warnings/errors:
 
 
 .. code-block:: sql
@@ -110,11 +111,11 @@ Hasura works out of the box with the default superuser, usually called "postgres
   ERROR:  permission denied for table pg_statistic
 
 
-You can choose to **ignore** these warnings/errors or skip granting these permission as all users have relevant access to ``information_schema`` and ``pg_catalog`` schemas by default (see keyword `PUBLIC <https://www.postgresql.org/docs/current/sql-grant.html>`__) .
+You can **ignore** these warnings/errors or skip granting these permission as all users have relevant access to ``information_schema`` and ``pg_catalog`` schemas by default (see keyword `PUBLIC <https://www.postgresql.org/docs/current/sql-grant.html>`_) .
 
 .. admonition:: Google Cloud SQL
 
-   On Google Cloud SQL, running ``ALTER SCHEMA hdb_catalog OWNER TO hasurauser;`` may give you an error ``ERROR:  must be member of role "hasurauser"``. You can fix this by running ``GRANT hasurauser to postgres;`` first, assuming "postgres" is the superuser. 
+   On Google Cloud SQL, running ``ALTER SCHEMA hdb_catalog OWNER TO hasurauser;`` may give you an error ``ERROR:  must be member of role "hasurauser"``. You can fix this by running ``GRANT hasurauser to postgres;`` first, assuming "postgres" is the superuser that you are running the commands with. 
 
 
 **pgcrypto** in PG search path
