@@ -24,7 +24,6 @@ module Hasura.RQL.DDL.Action
   ) where
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Context        (defaultTypes)
 import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -96,57 +95,47 @@ referred scalars.
 
 resolveAction
   :: (QErrM m, MonadIO m)
-  => (NonObjectTypeMap, AnnotatedObjects)
-  -> HashSet PGScalarType -- ^ List of all Postgres scalar types.
+  => AnnotatedCustomTypes
   -> ActionDefinitionInput
+  -> HashSet PGScalarType -- See Note [Postgres scalars in custom types]
   -> m ( ResolvedActionDefinition
        , AnnotatedObjectType
-       , HashSet PGScalarType -- ^ see Note [Postgres scalars in action input arguments].
        )
-resolveAction customTypes allPGScalars actionDefinition = do
-  let responseType = unGraphQLType $ _adOutputType actionDefinition
-      responseBaseType = G.getBaseType responseType
-
-  reusedPGScalars <- execWriterT $
-    forM (_adArguments actionDefinition) $ \argument -> do
-      let argumentBaseType = G.getBaseType $ unGraphQLType $ _argType argument
-          maybeArgTypeInfo = getNonObjectTypeInfo argumentBaseType
-          maybePGScalar = find ((==) argumentBaseType . VT.mkScalarTy) allPGScalars
-
-      if | Just argTypeInfo <- maybeArgTypeInfo ->
-             case argTypeInfo of
-               VT.TIScalar _ -> pure ()
-               VT.TIEnum _   -> pure ()
-               VT.TIInpObj _ -> pure ()
-               _ -> throw400 InvalidParams $ "the argument's base type: "
-                   <> showNamedTy argumentBaseType <>
-                   " should be a scalar/enum/input_object"
-         -- Collect the referred Postgres scalar. See Note [Postgres scalars in action input arguments].
-         | Just pgScalar <- maybePGScalar -> tell $ Set.singleton pgScalar
-         | Nothing <- maybeArgTypeInfo ->
-             throw400 NotExists $ "the type: " <> showNamedTy argumentBaseType
-             <> " is not defined in custom types"
-         | otherwise -> pure ()
+resolveAction AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = do
+  resolvedArguments <- forM _adArguments $ \argumentDefinition -> do
+    forM argumentDefinition $ \argumentType -> do
+      let gType = unGraphQLType argumentType
+          argumentBaseType = G.getBaseType gType
+      (gType,) <$>
+        if | Just pgScalar <- lookupPGScalar argumentBaseType ->
+               pure $ NOCTScalar pgScalar
+           | Just nonObjectType <- Map.lookup argumentBaseType _actNonObjects ->
+               pure nonObjectType
+           | otherwise ->
+               throw400 InvalidParams $
+               "the type: " <> showName argumentBaseType
+               <> " is not defined in custom types or it is not a scalar/enum/input_object"
 
   -- Check if the response type is an object
-  outputObject <- getObjectTypeInfo responseBaseType
-  resolvedDef <- traverse resolveWebhook actionDefinition
-  pure (resolvedDef, outputObject, reusedPGScalars)
+  let outputType = unGraphQLType _adOutputType
+      outputBaseType = G.getBaseType outputType
+  outputObject <- onNothing (Map.lookup outputBaseType _actObjects) $
+    throw400 NotExists $ "the type: " <> showName outputBaseType
+    <> " is not an object type defined in custom types"
+  resolvedWebhook <- resolveWebhook _adHandler
+  pure ( ActionDefinition resolvedArguments _adOutputType _adType
+         _adHeaders _adForwardClientHeaders resolvedWebhook
+       , outputObject
+       )
   where
-    getNonObjectTypeInfo typeName =
-      let nonObjectTypeMap = unNonObjectTypeMap $ fst $ customTypes
-          inputTypeInfos = nonObjectTypeMap <> mapFromL VT.getNamedTy defaultTypes
-      in Map.lookup typeName inputTypeInfos
-
     resolveWebhook (InputWebhook urlTemplate) = do
       eitherRenderedTemplate <- renderURLTemplate urlTemplate
       either (throw400 Unexpected . T.pack) (pure . ResolvedWebhook) eitherRenderedTemplate
 
-    getObjectTypeInfo typeName =
-      onNothing (Map.lookup (ObjectTypeName typeName) (snd customTypes)) $
-        throw400 NotExists $ "the type: "
-        <> showNamedTy typeName <>
-        " is not an object type defined in custom types"
+    lookupPGScalar baseType = -- see Note [Postgres scalars in custom types]
+      fmap (flip ScalarTypeDefinition Nothing) $
+      find ((==) baseType) $ mapMaybe (G.mkName . toSQLTxt) $
+      toList allPGScalars
 
 runUpdateAction
   :: forall m. ( QErrM m , CacheRWM m, MonadTx m)

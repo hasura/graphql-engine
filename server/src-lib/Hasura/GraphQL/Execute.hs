@@ -169,7 +169,7 @@ getExecPlanPartial userInfo sc enableAL req = do
 data ResolvedExecutionPlan
   = QueryExecutionPlan (EPr.ExecutionPlan (LazyRespTx, EQ.GeneratedSqlMap) EPr.RemoteCall (G.Name, J.Value))
   -- ^ query execution; remote schemata and introspection possible (TODO implement remote)
-  | MutationExecutionPlan (EPr.ExecutionPlan LazyRespTx EPr.RemoteCall (G.Name, J.Value))
+  | MutationExecutionPlan (EPr.ExecutionPlan (LazyRespTx, HTTP.ResponseHeaders) EPr.RemoteCall (G.Name, J.Value))
   -- ^ mutation execution; only __typename introspection supported (TODO implement remote)
   | SubscriptionExecutionPlan (EPr.ExecutionPlan EL.LiveQueryPlan Void Void)
   -- ^ live query execution; remote schemata and introspection not supported
@@ -235,7 +235,8 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
           return $ QueryExecutionPlan $ execPlan
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          queryTx <- EM.convertMutationSelectionSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
+          queryTx <- EM.convertMutationSelectionSet gCtx (userVars userInfo) httpManager reqHeaders
+                     inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ MutationExecutionPlan $ EPr.ExecStepDB queryTx
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs _ selSet -> do

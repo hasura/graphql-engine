@@ -281,7 +281,9 @@ library
                      , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.RemoteRelationship
+                     , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ComputedField
+                     , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.Types.CustomTypes
                      , Hasura.RQL.DDL.Deps
@@ -306,8 +308,6 @@ library
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DDL.RemoteRelationship
                      , Hasura.RQL.DDL.QueryCollection
-                     -- , Hasura.RQL.DDL.Action
-                     -- , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Delete.Types
                      , Hasura.RQL.DML.Internal
@@ -350,7 +350,7 @@ library
                      , Hasura.GraphQL.Execute.LiveQuery.State
                      , Hasura.GraphQL.Execute.LiveQuery.TMap
                      -- , Hasura.GraphQL.Resolve
-                     -- , Hasura.GraphQL.Resolve.Action
+                     , Hasura.GraphQL.Resolve.Action
                      -- , Hasura.GraphQL.Resolve.Types
                      -- , Hasura.GraphQL.Resolve.Context
                      -- , Hasura.GraphQL.Resolve.BoolExp

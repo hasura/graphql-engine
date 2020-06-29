@@ -21,7 +21,6 @@ module Hasura.RQL.Types.Action
   , aiName
   , aiOutputObject
   , aiDefinition
-  , aiPgScalars
   , aiPermissions
   , aiComment
   , ActionPermissionInfo(..)
@@ -31,6 +30,10 @@ module Hasura.RQL.Types.Action
 
   , ActionMetadata(..)
   , ActionPermissionMetadata(..)
+
+  , AnnActionMutationSync(..)
+  , AnnActionMutationAsync(..)
+  , ActionExecContext(..)
   ) where
 
 
@@ -39,6 +42,7 @@ import           Data.URL.Template
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
@@ -50,6 +54,8 @@ import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Network.HTTP.Client           as HTTP
+import qualified Network.HTTP.Types            as HTTP
 
 newtype ActionName
   = ActionName { unActionName :: G.Name }
@@ -84,14 +90,14 @@ newtype ArgumentName
   deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
            , Hashable, DQuote, Lift, Generic, NFData, Cacheable)
 
-data ArgumentDefinition
+data ArgumentDefinition a
   = ArgumentDefinition
   { _argName        :: !ArgumentName
-  , _argType        :: !GraphQLType
+  , _argType        :: !a
   , _argDescription :: !(Maybe G.Description)
-  } deriving (Show, Eq, Lift, Generic)
-instance NFData ArgumentDefinition
-instance Cacheable ArgumentDefinition
+  } deriving (Show, Eq, Functor, Foldable, Traversable, Lift, Generic)
+instance (NFData a) => NFData (ArgumentDefinition a)
+instance (Cacheable a) => Cacheable (ArgumentDefinition a)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ArgumentDefinition)
 
 data ActionType
@@ -101,19 +107,19 @@ data ActionType
 instance NFData ActionType
 instance Cacheable ActionType
 
-data ActionDefinition a
+data ActionDefinition a b
   = ActionDefinition
-  { _adArguments            :: ![ArgumentDefinition]
+  { _adArguments            :: ![a]
   , _adOutputType           :: !GraphQLType
   , _adType                 :: !ActionType
   , _adHeaders              :: ![HeaderConf]
   , _adForwardClientHeaders :: !Bool
-  , _adHandler              :: !a
+  , _adHandler              :: !b
   } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Generic)
-instance (NFData a) => NFData (ActionDefinition a)
-instance (Cacheable a) => Cacheable (ActionDefinition a)
+instance (NFData a, NFData b) => NFData (ActionDefinition a b)
+instance (Cacheable a, Cacheable b) => Cacheable (ActionDefinition a b)
 
-instance (J.FromJSON a) => J.FromJSON (ActionDefinition a) where
+instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
   parseJSON = J.withObject "ActionDefinition" $ \o -> do
     _adArguments <- o J..: "arguments"
     _adOutputType <- o J..: "output_type"
@@ -127,7 +133,7 @@ instance (J.FromJSON a) => J.FromJSON (ActionDefinition a) where
       t          -> fail $ "expected mutation or query, but found " <> t
     return ActionDefinition {..}
 
-instance (J.ToJSON a) => J.ToJSON (ActionDefinition a) where
+instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
   toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders handler) =
     let typeAndKind = case actionType of
           ActionQuery -> [ "type" J..= ("query" :: String)]
@@ -141,7 +147,8 @@ instance (J.ToJSON a) => J.ToJSON (ActionDefinition a) where
     , "handler"                J..= handler
     ] <> typeAndKind
 
-type ResolvedActionDefinition = ActionDefinition ResolvedWebhook
+type ResolvedActionDefinition =
+  ActionDefinition (ArgumentDefinition (G.GType, NonObjectCustomType)) ResolvedWebhook
 
 data ActionPermissionInfo
   = ActionPermissionInfo
@@ -153,17 +160,16 @@ type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
 
 type ActionOutputFields = Map.HashMap G.Name G.GType
 
-getActionOutputFields :: ObjectTypeDefinition -> ActionOutputFields
+getActionOutputFields :: AnnotatedObjectType -> ActionOutputFields
 getActionOutputFields =
-  Map.fromList . map ((unObjectFieldName . _ofdName) &&& (unGraphQLType . _ofdType)) . toList . _otdFields
+  Map.fromList . map ( (unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields
 
 data ActionInfo
   = ActionInfo
   { _aiName         :: !ActionName
-  , _aiOutputObject :: !ObjectTypeDefinition
+  , _aiOutputObject :: !AnnotatedObjectType
   , _aiDefinition   :: !ResolvedActionDefinition
   , _aiPermissions  :: !ActionPermissionMap
-  , _aiPgScalars    :: !(HashSet PGScalarType)
   , _aiComment      :: !(Maybe Text)
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
@@ -184,7 +190,8 @@ instance J.FromJSON InputWebhook where
       Left e  -> fail $ "Parsing URL template failed: " ++ e
       Right v -> pure $ InputWebhook v
 
-type ActionDefinitionInput = ActionDefinition InputWebhook
+type ActionDefinitionInput =
+  ActionDefinition (ArgumentDefinition GraphQLType) InputWebhook
 
 data CreateAction
   = CreateAction
@@ -245,3 +252,33 @@ instance J.FromJSON ActionMetadata where
       <*> o J..:? "comment"
       <*> o J..: "definition"
       <*> o J..:? "permissions" J..!= []
+
+----------------- Resolve Types ----------------
+
+data AnnActionMutationSync v
+  = AnnActionMutationSync
+  { _aamsName                 :: !ActionName
+  , _aamsOutputType           :: !GraphQLType -- ^ output type
+  , _aamsFields               :: !(AnnFldsG v) -- ^ output selection
+  , _aamsPayload              :: !J.Value -- ^ jsonified input arguments
+  , _aamsOutputFields         :: !ActionOutputFields
+  -- ^ to validate the response fields from webhook
+  , _aamsDefinitionList       :: ![(PGCol, PGScalarType)]
+  , _aamsWebhook              :: !ResolvedWebhook
+  , _aamsHeaders              :: ![HeaderConf]
+  , _aamsForwardClientHeaders :: !Bool
+  , _aamsStrfyNum             :: !Bool
+  } deriving (Show, Eq)
+
+data AnnActionMutationAsync
+  = AnnActionMutationAsync
+  { _aamaName    :: !ActionName
+  , _aamaPayload :: !J.Value -- ^ jsonified input arguments
+  } deriving (Show, Eq)
+
+data ActionExecContext
+  = ActionExecContext
+  { _aecManager          :: !HTTP.Manager
+  , _aecHeaders          :: !HTTP.RequestHeaders
+  , _aecSessionVariables :: !UserVars
+  }

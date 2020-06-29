@@ -236,16 +236,16 @@ instance Arbitrary RelationshipName where
 instance Arbitrary ObjectFieldName where
   arbitrary = genericArbitrary
 
-instance Arbitrary TypeRelationshipDefinition  where
+instance (Arbitrary a, Arbitrary b) => Arbitrary (TypeRelationship a b)  where
   arbitrary = genericArbitrary
 
 instance Arbitrary ObjectTypeName where
   arbitrary = genericArbitrary
 
-instance Arbitrary ObjectFieldDefinition where
+instance (Arbitrary a) => Arbitrary (ObjectFieldDefinition a) where
   arbitrary = genericArbitrary
 
-instance Arbitrary ObjectTypeDefinition where
+instance (Arbitrary a, Arbitrary b, Arbitrary c) => Arbitrary (ObjectTypeDefinition a b c) where
   arbitrary = genericArbitrary
 
 instance Arbitrary ScalarTypeDefinition where
@@ -266,7 +266,7 @@ instance Arbitrary CustomTypes where
 instance Arbitrary ArgumentName where
   arbitrary = genericArbitrary
 
-instance Arbitrary ArgumentDefinition where
+instance (Arbitrary a) => Arbitrary (ArgumentDefinition a) where
   arbitrary = genericArbitrary
 
 instance Arbitrary ActionMutationKind where
@@ -275,7 +275,7 @@ instance Arbitrary ActionMutationKind where
 instance Arbitrary ActionType where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (ActionDefinition a) where
+instance (Arbitrary a, Arbitrary b) => Arbitrary (ActionDefinition a b) where
   arbitrary = genericArbitrary
 
 instance Arbitrary ActionName where

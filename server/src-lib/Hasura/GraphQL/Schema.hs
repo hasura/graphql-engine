@@ -19,14 +19,14 @@ import qualified Hasura.GraphQL.Parser                 as P
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),
                                                         UnpreparedValue (..))
-import           Hasura.GraphQL.Parser.Internal.Parser (FieldParser(..))
 import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
+import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Introspect
 import           Hasura.GraphQL.Schema.Mutation
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
-import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -39,8 +39,10 @@ buildGQLContext
   => TableCache
   -> FunctionCache
   -> HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
+  -> ActionCache
+  -> NonObjectTypeMap
   -> m (HashMap RoleName GQLContext)
-buildGQLContext allTables allFunctions allRemoteSchemata =
+buildGQLContext allTables allFunctions allRemoteSchemata allActions nonObjectCustomTypes =
   S.toMap allRoles & Map.traverseWithKey \roleName () ->
     buildContextForRole roleName
   where
@@ -77,11 +79,13 @@ buildGQLContext allTables allFunctions allRemoteSchemata =
                      'Output
                      (P.ParseT Identity)
                      (InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-          queryWithIntrospection' = queryWithIntrospection (S.fromList $ Map.keys validTables) validFunctions queryRemotes
+          allActionInfos = Map.elems allActions
+          queryWithIntrospection' = queryWithIntrospection (S.fromList $ Map.keys validTables)
+                                    validFunctions queryRemotes allActionInfos nonObjectCustomTypes
           gqlContext :: P.SchemaT (P.ParseT Identity) (ReaderT QueryContext m) GQLContext
           gqlContext = GQLContext
             <$> (finalizeParser <$> queryWithIntrospection')
-            <*> (finalizeParser <$> mutation (S.fromList $ Map.keys validTables))
+            <*> (finalizeParser <$> mutation (S.fromList $ Map.keys validTables) allActionInfos nonObjectCustomTypes)
       flip runReaderT (QueryContext stringifyNum queryRemotesMap) $
         P.runSchemaT roleName allTables gqlContext
 
@@ -204,10 +208,12 @@ queryWithIntrospection
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> [ActionInfo]
+  -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-queryWithIntrospection allTables allFunctions allRemotes = do
+queryWithIntrospection allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   basicQueryFP <- query' allTables allFunctions allRemotes
-  mutationP <- mutation allTables
+  mutationP <- mutation allTables allActions nonObjectCustomTypes
   subscriptionP <- subscription allTables allFunctions
   let
     basicQueryP = queryRootFromFields basicQueryFP
@@ -240,8 +246,10 @@ mutation
   :: forall m n
    . (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
   => HashSet QualifiedTable
+  -> [ActionInfo]
+  -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
-mutation allTables = do
+mutation allTables allActions nonObjectCustomTypes = do
   mutationParsers <- for (toList allTables) \table -> do
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
     displayName <- P.qualifiedObjectToName table
@@ -288,6 +296,17 @@ mutation allTables = do
         pure $ fmap (RFDB . MDBDelete) delete : maybe [] (pure . fmap (RFDB . MDBDelete)) deleteByPk
 
       pure $ concat $ catMaybes [inserts, updates, deletes]
-  let mutationFieldsParser = concat $ catMaybes mutationParsers
+
+  actionParsers <- for allActions $ \actionInfo ->
+    case _adType (_aiDefinition actionInfo) of
+      ActionMutation (ActionSynchronous) ->
+        fmap (fmap (RFAction . AMSync)) <$>
+        actionSync nonObjectCustomTypes actionInfo
+      ActionMutation (ActionAsynchronous) ->
+        fmap (fmap (RFAction . AMAsync)) <$>
+        actionAsync nonObjectCustomTypes actionInfo
+      ActionQuery -> pure Nothing
+
+  let mutationFieldsParser = concat (catMaybes mutationParsers) <> catMaybes actionParsers
   pure $ P.selectionSet $$(G.litName "mutation_root") Nothing mutationFieldsParser
     <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))

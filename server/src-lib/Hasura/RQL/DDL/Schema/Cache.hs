@@ -39,10 +39,10 @@ import           Hasura.Db
 -- import           Hasura.GraphQL.RemoteServer
 -- import           Hasura.GraphQL.Schema.CustomTypes
 -- import           Hasura.GraphQL.Utils                     (showNames)
--- import           Hasura.RQL.DDL.Action
-import           Hasura.RQL.DDL.ComputedField
--- import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
+import           Hasura.RQL.DDL.Action
+import           Hasura.RQL.DDL.ComputedField
+import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.RemoteSchema
@@ -171,6 +171,8 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     (_boTables    resolvedOutputs)
     (_boFunctions resolvedOutputs)
     (_boRemoteSchemas resolvedOutputs)
+    (_boActions resolvedOutputs)
+    (_actNonObjects $ _boCustomTypes resolvedOutputs)
   -- (remoteSchemaMap, gqlSchema, remoteGQLSchema)
   --   <- _buildGQLSchema -< ( _boTables resolvedOutputs
   --                                   , _boFunctions resolvedOutputs
@@ -184,7 +186,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
   returnA -< SchemaCache
     { scTables = _boTables resolvedOutputs
     -- TODO this is empty now so that things run.  Of course we should cache the right map of Actions.
-    , scActions = M.empty -- _boActions resolvedOutputs
+    , scActions = _boActions resolvedOutputs
     , scFunctions = _boFunctions resolvedOutputs
     , scRemoteSchemas = mempty -- remoteSchemaMap
     , scAllowlist = _boAllowlist resolvedOutputs
@@ -269,35 +271,34 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
             & HS.fromList
 
       -- custom types
-      -- let CatalogCustomTypes customTypes pgScalars = catalogCustomTypes
-      -- maybeResolvedCustomTypes <-
-      --   (| withRecordInconsistency
-      --        (bindErrorA -< resolveCustomTypes tableCache customTypes pgScalars)
-      --    |) (MetadataObject MOCustomTypes $ toJSON customTypes)
+      let CatalogCustomTypes customTypes pgScalars = catalogCustomTypes
+      maybeResolvedCustomTypes <-
+        (| withRecordInconsistency
+             (bindErrorA -< resolveCustomTypes tableCache customTypes pgScalars)
+         |) (MetadataObject MOCustomTypes $ toJSON customTypes)
 
       -- -- actions
-      -- actionCache <- case maybeResolvedCustomTypes of
-      --   Just resolvedCustomTypes -> buildActions -< ((resolvedCustomTypes, pgScalars), actions)
+      (actionCache, annotatedCustomTypes) <- case maybeResolvedCustomTypes of
+        Just resolvedCustomTypes -> do
+          actionCache' <- buildActions -< ((resolvedCustomTypes, pgScalars), actions)
+          returnA -< (actionCache', resolvedCustomTypes)
 
-      --   -- If the custom types themselves are inconsistent, we can’t really do
-      --   -- anything with actions, so just mark them all inconsistent.
-      --   Nothing -> do
-      --     recordInconsistencies -< ( map mkActionMetadataObject actions
-      --                              , "custom types are inconsistent" )
-      --     returnA -< M.empty
+        -- If the custom types themselves are inconsistent, we can’t really do
+        -- anything with actions, so just mark them all inconsistent.
+        Nothing -> do
+          recordInconsistencies -< ( map mkActionMetadataObject actions
+                                   , "custom types are inconsistent" )
+          returnA -< (M.empty, emptyAnnotatedCustomTypes)
 
       -- remote schemas
 
       returnA -< BuildOutputs
         { _boTables = tableCache
-        -- , _boActions = actionCache
+        , _boActions = actionCache
         , _boFunctions = functionCache
         , _boRemoteSchemas = remoteSchemaMap
         , _boAllowlist = allowList
-        -- , _boCustomTypes = resolvedCustomTypes
-        -- If 'maybeResolvedCustomTypes' is 'Nothing', then custom types are inconsinstent.
-        -- In such case, use empty resolved value of custom types.
-        -- , _boCustomTypes = fromMaybe (NonObjectTypeMap mempty, mempty) maybeResolvedCustomTypes
+        , _boCustomTypes = annotatedCustomTypes
         }
 
     mkEventTriggerMetadataObject (CatalogEventTrigger qt trn configuration) =
@@ -383,26 +384,26 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
                runExceptT $ addRemoteSchemaP2Setup remoteSchema)
            |) (mkRemoteSchemaMetadataObject remoteSchema)
 
-    -- buildActions
-    --   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-    --      , ArrowWriter (Seq CollectedInfo) arr, MonadIO m )
-    --   => ( ((NonObjectTypeMap, AnnotatedObjects), HashSet PGScalarType)
-    --      , [ActionMetadata]
-    --      ) `arr` HashMap ActionName ActionInfo
-    -- buildActions = buildInfoMap _amName mkActionMetadataObject buildAction
-    --   where
-    --     buildAction = proc ((resolvedCustomTypes, pgScalars), action) -> do
-    --       let ActionMetadata name comment def actionPermissions = action
-    --           addActionContext e = "in action " <> name <<> "; " <> e
-    --       (| withRecordInconsistency (
-    --          (| modifyErrA (do
-    --               (resolvedDef, outObject, reusedPgScalars) <- liftEitherA <<< bindA -<
-    --                 runExceptT $ resolveAction resolvedCustomTypes pgScalars def
-    --               let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
-    --                   permissionMap = mapFromL _apiRole permissionInfos
-    --               returnA -< ActionInfo name outObject resolvedDef permissionMap reusedPgScalars comment)
-    --           |) addActionContext)
-    --        |) (mkActionMetadataObject action)
+    buildActions
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
+         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m )
+      => ( (AnnotatedCustomTypes, HashSet PGScalarType)
+         , [ActionMetadata]
+         ) `arr` HashMap ActionName ActionInfo
+    buildActions = buildInfoMap _amName mkActionMetadataObject buildAction
+      where
+        buildAction = proc ((resolvedCustomTypes, pgScalars), action) -> do
+          let ActionMetadata name comment def actionPermissions = action
+              addActionContext e = "in action " <> name <<> "; " <> e
+          (| withRecordInconsistency (
+             (| modifyErrA (do
+                  (resolvedDef, outObject) <- liftEitherA <<< bindA -<
+                    runExceptT $ resolveAction resolvedCustomTypes def pgScalars
+                  let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
+                      permissionMap = mapFromL _apiRole permissionInfos
+                  returnA -< ActionInfo name outObject resolvedDef permissionMap comment)
+              |) addActionContext)
+           |) (mkActionMetadataObject action)
 
 
     -- -- Builds the GraphQL schema and merges in remote schemas. This function is kind of gross, as

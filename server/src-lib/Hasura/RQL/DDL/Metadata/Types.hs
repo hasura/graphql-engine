@@ -440,16 +440,16 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                           ]
               <> catMaybes [maybeDescriptionToMaybeOrdPair fieldDescM]
 
-        objectTypeToOrdJSON :: ObjectTypeDefinition -> AO.Value
+        objectTypeToOrdJSON :: ObjectType -> AO.Value
         objectTypeToOrdJSON (ObjectTypeDefinition tyName descM fields rels) =
           AO.object $ [ ("name", AO.toOrdered tyName)
                       , ("fields", AO.array $ map fieldDefinitionToOrdJSON $ toList fields)
                       ]
           <> catMaybes [ maybeDescriptionToMaybeOrdPair descM
-                       , listToMaybeOrdPair "relationships" AO.toOrdered =<< rels
+                       , maybeAnyToMaybeOrdPair "relationships" AO.toOrdered rels
                        ]
           where
-            fieldDefinitionToOrdJSON :: ObjectFieldDefinition -> AO.Value
+            fieldDefinitionToOrdJSON :: ObjectFieldDefinition GraphQLType -> AO.Value
             fieldDefinitionToOrdJSON (ObjectFieldDefinition fieldName argsValM fieldDescM ty) =
               AO.object $ [ ("name", AO.toOrdered fieldName)
                           , ("type", AO.toOrdered ty)
@@ -480,7 +480,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                    , listToMaybeOrdPair "permissions" permToOrdJSON permissions
                    ]
       where
-        argDefinitionToOrdJSON :: ArgumentDefinition -> AO.Value
+        argDefinitionToOrdJSON :: ArgumentDefinition GraphQLType -> AO.Value
         argDefinitionToOrdJSON (ArgumentDefinition argName ty descM) =
           AO.object $  [ ("name", AO.toOrdered argName)
                        , ("type", AO.toOrdered ty)

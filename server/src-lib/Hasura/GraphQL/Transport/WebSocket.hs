@@ -340,7 +340,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       case mutationPlan of
         E.ExecStepDB tx ->
           execQueryOrMut timerTot Telem.Mutation telemCacheHit Telem.Local Nothing requestId q $
-            runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo tx
+            runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo $ fst tx
         E.ExecStepRemote (rsi, opDef, _varValsM) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
         E.ExecStepRaw (name, json) ->

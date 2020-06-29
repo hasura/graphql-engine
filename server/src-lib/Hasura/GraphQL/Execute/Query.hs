@@ -146,11 +146,11 @@ irToRootFieldPlan vars prepped = \case
   QDBAggregation s -> PGPlan (DS.selectAggQuerySQL s) vars prepped
 
 traverseQueryRootField
-  :: forall f a b c d
+  :: forall f a b c d e h
    . Applicative f
   => (a -> f b)
-  -> RootField (QueryDB a) c d
-  -> f (RootField (QueryDB b) c d)
+  -> RootField (QueryDB a) c h d
+  -> f (RootField (QueryDB b) c h d)
 traverseQueryRootField f =
   traverseDB f'
   where
@@ -193,7 +193,7 @@ convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
       collectPlan
         :: (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteField))
         -> G.Name
-        -> RootField PGPlan RemoteField J.Value
+        -> RootField PGPlan RemoteField ActionQuery J.Value
         -> (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteField))
 
       collectPlan (seqDB, seqRemote) name (RFRemote rem) =

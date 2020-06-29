@@ -8,6 +8,7 @@ module Hasura.GraphQL.Execute.Prepare
   , initPlanningSt
   , runPlan
   , prepareWithPlan
+  , unpreparedToTextSQL
   , withUserVars
   , buildTypedOperation
   ) where
@@ -15,22 +16,23 @@ module Hasura.GraphQL.Execute.Prepare
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson                             as J
 import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashSet                           as Set
 import qualified Data.IntMap                            as IntMap
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Data.Aeson                             as J
-import qualified Data.HashSet                           as Set
 
-import qualified Hasura.SQL.DML                         as S
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
+import           Hasura.RQL.DML.Internal                (currentSession, sessVarFromCurrentSetting')
+import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.RQL.Types
 
 
 type PlanVariables = Map.HashMap G.Name Int
@@ -82,15 +84,22 @@ prepareWithPlan = \case
   UVSessionVar ty sessVar -> do
     let sessVarVal =
           S.SEOpApp (S.SQLOp "->>")
-          [currentSession, S.SELit $ T.toLower sessVar]
+          [currentSessionExp, S.SELit $ T.toLower sessVar]
     return $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
       PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
       PGTypeArray _      -> sessVarVal
 
   UVLiteral sqlExp -> pure sqlExp
-  UVSession        -> pure currentSession
+  UVSession        -> pure currentSessionExp
   where
-    currentSession = S.SEPrep 1
+    currentSessionExp = S.SEPrep 1
+
+unpreparedToTextSQL :: UnpreparedValue -> S.SQLExp
+unpreparedToTextSQL = \case
+  UVParameter pgValue _   -> toTxtValue $ pcvValue pgValue
+  UVSessionVar ty sessVar -> sessVarFromCurrentSetting' ty sessVar
+  UVLiteral sqlExp        -> sqlExp
+  UVSession               -> currentSession
 
 withUserVars :: UserVars -> [(Q.PrepArg, PGScalarValue)] -> [(Q.PrepArg, PGScalarValue)]
 withUserVars usrVars list =

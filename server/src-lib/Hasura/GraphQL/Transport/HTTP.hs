@@ -58,9 +58,9 @@ runGQ reqId userInfo reqHdrs queryType req = do
             return (telemCacheHit, Telem.Local, (telemTimeIO, Telem.Query, HttpResponse obj []))
       E.MutationExecutionPlan mutationPlan -> do
         case mutationPlan of
-          E.ExecStepDB tx -> do
+          E.ExecStepDB (tx, responseHeaders) -> do
             (telemTimeIO, telemQueryType, resp) <- runMutationDB reqId req userInfo tx
-            return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp []))
+            return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp responseHeaders))
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
           E.ExecStepRaw (name, json) -> do

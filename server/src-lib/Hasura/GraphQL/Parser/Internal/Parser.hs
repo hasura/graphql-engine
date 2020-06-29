@@ -226,6 +226,7 @@ data ScalarRepresentation a where
   SRFloat :: ScalarRepresentation Double
   SRString :: ScalarRepresentation Text
   -- TODO should this have an "others" case?
+  SRAny :: ScalarRepresentation A.Value
 
 scalar
   :: MonadParse m
@@ -249,6 +250,13 @@ scalar name description representation = Parser
       SRString -> case v of
         VString _ a -> pure a
         _           -> typeMismatch name "a string" v
+      SRAny -> case v of
+        VNull               -> pure A.Null
+        VInt i              -> pure $ A.toJSON i
+        VFloat f            -> pure $ A.toJSON f
+        VString _ t         -> pure $ A.toJSON t
+        VBoolean b          -> pure $ A.toJSON b
+        _                   -> typeMismatch name "a scalar" v
   }
   where
     schemaType = NonNullable $ TNamed $ mkDefinition name description TIScalar
@@ -264,6 +272,11 @@ float = scalar $$(litName "Float") Nothing SRFloat
 
 string :: MonadParse m => Parser 'Both m Text
 string = scalar $$(litName "String") Nothing SRString
+
+jsonScalar
+  :: MonadParse m
+  => Name -> Maybe Description -> Parser 'Both m A.Value
+jsonScalar name description = scalar name description SRAny
 
 json :: MonadParse m => Parser 'Both m A.Value
 json = Parser
