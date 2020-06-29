@@ -31,13 +31,14 @@ func Hasura(args ...string) *Session {
 	Expect(err).NotTo(HaveOccurred())
 	return session
 }
-func RunCommandAndSucceed(args ...string) {
+func RunCommandAndSucceed(args ...string) *Session {
 	session := Hasura(args...)
 	Eventually(session, 5).Should(Exit(0))
+	return session
 }
 
 func RandDirName() string {
-	file, err := ioutil.TempFile("", "cli-e2e")
+	file, err := ioutil.TempFile("", "cli-e2e-*")
 	if err != nil {
 		log.Fatal(err)
 	}

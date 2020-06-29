@@ -3,7 +3,6 @@ package e2e
 import (
 	"fmt"
 	"path/filepath"
-	"testing"
 
 	"github.com/hasura/graphql-engine/cli/tests/e2e/helpers"
 
@@ -68,7 +67,3 @@ var _ = Describe("init command", func() {
 		})
 	})
 })
-
-func TestInitCommand(t *testing.T) {
-
-}

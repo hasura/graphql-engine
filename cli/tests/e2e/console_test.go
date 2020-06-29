@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -8,41 +9,76 @@ import (
 	"github.com/hasura/graphql-engine/cli/tests/e2e/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("console command", func() {
-	var teardown func()
-	BeforeSuite(func() {
-		projectDir := helpers.RandDirName()
-		helpers.RunCommandAndSucceed("init", projectDir)
-		err := os.Chdir(projectDir)
-		Expect(err).To(BeNil())
-
-		teardown = func() {
-			os.RemoveAll(projectDir)
-		}
-	})
-	AfterSuite(func() {
-		teardown()
-	})
-
-	When("running console command without any args", func() {
-		It("should open console on port 9695, api port on 9693", func() {
-			session := helpers.Hasura("console")
-
-			resp, err := http.Get("http://localhost:9695/console")
+	Context("v1 project", func() {
+		var teardown func()
+		BeforeEach(func() {
+			projectDir := helpers.RandDirName()
+			fmt.Fprintln(GinkgoWriter, "creating this", projectDir)
+			helpers.RunCommandAndSucceed("init", projectDir, "--version", "1")
+			err := os.Chdir(projectDir)
 			Expect(err).To(BeNil())
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			resp, err = http.Get("http://localhost:9693/apis/migrate")
-			Expect(err).To(BeNil())
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			b, err := ioutil.ReadAll(resp.Body)
-			Expect(b).Should(MatchJSON(`{"migrations":[],"status":{}}`))
-			defer resp.Body.Close()
+			session := helpers.Hasura("console", "--no-browser")
 
-			session.Signal(os.Interrupt)
-			Eventually(session, 5).Should(Exit())
+			teardown = func() {
+				fmt.Fprintln(GinkgoWriter, "tearing down", projectDir)
+				session.Signal(os.Interrupt)
+				os.RemoveAll(projectDir)
+			}
+		})
+		AfterEach(func() {
+			teardown()
+		})
+
+		When("api requests are send", func() {
+			It("generates metadata and migration files", func() {
+				checkRequiredServersAreStarted()
+				sendAPIRequestsToCreateMetadataAndMigrations()
+			})
+		})
+	})
+	Context("v2 project", func() {
+		var teardown func()
+		BeforeEach(func() {
+			projectDir := helpers.RandDirName()
+			fmt.Fprintln(GinkgoWriter, "creating this", projectDir)
+			helpers.RunCommandAndSucceed("init", projectDir)
+			err := os.Chdir(projectDir)
+			Expect(err).To(BeNil())
+			session := helpers.Hasura("console", "--no-browser")
+
+			teardown = func() {
+				fmt.Fprintln(GinkgoWriter, "tearing down", projectDir)
+				session.Signal(os.Interrupt)
+				os.RemoveAll(projectDir)
+			}
+		})
+		AfterEach(func() {
+			teardown()
+		})
+		When("api requests are send", func() {
+			It("generates metadata and migration files", func() {
+				checkRequiredServersAreStarted()
+				sendAPIRequestsToCreateMetadataAndMigrations()
+			})
 		})
 	})
 })
+
+func checkRequiredServersAreStarted() {
+	resp, err := http.Get("http://localhost:9695/console")
+	Expect(err).To(BeNil())
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+	resp, err = http.Get("http://localhost:9693/apis/migrate")
+	Expect(err).To(BeNil())
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+	b, err := ioutil.ReadAll(resp.Body)
+	Expect(b).Should(MatchJSON(`{"migrations":[],"status":{}}`))
+	fmt.Fprint(GinkgoWriter, string(b))
+	defer resp.Body.Close()
+}
+
+func sendAPIRequestsToCreateMetadataAndMigrations() {
+}
