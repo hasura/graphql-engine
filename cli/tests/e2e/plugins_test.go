@@ -1,10 +1,10 @@
-package acceptance
+package e2e
 
 import (
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/acceptance/helpers"
+	"github.com/hasura/graphql-engine/cli/tests/e2e/helpers"
 	"github.com/mitchellh/go-homedir"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

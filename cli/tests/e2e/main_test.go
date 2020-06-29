@@ -1,4 +1,4 @@
-package acceptance
+package e2e
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestAcceptance(t *testing.T) {
+func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Acceptance Suite")
 }
