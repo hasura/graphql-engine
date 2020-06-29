@@ -87,15 +87,31 @@ Here's a sample SQL block that you can run on your database (as a **superuser**)
     GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO hasurauser;
 
     -- Similarly add this for other schemas, if you have any.
-    GRANT USAGE ON SCHEMA <schema-name> TO hasurauser;
-    GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
-    GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
-    GRANT ALL ON ALL FUNCTIONS IN SCHEMA <schema-name> TO hasurauser;
+    -- GRANT USAGE ON SCHEMA <schema-name> TO hasurauser;
+    -- GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
+    -- GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
+    -- GRANT ALL ON ALL FUNCTIONS IN SCHEMA <schema-name> TO hasurauser;
 
 Note for managed databases (AWS RDS, GCP Cloud SQL, etc.)
----------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Hasura works out of the box with the default superuser, usually called "postgres", created by most managed cloud database providers. But if you are creating a new user and giving the :ref:`above <postgres_permissions>` privileges, then you may notice that the following commands may throw warnings/errors:
+Hasura works out of the box with the default superuser, usually called "postgres", created by most managed cloud database providers. On some cloud providers like **Google Cloud SQL**, if you are creating a new user and giving the :ref:`above <postgres_permissions>` privileges, then you may notice that the following commands may throw warnings/errors:
+
+.. code-block:: sql
+
+   postgres=> ALTER SCHEMA hdb_catalog OWNER TO hasurauser;
+   ERROR:  must be member of role "hasurauser"
+
+This happens because the superuser created by the cloud provider sometimes has different permissions. To fix this, you can run the following command first:
+
+.. code-block:: sql
+
+   -- assuming "postgres" is the superuser that you are running the commands with.
+   postgres=> GRANT hasurauser to postgres;
+   GRANT
+   postgres=> ALTER SCHEMA hdb_catalog OWNER TO hasurauser;
+
+You may also notice the following commands throw warnings/errors:
 
 .. code-block:: sql
 
@@ -108,11 +124,7 @@ Hasura works out of the box with the default superuser, usually called "postgres
   postgres=> GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO hasurauser;
   ERROR:  permission denied for table pg_statistic
 
-You can **ignore** these warnings/errors or skip granting these permission as all users have relevant access to ``information_schema`` and ``pg_catalog`` schemas by default (see keyword `PUBLIC <https://www.postgresql.org/docs/current/sql-grant.html>`_) .
-
-.. admonition:: Google Cloud SQL
-
-   On Google Cloud SQL, running ``ALTER SCHEMA hdb_catalog OWNER TO hasurauser;`` may give you an error ``ERROR:  must be member of role "hasurauser"``. You can fix this by running ``GRANT hasurauser to postgres;`` first, assuming "postgres" is the superuser that you are running the commands with. 
+You can **ignore** these warnings/errors or skip granting these permission as usually all users have relevant access to ``information_schema`` and ``pg_catalog`` schemas by default (see keyword `PUBLIC <https://www.postgresql.org/docs/current/sql-grant.html>`_).
 
 **pgcrypto** in PG search path
 ------------------------------
