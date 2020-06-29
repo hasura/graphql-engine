@@ -37,7 +37,7 @@ addNonColumnFields
      , [CatalogComputedField]
      , [RemoteRelationship]
      ) `arr` FieldInfoMap FieldInfo
-addNonColumnFields = proc (rawTableInfo, columns,remoteSchemaMap, relationships, computedFields) -> do
+addNonColumnFields = proc (rawTableInfo, columns, remoteSchemaMap, relationships, computedFields, remoteRelationships) -> do
   relationshipInfos
     <- buildInfoMapPreservingMetadata _crRelName mkRelationshipMetadataObject buildRelationship
     -< (_tciForeignKeys <$> rawTableInfo, relationships)
@@ -54,16 +54,15 @@ addNonColumnFields = proc (rawTableInfo, columns,remoteSchemaMap, relationships,
   let mapKey f = M.fromList . map (first f) . M.toList
       relationshipFields = mapKey fromRel relationshipInfos
       computedFieldFields = mapKey fromComputedField computedFieldInfos
-      remoteRelationshipFields = mapKey fromRemoteRelationship $
-                                 M.map (\((rf, _), mo) -> (rf, mo)) rawRemoteRelationshipInfos
+      remoteRelationshipFields = mapKey fromRemoteRelationship rawRemoteRelationshipInfos
 
   -- First, check for conflicts between non-column fields, since we can raise a better error
   -- message in terms of the two metadata objects that define them.
   (align relationshipFields computedFieldFields >- returnA)
     >-> (| Inc.keyed (\fieldName fields -> (fieldName, fields) >- noFieldConflicts FIRelationship FIComputedField) |)
     -- Second, align with remote relationship fields
-    -- >-> (\fields -> align (M.catMaybes fields) remoteRelationshipFields >- returnA)
-    -- >-> (| Inc.keyed (\fieldName fields -> (fieldName, fields) >- noFieldConflicts id FIRemoteRelationship) |)
+    >-> (\fields -> align (M.catMaybes fields) remoteRelationshipFields >- returnA)
+    >-> (| Inc.keyed (\fieldName fields -> (fieldName, fields) >- noFieldConflicts id FIRemoteRelationship) |)
     -- Next, check for conflicts with custom field names. This is easiest to do before merging with
     -- the column info itself because we have access to the information separately, and custom field
     -- names are not currently stored as a separate map (but maybe should be!).
@@ -164,7 +163,7 @@ mkRemoteRelationshipMetadataObject rr =
 buildRemoteRelationship
   :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
-  => (([PGColumnInfo], RemoteSchemaMap), RemoteRelationship) `arr` Maybe (RemoteFieldInfo, VT.TypeMap)
+  => (([PGColumnInfo], RemoteSchemaMap), RemoteRelationship) `arr` Maybe RemoteFieldInfo
 buildRemoteRelationship = proc ((pgColumns, remoteSchemaMap), remoteRelationship) -> do
   let relationshipName = rtrName remoteRelationship
       tableName = rtrTable remoteRelationship
@@ -173,8 +172,8 @@ buildRemoteRelationship = proc ((pgColumns, remoteSchemaMap), remoteRelationship
       addRemoteRelationshipContext e = "in remote relationship" <> relationshipName <<> ": " <> e
   (| withRecordInconsistency (
        (| modifyErrA (do
-          (remoteField, typeMap, dependencies) <- bindErrorA -< resolveRemoteRelationship remoteRelationship pgColumns remoteSchemaMap
+          (remoteField, dependencies) <- bindErrorA -< resolveRemoteRelationship remoteRelationship pgColumns remoteSchemaMap
           recordDependencies -< (metadataObject, schemaObj, dependencies)
-          returnA -< (remoteField, typeMap))
+          returnA -< remoteField)
         |)(addTableContext tableName . addRemoteRelationshipContext))
    |) metadataObject

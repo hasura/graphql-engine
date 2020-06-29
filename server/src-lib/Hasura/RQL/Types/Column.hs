@@ -167,6 +167,7 @@ data PGColumnInfo
   } deriving (Show, Eq, Generic)
 instance NFData PGColumnInfo
 instance Cacheable PGColumnInfo
+instance Hashable PGColumnInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColumnInfo)
 
 onlyIntCols :: [PGColumnInfo] -> [PGColumnInfo]

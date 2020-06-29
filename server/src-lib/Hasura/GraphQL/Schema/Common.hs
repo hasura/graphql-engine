@@ -14,8 +14,8 @@ import           Hasura.SQL.Types
 
 data QueryContext =
   QueryContext
-  { qcStringifyNum :: Bool
-  , qcRemoteFields :: [P.Definition P.FieldInfo]
+  { qcStringifyNum :: !Bool
+  , qcRemoteFields :: !(HashMap RemoteSchemaName [P.Definition P.FieldInfo])
   }
 
 textToName :: MonadError QErr m => Text -> m G.Name

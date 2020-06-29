@@ -42,6 +42,11 @@ newtype SchemaT n m a = SchemaT
   { unSchemaT :: ReaderT (RoleName, TableCache) (StateT (DMap ParserId (ParserById n)) m) a
   } deriving (Functor, Applicative, Monad, MonadError e)
 
+instance Monad m => MonadReader a (SchemaT n (ReaderT a m)) where
+  ask = SchemaT $ lift $ lift ask
+  local f (SchemaT x) = SchemaT $ mapReaderT (mapStateT (local f)) x
+  reader f = SchemaT $ lift $ lift $ reader f
+
 runSchemaT :: Monad m => RoleName -> TableCache -> SchemaT n m a -> m a
 runSchemaT roleName tableCache = unSchemaT
   >>> flip runReaderT (roleName, tableCache)

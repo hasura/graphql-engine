@@ -76,6 +76,9 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
         -- Using computed fields in boolean expressions is not currently supported.
         FIComputedField _ -> empty
 
+        -- TODO: Check if remote relationship fields are supported in boolean expressions
+        FIRemoteRelationship _ -> empty
+
 comparisonExps
   :: (MonadSchema n m, MonadError QErr m)
   => PGColumnType -> m (Parser 'Input n [ComparisonExp])

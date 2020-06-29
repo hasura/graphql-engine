@@ -50,28 +50,31 @@ fromRemoteRelationship = FieldName . remoteRelationshipNameToText
 -- | Resolved remote relationship
 data RemoteFieldInfo
   = RemoteFieldInfo
-  { _rfiName         :: !RemoteRelationshipName
+  { _rfiName             :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
-  , _rfiGType        :: G.GType
-  , _rfiParamMap     :: !(HashMap G.Name G.InputValueDefinition)
+
+--  , _rfiGType            :: G.GType -- do we need this for the PDV refactor?
+  , _rfiParamMap         :: !(HashMap G.Name G.InputValueDefinition)
   -- ^ Fully resolved arguments (no variable references, since this uses
   -- 'G.ValueConst' not 'G.Value').
-  , _rfiHasuraFields :: !(HashSet PGColumnInfo)
-  , _rfiRemoteFields :: !(NonEmpty FieldCall)
-  , _rfiRemoteSchema :: !RemoteSchemaInfo
-  , _rfiSchemaDoc    :: G.SchemaDocument
+  , _rfiHasuraFields     :: !(HashSet PGColumnInfo)
+  , _rfiRemoteFields     :: !RemoteFields
+  , _rfiRemoteSchema     :: !RemoteSchemaInfo
+  , _rfiSchemaDoc        :: G.SchemaDocument
   -- ^ The schema document is used to make parsers for the arguments and the selection set
+  , _rfiRemoteSchemaName :: !RemoteSchemaName -- TODO: maybe include this field in 'RemoteSchemaInfo'?
+  -- ^ Name of the remote schema, that's used for joining
   } deriving (Show, Eq, Generic)
 instance Cacheable RemoteFieldInfo
 
 instance ToJSON RemoteFieldInfo where
   toJSON RemoteFieldInfo{..} = object
     [ "name" .= _rfiName
-    , "g_type" .= toJsonGType _rfiGType
+--    , "g_type" .= toJsonGType _rfiGType
     , "param_map" .= fmap toJsonInpValInfo _rfiParamMap
     , "hasura_fields" .= _rfiHasuraFields
-    , "remote_fields" .= RemoteFields _rfiRemoteFields
+    , "remote_fields" .= _rfiRemoteFields
     , "remote_schema" .= _rfiRemoteSchema
     ]
     where

@@ -71,6 +71,7 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
                 aggregationOrderBy <- join <$> P.fieldOptional aggregateFieldName Nothing (P.nullable aggregationParser)
                 pure $ fmap (map $ fmap $ RQL.AOCAgg relationshipInfo newPerms) aggregationOrderBy
         FIComputedField _ -> empty
+        FIRemoteRelationship _ -> empty
 
 
 

@@ -86,6 +86,8 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
       SOTable tableName -> void $ resolveTable tableName
       SOFunction functionName -> unless (functionName `M.member` _boFunctions cache) $
         Left $ "function " <> functionName <<> " is not tracked"
+      SORemoteSchema remoteSchemaName -> unless (remoteSchemaName `M.member` _boRemoteSchemas cache) $
+        Left $ "remote schema " <> remoteSchemaName <<> " is not found"
       SOTableObj tableName tableObjectId -> do
         tableInfo <- resolveTable tableName
         case tableObjectId of
@@ -95,6 +97,8 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
             void $ resolveField tableInfo (fromRel relName) _FIRelationship "relationship"
           TOComputedField fieldName ->
             void $ resolveField tableInfo (fromComputedField fieldName) _FIComputedField "computed field"
+          TORemoteRel fieldName ->
+            void $ resolveField tableInfo (fromRemoteRelationship fieldName) _FIRemoteRelationship "remote relationship"
           TOForeignKey constraintName -> do
             let foreignKeys = _tciForeignKeys $ _tiCoreInfo tableInfo
             unless (isJust $ find ((== constraintName) . _cName . _fkConstraint) foreignKeys) $
@@ -129,6 +133,7 @@ deleteMetadataObject objectId = case objectId of
   MOTableObj tableName tableObjectId -> boTables.ix tableName %~ case tableObjectId of
     MTORel           name _ -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
     MTOComputedField name   -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)
+    MTORemoteRelationship name -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRemoteRelationship name)
     MTOPerm roleName permType -> withPermType permType \accessor ->
       tiRolePermInfoMap.ix roleName.permAccToLens accessor .~ Nothing
     MTOTrigger name -> tiEventTriggerInfoMap %~ M.delete name

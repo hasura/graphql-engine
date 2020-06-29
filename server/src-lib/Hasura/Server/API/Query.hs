@@ -26,6 +26,7 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
+import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DML.Count
@@ -59,6 +60,10 @@ data RQLQueryV1
 
   | RQAddComputedField !AddComputedField
   | RQDropComputedField !DropComputedField
+
+  | RQCreateRemoteRelationship !RemoteRelationship
+  | RQUpdateRemoteRelationship !RemoteRelationship
+  | RQDeleteRemoteRelationship !DeleteRemoteRelationship
 
   | RQCreateInsertPermission !CreateInsPerm
   | RQCreateSelectPermission !CreateSelPerm
@@ -224,6 +229,10 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQAddComputedField _            -> True
   RQDropComputedField _           -> True
 
+  RQCreateRemoteRelationship _        -> True
+  RQUpdateRemoteRelationship _        -> True
+  RQDeleteRemoteRelationship _        -> True
+
   RQCreateInsertPermission _      -> True
   RQCreateSelectPermission _      -> True
   RQCreateUpdatePermission _      -> True
@@ -373,6 +382,10 @@ runQueryM rq = withPathK "args" $ case rq of
       RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q
       RQReloadRemoteSchema q       -> runReloadRemoteSchema q
 
+      RQCreateRemoteRelationship q -> runCreateRemoteRelationship q
+      RQUpdateRemoteRelationship q -> runUpdateRemoteRelationship q
+      RQDeleteRemoteRelationship q -> runDeleteRemoteRelationship q
+
       RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
       RQRedeliverEvent q           -> runRedeliverEvent q
@@ -429,6 +442,10 @@ requiresAdmin = \case
 
     RQAddComputedField _            -> True
     RQDropComputedField _           -> True
+
+    RQCreateRemoteRelationship _        -> True
+    RQUpdateRemoteRelationship _        -> True
+    RQDeleteRemoteRelationship _        -> True
 
     RQCreateInsertPermission _      -> True
     RQCreateSelectPermission _      -> True

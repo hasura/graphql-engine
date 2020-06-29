@@ -304,6 +304,7 @@ library
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
+                     , Hasura.RQL.DDL.RemoteRelationship
                      , Hasura.RQL.DDL.QueryCollection
                      -- , Hasura.RQL.DDL.Action
                      -- , Hasura.RQL.DDL.CustomTypes
