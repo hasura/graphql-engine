@@ -105,7 +105,7 @@ insertOneIntoTable
   -> m (FieldParser n (AnnMultiInsert UnpreparedValue))
 insertOneIntoTable table fieldName description insertPerms selectPerms updatePerms  = do
   columns         <- tableColumns table
-  selectionParser <- tableSelectionSet table selectPerms
+  selectionParser <- tableSelectionSet table selectPerms Nothing
   objectParser    <- tableFieldsInput table insertPerms
   conflictParser  <- fmap join $ sequenceA $ conflictObject table (Just selectPerms) <$> updatePerms
   let conflictName  = $$(G.litName "on_conflict")
@@ -320,7 +320,7 @@ updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT 
   columns   <- lift   $ tableSelectColumns table selectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
   opArgs    <- MaybeT $ updateOperators table updatePerms
-  selection <- lift $ tableSelectionSet table selectPerms
+  selection <- lift $ tableSelectionSet table selectPerms Nothing
   let argsParser = liftA2 (,) opArgs pkArgs
   pure $ P.subselection fieldName description argsParser selection
     <&> mkUpdateObject table columns updatePerms . fmap RQL.MOutSinglerowObject
@@ -470,7 +470,7 @@ deleteFromTableByPk
 deleteFromTableByPk table fieldName description deletePerms selectPerms = runMaybeT $ do
   columns   <- lift   $ tableSelectColumns table selectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
-  selection <- lift $ tableSelectionSet table selectPerms
+  selection <- lift $ tableSelectionSet table selectPerms Nothing
   pure $ P.subselection fieldName description pkArgs selection
     <&> mkDeleteObject table columns deletePerms . fmap RQL.MOutSinglerowObject
 
@@ -502,7 +502,7 @@ mutationSelectionSet table selectPerms =
   tableName <- qualifiedObjectToName table
   returning <- runMaybeT do
     permissions <- MaybeT $ pure selectPerms
-    tableSet    <- lift $ tableSelectionSet table permissions
+    tableSet    <- lift $ tableSelectionSet table permissions Nothing
     let returningName = $$(G.litName "returning")
         returningDesc = "data from the rows affected by the mutation"
     pure $ RQL.MRet <$> P.subselection_ returningName  (Just returningDesc) tableSet
