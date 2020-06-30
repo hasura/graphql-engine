@@ -21,7 +21,7 @@ One-Click deploy on Nhost
 -------------------------
 
 .. note::
-   Make sure to `create an Nhost account <https://nhost.io/register>`_ first. Nhost offers a 30-day trial with its starter plan.
+   Make sure to `create an Nhost account <https://nhost.io/register>`__ first. Nhost offers a 30-day trial with its starter plan.
 
 Once you're logged into your Nhost account, click the button bellow to configure your project.
 
