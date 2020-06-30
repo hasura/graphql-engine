@@ -323,9 +323,9 @@ instance HasDefinition (NonNullableType k) (TypeInfo k) where
   definitionLens f (TNamed definition) = TNamed <$> f definition
   definitionLens f (TList t)           = TList <$> definitionLens f t
 
-data ObjectInfo = ObjectInfo [Definition FieldInfo] [Definition InterfaceInfo]
-data InterfaceInfo = InterfaceInfo [Definition FieldInfo] [Definition InterfaceInfo] [Definition ObjectInfo]
-data UnionInfo = UnionInfo [Definition ObjectInfo]
+data ObjectInfo = ObjectInfo ~[Definition FieldInfo] ~[Definition InterfaceInfo]
+data InterfaceInfo = InterfaceInfo ~[Definition FieldInfo] ~[Definition InterfaceInfo] ~[Definition ObjectInfo]
+data UnionInfo = UnionInfo ~[Definition ObjectInfo]
 
 data TypeInfo k where
   TIScalar :: TypeInfo 'Both

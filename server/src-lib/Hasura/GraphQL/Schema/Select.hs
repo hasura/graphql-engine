@@ -8,6 +8,7 @@ module Hasura.GraphQL.Schema.Select
   , selectFunction
   , selectFunctionAggregate
   , tableSelectionSet
+  , nodeField
   ) where
 
 
@@ -226,7 +227,7 @@ tableSelectionSet
      )
   => QualifiedTable
   -> SelPermInfo
-  -> Maybe (m (Parser 'Output n b))
+  -> Maybe (Parser 'Output n b)
   -- ^ An interface that this object claims to implement (used for Relay)
   -> m (Parser 'Output n AnnotatedFields)
 tableSelectionSet table selectPermissions interfaceM = memoizeOn 'tableSelectionSet table do
@@ -245,8 +246,7 @@ tableSelectionSet table selectPermissions interfaceM = memoizeOn 'tableSelection
   -- for the construction of invalid queries.
 
   let description  = G.Description . getPGDescription <$> _tciDescription tableInfo
-  interface <- traverse id interfaceM
-  pure $ P.selectionSetObject tableName description fieldParsers (toList interface)
+  pure $ P.selectionSetObject tableName description fieldParsers (toList interfaceM)
     <&> parsedSelectionsToFields RQL.FExp
 
 
@@ -855,11 +855,12 @@ node
   => HashSet QualifiedTable
   -> m (P.Parser 'Output n (HashMap QualifiedTable (SelPermInfo, AnnotatedFields)))
 node allTables = memoizeOn 'node allTables do
+  myself <- node allTables
   let idField = P.selection_ $$(G.litName "id") Nothing P.identifier
   tables :: HashMap QualifiedTable (Parser 'Output n (SelPermInfo, AnnotatedFields)) <-
     Map.mapMaybe id <$> flip Map.traverseWithKey (Set.toMap allTables) \table _ -> do
     selectPermissions <- tableSelectPermissions table
-    for selectPermissions \perm -> fmap (fmap (perm,)) $ tableSelectionSet table perm $ Just (node allTables)
+    for selectPermissions \perm -> fmap (fmap (perm,)) $ tableSelectionSet table perm $ Just myself
   pure $ P.selectionSetInterface $$(G.litName "Node") Nothing [idField] tables []
 
 nodeField

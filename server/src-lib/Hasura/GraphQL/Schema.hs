@@ -76,9 +76,12 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemata allActions no
                    (remoteSchemaName, map (\(FieldParser defn _) -> defn) queryFieldParser))
             $ Map.toList remotes
           allActionInfos = Map.elems allActions
+          queryHasuraOrRelay = case queryType of
+            QueryHasura -> queryWithIntrospection (S.fromList $ Map.keys validTables)
+                           validFunctions queryRemotes allActionInfos nonObjectCustomTypes
+            QueryRelay  -> relayWithIntrospection (S.fromList $ Map.keys validTables)
           gqlContext = GQLContext
-            <$> (finalizeParser <$> queryWithIntrospection (S.fromList $ Map.keys validTables)
-                                    validFunctions queryRemotes allActionInfos nonObjectCustomTypes)
+            <$> (finalizeParser <$> queryHasuraOrRelay)
             <*> (finalizeParser <$> mutation (S.fromList $ Map.keys validTables) allActionInfos nonObjectCustomTypes)
       flip runReaderT (queryType, roleName, allTables, QueryContext stringifyNum queryRemotesMap) $
         P.runSchemaT gqlContext
@@ -251,8 +254,47 @@ queryWithIntrospection allTables allFunctions allRemotes allActions nonObjectCus
         , sTypes = allTypes
         , sQueryType = P.parserType basicQueryP
         , sMutationType = Just $ P.parserType mutationP
-        -- TODO make sure NOT to expose remote schemata via subscription introspection (when remote schemata are implemented)
+        -- TODO make sure NOT to expose remote schemas via subscription introspection (when remote schemata are implemented)
         , sSubscriptionType = Just $ P.parserType subscriptionP
+        , sDirectives = []
+        }
+  let partialQueryFields =
+        basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
+  pure $ P.selectionSet $$(G.litName "query_root") Nothing partialQueryFields
+    <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+
+relayWithIntrospection
+  :: forall m n r
+   . ( MonadSchema n m
+     , MonadTableInfo r m
+     , MonadRole r m
+     , Has QueryContext r
+     , Has GraphQLQueryType r
+     )
+  => HashSet QualifiedTable
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+relayWithIntrospection allTables = do
+  nodeF <- nodeField allTables
+  mutationP <- mutation allTables [] mempty
+  let basicQueryFP = (:[]) . (fmap (RFDB . QDBPrimaryKey)) $ nodeF
+      basicQueryP = queryRootFromFields basicQueryFP
+  emptyIntro <- emptyIntrospection
+  allBasicTypes <- collectTypes
+    [ P.parserType basicQueryP
+    , P.parserType mutationP
+    ]
+  allIntrospectionTypes <- collectTypes (P.parserType (queryRootFromFields emptyIntro))
+  let allTypes = Map.unions
+        [ allBasicTypes
+        , Map.filterWithKey (\name _info -> name /= $$(G.litName "query_root")) allIntrospectionTypes
+        ]
+      partialSchema = Schema
+        { sDescription = Nothing
+        , sTypes = allTypes
+        , sQueryType = P.parserType basicQueryP
+        , sMutationType = Just $ P.parserType mutationP
+        -- TODO make sure NOT to expose remote schemas via subscription introspection (when remote schemata are implemented)
+        , sSubscriptionType = Nothing
         , sDirectives = []
         }
   let partialQueryFields =
