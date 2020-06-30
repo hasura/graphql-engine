@@ -22,12 +22,18 @@ type CancelButtonProps = {
   onClickHandler: () => void;
 };
 
-const handlerWrapper = (e: React.MouseEvent<HTMLButtonElement>, handler: () => void) => {
+const handlerWrapper = (
+  e: React.MouseEvent<HTMLButtonElement>,
+  handler: () => void
+) => {
   e.preventDefault();
   handler();
-}
+};
 
-const CancelEventButton: React.FC<CancelButtonProps> = ({ id, onClickHandler }) => (
+const CancelEventButton: React.FC<CancelButtonProps> = ({
+  id,
+  onClickHandler,
+}) => (
   <Button
     key={id}
     onClick={e => handlerWrapper(e, onClickHandler)}
