@@ -37,6 +37,8 @@ Currently, only functions which satisfy the following constraints can be exposed
 - **Return type**: MUST be ``SETOF <table-name>``
 - **Argument modes**: ONLY ``IN``
 
+.. _create_and_expose_sql_functions:
+
 Creating & exposing SQL functions
 ---------------------------------
 

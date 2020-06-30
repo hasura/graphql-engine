@@ -186,6 +186,8 @@ If the ``!`` is not added and the variable is nullable, the generated query will
    Hasura is fast even for queries which cannot have a reusable plan.
    This should concern you only if you face a high volume of traffic (thousands of requests per second).
 
+.. _data_validation_pg_indexes:
+
 Using PG indexes
 ^^^^^^^^^^^^^^^^
 

@@ -18,8 +18,12 @@ Introduction
 `Indexes <https://www.postgresql.org/docs/current/sql-createindex.html>`__ are a way of increasing performance on a field that is queried frequently. The concept is similar to the one of an index in a book. 
 It helps accessing the data you're looking for more quickly.
 
-Examples
---------
+.. note::
+
+  Learn more about creating indexes in the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createindex.html>`__.
+
+Use cases
+---------
 
 **Example:**
 
@@ -37,10 +41,7 @@ We can now create an index on the ``name`` field of the ``authors`` table:
 
 Since the database is now able to look up the result of these queries more quickly, the performance of these queries increases significantly.
 
-Indexes & Hasura
-----------------
+Postgres indexes & Hasura
+-------------------------
 
-
-.. note::
-
-  Learn more about creating indexes in the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createindex.html>`__.
+Indexes can be used to optimize query performance in Hasura. :ref:`Refer to this page <data_validation_pg_indexes>` for information about query performance and how to add Postgres indexes to Hasura.

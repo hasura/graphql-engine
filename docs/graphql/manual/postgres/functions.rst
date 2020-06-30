@@ -15,11 +15,15 @@ Postgres functions
 Introduction
 ------------
 
-`Postgres functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ allow you to define a set of operations that can include several statements such as declarations, assignments and conditional workflows.
-They are a way of customizing your database schema.
+`Postgres functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ allow you to customize your database schema by defining a set of operations that can include several statements such as declarations, assignments and conditional workflows. 
+Postgres functions are similar to views but are used when we have arguments.
 
-Examples
---------
+.. note::
+
+  For more information on Postgres functions, please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createfunction.html>`__.
+
+Use cases
+---------
 
 **Example:**
 
@@ -49,9 +53,9 @@ Let's break this function apart:
 - Function body: Block between ``BEGIN`` and ``END`` checking if the author for whom the article is to be inserted is active
 - Response: The response (``$BODY$``) is returned in the ``slpgsql`` language
 
-Functions & Hasura
-------------------
+Postgres functions & Hasura
+---------------------------
 
-.. note::
+Functions can be used to extend your Hasura GraphQL API, and they can also be exposed via the same.
 
-  For more information on Postgres functions, please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createfunction.html>`__.
+See :ref:`here <create_and_expose_sql_functions>` how to create and expose Postgres functions in Hasura.

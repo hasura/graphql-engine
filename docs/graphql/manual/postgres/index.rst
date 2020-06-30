@@ -44,8 +44,8 @@ Not all open source applications support Postgres as MySQL is generally a bit mo
 
   MySQL support for Hasura is in the works.
 
-Postgres features & Hasura
---------------------------
+Postgres features
+-----------------
 
 Postgres has some features that can be used to extend your Hasura GraphQL API. 
 They are described in the following sections:
