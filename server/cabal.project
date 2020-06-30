@@ -36,8 +36,7 @@ package graphql-engine
 source-repository-package
   type: git
   location: https://github.com/hasura/pg-client-hs.git
-  -- TODO merge https://github.com/hasura/pg-client-hs/pull/16 
-  tag: b526847a79966f0cd7b6de9365a83b4411ad2002 
+  tag: cbfc69b935d19dc40be8cdcc73a70b81cf511d34
 
 source-repository-package
   type: git
