@@ -32,8 +32,8 @@ import {
   setTypeDefinition,
   setDerivedActionParentOperation,
 } from '../../Actions/Add/reducer';
-import snippets from '../snippets';
 import { getGraphQLEndpoint } from '../utils';
+import snippets from '../snippets';
 
 import 'graphiql/graphiql.css';
 import './GraphiQL.css';
@@ -60,17 +60,16 @@ class GraphiQLWrapper extends Component {
   }
 
   _handleToggleCodeExporter = () => {
-    const newIsOpen = !this.state.codeExporterOpen;
+    const nextState = !this.state.codeExporterOpen;
 
-    setCodeExporterOpen(newIsOpen);
+    setCodeExporterOpen(nextState);
 
-    this.setState({ codeExporterOpen: newIsOpen });
+    this.setState({ codeExporterOpen: nextState });
   };
 
   render() {
     const styles = require('../../../Common/Common.scss');
 
-    const { codeExporterOpen } = this.state;
     const {
       numberOfTables,
       urlParams,
@@ -79,6 +78,7 @@ class GraphiQLWrapper extends Component {
       mode,
       loading,
     } = this.props;
+    const { codeExporterOpen } = this.state;
     const graphqlNetworkData = this.props.data;
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {
@@ -160,21 +160,6 @@ class GraphiQLWrapper extends Component {
       dispatch(push(getActionsCreateRoute()));
     };
 
-    const getCodeExporter = query => {
-      return (
-        <>
-          {codeExporterOpen ? (
-            <CodeExporter
-              hideCodeExporter={this._handleToggleCodeExporter}
-              snippets={snippets}
-              query={query}
-              codeMirrorTheme="default"
-            />
-          ) : null}
-        </>
-      );
-    };
-
     const renderGraphiql = graphiqlProps => {
       const voyagerUrl = graphqlNetworkData.consoleUrl + '/voyager-view';
       let analyzerProps = {};
@@ -249,7 +234,14 @@ class GraphiQLWrapper extends Component {
               />
             </GraphiQL.Toolbar>
           </GraphiQL>
-          {getCodeExporter(graphiqlProps.query)}
+          {codeExporterOpen ? (
+            <CodeExporter
+              hideCodeExporter={this._handleToggleCodeExporter}
+              snippets={snippets}
+              query={graphiqlProps.query}
+              codeMirrorTheme="default"
+            />
+          ) : null}
         </>
       );
     };
