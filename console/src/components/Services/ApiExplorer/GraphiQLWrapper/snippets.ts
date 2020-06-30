@@ -46,8 +46,8 @@ const getQuery = (query: string) => {
 
 const getVariables = (operationData: OperationData): string => {
   const params = (
-    operationData.operationDefinition.variableDefinitions || []
-  ).map(def => def.variable.name.value);
+    operationData?.operationDefinition?.variableDefinitions || []
+  ).map(def => def?.variable?.name?.value);
   const variablesBody = params.map(param => `"${param}": ${param}`).join(', ');
   const variables = `{${variablesBody}}`;
   return variables;
