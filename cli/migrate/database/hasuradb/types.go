@@ -79,7 +79,7 @@ type deleteCronTriggerInput struct {
 }
 
 type actionDefinition struct {
-	Name       interface{} `json:"name,omitempty" yaml:"name,omitempty"`
+	Action     interface{} `json:"action,omitempty" yaml:"action,omitempty"`
 	Definition interface{} `json:"definition,omitempty" yaml:"definition,omitempty"`
 }
 
@@ -107,6 +107,13 @@ type dropActionPermissionInput struct {
 	Name    interface{} `json:"name,omitempty" yaml:"name,omitempty"`
 	Role    interface{} `json:"role,omitempty" yaml:"role,omitempty"`
 	Comment string      `json:"comment,omitempty" yaml:"comment,omitempty"`
+}
+
+type setCustomTypesInput struct {
+	InputObjects interface{} `json:"input_objects,omitempty" yaml:"input_objects,omitempty"`
+	Objects      interface{} `json:"objects,omitempty" yaml:"objects,omitempty"`
+	Scalars      interface{} `json:"scalars,omitempty" yaml:"scalars,omitempty"`
+	Enums        interface{} `json:"enums,omitempty" yaml:"enums,omitempty"`
 }
 
 func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
