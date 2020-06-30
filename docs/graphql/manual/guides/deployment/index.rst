@@ -29,7 +29,7 @@ Guides: Deployment
    :titlesonly:
    :hidden:
 
-   Heroku one-click deployment <heroku-quickstart>
+   Heroku One-click deployment <heroku-quickstart>
    DigitalOcean One-click App on Marketplace <digital-ocean-one-click>
    Azure Container Instances with Postgres <azure-container-instances-postgres>
    Google Cloud Platform with Kubernetes engine and Cloud SQL <google-kubernetes-engine-cloud-sql>
