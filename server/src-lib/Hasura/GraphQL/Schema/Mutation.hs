@@ -7,49 +7,45 @@ module Hasura.GraphQL.Schema.Mutation
   , updateTableByPk
   , deleteFromTable
   , deleteFromTableByPk
-  , actionAsync
-  , actionSync
   -- FIXME: move somewhere else
   , traverseAnnInsert
   , convertToSQLTransaction
   ) where
 
 
+import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                            as J
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.HashMap.Strict.InsOrd            as OMap
-import qualified Data.HashSet                          as Set
-import qualified Data.List                             as L
-import qualified Data.List.NonEmpty                    as NE
-import qualified Data.Sequence                         as Seq
-import qualified Data.Text                             as T
-import qualified Database.PG.Query                     as Q
-import qualified Language.GraphQL.Draft.Syntax         as G
-import           Data.Has
+import qualified Data.Aeson                     as J
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.HashMap.Strict.InsOrd     as OMap
+import qualified Data.HashSet                   as Set
+import qualified Data.List                      as L
+import qualified Data.List.NonEmpty             as NE
+import qualified Data.Sequence                  as Seq
+import qualified Data.Text                      as T
+import qualified Database.PG.Query              as Q
+import qualified Language.GraphQL.Draft.Syntax  as G
 
-import qualified Hasura.GraphQL.Parser                 as P
-import qualified Hasura.GraphQL.Parser.Internal.Parser as P
-import qualified Hasura.RQL.DML.Delete.Types           as RQL
-import qualified Hasura.RQL.DML.Insert                 as RQL
-import qualified Hasura.RQL.DML.Insert.Types           as RQL
-import qualified Hasura.RQL.DML.Internal               as RQL
-import qualified Hasura.RQL.DML.Mutation               as RQL
-import qualified Hasura.RQL.DML.Returning              as RQL
-import qualified Hasura.RQL.DML.Returning.Types        as RQL
-import qualified Hasura.RQL.DML.Select.Types           as RQL
-import qualified Hasura.RQL.DML.Update                 as RQL
-import qualified Hasura.RQL.DML.Update.Types           as RQL
-import qualified Hasura.RQL.GBoolExp                   as RQL
-import qualified Hasura.SQL.DML                        as S
+import qualified Hasura.GraphQL.Parser          as P
+import qualified Hasura.RQL.DML.Delete.Types    as RQL
+import qualified Hasura.RQL.DML.Insert          as RQL
+import qualified Hasura.RQL.DML.Insert.Types    as RQL
+import qualified Hasura.RQL.DML.Internal        as RQL
+import qualified Hasura.RQL.DML.Mutation        as RQL
+import qualified Hasura.RQL.DML.Returning       as RQL
+import qualified Hasura.RQL.DML.Returning.Types as RQL
+import qualified Hasura.RQL.DML.Update          as RQL
+import qualified Hasura.RQL.DML.Update.Types    as RQL
+import qualified Hasura.RQL.GBoolExp            as RQL
+import qualified Hasura.SQL.DML                 as S
 
 import           Hasura.Db
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
-                                                        Parser, UnpreparedValue (..), mkParameter)
+import           Hasura.GraphQL.Parser          (FieldParser, InputFieldsParser, Kind (..), Parser,
+                                                 UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Column          (qualifiedObjectToName)
+import           Hasura.GraphQL.Parser.Column   (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Insert
@@ -785,169 +781,3 @@ decodeEncJSON :: (J.FromJSON a, QErrM m) => EncJSON -> m a
 decodeEncJSON =
   either (throw500 . T.pack) decodeValue .
   J.eitherDecode . encJToLBS
-
-------------------- Actions -----------------------
-actionAsync
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => NonObjectTypeMap
-  -> ActionInfo
-  -> m (Maybe (FieldParser n AnnActionMutationAsync))
-actionAsync nonObjectTypeMap actionInfo = runMaybeT do
-  roleName <- lift askRoleName
-  guard $ roleName == adminRole || roleName `Map.member` permissions
-  inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
-  let fieldName = unActionName actionName
-      description = G.Description <$> comment
-      outputTypeParser = P.scalar $$(G.litName "uuid") Nothing P.SRString
-  pure $ P.selection fieldName description inputArguments outputTypeParser
-         <&> AnnActionMutationAsync actionName
-  where
-    ActionInfo actionName outputObject definition permissions comment = actionInfo
-
-actionSync
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => NonObjectTypeMap
-  -> ActionInfo
-  -> m (Maybe (FieldParser n (AnnActionMutationSync UnpreparedValue)))
-actionSync nonObjectTypeMap actionInfo = runMaybeT do
-  roleName <- lift askRoleName
-  guard $ roleName == adminRole || roleName `Map.member` permissions
-  let fieldName = unActionName actionName
-      description = G.Description <$> comment
-  inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
-  let scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
-  relationshipFields <- forM (_otdRelationships outputObject) $ traverse relationshipFieldParser
-  let allFieldParsers = scalarOrEnumFields <>
-                        maybe [] toList relationshipFields
-      selectionSet =
-        let outputTypeName = unObjectTypeName $ _otdName outputObject
-            outputTypeDescription = _otdDescription outputObject
-        in P.selectionSet outputTypeName outputTypeDescription allFieldParsers
-           <&> parsedSelectionsToFields RQL.FExp
-
-  stringifyNum <- asks $ qcStringifyNum . getter
-  pure $ P.subselection fieldName description inputArguments selectionSet
-         <&> \(argsJson, fields) -> AnnActionMutationSync
-               { _aamsName = actionName
-               , _aamsFields = fields
-               , _aamsPayload = argsJson
-               , _aamsOutputType = _adOutputType definition
-               , _aamsOutputFields = getActionOutputFields outputObject
-               , _aamsDefinitionList = mkDefinitionList outputObject
-               , _aamsWebhook = _adHandler definition
-               , _aamsHeaders = _adHeaders definition
-               , _aamsForwardClientHeaders = _adForwardClientHeaders definition
-               , _aamsStrfyNum = stringifyNum
-               }
-  where
-    ActionInfo actionName outputObject definition permissions comment = actionInfo
-
-    scalarOrEnumFieldParser
-      :: ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType)
-      -> FieldParser n (RQL.AnnFldG UnpreparedValue)
-    scalarOrEnumFieldParser (ObjectFieldDefinition name _ description ty) =
-      let (gType, objectFieldType) = ty
-          fieldName = unObjectFieldName name
-          -- FIXME?
-          pgColumnInfo = PGColumnInfo (unsafePGCol $ G.unName fieldName)
-                         fieldName 0 (PGColumnScalar PGJSON) (G.isNullable gType) Nothing
-          fieldParser = case objectFieldType of
-            AOFTScalar def -> customScalarParser def
-            AOFTEnum def   -> customEnumParser def
-      in bool P.nonNullableField id (G.isNullable gType) $
-         P.selection_ (unObjectFieldName name) description fieldParser
-         $> RQL.mkAnnColField pgColumnInfo Nothing
-
-    relationshipFieldParser
-      :: TypeRelationship TableInfo PGColumnInfo
-      -> MaybeT m (FieldParser n (RQL.AnnFldG UnpreparedValue))
-    relationshipFieldParser typeRelationship = do
-      let TypeRelationship relName relType tableInfo fieldMapping = typeRelationship
-          tableName = _tciName $ _tiCoreInfo tableInfo
-          fieldName = unRelationshipName relName
-      roleName <- lift askRoleName
-      tablePerms <- MaybeT $ pure $ RQL.getPermInfoMaybe roleName PASelect tableInfo
-      tableParser <- lift $ selectTable tableName fieldName Nothing tablePerms
-      pure $ tableParser <&> \selectExp ->
-        let tableRelName = RelName $ mkNonEmptyTextUnsafe $ G.unName fieldName
-            columnMapping = Map.fromList $
-              [ (unsafePGCol $ G.unName $ unObjectFieldName k, pgiColumn v)
-              | (k, v) <- Map.toList fieldMapping
-              ]
-            annotatedRelationship = RQL.AnnRelG tableRelName columnMapping selectExp
-        in case relType of
-             ObjRel -> RQL.FObj annotatedRelationship
-             ArrRel -> RQL.FArr $ RQL.ASSimple annotatedRelationship
-
-mkDefinitionList :: AnnotatedObjectType -> [(PGCol, PGScalarType)]
-mkDefinitionList annotatedOutputType =
-  [ (unsafePGCol $ G.unName k,  PGJSON) -- FIXME? - Use relationship mapping references
-  | k <- map (unObjectFieldName . _ofdName) $
-         toList $ _otdFields annotatedOutputType
-  ]
-
--- This should into schema/action.hs
-actionInputArguments
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
-  => NonObjectTypeMap
-  -> [ArgumentDefinition (G.GType, NonObjectCustomType)]
-  -> m (InputFieldsParser n J.Value)
-actionInputArguments nonObjectTypeMap arguments = do
-  argumentParsers <- for arguments $ \argument -> do
-    let ArgumentDefinition argumentName (gType, nonObjectType) argumentDescription = argument
-        name = unArgumentName argumentName
-    (name,) <$> argumentParser name argumentDescription gType nonObjectType
-  pure $ fmap (J.toJSON . Map.fromList) $ for argumentParsers $
-         \(name, parser) -> (name,) <$> parser
-  where
-    argumentParser
-      :: G.Name
-      -> Maybe G.Description
-      -> G.GType
-      -> NonObjectCustomType
-      -> m (InputFieldsParser n J.Value)
-    argumentParser name description gType nonObjectType =
-      case nonObjectType of
-        NOCTScalar def -> pure $ P.field name description $ mkParserModifier gType $ customScalarParser def
-        NOCTEnum def -> pure $ P.field name description $ mkParserModifier gType $ customEnumParser def
-        NOCTInputObject def -> do
-          let InputObjectTypeDefinition typeName objectDescription inputFields = def
-              objectName = unInputObjectTypeName typeName
-          inputFieldsParsers <- forM (toList inputFields) $ \inputField -> do
-            let InputObjectFieldName fieldName = _iofdName inputField
-                GraphQLType fieldType = _iofdType inputField
-            nonObjectFieldType <-
-              onNothing (Map.lookup (G.getBaseType fieldType) nonObjectTypeMap) $
-                throw500 "object type for a field found in custom input object type"
-            (fieldName,) <$> argumentParser fieldName (_iofdDescription inputField) fieldType nonObjectFieldType
-
-          pure $ P.field name description $ mkParserModifier gType $ P.object objectName objectDescription $
-            fmap (J.toJSON . Map.fromList) $ for inputFieldsParsers $ \(n, parser) -> (n,) <$> parser
-
-mkParserModifier
-  :: (MonadParse m, 'Input P.<: k)
-  => G.GType -> Parser k m J.Value -> Parser k m J.Value
-mkParserModifier = \case
-  G.TypeNamed nullable _    -> nullableModifier nullable
-  G.TypeList nullable gType ->
-    nullableModifier nullable . fmap J.toJSON . P.list . mkParserModifier gType
-  where
-    nullableModifier =
-      bool (fmap J.toJSON) (fmap J.toJSON . P.nullable) . G.unNullability
-
-customScalarParser
-  :: MonadParse m
-  => ScalarTypeDefinition -> Parser 'Both m J.Value
-customScalarParser (ScalarTypeDefinition name description) =
-  P.scalar name description P.SRAny
-
-customEnumParser
-  :: MonadParse m
-  => EnumTypeDefinition -> Parser 'Both m J.Value
-customEnumParser (EnumTypeDefinition typeName description enumValues) =
-  let enumName = unEnumTypeName typeName
-      enumValueDefinitions = enumValues <&> \enumValue ->
-        let valueName = G.unEnumValue $ _evdValue enumValue
-        in (, J.toJSON valueName) $ P.mkDefinition valueName
-           (_evdDescription enumValue) P.EnumValueInfo
-  in P.enum enumName description enumValueDefinitions

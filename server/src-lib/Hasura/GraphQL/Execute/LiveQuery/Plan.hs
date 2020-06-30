@@ -55,6 +55,7 @@ import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.RQL.Types
+import           Hasura.GraphQL.Resolve.Action
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -66,18 +67,19 @@ import           Hasura.GraphQL.Context
 newtype MultiplexedQuery = MultiplexedQuery { unMultiplexedQuery :: Q.Query }
   deriving (Show, Eq, Hashable, J.ToJSON)
 
-toSQLSelect :: SubscriptionRootField S.SQLExp -> S.Select
+toSQLSelect :: SubscriptionRootFieldResolved -> S.Select
 toSQLSelect = \case
   RFDB (QDBPrimaryKey s)  -> DS.mkSQLSelect DS.JASSingleObject s
   RFDB (QDBSimple s)      -> DS.mkSQLSelect DS.JASMultipleRows s
   RFDB (QDBAggregation s) -> DS.mkAggSelect s
+  RFAction s              -> DS.mkSQLSelect DS.JASSingleObject s
   RFRemote x -> case x of
   RFRaw x -> case x of
   -- QRFActionSelect s -> DS.mkSQLSelect DS.JASSingleObject s
   -- QRFActionExecuteObject s -> DS.mkSQLSelect DS.JASSingleObject s
   -- QRFActionExecuteList s -> DS.mkSQLSelect DS.JASSingleObject s
 
-mkMultiplexedQuery :: Map.HashMap G.Name (SubscriptionRootField S.SQLExp) -> MultiplexedQuery
+mkMultiplexedQuery :: Map.HashMap G.Name SubscriptionRootFieldResolved -> MultiplexedQuery
 mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
   { S.selExtr =
     -- SELECT _subs.result_id, _fld_resp.root AS result
@@ -309,6 +311,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
   (preparedAST, (queryVariableValues, querySyntheticVariableValues)) <- flip runStateT (mempty, Seq.empty) $
     for unpreparedAST \unpreparedQuery -> do
     traverseQueryRootField resolveMultiplexedValue unpreparedQuery
+    >>= traverseAction (DS.traverseAnnSimpleSel resolveMultiplexedValue . resolveAsyncActionQuery userInfo)
 
 
 

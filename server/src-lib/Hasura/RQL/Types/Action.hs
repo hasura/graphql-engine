@@ -5,8 +5,16 @@ module Hasura.RQL.Types.Action
 
   , ActionName(..)
   , ActionMutationKind(..)
+  , _ActionAsynchronous
   , ActionDefinition(..)
+  , adArguments
+  , adOutputType
+  , adType
+  , adHeaders
+  , adForwardClientHeaders
+  , adHandler
   , ActionType(..)
+  , _ActionMutation
   , CreateAction(..)
   , UpdateAction(..)
   , ActionDefinitionInput
@@ -31,13 +39,15 @@ module Hasura.RQL.Types.Action
   , ActionMetadata(..)
   , ActionPermissionMetadata(..)
 
-  , AnnActionMutationSync(..)
+  , AnnActionExecution(..)
   , AnnActionMutationAsync(..)
   , ActionExecContext(..)
+  , AsyncActionQueryFieldG(..)
+  , AnnActionAsyncQuery(..)
   ) where
 
 
-import           Control.Lens                  (makeLenses)
+import           Control.Lens                  (makeLenses, makePrisms)
 import           Data.URL.Template
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
@@ -84,6 +94,7 @@ instance Cacheable ActionMutationKind
 $(J.deriveJSON
   J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 6}
   ''ActionMutationKind)
+$(makePrisms ''ActionMutationKind)
 
 newtype ArgumentName
   = ArgumentName { unArgumentName :: G.Name }
@@ -106,6 +117,7 @@ data ActionType
   deriving (Show, Eq, Lift, Generic)
 instance NFData ActionType
 instance Cacheable ActionType
+$(makePrisms ''ActionType)
 
 data ActionDefinition a b
   = ActionDefinition
@@ -118,6 +130,7 @@ data ActionDefinition a b
   } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Generic)
 instance (NFData a, NFData b) => NFData (ActionDefinition a b)
 instance (Cacheable a, Cacheable b) => Cacheable (ActionDefinition a b)
+$(makeLenses ''ActionDefinition)
 
 instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
   parseJSON = J.withObject "ActionDefinition" $ \o -> do
@@ -255,25 +268,45 @@ instance J.FromJSON ActionMetadata where
 
 ----------------- Resolve Types ----------------
 
-data AnnActionMutationSync v
-  = AnnActionMutationSync
-  { _aamsName                 :: !ActionName
-  , _aamsOutputType           :: !GraphQLType -- ^ output type
-  , _aamsFields               :: !(AnnFldsG v) -- ^ output selection
-  , _aamsPayload              :: !J.Value -- ^ jsonified input arguments
-  , _aamsOutputFields         :: !ActionOutputFields
+data AnnActionExecution v
+  = AnnActionExecution
+  { _aaeName                 :: !ActionName
+  , _aaeOutputType           :: !GraphQLType -- ^ output type
+  , _aaeFields               :: !(AnnFldsG v) -- ^ output selection
+  , _aaePayload              :: !J.Value -- ^ jsonified input arguments
+  , _aaeOutputFields         :: !ActionOutputFields
   -- ^ to validate the response fields from webhook
-  , _aamsDefinitionList       :: ![(PGCol, PGScalarType)]
-  , _aamsWebhook              :: !ResolvedWebhook
-  , _aamsHeaders              :: ![HeaderConf]
-  , _aamsForwardClientHeaders :: !Bool
-  , _aamsStrfyNum             :: !Bool
+  , _aaeDefinitionList       :: ![(PGCol, PGScalarType)]
+  , _aaeWebhook              :: !ResolvedWebhook
+  , _aaeHeaders              :: ![HeaderConf]
+  , _aaeForwardClientHeaders :: !Bool
+  , _aaeStrfyNum             :: !Bool
   } deriving (Show, Eq)
 
 data AnnActionMutationAsync
   = AnnActionMutationAsync
   { _aamaName    :: !ActionName
   , _aamaPayload :: !J.Value -- ^ jsonified input arguments
+  } deriving (Show, Eq)
+
+data AsyncActionQueryFieldG v
+  = AsyncTypename !Text
+  | AsyncOutput !(AnnFldsG v)
+  | AsyncId
+  | AsyncCreatedAt
+  | AsyncErrors
+  deriving (Show, Eq)
+
+type AsyncActionQueryFieldsG v = Fields (AsyncActionQueryFieldG v)
+
+data AnnActionAsyncQuery v
+  = AnnActionAsyncQuery
+  { _aaaqName           :: !ActionName
+  , _aaaqActionId       :: !v
+  , _aaaqOutputType     :: !GraphQLType
+  , _aaaqFields         :: !(AsyncActionQueryFieldsG v)
+  , _aaaqDefinitionList :: ![(PGCol, PGScalarType)]
+  , _aaaqStringifyNum   :: !Bool
   } deriving (Show, Eq)
 
 data ActionExecContext

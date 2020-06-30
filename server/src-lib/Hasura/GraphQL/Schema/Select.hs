@@ -13,19 +13,19 @@ module Hasura.GraphQL.Schema.Select
 
 import           Hasura.Prelude
 
+import           Data.Has
 import           Data.Maybe                            (fromJust)
 import           Data.Parser.JSONPath
 import           Data.Traversable                      (mapAccumL)
-import           Data.Has
 
+import qualified Data.Aeson                            as J
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashSet                          as Set
+import qualified Data.List.NonEmpty                    as NE
 import qualified Data.Sequence                         as Seq
 import qualified Data.Sequence.NonEmpty                as NESeq
-import qualified Data.Aeson                            as J
 import qualified Data.Text                             as T
 import qualified Language.GraphQL.Draft.Syntax         as G
-import qualified Data.List.NonEmpty                    as NE
 
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
@@ -33,7 +33,6 @@ import qualified Hasura.RQL.DML.Select                 as RQL
 import qualified Hasura.RQL.Types.BoolExp              as RQL
 import qualified Hasura.SQL.DML                        as SQL
 
-import           Hasura.GraphQL.Execute.Query          (GraphQLQueryType(..))
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
@@ -41,8 +40,8 @@ import           Hasura.GraphQL.Parser.Column          (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
-import           Hasura.GraphQL.Schema.Table
 import           Hasura.GraphQL.Schema.Remote
+import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value

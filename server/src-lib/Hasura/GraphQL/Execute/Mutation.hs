@@ -76,7 +76,7 @@ convertMutationRootField usrVars manager reqHeaders stringifyNum = \case
   RFDB (MDBUpdate s)  -> noResponseHeaders $ convertUpdate usrVars s stringifyNum
   RFDB (MDBDelete s)  -> noResponseHeaders $ convertDelete usrVars s stringifyNum
   RFAction (AMSync s) -> first liftTx <$> resolveActionExecution s actionExecContext
-  RFAction (AMAsync s) -> join $ noResponseHeaders <$> resolveActionMutationAsync s reqHeaders usrVars
+  RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders usrVars
   RFRaw s             -> noResponseHeaders $ pure $ encJFromJValue s
   where
     noResponseHeaders :: RespTx -> m (LazyRespTx, HTTP.ResponseHeaders)

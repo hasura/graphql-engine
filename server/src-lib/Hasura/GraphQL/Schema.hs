@@ -17,11 +17,12 @@ import           Data.Has
 import qualified Hasura.GraphQL.Parser                 as P
 
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Execute.Query          (GraphQLQueryType(..))
+import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),
                                                         UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
+import           Hasura.GraphQL.Schema.Action
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Introspect
 import           Hasura.GraphQL.Schema.Mutation
@@ -98,8 +99,10 @@ query'
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> [ActionInfo]
+  -> NonObjectTypeMap
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-query' allTables allFunctions allRemotes = do
+query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
@@ -129,7 +132,16 @@ query' allTables allFunctions allRemotes = do
         [ toQrf2 (RFDB . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
         , toQrf3 (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
         ]
-  pure $ concat $ catMaybes $ tableSelectExpParsers <> functionSelectExpParsers <> conv allRemotes
+  actionParsers <- for allActions $ \actionInfo ->
+    case _adType (_aiDefinition actionInfo) of
+      ActionMutation (ActionSynchronous) -> pure Nothing
+      ActionMutation (ActionAsynchronous) ->
+        fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
+      ActionQuery ->
+        fmap (fmap (RFAction . AQQuery)) <$>
+        actionExecute nonObjectCustomTypes actionInfo
+  pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers <> conv allRemotes)
+         <> catMaybes actionParsers
   where
     -- TODO: this is a terrible name, there must be something better
     toQrf2 :: (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
@@ -145,9 +157,11 @@ query
   -> HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> [ActionInfo]
+  -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-query name allTables allFunctions allRemotes = do
-  queryFieldsParser <- query' allTables allFunctions allRemotes
+query name allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
+  queryFieldsParser <- query' allTables allFunctions allRemotes allActions nonObjectCustomTypes
   pure $ P.selectionSet name Nothing queryFieldsParser
     <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 
@@ -156,9 +170,10 @@ subscription
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => HashSet QualifiedTable
   -> [FunctionInfo]
+  -> [ActionInfo]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-subscription allTables allFunctions =
-  query $$(G.litName "subscription_root") allTables allFunctions []
+subscription allTables allFunctions asyncActions =
+  query $$(G.litName "subscription_root") allTables allFunctions [] asyncActions mempty
 
 queryRootFromFields
   :: forall n
@@ -214,9 +229,10 @@ queryWithIntrospection
   -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryWithIntrospection allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
-  basicQueryFP <- query' allTables allFunctions allRemotes
+  basicQueryFP <- query' allTables allFunctions allRemotes allActions nonObjectCustomTypes
   mutationP <- mutation allTables allActions nonObjectCustomTypes
-  subscriptionP <- subscription allTables allFunctions
+  subscriptionP <- subscription allTables allFunctions $
+                   filter (has (aiDefinition.adType._ActionMutation._ActionAsynchronous)) allActions
   let
     basicQueryP = queryRootFromFields basicQueryFP
   emptyIntro <- emptyIntrospection
@@ -303,10 +319,10 @@ mutation allTables allActions nonObjectCustomTypes = do
     case _adType (_aiDefinition actionInfo) of
       ActionMutation (ActionSynchronous) ->
         fmap (fmap (RFAction . AMSync)) <$>
-        actionSync nonObjectCustomTypes actionInfo
+        actionExecute nonObjectCustomTypes actionInfo
       ActionMutation (ActionAsynchronous) ->
         fmap (fmap (RFAction . AMAsync)) <$>
-        actionAsync nonObjectCustomTypes actionInfo
+        actionAsyncMutation nonObjectCustomTypes actionInfo
       ActionQuery -> pure Nothing
 
   let mutationFieldsParser = concat (catMaybes mutationParsers) <> catMaybes actionParsers

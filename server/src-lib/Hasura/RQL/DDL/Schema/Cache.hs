@@ -39,6 +39,7 @@ import           Hasura.Db
 -- import           Hasura.GraphQL.RemoteServer
 -- import           Hasura.GraphQL.Schema.CustomTypes
 -- import           Hasura.GraphQL.Utils                     (showNames)
+import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
@@ -60,7 +61,6 @@ import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.SQL.Types
-import           Hasura.GraphQL.Execute.Query          (GraphQLQueryType(..))
 
 -- mergeCustomTypes
 --   :: MonadError QErr f

@@ -6,7 +6,6 @@ module Hasura.GraphQL.Execute.Query
   , PreparedSql(..)
   , traverseQueryRootField -- for live query planning
   , irToRootFieldPlan
-  , GraphQLQueryType(..)
   ) where
 
 import qualified Data.Aeson                             as J
@@ -20,6 +19,8 @@ import qualified Data.Sequence.NonEmpty                 as NESeq
 import qualified Data.TByteString                       as TBS
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Types                     as HTTP
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import           Hasura.Server.Version                  (HasVersion)
@@ -31,7 +32,7 @@ import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Monad
--- import           Hasura.GraphQL.Resolve.Action
+import           Hasura.GraphQL.Resolve.Action
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
@@ -57,13 +58,26 @@ instance J.ToJSON PGPlan where
 data RootFieldPlan
   = RFPRaw !B.ByteString
   | RFPPostgres !PGPlan
+  | RFPActionQuery !LazyRespTx
 
 instance J.ToJSON RootFieldPlan where
   toJSON = \case
     RFPRaw encJson     -> J.toJSON $ TBS.fromBS encJson
     RFPPostgres pgPlan -> J.toJSON pgPlan
+    RFPActionQuery _   -> J.String "Action Execution Tx"
 
 type FieldPlans = [(G.Name, RootFieldPlan)]
+
+data ActionQueryPlan
+  = AQPAsyncQuery !DS.AnnSimpleSel -- ^ Cacheable plan
+  | AQPQuery !RespTx -- ^ Non cacheable transaction
+
+actionQueryToRootFieldPlan
+  :: PlanVariables -> PrepArgMap -> ActionQueryPlan -> RootFieldPlan
+actionQueryToRootFieldPlan vars prepped = \case
+  AQPAsyncQuery s -> RFPPostgres $
+    PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped
+  AQPQuery tx     -> RFPActionQuery (liftTx tx)
 
 data ReusableVariableTypes  -- FIXME
 data ReusableVariableValues -- FIXME
@@ -109,6 +123,7 @@ mkCurPlanTx usrVars fldPlans = do
       RFPPostgres (PGPlan q _ prepMap) -> do
         let args = withUserVars usrVars $ IntMap.elems prepMap
         return $ RRSql $ PreparedSql q args
+      RFPActionQuery tx -> pure $ RRActionQuery tx
     return (alias, fldResp)
 
   return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
@@ -146,7 +161,7 @@ irToRootFieldPlan vars prepped = \case
   QDBAggregation s -> PGPlan (DS.selectAggQuerySQL s) vars prepped
 
 traverseQueryRootField
-  :: forall f a b c d e h
+  :: forall f a b c d h
    . Applicative f
   => (a -> f b)
   -> RootField (QueryDB a) c h d
@@ -161,10 +176,11 @@ traverseQueryRootField f =
       QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggSel f s
 
 convertQuerySelSet
-  :: forall m
-   . MonadError QErr m
+  :: forall m. (HasVersion, MonadError QErr m, MonadIO m)
   => GQLContext
-  -> UserVars
+  -> UserInfo
+  -> HTTP.Manager
+  -> HTTP.RequestHeaders
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
@@ -172,7 +188,7 @@ convertQuerySelSet
        , Maybe ReusableQueryPlan
        , InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
        )
-convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
+convertQuerySelSet gqlContext userInfo manager reqHeaders fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
     <-  resolveVariables varDefs (fromMaybe Map.empty varValsM) fields
@@ -182,8 +198,10 @@ convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
   queryPlans <- for unpreparedQueries \unpreparedQuery -> do
     (preparedQuery, PlanningSt _ planVars planVals)
       <- flip runStateT initPlanningSt
-      $  traverseQueryRootField prepareWithPlan unpreparedQuery
+         $ traverseQueryRootField prepareWithPlan unpreparedQuery
+           >>= traverseAction convertActionQuery
     traverseDB (pure . irToRootFieldPlan planVars planVals) preparedQuery
+      >>= traverseAction (pure . actionQueryToRootFieldPlan planVars planVals)
 
   -- This monster makes sure that consecutive database operation get executed together
   let dbPlans :: Seq.Seq (G.Name, RootFieldPlan)
@@ -193,17 +211,21 @@ convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
       collectPlan
         :: (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteField))
         -> G.Name
-        -> RootField PGPlan RemoteField ActionQuery J.Value
+        -> RootField PGPlan RemoteField RootFieldPlan J.Value
         -> (Seq.Seq (G.Name, RootFieldPlan), Seq.Seq (G.Name, RemoteField))
 
-      collectPlan (seqDB, seqRemote) name (RFRemote rem) =
-        (seqDB, seqRemote Seq.:|> (name, rem))
+      collectPlan (seqDB, seqRemote) name (RFRemote r) =
+        (seqDB, seqRemote Seq.:|> (name, r))
 
       collectPlan (seqDB, seqRemote) name (RFDB db)      =
         (seqDB Seq.:|> (name, RFPPostgres db), seqRemote)
 
+      collectPlan (seqDB, seqRemote) name (RFAction rfp) =
+        (seqDB Seq.:|> (name, rfp), seqRemote)
+
       collectPlan (seqDB, seqRemote) name (RFRaw r)      =
         (seqDB Seq.:|> (name, RFPRaw $ LBS.toStrict $ J.encode r), seqRemote)
+
 
   executionPlan <- case (dbPlans, remoteFields) of
     (dbs, Seq.Empty) -> ExecStepDB <$> mkCurPlanTx usrVars (toList dbs)
@@ -220,12 +242,21 @@ convertQuerySelSet gqlContext usrVars fields varDefs varValsM = do
     _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemata not supported"
   pure (executionPlan, Nothing, unpreparedQueries) -- FIXME ReusableQueryPlan
   where
+    usrVars = userVars userInfo
     reportParseErrors errs = case NESeq.head errs of
       -- TODO: Our error reporting machinery doesn’t currently support reporting
       -- multiple errors at once, so we’re throwing away all but the first one
       -- here. It would be nice to report all of them!
       ParseError{ pePath, peMessage } ->
         throwError (err400 ValidationFailed peMessage){ qePath = pePath }
+
+    convertActionQuery
+      :: ActionQuery UnpreparedValue -> StateT PlanningSt m ActionQueryPlan
+    convertActionQuery = \case
+      AQQuery s -> (AQPQuery . fst) <$>
+        lift (resolveActionExecution s $ ActionExecContext manager reqHeaders usrVars)
+      AQAsync s -> AQPAsyncQuery <$>
+        DS.traverseAnnSimpleSel prepareWithPlan (resolveAsyncActionQuery userInfo s)
 
 -- use the existing plan and new variables to create a pg query
 queryOpFromPlan
@@ -266,6 +297,7 @@ instance J.ToJSON PreparedSql where
 data ResolvedQuery
   = RRRaw !B.ByteString
   | RRSql !PreparedSql
+  | RRActionQuery !LazyRespTx
 
 -- | The computed SQL with alias which can be logged. Nothing here represents no
 -- SQL for cases like introspection responses. Tuple of alias to a (maybe)
@@ -278,24 +310,14 @@ mkLazyRespTx resolved =
     resp <- case node of
       RRRaw bs                   -> return $ encJFromBS bs
       RRSql (PreparedSql q args) -> liftTx $ asSingleRowJsonResp q (map fst args)
+      RRActionQuery tx           -> tx
     return (G.unName alias, resp)
 
 mkGeneratedSqlMap :: [(G.Name, ResolvedQuery)] -> GeneratedSqlMap
 mkGeneratedSqlMap resolved =
   flip map resolved $ \(alias, node) ->
     let res = case node of
-                RRRaw _  -> Nothing
-                RRSql ps -> Just ps
+                RRRaw _         -> Nothing
+                RRSql ps        -> Just ps
+                RRActionQuery _ -> Nothing
     in (alias, res)
-
--- graphql-engine supports two GraphQL interfaces: one at v1/graphql, and a Relay one at v1/relay
-data GraphQLQueryType
-  = QueryHasura
-  | QueryRelay
-  deriving (Show, Eq, Ord, Generic)
-instance Hashable GraphQLQueryType
-
-instance J.ToJSON GraphQLQueryType where
-  toJSON = \case
-    QueryHasura -> "hasura"
-    QueryRelay  -> "relay"

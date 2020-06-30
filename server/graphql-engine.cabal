@@ -340,6 +340,7 @@ library
                      , Hasura.GraphQL.Execute.Inline
                      , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Query
+                     , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Execute.Mutation
                      , Hasura.GraphQL.Execute.Resolve
                      , Hasura.GraphQL.Execute.Prepare
@@ -372,6 +373,7 @@ library
                      , Hasura.GraphQL.Parser.Schema
 
                      , Hasura.GraphQL.Schema
+                     , Hasura.GraphQL.Schema.Action
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
                      , Hasura.GraphQL.Schema.Insert

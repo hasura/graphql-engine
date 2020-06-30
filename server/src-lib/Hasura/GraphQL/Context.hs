@@ -5,6 +5,7 @@ module Hasura.GraphQL.Context
   , ParserFn
   , RootField(..)
   , traverseDB
+  , traverseAction
   , RemoteField
   , QueryDB(..)
   , ActionQuery(..)
@@ -13,6 +14,7 @@ module Hasura.GraphQL.Context
   , ActionMutation(..)
   , MutationRootField
   , SubscriptionRootField
+  , SubscriptionRootFieldResolved
   ) where
 
 import           Hasura.Prelude
@@ -27,6 +29,7 @@ import qualified Hasura.RQL.DML.Select.Types   as RQL
 import qualified Hasura.RQL.DML.Update.Types   as RQL
 import qualified Hasura.RQL.Types.Action       as RQL
 import qualified Hasura.RQL.Types.RemoteSchema as RQL
+import qualified Hasura.SQL.DML                as S
 
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Insert  (AnnMultiInsert)
@@ -61,20 +64,32 @@ traverseDB f = \case
   RFAction x -> pure $ RFAction x
   RFRaw x -> pure $ RFRaw x
 
+traverseAction :: forall db remote action action' raw f
+        . Applicative f
+       => (action -> f action')
+       -> RootField db remote action raw
+       -> f (RootField db remote action' raw)
+traverseAction f = \case
+  RFDB x -> pure $ RFDB x
+  RFRemote x -> pure $ RFRemote x
+  RFAction x -> RFAction <$> f x
+  RFRaw x -> pure $ RFRaw x
+
 data QueryDB v
   = QDBSimple      (RQL.AnnSimpleSelG v)
   | QDBPrimaryKey  (RQL.AnnSimpleSelG v)
   | QDBAggregation (RQL.AnnAggSelG    v)
 
-data ActionQuery
-  = AQQuery
+data ActionQuery v
+  = AQQuery !(RQL.AnnActionExecution v)
+  | AQAsync !(RQL.AnnActionAsyncQuery v)
 
 -- TODO this should maybe take a G.Field rather than a
 -- G.TypedOperationDefinition -- the operation would get built when we pass to
 -- the execution phase.
 type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments Variable)
 
-type QueryRootField v = RootField (QueryDB v) RemoteField ActionQuery J.Value
+type QueryRootField v = RootField (QueryDB v) RemoteField (ActionQuery v) J.Value
 
 data MutationDB v
   = MDBInsert (AnnMultiInsert v)
@@ -82,10 +97,11 @@ data MutationDB v
   | MDBDelete (RQL.AnnDelG    v)
 
 data ActionMutation v
-  = AMSync !(RQL.AnnActionMutationSync v)
+  = AMSync !(RQL.AnnActionExecution v)
   | AMAsync !RQL.AnnActionMutationAsync
 
 type MutationRootField v =
   RootField (MutationDB v) RemoteField (ActionMutation v) J.Value
 
-type SubscriptionRootField v = RootField (QueryDB v) Void Void Void
+type SubscriptionRootField v = RootField (QueryDB v) Void (RQL.AnnActionAsyncQuery v) Void
+type SubscriptionRootFieldResolved = RootField (QueryDB S.SQLExp) Void (RQL.AnnSimpleSel) Void

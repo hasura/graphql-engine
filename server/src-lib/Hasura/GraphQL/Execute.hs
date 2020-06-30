@@ -1,7 +1,7 @@
 module Hasura.GraphQL.Execute
   ( EPr.ExecutionStep(..)
   , ResolvedExecutionPlan(..)
-  , EQ.GraphQLQueryType(..)
+  , ET.GraphQLQueryType(..)
   , getResolvedExecPlan
   , execRemoteGQ
   -- , getSubsOp
@@ -53,6 +53,7 @@ import qualified Hasura.GraphQL.Execute.Mutation        as EM
 import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Prepare         as EPr
 import qualified Hasura.GraphQL.Execute.Query           as EQ
+import qualified Hasura.GraphQL.Execute.Types           as ET
 import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
@@ -104,7 +105,7 @@ getExecPlanPartial
   => UserInfo
   -> SchemaCache
   -> Bool
-  -> EQ.GraphQLQueryType
+  -> ET.GraphQLQueryType
   -> GQLReqParsed
   -> m (C.GQLContext, QueryParts)
 getExecPlanPartial userInfo sc enableAL queryType req = do
@@ -141,8 +142,8 @@ getExecPlanPartial userInfo sc enableAL queryType req = do
       {- TODO TODO FIXME of course this is wrong -}
       fromMaybe (head $ Map.elems $ scGQLContext sc) $ Map.lookup rn $
       case queryType of
-        EQ.QueryHasura -> scGQLContext sc
-        EQ.QueryRelay  -> scRelayContext sc
+        ET.QueryHasura -> scGQLContext sc
+        ET.QueryRelay  -> scRelayContext sc
 
     -- | Depending on the request parameters, fetch the correct typed operation
     -- definition from the GraphQL query
@@ -198,7 +199,7 @@ getResolvedExecPlan
   -> Bool
   -> SchemaCache
   -> SchemaCacheVer
-  -> EQ.GraphQLQueryType
+  -> ET.GraphQLQueryType
   -> HTTP.Manager
   -> [HTTP.Header]
   -> GQLReqUnparsed
@@ -234,7 +235,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           (execPlan, plan, _unprepared) <-
-            EQ.convertQuerySelSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
+            EQ.convertQuerySelSet gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ QueryExecutionPlan $ execPlan
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
@@ -247,9 +248,11 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           -- Parse as query to check correctness
           (_execPlan, _plan, unpreparedAST) <-
-            EQ.convertQuerySelSet gCtx (userVars userInfo) inlinedSelSet varDefs (_grVariables reqUnparsed)
+            EQ.convertQuerySelSet gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           validSubscriptionAST <- for unpreparedAST $ \case
             C.RFDB x -> pure $ C.RFDB x
+            C.RFAction (C.AQAsync s) -> pure $ C.RFAction s
+            C.RFAction (C.AQQuery _) -> throw400 NotSupported "action queries are not supported over subscriptions"
             C.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
             C.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
           -- TODO we should check that there's only one root field (unless the appropriate directive is set)

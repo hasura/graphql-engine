@@ -2,11 +2,8 @@
 {-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 
 module Hasura.GraphQL.Resolve.Action
-  (
-    -- resolveActionMutation
-  -- , resolveAsyncActionQuery
-  asyncActionsProcessor
-  -- , resolveActionQuery
+  ( resolveAsyncActionQuery
+  , asyncActionsProcessor
   , resolveActionExecution
   , resolveActionMutationAsync
   , mkJsonAggSelect
@@ -39,12 +36,10 @@ import qualified Network.Wreq                   as Wreq
 
 import qualified Hasura.RQL.DML.Select          as RS
 
--- import           Hasura.GraphQL.Resolve.Context
--- import           Hasura.GraphQL.Resolve.InputValue
--- import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser
+import           Hasura.GraphQL.Utils           (showNames)
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Schema.Cache
@@ -54,8 +49,7 @@ import           Hasura.RQL.Types.Run
 import           Hasura.Server.Utils            (mkClientHeadersForward, mkSetCookieHeaders)
 import           Hasura.Server.Version          (HasVersion)
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value               (PGScalarValue (..), pgScalarValueToJson,
-                                                 toTxtValue)
+import           Hasura.SQL.Value               (PGScalarValue (..), toTxtValue)
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -141,7 +135,7 @@ resolveActionExecution
      , MonadError QErr m
      , MonadIO m
      )
-  => AnnActionMutationSync UnpreparedValue
+  => AnnActionExecution UnpreparedValue
   -> ActionExecContext
   -> m (RespTx, HTTP.ResponseHeaders)
 resolveActionExecution annAction execContext = do
@@ -157,7 +151,7 @@ resolveActionExecution annAction execContext = do
   let jsonAggType = mkJsonAggSelect outputType
   return $ (,respHeaders) $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
   where
-    AnnActionMutationSync actionName outputType annFields inputPayload
+    AnnActionExecution actionName outputType annFields inputPayload
       outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders stringifyNum = annAction
     ActionExecContext manager reqHeaders sessionVariables = execContext
@@ -253,71 +247,56 @@ action's type. Here, we treat the "output" field as a computed field to hdb_acti
 `jsonb_to_record` as custom SQL function.
 -}
 
--- resolveAsyncActionQuery
---   :: ( MonadReusability m
---      , MonadError QErr m
---      , MonadReader r m
---      , Has FieldMap r
---      , Has OrdByCtx r
---      , Has SQLGenCtx r
---      )
---   => UserInfo
---   -> ActionSelectOpContext
---   -> Field
---   -> m GRS.AnnSimpleSelect
--- resolveAsyncActionQuery userInfo selectOpCtx field = do
---   actionId <- withArg (_fArguments field) "id" parseActionId
---   stringifyNumerics <- stringifyNum <$> asks getter
+resolveAsyncActionQuery
+  :: UserInfo
+  -> AnnActionAsyncQuery UnpreparedValue
+  -> RS.AnnSimpleSelG UnpreparedValue
+resolveAsyncActionQuery userInfo annAction =
+  let annotatedFields = asyncFields <&> second \case
+        AsyncTypename t -> RS.FExp t
+        AsyncOutput annFields ->
+          -- See Note [Resolving async action query/subscription]
+          let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
+              jsonAggSelect = mkJsonAggSelect outputType
+          in RS.FComputedField $ RS.CFSTable jsonAggSelect $
+             processOutputSelectionSet inputTableArgument outputType
+             definitionList annFields stringifyNumerics
 
---   annotatedFields <- fmap (map (first FieldName)) $ withSelSet (_fSelSet field) $ \fld ->
---     case _fName fld of
---       "__typename" -> return $ RS.FExp $ G.unName $ G.unNamedType $ _fType field
---       "output"     -> do
---         -- See Note [Resolving async action query/subscription]
---         let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
---             ActionSelectOpContext outputType definitionList = selectOpCtx
---             jsonAggSelect = mkJsonAggSelect outputType
---         (RS.FComputedField . RS.CFSTable jsonAggSelect)
---           <$> processOutputSelectionSet inputTableArgument outputType
---               definitionList (_fType fld) (_fSelSet fld)
+        AsyncId        -> mkAnnFldFromPGCol "id" PGUUID
+        AsyncCreatedAt -> mkAnnFldFromPGCol "created_at" PGTimeStampTZ
+        AsyncErrors    -> mkAnnFldFromPGCol "errors" PGJSONB
 
---       -- The metadata columns
---       "id"         -> return $ mkAnnFldFromPGCol "id" PGUUID
---       "created_at" -> return $ mkAnnFldFromPGCol "created_at" PGTimeStampTZ
---       "errors"     -> return $ mkAnnFldFromPGCol "errors" PGJSONB
---       G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
+      tableFromExp = RS.FromTable actionLogTable
+      tableArguments = RS.noTableArgs
+                       { RS._taWhere = Just tableBoolExpression}
+      tablePermissions = RS.TablePerm annBoolExpTrue Nothing
 
---   let tableFromExp = RS.FromTable actionLogTable
---       tableArguments = RS.noTableArgs
---                        { RS._taWhere = Just $ mkTableBoolExpression actionId}
---       tablePermissions = RS.TablePerm annBoolExpTrue Nothing
---       selectAstUnresolved = RS.AnnSelG annotatedFields tableFromExp tablePermissions
---                             tableArguments stringifyNumerics
---   return selectAstUnresolved
---   where
---     actionLogTable = QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
+  in RS.AnnSelG annotatedFields tableFromExp tablePermissions
+     tableArguments stringifyNumerics
+  where
+    AnnActionAsyncQuery actionName actionId outputType asyncFields definitionList stringifyNumerics = annAction
+    actionLogTable = QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
 
---     -- TODO:- Avoid using PGColumnInfo
---     mkAnnFldFromPGCol column columnType =
---       flip RS.mkAnnColField Nothing $
---       PGColumnInfo (unsafePGCol column) (G.Name column) 0 (PGColumnScalar columnType) True Nothing
+    -- TODO:- Avoid using PGColumnInfo
+    mkAnnFldFromPGCol col columnType =
+      flip RS.mkAnnColField Nothing $
+      PGColumnInfo (unsafePGCol col) (G.unsafeMkName col) 0 (PGColumnScalar columnType) True Nothing
 
---     parseActionId annInpValue = mkParameterizablePGValue <$> asPGColumnValue annInpValue
+    tableBoolExpression =
+      let actionIdColumnInfo = PGColumnInfo (unsafePGCol "id") $$(G.litName "id")
+                               0 (PGColumnScalar PGUUID) False Nothing
+          actionIdColumnEq = BoolFld $ AVCol actionIdColumnInfo [AEQ True actionId]
+          sessionVarsColumnInfo = PGColumnInfo (unsafePGCol "session_variables") $$(G.litName "session_variables")
+                                  0 (PGColumnScalar PGJSONB) False Nothing
+          sessionVarValue = flip UVParameter Nothing $ PGColumnValue (PGColumnScalar PGJSONB) $
+                            WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON $ userVars userInfo
+          sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
 
---     mkTableBoolExpression actionId =
---       let actionIdColumnInfo = PGColumnInfo (unsafePGCol "id") "id" 0 (PGColumnScalar PGUUID) False Nothing
---           actionIdColumnEq = BoolFld $ AVCol actionIdColumnInfo [AEQ True actionId]
---           sessionVarsColumnInfo = PGColumnInfo (unsafePGCol "session_variables") "session_variables"
---                                   0 (PGColumnScalar PGJSONB) False Nothing
---           sessionVarValue = UVPG $ AnnPGVal Nothing False $ WithScalarType PGJSONB
---                             $ PGValJSONB $ Q.JSONB $ J.toJSON $ userVars userInfo
---           sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
-
---       -- For non-admin roles, accessing an async action's response should be allowed only for the user
---       -- who initiated the action through mutation. The action's response is accessible for a query/subscription
---       -- only when it's session variables are equal to that of action's.
---       in if isAdmin (userRole userInfo) then actionIdColumnEq
---          else BoolAnd [actionIdColumnEq, sessionVarsColumnEq]
+      -- For non-admin roles, accessing an async action's response should be allowed only for the user
+      -- who initiated the action through mutation. The action's response is accessible for a query/subscription
+      -- only when it's session variables are equal to that of action's.
+      in if isAdmin (userRole userInfo) then actionIdColumnEq
+         else BoolAnd [actionIdColumnEq, sessionVarsColumnEq]
 
 data ActionLogItem
   = ActionLogItem
@@ -502,7 +481,7 @@ callWebhook manager outputType outputFields reqHeaders confHeaders
         -- Fields not specified in the output type shouldn't be present in the response
         let extraFields = filter (not . flip Map.member outputFields) $ Map.keys obj
         when (not $ null extraFields) $ throwUnexpected $
-          "unexpected fields in webhook response: " <> undefined extraFields
+          "unexpected fields in webhook response: " <> showNames extraFields
 
         void $ flip Map.traverseWithKey outputFields $ \fieldName fieldTy ->
           -- When field is non-nullable, it has to present in the response with no null value
