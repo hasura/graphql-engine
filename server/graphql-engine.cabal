@@ -48,7 +48,11 @@ common common-exe
     -- limiting the parallel GC to 2 or 3 capabilities as a very conservative choice, since more
     -- than that is highly unlikely to ever be helpful. More benchmarking would be useful to know if
     -- this is the right decision. It’s possible it would better to just turn it off completely.
-    "-with-rtsopts=-N -I2 -qn2"
+    --
+    -- `-kc8K` helps limit memory consumption in websockets (perhaps elsewhere) by making the 
+    -- cost of a thread's first (and probably only) stack overflow less severe. 
+    -- See:https://github.com/hasura/graphql-engine/issues/5190 
+    "-with-rtsopts=-N -I2 -qn2 -kc8K"
 
 library
   import: common-all

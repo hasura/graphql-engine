@@ -106,6 +106,7 @@ args:
         - articles:
             is_published:
               _eq: true
+      limit: 10
 
 #Author select permission for anonymous users
 #Only authors with atleast one article will be shown
@@ -287,7 +288,7 @@ args:
   args:
     sql: |
       CREATE EXTENSION IF NOT EXISTS postgis;
-      
+
 - type: run_sql
   args:
     sql: |

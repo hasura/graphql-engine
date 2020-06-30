@@ -162,4 +162,4 @@ When configuring your permissions in Hasura, it's useful to be able to quickly g
 
 Next Steps
 ^^^^^^^^^^
-AuthGuardian supports much more, including the ability to eject your rules as a pair of GraphQL query and JavaScript function so you can customize the auth as necessary. To read more about it, please visit the `AuthGuardian docs <https://www.onegraph.com/docs/>`__.
+AuthGuardian supports much more, including the ability to eject your rules as a pair of GraphQL request and JavaScript function so you can customize the auth as necessary. To read more about it, please visit the `AuthGuardian docs <https://www.onegraph.com/docs/>`__.
