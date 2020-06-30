@@ -13,7 +13,7 @@ type Option = {
 export interface ColumnTypeSelectorProps {
   options: Array<{ label: string; options?: Option[] }>;
   onChange: (option: any) => void;
-  value: Option | string;
+  value: Option;
   bsClass: string;
   styleOverrides: Record<string, any>;
   colIdentifier: number;
@@ -28,9 +28,9 @@ export const ColumnTypeSelector: React.FC<ColumnTypeSelectorProps> = ({
   colIdentifier,
 }) => {
   const createOpt = useCallback(
-    (prevValue: string) => ({
-      value: prevValue,
-      label: prevValue,
+    (shearchValue: string) => ({
+      value: shearchValue,
+      label: shearchValue,
       colIdentifier,
     }),
     [colIdentifier]

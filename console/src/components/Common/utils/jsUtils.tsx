@@ -3,7 +3,7 @@ import moment from 'moment';
 // TODO: make functions from this file available without imports
 /* TYPE utils */
 
-export const isNotDefined = (value: unknown) => {
+export const isNotDefined = (value: unknown): value is null | undefined => {
   return value === null || value === undefined;
 };
 
@@ -143,6 +143,20 @@ export const isStringArray = (str: string): boolean => {
     return false;
   }
 };
+
+/* Record utils */
+
+export const mapValues = <K extends string | number | symbol, T, R>(
+  mapper: (value: T, key: string, object: Record<K, T>) => R,
+  object: Record<K, T>,
+): Record<string, R> =>  {
+  const result: Record<string, R> = {}
+  Object.entries(object).forEach(([key, value]) => {
+    result[key] = mapper(value as T, key, object)
+  })
+
+  return result
+}
 
 /* JSON utils */
 
