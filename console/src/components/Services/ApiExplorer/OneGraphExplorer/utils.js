@@ -33,16 +33,21 @@ export const setExplorerIsOpen = isOpen => {
   window.localStorage.setItem('graphiql:explorerOpen', isOpen);
 };
 
-export const setCodeExporterOpen = isOpen => {
-  window.localStorage.setItem('graphiql:graphiqlCodeExporterOpen', isOpen);
+export const persistCodeExporterOpen = isOpen => {
+  window.localStorage.setItem(
+    'graphiql:codeExporterOpen',
+    JSON.stringify(isOpen)
+  );
 };
 
-export const getCodeExporterIsOpen = () => {
-  const defaultIsOpen = false;
+export const getPersistedCodeExporterOpen = () => {
+  const isOpen = window.localStorage.getItem('graphiql:codeExporterOpen');
 
-  const isOpen = window.localStorage.getItem(
-    'graphiql:graphiqlCodeExporterOpen'
-  );
+  if (!isOpen) return false;
 
-  return isOpen ? isOpen === 'true' : defaultIsOpen;
+  try {
+    return JSON.parse(isOpen);
+  } catch {
+    return false;
+  }
 };

@@ -8,8 +8,8 @@ import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
 import AnalyzeButton from '../Analyzer/AnalyzeButton';
 import CodeExporter from 'graphiql-code-exporter';
 import {
-  getCodeExporterIsOpen,
-  setCodeExporterOpen,
+  getPersistedCodeExporterOpen,
+  persistCodeExporterOpen,
 } from '../OneGraphExplorer/utils';
 
 import {
@@ -33,7 +33,7 @@ import {
   setDerivedActionParentOperation,
 } from '../../Actions/Add/reducer';
 import { getGraphQLEndpoint } from '../utils';
-import snippets from '../snippets';
+import snippets from './snippets';
 
 import 'graphiql/graphiql.css';
 import './GraphiQL.css';
@@ -47,12 +47,17 @@ class GraphiQLWrapper extends Component {
       noSchema: false,
       onBoardingEnabled: false,
       copyButtonText: 'Copy',
-      codeExporterOpen: getCodeExporterIsOpen(),
+      codeExporterOpen: false,
     };
   }
 
   componentDidMount() {
     setQueryVariableSectionHeight();
+  }
+
+  componentWillMount() {
+    const codeExporterOpen = getPersistedCodeExporterOpen();
+    this.setState({ codeExporterOpen });
   }
 
   componentWillUnmount() {
@@ -62,7 +67,7 @@ class GraphiQLWrapper extends Component {
   _handleToggleCodeExporter = () => {
     const nextState = !this.state.codeExporterOpen;
 
-    setCodeExporterOpen(nextState);
+    persistCodeExporterOpen(nextState);
 
     this.setState({ codeExporterOpen: nextState });
   };
