@@ -203,6 +203,7 @@ data SchemaCache
   , scRemoteSchemas    :: !RemoteSchemaMap
   , scAllowlist        :: !(HS.HashSet GQLQuery)
   , scGQLContext       :: !(HashMap RoleName GQLContext)
+  , scRelayContext     :: !(HashMap RoleName GQLContext)
   -- , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
   -- , scGCtxMap           :: !GC.GCtxMap
   -- , scDefaultRemoteGCtx :: !GC.GCtx

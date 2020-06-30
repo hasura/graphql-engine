@@ -60,6 +60,7 @@ import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.SQL.Types
+import           Hasura.GraphQL.Execute.Query          (GraphQLQueryType(..))
 
 -- mergeCustomTypes
 --   :: MonadError QErr f
@@ -168,6 +169,14 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
 
   -- Step 3: Build the GraphQL schema.
   gqlContext <- bindA -< buildGQLContext
+    QueryHasura
+    (_boTables    resolvedOutputs)
+    (_boFunctions resolvedOutputs)
+    (_boRemoteSchemas resolvedOutputs)
+    (_boActions resolvedOutputs)
+    (_actNonObjects $ _boCustomTypes resolvedOutputs)
+  relayContext <- bindA -< buildGQLContext
+    QueryRelay
     (_boTables    resolvedOutputs)
     (_boFunctions resolvedOutputs)
     (_boRemoteSchemas resolvedOutputs)
@@ -192,6 +201,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     , scAllowlist = _boAllowlist resolvedOutputs
     -- , scCustomTypes = _boCustomTypes resolvedOutputs
     , scGQLContext = gqlContext
+    , scRelayContext = relayContext
     -- , scGCtxMap = gqlSchema
     -- , scDefaultRemoteGCtx = remoteGQLSchema
     , scDepMap = resolvedDependencies

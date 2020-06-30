@@ -17,6 +17,7 @@ import           Control.Monad.Unique
 import qualified Hasura.GraphQL.Parser                 as P
 
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Execute.Query          (GraphQLQueryType(..))
 import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),
                                                         UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
@@ -36,13 +37,14 @@ buildGQLContext
      , MonadUnique m
      , MonadError QErr m
      , HasSQLGenCtx m )
-  => TableCache
+  => GraphQLQueryType
+  -> TableCache
   -> FunctionCache
   -> HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
   -> ActionCache
   -> NonObjectTypeMap
   -> m (HashMap RoleName GQLContext)
-buildGQLContext allTables allFunctions allRemoteSchemata allActions nonObjectCustomTypes =
+buildGQLContext queryType allTables allFunctions allRemoteSchemata allActions nonObjectCustomTypes =
   S.toMap allRoles & Map.traverseWithKey \roleName () ->
     buildContextForRole roleName
   where

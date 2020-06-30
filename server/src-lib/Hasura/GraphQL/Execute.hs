@@ -104,9 +104,10 @@ getExecPlanPartial
   => UserInfo
   -> SchemaCache
   -> Bool
+  -> EQ.GraphQLQueryType
   -> GQLReqParsed
   -> m (C.GQLContext, QueryParts)
-getExecPlanPartial userInfo sc enableAL req = do
+getExecPlanPartial userInfo sc enableAL queryType req = do
   -- check if query is in allowlist
   when enableAL checkQueryInAllowlist
 
@@ -138,7 +139,10 @@ getExecPlanPartial userInfo sc enableAL req = do
       {- TODO TODO FIXME of course this is wrong -}
       {- TODO TODO FIXME of course this is wrong -}
       {- TODO TODO FIXME of course this is wrong -}
-      fromMaybe (head $ Map.elems $ scGQLContext sc) $ Map.lookup rn (scGQLContext sc)
+      fromMaybe (head $ Map.elems $ scGQLContext sc) $ Map.lookup rn $
+      case queryType of
+        EQ.QueryHasura -> scGQLContext sc
+        EQ.QueryRelay  -> scRelayContext sc
 
     -- | Depending on the request parameters, fetch the correct typed operation
     -- definition from the GraphQL query
@@ -225,7 +229,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
         takeFragment = \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
         fragments =
             mapMaybe takeFragment $ unGQLExecDoc $ _grQuery req
-      (gCtx, queryParts) <- getExecPlanPartial userInfo sc enableAL req
+      (gCtx, queryParts) <- getExecPlanPartial userInfo sc enableAL queryType req
       case queryParts of
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
