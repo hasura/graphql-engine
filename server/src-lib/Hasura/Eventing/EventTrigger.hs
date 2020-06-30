@@ -167,16 +167,24 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
   events0 <- popEventsBatch
   go events0 0 False
   where
+    hasEventTrigger = not . null . _tiEventTriggerInfoMap
     fetchBatchSize = 100
     popEventsBatch = do
-      let run = runExceptT . Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite)
-      run (fetchEvents fetchBatchSize) >>= \case
-          Left err -> do
-            L.unLogger logger $ EventInternalErr err
-            return []
-          Right events -> do
-            saveLockedEvents events
-            return events
+      cache <- liftIO getSchemaCache
+      let tables = scTables cache
+      -- only fetch events from db if there is atleast one event trigger
+      if | any hasEventTrigger tables -> do
+             let run = runExceptT . Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite)
+             run (fetchEvents fetchBatchSize) >>= \case
+                 Left err -> do
+                   L.unLogger logger $ EventInternalErr err
+                   return []
+                 Right events -> do
+                   saveLockedEvents events
+                   return events
+         | otherwise -> do
+           L.unLogger logger $ L.debugT "no event triggers found, skipping fetch"
+           return []
 
     -- After the events are fetched from the DB, we store the locked events
     -- in a hash set(order doesn't matter and look ups are faster) in the
