@@ -23,7 +23,6 @@ const SET_SQL = 'RawSQL/SET_SQL';
 const SET_CASCADE_CHECKED = 'RawSQL/SET_CASCADE_CHECKED';
 const SET_MIGRATION_CHECKED = 'RawSQL/SET_MIGRATION_CHECKED';
 const SET_TRACK_TABLE_CHECKED = 'RawSQL/SET_TRACK_TABLE_CHECKED';
-const SET_STATEMENT_TIMEOUT = 'RawSQL/SET_STATEMENT_TIMEOUT';
 const REQUEST_SUCCESS = 'RawSQL/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'RawSQL/REQUEST_ERROR';
 
@@ -33,15 +32,14 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
+const executeSQL = (isMigration, migrationName, statementTimeout) => (
+  dispatch,
+  getState
+) => {
   dispatch({ type: MAKING_REQUEST });
   dispatch(showSuccessNotification('Executing the Query...'));
 
-  const {
-    statementTimeout,
-    isTableTrackChecked,
-    isCascadeChecked,
-  } = getState().rawSQL;
+  const { isTableTrackChecked, isCascadeChecked } = getState().rawSQL;
   const { currMigrationMode, readOnlyMode } = getState().main;
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
@@ -50,9 +48,7 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
 
   const schemaChangesUp = [];
 
-  const shouldAddStatementTimeout = statementTimeout > 0 && !isMigration;
-
-  const sql = shouldAddStatementTimeout
+  const sql = statementTimeout
     ? `${getStatementTimeoutSql(statementTimeout)} ${getState().rawSQL.sql}`
     : getState().rawSQL.sql;
 
@@ -172,11 +168,6 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   );
 };
 
-export const setRawSqlTimeout = timeoutInSeconds => ({
-  type: SET_STATEMENT_TIMEOUT,
-  data: timeoutInSeconds,
-});
-
 const rawSQLReducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_SQL:
@@ -191,8 +182,6 @@ const rawSQLReducer = (state = defaultState, action) => {
         isTableTrackChecked: action.data,
         showTrackTable: action.data,
       };
-    case SET_STATEMENT_TIMEOUT:
-      return { ...state, statementTimeout: action.data };
 
     case MAKING_REQUEST:
       return {
@@ -248,7 +237,6 @@ export {
   SET_CASCADE_CHECKED,
   SET_MIGRATION_CHECKED,
   SET_TRACK_TABLE_CHECKED,
-  SET_STATEMENT_TIMEOUT,
   modalOpen,
   modalClose,
 };
