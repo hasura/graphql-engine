@@ -60,7 +60,6 @@ const typeScriptSnippet: Snippet = {
   options: [],
   generate: ({ operationDataList }) => {
     const queryDef = operationDataList[0];
-    console.log({ queryDef });
 
     return `
 /*
