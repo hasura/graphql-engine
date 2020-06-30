@@ -12,10 +12,32 @@ import { sanitiseRow } from '../../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { getEventStatusIcon, getEventDeliveryIcon } from './utils';
-import CancelEventButton from './CancelEventButton';
 import { Dispatch } from '../../../../../types';
 import Endpoints from '../../../../../Endpoints';
 import makeCancelRequest from './makeCancelRequest';
+import Button from '../../../../Common/Button';
+
+type CancelButtonProps = {
+  id: string;
+  onClickHandler: () => void;
+};
+
+const handlerWrapper = (e: React.MouseEvent<HTMLButtonElement>, handler: () => void) => {
+  e.preventDefault();
+  handler();
+}
+
+const CancelEventButton: React.FC<CancelButtonProps> = ({ id, onClickHandler }) => (
+  <Button
+    key={id}
+    onClick={e => handlerWrapper(e, onClickHandler)}
+    color="white"
+    size="xs"
+    title="Cancel Event"
+  >
+    <i className="fa fa-close" />
+  </Button>
+);
 
 const cancelEvent = (
   dispatch: Dispatch,
@@ -164,7 +186,7 @@ const EventsTable: React.FC<Props> = props => {
       actions: columns.includes('actions') ? (
         <CancelEventButton
           id={row.id}
-          handler={() => cancelButtonHandler(row)}
+          onClickHandler={() => cancelButtonHandler(row)}
         />
       ) : undefined,
     };
