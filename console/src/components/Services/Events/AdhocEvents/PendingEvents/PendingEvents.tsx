@@ -29,8 +29,16 @@ const PendingEvents: React.FC<Props> = props => {
       filterState={filterState}
       setFilterState={setFilterState}
       runQuery={runQuery}
-      columns={['id', 'status', 'scheduled_time', 'created_at', 'tries']}
+      columns={[
+        'id',
+        'status',
+        'scheduled_time',
+        'created_at',
+        'tries',
+        'actions',
+      ]}
       identifier="adhoc-events-processed"
+      dispatch={dispatch}
     />
   );
 

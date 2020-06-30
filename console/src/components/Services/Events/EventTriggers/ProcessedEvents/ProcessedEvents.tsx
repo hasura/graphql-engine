@@ -34,6 +34,7 @@ const ProcessedEvents: React.FC<Props> = props => {
       runQuery={runQuery}
       columns={['id', 'delivered', 'created_at', 'tries']}
       identifier={triggerName}
+      dispatch={dispatch}
     />
   );
 

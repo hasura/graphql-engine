@@ -31,6 +31,7 @@ const ProcessedEvents: React.FC<Props> = props => {
       runQuery={runQuery}
       columns={['id', 'status', 'scheduled_time', 'created_at', 'tries']}
       identifier="adhoc-events-processed"
+      dispatch={dispatch}
     />
   );
 
