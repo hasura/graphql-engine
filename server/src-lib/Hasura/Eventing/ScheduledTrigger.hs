@@ -66,8 +66,8 @@ module Hasura.Eventing.ScheduledTrigger
   , generateScheduleTimes
   , insertCronEvents
   , StandAloneScheduledEvent(..)
-  , initLockedScheduledEventsCtx
-  , LockedScheduledEventsCtx(..)
+  , initLockedEventsCtx
+  , LockedEventsCtx(..)
   , unlockCronEvents
   , unlockStandaloneScheduledEvents
   , unlockAllLockedScheduledEvents
@@ -75,7 +75,6 @@ module Hasura.Eventing.ScheduledTrigger
 
 import           Control.Arrow.Extended            (dup)
 import           Control.Concurrent.Extended       (sleep)
-import           Control.Monad.STM                 (atomically,STM)
 import           Control.Concurrent.STM.TVar
 import           Data.Has
 import           Data.Int                          (Int64)
@@ -90,6 +89,7 @@ import           Hasura.Server.Version             (HasVersion)
 import           Hasura.RQL.DDL.EventTrigger       (getHeaderInfosFromConf)
 import           Hasura.SQL.DML
 import           Hasura.SQL.Types
+import           Hasura.Eventing.Common
 import           System.Cron
 
 import qualified Data.Aeson                        as J
@@ -167,8 +167,6 @@ data CronEventSeed
   , cesScheduledTime :: !UTCTime
   } deriving (Show, Eq)
 
-type CronEventId = Text
-
 data CronEventPartial
   = CronEventPartial
   { cepId            :: !CronEventId
@@ -194,8 +192,6 @@ data ScheduledEventFull
   } deriving (Show, Eq)
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventFull)
-
-type StandAloneScheduledEventId = Text
 
 data StandAloneScheduledEvent
   = StandAloneScheduledEvent
@@ -227,18 +223,6 @@ data ScheduledEventType =
   -- ^ A standalone scheduled event doesn't have any template defined
   -- so all the configuration is fetched along the scheduled events.
     deriving (Eq, Show)
-
-data LockedScheduledEventsCtx
-  = LockedScheduledEventsCtx
-  { lseCronEvents :: TVar (Set.Set CronEventId)
-  , lseStandAloneEvents :: TVar (Set.Set StandAloneScheduledEventId)
-  }
-
-initLockedScheduledEventsCtx :: STM LockedScheduledEventsCtx
-initLockedScheduledEventsCtx = do
-  lseCronEvents <- newTVar Set.empty
-  lseStandAloneEvents <- newTVar Set.empty
-  return $ LockedScheduledEventsCtx{..}
 
 -- | runCronEventsGenerator makes sure that all the cron triggers
 --   have an adequate buffer of cron events.
@@ -359,7 +343,7 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
       -- save the locked standalone events that have been fetched from the
       -- database, the events stored here will be unlocked in case a
       -- graceful shutdown is initiated in midst of processing these events
-      saveLockedCronEvents partialEvents
+      saveLockedEvents (map cepId partialEvents) lockedCronEvents
       for_ partialEvents $ \(CronEventPartial id' name st tries)-> do
         case Map.lookup name cronTriggersInfo of
           Nothing ->  logInternalError $
@@ -379,25 +363,25 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
                                        ctiComment
             finally <- runExceptT $
               runReaderT (processScheduledEvent logEnv pgpool scheduledEvent CronScheduledEvent) (logger, httpMgr)
-            removeEventFromLockedEvents id'
+            removeEventFromLockedEvents id' lockedCronEvents
             either logInternalError pure finally
     Left err -> logInternalError err
   where
     logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
 
-    saveLockedCronEvents :: [CronEventPartial] -> IO ()
-    saveLockedCronEvents partialCronEvents =
-      liftIO $ atomically $ do
-        lockedEvents <- readTVar lockedCronEvents
-        let ids = map cepId partialCronEvents
-        writeTVar lockedCronEvents $!
-          Set.union lockedEvents $ Set.fromList ids
+    -- saveLockedCronEvents :: [CronEventPartial] -> IO ()
+    -- saveLockedCronEvents partialCronEvents =
+    --   atomically $ do
+    --     lockedEvents <- readTVar lockedCronEvents
+    --     let ids = map cepId partialCronEvents
+    --     writeTVar lockedCronEvents $!
+    --       Set.union lockedEvents $ Set.fromList ids
 
-    removeEventFromLockedEvents :: CronEventId -> IO ()
-    removeEventFromLockedEvents eventId =
-      liftIO $ atomically $ do
-        lockedEvents <- readTVar lockedCronEvents
-        writeTVar lockedCronEvents $! Set.delete eventId lockedEvents
+    -- removeEventFromLockedEvents :: CronEventId -> IO ()
+    -- removeEventFromLockedEvents eventId =
+    --   atomically $ do
+    --     lockedEvents <- readTVar lockedCronEvents
+    --     writeTVar lockedCronEvents $! Set.delete eventId lockedEvents
 
 processStandAloneEvents
   :: HasVersion
@@ -416,7 +400,7 @@ processStandAloneEvents logger logEnv httpMgr pgpool lockedStandAloneEvents = do
       -- save the locked standalone events that have been fetched from the
       -- database, the events stored here will be unlocked in case a
       -- graceful shutdown is initiated in midst of processing these events
-      saveLockedStandAloneEvents standAloneScheduledEvents'
+      saveLockedEvents (map saseId standAloneScheduledEvents') lockedStandAloneEvents
       for_ standAloneScheduledEvents' $
              \(StandAloneScheduledEvent id'
                                         scheduledTime
@@ -448,7 +432,7 @@ processStandAloneEvents logger logEnv httpMgr pgpool lockedStandAloneEvents = do
                 finally <- runExceptT $
                   runReaderT (processScheduledEvent logEnv pgpool scheduledEvent StandAloneEvent) $
                                  (logger, httpMgr)
-                removeEventFromLockedEvents id'
+                removeEventFromLockedEvents id' lockedStandAloneEvents
                 either logInternalError pure finally
 
               Left headerInfoErr -> logInternalError headerInfoErr
@@ -459,20 +443,6 @@ processStandAloneEvents logger logEnv httpMgr pgpool lockedStandAloneEvents = do
   where
     logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
 
-    saveLockedStandAloneEvents :: [StandAloneScheduledEvent] -> IO ()
-    saveLockedStandAloneEvents standAloneEvents =
-      liftIO $ atomically $ do
-        lockedEvents <- readTVar lockedStandAloneEvents
-        let ids = map saseId standAloneEvents
-        writeTVar lockedStandAloneEvents $!
-          Set.union lockedEvents $ Set.fromList ids
-
-    removeEventFromLockedEvents :: ScheduledEventId -> IO ()
-    removeEventFromLockedEvents eventId =
-      liftIO $ atomically $ do
-        lockedEvents <- readTVar lockedStandAloneEvents
-        writeTVar lockedStandAloneEvents $! Set.delete eventId lockedEvents
-
 processScheduledTriggers
   :: HasVersion
   => L.Logger L.Hasura
@@ -480,12 +450,12 @@ processScheduledTriggers
   -> HTTP.Manager
   -> Q.PGPool
   -> IO SchemaCache
-  -> LockedScheduledEventsCtx
+  -> LockedEventsCtx
   -> IO void
-processScheduledTriggers logger logEnv httpMgr pgpool getSC LockedScheduledEventsCtx {..} =
+processScheduledTriggers logger logEnv httpMgr pgpool getSC LockedEventsCtx {..} =
   forever $ do
-    processCronEvents logger logEnv httpMgr pgpool getSC lseCronEvents
-    processStandAloneEvents logger logEnv httpMgr pgpool lseStandAloneEvents
+    processCronEvents logger logEnv httpMgr pgpool getSC leCronEvents
+    processStandAloneEvents logger logEnv httpMgr pgpool leStandAloneEvents
     sleep (minutes 1)
 
 processScheduledEvent ::
