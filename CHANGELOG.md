@@ -8,7 +8,7 @@ A scheduled trigger can be used to execute custom business logic based on time. 
 
 A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to  generate an end-of-day sales report every weekday at 9pm.
 
-You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience. 
+You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience.
 
 <Add docs links>
 
@@ -38,7 +38,7 @@ query {
     content
     likedByMe
   }
-}     
+}
 ```
 
 Support for this is now added through the `add_computed_field` API.
@@ -93,6 +93,8 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add `--pg-connection-options` command-line flag for passing parameters to PostgreSQL (close #5092) (#5187)
+- server: improve memory usage of idle websockets connections (#5190)
 - server: few relay fixes (fix #5020, #5037, #5046) (#5013)
 - server: raise error on startup when `--unauthorized-role` is ignored (#4736)
 - server: fix bug which arises when renaming/dropping a column on a remote relationship (#5005, #5119)
@@ -103,6 +105,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: allow configuring session_argument for custom functions (close #4499) (#4922)
 - console: fix listen update column config selection for event trigger (close #5042) (#5043)
 - cli: add new flags up-sql and down-sql to generate sql based migrations from the CLI (#5026)
+- docs: add instructions on fixing loss of data when using floats (close #5092)
 - docs: add page on setting up v2 migrations (close #4746) (#4898)
 
 ## `v1.3.0-beta.1`
