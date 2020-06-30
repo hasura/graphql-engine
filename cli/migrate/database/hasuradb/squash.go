@@ -1520,6 +1520,18 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			q.Type = createCronTrigger
 		case *deleteCronTriggerInput:
 			q.Type = deleteCronTrigger
+		case *createActionInput:
+			q.Type = createAction
+		case *updateActionInput:
+			q.Type = updateAction
+		case *dropActionInput:
+			q.Type = dropAction
+		case *createActionPermissionInput:
+			q.Type = createActionPermission
+		case *dropActionPermissionInput:
+			q.Type = dropActionPermission
+		case *setCustomTypesInput:
+			q.Type = setCustomTypes
 		case *RunSQLInput:
 			ret <- []byte(args.SQL)
 			continue

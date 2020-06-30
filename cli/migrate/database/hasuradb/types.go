@@ -211,6 +211,18 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		q.Args = &createCronTriggerInput{}
 	case deleteCronTrigger:
 		q.Args = &deleteCronTriggerInput{}
+	case createAction:
+		q.Args = &createActionInput{}
+	case dropAction:
+		q.Args = &dropActionInput{}
+	case updateAction:
+		q.Args = &updateActionInput{}
+	case createActionPermission:
+		q.Args = &createActionPermissionInput{}
+	case dropActionPermission:
+		q.Args = &dropActionPermissionInput{}
+	case setCustomTypes:
+		q.Args = &setCustomTypesInput{}
 	default:
 		return fmt.Errorf("cannot squash type %s", q.Type)
 	}
@@ -373,6 +385,12 @@ const (
 	deleteRemoteRelationship                 = "delete_remote_relationship"
 	createCronTrigger                        = "create_cron_trigger"
 	deleteCronTrigger                        = "delete_cron_trigger"
+	createAction                             = "create_action"
+	dropAction                               = "drop_action"
+	updateAction                             = "update_action"
+	createActionPermission                   = "create_action_permission"
+	dropActionPermission                     = "drop_action_permission"
+	setCustomTypes                           = "set_custom_types"
 )
 
 type tableMap struct {
