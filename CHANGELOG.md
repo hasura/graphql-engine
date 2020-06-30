@@ -2,6 +2,15 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
+
+
+## `v1.3.0-beta.3`
+
 
 ### Bug fixes and improvements
 
@@ -10,6 +19,7 @@
 - server: fix introspection when multiple actions defined with Postgres scalar types (fix #5166) (#5173)
 - console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
 - console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
+- console: fix styling of table row contents on tables on relationship page (#4974)
 - cli: handle missing files during metadata apply (close #5163) (#5170)
 - docs: add page on Relay schema (close #4912) (#5150)
 
@@ -23,6 +33,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: improve memory usage of idle websockets connections (#5190)
 - server: few relay fixes (fix #5020, #5037, #5046) (#5013)
 - server: raise error on startup when `--unauthorized-role` is ignored (#4736)
 - server: fix bug which arises when renaming/dropping a column on a remote relationship (#5005, #5119)
