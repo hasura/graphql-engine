@@ -57,6 +57,7 @@ library
   build-depends:       base
                      , lifted-base
                      , pg-client
+                     , validation
                      , text
                      , text-builder >= 0.6
                      , bytestring
@@ -322,6 +323,7 @@ library
                      , Hasura.RQL.DML.Update
                      , Hasura.RQL.DML.Update.Types
                      , Hasura.RQL.DML.Count
+                     , Hasura.RQL.DML.RemoteJoin
                      , Hasura.RQL.GBoolExp
 
                      , Hasura.GraphQL.Transport.HTTP.Protocol
