@@ -60,11 +60,11 @@ class GraphiQLWrapper extends Component {
   }
 
   _handleToggleCodeExporter = () => {
-    const newIsOpen = !this.state.codeExporterOpen;
+    const nextState = !this.state.codeExporterOpen;
 
-    setCodeExporterOpen(newIsOpen);
+    setCodeExporterOpen(nextState);
 
-    this.setState({ codeExporterOpen: newIsOpen });
+    this.setState({ codeExporterOpen: nextState });
   };
 
   render() {
@@ -160,21 +160,6 @@ class GraphiQLWrapper extends Component {
       dispatch(push(getActionsCreateRoute()));
     };
 
-    const getCodeExporter = query => {
-      return (
-        <>
-          {codeExporterOpen ? (
-            <CodeExporter
-              hideCodeExporter={this._handleToggleCodeExporter}
-              snippets={snippets}
-              query={query}
-              codeMirrorTheme="default"
-            />
-          ) : null}
-        </>
-      );
-    };
-
     const renderGraphiql = graphiqlProps => {
       const voyagerUrl = graphqlNetworkData.consoleUrl + '/voyager-view';
       let analyzerProps = {};
@@ -232,12 +217,12 @@ class GraphiQLWrapper extends Component {
       return (
         <>
           <GraphiQL
-            {...graphiqlProps}ref={c => {
+            {...graphiqlProps}
+            ref={c => {
               graphiqlContext = c;
             }}
             fetcher={graphQLFetcher}
             voyagerUrl={voyagerUrl}
-
           >
             <GraphiQL.Logo>GraphiQL</GraphiQL.Logo>
             <GraphiQL.Toolbar>
@@ -249,7 +234,14 @@ class GraphiQLWrapper extends Component {
               />
             </GraphiQL.Toolbar>
           </GraphiQL>
-          {getCodeExporter(graphiqlProps.query)}
+          {codeExporterOpen ? (
+            <CodeExporter
+              hideCodeExporter={this._handleToggleCodeExporter}
+              snippets={snippets}
+              query={graphiqlProps.query}
+              codeMirrorTheme="default"
+            />
+          ) : null}
         </>
       );
     };

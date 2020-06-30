@@ -15,13 +15,43 @@ const typescriptSnippet = {
   language: `Typescript`,
   codeMirrorMode: `jsx`,
   options: [],
-  generate: arg => `import React from "react"
-import { graphql } from "graphql"
-const ComponentName = ({ data }) => <pre>{JSON.stringify(data, null, 4)}</pre>
-export const query = graphql\`
+  generate: arg => `
+function fetchGraphQL(
+  operationsDoc: string,
+  operationName: string,
+  variables: Record<string, any>
+) {
+  return fetch('undefined', {
+    method: 'POST',
+    body: JSON.stringify({
+      query: operationsDoc,
+      variables,
+      operationName,
+    }),
+  }).then(result => result.json());
+}
+
+const operationsDoc = \`
+# Consider giving this query a unique, descriptive
+# name in your application as a best practice
+
 ${getQuery(arg, 2)}
-\`
-export default ComponentName
+\`;
+
+function fetchUnnamedQuery1() {
+  return fetchGraphQL(operationsDoc, <QUERY_NAME>, {});
+}
+
+fetchUnnamedQuery1()
+  .then(({ data, errors }) => {
+    if (errors) {
+      console.error(errors);
+    }
+    console.log(data);
+  })
+  .catch(error => {
+    console.error(error);
+  });
 `,
 };
 
