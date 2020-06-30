@@ -40,7 +40,7 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
         url: getDataEventsLandingRoute(),
       },
       {
-        title: 'Data Events',
+        title: 'Data Triggers',
         url: getDataEventsLandingRoute(),
       },
       {
