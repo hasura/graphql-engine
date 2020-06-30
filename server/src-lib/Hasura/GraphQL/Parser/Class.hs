@@ -4,15 +4,18 @@ module Hasura.GraphQL.Parser.Class where
 import           Hasura.Prelude
 
 import qualified Language.Haskell.TH                   as TH
+import qualified Data.HashMap.Strict                   as Map
 
 import           Data.Parser.JSONPath
 import           Data.Tuple.Extended
 import           GHC.Stack                             (HasCallStack)
 import           Type.Reflection                       (Typeable)
+import           Data.Has
 
 import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser
+import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission           (RoleName)
-import           Hasura.RQL.Types.Table                (TableInfo)
+import           Hasura.RQL.Types.Table                (TableCache, TableInfo)
 import           Hasura.SQL.Types
 
 {- Note [Tying the knot]
@@ -81,14 +84,6 @@ traversing the graph, so we get observable sharing as well. -}
 -- | A class that provides functionality used when building the GraphQL schema,
 -- i.e. constructing the 'Parser' graph.
 class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
-  -- | Gets the current role the schema is being built for.
-  askRoleName :: m RoleName
-
-  -- | Looks up table information for the given table name. This function
-  -- should never fail, since the schema cache construction process is
-  -- supposed to ensure all dependencies are resolved.
-  askTableInfo :: QualifiedTable -> m TableInfo
-
   -- | Memoizes a parser constructor function for the extent of a single schema
   -- construction process. This is mostly useful for recursive parsers;
   -- see Note [Tying the knot] for more details.
@@ -103,6 +98,29 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
     -- responsibility to ensure multiple calls to the same function don’t use
     -- the same key.
     -> m (Parser k n b) -> m (Parser k n b)
+
+type MonadRole r m = (MonadReader r m, Has RoleName r)
+
+-- | Gets the current role the schema is being built for.
+askRoleName
+  :: MonadRole r m
+  => m RoleName
+askRoleName = asks getter
+
+type MonadTableInfo r m = (MonadReader r m, Has TableCache r, MonadError QErr m)
+
+-- | Looks up table information for the given table name. This function
+-- should never fail, since the schema cache construction process is
+-- supposed to ensure all dependencies are resolved.
+askTableInfo
+  :: MonadTableInfo r m
+  => QualifiedTable
+  -> m TableInfo
+askTableInfo tableName = do
+  tableInfo <- asks $ Map.lookup tableName . getter
+  -- This should never fail, since the schema cache construction process is
+  -- supposed to ensure that all dependencies are resolved.
+  tableInfo `onNothing` throw500 ("askTableInfo: no info for " <>> tableName)
 
 -- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
 -- as the key.

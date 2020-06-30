@@ -39,30 +39,15 @@ import           Hasura.SQL.Types
 -- schema construction
 
 newtype SchemaT n m a = SchemaT
-  { unSchemaT :: ReaderT (RoleName, TableCache) (StateT (DMap ParserId (ParserById n)) m) a
+  { unSchemaT :: StateT (DMap ParserId (ParserById n)) m a
   } deriving (Functor, Applicative, Monad, MonadError e)
 
-instance Monad m => MonadReader a (SchemaT n (ReaderT a m)) where
-  ask = SchemaT $ lift $ lift ask
-  local f (SchemaT x) = SchemaT $ mapReaderT (mapStateT (local f)) x
-  reader f = SchemaT $ lift $ lift $ reader f
-
-runSchemaT :: Monad m => RoleName -> TableCache -> SchemaT n m a -> m a
-runSchemaT roleName tableCache = unSchemaT
-  >>> flip runReaderT (roleName, tableCache)
-  >>> flip evalStateT mempty
+runSchemaT :: Monad m => SchemaT n m a -> m a
+runSchemaT = flip evalStateT mempty . unSchemaT
 
 -- | see Note [SchemaT requires MonadIO]
-instance (MonadIO m, MonadUnique m, MonadError QErr m, MonadParse n)
+instance (MonadIO m, MonadUnique m, MonadParse n)
       => MonadSchema n (SchemaT n m) where
-  askRoleName = SchemaT $ asks fst
-
-  askTableInfo tableName = SchemaT $ do
-    tableInfo <- asks $ M.lookup tableName . snd
-    -- This should never fail, since the schema cache construction process is
-    -- supposed to ensure that all dependencies are resolved.
-    tableInfo `onNothing` throw500 ("SchemaT.askTableInfo: no info for " <>> tableName)
-
   memoizeOn name key buildParser = SchemaT do
     let parserId = ParserId name key
     parsersById <- get
@@ -102,6 +87,16 @@ instance (MonadIO m, MonadUnique m, MonadError QErr m, MonadParse n)
         parser <- addDefinitionUnique unique <$> unSchemaT buildParser
         liftIO $ writeIORef cell (Just parser)
         pure parser
+
+-- We can add a reader in two places.  I'm not sure which one is the correct
+-- one.  But since we don't seem to change the values that are being read, I
+-- don't think it matters.
+
+deriving instance Monad m => MonadReader a (SchemaT n (ReaderT a m))
+
+instance (MonadIO m, MonadUnique m, MonadParse n)
+      => MonadSchema n (ReaderT a (SchemaT n m)) where
+  memoizeOn name key = mapReaderT (memoizeOn name key)
 
 {- Note [SchemaT requires MonadIO]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

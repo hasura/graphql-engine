@@ -27,6 +27,7 @@ import qualified Data.Sequence                         as Seq
 import qualified Data.Text                             as T
 import qualified Database.PG.Query                     as Q
 import qualified Language.GraphQL.Draft.Syntax         as G
+import           Data.Has
 
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
@@ -54,7 +55,6 @@ import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
-import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -64,7 +64,7 @@ import           Hasura.SQL.Value
 -- insert
 
 insertIntoTable
-  :: forall m n. (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -95,7 +95,7 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
        )
 
 insertOneIntoTable
-  :: forall m n. (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -127,7 +127,7 @@ insertOneIntoTable table fieldName description insertPerms selectPerms updatePer
 
 
 tableFieldsInput
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable -- ^ qualified name of the table
   -> InsPermInfo    -- ^ insert permissions of the table
   -> m (Parser 'Input n (AnnInsObj UnpreparedValue))
@@ -167,7 +167,7 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
     <&> mconcat
 
 objectRelationshipInput
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> InsPermInfo
   -> Maybe SelPermInfo
@@ -193,7 +193,7 @@ objectRelationshipInput table insertPerms selectPerms updatePerms =
   pure $ P.object inputName (Just inputDesc) inputParser <&> undefined
 
 arrayRelationshipInput
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> InsPermInfo
   -> Maybe SelPermInfo
@@ -239,7 +239,7 @@ mkInsertObject objects table columns conflictClause insertPerms updatePerms =
         updateCheck = fmapAnnBoolExp partialSQLExpToUnpreparedValue <$> (upiCheck =<< updatePerms)
 
 conflictObject
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> Maybe SelPermInfo
   -> UpdPermInfo
@@ -266,7 +266,7 @@ conflictObject table selectPerms updatePerms = runMaybeT $ do
   where preSetColumns = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
 
 conflictConstraint
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedTable
   -> m (Parser 'Both n ConstraintName)
 conflictConstraint table =
@@ -290,7 +290,7 @@ conflictConstraint table =
 -- update
 
 updateTable
-  :: forall m n. (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -309,7 +309,7 @@ updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
     <&> mkUpdateObject table columns updatePerms . fmap RQL.MOutMultirowFields
 
 updateTableByPk
-  :: forall m n. (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -351,7 +351,7 @@ mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
 
 
 updateOperators
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedTable -- ^ qualified name of the table
   -> UpdPermInfo    -- ^ update permissions of the table
   -> m (Maybe (InputFieldsParser n [(PGCol, RQL.UpdOpExpG UnpreparedValue)]))
@@ -443,7 +443,7 @@ updateOperators table updatePermissions = do
 -- delete
 
 deleteFromTable
-  :: forall m n. (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -460,7 +460,7 @@ deleteFromTable table fieldName description deletePerms selectPerms = do
     <&> mkDeleteObject table columns deletePerms . fmap RQL.MOutMultirowFields
 
 deleteFromTableByPk
-  :: forall m n. (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -493,7 +493,7 @@ mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
 -- common
 
 mutationSelectionSet
-  :: forall m n. (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable
   -> Maybe SelPermInfo
   -> m (Parser 'Output n (RQL.MutFldsG UnpreparedValue))
@@ -520,7 +520,7 @@ mutationSelectionSet table selectPerms =
     <&> parsedSelectionsToFields RQL.MExp
 
 primaryKeysArguments
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedTable
   -> SelPermInfo
   -> m (Maybe (InputFieldsParser n (AnnBoolExp UnpreparedValue)))
@@ -788,7 +788,7 @@ decodeEncJSON =
 
 ------------------- Actions -----------------------
 actionAsync
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => NonObjectTypeMap
   -> ActionInfo
   -> m (Maybe (FieldParser n AnnActionMutationAsync))
@@ -805,7 +805,7 @@ actionAsync nonObjectTypeMap actionInfo = runMaybeT do
     ActionInfo actionName outputObject definition permissions comment = actionInfo
 
 actionSync
-  :: forall m n. (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => NonObjectTypeMap
   -> ActionInfo
   -> m (Maybe (FieldParser n (AnnActionMutationSync UnpreparedValue)))
@@ -825,7 +825,7 @@ actionSync nonObjectTypeMap actionInfo = runMaybeT do
         in P.selectionSet outputTypeName outputTypeDescription allFieldParsers
            <&> parsedSelectionsToFields RQL.FExp
 
-  stringifyNum <- asks qcStringifyNum
+  stringifyNum <- asks $ qcStringifyNum . getter
   pure $ P.subselection fieldName description inputArguments selectionSet
          <&> \(argsJson, fields) -> AnnActionMutationSync
                { _aamsName = actionName
@@ -888,7 +888,7 @@ mkDefinitionList annotatedOutputType =
 
 -- This should into schema/action.hs
 actionInputArguments
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => NonObjectTypeMap
   -> [ArgumentDefinition (G.GType, NonObjectCustomType)]
   -> m (InputFieldsParser n J.Value)

@@ -30,7 +30,7 @@ type ComparisonExp = OpExpG UnpreparedValue
 -- >   ...
 -- > }
 boolExp
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> Maybe SelPermInfo
   -> m (Parser 'Input n (AnnBoolExp UnpreparedValue))

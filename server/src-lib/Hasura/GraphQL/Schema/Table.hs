@@ -13,8 +13,6 @@ module Hasura.GraphQL.Schema.Table
 
 import           Hasura.Prelude
 
-import           Data.Maybe                    (isJust)
-
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -38,7 +36,7 @@ import           Hasura.RQL.DML.Internal
 -- Return Nothing if there's no column the current user has "select"
 -- permissions for.
 tableSelectColumnsEnum
-  :: (MonadSchema n m, MonadError QErr m)
+  :: (MonadSchema n m, MonadRole r m, MonadTableInfo r m)
   => QualifiedTable
   -> SelPermInfo
   -> m (Maybe (Parser 'Both n PGCol))
@@ -67,7 +65,7 @@ tableSelectColumnsEnum table selectPermissions = do
 -- Return Nothing if there's no column the current user has "update"
 -- permissions for.
 tableUpdateColumnsEnum
-  :: (MonadSchema n m, MonadError QErr m)
+  :: (MonadSchema n m, MonadRole r m, MonadTableInfo r m)
   => QualifiedTable
   -> UpdPermInfo
   -> m (Maybe (Parser 'Both n PGCol))
@@ -89,7 +87,7 @@ tableUpdateColumnsEnum table updatePermissions = do
 
 -- TODO deduplicate with @askPermInfo'@?
 tablePermissions
-  :: forall m n. (MonadSchema n m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> m (Maybe RolePermInfo)
 tablePermissions table = do
@@ -100,25 +98,25 @@ tablePermissions table = do
     else Map.lookup roleName $ _tiRolePermInfoMap tableInfo
 
 tableSelectPermissions
-  :: forall m n. (MonadSchema n m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> m (Maybe SelPermInfo)
 tableSelectPermissions table = (_permSel =<<) <$> tablePermissions table
 
 tableUpdatePermissions
-  :: forall m n. (MonadSchema n m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> m (Maybe UpdPermInfo)
 tableUpdatePermissions table = (_permUpd =<<) <$> tablePermissions table
 
 tableDeletePermissions
-  :: forall m n. (MonadSchema n m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> m (Maybe DelPermInfo)
 tableDeletePermissions table = (_permDel =<<) <$> tablePermissions table
 
 tableSelectFields
-  :: forall m n. (MonadSchema n m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> SelPermInfo
   -> m [FieldInfo]
@@ -140,7 +138,7 @@ tableSelectFields table permissions = do
     canBeSelected (FIRemoteRelationship _) = pure True   -- TODO: Are there permissions for remote join fields?
 
 tableColumns
-  :: forall m n. (MonadSchema n m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedTable
   -> m [PGColumnInfo]
 tableColumns table =
@@ -150,7 +148,7 @@ tableColumns table =
     columnInfo _             = Nothing
 
 tableSelectColumns
-  :: forall m n. (MonadSchema n m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> SelPermInfo
   -> m [PGColumnInfo]
@@ -161,7 +159,7 @@ tableSelectColumns table permissions =
     columnInfo _             = Nothing
 
 tableUpdateColumns
-  :: forall m n. (MonadSchema n m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedTable
   -> UpdPermInfo
   -> m [PGColumnInfo]

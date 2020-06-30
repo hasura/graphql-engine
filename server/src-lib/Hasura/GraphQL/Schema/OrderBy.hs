@@ -32,7 +32,7 @@ import           Hasura.SQL.Types
 -- >   obj-rel: <remote-table>_order_by
 -- > }
 orderByExp
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> SelPermInfo
   -> m (Parser 'Input n [RQL.AnnOrderByItemG UnpreparedValue])
@@ -81,7 +81,7 @@ type OrderInfo = (SQL.OrderType, SQL.NullsOrder)
 
 
 orderByAggregation
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> SelPermInfo
   -> m (Parser 'Input n [OrderByItemG RQL.AnnAggOrdBy])

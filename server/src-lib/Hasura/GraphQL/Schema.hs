@@ -6,13 +6,13 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                            as J
 import qualified Data.HashMap.Strict                   as Map
-import qualified Data.HashMap.Strict.Extended          as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
 import qualified Data.HashSet                          as S
 import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Control.Lens.Extended
 import           Control.Monad.Unique
+import           Data.Has
 
 import qualified Hasura.GraphQL.Parser                 as P
 
@@ -62,34 +62,25 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemata allActions no
          ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
          , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
          , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]))
-    allRemoteParsers = P.runSchemaT _roleName _allTables do
-      traverse (buildRemoteParser . fst) allRemoteSchemata
+    allRemoteParsers = P.runSchemaT $ traverse (buildRemoteParser . fst) allRemoteSchemata
 
     buildContextForRole roleName = do
       SQLGenCtx{ stringifyNum } <- askSQLGenCtx
       remotes <- allRemoteParsers
-      let queryRemotes = concat $ map (\(q,m,s)->q) $ Map.elems remotes
+      let -- | The 'query' type of the remotes. TODO: also expose mutation remotes. NOT TODO: subscriptions, as we do not yet aim to support these.
+          queryRemotes = concat $ map (\(q,m,s)->q) $ Map.elems remotes
           queryRemotesMap =
             Map.fromList $
             map (\(remoteSchemaName, (queryFieldParser, _, _) ) ->
                    (remoteSchemaName, map (\(FieldParser defn _) -> defn) queryFieldParser))
             $ Map.toList remotes
-          queryWithIntrospection' :: P.SchemaT
-                  (P.ParseT Identity)
-                  (ReaderT QueryContext m)
-                  (Parser
-                     'Output
-                     (P.ParseT Identity)
-                     (InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
           allActionInfos = Map.elems allActions
-          queryWithIntrospection' = queryWithIntrospection (S.fromList $ Map.keys validTables)
-                                    validFunctions queryRemotes allActionInfos nonObjectCustomTypes
-          gqlContext :: P.SchemaT (P.ParseT Identity) (ReaderT QueryContext m) GQLContext
           gqlContext = GQLContext
-            <$> (finalizeParser <$> queryWithIntrospection')
+            <$> (finalizeParser <$> queryWithIntrospection (S.fromList $ Map.keys validTables)
+                                    validFunctions queryRemotes allActionInfos nonObjectCustomTypes)
             <*> (finalizeParser <$> mutation (S.fromList $ Map.keys validTables) allActionInfos nonObjectCustomTypes)
-      flip runReaderT (QueryContext stringifyNum queryRemotesMap) $
-        P.runSchemaT roleName allTables gqlContext
+      flip runReaderT (roleName, allTables, QueryContext stringifyNum queryRemotesMap) $
+        P.runSchemaT gqlContext
 
     finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
     finalizeParser parser = runIdentity . P.runParseT . P.runParser parser
@@ -98,8 +89,8 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemata allActions no
 -- actually collect these into a @Parser@ using @selectionSet@ so that we can
 -- insert the introspection before doing so.
 query'
-  :: forall m n
-   . (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r
+   . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
@@ -144,8 +135,8 @@ query' allTables allFunctions allRemotes = do
 
 -- | Parse query-type GraphQL requests without introspection
 query
-  :: forall m n
-   . (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r
+   . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => G.Name
   -> HashSet QualifiedTable
   -> [FunctionInfo]
@@ -157,8 +148,8 @@ query name allTables allFunctions allRemotes = do
     <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 
 subscription
-  :: forall m n
-   . (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r
+   . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
@@ -183,7 +174,7 @@ emptyIntrospection = do
   introspectionTypes <- collectTypes (P.parserType emptyQueryP)
   let introspectionSchema = Schema
         { sDescription = Nothing
-        , sTypes = mempty
+        , sTypes = introspectionTypes
         , sQueryType = P.parserType (emptyQueryP)
         , sMutationType = Nothing
         , sSubscriptionType = Nothing
@@ -205,8 +196,8 @@ collectTypes x = case P.collectTypeDefinitions x of
 -- | Prepare the parser for query-type GraphQL requests, but with introspection
 -- for queries, mutations and subscriptions (TODO) built in.
 queryWithIntrospection
-  :: forall m n
-   . (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r
+   . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
@@ -245,8 +236,8 @@ queryWithIntrospection allTables allFunctions allRemotes allActions nonObjectCus
     <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 
 mutation
-  :: forall m n
-   . (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r
+   . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => HashSet QualifiedTable
   -> [ActionInfo]
   -> NonObjectTypeMap

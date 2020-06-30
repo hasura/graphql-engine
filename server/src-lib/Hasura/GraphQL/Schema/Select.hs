@@ -17,6 +17,7 @@ import           Data.Foldable                         (toList)
 import           Data.Maybe                            (fromJust)
 import           Data.Parser.JSONPath
 import           Data.Traversable                      (mapAccumL)
+import           Data.Has
 
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashSet                          as Set
@@ -69,14 +70,14 @@ type AnnotatedField  = RQL.AnnFldG UnpreparedValue
 -- >   col2: col2_type
 -- > }: [table!]
 selectTable
-  :: forall m n. (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
   -> SelPermInfo          -- ^ select permissions of the table
   -> m (FieldParser n SelectExp)
 selectTable table fieldName description selectPermissions = do
-  stringifyNum <- asks qcStringifyNum
+  stringifyNum <- asks $ qcStringifyNum . getter
   tableArgsParser    <- tableArgs table selectPermissions
   selectionSetParser <- tableSelectionSet table selectPermissions
   pure $ P.subselection fieldName description tableArgsParser selectionSetParser
@@ -99,14 +100,14 @@ selectTable table fieldName description selectPermissions = do
 -- current permissions or if there are primary keys the user
 -- doesn't have select permissions for.
 selectTableByPk
-  :: forall m n. (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
   -> SelPermInfo          -- ^ select permissions of the table
   -> m (Maybe (FieldParser n SelectExp))
 selectTableByPk table fieldName description selectPermissions = runMaybeT do
-  stringifyNum <- asks qcStringifyNum
+  stringifyNum <- asks $ qcStringifyNum . getter
   primaryKeys <- MaybeT $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo <$> askTableInfo table
   guard $ all (\c -> pgiColumn c `Set.member` spiCols selectPermissions) primaryKeys
   argsParser <- lift $ sequenceA <$> for primaryKeys \columnInfo -> do
@@ -139,14 +140,14 @@ selectTableByPk table fieldName description selectPermissions = runMaybeT do
 -- Returns Nothing if there's nothing that can be selected with
 -- current permissions.
 selectTableAggregate
-  :: forall m n. (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
   -> SelPermInfo          -- ^ select permissions of the table
   -> m (Maybe (FieldParser n AggSelectExp))
 selectTableAggregate table fieldName description selectPermissions = runMaybeT do
-  stringifyNum <- asks qcStringifyNum
+  stringifyNum <- asks $ qcStringifyNum . getter
   guard $ spiAllowAgg selectPermissions
   tableArgsParser <- lift $ tableArgs table selectPermissions
   aggregateParser <- lift $ tableAggregationFields table selectPermissions
@@ -219,7 +220,7 @@ require non-empty subselections.
 --
 -- TODO: write a better blurb
 tableSelectionSet
-  :: (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => QualifiedTable
   -> SelPermInfo
   -> m (Parser 'Output n AnnotatedFields)
@@ -245,14 +246,14 @@ tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table d
 
 -- | User-defined function (AKA custom function)
 selectFunction
-  :: (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => FunctionInfo         -- ^ SQL function info
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
   -> SelPermInfo          -- ^ select permissions of the target table
   -> m (FieldParser n SelectExp)
 selectFunction function fieldName description selectPermissions = do
-  stringifyNum <- asks qcStringifyNum
+  stringifyNum <- asks $ qcStringifyNum . getter
   let table = fiReturnType function
   tableArgsParser    <- tableArgs table selectPermissions
   functionArgsParser <- customSQLFunctionArgs function
@@ -268,7 +269,7 @@ selectFunction function fieldName description selectPermissions = do
       }
 
 selectFunctionAggregate
-  :: (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => FunctionInfo         -- ^ SQL function info
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -276,7 +277,7 @@ selectFunctionAggregate
   -> m (Maybe (FieldParser n AggSelectExp))
 selectFunctionAggregate function fieldName description selectPermissions = runMaybeT do
   let table = fiReturnType function
-  stringifyNum <- asks qcStringifyNum
+  stringifyNum <- asks $ qcStringifyNum . getter
   guard $ spiAllowAgg selectPermissions
   tableArgsParser    <- lift $ tableArgs table selectPermissions
   functionArgsParser <- lift $ customSQLFunctionArgs function
@@ -311,7 +312,7 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
 -- > order_by: [table_order_by!]
 -- > where: table_bool_exp
 tableArgs
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> SelPermInfo
   -> m (InputFieldsParser n TableArgs)
@@ -386,7 +387,7 @@ tableArgs table selectPermissions = do
 -- >   min: table_min_fields
 -- > }
 tableAggregationFields
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> SelPermInfo
   -> m (Parser 'Output n RQL.AggFlds)
@@ -449,7 +450,7 @@ tableAggregationFields table selectPermissions = do
          <&> (RQL.AFOp . RQL.AggOp opText)
 
 lookupRemoteField'
-  :: (MonadSchema n m, MonadError QErr m)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => [P.Definition P.FieldInfo]
   -> FieldCall
   -> m P.FieldInfo
@@ -459,7 +460,7 @@ lookupRemoteField' fieldInfos (FieldCall fcName _) =
     Just (P.Definition _ _ _ fieldInfo) -> pure fieldInfo
 
 lookupRemoteField
-  :: (MonadSchema n m, MonadError QErr m)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => [P.Definition P.FieldInfo]
   -> NonEmpty FieldCall
   -> m P.FieldInfo
@@ -477,7 +478,7 @@ lookupRemoteField fieldInfos (fieldCall :| rest) =
 --
 -- > field_name(arg_name: arg_type, ...): field_type
 fieldSelection
-  :: (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => FieldInfo
   -> SelPermInfo
   -> m [FieldParser n AnnotatedField]
@@ -522,7 +523,7 @@ fieldSelection fieldInfo selectPermissions = do
       maybeToList <$> computedField computedFieldInfo selectPermissions
 
     FIRemoteRelationship (remoteFieldInfo :: RemoteFieldInfo)  -> do
-      remoteSchemasFieldDefns <- asks qcRemoteFields
+      remoteSchemasFieldDefns <- asks $ qcRemoteFields . getter
       let remoteSchemaName = _rfiRemoteSchemaName remoteFieldInfo
       fieldDefns <-
         case Map.lookup remoteSchemaName remoteSchemasFieldDefns of
@@ -577,7 +578,7 @@ fieldSelection fieldInfo selectPermissions = do
 --   3. otherwise, if there is at least one field that doesn't have a default value, the
 --      args object will be a required field.
 functionArgs
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedFunction
   -> Seq.Seq FunctionInputArgument
   -> m (InputFieldsParser n (RQL.FunctionArgsExpTableRow UnpreparedValue))
@@ -668,13 +669,13 @@ functionArgs functionName (toList -> inputArgs) = do
 
 
 customSQLFunctionArgs
-  :: (MonadSchema n m, MonadError QErr m)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => FunctionInfo
   -> m (InputFieldsParser n (RQL.FunctionArgsExpTableRow UnpreparedValue))
 customSQLFunctionArgs FunctionInfo{..} = functionArgs fiName fiInputArgs
 
 computedFieldFunctionArgs
-  :: (MonadSchema n m, MonadError QErr m)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => ComputedFieldFunction
   -> m (InputFieldsParser n (RQL.FunctionArgsExpTableRow UnpreparedValue))
 computedFieldFunctionArgs ComputedFieldFunction{..} =
@@ -702,12 +703,12 @@ jsonPathArg columnType
     elToColExp (Index i) = SQL.SELit $ T.pack (show i)
 
 computedField
-  :: (MonadSchema n m, MonadError QErr m, MonadReader QueryContext m)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => ComputedFieldInfo
   -> SelPermInfo
   -> m (Maybe (FieldParser n AnnotatedField))
 computedField ComputedFieldInfo{..} selectPermissions = runMaybeT do
-  stringifyNum <- asks qcStringifyNum
+  stringifyNum <- asks $ qcStringifyNum . getter
   fieldName <- lift $ textToName $ computedFieldNameToText $ _cfiName
   functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
   case _cfiReturnType of
