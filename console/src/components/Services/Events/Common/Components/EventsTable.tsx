@@ -15,14 +15,15 @@ import { getEventStatusIcon, getEventDeliveryIcon } from './utils';
 import CancelEventButton from './CancelEventButton';
 import { Dispatch } from '../../../../../types';
 import Endpoints from '../../../../../Endpoints';
-import requestAction from '../../../../../utils/requestAction';
+import makeCancelRequest from './makeCancelRequest';
 
 const cancelEvent = (
   dispatch: Dispatch,
   tableName: string,
   id: string,
-  success: string,
-  error: string
+  successText: string,
+  errorText: string,
+  successCallback: () => void
 ) => {
   const url = Endpoints.query;
   const payload = {
@@ -38,7 +39,9 @@ const cancelEvent = (
     method: 'POST',
     body: JSON.stringify(payload),
   };
-  dispatch(requestAction(url, options, success, error, true, true));
+  dispatch(
+    makeCancelRequest(url, options, successText, errorText, successCallback)
+  );
 };
 
 interface Props extends FilterTableProps {
@@ -110,48 +113,58 @@ const EventsTable: React.FC<Props> = props => {
       accessor: column,
     };
   });
-  const rowsFormatted = rows.map(r => {
-    const formattedRow = Object.keys(r).reduce((fr, col) => {
+
+  const cancelButtonHandler = (row: {
+    id: string;
+    trigger_name?: string;
+    cron_event_logs?: string;
+  }) => {
+    const isCronTrigger = row?.trigger_name && row?.cron_event_logs;
+
+    if (isCronTrigger) {
+      cancelEvent(
+        dispatch,
+        'hdb_cron_events',
+        row.id,
+        'Successfully cancelled cron event',
+        'Error in deleting cron event',
+        () => runQuery()
+      );
+    }
+
+    if (row?.id && !isCronTrigger) {
+      cancelEvent(
+        dispatch,
+        'hdb_scheduled_events',
+        row.id,
+        'Successfully cancelled one-off scheduled event',
+        'Error in deleting one-off scheduled event',
+        () => runQuery()
+      );
+    }
+  };
+
+  const rowsFormatted = rows.map(row => {
+    const formattedRow = Object.keys(row).reduce((fr, col) => {
       return {
         ...fr,
-        [col]: <div>{r[col]}</div>,
+        [col]: <div>{row[col]}</div>,
       };
     }, {});
     return {
       ...formattedRow,
-      delivered: getEventDeliveryIcon(r.delivered),
-      status: getEventStatusIcon(r.status),
-      scheduled_time: r.scheduled_time ? (
-        <div>{convertDateTimeToLocale(r.scheduled_time)}</div>
+      delivered: getEventDeliveryIcon(row.delivered),
+      status: getEventStatusIcon(row.status),
+      scheduled_time: row.scheduled_time ? (
+        <div>{convertDateTimeToLocale(row.scheduled_time)}</div>
       ) : undefined,
-      created_at: r.created_at ? (
-        <div>{convertDateTimeToLocale(r.created_at)}</div>
+      created_at: row.created_at ? (
+        <div>{convertDateTimeToLocale(row.created_at)}</div>
       ) : undefined,
       actions: columns.includes('actions') ? (
         <CancelEventButton
-          id={r.id}
-          handler={() => {
-            const isCronTrigger = r?.trigger_name && r?.cron_event_logs;
-            if (isCronTrigger) {
-              cancelEvent(
-                dispatch,
-                'hdb_cron_events',
-                r.id,
-                'Successfully cancelled cron event',
-                'Error in deleting cron event'
-              );
-            }
-
-            if (r?.id && !isCronTrigger) {
-              cancelEvent(
-                dispatch,
-                'hdb_scheduled_events',
-                r.id,
-                'Successfully cancelled one-off scheduled event',
-                'Error in deleting one-off scheduled event'
-              );
-            }
-          }}
+          id={row.id}
+          handler={() => cancelButtonHandler(row)}
         />
       ) : undefined,
     };
