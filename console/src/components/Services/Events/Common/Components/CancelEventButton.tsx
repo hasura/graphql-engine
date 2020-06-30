@@ -6,20 +6,16 @@ type CancelButtonProps = {
   handler: () => void;
 };
 
-const CancelEventButton: React.FC<CancelButtonProps> = ({ id, handler }) => {
-  const onClickHandler = () => handler();
-
-  return (
-    <Button
-      key={id}
-      onClick={onClickHandler}
-      color="white"
-      size="xs"
-      title="Cancel Event"
-    >
-      <i className="fa fa-close" />
-    </Button>
-  );
-};
+const CancelEventButton: React.FC<CancelButtonProps> = ({ id, handler }) => (
+  <Button
+    key={id}
+    onClick={() => handler()}
+    color="white"
+    size="xs"
+    title="Cancel Event"
+  >
+    <i className="fa fa-close" />
+  </Button>
+);
 
 export default CancelEventButton;
