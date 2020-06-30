@@ -13,7 +13,6 @@ module Hasura.GraphQL.Schema.Select
 
 import           Hasura.Prelude
 
-import           Data.Foldable                         (toList)
 import           Data.Maybe                            (fromJust)
 import           Data.Parser.JSONPath
 import           Data.Traversable                      (mapAccumL)
@@ -22,6 +21,8 @@ import           Data.Has
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashSet                          as Set
 import qualified Data.Sequence                         as Seq
+import qualified Data.Sequence.NonEmpty                as NESeq
+import qualified Data.Aeson                            as J
 import qualified Data.Text                             as T
 import qualified Language.GraphQL.Draft.Syntax         as G
 import qualified Data.List.NonEmpty                    as NE
@@ -29,11 +30,12 @@ import qualified Data.List.NonEmpty                    as NE
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 import qualified Hasura.RQL.DML.Select                 as RQL
+import qualified Hasura.RQL.Types.BoolExp              as RQL
 import qualified Hasura.SQL.DML                        as SQL
 
+import           Hasura.GraphQL.Execute.Query          (GraphQLQueryType(..))
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..), mkParameter)
-import           Hasura.GraphQL.Parser.Schema          (Variable)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column          (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.BoolExp
@@ -42,8 +44,6 @@ import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.RemoteRelationship
-import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -220,7 +220,11 @@ require non-empty subselections.
 --
 -- TODO: write a better blurb
 tableSelectionSet
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: ( MonadSchema n m
+     , MonadTableInfo r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => QualifiedTable
   -> SelPermInfo
   -> m (Parser 'Output n AnnotatedFields)
@@ -260,11 +264,11 @@ selectFunction function fieldName description selectPermissions = do
   selectionSetParser <- tableSelectionSet table selectPermissions
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
   pure $ P.subselection fieldName description argsParser selectionSetParser
-    <&> \((funcArgs, tableArgs), fields) -> RQL.AnnSelG
+    <&> \((funcArgs, tableArgs'), fields) -> RQL.AnnSelG
       { RQL._asnFields   = fields
       , RQL._asnFrom     = RQL.FromFunction (fiName function) funcArgs Nothing
       , RQL._asnPerm     = tablePermissionsInfo selectPermissions
-      , RQL._asnArgs     = tableArgs
+      , RQL._asnArgs     = tableArgs'
       , RQL._asnStrfyNum = stringifyNum
       }
 
@@ -291,11 +295,11 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
         , RQL.TAFAgg <$> P.subselection_ $$(G.litName "aggregate") Nothing aggregateParser
         ]
   pure $ P.subselection fieldName description argsParser aggregationParser
-    <&> \((funcArgs, tableArgs), fields) -> RQL.AnnSelG
+    <&> \((funcArgs, tableArgs'), fields) -> RQL.AnnSelG
       { RQL._asnFields   = fields
       , RQL._asnFrom     = RQL.FromFunction (fiName function) funcArgs Nothing
       , RQL._asnPerm     = tablePermissionsInfo selectPermissions
-      , RQL._asnArgs     = tableArgs
+      , RQL._asnArgs     = tableArgs'
       , RQL._asnStrfyNum = stringifyNum
       }
 
@@ -450,7 +454,7 @@ tableAggregationFields table selectPermissions = do
          <&> (RQL.AFOp . RQL.AggOp opText)
 
 lookupRemoteField'
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: (MonadSchema n m, MonadTableInfo r m)
   => [P.Definition P.FieldInfo]
   -> FieldCall
   -> m P.FieldInfo
@@ -578,7 +582,7 @@ fieldSelection fieldInfo selectPermissions = do
 --   3. otherwise, if there is at least one field that doesn't have a default value, the
 --      args object will be a required field.
 functionArgs
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedFunction
   -> Seq.Seq FunctionInputArgument
   -> m (InputFieldsParser n (RQL.FunctionArgsExpTableRow UnpreparedValue))
@@ -669,13 +673,13 @@ functionArgs functionName (toList -> inputArgs) = do
 
 
 customSQLFunctionArgs
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: (MonadSchema n m, MonadTableInfo r m)
   => FunctionInfo
   -> m (InputFieldsParser n (RQL.FunctionArgsExpTableRow UnpreparedValue))
 customSQLFunctionArgs FunctionInfo{..} = functionArgs fiName fiInputArgs
 
 computedFieldFunctionArgs
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: (MonadSchema n m, MonadTableInfo r m)
   => ComputedFieldFunction
   -> m (InputFieldsParser n (RQL.FunctionArgsExpTableRow UnpreparedValue))
 computedFieldFunctionArgs ComputedFieldFunction{..} =
@@ -731,10 +735,10 @@ computedField ComputedFieldInfo{..} selectPermissions = runMaybeT do
       selectionSetParser <- lift   $ tableSelectionSet tableName remotePerms
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure $ P.subselection fieldName Nothing fieldArgsParser selectionSetParser <&>
-        \((functionArgs, args), fields) ->
+        \((functionArgs', args), fields) ->
           RQL.FComputedField $ RQL.CFSTable RQL.JASMultipleRows $ RQL.AnnSelG
             { RQL._asnFields   = fields
-            , RQL._asnFrom     = RQL.FromFunction (_cffName _cfiFunction) functionArgs Nothing
+            , RQL._asnFrom     = RQL.FromFunction (_cffName _cfiFunction) functionArgs' Nothing
             , RQL._asnPerm     = tablePermissionsInfo remotePerms
             , RQL._asnArgs     = args
             , RQL._asnStrfyNum = stringifyNum
@@ -758,3 +762,120 @@ tablePermissionsInfo selectPermissions = RQL.TablePerm
   { RQL._tpFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter selectPermissions
   , RQL._tpLimit  = spiLimit selectPermissions
   }
+
+{- Note [Relay Node Id]
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The 'Node' interface in Relay schema has exactly one field which returns
+a non-null 'ID' value. Each table object type in Relay schema should implement
+'Node' interface to provide global object identification.
+See https://relay.dev/graphql/objectidentification.htm for more details.
+
+To identify each row in a table, we need to encode the table information
+(schema and name) and primary key column values in the 'Node' id.
+
+Node id data:
+-------------
+We are using JSON format for encoding and decoding the node id. The JSON
+schema looks like following
+
+'[<version-integer>, "<table-schema>", "<table-name>", "column-1", "column-2", ... "column-n"]'
+
+It is represented in the type @'NodeId'. The 'version-integer' represents the JSON
+schema version to enable any backward compatibility if it is broken in upcoming versions.
+
+The stringified JSON is Base64 encoded and sent to client. Also the same
+base64 encoded JSON string is accepted for 'node' field resolver's 'id' input.
+-}
+
+data NodeIdVersion
+  = NIVersion1
+  deriving (Show, Eq)
+
+nodeIdVersionInt :: NodeIdVersion -> Int
+nodeIdVersionInt NIVersion1 = 1
+
+currentNodeIdVersion :: NodeIdVersion
+currentNodeIdVersion = NIVersion1
+
+instance J.FromJSON NodeIdVersion where
+  parseJSON v = do
+    versionInt :: Int <- J.parseJSON v
+    case versionInt of
+      1 -> pure NIVersion1
+      _ -> fail $ "expecting version 1 for node id, but got " <> show versionInt
+
+data V1NodeId
+  = V1NodeId
+  { _nidTable   :: !QualifiedTable
+  , _nidColumns :: !(NESeq.NESeq J.Value)
+  } deriving (Show, Eq)
+
+-- | The Relay 'Node' inteface's 'id' field value.
+-- See Note [Relay Node id].
+data NodeId
+  = NodeIdV1 !V1NodeId
+  deriving (Show, Eq)
+
+instance J.FromJSON NodeId where
+  parseJSON v = do
+    valueList <- J.parseJSON v
+    case valueList of
+      []              -> fail "unexpected GUID format, found empty list"
+      J.Number 1:rest -> NodeIdV1 <$> parseNodeIdV1 rest
+      J.Number n:_    -> fail $ "unsupported GUID version: " <> show n
+      _               -> fail "unexpected GUID format, needs to start with a version number"
+    where
+      parseNodeIdV1 (schemaValue:(nameValue:(firstColumn:remainingColumns))) =
+        V1NodeId
+        <$> (QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
+        <*> pure (firstColumn NESeq.:<|| Seq.fromList remainingColumns)
+      parseNodeIdV1 _ = fail "GUID version 1: expecting schema name, table name and at least one column value"
+
+parseNodeId
+  :: forall n
+   . MonadParse n
+  => Text
+  -> n NodeId
+parseNodeId = either (throwInvalidNodeId . T.pack) pure . J.eitherDecode . base64Decode
+  where
+    throwInvalidNodeId :: Text -> n a
+    throwInvalidNodeId t = parseError $ "the node id is invalid: " <> t
+
+-- | The 'node' root field of a Relay request.
+node
+  :: forall m n r
+   . ( MonadSchema n m
+     , MonadTableInfo r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
+  => HashSet QualifiedTable
+  -> m (P.FieldParser n SelectExp)
+node allTables = do
+  let idField = P.selection_ $$(G.litName "id") Nothing P.identifier
+      idArgument = P.field $$(G.litName "id") Nothing P.identifier
+  stringifyNum <- asks $ qcStringifyNum . getter
+  tables :: HashMap QualifiedTable (Parser 'Output n (SelPermInfo, AnnotatedFields)) <-
+    Map.mapMaybe id <$> flip Map.traverseWithKey (Set.toMap allTables) \table _ -> do
+    selectPermissions <- tableSelectPermissions table
+    for selectPermissions \perm -> fmap (fmap (perm,)) $ tableSelectionSet table perm
+  nodeObject <- memoizeOn 'node () $ return $
+    P.selectionSetInterface $$(G.litName "Node") Nothing [idField] tables []
+  return $ P.subselection $$(G.litName "node") Nothing idArgument nodeObject `P.bindField`
+    \(ident, parseds) -> do
+      NodeIdV1 (V1NodeId table cols) <- parseNodeId ident
+      (perms, fields) <- onNothing (Map.lookup table parseds) $ parseError $ "invalid id " <>> ident
+      return $ RQL.AnnSelG
+        { RQL._asnFields   = fields
+        , RQL._asnFrom     = RQL.FromTable table
+        , RQL._asnPerm     = tablePermissionsInfo perms
+        , RQL._asnArgs     = RQL.TableArgs
+          { RQL._taWhere    = Just $ RQL.BoolAnd $ _where -- toList $ fmap BoolFld _whereF
+          , RQL._taOrderBy  = Nothing
+          , RQL._taLimit    = Nothing
+          , RQL._taOffset   = Nothing
+          , RQL._taDistCols = Nothing
+          }
+        , RQL._asnStrfyNum = stringifyNum
+        }

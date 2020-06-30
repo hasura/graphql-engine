@@ -273,6 +273,9 @@ float = scalar $$(litName "Float") Nothing SRFloat
 string :: MonadParse m => Parser 'Both m Text
 string = scalar $$(litName "String") Nothing SRString
 
+identifier :: MonadParse m => Parser 'Both m Text
+identifier = scalar $$(litName "ID") Nothing SRString
+
 jsonScalar
   :: MonadParse m
   => Name -> Maybe Description -> Parser 'Both m A.Value
@@ -541,7 +544,9 @@ selectionSetObject name description parsers implementsInterfaces = Parser
       when (null input) $
         parseError $ "missing selection set for " <>> name
 
-      fields <- collectFields (name:parsedInterfaceNames) input -- TODO use list of interfaces here?
+      -- TODO This probably accepts invalid queries, namely queries that use
+      -- type names that do not exist.
+      fields <- collectFields (name:parsedInterfaceNames) input
       for fields \selectionField@Field{ _fName, _fAlias } -> if
         | _fName == $$(litName "__typename") ->
             pure $ SelectTypename name
@@ -580,6 +585,11 @@ selectionSetInterface name description fields objectImplementations implementsIn
   { pType = Nullable $ TNamed $ mkDefinition name description $
       TIInterface $ InterfaceInfo (map fDefinition fields) interfaces objects
   , pParser = \input -> for objectImplementations (($ input) . pParser)
+  -- TODO: This is somewhat suboptimal, since it parses a query against any
+  -- possible object implementing this.  But in our intended use case (Relay),
+  -- based on a field argument, we can decide which object we are about to
+  -- retrieve.  So this implementation could save some work by only running that
+  -- parser.
   }
   where
     objects = catMaybes $ toList $ fmap (getObjectInfo . pType) objectImplementations

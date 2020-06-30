@@ -13,6 +13,7 @@ module Hasura.GraphQL.Parser
   , int
   , float
   , string
+  , identifier
   , unsafeRawScalar
 
   , enum
