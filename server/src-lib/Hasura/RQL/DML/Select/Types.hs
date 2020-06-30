@@ -209,6 +209,7 @@ traverseAnnFld f = \case
   FArr sel -> FArr <$> traverseArrSel f sel
   FComputedField sel -> FComputedField <$> traverseComputedFieldSel f sel
   FExp t -> FExp <$> pure t
+  FRemote s -> pure $ FRemote s
 
 type AnnFld = AnnFldG S.SQLExp
 

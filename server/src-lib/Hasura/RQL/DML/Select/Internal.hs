@@ -231,6 +231,7 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
       FComputedField (CFSTable _ _) ->
         let ccPfx = mkComputedFieldTableAls pfx fldAls
         in S.mkQIdenExp ccPfx fldAls
+      FRemote _ -> S.SELit "null: remote field selected"
 
     toSQLCol :: AnnColField -> S.SQLExp
     toSQLCol (AnnColField col asText colOpM) =

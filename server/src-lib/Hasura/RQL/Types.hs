@@ -222,6 +222,7 @@ askPGColInfo m c msg = do
     (FIColumn pgColInfo) -> pure pgColInfo
     (FIRelationship   _) -> throwErr "relationship"
     (FIComputedField _)  -> throwErr "computed field"
+    (FIRemoteRelationship _) -> throwErr "remote relationship"
   where
     throwErr fieldType =
       throwError $ err400 UnexpectedPayload $ mconcat
@@ -242,6 +243,7 @@ askComputedFieldInfo fields computedField = do
     (FIColumn           _) -> throwErr "column"
     (FIRelationship     _) -> throwErr "relationship"
     (FIComputedField cci)  -> pure cci
+    (FIRemoteRelationship _) -> throwErr "remote relatioship"
   where
     throwErr fieldType =
       throwError $ err400 UnexpectedPayload $ mconcat
