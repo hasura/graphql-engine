@@ -1056,6 +1056,11 @@ type remoteRelationshipConfig struct {
 	tableName, schemaName, name string
 	transition.Transition
 }
+
+type actionConfig struct {
+	name string
+	transition.Transition
+}
 type cronTriggerConfig struct {
 	name string
 	transition.Transition

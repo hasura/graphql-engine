@@ -17,6 +17,96 @@ import (
 
 type CustomQuery linq.Query
 
+func (q CustomQuery) MergeActions(squashList *database.CustomList) error {
+	actionTransition := transition.New(&actionConfig{})
+	actionTransition.Initial("new")
+	actionTransition.State("created")
+	actionTransition.State("updated")
+	actionTransition.State("deleted")
+
+	actionTransition.Event(createAction).To("created").From("new", "deleted")
+	actionTransition.Event(updateAction).To("updated").From("new", "created", "updated", "deleted")
+	actionTransition.Event(dropAction).To("deleted").From("new", "created", "updated")
+
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		g := item.(linq.Group)
+		if g.Key == "" {
+			continue
+		}
+		key, ok := g.Key.(string)
+		if !ok {
+			continue
+		}
+		cfg := actionConfig{
+			name: key,
+		}
+		prevElems := make([]*list.Element, 0)
+		for _, val := range g.Group {
+			element := val.(*list.Element)
+			switch obj := element.Value.(type) {
+			case *createActionInput:
+				err := actionTransition.Trigger(createAction, &cfg, nil)
+				if err != nil {
+					return errors.Wrapf(err, "error squashin Action: %v", obj.Action)
+				}
+				prevElems = append(prevElems, element)
+			case *updateActionInput:
+				if len(prevElems) != 0 {
+					if _, ok := prevElems[0].Value.(*createActionInput); ok {
+						squashList.Remove(prevElems[0])
+						prevElems = prevElems[:0]
+						err := actionTransition.Trigger(dropAction, &cfg, nil)
+						if err != nil {
+							return errors.Wrapf(err, "error squashing action: %v", obj.Action)
+						}
+
+						element.Value = &createActionInput{
+							actionDefinition: obj.actionDefinition,
+						}
+						prevElems = append(prevElems, element)
+						err = actionTransition.Trigger(createAction, &cfg, nil)
+						if err != nil {
+							return errors.Wrapf(err, "error squashing action: %v", obj.Action)
+						}
+						continue
+					}
+
+					for _, e := range prevElems {
+						squashList.Remove(e)
+					}
+					prevElems = prevElems[:0]
+					err := actionTransition.Trigger(dropAction, &cfg, nil)
+					if err != nil {
+						return errors.Wrapf(err, "error squashing action: %v", obj.Action)
+					}
+
+				}
+
+				prevElems = append(prevElems, element)
+				err := actionTransition.Trigger(updateAction, &cfg, nil)
+				if err != nil {
+					return errors.Wrapf(err, "error squashing: %v", obj.Action)
+				}
+			case *dropActionInput:
+				if cfg.GetState() == "created" {
+					prevElems = append(prevElems, element)
+				}
+				err := actionTransition.Trigger(dropAction, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				for _, e := range prevElems {
+					squashList.Remove(e)
+				}
+				prevElems = prevElems[:0]
+			}
+		}
+	}
+	return nil
+}
+
 func (q CustomQuery) MergeCronTriggers(squashList *database.CustomList) error {
 	cronTriggersTransition := transition.New(&cronTriggerConfig{})
 	cronTriggersTransition.Initial("new")
@@ -986,6 +1076,32 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 }
 
 func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
+	actionGroup := CustomQuery(linq.FromIterable(l).GroupByT(
+		func(element *list.Element) string {
+			switch args := element.Value.(type) {
+			case *createActionInput:
+				if v, ok := args.Action.(string); ok {
+					return v
+				}
+			case *updateActionInput:
+				if v, ok := args.Action.(string); ok {
+					return v
+				}
+			case *dropActionInput:
+				if v, ok := args.Name.(string); ok {
+					return v
+				}
+			}
+			return ""
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err := actionGroup.MergeActions(l)
+	if err != nil {
+		ret <- err
+	}
+
 	cronTriggersGroup := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) string {
 			switch args := element.Value.(type) {
@@ -999,7 +1115,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			return element
 		},
 	))
-	err := cronTriggersGroup.MergeCronTriggers(l)
+	err = cronTriggersGroup.MergeCronTriggers(l)
 	if err != nil {
 		ret <- err
 	}
