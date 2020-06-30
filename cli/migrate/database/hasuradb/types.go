@@ -78,6 +78,37 @@ type deleteCronTriggerInput struct {
 	Name string `json:"name" yaml:"name"`
 }
 
+type actionDefinition struct {
+	Name       interface{} `json:"name,omitempty" yaml:"name,omitempty"`
+	Definition interface{} `json:"definition,omitempty" yaml:"definition,omitempty"`
+}
+
+type createActionInput struct {
+	actionDefinition
+	Comment string `json:"comment,omitempty" yaml:"comment,omitempty"`
+}
+
+type dropActionInput struct {
+	Name      interface{} `json:"name,omitempty" yaml:"name,omitempty"`
+	ClearData bool        `json:"clear_data,omitempty" yaml:"clear_data,omitempty"`
+}
+
+type updateActionInput struct {
+	actionDefinition
+}
+
+type createActionPermissionInput struct {
+	Name    interface{} `json:"name,omitempty" yaml:"name,omitempty"`
+	Role    interface{} `json:"role,omitempty" yaml:"role,omitempty"`
+	Comment string      `json:"comment,omitempty" yaml:"comment,omitempty"`
+}
+
+type dropActionPermissionInput struct {
+	Name    interface{} `json:"name,omitempty" yaml:"name,omitempty"`
+	Role    interface{} `json:"role,omitempty" yaml:"role,omitempty"`
+	Comment string      `json:"comment,omitempty" yaml:"comment,omitempty"`
+}
+
 func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 	type t newHasuraIntefaceQuery
 	var q t
