@@ -21,7 +21,7 @@ One-Click deploy on Nhost
 -------------------------
 
 .. note::
-   Make sure to `create a Nhost account <https://nhost.io/register>`_ first. Nhost offers a 30-day trial with its starter plan.
+   Make sure to `create an Nhost account <https://nhost.io/register>`_ first. Nhost offers a 30-day trial with its starter plan.
 
 Once you're logged into your Nhost account, click the button bellow to configure your project.
 
@@ -62,4 +62,4 @@ Check out :ref:`making your first GraphQL query <first_graphql_query>` for more 
 References
 ----------
 
-- `Nhost Docs <https://docs.nhost.io/>`_
+- `Nhost Docs <https://docs.nhost.io/>`__
