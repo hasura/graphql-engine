@@ -2,6 +2,15 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
+
+
+## `v1.3.0-beta.3`
+
 
 ### Bug fixes and improvements
 
@@ -20,6 +29,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add `--pg-connection-options` command-line flag for passing parameters to PostgreSQL (close #5092) (#5187)
 - server: improve memory usage of idle websockets connections (#5190)
 - server: few relay fixes (fix #5020, #5037, #5046) (#5013)
 - server: raise error on startup when `--unauthorized-role` is ignored (#4736)
@@ -31,6 +41,7 @@
 - console: allow configuring session_argument for custom functions (close #4499) (#4922)
 - console: fix listen update column config selection for event trigger (close #5042) (#5043)
 - cli: add new flags up-sql and down-sql to generate sql based migrations from the CLI (#5026)
+- docs: add instructions on fixing loss of data when using floats (close #5092)
 - docs: add page on setting up v2 migrations (close #4746) (#4898)
 
 ## `v1.3.0-beta.1`
