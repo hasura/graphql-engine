@@ -12,11 +12,49 @@ import { sanitiseRow } from '../../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { getEventStatusIcon, getEventDeliveryIcon } from './utils';
+import CancelEventButton from './CancelEventButton';
+import { Dispatch } from '../../../../../types';
+import Endpoints from '../../../../../Endpoints';
+import requestAction from '../../../../../utils/requestAction';
 
-type Props = FilterTableProps;
+const cancelEvent = (
+  dispatch: Dispatch,
+  tableName: string,
+  id: string,
+  success: string,
+  error: string
+) => {
+  const url = Endpoints.query;
+  const payload = {
+    type: 'delete',
+    args: {
+      table: { name: tableName, schema: 'hdb_catalog' },
+      where: {
+        id: { $eq: id },
+      },
+    },
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  };
+  dispatch(requestAction(url, options, success, error, true, true));
+};
+
+interface Props extends FilterTableProps {
+  dispatch: Dispatch;
+}
 
 const EventsTable: React.FC<Props> = props => {
-  const { rows, count, filterState, runQuery, columns, identifier } = props;
+  const {
+    rows,
+    count,
+    filterState,
+    runQuery,
+    columns,
+    identifier,
+    dispatch,
+  } = props;
 
   if (rows.length === 0) {
     return <div className={styles.add_mar_top}>No data available</div>;
@@ -88,6 +126,33 @@ const EventsTable: React.FC<Props> = props => {
       ) : undefined,
       created_at: r.created_at ? (
         <div>{convertDateTimeToLocale(r.created_at)}</div>
+      ) : undefined,
+      actions: columns.includes('actions') ? (
+        <CancelEventButton
+          id={r.id}
+          handler={() => {
+            const isCronTrigger = r?.trigger_name && r?.cron_event_logs;
+            if (isCronTrigger) {
+              cancelEvent(
+                dispatch,
+                'hdb_cron_events',
+                r.id,
+                'Successfully cancelled cron event',
+                'Error in deleting cron event'
+              );
+            }
+
+            if (r?.id && !isCronTrigger) {
+              cancelEvent(
+                dispatch,
+                'hdb_scheduled_events',
+                r.id,
+                'Successfully cancelled one-off scheduled event',
+                'Error in deleting one-off scheduled event'
+              );
+            }
+          }}
+        />
       ) : undefined,
     };
   });
