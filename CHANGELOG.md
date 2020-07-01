@@ -6,6 +6,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- console: support partitioned tables (close #5071) #5258
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
 
 
