@@ -22,10 +22,10 @@ It helps accessing the data you're looking for more quickly.
 
   Learn more about creating indexes in the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createindex.html>`__.
 
-Use cases
----------
+Example
+-------
 
-**Example:**
+**Create index on the field name in the table authors**
 
 Let's say the database receives a large number of requests where an author is queried by their name, for example:
 

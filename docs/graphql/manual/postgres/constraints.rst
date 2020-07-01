@@ -32,7 +32,7 @@ Primary key constraints
 
 There is one ``PRIMARY KEY`` in each table. It's used to identify each specific row of a table.
 
-**Example: Identify the author's id as the primary key**
+**Identify the author's id as the primary key:**
 
 .. code-block:: sql
   :emphasize-lines: 2
@@ -48,7 +48,7 @@ Foreign key constraints
 A foreign key constraint specifies that the values in a column must match the values appearing in a row of another table. 
 Foreign key constraints are used to create relationships between tables.
 
-**Example: Define the author_id in the articles table as a foreign key**
+**Define the author_id in the articles table as a foreign key:**
 
 .. code-block:: sql
   :emphasize-lines: 5
@@ -65,7 +65,7 @@ Not-null constraints
 
 A not-null constraint allows you to specify that a column's value cannot be ``null``.
 
-**Example: Validate that an author's name is not null**
+**Validate that an author's name is not null:**
 
 .. code-block:: sql
   :emphasize-lines: 2-3
@@ -80,7 +80,7 @@ Unique constraints
 
 Unique constraints prevent database entries with a duplicate value of the respective field.
 
-**Example: Validate that an author's indicator is unique**
+**Validate that an author's indicator is unique:**
 
 .. code-block:: sql
   :emphasize-lines: 4
@@ -97,7 +97,7 @@ Check constraints
 Check constraints allow you to specify a ``Boolean`` expression for a specific field. 
 This Boolean expression must be satisfied (equal to ``true``) by the field value for the object to be inserted.
 
-**Example: Validate that an author's rating is between 0 and 10**
+**Validate that an author's rating is between 0 and 10:**
 
 .. code-block:: sql
   :emphasize-lines: 4
