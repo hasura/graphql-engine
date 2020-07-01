@@ -22,10 +22,15 @@ Postgres functions are similar to views but are used when we have arguments.
 
   For more information on Postgres functions, please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createfunction.html>`__.
 
-Use cases
----------
+Examples
+--------
 
-**Example:**
+.. _pg_function_example_one:
+
+**Check that an author is active before inserting an article for them:**
+
+The objective of this function is to check if an author is active for a specific article. 
+If the author is not active, an exception is raised. If the author is active, the article will be returned.
 
 .. code-block:: plpgsql
 
@@ -41,9 +46,6 @@ Use cases
       END;
       $BODY$ LANGUAGE plpgsql;
 
-The objective of this function is to check if an author is active before a corresponding article is inserted. 
-If the author is not active, an exception is raised and the insertion will fail. If the author is active, the article will be inserted and returned.
-
 Let's break this function apart:
 
 - Function name: ``check_author_active``
@@ -53,9 +55,25 @@ Let's break this function apart:
 - Function body: Block between ``BEGIN`` and ``END`` checking if the author for whom the article is to be inserted is active
 - Response: The response (``$BODY$``) is returned in the ``slpgsql`` language
 
+.. _pg_function_example_two:
+
+**Refresh a materialized view:**
+
+The objective of this function is to refresh a :ref:`materialized view <pg_materialized_view_example>`.
+
+.. code-block:: plpgsql
+
+  CREATE FUNCTION update_materialized_view()
+    RETURNS trigger AS $BODY$
+    BEGIN
+    REFRESH MATERIALIZED VIEW popular_active_authors;
+    RETURN NULL;
+    END;
+    $BODY$ LANGUAGE plpgsql;
+
 Postgres functions & Hasura
 ---------------------------
 
 Functions can be used to extend your Hasura GraphQL API, and they can also be exposed via the same.
 
-See :ref:`here <create_and_expose_sql_functions>` how to create and expose Postgres functions in Hasura.
+Refer to :ref:`this page <create_and_expose_sql_functions>` for more use cases and for instructions on how to create and expose Postgres functions in Hasura.

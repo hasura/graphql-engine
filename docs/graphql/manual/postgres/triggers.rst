@@ -24,9 +24,9 @@ Introduction
 Examples
 --------
 
-**Example:**
+**Trigger a Postgres function before an article is inserted or updated:**
 
-Let's say we want the :ref:`Postgres function<postgres_functions>` to be executed whenever a new article is about to be inserted or updated.
+Let's say we want :ref:`this Postgres function<pg_function_example>` to be executed whenever a new article is about to be inserted or updated.
 We can create a trigger as follows:
 
 .. code-block:: plpgsql
@@ -39,9 +39,13 @@ If someone now tries to insert an article for an author that is not active, the 
 
   unexpected : Author must be active
 
-**Update a materialized view**
+**Refresh a materialized view when an author gets inserted:**
 
-TODO
+Let's say we want to refresh :ref:`this materialized view<pg_function_example_two>` whenever a new author is inserted:
+
+.. code-block:: plpgsql
+
+  CREATE TRIGGER update_materialized_view AFTER INSERT ON "authors" FOR EACH ROW EXECUTE PROCEDURE update_materialized_view();
 
 Postgres triggers & Hasura
 --------------------------

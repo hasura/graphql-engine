@@ -69,6 +69,8 @@ Materialized views are used if data from complex queries needs to be accessed qu
 Example
 *******
 
+.. _pg_materialized_view_example:
+
 **Materialized view with authors who are active and whose rating is larger than 6, ordered by rating:**
 
 .. code-block:: sql
