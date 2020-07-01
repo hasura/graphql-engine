@@ -8,6 +8,9 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"gopkg.in/yaml.v2"
+
+	"github.com/hasura/graphql-engine/cli"
 	"github.com/mitchellh/go-homedir"
 
 	"github.com/sirupsen/logrus"
@@ -87,4 +90,29 @@ func RemoveHasuraConfigHomeDirectory() {
 	Expect(err).To(BeNil())
 	err = os.RemoveAll(filepath.Join(homeDir, ".hasura"))
 	Expect(err).To(BeNil())
+}
+
+// EditEndpoint in config
+func EditEndpointInConfig(configFilePath, endpoint string) error {
+	var config cli.Config
+	b, err := ioutil.ReadFile(configFilePath)
+	if err != nil {
+		return err
+	}
+	err = yaml.Unmarshal(b, config)
+	if err != nil {
+		return err
+	}
+	config.Endpoint = endpoint
+
+	b, err = yaml.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(configFilePath, b, 0655)
+	if err != nil {
+		return err
+	}
+	return nil
 }
