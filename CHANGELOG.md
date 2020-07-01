@@ -9,6 +9,7 @@
 - server: add new `--conn-lifetime` and `HASURA_GRAPHQL_PG_CONN_LIFETIME` options for expiring connections after some amount of active time (#5087)
 - server: shrink libpq connection request/response buffers back to 1MB if they grow beyond 2MB, fixing leak-like behavior on active servers (#5087)
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
+- docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
 
 
 ## `v1.3.0-beta.3`
@@ -45,7 +46,6 @@
 - cli: add new flags up-sql and down-sql to generate sql based migrations from the CLI (#5026)
 - docs: add instructions on fixing loss of data when using floats (close #5092)
 - docs: add page on setting up v2 migrations (close #4746) (#4898)
-- docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
 
 ## `v1.3.0-beta.1`
 
