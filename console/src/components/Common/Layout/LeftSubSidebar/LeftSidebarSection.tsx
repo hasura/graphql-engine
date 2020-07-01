@@ -13,7 +13,7 @@ interface LeftSidebarSectionProps extends React.ComponentProps<'div'> {
   service: string;
 }
 
-const getLeftSidebarSection = ({
+const LeftSidebarSection = ({
   items = [],
   currentItem,
   service,
@@ -96,4 +96,4 @@ const getLeftSidebarSection = ({
   };
 };
 
-export default getLeftSidebarSection;
+export default LeftSidebarSection;
