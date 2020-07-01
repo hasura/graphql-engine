@@ -4,7 +4,8 @@
 module Hasura.RQL.DML.Select.Types where
 
 import           Data.Aeson.Types
-import           Language.Haskell.TH.Syntax (Lift)
+import           Language.Haskell.TH.Syntax   (Lift)
+import           Control.Lens.TH              (makePrisms)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.List.NonEmpty            as NE
@@ -503,3 +504,5 @@ data Prefixes
   { _pfThis :: !Iden -- Current node prefix
   , _pfBase :: !Iden -- Base table row identifier for computed field function
   } deriving (Show, Eq)
+
+$(makePrisms ''AnnFldG)

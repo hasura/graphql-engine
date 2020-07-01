@@ -202,8 +202,8 @@ transformSelect path sel = do
 
 transformAnnFields :: FieldPath -> AnnFlds -> State RemoteJoinMap AnnFlds
 transformAnnFields path fields = do
-  let pgColumnFields = map fst $ getFields _AFColumn fields
-      remoteSelects = getFields _AFRemote fields
+  let pgColumnFields = map fst $ getFields _FCol fields
+      remoteSelects = getFields _FRemote fields
       remoteJoins = flip map remoteSelects $ \(fieldName, remoteSelect) ->
         let RemoteSelect argsMap selSet hasuraColumns remoteFields rsi = remoteSelect
             hasuraColumnL = toList hasuraColumns
@@ -211,9 +211,9 @@ transformAnnFields path fields = do
             phantomColumns = filter ((`notElem` pgColumnFields) . fromPGCol . pgiColumn) hasuraColumnL
         in RemoteJoin fieldName argsMap selSet hasuraColumnFields remoteFields rsi phantomColumns
 
-  transformedFields <- forM fields $ \(fieldName, field) -> do
+  transformedFields <- forM fields $ \(fieldName, field') -> do
     let fieldPath = appendPath fieldName path
-    (fieldName,) <$> case field of
+    (fieldName,) <$> case field' of
       FCol c -> pure $ FCol c
       FObj annRel ->
         FObj <$> transformAnnRelation fieldPath annRel
