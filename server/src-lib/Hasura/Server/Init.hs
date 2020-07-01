@@ -183,8 +183,7 @@ mkServeOptions rso = do
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
       connLifetime <- withEnv cl (fst pgConnLifetimeEnv)
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
-      -- The connLifetime is being used by the new pg-client-hs, uncomment it below
-      return $ Q.ConnParams stripes conns iTime allowPrepare --connLifetime
+      return $ Q.ConnParams stripes conns iTime allowPrepare connLifetime
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
