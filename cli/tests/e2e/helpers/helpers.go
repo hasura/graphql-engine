@@ -22,7 +22,11 @@ const (
 )
 
 func Hasura(args ...string) *Session {
-	cmd := exec.Command("hasura", args...)
+	hasuraBinaryPath := "hasura"
+	if os.Getenv("CI") != "" {
+		hasuraBinaryPath = "/build/_cli_output/binaries/cli-hasura-linux-amd64"
+	}
+	cmd := exec.Command(hasuraBinaryPath, args...)
 	session, err := Start(
 		cmd,
 		NewPrefixedWriter(DebugOutPrefix, GinkgoWriter),
