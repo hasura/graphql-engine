@@ -1,4 +1,4 @@
-import React, { ReactText, useState, useMemo } from 'react';
+import React, { ReactText, useState, useMemo, useEffect, useRef } from 'react';
 import Select, {
   components,
   createFilter,
@@ -33,6 +33,7 @@ export interface SearchableSelectProps {
   placeholder: string;
   filterOption: 'prefix' | 'fulltext';
   isCreatable?: boolean;
+  onSearchValueChange?: (v: string | undefined | null) => void;
   createNewOption?: (v: string) => ValueType<OptionTypeBase>;
 }
 const SearchableSelect: React.FC<SearchableSelectProps> = ({
@@ -45,9 +46,11 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   filterOption,
   isCreatable,
   createNewOption,
+  onSearchValueChange,
 }) => {
   const [searchValue, setSearchValue] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const selectedItem = useRef<ValueType<OptionTypeBase> | string>(null);
 
   const inputValue = useMemo(() => {
     // if input is not focused we don't want to show inputValue
@@ -60,10 +63,20 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     // this way typing after selecting an options is allowed
     return typeof value === 'string' ? value : value?.label;
   }, [searchValue, value, isFocused]);
+  useEffect(() => {
+    if (onSearchValueChange) onSearchValueChange(searchValue);
+  }, [searchValue]);
 
   const onMenuClose = () => {
-    if (searchValue && createNewOption) onChange(createNewOption(searchValue));
+    if (selectedItem.current) onChange(selectedItem.current);
+    else if (createNewOption) onChange(createNewOption(searchValue || ''));
+
+    setIsFocused(false);
     setSearchValue(null);
+    selectedItem.current = null;
+  };
+  const onSelect = (v: ValueType<OptionTypeBase> | string) => {
+    selectedItem.current = v;
   };
 
   const customStyles: Record<string, any> = {};
@@ -90,7 +103,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   // handle simple options
   if (isArray(options) && !isObject((options as unknown[])[0])) {
-    options = options.map((op: string) => {
+    options = options.map(op => {
       return { value: op, label: op };
     });
   }
@@ -113,15 +126,15 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
       classNamePrefix={bsClass}
       placeholder={placeholder}
       options={options as Option[]}
-      onChange={onChange}
+      onChange={onSelect}
       value={value as Option}
       onFocus={() => setIsFocused(true)}
-      onBlur={() => setIsFocused(false)}
+      onBlur={onMenuClose}
       inputValue={inputValue}
       onInputChange={s => setSearchValue(s)}
-      onMenuClose={onMenuClose}
       styles={customStyles}
       filterOption={searchValue ? customFilter : null}
+      className="search-select"
     />
   );
 };
