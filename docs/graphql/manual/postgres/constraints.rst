@@ -32,34 +32,47 @@ Primary key constraints
 
 There is one ``PRIMARY KEY`` in each table. It's used to identify each specific row of a table.
 
-**Example: identify the author's id as the primary key**
+**Example: Identify the author's id as the primary key**
 
 .. code-block:: sql
+  :emphasize-lines: 2
 
   CREATE TABLE authors(
     id INT PRIMARY KEY     NOT NULL,
-    name           TEXT    NOT NULL,
-    indicator      TEXT    NOT NULL UNIQUE,
-    rating         INT     NOT NULL CHECK(rating > 0 AND rating < 11)
+    name           TEXT    NOT NULL
   );
 
 Foreign key constraints
 ^^^^^^^^^^^^^^^^^^^^^^^
+
+A foreign key constraint specifies that the values in a column must match the values appearing in a row of another table. 
+Foreign key constraints are used to create relationships between tables.
+
+**Example: Define the author_id in the articles table as a foreign key**
+
+.. code-block:: sql
+  :emphasize-lines: 5
+
+  CREATE TABLE articles(
+    id        INTEGER PRIMARY KEY,
+    title     TEXT,
+    author_id INTEGER,
+    FOREIGN KEY (author_id) REFERENCES authors (id)
+  );
 
 Not-null constraints
 ^^^^^^^^^^^^^^^^^^^^
 
 A not-null constraint allows you to specify that a column's value cannot be ``null``.
 
-**Example: validate that an author's name is not null**
+**Example: Validate that an author's name is not null**
 
 .. code-block:: sql
+  :emphasize-lines: 2-3
 
   CREATE TABLE authors(
     id INT PRIMARY KEY     NOT NULL,
-    name           TEXT    NOT NULL,
-    indicator      TEXT    NOT NULL UNIQUE,
-    rating         INT     NOT NULL CHECK(rating > 0 AND rating < 11)
+    name           TEXT    NOT NULL
   );
 
 Unique constraints
@@ -67,15 +80,15 @@ Unique constraints
 
 Unique constraints prevent database entries with a duplicate value of the respective field.
 
-**Example: validate that an author's indicator is unique**
+**Example: Validate that an author's indicator is unique**
 
 .. code-block:: sql
+  :emphasize-lines: 4
 
   CREATE TABLE authors(
     id INT PRIMARY KEY     NOT NULL,
     name           TEXT    NOT NULL,
-    indicator      TEXT    NOT NULL UNIQUE,
-    rating         INT     NOT NULL CHECK(rating > 0 AND rating < 11)
+    indicator      TEXT    NOT NULL UNIQUE
   );
 
 Check constraints
@@ -84,14 +97,14 @@ Check constraints
 Check constraints allow you to specify a ``Boolean`` expression for a specific field. 
 This Boolean expression must be satisfied (equal to ``true``) by the field value for the object to be inserted.
 
-**Example: validate that an author's rating is between 0 and 10**
+**Example: Validate that an author's rating is between 0 and 10**
 
 .. code-block:: sql
+  :emphasize-lines: 4
 
   CREATE TABLE authors(
     id INT PRIMARY KEY     NOT NULL,
     name           TEXT    NOT NULL,
-    indicator      TEXT    NOT NULL UNIQUE,
     rating         INT     NOT NULL CHECK(rating > 0 AND rating <= 10)
   );
 
