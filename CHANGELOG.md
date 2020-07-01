@@ -26,6 +26,7 @@
 - console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
 - console: fix styling of table row contents on tables on relationship page (#4974)
 - cli: handle missing files during metadata apply (close #5163) (#5170)
+- docs: add page on scheduled triggers (close #4913) (#5141)
 - docs: add page on Relay schema (close #4912) (#5150)
 
 ## `v1.3.0-beta.2`
