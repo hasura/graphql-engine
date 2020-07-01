@@ -9,6 +9,7 @@ import EventsTable from '../../Common/Components/EventsTable';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { Dispatch } from '../../../../../types';
 import { cancelEvent } from '../../ServerIO';
+import { getConfirmation } from '../../../../Common/utils/jsUtils';
 
 type Props = {
   dispatch: Dispatch;
@@ -18,9 +19,12 @@ const PendingEvents: React.FC<Props> = props => {
   const { dispatch } = props;
 
   const onCancelOneOffScheduledEvent = (id: string, onSuccess: () => void) => {
-    dispatch(
-      cancelEvent('one-off scheduled', 'hdb_scheduled_events', id, onSuccess)
-    );
+    const shouldCancelEvent = getConfirmation('You want to cancel this event?');
+    if (shouldCancelEvent) {
+      dispatch(
+        cancelEvent('one-off scheduled', 'hdb_scheduled_events', id, onSuccess)
+      );
+    }
   };
 
   const renderRows: FilterRenderProp = (
@@ -37,12 +41,12 @@ const PendingEvents: React.FC<Props> = props => {
       setFilterState={setFilterState}
       runQuery={runQuery}
       columns={[
+        'actions',
         'id',
         'status',
         'scheduled_time',
         'created_at',
         'tries',
-        'actions',
       ]}
       identifier="adhoc-events-processed"
       onCancelEvent={onCancelOneOffScheduledEvent}

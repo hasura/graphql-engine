@@ -10,6 +10,7 @@ import { Dispatch } from '../../../../../types';
 import EventsTable from '../../Common/Components/EventsTable';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { cancelEvent } from '../../ServerIO';
+import { getConfirmation } from '../../../../Common/utils/jsUtils';
 
 type Props = {
   currentTrigger?: ScheduledTrigger;
@@ -21,7 +22,12 @@ const PendingEvents: React.FC<Props> = props => {
   const triggerName = currentTrigger ? currentTrigger.name : '';
 
   const onCancelCronTrigger = (id: string, onSuccess: () => void) => {
-    dispatch(cancelEvent('cron', 'hdb_cron_events', id, onSuccess));
+    const shouldCancelEvent = getConfirmation(
+      `You want to cancel the event ${id} of ${triggerName} cron trigger`
+    );
+    if (shouldCancelEvent) {
+      dispatch(cancelEvent('cron', 'hdb_cron_events', id, onSuccess));
+    }
   };
 
   const renderRows: FilterRenderProp = (
@@ -38,12 +44,12 @@ const PendingEvents: React.FC<Props> = props => {
       setFilterState={setFilterState}
       runQuery={runQuery}
       columns={[
+        'actions',
         'id',
         'status',
         'scheduled_time',
         'created_at',
         'tries',
-        'actions',
       ]}
       identifier={triggerName}
       onCancelEvent={onCancelCronTrigger}
