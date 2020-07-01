@@ -44,4 +44,3 @@ Events can be of the following types:
    samples
    Invoke trigger via console <invoke-trigger-console>
    clean-up
-   scheduled-triggers
