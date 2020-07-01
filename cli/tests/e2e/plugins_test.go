@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"os"
 	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli/tests/e2e/helpers"
@@ -16,11 +15,7 @@ import (
 var _ = Describe("plugins command", func() {
 	Describe("install plugin", func() {
 		BeforeEach(func() {
-			// remove .hasura directory at home
-			homeDir, err := homedir.Dir()
-			Expect(err).To(BeNil())
-			err = os.RemoveAll(filepath.Join(homeDir, ".hasura"))
-			Expect(err).To(BeNil())
+			helpers.RemoveHasuraConfigHomeDirectory()
 		})
 		When("when plugin name is given as argument", func() {
 			It("can install plugin successfully", func() {
@@ -46,11 +41,7 @@ var _ = Describe("plugins command", func() {
 	})
 	Describe("list plugin", func() {
 		BeforeEach(func() {
-			// remove .hasura directory at home
-			homeDir, err := homedir.Dir()
-			Expect(err).To(BeNil())
-			err = os.RemoveAll(filepath.Join(homeDir, ".hasura"))
-			Expect(err).To(BeNil())
+			helpers.RemoveHasuraConfigHomeDirectory()
 		})
 		It("before a plugin is installed the installed status is no", func() {
 			session := helpers.Hasura("plugins", "list")
@@ -72,6 +63,9 @@ var _ = Describe("plugins command", func() {
 
 	})
 	Describe("uninstall plugin", func() {
+		BeforeEach(func() {
+			helpers.RemoveHasuraConfigHomeDirectory()
+		})
 		It("throws an error when we try to uninstall a plugin which is not installed", func() {
 			session := helpers.Hasura("plugins", "uninstall", "nobodynametheirpluginthis")
 			want := `.*failed to uninstall.*`
@@ -97,11 +91,7 @@ var _ = Describe("plugins command", func() {
 	})
 	Describe("upgrade plugin", func() {
 		BeforeEach(func() {
-			// remove .hasura directory at home
-			homeDir, err := homedir.Dir()
-			Expect(err).To(BeNil())
-			err = os.RemoveAll(filepath.Join(homeDir, ".hasura"))
-			Expect(err).To(BeNil())
+			helpers.RemoveHasuraConfigHomeDirectory()
 		})
 		It("can successfully upgrade from a previous version of plugin", func() {
 			session := helpers.Hasura("plugins", "install", "cli-ext", "--version", "v1.2.0")

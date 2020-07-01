@@ -6,6 +6,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
+
+	"github.com/mitchellh/go-homedir"
 
 	"github.com/sirupsen/logrus"
 
@@ -69,4 +72,11 @@ func CloseWithLogOnErr(closer io.Closer) {
 	logger := logrus.New()
 	logger.Out = GinkgoWriter
 	logger.Error(err)
+}
+
+func RemoveHasuraConfigHomeDirectory() {
+	homeDir, err := homedir.Dir()
+	Expect(err).To(BeNil())
+	err = os.RemoveAll(filepath.Join(homeDir, ".hasura"))
+	Expect(err).To(BeNil())
 }
