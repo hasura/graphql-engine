@@ -49,9 +49,11 @@ ci-copy-binary:
 # run tests
 .PHONY: test
 test:
-	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" `go list ./... | grep -v integration_test`
-	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v1 ./integration_test
-	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v2 ./integration_test
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" `go list ./... | grep -v integration | grep -v e2e`
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v1 ./tests/integration
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v2 ./tests/integration
+	ginkgo ./tests/e2e
+
 
 # clean the output directory
 .PHONY: clean
