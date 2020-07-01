@@ -75,15 +75,21 @@ type MonadInline var m =
 -- | Inlines all fragment spreads in a 'SelectionSet'; see the module
 -- documentation for "Hasura.GraphQL.Execute.Inline" for details.
 inlineSelectionSet
-  :: MonadError QErr m
-  => [FragmentDefinition]
+  :: (MonadError QErr m, Foldable t)
+  => t FragmentDefinition
   -> SelectionSet FragmentSpread var
   -> m (SelectionSet NoFragments var)
-inlineSelectionSet fragmentDefinitions selectionSet
-  = traverse inlineSelection selectionSet
-  & flip evalStateT InlineState{ _isFragmentCache = mempty }
-  & flip runReaderT InlineEnv
-    { _ieFragmentDefinitions = Map.fromListOn _fdName fragmentDefinitions
+inlineSelectionSet fragmentDefinitions selectionSet = do
+  let fragmentDefinitionMap = Map.groupOnNE _fdName fragmentDefinitions
+  uniqueFragmentDefinitions <- flip Map.traverseWithKey fragmentDefinitionMap
+    \fragmentName fragmentDefinitions' ->
+      case fragmentDefinitions' of
+        a :| [] -> return a
+        _       -> throw400 ParseFailed $ "multiple definitions for fragment " <>> fragmentName
+  traverse inlineSelection selectionSet
+    & flip evalStateT InlineState{ _isFragmentCache = mempty }
+    & flip runReaderT InlineEnv
+    { _ieFragmentDefinitions = uniqueFragmentDefinitions
     , _ieFragmentStack = [] }
 
 inlineSelection
