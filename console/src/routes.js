@@ -135,7 +135,7 @@ const routes = store => {
               component={metadataStatusConnector(connect)}
             />
             <Route
-              path="allowed-queries"
+              path="allow-list"
               component={allowedQueriesConnector(connect)}
             />
             <Route path="logout" component={logoutConnector(connect)} />
