@@ -10,6 +10,7 @@
 - server: shrink libpq connection request/response buffers back to 1MB if they grow beyond 2MB, fixing leak-like behavior on active servers (#5087)
 - console: add button to cancel one-off scheduled events and cron-trigger events (close #5161) (#5236)
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
+- docs: add hasura cloud to getting started section (close #5206) (#5208)
 
 
 ## `v1.3.0-beta.3`
