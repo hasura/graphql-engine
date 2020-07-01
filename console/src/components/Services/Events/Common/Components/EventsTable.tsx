@@ -118,18 +118,18 @@ const EventsTable: React.FC<Props> = props => {
       return {
         ...fr,
         [col]: <div>{row[col]}</div>,
-        actions: columns.includes('actions') ? (
-          <div>
-            <CancelEventButton
-              id={row.id}
-              onClickHandler={() => onCancelHandler(row.id)}
-            />
-          </div>
-        ) : undefined,
       };
     }, {});
     return {
       ...formattedRow,
+      actions: columns.includes('actions') ? (
+        <div>
+          <CancelEventButton
+            id={row.id}
+            onClickHandler={() => onCancelHandler(row.id)}
+          />
+        </div>
+      ) : undefined,
       delivered: getEventDeliveryIcon(row.delivered),
       status: getEventStatusIcon(row.status),
       scheduled_time: row.scheduled_time ? (
