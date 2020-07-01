@@ -492,7 +492,7 @@ adminInternalErrorsEnv =
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
-              <*> dbUrl <*> dbName <*> pure Nothing
+              <*> dbUrl <*> dbName <*> options
               <*> retries
   where
     host = optional $
@@ -532,6 +532,14 @@ parseRawConnInfo =
                   metavar "<DBNAME>" <>
                   help "Database name to connect to"
                 )
+
+    options = optional $
+      strOption ( long "pg-connection-options" <>
+                  short 'o' <>
+                  metavar "<DATABASE-OPTIONS>" <>
+                  help "PostgreSQL options"
+                )
+
     retries = optional $
       option auto ( long "retries" <>
                     metavar "NO OF RETRIES" <>
