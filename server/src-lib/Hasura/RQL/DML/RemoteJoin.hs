@@ -23,6 +23,7 @@ import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning
+import           Hasura.RQL.DML.Returning.Types
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
@@ -135,23 +136,23 @@ transformSelect path sel = do
   transformedFields <- transformAnnFields path fields
   pure sel{_asnFields = transformedFields}
 
--- -- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
--- getRemoteJoinsAggregateSelect :: AnnAggregateSelect -> (AnnAggregateSelect, Maybe RemoteJoins)
--- getRemoteJoinsAggregateSelect =
---   second mapToNonEmpty . flip runState mempty . transformAggregateSelect mempty
+-- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
+getRemoteJoinsAggregateSelect :: AnnAggSel -> (AnnAggSel, Maybe RemoteJoins)
+getRemoteJoinsAggregateSelect =
+  second mapToNonEmpty . flip runState mempty . transformAggregateSelect mempty
 
--- transformAggregateSelect
---   :: FieldPath
---   -> AnnAggregateSelect
---   -> State RemoteJoinMap AnnAggregateSelect
--- transformAggregateSelect path sel = do
---   let aggFields = _asnFields sel
---   transformedFields <- forM aggFields $ \(fieldName, aggField) ->
---     (fieldName,) <$> case aggField of
---       TAFAgg agg         -> pure $ TAFAgg agg
---       TAFNodes annFields -> TAFNodes <$> transformAnnFields (appendPath fieldName path) annFields
---       TAFExp t           -> pure $ TAFExp t
---   pure sel{_asnFields = transformedFields}
+transformAggregateSelect
+  :: FieldPath
+  -> AnnAggSel
+  -> State RemoteJoinMap AnnAggSel
+transformAggregateSelect path sel = do
+  let aggFields = _asnFields sel
+  transformedFields <- forM aggFields $ \(fieldName, aggField) ->
+    (fieldName,) <$> case aggField of
+      TAFAgg agg         -> pure $ TAFAgg agg
+      TAFNodes annFields -> TAFNodes <$> transformAnnFields (appendPath fieldName path) annFields
+      TAFExp t           -> pure $ TAFExp t
+  pure sel{_asnFields = transformedFields}
 
 -- -- | Traverse through @'ConnectionSelect' and collect remote join fields (if any).
 -- getRemoteJoinsConnectionSelect :: ConnectionSelect S.SQLExp -> (ConnectionSelect S.SQLExp, Maybe RemoteJoins)
@@ -180,25 +181,25 @@ transformSelect path sel = do
 --         EdgeNode annFields ->
 --           EdgeNode <$> transformAnnFields (appendPath fieldName edgePath) annFields
 
--- -- | Traverse through 'MutationOutput' and collect remote join fields (if any)
--- getRemoteJoinsMutationOutput :: MutationOutput -> (MutationOutput, Maybe RemoteJoins)
--- getRemoteJoinsMutationOutput =
---   second mapToNonEmpty . flip runState mempty . transformMutationOutput mempty
---   where
---     transformMutationOutput :: FieldPath -> MutationOutput -> State RemoteJoinMap MutationOutput
---     transformMutationOutput path = \case
---       MOutMultirowFields mutationFields ->
---         MOutMultirowFields <$> transfromMutationFields mutationFields
---       MOutSinglerowObject annFields ->
---         MOutSinglerowObject <$> transformAnnFields path annFields
---       where
---         transfromMutationFields fields =
---           forM fields $ \(fieldName, field) -> do
---           let fieldPath = appendPath fieldName path
---           (fieldName,) <$> case field of
---             MCount         -> pure MCount
---             MExp t         -> pure $ MExp t
---             MRet annFields -> MRet <$> transformAnnFields fieldPath annFields
+-- | Traverse through 'MutationOutput' and collect remote join fields (if any)
+getRemoteJoinsMutationOutput :: MutationOutput -> (MutationOutput, Maybe RemoteJoins)
+getRemoteJoinsMutationOutput =
+  second mapToNonEmpty . flip runState mempty . transformMutationOutput mempty
+  where
+    transformMutationOutput :: FieldPath -> MutationOutput -> State RemoteJoinMap MutationOutput
+    transformMutationOutput path = \case
+      MOutMultirowFields mutationFields ->
+        MOutMultirowFields <$> transfromMutationFields mutationFields
+      MOutSinglerowObject annFields ->
+        MOutSinglerowObject <$> transformAnnFields path annFields
+      where
+        transfromMutationFields fields =
+          forM fields $ \(fieldName, field') -> do
+          let fieldPath = appendPath fieldName path
+          (fieldName,) <$> case field' of
+            MCount         -> pure MCount
+            MExp t         -> pure $ MExp t
+            MRet annFields -> MRet <$> transformAnnFields fieldPath annFields
 
 transformAnnFields :: FieldPath -> AnnFlds -> State RemoteJoinMap AnnFlds
 transformAnnFields path fields = do
@@ -219,8 +220,8 @@ transformAnnFields path fields = do
         FObj <$> transformAnnRelation fieldPath annRel
       FArr (ASSimple annRel) ->
         FArr . ASSimple <$> transformAnnRelation fieldPath annRel
-      -- AFArrayRelation (ASAggregate aggRel) ->
-      --   AFArrayRelation . ASAggregate <$> transformAnnAggregateRelation fieldPath aggRel
+      FArr (ASAgg aggRel) ->
+        FArr . ASAgg <$> transformAnnAggregateRelation fieldPath aggRel
       -- AFArrayRelation (ASConnection annRel) ->
       --   AFArrayRelation . ASConnection <$> transformArrayConnection fieldPath annRel
       FComputedField computedField ->
@@ -243,10 +244,10 @@ transformAnnFields path fields = do
         transformedSel <- transformSelect fieldPath annSel
         pure annRel{aarAnnSel = transformedSel}
 
-      -- transformAnnAggregateRelation fieldPath annRel = do
-      --   let annSel = aarAnnSelect annRel
-      --   transformedSel <- transformAggregateSelect fieldPath annSel
-      --   pure annRel{aarAnnSelect = transformedSel}
+      transformAnnAggregateRelation fieldPath annRel = do
+        let annSel = aarAnnSel annRel
+        transformedSel <- transformAggregateSelect fieldPath annSel
+        pure annRel{aarAnnSel = transformedSel}
 
       -- transformArrayConnection fieldPath annRel = do
       --   let connectionSelect = aarAnnSelect annRel
