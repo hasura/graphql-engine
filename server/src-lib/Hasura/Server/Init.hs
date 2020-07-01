@@ -175,14 +175,15 @@ mkServeOptions rso = do
 #else
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
 #endif
-    mkConnParams (RawConnParams s c i p) = do
+    mkConnParams (RawConnParams s c i cl p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
+      connLifetime <- withEnv cl (fst pgConnLifetimeEnv)
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
-      return $ Q.ConnParams stripes conns iTime allowPrepare
+      return $ Q.ConnParams stripes conns iTime allowPrepare connLifetime
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
@@ -357,6 +358,13 @@ pgTimeoutEnv :: (String, String)
 pgTimeoutEnv =
   ( "HASURA_GRAPHQL_PG_TIMEOUT"
   , "Each connection's idle time before it is closed (default: 180 sec)"
+  )
+
+pgConnLifetimeEnv :: (String, String)
+pgConnLifetimeEnv =
+  ( "HASURA_GRAPHQL_PG_CONN_LIFETIME"
+  , "Time from connection creation after which the connection should be destroyed and a new one " 
+    <> "created. (default: none)"
   )
 
 pgUsePrepareEnv :: (String, String)
@@ -574,7 +582,7 @@ parseTxIsolation = optional $
 
 parseConnParams :: Parser RawConnParams
 parseConnParams =
-  RawConnParams <$> stripes <*> conns <*> timeout <*> allowPrepare
+  RawConnParams <$> stripes <*> conns <*> idleTimeout <*> connLifetime <*> allowPrepare
   where
     stripes = optional $
       option auto
@@ -592,12 +600,20 @@ parseConnParams =
                help (snd pgConnsEnv)
             )
 
-    timeout = optional $
+    idleTimeout = optional $
       option auto
               ( long "timeout" <>
                 metavar "<SECONDS>" <>
                 help (snd pgTimeoutEnv)
               )
+
+    connLifetime = fmap (fmap fromRational) $ optional $
+      option auto
+              ( long "conn-lifetime" <>
+                metavar "<SECONDS>" <>
+                help (snd pgConnLifetimeEnv)
+              )
+
     allowPrepare = optional $
       option (eitherReader parseStringAsBool)
               ( long "use-prepared-statements" <>
