@@ -127,12 +127,10 @@ const EventsTable: React.FC<Props> = props => {
     return {
       ...formattedRow,
       actions: columns.includes('actions') ? (
-        <div>
-          <CancelEventButton
-            id={row.id}
-            onClickHandler={() => onCancelHandler(row.id, row.scheduled_time)}
-          />
-        </div>
+        <CancelEventButton
+          id={row.id}
+          onClickHandler={() => onCancelHandler(row.id, row.scheduled_time)}
+        />
       ) : undefined,
       delivered: getEventDeliveryIcon(row.delivered),
       status: getEventStatusIcon(row.status),
