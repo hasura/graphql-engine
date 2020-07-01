@@ -25,7 +25,7 @@ const CancelEventButton: React.FC<CancelButtonProps> = ({
 }) => (
   <Button
     key={id}
-    onClick={() => onClickHandler()}
+    onClick={onClickHandler}
     color="white"
     size="xs"
     title="Cancel Event"

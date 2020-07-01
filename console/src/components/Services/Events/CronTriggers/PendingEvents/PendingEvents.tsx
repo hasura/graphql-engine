@@ -31,7 +31,7 @@ const PendingEvents: React.FC<Props> = props => {
   ) => {
     const localeTime = convertDateTimeToLocale(scheduledAt);
     const shouldCancelEvent = getConfirmation(
-      `This will delete the ${triggerName} cron event ${id} scheduled for ${localeTime}`
+      `This will delete the "${triggerName}" cron event "${id}" scheduled for "${localeTime}"`
     );
     if (shouldCancelEvent) {
       dispatch(cancelEvent('cron', 'hdb_cron_events', id, onSuccess));
