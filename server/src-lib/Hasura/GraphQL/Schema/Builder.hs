@@ -8,6 +8,8 @@ module Hasura.GraphQL.Schema.Builder
   , addFieldsToTyAgg
   , addTypeInfoToTyAgg
   , addScalarToTyAgg
+  , QueryRootFieldMap
+  , MutationRootFieldMap
   , RootFields(..)
   , addQueryField
   , addMutationField
@@ -57,11 +59,14 @@ instance Semigroup TyAgg where
 instance Monoid TyAgg where
   mempty = TyAgg Map.empty Map.empty Set.empty Map.empty
 
+type QueryRootFieldMap = Map.HashMap G.Name (QueryCtx, ObjFldInfo)
+type MutationRootFieldMap = Map.HashMap G.Name (MutationCtx, ObjFldInfo)
+
 -- | A role-specific mapping from root field names to allowed operations.
 data RootFields
   = RootFields
-  { _rootQueryFields    :: !(Map.HashMap G.Name (QueryCtx, ObjFldInfo))
-  , _rootMutationFields :: !(Map.HashMap G.Name (MutationCtx, ObjFldInfo))
+  { _rootQueryFields    :: !QueryRootFieldMap
+  , _rootMutationFields :: !MutationRootFieldMap
   } deriving (Show, Eq)
 $(makeLenses ''RootFields)
 

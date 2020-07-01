@@ -7,10 +7,11 @@ import           Hasura.SQL.Types
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.Text                  as T
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
+
+import qualified Data.HashMap.Strict        as HM
+import qualified Data.Text                  as T
 
 data RelDef a
   = RelDef

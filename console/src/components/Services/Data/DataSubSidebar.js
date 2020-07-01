@@ -106,6 +106,8 @@ class DataSubSidebar extends React.Component {
           const isActive =
             tableName === currentTable && currentLocation.includes(tableName);
 
+          const iconStyle = table.is_enum ? 'fa-list-ul' : 'fa-table';
+
           return (
             <li
               className={isActive ? styles.activeLink : ''}
@@ -120,7 +122,7 @@ class DataSubSidebar extends React.Component {
                 data-test={tableName}
               >
                 <i
-                  className={styles.tableIcon + ' fa fa-table'}
+                  className={`${styles.tableIcon} fa ${iconStyle}`}
                   aria-hidden="true"
                 />
                 {displayTableName(table)}

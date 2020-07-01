@@ -77,7 +77,7 @@ type PluginInstallOptions struct {
 }
 
 func (o *PluginInstallOptions) Run() error {
-	plugin, err := ec.PluginsConfig.GetPlugin(o.Name, plugins.FetchOpts{
+	plugin, err := o.EC.PluginsConfig.GetPlugin(o.Name, plugins.FetchOpts{
 		ManifestFile: o.ManifestFile,
 		Version:      o.Version.Version,
 	})

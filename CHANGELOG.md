@@ -2,6 +2,38 @@
 
 ## Next release
 
+### Relay
+
+The Hasura GraphQL Engine serves [Relay](https://relay.dev/en/) schema for Postgres tables which has a primary key defined.
+
+The Relay schema can be accessed through `/v1/relay` endpoint.
+
+[Add docs links][add console screenshot for relay toggle]
+
+### Remote Joins
+
+Remote Joins extend the concept of joining data across tables, to being able to join data across tables and remote schemas.
+
+It works similar to table relationships. Head to the `Relationship` tab in your table page and define a remote relationship:
+
+1. give a name for the relationship
+2. select the remote schema
+3. give the join configuration from table columns to remote schema fields.
+
+[Add docs links][add console screenshot]
+
+### Scheduled Triggers
+
+A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron based or timestamp based.
+
+A cron trigger will be useful when something needs to be done periodically. For example, you can create a cron trigger to generate an end-of-day sales report every weekday at 9pm.
+
+You can also schedule one-off events based on a timestamp. For example, a new scheduled event can be created for 2 weeks from when a user signs up to send them an email about their experience.
+
+[Add docs links][add console screenshot]
+
+(close #1914)
+
 ### Allow access to session variables by computed fields (fix #3846)
 
 Sometimes it is useful for computed fields to have access to the Hasura session variables directly. For example, suppose you want to fetch some articles but also get related user info, say `likedByMe`. Now, you can define a function like:
@@ -16,6 +48,7 @@ RETURNS boolean AS $$
   );
 $$ LANGUAGE sql STABLE;
 ```
+
 and make a query like:
 
 ```
@@ -25,7 +58,7 @@ query {
     content
     likedByMe
   }
-}     
+}
 ```
 
 Support for this is now added through the `add_computed_field` API.
@@ -40,7 +73,50 @@ Read more about the session argument for computed fields in the [docs](https://h
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: fix explain queries with role permissions (fix #4816)
+- server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
+- server: fixes an issue where introspection queries with variables would fail because of caching (fix #4547)
+- server: avoid loss of precision when passing values in scientific notation (fix #4733)
+- server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
+- server: fix importing of allow list query from metadata (fix #4687)
+- server: flush log buffer during shutdown (#4800)
+- server: fix edge case with printing logs on startup failure (fix #4772)
+- console: provide option to cascade metadata on dependency conflicts on console (fix #1593)
+- console: fix enum tables reload data button UI (#4647)
+- console: allow entering big int values in the console (close #3667) (#4775)
+- console: add support for subscriptions analyze in API explorer (close #2541) (#2541)
+- console: avoid count queries for large tables (#4692)
 - console: add read replica support section to pro popup (#4118)
+- console: fix regression in editing permissions manually (fix #4683) (#4826)
+- console: allow modifying default value for PK (fix #4075) (#4679)
+- console: fix checkbox for forwarding client headers in actions (#4595)
+- console: re-enable foreign tables to be listed as views (fix #4714) (#4742)
+- console: display rows limit in permissions editor if set to zero (fix #4559)
+- console: fix inconsistency between selected rows state and displayed rows (fix #4654) (#4673)
+- console: fix displaying boolean values in `Edit Row` tab (#4682)
+- console: fix underscores not being displayed on raw sql page (close #4754) (#4799)
+- console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
+- console: add help button and move about page to settings (#4848)
+- console: add new sidebar icon that separates enums from tables (fix #4984) (#4992)
+- console: fix "Cannot read property 'foldable'" runtime error in `Browse Rows` page (fix #4907) (#5016)
+- console: respect read-only mode in actions pages (fix #4656) (#4764)
+- cli: list all available commands in root command help (fix #4623) (#4628)
+- cli: fix bug with squashing event triggers (close #4883)
+- cli: add support for skipping execution while generating migrations through the migrate REST API
+- cli: add dry run flag in hasura migrate apply command (fix #3128) (#3499)
+- cli: load assets from server when HASURA_GRAPHQL_CONSOLE_ASSETS_DIR is set (close #3382)
+- docs: add section on actions vs. remote schemas to actions documentation (#4284)
+- docs: fix wrong info about excluding scheme in CORS config (#4685)
+- docs: add single object mutations docs (close #4622) (#4625)
+- docs: add docs page on query performance (close #2316) (#3693)
+- docs: add a sample Caddyfile for Caddy 2 in enable-https section (#4710)
+- docs: add disabling dev mode to production checklist (#4715)
+- docs: add integration guide for AWS Cognito (#4822, #4843)
+- docs: update troubleshooting section with reference on debugging errors (close #4052) (#4825)
+- docs: add page for procuring custom docker images and binaries (#4828)
+- docs: add content on how to secure action handlers and other actions docs improvements (#4743)
+- docs: make header common with other hasura.io/ pages (#4957)
+- install manifests: update all install manifests to enable dev mode by default (close #4599) (#4716)
 
 ## `v1.2.0`
 
@@ -106,6 +182,7 @@ The `internal` field for action errors is improved with more debug information. 
 `response` and `error` fields instead of just `webhook_response` field.
 
 Before:
+
 ```json
 {
   "errors": [
@@ -126,7 +203,9 @@ Before:
   ]
 }
 ```
+
 After:
+
 ```json
 {
   "errors": [
@@ -190,6 +269,7 @@ ENV vars can now be read from .env file present at the project root directory. A
 ```
 hasura console --envfile production.env
 ```
+
 The above command will read ENV vars from `production.env` file present at the project root directory.
 
 (close #4129) (#4454)
@@ -231,6 +311,7 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
+- server: make the graceful shutdown logic customizable (graceful shutdown on the SIGTERM signal continues to be the default)
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
 
 ## `v1.2.0-beta.4`

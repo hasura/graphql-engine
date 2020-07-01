@@ -51,7 +51,7 @@ Let's say we have a table:
 Now, we can head to the ``Modify`` tab in the table page and add a check
 constraint in the ``Check Constraints`` section:
 
-.. thumbnail:: ../../../img/graphql/manual/schema/validation-add-check-constraint.png
+.. thumbnail:: /img/graphql/manual/schema/validation-add-check-constraint.png
    :alt: Add check constraint
 
 If someone now tries to add an author with a rating of ``11``, the following
@@ -185,7 +185,7 @@ Suppose, we have a table:
 
 Now, we can create a role ``user`` and add the following rule:
 
-.. thumbnail:: ../../../img/graphql/manual/schema/validation-not-empty.png
+.. thumbnail:: /img/graphql/manual/schema/validation-not-empty.png
    :alt: validation using permission: title cannot be empty
 
 If we try to insert an article with ``title = ""``, we will get a ``permission-error``:
@@ -233,7 +233,7 @@ Also, suppose there is an :ref:`object relationship <graphql_relationships>` ``a
 
 Now, we can create a role ``user`` and add the following rule:
 
-.. thumbnail:: ../../../img/graphql/manual/schema/validation-author-isactive.png
+.. thumbnail:: /img/graphql/manual/schema/validation-author-isactive.png
    :alt: validation using permissions: author should be active
 
 If we try to insert an article for an author for whom ``is_active = false``, we
@@ -291,7 +291,7 @@ or not.
 
 The validation process looks as follows:
 
-.. thumbnail:: ../../../img/graphql/manual/schema/actions-data-validation.png
+.. thumbnail:: /img/graphql/manual/schema/diagram-actions-data-validation.png
    :alt: validation using actions: article not blacklisted
    :width: 60%
 
@@ -301,7 +301,7 @@ Actions allow us to define :ref:`custom types <custom_types>` in our GraphQL sch
 We create a new action called ``InsertAuthor`` that takes an ``author`` object with type ``AuthorInput`` as input and
 returns an object of type ``AuthorOutput``:
 
-.. thumbnail:: ../../../img/graphql/manual/schema/validation-actions-def.png
+.. thumbnail:: /img/graphql/manual/schema/validation-actions-def.png
    :alt: Create action
 
 The business logic of an action - in our case the author validation - happens in the :ref:`action handler <action_handlers>`

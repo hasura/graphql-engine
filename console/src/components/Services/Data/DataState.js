@@ -22,6 +22,8 @@ const defaultViewState = {
   manualTriggers: [],
   triggeredRow: -1,
   triggeredFunction: null,
+  estimatedCount: 0,
+  isCountEstimated: 0,
 };
 
 const defaultPermissionsState = {
@@ -115,6 +117,9 @@ const defaultModifyState = {
     colMappings: [{ column: '', refColumn: '' }],
     isToggled: false,
   },
+  remoteRelationships: {
+    remoteSchema: {},
+  },
   rootFieldsEdit: {
     select: '',
     select_by_pk: '',
@@ -133,6 +138,7 @@ const defaultModifyState = {
   lastSuccess: null,
   viewDefinition: null,
   viewDefinitionError: null,
+  viewDefSql: '',
   tableCommentEdit: { enabled: false, editedValue: null },
   alterColumnOptions: [], // Store supported implicit column -> column casts
   alterColumnOptionsFetchErr: null,

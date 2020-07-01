@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styles from './Styles.scss';
 import Helmet from 'react-helmet';
 import HandlerEditor from '../Common/components/HandlerEditor';
@@ -19,6 +19,8 @@ import {
 } from './reducer';
 import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import { showWarningNotification } from '../../Common/Notification';
 
 const AddAction = ({
   handler,
@@ -30,8 +32,17 @@ const AddAction = ({
   headers,
   forwardClientHeaders,
   derive,
+  readOnlyMode,
 }) => {
-  React.useEffect(() => {
+  useEffect(() => {
+    if (readOnlyMode)
+      dispatch(
+        showWarningNotification(
+          'Adding new action is not allowed in Read only mode!'
+        )
+      );
+  }, [dispatch, readOnlyMode]);
+  useEffect(() => {
     if (!derive.operation) {
       dispatch(setDefaults());
     }
@@ -63,8 +74,7 @@ const AddAction = ({
     dispatch(dispatchNewHeaders(hs));
   };
 
-  const toggleForwardClientHeaders = e => {
-    e.preventDefault();
+  const toggleForwardClientHeaders = () => {
     dispatch(toggleFCH());
   };
 
@@ -81,6 +91,7 @@ const AddAction = ({
     !typesDefinitionError &&
     !actionDefinitionError &&
     !actionParseTimer &&
+    !readOnlyMode &&
     !typedefParseTimer;
 
   let actionType;
@@ -104,6 +115,7 @@ const AddAction = ({
         onChange={actionDefinitionOnChange}
         timer={actionParseTimer}
         placeholder={''}
+        readOnlyMode={readOnlyMode}
       />
       <hr />
       <TypeDefinitionEditor
@@ -112,6 +124,7 @@ const AddAction = ({
         timer={typedefParseTimer}
         onChange={typeDefinitionOnChange}
         placeholder={''}
+        readOnlyMode={readOnlyMode}
       />
       <hr />
       <HandlerEditor
@@ -120,6 +133,7 @@ const AddAction = ({
         placeholder="action handler"
         className={styles.add_mar_bottom_mid}
         service="create-action"
+        disabled={readOnlyMode}
       />
       <hr />
       {actionType === 'query' ? null : (
@@ -128,6 +142,7 @@ const AddAction = ({
             value={kind}
             onChange={kindOnChange}
             className={styles.add_mar_bottom_mid}
+            disabled={readOnlyMode}
           />
           <hr />
         </React.Fragment>
@@ -137,6 +152,7 @@ const AddAction = ({
         toggleForwardClientHeaders={toggleForwardClientHeaders}
         headers={headers}
         setHeaders={setHeaders}
+        disabled={readOnlyMode}
       />
       <hr />
       <Button
@@ -148,6 +164,12 @@ const AddAction = ({
       >
         Create
       </Button>
+      {readOnlyMode && (
+        <ToolTip
+          id="tooltip-actions-add-readonlymode"
+          message="Adding new action is not allowed in Read only mode!"
+        />
+      )}
     </div>
   );
 };

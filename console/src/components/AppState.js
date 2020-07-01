@@ -1,6 +1,7 @@
 import globals from 'Globals';
 
 const stateKey = 'CONSOLE_LOCAL_INFO:' + globals.dataApiUrl;
+
 const CONSOLE_ADMIN_SECRET = 'CONSOLE_ADMIN_SECRET';
 
 const loadAppState = () => JSON.parse(window.localStorage.getItem(stateKey));

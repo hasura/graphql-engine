@@ -482,8 +482,9 @@ type createEventTriggerInput struct {
 	WebhookFromEnv string                            `json:"webhook_from_env,omitempty" yaml:"webhook_from_env,omitempty"`
 	Definition     *createEventTriggerOperationInput `json:"definition,omitempty" yaml:"definition,omitempty"`
 	Headers        interface{}                       `json:"headers" yaml:"headers"`
-	Replace        bool                              `json:"replace" yaml:"replace"`
+	Replace        *bool                             `json:"replace,omitempty" yaml:"replace,omitempty"`
 	RetryConf      *createEventTriggerRetryConfInput `json:"retry_conf" yaml:"retry_conf"`
+	EnableManual   *bool                             `json:"enable_manual,omitempty" yaml:"enable_manual,omitempty"`
 
 	createEventTriggerOperationInput
 }
@@ -513,11 +514,12 @@ func (c *createEventTriggerInput) MarshalJSON() ([]byte, error) {
 		Webhook        string                            `json:"webhook,omitempty" yaml:"webhook,omitempty"`
 		WebhookFromEnv string                            `json:"webhook_from_env,omitempty" yaml:"webhook_from_env,omitempty"`
 		Headers        interface{}                       `json:"headers" yaml:"headers"`
-		Replace        bool                              `json:"replace" yaml:"replace"`
+		Replace        *bool                             `json:"replace,omitempty" yaml:"replace,omitempty"`
 		RetryConf      *createEventTriggerRetryConfInput `json:"retry_conf" yaml:"retry_conf"`
 		Insert         interface{}                       `json:"insert,omitempty" yaml:"insert,omitempty"`
 		Update         interface{}                       `json:"update,omitempty" yaml:"update,omitempty"`
 		Delete         interface{}                       `json:"delete,omitempty" yaml:"delete,omitempty"`
+		EnableManual   *bool                             `json:"enable_manual,omitempty" yaml:"enable_manual,omitempty"`
 	}{
 		Name:           c.Name,
 		Table:          c.Table,
@@ -529,6 +531,7 @@ func (c *createEventTriggerInput) MarshalJSON() ([]byte, error) {
 		Insert:         c.Insert,
 		Update:         c.Update,
 		Delete:         c.Delete,
+		EnableManual:   c.EnableManual,
 	})
 }
 
