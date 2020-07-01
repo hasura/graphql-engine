@@ -1,6 +1,6 @@
 Package history
 
-0.0.6-1.3.0 - Merges stable branch of 1.3.0 and releases 
+0.0.6-1.3.0-beta.3 - Merges stable branch of 1.3.0 and releases 
   Updates the directory structure
   Changes the event trigger exports
   Removes about
