@@ -9,6 +9,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/tests/e2e/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("console command", func() {
@@ -16,16 +17,17 @@ var _ = Describe("console command", func() {
 		var teardown func()
 		BeforeEach(func() {
 			projectDir := helpers.RandDirName()
-			fmt.Fprintln(GinkgoWriter, "creating this", projectDir)
 			helpers.RunCommandAndSucceed("init", projectDir, "--version", "1")
 			err := os.Chdir(projectDir)
 			Expect(err).To(BeNil())
 			session := helpers.Hasura("console", "--no-browser")
+			want := `.*console running at: http://localhost:9695/.*`
+			Eventually(session, 5).Should(Say(want))
 
 			teardown = func() {
-				fmt.Fprintln(GinkgoWriter, "tearing down", projectDir)
 				session.Signal(os.Interrupt)
 				os.RemoveAll(projectDir)
+				os.Chdir(os.TempDir())
 			}
 		})
 		AfterEach(func() {
@@ -48,11 +50,13 @@ var _ = Describe("console command", func() {
 			err := os.Chdir(projectDir)
 			Expect(err).To(BeNil())
 			session := helpers.Hasura("console", "--no-browser")
+			want := `.*console running at: http://localhost:9695/.*`
+			Eventually(session, 5).Should(Say(want))
 
 			teardown = func() {
-				fmt.Fprintln(GinkgoWriter, "tearing down", projectDir)
-				session.Signal(os.Interrupt)
+				session.Terminate()
 				os.RemoveAll(projectDir)
+				os.Chdir(os.TempDir())
 			}
 		})
 		AfterEach(func() {
