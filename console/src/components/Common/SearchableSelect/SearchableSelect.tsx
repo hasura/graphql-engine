@@ -57,7 +57,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     if (!isFocused) return;
 
     // if user is searching we don't want to control the input
-    if (searchValue !== null) return;
+    if (searchValue !== null) return searchValue; // when the user focus back to input
 
     // otherwise we display last selected option
     // this way typing after selecting an options is allowed
@@ -77,6 +77,15 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   };
   const onSelect = (v: ValueType<OptionTypeBase> | string) => {
     selectedItem.current = v;
+  };
+  const onFocus = () => {
+    setIsFocused(true);
+    let ipValue;
+    if (!inputValue) {
+      if (typeof value === 'string') ipValue = value;
+      else ipValue = value?.label || '';
+      setSearchValue(String(ipValue));
+    }
   };
 
   const customStyles: Record<string, any> = {};
@@ -128,7 +137,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
       options={options as Option[]}
       onChange={onSelect}
       value={value as Option}
-      onFocus={() => setIsFocused(true)}
+      onFocus={onFocus}
       onBlur={onMenuClose}
       inputValue={inputValue}
       onInputChange={s => setSearchValue(s)}
