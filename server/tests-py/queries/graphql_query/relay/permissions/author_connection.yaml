@@ -19,6 +19,14 @@ query:
           node{
             id
             name
+            articles_connection{
+              edges{
+                node{
+                  id
+                  title
+                }
+              }
+            }
           }
         }
       }
@@ -36,3 +44,11 @@ response:
         node:
           id: WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgMl0=
           name: Author 2
+          articles_connection:
+            edges:
+            - node:
+                id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDRd
+                title: Article 4
+            - node:
+                id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDVd
+                title: Article 5

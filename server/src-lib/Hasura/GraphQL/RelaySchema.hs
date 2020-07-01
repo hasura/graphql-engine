@@ -165,7 +165,7 @@ mkRelayGCtxRole tableCache tn descM fields primaryKey constraints funcs viM tabC
       tyAgg = mkRelayTyAggRole tn descM insPermM selPermM updColsM
               (void $ _permDel permInfo) primaryKey constraints viM funcs
       queryRootFlds = getRelayQueryRootFieldsRole tn primaryKey fields funcs
-                 (mkSel <$> _permSel permInfo)
+                      (mkSel <$> _permSel permInfo)
       mutationRootFlds = getMutationRootFieldsRole tn primaryKey constraints fields
                        (mkIns <$> insM) (mkSel <$> selM)
                        (mkUpd <$> updM) (mkDel <$> delM) viM tabConfigM
@@ -269,7 +269,9 @@ mkRelayTyAggRole tn descM insPermM selPermM updColsM delPermM pkeyCols constrain
                            )
         in case riType relInfo of
           ObjRel -> [relFld]
-          ArrRel -> bool [relFld] ([relFld, aggRelFld] <> catMaybes [maybeConnFld]) allowAgg
+          ArrRel -> bool [relFld] [relFld, aggRelFld] allowAgg
+                    <> maybeToList maybeConnFld
+
       SFComputedField cf -> pure
         ( (ty, mkComputedFieldName $ _cfName cf)
         , RFComputedField cf
@@ -377,21 +379,15 @@ getRelayQueryRootFieldsRole tn primaryKey fields funcs selM =
                             <$> selM <*> maybePrimaryKeyColumns
 
     getSelConnectionDet (selFltr, pLimit, hdrs, _) primaryKeyColumns =
-      selFldHelper (QCSelectConnection primaryKeyColumns)
-      (mkSelFldConnection Nothing) selFltr pLimit hdrs
-
-    selFldHelper f g pFltr pLimit hdrs =
-      ( f $ mkSelectOpCtx tn (getCols fields) (pFltr, pLimit, hdrs)
-      , g tn
+      ( QCSelectConnection primaryKeyColumns $ mkSelectOpCtx tn (getCols fields) (selFltr, pLimit, hdrs)
+      , mkSelFldConnection Nothing tn
       )
 
     getFuncQueryConnectionFlds (selFltr, pLimit, hdrs, _) primaryKeyColumns =
-      funcFldHelper (QCFuncConnection primaryKeyColumns) mkFuncQueryConnectionFld selFltr pLimit hdrs
-
-    funcFldHelper f g pFltr pLimit hdrs =
       flip map funcs $ \fi ->
-      ( f $ FuncQOpCtx (fiName fi) (mkFuncArgItemSeq fi) hdrs colGNameMap pFltr pLimit
-      , g fi $ fiDescription fi
+      ( QCFuncConnection primaryKeyColumns $
+          FuncQOpCtx (fiName fi) (mkFuncArgItemSeq fi) hdrs colGNameMap selFltr pLimit
+      , mkFuncQueryConnectionFld fi $ fiDescription fi
       )
 
 mkNodeQueryRootFields :: RoleName -> [TableInfo] -> RootFields
