@@ -226,27 +226,33 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
     noExistingPlan :: m ResolvedExecutionPlan
     noExistingPlan = do
       req <- toParsed reqUnparsed
-      let
-        takeFragment = \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
-        fragments =
+      -- GraphQL requests may incorporate fragments which insert a pre-defined
+      -- part of a GraphQL query. Here we make sure to remember those
+      -- pre-defined sections, so that when we encounter a fragment spread
+      -- later, we can inline it instead.
+      let takeFragment = \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
+          fragments =
             mapMaybe takeFragment $ unGQLExecDoc $ _grQuery req
         -- TODO check that all defined fragments are used, see:
         -- http://spec.graphql.org/June2018/#sec-Fragments-Must-Be-Used
       (gCtx, queryParts) <- getExecPlanPartial userInfo sc enableAL queryType req
       case queryParts of
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
+          -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           (execPlan, plan, _unprepared) <-
             EQ.convertQuerySelSet gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ QueryExecutionPlan $ execPlan
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
+          -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           queryTx <- EM.convertMutationSelectionSet gCtx (userVars userInfo) httpManager reqHeaders
                      inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ MutationExecutionPlan $ EPr.ExecStepDB queryTx
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs _ selSet -> do
+          -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           -- Parse as query to check correctness
           (_execPlan, _plan, unpreparedAST) <-
