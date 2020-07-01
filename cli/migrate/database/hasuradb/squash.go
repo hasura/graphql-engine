@@ -170,7 +170,45 @@ func (q CustomQuery) MergeActions(squashList *database.CustomList) error {
 			case *dropActionInput:
 				if cfg.GetState() == "created" {
 					prevElems = append(prevElems, element)
+					// drop action permissions as well
+					actionPermissionGroup := CustomQuery(linq.FromIterable(squashList).GroupByT(
+						func(element *list.Element) string {
+							switch args := element.Value.(type) {
+							case *createActionPermissionInput:
+								if v, ok := args.Action.(string); ok {
+									return v
+								}
+							case *dropActionPermissionInput:
+								if v, ok := args.Action.(string); ok {
+									return v
+								}
+							}
+							return ""
+						}, func(element *list.Element) *list.Element {
+							return element
+						},
+					))
+
+					next := actionPermissionGroup.Iterate()
+
+					for item, ok := next(); ok; item, ok = next() {
+						g := item.(linq.Group)
+						if g.Key == "" {
+							continue
+						}
+						key, ok := g.Key.(string)
+						if !ok {
+							continue
+						}
+						if key == obj.Name {
+							for _, val := range g.Group {
+								element := val.(*list.Element)
+								squashList.Remove(element)
+							}
+						}
+					}
 				}
+
 				err := actionTransition.Trigger(dropAction, &cfg, nil)
 				if err != nil {
 					return err
