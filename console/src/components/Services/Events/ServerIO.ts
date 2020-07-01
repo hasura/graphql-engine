@@ -634,3 +634,35 @@ export const getEventLogs = (
     successCallback(data);
   }, errorCallback);
 };
+
+export const cancelEvent = (
+  tableName: string,
+  id: string,
+  onSuccessCallback: () => void
+): Thunk => dispatch => {
+  const url = Endpoints.query;
+  const payload = {
+    type: 'delete',
+    args: {
+      table: { name: tableName, schema: 'hdb_catalog' },
+      where: {
+        id: { $eq: id },
+      },
+    },
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  };
+  const successText = 'Successfully deleted one-off scheduled event';
+  const errorText = 'Error in cancelling event';
+
+  dispatch(requestAction(url, options, successText, errorText, true, true))
+    .then(() => {
+      dispatch(showSuccessNotification(successText));
+      onSuccessCallback();
+    })
+    .catch(err => {
+      dispatch(showErrorNotification(errorText, err.message, err));
+    });
+};
