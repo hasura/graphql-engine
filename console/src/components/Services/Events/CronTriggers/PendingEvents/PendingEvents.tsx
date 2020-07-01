@@ -10,7 +10,10 @@ import { Dispatch } from '../../../../../types';
 import EventsTable from '../../Common/Components/EventsTable';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { cancelEvent } from '../../ServerIO';
-import { getConfirmation } from '../../../../Common/utils/jsUtils';
+import {
+  getConfirmation,
+  convertDateTimeToLocale,
+} from '../../../../Common/utils/jsUtils';
 
 type Props = {
   currentTrigger?: ScheduledTrigger;
@@ -21,9 +24,14 @@ const PendingEvents: React.FC<Props> = props => {
   const { dispatch, currentTrigger } = props;
   const triggerName = currentTrigger ? currentTrigger.name : '';
 
-  const onCancelCronTrigger = (id: string, onSuccess: () => void) => {
+  const onCancelCronTrigger = (
+    id: string,
+    scheduledAt: string,
+    onSuccess: () => void
+  ) => {
+    const localeTime = convertDateTimeToLocale(scheduledAt);
     const shouldCancelEvent = getConfirmation(
-      `You want to cancel the event ${id} of ${triggerName} cron trigger`
+      `This action will delete an event from the ${triggerName} cron trigger which is scheduled at ${localeTime}`
     );
     if (shouldCancelEvent) {
       dispatch(cancelEvent('cron', 'hdb_cron_events', id, onSuccess));

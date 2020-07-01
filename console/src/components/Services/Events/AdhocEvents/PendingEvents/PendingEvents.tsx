@@ -9,7 +9,10 @@ import EventsTable from '../../Common/Components/EventsTable';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { Dispatch } from '../../../../../types';
 import { cancelEvent } from '../../ServerIO';
-import { getConfirmation } from '../../../../Common/utils/jsUtils';
+import {
+  getConfirmation,
+  convertDateTimeToLocale,
+} from '../../../../Common/utils/jsUtils';
 
 type Props = {
   dispatch: Dispatch;
@@ -18,8 +21,15 @@ type Props = {
 const PendingEvents: React.FC<Props> = props => {
   const { dispatch } = props;
 
-  const onCancelOneOffScheduledEvent = (id: string, onSuccess: () => void) => {
-    const shouldCancelEvent = getConfirmation('You want to cancel this event?');
+  const onCancelOneOffScheduledEvent = (
+    id: string,
+    scheduledAt: string,
+    onSuccess: () => void
+  ) => {
+    const localeTime = convertDateTimeToLocale(scheduledAt);
+    const shouldCancelEvent = getConfirmation(
+      `This action will delete a one-off event scheduled at ${localeTime}`
+    );
     if (shouldCancelEvent) {
       dispatch(
         cancelEvent('one-off scheduled', 'hdb_scheduled_events', id, onSuccess)

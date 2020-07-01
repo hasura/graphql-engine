@@ -35,7 +35,11 @@ const CancelEventButton: React.FC<CancelButtonProps> = ({
 );
 
 interface Props extends FilterTableProps {
-  onCancelEvent?: (id: string, onSuccess: () => void) => void;
+  onCancelEvent?: (
+    id: string,
+    scheduledAt: string,
+    onSuccess: () => void
+  ) => void;
 }
 
 const EventsTable: React.FC<Props> = props => {
@@ -107,9 +111,9 @@ const EventsTable: React.FC<Props> = props => {
     };
   });
 
-  const onCancelHandler = (id: string) => {
+  const onCancelHandler = (id: string, scheduledAt: string) => {
     if (onCancelEvent) {
-      onCancelEvent(id, runQuery);
+      onCancelEvent(id, scheduledAt, runQuery);
     }
   };
 
@@ -126,7 +130,7 @@ const EventsTable: React.FC<Props> = props => {
         <div>
           <CancelEventButton
             id={row.id}
-            onClickHandler={() => onCancelHandler(row.id)}
+            onClickHandler={() => onCancelHandler(row.id, row.scheduled_time)}
           />
         </div>
       ) : undefined,
