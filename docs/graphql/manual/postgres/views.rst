@@ -15,7 +15,7 @@ Postgres views
 Introduction
 ------------
 
-A `view <https://www.postgresql.org/docs/current/sql-createview.html>`__ is a virtual table in Postgres. It represents the result of a query to one or more underlying tables in Postgres.
+A `Postgres view <https://www.postgresql.org/docs/current/sql-createview.html>`__ is a virtual table in Postgres. It represents the result of a query to one or more underlying tables in Postgres.
 Views are used to simplify complex queries since these queries are defined once in the view, and can then be directly queried via the same.
 
 .. note::
@@ -25,7 +25,7 @@ Views are used to simplify complex queries since these queries are defined once 
 Standard views
 --------------
 
-Standard views represent the result of a query without actually storing data.
+`Standard views <https://www.postgresql.org/docs/current/sql-createview.html>`__ represent the result of a query without actually storing data.
 
 Examples
 ********
@@ -71,7 +71,7 @@ Example
 
 .. _pg_materialized_view_example:
 
-**Materialized view with authors who are active and whose rating is larger than 6, ordered by rating:**
+**Materialized view with authors whose rating is larger than 6 and who are active, ordered by rating:**
 
 .. code-block:: sql
 
@@ -101,7 +101,7 @@ Materialized views can be refreshed periodically using :ref:`Postgres triggers <
 
 .. note::
 
-  Materialized views are not updatable. Should the query change, the view needs to be `dropped <https://www.postgresql.org/docs/9.4/sql-dropview.html>`__ and `re-created <https://www.postgresql.org/docs/9.2/sql-createview.html>`__.
+  Materialized views are not updatable. Should the query change, the view needs to be `dropped <https://www.postgresql.org/docs/current/sql-dropmaterializedview.html>`__ and `re-created <https://www.postgresql.org/docs/current/rules-materializedviews.html>`__.
 
 Postgres views & Hasura
 -----------------------

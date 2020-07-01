@@ -27,7 +27,7 @@ Examples
 
 .. _pg_function_example_one:
 
-**Check that an author is active before inserting an article for them:**
+**Check that an author of a specific article is active:**
 
 The objective of this function is to check if an author is active for a specific article. 
 If the author is not active, an exception is raised. If the author is active, the article will be returned.
@@ -59,7 +59,7 @@ Let's break this function apart:
 
 **Refresh a materialized view:**
 
-The objective of this function is to refresh a :ref:`materialized view <pg_materialized_view_example>`.
+The objective of the following function is to refresh a :ref:`materialized view <pg_materialized_view_example>`.
 
 .. code-block:: plpgsql
 

@@ -21,7 +21,7 @@ About Postgres
 --------------
 
 Postgres (or PostgreSQL) is a general-purpose object-relational database management system that uses and extends the SQL language.
-Postgres is free and open source, and it's considered the most advanced open source database system.
+Postgres is free and open source, and it's considered the most advanced open source database systems.
 
 Postgres supports advanced data types and advanced performance optimization, features that are otherwise only available in expensive commercial database systems.
 

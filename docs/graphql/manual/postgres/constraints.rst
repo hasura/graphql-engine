@@ -97,7 +97,7 @@ Check constraints
 Check constraints allow you to specify a ``Boolean`` expression for a specific field. 
 This Boolean expression must be satisfied (equal to ``true``) by the field value for the object to be inserted.
 
-**Validate that an author's rating is between 0 and 10:**
+**Validate that an author's rating is between 1 and 10:**
 
 .. code-block:: sql
   :emphasize-lines: 4
