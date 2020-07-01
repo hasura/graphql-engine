@@ -12,22 +12,11 @@ import { sanitiseRow } from '../../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { getEventStatusIcon, getEventDeliveryIcon } from './utils';
-import { Dispatch } from '../../../../../types';
-import Endpoints from '../../../../../Endpoints';
-import makeCancelRequest from './makeCancelRequest';
 import Button from '../../../../Common/Button';
 
 type CancelButtonProps = {
   id: string;
   onClickHandler: () => void;
-};
-
-const handlerWrapper = (
-  e: React.MouseEvent<HTMLButtonElement>,
-  handler: () => void
-) => {
-  e.preventDefault();
-  handler();
 };
 
 const CancelEventButton: React.FC<CancelButtonProps> = ({
@@ -36,7 +25,7 @@ const CancelEventButton: React.FC<CancelButtonProps> = ({
 }) => (
   <Button
     key={id}
-    onClick={e => handlerWrapper(e, onClickHandler)}
+    onClick={() => onClickHandler()}
     color="white"
     size="xs"
     title="Cancel Event"
@@ -45,35 +34,8 @@ const CancelEventButton: React.FC<CancelButtonProps> = ({
   </Button>
 );
 
-const cancelEvent = (
-  dispatch: Dispatch,
-  tableName: string,
-  id: string,
-  successText: string,
-  errorText: string,
-  successCallback: () => void
-) => {
-  const url = Endpoints.query;
-  const payload = {
-    type: 'delete',
-    args: {
-      table: { name: tableName, schema: 'hdb_catalog' },
-      where: {
-        id: { $eq: id },
-      },
-    },
-  };
-  const options = {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  };
-  dispatch(
-    makeCancelRequest(url, options, successText, errorText, successCallback)
-  );
-};
-
 interface Props extends FilterTableProps {
-  dispatch: Dispatch;
+  onCancelEvent?: (id: string, onSuccess: () => void) => void;
 }
 
 const EventsTable: React.FC<Props> = props => {
@@ -84,7 +46,7 @@ const EventsTable: React.FC<Props> = props => {
     runQuery,
     columns,
     identifier,
-    dispatch,
+    onCancelEvent,
   } = props;
 
   if (rows.length === 0) {
@@ -142,33 +104,9 @@ const EventsTable: React.FC<Props> = props => {
     };
   });
 
-  const cancelButtonHandler = (row: {
-    id: string;
-    trigger_name?: string;
-    cron_event_logs?: string;
-  }) => {
-    const isCronTrigger = row?.trigger_name && row?.cron_event_logs;
-
-    if (isCronTrigger) {
-      cancelEvent(
-        dispatch,
-        'hdb_cron_events',
-        row.id,
-        'Successfully cancelled cron event',
-        'Error in deleting cron event',
-        () => runQuery()
-      );
-    }
-
-    if (row?.id && !isCronTrigger) {
-      cancelEvent(
-        dispatch,
-        'hdb_scheduled_events',
-        row.id,
-        'Successfully cancelled one-off scheduled event',
-        'Error in deleting one-off scheduled event',
-        () => runQuery()
-      );
+  const onCancelHandler = (id: string) => {
+    if (onCancelEvent) {
+      onCancelEvent(id, runQuery);
     }
   };
 
@@ -192,7 +130,7 @@ const EventsTable: React.FC<Props> = props => {
       actions: columns.includes('actions') ? (
         <CancelEventButton
           id={row.id}
-          onClickHandler={() => cancelButtonHandler(row)}
+          onClickHandler={() => onCancelHandler(row.id)}
         />
       ) : undefined,
     };
