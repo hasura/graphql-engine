@@ -18,6 +18,12 @@ args:
           price           numeric
       );
 
+#Set timezone
+- type: run_sql
+  args:
+    sql: |
+      SET TIME ZONE 'UTC';
+
 #Test table with different types
 - type: run_sql
   args:
@@ -293,9 +299,3 @@ args:
     - name: "John\\"
     - name: "Clarke"
     - name: "clarke"
-
-#Set timezone
-- type: run_sql
-  args:
-    sql: |
-      SET TIME ZONE 'UTC';
