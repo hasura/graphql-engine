@@ -121,6 +121,8 @@ The README of the CLI repository can be found [here](https://github.com/hasura/g
 
 ### Working on an issue
 
+- We use the [fork-and-branch git workflow](https://blog.scottlowe.org/2015/01/27/using-fork-branch-git-workflow/).
+
 - Please make sure there is an issue associated with the work that you're doing.
 
 - If you're working on an issue, please comment that you are doing so to prevent duplicate work by others also.
