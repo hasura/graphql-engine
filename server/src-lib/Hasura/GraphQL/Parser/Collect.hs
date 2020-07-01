@@ -119,9 +119,11 @@ flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
           -- given type; see
           -- http://spec.graphql.org/June2018/#sec-Fragment-spread-is-possible.
           -- Therefore, we raise an error.
-          | otherwise -> parseError $ "illegal type condition in fragment; type "
+          | otherwise -> return []
+            {- parseError $ "illegal type condition in fragment; type "
               <> typeName <<> " is unrelated to any of the types " <>
               Text.intercalate ", " (fmap dquoteTxt (toList objectTypeNames))
+            -}
 
     flattenInlineFragment InlineFragment{ _ifSelectionSet } =
       flattenSelectionSet objectTypeNames _ifSelectionSet
