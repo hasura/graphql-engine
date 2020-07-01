@@ -111,7 +111,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 A new `seeds` command is introduced in CLI, this will allow managing seed migrations as SQL files
 
 #### Creating seed
-```                                                        
+```
 # create a new seed file and use editor to add SQL content
 hasura seed create new_table_seed
 
@@ -468,6 +468,7 @@ See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-
 - console: fix parsing of wrapped types in SDL (close #4099) (#4167)
 - console: misc actions fixes (#4059)
 - console: action relationship page improvements (fix #4062, #4130) (#4133)
+- console: fix allowed queries through upload graphql file (fix #5137) (#5252)
 - cli: fix init command to generate correct config (fix #4036) (#4038)
 - cli: fix parse error returned on console api (close #4126) (#4152)
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
