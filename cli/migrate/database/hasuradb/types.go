@@ -88,6 +88,11 @@ type createActionInput struct {
 	Comment string `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
+type actionAndPermission struct {
+	actionDefinition
+	Permissions []PermissionDefinition `json:"permissions" yaml:"permissions"`
+}
+
 type dropActionInput struct {
 	Name      interface{} `json:"name,omitempty" yaml:"name,omitempty"`
 	ClearData bool        `json:"clear_data,omitempty" yaml:"clear_data,omitempty"`
@@ -97,16 +102,18 @@ type updateActionInput struct {
 	actionDefinition
 }
 
-type createActionPermissionInput struct {
-	Action  interface{} `json:"action,omitempty" yaml:"action,omitempty"`
+type PermissionDefinition struct {
 	Role    interface{} `json:"role,omitempty" yaml:"role,omitempty"`
 	Comment string      `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
+type createActionPermissionInput struct {
+	Action interface{} `json:"action,omitempty" yaml:"action,omitempty"`
+	PermissionDefinition
+}
 
 type dropActionPermissionInput struct {
-	Action  interface{} `json:"action,omitempty" yaml:"action,omitempty"`
-	Role    interface{} `json:"role,omitempty" yaml:"role,omitempty"`
-	Comment string      `json:"comment,omitempty" yaml:"comment,omitempty"`
+	Action interface{} `json:"action,omitempty" yaml:"action,omitempty"`
+	PermissionDefinition
 }
 
 type setCustomTypesInput struct {
@@ -734,8 +741,8 @@ type replaceMetadataInput struct {
 	AllowList        []*addCollectionToAllowListInput `json:"allowlist" yaml:"allowlist"`
 	RemoteSchemas    []*addRemoteSchemaInput          `json:"remote_schemas" yaml:"remote_schemas"`
 	CronTriggers     []*createCronTriggerInput        `json:"cron_triggers" yaml:"cron_triggers"`
-	// TODO: Fix this to include permissions
-	Actions []*createActionInput `json:"actions" yaml:"actions"`
+	Actions          []*actionAndPermission           `json:"actions" yaml:"actions"`
+	CustomTypes      *setCustomTypesInput             `json:"custom_types" yaml:"custom_types"`
 }
 
 func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList) {
@@ -842,15 +849,17 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	}
 
 	for _, table := range rmi.Tables {
-		for _, remoteRelationship := range *table.RemoteRelationships {
-			r := createRemoteRelationshipInput{
-				remoteRelationshipDefinition: remoteRelationship.Definiton,
-				Table: tableSchema{
-					Name:   table.Table.Name,
-					Schema: table.Table.Schema,
-				},
+		if table.RemoteRelationships != nil {
+			for _, remoteRelationship := range *table.RemoteRelationships {
+				r := createRemoteRelationshipInput{
+					remoteRelationshipDefinition: remoteRelationship.Definiton,
+					Table: tableSchema{
+						Name:   table.Table.Name,
+						Schema: table.Table.Schema,
+					},
+				}
+				l.PushBack(r)
 			}
-			l.PushBack(r)
 		}
 	}
 
@@ -879,9 +888,24 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 		l.PushBack(ct)
 	}
 
-	// track cron actions
-	for _, actions := range rmi.Actions {
-		l.PushBack(actions)
+	// track actions
+	for _, action := range rmi.Actions {
+		// action definition
+		a := &createActionInput{
+			actionDefinition: action.actionDefinition,
+		}
+		l.PushBack(a)
+		// permission
+		for _, permission := range action.Permissions {
+			p := &createActionPermissionInput{
+				Action:               action.Name,
+				PermissionDefinition: permission,
+			}
+			l.PushBack(p)
+		}
+	}
+	if rmi.CustomTypes != nil {
+		l.PushBack(rmi.CustomTypes)
 	}
 }
 

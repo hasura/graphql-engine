@@ -1821,6 +1821,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			ret <- []byte(args.SQL)
 			continue
 		default:
+			h.logger.Debug("cannot find metadata type for:", args)
 			ret <- fmt.Errorf("invalid metadata action")
 			return
 		}
