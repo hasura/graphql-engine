@@ -30,6 +30,7 @@
 - console: respect read-only mode in actions pages (fix #4656) (#4764)
 - console: allow configuring session_argument for custom functions (close #4499) (#4922)
 - console: fix listen update column config selection for event trigger (close #5042) (#5043)
+- console: added user prompt to cascade delete on Postgres dependency errors (close #5109) (#5248)
 - cli: add new flags up-sql and down-sql to generate sql based migrations from the CLI (#5026)
 - docs: add page on setting up v2 migrations (close #4746) (#4898)
 
