@@ -105,6 +105,7 @@
     "@types/jwt-decode": "2.2.1",
     "@babel/core": "7.9.6",
     "@babel/plugin-proposal-class-properties": "7.8.3",
+    "@babel/plugin-proposal-export-default-from": "^7.10.4",
     "@babel/plugin-proposal-nullish-coalescing-operator": "7.10.1",
     "@babel/preset-env": "7.9.5",
     "@babel/preset-react": "7.9.4",

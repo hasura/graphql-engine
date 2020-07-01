@@ -36,8 +36,8 @@ import {
 } from './src/components/Services/Data/DataActions';
 
 // import Event Tab parts
-import { eventRouterUtils } from './src/components/Services/EventTrigger';
-import { eventReducer } from './src/components/Services/EventTrigger';
+import { getEventsRouter, eventsReducer } from './src/components/Services/Events';
+// import { eventReducer } from './src/components/Services/EventTrigger';
 
 // import Remote Schema parts
 import {
@@ -74,7 +74,7 @@ import metadataOptionsContainer from './src/components/Services/Settings/Metadat
 import metadataStatusContainer from './src/components/Services/Settings/MetadataStatus/MetadataStatus';
 import allowedQueriesContainer from './src/components/Services/Settings/AllowedQueries/AllowedQueries';
 import logoutContainer from './src/components/Services/Settings/Logout/Logout';
-import aboutContainer from './src/components/Services/About/About';
+import aboutContainer from './src/components/Services/Settings/About/About';
 
 import {
   loadInconsistentObjects,
@@ -132,8 +132,8 @@ export {
   loadInconsistentObjects,
   redirectToMetadataStatus,
   isMetadataStatusPage,
-  aboutContainer,
   logoutContainer,
+  aboutContainer,
 };
 
 // export GraphiQL parts
@@ -146,7 +146,7 @@ export { ADMIN_SECRET_ERROR, UPDATE_CURRENT_SCHEMA, UPDATE_DATA_HEADERS };
 export { dataHeaders };
 
 // export Event Tab parts
-export { eventRouterUtils, eventReducer };
+export { getEventsRouter, eventsReducer};
 
 // export Remote Schema parts
 export { getRemoteSchemaRouter, remoteSchemaReducer };

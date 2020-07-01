@@ -1,5 +1,9 @@
 Package history
 
+0.0.6-1.3.0 - Merges stable branch of 1.3.0 and releases 
+  Updates the directory structure
+  Changes the event trigger exports
+  Removes about
 0.0.6-1.2.0-4 - Merges with stable branch for 1.2.1 and releases a package with corresponding exports
 0.0.5-2 - Exports certain modules from src/components/Common
 0.0.5-1 - Merges v1.1.0 of upstream into ex-bundle and release
