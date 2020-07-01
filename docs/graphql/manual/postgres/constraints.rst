@@ -15,7 +15,7 @@ Postgres constraints
 Introduction
 ------------
 
-`Constraints <https://www.postgresql.org/docs/current/ddl-constraints.html>`__ are used to define rules for fields in a database table. They ensure that
+`Postgres constraints <https://www.postgresql.org/docs/current/ddl-constraints.html>`__ are used to define rules for fields in a database table. They ensure that
 no invalid data is entered into the database.
 
 .. note::
@@ -32,7 +32,7 @@ Primary key constraints
 
 There is one ``PRIMARY KEY`` in each table. It's used to identify each specific row of a table.
 
-**Identify the author's id as the primary key:**
+**Identify the author's id as the primary key of the authors table:**
 
 .. code-block:: sql
   :emphasize-lines: 2
@@ -48,14 +48,14 @@ Foreign key constraints
 A foreign key constraint specifies that the values in a column must match the values appearing in a row of another table. 
 Foreign key constraints are used to create relationships between tables.
 
-**Define the author_id in the articles table as a foreign key:**
+**Define the author_id in the articles table as a foreign key to the id field in the authors table:**
 
 .. code-block:: sql
   :emphasize-lines: 5
 
   CREATE TABLE articles(
-    id        INTEGER PRIMARY KEY,
-    title     TEXT,
+    id SERIAL PRIMARY KEY  NOT NULL,
+    title          TEXT    NOT NULL,
     author_id INTEGER,
     FOREIGN KEY (author_id) REFERENCES authors (id)
   );
@@ -65,13 +65,13 @@ Not-null constraints
 
 A not-null constraint allows you to specify that a column's value cannot be ``null``.
 
-**Validate that an author's name is not null:**
+**Validate that an author's id and name cannot be null:**
 
 .. code-block:: sql
   :emphasize-lines: 2-3
 
   CREATE TABLE authors(
-    id INT PRIMARY KEY     NOT NULL,
+    id SERIAL PRIMARY KEY  NOT NULL,
     name           TEXT    NOT NULL
   );
 
@@ -86,9 +86,9 @@ Unique constraints prevent database entries with a duplicate value of the respec
   :emphasize-lines: 4
 
   CREATE TABLE authors(
-    id INT PRIMARY KEY     NOT NULL,
+    id SERIAL PRIMARY KEY  NOT NULL,
     name           TEXT    NOT NULL,
-    indicator      TEXT    NOT NULL UNIQUE
+    indicator      TEXT    UNIQUE
   );
 
 Check constraints
@@ -103,7 +103,7 @@ This Boolean expression must be satisfied (equal to ``true``) by the field value
   :emphasize-lines: 4
 
   CREATE TABLE authors(
-    id INT PRIMARY KEY     NOT NULL,
+    id SERIAL PRIMARY KEY  NOT NULL,
     name           TEXT    NOT NULL,
     rating         INT     NOT NULL CHECK(rating > 0 AND rating <= 10)
   );

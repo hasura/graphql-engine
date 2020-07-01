@@ -21,8 +21,8 @@ Introduction
 
   For more information on Postgres triggers, please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__.
 
-Use cases
----------
+Examples
+--------
 
 **Example:**
 
@@ -39,7 +39,15 @@ If someone now tries to insert an article for an author that is not active, the 
 
   unexpected : Author must be active
 
+**Update a materialized view**
+
+TODO
+
 Postgres triggers & Hasura
 --------------------------
 
 Postgres triggers can be used as a form of data validation in Hasura and can be added :ref:`as described here <data_validations_pg_triggers>`.
+
+.. note::
+
+  Hasura has :ref:`event triggers<event_triggers>` that can be used for adding business logic such as data validation.

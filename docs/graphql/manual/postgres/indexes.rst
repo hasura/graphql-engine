@@ -25,7 +25,7 @@ It helps accessing the data you're looking for more quickly.
 Example
 -------
 
-**Create index on the field name in the table authors**
+**Create index on the field name in the table authors:**
 
 Let's say the database receives a large number of requests where an author is queried by their name, for example:
 
