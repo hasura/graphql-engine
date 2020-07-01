@@ -119,6 +119,12 @@ const EventsTable: React.FC<Props> = props => {
     }, {});
     return {
       ...formattedRow,
+      actions: columns.includes('actions') ? (
+        <CancelEventButton
+          id={row.id}
+          onClickHandler={() => onCancelHandler(row.id)}
+        />
+      ) : undefined,
       delivered: getEventDeliveryIcon(row.delivered),
       status: getEventStatusIcon(row.status),
       scheduled_time: row.scheduled_time ? (
@@ -126,12 +132,6 @@ const EventsTable: React.FC<Props> = props => {
       ) : undefined,
       created_at: row.created_at ? (
         <div>{convertDateTimeToLocale(row.created_at)}</div>
-      ) : undefined,
-      actions: columns.includes('actions') ? (
-        <CancelEventButton
-          id={row.id}
-          onClickHandler={() => onCancelHandler(row.id)}
-        />
       ) : undefined,
     };
   });
