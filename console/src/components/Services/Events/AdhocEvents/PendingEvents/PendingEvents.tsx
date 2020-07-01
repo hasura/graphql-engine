@@ -28,7 +28,7 @@ const PendingEvents: React.FC<Props> = props => {
   ) => {
     const localeTime = convertDateTimeToLocale(scheduledAt);
     const shouldCancelEvent = getConfirmation(
-      `This action will delete a one-off event scheduled at ${localeTime}`
+      `This will delete the one-off event ${id} scheduled for ${localeTime}`
     );
     if (shouldCancelEvent) {
       dispatch(
