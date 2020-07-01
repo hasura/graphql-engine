@@ -8,6 +8,7 @@
 
 - server: add new `--conn-lifetime` and `HASURA_GRAPHQL_PG_CONN_LIFETIME` options for expiring connections after some amount of active time (#5087)
 - server: shrink libpq connection request/response buffers back to 1MB if they grow beyond 2MB, fixing leak-like behavior on active servers (#5087)
+- console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
 - docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
 - docs: add hasura cloud to getting started section (close #5206) (#5208)
@@ -22,12 +23,10 @@
 
 - server: fix introspection when multiple actions defined with Postgres scalar types (fix #5166) (#5173)
 - console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
-- console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
 - console: fix styling of table row contents on tables on relationship page (#4974)
 - cli: handle missing files during metadata apply (close #5163) (#5170)
 - docs: add page on Relay schema (close #4912) (#5150)
-
 
 ## `v1.3.0-beta.2`
 
