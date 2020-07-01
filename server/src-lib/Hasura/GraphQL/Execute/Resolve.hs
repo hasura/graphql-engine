@@ -26,8 +26,13 @@ resolveVariables
   -> G.SelectionSet fragments G.Name
   -> m (G.SelectionSet fragments Variable)
 resolveVariables definitions jsonValues selSet = do
-  variables <- Map.fromListOn getName <$> traverse buildVariable definitions
-  traverse (traverse (resolveVariable variables)) selSet
+  variablesByName <- Map.groupOnNE getName <$> traverse buildVariable definitions
+  uniqueVariables <- flip Map.traverseWithKey variablesByName
+    \variableName variableDefinitions ->
+      case variableDefinitions of
+        a :| [] -> return a
+        _      -> throw400 ParseFailed $ "multiple definitions for variable " <>> variableName
+  traverse (traverse (resolveVariable uniqueVariables)) selSet
   where
     buildVariable :: G.VariableDefinition -> m Variable
     buildVariable G.VariableDefinition{ G._vdName, G._vdType, G._vdDefaultValue } = do
