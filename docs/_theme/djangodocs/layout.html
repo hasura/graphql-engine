@@ -588,7 +588,11 @@
       $('.thumb_up').on('click', handleThumbUpClick);
 
       const handleThumbDownClick = function(e) {
-        sendFeedback('negative', 'Sorry to hear that. Please tell us what you were looking for:');
+        if (Intercom) {
+          Intercom('show');
+        } else {
+          sendFeedback('negative', 'Sorry to hear that. Please tell us what you were looking for:');
+        }
       };
       $('.thumb_down').on('click', handleThumbDownClick);
 
