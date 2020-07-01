@@ -79,7 +79,7 @@ type deleteCronTriggerInput struct {
 }
 
 type actionDefinition struct {
-	Action     interface{} `json:"action,omitempty" yaml:"action,omitempty"`
+	Name       interface{} `json:"name,omitempty" yaml:"name,omitempty"`
 	Definition interface{} `json:"definition,omitempty" yaml:"definition,omitempty"`
 }
 
@@ -98,13 +98,13 @@ type updateActionInput struct {
 }
 
 type createActionPermissionInput struct {
-	Name    interface{} `json:"name,omitempty" yaml:"name,omitempty"`
+	Action  interface{} `json:"action,omitempty" yaml:"action,omitempty"`
 	Role    interface{} `json:"role,omitempty" yaml:"role,omitempty"`
 	Comment string      `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 type dropActionPermissionInput struct {
-	Name    interface{} `json:"name,omitempty" yaml:"name,omitempty"`
+	Action  interface{} `json:"action,omitempty" yaml:"action,omitempty"`
 	Role    interface{} `json:"role,omitempty" yaml:"role,omitempty"`
 	Comment string      `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
@@ -734,6 +734,8 @@ type replaceMetadataInput struct {
 	AllowList        []*addCollectionToAllowListInput `json:"allowlist" yaml:"allowlist"`
 	RemoteSchemas    []*addRemoteSchemaInput          `json:"remote_schemas" yaml:"remote_schemas"`
 	CronTriggers     []*createCronTriggerInput        `json:"cron_triggers" yaml:"cron_triggers"`
+	// TODO: Fix this to include permissions
+	Actions []*createActionInput `json:"actions" yaml:"actions"`
 }
 
 func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList) {
@@ -875,6 +877,11 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	// track cron triggers
 	for _, ct := range rmi.CronTriggers {
 		l.PushBack(ct)
+	}
+
+	// track cron actions
+	for _, actions := range rmi.Actions {
+		l.PushBack(actions)
 	}
 }
 
@@ -1057,11 +1064,16 @@ type remoteRelationshipConfig struct {
 	transition.Transition
 }
 
+type cronTriggerConfig struct {
+	name string
+	transition.Transition
+}
+
 type actionConfig struct {
 	name string
 	transition.Transition
 }
-type cronTriggerConfig struct {
-	name string
+type actionPermissionConfig struct {
+	action string
 	transition.Transition
 }

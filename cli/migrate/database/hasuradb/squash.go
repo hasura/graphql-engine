@@ -17,6 +17,84 @@ import (
 
 type CustomQuery linq.Query
 
+func (q CustomQuery) MergeCustomTypes(squashList *database.CustomList) error {
+	actionPermissionsTransition := transition.New(&cronTriggerConfig{})
+	actionPermissionsTransition.Initial("new")
+	actionPermissionsTransition.State("created")
+
+	actionPermissionsTransition.Event(setCustomTypes).To("created").From("new", "created")
+
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		g := item.(linq.Group)
+		if g.Key == "" {
+			continue
+		}
+		var first *list.Element
+		for ind, val := range g.Group {
+			element := val.(*list.Element)
+			switch obj := element.Value.(type) {
+			case *setCustomTypesInput:
+				if ind == 0 {
+					first = element
+					continue
+				}
+				first.Value = obj
+				squashList.Remove(element)
+			}
+		}
+	}
+	return nil
+}
+
+func (q CustomQuery) MergeActionPermissions(squashList *database.CustomList) error {
+	actionPermissionsTransition := transition.New(&actionPermissionConfig{})
+	actionPermissionsTransition.Initial("new")
+	actionPermissionsTransition.State("created")
+	actionPermissionsTransition.State("deleted")
+
+	actionPermissionsTransition.Event(createActionPermission).To("created").From("new", "deleted")
+	actionPermissionsTransition.Event(dropActionPermission).To("deleted").From("new", "created")
+
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		g := item.(linq.Group)
+		if g.Key == "" {
+			continue
+		}
+		key := g.Key.(string)
+		cfg := actionPermissionConfig{
+			action: key,
+		}
+		prevElems := make([]*list.Element, 0)
+		for _, val := range g.Group {
+			element := val.(*list.Element)
+			switch element.Value.(type) {
+			case *createActionPermissionInput:
+				err := actionPermissionsTransition.Trigger(createActionPermission, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				prevElems = append(prevElems, element)
+			case *dropActionPermissionInput:
+				if cfg.GetState() == "created" {
+					prevElems = append(prevElems, element)
+				}
+				err := actionPermissionsTransition.Trigger(dropActionPermission, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				for _, e := range prevElems {
+					squashList.Remove(e)
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func (q CustomQuery) MergeActions(squashList *database.CustomList) error {
 	actionTransition := transition.New(&actionConfig{})
 	actionTransition.Initial("new")
@@ -49,26 +127,26 @@ func (q CustomQuery) MergeActions(squashList *database.CustomList) error {
 			case *createActionInput:
 				err := actionTransition.Trigger(createAction, &cfg, nil)
 				if err != nil {
-					return errors.Wrapf(err, "error squashin Action: %v", obj.Action)
+					return errors.Wrapf(err, "error squashin Action: %v", obj.Name)
 				}
 				prevElems = append(prevElems, element)
 			case *updateActionInput:
 				if len(prevElems) != 0 {
 					if _, ok := prevElems[0].Value.(*createActionInput); ok {
-						squashList.Remove(prevElems[0])
-						prevElems = prevElems[:0]
-						err := actionTransition.Trigger(dropAction, &cfg, nil)
-						if err != nil {
-							return errors.Wrapf(err, "error squashing action: %v", obj.Action)
-						}
-
-						element.Value = &createActionInput{
+						prevElems[0].Value = &createActionInput{
 							actionDefinition: obj.actionDefinition,
 						}
-						prevElems = append(prevElems, element)
+						prevElems = prevElems[:1]
+
+						err := actionTransition.Trigger(dropAction, &cfg, nil)
+						if err != nil {
+							return errors.Wrapf(err, "error squashing action: %v", obj.Name)
+						}
+						squashList.Remove(element)
+
 						err = actionTransition.Trigger(createAction, &cfg, nil)
 						if err != nil {
-							return errors.Wrapf(err, "error squashing action: %v", obj.Action)
+							return errors.Wrapf(err, "error squashing action: %v", obj.Name)
 						}
 						continue
 					}
@@ -79,7 +157,7 @@ func (q CustomQuery) MergeActions(squashList *database.CustomList) error {
 					prevElems = prevElems[:0]
 					err := actionTransition.Trigger(dropAction, &cfg, nil)
 					if err != nil {
-						return errors.Wrapf(err, "error squashing action: %v", obj.Action)
+						return errors.Wrapf(err, "error squashing action: %v", obj.Name)
 					}
 
 				}
@@ -87,7 +165,7 @@ func (q CustomQuery) MergeActions(squashList *database.CustomList) error {
 				prevElems = append(prevElems, element)
 				err := actionTransition.Trigger(updateAction, &cfg, nil)
 				if err != nil {
-					return errors.Wrapf(err, "error squashing: %v", obj.Action)
+					return errors.Wrapf(err, "error squashing: %v", obj.Name)
 				}
 			case *dropActionInput:
 				if cfg.GetState() == "created" {
@@ -1065,6 +1143,21 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 					}
 					l.PushBack(o)
 				}
+			case *createActionInput, *updateActionInput:
+				if v.Type == updateAction {
+					o, ok := v.Args.(*updateActionInput)
+					if !ok {
+						break
+					}
+					l.PushBack(o)
+				}
+				if v.Type == createAction {
+					o, ok := v.Args.(*createActionInput)
+					if !ok {
+						break
+					}
+					l.PushBack(o)
+				}
 			default:
 				l.PushBack(actionType)
 			}
@@ -1076,32 +1169,6 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 }
 
 func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
-	actionGroup := CustomQuery(linq.FromIterable(l).GroupByT(
-		func(element *list.Element) string {
-			switch args := element.Value.(type) {
-			case *createActionInput:
-				if v, ok := args.Action.(string); ok {
-					return v
-				}
-			case *updateActionInput:
-				if v, ok := args.Action.(string); ok {
-					return v
-				}
-			case *dropActionInput:
-				if v, ok := args.Name.(string); ok {
-					return v
-				}
-			}
-			return ""
-		}, func(element *list.Element) *list.Element {
-			return element
-		},
-	))
-	err := actionGroup.MergeActions(l)
-	if err != nil {
-		ret <- err
-	}
-
 	cronTriggersGroup := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) string {
 			switch args := element.Value.(type) {
@@ -1115,7 +1182,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			return element
 		},
 	))
-	err = cronTriggersGroup.MergeCronTriggers(l)
+	err := cronTriggersGroup.MergeCronTriggers(l)
 	if err != nil {
 		ret <- err
 	}
@@ -1549,6 +1616,70 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		},
 	))
 	err = queryCollectionGroups.MergeQueryCollections(l)
+	if err != nil {
+		ret <- err
+	}
+
+	customTypesGroup := CustomQuery(linq.FromIterable(l).GroupByT(
+		func(element *list.Element) string {
+			switch element.Value.(type) {
+			case *setCustomTypesInput:
+				return setCustomTypes
+			}
+			return ""
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err = customTypesGroup.MergeCustomTypes(l)
+	if err != nil {
+		ret <- err
+	}
+
+	actionGroup := CustomQuery(linq.FromIterable(l).GroupByT(
+		func(element *list.Element) string {
+			switch args := element.Value.(type) {
+			case *createActionInput:
+				if v, ok := args.Name.(string); ok {
+					return v
+				}
+			case *updateActionInput:
+				if v, ok := args.Name.(string); ok {
+					return v
+				}
+			case *dropActionInput:
+				if v, ok := args.Name.(string); ok {
+					return v
+				}
+			}
+			return ""
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err = actionGroup.MergeActions(l)
+	if err != nil {
+		ret <- err
+	}
+
+	actionPermissionGroup := CustomQuery(linq.FromIterable(l).GroupByT(
+		func(element *list.Element) string {
+			switch args := element.Value.(type) {
+			case *createActionPermissionInput:
+				if v, ok := args.Action.(string); ok {
+					return v
+				}
+			case *dropActionPermissionInput:
+				if v, ok := args.Action.(string); ok {
+					return v
+				}
+			}
+			return ""
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err = actionPermissionGroup.MergeActionPermissions(l)
 	if err != nil {
 		ret <- err
 	}
