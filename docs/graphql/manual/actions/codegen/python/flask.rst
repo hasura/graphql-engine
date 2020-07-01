@@ -60,71 +60,6 @@ If we check the "Codegen" tab, we can see that a nice scaffold has been generate
   :scale: 100%
   :alt: python-flask-signup-codegen-types
 
-You may notice a couple of things about the generated code:
-
-* The generated handler function returns a Dataclass instance of the auto-generated type matching it's expected return type
-* There is a ``RequestMixin`` Dataclass which provides some utility functions that all other classes inherit from
-
-Let's walk through the boilerplate and see what's happening.
-
-.. code-block:: python
-
-  from SignupTypes import SignupArgs, CreateUserOutput
-  from flask import Flask, request, jsonify
-
-  app = Flask(__name__)
-
-  @app.route('/Signup', methods=['POST'])
-  def SignupHandler():
-    args = SignupArgs.from_request(request.get_json())
-    print(args)
-    # business logic here
-    return CreateUserOutput().to_json()
-
-  if __name__ == '__main__':
-    app.run(debug = True, host = '0.0.0.0')
-
-Here we have the base handler method for the Action generated. The route name will match the name of your Action, and so will the function name.
-Our codegen module generates new GraphQL Types for the input arguments to all Action queries/mutations, and from that we generate language-specific types.
-
-This is where ``SignupArgs`` comes from -- It's a Python Dataclass that matches the shape of your mutation argument input. With it, on the ``RequestMixin``
-we provide a method ``.from_request()`` which can take a JSON object from HTTP request body and convert it to an instance of the class. So we invoke that
-generic method and convert it for convenience.
-
-Finally, we know from the schema that the return type needs to be a ```CreateUserOutput```, so we leave an empty instance there and call
-the ``.to_json()`` helper method we define on all ``RequestMixin`` objects.
-
-
-.. code-block:: python
-
-  from dataclasses import dataclass, asdict
-  from typing import List, Optional
-  from enum import Enum, auto
-  import json
-
-  @dataclass
-  class RequestMixin:
-      @classmethod
-      def from_request(cls, request):
-          """
-          Helper method to convert an HTTP request to Dataclass Instance
-          """
-          values = request.get("input")
-          return cls(**values)
-
-      def to_json(self):
-          return json.dumps(asdict(self))
-
-  @dataclass
-  class CreateUserOutput(RequestMixin):
-    id: int
-    email: str
-    password: str
-
-  @dataclass
-  class SignupArgs(RequestMixin):
-    email: str
-    password: str
 
 Overview of Action Handler Implementation
 -----------------------------------------
@@ -228,10 +163,33 @@ Now, in our ``signup`` Action handler, we need to call ``client.create_user()`` 
 
 To test this out, send an HTTP request to your Flask API at ``/signup`` with an email and password. You should get a successful response like this:
 
-.. image:: python-flask-signup-request.png
-  :width: 800px
-  :alt: python-flask-signup-request
-  :class: no-shadow
+.. code-block:: http
+
+  POST http://localhost:5000/signup HTTP/1.1
+  content-type: application/json
+
+  {
+    "input": {
+      "email": "user@test.com",
+      "password": "password123"
+    }
+  }
+
+.. code-block:: http
+
+  HTTP/1.0 200 OK
+  Content-Type: text/html; charset=utf-8
+  Content-Length: 129
+  Server: Werkzeug/1.0.1 Python/3.8.2
+  Date: Sun, 10 May 2020 19:58:23 GMT
+
+  {
+    "id": 1,
+    "email": "user@test.com",
+    "password": "$argon2id$v=19$m=102400,t=2,p=8$fSmC349hY74QoGRTD0w$OYQYd/PP9kYsy9gRnDF1oQ"
+  }
+  
+
 
 Now our Signup Action is functional! The last piece is create the Login handler, which will do a password comparison, and then return a signed JWT if successful.
 
@@ -334,42 +292,301 @@ Testing out the Handler Routes
 
 Now, if we send a request to ``/login`` using our email and password from ``/signup``, we should successful get a signed JWT, and decoding the JWT should return the correct information:
 
-.. image:: python-request-login.png  
-  :scale: 90%
-  :alt: python-request-login
+.. code-block:: http
 
-.. image:: python-flask-jwt-decode.png
-  :scale: 80%
-  :alt: python-flask-jwt-decode
+  POST http://localhost:5000/signup HTTP/1.1
+  content-type: application/json
 
+  {
+    "input": {
+      "email": "user@test.com",
+      "password": "password123"
+    }
+  }
+
+.. code-block:: http
+
+  HTTP/1.0 200 OK
+  Content-Type: text/html; charset=utf-8
+  Content-Length: 256
+  Server: Werkzeug/1.0.1 Python/3.8.2
+  Date: Sun, 10 May 2020 19:59:36 GMT
+
+  {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.z9ey1lw9p89gUkAmWEa7Qbpa1R71TgfkjZnEunGJ1ig"
+  }
+
+.. code-block:: bash
+
+  $ decode_jwt 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.z9ey1lw9p89gUkAmWEa7Qbpa1R71TgfkjZnEunGJ1ig'
+
+  {
+    "https://hasura.io/jwt/claims": {
+      "x-hasura-allowed-roles": ["user"],
+      "x-hasura-default-role": "user",
+      "x-hasura-user-id": 1
+    }
+  }
+  
 
 Calling the Finished Actions
 -----------------------------
 
 Now we can call our finished Action from Hasura's API, and validate our responses:
 
-.. figure:: signup-mutation.png
-  :width: 90 %
-  :align: center
+.. graphiql::
+  :view_only:
+  :query:
+    mutation Signup {
+      signup(email: "newuser@test.com", password: "a-password") {
+        id
+        email
+        password
+      }
+    }
+  :response:
+    {
+      "data": {
+        "Signup": {
+          "id": 2,
+          "email": "newuser@test.com",
+          "password": "$argon2id$v=19$m=102400,t=2,p=8$fSmC349hY74QoGRTD0w$OYQYd/PP9kYsy9gRnDF1oQ" 
+        }
+      }
+    }
 
-  Signup Mutation
+.. graphiql::
+  :view_only:
+  :query:
+    mutation SignupDuplicate {
+      signup(email: "newuser@test.com", password: "a-password") {
+        id
+        email
+        password
+      }
+    }
+  :response:
+    {
+      "errors": [
+        {
+        "extensions": {
+          "path": "$",
+          "code": "unexpected"
+        },
+        "message": "Uniqueness violation. Duplicate key value violates unique constraint \"user_email_key\""
+      ]
+    }
 
-.. figure:: signup-mutation-duplicate.png
-  :width: 110 %
-  :align: center
+.. graphiql::
+  :view_only:
+  :query:
+    query Login {
+      Login(email: "newuser@test.com", password: "a-password") {
+        token
+      }
+    }
+  :response:
+    {
+      "data": {
+        "Login": {
+          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.z9ey1lw9p89gUkAmWEa7Qbpa1R71TgfkjZnEunGJ1ig"
+        }
+      }
+    }
 
-  Signup Mutation Error
+.. graphiql::
+  :view_only:
+  :query:
+    query IncorrectLogin {
+      Login(email: "newuser@test.com", password: "bad-password") {
+        token
+      }
+    }
+  :response:
+    {
+      "errors": [
+        {
+        "extensions": {
+          "path": "$",
+          "code": "unexpected"
+        },
+        "message": "Invalid credentials"
+      ]
+    }
 
-.. figure:: login-query.png
-  :width: 90 %
-  :align: center
+Complete App Code
+---------------
 
-  Login Query
+.. code-block:: python
 
-.. figure:: login-query-bad-password.png
-  :width: 110 %
-  :align: center
+    import os
+    import jwt
+    import json
+    import logging
+    import requests
+    from flask import Flask, request, jsonify
+    from argon2 import PasswordHasher
+    from argon2.exceptions import VerifyMismatchError
+    from typing import Optional
+    from dataclasses import dataclass, asdict
 
-  Login Query Error
+    HASURA_URL = "http://graphql-engine:8080/v1/graphql"
+    HASURA_HEADERS = {"X-Hasura-Admin-Secret": "your-secret"}
+    HASURA_JWT_SECRET = os.getenv("HASURA_GRAPHQL_JWT_SECRET", "a-very-secret-secret")
 
-  
+    ##################
+    # GRAPHQL CLIENT
+    ##################
+
+    @dataclass
+    class Client:
+        url: str
+        headers: dict
+
+        def run_query(self, query: str, variables: dict, extract=False):
+            request = requests.post(
+                self.url,
+                headers=self.headers,
+                json={"query": query, "variables": variables},
+            )
+            assert request.ok, f"Failed with code {request.status_code}"
+            return request.json()
+
+        find_user_by_email = lambda self, email: self.run_query(
+            """
+                query UserByEmail($email: String!) {
+                    user(where: {email: {_eq: $email}}, limit: 1) {
+                        id
+                        email
+                        password
+                    }
+                }
+            """,
+            {"email": email},
+        )
+
+        create_user = lambda self, email, password: self.run_query(
+            """
+                mutation CreateUser($email: String!, $password: String!) {
+                    insert_user_one(object: {email: $email, password: $password}) {
+                        id
+                        email
+                        password
+                    }
+                }
+            """,
+            {"email": email, "password": password},
+        )
+
+        update_password = lambda self, id, password: self.run_query(
+            """
+                mutation UpdatePassword($id: Int!, $password: String!) {
+                    update_user_by_pk(pk_columns: {id: $id}, _set: {password: $password}) {
+                        password
+                    }
+                }
+            """,
+            {"id": id, "password": password},
+        )
+
+    ##################
+    # UTILS
+    ##################
+
+    Password = PasswordHasher()
+    client = Client(url=HASURA_URL, headers=HASURA_HEADERS)
+
+    # ROLE LOGIC FOR DEMO PURPOSES ONLY
+    # NOT AT ALL SUITABLE FOR A REAL APP
+    def generate_token(user) -> str:
+        """
+        Generates a JWT compliant with the Hasura spec, given a User object with field "id"
+        """
+        user_roles = ["user"]
+        admin_roles = ["user", "admin"]
+        is_admin = user["email"] == "admin@site.com"
+        payload = {
+            "https://hasura.io/jwt/claims": {
+                "x-hasura-allowed-roles": admin_roles if is_admin else user_roles,
+                "x-hasura-default-role": "admin" if is_admin else "user",
+                "x-hasura-user-id": user["id"],
+            }
+        }
+        token = jwt.encode(payload, HASURA_JWT_SECRET, "HS256")
+        return token.decode("utf-8")
+
+
+    def rehash_and_save_password_if_needed(user, plaintext_password):
+        if Password.check_needs_rehash(user["password"]):
+            client.update_password(user["id"], Password.hash(plaintext_password))
+
+
+    ##################
+    # DATA MODELS
+    ##################
+
+    @dataclass
+    class RequestMixin:
+        @classmethod
+        def from_request(cls, request):
+            """
+            Helper method to convert an HTTP request to Dataclass Instance
+            """
+            values = request.get("input")
+            return cls(**values)
+
+        def to_json(self):
+            return json.dumps(asdict(self))
+
+
+    @dataclass
+    class CreateUserOutput(RequestMixin):
+        id: int
+        email: str
+        password: str
+
+
+    @dataclass
+    class JsonWebToken(RequestMixin):
+        token: str
+
+
+    @dataclass
+    class AuthArgs(RequestMixin):
+        email: str
+        password: str
+
+
+    ##################
+    # MAIN SERVICE
+    ##################
+
+    app = Flask(__name__)
+
+    @app.route("/signup", methods=["POST"])
+    def signup_handler():
+        args = AuthArgs.from_request(request.get_json())
+        hashed_password = Password.hash(args.password)
+        user_response = client.create_user(args.email, hashed_password)
+        if user_response.get("errors"):
+            return {"message": user_response["errors"][0]["message"]}, 400
+        else:
+            user = user_response["data"]["insert_user_one"]
+            return CreateUserOutput(**user).to_json()
+
+
+    @app.route("/login", methods=["POST"])
+    def login_handler():
+        args = AuthArgs.from_request(request.get_json())
+        user_response = client.find_user_by_email(args.email)
+        user = user_response["data"]["user"][0]
+        try:
+            Password.verify(user.get("password"), args.password)
+            rehash_and_save_password_if_needed(user, args.password)
+            return JsonWebToken(generate_token(user)).to_json()
+        except VerifyMismatchError:
+            return {"message": "Invalid credentials"}, 401
+
+
+    if __name__ == "__main__":
+        app.run(debug=True, host="0.0.0.0")
