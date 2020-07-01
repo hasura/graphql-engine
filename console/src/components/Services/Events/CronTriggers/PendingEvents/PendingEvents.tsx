@@ -60,24 +60,24 @@ const PendingEvents: React.FC<Props> = props => {
     setFilterState,
     runQuery
   ) => (
-      <EventsTable
-        rows={rows}
-        count={count}
-        filterState={filterState}
-        setFilterState={setFilterState}
-        runQuery={runQuery}
-        columns={[
-          'id',
-          'status',
-          'scheduled_time',
-          'created_at',
-          'tries',
-          'actions',
-        ]}
-        identifier={triggerName}
-        onCancelEvent={onCancelCronTrigger}
-      />
-    );
+    <EventsTable
+      rows={rows}
+      count={count}
+      filterState={filterState}
+      setFilterState={setFilterState}
+      runQuery={runQuery}
+      columns={[
+        'id',
+        'status',
+        'scheduled_time',
+        'created_at',
+        'tries',
+        'actions',
+      ]}
+      identifier={triggerName}
+      onCancelEvent={onCancelCronTrigger}
+    />
+  );
 
   return (
     <FilterQuery
