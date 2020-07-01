@@ -13,12 +13,14 @@ import           Hasura.Prelude
 import           Control.Lens
 import           Data.List                              (nub)
 import           Data.Validation
+import           Data.Scientific                        (toBoundedInteger, toRealFloat)
 
 import           Hasura.EncJSON
 --import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Parser
+import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Select.Types
@@ -308,9 +310,7 @@ traverseQueryResponseJSON rjm =
           let RemoteJoin fieldName inputArgs selSet hasuraFields fieldCall rsi _ = remoteJoin
           hasuraFieldVariables <- mapM (parseGraphQLName . getFieldNameTxt) $ toList hasuraFields
           siblingFieldArgsVars <- mapM (\(k,val) -> do
-                                          keyName <- parseGraphQLName k
-                                          pure (keyName,ordJsonvalueToGValue val)
-                                       )
+                                          (,) <$> parseGraphQLName k <*> ordJSONValueToGValue val)
                                   $ siblingFields
           let siblingFieldArgs = Map.fromList $ siblingFieldArgsVars
               hasuraFieldArgs = flip Map.filterWithKey siblingFieldArgs $ \k _ -> k `elem` hasuraFieldVariables
@@ -322,8 +322,27 @@ traverseQueryResponseJSON rjm =
                                  (map fcName $ toList $ NE.tail fieldCall)
                                  (concat $ mapMaybe _rfaVariable inputArgs)
           where
-            ordJsonvalueToGValue :: AO.Value -> G.Value Void
-            ordJsonvalueToGValue = _ . AO.fromOrdered
+            ordJSONValueToGValue :: (MonadError QErr m) => AO.Value -> m (G.Value Void)
+            ordJSONValueToGValue orderedVal =
+              let jsonVal = AO.fromOrdered orderedVal
+              in go jsonVal
+              where
+                go :: (MonadError QErr m) => A.Value -> m (G.Value Void)
+                go = \case
+                  A.Null -> pure $  G.VNull
+                  A.Bool val -> pure $  G.VBoolean val
+                  A.String val -> pure $  G.VString G.ExternalValue val
+                  A.Number val ->
+                    case (toBoundedInteger val) of
+                      Just intVal -> pure $  G.VInt intVal
+                      Nothing -> pure $  G.VFloat $ toRealFloat val
+                  A.Array vals -> G.VList <$> traverse go (toList vals)
+                  A.Object vals ->
+                    G.VObject . Map.fromList <$> for (Map.toList vals) \(key, val) -> do
+                      name <- G.mkName key `onNothing` throw400 ValidationFailed
+                        ("variable value contains object with key " <> key
+                         <<> ", which is not a legal GraphQL name")
+                      (name,) <$> go val
 
             inputArgsToMap = Map.fromList . map (_rfaName &&& _rfaValue)
 
@@ -539,4 +558,6 @@ substituteVariables values = traverse go
       G.VInt i -> pure $ G.VInt i
       G.VFloat d -> pure $ G.VFloat d
       G.VString origin txt -> pure $ G.VString origin txt
-      G.VEnum enum -> pure $ G.VEnum enum
+      G.VEnum e -> pure $ G.VEnum e
+      G.VBoolean b -> pure $ G.VBoolean b
+      G.VNull -> pure $ G.VNull
