@@ -22,7 +22,7 @@
 
 - server: fix introspection when multiple actions defined with Postgres scalar types (fix #5166) (#5173)
 - console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
-- console: allow configurable statement_timeout on console raw sql page (close #4998) (#5045)
+- console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
 - console: fix styling of table row contents on tables on relationship page (#4974)
 - cli: handle missing files during metadata apply (close #5163) (#5170)
