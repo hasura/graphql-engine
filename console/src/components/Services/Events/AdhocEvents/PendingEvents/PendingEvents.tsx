@@ -18,7 +18,9 @@ const PendingEvents: React.FC<Props> = props => {
   const { dispatch } = props;
 
   const onCancelOneOffScheduledEvent = (id: string, onSuccess: () => void) => {
-    dispatch(cancelEvent('hdb_scheduled_events', id, onSuccess));
+    dispatch(
+      cancelEvent('one-off scheduled', 'hdb_scheduled_events', id, onSuccess)
+    );
   };
 
   const renderRows: FilterRenderProp = (

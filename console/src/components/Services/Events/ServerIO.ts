@@ -636,6 +636,7 @@ export const getEventLogs = (
 };
 
 export const cancelEvent = (
+  type: 'one-off scheduled' | 'cron',
   tableName: string,
   id: string,
   onSuccessCallback: () => void
@@ -654,8 +655,8 @@ export const cancelEvent = (
     method: 'POST',
     body: JSON.stringify(payload),
   };
-  const successText = 'Successfully deleted one-off scheduled event';
-  const errorText = 'Error in cancelling event';
+  const successText = `Successfully deleted ${type} event`;
+  const errorText = 'Error in cancelling the event';
 
   dispatch(requestAction(url, options, successText, errorText, true, true))
     .then(() => {

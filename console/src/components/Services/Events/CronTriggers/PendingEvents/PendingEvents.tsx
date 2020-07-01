@@ -21,7 +21,7 @@ const PendingEvents: React.FC<Props> = props => {
   const triggerName = currentTrigger ? currentTrigger.name : '';
 
   const onCancelCronTrigger = (id: string, onSuccess: () => void) => {
-    dispatch(cancelEvent('hdb_cron_events', id, onSuccess));
+    dispatch(cancelEvent('cron', 'hdb_cron_events', id, onSuccess));
   };
 
   const renderRows: FilterRenderProp = (
