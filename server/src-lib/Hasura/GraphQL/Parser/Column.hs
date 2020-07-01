@@ -87,7 +87,7 @@ column columnType (Nullability isNullable) =
       PGText    -> pure (PGValText    <$> string)
       PGVarchar -> pure (PGValVarchar <$> string)
       PGJSON    -> pure (PGValJSON  . Q.JSON  <$> json)
-      PGJSONB   -> pure (PGValJSONB . Q.JSONB <$> json)
+      PGJSONB   -> pure (PGValJSONB . Q.JSONB <$> jsonb)
       -- WIP NOTE
       --
       -- Similarly to what was done before, we are re-using the FromJSON instance

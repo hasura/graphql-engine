@@ -276,16 +276,22 @@ string = scalar $$(litName "String") Nothing SRString
 identifier :: MonadParse m => Parser 'Both m Text
 identifier = scalar $$(litName "ID") Nothing SRString
 
+{-
 jsonScalar
   :: MonadParse m
   => Name -> Maybe Description -> Parser 'Both m A.Value
 jsonScalar name description = scalar name description SRAny
+-}
 
-json :: MonadParse m => Parser 'Both m A.Value
-json = Parser
-  { pType = NonNullable $ TNamed $ mkDefinition $$(litName "JSON") Nothing TIScalar
+namedJSON :: MonadParse m => Name -> Parser 'Both m A.Value
+namedJSON name = Parser
+  { pType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
   , pParser = graphQLToJSON
   }
+
+json, jsonb :: MonadParse m => Parser 'Both m A.Value
+json  = namedJSON $$(litName "json")
+jsonb = namedJSON $$(litName "jsonb")
 
 -- | Explicitly define any desired scalar type.  This is unsafe because it does
 -- not mark queries as unreusable when they should be.
