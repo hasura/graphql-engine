@@ -24,12 +24,20 @@ const (
 	DebugErrPrefix            = "ERR: "
 )
 
-func Hasura(args ...string) *Session {
+type CmdOpts struct {
+	Args             []string
+	WorkingDirectory string
+}
+
+func Hasura(opts CmdOpts) *Session {
 	hasuraBinaryPath := "hasura"
 	if os.Getenv("CI") != "" {
 		hasuraBinaryPath = "/build/_cli_output/binaries/cli-hasura-linux-amd64"
 	}
-	cmd := exec.Command(hasuraBinaryPath, args...)
+	cmd := exec.Command(hasuraBinaryPath, opts.Args...)
+	if opts.WorkingDirectory != "" {
+		cmd.Dir = opts.WorkingDirectory
+	}
 	session, err := Start(
 		cmd,
 		NewPrefixedWriter(DebugOutPrefix, GinkgoWriter),
@@ -38,8 +46,8 @@ func Hasura(args ...string) *Session {
 	Expect(err).NotTo(HaveOccurred())
 	return session
 }
-func RunCommandAndSucceed(args ...string) *Session {
-	session := Hasura(args...)
+func RunCommandAndSucceed(opts CmdOpts) *Session {
+	session := Hasura(opts)
 	Eventually(session, 5).Should(Exit(0))
 	return session
 }

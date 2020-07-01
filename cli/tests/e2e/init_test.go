@@ -18,7 +18,10 @@ var _ = Describe("init command", func() {
 			dirName := helpers.RandDirName()
 			defer helpers.RemoveDir(dirName)
 
-			session := helpers.Hasura("init", dirName)
+			session := helpers.Hasura(helpers.CmdOpts{
+				Args: []string{"init", dirName},
+			})
+
 			want := fmt.Sprintf(`.*directory created\. execute the following commands to continue:.*cd %s`, dirName)
 			Eventually(session, 5).Should(Say(want))
 
@@ -45,7 +48,9 @@ var _ = Describe("init command", func() {
 				dirName := helpers.RandDirName()
 				defer helpers.RemoveDir(dirName)
 
-				session := helpers.Hasura("init", dirName)
+				session := helpers.Hasura(helpers.CmdOpts{
+					Args: []string{"init", dirName},
+				})
 				want := `.*directory created\. execute the following commands to continue:.*`
 				Eventually(session, 5).Should(Say(want))
 				Eventually(session, 5).Should(Exit(0))

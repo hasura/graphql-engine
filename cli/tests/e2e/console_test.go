@@ -15,12 +15,17 @@ import (
 var _ = Describe("console command", func() {
 	Context("v1 project", func() {
 		var teardown func()
+		projectDir := helpers.RandDirName()
 		BeforeEach(func() {
-			projectDir := helpers.RandDirName()
-			helpers.RunCommandAndSucceed("init", projectDir, "--version", "1")
-			err := os.Chdir(projectDir)
-			Expect(err).To(BeNil())
-			session := helpers.Hasura("console", "--no-browser")
+			// TODO: run from a fresh db
+			helpers.RunCommandAndSucceed(helpers.CmdOpts{
+				Args: []string{"init", projectDir, "--version", "1"},
+			})
+			session := helpers.Hasura(helpers.CmdOpts{
+				Args:             []string{"console", "--no-browser"},
+				WorkingDirectory: projectDir,
+			})
+
 			want := `.*console running at: http://localhost:9695/.*`
 			Eventually(session, 5).Should(Say(want))
 
@@ -43,20 +48,22 @@ var _ = Describe("console command", func() {
 	})
 	Context("v2 project", func() {
 		var teardown func()
+		projectDir := helpers.RandDirName()
 		BeforeEach(func() {
-			projectDir := helpers.RandDirName()
 			fmt.Fprintln(GinkgoWriter, "creating this", projectDir)
-			helpers.RunCommandAndSucceed("init", projectDir)
-			err := os.Chdir(projectDir)
-			Expect(err).To(BeNil())
-			session := helpers.Hasura("console", "--no-browser")
+			helpers.RunCommandAndSucceed(helpers.CmdOpts{
+				Args: []string{"init", projectDir},
+			})
+			session := helpers.Hasura(helpers.CmdOpts{
+				Args:             []string{"console", "--no-browser"},
+				WorkingDirectory: projectDir,
+			})
 			want := `.*console running at: http://localhost:9695/.*`
 			Eventually(session, 5).Should(Say(want))
 
 			teardown = func() {
 				session.Terminate()
 				os.RemoveAll(projectDir)
-				os.Chdir(os.TempDir())
 			}
 		})
 		AfterEach(func() {
@@ -73,16 +80,19 @@ var _ = Describe("console command", func() {
 
 func checkRequiredServersAreStarted() {
 	resp, err := http.Get("http://localhost:9695/console")
-	Expect(err).To(BeNil())
+	Expect(err).ShouldNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 	resp, err = http.Get("http://localhost:9693/apis/migrate")
-	Expect(err).To(BeNil())
+	Expect(err).ShouldNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 	b, err := ioutil.ReadAll(resp.Body)
+	Expect(err).ShouldNot(HaveOccurred())
 	Expect(b).Should(MatchJSON(`{"migrations":[],"status":{}}`))
-	fmt.Fprint(GinkgoWriter, string(b))
 	defer resp.Body.Close()
 }
 
 func sendAPIRequestsToCreateMetadataAndMigrations() {
+	resp, err := helpers.SendToHasuraMigrateAPIBodyFromFile("testdata/fixtures/create_table_users.json")
+	Expect(err).ShouldNot(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 }

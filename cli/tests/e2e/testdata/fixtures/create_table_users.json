@@ -1,0 +1,31 @@
+{
+  "name": "create_table_public_authors",
+  "up": [
+    {
+      "type": "run_sql",
+      "args": {
+        "sql": "CREATE TABLE \"public\".\"authors\"(\"id\" serial NOT NULL, \"name\" text NOT NULL, PRIMARY KEY (\"id\") );",
+        "cascade": false,
+        "read_only": false
+      }
+    },
+    {
+      "type": "add_existing_table_or_view",
+      "args": {
+        "name": "authors",
+        "schema": "public"
+      }
+    }
+  ],
+  "down": [
+    {
+      "type": "run_sql",
+      "args": {
+        "sql": "DROP TABLE \"public\".\"authors\";",
+        "cascade": false,
+        "read_only": false
+      }
+    }
+  ],
+  "skip_execution": false
+}
