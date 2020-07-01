@@ -167,6 +167,7 @@
     "eslint-plugin-import": "2.18.2",
     "eslint-plugin-jsx-a11y": "6.2.3",
     "eslint-plugin-react": "7.19.0",
+    "eslint-plugin-react-hooks": "^4.0.4",
     "express": "4.17.1",
     "extract-hoc": "0.0.5",
     "extract-text-webpack-plugin": "3.0.2",
