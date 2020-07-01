@@ -13,6 +13,7 @@ import {
   getFunctionModifyRoute,
 } from '../../../Common/utils/routesUtils';
 import { checkIfTable } from '../../../Common/utils/pgUtils';
+import Migration from '../../../../utils/migration/Migration';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -47,16 +48,11 @@ const addExistingTableSql = () => {
         },
       },
     };
+
+    const migration = new Migration();
+    migration.add(requestBodyUp, requestBodyDown);
     const migrationName =
       'add_existing_table_or_view_' + currentSchema + '_' + tableName;
-    const upQuery = {
-      type: 'bulk',
-      args: [requestBodyUp],
-    };
-    const downQuery = {
-      type: 'bulk',
-      args: [requestBodyDown],
-    };
 
     const requestMsg = 'Adding existing table/view...';
     const successMsg = 'Existing table/view added';
@@ -79,18 +75,17 @@ const addExistingTableSql = () => {
       dispatch({ type: REQUEST_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      upQuery.args,
-      downQuery.args,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -100,29 +95,24 @@ const addExistingFunction = name => {
     dispatch(showSuccessNotification('Adding an function...'));
     const currentSchema = getState().tables.currentSchema;
 
-    const requestBodyUp = {
+    const upMigration = {
       type: 'track_function',
       args: {
         name,
         schema: currentSchema,
       },
     };
-    const requestBodyDown = {
+    const downMigration = {
       type: 'untrack_function',
       args: {
         name,
         schema: currentSchema,
       },
     };
+    const migration = new Migration();
+    migration.add(upMigration, downMigration);
+
     const migrationName = 'add_existing_function ' + currentSchema + '_' + name;
-    const upQuery = {
-      type: 'bulk',
-      args: [requestBodyUp],
-    };
-    const downQuery = {
-      type: 'bulk',
-      args: [requestBodyDown],
-    };
 
     const requestMsg = 'Adding existing function...';
     const successMsg = 'Existing function added';
@@ -138,18 +128,17 @@ const addExistingFunction = name => {
       dispatch({ type: REQUEST_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      upQuery.args,
-      downQuery.args,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
-    );
+      errorMsg,
+    });
   };
 };
 
@@ -159,37 +148,31 @@ const addAllUntrackedTablesSql = tableList => {
 
     dispatch({ type: MAKING_REQUEST });
     dispatch(showSuccessNotification('Existing table/view added!'));
-    const bulkQueryUp = [];
-    const bulkQueryDown = [];
+
+    const migration = new Migration();
     for (let i = 0; i < tableList.length; i++) {
       if (tableList[i].table_name !== 'schema_migrations') {
-        bulkQueryUp.push({
-          type: 'add_existing_table_or_view',
-          args: {
-            name: tableList[i].table_name,
-            schema: currentSchema,
-          },
-        });
-        bulkQueryDown.push({
-          type: 'untrack_table',
-          args: {
-            table: {
+        migration.add(
+          {
+            type: 'add_existing_table_or_view',
+            args: {
               name: tableList[i].table_name,
               schema: currentSchema,
             },
           },
-        });
+          {
+            type: 'untrack_table',
+            args: {
+              table: {
+                name: tableList[i].table_name,
+                schema: currentSchema,
+              },
+            },
+          }
+        );
       }
     }
     const migrationName = 'add_all_existing_table_or_view_' + currentSchema;
-    const upQuery = {
-      type: 'bulk',
-      args: bulkQueryUp,
-    };
-    const downQuery = {
-      type: 'bulk',
-      args: bulkQueryDown,
-    };
 
     const requestMsg = 'Adding existing table/view...';
     const successMsg = 'Existing table/view added';
@@ -206,19 +189,18 @@ const addAllUntrackedTablesSql = tableList => {
       dispatch({ type: REQUEST_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      upQuery.args,
-      downQuery.args,
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
       errorMsg,
-      true
-    );
+      shouldSkipSchemaReload: true,
+    });
   };
 };
 

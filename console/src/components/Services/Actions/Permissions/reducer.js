@@ -32,7 +32,7 @@ export const setDefaults = () => ({
 });
 
 const MAKE_REQUEST = 'Actions/Permissions/MAKE_REQUEST';
-export const makeRequest = () => ({ type: MAKE_REQUEST });
+export const makePermRequest = () => ({ type: MAKE_REQUEST });
 const REQUEST_SUCCESS = 'Actions/Permissions/REQUEST_SUCCESS';
 export const setRequestSuccess = () => ({ type: REQUEST_SUCCESS });
 const REQUEST_FAILURE = 'Actions/Permissions/REQUEST_FAILURE';

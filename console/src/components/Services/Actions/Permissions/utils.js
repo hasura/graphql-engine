@@ -3,50 +3,48 @@ import {
   getDropActionPermissionQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { findActionPermission } from '../utils';
+import Migration from '../../../../utils/migration/Migration';
 
-export const getActionPermissionQueries = (
+export const getActionPermissionMigration = (
   permissionEdit,
   allPermissions,
   actionName
 ) => {
   const { role, newRole, filter } = permissionEdit;
 
-  const upQueries = [];
-  const downQueries = [];
-
   const permRole = (newRole || role).trim();
 
   const existingPerm = findActionPermission(allPermissions, permRole);
-
+  const migration = new Migration();
   if (newRole || (!newRole && !existingPerm)) {
-    upQueries.push(
-      getCreateActionPermissionQuery(
+    migration.add(
+      (getCreateActionPermissionQuery(
         {
           role: permRole,
           filter,
         },
         actionName
-      )
+      ),
+      getDropActionPermissionQuery(permRole, actionName))
     );
-    downQueries.push(getDropActionPermissionQuery(permRole, actionName));
   }
 
   if (existingPerm) {
-    upQueries.push(getDropActionPermissionQuery(permRole, actionName));
-    upQueries.push(
-      getCreateActionPermissionQuery({ role: permRole, filter }, actionName)
+    migration.add(
+      getDropActionPermissionQuery(permRole, actionName),
+      getDropActionPermissionQuery(permRole, actionName)
     );
-    downQueries.push(getDropActionPermissionQuery(permRole, actionName));
-    upQueries.push(
+
+    migration.add(
+      getCreateActionPermissionQuery({ role: permRole, filter }, actionName)
+    ); // TODO Down queries
+    migration.add(
       getCreateActionPermissionQuery(
         { role: permRole, filter: existingPerm.definition.select.filter },
         actionName
       )
-    );
+    ); // TODO Down queries
   }
 
-  return {
-    upQueries,
-    downQueries,
-  };
+  return migration;
 };

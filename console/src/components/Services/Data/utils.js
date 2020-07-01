@@ -775,6 +775,8 @@ const postgresFunctionTester = /.*\(\)$/gm;
 export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
 
+export const isTypeCast = (str = '') => str.split('::').length > 1;
+
 export const getEstimateCountQuery = (schemaName, tableName) => {
   return `
 SELECT

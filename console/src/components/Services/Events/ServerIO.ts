@@ -61,6 +61,7 @@ import {
 } from '../Common/Notification';
 import { EventTriggerProperty } from './EventTriggers/Modify/utils';
 import { getLogsTableDef } from './utils';
+import Migration from '../../../utils/migration/Migration';
 
 export const fetchTriggers = (
   kind: Nullable<TriggerKind>
@@ -122,9 +123,11 @@ export const addScheduledTrigger = (
     }
     return dispatch(showErrorNotification(errorMsg, validationError));
   }
-
-  const upQuery = generateCreateScheduledTriggerQuery(state);
-  const downQuery = getDropScheduledTriggerQuery(state.name);
+  const migration = new Migration();
+  migration.add(
+    generateCreateScheduledTriggerQuery(state),
+    getDropScheduledTriggerQuery(state.name)
+  );
 
   const migrationName = `create_scheduled_trigger_${state.name}`;
   const requestMsg = 'Creating scheduled trigger...';
@@ -150,19 +153,18 @@ export const addScheduledTrigger = (
     }
   };
 
-  return makeMigrationCall(
+  return makeMigrationCall({
     dispatch,
     getState,
-    [upQuery],
-    [downQuery],
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
     errorMsg,
-    false
-  );
+    shouldSkipSchemaReload: false,
+  });
 };
 
 export const saveScheduledTrigger = (
@@ -195,22 +197,28 @@ export const saveScheduledTrigger = (
       return null;
     }
   }
-
-  const replaceQueryUp = generateUpdateScheduledTriggerQuery(state);
-  const replaceQueryDown = generateUpdateScheduledTriggerQuery(
-    parseServerScheduledTrigger(existingTrigger)
-  );
-
-  const upRenameQueries = [
-    generateCreateScheduledTriggerQuery(state),
-    getDropScheduledTriggerQuery(existingTrigger.name),
-  ];
-  const downRenameQueries = [
-    getDropScheduledTriggerQuery(state.name),
-    generateCreateScheduledTriggerQuery(
-      parseServerScheduledTrigger(existingTrigger)
-    ),
-  ];
+  const migration = new Migration();
+  if (!isRenamed) {
+    migration.add(
+      generateUpdateScheduledTriggerQuery(state),
+      generateUpdateScheduledTriggerQuery(
+        parseServerScheduledTrigger(existingTrigger)
+      )
+    );
+  } else {
+    // drop existing
+    migration.add(
+      getDropScheduledTriggerQuery(existingTrigger.name),
+      generateCreateScheduledTriggerQuery(
+        parseServerScheduledTrigger(existingTrigger)
+      )
+    );
+    // create new
+    migration.add(
+      generateCreateScheduledTriggerQuery(state),
+      getDropScheduledTriggerQuery(state.name)
+    );
+  }
 
   const migrationName = `update_scheduled_trigger_${existingTrigger.name}_to_${state.name}`;
   const requestMsg = 'Updating scheduled trigger...';
@@ -243,19 +251,18 @@ export const saveScheduledTrigger = (
     }
   };
 
-  return makeMigrationCall(
+  return makeMigrationCall({
     dispatch,
     getState,
-    isRenamed ? upRenameQueries : [replaceQueryUp],
-    isRenamed ? downRenameQueries : [replaceQueryDown],
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
     errorMsg,
-    false
-  );
+    shouldSkipSchemaReload: false,
+  });
 };
 
 export const deleteScheduledTrigger = (
@@ -274,10 +281,10 @@ export const deleteScheduledTrigger = (
     }
     return;
   }
-
-  const upQuery = getDropScheduledTriggerQuery(trigger.name);
-  const downQuery = generateCreateScheduledTriggerQuery(
-    parseServerScheduledTrigger(trigger)
+  const migration = new Migration();
+  migration.add(
+    getDropScheduledTriggerQuery(trigger.name),
+    generateCreateScheduledTriggerQuery(parseServerScheduledTrigger(trigger))
   );
 
   const migrationName = `delete_scheduled_trigger_${trigger.name}`;
@@ -298,19 +305,18 @@ export const deleteScheduledTrigger = (
     }
   };
 
-  makeMigrationCall(
+  makeMigrationCall({
     dispatch,
     getState,
-    [upQuery],
-    [downQuery],
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
     errorMsg,
-    false
-  );
+    shouldSkipSchemaReload: false,
+  });
 };
 
 export const createEventTrigger = (
@@ -328,8 +334,11 @@ export const createEventTrigger = (
 
     const migrationName = `create_event_trigger_${state.name.trim()}`;
 
-    const upQuery = generateCreateEventTriggerQuery(state);
-    const downQuery = getDropEventTriggerQuery(state.name);
+    const migration = new Migration();
+    migration.add(
+      generateCreateEventTriggerQuery(state),
+      getDropEventTriggerQuery(state.name)
+    );
 
     const requestMsg = 'Creating event trigger...';
     const successMsg = 'Event Trigger Created';
@@ -349,19 +358,18 @@ export const createEventTrigger = (
       }
     };
 
-    makeMigrationCall(
+    makeMigrationCall({
       dispatch,
       getState,
-      [upQuery],
-      [downQuery],
+      migration,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
       successMsg,
       errorMsg,
-      true
-    );
+      shouldSkipSchemaReload: true,
+    });
   };
 };
 
@@ -430,9 +438,10 @@ export const modifyEventTrigger = (
     default:
       break;
   }
+  const migration = new Migration();
+  migration.add(upQuery, downQuery);
 
   const migrationName = `set_et_${state.name.trim()}_${property}`;
-
   const requestMsg = 'Saving...';
   const successMsg = 'Saved';
 
@@ -449,19 +458,18 @@ export const modifyEventTrigger = (
     }
   };
 
-  return makeMigrationCall(
+  return makeMigrationCall({
     dispatch,
     getState,
-    [upQuery],
-    [downQuery],
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
     errorMsg,
-    true
-  );
+    shouldSkipSchemaReload: true,
+  });
 };
 
 export const deleteEventTrigger = (
@@ -477,10 +485,10 @@ export const deleteEventTrigger = (
   if (!isOk) {
     return undefined;
   }
-
-  const upQuery = getDropEventTriggerQuery(trigger.name);
-  const downQuery = generateCreateEventTriggerQuery(
-    parseServerETDefinition(trigger)
+  const migration = new Migration();
+  migration.add(
+    getDropEventTriggerQuery(trigger.name),
+    generateCreateEventTriggerQuery(parseServerETDefinition(trigger))
   );
 
   const migrationName = `delete_et_${trigger.name}`;
@@ -503,19 +511,18 @@ export const deleteEventTrigger = (
     }
   };
 
-  return makeMigrationCall(
+  return makeMigrationCall({
     dispatch,
     getState,
-    [upQuery],
-    [downQuery],
+    migration,
     migrationName,
     customOnSuccess,
     customOnError,
     requestMsg,
     successMsg,
     errorMsg,
-    true
-  );
+    shouldSkipSchemaReload: true,
+  });
 };
 
 export const createScheduledEvent = (
