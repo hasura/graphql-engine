@@ -111,6 +111,9 @@ flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
           -- selection set; the fragment trivially applies.
           | typeName `elem` objectTypeNames -> flattenInlineFragment fragment
 
+          -- TODO implement this check:
+          -- http://spec.graphql.org/June2018/#sec-Fragment-Spread-Type-Existence
+
           -- TODO we are now starting to support interfaces and unions; fix the below
 
           -- Otherwise, the fragment must not apply, because we do not currently

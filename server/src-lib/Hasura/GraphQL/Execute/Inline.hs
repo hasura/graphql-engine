@@ -144,6 +144,7 @@ inlineFragmentSpread FragmentSpread{ _fsName, _fsDirectives } = do
        pure $! addSpreadDirectives fragment
 
      -- If we get here, the fragment name is unbound; raise an error.
+     -- http://spec.graphql.org/June2018/#sec-Fragment-spread-target-defined
      | otherwise -> throw400 ValidationFailed $
        "reference to undefined fragment " <>> _fsName
   where
