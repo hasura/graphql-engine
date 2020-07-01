@@ -790,13 +790,21 @@ WHERE
 export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
-export const cascadeUpQueries = (upQueries = []) =>
+const cascadePGSqlQuery = sql => {
+  let prefix;
+  if (sql[sql.length - 1] === ';') prefix = sql.substr(0, sql.length - 1);
+  // SQL might have  a " at the end
+  else if (sql[sql.length - 2] === ';') prefix = sql.substr(0, sql.length - 2);
+  return prefix + ' CASCADE;';
+};
+export const cascadeUpQueries = (upQueries = [], isPgCascade = false) =>
   upQueries.map((i = {}) => {
     if (i.type === 'run_sql' || i.type === 'untrack_table') {
       return {
         ...i,
         args: {
           ...i.args,
+          ...(isPgCascade && { sql: cascadePGSqlQuery(i.args.sql) }),
           cascade: true,
         },
       };
@@ -805,16 +813,26 @@ export const cascadeUpQueries = (upQueries = []) =>
   });
 
 export const getDependencyError = (err = {}) => {
+  const dflt = {};
   if (err.code == ERROR_CODES.dependencyError.code) {
     // direct dependency error
-    return err;
+    return { dependencyError: err };
   } else if (err.code == ERROR_CODES.dataApiError.code) {
     // message is coming as error, further parssing willbe based on message key
     const actualError = isJsonString(err.message)
       ? JSON.parse(err.message)
       : {};
-    if (actualError.code == ERROR_CODES.dependencyError.code) {
-      return { ...actualError, message: actualError.error };
-    }
+    if (actualError.code == ERROR_CODES.dependencyError.code)
+      return {
+        dependencyError: { ...actualError, message: actualError.error },
+      };
+    else if (
+      actualError.code === ERROR_CODES.postgresError.code &&
+      actualError?.internal?.error?.status_code === '2BP01' // pg dependent error > https://www.postgresql.org/docs/12/errcodes-appendix.html
+    )
+      return {
+        pgDependencyError: { ...actualError, message: actualError.error },
+      };
   }
+  return dflt;
 };
