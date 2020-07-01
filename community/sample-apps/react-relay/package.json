@@ -1,0 +1,45 @@
+{
+  "name": "react-relay-hasura",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/core": "^10.0.28",
+    "@emotion/styled": "^10.0.27",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.5.0",
+    "@testing-library/user-event": "^7.2.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-relay": "^0.0.0-experimental-94e87455",
+    "react-scripts": "3.4.1",
+    "relay-runtime": "^9.1.0"
+  },
+  "scripts": {
+    "start": "yarn run relay && react-scripts start",
+    "build": "yarn run relay && react-scripts build",
+    "relay": "yarn run relay-compiler --schema schema.graphql --src ./src",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "babel-plugin-relay": "^9.1.0",
+    "graphql": "^15.0.0",
+    "relay-compiler": "^9.1.0",
+    "relay-config": "^9.1.0"
+  }
+}

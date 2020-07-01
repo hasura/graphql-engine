@@ -28,6 +28,8 @@ community [Discord](https://discord.gg/vBPpJkS).
 
 ## Steps for contributing
 
+We use the [fork-and-branch git workflow](https://blog.scottlowe.org/2015/01/27/using-fork-branch-git-workflow/).
+
 - Fork the repo and clone it:
   ```bash
   git clone https://github.com/<your-username>/graphql-engine
@@ -64,6 +66,21 @@ community [Discord](https://discord.gg/vBPpJkS).
 - Commit the changes. Follow the common guidelines for commit messages at the 
 [main contributing guide](../CONTRIBUTING.md#common-guidelines).
 - Push the changes to your fork and submit a pull request.
+
+### Changelog 
+
+In order for all the checks to pass on Github, it's required to do one of the following:
+
+- Make an entry to the `CHANGELOG.md` file (under "Next release") to describe the change from a user's perspective.
+
+- Add the `no-changelog-required` label.
+
+For docs, a changelog entry is required for the following:
+
+- Entire new docs pages
+- Considerable changes in the overall structure
+
+For small changes (such as fixes, adding examples, UI changes etc.), the `no-changelog-required` label will suffice.
 
 ## Some guidelines while adding docs
 

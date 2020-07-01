@@ -1,0 +1,38 @@
+description: Query author connection with edges and pageinfo as user role
+url: /v1/relay
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '2'
+query:
+  query: |
+    query {
+      author_connection{
+        pageInfo{
+          startCursor
+          endCursor
+          hasPreviousPage
+          hasNextPage
+        }
+        edges{
+          cursor
+          node{
+            id
+            name
+          }
+        }
+      }
+    }
+response:
+  data:
+    author_connection:
+      pageInfo:
+        startCursor: eyJpZCIgOiAyfQ==
+        endCursor: eyJpZCIgOiAyfQ==
+        hasPreviousPage: false
+        hasNextPage: false
+      edges:
+      - cursor: eyJpZCIgOiAyfQ==
+        node:
+          id: WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgMl0=
+          name: Author 2

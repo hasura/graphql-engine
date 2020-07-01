@@ -102,8 +102,8 @@ resolveAction
   -> ActionDefinitionInput
   -> m ( ResolvedActionDefinition
        , AnnotatedObjectType
-       , HashSet PGScalarType -- ^ see Note [Postgres scalars in action input arguments].
-       )
+       , HashSet PGScalarType
+       ) -- ^ see Note [Postgres scalars in action input arguments].
 resolveAction customTypes allPGScalars actionDefinition = do
   let responseType = unGraphQLType $ _adOutputType actionDefinition
       responseBaseType = G.getBaseType responseType

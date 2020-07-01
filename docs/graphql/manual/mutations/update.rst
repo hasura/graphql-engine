@@ -110,6 +110,10 @@ row object or ``null`` if the row does not exist.
       }
     }
 
+.. note:: 
+
+   ``update_<table>_by_pk`` will **only** be available if you have select permissions on the table, as it returns the updated row.
+
 .. admonition:: Supported from
 
    The ``update_<table>_by_pk`` mutation is supported in versions ``v1.2.0``

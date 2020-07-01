@@ -1,0 +1,16 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      drop table if exists profiles
+
+- type: run_sql
+  args:
+    sql: |
+      drop table if exists user_profiles
+
+# also drops remote relationship as direct dep
+- type: remove_remote_schema
+  args:
+    name: my-remote-schema

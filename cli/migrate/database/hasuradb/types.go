@@ -43,6 +43,41 @@ type newHasuraIntefaceQuery struct {
 	Args    interface{}     `json:"args" yaml:"args"`
 }
 
+type deleteRemoteRelationshipInput struct {
+	Name  string      `json:"name" yaml:"name"`
+	Table tableSchema `json:"table" yaml:"table"`
+}
+
+type remoteRelationshipDefinition struct {
+	HasuraFields []string               `yaml:"hasura_fields" json:"hasura_fields"`
+	Name         string                 `yaml:"name" json:"name"`
+	RemoteField  map[string]interface{} `yaml:"remote_field" json:"remote_field"`
+	RemoteSchema string                 `yaml:"remote_schema" json:"remote_schema"`
+}
+type createRemoteRelationshipInput struct {
+	remoteRelationshipDefinition
+	Table tableSchema `yaml:"table" json:"table"`
+}
+type updateRemoteRelationshipInput struct {
+	*createRemoteRelationshipInput
+}
+
+type createCronTriggerInput struct {
+	Name              string      `json:"name" yaml:"name"`
+	Webhook           string      `json:"webhook" yaml:"webhook"`
+	Schedule          string      `json:"schedule" yaml:"schedule"`
+	Payload           interface{} `json:"payload,omitempty" yaml:"payload,omitempty"`
+	Headers           interface{} `json:"headers,omitempty" yaml:"headers,omitempty"`
+	RetryConf         interface{} `json:"retry_conf,omitempty" yaml:"retry_conf,omitempty"`
+	IncludeInMetadata *bool       `json:"include_in_metadata,omitempty" yaml:"include_in_metadata,omitempty"`
+	Comment           string      `json:"comment,omitempty" yaml:"comment,omitempty"`
+	Replace           *bool       `json:"replace,omitempty" yaml:"replace,omitempty"`
+}
+
+type deleteCronTriggerInput struct {
+	Name string `json:"name" yaml:"name"`
+}
+
 func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 	type t newHasuraIntefaceQuery
 	var q t
@@ -128,6 +163,16 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		q.Args = &addComputedFieldInput{}
 	case dropComputedField:
 		q.Args = &dropComputedFieldInput{}
+	case deleteRemoteRelationship:
+		q.Args = &deleteRemoteRelationshipInput{}
+	case createRemoteRelationship:
+		q.Args = &createRemoteRelationshipInput{}
+	case updateRemoteRelationship:
+		q.Args = &createRemoteRelationshipInput{}
+	case createCronTrigger:
+		q.Args = &createCronTriggerInput{}
+	case deleteCronTrigger:
+		q.Args = &deleteCronTriggerInput{}
 	default:
 		return fmt.Errorf("cannot squash type %s", q.Type)
 	}
@@ -285,6 +330,11 @@ const (
 	bulkQuery                                = "bulk"
 	addComputedField                         = "add_computed_field"
 	dropComputedField                        = "drop_computed_field"
+	createRemoteRelationship                 = "create_remote_relationship"
+	updateRemoteRelationship                 = "update_remote_relationship"
+	deleteRemoteRelationship                 = "delete_remote_relationship"
+	createCronTrigger                        = "create_cron_trigger"
+	deleteCronTrigger                        = "delete_cron_trigger"
 )
 
 type tableMap struct {
@@ -305,6 +355,10 @@ type computedFieldMap struct {
 
 type queryInCollectionMap struct {
 	collectionName, queryName string
+}
+
+type remoteRelationshipMap struct {
+	tableName, schemaName, name string
 }
 
 type tableSchema struct {
@@ -482,8 +536,9 @@ type createEventTriggerInput struct {
 	WebhookFromEnv string                            `json:"webhook_from_env,omitempty" yaml:"webhook_from_env,omitempty"`
 	Definition     *createEventTriggerOperationInput `json:"definition,omitempty" yaml:"definition,omitempty"`
 	Headers        interface{}                       `json:"headers" yaml:"headers"`
-	Replace        bool                              `json:"replace" yaml:"replace"`
+	Replace        *bool                             `json:"replace,omitempty" yaml:"replace,omitempty"`
 	RetryConf      *createEventTriggerRetryConfInput `json:"retry_conf" yaml:"retry_conf"`
+	EnableManual   *bool                             `json:"enable_manual,omitempty" yaml:"enable_manual,omitempty"`
 
 	createEventTriggerOperationInput
 }
@@ -513,11 +568,12 @@ func (c *createEventTriggerInput) MarshalJSON() ([]byte, error) {
 		Webhook        string                            `json:"webhook,omitempty" yaml:"webhook,omitempty"`
 		WebhookFromEnv string                            `json:"webhook_from_env,omitempty" yaml:"webhook_from_env,omitempty"`
 		Headers        interface{}                       `json:"headers" yaml:"headers"`
-		Replace        bool                              `json:"replace" yaml:"replace"`
+		Replace        *bool                             `json:"replace,omitempty" yaml:"replace,omitempty"`
 		RetryConf      *createEventTriggerRetryConfInput `json:"retry_conf" yaml:"retry_conf"`
 		Insert         interface{}                       `json:"insert,omitempty" yaml:"insert,omitempty"`
 		Update         interface{}                       `json:"update,omitempty" yaml:"update,omitempty"`
 		Delete         interface{}                       `json:"delete,omitempty" yaml:"delete,omitempty"`
+		EnableManual   *bool                             `json:"enable_manual,omitempty" yaml:"enable_manual,omitempty"`
 	}{
 		Name:           c.Name,
 		Table:          c.Table,
@@ -529,6 +585,7 @@ func (c *createEventTriggerInput) MarshalJSON() ([]byte, error) {
 		Insert:         c.Insert,
 		Update:         c.Update,
 		Delete:         c.Delete,
+		EnableManual:   c.EnableManual,
 	})
 }
 
@@ -599,6 +656,9 @@ type dropComputedFieldInput struct {
 type clearMetadataInput struct {
 }
 
+type remoteRelationships []struct {
+	Definiton remoteRelationshipDefinition `json:"definiton" yaml:"definiton"`
+}
 type replaceMetadataInput struct {
 	Tables []struct {
 		Table               tableSchema                      `json:"table" yaml:"table"`
@@ -610,12 +670,14 @@ type replaceMetadataInput struct {
 		DeletePermissions   []*createDeletePermissionInput   `json:"delete_permissions" yaml:"delete_permissions"`
 		EventTriggers       []*createEventTriggerInput       `json:"event_triggers" yaml:"event_triggers"`
 		ComputedFields      []*addComputedFieldInput         `json:"computed_fields" yaml:"computed_fields"`
+		RemoteRelationships *remoteRelationships             `json:"remote_relationships" yaml:"remote_relationships"`
 		Configuration       *tableConfiguration              `json:"configuration" yaml:"configuration"`
 	} `json:"tables" yaml:"tables"`
 	Functions        []*trackFunctionInput            `json:"functions" yaml:"functions"`
 	QueryCollections []*createQueryCollectionInput    `json:"query_collections" yaml:"query_collections"`
 	AllowList        []*addCollectionToAllowListInput `json:"allowlist" yaml:"allowlist"`
 	RemoteSchemas    []*addRemoteSchemaInput          `json:"remote_schemas" yaml:"remote_schemas"`
+	CronTriggers     []*createCronTriggerInput        `json:"cron_triggers" yaml:"cron_triggers"`
 }
 
 func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList) {
@@ -720,6 +782,20 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 			l.PushBack(cf)
 		}
 	}
+
+	for _, table := range rmi.Tables {
+		for _, remoteRelationship := range *table.RemoteRelationships {
+			r := createRemoteRelationshipInput{
+				remoteRelationshipDefinition: remoteRelationship.Definiton,
+				Table: tableSchema{
+					Name:   table.Table.Name,
+					Schema: table.Table.Schema,
+				},
+			}
+			l.PushBack(r)
+		}
+	}
+
 	// track functions
 	for _, function := range rmi.Functions {
 		l.PushBack(function)
@@ -738,6 +814,11 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	// track remote schemas
 	for _, rs := range rmi.RemoteSchemas {
 		l.PushBack(rs)
+	}
+
+	// track cron triggers
+	for _, ct := range rmi.CronTriggers {
+		l.PushBack(ct)
 	}
 }
 
@@ -912,5 +993,14 @@ type queryInCollectionConfig struct {
 
 type allowListConfig struct {
 	collection string
+	transition.Transition
+}
+
+type remoteRelationshipConfig struct {
+	tableName, schemaName, name string
+	transition.Transition
+}
+type cronTriggerConfig struct {
+	name string
 	transition.Transition
 }

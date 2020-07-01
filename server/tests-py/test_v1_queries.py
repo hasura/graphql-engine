@@ -516,6 +516,8 @@ class TestMetadataOrder:
         check_query_f(hge_ctx, self.dir() + '/export_metadata.yaml')
 
     def test_clear_export_metadata(self, hge_ctx):
+        # In the 'clear_export_metadata.yaml' the metadata is added
+        # using the metadata APIs
         check_query_f(hge_ctx, self.dir() + '/clear_export_metadata.yaml')
 
     def test_export_replace(self, hge_ctx):
@@ -527,14 +529,29 @@ class TestMetadataOrder:
         headers = {}
         if hge_ctx.hge_key is not None:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        # we are exporting the metadata here after creating it though
+        # the metadata APIs
         export_code, export_resp, _ = hge_ctx.anyq(url, export_query, headers)
         assert export_code == 200, export_resp
         replace_query = {
             'type': 'replace_metadata',
             'args': export_resp
         }
+        # we are replacing the metadata with the exported metadata from the
+        # `export_metadata` response.
         replace_code, replace_resp, _ = hge_ctx.anyq(url, replace_query, headers)
         assert replace_code == 200, replace_resp
+        # This test catches incorrect key names(if any) in the export_metadata serialization,
+        # for example, A new query collection is added to the allow list using the
+        # add_collection_to_allowlist metadata API. When
+        # the metadata is exported it will contain the allowlist. Now, when this
+        # metadata is imported, if the graphql-engine is expecting a different key
+        # like allow_list(instead of allowlist) then the allow list won't be imported.
+        # Now, exporting the metadata won't contain the allowlist key
+        # because it wasn't imported properly and hence the two exports will differ.
+        export_code_1, export_resp_1, _ = hge_ctx.anyq(url, export_query, headers)
+        assert export_code_1 == 200
+        assert export_resp == export_resp_1
 
 @usefixtures('per_method_tests_db_state')
 class TestRunSQL:
