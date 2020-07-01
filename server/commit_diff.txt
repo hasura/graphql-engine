@@ -129,21 +129,6 @@ Date:   Thu Jul 2 17:27:09 2020 +0530
 
     server: unlock scheduled events on graceful shutdown (#4928)
 
-commit d464208515ef6649bde5d7266fd783ad488dc859
-Merge: a78f17b7 cfffade1
-Author: Vamshi Surabhi <0x777@users.noreply.github.com>
-Date:   Thu Jul 2 10:50:25 2020 +0530
-
-    Merge pull request #5255 from 0x777/issue-2012-mutations-no-prepared-statements
-
-    do not use prepared statements for mutations, close #2012
-
-commit cfffade11589488cfae356e35e735f53df23ae6e
-Author: Vamshi Surabhi <vamshi@hasura.io>
-Date:   Wed Jul 1 17:44:19 2020 +0530
-
-    do not use prepared statements for mutations
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
