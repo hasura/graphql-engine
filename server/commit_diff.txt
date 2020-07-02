@@ -129,12 +129,6 @@ Date:   Thu Jul 2 17:27:09 2020 +0530
 
     server: unlock scheduled events on graceful shutdown (#4928)
 
-commit 9ccbd1c0f6b4816f954b1a9e0eef168625dbaecb
-Author: Vamshi Surabhi <0x777@users.noreply.github.com>
-Date:   Thu Jul 2 12:11:08 2020 +0530
-
-    bump pg-client-hs version (fixes a build issue on some environments) (#5267)
-
 commit d464208515ef6649bde5d7266fd783ad488dc859
 Merge: a78f17b7 cfffade1
 Author: Vamshi Surabhi <0x777@users.noreply.github.com>
@@ -149,18 +143,6 @@ Author: Vamshi Surabhi <vamshi@hasura.io>
 Date:   Wed Jul 1 17:44:19 2020 +0530
 
     do not use prepared statements for mutations
-
-commit 2b0e3774a3fa00d23aa0e9ee9b43767b536ba54d
-Author: Brandon Simmons <brandon@hasura.io>
-Date:   Tue Jun 30 23:53:10 2020 -0400
-
-    5087 libpq pool leak (#5089)
-
-    Shrink libpq buffers to 1MB before returning connection to pool. Closes #5087
-
-    See: https://github.com/hasura/pg-client-hs/pull/19
-
-    Also related: #3388 #4077
 
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
