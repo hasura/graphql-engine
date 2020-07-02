@@ -59,7 +59,7 @@ test:
 	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v2 ./tests/integration
 
 test-e2e-ci:
-	HASURA_CLI_E2E_TESTS_HGE_BINARY_PATH="/build/_server_output/graphql-engine" HASURA_CLI_E2E_TESTS_CLI_BINARY_PATH="/build/_cli_output/binaries/cli-linux-linux-amd64" ginkgo tests/e2e
+	HASURA_CLI_E2E_TESTS_HGE_BINARY_PATH="/build/_server_output/graphql-engine" HASURA_CLI_E2E_TESTS_CLI_BINARY_PATH="/build/_cli_output/binaries/cli-hasura-linux-amd64" ginkgo tests/e2e
 
 
 # clean the output directory
