@@ -10,7 +10,7 @@ import { getPathRoot } from '../Common/utils/urlUtils';
 
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
-
+import Button from '../Common/Button/Button';
 import logo from './images/white-logo.svg';
 import pixHeart from './images/pix-heart.svg';
 import close from './images/x-circle.svg';
@@ -19,7 +19,7 @@ import rate from './images/rate.svg';
 import regression from './images/regression.svg';
 import management from './images/management.svg';
 import allow from './images/allow-listing.svg';
-import read from './images/read-replica.svg';
+import dataCaching from './images/data-caching.svg';
 import arrowForwardRed from './images/arrow_forward-red.svg';
 
 import styles from './Main.scss';
@@ -527,7 +527,7 @@ class Main extends React.Component {
         return (
           <div className={styles.proPopUpWrapper}>
             <div className={styles.popUpHeader}>
-              Hasura <span>PRO</span>
+              Hasura <span>CLOUD</span>
               <img
                 onClick={this.toggleProPopup.bind(this)}
                 className={styles.popUpClose}
@@ -537,8 +537,7 @@ class Main extends React.Component {
             </div>
             <div className={styles.popUpBodyWrapper}>
               <div className={styles.featuresDescription}>
-                Hasura Pro is an enterprise-ready version of Hasura that comes
-                with the following features:
+                Hasura Cloud gives you a scalable, highly available, globally distributed, fully managed, secure GraphQL API as a service!
               </div>
               <div className={styles.proFeaturesList}>
                 <div className={styles.featuresImg}>
@@ -549,8 +548,7 @@ class Main extends React.Component {
                     Monitoring/Analytics
                   </div>
                   <div className={styles.featuresDescription}>
-                    Complete observability to troubleshoot errors and drill-down
-                    into individual operations.
+                    Complete observability: Troubleshoot errors & drill-down into individual operations.
                   </div>
                 </div>
               </div>
@@ -561,7 +559,7 @@ class Main extends React.Component {
                 <div className={styles.featuresList}>
                   <div className={styles.featuresTitle}>Rate Limiting</div>
                   <div className={styles.featuresDescription}>
-                    Prevent abuse with role-based rate limits.
+                    Role-based rate limits to prevent abuse.
                   </div>
                 </div>
               </div>
@@ -572,8 +570,7 @@ class Main extends React.Component {
                 <div className={styles.featuresList}>
                   <div className={styles.featuresTitle}>Regression Testing</div>
                   <div className={styles.featuresDescription}>
-                    Automatically create regression suites to prevent breaking
-                    changes.
+                    Automatically create regression suites to prevent breaking changes.
                   </div>
                 </div>
               </div>
@@ -584,7 +581,18 @@ class Main extends React.Component {
                 <div className={styles.featuresList}>
                   <div className={styles.featuresTitle}>Team Management</div>
                   <div className={styles.featuresDescription}>
-                    Login to a Hasura project with granular privileges.
+                    Login to Hasura project with granular privileges.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={dataCaching} alt={'data caching'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>Query & Dynamic Data caching</div>
+                  <div className={styles.featuresDescription}>
+                    Automatic caching of your shared data, cache query plans at the GraphQL and at the database level and blazing fast performance.
                   </div>
                 </div>
               </div>
@@ -594,23 +602,10 @@ class Main extends React.Component {
                 </div>
                 <div className={styles.featuresList}>
                   <div className={styles.featuresTitle}>
-                    Allow Listing Workflows
+                    Allow Listing
                   </div>
                   <div className={styles.featuresDescription}>
-                    Setup allow lists across dev, staging and production
-                    environments with easy workflows.
-                  </div>
-                </div>
-              </div>
-              <div className={styles.proFeaturesList}>
-                <div className={styles.featuresImg}>
-                  <img src={read} alt={'read'} />
-                </div>
-                <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>Read Replicas</div>
-                  <div className={styles.featuresDescription}>
-                    Native Read Replica support for enhanced performance and
-                    scalability
+                    Allow listing workflows across dev, staging and production environments.
                   </div>
                 </div>
               </div>
@@ -618,17 +613,18 @@ class Main extends React.Component {
             <div className={styles.popUpFooter}>
               <a
                 href={
-                  'https://hasura.io/getintouch?type=hasuraprodemo&utm_source=console'
+                  'https://cloud.hasura.io/'
                 }
                 target={'_blank'}
                 rel="noopener noreferrer"
               >
-                Set up a chat to learn more{' '}
-                <img
-                  className={styles.arrow}
-                  src={arrowForwardRed}
-                  alt={'Arrow'}
-                />
+                <Button
+                  data-test="data-get-started"
+                  color="yellow"
+                  className={styles.largeButton}
+                >
+                  Get started
+                </Button>
               </a>
             </div>
           </div>
@@ -764,11 +760,11 @@ class Main extends React.Component {
               >
                 <span
                   className={
-                    !isProClicked ? styles.proName : styles.proNameClicked
+                    ((!isProClicked) ? styles.proName : styles.proNameClicked) + ' ' + ((this.state.isPopUpOpen) ? styles.navActive : '')
                   }
                   onClick={this.clickProIcon.bind(this)}
                 >
-                  PRO
+                  CLOUD
                 </span>
                 {renderProPopup()}
               </div>

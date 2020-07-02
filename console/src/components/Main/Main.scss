@@ -918,8 +918,10 @@
   cursor: pointer;
 
   &:hover {
-    opacity: 0.7;
-    font-weight: 600;
+    span {
+      opacity: 0.7;
+      font-weight: 600;
+    }
   }
 
   .selected {
@@ -1220,6 +1222,13 @@
   .proNameClicked {
     color: #fff;
   }
+  .navActive {
+    color: #f8c53c;
+    opacity: 1 !important;
+    &:hover {
+      opacity: 1 !important;
+    }
+  }
   .proPopUpWrapper {
     position: absolute;
     box-shadow: 0 3px 20px 0 rgba(0, 0, 0, 0.24);
@@ -1240,7 +1249,7 @@
       padding: 20px 24px;
       border-bottom: 1px solid #ddd;
       span {
-        color: #1cd3c6;
+        color: #1eb4d4;
       }
       .popUpClose {
         position: absolute;
@@ -1284,11 +1293,16 @@
       }
     }
     .popUpFooter {
-      border-top: 1px solid #ddd;
+      // border-top: 1px solid #ddd;
       padding: 20px 24px;
+      padding-top: 0;
       color: #ff3264;
       font-weight: normal;
       font-size: 15px;
+      text-align: center;
+      .largeButton {
+        padding: 10px 55px;
+      }
       a {
         color: #ff3264;
         &:hover {
