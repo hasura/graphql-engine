@@ -2,7 +2,7 @@
 -- in "Hasura.GraphQL.Execute.LiveQuery.Poll". See "Hasura.GraphQL.Execute.LiveQuery" for high-level
 -- details.
 module Hasura.GraphQL.Execute.LiveQuery.State
-  ( LiveQueriesState
+  ( LiveQueriesState(..)
   , initLiveQueriesState
   , dumpLiveQueriesState
 
