@@ -24,6 +24,7 @@ The Hasura GraphQL engine is a binary that is shipped as a Docker container.
 
 Choose from the following guides to deploy the Hasura GraphQL engine and connect it to a Postgres database:
 
+- `Deploy using Hasura Cloud <https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html>`__
 - :ref:`Deploy using Heroku <deploy_heroku>`
 - :ref:`Deploy using Docker <deployment_docker>`
 - :ref:`Deploy using Kubernetes <deploy_kubernetes>`

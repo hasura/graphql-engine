@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_PASSWORD: postgrespassword
   graphql-engine:
-    image: hasura/graphql-engine:v1.3.0-beta.1
+    image: hasura/graphql-engine:v1.3.0-beta.3
     depends_on:
     - "postgres"
     restart: always
@@ -22,10 +22,10 @@ services:
       ## uncomment next line to set an admin secret
       # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
     command:
-    - graphql-engine 
+    - graphql-engine
     - serve
   caddy:
-    image: abiosoft/caddy:0.11.0
+    image: caddy/caddy
     depends_on:
     - "graphql-engine"
     restart: always
@@ -33,7 +33,7 @@ services:
     - "80:80"
     - "443:443"
     volumes:
-    - ./Caddyfile:/etc/Caddyfile
+    - ./Caddyfile:/etc/caddy/Caddyfile
     - caddy_certs:/root/.caddy
 volumes:
   db_data:

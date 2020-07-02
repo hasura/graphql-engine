@@ -1,4 +1,4 @@
-import { push } from 'react-router-redux';
+import { push, replace } from 'react-router-redux';
 import {
   fetchEventTriggersQuery,
   fetchScheduledTriggersQuery,
@@ -35,8 +35,14 @@ import {
   EventTrigger,
   EventKind,
   InvocationLog,
+  LOADING_TRIGGERS,
 } from './types';
-import { setScheduledTriggers, setEventTriggers, setTriggers } from './reducer';
+import {
+  setScheduledTriggers,
+  setEventTriggers,
+  setTriggers,
+  setCurrentTrigger,
+} from './reducer';
 import { LocalScheduledTriggerState } from './CronTriggers/state';
 import { LocalAdhocEventState } from './AdhocEvents/Add/state';
 import {
@@ -59,6 +65,8 @@ import { getLogsTableDef } from './utils';
 export const fetchTriggers = (
   kind: Nullable<TriggerKind>
 ): Thunk<Promise<void>> => (dispatch, getState) => {
+  dispatch({ type: LOADING_TRIGGERS });
+
   const bulkQueryArgs = [];
   if (kind) {
     bulkQueryArgs.push(
@@ -194,8 +202,8 @@ export const saveScheduledTrigger = (
   );
 
   const upRenameQueries = [
-    getDropScheduledTriggerQuery(existingTrigger.name),
     generateCreateScheduledTriggerQuery(state),
+    getDropScheduledTriggerQuery(existingTrigger.name),
   ];
   const downRenameQueries = [
     getDropScheduledTriggerQuery(state.name),
@@ -209,17 +217,18 @@ export const saveScheduledTrigger = (
   const successMsg = 'Updated scheduled trigger successfully';
 
   const customOnSuccess = () => {
-    if (isRenamed) {
-      const newHref = window.location.href.replace(
-        getSTModifyRoute(existingTrigger.name, 'relative'),
-        getSTModifyRoute(state.name, 'relative')
-      );
-      return window.location.replace(newHref);
-    }
     return dispatch(fetchTriggers('cron'))
       .then(() => {
         if (successCb) {
           successCb();
+        }
+        if (isRenamed) {
+          const newHref = window.location.href.replace(
+            getSTModifyRoute(existingTrigger.name, 'relative'),
+            getSTModifyRoute(state.name, 'relative')
+          );
+          dispatch(replace(newHref));
+          dispatch(setCurrentTrigger(state.name));
         }
       })
       .catch(() => {
@@ -397,8 +406,12 @@ export const modifyEventTrigger = (
         insert: state.operations.insert ? { columns: '*' } : null,
         update: state.operations.update
           ? {
-              columns: state.operationColumns.map(c => c.name),
-              payload: state.operationColumns.map(c => c.name),
+              columns: state.operationColumns
+                .filter(c => !!c.enabled)
+                .map(c => c.name),
+              payload: state.operationColumns
+                .filter(c => !!c.enabled)
+                .map(c => c.name),
             }
           : null,
         delete: state.operations.delete ? { columns: '*' } : null,
@@ -620,4 +633,37 @@ export const getEventLogs = (
   ).then((data: InvocationLog[]) => {
     successCallback(data);
   }, errorCallback);
+};
+
+export const cancelEvent = (
+  type: 'one-off scheduled' | 'cron',
+  tableName: string,
+  id: string,
+  onSuccessCallback: () => void
+): Thunk => dispatch => {
+  const url = Endpoints.query;
+  const payload = {
+    type: 'delete',
+    args: {
+      table: { name: tableName, schema: 'hdb_catalog' },
+      where: {
+        id: { $eq: id },
+      },
+    },
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  };
+  const successText = `Successfully deleted ${type} event`;
+  const errorText = 'Error in cancelling the event';
+
+  dispatch(requestAction(url, options, successText, errorText, true, true))
+    .then(() => {
+      dispatch(showSuccessNotification(successText));
+      onSuccessCallback();
+    })
+    .catch(err => {
+      dispatch(showErrorNotification(errorText, err.message, err));
+    });
 };

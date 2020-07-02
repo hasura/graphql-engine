@@ -142,16 +142,19 @@ fi
 # export for psql, etc.
 export PGPASSWORD=postgres
 
-DB_URL="postgres://postgres:$PGPASSWORD@127.0.0.1:$PG_PORT/postgres"
+# The URL for the postgres server we might launch
+CONTAINER_DB_URL="postgres://postgres:$PGPASSWORD@127.0.0.1:$PG_PORT/postgres"
+# ... but we might like to use a different PG instance when just launching graphql-engine:
+HASURA_GRAPHQL_DATABASE_URL=${HASURA_GRAPHQL_DATABASE_URL-$CONTAINER_DB_URL}
 
 PG_CONTAINER_NAME="hasura-dev-postgres-$PG_PORT"
 
-# We can remove psql as a dependency:
-DOCKER_PSQL="docker exec -u postgres -it $PG_CONTAINER_NAME psql -p $PG_PORT"
+# We can remove psql as a dependency by using it from the (running) PG container:
+DOCKER_PSQL="docker exec -u postgres -it $PG_CONTAINER_NAME psql $HASURA_GRAPHQL_DATABASE_URL"
 
-function wait_docker_postgres {
+function wait_postgres {
   echo -n "Waiting for postgres to come up"
-  until $DOCKER_PSQL postgres -c '\l' &>/dev/null; do
+  until ( $DOCKER_PSQL -c '\l' || psql $HASURA_GRAPHQL_DATABASE_URL -c '\l') &>/dev/null; do
     echo -n '.' && sleep 0.2
   done
   echo " Ok"
@@ -202,18 +205,20 @@ if [ "$MODE" = "graphql-engine" ]; then
   }
   trap cleanup EXIT
 
-
+  export HASURA_GRAPHQL_DATABASE_URL  # Defined above
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
 
-  echo_pretty "We will connect to postgres container '$PG_CONTAINER_NAME'"
-  echo_pretty "If you haven't yet, please launch a postgres container in a separate terminal with:"
+  echo_pretty "We will connect to postgres at '$HASURA_GRAPHQL_DATABASE_URL'"
+  echo_pretty "If you haven't overridden HASURA_GRAPHQL_DATABASE_URL, you can"
+  echo_pretty "launch a fresh postgres container for us to connect to, in a"
+  echo_pretty "separate terminal with:"
   echo_pretty "    $ $0 postgres"
-  echo_pretty "or press CTRL-C and invoke graphql-engine manually"
   echo_pretty ""
 
-  RUN_INVOCATION=(cabal new-run --project-file=cabal.project.dev-sh --RTS -- exe:graphql-engine +RTS -N -T -RTS
-    --database-url="$DB_URL" serve
-    --enable-console --console-assets-dir "$PROJECT_ROOT/console/static/dist")
+  RUN_INVOCATION=(cabal new-run --project-file=cabal.project.dev-sh --RTS -- 
+    exe:graphql-engine +RTS -N -T -s -RTS serve
+    --enable-console --console-assets-dir "$PROJECT_ROOT/console/static/dist"
+    )
 
   echo_pretty 'About to do:'
   echo_pretty '    $ cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine'
@@ -221,7 +226,7 @@ if [ "$MODE" = "graphql-engine" ]; then
   echo_pretty ''
 
   cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine
-  wait_docker_postgres
+  wait_postgres
 
   # Print helpful info after startup logs so it's visible:
   {
@@ -337,7 +342,7 @@ EOL
 
 if [ "$MODE" = "postgres" ]; then
   launch_postgres_container
-  wait_docker_postgres
+  wait_postgres
   echo_pretty "Postgres logs will start to show up in realtime here. Press CTRL-C to exit and "
   echo_pretty "shutdown this container."
   echo_pretty ""
@@ -347,7 +352,7 @@ if [ "$MODE" = "postgres" ]; then
   echo_pretty "    $ PGPASSWORD="$PGPASSWORD" psql -h 127.0.0.1 -p "$PG_PORT" postgres -U postgres"
   echo_pretty ""
   echo_pretty "Here is the database URL:"
-  echo_pretty "    $DB_URL"
+  echo_pretty "    $CONTAINER_DB_URL"
   echo_pretty ""
   echo_pretty "If you want to launch a 'graphql-engine' that works with this database:"
   echo_pretty "    $ $0 graphql-engine"
@@ -375,19 +380,19 @@ elif [ "$MODE" = "test" ]; then
   # rebuilding twice... ugh
   cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine test:graphql-engine-tests
   launch_postgres_container
-  wait_docker_postgres
+  wait_postgres
 
   # These also depend on a running DB:
   if [ "$RUN_UNIT_TESTS" = true ]; then
     echo_pretty "Running Haskell test suite"
-    HASURA_GRAPHQL_DATABASE_URL="$DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
+    HASURA_GRAPHQL_DATABASE_URL="$CONTAINER_DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
   fi
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
     GRAPHQL_ENGINE_TEST_LOG=/tmp/hasura-dev-test-engine.log
     echo_pretty "Starting graphql-engine, logging to $GRAPHQL_ENGINE_TEST_LOG"
     export HASURA_GRAPHQL_SERVER_PORT=8088
-    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine --database-url="$DB_URL" serve --stringify-numeric-types \
+    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine --database-url="$CONTAINER_DB_URL" serve --stringify-numeric-types \
       --enable-console --console-assets-dir ../console/static/dist \
       &> "$GRAPHQL_ENGINE_TEST_LOG" & GRAPHQL_ENGINE_PID=$!
 
@@ -449,7 +454,7 @@ elif [ "$MODE" = "test" ]; then
 
 
     # TODO MAYBE: fix deprecation warnings, make them an error
-    if pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$DB_URL" $PYTEST_ARGS; then
+    if pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$CONTAINER_DB_URL" $PYTEST_ARGS; then
       PASSED=true
     else
       PASSED=false

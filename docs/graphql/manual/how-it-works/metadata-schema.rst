@@ -129,10 +129,10 @@ Column Definitions
 +---------------------+------------------------------------------------------------------------------------------+
 | perm_def            | Captures information about how the permission is defined.                                |
 |                     |                                                                                          |
-|                     | Whenever a query is made with the above role for the above table GraphQL engine          |
+|                     | Whenever a request is made with the above role for the above table GraphQL engine        |
 |                     | will first validate the requested columns with the columns which the user has access to  |
 |                     | using the ``columns`` key.                                                               |
-|                     | Once the query is validated the appropriate results are returned after applying the      |
+|                     | Once the request is validated the appropriate results are returned after applying the    |
 |                     | filter defined in the ``filter`` key.                                                    |
 |                     |                                                                                          |
 |                     | For example:                                                                             |
