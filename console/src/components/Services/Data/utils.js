@@ -19,7 +19,7 @@ export const TIMETZ = 'timetz';
 export const BOOLEAN = 'boolean';
 export const TEXT = 'text';
 
-export const getPlaceholder = (type) => {
+export const getPlaceholder = type => {
   switch (type) {
     case TIMESTAMP:
       return new Date().toISOString();
@@ -61,7 +61,7 @@ export const ordinalColSort = (a, b) => {
 const findFKConstraint = (curTable, column) => {
   const fkConstraints = curTable.foreign_key_constraints;
   return fkConstraints.find(
-    (fk) =>
+    fk =>
       Object.keys(fk.column_mapping).length === column.length &&
       Object.keys(fk.column_mapping).join(',') === column.join(',')
   );
@@ -70,7 +70,7 @@ const findFKConstraint = (curTable, column) => {
 const findOppFKConstraint = (curTable, column) => {
   const fkConstraints = curTable.opp_foreign_key_constraints;
   return fkConstraints.find(
-    (fk) =>
+    fk =>
       Object.keys(fk.column_mapping).length === column.length &&
       Object.keys(fk.column_mapping).join(',') === column.join(',')
   );
@@ -111,7 +111,7 @@ export const findTableFromRel = (schemas, curTable, rel) => {
     }
   }
   return schemas.find(
-    (x) => x.table_name === rTable && x.table_schema === rSchema
+    x => x.table_name === rTable && x.table_schema === rSchema
   );
 };
 
@@ -139,7 +139,7 @@ export const findAllFromRel = (schemas, curTable, rel) => {
     }
     const columnMapping = rel.rel_def.manual_configuration.column_mapping;
     relMeta.lcol = Object.keys(columnMapping);
-    relMeta.rcol = relMeta.lcol.map((column) => columnMapping[column]);
+    relMeta.rcol = relMeta.lcol.map(column => columnMapping[column]);
   }
 
   // for table
@@ -174,7 +174,7 @@ export const findAllFromRel = (schemas, curTable, rel) => {
   return relMeta;
 };
 
-export const getIngForm = (string) => {
+export const getIngForm = string => {
   return (
     (string[string.length - 1] === 'e'
       ? string.slice(0, string.length - 1)
@@ -182,7 +182,7 @@ export const getIngForm = (string) => {
   );
 };
 
-export const getEdForm = (string) => {
+export const getEdForm = string => {
   return (
     (string[string.length - 1] === 'e'
       ? string.slice(0, string.length - 1)
@@ -190,11 +190,11 @@ export const getEdForm = (string) => {
   );
 };
 
-export const escapeRegExp = (string) => {
+export const escapeRegExp = string => {
   return string.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
 };
 
-export const getTableName = (t) => {
+export const getTableName = t => {
   const typ = typeof t;
   if (typ === 'string') {
     return t;
@@ -204,7 +204,7 @@ export const getTableName = (t) => {
   return '';
 };
 
-export const fetchTrackedTableListQuery = (options) => {
+export const fetchTrackedTableListQuery = options => {
   const query = {
     type: 'select',
     args: {
@@ -263,14 +263,14 @@ export const fetchTrackedTableListQuery = (options) => {
     };
   }
   if (options.schemas) {
-    options.schemas.forEach((schemaName) => {
+    options.schemas.forEach(schemaName => {
       query.where.$or.push({
         table_schema: schemaName,
       });
     });
   }
   if (options.tables) {
-    options.tables.forEach((tableInfo) => {
+    options.tables.forEach(tableInfo => {
       query.where.$or.push({
         table_schema: tableInfo.table_schema,
         table_name: tableInfo.table_name,
@@ -291,12 +291,12 @@ const generateWhereClause = (
 
   const whereCondtions = [];
   if (options.schemas) {
-    options.schemas.forEach((schemaName) => {
+    options.schemas.forEach(schemaName => {
       whereCondtions.push(`(${sqlSchemaName}='${schemaName}')`);
     });
   }
   if (options.tables) {
-    options.tables.forEach((tableInfo) => {
+    options.tables.forEach(tableInfo => {
       whereCondtions.push(
         `(${sqlSchemaName}='${tableInfo.table_schema}' and ${sqlTableName}='${tableInfo.table_name}')`
       );
@@ -317,7 +317,7 @@ const generateWhereClause = (
   return whereClause;
 };
 
-export const fetchTrackedTableFkQuery = (options) => {
+export const fetchTrackedTableFkQuery = options => {
   const whereQuery = generateWhereClause(options);
 
   const runSql = `select
@@ -348,7 +348,7 @@ FROM
   );
 };
 
-export const fetchTrackedTableReferencedFkQuery = (options) => {
+export const fetchTrackedTableReferencedFkQuery = options => {
   const whereQuery = generateWhereClause(options);
 
   const runSql = `select
@@ -382,7 +382,7 @@ FROM
   );
 };
 
-export const fetchTableListQuery = (options) => {
+export const fetchTableListQuery = options => {
   const whereQuery = generateWhereClause(
     options,
     'pgc.relname',
@@ -530,12 +530,12 @@ export const mergeLoadSchemaData = (
 ) => {
   const _mergedTableData = [];
 
-  infoSchemaTableData.forEach((infoSchemaTableInfo) => {
+  infoSchemaTableData.forEach(infoSchemaTableInfo => {
     const _tableSchema = infoSchemaTableInfo.table_schema;
     const _tableName = infoSchemaTableInfo.table_name;
 
     const trackedTableInfo = hdbTableData.find(
-      (t) => t.table_schema === _tableSchema && t.table_name === _tableName
+      t => t.table_schema === _tableSchema && t.table_name === _tableName
     );
 
     const _isTableTracked = trackedTableInfo ? true : false;
@@ -568,11 +568,11 @@ export const mergeLoadSchemaData = (
       _computed_fields = trackedTableInfo.computed_fields;
 
       _fkConstraints = fkData.filter(
-        (fk) => fk.table_schema === _tableSchema && fk.table_name === _tableName
+        fk => fk.table_schema === _tableSchema && fk.table_name === _tableName
       );
 
       _refFkConstraints = refFkData.filter(
-        (fk) =>
+        fk =>
           fk.ref_table_table_schema === _tableSchema &&
           fk.ref_table === _tableName
       );
@@ -721,7 +721,7 @@ ORDER BY t.typname ASC;
 
 const postgresFunctionTester = /.*\(\)$/gm;
 
-export const isPostgresFunction = (str) =>
+export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
 
 export const getEstimateCountQuery = (schemaName, tableName) => {
@@ -736,5 +736,5 @@ WHERE
 `;
 };
 
-export const isColTypeString = (colType) =>
+export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
