@@ -369,20 +369,6 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
   where
     logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
 
-    -- saveLockedCronEvents :: [CronEventPartial] -> IO ()
-    -- saveLockedCronEvents partialCronEvents =
-    --   atomically $ do
-    --     lockedEvents <- readTVar lockedCronEvents
-    --     let ids = map cepId partialCronEvents
-    --     writeTVar lockedCronEvents $!
-    --       Set.union lockedEvents $ Set.fromList ids
-
-    -- removeEventFromLockedEvents :: CronEventId -> IO ()
-    -- removeEventFromLockedEvents eventId =
-    --   atomically $ do
-    --     lockedEvents <- readTVar lockedCronEvents
-    --     writeTVar lockedCronEvents $! Set.delete eventId lockedEvents
-
 processStandAloneEvents
   :: HasVersion
   => L.Logger L.Hasura
