@@ -7,7 +7,6 @@ module Hasura.GraphQL.Schema.Remote
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.RQL.DML.Select.Types
 
 import           Language.GraphQL.Draft.Syntax       as G
 import qualified Data.List.NonEmpty                  as NE
@@ -15,9 +14,6 @@ import           Data.Type.Equality
 
 import           Hasura.GraphQL.Parser               as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
-
-
--- HashMap RemoteSchemaName
 
 buildRemoteParser
   :: forall m n
@@ -87,7 +83,7 @@ remoteField' schemaDoc (G.FieldDefinition _ name argsDefinition gType _) =
             remoteFld <- remoteFieldFromName schemaDoc name fieldTypeName argsDefinition
             pure . P.nullableField $ remoteFld
           G.TypeList (Nullability True) gType'' ->
-            pure .addNullableList =<< convertType gType''
+            pure . addNullableList =<< convertType gType''
           G.TypeNamed (Nullability False) fieldTypeName -> do
             remoteFld <- remoteFieldFromName schemaDoc name fieldTypeName argsDefinition
             pure . P.nonNullableField $ remoteFld
@@ -264,8 +260,8 @@ argumentsParser
   => G.ArgumentsDefinition
   -> G.SchemaDocument
   -> m (InputFieldsParser n ())
-argumentsParser args schemaDoc = do
-  pure () <$ mapM (inputValueDefinitionParser schemaDoc) args
+argumentsParser args schemaDoc =
+  ($> ()) <$> sequenceA <$> traverse (inputValueDefinitionParser schemaDoc) args
 
 -- | 'remoteField' accepts a 'G.TypeDefinition' and will returns a 'FieldParser' for it.
 --   Note that the 'G.TypeDefinition' should be of the GraphQL 'Output' kind, when an
@@ -311,7 +307,7 @@ remoteFieldScalarParser name =
     -- TODO IDs are allowed to be numbers, I think. But not floats. See
     -- http://spec.graphql.org/draft/#sec-ID
     "ID" -> pure $ P.string $> ()
-    name' -> pure $ P.unsafeRawScalar name Nothing $> () -- TODO pass correct description
+    _ -> pure $ P.unsafeRawScalar name Nothing $> () -- TODO pass correct description
 
 remoteFieldEnumParser
   :: MonadParse n
