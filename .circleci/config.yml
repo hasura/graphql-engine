@@ -375,9 +375,12 @@ jobs:
 
   # test and build cli
   test_and_build_cli:
-    machine:
-      image: ubuntu-1604:201903-01
-      docker_layer_caching: true 
+    docker:
+    - image: hasura/graphql-engine-cli-builder:20191205
+    - image: circleci/postgres:10-alpine
+      environment:
+        POSTGRES_USER: gql_test
+        POSTGRES_DB: gql_test
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
