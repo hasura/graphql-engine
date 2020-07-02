@@ -1,5 +1,5 @@
 import React from 'react';
-import { parse as sdlParse } from 'graphql/language/parser';
+import { parse as sdlParser } from 'graphql/language/parser';
 import styles from './Styles.scss';
 import Tooltip from './Tooltip';
 import CrossIcon from '../../../../Common/Icons/Cross';
@@ -9,25 +9,27 @@ import { Nullable } from '../../../../Common/utils/tsUtils';
 type GraphQLEditorProps = {
     value: string;
     onChange: (value: Nullable<Record<string, any>>, error: Nullable<Error>, timer: Nullable<() => void>, ast: Nullable<Record<string, any>>) => void;
-    className: string;
+    className?: string;
     placeholder: string;
     error: Error;
     timer: number;
     readOnlyMode: boolean;
     label: string;
     tooltip: string;
+    height?: string;
 };
 
 const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
     value,
     onChange,
     className,
-    placeholder,
+    placeholder = "",
     error,
     timer,
     readOnlyMode,
     label,
-    tooltip
+    tooltip,
+    height,
 }) => {
     const onChangeWithError = (value: any) => {
         if (timer) {
@@ -39,7 +41,7 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
                 let error = null;
                 let ast = null;
                 try {
-                    ast = sdlParse(value);
+                    ast = sdlParser(value);
                 } catch (err) {
                     error = err;
                 }
@@ -81,7 +83,7 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
                     value={value}
                     onChange={onChangeWithError}
                     placeholder={placeholder}
-                    height="200px"
+                    height={height || "200px"}
                     mode="graphqlschema"
                     width="600px"
                     readOnly={readOnlyMode}
@@ -89,6 +91,16 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
             </div>
         </div>
     );
+};
+
+export const actionDefinitionInfo = {
+    label: "Action definition",
+    tooltip: "Define the action as a query or a mutation using GraphQL SDL. You can use the custom types already defined by you or define new types in the new types definition editor below."
+};
+
+export const typeDefinitionInfo = {
+    label: "New types definition",
+    tooltip: "You can define new GraphQL types that you can use in the action definition above",
 };
 
 export default GraphQLEditor;
