@@ -416,6 +416,10 @@ jobs:
         root: /build
         paths:
           - _cli_output
+    - run:
+        name: e2e tests
+        working_directory: cli
+        command: make test-e2e-ci
   
   test_and_build_cli_migrations:
     docker:

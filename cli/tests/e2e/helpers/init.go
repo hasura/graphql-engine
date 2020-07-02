@@ -2,7 +2,9 @@ package helpers
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 )
 
 const E2eTestEnvPrefix = "HASURA_CLI_E2E_TESTS"
@@ -18,8 +20,14 @@ var (
 )
 
 func init() {
+	var err error
 	// get value from env vars if set
 	hgeBinaryPath = os.Getenv(HGEBinaryPathENVVar)
-	hgeServerDirectoryPath = os.Getenv(HGEServerPathENVVar)
+	if v := os.Getenv(HGEServerPathENVVar); v != "" {
+		hgeServerDirectoryPath, err = filepath.Abs(v)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 	cliBinaryPath = os.Getenv(CLIBinaryPathEnvVar)
 }

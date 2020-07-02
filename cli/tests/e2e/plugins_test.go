@@ -85,7 +85,7 @@ var _ = Describe("plugins command", func() {
 
 			// make sure the binary was also removed
 			homeDir, err := homedir.Dir()
-			Expect(err).To(BeNil())
+			Expect(err).ShouldNot(HaveOccurred())
 			Expect(filepath.Join(homeDir, ".hasura/bin/cli-ext-hasura-linux")).ShouldNot(BeAnExistingFile())
 		})
 	})

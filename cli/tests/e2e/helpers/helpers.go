@@ -33,8 +33,8 @@ type CmdOpts struct {
 }
 
 func Hasura(opts CmdOpts) *Session {
-	var hasuraBinaryPath string
-	if cliBinaryPath == "" {
+	var hasuraBinaryPath = cliBinaryPath
+	if hasuraBinaryPath == "" {
 		hasuraBinaryPath = "hasura"
 	}
 	cmd := exec.Command(hasuraBinaryPath, opts.Args...)
@@ -87,7 +87,7 @@ func CloseWithLogOnErr(closer io.Closer) {
 
 func RemoveHasuraConfigHomeDirectory() {
 	homeDir, err := homedir.Dir()
-	Expect(err).To(BeNil())
+	Expect(err).ShouldNot(HaveOccurred())
 	err = os.RemoveAll(filepath.Join(homeDir, ".hasura"))
 	Expect(err).ShouldNot(HaveOccurred())
 }
