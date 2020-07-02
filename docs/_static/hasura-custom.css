@@ -236,9 +236,6 @@ p {
 }
 
 #docs-content a.reference {
-  /*color: #1CD3C6 !important;*/
-  /*color: #1CD3C6 !important;*/
-  /* color: #FF3264 !important; */
   color: #DB0037 !important;
   background-color: transparent !important;
 }
@@ -377,80 +374,34 @@ article ol ol {
 /*** Header ***/
 
 #docs-header-actions {
+  display: flex;
+  align-items: center;
   margin-top: 30px;
 }
 
-#docs-header-actions .header_links {
-  min-width: 33%;
-  text-align: right;
+.editGitHubBtnWrap {
+ margin-left: auto;
 }
 
-#docs-header-actions .header_links.inline-block .header_links_content {
-  float: left;
-}
-
-#docs-header-actions .header_links.inline-block .buttons {
-  float: right;
-}
-
-#docs-header-actions .social_icons_wrapper {
-  padding-left: 10px;
-  display: flex;
-  align-items: center;
-}
-
-#docs-header-actions .social_icons_wrapper .social_icons {
-  display: inline-block;
-  padding: 10px 5px;
-  opacity: 0.7;
-  vertical-align: middle;
-  display: flex;
-  align-items: center;
-}
-
-#docs-header-actions .social_icons_wrapper .social_icons:hover {
-  opacity: 1;
-}
-
-#docs-header-actions .social_icons_wrapper .social_icons img {
-  box-shadow: none !important;
-  -webkit-box-shadow: none !important;
-  -moz-box-shadow: none !important;
-  width: 30px;
-  display: inline-block;
-}
-
-#docs-header-actions .social_icons_wrapper .social_icons a {
-  text-decoration: none;
-  color: #DB0037;
-  display: contents;
-}
-
-#docs-header-actions .social_icons_wrapper .social_icons iframe {
-  height: 20px;
-}
-
-#docs-header-actions .tooltip {
-  position: relative;
-}
-
-#docs-header-actions .tooltip .tooltip_text {
-  visibility: hidden;
-  width: 272px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 2px;
-  position: absolute;
-  z-index: 1;
-  right: 0;
-  top: 36px;
+.editGitHubBtn,
+.editGitHubBtn:hover
+.editGitHubBtn:visited {
   font-size: 14px;
+  padding: 4px 6px;
+  color: #333 !important; /* override django-site.css */
+  border-radius: 4px;
+  border: solid 1px #d1d2d3;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
 }
-
-#docs-header-actions .tooltip:hover .tooltip_text {
-  visibility: visible;
+.editGitHubBtn:hover {
+  background-color: rgb(245,247,249);
+}
+.editGitHubBtn img {
+  width: 16px;
+  margin-right: 4px;
 }
 
 /*** Header END ***/
@@ -1012,13 +963,6 @@ article ol ol {
     margin-left: 0;
     margin-right: 0;
   }
-  #docs-header-actions {
-    display: flex;
-    align-items: center;
-  }
-  #docs-header-actions {
-    margin-top: 20px;
-  }
 
   #input_search_box {
     flex: 1;
@@ -1079,15 +1023,6 @@ article ol ol {
     left: -34px !important;
     max-width: calc(111% + 10px);
     min-width: calc(111% + 10px);  /* 1 / width(input_search_box) + 10px */
-  }
-
-  #docs-header-actions .header_links {
-    width: 100%;
-    margin-top: 10px;
-  }
-
-  #docs-header-actions .header_links.inline-block .buttons {
-    float: none !important;
   }
 
   .api-tabs .ui.tab {
