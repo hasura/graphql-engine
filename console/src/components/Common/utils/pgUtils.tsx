@@ -78,7 +78,12 @@ export const makeBaseTable = (
 export interface Table extends BaseTable {
   table_name: string;
   table_schema: string;
-  table_type: string;
+  table_type:
+    | 'TABLE'
+    | 'VIEW'
+    | 'MATERIALIZED VIEW'
+    | 'FOREIGN TABLE'
+    | 'PARTITIONED TABLE';
   is_table_tracked: boolean;
   columns: TableColumn[];
   relationships: TableRelationship[];
@@ -178,7 +183,11 @@ export const getTableNameWithSchema = (
 };
 
 export const checkIfTable = (table: Table) => {
-  return table.table_type === 'TABLE';
+  return (
+    table.table_type === 'TABLE' ||
+    table.table_type === 'PARTITIONED TABLE' ||
+    table.table_type === 'FOREIGN TABLE'
+  );
 };
 
 export const displayTableName = (table: Table) => {
