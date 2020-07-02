@@ -7,6 +7,7 @@ OUTPUT_DIR := _output
 
 HAS_GOX := $(shell command -v gox;)
 HAS_PKGER := $(shell command -v pkger;)
+HAS_GINKGO := $(shell command -v ginkgo;)
 
 # compile assets
 .PHONY: assets
@@ -54,6 +55,10 @@ test:
 	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v2 ./tests/integration
 
 test-e2e-ci:
+ifndef HAS_GOX
+	go get github.com/onsi/ginkgo/ginkgo
+	go get github.com/onsi/gomega/...
+endif
 	HASURA_CLI_E2E_TESTS_HGE_BINARY_PATH="/build/_server_output/graphql-engine" HASURA_CLI_E2E_TESTS_CLI_BINARY_PATH="/build/_cli_output/binaries/cli-linux-linux-amd64" ginkgo tests/e2e
 
 
