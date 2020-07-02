@@ -112,7 +112,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   // handle simple options
   if (isArray(options) && !isObject((options as unknown[])[0])) {
-    options = options.map(op => {
+    options = options.map((op: string) => {
       return { value: op, label: op };
     });
   }
@@ -140,7 +140,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
       onFocus={onFocus}
       onBlur={onMenuClose}
       inputValue={inputValue}
-      onInputChange={s => setSearchValue(s)}
+      onInputChange={(s: string) => setSearchValue(s)}
       styles={customStyles}
       filterOption={searchValue ? customFilter : null}
       className="search-select"
