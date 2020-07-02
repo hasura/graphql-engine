@@ -24,7 +24,7 @@ deps:
 ifndef HAS_GOX
 	go get github.com/mitchellh/gox
 endif
-ifndef HAS_GOX
+ifndef HAS_GINKGO
 	go get github.com/onsi/ginkgo/ginkgo
 	go get github.com/onsi/gomega/...
 endif
