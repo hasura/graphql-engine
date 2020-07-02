@@ -30,14 +30,47 @@ common common-all
 
   default-language: Haskell2010
   default-extensions:
-    ApplicativeDo BangPatterns BlockArguments ConstraintKinds DataKinds DefaultSignatures
-    DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveLift DeriveTraversable
-    DerivingVia EmptyCase ExistentialQuantification FlexibleContexts FlexibleInstances
-    FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs LambdaCase
-    MultiParamTypeClasses MultiWayIf NamedFieldPuns NoImplicitPrelude OverloadedStrings
-    QuantifiedConstraints QuasiQuotes RankNTypes RoleAnnotations ScopedTypeVariables
-    StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies
-    TypeFamilyDependencies TypeOperators
+    ApplicativeDo
+    BangPatterns
+    BlockArguments
+    ConstraintKinds
+    DataKinds
+    DefaultSignatures
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    DerivingVia
+    EmptyCase
+    ExistentialQuantification
+    FlexibleContexts
+    FlexibleInstances
+    FunctionalDependencies
+    GADTs
+    GeneralizedNewtypeDeriving
+    InstanceSigs
+    LambdaCase
+    MultiParamTypeClasses
+    MultiWayIf
+    NamedFieldPuns
+    NoImplicitPrelude
+    OverloadedStrings
+    QuantifiedConstraints
+    QuasiQuotes
+    RankNTypes
+    RecordWildCards
+    RoleAnnotations
+    ScopedTypeVariables
+    StandaloneDeriving
+    TemplateHaskell
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeFamilyDependencies
+    TypeOperators
+
 
 common common-exe
   ghc-options:
