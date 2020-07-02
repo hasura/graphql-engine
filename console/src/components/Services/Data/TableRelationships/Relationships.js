@@ -70,7 +70,7 @@ const addRelationshipCellView = (
   };
   return (
     <td>
-      <div>
+      <div className={styles.textNoNewLine}>
         {selectedRelationship === rel ? null : (
           <Button
             size="xs"

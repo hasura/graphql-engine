@@ -17,3 +17,6 @@ declare module '*.svg' {
   const content: string;
   export default content;
 }
+
+declare module 'graphiql-code-exporter/lib/snippets';
+declare module 'graphiql-code-exporter';
