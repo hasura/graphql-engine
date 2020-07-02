@@ -1,9 +1,9 @@
 -- | Types and Functions for resolving remote join fields
 module Hasura.RQL.DML.RemoteJoin
-  ( --executeQueryWithRemoteJoins
-   getRemoteJoins
---  , getRemoteJoinsAggregateSelect
---  , getRemoteJoinsMutationOutput
+  ( executeQueryWithRemoteJoins
+  , getRemoteJoins
+  , getRemoteJoinsAggregateSelect
+  , getRemoteJoinsMutationOutput
 --  , getRemoteJoinsConnectionSelect
   , RemoteJoins
   ) where
@@ -49,29 +49,28 @@ import qualified Data.ByteString.Lazy                   as BL
 import qualified Network.Wreq                           as Wreq
 
 -- | Executes given query and fetch response JSON from Postgres. Substitutes remote relationship fields.
-
--- executeQueryWithRemoteJoins
---   :: (HasVersion, MonadTx m, MonadIO m)
---   => HTTP.Manager
---   -> [N.Header]
---   -> UserInfo
---   -> Q.Query
---   -> [Q.PrepArg]
---   -> RemoteJoins
---   -> m EncJSON
--- executeQueryWithRemoteJoins manager reqHdrs userInfo q prepArgs rjs = do
---   -- Step 1: Perform the query on database and fetch the response
---   pgRes <- runIdentity . Q.getRow <$> liftTx (Q.rawQE dmlTxErrorHandler q prepArgs True)
---   jsonRes <- either (throw500 . T.pack) pure $ AO.eitherDecode pgRes
---   -- Step 2: Traverse through the JSON obtained in above step and generate composite JSON value with remote joins
---   compositeJson <- traverseQueryResponseJSON rjMap jsonRes
---   let remoteJoins = collectRemoteFields compositeJson
---   -- Step 3: Make queries to remote server and fetch graphql response
---   remoteServerResp <- fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins
---   -- Step 4: Replace remote fields in composite json with remote join values
---   AO.toEncJSON <$> replaceRemoteFields compositeJson remoteServerResp
---   where
---     rjMap = Map.fromList $ toList rjs
+executeQueryWithRemoteJoins
+  :: (HasVersion, MonadTx m, MonadIO m)
+  => HTTP.Manager
+  -> [N.Header]
+  -> UserInfo
+  -> Q.Query
+  -> [Q.PrepArg]
+  -> RemoteJoins
+  -> m EncJSON
+executeQueryWithRemoteJoins manager reqHdrs userInfo q prepArgs rjs = do
+  -- Step 1: Perform the query on database and fetch the response
+  pgRes <- runIdentity . Q.getRow <$> liftTx (Q.rawQE dmlTxErrorHandler q prepArgs True)
+  jsonRes <- either (throw500 . T.pack) pure $ AO.eitherDecode pgRes
+  -- Step 2: Traverse through the JSON obtained in above step and generate composite JSON value with remote joins
+  compositeJson <- traverseQueryResponseJSON rjMap jsonRes
+  let remoteJoins = collectRemoteFields compositeJson
+  -- Step 3: Make queries to remote server and fetch graphql response
+  remoteServerResp <- fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins
+  -- Step 4: Replace remote fields in composite json with remote join values
+  AO.toEncJSON <$> replaceRemoteFields compositeJson remoteServerResp
+  where
+    rjMap = Map.fromList $ toList rjs
 
 -- | Path to the remote join field in query response JSON from Postgres.
 newtype FieldPath = FieldPath {unFieldPath :: [FieldName]}
