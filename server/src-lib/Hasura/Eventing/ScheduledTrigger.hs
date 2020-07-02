@@ -224,17 +224,17 @@ data ScheduledEventType =
   -- so all the configuration is fetched along the scheduled events.
     deriving (Eq, Show)
 
-data ScheduledEventWebhookBody
-  = ScheduledEventWebhookBody
-  { sewbId            :: !Text
-  , sewbName          :: !(Maybe TriggerName)
-  , sewbScheduledTime :: !UTCTime
-  , sewbPayload       :: !J.Value
-  , sewbComment       :: !(Maybe Text)
-  , sewbCreatedAt     :: !UTCTime
+data ScheduledEventWebhookPayload
+  = ScheduledEventWebhookPayload
+  { sewpId            :: !Text
+  , sewpName          :: !(Maybe TriggerName)
+  , sewpScheduledTime :: !UTCTime
+  , sewpPayload       :: !J.Value
+  , sewpComment       :: !(Maybe Text)
+  , sewpCreatedAt     :: !UTCTime
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventWebhookBody)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
 
 -- | runCronEventsGenerator makes sure that all the cron triggers
 --   have an adequate buffer of cron events.
@@ -481,9 +481,9 @@ processScheduledEvent
           httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
           headers = addDefaultHeaders $ map encodeHeader sefHeaders
           extraLogCtx = ExtraLogContext (Just currentTime) sefId
-          webhookReqBody =
-            ScheduledEventWebhookBody sefId sefName sefScheduledTime sefPayload sefComment currentTime
-          webhookReqBodyJson = J.toJSON webhookReqBody
+          webhookReqPayload =
+            ScheduledEventWebhookPayload sefId sefName sefScheduledTime sefPayload sefComment currentTime
+          webhookReqBodyJson = J.toJSON webhookReqPayload
       res <- runExceptT $ tryWebhook headers httpTimeout webhookReqBodyJson (T.unpack sefWebhook)
       logHTTPForST res extraLogCtx
       let decodedHeaders = map (decodeHeader logEnv sefHeaders) headers
