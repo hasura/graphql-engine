@@ -8,7 +8,7 @@ import { Nullable } from '../../../../Common/utils/tsUtils';
 
 type GraphQLEditorProps = {
     value: string;
-    onChange: (value: any, error: Nullable<Error>, timer: Nullable<() => void>, ast: any) => void;
+    onChange: (value: Nullable<Record<string, any>>, error: Nullable<Error>, timer: Nullable<() => void>, ast: Nullable<Record<string, any>>) => void;
     className: string;
     placeholder: string;
     error: Error;
@@ -29,24 +29,24 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
     label,
     tooltip
 }) => {
-    const onChangeWithError = (v: any) => {
+    const onChangeWithError = (value: any) => {
         if (timer) {
             clearTimeout(timer);
         }
 
         const parseDebounceTimer = () => {
             setTimeout(() => {
-                let _e = null;
+                let error = null;
                 let ast = null;
                 try {
-                    ast = sdlParse(v);
-                } catch (e) {
-                    _e = e;
+                    ast = sdlParse(value);
+                } catch (err) {
+                    error = err;
                 }
-                onChange(null, _e, null, ast);
+                onChange(null, error, null, ast);
             }, 1000);
 
-            onChange(v, null, parseDebounceTimer, null);
+            onChange(value, null, parseDebounceTimer, null);
         };
     };
 
