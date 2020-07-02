@@ -403,6 +403,10 @@ instance MonadQueryLog AppM where
 instance WS.MonadWSLog AppM where
   logWSLog = unLogger
 
+instance MonadConfigApiHandler AppM where
+  runConfigApiHandler = configApiGetHandler
+
+
 mkConsoleHTML :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
   renderHtmlTemplate consoleTmplt $

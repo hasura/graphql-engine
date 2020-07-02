@@ -445,6 +445,18 @@ legacyQueryHandler tn queryType req =
   where
     qt = QualifiedObject publicSchema tn
 
+-- | Default implementation of the 'MonadConfigApiHandler'
+configApiGetHandler
+  :: (HasVersion, MonadIO m, UserAuthentication m, HttpLog m)
+  => ServerCtx -> Maybe Text -> Spock.SpockCtxT () m ()
+configApiGetHandler serverCtx@ServerCtx{..} consoleAssetsDir =
+  Spock.get "v1alpha1/config" $ mkSpockAction serverCtx encodeQErr id $
+    mkGetHandler $ do
+      onlyAdmin
+      let res = runGetConfig scAuthMode scEnableAllowlist
+                (EL._lqsOptions $ scLQState) consoleAssetsDir
+      return $ JSONResp $ HttpResponse (encJFromJValue res) []
+
 initErrExit :: QErr -> IO a
 initErrExit e = do
   putStrLn $
