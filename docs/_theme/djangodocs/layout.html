@@ -230,6 +230,9 @@
                 -->
                 <div id="docs-header-actions">
                   <div class="inline-block" id="input_search_box">
+                    <a id="search_help" class="hide" onClick="if (Intercom) Intercom('show');" href="javascript:undefined">
+                      Can't find what you're looking for?
+                    </a>
                     <span class="fa fa-search search_icon"></span>
                     <input type="text" id="search_element" placeholder="Search docs..." />
                   </div>
@@ -485,6 +488,15 @@
               suggestion.url = suggestion.url.replace('https://hasura.io\/docs', window.location.origin);
             }
           });
+        }
+
+        if (suggestions.length === 0) {
+          setTimeout(function() {$('#search_help').removeClass('hide');}, 100);
+          $('#search_element').blur(function () {
+            setTimeout(function() {$('#search_help').addClass('hide');}, 100);
+          });
+        } else if (!$('#search_help').hasClass('hide')) {
+          $('#search_help').addClass('hide');
         }
 
         return suggestions;

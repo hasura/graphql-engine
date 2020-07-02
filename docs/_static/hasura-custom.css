@@ -395,6 +395,8 @@ article ol ol {
   display: flex;
   align-items: center;
   text-decoration: none;
+  white-space: nowrap;
+  margin-left: 8px;
 }
 .editGitHubBtn:hover {
   background-color: rgb(245,247,249);
@@ -491,6 +493,19 @@ article ol ol {
 
 #input_search_box input:-moz-placeholder { /* Firefox 18- */
   color:#ccc;
+}
+
+#search_help {
+  position: absolute;
+  top: 100px;
+  z-index: 1000;
+}
+
+@media (max-width: 768px) {
+  #search_help {
+    top: -20px;
+    left: 10px;
+  }
 }
 
 /*** Search box END ***/
