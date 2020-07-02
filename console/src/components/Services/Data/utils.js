@@ -509,7 +509,6 @@ FROM (
     AND isv.table_name   = pgc.relname
 
   WHERE
-    pgc.relkind IN ('r', 'v', 'm')
     pgc.relkind IN ('r', 'v', 'f', 'm', 'p')
     ${whereQuery}
   GROUP BY pgc.oid, pgn.nspname, pgc.relname, table_type, isv.*
