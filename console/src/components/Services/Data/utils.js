@@ -402,6 +402,7 @@ FROM (
       when pgc.relkind = 'r' then 'TABLE'
       when pgc.relkind = 'v' then 'VIEW'
       when pgc.relkind = 'm' then 'MATERIALIZED VIEW'
+      when pgc.relkind = 'p' then 'PARTITIONED TABLE'
     end as table_type,
     obj_description(pgc.oid) AS comment,
     COALESCE(json_agg(DISTINCT row_to_json(isc) :: jsonb || jsonb_build_object('comment', col_description(pga.attrelid, pga.attnum))) filter (WHERE isc.column_name IS NOT NULL), '[]' :: json) AS columns,
@@ -448,7 +449,7 @@ FROM (
       coalesce(bt.typname, t.typname) AS udt_name,
       a.attnum AS dtd_identifier,
       CASE WHEN c.relkind = 'r' OR
-                     (c.relkind IN ('v', 'f') AND
+                     (c.relkind IN ('v', 'f', 'p') AND
                       pg_column_is_updatable(c.oid, a.attnum, false))
            THEN 'YES' ELSE 'NO' END AS is_updatable
     FROM (pg_attribute a LEFT JOIN pg_attrdef ad ON attrelid = adrelid AND attnum = adnum)
@@ -459,7 +460,7 @@ FROM (
       LEFT JOIN (pg_collation co JOIN pg_namespace nco ON (co.collnamespace = nco.oid))
         ON a.attcollation = co.oid AND (nco.nspname, co.collname) <> ('pg_catalog', 'default')
     WHERE (NOT pg_is_other_temp_schema(nc.oid))
-      AND a.attnum > 0 AND NOT a.attisdropped AND c.relkind in ('r', 'v', 'm')
+      AND a.attnum > 0 AND NOT a.attisdropped AND c.relkind in ('r', 'v', 'm', 'f', 'p')
       AND (pg_has_role(c.relowner, 'USAGE')
            OR has_column_privilege(c.oid, a.attnum,
                                    'SELECT, INSERT, UPDATE, REFERENCES'))
@@ -508,7 +509,7 @@ FROM (
     AND isv.table_name   = pgc.relname
 
   WHERE
-    pgc.relkind IN ('r', 'v', 'm')
+    pgc.relkind IN ('r', 'v', 'f', 'm', 'p')
     ${whereQuery}
   GROUP BY pgc.oid, pgn.nspname, pgc.relname, table_type, isv.*
 ) AS info;
