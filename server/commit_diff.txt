@@ -123,12 +123,6 @@ Date:   Thu Jul 2 10:55:46 2020 -0400
 
     Fix buggy parsing of new --conn-lifetime flag in 2b0e3774
 
-commit 97b1155bf83bbed223c763c681b88abfac5521e0
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Thu Jul 2 17:27:09 2020 +0530
-
-    server: unlock scheduled events on graceful shutdown (#4928)
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
