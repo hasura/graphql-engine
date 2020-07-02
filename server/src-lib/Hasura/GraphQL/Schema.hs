@@ -46,7 +46,7 @@ buildGQLContext
   -> ActionCache
   -> NonObjectTypeMap
   -> m (HashMap RoleName GQLContext)
-buildGQLContext queryType allTables allFunctions allRemoteSchemata allActions nonObjectCustomTypes =
+buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions nonObjectCustomTypes =
   S.toMap allRoles & Map.traverseWithKey \roleName () ->
     buildContextForRole roleName
   where
@@ -64,7 +64,7 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemata allActions no
          ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
          , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
          , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]))
-    allRemoteParsers = P.runSchemaT $ traverse (buildRemoteParser . fst) allRemoteSchemata
+    allRemoteParsers = P.runSchemaT $ traverse (buildRemoteParser . fst) allRemoteSchemas
 
     buildContextForRole roleName = do
       SQLGenCtx{ stringifyNum } <- askSQLGenCtx
@@ -255,7 +255,7 @@ queryWithIntrospection allTables allFunctions allRemotes allActions nonObjectCus
         , sTypes = allTypes
         , sQueryType = P.parserType basicQueryP
         , sMutationType = Just $ P.parserType mutationP
-        -- TODO make sure NOT to expose remote schemas via subscription introspection (when remote schemata are implemented)
+        -- TODO make sure NOT to expose remote schemas via subscription introspection (when remote schemas are implemented)
         , sSubscriptionType = Just $ P.parserType subscriptionP
         , sDirectives = []
         }
@@ -294,7 +294,7 @@ relayWithIntrospection allTables = do
         , sTypes = allTypes
         , sQueryType = P.parserType basicQueryP
         , sMutationType = Just $ P.parserType mutationP
-        -- TODO make sure NOT to expose remote schemas via subscription introspection (when remote schemata are implemented)
+        -- TODO make sure NOT to expose remote schemas via subscription introspection (when remote schemas are implemented)
         , sSubscriptionType = Nothing
         , sDirectives = []
         }

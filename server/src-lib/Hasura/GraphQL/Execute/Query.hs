@@ -239,8 +239,8 @@ convertQuerySelSet gqlContext userInfo manager reqHeaders fields varDefs varVals
             varValsM
       if all (\remote' -> fst (snd firstRemote) == fst (snd remote')) remotes
         then return $ ExecStepRemote (fst (snd firstRemote), remoteOperation, varValsM)
-        else throw400 NotSupported "Mixed remote schemata are not supported"
-    _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemata not supported"
+        else throw400 NotSupported "Mixed remote schemas are not supported"
+    _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemas not supported"
   pure (executionPlan, Nothing, unpreparedQueries) -- FIXME ReusableQueryPlan
   where
     usrVars = _uiSession userInfo

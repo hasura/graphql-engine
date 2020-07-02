@@ -175,11 +175,11 @@ getExecPlanPartial userInfo sc enableAL queryType req = do
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan
   = QueryExecutionPlan (EPr.ExecutionPlan (LazyRespTx, EQ.GeneratedSqlMap) EPr.RemoteCall (G.Name, J.Value))
-  -- ^ query execution; remote schemata and introspection possible (TODO implement remote)
+  -- ^ query execution; remote schemas and introspection possible (TODO implement remote)
   | MutationExecutionPlan (EPr.ExecutionPlan (LazyRespTx, HTTP.ResponseHeaders) EPr.RemoteCall (G.Name, J.Value))
   -- ^ mutation execution; only __typename introspection supported (TODO implement remote)
   | SubscriptionExecutionPlan (EPr.ExecutionPlan EL.LiveQueryPlan Void Void)
-  -- ^ live query execution; remote schemata and introspection not supported
+  -- ^ live query execution; remote schemas and introspection not supported
 
 -- An execution operation, in case of
 -- queries and mutations it is just a transaction
