@@ -379,13 +379,13 @@ article ol ol {
   margin-top: 30px;
 }
 
-.editGitHubBtnWrap {
+.edit-github-btn-wrap {
  margin-left: auto;
 }
 
-.editGitHubBtn,
-.editGitHubBtn:hover
-.editGitHubBtn:visited {
+.edit-github-btn,
+.edit-github-btn:hover
+.edit-github-btn:visited {
   font-size: 14px;
   padding: 4px 6px;
   color: #333 !important; /* override django-site.css */
@@ -398,10 +398,10 @@ article ol ol {
   white-space: nowrap;
   margin-left: 8px;
 }
-.editGitHubBtn:hover {
+.edit-github-btn:hover {
   background-color: rgb(245,247,249);
 }
-.editGitHubBtn img {
+.edit-github-btn img {
   width: 16px;
   margin-right: 4px;
 }
