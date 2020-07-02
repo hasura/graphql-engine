@@ -249,7 +249,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
              case typeDef of
                G.TypeDefinitionScalar (G.ScalarTypeDefinition _ name' _) ->
                  fieldConstructor' <$> remoteFieldScalarParser name'
-               G.TypeDefinitionEnum defn -> pure $ fieldConstructor' $ remoteFieldEnumParser typeName defn
+               G.TypeDefinitionEnum defn -> pure $ fieldConstructor' $ remoteFieldEnumParser defn
                G.TypeDefinitionObject _ -> throw500 $ "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
                G.TypeDefinitionInputObject defn ->
                  pure . fieldConstructor' =<< remoteSchemaInputObject schemaDoc defn
@@ -288,7 +288,7 @@ remoteField sdoc fieldName argsDefn typeDefn = do
     G.TypeDefinitionScalar (G.ScalarTypeDefinition desc name' _) ->
       P.selection fieldName desc argsParser <$> remoteFieldScalarParser name'
     G.TypeDefinitionEnum enumTypeDefn@(G.EnumTypeDefinition desc _ _ _) ->
-      pure $ P.selection fieldName desc argsParser $ remoteFieldEnumParser fieldName enumTypeDefn
+      pure $ P.selection fieldName desc argsParser $ remoteFieldEnumParser enumTypeDefn
     G.TypeDefinitionInterface ifaceTypeDefn -> do
       remoteSchemaObj <- remoteSchemaInterface sdoc ifaceTypeDefn
       pure $ () <$ P.subselection fieldName (G._itdDescription ifaceTypeDefn) argsParser remoteSchemaObj
@@ -315,10 +315,9 @@ remoteFieldScalarParser name =
 
 remoteFieldEnumParser
   :: MonadParse n
-  => G.Name
-  -> G.EnumTypeDefinition
+  => G.EnumTypeDefinition
   -> Parser 'Both n ()
-remoteFieldEnumParser name (G.EnumTypeDefinition desc _ _ valueDefns) =
+remoteFieldEnumParser (G.EnumTypeDefinition desc name _ valueDefns) =
   let enumValDefns = map (\(G.EnumValueDefinition enumDesc enumName _) ->
                             ((mkDefinition (G.unEnumValue enumName) enumDesc P.EnumValueInfo),()))
                          $ valueDefns
