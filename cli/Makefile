@@ -35,16 +35,6 @@ build:
 	-output="$(OUTPUT_DIR)/$(VERSION)/cli-hasura-{{.OS}}-{{.Arch}}" \
 	./cmd/hasura/
 
-.PHONY: build-brew
-build-brew: export CGO_ENABLED=0
-build-brew:
-	gox -ldflags '-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -X github.com/hasura/graphql-engine/cli/plugins.IndexBranchRef=$(PLUGINS_BRANCH) -X github.com/hasura/graphql-engine/cli/commands.IsUpdateCommandEnabled=false -s -w -extldflags "-static"' \
-	-rebuild \
-	-os="${OS}" \
-	-arch="amd64" \
-	-output="${OUTPUT_DIR}/${VERSION}/cli-hasura-{{.OS}}-{{.Arch}}" \
-	./cmd/hasura/
-
 # compress
 .PHONY: compress
 compress:
