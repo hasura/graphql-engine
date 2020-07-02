@@ -8,7 +8,10 @@
 
 - server: add new `--conn-lifetime` and `HASURA_GRAPHQL_PG_CONN_LIFETIME` options for expiring connections after some amount of active time (#5087)
 - server: shrink libpq connection request/response buffers back to 1MB if they grow beyond 2MB, fixing leak-like behavior on active servers (#5087)
+- console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
+- docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
+- docs: add hasura cloud to getting started section (close #5206) (#5208)
 
 
 ## `v1.3.0-beta.3`
@@ -23,6 +26,7 @@
 - console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
 - console: fix styling of table row contents on tables on relationship page (#4974)
 - cli: handle missing files during metadata apply (close #5163) (#5170)
+- docs: add page on scheduled triggers (close #4913) (#5141)
 - docs: add page on Relay schema (close #4912) (#5150)
 
 ## `v1.3.0-beta.2`
@@ -472,6 +476,7 @@ See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-
 - console: fix parsing of wrapped types in SDL (close #4099) (#4167)
 - console: misc actions fixes (#4059)
 - console: action relationship page improvements (fix #4062, #4130) (#4133)
+- console: add code exporter to graphiql (close #4531) #4652
 - cli: fix init command to generate correct config (fix #4036) (#4038)
 - cli: fix parse error returned on console api (close #4126) (#4152)
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
