@@ -1,10 +1,10 @@
 package e2e
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli/tests/e2e/helpers"
 	. "github.com/onsi/ginkgo"
@@ -17,10 +17,11 @@ var _ = Describe("console command", func() {
 		var teardown func()
 		projectDir := helpers.RandDirName()
 		BeforeEach(func() {
-			// TODO: run from a fresh db
+			hgeEndpoint, teardownHGE := helpers.StartNewHge()
 			helpers.RunCommandAndSucceed(helpers.CmdOpts{
 				Args: []string{"init", projectDir, "--version", "1"},
 			})
+			helpers.EditEndpointInConfig(filepath.Join(projectDir, defaultConfigFilename), hgeEndpoint)
 			session := helpers.Hasura(helpers.CmdOpts{
 				Args:             []string{"console", "--no-browser"},
 				WorkingDirectory: projectDir,
@@ -32,7 +33,7 @@ var _ = Describe("console command", func() {
 			teardown = func() {
 				session.Signal(os.Interrupt)
 				os.RemoveAll(projectDir)
-				os.Chdir(os.TempDir())
+				teardownHGE()
 			}
 		})
 		AfterEach(func() {
@@ -50,10 +51,11 @@ var _ = Describe("console command", func() {
 		var teardown func()
 		projectDir := helpers.RandDirName()
 		BeforeEach(func() {
-			fmt.Fprintln(GinkgoWriter, "creating this", projectDir)
+			hgeEndpoint, teardownHGE := helpers.StartNewHge()
 			helpers.RunCommandAndSucceed(helpers.CmdOpts{
 				Args: []string{"init", projectDir},
 			})
+			helpers.EditEndpointInConfig(filepath.Join(projectDir, defaultConfigFilename), hgeEndpoint)
 			session := helpers.Hasura(helpers.CmdOpts{
 				Args:             []string{"console", "--no-browser"},
 				WorkingDirectory: projectDir,
@@ -64,6 +66,7 @@ var _ = Describe("console command", func() {
 			teardown = func() {
 				session.Terminate()
 				os.RemoveAll(projectDir)
+				teardownHGE()
 			}
 		})
 		AfterEach(func() {

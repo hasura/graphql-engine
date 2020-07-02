@@ -96,7 +96,7 @@ func startHGEDockerCompose() func() {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	teardown := func() {
-		execError := compose.Down()
+		execError := compose.WithCommand([]string{"down", "-v"}).Invoke()
 		err := execError.Error
 		if err != nil {
 			Expect(err).ShouldNot(gomega.HaveOccurred())

@@ -89,30 +89,24 @@ func RemoveHasuraConfigHomeDirectory() {
 	homeDir, err := homedir.Dir()
 	Expect(err).To(BeNil())
 	err = os.RemoveAll(filepath.Join(homeDir, ".hasura"))
-	Expect(err).To(BeNil())
+	Expect(err).ShouldNot(HaveOccurred())
 }
 
 // EditEndpoint in config
-func EditEndpointInConfig(configFilePath, endpoint string) error {
+func EditEndpointInConfig(configFilePath, endpoint string) {
 	var config cli.Config
 	b, err := ioutil.ReadFile(configFilePath)
-	if err != nil {
-		return err
-	}
-	err = yaml.Unmarshal(b, config)
-	if err != nil {
-		return err
-	}
+	Expect(err).ShouldNot(HaveOccurred())
+
+	err = yaml.Unmarshal(b, &config)
+	Expect(err).ShouldNot(HaveOccurred())
+
 	config.Endpoint = endpoint
 
-	b, err = yaml.Marshal(config)
-	if err != nil {
-		return err
-	}
+	b, err = yaml.Marshal(&config)
+	Expect(err).ShouldNot(HaveOccurred())
 
 	err = ioutil.WriteFile(configFilePath, b, 0655)
-	if err != nil {
-		return err
-	}
-	return nil
+	Expect(err).ShouldNot(HaveOccurred())
+
 }
