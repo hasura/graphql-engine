@@ -50,6 +50,7 @@ import           Hasura.Server.Utils            (mkClientHeadersForward, mkSetCo
 import           Hasura.Server.Version          (HasVersion)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value               (PGScalarValue (..), toTxtValue)
+import           Hasura.Session
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -59,7 +60,7 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ActionContext)
 data ActionWebhookPayload
   = ActionWebhookPayload
   { _awpAction           :: !ActionContext
-  , _awpSessionVariables :: !UserVars
+  , _awpSessionVariables :: !SessionVariables
   , _awpInput            :: !J.Value
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookPayload)
@@ -217,7 +218,7 @@ resolveActionMutationAsync
   :: (MonadError QErr m)
   => AnnActionMutationAsync
   -> [HTTP.Header]
-  -> UserVars
+  -> SessionVariables
   -> m RespTx
 resolveActionMutationAsync annAction reqHeaders sessionVariables = do
   pure $ do
@@ -289,13 +290,13 @@ resolveAsyncActionQuery userInfo annAction =
           sessionVarsColumnInfo = PGColumnInfo (unsafePGCol "session_variables") $$(G.litName "session_variables")
                                   0 (PGColumnScalar PGJSONB) False Nothing
           sessionVarValue = flip UVParameter Nothing $ PGColumnValue (PGColumnScalar PGJSONB) $
-                            WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON $ userVars userInfo
+                            WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
           sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
 
       -- For non-admin roles, accessing an async action's response should be allowed only for the user
       -- who initiated the action through mutation. The action's response is accessible for a query/subscription
       -- only when it's session variables are equal to that of action's.
-      in if isAdmin (userRole userInfo) then actionIdColumnEq
+      in if isAdmin (_uiRole userInfo) then actionIdColumnEq
          else BoolAnd [actionIdColumnEq, sessionVarsColumnEq]
 
 data ActionLogItem
@@ -303,7 +304,7 @@ data ActionLogItem
   { _aliId               :: !UUID.UUID
   , _aliActionName       :: !ActionName
   , _aliRequestHeaders   :: ![HTTP.Header]
-  , _aliSessionVariables :: !UserVars
+  , _aliSessionVariables :: !SessionVariables
   , _aliInputPayload     :: !J.Value
   } deriving (Show, Eq)
 

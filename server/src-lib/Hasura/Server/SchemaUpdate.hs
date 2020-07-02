@@ -12,6 +12,7 @@ import           Hasura.Server.API.Query
 import           Hasura.Server.App           (SchemaCacheRef (..), withSCUpdate)
 import           Hasura.Server.Init          (InstanceId (..))
 import           Hasura.Server.Logging
+import           Hasura.Session
 
 import           Data.Aeson
 import           Data.Aeson.Casing

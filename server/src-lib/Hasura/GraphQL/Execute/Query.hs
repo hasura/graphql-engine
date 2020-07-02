@@ -38,6 +38,7 @@ import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Session
 
 import qualified Hasura.RQL.DML.Select                  as DS
 
@@ -96,7 +97,7 @@ instance J.ToJSON ReusableQueryPlan where
 
 withPlan
   :: (MonadError QErr m)
-  => UserVars -> PGPlan -> HashMap G.Name (WithScalarType PGScalarValue) -> m PreparedSql
+  => SessionVariables -> PGPlan -> HashMap G.Name (WithScalarType PGScalarValue) -> m PreparedSql
 withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
   let args = withUserVars usrVars $ IntMap.elems prepMap'
@@ -112,7 +113,7 @@ withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
 -- turn the current plan into a transaction
 mkCurPlanTx
   :: (MonadError QErr m)
-  => UserVars
+  => SessionVariables
   -> FieldPlans
   -> m (LazyRespTx, GeneratedSqlMap)
 mkCurPlanTx usrVars fldPlans = do
@@ -242,7 +243,7 @@ convertQuerySelSet gqlContext userInfo manager reqHeaders fields varDefs varVals
     _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemata not supported"
   pure (executionPlan, Nothing, unpreparedQueries) -- FIXME ReusableQueryPlan
   where
-    usrVars = userVars userInfo
+    usrVars = _uiSession userInfo
     reportParseErrors errs = case NESeq.head errs of
       -- TODO: Our error reporting machinery doesn’t currently support reporting
       -- multiple errors at once, so we’re throwing away all but the first one
@@ -261,7 +262,7 @@ convertQuerySelSet gqlContext userInfo manager reqHeaders fields varDefs varVals
 -- use the existing plan and new variables to create a pg query
 queryOpFromPlan
   :: (MonadError QErr m)
-  => UserVars
+  => SessionVariables
   -> Maybe GH.VariableValues
   -> ReusableQueryPlan
   -> m (LazyRespTx, GeneratedSqlMap)

@@ -18,6 +18,7 @@ import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 import qualified Data.HashMap.Strict                as M
 import qualified Database.PG.Query                  as Q

@@ -91,6 +91,7 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.Server.Utils            (duplicates, englishList)
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 import           Control.Lens
 import           Data.Aeson

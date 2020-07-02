@@ -40,6 +40,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
 import           Hasura.Server.Utils
+import           Hasura.Session
 
 data StartupLog
   = StartupLog
@@ -102,6 +103,7 @@ data WebHookLog
   , whlMethod     :: !HTTP.StdMethod
   , whlError      :: !(Maybe HttpException)
   , whlResponse   :: !(Maybe T.Text)
+  , whlMessage    :: !(Maybe T.Text)
   } deriving (Show)
 
 instance ToEngineLog WebHookLog Hasura where
@@ -188,7 +190,7 @@ instance ToJSON HttpInfoLog where
 data OperationLog
   = OperationLog
   { olRequestId          :: !RequestId
-  , olUserVars           :: !(Maybe UserVars)
+  , olUserVars           :: !(Maybe SessionVariables)
   , olResponseSize       :: !(Maybe Int64)
   , olRequestReadTime    :: !(Maybe Seconds)
   -- ^ Request IO wait time, i.e. time spent reading the full request from the socket.
@@ -232,7 +234,7 @@ mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
              }
       op = OperationLog
            { olRequestId    = reqId
-           , olUserVars     = userVars <$> userInfoM
+           , olUserVars     = _uiSession <$> userInfoM
            , olResponseSize = respSize
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming
@@ -268,7 +270,7 @@ mkHttpErrorLogContext userInfoM reqId req err query mTiming compressTypeM header
              }
       op = OperationLog
            { olRequestId          = reqId
-           , olUserVars           = userVars <$> userInfoM
+           , olUserVars           = _uiSession <$> userInfoM
            , olResponseSize       = Just $ BL.length $ encode err
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming

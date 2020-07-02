@@ -42,10 +42,9 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types                          (CacheRWM, Code (..), HasHttpManager,
                                                             HasSQLGenCtx, HasSystemDefined,
                                                             QErr (..), SQLGenCtx (..),
-                                                            SchemaCache (..), UserInfoM, adminRole,
-                                                            adminUserInfo, buildSchemaCacheStrict,
-                                                            decodeValue, throw400, userRole,
-                                                            withPathK)
+                                                            SchemaCache (..), UserInfoM,
+                                                            buildSchemaCacheStrict, decodeValue,
+                                                            throw400, withPathK)
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                   (requiresAdmin, runQueryM)
 import           Hasura.Server.App
@@ -57,6 +56,7 @@ import           Hasura.Server.Migrate                     (migrateCatalog)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
+import           Hasura.Session
 
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
 
@@ -205,6 +205,7 @@ runHGEServer
      , MonadQueryLog m
      , ConsoleRenderer m
      , MonadGQLExecutionCheck m
+     , MonadConfigApiHandler m
      , WS.MonadWSLog m
      )
   => ServeOptions impl
@@ -216,7 +217,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers
 
-  authModeRes <- runExceptT $ mkAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
+  authModeRes <- runExceptT $ setupAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
                               _icHttpManager logger
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
@@ -371,8 +372,8 @@ instance UserAuthentication AppM where
 
 instance MetadataApiAuthorization AppM where
   authorizeMetadataApi query userInfo = do
-    let currRole = userRole userInfo
-    when (requiresAdmin query && currRole /= adminRole) $
+    let currRole = _uiRole userInfo
+    when (requiresAdmin query && currRole /= adminRoleName) $
       withPathK "args" $ throw400 AccessDenied errMsg
     where
       errMsg = "restricted access : admin only"

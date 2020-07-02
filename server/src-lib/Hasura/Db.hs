@@ -33,6 +33,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 import qualified Hasura.SQL.DML               as S
 
@@ -93,14 +94,14 @@ runLazyTx' (PGExecCtx pgPool _) = \case
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON
 
-setHeadersTx :: UserVars -> Q.TxE QErr ()
+setHeadersTx :: SessionVariables -> Q.TxE QErr ()
 setHeadersTx uVars =
   Q.unitQE defaultTxErrorHandler setSess () False
   where
     setSess = Q.fromText $
       "SET LOCAL \"hasura.user\" = " <> toSQLTxt (sessionInfoJsonExp uVars)
 
-sessionInfoJsonExp :: UserVars -> S.SQLExp
+sessionInfoJsonExp :: SessionVariables -> S.SQLExp
 sessionInfoJsonExp = S.SELit . J.encodeToStrictText
 
 defaultTxErrorHandler :: Q.PGTxErr -> QErr
@@ -142,7 +143,7 @@ withUserInfo :: UserInfo -> LazyTx QErr a -> LazyTx QErr a
 withUserInfo uInfo = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
-  LTTx tx  -> LTTx $ setHeadersTx (userVars uInfo) >> tx
+  LTTx tx  -> LTTx $ setHeadersTx (_uiSession uInfo) >> tx
 
 instance Functor (LazyTx e) where
   fmap f = \case

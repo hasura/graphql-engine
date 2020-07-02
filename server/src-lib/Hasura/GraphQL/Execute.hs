@@ -8,7 +8,7 @@ module Hasura.GraphQL.Execute
 
   , EP.PlanCache
   , EP.mkPlanCacheOptions
-  , EP.PlanCacheOptions
+  , EP.PlanCacheOptions(..)
   , EP.initPlanCache
   , EP.clearPlanCache
   , EP.dumpPlanCache
@@ -43,8 +43,10 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
-                                                         mkSetCookieHeaders)
+                                                         mkSetCookieHeaders,
+                                                         userRoleHeader)
 import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
 
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.Inline          as EI
@@ -116,11 +118,11 @@ getExecPlanPartial userInfo sc enableAL queryType req = do
 
   (gCtx ,) <$> getQueryParts req
   where
-    role = userRole userInfo
+    role = _uiRole userInfo
 
     checkQueryInAllowlist =
       -- only for non-admin roles
-      when (role /= adminRole) $ do
+      when (role /= adminRoleName) $ do
         let notInAllowlist =
               not $ _isQueryInAllowlist (_grQuery req) (scAllowlist sc)
         when notInAllowlist $ modifyQErr modErr $ _throwVE "query is not allowed"
@@ -206,9 +208,9 @@ getResolvedExecPlan
   -> m (Telem.CacheHit, ResolvedExecutionPlan)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   enableAL sc scVer queryType httpManager reqHeaders reqUnparsed = do
-  planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
+  planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo)
            opNameM queryStr planCache
-  let usrVars = userVars userInfo
+  let usrVars = _uiSession userInfo
   case planM of
     -- plans are only for queries and subscriptions
     Just plan -> (Telem.Hit,) <$> case plan of
@@ -247,7 +249,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          queryTx <- EM.convertMutationSelectionSet gCtx (userVars userInfo) httpManager reqHeaders
+          queryTx <- EM.convertMutationSelectionSet gCtx (_uiSession userInfo) httpManager reqHeaders
                      inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ MutationExecutionPlan $ EPr.ExecStepDB queryTx

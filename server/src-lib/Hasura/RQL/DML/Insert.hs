@@ -27,7 +27,7 @@ import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-
+import           Hasura.Session
 
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
@@ -85,7 +85,7 @@ convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
     preSetCols = HM.keys setInsVals
 
     throwNotInsErr c = do
-      role <- userRole <$> askUserInfo
+      role <- _uiRole <$> askUserInfo
       throw400 NotSupported $ "column " <> c <<> " is not insertable"
         <> " for role " <>> role
 

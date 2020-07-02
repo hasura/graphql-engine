@@ -30,7 +30,7 @@ import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
 import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.Permission           (SessVar)
+import           Hasura.Session                        (SessionVariable)
 import           Hasura.SQL.DML
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -58,7 +58,7 @@ data UnpreparedValue
   -- | The entire session variables JSON object.
   | UVSession
   -- | A single session variable.
-  | UVSessionVar (PGType PGScalarType) SessVar
+  | UVSessionVar (PGType PGScalarType) SessionVariable
 
 data PGColumnValue = PGColumnValue
   { pcvType  :: PGColumnType

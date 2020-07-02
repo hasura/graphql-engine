@@ -26,6 +26,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 -- TODO move code around so that we don't import an internal module here
 import           Hasura.RQL.DML.Internal
+import           Hasura.Session
 
 -- | Table select columns enum
 --
@@ -93,7 +94,7 @@ tablePermissions
 tablePermissions table = do
   roleName  <- askRoleName
   tableInfo <- askTableInfo table
-  pure $ if roleName == adminRole
+  pure $ if roleName == adminRoleName
     then Just $ mkAdminRolePermInfo $ _tiCoreInfo tableInfo
     else Map.lookup roleName $ _tiRolePermInfoMap tableInfo
 

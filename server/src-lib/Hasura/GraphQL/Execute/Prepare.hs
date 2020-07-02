@@ -33,6 +33,7 @@ import           Hasura.RQL.DML.Internal                (currentSession, sessVar
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Session
 
 
 type PlanVariables = Map.HashMap G.Name Int
@@ -84,7 +85,7 @@ prepareWithPlan = \case
   UVSessionVar ty sessVar -> do
     let sessVarVal =
           S.SEOpApp (S.SQLOp "->>")
-          [currentSessionExp, S.SELit $ T.toLower sessVar]
+          [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
     return $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
       PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
       PGTypeArray _      -> sessVarVal
@@ -101,7 +102,7 @@ unpreparedToTextSQL = \case
   UVLiteral sqlExp        -> sqlExp
   UVSession               -> currentSession
 
-withUserVars :: UserVars -> [(Q.PrepArg, PGScalarValue)] -> [(Q.PrepArg, PGScalarValue)]
+withUserVars :: SessionVariables -> [(Q.PrepArg, PGScalarValue)] -> [(Q.PrepArg, PGScalarValue)]
 withUserVars usrVars list =
   let usrVarsAsPgScalar = PGValJSON $ Q.JSON $ J.toJSON usrVars
       prepArg = Q.toPrepVal (Q.AltJ usrVars)

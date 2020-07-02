@@ -42,6 +42,7 @@ module Hasura.RQL.Types
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 import           Hasura.Db                           as R
 import           Hasura.RQL.Types.Action             as R
@@ -301,7 +302,7 @@ askRemoteRel fieldInfoMap relName = do
       throw400 UnexpectedPayload "expecting a remote relationship"
 
 askCurRole :: (UserInfoM m) => m RoleName
-askCurRole = userRole <$> askUserInfo
+askCurRole = _uiRole <$> askUserInfo
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"

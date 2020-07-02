@@ -1,39 +1,8 @@
 -- | Types and functions related to the server initialisation
 {-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -O0 #-}
 module Hasura.Server.Init
-  ( DbUid(..)
-  , getDbId
-
-  -- , PGVersion(..)
-  -- , getPgVersion
-
-  , InstanceId(..)
-  , generateInstanceId
-
-  , StartupTimeInfo(..)
-
-  -- * Server command related
-  , parseRawConnInfo
-  , mkRawConnInfo
-  , mkHGEOptions
-  , mkConnInfo
-  , serveOptionsParser
-
-  -- * Downgrade command related
-  , downgradeShortcuts
-  , downgradeOptionsParser
-
-  -- * Help footers
-  , mainCmdFooter
-  , serveCmdFooter
-
-  -- * Startup logs
-  , mkGenericStrLog
-  , mkGenericLog
-  , inconsistentMetadataLog
-  , serveOptsToLog
-  , connInfoToLog
-
+  ( module Hasura.Server.Init
   , module Hasura.Server.Init.Config
   ) where
 
@@ -59,18 +28,20 @@ import qualified Hasura.Logging                   as L
 
 import           Hasura.Db
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (QErr, RoleName (..), SchemaCache (..),
-                                                   mkNonEmptyText)
+import           Hasura.RQL.Types                 (QErr, SchemaCache (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
+import           Hasura.Session
 import           Network.URI                      (parseURI)
 
 newtype DbUid
   = DbUid { getDbUid :: Text }
   deriving (Show, Eq, J.ToJSON, J.FromJSON)
+
+newtype PGVersion = PGVersion { unPGVersion :: Int } deriving (Show, Eq, J.ToJSON)
 
 getDbId :: Q.TxE QErr Text
 getDbId =
@@ -80,6 +51,8 @@ getDbId =
     SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
   |] () False
 
+getPgVersion :: Q.TxE QErr PGVersion
+getPgVersion = PGVersion <$> Q.serverVersion
 
 newtype InstanceId
   = InstanceId { getInstanceId :: Text }
@@ -182,7 +155,7 @@ mkServeOptions rso = do
   enabledLogs <- maybe L.defaultEnabledLogTypes (Set.fromList) <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
-  planCacheOptions <- E.mkPlanCacheOptions <$> withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
+  planCacheOptions <- E.PlanCacheOptions <$> withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
   devMode <- withEnvBool (rsoDevMode rso) $ fst devModeEnv
   adminInternalErrors <- fromMaybe True <$> -- Default to `true` to enable backwards compatibility
                                 withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
@@ -202,14 +175,16 @@ mkServeOptions rso = do
 #else
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
 #endif
-    mkConnParams (RawConnParams s c i p) = do
+    mkConnParams (RawConnParams s c i cl p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
+      connLifetime <- withEnv cl (fst pgConnLifetimeEnv)
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
-      return $ Q.ConnParams stripes conns iTime allowPrepare
+      -- The connLifetime is being used by the new pg-client-hs, uncomment it below
+      return $ Q.ConnParams stripes conns iTime allowPrepare --connLifetime
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
@@ -386,6 +361,13 @@ pgTimeoutEnv =
   , "Each connection's idle time before it is closed (default: 180 sec)"
   )
 
+pgConnLifetimeEnv :: (String, String)
+pgConnLifetimeEnv =
+  ( "HASURA_GRAPHQL_PG_CONN_LIFETIME"
+  , "Time from connection creation after which the connection should be destroyed and a new one "
+    <> "created. (default: none)"
+  )
+
 pgUsePrepareEnv :: (String, String)
 pgUsePrepareEnv =
   ( "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS"
@@ -519,7 +501,7 @@ adminInternalErrorsEnv =
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
-              <*> dbUrl <*> dbName <*> pure Nothing
+              <*> dbUrl <*> dbName <*> options
               <*> retries
   where
     host = optional $
@@ -559,6 +541,14 @@ parseRawConnInfo =
                   metavar "<DBNAME>" <>
                   help "Database name to connect to"
                 )
+
+    options = optional $
+      strOption ( long "pg-connection-options" <>
+                  short 'o' <>
+                  metavar "<DATABASE-OPTIONS>" <>
+                  help "PostgreSQL options"
+                )
+
     retries = optional $
       option auto ( long "retries" <>
                     metavar "NO OF RETRIES" <>
@@ -593,7 +583,7 @@ parseTxIsolation = optional $
 
 parseConnParams :: Parser RawConnParams
 parseConnParams =
-  RawConnParams <$> stripes <*> conns <*> timeout <*> allowPrepare
+  RawConnParams <$> stripes <*> conns <*> idleTimeout <*> connLifetime <*> allowPrepare
   where
     stripes = optional $
       option auto
@@ -611,14 +601,22 @@ parseConnParams =
                help (snd pgConnsEnv)
             )
 
-    timeout = optional $
+    idleTimeout = optional $
       option auto
               ( long "timeout" <>
                 metavar "<SECONDS>" <>
                 help (snd pgTimeoutEnv)
               )
+
+    connLifetime = fmap (fmap fromRational) $ optional $
+      option auto
+              ( long "conn-lifetime" <>
+                metavar "<SECONDS>" <>
+                help (snd pgConnLifetimeEnv)
+              )
+
     allowPrepare = optional $
-      option (eitherReader parseStrAsBool)
+      option (eitherReader parseStringAsBool)
               ( long "use-prepared-statements" <>
                 metavar "<true|false>" <>
                 help (snd pgUsePrepareEnv)
@@ -638,17 +636,17 @@ parseServerHost = optional $ strOption ( long "server-host" <>
                 help "Host on which graphql-engine will listen (default: *)"
               )
 
-parseAccessKey :: Parser (Maybe AdminSecret)
+parseAccessKey :: Parser (Maybe AdminSecretHash)
 parseAccessKey =
-  optional $ AdminSecret <$>
+  optional $ hashAdminSecret <$>
     strOption ( long "access-key" <>
                 metavar "ADMIN SECRET KEY (DEPRECATED: USE --admin-secret)" <>
                 help (snd adminSecretEnv)
               )
 
-parseAdminSecret :: Parser (Maybe AdminSecret)
+parseAdminSecret :: Parser (Maybe AdminSecretHash)
 parseAdminSecret =
-  optional $ AdminSecret <$>
+  optional $ hashAdminSecret <$>
     strOption ( long "admin-secret" <>
                 metavar "ADMIN SECRET KEY" <>
                 help (snd adminSecretEnv)
@@ -685,13 +683,13 @@ jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
               <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`"
 
 parseUnAuthRole :: Parser (Maybe RoleName)
-parseUnAuthRole = fmap mkRoleName $ optional $
+parseUnAuthRole = fmap mkRoleName' $ optional $
   strOption ( long "unauthorized-role" <>
               metavar "<ROLE>" <>
               help (snd unAuthRoleEnv)
             )
   where
-    mkRoleName mText = mText >>= (fmap RoleName . mkNonEmptyText)
+    mkRoleName' mText = mText >>= mkRoleName
 
 parseCorsConfig :: Parser (Maybe CorsConfig)
 parseCorsConfig = mapCC <$> disableCors <*> corsDomain
@@ -726,7 +724,7 @@ parseConsoleAssetsDir = optional $
 
 parseEnableTelemetry :: Parser (Maybe Bool)
 parseEnableTelemetry = optional $
-  option (eitherReader parseStrAsBool)
+  option (eitherReader parseStringAsBool)
          ( long "enable-telemetry" <>
            help (snd enableTelemetryEnv)
          )
@@ -818,7 +816,7 @@ planCacheSizeEnv =
 parsePlanCacheSize :: Parser (Maybe Cache.CacheSize)
 parsePlanCacheSize =
   optional $
-    option (eitherReader Cache.mkCacheSize)
+    option (eitherReader Cache.parseCacheSize)
     ( long "query-plan-cache-size" <>
       metavar "QUERY_PLAN_CACHE_SIZE" <>
       help (snd planCacheSizeEnv)

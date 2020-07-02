@@ -243,6 +243,7 @@ library
                      , Hasura.RQL.DDL.Metadata.Generator
                      , Hasura.RQL.DDL.Schema
                      , Hasura.EncJSON
+                     , Hasura.Session
 
                      , Data.Aeson.Ordered
 
@@ -251,6 +252,7 @@ library
                      , Hasura.Incremental.Internal.Dependency
                      , Hasura.Incremental.Internal.Rule
 
+                     , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Auth.JWT
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
@@ -402,6 +404,7 @@ library
                      , Data.TByteString
                      , Data.Text.Extended
                      , Data.Tuple.Extended
+                     , Data.Parser.Expires
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error

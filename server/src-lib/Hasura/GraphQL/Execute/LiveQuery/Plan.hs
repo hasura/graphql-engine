@@ -60,6 +60,7 @@ import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 import           Hasura.GraphQL.Context
+import           Hasura.Session
 
 -- -------------------------------------------------------------------------------------------------
 -- Multiplexed queries
@@ -150,7 +151,7 @@ newCohortId = CohortId <$> liftIO UUID.nextRandom
 
 data CohortVariables
   = CohortVariables
-  { _cvSessionVariables   :: !UserVars
+  { _cvSessionVariables   :: !SessionVariables
   , _cvQueryVariables     :: !ValidatedQueryVariables
   , _cvSyntheticVariables :: !ValidatedSyntheticVariables
   -- ^ To allow more queries to be multiplexed together, we introduce “synthetic” variables for
@@ -316,7 +317,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
 
 
   let multiplexedQuery = mkMultiplexedQuery $ OMap.toHashMap preparedAST
-      roleName = userRole userInfo
+      roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery
 
   -- We need to ensure that the values provided for variables are correct according to Postgres.
@@ -326,7 +327,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
   validatedSyntheticVars <- validateVariables pgExecCtx $ map pcvValue $ toList querySyntheticVariableValues
 
   let -- TODO validatedQueryVars validatedSyntheticVars
-      cohortVariables = CohortVariables (userVars userInfo) validatedQueryVars validatedSyntheticVars
+      cohortVariables = CohortVariables (_uiSession userInfo) validatedQueryVars validatedSyntheticVars
 
       plan = LiveQueryPlan parameterizedPlan cohortVariables
       -- varTypes = finalReusability ^? GV._Reusable
@@ -352,7 +353,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
 reuseLiveQueryPlan
   :: (MonadError QErr m, MonadIO m)
   => PGExecCtx
-  -> UserVars
+  -> SessionVariables
   -> Maybe GH.VariableValues
   -> ReusableLiveQueryPlan
   -> m LiveQueryPlan

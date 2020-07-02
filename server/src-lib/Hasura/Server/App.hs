@@ -54,6 +54,7 @@ import           Hasura.Server.Middleware               (corsMiddleware)
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
@@ -191,8 +192,8 @@ parseBody reqBody =
 
 onlyAdmin :: (Monad m) => Handler m ()
 onlyAdmin = do
-  uRole <- asks (userRole . hcUser)
-  when (uRole /= adminRole) $
+  uRole <- asks (_uiRole . hcUser)
+  when (uRole /= adminRoleName) $
     throw400 AccessDenied "You have to be an admin to access this endpoint"
 
 buildQCtx :: (MonadIO m) => Handler m QCtx
@@ -210,6 +211,15 @@ setHeader (headerName, headerValue) =
 -- | Typeclass representing the metadata API authorization effect
 class MetadataApiAuthorization m where
   authorizeMetadataApi :: RQLQuery -> UserInfo -> Handler m ()
+
+-- | The config API (/v1alpha1/config) handler
+class Monad m => MonadConfigApiHandler m where
+  runConfigApiHandler
+    :: HasVersion
+    => ServerCtx
+    -> Maybe Text
+    -- ^ console assets directory
+    -> Spock.SpockCtxT () m ()
 
 mkSpockAction
   :: (HasVersion, MonadIO m, FromJSON a, ToJSON a, UserAuthentication m, HttpLog m)
@@ -235,7 +245,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
                  return userInfoE
 
     let handlerState = HandlerCtx serverCtx userInfo headers requestId
-        includeInternal = shouldIncludeInternal (userRole userInfo) $
+        includeInternal = shouldIncludeInternal (_uiRole userInfo) $
                           scResponseInternalErrorsConfig serverCtx
 
     (serviceTime, (result, q)) <- withElapsedTime $ case apiHandler of
@@ -462,6 +472,7 @@ mkWaiApp
      , UserAuthentication m
      , MetadataApiAuthorization m
      , E.MonadGQLExecutionCheck m
+     , MonadConfigApiHandler m
      , WS.MonadWSLog m
      )
   => Q.TxIsolation
@@ -546,7 +557,17 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
 
 
 httpApp
-  :: (HasVersion, MonadIO m, MonadBaseControl IO m, ConsoleRenderer m, HttpLog m, UserAuthentication m, MetadataApiAuthorization m)
+  :: ( HasVersion
+     , MonadIO m
+     , MonadBaseControl IO m
+     , ConsoleRenderer m
+     , HttpLog m
+     , UserAuthentication m
+     , MetadataApiAuthorization m
+     , E.MonadGQLExecutionCheck m
+     , MonadConfigApiHandler m
+     , MonadQueryLog m
+     )
   => CorsConfig
   -> ServerCtx
   -> Bool
@@ -594,12 +615,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       Spock.post "v1alpha1/pg_dump" $ spockAction encodeQErr id $
         mkPostHandler v1Alpha1PGDumpHandler
 
-    when enableConfig $
-      Spock.get "v1alpha1/config" $ spockAction encodeQErr id $
-        mkGetHandler $ do
-          onlyAdmin
-          let res = encJFromJValue $ runGetConfig (scAuthMode serverCtx)
-          return $ JSONResp $ HttpResponse res []
+    when enableConfig $ runConfigApiHandler serverCtx consoleAssetsDir
 
     when enableGraphQL $ do
       Spock.post "v1alpha1/graphql" $ spockAction GH.encodeGQErr id $

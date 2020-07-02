@@ -9,6 +9,7 @@ import qualified Data.Text                        as T
 import qualified Database.PG.Query                as Q
 
 import           Data.Char                        (toLower)
+import           Data.Time
 import           Network.Wai.Handler.Warp         (HostPreference)
 
 import qualified Hasura.Cache                     as Cache
@@ -17,15 +18,18 @@ import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (RoleName (..), isAdmin, mkNonEmptyText)
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
+import           Hasura.Session
 
 data RawConnParams
   = RawConnParams
   { rcpStripes      :: !(Maybe Int)
   , rcpConns        :: !(Maybe Int)
   , rcpIdleTime     :: !(Maybe Int)
+  , rcpConnLifetime :: !(Maybe NominalDiffTime)
+  -- ^ Time from connection creation after which to destroy a connection and
+  -- choose a different/new one.
   , rcpAllowPrepare :: !(Maybe Bool)
   } deriving (Show, Eq)
 
@@ -37,7 +41,7 @@ data RawServeOptions impl
   , rsoHost                :: !(Maybe HostPreference)
   , rsoConnParams          :: !RawConnParams
   , rsoTxIso               :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret         :: !(Maybe AdminSecret)
+  , rsoAdminSecret         :: !(Maybe AdminSecretHash)
   , rsoAuthHook            :: !RawAuthHook
   , rsoJwtSecret           :: !(Maybe JWTConfig)
   , rsoUnAuthRole          :: !(Maybe RoleName)
@@ -79,7 +83,7 @@ data ServeOptions impl
   , soHost                         :: !HostPreference
   , soConnParams                   :: !Q.ConnParams
   , soTxIso                        :: !Q.TxIsolation
-  , soAdminSecret                  :: !(Maybe AdminSecret)
+  , soAdminSecret                  :: !(Maybe AdminSecretHash)
   , soAuthHook                     :: !(Maybe AuthHook)
   , soJwtSecret                    :: !(Maybe JWTConfig)
   , soUnAuthRole                   :: !(Maybe RoleName)
@@ -202,6 +206,11 @@ readJson = J.eitherDecodeStrict . txtToBs . T.pack
 class FromEnv a where
   fromEnv :: String -> Either String a
 
+-- Deserialize from seconds, in the usual way
+instance FromEnv NominalDiffTime where
+  fromEnv s = maybe (Left "could not parse as a Double") (Right . realToFrac) $
+                (readMaybe s :: Maybe Double)
+
 instance FromEnv String where
   fromEnv = Right
 
@@ -217,13 +226,13 @@ instance FromEnv AuthHookType where
 instance FromEnv Int where
   fromEnv = maybe (Left "Expecting Int value") Right . readMaybe
 
-instance FromEnv AdminSecret where
-  fromEnv = Right . AdminSecret . T.pack
+instance FromEnv AdminSecretHash where
+  fromEnv = Right . hashAdminSecret . T.pack
 
 instance FromEnv RoleName where
-  fromEnv string = case mkNonEmptyText (T.pack string) of
-    Nothing     -> Left "empty string not allowed"
-    Just neText -> Right $ RoleName neText
+  fromEnv string = case mkRoleName (T.pack string) of
+    Nothing       -> Left "empty string not allowed"
+    Just roleName -> Right roleName
 
 instance FromEnv Bool where
   fromEnv = parseStrAsBool
@@ -253,7 +262,7 @@ instance FromEnv L.LogLevel where
   fromEnv = readLogLevel
 
 instance FromEnv Cache.CacheSize where
-  fromEnv = Cache.mkCacheSize
+  fromEnv = Cache.parseCacheSize
 
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 

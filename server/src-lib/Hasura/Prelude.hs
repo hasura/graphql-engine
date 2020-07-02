@@ -1,12 +1,14 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.Prelude
   ( module M
+  , alphabet
   , alphaNumerics
   , onNothing
   , onJust
   , onLeft
   , whenMaybe
   , choice
+  , afold
   , bsToTxt
   , txtToBs
   , base64Decode
@@ -48,6 +50,7 @@ import           Data.List                         as M (find, findIndex, foldl'
 import           Data.List.NonEmpty                as M (NonEmpty (..), nonEmpty)
 import           Data.Maybe                        as M (catMaybes, fromMaybe, isJust, isNothing,
                                                          listToMaybe, mapMaybe, maybeToList)
+import           Data.Monoid                       as M (getAlt)
 import           Data.Ord                          as M (comparing)
 import           Data.Semigroup                    as M (Semigroup (..))
 import           Data.Sequence                     as M (Seq)
@@ -75,6 +78,9 @@ import qualified Data.Text.Encoding.Error          as TE
 import qualified GHC.Clock                         as Clock
 import qualified Test.QuickCheck                   as QC
 
+alphabet :: String
+alphabet = ['a'..'z'] ++ ['A'..'Z']
+
 alphaNumerics :: String
 alphaNumerics = ['a'..'z'] ++ ['A'..'Z'] ++ "0123456789 "
 
@@ -94,9 +100,11 @@ whenMaybe :: Applicative m => Bool -> m a -> m (Maybe a)
 whenMaybe True  = fmap Just
 whenMaybe False = const $ pure Nothing
 
-
 choice :: (Alternative f) => [f a] -> f a
 choice = asum
+
+afold :: (Foldable t, Alternative f) => t a -> f a
+afold = getAlt . foldMap pure
 
 bsToTxt :: B.ByteString -> Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode

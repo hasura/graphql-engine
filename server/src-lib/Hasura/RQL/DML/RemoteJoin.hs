@@ -16,7 +16,7 @@ import           Data.Validation
 import           Data.Scientific                        (toBoundedInteger, toRealFloat)
 
 import           Hasura.EncJSON
---import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
+import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Parser
@@ -28,6 +28,7 @@ import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.SQL.Types                       ((<<>))
+import           Hasura.Session
 
 import qualified Hasura.SQL.DML                         as S
 
@@ -44,6 +45,8 @@ import qualified Language.GraphQL.Draft.Printer.Text    as G
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
+import qualified Data.ByteString.Lazy                   as BL
+import qualified Network.Wreq                           as Wreq
 
 -- | Executes given query and fetch response JSON from Postgres. Substitutes remote relationship fields.
 
@@ -366,90 +369,107 @@ traverseQueryResponseJSON rjm =
                            Nothing -> Just <$> traverseValue fieldPath value
           pure $ CVObject $ OMap.fromList processedFields
 
+convertValueWithVariableToName :: G.Value Variable -> G.Value G.Name
+convertValueWithVariableToName = \case
+  G.VVariable var -> G.VVariable $ getName var
+  G.VList listValue ->
+    G.VList $ (map convertValueWithVariableToName listValue)
+  G.VObject objectValue ->
+    G.VObject $ Map.fromList $ (map (\(k,v) -> (k,convertValueWithVariableToName v)) $ Map.toList objectValue)
+  G.VInt i ->  G.VInt i
+  G.VFloat d ->  G.VFloat d
+  G.VString origin txt ->  G.VString origin txt
+  G.VEnum e ->  G.VEnum e
+  G.VBoolean b ->  G.VBoolean b
+  G.VNull -> G.VNull
+
+convertFieldWithVariablesToName :: G.Field G.NoFragments Variable -> G.Field G.NoFragments G.Name -- Maybe will need to collect the variable definitions too
+convertFieldWithVariablesToName = fmap getName
+
 -- | Fetch remote join field value from remote servers by batching respective 'RemoteJoinField's
+fetchRemoteJoinFields
+  :: ( HasVersion
+     , MonadError QErr m
+     , MonadIO m
+     )
+  => HTTP.Manager
+  -> [N.Header]
+  -> UserInfo
+  -> [RemoteJoinField]
+  -> m AO.Object
+fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins = do
+  results <- forM (Map.toList remoteSchemaBatch) $ \(rsi, batch) -> do
+    let batchList = toList batch
+        gqlReq = fieldsToRequest G.OperationTypeQuery
+                                 (map _rjfField batchList)
+                                 (concatMap _rjfVariables batchList)
+        gqlReqUnparsed = (GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc) <$> gqlReq
+    -- NOTE: discard remote headers (for now):
+    (_, _, respBody) <- execRemoteGQ' manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
+    case AO.eitherDecode respBody of
+      Left e -> throw500 $ "Remote server response is not valid JSON: " <> T.pack e
+      Right r -> do
+        respObj <- either throw500 pure $ AO.asObject r
+        let errors = AO.lookup "errors" respObj
+        if | isNothing errors || errors == Just AO.Null ->
+               case AO.lookup "data" respObj of
+                 Nothing -> throw400 Unexpected "\"data\" field not found in remote response"
+                 Just v  -> either throw500 pure $ AO.asObject v
 
--- fetchRemoteJoinFields
---   :: ( HasVersion
---      , MonadError QErr m
---      , MonadIO m
---      )
---   => HTTP.Manager
---   -> [N.Header]
---   -> UserInfo
---   -> [RemoteJoinField]
---   -> m AO.Object
--- fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins = do
---   results <- forM (Map.toList remoteSchemaBatch) $ \(rsi, batch) -> do
---     let batchList = toList batch
---         gqlReq = fieldsToRequest G.OperationTypeQuery
---                                  (map _rjfField batchList)
---                                  (concatMap _rjfVariables batchList)
---         gqlReqUnparsed = (GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc) <$> gqlReq
---     -- NOTE: discard remote headers (for now):
---     (_, _, respBody) <- execRemoteGQ' manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
---     case AO.eitherDecode respBody of
---       Left e -> throw500 $ "Remote server response is not valid JSON: " <> T.pack e
---       Right r -> do
---         respObj <- either throw500 pure $ AO.asObject r
---         let errors = AO.lookup "errors" respObj
+           | otherwise ->
+             throwError (err400 Unexpected "Errors from remote server")
+             {qeInternal = Just $ A.object ["errors" A..= (AO.fromOrdered <$> errors)]}
 
---         if | isNothing errors || errors == Just AO.Null ->
---                case AO.lookup "data" respObj of
---                  Nothing -> throw400 Unexpected "\"data\" field not found in remote response"
---                  Just v  -> either throw500 pure $ AO.asObject v
+  either (throw500 . T.pack) pure $ foldM AO.safeUnion AO.empty results
+  where
+    remoteSchemaBatch = Map.groupOnNE _rjfRemoteSchema remoteJoins
 
---            | otherwise ->
---              throwError (err400 Unexpected "Errors from remote server")
---              {qeInternal = Just $ A.object ["errors" A..= (AO.fromOrdered <$> errors)]}
+    fieldsToRequest :: G.OperationType -> [G.Field G.NoFragments Variable] -> [(G.VariableDefinition,A.Value)] -> GQLReqParsed
+    fieldsToRequest opType gFields vars =
+      let gFields' = map (G.fmapFieldFragment G.inline . convertFieldWithVariablesToName) gFields
+      in
+      case vars of
+        [] ->
+          GQLReq
+            { _grOperationName = Nothing
+            , _grQuery =
+               GQLExecDoc
+                 [ G.ExecutableDefinitionOperation
+                     (G.OperationDefinitionTyped
+                       ( emptyOperationDefinition
+                           { G._todSelectionSet = map G.SelectionField gFields'
+                           }
+                       )
+                     )
+                  ]
+             , _grVariables = Nothing
+             }
+        vars' ->
+          GQLReq
+            { _grOperationName = Nothing
+            , _grQuery =
+                GQLExecDoc
+                  [ G.ExecutableDefinitionOperation
+                      (G.OperationDefinitionTyped
+                       ( emptyOperationDefinition
+                            { G._todSelectionSet = map G.SelectionField gFields'
+                            , G._todVariableDefinitions = nub (map fst vars')
+                            }
+                        )
+                      )
+                  ]
+            , _grVariables = Just $ Map.fromList
+                                      (map (\(varDef, val) -> (G._vdName varDef, val)) vars')
+            }
 
---   either (throw500 . T.pack) pure $ foldM AO.safeUnion AO.empty results
---   where
---     remoteSchemaBatch = Map.groupOnNE _rjfRemoteSchema remoteJoins
-
---     fieldsToRequest :: G.OperationType -> [G.Field] -> [(G.VariableDefinition,A.Value)] -> GQLReqParsed
---     fieldsToRequest opType gfields vars =
---       case vars of
---         [] ->
---           GQLReq
---             { _grOperationName = Nothing
---             , _grQuery =
---                GQLExecDoc
---                  [ G.ExecutableDefinitionOperation
---                      (G.OperationDefinitionTyped
---                        ( emptyOperationDefinition
---                            { G._todSelectionSet = map G.SelectionField gfields
---                            }
---                        )
---                      )
---                   ]
---              , _grVariables = Nothing
---              }
---         vars' ->
---           GQLReq
---             { _grOperationName = Nothing
---             , _grQuery =
---                 GQLExecDoc
---                   [ G.ExecutableDefinitionOperation
---                       (G.OperationDefinitionTyped
---                        ( emptyOperationDefinition
---                             { G._todSelectionSet = map G.SelectionField gfields
---                             , G._todVariableDefinitions = nub (map fst vars')
---                             }
---                         )
---                       )
---                   ]
---             , _grVariables = Just $ Map.fromList
---                                       (map (\(varDef, val) -> (G._vdVariable varDef, val)) vars')
---             }
-
---       where
---         emptyOperationDefinition =
---           G.TypedOperationDefinition {
---              G._todType = opType
---            , G._todName = Nothing
---            , G._todVariableDefinitions = []
---            , G._todDirectives = []
---            , G._todSelectionSet = [] }
+      where
+        emptyOperationDefinition =
+          G.TypedOperationDefinition {
+             G._todType = opType
+           , G._todName = Nothing
+           , G._todVariableDefinitions = []
+           , G._todDirectives = []
+           , G._todSelectionSet = [] }
 
 -- | Replace 'RemoteJoinField' in composite JSON with it's json value from remote server response.
 replaceRemoteFields

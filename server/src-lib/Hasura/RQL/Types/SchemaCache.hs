@@ -134,6 +134,7 @@ import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 import           Data.Aeson
 import           Data.Aeson.Casing

@@ -16,6 +16,7 @@ module Data.Aeson.Ordered
   , decode
   , Data.Aeson.Ordered.toList
   , fromList
+  , asObject
   , object
   , array
   , insert
@@ -178,6 +179,11 @@ fromOrdered v = case v of
   Number number -> J.Number number
   Bool boolean  -> J.Bool boolean
   Null          -> J.Null
+
+asObject :: Value -> Either Text Object
+asObject = \case
+  Object o -> Right o
+  _        -> Left "expecting ordered object"
 
 --------------------------------------------------------------------------------
 -- Top-level entry points

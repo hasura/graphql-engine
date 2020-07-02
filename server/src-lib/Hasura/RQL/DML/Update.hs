@@ -23,6 +23,7 @@ import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances        ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 import qualified Database.PG.Query           as Q
 import qualified Hasura.SQL.DML              as S
@@ -154,9 +155,9 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
     allowedCols  = upiCols updPerm
     relWhenPgErr = "relationships can't be updated"
     throwNotUpdErr c = do
-      role <- userRole <$> askUserInfo
+      roleName <- _uiRole <$> askUserInfo
       throw400 NotSupported $ "column " <> c <<> " is not updatable"
-        <> " for role " <> role <<> "; its value is predefined in permission"
+        <> " for role " <> roleName <<> "; its value is predefined in permission"
 
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, CacheRM m)

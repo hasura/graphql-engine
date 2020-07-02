@@ -21,6 +21,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Init
 import           Hasura.Server.Telemetry.Counters
 import           Hasura.Server.Version
+import           Hasura.Session
 
 import qualified CI
 import qualified Control.Concurrent.Extended      as C

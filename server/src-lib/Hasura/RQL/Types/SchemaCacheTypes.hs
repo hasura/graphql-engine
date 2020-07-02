@@ -15,6 +15,7 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 data TableObjId
   = TOCol !PGCol

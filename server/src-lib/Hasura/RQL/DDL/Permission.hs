@@ -42,6 +42,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
@@ -202,7 +203,7 @@ data UpdPerm
   { ucColumns :: !PermColSpec -- Allowed columns
   , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
   , ucFilter  :: !BoolExp     -- Filter expression (applied before update)
-  , ucCheck   :: !(Maybe BoolExp)     
+  , ucCheck   :: !(Maybe BoolExp)
   -- ^ Check expression, which must be true after update.
   -- This is optional because we don't want to break the v1 API
   -- but Nothing should be equivalent to the expression which always
@@ -224,7 +225,7 @@ buildUpdPermInfo
 buildUpdPermInfo tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
   (be, beDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap fltr
-    
+
   checkExpr <- traverse (withPathK "check" . procBoolExp tn fieldInfoMap) check
 
   (setColsSQL, setHeaders, setColDeps) <- procSetObj tn fieldInfoMap set
@@ -333,7 +334,7 @@ setPermCommentTx (SetPermComment (QualifiedObject sn tn) rn pt comment) =
                 |] (comment, sn, tn, rn, permTypeToCode pt) True
 
 purgePerm :: MonadTx m => QualifiedTable -> RoleName -> PermType -> m ()
-purgePerm qt rn pt = 
+purgePerm qt rn pt =
     case pt of
       PTInsert -> dropPermP2 @InsPerm dp
       PTSelect -> dropPermP2 @SelPerm dp

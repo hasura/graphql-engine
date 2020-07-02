@@ -31,6 +31,7 @@ import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 buildGQLContext
   :: forall m
@@ -50,7 +51,7 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemata allActions no
     buildContextForRole roleName
   where
     allRoles :: HashSet RoleName
-    allRoles = S.insert adminRole $ allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded
+    allRoles = S.insert adminRoleName $ allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded
 
     tableFilter ti = not (isSystemDefined $ _tciSystemDefined ti)
     functionFilter = not . isSystemDefined . fiSystemDefined

@@ -1,6 +1,7 @@
 module Hasura.GraphQL.RemoteServer
   ( fetchRemoteSchema
   , IntrospectionResult
+  , execRemoteGQ'
   ) where
 
 import           Control.Exception             (try)
@@ -9,20 +10,23 @@ import           Data.Aeson                    ((.:), (.:?))
 import           Data.FileEmbed                (embedStringFile)
 import           Hasura.HTTP
 import           Hasura.Prelude
-import           Data.Void                     (Void)
 
 import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as BL
+import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Parser as G
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
+import qualified Network.HTTP.Types            as N
 import qualified Network.Wreq                  as Wreq
 
 import           Hasura.RQL.DDL.Headers        (makeHeadersFromConf)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils           (httpExceptToJSON)
+import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.Server.Utils
 import           Hasura.Server.Version         (HasVersion)
+import           Hasura.Session
 
 introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
@@ -352,3 +356,49 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
             , subsRoot
             )
     return $ FromIntrospection r
+
+execRemoteGQ'
+  :: ( HasVersion
+     , MonadIO m
+     , MonadError QErr m
+     )
+  => HTTP.Manager
+  -> UserInfo
+  -> [N.Header]
+  -> GQLReqUnparsed
+  -> RemoteSchemaInfo
+  -> G.OperationType
+  -> m (DiffTime, [N.Header], BL.ByteString)
+execRemoteGQ' manager userInfo reqHdrs q rsi opType = do
+  when (opType == G.OperationTypeSubscription) $
+    throw400 NotSupported "subscription to remote server is not supported"
+  confHdrs <- makeHeadersFromConf hdrConf
+  let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
+      -- filter out duplicate headers
+      -- priority: conf headers > resolved userinfo vars > client headers
+      hdrMaps    = [ Map.fromList confHdrs
+                   , Map.fromList userInfoToHdrs
+                   , Map.fromList clientHdrs
+                   ]
+      headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
+      finalHeaders = addDefaultHeaders headers
+  initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
+  initReq <- either httpThrow pure initReqE
+  let req = initReq
+           { HTTP.method = "POST"
+           , HTTP.requestHeaders = finalHeaders
+           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
+           , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
+           }
+
+  (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req manager
+  resp <- either httpThrow return res
+  pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
+  where
+    RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
+    httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
+    httpThrow = \case
+      HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
+      HTTP.InvalidUrlException _url reason -> throw500 $ T.pack . show $ reason
+
+    userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo

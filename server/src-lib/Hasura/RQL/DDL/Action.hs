@@ -27,6 +27,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
 
 import qualified Data.Aeson                    as J

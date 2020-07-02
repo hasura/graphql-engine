@@ -4,7 +4,7 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GQLReqUnparsed
   , GQLReqParsed
   , toParsed
-  , GQLQueryText
+  , GQLQueryText(..)
   , GQLExecDoc(..)
   , OperationName(..)
   , VariableValues
@@ -55,7 +55,7 @@ data GQLReq a
   { _grOperationName :: !(Maybe OperationName)
   , _grQuery         :: !a
   , _grVariables     :: !(Maybe VariableValues)
-  } deriving (Show, Eq, Generic)
+  } deriving (Show, Eq, Generic, Functor)
 
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True}
   ''GQLReq

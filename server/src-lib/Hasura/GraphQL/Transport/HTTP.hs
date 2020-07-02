@@ -15,6 +15,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Init.Config
 import           Hasura.Server.Utils                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
 
 import qualified Data.Aeson                             as J
 import qualified Data.HashMap.Strict                    as Map
@@ -90,7 +91,6 @@ runGQ reqId userInfo reqHdrs queryType req = do
       (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi opDef
       return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
 
-
 runGQBatched
   :: ( HasVersion
      , MonadIO m
@@ -112,7 +112,7 @@ runGQBatched reqId responseErrorsConfig userInfo reqHdrs queryType query =
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
       -- in this case, and don't forward any.
-      let includeInternal = shouldIncludeInternal (userRole userInfo) responseErrorsConfig
+      let includeInternal = shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig
           removeHeaders =
             flip HttpResponse []
             . encJFromList

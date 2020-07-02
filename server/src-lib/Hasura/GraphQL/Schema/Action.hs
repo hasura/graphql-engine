@@ -23,6 +23,7 @@ import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 actionExecute
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
@@ -31,7 +32,7 @@ actionExecute
   -> m (Maybe (FieldParser n (AnnActionExecution UnpreparedValue)))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- lift askRoleName
-  guard $ roleName == adminRole || roleName `Map.member` permissions
+  guard $ roleName == adminRoleName || roleName `Map.member` permissions
   let fieldName = unActionName actionName
       description = G.Description <$> comment
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
@@ -60,7 +61,7 @@ actionAsyncMutation
   -> m (Maybe (FieldParser n AnnActionMutationAsync))
 actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- lift askRoleName
-  guard $ roleName == adminRole || roleName `Map.member` permissions
+  guard $ roleName == adminRoleName || roleName `Map.member` permissions
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
   actionId <- lift actionIdParser
   let fieldName = unActionName actionName
@@ -76,7 +77,7 @@ actionAsyncQuery
   -> m (Maybe (FieldParser n (AnnActionAsyncQuery UnpreparedValue)))
 actionAsyncQuery actionInfo = runMaybeT do
   roleName <- lift askRoleName
-  guard $ roleName == adminRole || roleName `Map.member` permissions
+  guard $ roleName == adminRoleName || roleName `Map.member` permissions
   actionId <- lift actionIdParser
   actionOutputParser <- actionOutputFields outputObject
   createdAtFieldParser <-

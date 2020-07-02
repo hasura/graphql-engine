@@ -27,10 +27,11 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import qualified Language.GraphQL.Draft.Syntax          as G
+import           Hasura.Session
 
 
 convertDelete
-  :: UserVars
+  :: SessionVariables
   -> RQL.AnnDelG UnpreparedValue
   -> Bool
   -> Q.TxE QErr EncJSON
@@ -39,7 +40,7 @@ convertDelete usrVars deleteOperation stringifyNum =
   where (preparedDelete, planningState) = runIdentity $ runPlan $ RQL.traverseAnnDel prepareWithPlan deleteOperation
 
 convertUpdate
-  :: UserVars
+  :: SessionVariables
   -> RQL.AnnUpdG UnpreparedValue
   -> Bool
   -> RespTx
@@ -49,7 +50,7 @@ convertUpdate usrVars updateOperation stringifyNum =
   where (preparedUpdate, planningState) = runIdentity $ runPlan $ RQL.traverseAnnUpd prepareWithPlan updateOperation
 
 convertInsert
-  :: UserVars
+  :: SessionVariables
   -> AnnMultiInsert UnpreparedValue
   -> Bool
   -> RespTx
@@ -57,7 +58,7 @@ convertInsert userVars insertOperation stringifyNum =
   convertToSQLTransaction preparedUpdate stringifyNum
   where (preparedUpdate, _FIXME) = runIdentity $ runPlan $ traverseAnnInsert prepareWithPlan insertOperation
 
-planVariablesSequence :: UserVars -> PlanningSt -> Seq.Seq Q.PrepArg
+planVariablesSequence :: SessionVariables -> PlanningSt -> Seq.Seq Q.PrepArg
 planVariablesSequence usrVars = Seq.fromList . map fst . withUserVars usrVars . IntMap.elems . _psPrepped
 
 convertMutationRootField
@@ -65,7 +66,7 @@ convertMutationRootField
                , MonadIO m
                , MonadError QErr m
                )
-  => UserVars
+  => SessionVariables
   -> HTTP.Manager
   -> HTTP.RequestHeaders
   -> Bool
@@ -87,7 +88,7 @@ convertMutationRootField usrVars manager reqHeaders stringifyNum = \case
 convertMutationSelectionSet
   :: (HasVersion, MonadIO m, MonadError QErr m)
   => GQLContext
-  -> UserVars
+  -> SessionVariables
   -> HTTP.Manager
   -> HTTP.RequestHeaders
   -> G.SelectionSet G.NoFragments G.Name

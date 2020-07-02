@@ -59,6 +59,7 @@ import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types
+import           Hasura.Session
 
 -- -------------------------------------------------------------------------------------------------
 -- Subscribers

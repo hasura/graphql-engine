@@ -1,7 +1,7 @@
 module Hasura.GraphQL.Execute.Plan
   ( ReusablePlan(..)
   , PlanCache
-  , PlanCacheOptions
+  , PlanCacheOptions(..)
   , mkPlanCacheOptions
   , getPlan
   , addPlan
@@ -21,6 +21,7 @@ import qualified Hasura.GraphQL.Execute.LiveQuery       as LQ
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import           Hasura.RQL.Types
+import           Hasura.Session
 
 data PlanId
   = PlanId
@@ -63,8 +64,7 @@ mkPlanCacheOptions = PlanCacheOptions
 
 initPlanCache :: PlanCacheOptions -> IO PlanCache
 initPlanCache options =
-  PlanCache <$>
-  Cache.initialise (Cache.mkCacheOptions $ unPlanCacheSize options)
+  PlanCache <$> Cache.initialise (unPlanCacheSize options)
 
 getPlan
   :: SchemaCacheVer -> RoleName -> Maybe GH.OperationName -> GH.GQLQueryText

@@ -6,9 +6,11 @@ import qualified Hasura.SQL.DML      as S
 import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.Session
 
 import           Control.Lens
 import           Data.Aeson.Types
@@ -58,7 +60,7 @@ getPermInfoMaybe roleName pa tableInfo =
   getRolePermInfo >>= (^. permAccToLens pa)
   where
     getRolePermInfo
-      | roleName == adminRole = Just $ mkAdminRolePermInfo (_tiCoreInfo tableInfo)
+      | roleName == adminRoleName = Just $ mkAdminRolePermInfo (_tiCoreInfo tableInfo)
       | otherwise             = M.lookup roleName (_tiRolePermInfoMap tableInfo)
 
 askPermInfo
@@ -81,7 +83,7 @@ askPermInfo pa tableInfo = do
 
 isTabUpdatable :: RoleName -> TableInfo -> Bool
 isTabUpdatable role ti
-  | role == adminRole = True
+  | role == adminRoleName = True
   | otherwise = isJust $ M.lookup role rpim >>= _permUpd
   where
     rpim = _tiRolePermInfoMap ti
@@ -126,7 +128,7 @@ checkPermOnCol pt allowedCols pgCol = do
     throw400 PermissionDenied $ permErrMsg roleName
   where
     permErrMsg roleName
-      | roleName == adminRole = "no such column exists : " <>> pgCol
+      | roleName == adminRoleName = "no such column exists : " <>> pgCol
       | otherwise = mconcat
         [ "role " <>> roleName
         , " does not have permission to "
@@ -148,7 +150,7 @@ fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
 
-type SessVarBldr m = PGType PGScalarType -> SessVar -> m S.SQLExp
+type SessVarBldr m = PGType PGScalarType -> SessionVariable -> m S.SQLExp
 
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
@@ -207,11 +209,11 @@ convPartialSQLExp f = \case
   PSESessVar colTy sessionVariable -> f colTy sessionVariable
 
 sessVarFromCurrentSetting
-  :: (Applicative f) => PGType PGScalarType -> SessVar -> f S.SQLExp
+  :: (Applicative f) => PGType PGScalarType -> SessionVariable -> f S.SQLExp
 sessVarFromCurrentSetting pgType sessVar =
   pure $ sessVarFromCurrentSetting' pgType sessVar
 
-sessVarFromCurrentSetting' :: PGType PGScalarType -> SessVar -> S.SQLExp
+sessVarFromCurrentSetting' :: PGType PGScalarType -> SessionVariable -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
   flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
@@ -219,7 +221,7 @@ sessVarFromCurrentSetting' ty sessVar =
     PGTypeArray _       -> sessVarVal
   where
     sessVarVal = S.SEOpApp (S.SQLOp "->>")
-                 [currentSession, S.SELit $ T.toLower sessVar]
+                 [currentSession, S.SELit $ sessionVariableToText sessVar]
 
 currentSession :: S.SQLExp
 currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
@@ -280,7 +282,7 @@ toJSONableExp strfyNum colTy asText expn
 -- validate headers
 validateHeaders :: (UserInfoM m, QErrM m) => [T.Text] -> m ()
 validateHeaders depHeaders = do
-  headers <- getVarNames . userVars <$> askUserInfo
+  headers <- getSessionVariables . _uiSession <$> askUserInfo
   forM_ depHeaders $ \hdr ->
     unless (hdr `elem` map T.toLower headers) $
     throw400 NotFound $ hdr <<> " header is expected but not found"

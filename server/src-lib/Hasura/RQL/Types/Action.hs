@@ -57,6 +57,7 @@ import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax    (Lift)
+import           Hasura.Session
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
@@ -313,5 +314,5 @@ data ActionExecContext
   = ActionExecContext
   { _aecManager          :: !HTTP.Manager
   , _aecHeaders          :: !HTTP.RequestHeaders
-  , _aecSessionVariables :: !UserVars
+  , _aecSessionVariables :: !SessionVariables
   }
