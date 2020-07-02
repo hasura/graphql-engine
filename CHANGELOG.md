@@ -12,6 +12,7 @@
 - console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - console: support tracking partitioned tables (close #5071) (#5258)
 - console: add button to cancel one-off scheduled events and cron-trigger events (close #5161) (#5236)
+- console: handle generated and identity columns in console data section (close #4552, #4863) (#4761)
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
 - docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
 - docs: add hasura cloud to getting started section (close #5206) (#5208)
