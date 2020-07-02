@@ -33,9 +33,9 @@ type CmdOpts struct {
 }
 
 func Hasura(opts CmdOpts) *Session {
-	hasuraBinaryPath := "hasura"
-	if os.Getenv("CI") != "" {
-		hasuraBinaryPath = "/build/_cli_output/binaries/cli-hasura-linux-amd64"
+	var hasuraBinaryPath string
+	if cliBinaryPath == "" {
+		hasuraBinaryPath = "hasura"
 	}
 	cmd := exec.Command(hasuraBinaryPath, opts.Args...)
 	if opts.WorkingDirectory != "" {
@@ -111,8 +111,8 @@ func EditEndpointInConfig(configFilePath, endpoint string) {
 
 }
 
-func IsCI() bool {
-	if os.Getenv("CI") != "" {
+func IsHGEBinaryPathSet() bool {
+	if hgeBinaryPath != "" {
 		return true
 	}
 	return false

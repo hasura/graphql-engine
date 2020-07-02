@@ -27,7 +27,8 @@ import (
 
 func StartNewHge() (endpoint string, teardown func()) {
 	// create a new postgres testcontainer
-	if IsCI() {
+	if IsHGEBinaryPathSet() {
+		fmt.Fprintln(GinkgoWriter, hgeBinaryPath, hgeServerDirectoryPath)
 		// start a postgres container
 		ctx := context.Background()
 		postgresC := startPostgresContainer(ctx)
@@ -38,9 +39,14 @@ func StartNewHge() (endpoint string, teardown func()) {
 		postgresConnectionString := fmt.Sprintf("postgres://postgres:postgrespassword@%s:%d/postgres", ip, port.Int())
 
 		// run HGE server on a random port
+		if hgeBinaryPath == "" {
+			hgeBinaryPath = "/build/_server_output/graphql-engine"
+		}
 		hgePort := getFreePort()
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%d", hgePort)
-		session := startHgeBinary(postgresConnectionString, hgePort)
+		session := startHgeBinary(startHgeBinaryOpts{
+			postgresConnectionString, hgePort, hgeBinaryPath, hgeServerDirectoryPath,
+		})
 
 		teardown := func() {
 			Expect(postgresC.Terminate(ctx)).ShouldNot(HaveOccurred())
@@ -76,31 +82,46 @@ func startPostgresContainer(ctx context.Context) tc.Container {
 	return postgresC
 }
 
-func startHgeBinary(dbConnectionString string, port int) *Session {
+type startHgeBinaryOpts struct {
+	DbConnectionString string
+	Port               int
+	BinaryPath         string
+	WorkingDirectory   string
+}
+
+func startHgeBinary(opts startHgeBinaryOpts) *Session {
 	var hgeArgs = []string{
 		"--database-url",
-		dbConnectionString,
+		opts.DbConnectionString,
 		"serve",
 		"--server-port",
-		strconv.Itoa(port),
+		strconv.Itoa(opts.Port),
 		"--server-host",
 		"0.0.0.0",
 		"--enable-console",
 		"--console-assets-dir=../console/static/dist",
 	}
-	//var binaryPath = []string{"cabal", "new-run", "--", "exe:graphql-engine"}
-	const binaryPath = "/build/_server_output/graphql-engine"
-	cmd := exec.Command(binaryPath, hgeArgs...)
+	if v := strings.Split(opts.BinaryPath, " "); len(v) > 1 {
+		// for handling paths like
+		// cabal new-run -- exe:graphql-engine
+		opts.BinaryPath = v[0]
+		hgeArgs = append(v[1:], hgeArgs...)
+	}
+	cmd := exec.Command(opts.BinaryPath, hgeArgs...)
+	if opts.WorkingDirectory != "" {
+		cmd.Dir = opts.WorkingDirectory
+	}
 	session, err := Start(
 		cmd,
 		NewPrefixedWriter(DebugOutPrefix, GinkgoWriter),
 		NewPrefixedWriter(DebugErrPrefix, GinkgoWriter),
 	)
+	fmt.Fprint(GinkgoWriter, "starting command", opts.BinaryPath, hgeArgs)
 	Expect(err).ShouldNot(HaveOccurred())
 	// wait for server to start
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 10
-	_, err = retryablehttp.Get(fmt.Sprintf("%s:%d/healthz", "http://0.0.0.0", port))
+	_, err = retryablehttp.Get(fmt.Sprintf("%s:%d/healthz", "http://0.0.0.0", opts.Port))
 	Expect(err).ShouldNot(HaveOccurred())
 	return session
 }
