@@ -8,6 +8,7 @@
 
 - server: add new `--conn-lifetime` and `HASURA_GRAPHQL_PG_CONN_LIFETIME` options for expiring connections after some amount of active time (#5087)
 - server: shrink libpq connection request/response buffers back to 1MB if they grow beyond 2MB, fixing leak-like behavior on active servers (#5087)
+- server: unlock locked scheduled events on graceful shutdown (#4928)
 - console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
 - docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
@@ -40,7 +41,6 @@
 - server: few relay fixes (fix #5020, #5037, #5046) (#5013)
 - server: raise error on startup when `--unauthorized-role` is ignored (#4736)
 - server: fix bug which arises when renaming/dropping a column on a remote relationship (#5005, #5119)
-- server: unlock locked scheduled events on graceful shutdown
 - console: provide option to cascade metadata on dependency conflicts on console (fix #1593)
 - console: fix enum tables reload data button UI (#4647)
 - console: fix "Cannot read property 'foldable'" runtime error in Browse Rows page (fix #4907) (#5016)
@@ -120,7 +120,7 @@ Read more about the session argument for computed fields in the [docs](https://h
 A new `seeds` command is introduced in CLI, this will allow managing seed migrations as SQL files
 
 #### Creating seed
-```                                                        
+```
 # create a new seed file and use editor to add SQL content
 hasura seed create new_table_seed
 
