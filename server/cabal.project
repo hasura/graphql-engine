@@ -36,12 +36,12 @@ package graphql-engine
 source-repository-package
   type: git
   location: https://github.com/hasura/pg-client-hs.git
-  tag: 70a849d09bea9461e72c5a5bbde06df65aab61c0
+  tag: 049015e042d107d8ededc943a64f7fabd3690a35
 
 source-repository-package
   type: git
   location: https://github.com/hasura/graphql-parser-hs.git
-  tag: ba2379640248ce67cdfe700cbb79acd91c644bdb
+  tag: f4a093981ca5626982a17c2bfaad047cc0834a81
 
 source-repository-package
   type: git

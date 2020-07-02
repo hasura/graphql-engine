@@ -19,6 +19,7 @@ import {
   passDeleteRow,
   passBulkDeleteRows,
   passBulkDeleteAllRows,
+  passArrayDataType,
 } from './spec';
 
 import { setMetaData } from '../../validators/validators';
@@ -52,6 +53,7 @@ export const runInsertBrowseTests = () => {
     it('Delete the row', passDeleteRow);
     it('Bulk delete rows', passBulkDeleteRows);
     it('Bulk delete all rows', passBulkDeleteAllRows);
+    it('Handle array data types', passArrayDataType);
     it('Check view relationship', checkViewRelationship);
     it('Delete test table', deleteBITestTable);
   });

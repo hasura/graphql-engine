@@ -1,0 +1,27 @@
+# https://github.com/hasura/graphql-engine/issues/5144
+description: Test remote relationships via relay endpoint
+url: /v1/relay
+status: 200
+query:
+  query: |
+    query {
+      profiles_connection{
+        edges{
+          node{
+            id
+            name
+            messageBasic {
+              id
+              msg
+              name
+            }
+          }
+        }
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: $.selectionSet.profiles_connection.selectionSet.edges.selectionSet.node.selectionSet.messageBasic
+      code: validation-failed
+    message: "field \"messageBasic\" not found in type: 'profiles'"

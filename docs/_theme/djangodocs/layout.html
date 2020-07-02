@@ -4,7 +4,7 @@
   {% set is_landing_page = true %}
 {%- endif %}
 
-{% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css'] %}
+{% set css_files = css_files + ['_static/djangosite.css', '_static/hasura-custom.css'] %}
 
 {%- if is_landing_page %}
   {% set css_files = css_files + ['_static/landing.css'] %}
@@ -29,34 +29,163 @@
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if not is_landing_page else '' }}{% endblock %}">
     <div class="main_container_wrapper">
       {% include 'pages/loading.html' %}
-      <div id="banner" class="bannerStripWrapper hideClass">
-        <div class='bannerInnerWrapper displayFlex'>
-          <a
-            href="https://hasura.io/events/hasura-con-2020/"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            <div class="bannerStrip">
-              <div class="displayFlex noPadd">
-                <div class="announceIcon">
-                  <img src="{{ pathto('_images/layout/hasura-con.svg', 1) }}" alt="Hasura Con20"/>
+      <header
+        id="header"
+        class='blueBgColor boderBottom'
+      >
+        <div class="navContainerWrapper noPadd">
+          <div class="headerWrapper">
+            <div class="navLeft">
+              <div class="brand">
+                <a href="https://hasura.io/">
+                  <img src="{{ pathto('_images/layout/white-logo.svg', 1) }}" alt="Logo"/>
+                </a>
+              </div>
+              <a href="https://discordapp.com/invite/hasura" target="_blank" rel="noopener noreferrer">
+                <div class="socialBtn discordBtn">
+                  <img src="{{ pathto('_images/layout/discord-brands-block.svg', 1) }}" alt="Discord"/>
                 </div>
-                <div class="bodyTextSmall">
-                  <span class="textColor">
-                    Register for Hasura Con: A free, online conference on pushing the boundaries of GraphQL
-                  </span>
+              </a>
+              <a href="https://twitter.com/hasurahq" target="_blank" rel="noopener noreferrer">
+                <div class="socialBtn twitterBtn">
+                  <img src="{{ pathto('_images/layout/twitter-brands-block.svg', 1) }}" alt="Twitter"/>
                 </div>
+              </a>
+              <a class='socialBtn gitHubBtn hide' href="https://github.com/hasura/graphql-engine/" target="_blank" rel="noopener noreferrer">
+                <div class='gitHubStars'>
+                  <img src="{{ pathto('_images/layout/github-header.svg', 1) }}" alt='Github'/>
+                  <span>Star</span>
+                </div>
+                <div class='gitHubCount'>
+
+                </div>
+              </a>
+            </div>
+            <div class="navBlueBG">
+              <ul class="navBarUL">
+                <!-- <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                  {%- if version == '1.0' %}
+                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.x</option>
+                  {%- else -%}
+                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.x</option>
+                  {% endif %}
+                </select> -->
+
+                <li>v1.x</li>
+                <li class='navListActive'>
+                  <a href="/docs/">Docs</a>
+                </li>
+                <li>
+                  <a href='https://hasura.io/blog/'>
+                    Blog
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/learn/">
+                    Tutorials
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/enterprise/">
+                    Enterprise
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/hasura-pro/">
+                    Hasura Pro
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hasura.io/pricing/">
+                    Pricing
+                  </a>
+                </li>
+                <li>
+                  <a href='https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html'>
+                    <button class="commonBtn navBtnHome">
+                      Get Started
+                    </button>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class='navBlueBG'>
+              <span class="navBarToggle"
+                onclick="toggleMenu()"
+              >
+                <span class="iconBar"></span>
+                <span class="iconBar"></span>
+                <span class="iconBar"></span>
+              </span>
+            </div>
+            <div id="navbar" class="topnav">
+              <div class="visibleMobile">
+                <ul class="navBarULMobile">
+                  <li>
+                    <a href="/docs/"
+                      onclick="toggleMenu()"
+                    >Docs</a>
+                    <span class="versionTxt">
+                      v1.x
+                      <!-- <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                        {%- if version == '1.0' %}
+                          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.x</option>
+                        {%- else -%}
+                          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.x</option>
+                        {% endif %}
+                      </select> -->
+                    </span>
+                  </li>
+                  <li>
+                    <a href='https://hasura.io/blog/'
+                      onclick="toggleMenu()"
+                    >
+                      Blog
+                    </a>
+                  </li>
+                  <li>
+                    <a href='https://hasura.io/learn/'
+                      onclick="toggleMenu()"
+                    >
+                      Tutorials
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://hasura.io/enterprise/"
+                      onclick="toggleMenu()"
+                    >
+                      Enterprise
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://hasura.io/hasura-pro/"
+                      onclick="toggleMenu()"
+                    >
+                      Hasura Pro
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://hasura.io/pricing/"
+                      onclick="toggleMenu()"
+                    >
+                      Pricing
+                    </a>
+                  </li>
+                  <li>
+                    <a href='https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html'
+                      onclick="toggleMenu()"
+                    >
+                      <button class='commonBtn navBtnHome'>
+                        Get Started
+                      </button>
+                    </a>
+                  </li>
+                </ul>
               </div>
             </div>
-          </a>
-          <div id="banner-close" class="closeBanner">
-            <img src="{{ pathto('_images/layout/close.svg', 1) }}" alt="Close" />
           </div>
         </div>
-        <div class='bannerStripImg'>
-          <img src="{{ pathto('_images/layout/stripe.png', 1) }}" alt='stripe' />
-        </div>
-      </div>
+      </header>
       <div id="" class="content_wrapper">
         {%- if is_landing_page %}
           {% include 'pages/landing.html' %}
@@ -66,6 +195,21 @@
 
           {% block sidebarwrapper %}
             <div class="yui-b mobile-hide" id="sidebar">
+              <div id='sidebar-close' class='mobile-only closeIcon'>
+                <img src="{{ pathto('_images/layout/close-icon.svg', 1) }}" alt="Close"/>
+              </div>
+              <div class="tabbarContainerWrapper blueBgColor boderBottom">
+                <a href="" class="tabbarTabActive">
+                  <span>
+                    Hasura Core
+                  </span>
+                </a>
+                <a href="https://hasura.io/docs/cloud/1.0/manual/index.html">
+                  <span>
+                    Hasura Cloud
+                  </span>
+                </a>
+              </div>
               {{ sidebar() }}
             </div>
           {% endblock %}
@@ -74,6 +218,7 @@
             <div role="main" parent={{ rootpage }}>
 
               <div id="docs-header">
+                <!--
                 <div class="mobile-only" id="mobile-logo">
                   <a href="https://{{ BASE_DOMAIN }}/" target="_blank" rel="noopener">
                     <div class="img_wrapper inline-block">
@@ -82,14 +227,18 @@
                   </a>
                   <a href="https://{{ BASE_DOMAIN }}/docs" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
                 </div>
+                -->
                 <div id="docs-header-actions">
-                  <div class="inline-block mobile-only" id="nav_tree_icon">
-                    <span class="fa fa-bars"></span>
-                  </div>
                   <div class="inline-block" id="input_search_box">
                     <span class="fa fa-search search_icon"></span>
                     <input type="text" id="search_element" placeholder="Search docs..." />
                   </div>
+                  <div class="inline-block mobile-only" id="nav_tree_icon">
+                    <div class="docs-menu">
+                      DOCS MENU >
+                    </div>
+                  </div>
+                  <!--
                   <div class="inline-block header_links">
                     <div class="social_icons_wrapper">
                       <div class="social_icons">
@@ -110,6 +259,7 @@
                       </div>
                     </div>
                   </div>
+                  -->
                 </div>
               </div>
 
@@ -154,7 +304,30 @@
                   Thank you for your feedback!
                 </div>
               </div>
-
+              <div class="subscribe-form-wrapper">
+                <div id="mc_embed_signup">
+                  <div class="subscribe-form-content">
+                    Stay up to date with product & security news
+                  </div>
+                  <form action="https://hasura.us13.list-manage.com/subscribe/post?u=9b63e92a98ecdc99732456b0e&amp;id=f5c4f66bcf" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate post-subscription-form mailchimp-form" target="_blank" rel="noopener" novalidate>
+                      <div class="full-width">
+                        <div class="input-box">
+                          <input type="email" name="EMAIL" id="mce-EMAIL" aria-label="Email" placeholder="Your Email Address" pattern="^([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22))*\x40([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d))*(\.\w{2,})+$" title="The domain portion of the email address is invalid (the portion after the @)." required>
+                        </div>
+                        <div id="mce-responses" class="clear display-inline">
+                          <div class="mce-error-response response error-message hide">
+                          </div>
+                          <div class="mce-success-response response success-message hide">
+                          </div>
+                        </div>
+                      </div>
+                      <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_9b63e92a98ecdc99732456b0e_f5c4f66bcf" tabindex="-1" value=""></div>
+                      <div class="clear submit-box">
+                        <input type="submit" disabled="true" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
+                      </div>
+                  </form>
+                </div>
+              </div>
               <div class="footer-hasura-custom">
                 <img class="responsive footer_logo" src="{{ pathto('_images/layout/hasura_logo.svg', 1) }}" alt="Hasura Logo Dark"/>
                 <div class="footer_text">
@@ -214,20 +387,34 @@
       $('.supportBtn').on('click', supportBtnHandler);
     });
   </script>
+
   <!-- Local storage -->
   <script type="text/javascript">
     $(document).ready( function() {
-      const bannerStripeConsent = window.localStorage.getItem("hasuraCon2020BannerStripeConsent")
-      if (bannerStripeConsent !== "yes") {
-        $('#banner').removeClass("hideClass");
+      const bannerLocalStorageKey = 'hasuraConBannerDismissed';
+      const bannerDismissed = window.localStorage.getItem(bannerLocalStorageKey);
+      if (bannerDismissed !== "yes") {
+        $('#banner').removeClass("hide");
       }
       $('#banner-close').click(function(e){
-        window.localStorage.setItem('hasuraCon2020BannerStripeConsent', 'yes');
+        window.localStorage.setItem(bannerLocalStorageKey, 'yes');
         $('#banner').hide();
       });
     });
-
   </script>
+
+  <!--Hamburger menu-->
+  <script type="text/javascript">
+    function toggleMenu() {
+      var x = document.getElementById("navbar")
+      if (x.className === "topnav") {
+        x.className += " responsive"
+      } else {
+        x.className = "topnav"
+      }
+    }
+  </script>
+
   <!-- utils -->
   <script type="text/javascript">
     // load script file
@@ -344,7 +531,19 @@
         }
       };
       $('#nav_tree_icon').on('click', navTreeHandler);
+      $('#sidebar-close').on('click', navTreeHandler);
     });
+  </script>
+
+  <!-- mailchimp -->
+  <script type="text/javascript">
+    $(document).ready( function() {
+        loadCss('//cdn-images.mailchimp.com/embedcode/classic-10_7.css', function(){});
+        loadScript("{{ pathto('_static/mailchimp/mailchimp.js', 1) }}", function(){});
+    });
+  </script>
+  <script type='text/javascript'>
+    (function($) {window.fnames = new Array(); window.ftypes = new Array();fnames[0]='EMAIL';ftypes[0]='email';fnames[1]='FNAME';ftypes[1]='text';fnames[2]='LNAME';ftypes[2]='text';fnames[3]='ADDRESS';ftypes[3]='address';fnames[4]='PHONE';ftypes[4]='phone';}(jQuery));
   </script>
 
   <!-- feedback -->
@@ -384,12 +583,12 @@
       };
 
       const handleThumbUpClick = function(e) {
-        sendFeedback('positive', 'Great to hear that. Would you like to share any other feedback:');
+        sendFeedback('positive', 'Great to hear that! If you have any other feedback, please share here:');
       };
       $('.thumb_up').on('click', handleThumbUpClick);
 
       const handleThumbDownClick = function(e) {
-        sendFeedback('negative', 'Sorry to hear that. Could you please tell us what you were looking for:');
+        sendFeedback('negative', 'Sorry to hear that. Please tell us what you were looking for:');
       };
       $('.thumb_down').on('click', handleThumbDownClick);
 
@@ -422,7 +621,6 @@
       $('.feedback_btn').on('click', handleFeedbackBtnClick);
     });
   </script>
-
   <!-- graphiql -->
   <script type="text/javascript">
     $(document).ready( function() {
@@ -519,6 +717,49 @@
     });
   </script>
 
+  <script type="text/javascript">
+    $(document).ready( function() {
+      var baseDomain = "{{ BASE_DOMAIN }}";
+      const dbUrl = baseDomain ? 'https://data.' + baseDomain + '/v1/query' : 'https://data.hasura-stg.hasura-app.io/v1/query';
+      const githubStarCount = () => {
+        const bodyObj = {
+          type: "select",
+          args: {
+            table: "github_repos",
+            columns: ["star_count"],
+            where: {
+              $or: [
+                {
+                  name: "graphql-engine",
+                },
+              ],
+            },
+          },
+        }
+        const options = {
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify(bodyObj),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+        fetch(dbUrl, options)
+          .then(response => {
+            return response.json()
+          })
+          .then(data => {
+            const githubStar = data[0].star_count
+            $(".gitHubCount").html(githubStar);
+            $(".gitHubBtn").removeClass("hide");
+          })
+          .catch(e => {
+            console.error(e)
+          })
+      }
+      githubStarCount();
+    });
+  </script>
   <!-- global_tabs -->
   <script type="text/javascript">
     $(document).ready( function() {

@@ -1,0 +1,86 @@
+description: Query articles connection with pageInfo and edges
+url: /v1/relay
+status: 200
+query:
+  query: |
+    query {
+      article_connection{
+        pageInfo{
+          hasNextPage
+          startCursor
+          endCursor
+          hasPreviousPage
+        }
+        edges{
+          cursor
+          node_id: node{
+            id
+          }
+          node{
+            title
+            content
+            author{
+              name
+            }
+          }
+        }
+      }
+    }
+
+response:
+  data:
+    article_connection:
+      pageInfo:
+        hasNextPage: false
+        startCursor: eyJpZCIgOiAxfQ==
+        endCursor: eyJpZCIgOiA2fQ==
+        hasPreviousPage: false
+      edges:
+      - cursor: eyJpZCIgOiAxfQ==
+        node_id:
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDFd
+        node:
+          title: Article 1
+          content: Sample article content 1
+          author:
+            name: Author 1
+      - cursor: eyJpZCIgOiAyfQ==
+        node_id:
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDJd
+        node:
+          title: Article 2
+          content: Sample article content 2
+          author:
+            name: Author 1
+      - cursor: eyJpZCIgOiAzfQ==
+        node_id:
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDNd
+        node:
+          title: Article 3
+          content: Sample article content 3
+          author:
+            name: Author 1
+      - cursor: eyJpZCIgOiA0fQ==
+        node_id:
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDRd
+        node:
+          title: Article 4
+          content: Sample article content 4
+          author:
+            name: Author 2
+      - cursor: eyJpZCIgOiA1fQ==
+        node_id:
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDVd
+        node:
+          title: Article 5
+          content: Sample article content 5
+          author:
+            name: Author 2
+      - cursor: eyJpZCIgOiA2fQ==
+        node_id:
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDZd
+        node:
+          title: Article 6
+          content: Sample article content 6
+          author:
+            name: Author 3

@@ -1,0 +1,5 @@
+type: bulk
+args:
+- type: replace_metadata
+  args:
+    tables: []

@@ -9,6 +9,7 @@ import qualified Data.Text                        as T
 import qualified Database.PG.Query                as Q
 
 import           Data.Char                        (toLower)
+import           Data.Time
 import           Network.Wai.Handler.Warp         (HostPreference)
 
 import qualified Hasura.Cache                     as Cache
@@ -26,6 +27,9 @@ data RawConnParams
   { rcpStripes      :: !(Maybe Int)
   , rcpConns        :: !(Maybe Int)
   , rcpIdleTime     :: !(Maybe Int)
+  , rcpConnLifetime :: !(Maybe NominalDiffTime)
+  -- ^ Time from connection creation after which to destroy a connection and
+  -- choose a different/new one.
   , rcpAllowPrepare :: !(Maybe Bool)
   } deriving (Show, Eq)
 
@@ -37,7 +41,7 @@ data RawServeOptions impl
   , rsoHost                :: !(Maybe HostPreference)
   , rsoConnParams          :: !RawConnParams
   , rsoTxIso               :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret         :: !(Maybe AdminSecret)
+  , rsoAdminSecret         :: !(Maybe AdminSecretHash)
   , rsoAuthHook            :: !RawAuthHook
   , rsoJwtSecret           :: !(Maybe JWTConfig)
   , rsoUnAuthRole          :: !(Maybe RoleName)
@@ -79,7 +83,7 @@ data ServeOptions impl
   , soHost                         :: !HostPreference
   , soConnParams                   :: !Q.ConnParams
   , soTxIso                        :: !Q.TxIsolation
-  , soAdminSecret                  :: !(Maybe AdminSecret)
+  , soAdminSecret                  :: !(Maybe AdminSecretHash)
   , soAuthHook                     :: !(Maybe AuthHook)
   , soJwtSecret                    :: !(Maybe JWTConfig)
   , soUnAuthRole                   :: !(Maybe RoleName)
@@ -202,6 +206,11 @@ readJson = J.eitherDecodeStrict . txtToBs . T.pack
 class FromEnv a where
   fromEnv :: String -> Either String a
 
+-- Deserialize from seconds, in the usual way
+instance FromEnv NominalDiffTime where
+  fromEnv s = maybe (Left "could not parse as a Double") (Right . realToFrac) $
+                (readMaybe s :: Maybe Double)
+
 instance FromEnv String where
   fromEnv = Right
 
@@ -217,8 +226,8 @@ instance FromEnv AuthHookType where
 instance FromEnv Int where
   fromEnv = maybe (Left "Expecting Int value") Right . readMaybe
 
-instance FromEnv AdminSecret where
-  fromEnv = Right . AdminSecret . T.pack
+instance FromEnv AdminSecretHash where
+  fromEnv = Right . hashAdminSecret . T.pack
 
 instance FromEnv RoleName where
   fromEnv string = case mkRoleName (T.pack string) of

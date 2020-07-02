@@ -13,7 +13,7 @@ const editorLabel = 'New types definition';
 const editorTooltip =
   'You can define new GraphQL types that you can use in the action definition above';
 
-const ActionDefinitionEditor = ({
+const TypeDefinitionEditor = ({
   value,
   onChange,
   className,
@@ -24,6 +24,7 @@ const ActionDefinitionEditor = ({
   tooltip = editorTooltip,
   editorHeight = '200px',
   editorWidth = '600px',
+  readOnlyMode,
 }) => {
   // const [modalOpen, setModalState] = React.useState(false);
   // const toggleModal = () => setModalState(!modalOpen);
@@ -114,10 +115,11 @@ const ActionDefinitionEditor = ({
           placeholder={placeholder}
           height={editorHeight}
           width={editorWidth}
+          readOnly={readOnlyMode}
         />
       </div>
     </div>
   );
 };
 
-export default ActionDefinitionEditor;
+export default TypeDefinitionEditor;

@@ -5,6 +5,7 @@ from datetime import datetime,timedelta
 from croniter import croniter
 from validate import validate_event_webhook,validate_event_headers
 from queue import Empty
+import json
 import time
 
 # The create and delete tests should ideally go in setup and teardown YAML files,
@@ -142,7 +143,7 @@ class TestCronTrigger(object):
         TestCronTrigger.init_time = datetime.utcnow()
         # the cron events will be generated based on the current time, they
         # will not be exactly the same though(the server now and now here)
-        assert cron_st_code == 200,resp
+        assert cron_st_code == 200,cron_st_resp
         assert cron_st_resp['message'] == 'success'
 
     def test_check_generated_cron_scheduled_events(self,hge_ctx):
@@ -168,6 +169,73 @@ class TestCronTrigger(object):
         assert len(ts_resp) == 100
         # 100 scheduled events are generated in a single batch when the
         # scheduled events need hydration
+        actual_schedule_timestamps = []
+        for ts in ts_resp:
+            datetime_ts = datetime.strptime(ts[0],"%Y-%m-%d %H:%M:%S")
+            actual_schedule_timestamps.append(datetime_ts)
+        assert actual_schedule_timestamps == expected_schedule_timestamps
+
+    def test_update_existing_cron_trigger(self,hge_ctx):
+        expected_schedule_timestamps = []
+        iter = croniter(self.cron_schedule,datetime.utcnow())
+        for i in range(100):
+            expected_schedule_timestamps.append(iter.next(datetime))
+        q = {
+            "type":"create_cron_trigger",
+            "args":{
+                "name":self.cron_trigger_name,
+                "webhook":"{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}" + "/foo",
+                "schedule":self.cron_schedule,
+                "headers":[
+                    {
+                        "name":"header-name",
+                        "value":"header-value"
+                    }
+                ],
+                "payload":{"foo":"baz"},
+                "include_in_metadata":False,
+                "replace":True
+            }
+        }
+        st,resp = hge_ctx.v1q(q)
+        assert st == 200, resp
+
+        sql = '''
+        select header_conf::json
+        from hdb_catalog.hdb_cron_triggers where
+        name = '{}' '''
+        q = {
+            "type":"run_sql",
+            "args":{
+                "sql":sql.format(self.cron_trigger_name)
+            }
+        }
+        st,resp = hge_ctx.v1q(q)
+        assert st == 200,resp
+        print ("resp",resp['result'][1][0])
+        assert json.loads(resp['result'][1][0]) == [{
+            "name":"header-name",
+            "value":"header-value"
+        }]
+
+        # Get timestamps in UTC from the db to compare it with
+        # the croniter generated timestamps
+        # After updating the cron trigger, the future events should
+        # have been created
+        sql = '''
+        select timezone('utc',scheduled_time) as scheduled_time
+        from hdb_catalog.hdb_cron_events where
+        trigger_name = '{}' order by scheduled_time asc;'''
+        q = {
+            "type":"run_sql",
+            "args":{
+                "sql":sql.format(self.cron_trigger_name)
+            }
+        }
+        st,resp = hge_ctx.v1q(q)
+        assert st == 200,resp
+        ts_resp = resp['result'][1:]
+        assert len(ts_resp) == 100
         actual_schedule_timestamps = []
         for ts in ts_resp:
             datetime_ts = datetime.strptime(ts[0],"%Y-%m-%d %H:%M:%S")
