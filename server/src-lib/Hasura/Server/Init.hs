@@ -18,6 +18,7 @@ import qualified Language.Haskell.TH.Syntax       as TH
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Data.FileEmbed                   (embedStringFile)
+import           Data.Time                        (NominalDiffTime)
 import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
 
@@ -607,7 +608,7 @@ parseConnParams =
                 help (snd pgTimeoutEnv)
               )
 
-    connLifetime = fmap (fmap fromRational) $ optional $
+    connLifetime = fmap (fmap (realToFrac :: Int -> NominalDiffTime)) $ optional $
       option auto
               ( long "conn-lifetime" <>
                 metavar "<SECONDS>" <>
