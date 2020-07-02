@@ -11,7 +11,7 @@ type GraphQLEditorProps = {
   onChange: (
     value: Nullable<Record<string, any>>,
     error: Nullable<Error>,
-    timer: Nullable<() => void>,
+    timer: Nullable<NodeJS.Timeout>,
     ast: Nullable<Record<string, any>>
   ) => void;
   className?: string;
@@ -36,25 +36,23 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
   tooltip,
   height,
 }) => {
-  const onChangeWithError = (value: any) => {
+  const onChangeWithError = (val: any) => {
     if (timer) {
       clearTimeout(timer);
     }
 
-    const parseDebounceTimer = () => {
-      setTimeout(() => {
-        let error = null;
-        let ast = null;
-        try {
-          ast = sdlParser(value);
-        } catch (err) {
-          error = err;
-        }
-        onChange(null, error, null, ast);
-      }, 1000);
+    const parseDebounceTimer = setTimeout(() => {
+      let timerError = null;
+      let ast = null;
+      try {
+        ast = sdlParser(val);
+      } catch (err) {
+        timerError = err;
+      }
+      onChange(null, timerError, null, ast);
+    }, 1000);
 
-      onChange(value, null, parseDebounceTimer, null);
-    };
+    onChange(val, null, parseDebounceTimer, null);
   };
 
   const errorMessage =
