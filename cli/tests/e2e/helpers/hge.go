@@ -4,15 +4,19 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/docker/go-connections/nat"
 
 	"github.com/onsi/gomega"
 
+	_ "database/sql"
+
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-retryablehttp"
+	_ "github.com/lib/pq"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gexec"
@@ -23,20 +27,20 @@ import (
 
 func StartNewHge() (endpoint string, teardown func()) {
 	// create a new postgres testcontainer
-	if os.Getenv("CI") != "" {
+	if IsCI() {
 		// start a postgres container
 		ctx := context.Background()
 		postgresC := startPostgresContainer(ctx)
 		ip, err := postgresC.Host(ctx)
 		Expect(err).ShouldNot(HaveOccurred())
-		port, err := postgresC.MappedPort(ctx, "80")
+		port, err := postgresC.MappedPort(ctx, "5432")
 		Expect(err).ShouldNot(HaveOccurred())
 		postgresConnectionString := fmt.Sprintf("postgres://postgres:postgrespassword@%s:%d/postgres", ip, port.Int())
 
 		// run HGE server on a random port
-		hgePort := nat.Port(getFreePort())
-		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%d", hgePort.Int())
-		session := startHgeBinary(postgresConnectionString, nat.Port(hgePort))
+		hgePort := getFreePort()
+		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%d", hgePort)
+		session := startHgeBinary(postgresConnectionString, hgePort)
 
 		teardown := func() {
 			Expect(postgresC.Terminate(ctx)).ShouldNot(HaveOccurred())
@@ -50,14 +54,18 @@ func StartNewHge() (endpoint string, teardown func()) {
 }
 
 func startPostgresContainer(ctx context.Context) tc.Container {
+	port, err := nat.NewPort("tcp", "5432")
+	Expect(err).ShouldNot(HaveOccurred())
 	req := testcontainers.ContainerRequest{
 		Image:        "postgres:12",
 		ExposedPorts: []string{"5432/tcp"},
 		Env: map[string]string{
 			"POSTGRES_PASSWORD": "postgrespassword",
+			"POSTGRES_USER":     "postgres",
+			"POSTGRES_DB":       "hge-test",
 		},
-		WaitingFor: wait.ForSQL(nat.Port(5432), "pq", func(port nat.Port) string {
-			return fmt.Sprintf("postgres://postgres:postgrespassword@postgres:%d/postgres", port.Int())
+		WaitingFor: wait.ForSQL(port, "postgres", func(port nat.Port) string {
+			return fmt.Sprintf("postgres://postgres:postgrespassword@localhost:%s/hge-test?sslmode=disable", port.Port())
 		}),
 	}
 	postgresC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
@@ -68,21 +76,31 @@ func startPostgresContainer(ctx context.Context) tc.Container {
 	return postgresC
 }
 
-func startHgeBinary(dbConnectionString string, port nat.Port) *Session {
+func startHgeBinary(dbConnectionString string, port int) *Session {
 	var hgeArgs = []string{
 		"--database-url",
 		dbConnectionString,
 		"serve",
 		"--server-port",
-		port.Port(),
-		"--enable-console --console-assets-dir=../console/static/dist",
+		strconv.Itoa(port),
+		"--server-host",
+		"0.0.0.0",
+		"--enable-console",
+		"--console-assets-dir=../console/static/dist",
 	}
-	cmd := exec.Command("/build/_server_output/graphql-engine", hgeArgs...)
+	//var binaryPath = []string{"cabal", "new-run", "--", "exe:graphql-engine"}
+	const binaryPath = "/build/_server_output/graphql-engine"
+	cmd := exec.Command(binaryPath, hgeArgs...)
 	session, err := Start(
 		cmd,
 		NewPrefixedWriter(DebugOutPrefix, GinkgoWriter),
 		NewPrefixedWriter(DebugErrPrefix, GinkgoWriter),
 	)
+	Expect(err).ShouldNot(HaveOccurred())
+	// wait for server to start
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 10
+	_, err = retryablehttp.Get(fmt.Sprintf("%s:%d/healthz", "http://0.0.0.0", port))
 	Expect(err).ShouldNot(HaveOccurred())
 	return session
 }

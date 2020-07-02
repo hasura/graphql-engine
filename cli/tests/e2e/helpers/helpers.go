@@ -110,3 +110,10 @@ func EditEndpointInConfig(configFilePath, endpoint string) {
 	Expect(err).ShouldNot(HaveOccurred())
 
 }
+
+func IsCI() bool {
+	if os.Getenv("CI") != "" {
+		return true
+	}
+	return false
+}
