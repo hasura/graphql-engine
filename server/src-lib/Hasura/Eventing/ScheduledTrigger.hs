@@ -728,7 +728,8 @@ unlockCronEvents scheduledEventIds =
      WITH "cte" AS
      (UPDATE hdb_catalog.hdb_cron_events
      SET status = 'scheduled'
-     WHERE id = ANY($1::text[]) RETURNING *) and status = 'locked'
+     WHERE id = ANY($1::text[]) and status = 'locked'
+     RETURNING *)
      SELECT count(*) FROM "cte"
    |] (Identity $ ScheduledEventIdArray scheduledEventIds) True
 
@@ -739,7 +740,8 @@ unlockStandaloneScheduledEvents scheduledEventIds =
      WITH "cte" AS
      (UPDATE hdb_catalog.hdb_scheduled_events
      SET status = 'scheduled'
-     WHERE id = ANY($1::text[]) RETURNING *) AND status = 'locked'
+     WHERE id = ANY($1::text[]) AND status = 'locked'
+     RETURNING *)
      SELECT count(*) FROM "cte"
    |] (Identity $ ScheduledEventIdArray scheduledEventIds) True
 
