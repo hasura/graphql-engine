@@ -1,5 +1,5 @@
 description: Query the relay Node interface
-url: /v1/relay
+url: /v1beta1/relay
 status: 200
 query:
   variables:
