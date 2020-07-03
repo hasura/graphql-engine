@@ -171,8 +171,7 @@ class Main extends React.Component {
     });
   };
 
-  toggleDropDown = e => {
-    e.preventDefault();
+  toggleDropDown = () => {
     this.setState(prevState => ({
       isDropdownOpen: !prevState.isDropdownOpen,
     }));
