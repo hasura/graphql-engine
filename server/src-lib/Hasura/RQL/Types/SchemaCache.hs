@@ -204,10 +204,10 @@ data SchemaCache
   , scRemoteSchemas    :: !RemoteSchemaMap
   , scAllowlist        :: !(HS.HashSet GQLQuery)
   , scGQLContext       :: !(HashMap RoleName GQLContext)
+  , scUnauthenticatedGQLContext :: !GQLContext
   , scRelayContext     :: !(HashMap RoleName GQLContext)
+  , scUnauthenticatedRelayContext :: !GQLContext
   -- , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
-  -- , scGCtxMap           :: !GC.GCtxMap
-  -- , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap           :: !DepMap
   , scInconsistentObjs :: ![InconsistentMetadata]
   }

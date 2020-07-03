@@ -114,15 +114,13 @@ getExecPlanPartial userInfo sc enableAL queryType req = do
   -- check if query is in allowlist
   when enableAL checkQueryInAllowlist
 
-  let gCtx = getGCtx sc role
-
-  (gCtx ,) <$> getQueryParts req
+  (getGCtx ,) <$> getQueryParts req
   where
-    role = _uiRole userInfo
+    roleName = _uiRole userInfo
 
     checkQueryInAllowlist =
       -- only for non-admin roles
-      when (role /= adminRoleName) $ do
+      when (roleName /= adminRoleName) $ do
         let notInAllowlist =
               not $ _isQueryInAllowlist (_grQuery req) (scAllowlist sc)
         when notInAllowlist $ modifyQErr modErr $ _throwVE "query is not allowed"
@@ -131,21 +129,31 @@ getExecPlanPartial userInfo sc enableAL queryType req = do
       let msg = "query is not in any of the allowlists"
       in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
 
-    getGCtx :: SchemaCache -> RoleName -> C.GQLContext
-    getGCtx sc rn =
-      {- TODO TODO FIXME of course this is wrong -}
-      {- TODO TODO FIXME of course this is wrong -}
-      {- TODO TODO FIXME of course this is wrong -}
-      {- TODO TODO FIXME of course this is wrong -}
-      {- TODO TODO FIXME of course this is wrong -}
-      {- TODO TODO FIXME of course this is wrong -}
-      {- TODO TODO FIXME of course this is wrong -}
-      {- TODO TODO FIXME of course this is wrong -}
-      {- TODO TODO FIXME of course this is wrong -}
-      fromMaybe (head $ Map.elems $ scGQLContext sc) $ Map.lookup rn $
+    contextMap =
       case queryType of
         ET.QueryHasura -> scGQLContext sc
         ET.QueryRelay  -> scRelayContext sc
+
+    defaultContext =
+      case queryType of
+        ET.QueryHasura -> scUnauthenticatedGQLContext sc
+        ET.QueryRelay  -> scUnauthenticatedRelayContext sc
+
+    getGCtx :: C.GQLContext
+    getGCtx =
+      case Map.lookup roleName contextMap of
+        Nothing                                           -> defaultContext
+        Just gql   -> gql
+        -- TODO FIXME implement backend-only field access
+        {-
+        Just (RoleContext defaultGCtx maybeBackendGCtx)   ->
+          case backendOnlyFieldAccess of
+            BOFAAllowed    ->
+              -- When backend field access is allowed and if there's no 'backend_only'
+              -- permissions defined, we should allow access to non backend only fields
+              fromMaybe defaultGCtx maybeBackendGCtx
+            BOFADisallowed -> defaultGCtx
+        -}
 
     -- | Depending on the request parameters, fetch the correct typed operation
     -- definition from the GraphQL query

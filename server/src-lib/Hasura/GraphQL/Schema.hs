@@ -45,10 +45,12 @@ buildGQLContext
   -> HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
   -> ActionCache
   -> NonObjectTypeMap
-  -> m (HashMap RoleName GQLContext)
-buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions nonObjectCustomTypes =
-  S.toMap allRoles & Map.traverseWithKey \roleName () ->
-    buildContextForRole roleName
+  -> m (HashMap RoleName GQLContext, GQLContext)
+buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions nonObjectCustomTypes = do
+  roleContexts <- (S.toMap allRoles & Map.traverseWithKey \roleName () ->
+                      buildContextForRole roleName)
+  unauthenticated <- unauthenticatedContext
+  return (roleContexts, unauthenticated)
   where
     allRoles :: HashSet RoleName
     allRoles = S.insert adminRoleName $ allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded
@@ -66,33 +68,39 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions non
          , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]))
     allRemoteParsers = P.runSchemaT $ traverse (buildRemoteParser . fst) allRemoteSchemas
 
+    unauthenticatedContext :: m GQLContext
+    unauthenticatedContext = do
+      remotes <- allRemoteParsers
+      let gqlContext = GQLContext . finalizeParser <$>
+            unauthenticatedQueryWithIntrospection (queryRemotes remotes) (mutationRemotes remotes)
+      halfContext <- P.runSchemaT gqlContext
+      return $ halfContext $ finalizeParser (unauthenticatedMutation (mutationRemotes remotes))
+
+    -- | The 'query' type of the remotes. TODO: also expose mutation
+    -- remotes. NOT TODO: subscriptions, as we do not yet aim to support
+    -- these.
+    queryRemotes remotes = concat $ map (\(q,_,_)->q) $ Map.elems remotes
+    queryRemotesMap remotes =
+      Map.fromList $
+      map (\(remoteSchemaName, (queryFieldParser, _, _) ) ->
+             (remoteSchemaName, map (\(FieldParser defn _) -> defn) queryFieldParser))
+      $ Map.toList remotes
+    mutationRemotes remotes = concat $ fmap concat $ map (\(_,m,_)->m) $ Map.elems remotes
+    allActionInfos = Map.elems allActions
+    queryHasuraOrRelay remotes = case queryType of
+      QueryHasura -> queryWithIntrospection (S.fromList $ Map.keys validTables)
+                     validFunctions (queryRemotes remotes) (mutationRemotes remotes)
+                     allActionInfos nonObjectCustomTypes
+      QueryRelay  -> relayWithIntrospection (S.fromList $ Map.keys validTables)
+
     buildContextForRole roleName = do
       SQLGenCtx{ stringifyNum } <- askSQLGenCtx
       remotes <- allRemoteParsers
-      let -- | The 'query' type of the remotes. TODO: also expose mutation
-          -- remotes. NOT TODO: subscriptions, as we do not yet aim to support
-          -- these.
-          queryRemotes = concat $ map (\(q,m,s)->q) $ Map.elems remotes
-          queryRemotesMap =
-            Map.fromList $
-            map (\(remoteSchemaName, (queryFieldParser, _, _) ) ->
-                   (remoteSchemaName, map (\(FieldParser defn _) -> defn) queryFieldParser))
-            $ Map.toList remotes
-          mutationRemotes = concat $ fmap concat $ map (\(q,m,s)->m) $ Map.elems remotes
-          mutationRemotesMap =
-            Map.fromList $
-            map (\(remoteSchemaName, (mutationFieldParser, _, _) ) ->
-                   (remoteSchemaName, map (\(FieldParser defn _) -> defn) mutationFieldParser))
-            $ Map.toList remotes
-          allActionInfos = Map.elems allActions
-          queryHasuraOrRelay = case queryType of
-            QueryHasura -> queryWithIntrospection (S.fromList $ Map.keys validTables)
-                           validFunctions queryRemotes mutationRemotes allActionInfos nonObjectCustomTypes
-            QueryRelay  -> relayWithIntrospection (S.fromList $ Map.keys validTables)
-          gqlContext = GQLContext
-            <$> (finalizeParser <$> queryHasuraOrRelay)
-            <*> (finalizeParser <$> mutation (S.fromList $ Map.keys validTables) mutationRemotes allActionInfos nonObjectCustomTypes)
-      flip runReaderT (queryType, roleName, allTables, QueryContext stringifyNum queryRemotesMap) $
+      let gqlContext = GQLContext
+            <$> (finalizeParser <$> queryHasuraOrRelay remotes)
+            <*> (finalizeParser <$> mutation (S.fromList $ Map.keys validTables) (mutationRemotes remotes)
+                 allActionInfos nonObjectCustomTypes)
+      flip runReaderT (queryType, roleName, allTables, QueryContext stringifyNum (queryRemotesMap remotes)) $
         P.runSchemaT gqlContext
 
     finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
@@ -232,6 +240,7 @@ queryWithIntrospection
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
+     -- This context is here because we'll probably need it in Select.hs at some point
      , Has GraphQLQueryType r
      )
   => HashSet QualifiedTable
@@ -264,7 +273,6 @@ queryWithIntrospection allTables allFunctions queryRemotes mutationRemotes allAc
         , sTypes = allTypes
         , sQueryType = P.parserType basicQueryP
         , sMutationType = Just $ P.parserType mutationP
-        -- TODO make sure NOT to expose remote schemas via subscription introspection (when remote schemas are implemented)
         , sSubscriptionType = Just $ P.parserType subscriptionP
         , sDirectives = []
         }
@@ -279,6 +287,7 @@ relayWithIntrospection
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
+     -- This context is here because we'll probably need it in Select.hs at some point
      , Has GraphQLQueryType r
      )
   => HashSet QualifiedTable
@@ -303,8 +312,47 @@ relayWithIntrospection allTables = do
         , sTypes = allTypes
         , sQueryType = P.parserType basicQueryP
         , sMutationType = Just $ P.parserType mutationP
-        -- TODO make sure NOT to expose remote schemas via subscription introspection (when remote schemas are implemented)
         , sSubscriptionType = Nothing
+        , sDirectives = []
+        }
+  let partialQueryFields =
+        basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
+  pure $ P.selectionSet $$(G.litName "query_root") Nothing partialQueryFields
+    <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+
+-- | Prepare the parser for query-type GraphQL requests, but with introspection
+-- for queries, mutations and subscriptions (TODO) built in.
+unauthenticatedQueryWithIntrospection
+  :: forall m n
+   . ( MonadSchema n m
+     , MonadError QErr m
+     )
+  => [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes = do
+  let basicQueryFP = fmap (fmap RFRemote) queryRemotes
+      mutationP = P.selectionSet $$(G.litName "mutation_root") Nothing (fmap (fmap RFRemote) mutationRemotes)
+                  <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+      subscriptionP = unauthenticatedSubscription @n
+      basicQueryP = queryRootFromFields basicQueryFP
+  emptyIntro <- emptyIntrospection
+  allBasicTypes <- collectTypes
+    [ P.parserType basicQueryP
+    , P.parserType mutationP
+    , P.parserType subscriptionP
+    ]
+  allIntrospectionTypes <- collectTypes (P.parserType (queryRootFromFields emptyIntro))
+  let allTypes = Map.unions
+        [ allBasicTypes
+        , Map.filterWithKey (\name _info -> name /= $$(G.litName "query_root")) allIntrospectionTypes
+        ]
+      partialSchema = Schema
+        { sDescription = Nothing
+        , sTypes = allTypes
+        , sQueryType = P.parserType basicQueryP
+        , sMutationType = Just $ P.parserType mutationP
+        , sSubscriptionType = Just $ P.parserType subscriptionP
         , sDirectives = []
         }
   let partialQueryFields =
@@ -381,3 +429,21 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
   let mutationFieldsParser = concat (catMaybes mutationParsers) <> catMaybes actionParsers <> (fmap (fmap RFRemote)) allRemotes
   pure $ P.selectionSet $$(G.litName "mutation_root") Nothing mutationFieldsParser
     <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+
+unauthenticatedMutation
+  :: forall n
+   . MonadParse n
+  => [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))
+unauthenticatedMutation allRemotes =
+  let mutationFieldsParser = fmap (fmap RFRemote) allRemotes
+  in P.selectionSet $$(G.litName "mutation_root") Nothing mutationFieldsParser
+     <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+
+unauthenticatedSubscription
+  :: forall n
+   . MonadParse n
+  => Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+unauthenticatedSubscription =
+ P.selectionSet $$(G.litName "subscription_root") Nothing []
+ <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
