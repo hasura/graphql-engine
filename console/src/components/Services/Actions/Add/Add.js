@@ -20,10 +20,13 @@ import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { showWarningNotification } from '../../Common/Notification';
 import GraphQLEditor from '../Common/components/GraphQLEditor';
-import {
-  actionDefinitionInfo,
-  typeDefinitionInfo,
-} from '../Common/components/GraphQLEditorTypeProps';
+import { actionDefinitionInfo } from '../Modify/ActionEditor';
+
+export const typeDefinitionInfo = {
+  label: 'New types definition',
+  tooltip:
+    'You can define new GraphQL types that you can use in the action definition above',
+};
 
 const AddAction = ({
   handler,
