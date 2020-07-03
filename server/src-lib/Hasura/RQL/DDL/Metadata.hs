@@ -28,6 +28,7 @@ import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
 -- import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2, fetchRemoteSchemas,
 --                                                      removeRemoteSchemaFromCatalog)
+import           Hasura.RQL.DDL.RemoteSchema        (removeRemoteSchemaFromCatalog)
 import           Hasura.RQL.Types
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.SQL.Types
@@ -39,6 +40,7 @@ import qualified Hasura.RQL.DDL.ComputedField       as ComputedField
 import qualified Hasura.RQL.DDL.Permission          as Permission
 import qualified Hasura.RQL.DDL.QueryCollection     as Collection
 import qualified Hasura.RQL.DDL.Relationship        as Relationship
+import qualified Hasura.RQL.DDL.RemoteRelationship  as RemoteRelationship
 import qualified Hasura.RQL.DDL.Schema              as Schema
 
 clearMetadata :: Q.TxE QErr ()
@@ -48,6 +50,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_computed_field" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_remote_relationship" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
@@ -469,13 +472,14 @@ runDropInconsistentMetadata _ = do
 
 purgeMetadataObj :: MonadTx m => MetadataObjId -> m ()
 purgeMetadataObj = liftTx . \case
-  MOTable qt                            -> Schema.deleteTableFromCatalog qt
-  MOFunction qf                         -> Schema.delFunctionFromCatalog qf
-  -- MORemoteSchema rsn                    -> removeRemoteSchemaFromCatalog rsn
-  MOTableObj qt (MTORel rn _)           -> Relationship.delRelFromCatalog qt rn
-  MOTableObj qt (MTOPerm rn pt)         -> dropPermFromCatalog qt rn pt
-  MOTableObj _ (MTOTrigger trn)         -> delEventTriggerFromCatalog trn
-  MOTableObj qt (MTOComputedField ccn)  -> dropComputedFieldFromCatalog qt ccn
+  MOTable qt                                 -> Schema.deleteTableFromCatalog qt
+  MOFunction qf                              -> Schema.delFunctionFromCatalog qf
+  MORemoteSchema rsn                         -> removeRemoteSchemaFromCatalog rsn
+  MOTableObj qt (MTORel rn _)                -> Relationship.delRelFromCatalog qt rn
+  MOTableObj qt (MTOPerm rn pt)              -> dropPermFromCatalog qt rn pt
+  MOTableObj _ (MTOTrigger trn)              -> delEventTriggerFromCatalog trn
+  MOTableObj qt (MTOComputedField ccn)       -> dropComputedFieldFromCatalog qt ccn
+  MOTableObj qt (MTORemoteRelationship rn)   -> RemoteRelationship.delRemoteRelFromCatalog qt rn
   -- MOCustomTypes                         -> CustomTypes.clearCustomTypes
   -- MOAction action                       -> Action.deleteActionFromCatalog action Nothing
   -- MOActionPermission action role        -> Action.deleteActionPermissionFromCatalog action role

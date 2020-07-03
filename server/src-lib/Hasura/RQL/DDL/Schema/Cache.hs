@@ -197,7 +197,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     -- TODO this is empty now so that things run.  Of course we should cache the right map of Actions.
     , scActions = _boActions resolvedOutputs
     , scFunctions = _boFunctions resolvedOutputs
-    , scRemoteSchemas = mempty -- remoteSchemaMap
+    , scRemoteSchemas = M.fromList $ (map (\(rsName,(rsCtx,_)) -> (rsName,rsCtx)) $ M.toList $ _boRemoteSchemas resolvedOutputs)
     , scAllowlist = _boAllowlist resolvedOutputs
     -- , scCustomTypes = _boCustomTypes resolvedOutputs
     , scGQLContext = gqlContext
