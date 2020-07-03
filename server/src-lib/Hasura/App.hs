@@ -2,7 +2,7 @@
 
 module Hasura.App where
 
-import           Control.Concurrent.STM.TVar               (readTVarIO)
+import           Control.Concurrent.STM.TVar               (readTVarIO,TVar)
 import           Control.Lens                              (view, _2)
 import           Control.Monad.Base
 import           Control.Monad.Catch                       (MonadCatch, MonadThrow, onException)
@@ -36,6 +36,7 @@ import qualified Text.Mustache.Compile                     as M
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Eventing.EventTrigger
+import           Hasura.Eventing.Common
 import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
                                                             checkQueryInAllowlist)
@@ -318,13 +319,15 @@ runHGEServer ServeOptions{..} InitCtx{..} pgExecCtx initTime = do
     getFromEnv (Milliseconds defaultFetchInterval) "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
   logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
 
+  lockedEventsCtx <- liftIO $ atomically $ initLockedEventsCtx
+
   -- prepare event triggers data
   prepareEvents _icPgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
   _eventQueueThread <- C.forkImmortal "processEventQueue" logger $ liftIO $
     processEventQueue logger logEnvHeaders
-    _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx
+    _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
 
   -- start a backgroud thread to handle async actions
   _asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $ liftIO $
@@ -334,9 +337,11 @@ runHGEServer ServeOptions{..} InitCtx{..} pgExecCtx initTime = do
   void $ liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
     runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
 
+  -- prepare scheduled triggers
+  prepareScheduledEvents _icPgPool logger
+
   -- start a background thread to deliver the scheduled events
-  void $ liftIO $ C.forkImmortal "processScheduledTriggers" logger $
-    processScheduledTriggers logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef)
+  void $ liftIO $ C.forkImmortal "processScheduledTriggers" logger  $ processScheduledTriggers logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) lockedEventsCtx
 
   -- start a background thread to check for updates
   _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
@@ -357,7 +362,7 @@ runHGEServer ServeOptions{..} InitCtx{..} pgExecCtx initTime = do
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers shutdownApp eventEngineCtx _icPgPool)
+                     . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers shutdownApp lockedEventsCtx _icPgPool)
                      $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 
@@ -378,23 +383,47 @@ runHGEServer ServeOptions{..} InitCtx{..} pgExecCtx initTime = do
       res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllEvents
       either printErrJExit return res
 
+    -- | prepareScheduledEvents is like prepareEvents, but for scheduled triggers
+    prepareScheduledEvents pool (Logger logger) = do
+      liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "preparing data"
+      res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllLockedScheduledEvents
+      either printErrJExit return res
+
     -- | shutdownEvents will be triggered when a graceful shutdown has been inititiated, it will
-    -- get the locked events from the event engine context and then it will unlock all those events.
+    -- get the locked events from the event engine context and the scheduled event engine context
+    -- then it will unlock all those events.
     -- It may happen that an event may be processed more than one time, an event that has been already
     -- processed but not been marked as delivered in the db will be unlocked by `shutdownEvents`
     -- and will be processed when the events are proccessed next time.
-    shutdownEvents :: Q.PGPool -> Logger Hasura -> EventEngineCtx -> IO ()
-    shutdownEvents pool (Logger logger) EventEngineCtx {..} = do
+    shutdownEvents
+      :: Q.PGPool
+      -> Logger Hasura
+      -> LockedEventsCtx
+      -> IO ()
+    shutdownEvents pool hasuraLogger@(Logger logger) LockedEventsCtx {..} = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "unlocking events that are locked by the HGE"
-      lockedEvents <- readTVarIO _eeCtxLockedEvents
-      liftIO $ do
-        when (not $ Set.null $ lockedEvents) $ do
-          res <- runTx pool (Q.ReadCommitted, Nothing) (unlockEvents $ toList lockedEvents)
-          case res of
-            Left err -> logger $ mkGenericStrLog
-                         LevelWarn "event_triggers" ("Error in unlocking the events " ++ (show err))
-            Right count -> logger $ mkGenericStrLog
-                            LevelInfo "event_triggers" ((show count) ++ " events were updated")
+      unlockEventsForShutdown pool hasuraLogger "event_triggers" "" unlockEvents leEvents
+      liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "unlocking scheduled events that are locked by the HGE"
+      unlockEventsForShutdown pool hasuraLogger "scheduled_triggers" "cron events" unlockCronEvents leCronEvents
+      unlockEventsForShutdown pool hasuraLogger "scheduled_triggers" "scheduled events" unlockCronEvents leStandAloneEvents
+
+    unlockEventsForShutdown
+      :: Q.PGPool
+      -> Logger Hasura
+      -> Text -- ^ trigger type
+      -> Text -- ^ event type
+      -> ([eventId] -> Q.TxE QErr Int)
+      -> TVar (Set.Set eventId)
+      -> IO ()
+    unlockEventsForShutdown pool (Logger logger) triggerType eventType doUnlock lockedIdsVar = do
+      lockedIds <- readTVarIO lockedIdsVar
+      unless (Set.null lockedIds) do
+        result <- runTx pool (Q.ReadCommitted, Nothing) (doUnlock $ toList lockedIds)
+        case result of
+          Left err -> logger $ mkGenericStrLog LevelWarn triggerType $
+            "Error while unlocking " ++ T.unpack eventType ++ " events: " ++ show err
+          Right count -> logger $ mkGenericStrLog LevelInfo triggerType $
+            show count ++ " " ++ T.unpack eventType ++ " events successfully unlocked"
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
@@ -413,12 +442,18 @@ runHGEServer ServeOptions{..} InitCtx{..} pgExecCtx initTime = do
     -- shuts down the server and associated resources.
     -- Structuring things this way lets us decide elsewhere exactly how
     -- we want to control shutdown.
-    shutdownHandler :: Loggers -> IO () -> EventEngineCtx -> Q.PGPool -> IO () -> IO ()
-    shutdownHandler (Loggers loggerCtx (Logger logger) _) shutdownApp eeCtx pool closeSocket =
+    shutdownHandler
+      :: Loggers
+      -> IO ()
+      -> LockedEventsCtx
+      -> Q.PGPool
+      -> IO ()
+      -> IO ()
+    shutdownHandler (Loggers loggerCtx (Logger logger) _) shutdownApp leCtx pool closeSocket =
       void . Async.async $ do
         waitForShutdown _icShutdownLatch
         logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
-        shutdownEvents pool (Logger logger) eeCtx
+        shutdownEvents pool (Logger logger) leCtx
         closeSocket
         shutdownApp
         cleanLoggerCtx loggerCtx

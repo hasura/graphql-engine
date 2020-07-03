@@ -8,6 +8,11 @@ import { adhocEventsTable } from '../utils';
 import EventsTable from '../../Common/Components/EventsTable';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { Dispatch } from '../../../../../types';
+import { cancelEvent } from '../../ServerIO';
+import {
+  getConfirmation,
+  convertDateTimeToLocale,
+} from '../../../../Common/utils/jsUtils';
 
 type Props = {
   dispatch: Dispatch;
@@ -15,6 +20,22 @@ type Props = {
 
 const PendingEvents: React.FC<Props> = props => {
   const { dispatch } = props;
+
+  const onCancelOneOffScheduledEvent = (
+    id: string,
+    scheduledAt: string,
+    onSuccess: () => void
+  ) => {
+    const localeTime = convertDateTimeToLocale(scheduledAt);
+    const shouldCancelEvent = getConfirmation(
+      `This will delete the one-off event "${id}" scheduled for "${localeTime}"`
+    );
+    if (shouldCancelEvent) {
+      dispatch(
+        cancelEvent('one-off scheduled', 'hdb_scheduled_events', id, onSuccess)
+      );
+    }
+  };
 
   const renderRows: FilterRenderProp = (
     rows,
@@ -29,8 +50,16 @@ const PendingEvents: React.FC<Props> = props => {
       filterState={filterState}
       setFilterState={setFilterState}
       runQuery={runQuery}
-      columns={['id', 'status', 'scheduled_time', 'created_at', 'tries']}
+      columns={[
+        'actions',
+        'id',
+        'status',
+        'scheduled_time',
+        'created_at',
+        'tries',
+      ]}
       identifier="adhoc-events-processed"
+      onCancelEvent={onCancelOneOffScheduledEvent}
     />
   );
 
