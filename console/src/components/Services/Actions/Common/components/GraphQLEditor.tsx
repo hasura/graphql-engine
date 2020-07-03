@@ -1,18 +1,11 @@
 import React from 'react';
 import { parse as sdlParser } from 'graphql/language/parser';
+import { GraphQLError } from 'graphql';
 import styles from './Styles.scss';
 import Tooltip from './Tooltip';
 import CrossIcon from '../../../../Common/Icons/Cross';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import { Nullable } from '../../../../Common/utils/tsUtils';
-
-type LocationError = {
-  line: number;
-  column: number;
-};
-interface GraphQLEditorError extends Error {
-  locations: LocationError[];
-}
 
 type GraphQLEditorProps = {
   value: string;
@@ -24,7 +17,7 @@ type GraphQLEditorProps = {
   ) => void;
   className?: string;
   placeholder: string;
-  error: GraphQLEditorError;
+  error: GraphQLError;
   timer: number;
   readOnlyMode: boolean;
   label: string;
