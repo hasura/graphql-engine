@@ -17,26 +17,19 @@ Introduction
 
 In this example, we will discuss how to use Hasura actions and codegen to build a Python & Flask API for JWT authentication.
 
+Create action definition & custom types
+---------------------------------------
+
 We assume a ``user`` table with fields ``email`` and ``password``.
 
-We define two custom mutations: 
+We create two actions & custom types:
 
-1. ``Login``: returns a ``JsonWebToken``
-
-2. ``Signup``: returns a ``CreateUserOutput``
+1. ``Signup``: returns a ``CreateUserOutput``
 
 .. code-block:: graphql
 
   type Mutation {
-    Login (email: String! password: String!): JsonWebToken
-  }
-
-  type Mutation {
     Signup (email: String! password: String!): CreateUserOutput
-  }
-
-  type JsonWebToken {
-    token : String!
   }
 
   type CreateUserOutput {
@@ -45,24 +38,29 @@ We define two custom mutations:
     password : String!
   }
 
-Create action definition & custom types
----------------------------------------
+2. ``Login``: returns a ``JsonWebToken``
 
-Let's start by defining the action for ``Signup``:
+.. code-block:: graphql
+
+  type Mutation {
+    Login (email: String! password: String!): JsonWebToken
+  }
+
+  type JsonWebToken {
+    token : String!
+  }
+
+See here how to create the ``Signup`` action:
 
 .. thumbnail:: ../../../../../img/graphql/manual/actions/python-flask-signup-types.png
         :width: 100%
         :alt: Python Flask signup types
         :class: no-shadow
 
-Codegen overview
-----------------
-
-If we check the ``Codegen`` tab, we can see that a nice scaffold has been generated for us from the GraphQL types we defined.
-
-
 Action handler implementation for signup
 ----------------------------------------
+
+If we check the ``Codegen`` tab, we can see that a nice scaffold has been generated for us from the GraphQL types we defined.
 
 Now we need to implement the business logic for ``Signup``. Our action will do the following:
 
@@ -99,8 +97,8 @@ In our signup handler, the first thing we'll do is convert the Action input pass
       args = AuthArgs.from_request(request.get_json())
       hashed_password = Password.hash(args.password)
 
-Creating the GraphQL request client
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+GraphQL request client
+^^^^^^^^^^^^^^^^^^^^^^
 
 Next, since we have the user's email and hashed password, we need to send a request to Hasura to save them in the database. For that, we'll need a request client implementation:
 
@@ -188,8 +186,6 @@ To test this out, send an HTTP request to your Flask API at ``/signup`` with an 
     "email": "user@test.com",
     "password": "$argon2id$v=19$m=102400,t=2,p=8$fSmC349hY74QoGRTD0w$OYQYd/PP9kYsy9gRnDF1oQ"
   }
-  
-
 
 Now our ``Signup`` Action is functional! The last piece is create the Login handler, which will do a password comparison, and then return a signed JWT if successful.
 
@@ -231,7 +227,7 @@ We also need to check to see if the password needs to be updated and re-hashed b
       except VerifyMismatchError:
           return { "message": "Invalid credentials" }, 401
 
-Here is what the implementation of ``generate_token()`` and ``rehash_and_save_password_if_needed()`` can look like:
+Here is what the implementation of ``generate_token()`` and ``rehash_and_save_password_if_needed()`` could look like:
 
 .. code-block:: python
 
@@ -290,6 +286,8 @@ And finally, ``client.update_password()``:
 Testing out the handler routes
 ------------------------------
 
+Call the ``/signup`` endpoint with ``email`` and ``password``:
+
 .. code-block:: http
 
   POST http://localhost:5000/signup HTTP/1.1
@@ -302,6 +300,8 @@ Testing out the handler routes
     }
   }
 
+Action handler response with token:
+
 .. code-block:: http
 
   HTTP/1.0 200 OK
@@ -313,6 +313,8 @@ Testing out the handler routes
   {
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.z9ey1lw9p89gUkAmWEa7Qbpa1R71TgfkjZnEunGJ1ig"
   }
+
+Decode the JWT token to access the Hasura claims:
 
 .. code-block:: bash
 
@@ -327,10 +329,12 @@ Testing out the handler routes
   }
   
 
-Calling the Finished Actions
------------------------------
+Calling the finished actions
+----------------------------
 
-Now we can call our finished Action from Hasura's API, and validate our responses:
+Let's try out our defined actions from the GraphQL API.
+
+Call the ``Signup`` action:
 
 .. graphiql::
   :view_only:
@@ -352,6 +356,8 @@ Now we can call our finished Action from Hasura's API, and validate our response
         }
       }
     }
+
+Call the ``Signup`` action with a duplicate:
 
 .. graphiql::
   :view_only:
@@ -375,6 +381,8 @@ Now we can call our finished Action from Hasura's API, and validate our response
       ]
     }
 
+Call the ``Login`` action with valid credentials:
+
 .. graphiql::
   :view_only:
   :query:
@@ -391,6 +399,8 @@ Now we can call our finished Action from Hasura's API, and validate our response
         }
       }
     }
+
+Call the ``Login`` action with invalid credentials:
 
 .. graphiql::
   :view_only:
@@ -412,8 +422,8 @@ Now we can call our finished Action from Hasura's API, and validate our response
       ]
     }
 
-Complete App Code
----------------
+Complete app code
+-----------------
 
 .. code-block:: python
 
@@ -432,9 +442,9 @@ Complete App Code
     HASURA_HEADERS = {"X-Hasura-Admin-Secret": "your-secret"}
     HASURA_JWT_SECRET = os.getenv("HASURA_GRAPHQL_JWT_SECRET", "a-very-secret-secret")
 
-    ##################
+    ################
     # GRAPHQL CLIENT
-    ##################
+    ################
 
     @dataclass
     class Client:
@@ -487,9 +497,9 @@ Complete App Code
             {"id": id, "password": password},
         )
 
-    ##################
+    #######
     # UTILS
-    ##################
+    #######
 
     Password = PasswordHasher()
     client = Client(url=HASURA_URL, headers=HASURA_HEADERS)
@@ -519,9 +529,9 @@ Complete App Code
             client.update_password(user["id"], Password.hash(plaintext_password))
 
 
-    ##################
+    #############
     # DATA MODELS
-    ##################
+    #############
 
     @dataclass
     class RequestMixin:
@@ -554,10 +564,9 @@ Complete App Code
         email: str
         password: str
 
-
-    ##################
+    ##############
     # MAIN SERVICE
-    ##################
+    ##############
 
     app = Flask(__name__)
 
@@ -572,7 +581,6 @@ Complete App Code
             user = user_response["data"]["insert_user_one"]
             return CreateUserOutput(**user).to_json()
 
-
     @app.route("/login", methods=["POST"])
     def login_handler():
         args = AuthArgs.from_request(request.get_json())
@@ -584,7 +592,6 @@ Complete App Code
             return JsonWebToken(generate_token(user)).to_json()
         except VerifyMismatchError:
             return {"message": "Invalid credentials"}, 401
-
 
     if __name__ == "__main__":
         app.run(debug=True, host="0.0.0.0")
