@@ -24,8 +24,8 @@ const hasuraASCIIText = `
 `
 
 var (
-	//IsUpdateCommandEnabled is an ldflag used to disable the automatic updates
-	IsUpdateCommandEnabled string
+	//IsUpdateCommandEnabled is an ldflag used to enable/disable the automatic updates
+	IsUpdateCommandEnabled = "true"
 )
 
 // ec is the Execution Context for the current run.
