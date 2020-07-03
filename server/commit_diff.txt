@@ -107,16 +107,6 @@ Date:   Fri Jul 10 22:17:05 2020 +0530
 
     * server: call the webhook asynchronosly in event triggers
 
-commit 9ef6de51133342acca3857c4392c6d853d3256ea
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Fri Jul 3 06:25:07 2020 +0530
-
-    server: include additional fields in scheduled trigger webhook payload (#5262)
-
-    * include scheduled triggers metadata in the webhook body
-
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
