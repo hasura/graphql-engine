@@ -119,7 +119,7 @@ export const getInsertDownQuery = (
   primaryKeyInfo: PrimaryKeyDetails,
   columns: Array<BaseTableColumn>
 ) => {
-  const whereClause: Record<string, any> = createPKClause(
+  const whereClause = createPKClause(
     primaryKeyInfo,
     insertion,
     columns
