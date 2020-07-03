@@ -566,6 +566,23 @@ article ol ol {
   font-weight: bold;
 }
 
+.toc-table,
+.toc-table th,
+.toc-table tr,
+.toc-table td {
+  border: none !important; /* override djangodocs.css */
+}
+
+.toc-table th {
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 15px 5px 10px 5px !important; /* override djangodocs.css */
+}
+
+.toc-table td {
+  padding: 5px !important; /* override djangodocs.css */
+}
+
 /*** Table of contents END ***/
 
 /*** Feedback section ***/
