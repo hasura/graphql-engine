@@ -18,18 +18,10 @@ import {
 import { saveAction, deleteAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 import GraphQLEditor from '../Common/components/GraphQLEditor';
-
-export const actionDefinitionInfo = {
-  label: 'Action definition',
-  tooltip:
-    'Define the action as a query or a mutation using GraphQL SDL. You can use the custom types already defined by you or define new types in the new types definition editor below.',
-};
-
-export const typeDefinitionInfo = {
-  label: 'New types definition',
-  tooltip:
-    'You can define new GraphQL types that you can use in the action definition above',
-};
+import {
+  actionDefinitionInfo,
+  typeDefinitionInfo,
+} from '../Common/components/GraphQLEditorTypeProps';
 
 const ActionEditor = ({
   currentAction,
@@ -125,8 +117,8 @@ const ActionEditor = ({
         onChange={typeDefinitionOnChange}
         timer={typeDefinitionTimer}
         readOnlyMode={readOnlyMode}
-        label={actionDefinitionInfo.label}
-        tooltip={actionDefinitionInfo.tooltip}
+        label={typeDefinitionInfo.label}
+        tooltip={typeDefinitionInfo.tooltip}
       />
       <hr />
       <HandlerEditor
