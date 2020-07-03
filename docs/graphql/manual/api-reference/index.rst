@@ -20,7 +20,7 @@ Available APIs
 +=================+=========================================+==================+
 | GraphQL         | :ref:`/v1/graphql <graphql_api>`        | Permission rules |
 +-----------------+-----------------------------------------+------------------+
-| Relay           | :ref:`/v1/relay <relay_api>`            | Permission rules |
+| Relay           | :ref:`/v1beta1/relay <relay_api>`       | Permission rules |
 +-----------------+-----------------------------------------+------------------+
 | Legacy GraphQL  | :ref:`/v1alpha1/graphql <graphql_api>`  | Permission rules |
 +-----------------+-----------------------------------------+------------------+

@@ -1130,14 +1130,6 @@ article ol ol {
   background-color: rgba(28, 211, 198, 1);
   border: 1px solid rgba(28, 211, 198, 1);
 }
-.navBtnContactHome {
-  background-color: #001934;
-  border: 1px solid #1CD3C6;
-  color: #1CD3C6;
-}
-.navBtnContactHome:hover {
-  background-color: #00244b;
-}
  .visibleMobile {
 	 display: none;
 }

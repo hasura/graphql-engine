@@ -42,6 +42,8 @@ common common-exe
   ghc-options:
     -threaded -rtsopts
     -- Re. `-I2` see #2565
+    -- TODO try the new: -Iw flag: 
+    --   http://downloads.haskell.org/~ghc/latest/docs/html/users_guide/runtime_control.html#rts-flag--Iw%20%E2%9F%A8seconds%E2%9F%A9 
     --
     -- `-qn2` limits the parallel GC to at most 2 capabilities. This came up in #3354/#3394, as the
     -- parallel GC was causing significant performance overhead. Folks in #ghc on freenode advised
@@ -402,6 +404,7 @@ library
                      , Hasura.Eventing.HTTP
                      , Hasura.Eventing.EventTrigger
                      , Hasura.Eventing.ScheduledTrigger
+                     , Hasura.Eventing.Common
 
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
