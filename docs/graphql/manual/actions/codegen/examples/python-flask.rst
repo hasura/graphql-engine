@@ -50,7 +50,7 @@ Create action definition & custom types
 
 Let's start by defining the action for ``Signup``:
 
-.. thumbnail:: ../../../../../../img/graphql/manual/actions/python-flask-signup-types.png
+.. thumbnail:: ../../../../../img/graphql/manual/actions/python-flask-signup-types.png
         :width: 100%
         :alt: Python Flask signup types
         :class: no-shadow

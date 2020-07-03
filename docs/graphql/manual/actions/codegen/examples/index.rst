@@ -26,4 +26,4 @@ Examples
 .. toctree::
   :maxdepth: 1
 
-  Python & Flask <python-flask/index>
+  Python & Flask <python-flask>
