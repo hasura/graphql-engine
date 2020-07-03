@@ -1,8 +1,6 @@
 import React from 'react';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import tabInfo from './tabInfo';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { push } from 'react-router-redux';
 import {
   fetchRemoteSchema,
@@ -14,15 +12,9 @@ import ReloadRemoteSchema from '../../Settings/MetadataOptions/ReloadRemoteSchem
 import { appPrefix } from '../constants';
 import globals from '../../../../Globals';
 import styles from '../RemoteSchema.scss';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
-
-const RefreshTooltip = (
-  <Tooltip id="tooltip-cascade">
-    If your remote schema has changed, you need to refresh the GraphQL Engine
-    metadata to query the modified schema
-  </Tooltip>
-);
 
 const RSHeadersDisplay = ({ data }) =>
   data.length > 0 ? (
@@ -54,9 +46,11 @@ const RSReloadSchema = ({ readOnlyMode, remoteSchemaName, ...props }) =>
         <ReloadRemoteSchema {...props} remoteSchemaName={remoteSchemaName} />
       </span>
       <span>
-        <OverlayTrigger placement="right" overlay={RefreshTooltip}>
-          <i className="fa fa-question-circle" aria-hidden="true" />
-        </OverlayTrigger>
+        <ToolTip
+          icon="fa-question-circle"
+          placement="right"
+          message="If your remote schema has changed, you need to refresh the GraphQL Engine metadata to query the modified schema"
+        />
       </span>
     </div>
   ) : null;
