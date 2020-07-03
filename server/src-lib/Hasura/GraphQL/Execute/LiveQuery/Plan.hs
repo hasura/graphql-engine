@@ -74,8 +74,6 @@ toSQLSelect = \case
   RFDB (QDBSimple s)      -> DS.mkSQLSelect DS.JASMultipleRows s
   RFDB (QDBAggregation s) -> DS.mkAggSelect s
   RFAction s              -> DS.mkSQLSelect DS.JASSingleObject s
-  RFRemote x -> case x of
-  RFRaw x -> case x of
   -- QRFActionSelect s -> DS.mkSQLSelect DS.JASSingleObject s
   -- QRFActionExecuteObject s -> DS.mkSQLSelect DS.JASSingleObject s
   -- QRFActionExecuteList s -> DS.mkSQLSelect DS.JASSingleObject s
