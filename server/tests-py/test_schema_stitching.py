@@ -77,7 +77,7 @@ class TestRemoteSchemaBasic:
         with open('queries/graphql_introspection/introspection.yaml') as f:
             query = yaml.safe_load(f)
         resp, _ = check_query(hge_ctx, query)
-        assert check_introspection_result(resp, ['Hello'], ['hello'])
+        assert check_introspection_result(resp, ['String'], ['hello'])
 
     @pytest.mark.allow_server_upgrade_test
     def test_introspection_as_user(self, hge_ctx):

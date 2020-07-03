@@ -194,10 +194,11 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
 
   returnA -< SchemaCache
     { scTables = _boTables resolvedOutputs
-    -- TODO this is empty now so that things run.  Of course we should cache the right map of Actions.
     , scActions = _boActions resolvedOutputs
     , scFunctions = _boFunctions resolvedOutputs
-    , scRemoteSchemas = M.fromList $ (map (\(rsName,(rsCtx,_)) -> (rsName,rsCtx)) $ M.toList $ _boRemoteSchemas resolvedOutputs)
+    -- TODO this is not the right value: we should track what part of the schema
+    -- we can stitch without consistencies, I think.
+    , scRemoteSchemas = fmap fst (_boRemoteSchemas resolvedOutputs) -- remoteSchemaMap
     , scAllowlist = _boAllowlist resolvedOutputs
     -- , scCustomTypes = _boCustomTypes resolvedOutputs
     , scGQLContext = gqlContext
