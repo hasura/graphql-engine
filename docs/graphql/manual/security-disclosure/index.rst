@@ -46,7 +46,7 @@ When should I NOT report a vulnerability?
 - You need help applying security related updates.
 - Your issue is not security related.
 
-In these cases you can join our `Discord server <http://hasura.io/discord>`_ where the community will be happy to help you out.
+In these cases you can join our `Discord server <https://hasura.io/discord>`_ where the community will be happy to help you out.
 
 Vulnerability report response
 -----------------------------

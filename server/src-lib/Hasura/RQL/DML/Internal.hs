@@ -40,7 +40,7 @@ mkAdminRolePermInfo ti =
 
     tn = _tciName ti
     i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False []
-    s = SelPermInfo (HS.fromList pgCols) (HS.fromList scalarComputedFields) tn annBoolExpTrue
+    s = SelPermInfo (HS.fromList pgCols) (HS.fromList scalarComputedFields) annBoolExpTrue
         Nothing True []
     u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty []
     d = DelPermInfo tn annBoolExpTrue []

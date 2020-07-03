@@ -1,0 +1,50 @@
+description: Fetch 1st page of articles ordered by their article count
+url: /v1beta1/relay
+status: 200
+query:
+  query: |
+    query {
+      author_connection(
+        first: 2
+        order_by: {articles_aggregate: {count: asc}}
+      ){
+        pageInfo{
+          startCursor
+          endCursor
+          hasPreviousPage
+          hasNextPage
+        }
+        edges{
+          cursor
+          node{
+            name
+            articles_aggregate{
+              aggregate{
+                count
+              }
+            }
+          }
+        }
+      }
+    }
+response:
+  data:
+    author_connection:
+      pageInfo:
+        startCursor: eyJhcnRpY2xlc19hZ2dyZWdhdGUiIDogeyJjb3VudCIgOiAwfSwgImlkIiA6IDR9
+        endCursor: eyJhcnRpY2xlc19hZ2dyZWdhdGUiIDogeyJjb3VudCIgOiAxfSwgImlkIiA6IDN9
+        hasPreviousPage: false
+        hasNextPage: true
+      edges:
+      - cursor: eyJhcnRpY2xlc19hZ2dyZWdhdGUiIDogeyJjb3VudCIgOiAwfSwgImlkIiA6IDR9
+        node:
+          name: Author 4
+          articles_aggregate:
+            aggregate:
+              count: 0
+      - cursor: eyJhcnRpY2xlc19hZ2dyZWdhdGUiIDogeyJjb3VudCIgOiAxfSwgImlkIiA6IDN9
+        node:
+          name: Author 3
+          articles_aggregate:
+            aggregate:
+              count: 1

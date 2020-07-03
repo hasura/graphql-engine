@@ -127,11 +127,11 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
@@ -143,11 +143,11 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           System.Cron.Types
 
-import qualified Hasura.GraphQL.Validate.Types     as VT
-import qualified Hasura.GraphQL.Context            as GC
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
 import qualified Data.Text                         as T
+import qualified Hasura.GraphQL.Context            as GC
+import qualified Hasura.GraphQL.Validate.Types     as VT
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . sort . map reportSchemaObj
@@ -217,7 +217,7 @@ data SchemaCache
   , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
-  , scRelayGCtxMap      :: !GC.GCtxMap
+  , scRelayGCtxMap      :: !GC.RelayGCtxMap
   , scDepMap            :: !DepMap
   , scInconsistentObjs  :: ![InconsistentMetadata]
   , scCronTriggers      :: !(M.HashMap TriggerName CronTriggerInfo)

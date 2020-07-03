@@ -57,7 +57,7 @@ data RelationshipFieldInfo
   , _rfiColumns           :: !PGColGNameMap
   , _rfiPermFilter        :: !AnnBoolExpPartialSQL
   , _rfiPermLimit         :: !(Maybe Int)
-  , _rfiPrimaryKeyColumns :: !(Maybe (NonEmpty PGColumnInfo))
+  , _rfiPrimaryKeyColumns :: !(Maybe PrimaryKeyColumns)
   , _rfiIsNullable        :: !Bool
   } deriving (Show, Eq)
 

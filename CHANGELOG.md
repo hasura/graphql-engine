@@ -2,11 +2,71 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: change relay endpoint to `/v1beta1/relay` (#5257)
+- server: relay connection fields are exposed regardless of allow aggregation permission (fix #5218) (#5257)
+- server: add new `--conn-lifetime` and `HASURA_GRAPHQL_PG_CONN_LIFETIME` options for expiring connections after some amount of active time (#5087)
+- server: shrink libpq connection request/response buffers back to 1MB if they grow beyond 2MB, fixing leak-like behavior on active servers (#5087)
+- server: unlock locked scheduled events on graceful shutdown (#4928)
+- server: disable prepared statements for mutations as we end up with single-use objects which result in excessive memory consumption for mutation heavy workloads (#5255)
+- server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook. 
+**WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
+- console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
+- console: support tracking partitioned tables (close #5071) (#5258)
+- console: add button to cancel one-off scheduled events and cron-trigger events (close #5161) (#5236)
+- console: handle generated and identity columns in console data section (close #4552, #4863) (#4761)
+- cli: fix plugins install failing due to permission issues on windows (close #5111)
+- docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
+- docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
+- docs: add hasura cloud to getting started section (close #5206) (#5208)
+
+
+## `v1.3.0-beta.3`
+
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: fix introspection when multiple actions defined with Postgres scalar types (fix #5166) (#5173)
+- console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
+- console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
+- console: fix styling of table row contents on tables on relationship page (#4974)
+- cli: handle missing files during metadata apply (close #5163) (#5170)
+- docs: add page on scheduled triggers (close #4913) (#5141)
+- docs: add page on Relay schema (close #4912) (#5150)
+
+## `v1.3.0-beta.2`
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: add `--pg-connection-options` command-line flag for passing parameters to PostgreSQL (close #5092) (#5187)
+- server: improve memory usage of idle websockets connections (#5190)
+- server: few relay fixes (fix #5020, #5037, #5046) (#5013)
+- server: raise error on startup when `--unauthorized-role` is ignored (#4736)
+- server: fix bug which arises when renaming/dropping a column on a remote relationship (#5005, #5119)
+- console: provide option to cascade metadata on dependency conflicts on console (fix #1593)
+- console: fix enum tables reload data button UI (#4647)
+- console: fix "Cannot read property 'foldable'" runtime error in Browse Rows page (fix #4907) (#5016)
+- console: respect read-only mode in actions pages (fix #4656) (#4764)
+- console: allow configuring session_argument for custom functions (close #4499) (#4922)
+- console: fix listen update column config selection for event trigger (close #5042) (#5043)
+- cli: add new flags up-sql and down-sql to generate sql based migrations from the CLI (#5026)
+- docs: add instructions on fixing loss of data when using floats (close #5092)
+- docs: add page on setting up v2 migrations (close #4746) (#4898)
+
+## `v1.3.0-beta.1`
+
 ### Relay
 
 The Hasura GraphQL Engine serves [Relay](https://relay.dev/en/) schema for Postgres tables which has a primary key defined.
 
-The Relay schema can be accessed through `/v1/relay` endpoint.
+The Relay schema can be accessed through `/v1beta1/relay` endpoint.
 
 [Add docs links][add console screenshot for relay toggle]
 
@@ -65,6 +125,29 @@ Support for this is now added through the `add_computed_field` API.
 
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
+### Manage seed migrations as SQL files
+A new `seeds` command is introduced in CLI, this will allow managing seed migrations as SQL files
+
+#### Creating seed
+```
+# create a new seed file and use editor to add SQL content
+hasura seed create new_table_seed
+
+# create a new seed by exporting data from tables already present in the database
+hasura seed create table1_seed --from-table table1
+
+# create from data in multiple tables:
+hasura seed create tables_seed --from-table table1 --from-table table2
+```
+#### Applying seed
+```
+# apply all seeds on the database:
+hasura seed apply
+
+# apply only a particular seed
+hasura seed apply --file 1234_add_some_seed_data.sql
+```
+
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
@@ -77,8 +160,6 @@ Read more about the session argument for computed fields in the [docs](https://h
 - server: fix importing of allow list query from metadata (fix #4687)
 - server: flush log buffer during shutdown (#4800)
 - server: fix edge case with printing logs on startup failure (fix #4772)
-- console: provide option to cascade metadata on dependency conflicts on console (fix #1593)
-- console: fix enum tables reload data button UI (#4647)
 - console: allow entering big int values in the console (close #3667) (#4775)
 - console: add support for subscriptions analyze in API explorer (close #2541) (#2541)
 - console: avoid count queries for large tables (#4692)
@@ -94,9 +175,6 @@ Read more about the session argument for computed fields in the [docs](https://h
 - console: fix visiting view modify page overwriting raw sql content (fix #4798) (#4810)
 - console: add help button and move about page to settings (#4848)
 - console: add new sidebar icon that separates enums from tables (fix #4984) (#4992)
-- console: fix "Cannot read property 'foldable'" runtime error in `Browse Rows` page (fix #4907) (#5016)
-- console: respect read-only mode in actions pages (fix #4656) (#4764)
-- console: fix listen update column config selection for event trigger (close #5042) (#5043)
 - cli: list all available commands in root command help (fix #4623) (#4628)
 - cli: fix bug with squashing event triggers (close #4883)
 - cli: add support for skipping execution while generating migrations through the migrate REST API
@@ -408,6 +486,7 @@ See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-
 - console: fix parsing of wrapped types in SDL (close #4099) (#4167)
 - console: misc actions fixes (#4059)
 - console: action relationship page improvements (fix #4062, #4130) (#4133)
+- console: add code exporter to graphiql (close #4531) #4652
 - cli: fix init command to generate correct config (fix #4036) (#4038)
 - cli: fix parse error returned on console api (close #4126) (#4152)
 - cli: fix typo in cli example for squash (fix #4047) (#4049)

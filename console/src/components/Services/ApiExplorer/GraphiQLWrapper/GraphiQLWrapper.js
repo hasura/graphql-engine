@@ -6,6 +6,11 @@ import PropTypes from 'prop-types';
 import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
 import AnalyzeButton from '../Analyzer/AnalyzeButton';
+import CodeExporter from 'graphiql-code-exporter';
+import {
+  getPersistedCodeExporterOpen,
+  persistCodeExporterOpen,
+} from '../OneGraphExplorer/utils';
 
 import {
   clearCodeMirrorHints,
@@ -29,9 +34,11 @@ import {
 } from '../../Actions/Add/reducer';
 import { getGraphQLEndpoint } from '../utils';
 import { removeStore } from '../../../../utils/localstorage';
+import snippets from './snippets';
 
 import 'graphiql/graphiql.css';
 import './GraphiQL.css';
+import 'graphiql-code-exporter/CodeExporter.css';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -40,6 +47,7 @@ class GraphiQLWrapper extends Component {
       error: false,
       noSchema: false,
       copyButtonText: 'Copy',
+      codeExporterOpen: false,
     };
   }
 
@@ -47,9 +55,22 @@ class GraphiQLWrapper extends Component {
     setQueryVariableSectionHeight();
   }
 
+  componentWillMount() {
+    const codeExporterOpen = getPersistedCodeExporterOpen();
+    this.setState({ codeExporterOpen });
+  }
+
   componentWillUnmount() {
     clearCodeMirrorHints();
   }
+
+  _handleToggleCodeExporter = () => {
+    const nextState = !this.state.codeExporterOpen;
+
+    persistCodeExporterOpen(nextState);
+
+    this.setState({ codeExporterOpen: nextState });
+  };
 
   render() {
     const styles = require('../../../Common/Common.scss');
@@ -62,6 +83,7 @@ class GraphiQLWrapper extends Component {
       mode,
       loading,
     } = this.props;
+    const { codeExporterOpen } = this.state;
     const graphqlNetworkData = this.props.data;
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {
@@ -190,6 +212,11 @@ class GraphiQLWrapper extends Component {
             onClick: graphiqlProps.toggleExplorer,
           },
           {
+            label: 'Code Exporter',
+            title: 'Toggle Code Exporter',
+            onClick: this._handleToggleCodeExporter,
+          },
+          {
             label: 'Voyager',
             title: 'GraphQL Voyager',
             onClick: () => window.open(voyagerUrl, '_blank'),
@@ -215,24 +242,34 @@ class GraphiQLWrapper extends Component {
       };
 
       return (
-        <GraphiQL
-          {...graphiqlProps}
-          ref={c => {
-            graphiqlContext = c;
-          }}
-          fetcher={graphQLFetcher}
-          voyagerUrl={voyagerUrl}
-        >
-          <GraphiQL.Logo>GraphiQL</GraphiQL.Logo>
-          <GraphiQL.Toolbar>
-            {getGraphiqlButtons()}
-            <AnalyzeButton
-              operations={graphiqlContext && graphiqlContext.state.operations}
-              analyzeFetcher={analyzeFetcherInstance}
-              {...analyzerProps}
+        <>
+          <GraphiQL
+            {...graphiqlProps}
+            ref={c => {
+              graphiqlContext = c;
+            }}
+            fetcher={graphQLFetcher}
+            voyagerUrl={voyagerUrl}
+          >
+            <GraphiQL.Logo>GraphiQL</GraphiQL.Logo>
+            <GraphiQL.Toolbar>
+              {getGraphiqlButtons()}
+              <AnalyzeButton
+                operations={graphiqlContext && graphiqlContext.state.operations}
+                analyzeFetcher={analyzeFetcherInstance}
+                {...analyzerProps}
+              />
+            </GraphiQL.Toolbar>
+          </GraphiQL>
+          {codeExporterOpen ? (
+            <CodeExporter
+              hideCodeExporter={this._handleToggleCodeExporter}
+              snippets={snippets}
+              query={graphiqlProps.query}
+              codeMirrorTheme="default"
             />
-          </GraphiQL.Toolbar>
-        </GraphiQL>
+          ) : null}
+        </>
       );
     };
 
