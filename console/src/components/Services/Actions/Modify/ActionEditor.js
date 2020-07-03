@@ -17,9 +17,19 @@ import {
 } from './reducer';
 import { saveAction, deleteAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
-import GraphQLEditor, {
-  actionDefinitionInfo,
-} from '../Common/components/GraphQLEditor';
+import GraphQLEditor from '../Common/components/GraphQLEditor';
+
+export const actionDefinitionInfo = {
+  label: 'Action definition',
+  tooltip:
+    'Define the action as a query or a mutation using GraphQL SDL. You can use the custom types already defined by you or define new types in the new types definition editor below.',
+};
+
+export const typeDefinitionInfo = {
+  label: 'New types definition',
+  tooltip:
+    'You can define new GraphQL types that you can use in the action definition above',
+};
 
 const ActionEditor = ({
   currentAction,
@@ -51,7 +61,7 @@ const ActionEditor = ({
     const modifyState = getModifyState(currentAction, allTypes);
     dispatch(setModifyState(modifyState));
   };
-  React.useEffect(init, [currentAction]);
+  React.useEffect(init, [currentAction, allTypes, dispatch]);
 
   const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
   const kindOnChange = k => dispatch(setActionKind(k));

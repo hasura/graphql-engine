@@ -19,10 +19,19 @@ import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { showWarningNotification } from '../../Common/Notification';
-import GraphQLEditor, {
-  actionDefinitionInfo,
-  typeDefinitionInfo,
-} from '../Common/components/GraphQLEditor';
+import GraphQLEditor from '../Common/components/GraphQLEditor';
+
+export const actionDefinitionInfo = {
+  label: 'Action definition',
+  tooltip:
+    'Define the action as a query or a mutation using GraphQL SDL. You can use the custom types already defined by you or define new types in the new types definition editor below.',
+};
+
+export const typeDefinitionInfo = {
+  label: 'New types definition',
+  tooltip:
+    'You can define new GraphQL types that you can use in the action definition above',
+};
 
 const AddAction = ({
   handler,
@@ -51,7 +60,7 @@ const AddAction = ({
     return () => {
       dispatch(resetDerivedActionParentOperation());
     };
-  }, []);
+  });
 
   const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
   const kindOnChange = k => dispatch(setActionKind(k));

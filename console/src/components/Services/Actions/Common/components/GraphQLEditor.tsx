@@ -6,17 +6,25 @@ import CrossIcon from '../../../../Common/Icons/Cross';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import { Nullable } from '../../../../Common/utils/tsUtils';
 
+type LocationError = {
+  line: number;
+  column: number;
+};
+interface GraphQLEditorError extends Error {
+  locations: LocationError[];
+}
+
 type GraphQLEditorProps = {
   value: string;
   onChange: (
-    value: Nullable<Record<string, any>>,
+    value: Nullable<string>,
     error: Nullable<Error>,
     timer: Nullable<NodeJS.Timeout>,
     ast: Nullable<Record<string, any>>
   ) => void;
   className?: string;
   placeholder: string;
-  error: Error;
+  error: GraphQLEditorError;
   timer: number;
   readOnlyMode: boolean;
   label: string;
@@ -36,7 +44,7 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
   tooltip,
   height,
 }) => {
-  const onChangeWithError = (val: any) => {
+  const onChangeWithError = (val: string) => {
     if (timer) {
       clearTimeout(timer);
     }
@@ -58,6 +66,12 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
   const errorMessage =
     error && (error.message || 'This is not valid GraphQL SDL');
 
+  const errorMessageLine =
+    error &&
+    error.locations &&
+    error.locations.length &&
+    ` at line ${error.locations[0].line}, column ${error.locations[0].column} `;
+
   return (
     <div className={`${className || ''}`}>
       <h2
@@ -77,7 +91,7 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
           {error && (
             <div className={`${styles.display_flex}  ${styles.errorMessage}`}>
               <CrossIcon className={styles.add_mar_right_small} />
-              <div>{errorMessage}</div>
+              <div>{`${errorMessage} ${errorMessageLine}`}</div>
             </div>
           )}
         </div>
@@ -94,18 +108,6 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
       </div>
     </div>
   );
-};
-
-export const actionDefinitionInfo = {
-  label: 'Action definition',
-  tooltip:
-    'Define the action as a query or a mutation using GraphQL SDL. You can use the custom types already defined by you or define new types in the new types definition editor below.',
-};
-
-export const typeDefinitionInfo = {
-  label: 'New types definition',
-  tooltip:
-    'You can define new GraphQL types that you can use in the action definition above',
 };
 
 export default GraphQLEditor;
