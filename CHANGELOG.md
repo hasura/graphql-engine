@@ -1,5 +1,12 @@
 # Hasura GraphQL Engine Changelog
 
+## Next release
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+
 ## `v1.3.0-beta.4`
 
 ### Bug fixes and improvements
