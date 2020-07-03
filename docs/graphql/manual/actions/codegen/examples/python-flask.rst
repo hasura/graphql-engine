@@ -22,7 +22,7 @@ Create action definition & custom types
 
 We assume a ``user`` table with fields ``email`` and ``password``.
 
-We create two actions & custom types:
+We create two :ref:`actions <create_actions>` and :ref:`custom types <custom_types>`: 
 
 1. ``Signup``: returns a ``CreateUserOutput``
 
@@ -50,7 +50,7 @@ We create two actions & custom types:
     token : String!
   }
 
-See here how to create the ``Signup`` action:
+Example: creating the ``Signup`` action
 
 .. thumbnail:: ../../../../../img/graphql/manual/actions/python-flask-signup-types.png
         :width: 100%
@@ -85,7 +85,7 @@ Signup handler & password hashing
 
 For password hashing, the ``argon2`` API is minimal and straightforward: an instance of a password hasher is created with ``PasswordHasher()``, which has methods ``.hash(password)``, ``.verify(hashed_password, password)``, and ``.check_needs_rehash(hashed_password)``.
 
-In our signup handler, the first thing we'll do is convert the Action input password to a secure hash:
+In our signup handler, the first thing we'll do is convert the action input password to a secure hash:
 
 .. code-block:: python
 
@@ -159,7 +159,7 @@ Now, in our ``Signup`` action handler, we need to call ``client.create_user()`` 
           user = user_response["data"]["insert_user_one"]
           return CreateUserOutput(**user).to_json()
 
-To test this out, send an HTTP request to your Flask API at ``/signup`` with an email and password. You should get a successful response like this:
+To test this out, send an HTTP request to your Flask API at ``/signup`` with an email and password: 
 
 .. code-block:: http
 
@@ -172,6 +172,8 @@ To test this out, send an HTTP request to your Flask API at ``/signup`` with an 
       "password": "password123"
     }
   }
+
+You should get a successful response like this:
 
 .. code-block:: http
 
@@ -187,12 +189,12 @@ To test this out, send an HTTP request to your Flask API at ``/signup`` with an 
     "password": "$argon2id$v=19$m=102400,t=2,p=8$fSmC349hY74QoGRTD0w$OYQYd/PP9kYsy9gRnDF1oQ"
   }
 
-Now our ``Signup`` Action is functional! The last piece is create the Login handler, which will do a password comparison, and then return a signed JWT if successful.
+Now our ``Signup`` action is functional! The last piece is create the ``Login`` handler, which will do a password comparison, and then return a signed JWT if successful.
 
 Action handler implementation for login
 ---------------------------------------
 
-The first thing we need is a new request method on our ``Client`` class to find a user by email, so that we can look them up to compare the password. Under ``create_user``, create a new method:
+The first thing we need is a new request method on our ``Client`` class to find a user by email, so that we can look them up to compare the password. Under ``create_user``, create the following new method:
 
 .. code-block:: python
 
@@ -300,7 +302,7 @@ Call the ``/signup`` endpoint with ``email`` and ``password``:
     }
   }
 
-Action handler response with token:
+Action handler response:
 
 .. code-block:: http
 
