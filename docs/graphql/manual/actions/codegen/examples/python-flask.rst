@@ -9,7 +9,7 @@ GraphQL API with Python & Flask: JWT authentication
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 2
+  :depth: 1
   :local:
 
 Introduction

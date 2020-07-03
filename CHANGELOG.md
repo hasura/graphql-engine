@@ -143,7 +143,6 @@ hasura seed apply
 # apply only a particular seed
 hasura seed apply --file 1234_add_some_seed_data.sql
 ```
->>>>>>> master
 
 ### Bug fixes and improvements
 
