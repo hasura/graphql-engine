@@ -117,13 +117,9 @@ export const getInsertDownQuery = (
   tableDef: TableDefinition,
   insertion: Record<string, any>,
   primaryKeyInfo: PrimaryKeyDetails,
-  columns: Array<BaseTableColumn>
+  columns: BaseTableColumn[]
 ) => {
-  const whereClause = createPKClause(
-    primaryKeyInfo,
-    insertion,
-    columns
-  );
+  const whereClause = createPKClause(primaryKeyInfo, insertion, columns);
 
   return {
     type: 'delete',
