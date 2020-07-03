@@ -110,12 +110,19 @@ Codegen for your framework
 --------------------------
 
 As of now, Hasura provides codegen for a few frameworks (``nodejs-express``,
-``typescript-zeit``, etc). We will continue adding them to the documentation.
+``typescript-zeit``, etc). 
+
+Refer to this page for examples using codegen:
 
 .. toctree::
   :maxdepth: 1
 
   Codegen examples <examples/index>
+
+We will continue adding more examples to the documentation.
+
+Building your own codegen
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you wish to build a code generator for your framework
 `read the contrib guide <https://github.com/hasura/codegen-builder-contrib/>`_.
