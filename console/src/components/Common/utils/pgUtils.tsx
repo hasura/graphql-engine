@@ -27,10 +27,12 @@ export interface BaseTableColumn {
 }
 
 export interface TableColumn extends BaseTableColumn {
-  column_name: string;
-  data_type: string;
   udt_name: string;
   column_default: string;
+  is_generated?: string;
+  is_nullable?: string;
+  is_identity?: string;
+  identity_generation?: 'ALWAYS' | 'BY DEFAULT' | null;
 }
 
 export type ForeignKeyConstraint = {
@@ -78,7 +80,12 @@ export const makeBaseTable = (
 export interface Table extends BaseTable {
   table_name: string;
   table_schema: string;
-  table_type: string;
+  table_type:
+    | 'TABLE'
+    | 'VIEW'
+    | 'MATERIALIZED VIEW'
+    | 'FOREIGN TABLE'
+    | 'PARTITIONED TABLE';
   is_table_tracked: boolean;
   columns: TableColumn[];
   relationships: TableRelationship[];
@@ -178,7 +185,11 @@ export const getTableNameWithSchema = (
 };
 
 export const checkIfTable = (table: Table) => {
-  return table.table_type === 'TABLE';
+  return (
+    table.table_type === 'TABLE' ||
+    table.table_type === 'PARTITIONED TABLE' ||
+    table.table_type === 'FOREIGN TABLE'
+  );
 };
 
 export const displayTableName = (table: Table) => {

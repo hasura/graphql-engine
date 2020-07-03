@@ -1,6 +1,6 @@
 # https://github.com/hasura/graphql-engine/issues/5144
 description: Test remote relationships via relay endpoint
-url: /v1/relay
+url: /v1beta1/relay
 status: 200
 query:
   query: |

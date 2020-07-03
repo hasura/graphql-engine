@@ -10,7 +10,7 @@ const Endpoints = {
   getSchema: `${baseUrl}/v1/query`,
   serverConfig: `${baseUrl}/v1alpha1/config`,
   graphQLUrl: `${baseUrl}/v1/graphql`,
-  relayURL: `${baseUrl}/v1/relay`,
+  relayURL: `${baseUrl}/v1beta1/relay`,
   schemaChange: `${baseUrl}/v1/query`,
   query: `${baseUrl}/v1/query`,
   rawSQL: `${baseUrl}/v1/query`,

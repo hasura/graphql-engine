@@ -100,20 +100,24 @@ if (__DEVELOPMENT__ && module.hot) {
   */
   module.hot.accept();
 }
-
 // Main routes and rendering
-const main = (
-  <Router
-    history={useBasename(() => history)({ basename: globals.urlPrefix })}
-    routes={getRoutes(store)}
-    onUpdate={hashLinkScroll}
-  />
-);
+const Main = () => {
+  const routeHistory = useBasename(() => history)({
+    basename: globals.urlPrefix,
+  });
+  return (
+    <Router
+      history={routeHistory}
+      routes={getRoutes(store)}
+      onUpdate={hashLinkScroll}
+    />
+  );
+};
 
 const dest = document.getElementById('content');
 ReactDOM.render(
   <Provider store={store} key="provider">
-    {main}
+    <Main />
   </Provider>,
   dest
 );
