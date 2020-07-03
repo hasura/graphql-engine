@@ -346,10 +346,13 @@ class ApiRequest extends Component {
           const isAdminSecret =
             header.key.toLowerCase() === ADMIN_SECRET_HEADER_KEY;
 
-          const isClientName = header.key.toLowerCase() === HASURA_CLIENT_NAME;
+          const consoleId = window.__env.consoleId;
+
+          const isClientName =
+            header.key.toLowerCase() === HASURA_CLIENT_NAME && consoleId;
 
           const isCollaboratorToken =
-            header.key.toLowerCase() === HASURA_COLLABORATOR_TOKEN;
+            header.key.toLowerCase() === HASURA_COLLABORATOR_TOKEN && consoleId;
 
           const getHeaderActiveCheckBox = () => {
             let headerActiveCheckbox = null;
