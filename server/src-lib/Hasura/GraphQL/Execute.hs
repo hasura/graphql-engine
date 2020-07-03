@@ -215,7 +215,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
     -- plans are only for queries and subscriptions
     Just plan -> (Telem.Hit,) <$> case plan of
       EP.RPQuery queryPlan -> do
-        (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
+        (tx, genSql) <- EQ.queryOpFromPlan httpManager reqHeaders userInfo queryVars queryPlan
         return $ QueryExecutionPlan _ -- tx (Just genSql)
       EP.RPSubs subsPlan ->
         return $ SubscriptionExecutionPlan _ -- <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan

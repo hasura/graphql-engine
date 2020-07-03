@@ -34,6 +34,7 @@ import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Monad
 import           Hasura.GraphQL.Resolve.Action
 import           Hasura.Prelude
+import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -44,13 +45,14 @@ import qualified Hasura.RQL.DML.Select                  as DS
 
 data PGPlan
   = PGPlan
-  { _ppQuery     :: !Q.Query
-  , _ppVariables :: !PlanVariables
-  , _ppPrepared  :: !PrepArgMap
+  { _ppQuery       :: !Q.Query
+  , _ppVariables   :: !PlanVariables
+  , _ppPrepared    :: !PrepArgMap
+  , _ppRemoteJoins :: !(Maybe RemoteJoins)
   }
 
 instance J.ToJSON PGPlan where
-  toJSON (PGPlan q vars prepared) =
+  toJSON (PGPlan q vars prepared _) =
     J.object [ "query"     J..= Q.getQueryText q
              , "variables" J..= vars
              , "prepared"  J..= fmap show prepared
@@ -77,7 +79,7 @@ actionQueryToRootFieldPlan
   :: PlanVariables -> PrepArgMap -> ActionQueryPlan -> RootFieldPlan
 actionQueryToRootFieldPlan vars prepped = \case
   AQPAsyncQuery s -> RFPPostgres $
-    PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped
+    PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped Nothing
   AQPQuery tx     -> RFPActionQuery (liftTx tx)
 
 data ReusableVariableTypes  -- FIXME
@@ -98,10 +100,10 @@ instance J.ToJSON ReusableQueryPlan where
 withPlan
   :: (MonadError QErr m)
   => SessionVariables -> PGPlan -> HashMap G.Name (WithScalarType PGScalarValue) -> m PreparedSql
-withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
+withPlan usrVars (PGPlan q reqVars prepMap remoteJoins) annVars = do
   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
   let args = withUserVars usrVars $ IntMap.elems prepMap'
-  return $ PreparedSql q args
+  return $ PreparedSql q args remoteJoins
   where
     getVar accum (var, prepNo) = do
       let varName = G.unName var
@@ -112,22 +114,24 @@ withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
 
 -- turn the current plan into a transaction
 mkCurPlanTx
-  :: (MonadError QErr m)
-  => SessionVariables
+  :: (HasVersion, MonadError QErr m)
+  => HTTP.Manager
+  -> [HTTP.Header]
+  -> UserInfo
   -> FieldPlans
   -> m (LazyRespTx, GeneratedSqlMap)
-mkCurPlanTx usrVars fldPlans = do
+mkCurPlanTx manager reqHdrs userInfo fldPlans = do
   -- generate the SQL and prepared vars or the bytestring
   resolved <- forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
       RFPRaw resp                      -> return $ RRRaw resp
-      RFPPostgres (PGPlan q _ prepMap) -> do
-        let args = withUserVars usrVars $ IntMap.elems prepMap
-        return $ RRSql $ PreparedSql q args
+      RFPPostgres (PGPlan q _ prepMap remoteJoins) -> do
+        let args = withUserVars (_uiSession userInfo) $ IntMap.elems prepMap
+        return $ RRSql $ PreparedSql q args remoteJoins
       RFPActionQuery tx -> pure $ RRActionQuery tx
     return (alias, fldResp)
 
-  return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
+  return (mkLazyRespTx manager reqHdrs userInfo resolved, mkGeneratedSqlMap resolved)
 
 getVarArgNum :: (MonadState PlanningSt m) => G.Name -> m Int
 getVarArgNum var = do
@@ -157,9 +161,15 @@ irToRootFieldPlan
   -> PrepArgMap
   -> QueryDB S.SQLExp -> PGPlan
 irToRootFieldPlan vars prepped = \case
-  QDBSimple s      -> PGPlan (DS.selectQuerySQL DS.JASMultipleRows s) vars prepped
-  QDBPrimaryKey s  -> PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped
-  QDBAggregation s -> PGPlan (DS.selectAggQuerySQL s) vars prepped
+  QDBSimple s      -> mkPGPlan (DS.selectQuerySQL DS.JASMultipleRows) s
+  QDBPrimaryKey s  -> mkPGPlan (DS.selectQuerySQL DS.JASSingleObject) s
+  QDBAggregation s ->
+    let (annAggSel, aggRemoteJoins) = getRemoteJoinsAggregateSelect s
+    in PGPlan (DS.selectAggQuerySQL annAggSel) vars prepped aggRemoteJoins
+  where
+    mkPGPlan f simpleSel =
+      let (simpleSel',remoteJoins) = getRemoteJoins simpleSel
+      in PGPlan (f simpleSel') vars prepped remoteJoins
 
 traverseQueryRootField
   :: forall f a b c d h
@@ -229,7 +239,7 @@ convertQuerySelSet gqlContext userInfo manager reqHeaders fields varDefs varVals
 
 
   executionPlan <- case (dbPlans, remoteFields) of
-    (dbs, Seq.Empty) -> ExecStepDB <$> mkCurPlanTx usrVars (toList dbs)
+    (dbs, Seq.Empty) -> ExecStepDB <$> mkCurPlanTx manager reqHeaders userInfo (toList dbs)
     (Seq.Empty, remotes@(firstRemote Seq.:<| _)) -> do
       let (remoteOperation, varValsM) =
             buildTypedOperation
@@ -261,32 +271,35 @@ convertQuerySelSet gqlContext userInfo manager reqHeaders fields varDefs varVals
 
 -- use the existing plan and new variables to create a pg query
 queryOpFromPlan
-  :: (MonadError QErr m)
-  => SessionVariables
+  :: (HasVersion, MonadError QErr m)
+  => HTTP.Manager
+  -> [HTTP.Header]
+  -> UserInfo
   -> Maybe GH.VariableValues
   -> ReusableQueryPlan
   -> m (LazyRespTx, GeneratedSqlMap)
-queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
+queryOpFromPlan manager reqHdrs userInfo varValsM (ReusableQueryPlan varTypes fldPlans) = do
   validatedVars <- _validateVariablesForReuse varTypes varValsM
   -- generate the SQL and prepared vars or the bytestring
   resolved <- forM fldPlans $ \(alias, fldPlan) ->
     (alias,) <$> case fldPlan of
       RFPRaw resp        -> return $ RRRaw resp
-      RFPPostgres pgPlan -> RRSql <$> withPlan usrVars pgPlan validatedVars
+      RFPPostgres pgPlan -> RRSql <$> withPlan (_uiSession userInfo) pgPlan validatedVars
 
-  return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
+  return (mkLazyRespTx manager reqHdrs userInfo resolved, mkGeneratedSqlMap resolved)
 
 data PreparedSql
   = PreparedSql
-  { _psQuery    :: !Q.Query
-  , _psPrepArgs :: ![(Q.PrepArg, PGScalarValue)]
+  { _psQuery       :: !Q.Query
+  , _psPrepArgs    :: ![(Q.PrepArg, PGScalarValue)]
     -- ^ The value is (Q.PrepArg, PGScalarValue) because we want to log the human-readable value of the
     -- prepared argument (PGScalarValue) and not the binary encoding in PG format (Q.PrepArg)
+  , _psRemoteJoins :: !(Maybe RemoteJoins)
   }
 
 -- | Required to log in `query-log`
 instance J.ToJSON PreparedSql where
-  toJSON (PreparedSql q prepArgs) =
+  toJSON (PreparedSql q prepArgs _) =
     J.object [ "query" J..= Q.getQueryText q
              , "prepared_arguments" J..= map (txtEncodedPGVal . snd) prepArgs
              ]
@@ -305,12 +318,18 @@ data ResolvedQuery
 -- prepared statement
 type GeneratedSqlMap = [(G.Name, Maybe PreparedSql)]
 
-mkLazyRespTx :: [(G.Name, ResolvedQuery)] -> LazyRespTx
-mkLazyRespTx resolved =
+mkLazyRespTx :: HasVersion
+  => HTTP.Manager -> [HTTP.Header] -> UserInfo -> [(G.Name, ResolvedQuery)] -> LazyRespTx
+mkLazyRespTx manager reqHdrs userInfo resolved =
   fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do
     resp <- case node of
       RRRaw bs                   -> return $ encJFromBS bs
-      RRSql (PreparedSql q args) -> liftTx $ asSingleRowJsonResp q (map fst args)
+      RRSql (PreparedSql q args maybeRemoteJoins) -> do
+        let prepArgs = map fst args
+        case maybeRemoteJoins of
+          Nothing -> liftTx $ asSingleRowJsonResp q (map fst args)
+          Just remoteJoins ->
+            executeQueryWithRemoteJoins manager reqHdrs userInfo q prepArgs remoteJoins
       RRActionQuery tx           -> tx
     return (G.unName alias, resp)
 
