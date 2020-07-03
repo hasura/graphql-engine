@@ -22,8 +22,12 @@
 
 {% block linktags %}
 {{ super() }}
-    <link rel="canonical" href="https://{{ BASE_DOMAIN }}/docs/1.0/{{ pagename }}{{ file_suffix }}" />
+  <link rel="canonical" href="https://hasura.io/docs/1.0/{{ pagename }}{{ file_suffix }}" />
 {% endblock %}
+
+{%- if BASE_DOMAIN != "production" %}
+  <meta name="robots" content="noindex">
+{%- endif %}
 
 {% block document %}
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if not is_landing_page else '' }}{% endblock %}">
