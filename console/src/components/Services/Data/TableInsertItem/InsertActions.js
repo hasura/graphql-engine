@@ -163,6 +163,9 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       body: JSON.stringify(reqBody),
     };
     const url = Endpoints.query;
+    const successCallback = (title, message) => {
+      dispatch(showSuccessNotification(title, message));
+    };
     return dispatch(
       requestAction(url, options, I_REQUEST_SUCCESS, I_REQUEST_ERROR)
     ).then(
@@ -176,21 +179,15 @@ const insertItem = (tableName, colValues, isMigration = false) => {
             insertedData,
             currentTableInfo.primary_key,
             columns,
-            () => {
-              dispatch(
-                showSuccessNotification(
-                  'Inserted!',
-                  'Affected rows: ' + data.affected_rows
-                )
-              );
-            }
+            successCallback(
+              'Inserted as migration!',
+              `Affected rows: ${data.affected_rows}`
+            )
           );
         } else {
-          dispatch(
-            showSuccessNotification(
-              'Inserted!',
-              'Affected rows: ' + data.affected_rows
-            )
+          successCallback(
+            'Inserted data!',
+            `Affected rows: ${data.affected_rows}`
           );
         }
       },
