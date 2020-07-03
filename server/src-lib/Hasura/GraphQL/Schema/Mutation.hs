@@ -248,7 +248,7 @@ conflictObject table selectPerms updatePerms = runMaybeT $ do
   let objectName = tableName <> $$(G.litName "_on_conflict")
       objectDesc = G.Description $ "on conflict condition type for table \"" <> G.unName tableName <> "\""
       constraintName = $$(G.litName "constraint")
-      columnsName    = $$(G.litName "update_columnns")
+      columnsName    = $$(G.litName "update_columns")
       whereExpName   = $$(G.litName "where")
       fieldsParser = do
         constraint <- RQL.CTConstraint <$> P.field constraintName Nothing constraintParser
