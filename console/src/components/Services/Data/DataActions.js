@@ -28,6 +28,7 @@ import {
   fetchTrackedTableReferencedFkQuery,
   fetchTrackedTableFkQuery,
   fetchTableListQuery,
+  fetchColumnsInfoQuery,
   fetchTrackedTableListQuery,
   fetchTrackedTableRemoteRelationshipQuery,
   mergeLoadSchemaData,
@@ -320,6 +321,7 @@ const loadSchema = configOptions => {
       type: 'bulk',
       args: [
         fetchTableListQuery(configOptions),
+        fetchColumnsInfoQuery(configOptions),
         fetchTrackedTableListQuery(configOptions), // v1/query
         fetchTrackedTableFkQuery(configOptions),
         fetchTrackedTableReferencedFkQuery(configOptions),
@@ -336,14 +338,17 @@ const loadSchema = configOptions => {
 
     return dispatch(requestAction(url, options)).then(
       data => {
+        console.log({ data });
         const tableList = JSON.parse(data[0].result[1]);
-        const fkList = JSON.parse(data[2].result[1]);
-        const refFkList = JSON.parse(data[3].result[1]);
-        const remoteRelationships = data[4];
+        const columnsInfo = JSON.parse(data[1].result[1]);
+        const fkList = JSON.parse(data[3].result[1]);
+        const refFkList = JSON.parse(data[4].result[1]);
+        const remoteRelationships = data[5];
 
         const mergedData = mergeLoadSchemaData(
           tableList,
-          data[1],
+          columnsInfo,
+          data[2],
           fkList,
           refFkList,
           remoteRelationships
@@ -361,6 +366,11 @@ const loadSchema = configOptions => {
             'tables'
           );
         }
+        console.log({
+          mergedData,
+          maybeInconsistentSchemas,
+          consistentSchemas,
+        });
 
         dispatch({
           type: LOAD_SCHEMA,
