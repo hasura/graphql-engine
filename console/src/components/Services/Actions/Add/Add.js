@@ -52,7 +52,7 @@ const AddAction = ({
     return () => {
       dispatch(resetDerivedActionParentOperation());
     };
-  });
+  }, []);
 
   const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
   const kindOnChange = k => dispatch(setActionKind(k));
