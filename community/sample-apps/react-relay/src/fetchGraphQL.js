@@ -1,6 +1,6 @@
 async function fetchGraphQL(text, variables) {
   const response = await fetch(
-    "https://[MY_HASURA_ENDPOINT_ROOT]/v1/relay",
+    "https://[MY_HASURA_ENDPOINT_ROOT]/v1beta1/relay",
     {
       method: "POST",
       headers: {

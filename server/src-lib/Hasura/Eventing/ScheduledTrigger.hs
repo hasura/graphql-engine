@@ -224,6 +224,18 @@ data ScheduledEventType =
   -- so all the configuration is fetched along the scheduled events.
     deriving (Eq, Show)
 
+data ScheduledEventWebhookPayload
+  = ScheduledEventWebhookPayload
+  { sewpId            :: !Text
+  , sewpName          :: !(Maybe TriggerName)
+  , sewpScheduledTime :: !UTCTime
+  , sewpPayload       :: !J.Value
+  , sewpComment       :: !(Maybe Text)
+  , sewpCreatedAt     :: !UTCTime
+  } deriving (Show, Eq)
+
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
+
 -- | runCronEventsGenerator makes sure that all the cron triggers
 --   have an adequate buffer of cron events.
 runCronEventsGenerator ::
@@ -469,33 +481,42 @@ processScheduledEvent
           httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
           headers = addDefaultHeaders $ map encodeHeader sefHeaders
           extraLogCtx = ExtraLogContext (Just currentTime) sefId
-      res <- runExceptT $ tryWebhook headers httpTimeout sefPayload (T.unpack sefWebhook)
+          webhookReqPayload =
+            ScheduledEventWebhookPayload sefId sefName sefScheduledTime sefPayload sefComment currentTime
+          webhookReqBodyJson = J.toJSON webhookReqPayload
+      res <- runExceptT $ tryWebhook headers httpTimeout webhookReqBodyJson (T.unpack sefWebhook)
       logHTTPForST res extraLogCtx
       let decodedHeaders = map (decodeHeader logEnv sefHeaders) headers
       either
-        (processError pgpool se decodedHeaders type')
-        (processSuccess pgpool se decodedHeaders type')
+        (processError pgpool se decodedHeaders type' webhookReqBodyJson)
+        (processSuccess pgpool se decodedHeaders type' webhookReqBodyJson)
         res
 
 processError
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> ScheduledEventType -> HTTPErr a  -> m ()
-processError pgpool se decodedHeaders type' err = do
+  => Q.PGPool
+  -> ScheduledEventFull
+  -> [HeaderConf]
+  -> ScheduledEventType
+  -> J.Value
+  -> HTTPErr a
+  -> m ()
+processError pgpool se decodedHeaders type' reqJson err = do
   let invocation = case err of
         HClient excp -> do
           let errMsg = TBS.fromLBS $ J.encode $ show excp
-          mkInvocation se 1000 decodedHeaders errMsg []
+          mkInvocation se 1000 decodedHeaders errMsg [] reqJson
         HParse _ detail -> do
           let errMsg = TBS.fromLBS $ J.encode detail
-          mkInvocation se 1001 decodedHeaders errMsg []
+          mkInvocation se 1001 decodedHeaders errMsg [] reqJson
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp
               respStatus = hrsStatus errResp
-          mkInvocation se respStatus decodedHeaders respPayload respHeaders
+          mkInvocation se respStatus decodedHeaders respPayload respHeaders reqJson
         HOther detail -> do
           let errMsg = (TBS.fromLBS $ J.encode detail)
-          mkInvocation se 500 decodedHeaders errMsg []
+          mkInvocation se 500 decodedHeaders errMsg [] reqJson
   liftExceptTIO $
     Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
     insertInvocation invocation type'
@@ -552,12 +573,18 @@ and it can transition to other states in the following ways:
 
 processSuccess
   :: (MonadIO m, MonadError QErr m)
-  => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> ScheduledEventType -> HTTPResp a -> m ()
-processSuccess pgpool se decodedHeaders type' resp = do
+  => Q.PGPool
+  -> ScheduledEventFull
+  -> [HeaderConf]
+  -> ScheduledEventType
+  -> J.Value
+  -> HTTPResp a
+  -> m ()
+processSuccess pgpool se decodedHeaders type' reqBodyJson resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
-      invocation = mkInvocation se respStatus decodedHeaders respBody respHeaders
+      invocation = mkInvocation se respStatus decodedHeaders respBody respHeaders reqBodyJson
   liftExceptTIO $
     Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
     insertInvocation invocation type'
@@ -588,17 +615,22 @@ setRetry se time type' =
         |] (time, sefId se) True
 
 mkInvocation
-  :: ScheduledEventFull -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
+  :: ScheduledEventFull
+  -> Int
+  -> [HeaderConf]
+  -> TBS.TByteString
+  -> [HeaderConf]
+  -> J.Value
   -> (Invocation 'ScheduledType)
-mkInvocation se status reqHeaders respBody respHeaders
+mkInvocation ScheduledEventFull {sefId} status reqHeaders respBody respHeaders reqBodyJson
   = let resp = if isClientError status
           then mkClientErr respBody
           else mkResp status respBody respHeaders
     in
       Invocation
-      (sefId se)
+      sefId
       status
-      (mkWebhookReq (J.toJSON se) reqHeaders invocationVersionST)
+      (mkWebhookReq reqBodyJson reqHeaders invocationVersionST)
       resp
 
 insertInvocation :: (Invocation 'ScheduledType) -> ScheduledEventType ->  Q.TxE QErr ()
