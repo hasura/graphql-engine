@@ -72,17 +72,18 @@ convertMutationRootField
   -> HTTP.RequestHeaders
   -> Bool
   -> MutationRootField UnpreparedValue
-  -> m (LazyRespTx, HTTP.ResponseHeaders)
+  -> m (Either (LazyRespTx, HTTP.ResponseHeaders) RemoteField)
 convertMutationRootField usrVars manager reqHeaders stringifyNum = \case
   RFDB (MDBInsert s)  -> noResponseHeaders $ convertInsert usrVars s stringifyNum
   RFDB (MDBUpdate s)  -> noResponseHeaders $ convertUpdate usrVars s stringifyNum
   RFDB (MDBDelete s)  -> noResponseHeaders $ convertDelete usrVars s stringifyNum
-  RFAction (AMSync s) -> first liftTx <$> resolveActionExecution s actionExecContext
+  RFRemote remote     -> pure $ Right remote
+  RFAction (AMSync s) -> Left <$> first liftTx <$> resolveActionExecution s actionExecContext
   RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders usrVars
   RFRaw s             -> noResponseHeaders $ pure $ encJFromJValue s
   where
-    noResponseHeaders :: RespTx -> m (LazyRespTx, HTTP.ResponseHeaders)
-    noResponseHeaders rTx = pure (liftTx rTx, [])
+    noResponseHeaders :: RespTx -> m (Either (LazyRespTx, HTTP.ResponseHeaders) RemoteField)
+    noResponseHeaders rTx = pure $ Left (liftTx rTx, [])
 
     actionExecContext = ActionExecContext manager reqHeaders usrVars
 
@@ -105,14 +106,25 @@ convertMutationSelectionSet gqlContext usrVars manager reqHeaders fields varDefs
 
   -- Transform the RQL AST into a prepared SQL query
   -- TODO pass the correct stringifyNum somewhere rather than True
-  txs <- flip OMap.traverseWithKey unpreparedQueries $ const $
-         convertMutationRootField usrVars manager reqHeaders True
+  txs <- for unpreparedQueries $ convertMutationRootField usrVars manager reqHeaders True
   let txList = OMap.toList txs
-      combinedTx = toSingleTx $ map (G.unName *** fst) txList
-      allHeaders = concatMap (snd . snd) txList
-
+  case (mapMaybe takeTx txList, mapMaybe takeRemote txList) of
+    (dbPlans, []) -> do
+      let allHeaders = concatMap (snd . snd) dbPlans
+          combinedTx = toSingleTx $ map (G.unName *** fst) dbPlans
+      pure $ ExecStepDB (combinedTx, allHeaders)
+    ([], remotes@(firstRemote:_)) -> do
+      let (remoteOperation, varValsM') =
+            buildTypedOperation
+            G.OperationTypeMutation
+            varDefs
+            (map (G.SelectionField . snd . snd) remotes)
+            varValsM
+      if all (\remote' -> fst (snd firstRemote) == fst (snd remote')) remotes
+        then return $ ExecStepRemote (fst (snd firstRemote), remoteOperation, varValsM')
+        else throw400 NotSupported "Mixed remote schemas are not supported"
+    _ -> throw400 NotSupported "Heterogeneous execution of database and remote schemas not supported"
   -- Build and return an executable action from the generated SQL
-  pure $ ExecStepDB (combinedTx, allHeaders)
   where
     reportParseErrors errs = case NE.head errs of
       -- TODO: Our error reporting machinery doesn’t currently support reporting
@@ -132,3 +144,13 @@ convertMutationSelectionSet gqlContext usrVars manager reqHeaders fields varDefs
     toSingleTx aliasedTxs =
       fmap encJFromAssocList $
       forM aliasedTxs $ \(al, tx) -> (,) al <$> tx
+    takeTx
+      :: (G.Name, Either (LazyRespTx, HTTP.ResponseHeaders) RemoteField)
+      -> Maybe (G.Name, (LazyRespTx, HTTP.ResponseHeaders))
+    takeTx (name, Left tx) = Just (name, tx)
+    takeTx _ = Nothing
+    takeRemote
+      :: (G.Name, Either (LazyRespTx, HTTP.ResponseHeaders) RemoteField)
+      -> Maybe (G.Name, RemoteField)
+    takeRemote (name, Right remote) = Just (name, remote)
+    takeRemote _ = Nothing
