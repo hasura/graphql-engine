@@ -83,20 +83,19 @@ const RemoteSchemaSubSidebar = ({
                 to={`${appPrefix}/manage/${d.name}/details`}
                 data-test={d.name}
               >
+                <i
+                  className={`${styles.tableIcon} fa fa-code-fork`}
+                  aria-hidden="true"
+                />
+                {d.name}
                 {isSchemaInconsistent ? (
                   <ToolTip message={inconsistentCurrentSchema.reason}>
                     <i
-                      className={`${styles.tableIcon} fa fa-exclamation-triangle ${styles.colorRed}`}
+                      className={`${styles.tableIcon} ${styles.icon_mar_left} fa fa-exclamation-triangle ${styles.colorRed}`}
                       aria-hidden="true"
                     />
                   </ToolTip>
-                ) : (
-                  <i
-                    className={`${styles.tableIcon} fa fa-code-fork`}
-                    aria-hidden="true"
-                  />
-                )}
-                {d.name}
+                ) : null}
               </Link>
             </li>
           );
