@@ -109,14 +109,16 @@ class RelationshipEditor extends React.Component {
 
       return (
         <div>
-          {getEditBtn()}
-          <b>{relName}</b>
+          <div className={styles.display_flex}>
+            {getEditBtn()}
+            <b className={styles.textNoNewLine}>{relName}</b>
+          </div>
           <GqlCompatibilityWarning
             identifier={relName}
             className={styles.add_mar_left_small}
           />
           <div className={tableStyles.relationshipTopPadding}>
-            {getRelDef(relConfig)}
+            <p className={styles.textNoNewLine}>{getRelDef(relConfig)}</p>
           </div>
         </div>
       );
@@ -134,7 +136,9 @@ class RelationshipEditor extends React.Component {
             Close
           </Button>
         </div>
-        <div className={tableStyles.relationshipTopPadding}>
+        <div
+          className={`${tableStyles.relationshipTopPadding} ${styles.textNoNewLine}`}
+        >
           <div>{getRelDef(relConfig)}</div>
           <input
             onChange={this.handleTextChange}
