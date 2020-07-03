@@ -11,6 +11,7 @@ export interface TooltipProps extends React.ComponentProps<'i'> {
   placement?: 'right' | 'left' | 'top' | 'bottom';
   className?: string;
   tooltipStyle?: string;
+  icon: string;
 }
 
 const ToolTip: React.FC<TooltipProps> = ({
@@ -18,11 +19,12 @@ const ToolTip: React.FC<TooltipProps> = ({
   placement = 'right',
   tooltipStyle = '',
   children,
+  icon = 'fa-info-circle',
 }) => (
   <OverlayTrigger placement={placement} overlay={tooltipGen(message)}>
     {children || (
       <i
-        className={`fa fa-info-circle ${styles.tooltipIcon} ${tooltipStyle}`}
+        className={`fa ${icon} ${styles.tooltipIcon} ${tooltipStyle}`}
         aria-hidden="true"
       />
     )}
