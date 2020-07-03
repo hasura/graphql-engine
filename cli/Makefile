@@ -28,7 +28,7 @@ endif
 .PHONY: build
 build: export CGO_ENABLED=0
 build:
-	gox -ldflags '-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -X github.com/hasura/graphql-engine/cli/plugins.IndexBranchRef=$(PLUGINS_BRANCH) -X github.com/hasura/graphql-engine/cli/commands.IsUpdateCommandEnabled=true -s -w -extldflags "-static"' \
+	gox -ldflags '-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -X github.com/hasura/graphql-engine/cli/plugins.IndexBranchRef=$(PLUGINS_BRANCH) -s -w -extldflags "-static"' \
 	-rebuild \
 	-os="$(OS)" \
 	-arch="amd64" \
