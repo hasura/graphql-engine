@@ -3,9 +3,7 @@ import styles from './Styles.scss';
 import Helmet from 'react-helmet';
 import HandlerEditor from '../Common/components/HandlerEditor';
 import KindEditor from '../Common/components/KindEditor';
-import ActionDefinitionEditor from '../Common/components/ActionDefinitionEditor';
 import HeaderConfEditor from '../Common/components/HeaderConfEditor';
-import TypeDefinitionEditor from '../Common/components/TypeDefinitionEditor';
 import Button from '../../../Common/Button';
 import { getModifyState } from './utils';
 import {
@@ -19,6 +17,9 @@ import {
 } from './reducer';
 import { saveAction, deleteAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
+import GraphQLEditor, {
+  actionDefinitionInfo,
+} from '../Common/components/GraphQLEditor';
 
 const ActionEditor = ({
   currentAction,
@@ -98,22 +99,24 @@ const ActionEditor = ({
   return (
     <div>
       <Helmet title={`Modify Action - ${actionName} - Actions | Hasura`} />
-      <ActionDefinitionEditor
+      <GraphQLEditor
         value={actionDefinitionSdl}
         error={actionDefinitionError}
         onChange={actionDefinitionOnChange}
         timer={actionDefinitionTimer}
-        placeholder={''}
         readOnlyMode={readOnlyMode}
+        label={actionDefinitionInfo.label}
+        tooltip={actionDefinitionInfo.tooltip}
       />
       <hr />
-      <TypeDefinitionEditor
+      <GraphQLEditor
         value={typesDefinitionSdl}
         error={typesDefinitionError}
         onChange={typeDefinitionOnChange}
         timer={typeDefinitionTimer}
-        placeholder={''}
         readOnlyMode={readOnlyMode}
+        label={actionDefinitionInfo.label}
+        tooltip={actionDefinitionInfo.tooltip}
       />
       <hr />
       <HandlerEditor

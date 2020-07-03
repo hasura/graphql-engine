@@ -3,8 +3,6 @@ import styles from './Styles.scss';
 import Helmet from 'react-helmet';
 import HandlerEditor from '../Common/components/HandlerEditor';
 import KindEditor from '../Common/components/KindEditor';
-import ActionDefinitionEditor from '../Common/components/ActionDefinitionEditor';
-import TypeDefinitionEditor from '../Common/components/TypeDefinitionEditor';
 import HeadersConfEditor from '../Common/components/HeaderConfEditor';
 import Button from '../../../Common/Button';
 import {
@@ -21,6 +19,10 @@ import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { showWarningNotification } from '../../Common/Notification';
+import GraphQLEditor, {
+  actionDefinitionInfo,
+  typeDefinitionInfo,
+} from '../Common/components/GraphQLEditor';
 
 const AddAction = ({
   handler,
@@ -109,22 +111,24 @@ const AddAction = ({
     <div>
       <Helmet title={'Add Action - Actions | Hasura'} />
       <div className={styles.heading_text}>Add a new action</div>
-      <ActionDefinitionEditor
+      <GraphQLEditor
         value={actionDefinitionSdl}
         error={actionDefinitionError}
         onChange={actionDefinitionOnChange}
         timer={actionParseTimer}
-        placeholder={''}
         readOnlyMode={readOnlyMode}
+        label={actionDefinitionInfo.label}
+        tooltip={actionDefinitionInfo.tooltip}
       />
       <hr />
-      <TypeDefinitionEditor
+      <GraphQLEditor
         value={typesDefinitionSdl}
         error={typesDefinitionError}
         timer={typedefParseTimer}
         onChange={typeDefinitionOnChange}
-        placeholder={''}
         readOnlyMode={readOnlyMode}
+        label={typeDefinitionInfo.label}
+        tooltip={typeDefinitionInfo.tooltip}
       />
       <hr />
       <HandlerEditor
