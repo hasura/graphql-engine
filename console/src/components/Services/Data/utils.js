@@ -609,8 +609,6 @@ GROUP BY
   isv.*
 ) AS info;
 `;
-  // ${whereQuery}
-  // ${whereQuery}
   return getRunSqlQuery(
     runSql,
     false,
@@ -677,11 +675,11 @@ export const mergeLoadSchemaData = (
 
     const _isTableTracked = trackedTableInfo ? true : false;
 
-    const tableColInfo = columnsInfo.find(
-      col => col.table_name === _tableName && col.schema_name === _tableSchema
-    );
+    const tableColInfo = columnsInfo.find(col => {
+      return col.table_name === _tableName && col.table_schema === _tableSchema;
+    });
 
-    const _columns = tableColInfo ? JSON.parse(tableColInfo.columns) : [];
+    const _columns = tableColInfo ? tableColInfo.columns : [];
     const _comment = infoSchemaTableInfo.comment;
     const _tableType = infoSchemaTableInfo.table_type;
     const _triggers = infoSchemaTableInfo.triggers; // TODO: get from v1/query
