@@ -252,7 +252,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
           queryTx <- EM.convertMutationSelectionSet gCtx (_uiSession userInfo) httpManager reqHeaders
                      inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
-          return $ MutationExecutionPlan $ EPr.ExecStepDB queryTx
+          return $ MutationExecutionPlan $ queryTx
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet

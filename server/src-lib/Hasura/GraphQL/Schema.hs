@@ -69,21 +69,29 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions non
     buildContextForRole roleName = do
       SQLGenCtx{ stringifyNum } <- askSQLGenCtx
       remotes <- allRemoteParsers
-      let -- | The 'query' type of the remotes. TODO: also expose mutation remotes. NOT TODO: subscriptions, as we do not yet aim to support these.
+      let -- | The 'query' type of the remotes. TODO: also expose mutation
+          -- remotes. NOT TODO: subscriptions, as we do not yet aim to support
+          -- these.
           queryRemotes = concat $ map (\(q,m,s)->q) $ Map.elems remotes
           queryRemotesMap =
             Map.fromList $
             map (\(remoteSchemaName, (queryFieldParser, _, _) ) ->
                    (remoteSchemaName, map (\(FieldParser defn _) -> defn) queryFieldParser))
             $ Map.toList remotes
+          mutationRemotes = concat $ fmap concat $ map (\(q,m,s)->m) $ Map.elems remotes
+          mutationRemotesMap =
+            Map.fromList $
+            map (\(remoteSchemaName, (mutationFieldParser, _, _) ) ->
+                   (remoteSchemaName, map (\(FieldParser defn _) -> defn) mutationFieldParser))
+            $ Map.toList remotes
           allActionInfos = Map.elems allActions
           queryHasuraOrRelay = case queryType of
             QueryHasura -> queryWithIntrospection (S.fromList $ Map.keys validTables)
-                           validFunctions queryRemotes allActionInfos nonObjectCustomTypes
+                           validFunctions queryRemotes mutationRemotes allActionInfos nonObjectCustomTypes
             QueryRelay  -> relayWithIntrospection (S.fromList $ Map.keys validTables)
           gqlContext = GQLContext
             <$> (finalizeParser <$> queryHasuraOrRelay)
-            <*> (finalizeParser <$> mutation (S.fromList $ Map.keys validTables) allActionInfos nonObjectCustomTypes)
+            <*> (finalizeParser <$> mutation (S.fromList $ Map.keys validTables) mutationRemotes allActionInfos nonObjectCustomTypes)
       flip runReaderT (queryType, roleName, allTables, QueryContext stringifyNum queryRemotesMap) $
         P.runSchemaT gqlContext
 
@@ -229,12 +237,13 @@ queryWithIntrospection
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-queryWithIntrospection allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
-  basicQueryFP <- query' allTables allFunctions allRemotes allActions nonObjectCustomTypes
-  mutationP <- mutation allTables allActions nonObjectCustomTypes
+queryWithIntrospection allTables allFunctions queryRemotes mutationRemotes allActions nonObjectCustomTypes = do
+  basicQueryFP <- query' allTables allFunctions queryRemotes allActions nonObjectCustomTypes
+  mutationP <- mutation allTables mutationRemotes allActions nonObjectCustomTypes
   subscriptionP <- subscription allTables allFunctions $
                    filter (has (aiDefinition.adType._ActionMutation._ActionAsynchronous)) allActions
   let
@@ -276,7 +285,7 @@ relayWithIntrospection
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 relayWithIntrospection allTables = do
   nodeF <- nodeField allTables
-  mutationP <- mutation allTables [] mempty
+  mutationP <- mutation allTables [] [] mempty
   let basicQueryFP = (:[]) . (fmap (RFDB . QDBPrimaryKey)) $ nodeF
       basicQueryP = queryRootFromFields basicQueryFP
   emptyIntro <- emptyIntrospection
@@ -307,10 +316,11 @@ mutation
   :: forall m n r
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => HashSet QualifiedTable
+  -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
-mutation allTables allActions nonObjectCustomTypes = do
+mutation allTables allRemotes allActions nonObjectCustomTypes = do
   mutationParsers <- for (toList allTables) \table -> do
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
     displayName <- P.qualifiedObjectToName table
@@ -368,6 +378,6 @@ mutation allTables allActions nonObjectCustomTypes = do
         actionAsyncMutation nonObjectCustomTypes actionInfo
       ActionQuery -> pure Nothing
 
-  let mutationFieldsParser = concat (catMaybes mutationParsers) <> catMaybes actionParsers
+  let mutationFieldsParser = concat (catMaybes mutationParsers) <> catMaybes actionParsers <> (fmap (fmap RFRemote)) allRemotes
   pure $ P.selectionSet $$(G.litName "mutation_root") Nothing mutationFieldsParser
     <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))

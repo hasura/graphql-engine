@@ -2,6 +2,7 @@ module Hasura.GraphQL.Execute.Mutation where
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson                             as J
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.IntMap                            as IntMap
@@ -94,7 +95,7 @@ convertMutationSelectionSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m (LazyRespTx, HTTP.ResponseHeaders)
+  -> m (ExecutionPlan (LazyRespTx, HTTP.ResponseHeaders) RemoteCall (G.Name, J.Value))
 convertMutationSelectionSet gqlContext usrVars manager reqHeaders fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
@@ -111,7 +112,7 @@ convertMutationSelectionSet gqlContext usrVars manager reqHeaders fields varDefs
       allHeaders = concatMap (snd . snd) txList
 
   -- Build and return an executable action from the generated SQL
-  pure (combinedTx, allHeaders)
+  pure $ ExecStepDB (combinedTx, allHeaders)
   where
     reportParseErrors errs = case NE.head errs of
       -- TODO: Our error reporting machinery doesn’t currently support reporting
