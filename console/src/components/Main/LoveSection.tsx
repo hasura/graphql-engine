@@ -87,13 +87,22 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
   )
 );
 
+function mapStateToProps(state: ReduxState) {
+  return {
+    consoleNotifications: state.main.consoleNotifications,
+  };
+}
+
+type StateProps = ReturnType<typeof mapStateToProps>;
+
 type LoveSectionProps = {
-  consoleNotifications: Array<ConsoleNotification>;
   toggleDropDown: (e: React.MouseEvent<HTMLDivElement>) => void;
   closeDropDown: () => void;
 };
 
-const LoveSection: React.FC<LoveSectionProps> = ({
+interface Props extends LoveSectionProps, StateProps {}
+
+const LoveSection: React.FC<Props> = ({
   consoleNotifications,
   toggleDropDown,
   closeDropDown,
@@ -116,11 +125,5 @@ const LoveSection: React.FC<LoveSectionProps> = ({
     </>
   );
 };
-
-function mapStateToProps(state: ReduxState) {
-  return {
-    consoleNotifications: state.main.consoleNotifications,
-  };
-}
 
 export default connect(mapStateToProps)(LoveSection);

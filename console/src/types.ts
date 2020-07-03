@@ -20,7 +20,7 @@ export type ReduxState = {
     readOnlyMode: boolean;
     serverVersion: string;
     latestStableServerVersion: string;
-    consoleNotifications: Array<ConsoleNotification>;
+    consoleNotifications: ConsoleNotification[];
   };
   telemetry: TelemetryState;
 };

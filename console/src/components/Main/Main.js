@@ -30,7 +30,7 @@ import {
   loadLatestServerVersion,
   featureCompatibilityInit,
   emitProClickedEvent,
-  fetchNotificationData,
+  fetchConsoleNotifications,
 } from './Actions';
 
 import {
@@ -81,7 +81,7 @@ class Main extends React.Component {
     });
 
     dispatch(fetchServerConfig());
-    dispatch(fetchNotificationData());
+    dispatch(fetchConsoleNotifications());
   }
 
   toggleProPopup() {

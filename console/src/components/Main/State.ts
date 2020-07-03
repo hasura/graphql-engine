@@ -31,7 +31,7 @@ export interface MainState {
     isFetching: boolean;
   };
   featuresCompatibility: object;
-  consoleNotifications: Array<ConsoleNotification>;
+  consoleNotifications: ConsoleNotification[];
 }
 
 const defaultState: MainState = {

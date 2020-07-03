@@ -13,10 +13,6 @@ const SET_SERVER_VERSION_ERROR = 'Main/SET_SERVER_VERSION_ERROR';
 const SET_LATEST_SERVER_VERSION_SUCCESS =
   'Main/SET_LATEST_SERVER_VERSION_SUCCESS';
 const SET_LATEST_SERVER_VERSION_ERROR = 'Main/SET_LATEST_SERVER_VERSION_ERROR';
-const SET_CONSOLE_NOTIFICATIONS = 'Main/SET_CONSOLE_NOTIFICATION';
-const SET_DEFAULT_CONSOLE_NOTIFICATION =
-  'Main/SET_DEFAULT_CONSOLE_NOTIFICATION';
-const SET_ERROR_CONSOLE_NOTIFICATION = 'Main/SET_ERROR_CONSOLE_NOTIFICATION';
 const UPDATE_MIGRATION_STATUS_SUCCESS = 'Main/UPDATE_MIGRATION_STATUS_SUCCESS';
 const UPDATE_MIGRATION_STATUS_ERROR = 'Main/UPDATE_MIGRATION_STATUS_ERROR';
 const HASURACTL_URL_ENV = 'Main/HASURACTL_URL_ENV';
@@ -27,6 +23,12 @@ const EXPORT_METADATA_ERROR = 'Main/EXPORT_METADATA_ERROR';
 const UPDATE_ADMIN_SECRET_INPUT = 'Main/UPDATE_ADMIN_SECRET_INPUT';
 const LOGIN_IN_PROGRESS = 'Main/LOGIN_IN_PROGRESS';
 const LOGIN_ERROR = 'Main/LOGIN_ERROR';
+const FETCH_CONSOLE_NOTIFICATIONS_SUCCESS =
+  'Main/FETCH_CONSOLE_NOTIFICATIONS_SUCCESS';
+const FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT =
+  'Main/FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT';
+const FETCH_CONSOLE_NOTIFICATIONS_ERROR =
+  'Main/FETCH_CONSOLE_NOTIFICATIONS_ERROR';
 
 const RUN_TIME_ERROR = 'Main/RUN_TIME_ERROR';
 const registerRunTimeError = data => ({
@@ -40,19 +42,17 @@ const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
 const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 /* End */
 
-const fetchNotificationData = () => dispatch => {
+const fetchConsoleNotifications = () => dispatch => {
   const url = Endpoints.consoleNotifications;
   const requestBody = {
     args: {
       limit: 5,
       table: 'console_notification',
-      where: null,
-      offset: null,
       columns: ['*'],
       order_by: [
         {
           type: 'desc',
-          column: ['id'],
+          column: ['created_at'],
         },
       ],
     },
@@ -66,20 +66,18 @@ const fetchNotificationData = () => dispatch => {
   return dispatch(requestAction(url, options))
     .then(data => {
       if (data.length) {
-        dispatch({ type: SET_CONSOLE_NOTIFICATIONS, data });
+        dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SUCCESS, data });
         return;
       }
 
       dispatch({
-        type: SET_DEFAULT_CONSOLE_NOTIFICATION,
-        data: [defaultNotification],
+        type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT,
       });
     })
     .catch(err => {
       console.error(err);
       dispatch({
-        type: SET_ERROR_CONSOLE_NOTIFICATION,
-        data: [errorNotification],
+        type: FETCH_CONSOLE_NOTIFICATIONS_ERROR,
       });
     });
 };
@@ -368,12 +366,20 @@ const mainReducer = (state = defaultState, action) => {
         ...state,
         featuresCompatibility: { ...action.data },
       };
-    case SET_CONSOLE_NOTIFICATIONS:
-    case SET_DEFAULT_CONSOLE_NOTIFICATION:
-    case SET_ERROR_CONSOLE_NOTIFICATION:
+    case FETCH_CONSOLE_NOTIFICATIONS_SUCCESS:
       return {
         ...state,
         consoleNotifications: action.data,
+      };
+    case FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT:
+      return {
+        ...state,
+        consoleNotifications: [defaultNotification],
+      };
+    case FETCH_CONSOLE_NOTIFICATIONS_ERROR:
+      return {
+        ...state,
+        consoleNotifications: [errorNotification],
       };
     default:
       return state;
@@ -398,5 +404,5 @@ export {
   featureCompatibilityInit,
   RUN_TIME_ERROR,
   registerRunTimeError,
-  fetchNotificationData,
+  fetchConsoleNotifications,
 };
