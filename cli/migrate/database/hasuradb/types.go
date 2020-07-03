@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mitchellh/mapstructure"
+
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 
 	"github.com/qor/transition"
@@ -280,25 +282,25 @@ type HasuraError struct {
 	// MigrationFile is used internally for hasuractl
 	migrationFile  string
 	migrationQuery string
-	Path           string            `json:"path"`
-	ErrorMessage   string            `json:"error"`
-	Internal       *SQLInternalError `json:"internal,omitempty"`
-	Message        string            `json:"message,omitempty"`
-	Code           string            `json:"code"`
+	Path           string      `json:"path"`
+	ErrorMessage   string      `json:"error"`
+	Internal       interface{} `json:"internal,omitempty"`
+	Message        string      `json:"message,omitempty"`
+	Code           string      `json:"code"`
 }
 
 type SQLInternalError struct {
-	Arguments []string      `json:"arguments"`
-	Error     PostgresError `json:"error"`
-	Prepared  bool          `json:"prepared"`
-	Statement string        `json:"statement"`
+	Arguments []string      `json:"arguments" mapstructure:"arguments,omitempty"`
+	Error     PostgresError `json:"error" mapstructure:"error,omitempty"`
+	Prepared  bool          `json:"prepared" mapstructure:"prepared,omitempty"`
+	Statement string        `json:"statement" mapstructure:"statement,omitempty"`
 }
 type PostgresError struct {
-	StatusCode  string `json:"status_code"`
-	ExecStatus  string `json:"exec_status"`
-	Message     string `json:"message"`
-	Description string `json:"description"`
-	Hint        string `json:"hint"`
+	StatusCode  string `json:"status_code" mapstructure:"status_code,omitempty"`
+	ExecStatus  string `json:"exec_status" mapstructure:"exec_status,omitempty"`
+	Message     string `json:"message" mapstructure:"message,omitempty"`
+	Description string `json:"description" mapstructure:"description,omitempty"`
+	Hint        string `json:"hint" mapstructure:"hint,omitempty"`
 }
 
 type SchemaDump struct {
@@ -315,14 +317,34 @@ func (h HasuraError) Error() string {
 	if h.migrationQuery != "" {
 		errorStrings = append(errorStrings, fmt.Sprintf("%s", h.migrationQuery))
 	}
-	if h.Internal != nil {
-		// postgres error
-		errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", h.Internal.Error.StatusCode, h.Internal.Error.ExecStatus, h.Internal.Error.Message))
-		if len(h.Internal.Error.Description) > 0 {
-			errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", h.Internal.Error.Description))
+	var internalError SQLInternalError
+	var internalErrors []SQLInternalError
+	if v, ok := h.Internal.(map[string]interface{}); ok {
+		err := mapstructure.Decode(v, &internalError)
+		if err == nil {
+			// postgres error
+			errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", internalError.Error.StatusCode, internalError.Error.ExecStatus, internalError.Error.Message))
+			if len(internalError.Error.Description) > 0 {
+				errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", internalError.Error.Description))
+			}
+			if len(internalError.Error.Hint) > 0 {
+				errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", internalError.Error.Hint))
+			}
 		}
-		if len(h.Internal.Error.Hint) > 0 {
-			errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", h.Internal.Error.Hint))
+	}
+	if v, ok := h.Internal.([]interface{}); ok {
+		err := mapstructure.Decode(v, &internalErrors)
+		if err == nil {
+			for _, internalError := range internalErrors {
+				// postgres error
+				errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", internalError.Error.StatusCode, internalError.Error.ExecStatus, internalError.Error.Message))
+				if len(internalError.Error.Description) > 0 {
+					errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", internalError.Error.Description))
+				}
+				if len(internalError.Error.Hint) > 0 {
+					errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", internalError.Error.Hint))
+				}
+			}
 		}
 	}
 	return strings.Join(errorStrings, "\r\n")
