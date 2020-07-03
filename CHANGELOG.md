@@ -6,6 +6,8 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: change relay endpoint to `/v1beta1/relay` (#5257)
+- server: relay connection fields are exposed regardless of allow aggregation permission (fix #5218) (#5257)
 - server: add new `--conn-lifetime` and `HASURA_GRAPHQL_PG_CONN_LIFETIME` options for expiring connections after some amount of active time (#5087)
 - server: shrink libpq connection request/response buffers back to 1MB if they grow beyond 2MB, fixing leak-like behavior on active servers (#5087)
 - server: unlock locked scheduled events on graceful shutdown (#4928)
@@ -64,7 +66,7 @@
 
 The Hasura GraphQL Engine serves [Relay](https://relay.dev/en/) schema for Postgres tables which has a primary key defined.
 
-The Relay schema can be accessed through `/v1/relay` endpoint.
+The Relay schema can be accessed through `/v1beta1/relay` endpoint.
 
 [Add docs links][add console screenshot for relay toggle]
 

@@ -1,5 +1,5 @@
 description: Get last page of articles with 2 items before 'Article 4'
-url: /v1/relay
+url: /v1beta1/relay
 status: 200
 query:
   query: |
