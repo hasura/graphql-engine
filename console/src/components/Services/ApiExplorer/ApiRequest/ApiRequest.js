@@ -544,13 +544,13 @@ class ApiRequest extends Component {
                   {getHeaderRemoveBtn()}
                   {isClientName && (
                     <ActionIcon
-                      message="indicates the origin of the request"
+                      message="Hasura client name is a header that indicates where the request is being made from. This is used by GraphQL Engine for providing detailed metrics."
                       dataHeaderID={i}
                     />
                   )}
                   {isCollaboratorToken && (
                     <ActionIcon
-                      message="an admin-secret alternative to authorize your requests"
+                      message="Hasura collaborator token is an admin-secret alternative when you login using Hasura. This is used by GraphQL Engine to authorise your requests."
                       dataHeaderID={i}
                     />
                   )}
