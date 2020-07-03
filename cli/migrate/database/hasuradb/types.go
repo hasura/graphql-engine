@@ -64,6 +64,22 @@ type updateRemoteRelationshipInput struct {
 	*createRemoteRelationshipInput
 }
 
+type createCronTriggerInput struct {
+	Name              string      `json:"name" yaml:"name"`
+	Webhook           string      `json:"webhook" yaml:"webhook"`
+	Schedule          string      `json:"schedule" yaml:"schedule"`
+	Payload           interface{} `json:"payload,omitempty" yaml:"payload,omitempty"`
+	Headers           interface{} `json:"headers,omitempty" yaml:"headers,omitempty"`
+	RetryConf         interface{} `json:"retry_conf,omitempty" yaml:"retry_conf,omitempty"`
+	IncludeInMetadata *bool       `json:"include_in_metadata,omitempty" yaml:"include_in_metadata,omitempty"`
+	Comment           string      `json:"comment,omitempty" yaml:"comment,omitempty"`
+	Replace           *bool       `json:"replace,omitempty" yaml:"replace,omitempty"`
+}
+
+type deleteCronTriggerInput struct {
+	Name string `json:"name" yaml:"name"`
+}
+
 func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 	type t newHasuraIntefaceQuery
 	var q t
@@ -155,6 +171,10 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		q.Args = &createRemoteRelationshipInput{}
 	case updateRemoteRelationship:
 		q.Args = &createRemoteRelationshipInput{}
+	case createCronTrigger:
+		q.Args = &createCronTriggerInput{}
+	case deleteCronTrigger:
+		q.Args = &deleteCronTriggerInput{}
 	default:
 		return fmt.Errorf("cannot squash type %s", q.Type)
 	}
@@ -335,6 +355,8 @@ const (
 	createRemoteRelationship                 = "create_remote_relationship"
 	updateRemoteRelationship                 = "update_remote_relationship"
 	deleteRemoteRelationship                 = "delete_remote_relationship"
+	createCronTrigger                        = "create_cron_trigger"
+	deleteCronTrigger                        = "delete_cron_trigger"
 )
 
 type tableMap struct {
@@ -677,6 +699,7 @@ type replaceMetadataInput struct {
 	QueryCollections []*createQueryCollectionInput    `json:"query_collections" yaml:"query_collections"`
 	AllowList        []*addCollectionToAllowListInput `json:"allowlist" yaml:"allowlist"`
 	RemoteSchemas    []*addRemoteSchemaInput          `json:"remote_schemas" yaml:"remote_schemas"`
+	CronTriggers     []*createCronTriggerInput        `json:"cron_triggers" yaml:"cron_triggers"`
 }
 
 func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList) {
@@ -813,6 +836,11 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	// track remote schemas
 	for _, rs := range rmi.RemoteSchemas {
 		l.PushBack(rs)
+	}
+
+	// track cron triggers
+	for _, ct := range rmi.CronTriggers {
+		l.PushBack(ct)
 	}
 }
 
@@ -992,5 +1020,9 @@ type allowListConfig struct {
 
 type remoteRelationshipConfig struct {
 	tableName, schemaName, name string
+	transition.Transition
+}
+type cronTriggerConfig struct {
+	name string
 	transition.Transition
 }

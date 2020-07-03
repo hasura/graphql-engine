@@ -49,3 +49,7 @@ export const parseCreateSQL = sql => {
 
   return _objects;
 };
+
+export const getStatementTimeoutSql = statementTimeoutInSecs => {
+  return `SET LOCAL statement_timeout = ${statementTimeoutInSecs * 1000};`;
+};
