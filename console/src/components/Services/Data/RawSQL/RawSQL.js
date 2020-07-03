@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
@@ -9,7 +9,13 @@ import Button from '../../../Common/Button/Button';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
+import {
+  getLocalStorageItem,
+  LS_RAW_SQL_STATEMENT_TIMEOUT,
+  setLocalStorageItem,
+} from '../../../Common/utils/localStorageUtils';
 
+import StatementTimeout from './StatementTimeout';
 import { parseCreateSQL } from './utils';
 import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
 
@@ -77,6 +83,10 @@ const RawSQL = ({
   // set up sqlRef to use in unmount
   const sqlRef = useRef(sql);
 
+  const [statementTimeout, setStatementTimeout] = useState(
+    Number(getLocalStorageItem(LS_RAW_SQL_STATEMENT_TIMEOUT)) || 10
+  );
+
   useEffect(() => {
     if (!sql) {
       const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
@@ -114,16 +124,16 @@ const RawSQL = ({
           dispatch(modalOpen());
           const confirmation = false;
           if (confirmation) {
-            dispatch(executeSQL(isMigration, migrationName));
+            dispatch(executeSQL(isMigration, migrationName, statementTimeout));
           }
         } else {
-          dispatch(executeSQL(isMigration, migrationName));
+          dispatch(executeSQL(isMigration, migrationName, statementTimeout));
         }
       } else {
-        dispatch(executeSQL(isMigration, migrationName));
+        dispatch(executeSQL(isMigration, migrationName, statementTimeout));
       }
     } else {
-      dispatch(executeSQL(false, ''));
+      dispatch(executeSQL(false, '', statementTimeout));
     }
   };
 
@@ -419,6 +429,13 @@ const RawSQL = ({
     return migrationSection;
   };
 
+  const updateStatementTimeout = value => {
+    const timeoutInSeconds = Number(value.trim());
+    const isValidTimeout = timeoutInSeconds > 0 && !isNaN(timeoutInSeconds);
+    setLocalStorageItem(LS_RAW_SQL_STATEMENT_TIMEOUT, timeoutInSeconds);
+    setStatementTimeout(isValidTimeout ? timeoutInSeconds : 0);
+  };
+
   return (
     <div
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
@@ -445,6 +462,12 @@ const RawSQL = ({
           {getTrackThisSection()}
           {getMetadataCascadeSection()}
           {getMigrationSection()}
+
+          <StatementTimeout
+            statementTimeout={statementTimeout}
+            isMigrationChecked={isMigrationChecked}
+            updateStatementTimeout={updateStatementTimeout}
+          />
           <Button
             type="submit"
             className={styles.add_mar_top}
@@ -493,6 +516,7 @@ RawSQL.propTypes = {
   isTableTrackChecked: PropTypes.bool.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   currentSchema: PropTypes.string.isRequired,
+  statementTimeout: PropTypes.string.isRequired,
 };
 
 const mapStateToProps = state => ({

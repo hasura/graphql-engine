@@ -29,32 +29,6 @@
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if not is_landing_page else '' }}{% endblock %}">
     <div class="main_container_wrapper">
       {% include 'pages/loading.html' %}
-      <div id="banner" class="bannerStripWrapper hide">
-        <div class='bannerInnerWrapper displayFlex'>
-          <a
-            href="https://hasura.io/events/hasura-con-2020/"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            <div class="bannerStrip">
-              <div class="displayFlex noPadd">
-                <div class="announceIcon">
-                  <img src="{{ pathto('_images/layout/hasura-con.svg', 1) }}" alt="Hasura con 2020"/>
-                </div>
-                <div class="bodyTextSmall">
-                  Hasura Con: <span class='fontNormal'>Our free online conference on pushing the boundaries of GraphQL<span class='mLeft15'>·</span></span><span class='underLine mLeft15'>Register now</span>
-                </div>
-              </div>
-            </div>
-          </a>
-          <div id="banner-close" class="closeBanner">
-            <img src="{{ pathto('_images/layout/close.svg', 1) }}" alt="Close" />
-          </div>
-        </div>
-        <div class='bannerStripImg'>
-          <img src="{{ pathto('_images/layout/stripe.png', 1) }}" alt='stripe' />
-        </div>
-      </div>
       <header
         id="header"
         class='blueBgColor boderBottom'
@@ -133,15 +107,6 @@
                     </button>
                   </a>
                 </li>
-                <li>
-                  <a
-                    href='https://calendly.com/hasura/prod-expert-call'
-                  >
-                    <button class="commonBtn navBtnContactHome">
-                      Talk to a Product Expert
-                    </button>
-                  </a>
-                </li>
               </ul>
             </div>
             <div class='navBlueBG'>
@@ -215,15 +180,6 @@
                       </button>
                     </a>
                   </li>
-                  <li>
-                    <a href="https://calendly.com/hasura/prod-expert-call"
-                      onclick="toggleMenu()"
-                    >
-                      <button class="commonBtn navBtnContactHome">
-                        Talk to a Product Expert
-                      </button>
-                    </a>
-                  </li>
                 </ul>
               </div>
             </div>
@@ -241,6 +197,18 @@
             <div class="yui-b mobile-hide" id="sidebar">
               <div id='sidebar-close' class='mobile-only closeIcon'>
                 <img src="{{ pathto('_images/layout/close-icon.svg', 1) }}" alt="Close"/>
+              </div>
+              <div class="tabbarContainerWrapper blueBgColor boderBottom">
+                <a href="" class="tabbarTabActive">
+                  <span>
+                    Hasura Core
+                  </span>
+                </a>
+                <a href="https://hasura.io/docs/cloud/1.0/manual/index.html">
+                  <span>
+                    Hasura Cloud
+                  </span>
+                </a>
               </div>
               {{ sidebar() }}
             </div>

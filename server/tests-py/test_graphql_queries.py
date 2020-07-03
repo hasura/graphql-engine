@@ -277,6 +277,9 @@ class TestGraphqlQueryPermissions:
     def test_user_select_unpublished_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_select_query_unpublished_articles.yaml', transport)
 
+    def test_user_select_query_article_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/user_select_query_article_author.yaml', transport)
+
     def test_user_only_other_users_published_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_can_query_other_users_published_articles.yaml', transport)
 
@@ -748,7 +751,6 @@ class TestRelayQueriesPermissions:
 
     def test_article_pagination_backward(self, hge_ctx, transport):
         _test_relay_pagination(hge_ctx, transport, self.dir() + '/article_pagination/backward', 2)
-
 
 def _test_relay_pagination(hge_ctx, transport, test_file_prefix, no_of_pages):
     for i in range(no_of_pages):
