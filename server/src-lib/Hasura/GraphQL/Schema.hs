@@ -33,6 +33,11 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session
 
+-- TODO So far, we're *always* generating a query_root, mutation_root and
+-- subscription_root.  But is this valid?  We may end up generating objects with
+-- 0 (exposed) fields.  Perhaps we should be a bit more careful.  I suppose
+-- `query` always exists because `__typename` is exposed... right?
+
 buildGQLContext
   :: forall m
    . ( MonadIO m -- see Note [SchemaT requires MonadIO] in Hasura.GraphQL.Parser.Monad
