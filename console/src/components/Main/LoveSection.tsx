@@ -95,14 +95,14 @@ function mapStateToProps(state: ReduxState) {
 
 type StateProps = ReturnType<typeof mapStateToProps>;
 
-type LoveSectionProps = {
+type HasuraNotificationProps = {
   toggleDropDown: (e: React.MouseEvent<HTMLDivElement>) => void;
   closeDropDown: () => void;
 };
 
-interface Props extends LoveSectionProps, StateProps {}
+interface Props extends HasuraNotificationProps, StateProps {}
 
-const LoveSection: React.FC<Props> = ({
+const HasuraNotifications: React.FC<Props> = ({
   consoleNotifications,
   toggleDropDown,
   closeDropDown,
@@ -126,4 +126,6 @@ const LoveSection: React.FC<Props> = ({
   );
 };
 
-export default connect(mapStateToProps)(LoveSection);
+const LoveSection = connect(mapStateToProps)(HasuraNotifications);
+
+export default LoveSection;
