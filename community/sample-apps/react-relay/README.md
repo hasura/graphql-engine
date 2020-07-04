@@ -11,7 +11,7 @@ This app demonstrates pagination using Hasura with Relay. It's for demo purposes
     - columns: `id`, `name`, `cuisine`
 - Create a [one-to-many relationship](https://hasura.io/docs/1.0/graphql/manual/schema/relationships/database-modelling/one-to-many.html) between the tables.
 - Using the Hasura console, add some rows to both tables. Add at least four reviews since the sample code loads three reviews at a time.
-- Using your Relay endpoint from Hasura (`/v1/relay`), export your GraphQL schema by following the instructions [here](https://hasura.io/docs/1.0/graphql/manual/schema/export-graphql-schema.html) (to replace `schema.graphql` at the root of this project).
+- Using your Relay endpoint from Hasura (`/v1beta1/relay`), export your GraphQL schema by following the instructions [here](https://hasura.io/docs/1.0/graphql/manual/schema/export-graphql-schema.html) (to replace `schema.graphql` at the root of this project).
 - In `fetchGraphQL.js`, set the GraphQL endpoint to your Relay endpoint.
 - In `App.js`, replace `MY_RESTAURANT_ID` with a restaurant `id` from your database (This is for demo purposes; normally you'd pass in the `id` via routing).
 - In your Terminal, at the root of the app:
