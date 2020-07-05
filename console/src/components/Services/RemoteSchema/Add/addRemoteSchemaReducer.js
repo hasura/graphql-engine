@@ -8,7 +8,10 @@ import dataHeaders from '../../Data/Common/Headers';
 import { push } from 'react-router-redux';
 import { fetchRemoteSchemas } from '../Actions';
 
-import { generateHeaderSyms } from '../../../Common/Layout/ReusableHeader/HeaderReducer';
+import {
+  UPDATE_HEADERS,
+  RESET_HEADER,
+} from '../../../Common/Layout/ReusableHeader/HeaderReducer';
 import { makeRequest } from '../Actions';
 // import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { appPrefix } from '../constants';
@@ -59,7 +62,6 @@ const inputChange = (type, data) => {
   return dispatch => dispatch({ type: inputEventMap[type], data });
 };
 
-const getHeaderEvents = generateHeaderSyms('REMOTE_SCHEMA');
 /* */
 
 const getReqHeader = headers => {
@@ -125,7 +127,7 @@ const fetchRemoteSchema = remoteSchema => {
             value: '',
           });
           dispatch({
-            type: getHeaderEvents.UPDATE_HEADERS,
+            type: UPDATE_HEADERS,
             data: [...headerObj],
           });
           return Promise.resolve();
@@ -211,7 +213,7 @@ const addRemoteSchema = () => {
         dispatch(fetchRemoteSchemas()).then(() => {
           dispatch(push(`${prefixUrl}/manage/${resolveObj.name}/details`));
         }),
-        dispatch({ type: getHeaderEvents.RESET_HEADER, data: data }),
+        dispatch({ type: RESET_HEADER, data: data }),
       ]);
     };
     const customOnError = err => {
@@ -578,7 +580,6 @@ export {
   RESET,
   TOGGLE_MODIFY,
   UPDATE_FORWARD_CLIENT_HEADERS,
-  getHeaderEvents,
 };
 
 export default addRemoteSchemaReducer;

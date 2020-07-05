@@ -1,20 +1,21 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { generateHeaderSyms } from './HeaderReducer';
 import DropdownButton from '../../DropdownButton/DropdownButton';
+import {
+  RESET_HEADER,
+  HEADER_KEY_CHANGE,
+  ADD_NEW_HEADER,
+  HEADER_VALUE_CHANGE,
+  HEADER_VALUE_TYPE_CHANGE,
+  DELETE_HEADER,
+} from './HeaderReducer';
 
 class Header extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      ...generateHeaderSyms(props.eventPrefix),
-    };
-  }
   componentWillUnmount() {
     // Reset the header whenever it is unmounted
     this.props.dispatch({
-      type: this.state.RESET_HEADER,
+      type: RESET_HEADER,
     });
   }
   getIndex(e) {
@@ -32,7 +33,7 @@ class Header extends React.Component {
     }
     Promise.all([
       this.props.dispatch({
-        type: this.state.HEADER_KEY_CHANGE,
+        type: HEADER_KEY_CHANGE,
         data: {
           name: e.target.value,
           index: indexId,
@@ -51,7 +52,7 @@ class Header extends React.Component {
       this.props.headers[indexId].name.length > 0 &&
       indexId === this.props.headers.length - 1
     ) {
-      Promise.all([this.props.dispatch({ type: this.state.ADD_NEW_HEADER })]);
+      this.props.dispatch({ type: ADD_NEW_HEADER });
     }
   }
   headerValueChange(e) {
@@ -61,7 +62,7 @@ class Header extends React.Component {
       return;
     }
     this.props.dispatch({
-      type: this.state.HEADER_VALUE_CHANGE,
+      type: HEADER_VALUE_CHANGE,
       data: {
         value: e.target.value,
         index: indexId,
@@ -76,7 +77,7 @@ class Header extends React.Component {
       return;
     }
     this.props.dispatch({
-      type: this.state.HEADER_VALUE_TYPE_CHANGE,
+      type: HEADER_VALUE_TYPE_CHANGE,
       data: {
         type: typeValue,
         index: indexId,
@@ -90,7 +91,7 @@ class Header extends React.Component {
       return;
     }
     this.props.dispatch({
-      type: this.state.DELETE_HEADER,
+      type: DELETE_HEADER,
       data: {
         type: e.target.value,
         index: indexId,

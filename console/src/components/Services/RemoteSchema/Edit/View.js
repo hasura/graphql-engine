@@ -6,11 +6,7 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { push } from 'react-router-redux';
 
-import {
-  fetchRemoteSchema,
-  RESET,
-  getHeaderEvents,
-} from '../Add/addRemoteSchemaReducer';
+import { fetchRemoteSchema, RESET } from '../Add/addRemoteSchemaReducer';
 
 import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import ReloadRemoteSchema from '../../Settings/MetadataOptions/ReloadRemoteSchema';
@@ -20,6 +16,7 @@ import { appPrefix } from '../constants';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
+import { UPDATE_HEADERS } from '../../../Common/Layout/ReusableHeader/HeaderReducer';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -55,7 +52,7 @@ class ViewStitchedSchema extends React.Component {
     Promise.all([
       this.props.dispatch({ type: RESET }),
       this.props.dispatch({
-        type: getHeaderEvents.UPDATE_HEADERS,
+        type: UPDATE_HEADERS,
         data: [
           {
             name: '',

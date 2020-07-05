@@ -7,7 +7,7 @@ import headerReducer from '../../Common/Layout/ReusableHeader/HeaderReducer';
 const remoteSchemaReducer = combineReducers({
   addData: addReducer,
   listData: listReducer,
-  headerData: headerReducer('REMOTE_SCHEMA', [
+  headerData: headerReducer([
     {
       name: '',
       type: 'static',

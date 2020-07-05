@@ -9,7 +9,7 @@ import {
   UPDATE_FORWARD_CLIENT_HEADERS,
 } from '../Add/addRemoteSchemaReducer';
 
-import CommonHeader from '../../../Common/Layout/ReusableHeader/Header';
+import Header from '../../../Common/Layout/ReusableHeader/Header';
 
 class Common extends React.Component {
   getPlaceHolderText(valType) {
@@ -210,8 +210,7 @@ class Common extends React.Component {
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
         </div>
-        <CommonHeader
-          eventPrefix="REMOTE_SCHEMA"
+        <Header
           headers={this.props.headers}
           dispatch={this.props.dispatch}
           typeOptions={[

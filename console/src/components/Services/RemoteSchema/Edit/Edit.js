@@ -7,7 +7,6 @@ import {
   modifyRemoteSchema,
   RESET,
   TOGGLE_MODIFY,
-  getHeaderEvents,
 } from '../Add/addRemoteSchemaReducer';
 import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import { push } from 'react-router-redux';
@@ -22,6 +21,7 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { UPDATE_HEADERS } from '../../../Common/Layout/ReusableHeader/HeaderReducer';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -69,7 +69,7 @@ class Edit extends React.Component {
     Promise.all([
       this.props.dispatch({ type: RESET }),
       this.props.dispatch({
-        type: getHeaderEvents.UPDATE_HEADERS,
+        type: UPDATE_HEADERS,
         data: [
           {
             name: '',
