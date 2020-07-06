@@ -368,20 +368,6 @@ traverseQueryResponseJSON rjm =
                            Nothing -> Just <$> traverseValue fieldPath value
           pure $ CVObject $ OMap.fromList processedFields
 
-convertValueWithVariableToName :: G.Value Variable -> G.Value G.Name
-convertValueWithVariableToName = \case
-  G.VVariable var -> G.VVariable $ getName var
-  G.VList listValue ->
-    G.VList $ (map convertValueWithVariableToName listValue)
-  G.VObject objectValue ->
-    G.VObject $ Map.fromList $ (map (\(k,v) -> (k,convertValueWithVariableToName v)) $ Map.toList objectValue)
-  G.VInt i ->  G.VInt i
-  G.VFloat d ->  G.VFloat d
-  G.VString origin txt ->  G.VString origin txt
-  G.VEnum e ->  G.VEnum e
-  G.VBoolean b ->  G.VBoolean b
-  G.VNull -> G.VNull
-
 convertFieldWithVariablesToName :: G.Field G.NoFragments Variable -> G.Field G.NoFragments G.Name -- Maybe will need to collect the variable definitions too
 convertFieldWithVariablesToName = fmap getName
 
@@ -516,22 +502,22 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
     -- almost: `foldr nest finalSelSet`
     nest :: NonEmpty FieldCall -> m (G.Field G.NoFragments Variable)
     nest ((FieldCall name remoteArgs) :| rest) = do
-      templatedArguments <- createArguments variables remoteArgs
+      templatedArguments <- convert <$> createArguments variables remoteArgs
       (args, selSet) <- case NE.nonEmpty rest of
             Just f -> do
               s <- nest f
-              pure (convert templatedArguments, [G.SelectionField s])
+              pure (templatedArguments, [G.SelectionField s])
             Nothing ->
               let arguments = Map.unionWith mergeValue
                                 rrArguments
                                 -- converting (G.Value Void) -> (G.Value Variable) to merge the
                                 -- 'rrArguments' with the 'variables'
-                                (convert variables)
+                                templatedArguments
               in pure (arguments, finalSelSet)
       pure $ G.Field Nothing name args [] selSet
 
     convert :: Map.HashMap G.Name (G.Value Void) -> Map.HashMap G.Name (G.Value Variable)
-    convert = Map.fromList . (map (\(k,v) -> (k,G.literal v))) . Map.toList
+    convert = fmap G.literal
 
 -- This is a kind of "deep merge".
 -- For e.g. suppose the input argument of the remote field is something like:
