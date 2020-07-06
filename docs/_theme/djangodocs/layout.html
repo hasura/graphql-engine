@@ -567,10 +567,12 @@
           .then( function(response) {
             const data = JSON.parse(response);
 
-            $('#feedback_box').data('id', data['returning'][0]['id']);
-            $('.feedback_detail_msg').html(feedbackDetailMsg);
-            $('.feedback').addClass('hide');
-            $('.detailed_feedback').removeClass('hide');
+            if (feedback == 'positive' || (feedback == 'negative' && !Intercom)) {
+              $('#feedback_box').data('id', data['returning'][0]['id']);
+              $('.feedback_detail_msg').html(feedbackDetailMsg);
+              $('.feedback').addClass('hide');
+              $('.detailed_feedback').removeClass('hide');
+            }
           })
           .catch( function(err) {
             alert('Error capturing feedback');
@@ -585,10 +587,9 @@
 
       const handleThumbDownClick = function(e) {
         if (Intercom) {
-          Intercom('show');
-        } else {
-          sendFeedback('negative', 'Sorry to hear that. Please tell us what you were looking for:');
+          Intercom('showNewMessage', 'Feedback on docs: ')
         }
+        sendFeedback('negative', 'Sorry to hear that. Please tell us what you were looking for:');
       };
       $('.thumb_down').on('click', handleThumbDownClick);
 
