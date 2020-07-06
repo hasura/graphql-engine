@@ -72,6 +72,20 @@ mutateAndReturn (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNu
     sqlQuery = Q.fromBuilder $ toSQL $
                mkMutationOutputExp qt allCols Nothing cte mutationOutput strfyNum
 
+{- Note: [Prepared statements in Mutations]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The SQL statements we generate for mutations seem to include the actual values
+in the statements in some cases which pretty much makes them unfit for reuse
+(Handling relationships in the returning clause is the source of this
+complexity). Further, `PGConn` has an internal cache which maps a statement to
+a 'prepared statement id' on Postgres. As we prepare more and more single-use
+SQL statements we end up leaking memory both on graphql-engine and Postgres
+till the connection is closed. So a simpler but very crude fix is to not use
+prepared statements for mutations. The performance of insert mutations
+shouldn't be affected but updates and delete mutations with complex boolean
+conditions **might** see some degradation.
+-}
+
 mutateAndSel
   :: (HasVersion, MonadTx m, MonadIO m)
   => Mutation -> m EncJSON
@@ -92,7 +106,8 @@ executeMutationOutputQuery
 executeMutationOutputQuery query prepArgs = \case
   Nothing ->
     runIdentity . Q.getRow
-      <$> liftTx (Q.rawQE dmlTxErrorHandler query prepArgs True)
+      -- See Note [Prepared statements in Mutations]
+      <$> liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
   Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
     executeQueryWithRemoteJoins httpManager reqHeaders userInfo query prepArgs remoteJoins
 
@@ -105,7 +120,8 @@ mutateAndFetchCols
   -> Q.TxE QErr (MutateResp TxtEncodedPGVal)
 mutateAndFetchCols qt cols (cte, p) strfyNum =
   Q.getAltJ . runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
+    -- See Note [Prepared statements in Mutations]
+    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) False
   where
     aliasIden = Iden $ qualObjectToText qt <> "__mutation_result"
     tabFrom = FromIden aliasIden

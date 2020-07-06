@@ -13,7 +13,7 @@ import {
   loadMigrationStatus,
   UPDATE_MIGRATION_STATUS_ERROR,
 } from '../../../Main/Actions';
-import { parseCreateSQL } from './utils';
+import { getStatementTimeoutSql, parseCreateSQL } from './utils';
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
@@ -32,22 +32,30 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
+const executeSQL = (isMigration, migrationName, statementTimeout) => (
+  dispatch,
+  getState
+) => {
   dispatch({ type: MAKING_REQUEST });
   dispatch(showSuccessNotification('Executing the Query...'));
 
-  const sql = getState().rawSQL.sql;
-  const currMigrationMode = getState().main.migrationMode;
-  const readOnlyMode = getState().main.readOnlyMode;
+  const { isTableTrackChecked, isCascadeChecked } = getState().rawSQL;
+  const { currMigrationMode, readOnlyMode } = getState().main;
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
-  const isCascadeChecked = getState().rawSQL.isCascadeChecked;
 
   let url = Endpoints.rawSQL;
-  const schemaChangesUp = [getRunSqlQuery(sql, isCascadeChecked, readOnlyMode)];
+
+  const schemaChangesUp = [];
+
+  const sql = statementTimeout
+    ? `${getStatementTimeoutSql(statementTimeout)} ${getState().rawSQL.sql}`
+    : getState().rawSQL.sql;
+
+  schemaChangesUp.push(getRunSqlQuery(sql, isCascadeChecked, readOnlyMode));
   // check if track view enabled
 
-  if (getState().rawSQL.isTableTrackChecked) {
+  if (isTableTrackChecked) {
     const objects = parseCreateSQL(sql);
 
     objects.forEach(object => {
@@ -174,6 +182,7 @@ const rawSQLReducer = (state = defaultState, action) => {
         isTableTrackChecked: action.data,
         showTrackTable: action.data,
       };
+
     case MAKING_REQUEST:
       return {
         ...state,
