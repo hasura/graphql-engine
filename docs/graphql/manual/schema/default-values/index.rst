@@ -33,5 +33,5 @@ the following ways:
   Postgres defaults <postgres-defaults>
   Custom SQL functions/stored procedures <sql-functions>
   Role based column presets <column-presets>
-  Created_at / updated_at timestamps  <created-updated-timestamps>
+  Created_at / updated_at timestamps <created-updated-timestamps>
 
