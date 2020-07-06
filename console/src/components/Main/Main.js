@@ -10,17 +10,8 @@ import { getPathRoot } from '../Common/utils/urlUtils';
 
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
-import Button from '../Common/Button/Button';
 import logo from './images/white-logo.svg';
 import pixHeart from './images/pix-heart.svg';
-import close from './images/x-circle.svg';
-import monitoring from './images/monitoring.svg';
-import rate from './images/rate.svg';
-import regression from './images/regression.svg';
-import management from './images/management.svg';
-import allow from './images/allow-listing.svg';
-import dataCaching from './images/data-caching.svg';
-import arrowForwardRed from './images/arrow_forward-red.svg';
 
 import styles from './Main.scss';
 
@@ -54,6 +45,7 @@ import {
 import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 import { Icon } from '../UIKit/atoms/Icon';
+import { ProPopup } from './components/ProPopup';
 
 class Main extends React.Component {
   constructor(props) {
@@ -93,11 +85,12 @@ class Main extends React.Component {
     dispatch(fetchServerConfig());
   }
 
-  toggleProPopup() {
+  toggleProPopup = () => {
+    console.log({ state: this.state });
     const { dispatch } = this.props;
     dispatch(emitProClickedEvent({ open: !this.state.isPopUpOpen }));
     this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
-  }
+  };
 
   setShowUpdateNotification() {
     const {
@@ -189,10 +182,10 @@ class Main extends React.Component {
     }
   }
 
-  clickProIcon() {
+  onProIconClick = () => {
     this.updateLocalStorageState();
     this.toggleProPopup();
-  }
+  };
 
   closeUpdateBanner() {
     const { updateNotificationVersion } = this.state;
@@ -214,7 +207,10 @@ class Main extends React.Component {
       dispatch,
     } = this.props;
 
-    const { isProClicked } = this.state.proClickState;
+    const {
+      proClickState: { isProClicked },
+      isPopUpOpen,
+    } = this.state;
 
     const appPrefix = '';
 
@@ -521,118 +517,6 @@ class Main extends React.Component {
       );
     };
 
-    const renderProPopup = () => {
-      const { isPopUpOpen } = this.state;
-      if (isPopUpOpen) {
-        return (
-          <div className={styles.proPopUpWrapper}>
-            <div className={styles.popUpHeader}>
-              Hasura <span>CLOUD</span>
-              <img
-                onClick={this.toggleProPopup.bind(this)}
-                className={styles.popUpClose}
-                src={close}
-                alt={'Close'}
-              />
-            </div>
-            <div className={styles.popUpBodyWrapper}>
-              <div className={styles.featuresDescription}>
-                Hasura Cloud gives you a scalable, highly available, globally distributed, fully managed, secure GraphQL API as a service!
-              </div>
-              <div className={styles.proFeaturesList}>
-                <div className={styles.featuresImg}>
-                  <img src={monitoring} alt={'Monitoring'} />
-                </div>
-                <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>
-                    Monitoring/Analytics
-                  </div>
-                  <div className={styles.featuresDescription}>
-                    Complete observability: Troubleshoot errors & drill-down into individual operations.
-                  </div>
-                </div>
-              </div>
-              <div className={styles.proFeaturesList}>
-                <div className={styles.featuresImg}>
-                  <img src={rate} alt={'Rate'} />
-                </div>
-                <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>Rate Limiting</div>
-                  <div className={styles.featuresDescription}>
-                    Role-based rate limits to prevent abuse.
-                  </div>
-                </div>
-              </div>
-              <div className={styles.proFeaturesList}>
-                <div className={styles.featuresImg}>
-                  <img src={regression} alt={'Regression'} />
-                </div>
-                <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>Regression Testing</div>
-                  <div className={styles.featuresDescription}>
-                    Automatically create regression suites to prevent breaking changes.
-                  </div>
-                </div>
-              </div>
-              <div className={styles.proFeaturesList}>
-                <div className={styles.featuresImg}>
-                  <img src={management} alt={'Management'} />
-                </div>
-                <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>Team Management</div>
-                  <div className={styles.featuresDescription}>
-                    Login to Hasura project with granular privileges.
-                  </div>
-                </div>
-              </div>
-              <div className={styles.proFeaturesList}>
-                <div className={styles.featuresImg}>
-                  <img src={dataCaching} alt={'data caching'} />
-                </div>
-                <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>Query & Dynamic Data caching</div>
-                  <div className={styles.featuresDescription}>
-                    Automatic caching of your shared data, cache query plans at the GraphQL and at the database level and blazing fast performance.
-                  </div>
-                </div>
-              </div>
-              <div className={styles.proFeaturesList}>
-                <div className={styles.featuresImg}>
-                  <img src={allow} alt={'allow'} />
-                </div>
-                <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>
-                    Allow Listing
-                  </div>
-                  <div className={styles.featuresDescription}>
-                    Allow listing workflows across dev, staging and production environments.
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className={styles.popUpFooter}>
-              <a
-                href={
-                  'https://cloud.hasura.io/'
-                }
-                target={'_blank'}
-                rel="noopener noreferrer"
-              >
-                <Button
-                  data-test="data-get-started"
-                  color="yellow"
-                  className={styles.largeButton}
-                >
-                  Get started
-                </Button>
-              </a>
-            </div>
-          </div>
-        );
-      }
-      return null;
-    };
-
     const getVulnerableVersionNotification = () => {
       let vulnerableVersionNotificationHtml = null;
 
@@ -754,19 +638,17 @@ class Main extends React.Component {
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
               {getAdminSecretSection()}
               <div
-                className={
-                  styles.headerRightNavbarBtn + ' ' + styles.proWrapper
-                }
+                className={`${styles.headerRightNavbarBtn} ${styles.proWrapper}`}
+                onClick={this.onProIconClick}
               >
                 <span
-                  className={
-                    ((!isProClicked) ? styles.proName : styles.proNameClicked) + ' ' + ((this.state.isPopUpOpen) ? styles.navActive : '')
-                  }
-                  onClick={this.clickProIcon.bind(this)}
+                  className={`
+                    ${isProClicked ? styles.proNameClicked : styles.proName}
+                    ${isPopUpOpen ? styles.navActive : ''}`}
                 >
                   CLOUD
                 </span>
-                {renderProPopup()}
+                {isPopUpOpen && <ProPopup toggleOpen={this.toggleProPopup} />}
               </div>
               <Link to="/settings">
                 <div className={styles.headerRightNavbarBtn}>
@@ -776,7 +658,7 @@ class Main extends React.Component {
               </Link>
               <a
                 id="help"
-                href={'https://hasura.io/help'}
+                href="https://hasura.io/help"
                 target="_blank"
                 rel="noopener noreferrer"
               >

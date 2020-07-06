@@ -10,10 +10,6 @@
   position: relative;
 }
 
-.flexRow {
-  // display: flex;
-}
-
 .phantom {
   display: block;
   padding: 14.5px 10px;
@@ -502,7 +498,6 @@
         text-align: center;
         width: 20%;
         display: inline-block;
-        float: right;
 
         i {
           font-size: 14px;
@@ -562,7 +557,7 @@
       // color: $navbar-inverse-link-hover-color;
       // background: #444;
       transition: color 0.5s;
-      pointer: cursor;
+      cursor: pointer;
     }
   }
 }
@@ -701,7 +696,6 @@
 
 .logoHeading {
   display: inline-block;
-  float: left;
   padding-top: 15px;
   padding-left: 15px;
   font-size: 18px;
@@ -747,10 +741,6 @@
     float: right;
     padding-bottom: 10px;
   }
-}
-
-.exploreDisabled {
-  // opacity: 0.2;
 }
 
 .exploreSidebar {
@@ -812,10 +802,6 @@
       text-align: center;
       padding: 7px 0;
     }
-  }
-
-  .exploreTaskDisabled {
-    // opacity: 0.1;
   }
 
   .progressBtn {
@@ -1203,6 +1189,7 @@
 .proWrapper {
   position: relative;
   padding: 12px 15px;
+  cursor: pointer;
   .proName,
   .proNameClicked {
     font-size: 15px;
@@ -1241,6 +1228,7 @@
     text-transform: none;
     overflow: auto;
     max-height: calc(100vh - 80px);
+    cursor: initial;
     .popUpHeader {
       font-size: 20px;
       font-weight: bold;
@@ -1321,8 +1309,7 @@
   }
 }
 
-@media(max-width: 1500px) {
-
+@media (max-width: 1500px) {
   .header_items {
     width: 52%;
   }
@@ -1350,9 +1337,10 @@
     font-size: 12px;
   }
 
-  .proWrapper{
-    .proName, .proNameClicked {
-      font-size: 12px
+  .proWrapper {
+    .proName,
+    .proNameClicked {
+      font-size: 12px;
     }
   }
 
@@ -1361,5 +1349,4 @@
       font-size: 12px;
     }
   }
-
 }
