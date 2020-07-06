@@ -40,6 +40,7 @@ import { getGraphQLEndpoint } from '../utils';
 
 import styles from '../ApiExplorer.scss';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../../constants';
+import { getLSItem, removeLSItem } from '../../../../utils/localstorage';
 
 /* When the page is loaded for the first time, hydrate the header state from the localStorage
  * Keep syncing the localStorage state when user modifies.
@@ -64,9 +65,9 @@ class ApiRequest extends Component {
     };
 
     if (this.props.numberOfTables !== 0) {
-      const graphqlQueryInLS = window.localStorage.getItem('graphiql:query');
+      const graphqlQueryInLS = getLSItem('graphiql:query');
       if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {
-        window.localStorage.removeItem('graphiql:query');
+        removeLSItem('graphiql:query');
       }
     }
 

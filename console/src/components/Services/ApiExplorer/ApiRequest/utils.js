@@ -4,31 +4,32 @@ import {
   ADMIN_SECRET_HEADER_KEY,
   SERVER_CONSOLE_MODE,
 } from '../../../../constants';
+import {
+  setLSItem,
+  getLSItem,
+  removeLSItem,
+} from '../../../../utils/localstorage';
 
 export const setEndPointSectionIsOpen = isOpen => {
-  window.localStorage.setItem('ApiExplorer:EndpointSectionIsOpen', isOpen);
+  setLSItem('ApiExplorer:EndpointSectionIsOpen', isOpen);
 };
 
 export const getEndPointSectionIsOpen = () => {
   const defaultIsOpen = true;
 
-  const isOpen = window.localStorage.getItem(
-    'ApiExplorer:EndpointSectionIsOpen'
-  );
+  const isOpen = getLSItem('ApiExplorer:EndpointSectionIsOpen');
 
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
 
 export const setHeadersSectionIsOpen = isOpen => {
-  window.localStorage.setItem('ApiExplorer:HeadersSectionIsOpen', isOpen);
+  setLSItem('ApiExplorer:HeadersSectionIsOpen', isOpen);
 };
 
 export const getHeadersSectionIsOpen = () => {
   const defaultIsOpen = true;
 
-  const isOpen = window.localStorage.getItem(
-    'ApiExplorer:HeadersSectionIsOpen'
-  );
+  const isOpen = getLSItem('ApiExplorer:HeadersSectionIsOpen');
 
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
@@ -51,20 +52,15 @@ const LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED =
   'ApiExplorer:AdminSecretHeaderWasAdded';
 
 export const persistAdminSecretHeaderWasAdded = () => {
-  window.localStorage.setItem(
-    LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED,
-    'true'
-  );
+  setLSItem(LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED, 'true');
 };
 
 export const removePersistedAdminSecretHeaderWasAdded = () => {
-  window.localStorage.removeItem(LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED);
+  removeLSItem(LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED);
 };
 
 export const getPersistedAdminSecretHeaderWasAdded = () => {
-  const lsValue = window.localStorage.getItem(
-    LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED
-  );
+  const lsValue = getLSItem(LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED);
 
   return lsValue ? lsValue === 'true' : false;
 };
@@ -84,16 +80,11 @@ export const persistGraphiQLHeaders = headers => {
     return maskedHeader;
   });
 
-  window.localStorage.setItem(
-    'HASURA_CONSOLE_GRAPHIQL_HEADERS',
-    JSON.stringify(maskedHeaders)
-  );
+  setLSItem('HASURA_CONSOLE_GRAPHIQL_HEADERS', JSON.stringify(maskedHeaders));
 };
 
 export const getPersistedGraphiQLHeaders = () => {
-  const headersString = window.localStorage.getItem(
-    'HASURA_CONSOLE_GRAPHIQL_HEADERS'
-  );
+  const headersString = getLSItem('HASURA_CONSOLE_GRAPHIQL_HEADERS');
 
   let headers = null;
   if (headersString) {
@@ -151,9 +142,9 @@ export const parseAuthHeader = header => {
 const GRAPHIQL_MODE_LS = 'ApiExplorer:GraphiQLMode';
 
 export const persistGraphiQLMode = mode => {
-  window.localStorage.setItem(GRAPHIQL_MODE_LS, mode);
+  setLSItem(GRAPHIQL_MODE_LS, mode);
 };
 
 export const getPersistedGraphiQLMode = () => {
-  return window.localStorage.getItem(GRAPHIQL_MODE_LS) || 'graphql';
+  return getLSItem(GRAPHIQL_MODE_LS) || 'graphql';
 };

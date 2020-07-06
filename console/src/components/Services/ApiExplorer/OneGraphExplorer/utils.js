@@ -1,4 +1,5 @@
 import GraphiQLExplorer from 'graphiql-explorer';
+import { getLSItem, setLSItem } from '../../../../utils/localstorage';
 
 export const makeDefaultArg = () => {
   return false;
@@ -11,37 +12,34 @@ export const getDefaultScalarArgValue = (parentField, arg, argType) => {
 export const getExplorerWidth = () => {
   const defaultWidth = 300;
 
-  const widthLSRaw = window.localStorage.getItem('graphiql:explorerWidth');
+  const widthLSRaw = getLSItem('graphiql:explorerWidth');
   const widthLS = parseInt(widthLSRaw, 10);
 
   return !isNaN(widthLS) ? widthLS : defaultWidth;
 };
 
 export const setExplorerWidth = width => {
-  localStorage.setItem('graphiql:explorerWidth', width);
+  setLSItem('graphiql:explorerWidth', width);
 };
 
 export const getExplorerIsOpen = () => {
   const defaultIsOpen = true;
 
-  const isOpen = window.localStorage.getItem('graphiql:explorerOpen');
+  const isOpen = getLSItem('graphiql:explorerOpen');
 
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
 
 export const setExplorerIsOpen = isOpen => {
-  window.localStorage.setItem('graphiql:explorerOpen', isOpen);
+  setLSItem('graphiql:explorerOpen', isOpen);
 };
 
 export const persistCodeExporterOpen = isOpen => {
-  window.localStorage.setItem(
-    'graphiql:codeExporterOpen',
-    JSON.stringify(isOpen)
-  );
+  setLSItem('graphiql:codeExporterOpen', JSON.stringify(isOpen));
 };
 
 export const getPersistedCodeExporterOpen = () => {
-  const isOpen = window.localStorage.getItem('graphiql:codeExporterOpen');
+  const isOpen = getLSItem('graphiql:codeExporterOpen');
 
   if (!isOpen) return false;
 

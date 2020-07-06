@@ -1,8 +1,3 @@
-type expiryValue = {
-  value: string;
-  expiry: number;
-};
-
 export const setLSItem = (key: string, data: string) => {
   window.localStorage.setItem(key, data);
 };
@@ -15,6 +10,11 @@ export const removeLSItem = (key: string) => {
   if (getLSItem(key)) {
     window.localStorage.removeItem(key);
   }
+};
+
+type expiryValue = {
+  value: string;
+  expiry: number;
 };
 
 export const setLSItemWithExpiry = (key: string, data: string, ttl: number) => {

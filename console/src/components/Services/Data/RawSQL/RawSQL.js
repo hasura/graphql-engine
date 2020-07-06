@@ -9,11 +9,7 @@ import Button from '../../../Common/Button/Button';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
-import {
-  getLocalStorageItem,
-  LS_RAW_SQL_STATEMENT_TIMEOUT,
-  setLocalStorageItem,
-} from '../../../Common/utils/localStorageUtils';
+import { LS_RAW_SQL_STATEMENT_TIMEOUT } from '../../../Common/utils/localStorageUtils';
 
 import StatementTimeout from './StatementTimeout';
 import { parseCreateSQL } from './utils';
@@ -34,6 +30,7 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
+import { getLSItem, setLSItem } from '../../../../utils/localstorage';
 
 /**
  * # RawSQL React FC
@@ -84,18 +81,18 @@ const RawSQL = ({
   const sqlRef = useRef(sql);
 
   const [statementTimeout, setStatementTimeout] = useState(
-    Number(getLocalStorageItem(LS_RAW_SQL_STATEMENT_TIMEOUT)) || 10
+    Number(getLSItem(LS_RAW_SQL_STATEMENT_TIMEOUT)) || 10
   );
 
   useEffect(() => {
     if (!sql) {
-      const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
+      const sqlFromLocalStorage = getLSItem(LS_RAW_SQL_SQL);
       if (sqlFromLocalStorage) {
         dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
       }
     }
     return () => {
-      localStorage.setItem(LS_RAW_SQL_SQL, sqlRef.current);
+      setLSItem(LS_RAW_SQL_SQL, sqlRef.current);
     };
   }, [dispatch, sql]);
   // set SQL to sqlRef
@@ -107,7 +104,7 @@ const RawSQL = ({
 
   const submitSQL = () => {
     // set SQL to LS
-    localStorage.setItem(LS_RAW_SQL_SQL, sql);
+    setLSItem(LS_RAW_SQL_SQL, sql);
 
     // check migration mode global
     if (migrationMode) {
@@ -432,7 +429,7 @@ const RawSQL = ({
   const updateStatementTimeout = value => {
     const timeoutInSeconds = Number(value.trim());
     const isValidTimeout = timeoutInSeconds > 0 && !isNaN(timeoutInSeconds);
-    setLocalStorageItem(LS_RAW_SQL_STATEMENT_TIMEOUT, timeoutInSeconds);
+    setLSItem(LS_RAW_SQL_STATEMENT_TIMEOUT, timeoutInSeconds);
     setStatementTimeout(isValidTimeout ? timeoutInSeconds : 0);
   };
 

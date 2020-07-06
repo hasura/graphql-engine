@@ -1,3 +1,5 @@
+import { setLSItem, getLSItem } from '../../../utils/localstorage';
+
 const LS_DERIVED_MUTATIONS = 'actions:derivedActions';
 
 export const persistAllDerivedActions = allActions => {
@@ -7,11 +9,11 @@ export const persistAllDerivedActions = allActions => {
   } catch (e) {
     stringified = '{}';
   }
-  window.localStorage.setItem(LS_DERIVED_MUTATIONS, stringified);
+  setLSItem(LS_DERIVED_MUTATIONS, stringified);
 };
 
 export const getAllPersistedDerivedActions = () => {
-  let allActions = window.localStorage.getItem(LS_DERIVED_MUTATIONS);
+  let allActions = getLSItem(LS_DERIVED_MUTATIONS);
   if (allActions) {
     try {
       allActions = JSON.parse(allActions);
