@@ -50,7 +50,7 @@ import { LS_VERSION_UPDATE_CHECK_LAST_CLOSED } from '../Common/utils/localStorag
 import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 import { Icon } from '../UIKit/atoms/Icon';
-import { getLSItem, setLSItem } from '../../utils/localstorage';
+import { getLSItem, setLSItem } from '../../utils/localStorageUtils';
 
 class Main extends React.Component {
   constructor(props) {

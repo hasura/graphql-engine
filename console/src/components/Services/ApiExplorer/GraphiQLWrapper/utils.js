@@ -1,4 +1,4 @@
-import { getLSItem } from '../../../../utils/localstorage';
+import { getLSItem } from '../../../../utils/localStorageUtils';
 
 export const getGraphiQLQueryFromLocalStorage = () => {
   return getLSItem('graphiql:query');

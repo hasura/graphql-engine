@@ -1,4 +1,4 @@
-import { setLSItem, getLSItem } from '../../../utils/localstorage';
+import { setLSItem, getLSItem } from '../../../utils/localStorageUtils';
 
 const LS_DERIVED_MUTATIONS = 'actions:derivedActions';
 

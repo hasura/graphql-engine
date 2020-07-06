@@ -8,7 +8,7 @@ import {
   setLSItem,
   getLSItem,
   removeLSItem,
-} from '../../../../utils/localstorage';
+} from '../../../../utils/localStorageUtils';
 
 export const setEndPointSectionIsOpen = isOpen => {
   setLSItem('ApiExplorer:EndpointSectionIsOpen', isOpen);

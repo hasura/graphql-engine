@@ -1,5 +1,5 @@
 import GraphiQLExplorer from 'graphiql-explorer';
-import { getLSItem, setLSItem } from '../../../../utils/localstorage';
+import { getLSItem, setLSItem } from '../../../../utils/localStorageUtils';
 
 export const makeDefaultArg = () => {
   return false;

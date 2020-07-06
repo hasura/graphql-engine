@@ -1,4 +1,4 @@
-import { setLSItem, getLSItem } from '../../utils/localstorage';
+import { setLSItem, getLSItem } from '../../utils/localStorageUtils';
 
 const loveConsentState = 'console:loveIcon';
 const proClickState = 'console:pro';

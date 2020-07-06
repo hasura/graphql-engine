@@ -1,4 +1,4 @@
-import { getLSItem, setLSItem } from '../../../../utils/localstorage';
+import { getLSItem, setLSItem } from '../../../../utils/localStorageUtils';
 
 export const parseLSState = (data: any) => {
   try {
