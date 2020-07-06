@@ -1,5 +1,5 @@
 description: Get 1st page of articles with 3 items
-url: /v1/relay
+url: /v1beta1/relay
 status: 200
 query:
   query: |

@@ -639,7 +639,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       Spock.post "v1/graphql" $ spockAction GH.encodeGQErr allMod200 $
         mkPostHandler $ mkAPIRespHandler v1GQHandler
 
-      Spock.post "v1/relay" $ spockAction GH.encodeGQErr allMod200 $
+      Spock.post "v1beta1/relay" $ spockAction GH.encodeGQErr allMod200 $
         mkPostHandler $ mkAPIRespHandler v1GQRelayHandler
 
     when (isDeveloperAPIEnabled serverCtx) $ do
