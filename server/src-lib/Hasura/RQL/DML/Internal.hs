@@ -10,7 +10,6 @@ import           Hasura.Session
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.Session
 
 import           Control.Lens
 import           Data.Aeson.Types
@@ -40,7 +39,7 @@ mkAdminRolePermInfo ti =
                      getComputedFieldInfos fields
 
     tn = _tciName ti
-    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty []
+    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False []
     s = SelPermInfo (HS.fromList pgCols) (HS.fromList scalarComputedFields) tn annBoolExpTrue
         Nothing True []
     u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty []

@@ -220,6 +220,7 @@ data InsPermInfo
   { ipiCols            :: !(HS.HashSet PGCol)
   , ipiCheck           :: !AnnBoolExpPartialSQL
   , ipiSet             :: !PreSetColsPartial
+  , ipiBackendOnly     :: !Bool
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq, Generic)
 instance NFData InsPermInfo
