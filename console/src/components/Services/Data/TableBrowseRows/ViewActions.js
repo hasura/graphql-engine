@@ -18,6 +18,7 @@ import {
 } from '../../../Common/utils/v1QueryUtils';
 import { generateTableDef } from '../../../Common/utils/pgUtils';
 import { COUNT_LIMIT } from '../constants';
+import { getStatementTimeoutSql } from '../RawSQL/utils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -31,6 +32,7 @@ const V_EXPAND_ROW = 'ViewTable/V_EXPAND_ROW';
 const V_COLLAPSE_ROW = 'ViewTable/V_COLLAPSE_ROW';
 
 const V_COUNT_REQUEST_SUCCESS = 'ViewTable/V_COUNT_REQUEST_SUCCESS';
+const V_COUNT_REQUEST_ERROR = 'ViewTable/V_COUNT_REQUEST_SUCCESS';
 
 const FETCHING_MANUAL_TRIGGER = 'ViewTable/FETCHING_MANUAL_TRIGGER';
 const FETCH_MANUAL_TRIGGER_SUCCESS = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
@@ -128,7 +130,7 @@ const vMakeCountRequest = () => {
     } = getState().tables;
     const url = Endpoints.query;
 
-    const requestBody = getSelectQuery(
+    const selectQuery = getSelectQuery(
       'count',
       generateTableDef(originalTable, currentSchema),
       view.query.columns,
@@ -137,6 +139,13 @@ const vMakeCountRequest = () => {
       view.query.limit,
       view.query.order_by
     );
+
+    const timeoutQuery = getRunSqlQuery(getStatementTimeoutSql(2));
+
+    const requestBody = {
+      type: 'bulk',
+      args: [timeoutQuery, selectQuery],
+    };
 
     const options = {
       method: 'POST',
@@ -147,20 +156,27 @@ const vMakeCountRequest = () => {
 
     return dispatch(requestAction(url, options)).then(
       data => {
-        const currentTable = getState().tables.currentTable;
+        if (data.length > 1) {
+          const currentTable = getState().tables.currentTable;
 
-        // in case table has changed before count load
-        if (currentTable === originalTable) {
-          dispatch({
-            type: V_COUNT_REQUEST_SUCCESS,
-            count: data.count,
-          });
+          // in case table has changed before count load
+          if (currentTable === originalTable) {
+            dispatch({
+              type: V_COUNT_REQUEST_SUCCESS,
+              count: data[1].count,
+            });
+          }
         }
       },
       error => {
-        dispatch(
-          showErrorNotification('Count query failed!', error.error, error)
-        );
+        Promise.all([
+          dispatch({
+            type: V_COUNT_REQUEST_ERROR,
+          }),
+          dispatch(
+            showErrorNotification('Count query failed!', error.error, error)
+          ),
+        ]);
       }
     );
   };
@@ -598,6 +614,12 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
         ...viewState,
         count: action.count,
         isCountEstimated: action.isEstimated === true,
+      };
+    case V_COUNT_REQUEST_ERROR:
+      return {
+        ...viewState,
+        count: null,
+        isCountEstimated: false,
       };
     case V_EXPAND_ROW:
       return {
