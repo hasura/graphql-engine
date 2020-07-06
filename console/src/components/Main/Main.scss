@@ -1314,8 +1314,13 @@
   margin-left: 8px;
 }
 
+.linkContainer {
+  margin-top: 4px;
+  font-weight: 500;
+}
+
 .notificationExternalLink {
-  margin-left: 8px;
+  font-size: 15px;
   &:hover {
     color: #e53935;
     text-transform: none;

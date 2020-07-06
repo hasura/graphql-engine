@@ -27,7 +27,7 @@ const Update: React.FC<ConsoleNotification> = ({
 
   return (
     <Box>
-      <Flex height={55} px="25px" pt="5px" justifyContent="space-between">
+      <Flex height={35} px="25px" pt="5px" justifyContent="space-between">
         <Flex justifyContent="space-between" bg="white">
           {type ? <Badge type={type} mr="12px" /> : null}
           <Heading as="h4" color="#1cd3c6" fontSize="16px">
@@ -39,15 +39,18 @@ const Update: React.FC<ConsoleNotification> = ({
         </Text>
       </Flex>
       <Flex borderBottom="1px solid #f7f7f7">
-        <Text fontSize={15} fontWeight="normal" px={15} py={4}>
+        <Text fontSize={15} fontWeight="normal" px={25} py={2}>
           {content}
+          <br />
           {props.external_link ? (
-            <a
-              href={props.external_link}
-              className={styles.notificationExternalLink}
-            >
-              Click here &rarr;
-            </a>
+            <div className={styles.linkContainer}>
+              <a
+                href={props.external_link}
+                className={styles.notificationExternalLink}
+              >
+                Click here &rarr;
+              </a>
+            </div>
           ) : null}
         </Text>
       </Flex>
@@ -78,7 +81,7 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
             subject={subject}
             created_at={getDateString(created_at)}
             content={content}
-            type={props.type ? props.type : ''}
+            type={props.type}
             is_active={is_active}
             {...props}
           />

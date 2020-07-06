@@ -3,7 +3,6 @@ import React from 'react';
 import StyledBadge, { StyledOwnBadgeProps } from './Badge';
 
 export type AllowedBadges =
-  | ''
   | 'error'
   | 'no updates'
   | 'community'
@@ -52,7 +51,7 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
         </StyledBadge>
       );
     default:
-      return <StyledBadge {...props} color="white" />;
+      return null;
   }
 };
 
