@@ -35,7 +35,10 @@ class VoyagerViewErrorBoundary extends Component<Props, ErrorState> {
               <div className="col-xs-8">
                 <h1>Error in Voyager View</h1>
                 <br />
-                <h3>You might be seeing this because your schema couldn&apos;t rendered.</h3>
+                <h3>
+                  You might be seeing this because your schema couldn&apos;t
+                  rendered.
+                </h3>
                 <div>
                   <pre className={styles.errorStack}>
                     {this.state.error.stack}
