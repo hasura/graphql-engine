@@ -37,3 +37,12 @@ export const compareRows = (
   });
   return same;
 };
+
+export const isPostgresTimeoutError = (error: {
+  code: string;
+  internal?: { error?: { message?: string } };
+}) => {
+  if (!(error.code === 'postgres-error')) return false;
+
+  return !!error.internal?.error?.message?.includes('statement timeout');
+};

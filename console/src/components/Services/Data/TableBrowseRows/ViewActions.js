@@ -19,6 +19,7 @@ import {
 import { generateTableDef } from '../../../Common/utils/pgUtils';
 import { COUNT_LIMIT } from '../constants';
 import { getStatementTimeoutSql } from '../RawSQL/utils';
+import { isPostgresTimeoutError } from './utils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -140,7 +141,9 @@ const vMakeCountRequest = () => {
       view.query.order_by
     );
 
-    const timeoutQuery = getRunSqlQuery(getStatementTimeoutSql(2));
+    const timeoutQuery = getRunSqlQuery(
+      getStatementTimeoutSql(2) + `select pg_sleep(5)`
+    );
 
     const requestBody = {
       type: 'bulk',
@@ -169,14 +172,15 @@ const vMakeCountRequest = () => {
         }
       },
       error => {
-        Promise.all([
-          dispatch({
-            type: V_COUNT_REQUEST_ERROR,
-          }),
+        dispatch({
+          type: V_COUNT_REQUEST_ERROR,
+        });
+
+        if (!isPostgresTimeoutError(error)) {
           dispatch(
             showErrorNotification('Count query failed!', error.error, error)
-          ),
-        ]);
+          );
+        }
       }
     );
   };
