@@ -86,7 +86,6 @@ class Main extends React.Component {
   }
 
   toggleProPopup = () => {
-    console.log({ state: this.state });
     const { dispatch } = this.props;
     dispatch(emitProClickedEvent({ open: !this.state.isPopUpOpen }));
     this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
