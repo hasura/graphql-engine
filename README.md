@@ -70,7 +70,7 @@ The fastest and easiest way to try Hasura out is via Hasura Cloud.
 
 1. Click on the following button to deploy GraphQL engine on Hasura Cloud including Postgres add-on:
 
-    [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura_2x.png)](https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html)
+    [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html)
 
 2. Open the Hasura console
 
