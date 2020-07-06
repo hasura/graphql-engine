@@ -10,7 +10,7 @@ import { parse } from 'graphql';
 import { execute } from 'apollo-link';
 
 import { getHeadersAsJSON, getGraphQLEndpoint } from './utils';
-import { saveAppState, clearState } from '../../AppState.js';
+import { saveAppState, clearState } from '../../AppState';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../constants';
 
 const CHANGE_TAB = 'ApiExplorer/CHANGE_TAB';

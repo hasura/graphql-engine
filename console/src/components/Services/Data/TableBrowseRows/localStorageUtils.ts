@@ -19,12 +19,12 @@ export const parseLSState = (data: any) => {
 
 const columnsCollapsedKey = 'data:collapsed';
 
-type CollapesEntry = Record<string, boolean>;
+type CollapseEntry = Record<string, boolean>;
 
 export const persistColumnCollapseChange = (
   tableName: string,
   schemaName: string,
-  collapsedData: CollapesEntry
+  collapsedData: CollapseEntry
 ) => {
   const state = getLSState(columnsCollapsedKey);
   const currentCollapsed = parseLSState(state) || {};
