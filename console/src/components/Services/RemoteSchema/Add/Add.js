@@ -12,7 +12,7 @@ import { defaultHeader } from '../../../Common/Headers/Headers';
 
 class Add extends React.Component {
   state = {
-    headers: [{...defaultHeader}],
+    headers: [{ ...defaultHeader }],
   };
   componentWillUnmount() {
     this.props.dispatch({ type: RESET });
