@@ -18,12 +18,14 @@ export const defaultHeader: Header = {
 interface HeadersListProps extends React.ComponentProps<'div'> {
   headers: Header[];
   disabled?: boolean;
+  module?: string;
   setHeaders: (h: Header[]) => void;
 }
 
 const Headers: React.FC<HeadersListProps> = ({
   headers,
   setHeaders,
+  module,
   disabled = false,
 }) => {
   return (
@@ -65,6 +67,7 @@ const Headers: React.FC<HeadersListProps> = ({
               onChange={setHeaderKey}
               placeholder="key"
               className={`form-control ${styles.add_mar_right} ${styles.headerInputWidth}`}
+              data-test={`${module || ''}-header-test${i + 1}-key`}
               disabled={disabled}
             />
             <div className={styles.headerInputWidth}>
@@ -82,7 +85,9 @@ const Headers: React.FC<HeadersListProps> = ({
                 inputVal={value}
                 id={`header-value-${i}`}
                 inputPlaceHolder={type === 'env' ? 'HEADER_FROM_ENV' : 'value'}
-                testId={`header-value-${i}`}
+                testId={
+                  module ? `${module}-header-test${i + 1}` : `header-value-${i}`
+                }
                 disabled={disabled}
               />
             </div>

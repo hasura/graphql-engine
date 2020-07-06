@@ -5,6 +5,7 @@ import Headers, { Header } from './Headers';
 
 export interface HeaderConfEditorProps {
   editorTitle: string;
+  module: string;
   editorTitleToolTip: string;
   className: string;
   additionalHeadersToolTip: string;
@@ -16,6 +17,7 @@ export interface HeaderConfEditorProps {
 }
 const HeaderConfEditor: React.FC<HeaderConfEditorProps> = ({
   editorTitle = 'Headers',
+  module,
   editorTitleToolTip,
   className,
   forwardClientHeaders,
@@ -60,7 +62,12 @@ const HeaderConfEditor: React.FC<HeaderConfEditorProps> = ({
         />
       </div>
 
-      <Headers headers={headers} setHeaders={setHeaders} disabled={disabled} />
+      <Headers
+        headers={headers}
+        setHeaders={setHeaders}
+        disabled={disabled}
+        module={module}
+      />
     </div>
   );
 };

@@ -180,6 +180,7 @@ class Common extends React.Component {
         <HeaderConfEditor
           className={styles.addPaddTop}
           editorTitle="Headers for the remote GraphQL server"
+          module="remote-schema"
           forwardClientHeaders={forwardClientHeaders}
           additionalHeadersToolTip="Custom headers to be sent to the remote GraphQL server"
           toggleForwardClientHeaders={this.toggleForwardHeaders}
