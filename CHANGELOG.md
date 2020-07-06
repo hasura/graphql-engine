@@ -6,6 +6,13 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+
+## `v1.3.0-beta.4`
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
 - server: change relay endpoint to `/v1beta1/relay` (#5257)
 - server: relay connection fields are exposed regardless of allow aggregation permission (fix #5218) (#5257)
 - server: add new `--conn-lifetime` and `HASURA_GRAPHQL_PG_CONN_LIFETIME` options for expiring connections after some amount of active time (#5087)
