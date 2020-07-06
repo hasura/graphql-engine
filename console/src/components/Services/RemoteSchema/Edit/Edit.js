@@ -38,19 +38,6 @@ class Edit extends React.Component {
     };
   }
 
-  // static getDerivedStateFromProps(props, state) {
-  //   if (
-  //     props.headers &&
-  //     props.headers.length > 0 &&
-  //     props.headers !== state.headers
-  //   ) {
-  //     return {
-  //       headers: props.headers,
-  //     };
-  //   }
-  //   return null;
-  // }
-
   componentDidMount() {
     const { remoteSchemaName } = this.props.params;
     if (!remoteSchemaName) {
