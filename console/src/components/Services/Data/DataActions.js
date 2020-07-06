@@ -338,7 +338,6 @@ const loadSchema = configOptions => {
 
     return dispatch(requestAction(url, options)).then(
       data => {
-        console.log({ data });
         const tableList = JSON.parse(data[0].result[1]);
         const columnsInfo = JSON.parse(data[1].result[1]);
         const fkList = JSON.parse(data[3].result[1]);
@@ -366,11 +365,6 @@ const loadSchema = configOptions => {
             'tables'
           );
         }
-        console.log({
-          mergedData,
-          maybeInconsistentSchemas,
-          consistentSchemas,
-        });
 
         dispatch({
           type: LOAD_SCHEMA,

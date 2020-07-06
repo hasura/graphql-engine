@@ -395,10 +395,9 @@ export const fetchColumnsInfoQuery = options => {
     'and'
   );
 
-  // todo: format this
   const runSql = `
 SELECT
-  COALESCE(Json_agg(Json_build_object('table_schema', table_schema, 'table_name', table_name, 'columns', columns)), '[]'::json) AS columns
+	COALESCE(Json_agg(Json_build_object('table_schema', table_schema, 'table_name', table_name, 'columns', columns)), '[]'::json) AS columns
 FROM (
 	SELECT
 		isc.table_schema,
@@ -490,7 +489,9 @@ AND nc.nspname = 'public'
 AND c.relkind in('r', 'v', 'm', 'f', 'p')
 AND(pg_has_role(c.relowner, 'USAGE')
 	OR has_column_privilege(c.oid, a.attnum, 'SELECT, INSERT, UPDATE, REFERENCES'))) AS isc
-GROUP BY (1, 2)) AS columns;
+GROUP BY
+	(1,
+	2)) AS columns;
   `;
 
   return getRunSqlQuery(
@@ -508,15 +509,14 @@ export const fetchTableListQuery = options => {
     'and'
   );
 
-  // TODO: format this.
   const runSql = `
 SELECT
 	COALESCE(Json_agg(Row_to_json(info)), '[]'::json) AS tables
 FROM (
 	SELECT
 		pgn.nspname AS table_schema,
-    pgc.relname AS table_name,
-    /* remove this */
+		pgc.relname AS table_name,
+		/* remove this */
 		CASE WHEN pgc.relkind = 'r' THEN
 			'TABLE'
 		WHEN pgc.relkind = 'f' THEN
@@ -596,18 +596,15 @@ SELECT
 	AND(NOT pg_is_other_temp_schema(nc.oid))
 	AND(pg_has_role(c.relowner, 'USAGE')
 	OR has_table_privilege(c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
-	OR has_any_column_privilege(c.oid, 'SELECT, INSERT, UPDATE, REFERENCES'))) AS isv
-	ON isv.table_schema = pgn.nspname AND isv.table_name = pgc.relname
-WHERE
-  pgc.relkind IN('r', 'v', 'f', 'm', 'p')
-  ${whereQuery}
+	OR has_any_column_privilege(c.oid, 'SELECT, INSERT, UPDATE, REFERENCES'))) AS isv ON isv.table_schema = pgn.nspname
+AND isv.table_name = pgc.relname WHERE pgc.relkind IN('r', 'v', 'f', 'm', 'p')
+${whereQuery}
 GROUP BY
-  pgc.oid,
-  pgn.nspname,
-  pgc.relname,
-  table_type,
-  isv.*
-) AS info;
+	pgc.oid,
+	pgn.nspname,
+	pgc.relname,
+	table_type,
+	isv.*) AS info;
 `;
   return getRunSqlQuery(
     runSql,
