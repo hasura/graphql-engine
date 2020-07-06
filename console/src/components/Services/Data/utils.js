@@ -3,6 +3,8 @@ import {
   checkFeatureSupport,
 } from '../../../helpers/versionUtils';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
+import { isJsonString } from '../../Common/utils/jsUtils';
+import { ERROR_CODES } from './constants';
 
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
@@ -18,6 +20,7 @@ export const DATE = 'date';
 export const TIMETZ = 'timetz';
 export const BOOLEAN = 'boolean';
 export const TEXT = 'text';
+export const ARRAY = 'ARRAY';
 
 export const getPlaceholder = type => {
   switch (type) {
@@ -34,6 +37,8 @@ export const getPlaceholder = type => {
       return '{"name": "foo"} or [12, "bar"]';
     case BOOLEAN:
       return '';
+    case ARRAY:
+      return '{"foo", "bar"} or ["foo", "bar"]';
     default:
       return type;
   }
@@ -403,6 +408,7 @@ FROM (
       when pgc.relkind = 'f' then 'FOREIGN TABLE'
       when pgc.relkind = 'v' then 'VIEW'
       when pgc.relkind = 'm' then 'MATERIALIZED VIEW'
+      when pgc.relkind = 'p' then 'PARTITIONED TABLE'
     end as table_type,
     obj_description(pgc.oid) AS comment,
     COALESCE(json_agg(DISTINCT row_to_json(isc) :: jsonb || jsonb_build_object('comment', col_description(pga.attrelid, pga.attnum))) filter (WHERE isc.column_name IS NOT NULL), '[]' :: json) AS columns,
@@ -449,7 +455,7 @@ FROM (
       coalesce(bt.typname, t.typname) AS udt_name,
       a.attnum AS dtd_identifier,
       CASE WHEN c.relkind = 'r' OR
-                     (c.relkind IN ('v', 'f') AND
+                     (c.relkind IN ('v', 'f', 'p') AND
                       pg_column_is_updatable(c.oid, a.attnum, false))
            THEN 'YES' ELSE 'NO' END AS is_updatable
     FROM (pg_attribute a LEFT JOIN pg_attrdef ad ON attrelid = adrelid AND attnum = adnum)
@@ -460,7 +466,7 @@ FROM (
       LEFT JOIN (pg_collation co JOIN pg_namespace nco ON (co.collnamespace = nco.oid))
         ON a.attcollation = co.oid AND (nco.nspname, co.collname) <> ('pg_catalog', 'default')
     WHERE (NOT pg_is_other_temp_schema(nc.oid))
-      AND a.attnum > 0 AND NOT a.attisdropped AND c.relkind in ('r', 'v', 'm', 'f')
+      AND a.attnum > 0 AND NOT a.attisdropped AND c.relkind in ('r', 'v', 'm', 'f', 'p')
       AND (pg_has_role(c.relowner, 'USAGE')
            OR has_column_privilege(c.oid, a.attnum,
                                    'SELECT, INSERT, UPDATE, REFERENCES'))
@@ -509,7 +515,7 @@ FROM (
     AND isv.table_name   = pgc.relname
 
   WHERE
-    pgc.relkind IN ('r', 'v', 'f', 'm')
+    pgc.relkind IN ('r', 'v', 'f', 'm', 'p')
     ${whereQuery}
   GROUP BY pgc.oid, pgn.nspname, pgc.relname, table_type, isv.*
 ) AS info;
@@ -521,11 +527,51 @@ FROM (
   );
 };
 
+const generateWhereObject = options => {
+  const where = {};
+  if (options.schemas) {
+    options.schemas.forEach(s => {
+      if (!where.$and) where.$and = [];
+
+      where.$and.push({
+        table_schema: s,
+      });
+    });
+  }
+  if (options.tables) {
+    options.tables.forEach(t => {
+      if (!where.$and) where.$and = [];
+      where.$and.push({
+        table_schema: t.table_schema,
+        table_name: t.table_name,
+      });
+    });
+  }
+  return where;
+};
+
+export const fetchTrackedTableRemoteRelationshipQuery = options => {
+  const query = {
+    type: 'select',
+    args: {
+      table: {
+        schema: 'hdb_catalog',
+        name: 'hdb_remote_relationship',
+      },
+      columns: ['*.*', 'remote_relationship_name'],
+      where: generateWhereObject(options),
+      order_by: [{ column: 'remote_relationship_name', type: 'asc' }],
+    },
+  };
+  return query;
+};
+
 export const mergeLoadSchemaData = (
   infoSchemaTableData,
   hdbTableData,
   fkData,
-  refFkData
+  refFkData,
+  remoteRelData
 ) => {
   const _mergedTableData = [];
 
@@ -551,6 +597,7 @@ export const mergeLoadSchemaData = (
     let _uniqueConstraints = [];
     let _fkConstraints = [];
     let _refFkConstraints = [];
+    let _remoteRelationships = [];
     let _isEnum = false;
     let _checkConstraints = [];
     let _configuration = {};
@@ -575,6 +622,11 @@ export const mergeLoadSchemaData = (
           fk.ref_table_table_schema === _tableSchema &&
           fk.ref_table === _tableName
       );
+
+      _remoteRelationships = remoteRelData.filter(
+        rel =>
+          rel.table_schema === _tableSchema && rel.table_name === _tableName
+      );
     }
 
     const _mergedInfo = {
@@ -593,6 +645,7 @@ export const mergeLoadSchemaData = (
       foreign_key_constraints: _fkConstraints,
       opp_foreign_key_constraints: _refFkConstraints,
       view_info: _viewInfo,
+      remote_relationships: _remoteRelationships,
       is_enum: _isEnum,
       configuration: _configuration,
       computed_fields: _computed_fields,
@@ -737,3 +790,32 @@ WHERE
 
 export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
+
+export const cascadeUpQueries = (upQueries = []) =>
+  upQueries.map((i = {}) => {
+    if (i.type === 'run_sql' || i.type === 'untrack_table') {
+      return {
+        ...i,
+        args: {
+          ...i.args,
+          cascade: true,
+        },
+      };
+    }
+    return i;
+  });
+
+export const getDependencyError = (err = {}) => {
+  if (err.code == ERROR_CODES.dependencyError.code) {
+    // direct dependency error
+    return err;
+  } else if (err.code == ERROR_CODES.dataApiError.code) {
+    // message is coming as error, further parssing willbe based on message key
+    const actualError = isJsonString(err.message)
+      ? JSON.parse(err.message)
+      : {};
+    if (actualError.code == ERROR_CODES.dependencyError.code) {
+      return { ...actualError, message: actualError.error };
+    }
+  }
+};

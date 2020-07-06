@@ -8,6 +8,7 @@ const Relationships = ({
   schemaList,
   dispatch,
   currentAction,
+  readOnlyMode,
 }) => {
   const existingRelationships = (objectType.relationships || []).map(r => {
     return (
@@ -18,6 +19,7 @@ const Relationships = ({
         typename={objectType.name}
         allTables={allTables}
         schemaList={schemaList}
+        readOnlyMode={readOnlyMode}
       />
     );
   });
@@ -35,6 +37,7 @@ const Relationships = ({
         allTables={allTables}
         schemaList={schemaList}
         isNew
+        readOnlyMode={readOnlyMode}
       />
     </div>
   );

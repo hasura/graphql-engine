@@ -1,39 +1,8 @@
 -- | Types and functions related to the server initialisation
 {-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -O0 #-}
 module Hasura.Server.Init
-  ( DbUid(..)
-  , getDbId
-
-  , PGVersion(..)
-  , getPgVersion
-
-  , InstanceId(..)
-  , generateInstanceId
-
-  , StartupTimeInfo(..)
-
-  -- * Server command related
-  , parseRawConnInfo
-  , mkRawConnInfo
-  , mkHGEOptions
-  , mkConnInfo
-  , serveOptionsParser
-
-  -- * Downgrade command related
-  , downgradeShortcuts
-  , downgradeOptionsParser
-
-  -- * Help footers
-  , mainCmdFooter
-  , serveCmdFooter
-
-  -- * Startup logs
-  , mkGenericStrLog
-  , mkGenericLog
-  , inconsistentMetadataLog
-  , serveOptsToLog
-  , connInfoToLog
-
+  ( module Hasura.Server.Init
   , module Hasura.Server.Init.Config
   ) where
 
@@ -49,6 +18,7 @@ import qualified Language.Haskell.TH.Syntax       as TH
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Data.FileEmbed                   (embedStringFile)
+import           Data.Time                        (NominalDiffTime)
 import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
 
@@ -206,14 +176,15 @@ mkServeOptions rso = do
 #else
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
 #endif
-    mkConnParams (RawConnParams s c i p) = do
+    mkConnParams (RawConnParams s c i cl p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
+      connLifetime <- withEnv cl (fst pgConnLifetimeEnv)
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
-      return $ Q.ConnParams stripes conns iTime allowPrepare
+      return $ Q.ConnParams stripes conns iTime allowPrepare connLifetime
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
@@ -390,6 +361,13 @@ pgTimeoutEnv =
   , "Each connection's idle time before it is closed (default: 180 sec)"
   )
 
+pgConnLifetimeEnv :: (String, String)
+pgConnLifetimeEnv =
+  ( "HASURA_GRAPHQL_PG_CONN_LIFETIME"
+  , "Time from connection creation after which the connection should be destroyed and a new one " 
+    <> "created. (default: none)"
+  )
+
 pgUsePrepareEnv :: (String, String)
 pgUsePrepareEnv =
   ( "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS"
@@ -523,7 +501,7 @@ adminInternalErrorsEnv =
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
-              <*> dbUrl <*> dbName <*> pure Nothing
+              <*> dbUrl <*> dbName <*> options
               <*> retries
   where
     host = optional $
@@ -563,6 +541,14 @@ parseRawConnInfo =
                   metavar "<DBNAME>" <>
                   help "Database name to connect to"
                 )
+
+    options = optional $
+      strOption ( long "pg-connection-options" <>
+                  short 'o' <>
+                  metavar "<DATABASE-OPTIONS>" <>
+                  help "PostgreSQL options"
+                )
+
     retries = optional $
       option auto ( long "retries" <>
                     metavar "NO OF RETRIES" <>
@@ -597,7 +583,7 @@ parseTxIsolation = optional $
 
 parseConnParams :: Parser RawConnParams
 parseConnParams =
-  RawConnParams <$> stripes <*> conns <*> timeout <*> allowPrepare
+  RawConnParams <$> stripes <*> conns <*> idleTimeout <*> connLifetime <*> allowPrepare
   where
     stripes = optional $
       option auto
@@ -615,12 +601,20 @@ parseConnParams =
                help (snd pgConnsEnv)
             )
 
-    timeout = optional $
+    idleTimeout = optional $
       option auto
               ( long "timeout" <>
                 metavar "<SECONDS>" <>
                 help (snd pgTimeoutEnv)
               )
+
+    connLifetime = fmap (fmap (realToFrac :: Int -> NominalDiffTime)) $ optional $
+      option auto
+              ( long "conn-lifetime" <>
+                metavar "<SECONDS>" <>
+                help (snd pgConnLifetimeEnv)
+              )
+
     allowPrepare = optional $
       option (eitherReader parseStringAsBool)
               ( long "use-prepared-statements" <>
@@ -642,17 +636,17 @@ parseServerHost = optional $ strOption ( long "server-host" <>
                 help "Host on which graphql-engine will listen (default: *)"
               )
 
-parseAccessKey :: Parser (Maybe AdminSecret)
+parseAccessKey :: Parser (Maybe AdminSecretHash)
 parseAccessKey =
-  optional $ AdminSecret <$>
+  optional $ hashAdminSecret <$>
     strOption ( long "access-key" <>
                 metavar "ADMIN SECRET KEY (DEPRECATED: USE --admin-secret)" <>
                 help (snd adminSecretEnv)
               )
 
-parseAdminSecret :: Parser (Maybe AdminSecret)
+parseAdminSecret :: Parser (Maybe AdminSecretHash)
 parseAdminSecret =
-  optional $ AdminSecret <$>
+  optional $ hashAdminSecret <$>
     strOption ( long "admin-secret" <>
                 metavar "ADMIN SECRET KEY" <>
                 help (snd adminSecretEnv)

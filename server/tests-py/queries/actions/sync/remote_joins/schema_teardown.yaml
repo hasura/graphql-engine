@@ -1,0 +1,20 @@
+type: bulk
+args:
+- type: drop_action
+  args:
+    name: create_user
+    clear_data: true
+
+- type: set_custom_types
+  args: {}
+
+- type: run_sql
+  args:
+    cascade: true
+    sql: |
+      DROP TABLE "user";
+
+# also drops remote relationship as direct dep
+- type: remove_remote_schema
+  args:
+    name: actions-remote-join-schema

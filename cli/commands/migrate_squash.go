@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"fmt"
+	"github.com/hasura/graphql-engine/cli/util"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -10,7 +11,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate"
 
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
