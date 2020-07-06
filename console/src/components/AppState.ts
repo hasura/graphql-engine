@@ -1,5 +1,5 @@
 import globals from '../Globals';
-import { getLSItem, setLSItem, removeLSItem } from '../utils/localStorageUtils';
+import { getLSItem, setLSItem, removeLSItem } from '../utils/localStorage';
 
 const stateKey = `CONSOLE_LOCAL_INFO:${globals.dataApiUrl}`;
 

@@ -40,7 +40,7 @@ import { getGraphQLEndpoint } from '../utils';
 
 import styles from '../ApiExplorer.scss';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../../constants';
-import { getLSItem, removeLSItem } from '../../../../utils/localStorageUtils';
+import { getLSItem, removeLSItem } from '../../../../utils/localStorage';
 
 /* When the page is loaded for the first time, hydrate the header state from the localStorage
  * Keep syncing the localStorage state when user modifies.

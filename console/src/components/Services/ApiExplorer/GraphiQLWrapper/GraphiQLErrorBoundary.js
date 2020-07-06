@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { clearLS } from '../../../../utils/localStorageUtils';
+import { clearLS } from '../../../../utils/localStorage';
 
 class GraphiQLErrorBoundary extends React.Component {
   constructor(props) {

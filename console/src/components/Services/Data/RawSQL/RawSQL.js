@@ -30,7 +30,7 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
-import { getLSItem, setLSItem } from '../../../../utils/localStorageUtils';
+import { getLSItem, setLSItem } from '../../../../utils/localStorage';
 
 /**
  * # RawSQL React FC
