@@ -55,7 +55,11 @@ export const getTableNameWithSchema = (tableDef, wrapDoubleQuotes = false) => {
 };
 
 export const checkIfTable = table => {
-  return table.table_type === 'TABLE';
+  return (
+    table.table_type === 'TABLE' ||
+    table.table_type === 'PARTITIONED TABLE' ||
+    table.table_type === 'FOREIGN TABLE'
+  );
 };
 
 export const displayTableName = table => {
