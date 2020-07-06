@@ -1,3 +1,5 @@
+import globals from '../Globals';
+
 export const setLSItem = (key: string, data: string) => {
   window.localStorage.setItem(key, data);
 };
@@ -51,4 +53,27 @@ export const clearLS = () => {
 
 export const listLSKeys = () => {
   return Object.keys(window.localStorage);
+};
+
+// This is the list of the localStorage keys that are being used.
+export const lsKeys = {
+  consoleAdminSecret: 'CONSOLE_ADMIN_SECRET',
+  consoleLocalInfo: `CONSOLE_LOCAL_INFO:${globals.dataApiUrl}`,
+  versionUpdateCheckLastClosed: 'versionUpdateCheck: lastClosed',
+  rawSqlStatementTimeout: 'rawSql:rawSqlStatementTimeout',
+  loveConsent: 'console:loveIcon',
+  proClick: 'console:pro',
+  derivedActions: 'actions:derivedActions',
+  graphiqlQuery: 'graphiql:query',
+  apiExplorerEndpointSectionIsOpen: 'ApiExplorer:EndpointSectionIsOpen',
+  apiExplorerGraphiqlMode: 'ApiExplorer:GraphiQLMode',
+  apiExplorerHeaderSectionIsOpen: 'ApiExplorer:HeadersSectionIsOpen',
+  apiExplorerAdminSecretWasAdded: 'ApiExplorer:AdminSecretHeaderWasAdded',
+  apiExplorerConsoleGraphQLHeaders: 'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+  oneGraphExplorerWidth: 'graphiql:explorerWidth',
+  oneGraphExplorerOpen: 'graphiql:explorerOpen',
+  oneGraphExplorerCodeExporterOpen: 'graphiql:codeExporterOpen',
+  rawSQLKey: 'rawSql:sql',
+  dataColumnsCollapsedKey: 'data:collapsed',
+  dataPageSizeKey: 'data:pageSize',
 };
