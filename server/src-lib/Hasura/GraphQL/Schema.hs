@@ -30,8 +30,8 @@ import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 -- TODO So far, we're *always* generating a query_root, mutation_root and
 -- subscription_root.  But is this valid?  We may end up generating objects with
@@ -60,7 +60,7 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions non
     allRoles :: HashSet RoleName
     allRoles = S.insert adminRoleName $ allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded
 
-    tableFilter ti = not (isSystemDefined $ _tciSystemDefined ti)
+    tableFilter    = not . isSystemDefined . _tciSystemDefined
     functionFilter = not . isSystemDefined . fiSystemDefined
 
     validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
