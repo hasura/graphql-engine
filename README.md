@@ -11,9 +11,9 @@
 
 Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant, realtime GraphQL APIs over Postgres**, with [**webhook triggers**](event-triggers.md) on database events, and [**remote schemas**](remote-schemas.md) for business logic.
 
-Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
+Hasura helps you build [GraphQL](https://hasura.io/graphql/) apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
 
-Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/docs).
+Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/docs/).
 
 ------------------
 
@@ -37,7 +37,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/doc
 * **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
 * **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
-Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/docs).
+Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/docs/).
 
 ## Table of contents
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
@@ -161,7 +161,7 @@ Check out all the example applications in the [community/sample-apps](community/
 
 The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
 
-* Support & feedback: [Discord](https://discord.gg/vBPpJkS)
+* Support & feedback: [Discord](https://discord.gg/hasura)
 * Issue & bug tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
 * Follow product updates: [@HasuraHQ](https://twitter.com/hasurahq)
 * Talk to us on our [website chat](https://hasura.io)

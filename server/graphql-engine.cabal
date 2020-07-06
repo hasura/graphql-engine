@@ -404,6 +404,7 @@ library
                      , Hasura.Eventing.HTTP
                      , Hasura.Eventing.EventTrigger
                      , Hasura.Eventing.ScheduledTrigger
+                     , Hasura.Eventing.Common
 
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
