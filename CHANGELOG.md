@@ -6,6 +6,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- docs: add page on created_at / updated_at timestamps (close #2880) (#5223)
 
 ## `v1.3.0-beta.4`
 
@@ -45,7 +46,6 @@
 - cli: handle missing files during metadata apply (close #5163) (#5170)
 - docs: add page on scheduled triggers (close #4913) (#5141)
 - docs: add page on Relay schema (close #4912) (#5150)
-- docs: add page on default timestamp values (close #2880) (#5223)
 
 ## `v1.3.0-beta.2`
 
