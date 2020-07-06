@@ -229,10 +229,12 @@ mkInsertObject objects table columns conflictClause insertPerms updatePerms =
          , _aiConflictClause = conflictClause
          , _aiCheckCond      = (insertCheck, updateCheck)
          , _aiTableCols      = columns
-         , _aiDefVals        = fmap partialSQLExpToUnpreparedValue $ ipiSet insertPerms
+         , _aiDefVals        = defaultValues
          }
   where insertCheck = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ ipiCheck insertPerms
         updateCheck = fmapAnnBoolExp partialSQLExpToUnpreparedValue <$> (upiCheck =<< updatePerms)
+        defaultValues = Map.union (partialSQLExpToUnpreparedValue <$> ipiSet insertPerms)
+          $ fmap UVLiteral $ S.mkColDefValMap $ map pgiColumn columns
 
 conflictObject
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
