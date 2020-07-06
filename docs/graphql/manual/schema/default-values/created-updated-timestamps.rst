@@ -1,11 +1,11 @@
 .. meta::
    :description: Set default timestamp field values
-   :keywords: hasura, docs, schema, default value, timestamp values
+   :keywords: hasura, docs, schema, default value, timestamps
 
-.. _timestamp_values:
+.. _created_updated_timestamps:
 
-Setting default timestamp values
-================================
+Adding created_at / updated_at timestamps
+=========================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,11 +15,11 @@ Setting default timestamp values
 Introduction
 ------------
 
-We often need timestamp values in our tables, such as ``created_at`` and ``updated_at`` in order to indicate when an object was created or last updated.
-This page explains how to add these values to your tables. 
+We often need ``created_at`` and ``updated_at`` fields in our tables in order to indicate when an object was created or last updated.
+This page explains how to add these. 
 
-Add a default timestamp value
------------------------------
+Add a created_at timestamp
+--------------------------
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -36,7 +36,7 @@ Add a default timestamp value
 
   .. tab:: CLI
 
-    :ref:`Create a migration manually <manual_migrations>` and add the SQL statement to update a table:
+    :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to add a ``created_at`` timestamp field to the ``article`` table:
 
     .. code-block:: SQL
 
@@ -64,3 +64,6 @@ Add a default timestamp value
             "sql": "ALTER TABLE ONLY \"article\" ADD COLUMN \"created_at\" TIMESTAMP DEFAULT NOW();"
         }
       }
+
+Add an created_at timestamp
+---------------------------
