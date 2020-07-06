@@ -86,8 +86,8 @@ Add an updated_at timestamp
     :ref:`Create a migration manually <manual_migrations>` and add the below SQL statement to achieve the following:
     
     1. Add an ``updated_at`` timestamp field to the ``article`` table.
-    2. Define a :ref:`Postgres function <custom_sql_functions>` to set the ``updated_at`` field to ``NOW()``.
-    3. Create a Postgres trigger to call the defined function whenever an article is updated.
+    2. Define a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ to set the ``updated_at`` field to ``NOW()``.
+    3. Create a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ to call the defined function whenever an article is updated.
 
     .. code-block:: SQL
 
@@ -121,8 +121,8 @@ Add an updated_at timestamp
     The below SQL statement will achieve the following:
 
     1. Add an ``updated_at`` timestamp field to the ``article`` table.
-    2. Define a :ref:`Postgres function <custom_sql_functions>` to set the ``updated_at`` field to ``NOW()``.
-    3. Create a Postgres trigger to call the defined function whenever an article is updated.
+    2. Define a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ to set the ``updated_at`` field to ``NOW()``.
+    3. Create a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ to call the defined function whenever an article is updated.
 
     .. code-block:: http
 
