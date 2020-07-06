@@ -6,9 +6,13 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { push } from 'react-router-redux';
 
-import { fetchRemoteSchema, RESET } from '../Add/addRemoteSchemaReducer';
+import {
+  fetchRemoteSchema,
+  RESET,
+  RESET_HEADER,
+} from '../Add/addRemoteSchemaReducer';
 
-import { VIEW_REMOTE_SCHEMA, RESET_HEADER } from '../Actions';
+import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import ReloadRemoteSchema from '../../Settings/MetadataOptions/ReloadRemoteSchema';
 
 import { appPrefix } from '../constants';

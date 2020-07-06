@@ -7,8 +7,9 @@ import {
   modifyRemoteSchema,
   RESET,
   TOGGLE_MODIFY,
+  RESET_HEADER,
 } from '../Add/addRemoteSchemaReducer';
-import { VIEW_REMOTE_SCHEMA, RESET_HEADER } from '../Actions';
+import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
 import tabInfo from './tabInfo';

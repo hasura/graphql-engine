@@ -7,6 +7,9 @@ import { EventsState } from './components/Services/Events/state';
 import { RAEvents } from './components/Services/Events/types';
 import { TelemetryState } from './telemetry/state';
 
+// TODO clean this with approprate type once metadata reducer migrated to TS
+import metadataState from './components/Services/Settings/State';
+
 // Redux Utils
 export type ReduxState = {
   tables: {
@@ -19,8 +22,11 @@ export type ReduxState = {
     readOnlyMode: boolean;
     serverVersion: string;
     latestStableServerVersion: string;
+    migrationMode: boolean;
   };
   telemetry: TelemetryState;
+  // Todo change this after metadata reducer
+  metadata: typeof metadataState;
 };
 
 export type ReduxAction = RAEvents | RouterAction;

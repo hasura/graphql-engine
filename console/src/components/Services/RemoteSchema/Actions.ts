@@ -1,4 +1,6 @@
 /* */
+import { ThunkDispatch } from 'redux-thunk';
+import { AnyAction } from 'redux';
 import { listState } from './state';
 /* */
 
@@ -13,7 +15,7 @@ import { handleMigrationErrors } from '../../../utils/migration';
 
 import { showSuccessNotification } from '../Common/Notification';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
-import { defaultHeader } from '../../Common/Headers/Headers';
+import { GetReduxState, ReduxState } from '../../../types';
 
 /* Action constants */
 
@@ -28,14 +30,15 @@ const SET_CONSISTENT_REMOTE_SCHEMAS =
 
 const VIEW_REMOTE_SCHEMA = '@remoteSchema/VIEW_REMOTE_SCHEMA';
 
-export const RESET_HEADER = '@remoteSchema/RESET_HEADER';
-export const UPDATE_HEADERS = '@remoteSchema/UPDATE_HEADERS';
 /* */
 
 const fetchRemoteSchemas = () => {
-  return (dispatch, getState) => {
+  return (
+    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    getState: GetReduxState
+  ) => {
     const url = Endpoints.getSchema;
-    const options = {
+    const options: RequestInit = {
       credentials: globalCookiePolicy,
       method: 'POST',
       headers: dataHeaders(getState),
@@ -71,8 +74,10 @@ const fetchRemoteSchemas = () => {
         });
         return Promise.resolve();
       },
-      error => {
-        console.error('Failed to load remote schemas' + JSON.stringify(error));
+      (error: unknown) => {
+        console.error(
+          `Failed to load remote schemas + ${JSON.stringify(error)}`
+        );
         dispatch({ type: REMOTE_SCHEMAS_FETCH_FAIL, data: error });
         return Promise.reject();
       }
@@ -80,12 +85,14 @@ const fetchRemoteSchemas = () => {
   };
 };
 
-const setConsistentRemoteSchemas = data => ({
+const setConsistentRemoteSchemas = (data: typeof listState.remoteSchemas) => ({
   type: SET_CONSISTENT_REMOTE_SCHEMAS,
   data,
 });
 
-const listReducer = (state = listState, action) => {
+export type Action = ReturnType<typeof setConsistentRemoteSchemas>;
+
+const listReducer = (state = listState, action: Action) => {
   switch (action.type) {
     case FETCH_REMOTE_SCHEMAS:
       return {
@@ -128,16 +135,6 @@ const listReducer = (state = listState, action) => {
         ...state,
         remoteSchemas: action.data,
       };
-    case RESET_HEADER:
-      return {
-        ...state,
-        headers: [{ ...defaultHeader }],
-      };
-    case UPDATE_HEADERS:
-      return {
-        ...state,
-        headers: [...action.data],
-      };
     default:
       return {
         ...state,
@@ -147,16 +144,19 @@ const listReducer = (state = listState, action) => {
 
 /* makeRequest function to identify what the current mode is and send normal query or a call */
 const makeRequest = (
-  upQueries,
-  downQueries,
-  migrationName,
-  customOnSuccess,
-  customOnError,
-  requestMsg,
-  successMsg,
-  errorMsg
+  upQueries: unknown[],
+  downQueries: unknown[],
+  migrationName: string,
+  customOnSuccess: (data: unknown) => void,
+  customOnError: (err: unknown) => void,
+  requestMsg: string,
+  successMsg: string,
+  errorMsg: string
 ) => {
-  return (dispatch, getState) => {
+  return (
+    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    getState: GetReduxState
+  ) => {
     const upQuery = {
       type: 'bulk',
       args: upQueries,
@@ -183,15 +183,15 @@ const makeRequest = (
     } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
       finalReqBody = migrationBody;
     }
-    const url = migrateUrl;
-    const options = {
+    const url = migrateUrl as string;
+    const options: RequestInit = {
       method: 'POST',
       credentials: globalCookiePolicy,
       headers: dataHeaders(getState),
       body: JSON.stringify(finalReqBody),
     };
 
-    const onSuccess = data => {
+    const onSuccess = (data: unknown) => {
       if (globals.consoleMode === CLI_CONSOLE_MODE) {
         dispatch(loadMigrationStatus()); // don't call for server mode
       }
@@ -202,7 +202,7 @@ const makeRequest = (
       customOnSuccess(data);
     };
 
-    const onError = err => {
+    const onError = (err: unknown) => {
       dispatch(handleMigrationErrors(errorMsg, err));
       customOnError(err);
     };

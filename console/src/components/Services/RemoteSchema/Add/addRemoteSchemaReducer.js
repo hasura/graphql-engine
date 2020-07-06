@@ -6,7 +6,7 @@ import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
 import dataHeaders from '../../Data/Common/Headers';
 import { push } from 'react-router-redux';
-import { fetchRemoteSchemas, RESET_HEADER, UPDATE_HEADERS } from '../Actions';
+import { fetchRemoteSchemas } from '../Actions';
 
 import { makeRequest } from '../Actions';
 // import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
@@ -14,6 +14,7 @@ import { appPrefix } from '../constants';
 
 import globals from '../../../../Globals';
 import { clearIntrospectionSchemaCache } from '../graphqlUtils';
+import { defaultHeader } from '../../../Common/Headers/Headers';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -45,6 +46,8 @@ const UPDATE_FORWARD_CLIENT_HEADERS =
 const TOGGLE_MODIFY = '@editRemoteSchema/TOGGLE_MODIFY';
 /* */
 /* */
+export const RESET_HEADER = '@remoteSchema/RESET_HEADER';
+export const UPDATE_HEADERS = '@remoteSchema/UPDATE_HEADERS';
 
 const inputEventMap = {
   name: NAME_CHANGED,
@@ -553,6 +556,17 @@ const addRemoteSchemaReducer = (state = addState, action) => {
         ...state,
         forwardClientHeaders: !state.forwardClientHeaders,
       };
+    case RESET_HEADER:
+      return {
+        ...state,
+        headers: [{ ...defaultHeader }],
+      };
+    case UPDATE_HEADERS:
+      return {
+        ...state,
+        headers: [...action.data],
+      };
+
     default:
       return {
         ...state,
