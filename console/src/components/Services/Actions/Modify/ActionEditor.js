@@ -4,7 +4,7 @@ import Helmet from 'react-helmet';
 import HandlerEditor from '../Common/components/HandlerEditor';
 import KindEditor from '../Common/components/KindEditor';
 import ActionDefinitionEditor from '../Common/components/ActionDefinitionEditor';
-import HeaderConfEditor from '../Common/components/HeaderConfEditor';
+import HeaderConfEditor from '../../../Common/Headers/HeaderConfEditor';
 import TypeDefinitionEditor from '../Common/components/TypeDefinitionEditor';
 import Button from '../../../Common/Button';
 import { getModifyState } from './utils';
@@ -137,6 +137,9 @@ const ActionEditor = ({
         </React.Fragment>
       )}
       <HeaderConfEditor
+        editorTitle="Headers"
+        editorTitleToolTip="Headers Hasura will send to the webhook with the POST request"
+        additionalHeadersToolTip="Custom headers to be sent to the webhook with the POST request"
         forwardClientHeaders={forwardClientHeaders}
         toggleForwardClientHeaders={toggleForwardClientHeaders}
         headers={headers}

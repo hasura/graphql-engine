@@ -8,7 +8,7 @@ import { push } from 'react-router-redux';
 
 import { fetchRemoteSchema, RESET } from '../Add/addRemoteSchemaReducer';
 
-import { VIEW_REMOTE_SCHEMA } from '../Actions';
+import { VIEW_REMOTE_SCHEMA, RESET_HEADER } from '../Actions';
 import ReloadRemoteSchema from '../../Settings/MetadataOptions/ReloadRemoteSchema';
 
 import { appPrefix } from '../constants';
@@ -16,7 +16,6 @@ import { appPrefix } from '../constants';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
-import { UPDATE_HEADERS } from '../../../Common/Layout/ReusableHeader/HeaderReducer';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -52,14 +51,7 @@ class ViewStitchedSchema extends React.Component {
     Promise.all([
       this.props.dispatch({ type: RESET }),
       this.props.dispatch({
-        type: UPDATE_HEADERS,
-        data: [
-          {
-            name: '',
-            type: 'static',
-            value: '',
-          },
-        ],
+        type: RESET_HEADER,
       }),
       this.props.dispatch({ type: VIEW_REMOTE_SCHEMA, data: '' }),
     ]);

@@ -3,13 +3,14 @@ import PropTypes from 'prop-types';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
+import styles from '../RemoteSchema.scss';
 
 import {
   inputChange,
   UPDATE_FORWARD_CLIENT_HEADERS,
 } from '../Add/addRemoteSchemaReducer';
 
-import Header from '../../../Common/Layout/ReusableHeader/Header';
+import HeaderConfEditor from '../../../Common/Headers/HeaderConfEditor';
 
 class Common extends React.Component {
   getPlaceHolderText(valType) {
@@ -29,13 +30,11 @@ class Common extends React.Component {
     this.props.dispatch(inputChange(field, ''));
   }
 
-  toggleForwardHeaders() {
+  toggleForwardHeaders = () => {
     this.props.dispatch({ type: UPDATE_FORWARD_CLIENT_HEADERS });
-  }
+  };
 
   render() {
-    const styles = require('../RemoteSchema.scss');
-
     const {
       name,
       manualUrl,
@@ -178,48 +177,16 @@ class Common extends React.Component {
           Note: Specifying the server URL via an environmental variable is
           recommended if you have different URLs for multiple environments.
         </small>
-        <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
-          Headers for the remote GraphQL server
-        </div>
-        <div className={styles.check_box}>
-          <label>
-            <input
-              onChange={this.toggleForwardHeaders.bind(this)}
-              className={styles.display_inline + ' ' + styles.add_mar_right}
-              type="checkbox"
-              value="forwardHeaders"
-              data-test="forward-remote-schema-headers"
-              checked={forwardClientHeaders}
-              disabled={isDisabled}
-            />
-            <span>Forward all headers from client</span>
-          </label>
-          <OverlayTrigger
-            placement="right"
-            overlay={tooltips.clientHeaderForward}
-          >
-            <i className="fa fa-question-circle" aria-hidden="true" />
-          </OverlayTrigger>
-        </div>
-        <div className={styles.subheading_text + ' ' + styles.font_normal}>
-          Additional headers:
-          <OverlayTrigger
-            placement="right"
-            overlay={tooltips.additionalHeaders}
-          >
-            <i className="fa fa-question-circle" aria-hidden="true" />
-          </OverlayTrigger>
-        </div>
-        <Header
+        <HeaderConfEditor
+          className={styles.addPaddTop}
+          editorTitle="Headers for the remote GraphQL server"
+          forwardClientHeaders={forwardClientHeaders}
+          additionalHeadersToolTip="Custom headers to be sent to the remote GraphQL server"
+          toggleForwardClientHeaders={this.toggleForwardHeaders}
           headers={this.props.headers}
-          dispatch={this.props.dispatch}
-          typeOptions={[
-            { display_text: 'Value', value: 'static' },
-            { display_text: 'From env var', value: 'env' },
-          ]}
-          isDisabled={isDisabled}
-          placeHolderText={this.getPlaceHolderText.bind(this)}
-          keyInputPlaceholder="header name"
+          disabled={isDisabled}
+          showTitle={false}
+          setHeaders={this.props.setHeaders}
         />
         <hr />
         {getTimeoutSection()}

@@ -7,27 +7,36 @@ import Button from '../../../Common/Button/Button';
 
 import { pageTitle } from '../constants';
 
+import styles from '../RemoteSchema.scss';
+import { defaultHeader } from '../../../Common/Headers/Headers';
+
 class Add extends React.Component {
+  state = {
+    headers: [{...defaultHeader}],
+  };
   componentWillUnmount() {
     this.props.dispatch({ type: RESET });
   }
+  setHeaders = headers => this.setState({ headers });
+  onSubmit = e => {
+    e.preventDefault();
+    const { headers } = this.state;
+    this.props.dispatch(addRemoteSchema(headers));
+  };
 
   render() {
-    const styles = require('../RemoteSchema.scss');
-
-    const { isRequesting, dispatch } = this.props;
+    const { isRequesting } = this.props;
 
     return (
       <div className={styles.addWrapper}>
         <Helmet title={`Add ${pageTitle} - ${pageTitle}s | Hasura`} />
         <div className={styles.heading_text}>Add a new remote schema</div>
-        <form
-          onSubmit={e => {
-            e.preventDefault();
-            dispatch(addRemoteSchema());
-          }}
-        >
-          <Common {...this.props} />
+        <form onSubmit={this.onSubmit}>
+          <Common
+            {...this.props}
+            headers={this.state.headers}
+            setHeaders={this.setHeaders}
+          />
           <div className={styles.commonBtn}>
             <Button
               type="submit"
@@ -51,7 +60,6 @@ class Add extends React.Component {
 const mapStateToProps = state => {
   return {
     ...state.remoteSchemas.addData,
-    ...state.remoteSchemas.headerData,
   };
 };
 

@@ -1,3 +1,5 @@
+import { defaultHeader } from "../../Common/Headers/Headers";
+
 const asyncState = {
   isRequesting: false,
   isError: false,
@@ -16,7 +18,7 @@ const listState = {
 const addState = {
   manualUrl: '',
   envName: null,
-  headers: [],
+  headers: [{...defaultHeader}],
   timeoutConf: '',
   name: '',
   forwardClientHeaders: false,

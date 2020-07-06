@@ -13,6 +13,7 @@ import { handleMigrationErrors } from '../../../utils/migration';
 
 import { showSuccessNotification } from '../Common/Notification';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
+import { defaultHeader } from '../../Common/Headers/Headers';
 
 /* Action constants */
 
@@ -27,6 +28,8 @@ const SET_CONSISTENT_REMOTE_SCHEMAS =
 
 const VIEW_REMOTE_SCHEMA = '@remoteSchema/VIEW_REMOTE_SCHEMA';
 
+export const RESET_HEADER= '@remoteSchema/RESET_HEADER';
+export const UPDATE_HEADERS='@remoteSchema/UPDATE_HEADERS';
 /* */
 
 const fetchRemoteSchemas = () => {
@@ -124,6 +127,16 @@ const listReducer = (state = listState, action) => {
       return {
         ...state,
         remoteSchemas: action.data,
+      };
+    case RESET_HEADER:
+      return {
+        ...state,
+        headers:[{...defaultHeader}]
+      };
+    case UPDATE_HEADERS:
+      return {
+        ...state,
+        headers: [...action.data],
       };
     default:
       return {

@@ -6,12 +6,8 @@ import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
 import dataHeaders from '../../Data/Common/Headers';
 import { push } from 'react-router-redux';
-import { fetchRemoteSchemas } from '../Actions';
+import { fetchRemoteSchemas, RESET_HEADER, UPDATE_HEADERS } from '../Actions';
 
-import {
-  UPDATE_HEADERS,
-  RESET_HEADER,
-} from '../../../Common/Layout/ReusableHeader/HeaderReducer';
 import { makeRequest } from '../Actions';
 // import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { appPrefix } from '../constants';
@@ -142,7 +138,7 @@ const fetchRemoteSchema = remoteSchema => {
   };
 };
 
-const addRemoteSchema = () => {
+const addRemoteSchema = (headers = []) => {
   return (dispatch, getState) => {
     const currState = getState().remoteSchemas.addData;
     // const url = Endpoints.getSchema;
@@ -155,15 +151,11 @@ const addRemoteSchema = () => {
       definition: {
         url: currState.manualUrl,
         url_from_env: currState.envName,
-        headers: [],
+        headers: [...getReqHeader(headers)],
         timeout_seconds: timeoutSeconds,
         forward_client_headers: currState.forwardClientHeaders,
       },
     };
-
-    resolveObj.definition.headers = [
-      ...getReqHeader(getState().remoteSchemas.headerData.headers),
-    ];
 
     if (resolveObj.definition.url) {
       delete resolveObj.definition.url_from_env;
@@ -316,7 +308,7 @@ const deleteRemoteSchema = () => {
   };
 };
 
-const modifyRemoteSchema = () => {
+const modifyRemoteSchema = (headers = []) => {
   return (dispatch, getState) => {
     const currState = getState().remoteSchemas.addData;
     const remoteSchemaName = currState.name.trim().replace(/ +/g, '');
@@ -343,13 +335,10 @@ const modifyRemoteSchema = () => {
         url_from_env: currState.envName,
         timeout_seconds: newTimeout,
         forward_client_headers: currState.forwardClientHeaders,
-        headers: [],
+        headers: [...getReqHeader(headers)],
       },
     };
 
-    resolveObj.definition.headers = [
-      ...getReqHeader(getState().remoteSchemas.headerData.headers),
-    ];
     if (resolveObj.definition.url) {
       delete resolveObj.definition.url_from_env;
     } else {
