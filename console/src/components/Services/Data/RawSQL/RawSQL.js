@@ -97,7 +97,7 @@ const RawSQL = ({
     return () => {
       localStorage.setItem(LS_RAW_SQL_SQL, sqlRef.current);
     };
-  }, []);
+  }, [dispatch, sql]);
   // set SQL to sqlRef
   useEffect(() => {
     sqlRef.current = sql;
