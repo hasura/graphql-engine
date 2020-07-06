@@ -438,6 +438,8 @@ updateOperators table updatePermissions = do
              $ P.object objName (Just objDesc)
              $ catMaybes <$> sequenceA fields
 
+
+
 -- delete
 
 deleteFromTable
@@ -488,6 +490,7 @@ mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
     permissionFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ dpiFilter deletePerms
 
 
+
 -- common
 
 mutationSelectionSet
@@ -533,6 +536,8 @@ primaryKeysArguments table selectPerms = runMaybeT $ do
 
 third :: (c -> d) -> (a,b,c) -> (a,b,d)
 third f (a,b,c) = (a,b,f c)
+
+
 
 -- insert translation
 
@@ -584,19 +589,21 @@ traverseAnnInsert f (annIns, mutationOutput) =
 
 convertToSQLTransaction
   :: AnnMultiInsert S.SQLExp
+  -> Seq.Seq Q.PrepArg
   -> Bool
   -> RespTx
-convertToSQLTransaction (annIns, mutationOutput) stringifyNum =
+convertToSQLTransaction (annIns, mutationOutput) planVars stringifyNum =
   if null $ _aiInsObj annIns
   then pure $ buildEmptyMutResp mutationOutput
-  else insertMultipleObjects annIns mutationOutput stringifyNum
+  else insertMultipleObjects annIns mutationOutput planVars stringifyNum
 
 insertMultipleObjects
   :: MultiObjIns S.SQLExp
   -> RQL.MutationOutput
+  -> Seq.Seq Q.PrepArg
   -> Bool
   -> Q.TxE QErr EncJSON
-insertMultipleObjects multiObjIns mutationOutput stringifyNum =
+insertMultipleObjects multiObjIns mutationOutput planVars stringifyNum =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
     AnnIns insObjs table conflictClause checkCondition columnInfos defVals = multiObjIns
@@ -615,15 +622,12 @@ insertMultipleObjects multiObjIns mutationOutput stringifyNum =
             checkCondition
             mutationOutput
             columnInfos
-      in RQL.insertP2 stringifyNum (insertQuery, Seq.empty)
-         -- FIXME: is this correct? Can we pass empty PrepArgs here?
-         -- if no: they'll need to be injected all the way from outside
-         -- I think it's fine since the other branch doesn't rely on prep args?
+      in RQL.insertP2 stringifyNum (insertQuery, planVars)
 
     withRelsInsert = do
       insertRequests <- for insObjs \obj -> do
         let singleObj = AnnIns obj table conflictClause checkCondition columnInfos defVals
-        insertObject singleObj stringifyNum
+        insertObject singleObj planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
           columnValues = catMaybes $ map snd insertRequests
       selectExpr <- RQL.mkSelCTEFromColVals table columnInfos columnValues
@@ -632,11 +636,12 @@ insertMultipleObjects multiObjIns mutationOutput stringifyNum =
 
 insertObject
   :: SingleObjIns S.SQLExp
+  -> Seq.Seq Q.PrepArg
   -> Bool
   -> Q.TxE QErr (Int, Maybe (ColumnValues TxtEncodedPGVal))
-insertObject singleObjIns stringifyNum = do
+insertObject singleObjIns planVars stringifyNum = do
   -- insert all object relations and fetch this insert dependent column values
-  objInsRes <- forM objectRels $ insertObjRel stringifyNum
+  objInsRes <- forM objectRels $ insertObjRel planVars stringifyNum
 
   -- prepare final insert columns
   let objRelAffRows = sum $ map fst objInsRes
@@ -662,7 +667,7 @@ insertObject singleObjIns stringifyNum = do
     withArrRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
       arrDepColsWithVal <- fetchFromColVals colVal arrRelDepCols
-      arrInsARows <- forM arrayRels $ insertArrRel arrDepColsWithVal stringifyNum
+      arrInsARows <- forM arrayRels $ insertArrRel arrDepColsWithVal planVars stringifyNum
       return $ sum arrInsARows
 
     asSingleObject = \case
@@ -675,11 +680,12 @@ insertObject singleObjIns stringifyNum = do
       <> table <<> " affects zero rows"
 
 insertObjRel
-  :: Bool
+  :: Seq.Seq Q.PrepArg
+  -> Bool
   -> ObjRelIns S.SQLExp
   -> Q.TxE QErr (Int, [(PGCol, S.SQLExp)])
-insertObjRel stringifyNum objRelIns = do
-  (affRows, colValM) <- insertObject singleObjIns stringifyNum
+insertObjRel planVars stringifyNum objRelIns = do
+  (affRows, colValM) <- insertObject singleObjIns planVars stringifyNum
   colVal <- onNothing colValM $ throw400 NotSupported errMsg
   retColsWithVals <- fetchFromColVals colVal rColInfos
   let c = mergeListsWith (Map.toList mapCols) retColsWithVals
@@ -701,11 +707,12 @@ insertObjRel stringifyNum objRelIns = do
 
 insertArrRel
   :: [(PGCol, S.SQLExp)]
+  -> Seq.Seq Q.PrepArg
   -> Bool
   -> ArrRelIns S.SQLExp
   -> Q.TxE QErr Int
-insertArrRel resCols stringifyNum arrRelIns = do
-  resBS <- insertMultipleObjects multiObjIns mutOutput stringifyNum
+insertArrRel resCols planVars stringifyNum arrRelIns = do
+  resBS <- insertMultipleObjects multiObjIns mutOutput planVars stringifyNum
   resObj <- decodeEncJSON resBS
   onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
     throw500 "affected_rows not returned in array rel insert"

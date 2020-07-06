@@ -27,8 +27,8 @@ import           Hasura.GraphQL.Schema.Mutation         (convertToSQLTransaction
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
-import qualified Language.GraphQL.Draft.Syntax          as G
 import           Hasura.Session
+import qualified Language.GraphQL.Draft.Syntax          as G
 
 
 convertDelete
@@ -55,9 +55,9 @@ convertInsert
   -> AnnMultiInsert UnpreparedValue
   -> Bool
   -> RespTx
-convertInsert userVars insertOperation stringifyNum =
-  convertToSQLTransaction preparedUpdate stringifyNum
-  where (preparedUpdate, _FIXME) = runIdentity $ runPlan $ traverseAnnInsert prepareWithPlan insertOperation
+convertInsert usrVars insertOperation stringifyNum =
+  convertToSQLTransaction preparedUpdate (planVariablesSequence usrVars planningState) stringifyNum
+  where (preparedUpdate, planningState) = runIdentity $ runPlan $ traverseAnnInsert prepareWithPlan insertOperation
 
 planVariablesSequence :: SessionVariables -> PlanningSt -> Seq.Seq Q.PrepArg
 planVariablesSequence usrVars = Seq.fromList . map fst . withUserVars usrVars . IntMap.elems . _psPrepped
