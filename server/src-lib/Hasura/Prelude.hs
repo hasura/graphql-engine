@@ -58,7 +58,7 @@ import           Data.Sequence.NonEmpty            as M (NESeq)
 import           Data.String                       as M (IsString)
 import           Data.Text                         as M (Text)
 import           Data.These                        as M (These (..), fromThese, mergeThese,
-                                                         mergeTheseWith, these)
+                                                         mergeTheseWith, partitionThese, these)
 import           Data.Time.Clock.Units
 import           Data.Traversable                  as M (for)
 import           Data.Void                         as M (Void, absurd)
@@ -69,8 +69,8 @@ import           Test.QuickCheck.Arbitrary.Generic as M
 import           Text.Read                         as M (readEither, readMaybe)
 
 import qualified Data.ByteString                   as B
-import qualified Data.ByteString.Lazy              as BL
 import qualified Data.ByteString.Base64.Lazy       as Base64
+import qualified Data.ByteString.Lazy              as BL
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.Text                         as T
 import qualified Data.Text.Encoding                as TE

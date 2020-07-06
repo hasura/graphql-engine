@@ -21,6 +21,8 @@ import           Data.List                     (delete)
 
 import qualified Data.HashMap.Strict           as M
 import qualified Data.List.NonEmpty            as NE
+import qualified Data.Sequence                 as Seq
+import qualified Data.Sequence.NonEmpty        as NESeq
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -51,7 +53,7 @@ resolveEnumReferences enumTables =
     resolveEnumReference foreignKey = do
       [(localColumn, foreignColumn)] <- pure $ M.toList (_fkColumnMapping foreignKey)
       (primaryKey, enumValues) <- M.lookup (_fkForeignTable foreignKey) enumTables
-      guard (_pkColumns primaryKey == foreignColumn:|[])
+      guard (_pkColumns primaryKey == foreignColumn NESeq.:<|| Seq.Empty)
       pure (localColumn, EnumReference (_fkForeignTable foreignKey) enumValues)
 
 data EnumTableIntegrityError
@@ -84,7 +86,7 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
         validatePrimaryKey = case maybePrimaryKey of
           Nothing -> refute [EnumTableMissingPrimaryKey]
           Just primaryKey -> case _pkColumns primaryKey of
-            column :| [] -> case prciType column of
+            column NESeq.:<|| Seq.Empty -> case prciType column of
               PGText -> pure column
               _      -> refute [EnumTableNonTextualPrimaryKey column]
             columns -> refute [EnumTableMultiColumnPrimaryKey $ map prciName (toList columns)]

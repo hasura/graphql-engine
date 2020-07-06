@@ -208,6 +208,7 @@ instance Cacheable UT.TemplateItem
 instance Cacheable UT.URLTemplate
 instance (Cacheable a) => Cacheable (Maybe a)
 instance (Cacheable a, Cacheable b) => Cacheable (Either a b)
+instance (Cacheable a) => Cacheable (NESeq a)
 instance Cacheable a => Cacheable [a]
 instance Cacheable a => Cacheable (NonEmpty a)
 instance Cacheable a => Cacheable (G.Directive a)

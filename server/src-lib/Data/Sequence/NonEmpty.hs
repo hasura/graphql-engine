@@ -13,11 +13,14 @@ module Data.Sequence.NonEmpty
   , toSeq
   ) where
 
-import           Prelude       hiding (head, tail)
+import           Prelude         hiding (head, tail)
 
-import qualified Data.Sequence as Seq
+import qualified Data.Sequence   as Seq
 
+import           Control.DeepSeq (NFData)
+import           Data.Aeson
 import           Data.Foldable
+import           GHC.Generics    (Generic)
 
 infixr 5 <|
 infixl 5 |>
@@ -25,7 +28,8 @@ infixl 5 |>
 data NESeq a = NESeq
   { head :: a
   , tail :: Seq.Seq a
-  } deriving (Show, Eq, Functor, Traversable)
+  } deriving (Show, Eq, Functor, Traversable, Generic)
+instance (NFData a) => NFData (NESeq a)
 
 instance Semigroup (NESeq a) where
   NESeq x xs <> NESeq y ys = NESeq x (xs Seq.>< y Seq.<| ys)
@@ -44,6 +48,14 @@ instance Foldable NESeq where
   foldr' f v = foldr' f v . toSeq
   foldr1 f   = foldr1 f   . toSeq
 
+instance FromJSON a => FromJSON (NESeq a) where
+  parseJSON v = do
+    seqList <- parseJSON v
+    maybe (fail "expected non empty list") pure $ fromSeq seqList
+
+instance ToJSON a => ToJSON (NESeq a) where
+  toJSON = toJSON . toSeq
+
 singleton :: a -> NESeq a
 singleton a = NESeq a Seq.empty
 
@@ -55,6 +67,11 @@ v <| NESeq h l = NESeq v (h Seq.<| l)
 
 toSeq :: NESeq a -> Seq.Seq a
 toSeq (NESeq v l) = v Seq.<| l
+
+fromSeq :: Seq.Seq a -> Maybe (NESeq a)
+fromSeq = \case
+  Seq.Empty   -> Nothing
+  h Seq.:<| l -> Just $ NESeq h l
 
 pattern (:<||) :: a -> Seq.Seq a -> NESeq a
 pattern x :<|| xs = NESeq x xs

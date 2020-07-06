@@ -44,7 +44,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Instances.TH.Lift             ()
-import           Language.Haskell.TH.Syntax    (Q, TExp, Lift)
+import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
@@ -211,7 +211,7 @@ $(deriveJSON (aesonDrop 2 snakeCase) ''Constraint)
 data PrimaryKey a
   = PrimaryKey
   { _pkConstraint :: !Constraint
-  , _pkColumns    :: !(NonEmpty a)
+  , _pkColumns    :: !(NESeq a)
   } deriving (Show, Eq, Generic)
 instance (NFData a) => NFData (PrimaryKey a)
 instance (Cacheable a) => Cacheable (PrimaryKey a)

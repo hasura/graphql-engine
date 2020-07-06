@@ -14,12 +14,14 @@ module Hasura.GraphQL.Schema.Select
 
 import           Hasura.Prelude
 
+import           Control.Lens
 import           Data.Has
 import           Data.Maybe                            (fromJust)
 import           Data.Parser.JSONPath
 import           Data.Traversable                      (mapAccumL)
 
 import qualified Data.Aeson                            as J
+import qualified Data.Aeson.Extended                   as J
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashSet                          as Set
 import qualified Data.List.NonEmpty                    as NE
@@ -491,7 +493,8 @@ fieldSelection
 fieldSelection fieldInfo selectPermissions = do
   case fieldInfo of
     FIColumn columnInfo -> maybeToList <$> runMaybeT do
-      guard $ Set.member (pgiColumn columnInfo) (spiCols selectPermissions)
+      let columnName = pgiColumn columnInfo
+      guard $ Set.member columnName (spiCols selectPermissions)
       let fieldName = pgiName columnInfo
           pathArg = jsonPathArg $ pgiType columnInfo
       field <- lift $ P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
@@ -835,14 +838,14 @@ instance J.FromJSON NodeId where
       parseNodeIdV1 _ = fail "GUID version 1: expecting schema name, table name and at least one column value"
 
 parseNodeId
-  :: forall n
-   . MonadParse n
+  :: MonadParse n
   => Text
   -> n NodeId
-parseNodeId = either (throwInvalidNodeId . T.pack) pure . J.eitherDecode . base64Decode
-  where
-    throwInvalidNodeId :: Text -> n a
-    throwInvalidNodeId t = parseError $ "the node id is invalid: " <> t
+parseNodeId =
+  either (throwInvalidNodeId . T.pack) pure . J.eitherDecode . base64Decode
+
+throwInvalidNodeId :: MonadParse m => Text -> m a
+throwInvalidNodeId t = parseError $ "the node id is invalid: " <> t
 
 -- | The 'node' root field of a Relay request.
 node
@@ -853,15 +856,20 @@ node
      , Has QueryContext r
      )
   => HashSet QualifiedTable
-  -> m (P.Parser 'Output n (HashMap QualifiedTable (SelPermInfo, AnnotatedFields)))
+  -> m (P.Parser 'Output n (HashMap QualifiedTable (SelPermInfo, NESeq PGColumnInfo, AnnotatedFields)))
 node allTables = memoizeOn 'node allTables do
   myself <- node allTables
-  let idField = P.selection_ $$(G.litName "id") Nothing P.identifier
-  tables :: HashMap QualifiedTable (Parser 'Output n (SelPermInfo, AnnotatedFields)) <-
-    Map.mapMaybe id <$> flip Map.traverseWithKey (Set.toMap allTables) \table _ -> do
-    selectPermissions <- tableSelectPermissions table
-    for selectPermissions \perm -> fmap (fmap (perm,)) $ tableSelectionSet table perm $ Just myself
-  pure $ P.selectionSetInterface $$(G.litName "Node") Nothing [idField] tables []
+  let idDescription = G.Description "A globally unique identifier"
+      idField = P.selection_ $$(G.litName "id") (Just idDescription) P.identifier
+      nodeInterfaceDescription = G.Description "An object with globally unique ID"
+  tables :: HashMap QualifiedTable (Parser 'Output n (SelPermInfo, NESeq PGColumnInfo, AnnotatedFields)) <-
+    Map.mapMaybe id <$> flip Map.traverseWithKey (Set.toMap allTables) \table _ -> runMaybeT do
+      tablePkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns) <$> askTableInfo table
+      selectPermissions <- MaybeT $ tableSelectPermissions table
+      annotatedFieldsParser <- lift $ tableSelectionSet table selectPermissions $ Just myself
+      pure $ (selectPermissions, tablePkeyColumns,) <$> annotatedFieldsParser
+  pure $ P.selectionSetInterface $$(G.litName "Node")
+         (Just nodeInterfaceDescription) [idField] tables []
 
 nodeField
   :: forall m n r
@@ -873,19 +881,22 @@ nodeField
   => HashSet QualifiedTable
   -> m (P.FieldParser n SelectExp)
 nodeField allTables = do
-  let idArgument = P.field $$(G.litName "id") Nothing P.identifier
+  let idDescription = G.Description "A globally unique id"
+      idArgument = P.field $$(G.litName "id") (Just idDescription) P.identifier
   stringifyNum <- asks $ qcStringifyNum . getter
   nodeObject <- node allTables
   return $ P.subselection $$(G.litName "node") Nothing idArgument nodeObject `P.bindField`
     \(ident, parseds) -> do
-      NodeIdV1 (V1NodeId table cols) <- parseNodeId ident
-      (perms, fields) <- onNothing (Map.lookup table parseds) $ parseError $ "invalid id " <>> ident
+      NodeIdV1 (V1NodeId table columnValues) <- parseNodeId ident
+      (perms, pkeyColumns, fields) <-
+        onNothing (Map.lookup table parseds) $ throwInvalidNodeId $ "the table " <>> ident
+      whereExp <- buildNodeIdBoolExp columnValues pkeyColumns
       return $ RQL.AnnSelG
         { RQL._asnFields   = fields
         , RQL._asnFrom     = RQL.FromTable table
         , RQL._asnPerm     = tablePermissionsInfo perms
         , RQL._asnArgs     = RQL.TableArgs
-          { RQL._taWhere    = Just $ RQL.BoolAnd $ _where -- toList $ fmap BoolFld _whereF
+          { RQL._taWhere    = Just whereExp
           , RQL._taOrderBy  = Nothing
           , RQL._taLimit    = Nothing
           , RQL._taOffset   = Nothing
@@ -893,3 +904,30 @@ nodeField allTables = do
           }
         , RQL._asnStrfyNum = stringifyNum
         }
+  where
+    buildNodeIdBoolExp
+      :: NESeq.NESeq J.Value
+      -> NESeq.NESeq PGColumnInfo
+      -> n (RQL.AnnBoolExp UnpreparedValue)
+    buildNodeIdBoolExp columnValues pkeyColumns = do
+        let firstPkColumn NESeq.:<|| remainingPkColumns = pkeyColumns
+            firstColumnValue NESeq.:<|| remainingColumns = columnValues
+            (nonAlignedPkColumns, nonAlignedColumnValues, alignedTuples) =
+              partitionThese $ toList $ align remainingPkColumns remainingColumns
+
+        when (not $ null nonAlignedPkColumns) $ throwInvalidNodeId $
+          "primary key columns " <> dquoteList (map pgiColumn nonAlignedPkColumns) <> " are missing"
+
+        when (not $ null nonAlignedColumnValues) $ throwInvalidNodeId $
+          "unexpected column values " <> J.encodeToStrictText nonAlignedColumnValues
+
+        let allTuples = (firstPkColumn, firstColumnValue):alignedTuples
+
+        either (throwInvalidNodeId . qeError) pure $ runExcept $
+          fmap RQL.BoolAnd $ for allTuples $ \(columnInfo, columnValue) -> do
+            let modifyErrFn t = "value of column " <> pgiColumn columnInfo
+                                <<> " in node id: " <> t
+                pgColumnType = pgiType columnInfo
+            pgValue <- modifyErr modifyErrFn $ parsePGScalarValue pgColumnType columnValue
+            let unpreparedValue = flip UVParameter Nothing $ P.PGColumnValue pgColumnType pgValue
+            pure $ RQL.BoolFld $ RQL.AVCol columnInfo [RQL.AEQ True unpreparedValue]
