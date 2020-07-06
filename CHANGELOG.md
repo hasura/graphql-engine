@@ -427,7 +427,6 @@ The order, collapsed state of columns and rows limit is now persisted across pag
 - console: surround string type column default value with quotes (close #4371) (#4423)
 - console: add undefined check to fix error (close #4444) (#4445)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
-- docs: clarify & improve `vuejs-auth0-graphql` sample app readme (#4383)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
 - server: manage inflight events when HGE instance is gracefully shutdown (close #3548)
