@@ -9,11 +9,10 @@ import Button from '../../../Common/Button/Button';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
-import { LS_RAW_SQL_STATEMENT_TIMEOUT } from '../../../Common/utils/localStorageUtils';
-
 import StatementTimeout from './StatementTimeout';
 import { parseCreateSQL } from './utils';
 import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 import {
   executeSQL,
@@ -30,7 +29,7 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
-import { getLSItem, setLSItem } from '../../../../utils/localStorage';
+import { getLSItem, setLSItem, lsKeys } from '../../../../utils/localStorage';
 
 /**
  * # RawSQL React FC
@@ -70,29 +69,22 @@ const RawSQL = ({
   migrationMode,
   allSchemas,
 }) => {
-  const styles = require('../../../Common/TableCommon/Table.scss');
-
-  // local storage key for SQL
-  const LS_RAW_SQL_SQL = 'rawSql:sql';
-
-  /* hooks */
-
   // set up sqlRef to use in unmount
   const sqlRef = useRef(sql);
 
   const [statementTimeout, setStatementTimeout] = useState(
-    Number(getLSItem(LS_RAW_SQL_STATEMENT_TIMEOUT)) || 10
+    Number(getLSItem(lsKeys.rawSqlStatementTimeout)) || 10
   );
 
   useEffect(() => {
     if (!sql) {
-      const sqlFromLocalStorage = getLSItem(LS_RAW_SQL_SQL);
+      const sqlFromLocalStorage = getLSItem(lsKeys.rawSQLKey);
       if (sqlFromLocalStorage) {
         dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
       }
     }
     return () => {
-      setLSItem(LS_RAW_SQL_SQL, sqlRef.current);
+      setLSItem(lsKeys.rawSQLKey, sqlRef.current);
     };
   }, [dispatch, sql]);
   // set SQL to sqlRef
@@ -104,7 +96,7 @@ const RawSQL = ({
 
   const submitSQL = () => {
     // set SQL to LS
-    setLSItem(LS_RAW_SQL_SQL, sql);
+    setLSItem(lsKeys.rawSQLKey, sql);
 
     // check migration mode global
     if (migrationMode) {
@@ -429,7 +421,7 @@ const RawSQL = ({
   const updateStatementTimeout = value => {
     const timeoutInSeconds = Number(value.trim());
     const isValidTimeout = timeoutInSeconds > 0 && !isNaN(timeoutInSeconds);
-    setLSItem(LS_RAW_SQL_STATEMENT_TIMEOUT, timeoutInSeconds);
+    setLSItem(lsKeys.rawSqlStatementTimeout, timeoutInSeconds);
     setStatementTimeout(isValidTimeout ? timeoutInSeconds : 0);
   };
 

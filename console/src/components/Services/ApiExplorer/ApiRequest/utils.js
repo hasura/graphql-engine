@@ -8,28 +8,29 @@ import {
   setLSItem,
   getLSItem,
   removeLSItem,
+  lsKeys,
 } from '../../../../utils/localStorage';
 
 export const setEndPointSectionIsOpen = isOpen => {
-  setLSItem('ApiExplorer:EndpointSectionIsOpen', isOpen);
+  setLSItem(lsKeys.apiExplorerEndpointSectionIsOpen, isOpen);
 };
 
 export const getEndPointSectionIsOpen = () => {
   const defaultIsOpen = true;
 
-  const isOpen = getLSItem('ApiExplorer:EndpointSectionIsOpen');
+  const isOpen = getLSItem(lsKeys.apiExplorerEndpointSectionIsOpen);
 
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
 
 export const setHeadersSectionIsOpen = isOpen => {
-  setLSItem('ApiExplorer:HeadersSectionIsOpen', isOpen);
+  setLSItem(lsKeys.apiExplorerHeaderSectionIsOpen, isOpen);
 };
 
 export const getHeadersSectionIsOpen = () => {
   const defaultIsOpen = true;
 
-  const isOpen = getLSItem('ApiExplorer:HeadersSectionIsOpen');
+  const isOpen = getLSItem(lsKeys.apiExplorerHeaderSectionIsOpen);
 
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
@@ -48,19 +49,16 @@ export const getAdminSecret = () => {
   return adminSecret;
 };
 
-const LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED =
-  'ApiExplorer:AdminSecretHeaderWasAdded';
-
 export const persistAdminSecretHeaderWasAdded = () => {
-  setLSItem(LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED, 'true');
+  setLSItem(lsKeys.apiExplorerAdminSecretWasAdded, 'true');
 };
 
 export const removePersistedAdminSecretHeaderWasAdded = () => {
-  removeLSItem(LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED);
+  removeLSItem(lsKeys.apiExplorerAdminSecretWasAdded);
 };
 
 export const getPersistedAdminSecretHeaderWasAdded = () => {
-  const lsValue = getLSItem(LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED);
+  const lsValue = getLSItem(lsKeys.apiExplorerAdminSecretWasAdded);
 
   return lsValue ? lsValue === 'true' : false;
 };
@@ -80,11 +78,14 @@ export const persistGraphiQLHeaders = headers => {
     return maskedHeader;
   });
 
-  setLSItem('HASURA_CONSOLE_GRAPHIQL_HEADERS', JSON.stringify(maskedHeaders));
+  setLSItem(
+    lsKeys.apiExplorerConsoleGraphQLHeaders,
+    JSON.stringify(maskedHeaders)
+  );
 };
 
 export const getPersistedGraphiQLHeaders = () => {
-  const headersString = getLSItem('HASURA_CONSOLE_GRAPHIQL_HEADERS');
+  const headersString = getLSItem(lsKeys.apiExplorerConsoleGraphQLHeaders);
 
   let headers = null;
   if (headersString) {
@@ -139,12 +140,10 @@ export const parseAuthHeader = header => {
   return { isAuthHeader, token };
 };
 
-const GRAPHIQL_MODE_LS = 'ApiExplorer:GraphiQLMode';
-
 export const persistGraphiQLMode = mode => {
-  setLSItem(GRAPHIQL_MODE_LS, mode);
+  setLSItem(lsKeys.apiExplorerGraphiqlMode, mode);
 };
 
 export const getPersistedGraphiQLMode = () => {
-  return getLSItem(GRAPHIQL_MODE_LS) || 'graphql';
+  return getLSItem(lsKeys.apiExplorerGraphiqlMode) || 'graphql';
 };
