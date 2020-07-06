@@ -15,7 +15,7 @@ Adding created_at / updated_at timestamps
 Introduction
 ------------
 
-We often need ``created_at`` and ``updated_at`` fields in our tables in order to indicate when an object was created or last updated.
+We often need ``created_at`` and ``updated_at`` timestamp fields in our tables in order to indicate when an object was created or last updated.
 This page explains how to add these. 
 
 Add a created_at timestamp
@@ -50,7 +50,7 @@ Add a created_at timestamp
 
   .. tab:: API
 
-    You can add a timestamp default value by using the :ref:`run_sql metadata API <run_sql>`:
+    You can add a ``created_at`` timestamp by using the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 
@@ -83,9 +83,9 @@ Add an updated_at timestamp
 
   .. tab:: CLI
 
-    :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to achieve the following:
+    :ref:`Create a migration manually <manual_migrations>` and add the below SQL statement to achieve the following:
     
-    1. Add a ``created_at`` timestamp field to the ``article`` table.
+    1. Add an ``updated_at`` timestamp field to the ``article`` table.
     2. Define a :ref:`Postgres function <custom_sql_functions>` to set the ``updated_at`` field to ``NOW()``.
     3. Create a Postgres trigger to call the defined function whenever an article is updated.
 
@@ -116,7 +116,13 @@ Add an updated_at timestamp
 
   .. tab:: API
 
-    You can add an ``updated_at`` timestamp by using the :ref:`run_sql metadata API <run_sql>`:
+    You can add an ``updated_at`` timestamp by using the :ref:`run_sql metadata API <run_sql>`.
+
+    The below SQL statement will achieve the following:
+
+    1. Add an ``updated_at`` timestamp field to the ``article`` table.
+    2. Define a :ref:`Postgres function <custom_sql_functions>` to set the ``updated_at`` field to ``NOW()``.
+    3. Create a Postgres trigger to call the defined function whenever an article is updated.
 
     .. code-block:: http
 
@@ -146,9 +152,3 @@ Add an updated_at timestamp
               EXECUTE PROCEDURE trigger_set_timestamp();"
         }
       }
-
-    The SQL will do the following:
-
-    1. Add a ``created_at`` timestamp field to the ``article`` table.
-    2. Define a :ref:`Postgres function <custom_sql_functions>` to set the ``updated_at`` field to ``NOW()``.
-    3. Create a Postgres trigger to call the defined function whenever an article is updated.
