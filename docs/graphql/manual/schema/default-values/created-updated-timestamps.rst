@@ -1,5 +1,5 @@
 .. meta::
-   :description: Set default timestamp field values
+   :description: Add created at / updated at timestamps
    :keywords: hasura, docs, schema, default value, timestamps
 
 .. _created_updated_timestamps:
