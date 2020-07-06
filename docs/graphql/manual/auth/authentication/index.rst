@@ -39,7 +39,7 @@ rules.
 
 Here's how a GraphQL request is processed in webhook mode:
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/auth-webhook-overview.png
+.. thumbnail:: /img/graphql/manual/auth/auth-webhook-overview.png
    :alt: Authentication using webhooks
 
 2. JWT (JSON Web Token)
@@ -51,7 +51,7 @@ evaluate access control rules.
 
 Here's how a GraphQL query is processed in JWT mode:
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/auth-jwt-overview.png
+.. thumbnail:: /img/graphql/manual/auth/auth-jwt-overview.png
    :alt: Authentication using JWT
 
 **See more details at:**
@@ -61,4 +61,4 @@ Here's how a GraphQL query is processed in JWT mode:
 
   Using webhooks <webhook>
   Using JWT <jwt>
-  Unauthenticated access <unauthenticated-access>
+  Unauthenticated / Public access <unauthenticated-access>

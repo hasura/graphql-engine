@@ -16,21 +16,21 @@ Introduction
 ------------
 
 It is a typical requirement to run some custom business logic before actually
-executing a mutation, for example, to perform validations or to enrich some data
-from an external source. Actions can be used to achieve this.
+executing a mutation / query, for example, to perform validations or to enrich
+some data from an external source. Actions can be used to achieve this.
 
 To help with creation of such actions, Hasura lets you derive an action from an
-existing mutation by:
+existing query or mutation by:
 
 - Auto-generating the GraphQL types defining the action
-- Generating the handler code to delegate the action back to the original mutation
+- Generating the handler code to delegate the action back to the original query or mutation
   after executing some business logic
 
 Generate derived action GraphQL types
 -------------------------------------
 
 Hasura can generate the relevant GraphQL types required to define an action
-given a mutation request.
+given a GraphQL operation.
 
 For example, let's say we would like to derive an action from the mutation:
 
@@ -75,13 +75,13 @@ derive our action:
 
      Next hit the ``Derive action`` button as shown below:
 
-     .. thumbnail:: ../../../img/graphql/manual/actions/actions-derive-button.png
+     .. thumbnail:: /img/graphql/manual/actions/actions-derive-button.png
         :alt: Console derive action button
 
      This will redirect you to the ``Add a new action`` page with the action
      definition auto filled.
 
-     .. thumbnail:: ../../../img/graphql/manual/actions/actions-derive-types.png
+     .. thumbnail:: /img/graphql/manual/actions/actions-derive-types.png
         :alt: Console derived action types
 
 
@@ -127,18 +127,17 @@ derive our action:
 .. note::
 
   - The derived output type will be derived from the actual output type of the
-    original mutation and not the mutation string.
+    original query or mutation and not the selection-set of the given query or mutation string.
   - As currently custom object types can only have scalar / enum fields any
     object type fields in the original output type will be dropped in the derived
     output type.
-
 
 
 Generate handler code for a derived action
 ------------------------------------------
 
 For a derived action, Hasura can generate the relevant handler code to delegate
-the action back to the original mutation.
+the action back to the original operation.
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -150,7 +149,7 @@ the action back to the original mutation.
     You can select the framework of your choice to get the corresponding
     handler boilerplate code.
 
-    .. thumbnail:: ../../../img/graphql/manual/actions/actions-derive-codegen.png
+    .. thumbnail:: /img/graphql/manual/actions/actions-derive-codegen.png
        :alt: Console derived action codegen
 
     .. note::
@@ -169,12 +168,23 @@ the action back to the original mutation.
     the corresponding codegen files. Hit `y` to generate the codegen files with
     the delegation logic.
 
-    .. note::
+    The CLI does not persist information about derived actions. Hence if you wish to generate the delegation code,
+    you might want to pass the query or mutation string while running the codegen command:
 
-      The CLI does not persist information about derived actions. Hence it is
-      currently only possible to generate handler files with the delegation
-      logic during action creation.
+    .. code-block:: bash
 
+        hasura actions codegen <action-name> --derive-from '<query/mutation string>'
 
+Hiding the original mutation in the API
+---------------------------------------
 
+Once a mutation is derived, you might want to hide it from your public
+GraphQL API but still want to use it from your action handler.
 
+To achieve this you can mark the mutation as ``backend_only`` so that it
+can be accessed only via "trusted sources". See :ref:`backend-only-permissions`
+for more details
+
+.. note::
+
+  Setting ``backend-only`` is currently available for insert mutations only.

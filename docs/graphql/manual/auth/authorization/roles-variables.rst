@@ -31,6 +31,8 @@ Examples:
 |           | user's data                       |                                       |
 +-----------+-----------------------------------+---------------------------------------+
 
+See :ref:`this page <permission_rules>` on how to configure permission rules.
+
 .. admonition:: Role-based schemas
 
   For every role that you create, Hasura automatically publishes a different GraphQL schema that represents the
@@ -104,7 +106,7 @@ Roles are typically modelled in two ways:
 1. **Hierarchical roles**: Access scopes are nested depending on available roles. `Roles in Github for organisations <https://help.github.com/en/articles/managing-peoples-access-to-your-organization-with-roles>`_
    is a great example of such modelling where access scopes are inherited by deeper roles:
 
-   .. thumbnail:: ../../../../img/graphql/manual/auth/github-org-hierarchical-roles.png
+   .. thumbnail:: /img/graphql/manual/auth/github-org-hierarchical-roles.png
       :alt: Hierarchical roles
 
 2. **Flat roles**: Non-hierarchical roles with each role requiring an independent access scope to be defined.

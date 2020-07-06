@@ -5,13 +5,9 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/graphql-go/graphql/language/ast"
-	"github.com/graphql-go/graphql/language/kinds"
-	"github.com/graphql-go/graphql/language/parser"
 	"github.com/hasura/graphql-engine/cli"
 	cliextension "github.com/hasura/graphql-engine/cli/metadata/actions/cli_extension"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/editor"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/printer"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
 	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/util"
@@ -24,7 +20,6 @@ import (
 const (
 	actionsFileName string = "actions.yaml"
 	graphqlFileName        = "actions.graphql"
-	pluginName             = "cli-ext"
 )
 
 type ActionConfig struct {
@@ -33,6 +28,7 @@ type ActionConfig struct {
 	serverFeatureFlags *version.ServerFeatureFlags
 	pluginsCfg         *plugins.Config
 	cliExtensionConfig *cliextension.Config
+	pluginInstallFunc  func(string, bool) error
 
 	logger *logrus.Logger
 }
@@ -45,69 +41,37 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 		logger:             ec.Logger,
 		pluginsCfg:         ec.PluginsConfig,
 		cliExtensionConfig: cliextension.NewCLIExtensionConfig(ec.PluginsConfig.Paths.BinPath(), ec.Logger),
+		pluginInstallFunc:  ec.InstallPlugin,
 	}
 	return cfg
 }
 
 func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFrom string) error {
 	// Ensure CLI Extesnion
-	err := a.ensureCLIExtension()
+	err := a.pluginInstallFunc(cli.CLIExtPluginName, true)
 	if err != nil {
-		return errors.Wrap(err, "error in install cli-extension plugin")
+		return err
 	}
 	// Read the content of graphql file
 	graphqlFileContent, err := a.GetActionsGraphQLFileContent()
 	if err != nil {
 		return errors.Wrapf(err, "error in reading %s file", graphqlFileName)
 	}
-	doc, err := parser.Parse(parser.ParseParams{
-		Source: graphqlFileContent,
-	})
+	// Read actions.yaml
+	oldAction, err := a.GetActionsFileContent()
 	if err != nil {
-		return errors.Wrap(err, "unable to parse graphql")
+		return errors.Wrapf(err, "error in reading %s file", actionsFileName)
 	}
-	currentActionNames := make([]string, 0)
-	// Check if the action already exists, if yes throw error
-	for _, def := range doc.Definitions {
-		switch obj := def.(type) {
-		case *ast.ObjectDefinition:
-			if obj.Kind == kinds.ObjectDefinition && obj.Name.Kind == kinds.Name && obj.Name.Value == "Mutation" {
-				for _, field := range obj.Fields {
-					currentActionNames = append(currentActionNames, field.Name.Value)
-				}
-			}
-		case *ast.TypeExtensionDefinition:
-			if obj.Kind == kinds.TypeExtensionDefinition && obj.Definition.Name.Kind == kinds.Name && obj.Definition.Name.Value == "Mutation" {
-				for _, field := range obj.Definition.Fields {
-					currentActionNames = append(currentActionNames, field.Name.Value)
-				}
-			}
-		}
-	}
-	for _, currAction := range currentActionNames {
-		if currAction == name {
+	// check if action already present
+	for _, currAction := range oldAction.Actions {
+		if currAction.Name == name {
 			return fmt.Errorf("action %s already exists in %s", name, graphqlFileName)
-		}
-	}
-
-	// add extend type mutation
-	for index, def := range doc.Definitions {
-		switch obj := def.(type) {
-		case *ast.ObjectDefinition:
-			if obj.Kind == kinds.ObjectDefinition && obj.Name.Kind == kinds.Name && obj.Name.Value == "Mutation" {
-				newObj := &ast.TypeExtensionDefinition{
-					Kind:       kinds.TypeExtensionDefinition,
-					Definition: obj,
-				}
-				doc.Definitions[index] = newObj
-			}
 		}
 	}
 
 	var defaultSDL string
 	if introSchema == nil {
-		defaultSDL = `
-extend type Mutation {
+		defaultSDL = `type Mutation {
 	# Define your action as a mutation here
 	` + name + ` (arg1: SampleInput!): SampleOutput
 }
@@ -135,54 +99,8 @@ input SampleInput {
 		}
 		defaultSDL = sdlToResp.SDL.Complete
 	}
-	newDoc, err := parser.Parse(parser.ParseParams{
-		Source: defaultSDL,
-	})
-	if err != nil {
-		return errors.Wrap(err, "error in parsing default sdl")
-	}
-	doc.Definitions = append(newDoc.Definitions, doc.Definitions...)
-	inputDupData := map[string][]int{}
-	objDupData := map[string][]int{}
-	for index, def := range doc.Definitions {
-		switch obj := def.(type) {
-		case *ast.ObjectDefinition:
-			if obj.GetName().Value != "Mutation" {
-				// check if name already exists
-				_, ok := objDupData[obj.GetName().Value]
-				if !ok {
-					objDupData[obj.GetName().Value] = []int{index}
-				} else {
-					objDupData[obj.GetName().Value] = append(objDupData[obj.GetName().Value], index)
-				}
-			}
-		case *ast.InputObjectDefinition:
-			_, ok := inputDupData[obj.GetName().Value]
-			if !ok {
-				inputDupData[obj.GetName().Value] = []int{index}
-			} else {
-				inputDupData[obj.GetName().Value] = append(inputDupData[obj.GetName().Value], index)
-			}
-		}
-	}
-	for _, indexes := range inputDupData {
-		if len(indexes) > 0 {
-			indexes = indexes[:len(indexes)-1]
-		}
-		for _, index := range indexes {
-			doc.Definitions = append(doc.Definitions[:index], doc.Definitions[index+1:]...)
-		}
-	}
-	for _, indexes := range objDupData {
-		if len(indexes) > 0 {
-			indexes = indexes[:len(indexes)-1]
-		}
-		for _, index := range indexes {
-			doc.Definitions = append(doc.Definitions[:index], doc.Definitions[index+1:]...)
-		}
-	}
-	defaultText := printer.Print(doc).(string)
-	data, err := editor.CaptureInputFromEditor(editor.GetPreferredEditorFromEnvironment, defaultText)
+	graphqlFileContent = defaultSDL + "\n" + graphqlFileContent
+	data, err := editor.CaptureInputFromEditor(editor.GetPreferredEditorFromEnvironment, graphqlFileContent, "graphql")
 	if err != nil {
 		return errors.Wrap(err, "error in getting input from editor")
 	}
@@ -195,12 +113,7 @@ input SampleInput {
 	if err != nil {
 		return errors.Wrap(err, "error in converting sdl to metadata")
 	}
-	// Read actions.yaml
-	oldAction, err := a.GetActionsFileContent()
-	if err != nil {
-		return errors.Wrapf(err, "error in reading %s file", actionsFileName)
-	}
-	currentActionNames = make([]string, 0)
+	currentActionNames := make([]string, 0)
 	for actionIndex, action := range sdlFromResp.Actions {
 		for _, currAction := range currentActionNames {
 			if currAction == action.Name {
@@ -212,6 +125,7 @@ input SampleInput {
 			if action.Name == oldActionObj.Name {
 				sdlFromResp.Actions[actionIndex].Permissions = oldAction.Actions[oldActionIndex].Permissions
 				sdlFromResp.Actions[actionIndex].Definition.Kind = oldAction.Actions[oldActionIndex].Definition.Kind
+				sdlFromResp.Actions[actionIndex].Definition.Type = oldAction.Actions[oldActionIndex].Definition.Type
 				sdlFromResp.Actions[actionIndex].Definition.Handler = oldAction.Actions[oldActionIndex].Definition.Handler
 				sdlFromResp.Actions[actionIndex].Definition.ForwardClientHeaders = oldAction.Actions[oldActionIndex].Definition.ForwardClientHeaders
 				sdlFromResp.Actions[actionIndex].Definition.Headers = oldAction.Actions[oldActionIndex].Definition.Headers
@@ -283,9 +197,9 @@ input SampleInput {
 }
 
 func (a *ActionConfig) Codegen(name string, derivePld types.DerivePayload) error {
-	err := a.ensureCLIExtension()
+	err := a.pluginInstallFunc(cli.CLIExtPluginName, true)
 	if err != nil {
-		return errors.Wrap(err, "error in install cli-extension plugin")
+		return err
 	}
 
 	graphqlFileContent, err := a.GetActionsGraphQLFileContent()
@@ -350,9 +264,9 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 		}
 		return nil
 	}
-	err := a.ensureCLIExtension()
+	err := a.pluginInstallFunc(cli.CLIExtPluginName, true)
 	if err != nil {
-		return errors.Wrap(err, "error in install cli-extension plugin")
+		return err
 	}
 	// Read actions.graphql
 	graphqlFileContent, err := a.GetActionsGraphQLFileContent()
@@ -471,9 +385,9 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 		a.logger.Debugf("Skipping creating %s and %s", actionsFileName, graphqlFileName)
 		return make(map[string][]byte), nil
 	}
-	err := a.ensureCLIExtension()
+	err := a.pluginInstallFunc(cli.CLIExtPluginName, true)
 	if err != nil {
-		return nil, errors.Wrap(err, "error in install cli-extension plugin")
+		return nil, err
 	}
 	var actions yaml.MapSlice
 	for _, item := range metadata {
@@ -499,12 +413,6 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in converting metadata to sdl")
 	}
-	doc, err := parser.Parse(parser.ParseParams{
-		Source: sdlToResp.SDL.Complete,
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "error in parsing sdl")
-	}
 	common.SetExportDefault()
 	commonByt, err := yaml.Marshal(common)
 	if err != nil {
@@ -512,25 +420,12 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 	}
 	return map[string][]byte{
 		filepath.Join(a.MetadataDir, actionsFileName): commonByt,
-		filepath.Join(a.MetadataDir, graphqlFileName): []byte(printer.Print(doc).(string)),
+		filepath.Join(a.MetadataDir, graphqlFileName): []byte(sdlToResp.SDL.Complete),
 	}, nil
 }
 
 func (a *ActionConfig) Name() string {
 	return "actions"
-}
-
-func (a *ActionConfig) ensureCLIExtension() error {
-	err := a.pluginsCfg.Install(pluginName, "", nil)
-	if err != nil && err != plugins.ErrIsAlreadyInstalled {
-		msg := fmt.Sprintf(`unable to install cli-ext plugin. execute the following commands to continue:
-
-  hasura plugins install %s
-`, pluginName)
-		a.logger.Info(msg)
-		return errors.Wrap(err, "cannot install cli-ext plugin")
-	}
-	return nil
 }
 
 func (a *ActionConfig) GetActionsFileContent() (content types.Common, err error) {

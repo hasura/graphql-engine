@@ -1,6 +1,7 @@
 package hasuradb
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -38,14 +39,16 @@ var (
 )
 
 type Config struct {
-	MigrationsTable string
-	SettingsTable   string
-	queryURL        *nurl.URL
-	graphqlURL      *nurl.URL
-	pgDumpURL       *nurl.URL
-	Headers         map[string]string
-	isCMD           bool
-	Plugins         types.MetadataPlugins
+	MigrationsTable                string
+	SettingsTable                  string
+	queryURL                       *nurl.URL
+	graphqlURL                     *nurl.URL
+	pgDumpURL                      *nurl.URL
+	Headers                        map[string]string
+	isCMD                          bool
+	Plugins                        types.MetadataPlugins
+	enableCheckMetadataConsistency bool
+	Req                            *gorequest.SuperAgent
 }
 
 type HasuraDB struct {
@@ -83,7 +86,7 @@ func WithInstance(config *Config, logger *log.Logger) (database.Driver, error) {
 	return hx, nil
 }
 
-func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Driver, error) {
+func (h *HasuraDB) Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger) (database.Driver, error) {
 	if logger == nil {
 		logger = log.New()
 	}
@@ -112,6 +115,11 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 		}
 	}
 
+	req := gorequest.New()
+	if tlsConfig != nil {
+		req.TLSClientConfig(tlsConfig)
+	}
+
 	config := &Config{
 		MigrationsTable: DefaultMigrationsTable,
 		SettingsTable:   DefaultSettingsTable,
@@ -133,6 +141,7 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 		isCMD:   isCMD,
 		Headers: headers,
 		Plugins: make(types.MetadataPlugins, 0),
+		Req:     req,
 	}
 	hx, err := WithInstance(config, logger)
 	if err != nil {
@@ -237,15 +246,18 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 		if body == "" {
 			break
 		}
+		sqlInput := RunSQLInput{
+			SQL: string(body),
+		}
+		if h.config.enableCheckMetadataConsistency {
+			sqlInput.CheckMetadataConsistency = func() *bool { b := false; return &b }()
+		}
 		t := HasuraInterfaceQuery{
-			Type: "run_sql",
-			Args: HasuraArgs{
-				SQL: string(body),
-			},
+			Type: RunSQL,
+			Args: sqlInput,
 		}
 		h.migrationQuery.Args = append(h.migrationQuery.Args, t)
 		h.jsonPath[fmt.Sprintf("%d", len(h.migrationQuery.Args)-1)] = fileName
-
 	case "meta":
 		var t []interface{}
 		err := yaml.Unmarshal(migr, &t)
@@ -416,7 +428,7 @@ func (h *HasuraDB) ensureVersionTable() error {
 }
 
 func (h *HasuraDB) sendv1Query(m interface{}) (resp *http.Response, body []byte, err error) {
-	request := gorequest.New()
+	request := h.config.Req.Clone()
 	request = request.Post(h.config.queryURL.String()).Send(m)
 	for headerName, headerValue := range h.config.Headers {
 		request.Set(headerName, headerValue)
@@ -434,7 +446,7 @@ func (h *HasuraDB) sendv1Query(m interface{}) (resp *http.Response, body []byte,
 }
 
 func (h *HasuraDB) sendv1GraphQL(query interface{}) (resp *http.Response, body []byte, err error) {
-	request := gorequest.New()
+	request := h.config.Req.Clone()
 	request = request.Post(h.config.graphqlURL.String()).Send(query)
 
 	for headerName, headerValue := range h.config.Headers {
@@ -453,7 +465,7 @@ func (h *HasuraDB) sendv1GraphQL(query interface{}) (resp *http.Response, body [
 }
 
 func (h *HasuraDB) sendSchemaDumpQuery(m interface{}) (resp *http.Response, body []byte, err error) {
-	request := gorequest.New()
+	request := h.config.Req.Clone()
 
 	request = request.Post(h.config.pgDumpURL.String()).Send(m)
 

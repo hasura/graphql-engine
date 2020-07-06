@@ -9,7 +9,7 @@ import {
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 
-import { isPostgresFunction } from '../utils';
+import { isColTypeString, isPostgresFunction } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
@@ -155,19 +155,24 @@ const createTableSql = () => {
     const state = getState().addTable.table;
     const currentSchema = getState().tables.currentSchema;
 
-    const { foreignKeys, uniqueKeys, checkConstraints } = state;
-    const tableName = state.tableName.trim();
+    const {
+      foreignKeys,
+      uniqueKeys,
+      checkConstraints,
+      tableName,
+      columns,
+    } = state;
 
     // validations
     if (tableName === '') {
       alert('Table name cannot be empty');
     }
 
-    const currentCols = state.columns.filter(c => c.name !== '');
+    const currentCols = columns.filter(c => c.name !== '');
 
     const pKeys = state.primaryKeys
       .filter(p => p !== '')
-      .map(p => state.columns[p].name);
+      .map(p => currentCols[p].name);
 
     let hasUUIDDefault = false;
     const columnSpecificSql = [];
@@ -188,7 +193,7 @@ const createTableSql = () => {
         currentCols[i].default.value !== ''
       ) {
         if (
-          currentCols[i].type === 'text' &&
+          isColTypeString(currentCols[i].type) &&
           !isPostgresFunction(currentCols[i].default.value)
         ) {
           // if a column type is text and if it has a non-func default value, add a single quote by default

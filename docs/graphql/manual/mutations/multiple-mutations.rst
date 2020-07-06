@@ -79,12 +79,10 @@ in the response:
       insert_article(
         objects: [
           {
-            id: 21,
             title: "Article 1",
             content: "Sample article content",
             author: {
               data: {
-                id: 11,
                 name: "Cory"
               }
             }

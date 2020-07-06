@@ -8,7 +8,6 @@ import {
   LOAD_SCHEMA,
 } from '../DataActions';
 import _push from '../push';
-import { SET_SQL } from '../RawSQL/Actions';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -27,7 +26,7 @@ import {
   getUniqueConstraintName,
 } from '../Common/Components/utils';
 
-import { isPostgresFunction } from '../utils';
+import { isColTypeString, isPostgresFunction } from '../utils';
 import {
   sqlEscapeText,
   getCreateCheckConstraintSql,
@@ -35,7 +34,7 @@ import {
   getDropPkSql,
   getCreatePkSql,
 } from '../../../Common/utils/sqlUtils';
-import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { getConfirmation, capitalize } from '../../../Common/utils/jsUtils';
 import {
   findTable,
   generateTableDef,
@@ -55,14 +54,12 @@ import {
   getUntrackTableQuery,
   getTrackTableQuery,
 } from '../../../Common/utils/v1QueryUtils';
-
 import {
   fetchColumnCastsQuery,
   convertArrayToJson,
   sanitiseRootFields,
   sanitiseColumnNames,
 } from './utils';
-
 import {
   getSchemaBaseRoute,
   getTableModifyRoute,
@@ -73,6 +70,7 @@ const DELETE_PK_WARNING =
 
 const VIEW_DEF_REQUEST_SUCCESS = 'ModifyTable/VIEW_DEF_REQUEST_SUCCESS';
 const VIEW_DEF_REQUEST_ERROR = 'ModifyTable/VIEW_DEF_REQUEST_ERROR';
+const SET_VIEW_DEF_SQL = 'ModifyTable/SET_VIEW_DEF_SQL';
 
 const SAVE_NEW_TABLE_NAME = 'ModifyTable/SAVE_NEW_TABLE_NAME';
 
@@ -84,8 +82,8 @@ const REMOVE_PRIMARY_KEY = 'ModifyTable/REMOVE_PRIMARY_KEY';
 const RESET_PRIMARY_KEY = 'ModifyTable/RESET_PRIMARY_KEY';
 const SET_PRIMARY_KEYS = 'ModifyTable/SET_PRIMARY_KEYS';
 
-const SET_COLUMN_EDIT = 'ModifyTable/SET_COLUMN_EDIT;';
-const RESET_COLUMN_EDIT = 'ModifyTable/RESET_COLUMN_EDIT;';
+const SET_COLUMN_EDIT = 'ModifyTable/SET_COLUMN_EDIT';
+const RESET_COLUMN_EDIT = 'ModifyTable/RESET_COLUMN_EDIT';
 const EDIT_COLUMN = 'ModifyTable/EDIT_COLUMN';
 
 const SET_FOREIGN_KEYS = 'ModifyTable/SET_FOREIGN_KEYS';
@@ -715,12 +713,11 @@ const setUniqueKeys = keys => ({
   keys,
 });
 
-const changeTableName = (oldName, newName, isTable) => {
+const changeTableName = (oldName, newName, isTable, tableType) => {
   return (dispatch, getState) => {
-    const property = isTable ? 'table' : 'view';
-
     dispatch({ type: SAVE_NEW_TABLE_NAME });
 
+    const property = tableType.toLowerCase();
     if (oldName === newName) {
       return dispatch(
         showErrorNotification(
@@ -742,13 +739,19 @@ const changeTableName = (oldName, newName, isTable) => {
         )
       );
     }
+    const compositeName = {
+      TABLE: 'table',
+      VIEW: 'view',
+      'MATERIALIZED VIEW': 'materialized_view',
+    }[tableType];
     const currentSchema = getState().tables.currentSchema;
     const upSql = `alter ${property} "${currentSchema}"."${oldName}" rename to "${newName}";`;
     const downSql = `alter ${property} "${currentSchema}"."${newName}" rename to "${oldName}";`;
     const migrateUp = [getRunSqlQuery(upSql)];
     const migrateDown = [getRunSqlQuery(downSql)];
     // apply migrations
-    const migrationName = `rename_${property}_` + currentSchema + '_' + oldName;
+    const migrationName =
+      `rename_${compositeName}_` + currentSchema + '_' + oldName;
 
     const requestMsg = `Renaming ${property}...`;
     const successMsg = `Renaming ${property} successful`;
@@ -797,7 +800,7 @@ ${trigger.action_timing} ${trigger.event_manipulation} ON "${tableSchema}"."${ta
 FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
-      downMigrationSql += `COMMENT ON TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}" 
+      downMigrationSql += `COMMENT ON TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}"
 IS ${sqlEscapeText(trigger.comment)};`;
     }
     const migrationDown = [getRunSqlQuery(downMigrationSql)];
@@ -908,11 +911,19 @@ const untrackTableSql = tableName => {
 const fetchViewDefinition = (viewName, isRedirect) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const sqlQuery =
-      'select view_definition from information_schema.views where table_name = ' +
-      "'" +
-      viewName +
-      "'";
+    const sqlQuery = `
+SELECT
+  CASE WHEN pg_has_role(c.relowner, 'USAGE') THEN pg_get_viewdef(c.oid)
+  ELSE null
+  END AS view_definition,
+  CASE WHEN c.relkind = 'v' THEN 'VIEW' ELSE 'MATERIALIZED VIEW' END AS view_type
+FROM pg_class c
+WHERE c.relname = '${viewName}'
+  AND c.relkind in ('v', 'm')
+  AND (pg_has_role(c.relowner, 'USAGE')
+    OR has_table_privilege(c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
+    OR has_any_column_privilege(c.oid, 'SELECT, INSERT, UPDATE, REFERENCES')
+  )`;
     const reqBody = getRunSqlQuery(sqlQuery, false, true);
 
     const url = Endpoints.query;
@@ -937,18 +948,24 @@ const fetchViewDefinition = (viewName, isRedirect) => {
           dispatch(_push('/data/sql'));
         }
 
-        const runSqlDef =
-          'CREATE OR REPLACE VIEW ' +
-          '"' +
-          currentSchema +
-          '"' +
-          '.' +
-          '"' +
-          viewName +
-          '"' +
-          ' AS \n' +
-          finalDef;
-        dispatch({ type: SET_SQL, data: runSqlDef });
+        const viewType = data.result[1][1];
+        const fullName = '"' + currentSchema + '"."' + viewName + '"';
+        let runSqlDef = '';
+
+        if (viewType == 'VIEW') {
+          runSqlDef =
+            'CREATE OR REPLACE VIEW ' + fullName + ' AS \n' + finalDef;
+        } else {
+          runSqlDef =
+            'DROP MATERIALIZED VIEW ' +
+            fullName +
+            ';\n' +
+            'CREATE MATERIALIZED VIEW ' +
+            fullName +
+            ' AS \n' +
+            finalDef;
+        }
+        dispatch({ type: SET_VIEW_DEF_SQL, data: runSqlDef });
       },
       err => {
         dispatch(
@@ -959,11 +976,11 @@ const fetchViewDefinition = (viewName, isRedirect) => {
   };
 };
 
-const deleteViewSql = viewName => {
+const deleteViewSql = (viewName, viewType) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const sqlDropView =
-      'DROP VIEW ' + '"' + currentSchema + '"' + '.' + '"' + viewName + '"';
+    const property = viewType.toLowerCase();
+    const sqlDropView = `DROP ${viewType} "${currentSchema}"."${viewName}"`;
     const sqlUpQueries = [getRunSqlQuery(sqlDropView)];
     // const sqlCreateView = ''; //pending
     // const sqlDownQueries = [
@@ -976,9 +993,9 @@ const deleteViewSql = viewName => {
     // Apply migrations
     const migrationName = 'drop_view_' + currentSchema + '_' + viewName;
 
-    const requestMsg = 'Deleting view...';
-    const successMsg = 'View deleted';
-    const errorMsg = 'Deleting view failed';
+    const requestMsg = `Deleting ${property}...`;
+    const successMsg = `${capitalize(property)} deleted`;
+    const errorMsg = `Deleting ${property} failed`;
 
     const customOnSuccess = () => {
       dispatch(_push('/data/'));
@@ -1182,7 +1199,7 @@ const addColSql = (
   let defWithQuotes = "''";
 
   const checkIfFunctionFormat = isPostgresFunction(colDefault);
-  if (colType === 'text' && colDefault !== '' && !checkIfFunctionFormat) {
+  if (isColTypeString(colType) && colDefault !== '' && !checkIfFunctionFormat) {
     defWithQuotes = "'" + colDefault + "'";
   } else {
     defWithQuotes = colDefault;
@@ -1358,7 +1375,7 @@ const deleteConstraintSql = (tableName, cName) => {
   };
 };
 
-const saveTableCommentSql = isTable => {
+const saveTableCommentSql = tableType => {
   return (dispatch, getState) => {
     let updatedComment = getState().tables.modify.tableCommentEdit.editedValue;
     if (!updatedComment) {
@@ -1369,7 +1386,7 @@ const saveTableCommentSql = isTable => {
 
     const commentQueryBase =
       'COMMENT ON ' +
-      (isTable ? 'TABLE' : 'VIEW') +
+      tableType +
       ' ' +
       '"' +
       currentSchema +
@@ -1442,7 +1459,7 @@ const isColumnUnique = (tableSchema, colName) => {
     tableSchema.unique_constraints.filter(
       constraint =>
         constraint.columns.includes(colName) && constraint.columns.length === 1
-    ).length !== 0
+    ).length > 0
   );
 };
 
@@ -1450,6 +1467,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
   // eslint-disable-line no-unused-vars
   return (dispatch, getState) => {
     const columnEdit = getState().tables.modify.columnEdit[colName];
+
     const { tableName } = columnEdit;
     const colType = columnEdit.type;
     const nullable = columnEdit.isNullable;
@@ -1464,7 +1482,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const table = findTable(getState().tables.allSchemas, tableDef);
 
     // check if column type has changed before making it part of the migration
-    const originalColType = column.data_type; // "value"
+    const originalColType = column.udt_name; // "value"
     const originalColDefault = column.column_default || ''; // null or "value"
     const originalColComment = column.comment || ''; // null or "value"
     const originalColNullable = column.is_nullable; // "YES" or "NO"
@@ -1544,11 +1562,11 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     }
 
     const colDefaultWithQuotes =
-      colType === 'text' && !isPostgresFunction(colDefault)
+      isColTypeString(colType) && !isPostgresFunction(colDefault)
         ? `'${colDefault}'`
         : colDefault;
     const originalColDefaultWithQuotes =
-      colType === 'text' && !isPostgresFunction(originalColDefault)
+      isColTypeString(colType) && !isPostgresFunction(originalColDefault)
         ? `'${originalColDefault}'`
         : originalColDefault;
 
@@ -2349,6 +2367,7 @@ export {
   FETCH_COLUMN_TYPE_CASTS_FAIL,
   VIEW_DEF_REQUEST_SUCCESS,
   VIEW_DEF_REQUEST_ERROR,
+  SET_VIEW_DEF_SQL,
   SET_COLUMN_EDIT,
   TABLE_COMMENT_EDIT,
   TABLE_COMMENT_INPUT_EDIT,
