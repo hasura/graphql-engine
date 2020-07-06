@@ -246,6 +246,6 @@ The following is an example of a simple authorization middleware with Express:
     function correctSecretProvided(req) {
         const requiredSecret = process.env.ACTION_SECRET_ENV;
         const providedSecret = req.headers['ACTION_SECRET'];
-        return requiredSecret == providedSecret;
+        return crypto.timingSafeEqual(Buffer.from(requiredSecret), Buffer.from(providedSecret));
     }
 
