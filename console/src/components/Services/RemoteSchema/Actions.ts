@@ -14,7 +14,7 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import { handleMigrationErrors } from '../../../utils/migration';
 
 import { showSuccessNotification } from '../Common/Notification';
-import { filterInconsistentMetadataObjects } from '../Settings/utils';
+import { filterInconsistentMetadataObjects, MetadataObject } from '../Settings/utils';
 import { GetReduxState, ReduxState } from '../../../types';
 
 /* Action constants */
@@ -62,7 +62,7 @@ const fetchRemoteSchemas = () => {
 
         if (inconsistentObjects.length > 0) {
           consistentRemoteSchemas = filterInconsistentMetadataObjects(
-            data,
+            data as MetadataObject[],
             inconsistentObjects,
             'remote_schemas'
           );

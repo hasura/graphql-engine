@@ -1,20 +1,23 @@
 /* defaultState */
+import { push } from 'react-router-redux';
+import { AnyAction } from 'redux';
+
 import { addState } from '../state';
 /* */
 
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
 import dataHeaders from '../../Data/Common/Headers';
-import { push } from 'react-router-redux';
-import { fetchRemoteSchemas } from '../Actions';
+import { fetchRemoteSchemas, makeRequest } from '../Actions';
 
-import { makeRequest } from '../Actions';
 // import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { appPrefix } from '../constants';
 
 import globals from '../../../../Globals';
 import { clearIntrospectionSchemaCache } from '../graphqlUtils';
-import { defaultHeader } from '../../../Common/Headers/Headers';
+import { defaultHeader, Header } from '../../../Common/Headers/Headers';
+
+import { StringObject, RawHeaderType, Thunk } from '../../../../types';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -49,7 +52,22 @@ const TOGGLE_MODIFY = '@editRemoteSchema/TOGGLE_MODIFY';
 export const RESET_HEADER = '@remoteSchema/RESET_HEADER';
 export const UPDATE_HEADERS = '@remoteSchema/UPDATE_HEADERS';
 
-const inputEventMap = {
+// types
+type AddStateType = typeof addState;
+
+type RawRemoteSchema = {
+  name: string;
+  definition: {
+    url?: string;
+    id?: string;
+    url_from_env?: string;
+    headers: Header[];
+    timeout_seconds?: string | number;
+    forward_client_headers: Header[];
+  };
+};
+
+const inputEventMap: StringObject = {
   name: NAME_CHANGED,
   envName: ENV_URL_CHANGED,
   manualUrl: MANUAL_URL_CHANGED,
@@ -57,27 +75,23 @@ const inputEventMap = {
 };
 
 /* Action creators */
-const inputChange = (type, data) => {
+const inputChange = (type: string, data: unknown): Thunk => {
   return dispatch => dispatch({ type: inputEventMap[type], data });
 };
 
 /* */
 
-const getReqHeader = headers => {
-  const requestHeaders = [];
+const getReqHeader = (headers: Header[]) => {
+  const requestHeaders: StringObject[] = [];
 
   const headersObj = headers.filter(h => h.name && h.name.length > 0);
   if (headersObj.length > 0) {
     headersObj.forEach(h => {
-      const reqHead = {
+      const reqHead: StringObject = {
         name: h.name,
+        ...(h.type === 'static' && { value: h.value }),
+        ...(h.type !== 'static' && { value_from_env: h.value }),
       };
-
-      if (h.type === 'static') {
-        reqHead.value = h.value;
-      } else {
-        reqHead.value_from_env = h.value;
-      }
 
       requestHeaders.push(reqHead);
     });
@@ -86,10 +100,10 @@ const getReqHeader = headers => {
   return requestHeaders;
 };
 
-const fetchRemoteSchema = remoteSchema => {
+const fetchRemoteSchema = (remoteSchema: string): Thunk<Promise<any>> => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
-    const options = {
+    const options: RequestInit = {
       credentials: globalCookiePolicy,
       method: 'POST',
       headers: dataHeaders(getState),
@@ -107,47 +121,47 @@ const fetchRemoteSchema = remoteSchema => {
         },
       }),
     };
-    dispatch({ type: FETCHING_INDIV_REMOTE_SCHEMA });
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        if (data.length > 0) {
-          dispatch({ type: REMOTE_SCHEMA_FETCH_SUCCESS, data: data });
-          const headerObj = [];
-          data[0].definition.headers.forEach(d => {
-            headerObj.push({
-              name: d.name,
-              value: d.value ? d.value : d.value_from_env,
-              type: d.value ? 'static' : 'env',
-            });
-          });
+    const onSuccess = (data: RawHeaderType[]) => {
+      if (data.length > 0) {
+        dispatch({ type: REMOTE_SCHEMA_FETCH_SUCCESS, data });
+        const headerObj = [];
+        const rawData = data[0] as RawRemoteSchema;
+        rawData.definition.headers.forEach((d: RawHeaderType) => {
           headerObj.push({
-            name: '',
-            type: 'static',
-            value: '',
+            name: d.name,
+            value: d.value ? d.value : d.value_from_env,
+            type: d.value ? 'static' : 'env',
           });
-          dispatch({
-            type: UPDATE_HEADERS,
-            data: [...headerObj],
-          });
-          return Promise.resolve();
-        }
-        return dispatch(push(`${prefixUrl}`));
-      },
-      error => {
-        console.error('Failed to fetch remoteSchema' + JSON.stringify(error));
-        return dispatch({ type: REMOTE_SCHEMA_FETCH_FAIL, data: error });
+        });
+        headerObj.push({
+          name: '',
+          type: 'static',
+          value: '',
+        });
+        dispatch({
+          type: UPDATE_HEADERS,
+          data: [...headerObj],
+        });
+        return Promise.resolve();
       }
-    );
+      dispatch(push(`${prefixUrl}`));
+    };
+    const onError = (error: unknown) => {
+      console.error(`Failed to fetch remoteSchema ${JSON.stringify(error)}`);
+      return dispatch({ type: REMOTE_SCHEMA_FETCH_FAIL, data: error });
+    };
+    dispatch({ type: FETCHING_INDIV_REMOTE_SCHEMA });
+    return dispatch(requestAction(url, options)).then(onSuccess, onError);
   };
 };
 
-const addRemoteSchema = (headers = []) => {
+const addRemoteSchema = (headers = []): Thunk => {
   return (dispatch, getState) => {
     const currState = getState().remoteSchemas.addData;
     // const url = Endpoints.getSchema;
 
     let timeoutSeconds = parseInt(currState.timeoutConf, 10);
-    if (isNaN(timeoutSeconds)) timeoutSeconds = 60;
+    if (Number.isNaN(timeoutSeconds)) timeoutSeconds = 60;
 
     const resolveObj = {
       name: currState.name.trim().replace(/ +/g, ''),
@@ -167,8 +181,9 @@ const addRemoteSchema = (headers = []) => {
     }
     /* TODO: Add mandatory fields validation */
 
-    const migrationName =
-      'create_remote_schema_' + currState.name.trim().replace(/ +/g, '');
+    const migrationName = `create_remote_schema_${currState.name
+      .trim()
+      .replace(/ +/g, '')}`;
 
     const payload = {
       type: 'add_remote_schema',
@@ -202,17 +217,17 @@ const addRemoteSchema = (headers = []) => {
     const successMsg = 'Remote schema added successfully';
     const errorMsg = 'Adding remote schema failed';
 
-    const customOnSuccess = data => {
+    const customOnSuccess = (data: unknown) => {
       Promise.all([
         dispatch({ type: RESET }),
         dispatch(fetchRemoteSchemas()).then(() => {
           dispatch(push(`${prefixUrl}/manage/${resolveObj.name}/details`));
         }),
-        dispatch({ type: RESET_HEADER, data: data }),
+        dispatch({ type: RESET_HEADER, data }),
       ]);
     };
-    const customOnError = err => {
-      console.error('Failed to create remote schema' + JSON.stringify(err));
+    const customOnError = (err: unknown) => {
+      console.error(`Failed to create remote schema${JSON.stringify(err)}`);
       dispatch({ type: ADD_REMOTE_SCHEMA_FAIL, data: err });
       // dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
       // alert(JSON.stringify(err));
@@ -233,15 +248,16 @@ const addRemoteSchema = (headers = []) => {
   };
 };
 
-const deleteRemoteSchema = () => {
+const deleteRemoteSchema = (): Thunk => {
   return (dispatch, getState) => {
     const currState = getState().remoteSchemas.addData;
     // const url = Endpoints.getSchema;
     const resolveObj = {
       name: currState.editState.originalName,
     };
-    const migrationName =
-      'remove_remote_schema_' + resolveObj.name.trim().replace(/ +/g, '');
+    const migrationName = `remove_remote_schema_${resolveObj.name
+      .trim()
+      .replace(/ +/g, '')}`;
     const payload = {
       type: 'remove_remote_schema',
       args: {
@@ -291,7 +307,7 @@ const deleteRemoteSchema = () => {
       ]);
       clearIntrospectionSchemaCache();
     };
-    const customOnError = error => {
+    const customOnError = (error: unknown) => {
       Promise.all([dispatch({ type: DELETE_REMOTE_SCHEMA_FAIL, data: error })]);
     };
 
@@ -311,14 +327,14 @@ const deleteRemoteSchema = () => {
   };
 };
 
-const modifyRemoteSchema = (headers = []) => {
+const modifyRemoteSchema = (headers = []): Thunk => {
   return (dispatch, getState) => {
     const currState = getState().remoteSchemas.addData;
     const remoteSchemaName = currState.name.trim().replace(/ +/g, '');
     // const url = Endpoints.getSchema;
     const upQueryArgs = [];
     const downQueryArgs = [];
-    const migrationName = 'update_remote_schema_' + remoteSchemaName;
+    const migrationName = `update_remote_schema_${remoteSchemaName}`;
     const deleteRemoteSchemaUp = {
       type: 'remove_remote_schema',
       args: {
@@ -328,8 +344,8 @@ const modifyRemoteSchema = (headers = []) => {
 
     let newTimeout = parseInt(currState.timeoutConf, 10);
     let oldTimeout = parseInt(currState.editState.originalTimeoutConf, 10);
-    if (isNaN(newTimeout)) newTimeout = 60;
-    if (isNaN(oldTimeout)) oldTimeout = 60;
+    if (Number.isNaN(newTimeout)) newTimeout = 60;
+    if (Number.isNaN(oldTimeout)) oldTimeout = 60;
 
     const resolveObj = {
       name: remoteSchemaName,
@@ -410,9 +426,9 @@ const modifyRemoteSchema = (headers = []) => {
     const successMsg = 'Remote schema modified';
     const errorMsg = 'Modify remote schema failed';
 
-    const customOnSuccess = data => {
+    const customOnSuccess = (data: unknown) => {
       // dispatch({ type: REQUEST_SUCCESS });
-      dispatch({ type: RESET, data: data });
+      dispatch({ type: RESET, data });
       dispatch(push(`${prefixUrl}/manage/schemas`)); // to avoid 404
       dispatch(fetchRemoteSchemas()).then(() => {
         dispatch(push(`${prefixUrl}/manage/${remoteSchemaName}/details`));
@@ -420,7 +436,7 @@ const modifyRemoteSchema = (headers = []) => {
       dispatch(fetchRemoteSchema(remoteSchemaName));
       clearIntrospectionSchemaCache();
     };
-    const customOnError = error => {
+    const customOnError = (error: unknown) => {
       Promise.all([dispatch({ type: MODIFY_REMOTE_SCHEMA_FAIL, data: error })]);
     };
 
@@ -440,7 +456,7 @@ const modifyRemoteSchema = (headers = []) => {
   };
 };
 
-const addRemoteSchemaReducer = (state = addState, action) => {
+const addRemoteSchemaReducer = (state = addState, action: AnyAction) => {
   switch (action.type) {
     case MANUAL_URL_CHANGED:
       return {

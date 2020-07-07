@@ -32,6 +32,7 @@ const addState = {
     originalEnvUrl: '',
     originalTimeoutConf: '',
     originalForwardClientHeaders: false,
+    headers: [{ ...defaultHeader }],
   },
 };
 
