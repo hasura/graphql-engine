@@ -54,10 +54,6 @@ export type ReduxStore = Store<ReduxState, ReduxAction>;
 // Router Utils
 export type ReplaceRouterState = (route: string) => void;
 
-export type StringObject = {
-  [key: string]: string;
-};
-
 export type RawHeaderType = {
   name: string;
   value?: string;

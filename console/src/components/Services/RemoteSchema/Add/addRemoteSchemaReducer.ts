@@ -1,6 +1,7 @@
-/* defaultState */
 import { push } from 'react-router-redux';
 import { AnyAction } from 'redux';
+
+/* defaultState */
 
 import { addState } from '../state';
 /* */
@@ -17,7 +18,7 @@ import globals from '../../../../Globals';
 import { clearIntrospectionSchemaCache } from '../graphqlUtils';
 import { defaultHeader, Header } from '../../../Common/Headers/Headers';
 
-import { StringObject, RawHeaderType, Thunk } from '../../../../types';
+import { RawHeaderType, Thunk } from '../../../../types';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -66,8 +67,14 @@ type RawRemoteSchema = {
     forward_client_headers: Header[];
   };
 };
+type InputEventMapType = {
+  name?: string;
+  envName?: string;
+  manualUrl?: string;
+  timeoutConf?: string;
+};
 
-const inputEventMap: StringObject = {
+const inputEventMap: InputEventMapType = {
   name: NAME_CHANGED,
   envName: ENV_URL_CHANGED,
   manualUrl: MANUAL_URL_CHANGED,
@@ -75,19 +82,19 @@ const inputEventMap: StringObject = {
 };
 
 /* Action creators */
-const inputChange = (type: string, data: unknown): Thunk => {
+const inputChange = (type: keyof InputEventMapType, data: unknown): Thunk => {
   return dispatch => dispatch({ type: inputEventMap[type], data });
 };
 
 /* */
 
 const getReqHeader = (headers: Header[]) => {
-  const requestHeaders: StringObject[] = [];
+  const requestHeaders: InputEventMapType[] = [];
 
   const headersObj = headers.filter(h => h.name && h.name.length > 0);
   if (headersObj.length > 0) {
     headersObj.forEach(h => {
-      const reqHead: StringObject = {
+      const reqHead: InputEventMapType = {
         name: h.name,
         ...(h.type === 'static' && { value: h.value }),
         ...(h.type !== 'static' && { value_from_env: h.value }),
@@ -100,7 +107,7 @@ const getReqHeader = (headers: Header[]) => {
   return requestHeaders;
 };
 
-const fetchRemoteSchema = (remoteSchema: string): Thunk<Promise<any>> => {
+const fetchRemoteSchema = (remoteSchema: string): Thunk => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
     const options: RequestInit = {
