@@ -31,7 +31,7 @@ A guide on setting up unauthenticated user permissions can be found :ref:`here <
 Configuring unauthenticated / public access
 -------------------------------------------
 
-Depending on your auth setup an unauthenticated role can be configured as follows:
+An unauthenticated role can be configured in several ways: with webhook auth setup, with JWT auth setup or without auth setup.
 
 Webhooks
 ^^^^^^^^
@@ -45,7 +45,15 @@ JWT
 
 For :ref:`JWT authentication <auth_jwt>`, an unauthenticated request is any request which does not contain a JWT token.
 
-You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or ``--unauthorized-role`` flag to set a role
+You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or the ``--unauthorized-role`` flag to set a role
 for unauthenticated (non-logged in) users. See :ref:`server_flag_reference` for more details
 on setting this flag/env var.
 
+Without auth setup
+^^^^^^^^^^^^^^^^^^
+
+With no auth setup, an unauthenticated request is one that doesn't set an explicit role defined in permissions.
+
+You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or the ``--unauthorized-role`` flag to set a role
+for unauthenticated (non-logged in) users. See :ref:`server_flag_reference` for more details
+on setting this flag/env var.
