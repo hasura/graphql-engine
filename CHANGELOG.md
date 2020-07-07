@@ -30,6 +30,7 @@
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
 - docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
 - docs: add hasura cloud to getting started section (close #5206) (#5208)
+- docs: add libkrb5-dev to Debian dependencies (#5321)
 
 
 ## `v1.3.0-beta.3`
