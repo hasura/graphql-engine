@@ -37,7 +37,6 @@ Use cases
 - Custom business logic, like a payment API
 - Querying data that is not available in your database
 
-
 You can handle these use cases by writing resolvers in a custom GraphQL server
 and making Hasura merge this "remote schema" with the existing auto-generated
 schema. You can also add multiple remote schemas. Think of the merged schema as
@@ -48,6 +47,11 @@ a union of top-level nodes from each of the sub-schemas.
   If you are looking for adding authorization & access control for your
   app users to the GraphQL APIs that are auto-generated via Hasura, head to
   :ref:`auth`
+
+Remote schema relationships
+---------------------------
+
+You can create remote relationships between your tables and tables from your remote schema. Read more about this in the :ref:`remote_schema_relationships` section.
 
 **See:**
 

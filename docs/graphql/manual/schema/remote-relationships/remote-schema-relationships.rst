@@ -2,7 +2,7 @@
    :description: Adding a remote schema relationship with Hasura
    :keywords: hasura, docs, remote schema relationship, remote join, remote schema, data federation
 
-.. _add_remote_relationship:
+.. _remote_schema_relationships:
 
 Remote schema relationships
 ===========================
@@ -29,16 +29,16 @@ Because Hasura is meant to be a GraphQL server that you can expose directly to y
   
   Remote schema relationships are supported from versions ``v.1.3.0`` and above.
 
+Create remote schema relationships
+----------------------------------
+
 Step 0: Add a remote schema
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Add a remote schema as described :ref:`here <adding_schema>`.
 
-Step 1: Create remote schema relationships
-------------------------------------------
-
-Step 1.1: Open the remote relationship section
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 1: Open the remote relationship section
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - From your table, go to the ``Relationships`` tab.
 - Click the ``Add a remote relationship`` button.
@@ -47,8 +47,8 @@ Step 1.1: Open the remote relationship section
    :alt: Opening the remote relationship section
    :width: 1000px
 
-Step 1.2: Define the relationship
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 2: Define the relationship
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following fields can be defined for a remote schema relationship:
 
@@ -133,8 +133,8 @@ In this example, we've added a remote schema which is a wrapper around `Auth0 <h
 2. We select the ``auth0`` schema that we've added.
 3. We set up the config to join the ``auth0_id`` input argument of our remote schema field to the ``auth0_id`` column of this table (in this case, the ``users`` table).
 
-Step 2: Explore with GraphiQL
------------------------------
+Step 3: Explore with GraphiQL
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In the GraphiQL tab, test out your remote schema relationship.
 

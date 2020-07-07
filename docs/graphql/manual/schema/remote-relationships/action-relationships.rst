@@ -2,7 +2,7 @@
    :description: Adding an action relationship with Hasura
    :keywords: hasura, docs, action relationship, remote join
 
-.. _action_relationship:
+.. _action_relationships:
 
 
 Action relationships
@@ -18,16 +18,16 @@ Introduction
 
 :ref:`Actions <actions>` are a way to extend Hasura’s schema with custom business logic using custom queries and mutations. The resolvers for these custom fields are written in REST endpoints. They are especially useful for setting up serverless functions as resolvers.
 
+Create an action relationship
+-----------------------------
+
 Step 0: Create an action
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 First, create an action, either :ref:`from scratch <create_actions>` or :ref:`derive it from an existing mutation <derive_actions>`.
 
-Step 1: Create an action relationship
--------------------------------------
-
-Step 1.1: Open the action relationship section
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 1: Open the action relationship section
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - From your action, go to the ``Relationships`` tab.
 - Click ``Add a relationship``.
@@ -38,8 +38,8 @@ Step 1.1: Open the action relationship section
 
 In this example, we're creating a relationship for the ``createUser`` action.
 
-Step 1.2: Define the relationship
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 2: Define the relationship
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following values can be defined for an action relationship:
 
@@ -133,8 +133,8 @@ The following values can be defined for an action relationship:
 
 In this example, we're creating a relationship called ``user``, from the ``id`` field returned in the action response, to the ``id`` column of the ``users`` table.
 
-Step 2: Explore with GraphiQL
------------------------------
+Step 3: Explore with GraphiQL
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In the GraphiQL tab, test out your action relationship.
 
@@ -163,7 +163,7 @@ In the GraphiQL tab, test out your action relationship.
       }
     }
 
-If your table has an existing :ref:`remote relationship <add_remote_relationship>`, you can also query the fields from the remote schema.
+If your table has an existing :ref:`remote relationship <remote_schema_relationships>`, you can also query the fields from the remote schema.
 
 .. graphiql::
   :view_only:
@@ -200,4 +200,4 @@ If your table has an existing :ref:`remote relationship <add_remote_relationship
       }
     }
 
-In the :ref:`add_remote_relationship` section, we joined our ``users`` table with a remote `Auth0 <https://auth0.com/>`__ schema. Here, we're able to get the Auth0 profile data of the user returned from our action.
+In the :ref:`remote_schema_relationships` section, we joined our ``users`` table with a remote `Auth0 <https://auth0.com/>`__ schema. Here, we're able to get the Auth0 profile data of the user returned from our action.

@@ -39,8 +39,8 @@ Remote relationships modelling guides
 
 The following guides will help you model the different types of remote relationships in the database:
 
-- :ref:`add_remote_relationship`
-- :ref:`action_relationship`
+- :ref:`remote_schema_relationships`
+- :ref:`action_relationships`
 
 .. toctree::
   :maxdepth: 1
