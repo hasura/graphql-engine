@@ -2,10 +2,11 @@
    :description: Adding an action relationship with Hasura
    :keywords: hasura, docs, action relationship, remote join
 
-.. _add_action_relationship:
+.. _action_relationship:
 
-Creating action relationships
-=============================
+
+Action relationships
+====================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -17,12 +18,12 @@ Introduction
 
 :ref:`Actions <actions>` are a way to extend Hasura’s schema with custom business logic using custom queries and mutations. The resolvers for these custom fields are written in REST endpoints. They are especially useful for setting up serverless functions as resolvers.
 
-Step 1: Create an action
+Step 0: Create an action
 ------------------------
 
 First, create an action, either :ref:`from scratch <create_actions>` or :ref:`derive it from an existing mutation <derive_actions>`.
 
-Step 2: Open the action relationship section
+Step 1: Open the action relationship section
 --------------------------------------------
 
 - From your action, go to the ``Relationships`` tab.
@@ -34,7 +35,7 @@ Step 2: Open the action relationship section
 
 In this example, we're creating a relationship for the ``createUser`` action.
 
-Step 3: Define the relationship
+Step 2: Define the relationship
 -------------------------------
 
 The following values can be defined for an action relationship:
@@ -129,7 +130,7 @@ The following values can be defined for an action relationship:
 
 In this example, we're creating a relationship called ``user``, from the ``id`` field returned in the action response, to the ``id`` column of the ``users`` table.
 
-Step 4: Explore with GraphiQL
+Step 3: Explore with GraphiQL
 -----------------------------
 
 In the GraphiQL tab, test out your action relationship.

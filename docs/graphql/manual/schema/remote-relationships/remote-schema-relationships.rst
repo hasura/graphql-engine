@@ -1,11 +1,11 @@
 .. meta::
    :description: Adding a remote schema relationship with Hasura
-   :keywords: hasura, docs, remote relationship, remote join, remote schema, data federation
+   :keywords: hasura, docs, remote schema relationship, remote join, remote schema, data federation
 
 .. _add_remote_relationship:
 
-Creating remote relationships
-=============================
+Remote schema relationships
+===========================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,7 +15,7 @@ Creating remote relationships
 Introduction
 ------------
 
-Remote relationships extend the concept of joining data across tables, to joining across tables *and* remote data sources. Once you create relationships between types from your database and types created from APIs, you can then "join" them by running GraphQL queries.
+Remote schema relationships extend the concept of joining data across tables, to joining across tables *and* remote data sources. Once you create relationships between types from your database and types created from APIs, you can then "join" them by running GraphQL queries.
 
 These APIs can be custom GraphQL servers you write, 3rd party SaaS APIs, or even other Hasura instances.
 
@@ -27,14 +27,14 @@ Because Hasura is meant to be a GraphQL server that you can expose directly to y
 
 .. admonition:: Supported from
   
-  Remote relationships are supported from versions ``v.1.3.0`` and above.
+  Remote schema relationships are supported from versions ``v.1.3.0`` and above.
 
-Step 1: Add a remote schema
+Step 0: Add a remote schema
 ---------------------------
 
 Add a remote schema as described :ref:`here <adding_schema>`.
 
-Step 2: Open the remote relationship section
+Step 1: Open the remote relationship section
 --------------------------------------------
 
 - From your table, go to the ``Relationships`` tab.
@@ -44,10 +44,10 @@ Step 2: Open the remote relationship section
    :alt: Opening the remote relationship section
    :width: 1000px
 
-Step 3: Define the relationship
+Step 2: Define the relationship
 -------------------------------
 
-The following fields can be defined for a remote relationship:
+The following fields can be defined for a remote schema relationship:
 
 - **Name**: Define a name for the relationship.
 - **Remote Schema**: Select a remote schema among all the ones you've created.
@@ -69,7 +69,7 @@ For this example, we assume that our schema has a ``users`` table with the field
 
   .. tab:: CLI
 
-    You can add a remote relationship by adding it to the ``tables.yaml`` in the ``metadata`` directory:
+    You can add a remote schema relationship by adding it to the ``tables.yaml`` in the ``metadata`` directory:
 
     .. code-block:: yaml
        :emphasize-lines: 4-13
@@ -96,7 +96,7 @@ For this example, we assume that our schema has a ``users`` table with the field
 
   .. tab:: API
 
-    You can add a remote relationship by using the :ref:`create_remote_relationship metadata API <create_remote_relationship>`:
+    You can add a remote schema relationship by using the :ref:`create_remote_relationship metadata API <create_remote_relationship>`:
 
     .. code-block:: http
 
@@ -130,10 +130,10 @@ In this example, we've added a remote schema which is a wrapper around `Auth0 <h
 2. We select the ``auth0`` schema that we've added.
 3. We set up the config to join the ``auth0_id`` input argument of our remote schema field to the ``auth0_id`` column of this table (in this case, the ``users`` table).
 
-Step 4: Explore with GraphiQL
+Step 3: Explore with GraphiQL
 -----------------------------
 
-In the GraphiQL tab, test out your remote relationship.
+In the GraphiQL tab, test out your remote schema relationship.
 
 .. graphiql::
   :view_only:

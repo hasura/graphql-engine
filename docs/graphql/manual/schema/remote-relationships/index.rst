@@ -4,8 +4,8 @@
 
 .. _remote_relationships:
 
-Relationships between tables/views
-==================================
+Relationships between tables and external sources
+=================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -40,11 +40,11 @@ Remote relationships modelling guides
 The following guides will help you model the different types of remote relationships in the database:
 
 - :ref:`add_remote_relationship`
-- :ref:`add_action_relationship`
+- :ref:`action_relationship`
 
 .. toctree::
   :maxdepth: 1
   :hidden:
 
-  remote-relationships
+  remote-schema-relationships
   action-relationships
