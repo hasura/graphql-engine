@@ -38,7 +38,7 @@ Webhooks
 
 For :ref:`webhook authentication <auth_webhooks>`, an unauthenticated request is any request for which the webhook returns a ``401 Unauthorized`` response.
 
-For unauthenticated access, you can return a ``200`` status response with your defined unauthenticated role, e.g: ``{ "x-hasura-role": "<anonymous-role>" }``.
+To allow unauthenticated access, the auth webhook should return a ``200`` status response with your unauthenticated role in the headers. For details on the webhook response, refer to :ref:`this section <webhook_response>`.
 
 JWT
 ^^^
