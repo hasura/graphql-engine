@@ -2,15 +2,18 @@
    :description: Get started with Hasura using Heroku
    :keywords: hasura, docs, start, heroku
 
-.. _heroku_simple:
+.. _heroku_one_click:
 
-Quickstart with Heroku
-======================
+One-click deployment with Heroku
+================================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
+
+Introduction
+------------
 
 This guide will help you get the Hasura GraphQL engine and Postgres running on `Heroku's free tier <https://www.heroku.com/free>`_.
 It is the easiest and fastest way of trying out Hasura.
@@ -33,7 +36,7 @@ Click the button below to deploy to Heroku:
    If you don't have an account on Heroku, you need to sign up on Heroku. You won't need a credit card, and once you
    sign up you'll be redirected to your Heroku app creation page automatically.
 
-.. thumbnail:: /img/graphql/manual/getting-started/heroku-app.png
+.. thumbnail:: /img/graphql/manual/guides/heroku-app.png
    :alt: Deploy to Heroku 
 
 Note that **Heroku's free Postgres add-on** is also automatically provisioned!
@@ -44,7 +47,7 @@ Open the Hasura console
 That's it!  Head to ``https://<YOUR_HEROKU_APP>.herokuapp.com`` and open your app.
 You should see the Hasura console.
 
-.. thumbnail:: /img/graphql/manual/getting-started/heroku-app-deployed.png
+.. thumbnail:: /img/graphql/manual/guides/heroku-app-deployed.png
    :alt: Open the Hasura console
 
 Hello World (GraphQL or event triggers)

@@ -5,6 +5,7 @@ module Hasura.RQL.DML.Select.Types where
 
 import           Control.Lens                  hiding ((.=))
 import           Data.Aeson.Types
+import           Data.Hashable
 import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.Aeson                    as J
@@ -103,13 +104,32 @@ data AnnRelationSelectG a
   , aarAnnSelect        :: !a -- Current table. Almost ~ to SQL Select
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 
-type ObjectRelationSelectG v = AnnRelationSelectG (AnnSimpleSelG v)
-type ObjectRelationSelect = ObjectRelationSelectG S.SQLExp
-
 type ArrayRelationSelectG v = AnnRelationSelectG (AnnSimpleSelG v)
 type ArrayAggregateSelectG v = AnnRelationSelectG (AnnAggregateSelectG v)
 type ArrayConnectionSelect v = AnnRelationSelectG (ConnectionSelect v)
 type ArrayAggregateSelect = ArrayAggregateSelectG S.SQLExp
+
+data AnnObjectSelectG v
+  = AnnObjectSelectG
+  { _aosFields      :: !(AnnFieldsG v)
+  , _aosTableFrom   :: !QualifiedTable
+  , _aosTableFilter :: !(AnnBoolExp v)
+  } deriving (Show, Eq)
+
+type AnnObjectSelect = AnnObjectSelectG S.SQLExp
+
+traverseAnnObjectSelect
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnObjectSelectG a -> f (AnnObjectSelectG b)
+traverseAnnObjectSelect f (AnnObjectSelectG fields fromTable permissionFilter) =
+  AnnObjectSelectG
+  <$> traverseAnnFields f fields
+  <*> pure fromTable
+  <*> traverseAnnBoolExp f permissionFilter
+
+type ObjectRelationSelectG v = AnnRelationSelectG (AnnObjectSelectG v)
+type ObjectRelationSelect = ObjectRelationSelectG S.SQLExp
 
 data ComputedFieldScalarSelect v
   = ComputedFieldScalarSelect
@@ -194,7 +214,7 @@ data AnnFieldG v
   | AFArrayRelation !(ArraySelectG v)
   | AFComputedField !(ComputedFieldSelect v)
   | AFRemote !RemoteSelect
-  | AFNodeId !QualifiedTable !(PrimaryKeyColumns)
+  | AFNodeId !QualifiedTable !PrimaryKeyColumns
   | AFExpression !T.Text
   deriving (Show, Eq)
 
@@ -211,7 +231,7 @@ traverseAnnField
   => (a -> f b) -> AnnFieldG a -> f (AnnFieldG b)
 traverseAnnField f = \case
   AFColumn colFld -> pure $ AFColumn colFld
-  AFObjectRelation sel -> AFObjectRelation <$> traverse (traverseAnnSimpleSelect f) sel
+  AFObjectRelation sel -> AFObjectRelation <$> traverse (traverseAnnObjectSelect f) sel
   AFArrayRelation sel -> AFArrayRelation <$> traverseArraySelect f sel
   AFComputedField sel -> AFComputedField <$> traverseComputedFieldSelect f sel
   AFRemote s -> pure $ AFRemote s
@@ -523,11 +543,23 @@ instance Semigroup SelectNode where
   SelectNode lExtrs lJoinTree <> SelectNode rExtrs rJoinTree =
     SelectNode (lExtrs <> rExtrs) (lJoinTree <> rJoinTree)
 
+data ObjectSelectSource
+  = ObjectSelectSource
+  { _ossPrefix :: !Iden
+  , _ossFrom   :: !S.FromItem
+  , _ossWhere  :: !S.BoolExp
+  } deriving (Show, Eq, Generic)
+instance Hashable ObjectSelectSource
+
+objectSelectSourceToSelectSource :: ObjectSelectSource -> SelectSource
+objectSelectSourceToSelectSource ObjectSelectSource{..} =
+  SelectSource _ossPrefix _ossFrom Nothing _ossWhere Nothing Nothing Nothing
+
 data ObjectRelationSource
   = ObjectRelationSource
   { _orsRelationshipName :: !RelName
   , _orsRelationMapping  :: !(HM.HashMap PGCol PGCol)
-  , _orsSelectSource     :: !SelectSource
+  , _orsSelectSource     :: !ObjectSelectSource
   } deriving (Show, Eq, Generic)
 instance Hashable ObjectRelationSource
 
