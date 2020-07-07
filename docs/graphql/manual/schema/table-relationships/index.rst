@@ -2,7 +2,7 @@
    :description: Manage relationships between tables/views in Hasura
    :keywords: hasura, docs, schema, relationship
 
-.. _relationships:
+.. _table_relationships:
 
 Relationships between tables/views
 ==================================
@@ -16,8 +16,6 @@ To make :ref:`nested object queries <nested_object_queries>`, the tables/views i
 be connected via relationships.
 
 Let's say we have the following tables in our database: ``author``, ``passport_info``, ``article`` and ``tag``.
-
-.. _table_relationships:
 
 Table relationships
 -------------------
@@ -76,13 +74,6 @@ The following guides will help you model the different types of table relationsh
 - :ref:`one_to_many_modelling`
 - :ref:`many_to_many_modelling`
 
-Remote joins
-------------
-
-- :ref:`add_remote_relationship`
-- :ref:`add_action_relationship`
-- :ref:`remote_joins_architecture`
-
 .. toctree::
   :maxdepth: 1
   :hidden:
@@ -90,6 +81,3 @@ Remote joins
   create
   rename
   Database modelling <database-modelling/index>
-  remote-relationships
-  action-relationships
-  remote-joins-architecture

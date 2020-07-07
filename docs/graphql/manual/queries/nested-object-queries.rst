@@ -12,7 +12,7 @@ Nested object queries
   :depth: 2
   :local:
 
-You can use the object (one-to-one) or array (one-to-many) :ref:`relationships <relationships>` defined
+You can use the object (one-to-one) or array (one-to-many) :ref:`table relationships <table_relationships>` defined
 in your schema to make a nested query i.e. fetch data for a type along with data from a nested or related type.
 
 The **name of the nested object** is the same as the name of the object/array relationship configured in
