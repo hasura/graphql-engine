@@ -130,6 +130,10 @@
     {%- block htmltitle %}
     <title>{{ title|striptags|e }}{{ titlesuffix }}</title>
     <meta name="title" content="{{ title|striptags|e }}{{ titlesuffix }}" />
+    {%- if BASE_DOMAIN != "production" %}
+      <meta name="robots" content="noindex">
+    {%- endif %}
+
     {%- endblock %}
     {%- block csss %}
     {{- css() }}
