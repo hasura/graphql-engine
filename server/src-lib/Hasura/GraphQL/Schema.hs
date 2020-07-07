@@ -33,6 +33,9 @@ import           Hasura.RQL.Types
 import           Hasura.Session
 import           Hasura.SQL.Types
 
+-- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
+data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
+
 -- TODO So far, we're *always* generating a query_root, mutation_root and
 -- subscription_root.  But is this valid?  We may end up generating objects with
 -- 0 (exposed) fields.  Perhaps we should be a bit more careful.  I suppose
@@ -50,7 +53,7 @@ buildGQLContext
   -> HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
   -> ActionCache
   -> NonObjectTypeMap
-  -> m (HashMap RoleName GQLContext, GQLContext)
+  -> m (HashMap RoleName (RoleContext GQLContext), GQLContext)
 buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions nonObjectCustomTypes = do
   roleContexts <- (S.toMap allRoles & Map.traverseWithKey \roleName () ->
                       buildContextForRole roleName)
@@ -98,14 +101,21 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions non
                      allActionInfos nonObjectCustomTypes
       QueryRelay  -> relayWithIntrospection (S.fromList $ Map.keys validTables)
 
+    buildContextForRole :: RoleName -> m (RoleContext GQLContext)
     buildContextForRole roleName = do
+      frontend <- buildContextForRoleAndScenario roleName Frontend
+      backend <- buildContextForRoleAndScenario roleName Backend
+      return $ RoleContext frontend $ Just backend
+
+    buildContextForRoleAndScenario :: RoleName -> Scenario -> m GQLContext
+    buildContextForRoleAndScenario roleName scenario = do
       SQLGenCtx{ stringifyNum } <- askSQLGenCtx
       remotes <- allRemoteParsers
       let gqlContext = GQLContext
             <$> (finalizeParser <$> queryHasuraOrRelay remotes)
             <*> (finalizeParser <$> mutation (S.fromList $ Map.keys validTables) (mutationRemotes remotes)
                  allActionInfos nonObjectCustomTypes)
-      flip runReaderT (queryType, roleName, allTables, QueryContext stringifyNum (queryRemotesMap remotes)) $
+      flip runReaderT (queryType, roleName, allTables, scenario, QueryContext stringifyNum (queryRemotesMap remotes)) $
         P.runSchemaT gqlContext
 
     finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
@@ -247,6 +257,7 @@ queryWithIntrospection
      , Has QueryContext r
      -- This context is here because we'll probably need it in Select.hs at some point
      , Has GraphQLQueryType r
+     , Has Scenario r
      )
   => HashSet QualifiedTable
   -> [FunctionInfo]
@@ -294,6 +305,7 @@ relayWithIntrospection
      , Has QueryContext r
      -- This context is here because we'll probably need it in Select.hs at some point
      , Has GraphQLQueryType r
+     , Has Scenario r
      )
   => HashSet QualifiedTable
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
@@ -367,7 +379,7 @@ unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes = do
 
 mutation
   :: forall m n r
-   . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+   . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r, Has Scenario r)
   => HashSet QualifiedTable
   -> [P.FieldParser n (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
   -> [ActionInfo]
@@ -381,7 +393,14 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
     for tablePerms \permissions -> do
       let selectPerms = _permSel permissions
 
-      inserts <- for (_permIns permissions) \insertPerms -> do
+      -- If we're in a frontend scenario, we should not include backend_only inserts
+      scenario <- asks getter
+      let scenarioInsertPermissionM = do
+            insertPermission <- _permIns permissions
+            if (scenario == Frontend && ipiBackendOnly insertPermission)
+              then Nothing
+              else return insertPermission
+      inserts <- for scenarioInsertPermissionM \insertPerms -> do
         let insertName = $$(G.litName "insert_") <> displayName
             insertDesc = G.Description $ "insert data into the table: \"" <> G.unName displayName <> "\""
             insertOneName = $$(G.litName "insert_") <> displayName <> $$(G.litName "_one")

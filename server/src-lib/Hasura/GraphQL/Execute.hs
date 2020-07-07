@@ -142,7 +142,10 @@ getExecPlanPartial userInfo sc enableAL queryType req = do
     getGCtx =
       case Map.lookup roleName contextMap of
         Nothing  -> defaultContext
-        Just gql -> gql
+        Just (C.RoleContext frontend backend) ->
+          case _uiBackendOnlyFieldAccess userInfo of
+            BOFAAllowed -> fromMaybe frontend backend
+            BOFADisallowed -> frontend
         -- TODO FIXME implement backend-only field access
         {-
         Just (RoleContext defaultGCtx maybeBackendGCtx)   ->

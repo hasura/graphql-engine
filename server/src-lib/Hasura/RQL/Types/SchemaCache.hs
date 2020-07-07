@@ -117,7 +117,7 @@ module Hasura.RQL.Types.SchemaCache
   ) where
 
 import           Hasura.Db
-import           Hasura.GraphQL.Context            (GQLContext)
+import           Hasura.GraphQL.Context            (GQLContext, RoleContext)
 import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
@@ -128,7 +128,7 @@ import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
-import           Hasura.RQL.Types.Permission
+--import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
@@ -203,9 +203,9 @@ data SchemaCache
   , scFunctions                   :: !FunctionCache
   , scRemoteSchemas               :: !RemoteSchemaMap
   , scAllowlist                   :: !(HS.HashSet GQLQuery)
-  , scGQLContext                  :: !(HashMap RoleName GQLContext)
+  , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
   , scUnauthenticatedGQLContext   :: !GQLContext
-  , scRelayContext                :: !(HashMap RoleName GQLContext)
+  , scRelayContext                :: !(HashMap RoleName (RoleContext GQLContext))
   , scUnauthenticatedRelayContext :: !GQLContext
   -- , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
   , scDepMap                      :: !DepMap
