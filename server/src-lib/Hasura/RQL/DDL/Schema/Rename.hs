@@ -11,18 +11,22 @@ where
 import           Control.Lens.Combinators
 import           Control.Lens.Operators
 import           Hasura.Prelude
-import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Session
+import           Hasura.SQL.Types
+
+import qualified Hasura.RQL.DDL.EventTrigger        as DS
+import qualified Hasura.RQL.DDL.RemoteRelationship  as RR
 
 import qualified Data.HashMap.Strict                as M
 import qualified Database.PG.Query                  as Q
-
+import qualified Data.Set                           as Set
+import qualified Data.List.NonEmpty                 as NE
+import qualified Language.GraphQL.Draft.Syntax      as G
 import           Data.Aeson
 
 data RenameItem a
@@ -56,6 +60,7 @@ renameTableInCatalog
 renameTableInCatalog newQT oldQT = do
   sc <- askSchemaCache
   let allDeps = getDependentObjs sc $ SOTable oldQT
+
   -- update all dependant schema objects
   forM_ allDeps $ \case
     SOTableObj refQT (TORel rn) ->
@@ -64,9 +69,13 @@ renameTableInCatalog newQT oldQT = do
       updatePermFlds refQT rn pt $ RTable (oldQT, newQT)
     -- A trigger's definition is not dependent on the table directly
     SOTableObj _ (TOTrigger _)   -> return ()
+    -- A remote relationship's definition is not dependent on the table directly
+    SOTableObj _ (TORemoteRel _) -> return ()
+
     d -> otherDeps errMsg d
-  -- -- Update table name in hdb_catalog
+  -- Update table name in hdb_catalog
   liftTx $ Q.catchE defaultTxErrorHandler updateTableInCatalog
+
   where
     QualifiedObject nsn ntn = newQT
     QualifiedObject osn otn = oldQT
@@ -96,6 +105,8 @@ renameColInCatalog oCol nCol qt fieldInfo = do
       updateColInRel refQT rn $ RenameItem qt oCol nCol
     SOTableObj _ (TOTrigger triggerName) ->
       updateColInEventTriggerDef triggerName $ RenameItem qt oCol nCol
+    SOTableObj _ (TORemoteRel remoteRelName) ->
+      updateColInRemoteRelationship remoteRelName $ RenameItem qt oCol nCol
     d -> otherDeps errMsg d
   -- Update custom column names
   possiblyUpdateCustomColumnNames qt oCol nCol
@@ -133,7 +144,6 @@ renameRelInCatalog qt oldRN newRN = do
            AND table_name = $3
            AND rel_name = $4
       |] (newRN, sn, tn, oldRN) True
-
 
 -- update table names in relationship definition
 updateRelDefs
@@ -325,7 +335,7 @@ updateColExp qt rf (ColExp fld val) =
           ube <- updateFieldInBoolExp remTable rf be
           return $ toJSON ube
         FIRemoteRelationship {} ->
-          throw500 "cannot update remote field" -- TODO: determine the proper behavior here (from master).
+          throw500 "cannot update remote field" -- TODO: determine the proper behavior here.
 
     (oFld, nFld, opQT) = case rf of
       RFCol (RenameItem tn oCol nCol) -> (fromPGCol oCol, fromPGCol nCol, tn)
@@ -346,6 +356,41 @@ updateColInRel fromQT rn rnCol = do
     ArrRel -> fmap toJSON $
       updateColInArrRel fromQT toQT rnCol <$> decodeValue oldDefV
   liftTx $ updateRel fromQT rn newDefV
+
+updateColInRemoteRelationship
+  :: (MonadTx m)
+  => RemoteRelationshipName -> RenameCol -> m ()
+updateColInRemoteRelationship remoteRelationshipName renameCol = do
+  let (RenameItem qt oldCol newCol) = renameCol
+  (RemoteRelationshipDef remoteSchemaName hasuraFlds remoteFields) <-
+    liftTx $ RR.getRemoteRelDefFromCatalog remoteRelationshipName qt
+  let oldColPGTxt = getPGColTxt oldCol
+      newColPGTxt = getPGColTxt newCol
+      oldColFieldName = FieldName $ oldColPGTxt
+      newColFieldName = FieldName $ newColPGTxt
+      modifiedHasuraFlds = Set.insert newColFieldName $ Set.delete oldColFieldName hasuraFlds
+      fieldCalls = unRemoteFields remoteFields
+  oldColName <- parseGraphQLName oldColPGTxt
+  newColName <- parseGraphQLName newColPGTxt
+  let modifiedFieldCalls = NE.map (\(FieldCall name args) ->
+                                     let remoteArgs = getRemoteArguments args
+                                     in FieldCall name $ RemoteArguments $
+                                         fmap (replaceVariableName oldColName newColName) remoteArgs
+                                  ) $ fieldCalls
+  liftTx $ RR.updateRemoteRelInCatalog (RemoteRelationship remoteRelationshipName qt modifiedHasuraFlds remoteSchemaName (RemoteFields modifiedFieldCalls))
+  where
+    parseGraphQLName txt = maybe (throw400 ParseFailed $ errMsg) pure $ G.mkName txt
+      where
+        errMsg = txt <> " is not a valid GraphQL name"
+
+    replaceVariableName :: G.Name -> G.Name -> G.Value G.Name -> G.Value G.Name
+    replaceVariableName oldColName newColName = \case
+      G.VVariable oldColName' ->
+        G.VVariable $ bool oldColName newColName $ oldColName == oldColName'
+      G.VList values -> G.VList $ map (replaceVariableName oldColName newColName) values
+      G.VObject values ->
+        G.VObject $ fmap (replaceVariableName oldColName newColName) values
+      v -> v
 
 -- rename columns in relationship definitions
 updateColInEventTriggerDef
