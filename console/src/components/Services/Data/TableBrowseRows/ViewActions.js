@@ -2,7 +2,11 @@ import { defaultViewState } from '../DataState';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from 'utils/requestAction';
 import filterReducer from './FilterActions';
-import { findTableFromRel, getEstimateCountQuery } from '../utils';
+import {
+  findTableFromRel,
+  getEstimateCountQuery,
+  getStatementTimeoutSql,
+} from '../utils';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -18,7 +22,6 @@ import {
 } from '../../../Common/utils/v1QueryUtils';
 import { generateTableDef } from '../../../Common/utils/pgUtils';
 import { COUNT_LIMIT } from '../constants';
-import { getStatementTimeoutSql } from '../RawSQL/utils';
 import { isPostgresTimeoutError } from './utils';
 
 /* ****************** View actions *************/
