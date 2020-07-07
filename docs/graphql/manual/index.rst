@@ -26,16 +26,16 @@ The Hasura GraphQL engine connects to your databases & microservices and auto-ge
      - `Authentication <auth/authentication/index>`_
    * - `Schema <schema/index>`_
      - `Remote Schemas <remote-schemas/index>`_
-     - `Authorization <auth/authorization/index>`_
+     - `Auth Using Webhooks <auth/authentication/webhook>`_
    * - `Queries <queries/index>`_
      - `Event Triggers <event-triggers/index>`_
-     - `Access Control Basics <auth/authorization/basics>`_
+     - `Auth Using JWT <auth/authentication/jwt>`_
    * - `Mutations <mutations/index>`_
      - `Scheduled Triggers <scheduled-triggers/index>`_
-     - `Roles & Session Variables <auth/authorization/roles-variables>`_
+     - `Unauthenticated / Public Access <auth/authentication/unauthenticated-access>`_
    * - `Subscriptions <subscriptions/index>`_
      - 
-     - `Permission Rules <auth/authorization/permission-rules>`_
+     - `Authorization / Access Control <auth/authorization/index>`_
 
 .. list-table::
    :header-rows: 1
