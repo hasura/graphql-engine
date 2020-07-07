@@ -11,7 +11,7 @@ export interface TooltipProps extends React.ComponentProps<'i'> {
   placement?: 'right' | 'left' | 'top' | 'bottom';
   className?: string;
   tooltipStyle?: string;
-  icon: string;
+  icon?: string;
 }
 
 const ToolTip: React.FC<TooltipProps> = ({
