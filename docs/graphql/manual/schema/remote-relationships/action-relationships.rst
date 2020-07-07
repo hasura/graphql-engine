@@ -43,7 +43,7 @@ Step 2: Define the relationship
 
 The following values can be defined for an action relationship:
 
-- **Relationship type**: Select a :ref:`type of relationship <relationship_database_modelling>`.
+- **Relationship type**: Select a type of relationship.
 
   - **Object relationship**: For one-to-one relationships.
   - **Array relationship**: For one-to-many relationships.
