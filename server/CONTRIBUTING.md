@@ -11,11 +11,12 @@ own machine and how to contribute.
 - npm >= 5.7
 - [gsutil](https://cloud.google.com/storage/docs/gsutil)
 - libpq-dev
+- libkrb5-dev
 - python >= 3.5 with pip3
 
-The last two prerequisites can be installed on Debian with:
+The last two prerequisites can be installed on Debian or Ubuntu with:
 
-    $ sudo apt install libpq-dev python3 python3-pip python3-venv
+    $ sudo apt install libpq-dev libkrb5-dev python3 python3-pip python3-venv
 
 Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
 
