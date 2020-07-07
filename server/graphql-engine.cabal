@@ -345,6 +345,7 @@ library
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DDL.RemoteRelationship
+                     , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DDL.QueryCollection
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Delete.Types
