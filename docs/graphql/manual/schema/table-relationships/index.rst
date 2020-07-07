@@ -9,8 +9,11 @@ Relationships between tables/views
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
+
+Introduction
+------------
 
 To make :ref:`nested object queries <nested_object_queries>`, the tables/views in your database need to
 be connected via relationships.
@@ -35,6 +38,16 @@ following types of table relationships:
 | ``many-to-many`` | ``article`` and ``tag``           | - an ``article`` can have many ``tags``        |
 |                  |                                   | - a ``tag`` can have many ``articles``         |
 +------------------+-----------------------------------+------------------------------------------------+
+
+Table relationships modelling guides
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following guides will help you model the different types of table relationships in the database:
+
+- :ref:`one_to_one_modelling`
+- :ref:`one_to_many_modelling`
+- :ref:`many_to_many_modelling`
+
 
 .. _graphql_relationships:
 
@@ -64,15 +77,6 @@ See the following to manage the object/array relationships between tables/views 
 
 - :ref:`create_relationships`
 - :ref:`rename_relationships`
-
-Table relationships modelling guides
-------------------------------------
-
-The following guides will help you model the different types of table relationships in the database:
-
-- :ref:`one_to_one_modelling`
-- :ref:`one_to_many_modelling`
-- :ref:`many_to_many_modelling`
 
 .. toctree::
   :maxdepth: 1
