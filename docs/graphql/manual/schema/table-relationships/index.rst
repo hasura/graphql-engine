@@ -9,7 +9,7 @@ Relationships between tables/views
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Introduction
