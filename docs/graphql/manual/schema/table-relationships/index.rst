@@ -39,8 +39,8 @@ following types of table relationships:
 |                  |                                   | - a ``tag`` can have many ``articles``         |
 +------------------+-----------------------------------+------------------------------------------------+
 
-Table relationships modelling guides
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Table relationships database modelling guides
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following guides will help you model the different types of table relationships in the database:
 
