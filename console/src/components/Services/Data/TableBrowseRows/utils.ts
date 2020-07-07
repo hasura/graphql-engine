@@ -41,8 +41,20 @@ export const compareRows = (
 export const isPostgresTimeoutError = (error: {
   code: string;
   internal?: { error?: { message?: string } };
+  message?: { error?: string; internal?: { error?: { message?: string } } };
 }) => {
-  if (!(error.code === 'postgres-error')) return false;
+  if (error.internal && error.internal.error) {
+    return !!error.internal?.error?.message?.includes('statement timeout');
+  }
 
-  return !!error.internal?.error?.message?.includes('statement timeout');
+  if (error.message && error.message.error === 'postgres query error') {
+    if (error.message.internal) {
+      return !!error.message.internal.error?.message?.includes(
+        'statement timeout'
+      );
+    }
+    return error.message.error.includes('statement timeout');
+  }
+
+  return false;
 };

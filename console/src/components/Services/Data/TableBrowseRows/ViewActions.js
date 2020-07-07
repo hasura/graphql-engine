@@ -141,9 +141,7 @@ const vMakeCountRequest = () => {
       view.query.order_by
     );
 
-    const timeoutQuery = getRunSqlQuery(
-      getStatementTimeoutSql(2) + `select pg_sleep(5)`
-    );
+    const timeoutQuery = getRunSqlQuery(getStatementTimeoutSql(2));
 
     const requestBody = {
       type: 'bulk',
