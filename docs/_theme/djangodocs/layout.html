@@ -25,9 +25,11 @@
   <link rel="canonical" href="https://hasura.io/docs/1.0/{{ pagename }}{{ file_suffix }}" />
 {% endblock %}
 
-{%- if BASE_DOMAIN != "hasura.io" %}
-  <meta name="robots" content="noindex">
-{%- endif %}
+{% - block htmltitle %}
+  {%- if BASE_DOMAIN != "hasura.io" %}
+    <meta name="robots" content="noindex">
+  {%- endif %}
+{% endblock %}
 
 {% block document %}
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if not is_landing_page else '' }}{% endblock %}">
