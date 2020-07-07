@@ -26,7 +26,7 @@ class VoyagerView extends Component<VoyagerViewProps> {
       'https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.30/dist/voyager.worker.min.js';
     const response = await fetch(url);
     const payload = await response.text();
-    // HACK: to increase viz.js memory size from 16mb to 256mb
+    // HACK: to increase viz.js memory size from 16mb to 512mb
     // NOTE: this is the same hack that is used here too: https://github.com/APIs-guru/graphql-voyager/blob/v1.0.0-rc.29/src/utils/index.ts#L21
     const newPayload = payload
       .replace('||16777216;', '||(16777216 * 16 * 2);')
