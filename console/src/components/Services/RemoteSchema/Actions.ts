@@ -14,7 +14,10 @@ import { loadMigrationStatus } from '../../Main/Actions';
 import { handleMigrationErrors } from '../../../utils/migration';
 
 import { showSuccessNotification } from '../Common/Notification';
-import { filterInconsistentMetadataObjects, MetadataObject } from '../Settings/utils';
+import {
+  filterInconsistentMetadataObjects,
+  MetadataObject,
+} from '../Settings/utils';
 import { GetReduxState, ReduxState } from '../../../types';
 
 /* Action constants */
