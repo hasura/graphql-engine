@@ -27,11 +27,7 @@ Because Hasura is meant to be a GraphQL server that you can expose directly to y
 
 .. admonition:: Supported from
   
-  Remote relationships are supported from versions ``v1.3.0-beta.1`` and above.
-
-.. .. admonition:: Supported from
-  
-..   Remote relationships are supported from versions ``v.1.3.0`` and above.
+  Remote relationships are supported from versions ``v.1.3.0`` and above.
 
 Step 1: Add a remote schema
 ---------------------------
