@@ -21,12 +21,27 @@ class VoyagerView extends Component<VoyagerViewProps> {
     }).then(response => response.json());
   };
 
+  loadWorker = async () => {
+    const url =
+      'https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.30/dist/voyager.worker.min.js';
+    const response = await fetch(url);
+    const payload = await response.text();
+    // HACK: to increase viz.js memory size from 16mb to 256mb
+    // NOTE: this is the same hack that is used here too: https://github.com/APIs-guru/graphql-voyager/blob/v1.0.0-rc.29/src/utils/index.ts#L21
+    const newPayload = payload
+      .replace('||16777216;', '||(16777216 * 16 * 2);')
+      .replace('||5242880;', '||(5242880 * 16 * 2);');
+    const script = new Blob([newPayload], { type: 'application/javascript' });
+    const workerURL = URL.createObjectURL(script);
+    return new Worker(workerURL);
+  };
+
   render() {
     return (
       <VoyagerViewErrorBoundary>
         <GraphQLVoyager
           introspection={this.introspectionProvider}
-          workerURI="https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.27/dist/voyager.worker.min.js"
+          loadWorker={this.loadWorker}
         />
       </VoyagerViewErrorBoundary>
     );
