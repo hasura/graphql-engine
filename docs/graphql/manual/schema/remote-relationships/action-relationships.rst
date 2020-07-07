@@ -10,7 +10,7 @@ Action relationships
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Introduction
@@ -23,8 +23,11 @@ Step 0: Create an action
 
 First, create an action, either :ref:`from scratch <create_actions>` or :ref:`derive it from an existing mutation <derive_actions>`.
 
-Step 1: Open the action relationship section
---------------------------------------------
+Step 1: Create an action relationship
+-------------------------------------
+
+Step 1.1: Open the action relationship section
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - From your action, go to the ``Relationships`` tab.
 - Click ``Add a relationship``.
@@ -35,8 +38,8 @@ Step 1: Open the action relationship section
 
 In this example, we're creating a relationship for the ``createUser`` action.
 
-Step 2: Define the relationship
--------------------------------
+Step 1.2: Define the relationship
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following values can be defined for an action relationship:
 
@@ -130,7 +133,7 @@ The following values can be defined for an action relationship:
 
 In this example, we're creating a relationship called ``user``, from the ``id`` field returned in the action response, to the ``id`` column of the ``users`` table.
 
-Step 3: Explore with GraphiQL
+Step 2: Explore with GraphiQL
 -----------------------------
 
 In the GraphiQL tab, test out your action relationship.
