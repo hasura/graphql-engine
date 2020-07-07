@@ -142,7 +142,7 @@ const vMakeCountRequest = () => {
     );
 
     const timeoutQuery = getRunSqlQuery(
-      getStatementTimeoutSql(2) + `select pg_sleep(5)`
+      getStatementTimeoutSql(2)
     );
 
     const requestBody = {
