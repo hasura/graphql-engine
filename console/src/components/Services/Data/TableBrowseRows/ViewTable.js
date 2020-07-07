@@ -147,6 +147,7 @@ class ViewTable extends Component {
         schemas={schemas}
         curDepth={0}
         count={exists(count) ? count : estimatedCount}
+        shouldHidePagination={!exists(count) && !estimatedCount}
         dispatch={dispatch}
         expandedRow={expandedRow}
         manualTriggers={manualTriggers}
