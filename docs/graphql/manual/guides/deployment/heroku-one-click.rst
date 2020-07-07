@@ -2,7 +2,7 @@
    :description: Get started with Hasura using Heroku
    :keywords: hasura, docs, start, heroku
 
-.. _heroku_quickstart:
+.. _heroku_one_click:
 
 One-click deployment with Heroku
 ================================

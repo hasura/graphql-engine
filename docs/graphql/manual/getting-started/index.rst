@@ -29,7 +29,7 @@ Get started from scratch
 - `Using Hasura Cloud <https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html>`__ **(recommended)**: Create a new Hasura Cloud project with just one click.
 - :ref:`Using Docker <docker_simple>`: Run a **local development** setup that sets up both the Hasura GraphQL
   engine and Postgres using Docker.
-- :ref:`Using Heroku <heroku_quickstart>`: Get started quickly with no setup required to
+- :ref:`Using Heroku <heroku_one_click>`: Get started quickly with no setup required to
   host the Hasura GraphQL engine and Postgres on Heroku.
 
 Get started using an existing database
@@ -52,7 +52,7 @@ Get started using an existing database
    :titlesonly:
    :hidden:
 
-   Hasura cloud quickstart <https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html>
+   Hasura Cloud quickstart <https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html>
    Docker quickstart <docker-simple>
    Using an existing database <using-existing-database>
    first-graphql-query
