@@ -156,7 +156,7 @@ the author's ID*):
 Using relationships or nested objects
 *************************************
 
-You can leverage :ref:`relationships <relationships>` to define permission rules with fields
+You can leverage :ref:`table relationships <table_relationships>` to define permission rules with fields
 from a nested object.
 
 **For example**, let's say you have an object relationship called ``agent`` from the ``authors`` table to another table
@@ -245,7 +245,7 @@ Column presets
 While this is strictly not a permission configuration, defining
 :ref:`role-based column presets <column_presets>` on any column automatically
 removes access to it. This preset can be defined for ``insert`` and ``update`` operations. This configuration
-is also very useful to avoid sending sensitive user-information in the query and leverage session variables
+is also very useful to avoid sending sensitive user-information in the request and leverage session variables
 or static data instead.
 
 .. _backend-only-permissions:

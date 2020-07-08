@@ -486,7 +486,7 @@ export const loadAllowedQueries = () => {
       },
       error => {
         console.error(error);
-        dispatch(showErrorNotification('Fetching allowed queries failed'));
+        dispatch(showErrorNotification('Fetching allow list failed'));
       }
     );
   };
