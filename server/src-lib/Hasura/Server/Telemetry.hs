@@ -75,6 +75,7 @@ data Metrics
   , _mtRemoteSchemas  :: !Int
   , _mtFunctions      :: !Int
   , _mtServiceTimings :: !ServiceTimingMetrics
+  , _mtPgVersion      :: !PGVersion
   , _mtActions        :: !ActionMetric
   } deriving (Show, Eq)
 $(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
@@ -111,20 +112,21 @@ mkPayload dbId instanceId version metrics = do
 -- hours. The send time depends on when the server was started and will
 -- naturally drift.
 runTelemetry
-  :: (HasVersion)
+  :: HasVersion
   => Logger Hasura
   -> HTTP.Manager
   -> IO SchemaCache
   -- ^ an action that always returns the latest schema cache
   -> Text
   -> InstanceId
+  -> PGVersion
   -> IO void
-runTelemetry (Logger logger) manager getSchemaCache dbId instanceId = do
+runTelemetry (Logger logger) manager getSchemaCache dbId instanceId pgVersion = do
   let options = wreqOptions manager []
   forever $ do
     schemaCache <- getSchemaCache
     serviceTimings <- dumpServiceTimingMetrics
-    let metrics = computeMetrics schemaCache serviceTimings
+    let metrics = computeMetrics schemaCache serviceTimings pgVersion
     payload <- A.encode <$> mkPayload dbId instanceId currentVersion metrics
     logger $ debugLBS $ "metrics_info: " <> payload
     resp <- try $ Wreq.postWith options (T.unpack telemetryUrl) payload
@@ -144,8 +146,8 @@ runTelemetry (Logger logger) manager getSchemaCache dbId instanceId = do
         let httpErr = Just $ mkHttpError telemetryUrl (Just resp) Nothing
         logger $ mkTelemetryLog "http_error" "failed to post telemetry" httpErr
 
-computeMetrics :: SchemaCache -> ServiceTimingMetrics -> Metrics
-computeMetrics sc _mtServiceTimings =
+computeMetrics :: SchemaCache -> ServiceTimingMetrics -> PGVersion -> Metrics
+computeMetrics sc _mtServiceTimings _mtPgVersion =
   let _mtTables = countUserTables (isNothing . _tciViewInfo . _tiCoreInfo)
       _mtViews = countUserTables (isJust . _tciViewInfo . _tiCoreInfo)
       _mtEnumTables = countUserTables (isJust . _tciEnumValues . _tiCoreInfo)
@@ -176,7 +178,7 @@ computeMetrics sc _mtServiceTimings =
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
     calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int
-    calcPerms fn perms = length $ catMaybes $ map fn perms
+    calcPerms fn perms = length $ mapMaybe fn perms
 
     permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap

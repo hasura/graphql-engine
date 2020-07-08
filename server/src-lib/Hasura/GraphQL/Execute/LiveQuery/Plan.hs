@@ -243,7 +243,7 @@ validateVariables pgExecCtx variableValues = do
     mkValidationSel vars =
       S.mkSelect { S.selExtr = mkExtrs vars }
     runTx' tx = do
-      res <- liftIO $ runExceptT (runLazyTx' pgExecCtx tx)
+      res <- liftIO $ runExceptT (runQueryTx pgExecCtx tx)
       liftEither res
 
     -- Explicitly look for the class of errors raised when the format of a value provided

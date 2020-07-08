@@ -137,7 +137,7 @@ runQueryDB reqId query userInfo (tx, genSql) = do
   (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ do
     -- log the generated SQL and the graphql query
     L.unLogger logger $ QueryLog query (Just genSql) reqId
-    runLazyTx' pgExecCtx tx
+    runQueryTx pgExecCtx tx
   resp <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
       telemQueryType = Telem.Query

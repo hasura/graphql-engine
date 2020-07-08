@@ -2,7 +2,6 @@ module Hasura.RQL.Types
   ( MonadTx(..)
 
   , UserInfoM(..)
-  , successMsg
 
   , HasHttpManager (..)
   -- , HasGCtxMap (..)
@@ -28,10 +27,10 @@ module Hasura.RQL.Types
   , askFieldInfo
   , askPGColInfo
   , askComputedFieldInfo
+  , askRemoteRel
   , askCurRole
   , askEventTriggerInfo
   , askTabInfoFromTrigger
-  , askRemoteRel
 
   , HeaderObj
 
@@ -39,10 +38,10 @@ module Hasura.RQL.Types
   , module R
   ) where
 
-import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.SQL.Types
 import           Hasura.Session
+import           Hasura.SQL.Types
+
 
 import           Hasura.Db                           as R
 import           Hasura.RQL.Types.Action             as R
@@ -57,17 +56,19 @@ import           Hasura.RQL.Types.EventTrigger       as R
 import           Hasura.RQL.Types.Function           as R
 import           Hasura.RQL.Types.Metadata           as R
 import           Hasura.RQL.Types.Permission         as R
-import           Hasura.RQL.Types.RemoteSchema       as R
 import           Hasura.RQL.Types.RemoteRelationship as R
+import           Hasura.RQL.Types.QueryCollection    as R
+import           Hasura.RQL.Types.ScheduledTrigger   as R
+import           Hasura.RQL.Types.RemoteSchema       as R
 import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
 
--- import qualified Hasura.GraphQL.Context             as GC
+-- import qualified Hasura.GraphQL.Context              as GC
 
-import qualified Data.HashMap.Strict                as M
-import qualified Data.Text                          as T
-import qualified Network.HTTP.Client                as HTTP
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.Text                           as T
+import qualified Network.HTTP.Client                 as HTTP
 
 data QCtx
   = QCtx
@@ -140,7 +141,7 @@ instance (Monoid w, HasHttpManager m) => HasHttpManager (WriterT w m) where
 
 -- class (Monad m) => HasGCtxMap m where
 --   askGCtxMap :: m GC.GCtxMap
---
+
 -- instance (HasGCtxMap m) => HasGCtxMap (ReaderT r m) where
 --   askGCtxMap = lift askGCtxMap
 -- instance (Monoid w, HasGCtxMap m) => HasGCtxMap (WriterT w m) where
@@ -220,9 +221,9 @@ askPGColInfo m c msg = do
   fieldInfo <- modifyErr ("column " <>) $
              askFieldInfo m (fromPGCol c)
   case fieldInfo of
-    (FIColumn pgColInfo) -> pure pgColInfo
-    (FIRelationship   _) -> throwErr "relationship"
-    (FIComputedField _)  -> throwErr "computed field"
+    (FIColumn pgColInfo)     -> pure pgColInfo
+    (FIRelationship   _)     -> throwErr "relationship"
+    (FIComputedField _)      -> throwErr "computed field"
     (FIRemoteRelationship _) -> throwErr "remote relationship"
   where
     throwErr fieldType =
@@ -241,10 +242,10 @@ askComputedFieldInfo fields computedField = do
   fieldInfo <- modifyErr ("computed field " <>) $
                askFieldInfo fields $ fromComputedField computedField
   case fieldInfo of
-    (FIColumn           _) -> throwErr "column"
-    (FIRelationship     _) -> throwErr "relationship"
-    (FIComputedField cci)  -> pure cci
-    (FIRemoteRelationship _) -> throwErr "remote relatioship"
+    (FIColumn           _)       -> throwErr "column"
+    (FIRelationship     _)       -> throwErr "relationship"
+    (FIRemoteRelationship     _) -> throwErr "remote relationship"
+    (FIComputedField cci)        -> pure cci
   where
     throwErr fieldType =
       throwError $ err400 UnexpectedPayload $ mconcat
@@ -303,8 +304,5 @@ askRemoteRel fieldInfoMap relName = do
 
 askCurRole :: (UserInfoM m) => m RoleName
 askCurRole = _uiRole <$> askUserInfo
-
-successMsg :: EncJSON
-successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text

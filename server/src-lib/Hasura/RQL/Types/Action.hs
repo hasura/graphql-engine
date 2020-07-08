@@ -29,6 +29,7 @@ module Hasura.RQL.Types.Action
   , aiName
   , aiOutputObject
   , aiDefinition
+  , aiPgScalars
   , aiPermissions
   , aiComment
   , ActionPermissionInfo(..)
@@ -48,13 +49,12 @@ module Hasura.RQL.Types.Action
 
 
 import           Control.Lens                  (makeLenses, makePrisms)
-import           Data.URL.Template
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.Common
 import           Hasura.Session
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax    (Lift)
@@ -81,10 +81,6 @@ instance Q.FromCol ActionName where
 
 instance Q.ToPrepArg ActionName where
   toPrepVal = Q.toPrepVal . G.unName . unActionName
-
-newtype ResolvedWebhook
-  = ResolvedWebhook { unResolvedWebhook :: Text}
-  deriving ( Show, Eq, J.FromJSON, J.ToJSON, Hashable, DQuote, Lift)
 
 data ActionMutationKind
   = ActionSynchronous
@@ -184,25 +180,11 @@ data ActionInfo
   , _aiOutputObject :: !AnnotatedObjectType
   , _aiDefinition   :: !ResolvedActionDefinition
   , _aiPermissions  :: !ActionPermissionMap
+  , _aiPgScalars    :: !(HashSet PGScalarType)
   , _aiComment      :: !(Maybe Text)
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
 $(makeLenses ''ActionInfo)
-
-newtype InputWebhook
-  = InputWebhook {unInputWebhook :: URLTemplate}
-  deriving (Show, Eq, Lift, Generic)
-instance NFData InputWebhook
-instance Cacheable InputWebhook
-
-instance J.ToJSON InputWebhook where
-  toJSON =  J.String . printURLTemplate . unInputWebhook
-
-instance J.FromJSON InputWebhook where
-  parseJSON = J.withText "String" $ \t ->
-    case parseURLTemplate t of
-      Left e  -> fail $ "Parsing URL template failed: " ++ e
-      Right v -> pure $ InputWebhook v
 
 type ActionDefinitionInput =
   ActionDefinition (ArgumentDefinition GraphQLType) InputWebhook

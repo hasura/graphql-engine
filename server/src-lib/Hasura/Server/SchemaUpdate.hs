@@ -2,8 +2,9 @@ module Hasura.Server.SchemaUpdate
   (startSchemaSyncThreads)
 where
 
+import           Hasura.Db
 import           Hasura.Prelude
-
+import           Hasura.Session
 import           Hasura.Logging
 import           Hasura.RQL.DDL.Schema       (runCacheRWT)
 import           Hasura.RQL.Types
@@ -12,12 +13,12 @@ import           Hasura.Server.API.Query
 import           Hasura.Server.App           (SchemaCacheRef (..), withSCUpdate)
 import           Hasura.Server.Init          (InstanceId (..))
 import           Hasura.Server.Logging
-import           Hasura.Session
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.IORef
+import           GHC.AssertNF
 
 import qualified Control.Concurrent.Extended as C
 import qualified Control.Concurrent.STM      as STM
@@ -160,6 +161,7 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
           Left e -> logError logger threadType $ TEJsonParse $ T.pack e
           Right payload -> do
             logInfo logger threadType $ object ["received_event" .= payload]
+            $assertNFHere payload  -- so we don't write thunks to mutable vars
             -- Push a notify event to Queue
             STM.atomically $ STM.writeTVar updateEventRef $ Just payload
 
@@ -226,7 +228,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
   runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
-  pgCtx = PGExecCtx pool PG.Serializable
+  pgCtx = mkPGExecCtx PG.Serializable pool
 
 logInfo :: Logger Hasura -> ThreadType -> Value -> IO ()
 logInfo logger threadType val = unLogger logger $

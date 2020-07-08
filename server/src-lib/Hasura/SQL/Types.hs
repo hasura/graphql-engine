@@ -43,6 +43,7 @@ module Hasura.SQL.Types
 
   , SchemaName(..)
   , publicSchema
+  , hdbCatalogSchema
 
   , TableName(..)
   , FunctionName(..)
@@ -251,6 +252,9 @@ newtype SchemaName
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
+
+hdbCatalogSchema :: SchemaName
+hdbCatalogSchema = SchemaName "hdb_catalog"
 
 instance IsIden SchemaName where
   toIden (SchemaName t) = Iden t

@@ -52,7 +52,7 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
                , _aaeStrfyNum = stringifyNum
                }
   where
-    ActionInfo actionName outputObject definition permissions comment = actionInfo
+    ActionInfo actionName outputObject definition permissions scalars comment = actionInfo
 
 actionAsyncMutation
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
@@ -69,7 +69,7 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
   pure $ P.selection fieldName description inputArguments actionId
          <&> AnnActionMutationAsync actionName
   where
-    ActionInfo actionName _ definition permissions comment = actionInfo
+    ActionInfo actionName _ definition permissions scalars comment = actionInfo
 
 actionAsyncQuery
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
@@ -118,7 +118,7 @@ actionAsyncQuery actionInfo = runMaybeT do
               , _aaaqStringifyNum = stringifyNum
               }
   where
-    ActionInfo actionName outputObject definition permissions comment = actionInfo
+    ActionInfo actionName outputObject definition permissions scalars comment = actionInfo
     idFieldName = $$(G.litName "id")
     idFieldDescription = "the unique id of an action"
 

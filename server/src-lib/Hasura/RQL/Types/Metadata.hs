@@ -32,6 +32,7 @@ data MetadataObjId
   | MOCustomTypes
   | MOAction !ActionName
   | MOActionPermission !ActionName !RoleName
+  | MOCronTrigger !TriggerName
   deriving (Show, Eq, Generic)
 instance Hashable MetadataObjId
 

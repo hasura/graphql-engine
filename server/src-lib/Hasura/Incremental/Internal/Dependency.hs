@@ -1,4 +1,5 @@
 {-# OPTIONS_HADDOCK not-home #-}
+{-# LANGUAGE GADTs #-}
 
 -- | Supporting functionality for fine-grained dependency tracking.
 module Hasura.Incremental.Internal.Dependency where
@@ -17,10 +18,11 @@ import           Data.GADT.Compare
 import           Data.Int
 import           Data.Scientific               (Scientific)
 import           Data.Set                      (Set)
+import           Data.Time.Clock
 import           Data.Vector                   (Vector)
-import           Data.Void                     (Void)
 import           GHC.Generics                  ((:*:) (..), (:+:) (..), Generic (..), K1 (..),
                                                 M1 (..), U1 (..), V1)
+import           System.Cron.Types
 
 import           Hasura.Incremental.Select
 
@@ -163,6 +165,22 @@ instance Cacheable Scientific where unchanged _ = (==)
 instance Cacheable Text where unchanged _ = (==)
 instance Cacheable N.URIAuth where unchanged _ = (==)
 instance Cacheable G.Name where unchanged _ = (==)
+instance Cacheable DiffTime where unchanged _ = (==)
+instance Cacheable NominalDiffTime where unchanged _ = (==)
+instance Cacheable UTCTime where unchanged _ = (==)
+
+-- instances for CronSchedule from package `cron`
+instance Cacheable StepField
+instance Cacheable RangeField
+instance Cacheable SpecificField
+instance Cacheable BaseField
+instance Cacheable CronField
+instance Cacheable MonthSpec
+instance Cacheable DayOfMonthSpec
+instance Cacheable DayOfWeekSpec
+instance Cacheable HourSpec
+instance Cacheable MinuteSpec
+instance Cacheable CronSchedule
 
 instance (Cacheable a) => Cacheable (Seq a) where
   unchanged = liftEq . unchanged
@@ -172,11 +190,10 @@ instance (Cacheable k, Cacheable v) => Cacheable (HashMap k v) where
   unchanged accesses = liftEq2 (unchanged accesses) (unchanged accesses)
 instance (Cacheable a) => Cacheable (HashSet a) where
   unchanged = liftEq . unchanged
-instance (Cacheable a) => Cacheable (Set a) where
-  unchanged = liftEq . unchanged
 instance (Cacheable a) => Cacheable (CI a) where
   unchanged _ = (==)
-
+instance (Cacheable a) => Cacheable (Set a) where
+  unchanged = liftEq . unchanged
 
 instance Cacheable ()
 instance (Cacheable a, Cacheable b) => Cacheable (a, b)

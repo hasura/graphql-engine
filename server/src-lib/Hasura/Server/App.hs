@@ -493,6 +493,7 @@ mkWaiApp
   -> SQLGenCtx
   -> Bool
   -> Q.PGPool
+  -> Maybe PGExecCtx
   -> Q.ConnInfo
   -> HTTP.Manager
   -> AuthMode
@@ -505,26 +506,16 @@ mkWaiApp
   -> EL.LiveQueriesOptions
   -> E.PlanCacheOptions
   -> ResponseInternalErrorsConfig
+  -> (RebuildableSchemaCache Run, Maybe UTCTime)
   -> m HasuraApp
-mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig = do
+mkWaiApp isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
+         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig (schemaCache, cacheBuiltTime) = do
 
-    let pgExecCtx = PGExecCtx pool isoLevel
-        pgExecCtxSer = PGExecCtx pool Q.Serializable
-        runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
-
-    (cacheRef, cacheBuiltTime) <- do
-      pgResp <- runExceptT $ peelRun runCtx pgExecCtxSer Q.ReadWrite $
-        (,) <$> buildRebuildableSchemaCache <*> liftTx fetchLastUpdate
-      (schemaCache, event) <- liftIO $ either initErrExit return pgResp
-      scRef <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
-      return (scRef, view _2 <$> event)
-
-    cacheLock <- liftIO $ newMVar ()
-    planCache <- liftIO $ E.initPlanCache planCacheOptions
+    (planCache, schemaCacheRef) <- initialiseCache
+    let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
-        getSchemaCache = first lastBuiltSchemaCache <$> readIORef cacheRef
+        pgExecCtx = fromMaybe (mkPGExecCtx isoLevel pool) pgExecCtxCustom
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx
     wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
@@ -532,8 +523,7 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
 
     ekgStore <- liftIO EKG.newStore
 
-    let schemaCacheRef = SchemaCacheRef cacheLock cacheRef (E.clearPlanCache planCache)
-        serverCtx = ServerCtx
+    let serverCtx = ServerCtx
                     { scPGExecCtx       =  pgExecCtx
                     , scConnInfo        =  ci
                     , scLogger          =  logger
@@ -555,7 +545,8 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
       liftIO $ EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs ekgStore
 
     spockApp <- liftWithStateless $ \lowerIO ->
-      Spock.spockAsApp $ Spock.spockT lowerIO $ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
+      Spock.spockAsApp $ Spock.spockT lowerIO $
+        httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
 
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
         stopWSServer = WS.stopWSServerApp wsServerEnv
@@ -568,6 +559,13 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
     getTimeMs :: IO Int64
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
+    initialiseCache :: m (E.PlanCache, SchemaCacheRef)
+    initialiseCache = do
+      cacheLock <- liftIO $ newMVar ()
+      cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
+      planCache <- liftIO $ E.initPlanCache planCacheOptions
+      let cacheRef = SchemaCacheRef cacheLock cacheCell (E.clearPlanCache planCache)
+      pure (planCache, cacheRef)
 
 httpApp
   :: ( HasVersion
@@ -691,7 +689,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     enableConfig = isConfigEnabled serverCtx
 
     checkDbConnection = do
-      e <- liftIO $ runExceptT $ runLazyTx' (scPGExecCtx serverCtx) select1Query
+      e <- liftIO $ runExceptT $ runQueryTx (scPGExecCtx serverCtx) select1Query
       pure $ isRight e
       where
         select1Query :: (MonadTx m) => m Int

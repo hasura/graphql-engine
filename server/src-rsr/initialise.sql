@@ -49,14 +49,13 @@ CREATE TABLE hdb_catalog.hdb_relationship
 
 CREATE TABLE hdb_catalog.hdb_remote_relationship
 (
-remote_relationship_name TEXT NOT NULL,
-table_schema name NOT NULL,
-table_name name NOT NULL,
-definition JSONB NOT NULL,
-PRIMARY KEY (remote_relationship_name, table_schema, table_name),
-FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
+  remote_relationship_name TEXT NOT NULL,
+  table_schema name NOT NULL,
+  table_name name NOT NULL,
+  definition JSONB NOT NULL,
+  PRIMARY KEY (remote_relationship_name, table_schema, table_name),
+  FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );
-
 
 CREATE TABLE hdb_catalog.hdb_permission
 (
@@ -311,6 +310,7 @@ CREATE TABLE hdb_catalog.event_log
 CREATE INDEX ON hdb_catalog.event_log (trigger_name);
 CREATE INDEX ON hdb_catalog.event_log (locked);
 CREATE INDEX ON hdb_catalog.event_log (delivered);
+CREATE INDEX ON hdb_catalog.event_log (created_at);
 
 CREATE TABLE hdb_catalog.event_invocation_logs
 (
@@ -805,13 +805,13 @@ CREATE INDEX hdb_scheduled_event_status ON hdb_catalog.hdb_scheduled_events (sta
 
 CREATE TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
 (
-  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
-  event_id TEXT,
-  status INTEGER,
-  request JSON,
-  response JSON,
-  created_at TIMESTAMP DEFAULT NOW(),
+id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+event_id TEXT,
+status INTEGER,
+request JSON,
+response JSON,
+created_at TIMESTAMP DEFAULT NOW(),
 
-  FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id)
-     ON DELETE CASCADE ON UPDATE CASCADE
+FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id)
+   ON DELETE CASCADE ON UPDATE CASCADE
 );

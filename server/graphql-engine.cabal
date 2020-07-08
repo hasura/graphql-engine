@@ -235,6 +235,9 @@ library
                      , directory
                      , semigroups >= 0.19.1
 
+                     -- scheduled triggers
+                     , cron >= 0.6.2
+
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
                      , Control.Monad.Stateless
@@ -319,6 +322,7 @@ library
                      , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.RemoteRelationship
+                     , Hasura.RQL.Types.ScheduledTrigger
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ComputedField
                      , Hasura.RQL.DDL.CustomTypes
@@ -342,6 +346,7 @@ library
                      , Hasura.RQL.DDL.Schema.Table
                      , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.EventTrigger
+                     , Hasura.RQL.DDL.ScheduledTrigger
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DDL.RemoteRelationship
@@ -427,6 +432,12 @@ library
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
 
+                     , Hasura.Eventing.HTTP
+                     , Hasura.Eventing.EventTrigger
+                     , Hasura.Eventing.ScheduledTrigger
+                     , Hasura.Eventing.Common
+
+
                      , Network.Wai.Extended
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
@@ -462,6 +473,7 @@ executable graphql-engine
                    , pg-client
                    , text
                    , text-conversions
+                   , unix
 
 test-suite graphql-engine-tests
   import: common-all, common-exe
