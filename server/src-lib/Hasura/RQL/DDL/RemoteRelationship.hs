@@ -14,8 +14,6 @@ module Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.RemoteRelationship
-import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Column                    ()
 import           Hasura.SQL.Types
 import           Hasura.RQL.DDL.RemoteRelationship.Validate
@@ -23,8 +21,7 @@ import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Instances.TH.Lift                          ()
 
 import qualified Database.PG.Query                          as Q
-import qualified Data.HashMap.Strict                        as Map
-import qualified Data.HashSet                                   as HS
+import qualified Data.HashSet                               as HS
 
 runCreateRemoteRelationship
   :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON

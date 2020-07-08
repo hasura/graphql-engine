@@ -234,9 +234,9 @@ inputValueDefinitionParser
    . (MonadSchema n m, MonadError QErr m)
   => G.SchemaDocument
   -> G.InputValueDefinition
-  -> m (InputFieldsParser n (G.Value Variable))
+  -> m (InputFieldsParser n (Maybe (G.Value Variable)))
 inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType maybeDefaultVal) =
-  let fieldConstructor :: forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Value Variable)
+  let fieldConstructor :: forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Maybe (Value Variable))
       fieldConstructor parser =
         let wrappedParser :: Parser k n (Value Variable)
             wrappedParser =
@@ -245,12 +245,15 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
                 , P.pParser = \value -> P.pParser parser value $> castWith (P.inputParserInput @k) value
                 }
         in case maybeDefaultVal of
-          Nothing -> field name desc wrappedParser
-          Just defaultVal -> fieldWithDefault name desc defaultVal wrappedParser
+          Nothing ->
+            case G.isNullable fieldType of
+              True -> fieldOptional name desc wrappedParser
+              False -> fmap Just $ field name desc wrappedParser
+          Just defaultVal -> fmap Just $ fieldWithDefault name desc defaultVal wrappedParser
       buildField
         :: G.GType
-        -> (forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (G.Value Variable))
-        -> m (InputFieldsParser n (G.Value Variable))
+        -> (forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Maybe (G.Value Variable)))
+        -> m (InputFieldsParser n (Maybe (G.Value Variable)))
       buildField fieldType' fieldConstructor' = case fieldType' of
        G.TypeNamed _ typeName ->
          case lookupType schemaDoc typeName of

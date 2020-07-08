@@ -7,23 +7,16 @@ module Hasura.RQL.DDL.RemoteRelationship.Validate
   , errorToText
   ) where
 
-import           Data.Bifunctor
 import           Data.Foldable
-import           Data.Validation
---import           Hasura.GraphQL.Validate.Types
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Parser.Column
-import           Hasura.GraphQL.Parser.Schema
 import           Hasura.Prelude                hiding (first)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils           (makeReasonMessage)
 import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.HashSet                  as HS
-import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
-import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
 
 -- | An error validating the remote relationship.
@@ -102,14 +95,14 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
   let pgColumnsVariablesMap = HM.fromList pgColumnsVariables
   case HM.lookup remoteSchemaName remoteSchemaMap of
     Nothing -> throwError $ RemoteSchemaNotFound remoteSchemaName
-    Just (RemoteSchemaCtx rsName (schemaDoc,queryRootName,_,_) rsi) -> do
+    Just (RemoteSchemaCtx rsName (schemaDoc@(G.SchemaDocument originalDefns),queryRootName,_,_) rsi) -> do
       queryRoot <-
         case lookupObject schemaDoc queryRootName of
           Just obj -> pure obj
           _ -> throwError $ FieldNotFoundInRemoteSchema queryRootName
-      _ <-
+      (_, (leafParamMap, leafTypeMap)) <-
         foldlM
-          (\objTyInfo fieldCall -> do
+          (\(objTyInfo,(_,typeMap)) fieldCall -> do
               objFldDefinition <- lookupField (fcName fieldCall) objTyInfo
               let providedArguments = getRemoteArguments $ fcArguments fieldCall
               (validateRemoteArguments
@@ -117,17 +110,19 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
                 providedArguments
                 pgColumnsVariablesMap
                 schemaDoc)
-             -- (newParamMap, newTypeMap) <-
-             --   first
-             --     pure
-             --       (runStateT
-             --          (stripInMap
-             --             remoteRelationship
-             --             (GS._gTypes gctx)
-             --             (_fiParams objFldInfo)
-             --             providedArguments)
-             --          typeMap)
-              innerObjTyInfo <- do
+              let eitherParamAndTypeMap =
+                    runStateT
+                      (stripInMap
+                         remoteRelationship
+                         schemaDoc
+                         (mapFromL G._ivdName (G._fldArgumentsDefinition objFldDefinition))
+                         providedArguments)
+                      $ typeMap
+              (newParamMap, newTypeMap) <-
+                case eitherParamAndTypeMap of
+                  Left err -> throwError err
+                  Right res -> pure res
+              innerObjTyInfo <-
                 case getObjTyInfoFromField schemaDoc objFldDefinition of
                   Just obj -> pure obj
                   Nothing ->
@@ -135,26 +130,25 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
                                 (InvalidType (G._fldType objFldDefinition) "only objects or scalar types expected"))
                          (pure objTyInfo)
                          (isScalarType schemaDoc objFldDefinition)
---              pure
---                ( innerObjTyInfo
--- --             , _fiTy objFldInfo
---                , (newParamMap, newTypeMap)))
-              pure innerObjTyInfo) -- temporary
-          queryRoot
+              pure
+               ( innerObjTyInfo
+               , (newParamMap,newTypeMap)))
+          (queryRoot,(mempty,mempty))
           (unRemoteFields $ rtrRemoteField remoteRelationship)
       pure $ RemoteFieldInfo
             { _rfiName = rtrName remoteRelationship
-            , _rfiParamMap = mempty -- _leafParamMap
+            , _rfiParamMap = leafParamMap
             , _rfiHasuraFields = HS.fromList hasuraFields
             , _rfiRemoteFields = rtrRemoteField remoteRelationship
             , _rfiRemoteSchema = rsi
-            , _rfiSchemaDoc = schemaDoc
+            -- adding the new types after stripping the values to the
+            -- schema document
+            , _rfiSchemaDoc = G.SchemaDocument $ originalDefns <> HM.elems leafTypeMap
             , _rfiRemoteSchemaName = rsName
             }
   where
     getObjTyInfoFromField schemaDoc field =
       let baseTy = G.getBaseType (G._fldType field)
-          fieldName = _fiName field
       in lookupObject schemaDoc baseTy
 
     isScalarType schemaDoc field =
@@ -164,117 +158,124 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
 -- | Return a map with keys deleted whose template argument is
 -- specified as an atomic (variable, constant), keys which are kept
 -- have their values modified by 'stripObject' or 'stripList'.
--- stripInMap ::
---      RemoteRelationship -> HM.HashMap G.Name TypeInfo
---   -> HM.HashMap G.Name InpValInfo
---   -> HM.HashMap G.Name G.Value
---   -> StateT (HM.HashMap G.Name TypeInfo) (Either ValidationError) (HM.HashMap G.Name InpValInfo)
--- stripInMap remoteRelationshipName types schemaArguments templateArguments =
---   fmap
---     (HM.mapMaybe id)
---     (HM.traverseWithKey
---        (\name inpValInfo ->
---           case HM.lookup name templateArguments of
---             Nothing -> pure (Just inpValInfo)
---             Just value -> do
---               maybeNewGType <- stripValue remoteRelationshipName types (_iviType inpValInfo) value
---               pure
---                 (fmap
---                    (\newGType -> inpValInfo {_iviType = newGType})
---                    maybeNewGType))
---        schemaArguments)
+-- This function creates the 'HashMap G.Name G.InputValueDefinition' which modifies
+-- the original input parameters (if any) of the remote node/table being used. Only
+-- list or object types are preserved and other types are stripped off. The object or
+-- list types are preserved because they can be merged, if any arguments are
+-- provided by the user while querying a remote join field.
+stripInMap
+  :: RemoteRelationship
+  -> G.SchemaDocument
+  -> HM.HashMap G.Name G.InputValueDefinition
+  -> HM.HashMap G.Name (G.Value G.Name)
+  -> StateT (HashMap G.Name G.TypeDefinition) (Either ValidationError) (HM.HashMap G.Name G.InputValueDefinition)
+stripInMap remoteRelationship types schemaArguments providedArguments =
+  fmap
+    (HM.mapMaybe id)
+    (HM.traverseWithKey
+       (\name inpValInfo ->
+          case HM.lookup name providedArguments of
+            Nothing -> pure (Just inpValInfo)
+            Just value -> do
+              maybeNewGType <- stripValue remoteRelationship types (G._ivdType inpValInfo) value
+              pure
+                (fmap
+                   (\newGType -> inpValInfo {G._ivdType = newGType})
+                   maybeNewGType))
+       schemaArguments)
 
 -- | Strip a value type completely, or modify it, if the given value
 -- is atomic-ish.
--- stripValue ::
---      RemoteRelationship -> HM.HashMap G.Name TypeInfo
---   -> G.GType
---   -> G.Value
---   -> StateT (HM.HashMap G.Name TypeInfo) (Either ValidationError) (Maybe G.GType)
--- stripValue remoteRelationshipName types gtype value = do
---   case value of
---     G.VVariable {} -> pure Nothing
---     G.VInt {} -> pure Nothing
---     G.VFloat {} -> pure Nothing
---     G.VString {} -> pure Nothing
---     G.VBoolean {} -> pure Nothing
---     G.VNull {} -> pure Nothing
---     G.VEnum {} -> pure Nothing
---     G.VList (G.ListValueG values) ->
---       case values of
---         []       -> pure Nothing
---         [gvalue] -> stripList remoteRelationshipName types gtype gvalue
---         _        -> lift (Left UnsupportedMultipleElementLists)
---     G.VObject (G.unObjectValue -> keypairs) ->
---       fmap Just (stripObject remoteRelationshipName types gtype keypairs)
+stripValue
+  :: RemoteRelationship
+  -> G.SchemaDocument
+  -> G.GType
+  -> G.Value G.Name
+  -> StateT (HashMap G.Name G.TypeDefinition) (Either ValidationError) (Maybe G.GType)
+stripValue remoteRelationshipName types gtype value = do
+  case value of
+    G.VVariable {} -> pure Nothing
+    G.VInt {} -> pure Nothing
+    G.VFloat {} -> pure Nothing
+    G.VString {} -> pure Nothing
+    G.VBoolean {} -> pure Nothing
+    G.VNull {} -> pure Nothing
+    G.VEnum {} -> pure Nothing
+    G.VList values ->
+      case values of
+        []       -> pure Nothing
+        [gvalue] -> stripList remoteRelationshipName types gtype gvalue
+        _        -> lift (Left UnsupportedMultipleElementLists)
+    G.VObject keyPairs ->
+      fmap Just (stripObject remoteRelationshipName types gtype keyPairs)
 
 -- -- | Produce a new type for the list, or strip it entirely.
--- stripList ::
---      RemoteRelationship
---   -> HM.HashMap G.Name TypeInfo
---   -> G.GType
---   -> G.Value
---   -> StateT (HM.HashMap G.Name TypeInfo) (Either ValidationError) (Maybe G.GType)
--- stripList remoteRelationshipName types originalOuterGType value =
---   case originalOuterGType of
---     G.TypeList nullability (G.ListType innerGType) -> do
---       maybeNewInnerGType <- stripValue remoteRelationshipName types innerGType value
---       pure
---         (fmap
---            (\newGType -> G.TypeList nullability (G.ListType newGType))
---            maybeNewInnerGType)
---     _ -> lift (Left (InvalidGTypeForStripping originalOuterGType))
+stripList
+  :: RemoteRelationship
+  -> G.SchemaDocument
+  -> G.GType
+  -> G.Value G.Name
+  -> StateT (HashMap G.Name G.TypeDefinition) (Either ValidationError) (Maybe G.GType)
+stripList remoteRelationshipName types originalOuterGType value =
+  case originalOuterGType of
+    G.TypeList nullability innerGType -> do
+      maybeNewInnerGType <- stripValue remoteRelationshipName types innerGType value
+      pure
+        (fmap
+           (\newGType -> G.TypeList nullability newGType)
+           maybeNewInnerGType)
+    _ -> lift (Left (InvalidGTypeForStripping originalOuterGType))
 
 -- -- | Produce a new type for the given InpValInfo, modified by
 -- -- 'stripInMap'. Objects can't be deleted entirely, just keys of an
 -- -- object.
--- stripObject ::
---      RemoteRelationship -> HM.HashMap G.Name TypeInfo
---   -> G.GType
---   -> [G.ObjectFieldG G.Value]
---   -> StateT (HM.HashMap G.Name TypeInfo) (Either ValidationError) G.GType
--- stripObject remoteRelationshipName types originalGtype keypairs =
---   case originalGtype of
---     G.TypeNamed nullability originalNamedType ->
---       case HM.lookup (getBaseTy originalGtype) types of
---         Just (TIInpObj originalInpObjTyInfo) -> do
---           let originalSchemaArguments = _iotiFields originalInpObjTyInfo
---               newNamedType =
---                 renameNamedType
---                   (renameTypeForRelationship remoteRelationshipName)
---                   originalNamedType
---           newSchemaArguments <-
---             stripInMap
---               remoteRelationshipName
---               types
---               originalSchemaArguments
---               templateArguments
---           let newInpObjTyInfo =
---                 originalInpObjTyInfo
---                   {_iotiFields = newSchemaArguments, _iotiName = newNamedType}
---               newGtype = G.TypeNamed nullability newNamedType
---           modify (HM.insert newNamedType (TIInpObj newInpObjTyInfo))
---           pure newGtype
---         _ -> lift (Left (InvalidGTypeForStripping originalGtype))
---     _ -> lift (Left (InvalidGTypeForStripping originalGtype))
---   where
---     templateArguments :: HM.HashMap G.Name G.Value
---     templateArguments =
---       HM.fromList (map (\(G.ObjectFieldG key val) -> (key, val)) keypairs)
+stripObject
+  :: RemoteRelationship
+  -> G.SchemaDocument
+  -> G.GType
+  -> HashMap G.Name (G.Value G.Name)
+  -> StateT (HashMap G.Name G.TypeDefinition) (Either ValidationError) G.GType
+stripObject remoteRelationshipName schemaDoc originalGtype templateArguments =
+  case originalGtype of
+    G.TypeNamed _ originalNamedType ->
+      case lookupType schemaDoc (G.getBaseType originalGtype) of
+        Just (G.TypeDefinitionInputObject originalInpObjTyInfo) -> do
+          let originalSchemaArguments =
+                mapFromL G._ivdName $ G._iotdValueDefinitions originalInpObjTyInfo
+              newNamedType =
+                renameNamedType
+                  (renameTypeForRelationship remoteRelationshipName)
+                  originalNamedType
+          newSchemaArguments <-
+            stripInMap
+              remoteRelationshipName
+              schemaDoc
+              originalSchemaArguments
+              templateArguments
+          let newInpObjTyInfo =
+                originalInpObjTyInfo
+                  { G._iotdValueDefinitions = HM.elems newSchemaArguments
+                  , G._iotdName = newNamedType
+                  }
+              newGtype = G.TypeNamed (G.Nullability True) newNamedType
+          modify (HM.insert newNamedType (G.TypeDefinitionInputObject newInpObjTyInfo))
+          pure newGtype
+        _ -> lift (Left (InvalidGTypeForStripping originalGtype))
+    _ -> lift (Left (InvalidGTypeForStripping originalGtype))
 
 -- -- | Produce a new name for a type, used when stripping the schema
 -- -- types for a remote relationship.
--- -- TODO: Consider a separator character to avoid conflicts.
--- renameTypeForRelationship :: RemoteRelationship -> Text -> Text
--- renameTypeForRelationship rtr text =
---   text <> "_remote_rel_" <> name
---   where name = schema <> "_" <> table <> remoteRelationshipNameToText (rtrName rtr)
---         QualifiedObject (SchemaName schema) (TableName table) = rtrTable rtr
+-- TODO: Consider a separator character to avoid conflicts. (from master)
+renameTypeForRelationship :: RemoteRelationship -> Text -> Text
+renameTypeForRelationship rtr text =
+  text <> "_remote_rel_" <> name
+  where name = schema <> "_" <> table <> remoteRelationshipNameToText (rtrName rtr)
+        QualifiedObject (SchemaName schema) (TableName table) = rtrTable rtr
 
 -- -- | Rename a type.
--- renameNamedType :: (Text -> Text) -> G.Name -> G.Name
--- renameNamedType rename (G.Name (G.Name text)) =
---   G.Name (G.Name (rename text))
+renameNamedType :: (Text -> Text) -> G.Name -> G.Name
+renameNamedType rename =
+  G.unsafeMkName . rename . G.unName
 
 -- | Convert a field name to a variable name.
 pgColumnToVariable :: (MonadError ValidationError m) => PGCol -> m G.Name

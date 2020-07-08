@@ -547,21 +547,20 @@ fieldSelection fieldInfo selectPermissions = do
         fmap sequenceA $ for (Map.toList $ _rfiParamMap remoteFieldInfo) $
         \(name, inpValDefn) ->
           inputValueDefinitionParser (_rfiSchemaDoc remoteFieldInfo) inpValDefn
-          -- FIXME: It shouldn't be Nothing below, construct the 'Maybe [(VariableDefinition, A.Value)]'
-          --  and use that!
-          <&> fmap (\gVal -> RQL.RemoteFieldArgument name gVal Nothing)
+          <&> fmap (fmap (\gVal -> RQL.RemoteFieldArgument name gVal))
 
       -- This selection set parser, should be of the remote node's selection set parser, which comes
       -- from the fieldCall
       nestedFieldInfo <- lookupRemoteField fieldDefns $ unRemoteFields $ _rfiRemoteFields remoteFieldInfo
+      let remoteFieldsArgumentsParser' = fmap catMaybes remoteFieldsArgumentsParser
       case nestedFieldInfo of
         P.FieldInfo{ P.fType = fieldType } -> do
           let fieldInfo' = P.FieldInfo
-                { P.fArguments = P.ifDefinitions remoteFieldsArgumentsParser
+                { P.fArguments = P.ifDefinitions remoteFieldsArgumentsParser'
                 , P.fType = fieldType }
           pure $ pure $ P.unsafeRawField (P.mkDefinition fieldName Nothing fieldInfo')
             `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
-              remoteArgs <- P.ifParser remoteFieldsArgumentsParser args
+              remoteArgs <- P.ifParser remoteFieldsArgumentsParser' args
               pure $ RQL.AFRemote $ RQL.RemoteSelect
                 { _rselArgs          = remoteArgs
                 , _rselSelection     = selSet
