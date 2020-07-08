@@ -50,6 +50,8 @@
   "dependencies": {
     "@graphql-codegen/core": "1.13.5",
     "@graphql-codegen/typescript": "1.13.5",
+    "@types/highlight.js": "^9.12.4",
+    "@types/sql-formatter": "^2.3.0",
     "ace-builds": "^1.4.11",
     "apollo-link": "1.2.14",
     "apollo-link-ws": "1.0.20",
