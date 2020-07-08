@@ -38,6 +38,7 @@ See :ref:`this page <permission_rules>` on how to configure permission rules.
   For every role that you create, Hasura automatically publishes a different GraphQL schema that represents the
   right queries, fields, and mutations that are available to that role.
 
+.. _dynamic_session_variables:
 
 Dynamic session variables
 -------------------------

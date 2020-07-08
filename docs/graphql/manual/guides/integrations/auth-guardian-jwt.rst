@@ -96,7 +96,7 @@ Now, you want to restrict access to some data in Hasura so that only you and you
 
 Option 4: Set a session variable
 --------------------------------
-Hasura can use **session variables** for all sorts of `powerful cases <https://docs.hasura.io/1.0/graphql/manual/auth/authorization/roles-variables.html#dynamic-session-variables>`__. AuthGuardian also supports setting these in your JWT!
+Hasura can use **session variables** for all sorts of :ref:`powerful cases <dynamic_session_variables>`. AuthGuardian also supports setting these in your JWT!
 
 Let's say we want to restrict access to some super-interesting data in our Hasura backend to users who have starred a particular GitHub repository:
 
