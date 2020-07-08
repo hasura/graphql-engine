@@ -41,7 +41,7 @@ data ComputedFieldDefinition
   } deriving (Show, Eq, Lift, Generic)
 instance NFData ComputedFieldDefinition
 instance Cacheable ComputedFieldDefinition
-$(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldDefinition)
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''ComputedFieldDefinition)
 
 data AddComputedField
   = AddComputedField
