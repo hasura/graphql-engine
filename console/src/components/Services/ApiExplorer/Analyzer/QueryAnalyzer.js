@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Modal from 'react-modal';
+import sqlFormatter from 'sql-formatter';
 import RootFields from './RootFields';
 
 export default class QueryAnalyser extends React.Component {
@@ -77,7 +78,7 @@ export default class QueryAnalyser extends React.Component {
                       />
                     </div>
                   </div>
-                  {window.hljs && window.sqlFormatter ? (
+                  {window.hljs ? (
                     <pre>
                       <code
                         dangerouslySetInnerHTML={{
@@ -86,7 +87,7 @@ export default class QueryAnalyser extends React.Component {
                             this.state.analyseData.length > 0 &&
                             window.hljs.highlight(
                               'sql',
-                              window.sqlFormatter.format(
+                              sqlFormatter.format(
                                 this.state.analyseData[this.state.activeNode]
                                   .sql,
                                 { language: 'sql' }
@@ -120,18 +121,6 @@ export default class QueryAnalyser extends React.Component {
                       />
                     </div>
                   </div>
-                  {/*
-                  <pre>
-                    <code>
-                      {this.state.activeNode >= 0
-                        && this.state.analyseData.length > 0
-                        ? this.state.analyseData[
-                            this.state.activeNode
-                          ].plan.map((k, i) => <div key={ i }>{k}</div> )
-                        : ''}
-                    </code>
-                  </pre>
-                  */}
                   <pre>
                     <code>
                       {this.state.activeNode >= 0 &&
@@ -150,20 +139,6 @@ export default class QueryAnalyser extends React.Component {
       </Modal>
     );
   }
-  /*
-  fetchAnalyse() {
-    const options = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    };
-    options.body = JSON.stringify(this.props.analyseQuery);
-    return fetch('http://localhost:8080/v1alpha1/graphql/explain', options);
-  }
-  */
-
   handleAnalyseNodeChange = e => {
     const nodeKey = e.target.getAttribute('data-key');
     if (nodeKey) {
@@ -174,12 +149,10 @@ export default class QueryAnalyser extends React.Component {
     let text = '';
     if (this.state.analyseData.length > 0) {
       if (type === 'sql') {
-        text = window.sqlFormatter
-          ? window.sqlFormatter.format(
-              this.state.analyseData[this.state.activeNode].sql,
-              { language: 'sql' }
-            )
-          : this.state.analyseData[this.state.activeNode].sql;
+        text = sqlFormatter.format(
+          this.state.analyseData[this.state.activeNode].sql,
+          { language: 'sql' }
+        );
       } else {
         text = this.state.analyseData[this.state.activeNode].plan.join('\n');
       }

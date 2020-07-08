@@ -1,5 +1,5 @@
 import React from 'react';
-
+import sqlFormatter from 'sql-formatter';
 import PropTypes from 'prop-types';
 
 class TextAreaWithCopy extends React.Component {
@@ -12,9 +12,7 @@ class TextAreaWithCopy extends React.Component {
     if (copyText.length > 0) {
       switch (textLanguage) {
         case 'sql':
-          text = window.sqlFormatter
-            ? window.sqlFormatter.format(copyText, { language: textLanguage })
-            : copyText;
+          text = sqlFormatter.format(copyText, { language: textLanguage });
           break;
         default:
           text = copyText;
@@ -35,7 +33,6 @@ class TextAreaWithCopy extends React.Component {
 
     try {
       const successful = document.execCommand('copy');
-      // const msg = successful ? 'successful' : 'unsuccessful';
       const tooltip = document.getElementById(id);
       if (!successful) {
         tooltip.innerHTML = 'Error copying';
@@ -75,7 +72,7 @@ class TextAreaWithCopy extends React.Component {
     };
 
     const renderSQLValue = () => {
-      if (!window || !window.hljs || !window.sqlFormatter) {
+      if (!window || !window.hljs) {
         return renderSimpleValue();
       }
 
@@ -86,7 +83,7 @@ class TextAreaWithCopy extends React.Component {
             dangerouslySetInnerHTML={{
               __html: window.hljs.highlight(
                 'sql',
-                window.sqlFormatter.format(copyText, { language: textLanguage })
+                sqlFormatter.format(copyText, { language: textLanguage })
               ).value,
             }}
           />
