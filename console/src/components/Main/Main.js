@@ -11,14 +11,6 @@ import { getPathRoot } from '../Common/utils/urlUtils';
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
 import logo from './images/white-logo.svg';
-import monitoring from './images/monitoring.svg';
-import rate from './images/rate.svg';
-import regression from './images/regression.svg';
-import management from './images/management.svg';
-import allow from './images/allow-listing.svg';
-import read from './images/read-replica.svg';
-import arrowForwardRed from './images/arrow_forward-red.svg';
-import pixHeart from './images/pix-heart.svg';
 
 import LoveSection from './LoveSection';
 
