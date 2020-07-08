@@ -45,6 +45,7 @@
 - console: fix styling of table row contents on tables on relationship page (#4974)
 - console: add error boundary to wrap VoyagerView (#4818)
 - cli: handle missing files during metadata apply (close #5163) (#5170)
+- docs: add pages on remote joins (close #4911) (#5132)
 - docs: add page on scheduled triggers (close #4913) (#5141)
 - docs: add page on Relay schema (close #4912) (#5150)
 
