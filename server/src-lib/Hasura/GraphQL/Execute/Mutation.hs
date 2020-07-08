@@ -99,11 +99,13 @@ convertMutationSelectionSet
   -> Maybe GH.VariableValues
   -> m (ExecutionPlan (LazyRespTx, HTTP.ResponseHeaders) RemoteCall (G.Name, J.Value))
 convertMutationSelectionSet gqlContext userInfo manager reqHeaders fields varDefs varValsM = do
+  mutationParser <- onNothing (gqlMutationParser gqlContext) $
+    throw400 ValidationFailed "no mutations exist"
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
     :: (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue), QueryReusability)
     <-  resolveVariables varDefs (fromMaybe Map.empty varValsM) fields
-    >>= (gqlMutationParser gqlContext >>> (`onLeft` reportParseErrors))
+    >>= (mutationParser >>> (`onLeft` reportParseErrors))
 
   -- Transform the RQL AST into a prepared SQL query
   -- TODO pass the correct stringifyNum somewhere rather than True

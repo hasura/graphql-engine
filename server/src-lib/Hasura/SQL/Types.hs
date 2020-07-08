@@ -33,6 +33,7 @@ module Hasura.SQL.Types
 
   , DQuote(..)
   , dquote
+  , squote
   , dquoteList
 
   , IsIden(..)
@@ -130,6 +131,10 @@ deriving instance DQuote G.EnumValue
 dquote :: (DQuote a) => a -> T.Text
 dquote = T.dquote . dquoteTxt
 {-# INLINE dquote #-}
+
+squote :: (DQuote a) => a -> T.Text
+squote = T.squote . dquoteTxt
+{-# INLINE squote #-}
 
 dquoteList :: (DQuote a, Foldable t) => t a -> T.Text
 dquoteList = T.intercalate ", " . map dquote . toList

@@ -434,9 +434,10 @@ field name description parser = case pType parser of
     { ifDefinitions = [mkDefinition name description case pType parser of
         NonNullable typ -> IFRequired typ
         Nullable typ    -> IFOptional typ (Just VNull)]
-    , ifParser = M.lookup name
-        >>> (`onNothing` parseError ("missing required field " <>> name))
-        >=> withPath (Key (unName name) :) . pInputParser parser
+    , ifParser = \ values -> withPath (++[Key (unName name)]) do
+        value <- onNothing (M.lookup name values) $
+          parseError ("missing required field " <>> name)
+        pInputParser parser value
     }
   -- nullable fields just have an implicit default value of `null`
   Nullable _ -> fieldWithDefault name description VNull parser
@@ -451,7 +452,7 @@ fieldWithDefault
 fieldWithDefault name description defaultValue parser = InputFieldsParser
   { ifDefinitions = [mkDefinition name description $
       IFOptional (discardNullability $ pType parser) (Just defaultValue)]
-  , ifParser = M.lookup name >>> withPath (Key (unName name) :) . \case
+  , ifParser = M.lookup name >>> withPath (++[Key (unName name)]) . \case
       Just value -> parseValue (toGraphQLType $ pType parser) value
       Nothing    -> pInputParser parser $ literal defaultValue
       -- FIXME: we use the literal without checking that its value can
@@ -512,7 +513,7 @@ fieldOptional
 fieldOptional name description parser = InputFieldsParser
   { ifDefinitions = [mkDefinition name description $
       IFOptional (discardNullability $ pType parser) Nothing]
-  , ifParser = M.lookup name >>> withPath (Key (unName name) :) . traverse (pInputParser parser)
+  , ifParser = M.lookup name >>> withPath (++[Key (unName name)]) . traverse (pInputParser parser)
   }
 
 -- | A variant of 'selectionSetObject' which doesn't implement any interfaces
@@ -536,7 +537,7 @@ selectionSetObject
 selectionSetObject name description parsers implementsInterfaces = Parser
   { pType = Nullable $ TNamed $ mkDefinition name description $
       TIObject $ ObjectInfo (map fDefinition parsers) interfaces
-  , pParser = \input -> do
+  , pParser = \input -> withPath (++[Key "selectionSet"]) do
       -- Not all fields have a selection set, but if they have one, it
       -- must contain at least one field. The GraphQL parser returns a
       -- list to represent this: an empty list indicates there was no
@@ -557,10 +558,11 @@ selectionSetObject name description parsers implementsInterfaces = Parser
         | _fName == $$(litName "__typename") ->
             pure $ SelectTypename name
         | Just parser <- M.lookup _fName parserMap ->
-            withPath (Key (unName _fName) :) $
+            withPath (++[Key (unName _fName)]) $
               SelectField <$> parser selectionField
         | otherwise ->
-            parseError $ name <<> " has no field named " <>> _fName
+            withPath (++[Key (unName _fName)]) $
+            parseError $ "field " <> _fName <<> " not found in type: " <> squote name
   }
   where
     parserMap = parsers
@@ -666,7 +668,7 @@ selection name description argumentsParser resultParser = FieldParser
       for_ (M.keys _fArguments) \argumentName -> do
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
-      ifParser argumentsParser _fArguments
+      withPath (++[Key "args"]) $ ifParser argumentsParser _fArguments
   }
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
@@ -692,7 +694,7 @@ subselection name description argumentsParser bodyParser = FieldParser
       for_ (M.keys _fArguments) \argumentName -> do
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
-      (,) <$> ifParser argumentsParser _fArguments
+      (,) <$> withPath (++[Key "args"]) (ifParser argumentsParser _fArguments)
           <*> pParser bodyParser _fSelectionSet
   }
   where

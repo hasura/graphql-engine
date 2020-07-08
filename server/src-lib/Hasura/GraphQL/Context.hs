@@ -47,8 +47,7 @@ $(deriveToJSON (aesonDrop 5 snakeCase) ''RoleContext)
 
 data GQLContext = GQLContext
   { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
-  -- TODO should we make mutation (and later subscription) parsers Maybe?
-  , gqlMutationParser :: ParserFn (InsOrdHashMap G.Name (MutationRootField UnpreparedValue))
+  , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
   }
 
 instance J.ToJSON GQLContext where
