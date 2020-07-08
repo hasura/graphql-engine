@@ -77,8 +77,10 @@ func init() {
 		NewScriptsCmd(ec),
 		NewDocsCmd(ec),
 		NewCompletionCmd(ec),
-		NewUpdateCLICmd(ec),
 	)
+	if IsUpdateCommandEnabled == "true" {
+		rootCmd.AddCommand(NewUpdateCLICmd(ec))
+	}
 	rootCmd.SetHelpCommand(NewHelpCmd(ec))
 	f := rootCmd.PersistentFlags()
 	f.StringVar(&ec.LogLevel, "log-level", "INFO", "log level (DEBUG, INFO, WARN, ERROR, FATAL)")
