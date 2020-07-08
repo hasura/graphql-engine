@@ -34,6 +34,7 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 /**
  * # RawSQL React FC
@@ -73,8 +74,6 @@ const RawSQL = ({
   migrationMode,
   allSchemas,
 }) => {
-  const styles = require('../../../Common/TableCommon/Table.scss');
-
   // local storage key for SQL
   const LS_RAW_SQL_SQL = 'rawSql:sql';
 
