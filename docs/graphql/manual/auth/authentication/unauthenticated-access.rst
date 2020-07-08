@@ -36,7 +36,7 @@ An unauthenticated role can be configured for the following scenarios: no auth s
 No auth setup
 ^^^^^^^^^^^^^
 
-With no auth setup, every request without the admin-secret header is considered an unauthenticated request.
+With no auth setup, every request without the admin secret header is considered an unauthenticated request.
 
 You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or the ``--unauthorized-role`` flag to set a role
 for unauthenticated (non-logged in) users. See :ref:`server_flag_reference` for more details
