@@ -6,8 +6,6 @@ import { isEmpty } from './components/Common/utils/jsUtils';
 
 // TODO: move this section to a more appropriate location
 
-const hljs = require('./helpers/highlight.min');
-
 declare global {
   interface Window {
     __env: {
@@ -25,14 +23,8 @@ declare global {
       consolePath: string;
       cliUUID: string;
     };
-    // TODO: Change
-    hljs: unknown;
   }
   const CONSOLE_ASSET_VERSION: string;
-}
-
-if ((window as Window) && typeof window === 'object' && !window.hljs) {
-  window.hljs = hljs;
 }
 
 /* initialize globals */
