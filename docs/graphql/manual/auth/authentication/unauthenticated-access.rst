@@ -18,7 +18,7 @@ Introduction
 It is a common requirement to have requests which are accessible to all users without the need for any authentication
 (logging in). For example, to display a public feed of events.
 
-Once you have configured authentication, by default Hasura GraphQL engine will reject any unauthenticated request it
+Once you have configured an :ref:`admin secret <securing_graphql_endpoint>`, by default Hasura GraphQL engine will reject any unauthenticated request it
 receives. 
 
 You can configure Hasura GraphQL engine to allow access to unauthenticated users by defining a specific role
@@ -31,7 +31,16 @@ A guide on setting up unauthenticated user permissions can be found :ref:`here <
 Configuring unauthenticated / public access
 -------------------------------------------
 
-An unauthenticated role can be configured for the following scenarios: webhook auth setup, JWT auth setup or no auth setup.
+An unauthenticated role can be configured for the following scenarios: no auth setup, webhook auth setup or JWT auth setup.
+
+No auth setup
+^^^^^^^^^^^^^
+
+With no auth setup, every request without the admin-secret header is considered an unauthenticated request.
+
+You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or the ``--unauthorized-role`` flag to set a role
+for unauthenticated (non-logged in) users. See :ref:`server_flag_reference` for more details
+on setting this flag/env var.
 
 Webhooks
 ^^^^^^^^
@@ -44,15 +53,6 @@ JWT
 ^^^
 
 For :ref:`JWT authentication <auth_jwt>`, an unauthenticated request is any request which does not contain a JWT token.
-
-You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or the ``--unauthorized-role`` flag to set a role
-for unauthenticated (non-logged in) users. See :ref:`server_flag_reference` for more details
-on setting this flag/env var.
-
-No auth setup
-^^^^^^^^^^^^^
-
-With no auth setup, an unauthenticated request is one that doesn't set an explicit role defined in permissions.
 
 You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or the ``--unauthorized-role`` flag to set a role
 for unauthenticated (non-logged in) users. See :ref:`server_flag_reference` for more details
