@@ -3,31 +3,40 @@ module Hasura.RQL.DDL.Metadata.Generator
   (genReplaceMetadata)
 where
 
+import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
-import qualified Hasura.RQL.DDL.ComputedField       as ComputedField
-import qualified Hasura.RQL.DDL.Permission          as Permission
-import qualified Hasura.RQL.DDL.Permission.Internal as Permission
-import qualified Hasura.RQL.DDL.QueryCollection     as Collection
-import qualified Hasura.RQL.DDL.Relationship        as Relationship
-import qualified Hasura.RQL.DDL.Schema              as Schema
+import qualified Hasura.RQL.DDL.ComputedField                  as ComputedField
+import qualified Hasura.RQL.DDL.Permission                     as Permission
+import qualified Hasura.RQL.DDL.Permission.Internal            as Permission
+import qualified Hasura.RQL.DDL.QueryCollection                as Collection
+import qualified Hasura.RQL.DDL.Relationship                   as Relationship
+import qualified Hasura.RQL.DDL.Schema                         as Schema
 
-import qualified Data.Aeson                         as J
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.List.NonEmpty                 as NEList
-import qualified Data.Text                          as T
-import qualified Data.Vector                        as V
-import qualified Language.GraphQL.Draft.Parser      as G
-import qualified Language.GraphQL.Draft.Syntax      as G
-import qualified Language.Haskell.TH.Syntax         as TH
-import qualified Network.URI                        as N
+import           System.Cron.Types
 
+import qualified Data.Aeson                                    as J
+import qualified Data.HashMap.Strict                           as HM
+import qualified Data.Text                                     as T
+import qualified Data.Vector                                   as V
+import qualified Language.GraphQL.Draft.Parser                 as G
+import qualified Language.GraphQL.Draft.Syntax                 as G
+import qualified Language.Haskell.TH.Syntax                    as TH
+import qualified Network.URI                                   as N
+import qualified System.Cron.Parser                            as Cr
+import qualified Data.List.NonEmpty                            as NEList
+
+
+import           Data.List.Extended                 (duplicates)
+import           Data.Scientific
 import           Test.QuickCheck
+import           Test.QuickCheck.Instances.Semigroup           ()
+import           Test.QuickCheck.Instances.Time                ()
+import           Test.QuickCheck.Instances.UnorderedContainers ()
 
 genReplaceMetadata :: Gen ReplaceMetadata
 genReplaceMetadata = do
@@ -40,14 +49,12 @@ genReplaceMetadata = do
     <*> arbitrary
     -- <*> arbitrary
     -- <*> arbitrary
+    <*> arbitrary
   where
     genFunctionsMetadata :: MetadataVersion -> Gen FunctionsMetadata
     genFunctionsMetadata = \case
       MVVersion1 -> FMVersion1 <$> arbitrary
       MVVersion2 -> FMVersion2 <$> arbitrary
-
-instance (Eq k, Hashable k, Arbitrary k, Arbitrary v) => Arbitrary (HM.HashMap k v) where
-  arbitrary = HM.fromList <$> arbitrary
 
 instance Arbitrary G.Name where
   arbitrary = G.unsafeMkName . T.pack <$> listOf1 (elements ['a'..'z'])
@@ -88,6 +95,9 @@ instance Arbitrary ComputedField.ComputedFieldDefinition where
 instance Arbitrary ComputedFieldMeta where
   arbitrary = genericArbitrary
 
+instance Arbitrary Scientific where
+  arbitrary = ((fromRational . toRational) :: Int -> Scientific) <$> arbitrary
+
 instance Arbitrary J.Value where
   arbitrary = sized sizedArbitraryValue
     where
@@ -97,7 +107,7 @@ instance Arbitrary J.Value where
         where
           n' = n `div` 2
           boolean = J.Bool <$> arbitrary
-          number = (J.Number . fromRational . toRational :: Int -> J.Value) <$> arbitrary
+          number = J.Number <$> arbitrary
           string = J.String <$> arbitrary
           array = J.Array . V.fromList <$> arbitrary
           object' = J.Object <$> arbitrary
@@ -179,11 +189,11 @@ instance Arbitrary AddRemoteSchemaQuery where
 -- FIXME:- The GraphQL AST has 'Gen' by Hedgehog testing package which lacks the
 -- 'Arbitrary' class implementation. For time being, a single query is generated every time.
 instance Arbitrary Collection.GQLQueryWithText where
-  arbitrary = pure $ Collection.GQLQueryWithText ( "query {author {id name}}"
+  arbitrary = pure $ Collection.GQLQueryWithText ( simpleGraphQLQuery
                                                  , Collection.GQLQuery simpleQuery
                                                  )
     where
-      simpleQuery = $(either (fail . T.unpack) TH.lift $ G.parseExecutableDoc "query {author {id name}}")
+      simpleQuery = $(either (fail . T.unpack) TH.lift $ G.parseExecutableDoc simpleGraphQLQuery)
 
 instance Arbitrary Collection.ListedQuery where
   arbitrary = genericArbitrary
@@ -196,9 +206,6 @@ instance Arbitrary Collection.CreateCollection where
 
 instance Arbitrary Collection.CollectionReq where
   arbitrary = genericArbitrary
-
-instance (Arbitrary a) => Arbitrary (NEList.NonEmpty a) where
-  arbitrary = NEList.fromList <$> listOf1 arbitrary
 
 instance Arbitrary G.Description where
   arbitrary = G.Description <$> arbitrary
@@ -289,3 +296,54 @@ instance Arbitrary ActionPermissionMetadata where
 
 instance Arbitrary ActionMetadata where
   arbitrary = genericArbitrary
+
+deriving instance Arbitrary RemoteArguments
+
+instance Arbitrary G.Origin where
+  arbitrary = genericArbitrary
+
+instance Arbitrary a => Arbitrary (G.Value a) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary FieldCall where
+  arbitrary = genericArbitrary
+
+deriving instance Arbitrary RemoteFields
+
+instance Arbitrary RemoteRelationshipDef where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteRelationshipMeta where
+  arbitrary = genericArbitrary
+
+instance Arbitrary CronTriggerMetadata where
+  arbitrary = genericArbitrary
+
+instance Arbitrary STRetryConf where
+  arbitrary = genericArbitrary
+
+instance Arbitrary NonNegativeDiffTime where
+  arbitrary = genericArbitrary
+
+instance Arbitrary CronSchedule where
+  arbitrary = elements sampleCronSchedules
+
+sampleCronSchedules :: [CronSchedule]
+sampleCronSchedules = rights $ map Cr.parseCronSchedule $
+  [ "* * * * *"
+  -- every minute
+  , "5 * * * *"
+  -- every hour at the 5th minute
+  , "\5 * * * *"
+  -- every 5 minutes
+  , "* 5 * * *"
+  -- every minute of the 5th hour of the day
+  , "5 5 * * *"
+  -- fifth minute of the fifth hour every day
+  , "0 0 5 * *"
+  -- 00:00 of the 5th day of every month
+  , "0 0 1 1 *"
+  -- 00:00 of 1st of January
+  , "0 0 * * 0"
+  -- Every sunday at 00:00
+  ]

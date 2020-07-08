@@ -379,7 +379,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           -- Telemetry. NOTE: don't time network IO:
           telemTimeTot <- Seconds <$> timerTot
           sendSuccResp encJson $ LQ.LiveQueryMetadata telemTimeIO_DT
-          let telemTimeIO = fromUnits telemTimeIO_DT
+          let telemTimeIO = convertDuration telemTimeIO_DT
           Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
       sendCompleted (Just requestId)
@@ -417,7 +417,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               -- Telemetry. NOTE: don't time network IO:
               telemTimeTot <- Seconds <$> timerTot
               sendSuccResp encJson $ LQ.LiveQueryMetadata telemTimeIO_DT
-              let telemTimeIO = fromUnits telemTimeIO_DT
+              let telemTimeIO = convertDuration telemTimeIO_DT
               Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
           sendCompleted (Just reqId)
@@ -444,7 +444,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             -- Telemetry. NOTE: don't time network IO:
             telemTimeTot <- Seconds <$> timerTot
             sendRemoteResp reqId (_hrBody val) $ LQ.LiveQueryMetadata telemTimeIO_DT
-            let telemTimeIO = fromUnits telemTimeIO_DT
+            let telemTimeIO = convertDuration telemTimeIO_DT
             Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
       sendCompleted (Just reqId)

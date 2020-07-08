@@ -4,6 +4,7 @@ module Hasura.GraphQL.Utils
   , groupListWith
   , mkMapWith
   , showNames
+  , simpleGraphQLQuery
   ) where
 
 import           Hasura.Prelude
@@ -48,3 +49,7 @@ mkMapWith f l =
 showNames :: (Foldable t) => t G.Name -> Text
 showNames names =
   T.intercalate ", " $ map G.unName $ toList names
+
+-- A simple graphql query to be used in generators
+simpleGraphQLQuery :: Text
+simpleGraphQLQuery = "query {author {id name}}"

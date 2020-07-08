@@ -80,8 +80,8 @@ runGQ reqId userInfo reqHdrs queryType req = do
         (telemTimeIO, resp) <- E.execRemoteGQ reqId userInfo reqHdrs req rsi $ G._todType opDef
         return (telemCacheHit, Telem.Remote, (telemTimeIO, telemQueryType, resp))
 -}
-  let telemTimeIO = fromUnits telemTimeIO_DT
-      telemTimeTot = fromUnits telemTimeTot_DT
+  let telemTimeIO = convertDuration telemTimeIO_DT
+      telemTimeTot = convertDuration telemTimeTot_DT
   Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return resp
   where

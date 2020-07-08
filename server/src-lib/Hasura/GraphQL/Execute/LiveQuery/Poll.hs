@@ -332,7 +332,7 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
     flip A.mapConcurrently_ queryVarsBatches $ \queryVars -> do
       (dt, mxRes) <- timing _rmQuery $
         runExceptT $ runQueryTx pgExecCtx $ executeMultiplexedQuery pgQuery queryVars
-      let lqMeta = LiveQueryMetadata $ fromUnits dt
+      let lqMeta = LiveQueryMetadata $ convertDuration dt
           operations = getCohortOperations cohortSnapshotMap lqMeta mxRes
 
       void $ timing _rmPush $

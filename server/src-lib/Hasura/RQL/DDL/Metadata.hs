@@ -70,7 +70,10 @@ runClearMetadata _ = do
 applyQP1
   :: (QErrM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata _ tables functionsMeta collections allowlist) = do
+applyQP1 (ReplaceMetadata _ tables functionsMeta -- schemas
+          collections
+          allowlist -- _ actions
+          cronTriggers) = do
   withPathK "tables" $ do
 
     checkMultipleDecls "tables" $ map _tmTable tables
@@ -136,7 +139,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata _ tables functionsMeta collections allowlist) = do
+applyQP2 (ReplaceMetadata _ tables functionsMeta collections allowlist cronTriggers) = do
 
   liftTx clearMetadata
   buildSchemaCacheStrict
@@ -291,8 +294,18 @@ fetchMetadata = do
   -- -- fetch actions
   -- actions <- fetchActions
 
-  return $ ReplaceMetadata currentMetadataVersion (HMIns.elems postRelMap) functions
-                           collections allowlist
+  cronTriggers <- fetchCronTriggers
+
+
+  return $ ReplaceMetadata currentMetadataVersion
+                           (HMIns.elems postRelMap)
+                           functions
+                           -- remoteSchemas
+                           collections
+                           allowlist
+                           -- customTypes
+                           -- actions
+                           cronTriggers
 
   where
 
@@ -388,6 +401,29 @@ fetchMetadata = do
                           , ComputedFieldMeta name definition comment
                           )
 
+    fetchCronTriggers =
+      map uncurryCronTrigger
+              <$> Q.listQE defaultTxErrorHandler
+      [Q.sql|
+       SELECT ct.name, ct.webhook_conf, ct.cron_schedule, ct.payload,
+             ct.retry_conf, ct.header_conf, ct.include_in_metadata, ct.comment
+        FROM hdb_catalog.hdb_cron_triggers ct
+        WHERE include_in_metadata
+      |] () False
+      where
+        uncurryCronTrigger
+          (name, webhook, schedule, payload, retryConfig, headerConfig, includeMetadata, comment) =
+          CronTriggerMetadata
+          { ctName = name,
+            ctWebhook = Q.getAltJ webhook,
+            ctSchedule = schedule,
+            ctPayload = Q.getAltJ <$> payload,
+            ctRetryConf = Q.getAltJ retryConfig,
+            ctHeaders = Q.getAltJ headerConfig,
+            ctIncludeInMetadata = includeMetadata,
+            ctComment = comment
+          }
+
     -- fetchCustomTypes :: Q.TxE QErr CustomTypes
     -- fetchCustomTypes =
     --   Q.getAltJ . runIdentity . Q.getRow <$>
@@ -435,9 +471,17 @@ runExportMetadata _ =
   (AO.toEncJSON . replaceMetadataToOrdJSON) <$> liftTx fetchMetadata
 
 runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
-runReloadMetadata ReloadMetadata = do
-  buildSchemaCacheWithOptions CatalogUpdate mempty { ciMetadata = True }
-  return successMsg
+runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
+  sc <- askSchemaCache
+  let remoteSchemaInvalidations =
+        -- TODO
+        -- if reloadRemoteSchemas then HS.fromList (getAllRemoteSchemas sc) else
+          mempty
+  buildSchemaCacheWithOptions CatalogUpdate CacheInvalidations
+                                            { ciMetadata = True
+                                            , ciRemoteSchemas = remoteSchemaInvalidations
+                                            }
+  pure successMsg
 
 runDumpInternalState
   :: (QErrM m, CacheRM m)
