@@ -4,7 +4,7 @@
 
 module Hasura.RQL.DDL.RemoteRelationship.Validate
   ( validateRemoteRelationship
-  , validateErrorToText
+  , errorToText
   ) where
 
 import           Data.Bifunctor
@@ -13,6 +13,7 @@ import           Data.Validation
 --import           Hasura.GraphQL.Validate.Types
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Parser.Column
+import           Hasura.GraphQL.Parser.Schema
 import           Hasura.Prelude                hiding (first)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils           (makeReasonMessage)
@@ -45,44 +46,40 @@ data ValidationError
   | InvalidGraphQLName !T.Text
   deriving (Show, Eq)
 
-validateErrorToText :: NE.NonEmpty ValidationError -> Text
-validateErrorToText (toList -> errs) =
-  "cannot validate remote relationship " <> makeReasonMessage errs errorToText
-  where
-    errorToText :: ValidationError -> Text
-    errorToText = \case
-      RemoteSchemaNotFound name ->
-        "remote schema with name " <> name <<> " not found"
-      CouldntFindRemoteField name ty ->
-        "remote field with name " <> name <<> " and type " <> ty <<> " not found"
-      FieldNotFoundInRemoteSchema name ->
-        "field with name " <> name <<> " not found in remote schema"
-      NoSuchArgumentForRemote name ->
-        "argument with name " <> name <<> " not found in remote schema"
-      MissingRequiredArgument name ->
-        "required argument with name " <> name <<> " is missing"
-      TypeNotFound ty ->
-        "type with name " <> ty <<> " not found"
-      TableNotFound name ->
-        "table with name " <> name <<> " not found"
-      TableFieldNonexistent table fieldName ->
-        "field with name " <> fieldName <<> " not found in table " <>> table
-      ExpectedTypeButGot expTy actualTy ->
-        "expected type " <> G.getBaseType expTy <<> " but got " <>> G.getBaseType actualTy
-      InvalidType ty err ->
-        "type " <> G.getBaseType ty <<> err
-      InvalidVariable var _ ->
-        "variable " <> var <<> " is not found"
-      NullNotAllowedHere ->
-        "null is not allowed here"
-      InvalidGTypeForStripping ty ->
-        "type " <> G.getBaseType ty <<> " is invalid for stripping"
-      UnsupportedMultipleElementLists ->
-        "multiple elements in list value is not supported"
-      UnsupportedEnum ->
-        "enum value is not supported"
-      InvalidGraphQLName t ->
-        t <<> " is not a valid GraphQL identifier"
+errorToText :: ValidationError -> Text
+errorToText = \case
+  RemoteSchemaNotFound name ->
+    "remote schema with name " <> name <<> " not found"
+  CouldntFindRemoteField name ty ->
+    "remote field with name " <> name <<> " and type " <> ty <<> " not found"
+  FieldNotFoundInRemoteSchema name ->
+    "field with name " <> name <<> " not found in remote schema"
+  NoSuchArgumentForRemote name ->
+    "argument with name " <> name <<> " not found in remote schema"
+  MissingRequiredArgument name ->
+    "required argument with name " <> name <<> " is missing"
+  TypeNotFound ty ->
+    "type with name " <> ty <<> " not found"
+  TableNotFound name ->
+    "table with name " <> name <<> " not found"
+  TableFieldNonexistent table fieldName ->
+    "field with name " <> fieldName <<> " not found in table " <>> table
+  ExpectedTypeButGot expTy actualTy ->
+    "expected type " <> G.getBaseType expTy <<> " but got " <>> G.getBaseType actualTy
+  InvalidType ty err ->
+    "type " <> G.getBaseType ty <<> err
+  InvalidVariable var _ ->
+    "variable " <> var <<> " is not found"
+  NullNotAllowedHere ->
+    "null is not allowed here"
+  InvalidGTypeForStripping ty ->
+    "type " <> G.getBaseType ty <<> " is invalid for stripping"
+  UnsupportedMultipleElementLists ->
+    "multiple elements in list value is not supported"
+  UnsupportedEnum ->
+    "enum value is not supported"
+  InvalidGraphQLName t ->
+    t <<> " is not a valid GraphQL identifier"
 
 -- | Validate a remote relationship given a context.
 validateRemoteRelationship
@@ -98,27 +95,28 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
     \fieldName -> case find ((==) fieldName . fromPGCol . pgiColumn) pgColumns of
                     Nothing -> throwError $ TableFieldNonexistent table fieldName
                     Just r  -> pure r
+  pgColumnsVariables <- (mapM (\(k,v) -> do
+                                  variableName <- pgColumnToVariable k
+                                  pure $ (variableName,v)
+                              )) $ (HM.toList $ mapFromL (pgiColumn) pgColumns)
+  let pgColumnsVariablesMap = HM.fromList pgColumnsVariables
   case HM.lookup remoteSchemaName remoteSchemaMap of
     Nothing -> throwError $ RemoteSchemaNotFound remoteSchemaName
     Just (RemoteSchemaCtx rsName (schemaDoc,queryRootName,_,_) rsi) -> do
-      queryRootFieldDefinitions <-
+      queryRoot <-
         case lookupObject schemaDoc queryRootName of
-          Just obj ->
-            pure $ G._otdFieldsDefinition obj
-          Nothing -> throwError $ FieldNotFoundInRemoteSchema queryRootName
-     -- (_, (leafParamMap, _)) <-
-     --    foldlM
-     --      (\(objTyInfo,_) fieldCall -> do
-     --         objFldDefinition <- lookupField (fcName fieldCall) objTyInfo
-     --         let providedArguments = getRemoteArguments $ fcArguments fieldCall
-     --         (validateRemoteArguments
-     --            (mapFromL G._fldName (G._fldArgumentsDefinition objFldInfo))
-     --            providedArguments
-     --            (HM.fromList
-     --               (map
-     --                  (first pgColumnToVariable)
-     --                  (HM.toList $ mapFromL (pgiColumn) pgColumns)))
-     --            (GS._gTypes gctx))                       -- I don't have this
+          Just obj -> pure obj
+          _ -> throwError $ FieldNotFoundInRemoteSchema queryRootName
+      _ <-
+        foldlM
+          (\objTyInfo fieldCall -> do
+              objFldDefinition <- lookupField (fcName fieldCall) objTyInfo
+              let providedArguments = getRemoteArguments $ fcArguments fieldCall
+              (validateRemoteArguments
+                (mapFromL G._ivdName (G._fldArgumentsDefinition objFldDefinition))
+                providedArguments
+                pgColumnsVariablesMap
+                schemaDoc)
              -- (newParamMap, newTypeMap) <-
              --   first
              --     pure
@@ -129,58 +127,39 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
              --             (_fiParams objFldInfo)
              --             providedArguments)
              --          typeMap)
-             -- innerObjTyInfo <-
-             --   if isObjType (GS._gTypes gctx) objFldInfo
-             --   then getTyInfoFromField (GS._gTypes gctx) objFldInfo
-             --   else if isScalarType (GS._gTypes gctx) objFldInfo
-             --          then pure objTyInfo
-             --          else throwError $
-             --                    (InvalidType (_fiTy objFldInfo) "only objects or scalar types expected")
+              innerObjTyInfo <- do
+                case getObjTyInfoFromField schemaDoc objFldDefinition of
+                  Just obj -> pure obj
+                  Nothing ->
+                    bool (throwError $
+                                (InvalidType (G._fldType objFldDefinition) "only objects or scalar types expected"))
+                         (pure objTyInfo)
+                         (isScalarType schemaDoc objFldDefinition)
 --              pure
 --                ( innerObjTyInfo
 -- --             , _fiTy objFldInfo
 --                , (newParamMap, newTypeMap)))
---                pure (queryRootFieldDefinitions,(mempty,mempty))
---           (pure
---              ( queryRootFieldDefinitions
--- --           , G.toGT (_otiName $ GS._gQueryRoot gctx)
---              , (mempty, mempty)))
---           (unRemoteFields $ rtrRemoteField remoteRelationship)
+              pure innerObjTyInfo) -- temporary
+          queryRoot
+          (unRemoteFields $ rtrRemoteField remoteRelationship)
       pure $ RemoteFieldInfo
             { _rfiName = rtrName remoteRelationship
-            , _rfiParamMap = _leafParamMap
+            , _rfiParamMap = mempty -- _leafParamMap
             , _rfiHasuraFields = HS.fromList hasuraFields
             , _rfiRemoteFields = rtrRemoteField remoteRelationship
             , _rfiRemoteSchema = rsi
             , _rfiSchemaDoc = schemaDoc
             , _rfiRemoteSchemaName = rsName
             }
-  -- where
-  --   getTyInfoFromField types field =
-  --     let baseTy = getBaseTy (_fiTy field)
-  --         fieldName = _fiName field
-  --         typeInfo = HM.lookup baseTy types
-  --      in case typeInfo of
-  --           Just (TIObj objTyInfo) -> pure objTyInfo
-  --           _                      -> Left (pure (FieldNotFoundInRemoteSchema fieldName))
-  --   isObjType types field =
-  --     let baseTy = getBaseTy (_fiTy field)
-  --         typeInfo = HM.lookup baseTy types
-  --      in case typeInfo of
-  --           Just (TIObj _) -> True
-  --           _              -> False
+  where
+    getObjTyInfoFromField schemaDoc field =
+      let baseTy = G.getBaseType (G._fldType field)
+          fieldName = _fiName field
+      in lookupObject schemaDoc baseTy
 
-  --   isScalarType types field =
-  --     let baseTy = getBaseTy (_fiTy field)
-  --         typeInfo = HM.lookup baseTy types
-  --      in case typeInfo of
-  --           Just (TIScalar _) -> True
-  --           _                 -> False
-
-    -- remoteArgumentsToMap =
-    --   HM.fromList .
-    --   map (\field -> (G._ofName field, G._ofValue field)) .
-    --   getRemoteArguments
+    isScalarType schemaDoc field =
+      let baseTy = G.getBaseType (G._fldType field)
+      in isJust $ lookupScalar schemaDoc baseTy
 
 -- | Return a map with keys deleted whose template argument is
 -- specified as an atomic (variable, constant), keys which are kept
@@ -297,9 +276,11 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
 -- renameNamedType rename (G.Name (G.Name text)) =
 --   G.Name (G.Name (rename text))
 
--- -- | Convert a field name to a variable name.
--- pgColumnToVariable :: PGCol -> G.Variable
--- pgColumnToVariable = G.Variable . G.Name . getPGColTxt
+-- | Convert a field name to a variable name.
+pgColumnToVariable :: (MonadError ValidationError m) => PGCol -> m G.Name
+pgColumnToVariable pgCol =
+  let pgColText = getPGColTxt pgCol
+  in maybe (throwError $ InvalidGraphQLName pgColText) pure $ G.mkName pgColText
 
 -- | Lookup the field in the schema.
 lookupField
@@ -317,80 +298,100 @@ lookupField name objFldInfo = viaObject objFldInfo
       G._otdFieldsDefinition
 
 -- | Validate remote input arguments against the remote schema.
--- validateRemoteArguments ::
---      HM.HashMap G.Name InpValInfo
---   -> HM.HashMap G.Name G.Value
---   -> HM.HashMap G.Variable PGColumnInfo
---   -> HM.HashMap G.Name TypeInfo
---   -> Validation (NonEmpty ValidationError) ()
--- validateRemoteArguments expectedArguments providedArguments permittedVariables types = do
---   traverse validateProvided (HM.toList providedArguments)
---   -- Not neccessary to validate if all required args are provided in the relationship
---   -- traverse validateExpected (HM.toList expectedArguments)
---   pure ()
---   where
---     validateProvided (providedName, providedValue) =
---       case HM.lookup providedName expectedArguments of
---         Nothing -> Failure (pure (NoSuchArgumentForRemote providedName))
---         Just (_iviType -> expectedType) ->
---           validateType permittedVariables providedValue expectedType types
+validateRemoteArguments
+  :: (MonadError ValidationError m)
+  => HM.HashMap G.Name G.InputValueDefinition
+  -> HM.HashMap G.Name (G.Value G.Name)
+  -> HM.HashMap G.Name PGColumnInfo
+  -> G.SchemaDocument
+  -> m ()
+validateRemoteArguments expectedArguments providedArguments permittedVariables schemaDocument = do
+  traverse_ validateProvided (HM.toList providedArguments)
+  -- Not neccessary to validate if all required args are provided in the relationship
+  -- traverse validateExpected (HM.toList expectedArguments)
+  where
+    validateProvided (providedName, providedValue) =
+      case HM.lookup providedName expectedArguments of
+        Nothing -> throwError (NoSuchArgumentForRemote providedName)
+        Just (G._ivdType -> expectedType) ->
+          validateType permittedVariables providedValue expectedType schemaDocument
+
+unwrapGraphQLType :: G.GType -> G.GType
+unwrapGraphQLType = \case
+  G.TypeList _ lt -> lt
+  nt -> nt
 
 -- | Validate a value against a type.
--- validateType ::
---      HM.HashMap G.Variable PGColumnInfo
---   -> G.Value
---   -> G.GType
---   -> HM.HashMap G.Name TypeInfo
---   -> Validation (NonEmpty ValidationError) ()
--- validateType permittedVariables value expectedGType types =
---   case value of
---     G.VVariable variable ->
---       case HM.lookup variable permittedVariables of
---         Nothing -> Failure (pure (InvalidVariable variable permittedVariables))
---         Just fieldInfo ->
---           bindValidation
---             (columnInfoToNamedType fieldInfo)
---             (\actualNamedType -> assertType (G.toGT actualNamedType) expectedGType)
---     G.VInt {} -> assertType (G.toGT $ mkScalarTy PGInteger) expectedGType
---     G.VFloat {} -> assertType (G.toGT $ mkScalarTy PGFloat) expectedGType
---     G.VBoolean {} -> assertType (G.toGT $ mkScalarTy PGBoolean) expectedGType
---     G.VNull -> Failure (pure NullNotAllowedHere)
---     G.VString {} -> assertType (G.toGT $ mkScalarTy PGText) expectedGType
---     G.VEnum _ -> Failure (pure UnsupportedEnum)
---     G.VList (G.unListValue -> values) -> do
---       case values of
---         []  -> pure ()
---         [_] -> pure ()
---         _   -> Failure (pure UnsupportedMultipleElementLists)
---       (assertListType expectedGType)
---       (flip
---          traverse_
---          values
---          (\val ->
---             validateType permittedVariables val (unwrapTy expectedGType) types))
---       pure ()
---     G.VObject (G.unObjectValue -> values) ->
---       flip
---         traverse_
---         values
---         (\(G.ObjectFieldG name val) ->
---            let expectedNamedType = getBaseTy expectedGType
---            in
---            case HM.lookup expectedNamedType types of
---              Nothing -> Failure (pure $ TypeNotFound expectedNamedType)
---              Just typeInfo ->
---                case typeInfo of
---                  TIInpObj inpObjTypeInfo ->
---                    case HM.lookup name (_iotiFields inpObjTypeInfo) of
---                      Nothing -> Failure (pure $ NoSuchArgumentForRemote name)
---                      Just (_iviType -> expectedType) ->
---                        validateType permittedVariables val expectedType types
---                  _ ->
---                    Failure
---                      (pure $
---                       InvalidType
---                         (G.toGT $ G.Name name)
---                         "not an input object type"))
+validateType
+  :: (MonadError ValidationError m)
+  => HM.HashMap G.Name PGColumnInfo
+  -> G.Value G.Name
+  -> G.GType
+  -> G.SchemaDocument
+  -> m ()
+validateType permittedVariables value expectedGType schemaDocument =
+  case value of
+    G.VVariable variable ->
+      case HM.lookup variable permittedVariables of
+        Nothing -> throwError (InvalidVariable variable permittedVariables)
+        Just fieldInfo -> do
+          namedType <- columnInfoToNamedType fieldInfo
+          assertType (mkGraphQLType namedType) expectedGType
+    G.VInt {} -> do
+      intScalarGType <- (mkGraphQLType <$> mkScalarTy PGInteger)
+      assertType intScalarGType expectedGType
+    G.VFloat {} -> do
+      floatScalarGType <- (mkGraphQLType <$> mkScalarTy PGFloat)
+      assertType floatScalarGType expectedGType
+    G.VBoolean {} -> do
+      boolScalarGType <- (mkGraphQLType <$> mkScalarTy PGBoolean)
+      assertType boolScalarGType expectedGType
+    G.VNull -> throwError NullNotAllowedHere
+    G.VString {} -> do
+      stringScalarGType <- (mkGraphQLType <$> mkScalarTy PGText)
+      assertType stringScalarGType expectedGType
+    G.VEnum _ -> throwError UnsupportedEnum
+    G.VList values -> do
+      case values of
+        []  -> pure ()
+        [_] -> pure ()
+        _   -> throwError UnsupportedMultipleElementLists
+      assertListType expectedGType
+      (flip
+         traverse_
+         values
+         (\val ->
+            validateType permittedVariables val (unwrapGraphQLType expectedGType) schemaDocument))
+    G.VObject values ->
+      flip
+        traverse_
+        (HM.toList values)
+        (\(name,val) ->
+           let expectedNamedType = G.getBaseType expectedGType
+           in
+           case lookupType schemaDocument expectedNamedType of
+             Nothing -> throwError $ (TypeNotFound expectedNamedType)
+             Just typeInfo ->
+               case typeInfo of
+                 G.TypeDefinitionInputObject inpObjTypeInfo ->
+                   let objectTypeDefnsMap =
+                         mapFromL G._ivdName $ (G._iotdValueDefinitions inpObjTypeInfo)
+                   in
+                   case HM.lookup name objectTypeDefnsMap of
+                     Nothing -> throwError $ NoSuchArgumentForRemote name
+                     Just (G._ivdType -> expectedType) ->
+                       validateType permittedVariables val expectedType schemaDocument
+                 _ -> do
+                   throwError $ InvalidType (mkGraphQLType name) "not an input object type")
+  where
+    mkGraphQLType =
+      G.TypeNamed (G.Nullability True)
+
+    mkScalarTy scalarType = do
+      eitherScalar <- runExceptT $ mkScalarTypeName scalarType
+      case eitherScalar of
+        Left _ -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
+        Right s -> pure s
 
 assertType
   :: (MonadError ValidationError m)
@@ -404,15 +405,11 @@ assertType actualType expectedType = do
      (throwError $ ExpectedTypeButGot expectedType actualType))
   -- if list type then check over unwrapped type, else check base types
   if G.isListType actualType
-    then assertType (unwrapType actualType) (unwrapType expectedType)
+    then assertType (unwrapGraphQLType actualType) (unwrapGraphQLType expectedType)
     else (when
             (G.getBaseType actualType /= G.getBaseType expectedType)
             (throwError $ ExpectedTypeButGot expectedType actualType))
   pure ()
-  where
-    unwrapType = \case
-      G.TypeList _ lt -> lt
-      nt -> nt
 
 assertListType :: (MonadError ValidationError m) => G.GType -> m ()
 assertListType actualType =

@@ -3,6 +3,8 @@ module Hasura.GraphQL.Schema.Remote
   , remoteFieldFullSchema
   , inputValueDefinitionParser
   , lookupObject
+  , lookupType
+  , lookupScalar
   ) where
 
 import           Hasura.Prelude
@@ -186,7 +188,8 @@ lookupObject (SchemaDocument types) name = go types
     go ((G.TypeDefinitionObject t):tps)
       | G._otdName t == name = Just t
       | otherwise = go tps
-    go _ = Nothing
+    go (_:tps) = go tps
+    go [] = Nothing
 
 lookupInterface :: SchemaDocument -> G.Name -> Maybe G.InterfaceTypeDefinition
 lookupInterface (SchemaDocument types) name = go types
@@ -195,7 +198,18 @@ lookupInterface (SchemaDocument types) name = go types
     go ((G.TypeDefinitionInterface t):tps)
       | G._itdName t == name = Just t
       | otherwise = go tps
-    go _ = Nothing
+    go (_:tps) = go tps
+    go [] = Nothing
+
+lookupScalar :: SchemaDocument -> G.Name -> Maybe G.ScalarTypeDefinition
+lookupScalar (SchemaDocument types) name = go types
+  where
+    go :: [TypeDefinition] -> Maybe G.ScalarTypeDefinition
+    go ((G.TypeDefinitionScalar t):tps)
+      | G._stdName t == name = Just t
+      | otherwise = go tps
+    go (_:tps) = go tps
+    go [] = Nothing
 
 -- | 'remoteFieldFromName' accepts a GraphQL name and searches for its definition
 --   in the 'SchemaDocument'.
