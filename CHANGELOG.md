@@ -26,7 +26,7 @@
 - console: support tracking partitioned tables (close #5071) (#5258)
 - console: add button to cancel one-off scheduled events and cron-trigger events (close #5161) (#5236)
 - console: handle generated and identity columns in console data section (close #4552, #4863) (#4761)
-- console: display line number that error message originated from in custom types editor (#4849)
+- console: display line number that error originated from in GraphQL editor (close #4849) (#4942)
 - cli: fix plugins install failing due to permission issues on windows (close #5111)
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
 - docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
