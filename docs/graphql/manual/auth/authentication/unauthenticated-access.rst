@@ -22,7 +22,7 @@ Once you have configured authentication, by default Hasura GraphQL engine will r
 receives. 
 
 You can configure Hasura GraphQL engine to allow access to unauthenticated users by defining a specific role
-which will be set for all unauthenticated requests. Once an unauthenticated role is configured, unaunthenticated requests will 
+which will be set for all unauthenticated requests. Once an unauthenticated role is configured, unauthenticated requests will 
 not be rejected and instead the request will be made with the configured role.
 
 This role can then be used to define the permissions for unauthenticated users as described in :ref:`authorization`.
