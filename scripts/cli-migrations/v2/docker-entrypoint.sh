@@ -12,6 +12,15 @@ DEFAULT_MIGRATIONS_DIR="/hasura-migrations"
 DEFAULT_METADATA_DIR="/hasura-metadata"
 TEMP_PROJECT_DIR="/tmp/hasura-project"
 
+# install cli-ext plugin
+log "installing cli-ext plugin"
+hasura-cli plugins install cli-ext --manifest-file /tmp/manifest.yaml
+cp -r /tmp/hasura-home-directory ~/.hasura
+
+# set an env var to let the cli know that
+# it is running in server environment
+HASURA_GRAPHQL_CLI_ENVIRONMENT=server-on-docker
+
 # configure the target database for migrations
 if [ ${HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR} ]; then
     log "database url for migrations is set by $HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR"
