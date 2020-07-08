@@ -45,14 +45,15 @@ on setting this flag/env var.
 Webhooks
 ^^^^^^^^
 
-For :ref:`webhook authentication <auth_webhooks>`, an unauthenticated request is any request for which the webhook returns a ``401 Unauthorized`` response.
+For :ref:`webhook authentication <auth_webhooks>`, any request for which the webhook returns a ``401 Unauthorized`` response 
+is considered an unauthenticated request.
 
 To allow unauthenticated access, the auth webhook should return a ``200`` status response with your unauthenticated role in the headers. For details on the webhook response, refer to :ref:`this section <webhook_response>`.
 
 JWT
 ^^^
 
-For :ref:`JWT authentication <auth_jwt>`, an unauthenticated request is any request which does not contain a JWT token.
+For :ref:`JWT authentication <auth_jwt>`, any request which does not contain a JWT token is considered an unauthenticated request.
 
 You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or the ``--unauthorized-role`` flag to set a role
 for unauthenticated (non-logged in) users. See :ref:`server_flag_reference` for more details
