@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Modal from 'react-modal';
 import sqlFormatter from 'sql-formatter';
+import hljs from 'highlight.js';
 import RootFields from './RootFields';
 
 export default class QueryAnalyser extends React.Component {
@@ -78,32 +79,22 @@ export default class QueryAnalyser extends React.Component {
                       />
                     </div>
                   </div>
-                  {window.hljs ? (
-                    <pre>
-                      <code
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            this.state.activeNode >= 0 &&
-                            this.state.analyseData.length > 0 &&
-                            window.hljs.highlight(
-                              'sql',
-                              sqlFormatter.format(
-                                this.state.analyseData[this.state.activeNode]
-                                  .sql,
-                                { language: 'sql' }
-                              )
-                            ).value,
-                        }}
-                      />
-                    </pre>
-                  ) : (
-                    <code>
-                      {this.state.activeNode >= 0 &&
-                      this.state.analyseData.length > 0
-                        ? this.state.analyseData[this.state.activeNode].sql
-                        : ''}
-                    </code>
-                  )}
+                  <pre>
+                    <code
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          this.state.activeNode >= 0 &&
+                          this.state.analyseData.length > 0 &&
+                          hljs.highlight(
+                            'sql',
+                            sqlFormatter.format(
+                              this.state.analyseData[this.state.activeNode].sql,
+                              { language: 'sql' }
+                            )
+                          ).value,
+                      }}
+                    />
+                  </pre>
                 </div>
               </div>
               <div className="plansWrapper">

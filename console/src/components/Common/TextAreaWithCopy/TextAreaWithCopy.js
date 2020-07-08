@@ -1,5 +1,6 @@
 import React from 'react';
 import sqlFormatter from 'sql-formatter';
+import hljs from 'highlight.js';
 import PropTypes from 'prop-types';
 
 class TextAreaWithCopy extends React.Component {
@@ -72,16 +73,12 @@ class TextAreaWithCopy extends React.Component {
     };
 
     const renderSQLValue = () => {
-      if (!window || !window.hljs) {
-        return renderSimpleValue();
-      }
-
       return (
         <pre>
           <code
             className={style.formattedCode}
             dangerouslySetInnerHTML={{
-              __html: window.hljs.highlight(
+              __html: hljs.highlight(
                 'sql',
                 sqlFormatter.format(copyText, { language: textLanguage })
               ).value,
@@ -92,16 +89,12 @@ class TextAreaWithCopy extends React.Component {
     };
 
     const renderJSONValue = () => {
-      if (!window || !window.hljs) {
-        return renderSimpleValue();
-      }
-
       return (
         <pre>
           <code
             className={style.formattedCode}
             dangerouslySetInnerHTML={{
-              __html: window.hljs.highlight(
+              __html: hljs.highlight(
                 'json',
                 JSON.stringify(JSON.parse(copyText), null, 4)
               ).value,
