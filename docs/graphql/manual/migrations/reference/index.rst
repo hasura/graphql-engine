@@ -12,5 +12,5 @@ Migrations reference documentation
 
   how-it-works
   Migration file format <migration-file-format>
-  Metadata file format <metadata-file-format>
+  Metadata format <metadata-format>
   

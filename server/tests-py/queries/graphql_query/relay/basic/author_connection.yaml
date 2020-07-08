@@ -1,0 +1,128 @@
+description: Query author connection with edges
+url: /v1beta1/relay
+status: 200
+query:
+  query: |
+    query {
+      author_connection{
+        edges{
+          cursor
+          node{
+            id
+            name
+            articles{
+              id
+              title
+              content
+            }
+            articles_aggregate{
+              aggregate{
+                count
+              }
+            }
+            articles_connection{
+              edges{
+                cursor
+                node{
+                  id
+                  title
+                  content
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+response:
+  data:
+    author_connection:
+      edges:
+      - cursor: eyJpZCIgOiAxfQ==
+        node:
+          id: WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgMV0=
+          name: Author 1
+          articles:
+          - id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDFd
+            title: Article 1
+            content: Sample article content 1
+          - id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDJd
+            title: Article 2
+            content: Sample article content 2
+          - id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDNd
+            title: Article 3
+            content: Sample article content 3
+          articles_aggregate:
+            aggregate:
+              count: 3
+          articles_connection:
+            edges:
+            - cursor: eyJpZCIgOiAxfQ==
+              node:
+                id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDFd
+                title: Article 1
+                content: Sample article content 1
+            - cursor: eyJpZCIgOiAyfQ==
+              node:
+                id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDJd
+                title: Article 2
+                content: Sample article content 2
+            - cursor: eyJpZCIgOiAzfQ==
+              node:
+                id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDNd
+                title: Article 3
+                content: Sample article content 3
+      - cursor: eyJpZCIgOiAyfQ==
+        node:
+          id: WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgMl0=
+          name: Author 2
+          articles:
+          - id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDRd
+            title: Article 4
+            content: Sample article content 4
+          - id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDVd
+            title: Article 5
+            content: Sample article content 5
+          articles_aggregate:
+            aggregate:
+              count: 2
+          articles_connection:
+            edges:
+            - cursor: eyJpZCIgOiA0fQ==
+              node:
+                id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDRd
+                title: Article 4
+                content: Sample article content 4
+            - cursor: eyJpZCIgOiA1fQ==
+              node:
+                id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDVd
+                title: Article 5
+                content: Sample article content 5
+      - cursor: eyJpZCIgOiAzfQ==
+        node:
+          id: WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgM10=
+          name: Author 3
+          articles:
+          - id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDZd
+            title: Article 6
+            content: Sample article content 6
+          articles_aggregate:
+            aggregate:
+              count: 1
+          articles_connection:
+            edges:
+            - cursor: eyJpZCIgOiA2fQ==
+              node:
+                id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDZd
+                title: Article 6
+                content: Sample article content 6
+      - cursor: eyJpZCIgOiA0fQ==
+        node:
+          id: WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgNF0=
+          name: Author 4
+          articles: []
+          articles_aggregate:
+            aggregate:
+              count: 0
+          articles_connection:
+            edges: []

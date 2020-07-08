@@ -1,12 +1,13 @@
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import AceEditor from 'react-ace';
+import React from 'react';
 import TableHeader from '../TableCommon/TableHeader';
+import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import {
   fetchViewDefinition,
   deleteViewSql,
   untrackTableSql,
   RESET,
+  setViewCustomColumnNames,
 } from './ModifyActions';
 import TableCommentEditor from './TableCommentEditor';
 import { ordinalColSort } from '../utils';
@@ -20,224 +21,259 @@ import {
   generateTableDef,
   getColumnName,
   getTableCustomRootFields,
+  getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
 import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { changeViewRootFields } from '../Common/TooltipMessages';
+import styles from './ModifyTable.scss';
+import ViewDefinitions from './ViewDefinitions';
 
-class ModifyView extends Component {
-  componentDidMount() {
-    const { dispatch } = this.props;
+const ModifyView = props => {
+  const {
+    viewDefSql,
+    tableName,
+    tableType,
+    allSchemas,
+    ongoingRequest,
+    lastError,
+    lastSuccess,
+    dispatch,
+    currentSchema,
+    tableCommentEdit,
+    rootFieldsEdit,
+    migrationMode,
+    readOnlyMode,
+  } = props;
+
+  React.useEffect(() => {
     dispatch({ type: RESET });
-    dispatch(setTable(this.props.tableName));
-    dispatch(fetchViewDefinition(this.props.tableName, false));
-  }
+    dispatch(setTable(tableName));
+    dispatch(fetchViewDefinition(tableName, false));
+  }, []);
 
-  modifyViewDefinition = viewName => {
-    // fetch the definition
-    this.props.dispatch(fetchViewDefinition(viewName, true));
-    // redirect the user to run_sql page and set state
+  const tableSchema = findTable(
+    allSchemas,
+    generateTableDef(tableName, currentSchema)
+  );
+
+  const [customColumnNames, setCustomColumnNames] = React.useState({});
+  const existingCustomColumnNames = getTableCustomColumnNames(tableSchema);
+  const initCustomColumnNames = () => {
+    setCustomColumnNames(existingCustomColumnNames);
   };
 
-  render() {
-    const {
-      sql,
-      tableName,
-      allSchemas,
-      ongoingRequest,
-      lastError,
-      lastSuccess,
-      dispatch,
-      currentSchema,
-      tableCommentEdit,
-      rootFieldsEdit,
-      migrationMode,
-      readOnlyMode,
-    } = this.props;
+  React.useEffect(() => {
+    initCustomColumnNames();
+  }, [existingCustomColumnNames]);
 
-    const styles = require('./ModifyTable.scss');
+  if (!tableSchema) {
+    // throw a 404 exception
+    throw new NotFoundError();
+  }
 
-    const tableSchema = findTable(
-      allSchemas,
-      generateTableDef(tableName, currentSchema)
-    );
+  const tableComment = tableSchema.comment;
 
-    if (!tableSchema) {
-      // throw a 404 exception
-      throw new NotFoundError();
-    }
-
-    const tableComment = tableSchema.comment;
-
-    let alert = null;
-    if (ongoingRequest) {
-      alert = (
-        <div
-          className="hidden alert alert-warning alert-dismissable"
-          role="alert"
-        >
-          Saving...
-        </div>
-      );
-    } else if (lastError) {
-      alert = (
-        <div className="hidden alert alert-danger" role="alert">
-          Error: {JSON.stringify(lastError)}
-        </div>
-      );
-    } else if (lastSuccess) {
-      alert = (
-        <div className="hidden alert alert-success" role="alert">
-          Saved!
-        </div>
-      );
-    }
-
-    const getViewColumnsSection = () => {
-      const columns = tableSchema.columns.sort(ordinalColSort);
-
-      return columns.map((c, i) => {
-        return (
-          <div key={i}>
-            <div className="container-fluid">
-              <div className={`row + ${styles.add_mar_bottom}`}>
-                <h5>
-                  <Button disabled="disabled" size="xs">
-                    -
-                  </Button>{' '}
-                  &nbsp; <b>{getColumnName(c)}</b>
-                </h5>
-              </div>
-            </div>
-          </div>
-        );
-      });
-    };
-
-    const getViewRootFieldsSection = () => {
-      const existingRootFields = getTableCustomRootFields(tableSchema);
-
-      return (
-        <React.Fragment>
-          <h4 className={styles.subheading_text}>
-            Custom GraphQL Root Fields
-            <Tooltip message={changeViewRootFields} />
-          </h4>
-          <RootFields
-            existingRootFields={existingRootFields}
-            rootFieldsEdit={rootFieldsEdit}
-            dispatch={dispatch}
-            tableName={tableName}
-          />
-          <hr />
-        </React.Fragment>
-      );
-    };
-
-    const modifyBtn = (
-      <Button
-        type="submit"
-        size="xs"
-        className={styles.add_mar_right}
-        onClick={() => {
-          this.modifyViewDefinition(tableName);
-        }}
-        data-test="modify-view"
+  let alert = null;
+  if (ongoingRequest) {
+    alert = (
+      <div
+        className="hidden alert alert-warning alert-dismissable"
+        role="alert"
       >
-        Modify
-      </Button>
+        Saving...
+      </div>
     );
-
-    const untrackBtn = (
-      <Button
-        type="submit"
-        className={styles.add_mar_right}
-        color="white"
-        size="sm"
-        onClick={() => {
-          const confirmMessage = `This will remove the view "${tableName}" from the GraphQL schema`;
-          const isOk = getConfirmation(confirmMessage);
-          if (isOk) {
-            dispatch(untrackTableSql(tableName));
-          }
-        }}
-        data-test="untrack-view"
-      >
-        Untrack View
-      </Button>
+  } else if (lastError) {
+    alert = (
+      <div className="hidden alert alert-danger" role="alert">
+        Error: {JSON.stringify(lastError)}
+      </div>
     );
-
-    const deleteBtn = (
-      <Button
-        type="submit"
-        color="red"
-        size="sm"
-        onClick={() => {
-          const confirmMessage = `This will permanently delete the view "${tableName}" from the database`;
-          const isOk = getConfirmation(confirmMessage, true, tableName);
-          if (isOk) {
-            dispatch(deleteViewSql(tableName));
-          }
-        }}
-        data-test="delete-view"
-      >
-        Delete view
-      </Button>
-    );
-
-    return (
-      <div className={styles.container + ' container-fluid'}>
-        <TableHeader
-          dispatch={dispatch}
-          table={tableSchema}
-          tabName="modify"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-        />
-        <br />
-        <div className={'container-fluid ' + styles.padd_left_remove}>
-          <div className={'col-xs-8 ' + styles.padd_left_remove}>
-            <TableCommentEditor
-              tableComment={tableComment}
-              tableCommentEdit={tableCommentEdit}
-              isTable={false}
-              dispatch={dispatch}
-            />
-            <h4 className={styles.subheading_text}>Columns</h4>
-            {getViewColumnsSection()}
-            <br />
-            <h4 className={styles.subheading_text}>
-              View Definition:
-              <span className={styles.add_mar_left}>{modifyBtn}</span>
-            </h4>
-            <AceEditor
-              mode="sql"
-              theme="github"
-              value={sql}
-              name="raw_sql"
-              minLines={8}
-              maxLines={100}
-              width="100%"
-              showPrintMargin={false}
-              readOnly
-            />
-            <hr />
-            {getViewRootFieldsSection()}
-            {untrackBtn}
-            {deleteBtn}
-            <br />
-            <br />
-          </div>
-          <div className={styles.fixed + ' col-xs-3 hidden'}>{alert}</div>
-        </div>
+  } else if (lastSuccess) {
+    alert = (
+      <div className="hidden alert alert-success" role="alert">
+        Saved!
       </div>
     );
   }
-}
+
+  const getViewColumnsSection = () => {
+    const columns = tableSchema.columns.sort(ordinalColSort);
+
+    return columns.map((c, i) => {
+      const columnName = getColumnName(c);
+
+      const setCustomColumnName = e => {
+        const value = e.target.value;
+        setCustomColumnNames({
+          ...customColumnNames,
+          [columnName]: value,
+        });
+      };
+
+      const columnExpanded = () => {
+        return (
+          <div className={`${styles.display_flex}`}>
+            <label className={'col-xs-4'}>
+              GraphQL field name
+              <Tooltip
+                message={
+                  'Expose the column with a different name in the GraphQL API'
+                }
+              />
+            </label>
+            <div className={'col-xs-6'}>
+              <input
+                type="text"
+                className={'form-control'}
+                value={customColumnNames[columnName] || ''}
+                placeholder={`${columnName} (default)`}
+                onChange={setCustomColumnName}
+              />
+            </div>
+          </div>
+        );
+      };
+
+      const label = () => {
+        return (
+          <b>
+            {columnName}
+            {existingCustomColumnNames[columnName]
+              ? ` → ${existingCustomColumnNames[columnName]}`
+              : ''}
+          </b>
+        );
+      };
+
+      const saveFunc = toggle => {
+        dispatch(
+          setViewCustomColumnNames(
+            customColumnNames,
+            tableName,
+            currentSchema,
+            toggle
+          )
+        );
+      };
+
+      return (
+        <div key={i}>
+          <ExpandableEditor
+            editorExpanded={columnExpanded}
+            property={`view-column-${i}`}
+            service="modify-view"
+            expandedLabel={label}
+            saveFunc={saveFunc}
+            collapsedLabel={label}
+            expandCallback={initCustomColumnNames}
+            collapseCallback={initCustomColumnNames}
+          />
+        </div>
+      );
+    });
+  };
+
+  const getViewRootFieldsSection = () => {
+    const existingRootFields = getTableCustomRootFields(tableSchema);
+    return (
+      <React.Fragment>
+        <h4 className={styles.subheading_text}>
+          Custom GraphQL Root Fields
+          <Tooltip message={changeViewRootFields} />
+        </h4>
+        <RootFields
+          existingRootFields={existingRootFields}
+          rootFieldsEdit={rootFieldsEdit}
+          dispatch={dispatch}
+          tableName={tableName}
+        />
+        <hr />
+      </React.Fragment>
+    );
+  };
+
+  const untrackOnclick = () => {
+    const confirmMessage = `This will remove the view "${tableName}" from the GraphQL schema`;
+    const isOk = getConfirmation(confirmMessage);
+    if (isOk) {
+      dispatch(untrackTableSql(tableName));
+    }
+  };
+
+  const untrackBtn = (
+    <Button
+      type="submit"
+      className={styles.add_mar_right}
+      color="white"
+      size="sm"
+      onClick={untrackOnclick}
+      data-test="untrack-view"
+    >
+      Untrack View
+    </Button>
+  );
+
+  const deleteOnClick = () => {
+    const confirmMessage = `This will permanently delete the view "${tableName}" from the database`;
+    const isOk = getConfirmation(confirmMessage, true, tableName);
+    if (isOk) {
+      dispatch(deleteViewSql(tableName, tableType));
+    }
+  };
+  const deleteBtn = (
+    <Button
+      type="submit"
+      color="red"
+      size="sm"
+      onClick={deleteOnClick}
+      data-test="delete-view"
+    >
+      Delete view
+    </Button>
+  );
+
+  return (
+    <div className={styles.container + ' container-fluid'}>
+      <TableHeader
+        dispatch={dispatch}
+        table={tableSchema}
+        tabName="modify"
+        migrationMode={migrationMode}
+        readOnlyMode={readOnlyMode}
+      />
+      <br />
+      <div className={'container-fluid ' + styles.padd_left_remove}>
+        <div className={'col-xs-8 ' + styles.padd_left_remove}>
+          <TableCommentEditor
+            tableComment={tableComment}
+            tableCommentEdit={tableCommentEdit}
+            tableType={tableType}
+            dispatch={dispatch}
+          />
+          <h4 className={styles.subheading_text}>Columns</h4>
+          {getViewColumnsSection()}
+          <br />
+          <ViewDefinitions dispatch={dispatch} sql={viewDefSql} />
+
+          <hr />
+          {getViewRootFieldsSection()}
+          {untrackBtn}
+          {deleteBtn}
+          <br />
+          <br />
+        </div>
+        <div className={styles.fixed + ' col-xs-3 hidden'}>{alert}</div>
+      </div>
+    </div>
+  );
+};
 
 ModifyView.propTypes = {
   sql: PropTypes.string.isRequired,
   tableName: PropTypes.string.isRequired,
+  tableType: PropTypes.string.isRequired,
   allSchemas: PropTypes.array.isRequired,
   currentSchema: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
@@ -250,12 +286,28 @@ ModifyView.propTypes = {
   serverVersion: PropTypes.string,
 };
 
+const findViewType = (currentSchema, viewName, allItems) => {
+  for (const item of allItems) {
+    if (item.table_schema === currentSchema && item.table_name === viewName) {
+      return item.table_type;
+    }
+  }
+  return 'VIEW';
+};
+
 const mapStateToProps = (state, ownProps) => {
+  const tableName = ownProps.params.table;
+  const schemaName = state.tables.currentSchema;
+  const tableType = findViewType(
+    schemaName,
+    tableName,
+    state.tables.allSchemas
+  );
   return {
-    tableName: ownProps.params.table,
+    tableName,
+    tableType,
+    currentSchema: schemaName,
     allSchemas: state.tables.allSchemas,
-    sql: state.rawSQL.sql,
-    currentSchema: state.tables.currentSchema,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,

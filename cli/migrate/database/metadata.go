@@ -8,6 +8,8 @@ import (
 type MetadataDriver interface {
 	SetMetadataPlugins(types.MetadataPlugins)
 
+	EnableCheckMetadataConsistency(bool)
+
 	ExportMetadata() (map[string][]byte, error)
 
 	ResetMetadata() error

@@ -4,7 +4,6 @@
 module Hasura.RQL.DDL.Schema.Table
   ( TrackTable(..)
   , runTrackTableQ
-  , trackExistingTableOrViewP2
 
   , TrackTableV2(..)
   , runTrackTableV2Q
@@ -38,6 +37,7 @@ import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
 import qualified Hasura.GraphQL.Schema              as GS
+import qualified Hasura.GraphQL.Context             as GC
 import qualified Hasura.Incremental                 as Inc
 import qualified Language.GraphQL.Draft.Syntax      as G
 
@@ -103,9 +103,8 @@ trackExistingTableOrViewP2
   :: (MonadTx m, CacheRWM m, HasSystemDefined m)
   => QualifiedTable -> Bool -> TableConfig -> m EncJSON
 trackExistingTableOrViewP2 tableName isEnum config = do
-  sc <- askSchemaCache
-  let defGCtx = scDefaultRemoteGCtx sc
-  GS.checkConflictingNode defGCtx $ GS.qualObjectToName tableName
+  typeMap <- GC._gTypes . scDefaultRemoteGCtx <$> askSchemaCache
+  GS.checkConflictingNode typeMap $ GS.qualObjectToName tableName
   saveTableToCatalog tableName isEnum config
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
@@ -212,9 +211,9 @@ processTableChanges ti tableDiff = do
 
       withNewTabName newTN = do
         let tnGQL = GS.qualObjectToName newTN
-            defGCtx = scDefaultRemoteGCtx sc
+            typeMap = GC._gTypes $ scDefaultRemoteGCtx sc
         -- check for GraphQL schema conflicts on new name
-        GS.checkConflictingNode defGCtx tnGQL
+        GS.checkConflictingNode typeMap tnGQL
         procAlteredCols sc tn
         -- update new table in catalog
         renameTableInCatalog newTN tn
@@ -280,6 +279,10 @@ delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
               |] (sn, tn) False
     Q.unitQ [Q.sql|
              DELETE FROM "hdb_catalog"."hdb_computed_field"
+             WHERE table_schema = $1 AND table_name = $2
+              |] (sn, tn) False
+    Q.unitQ [Q.sql|
+             DELETE FROM "hdb_catalog"."hdb_remote_relationship"
              WHERE table_schema = $1 AND table_name = $2
               |] (sn, tn) False
   deleteTableFromCatalog qtn

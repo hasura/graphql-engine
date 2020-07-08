@@ -1,0 +1,13 @@
+type: create_remote_relationship
+args:
+  name: messagesNested
+  table: profiles
+  hasura_fields:
+    - id
+  remote_schema: my-remote-schema
+  remote_field:
+    messages:
+      arguments:
+        where:
+          id:
+            xyz: "$id"

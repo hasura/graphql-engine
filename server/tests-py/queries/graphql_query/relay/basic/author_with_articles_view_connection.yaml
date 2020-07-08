@@ -1,0 +1,43 @@
+# https://github.com/hasura/graphql-engine/issues/5020
+description: Query author connection with edges
+url: /v1beta1/relay
+status: 200
+query:
+  query: |
+    query {
+      author_connection{
+        edges{
+          cursor
+          node{
+            id
+            name
+            articles{
+              id
+              title
+              content
+            }
+            articles_aggregate{
+              aggregate{
+                count
+              }
+            }
+            articles_view_connection{
+              edges{
+                cursor
+                node{
+                  id
+                  title
+                  content
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: $.selectionSet.author_connection.selectionSet.edges.selectionSet.node.selectionSet.articles_view_connection
+      code: validation-failed
+    message: "field \"articles_view_connection\" not found in type: 'author'"

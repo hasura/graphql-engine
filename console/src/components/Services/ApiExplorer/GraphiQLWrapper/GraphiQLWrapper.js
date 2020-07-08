@@ -1,10 +1,16 @@
 import React, { Component } from 'react';
 import { push } from 'react-router-redux';
 import GraphiQL from 'graphiql';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
 import AnalyzeButton from '../Analyzer/AnalyzeButton';
+import CodeExporter from 'graphiql-code-exporter';
+import {
+  getPersistedCodeExporterOpen,
+  persistCodeExporterOpen,
+} from '../OneGraphExplorer/utils';
 
 import {
   clearCodeMirrorHints,
@@ -13,21 +19,25 @@ import {
 } from './utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
 import { parse as sdlParse, print } from 'graphql';
-import deriveMutation from '../../../../shared/utils/deriveMutation';
+import deriveAction from '../../../../shared/utils/deriveAction';
 import {
   getActionDefinitionSdl,
   getTypesSdl,
 } from '../../../../shared/utils/sdlUtils';
 import { showErrorNotification } from '../../Common/Notification';
-import { persistDerivedMutation } from '../../Actions/lsUtils';
 import { getActionsCreateRoute } from '../../../Common/utils/routesUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   setActionDefinition,
   setTypeDefinition,
+  setDerivedActionParentOperation,
 } from '../../Actions/Add/reducer';
+import { getGraphQLEndpoint } from '../utils';
+import snippets from './snippets';
 
 import 'graphiql/graphiql.css';
 import './GraphiQL.css';
+import 'graphiql-code-exporter/CodeExporter.css';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -37,6 +47,7 @@ class GraphiQLWrapper extends Component {
       noSchema: false,
       onBoardingEnabled: false,
       copyButtonText: 'Copy',
+      codeExporterOpen: false,
     };
   }
 
@@ -44,14 +55,35 @@ class GraphiQLWrapper extends Component {
     setQueryVariableSectionHeight();
   }
 
+  componentWillMount() {
+    const codeExporterOpen = getPersistedCodeExporterOpen();
+    this.setState({ codeExporterOpen });
+  }
+
   componentWillUnmount() {
     clearCodeMirrorHints();
   }
 
+  _handleToggleCodeExporter = () => {
+    const nextState = !this.state.codeExporterOpen;
+
+    persistCodeExporterOpen(nextState);
+
+    this.setState({ codeExporterOpen: nextState });
+  };
+
   render() {
     const styles = require('../../../Common/Common.scss');
 
-    const { numberOfTables, urlParams, headerFocus, dispatch } = this.props;
+    const {
+      numberOfTables,
+      urlParams,
+      headerFocus,
+      dispatch,
+      mode,
+      loading,
+    } = this.props;
+    const { codeExporterOpen } = this.state;
     const graphqlNetworkData = this.props.data;
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {
@@ -60,14 +92,14 @@ class GraphiQLWrapper extends Component {
 
       return graphQLFetcherFinal(
         graphQLParams,
-        graphqlNetworkData.url,
+        getGraphQLEndpoint(mode),
         graphqlNetworkData.headers
       );
     };
 
     const analyzeFetcherInstance = analyzeFetcher(
-      graphqlNetworkData.url,
-      graphqlNetworkData.headers
+      graphqlNetworkData.headers,
+      mode
     );
 
     let graphiqlContext;
@@ -99,31 +131,38 @@ class GraphiQLWrapper extends Component {
       }));
     };
 
-    const deriveActionFromMutation = () => {
+    const deriveActionFromOperation = () => {
       const { schema, query } = graphiqlContext.state;
       if (!schema) return;
       if (!query) return;
-      let derivedMutationMetadata;
+      let derivedOperationMetadata;
       try {
-        derivedMutationMetadata = deriveMutation(query.trim(), schema);
+        derivedOperationMetadata = deriveAction(query.trim(), schema);
       } catch (e) {
         dispatch(showErrorNotification('Unable to derive mutation', e.message));
         console.error(e);
         return;
       }
-      const { action, types } = derivedMutationMetadata;
+      const { action, types, variables } = derivedOperationMetadata;
       const actionsSdl = getActionDefinitionSdl(
         action.name,
+        action.type,
         action.arguments,
         action.output_type
       );
+      if (variables && !variables.length) {
+        const ok = getConfirmation(
+          `Looks like your ${action.type} does not have variables. This means that the derived action will have no arguments.`
+        );
+        if (!ok) return;
+      }
       const typesSdl = getTypesSdl(types);
       dispatch(
         setActionDefinition(actionsSdl, null, null, sdlParse(actionsSdl))
       );
       dispatch(setTypeDefinition(typesSdl, null, null, sdlParse(typesSdl)));
-      persistDerivedMutation(action.name, query.trim());
-      dispatch(push(getActionsCreateRoute(true)));
+      dispatch(setDerivedActionParentOperation(query.trim()));
+      dispatch(push(getActionsCreateRoute()));
     };
 
     const renderGraphiql = graphiqlProps => {
@@ -157,63 +196,78 @@ class GraphiQLWrapper extends Component {
             onClick: graphiqlProps.toggleExplorer,
           },
           {
+            label: 'Code Exporter',
+            title: 'Toggle Code Exporter',
+            onClick: this._handleToggleCodeExporter,
+          },
+          {
             label: 'Voyager',
             title: 'GraphQL Voyager',
             onClick: () => window.open(voyagerUrl, '_blank'),
             icon: <i className="fa fa-external-link" aria-hidden="true" />,
           },
-          {
+        ];
+        if (mode === 'graphql') {
+          buttons.push({
             label: 'Derive action',
             title: 'Derive action for the given mutation',
-            onClick: deriveActionFromMutation,
-          },
-        ];
+            onClick: deriveActionFromOperation,
+          });
+        }
         return buttons.map(b => {
           return <GraphiQL.Button key={b.label} {...b} />;
         });
       };
 
       return (
-        <GraphiQL
-          ref={c => {
-            graphiqlContext = c;
-          }}
-          fetcher={graphQLFetcher}
-          voyagerUrl={voyagerUrl}
-          {...graphiqlProps}
-        >
-          <GraphiQL.Logo>GraphiQL</GraphiQL.Logo>
-          <GraphiQL.Toolbar>
-            {getGraphiqlButtons()}
-            <AnalyzeButton
-              operations={graphiqlContext && graphiqlContext.state.operations}
-              analyzeFetcher={analyzeFetcherInstance}
-              {...analyzerProps}
+        <>
+          <GraphiQL
+            {...graphiqlProps}
+            ref={c => {
+              graphiqlContext = c;
+            }}
+            fetcher={graphQLFetcher}
+            voyagerUrl={voyagerUrl}
+          >
+            <GraphiQL.Logo>GraphiQL</GraphiQL.Logo>
+            <GraphiQL.Toolbar>
+              {getGraphiqlButtons()}
+              <AnalyzeButton
+                operations={graphiqlContext && graphiqlContext.state.operations}
+                analyzeFetcher={analyzeFetcherInstance}
+                {...analyzerProps}
+              />
+            </GraphiQL.Toolbar>
+          </GraphiQL>
+          {codeExporterOpen ? (
+            <CodeExporter
+              hideCodeExporter={this._handleToggleCodeExporter}
+              snippets={snippets}
+              query={graphiqlProps.query}
+              codeMirrorTheme="default"
             />
-          </GraphiQL.Toolbar>
-        </GraphiQL>
+          ) : null}
+        </>
       );
     };
 
     return (
       <GraphiQLErrorBoundary>
         <div
-          className={
-            'react-container-graphql ' +
-            styles.wd100 +
-            ' ' +
-            styles.graphQLHeight
-          }
+          className={`react-container-graphql ${styles.wd100} ${styles.height100} ${styles.box_shadow}`}
         >
           <OneGraphExplorer
             renderGraphiql={renderGraphiql}
-            endpoint={graphqlNetworkData.url}
+            endpoint={getGraphQLEndpoint(mode)}
+            dispatch={dispatch}
             headers={graphqlNetworkData.headers}
             headersInitialised={graphqlNetworkData.headersInitialised}
             headerFocus={headerFocus}
             urlParams={urlParams}
+            loading={loading}
             numberOfTables={numberOfTables}
             dispatch={dispatch}
+            mode={mode}
           />
         </div>
       </GraphiQLErrorBoundary>
@@ -229,4 +283,11 @@ GraphiQLWrapper.propTypes = {
   urlParams: PropTypes.object.isRequired,
 };
 
-export default GraphiQLWrapper;
+const mapStateToProps = state => ({
+  mode: state.apiexplorer.mode,
+  loading: state.apiexplorer.loading,
+});
+
+const GraphiQLWrapperConnected = connect(mapStateToProps)(GraphiQLWrapper);
+
+export default GraphiQLWrapperConnected;

@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"syscall"
 
 	"github.com/hasura/graphql-engine/cli/plugins/download"
 	"github.com/pkg/errors"
@@ -134,7 +135,7 @@ func IsWindows() bool {
 }
 
 func createOrUpdateLink(binDir, binary, plugin string) error {
-	dst := filepath.Join(binDir, pluginNameToBin(plugin, IsWindows()))
+	dst := filepath.Join(binDir, PluginNameToBin(plugin, IsWindows()))
 
 	if err := removeLink(dst); err != nil {
 		return errors.Wrap(err, "failed to remove old symlink")
@@ -145,7 +146,22 @@ func createOrUpdateLink(binDir, binary, plugin string) error {
 
 	// Create new
 	if err := os.Symlink(binary, dst); err != nil {
-		return errors.Wrapf(err, "failed to create a symlink from %q to %q", binary, dst)
+		if IsWindows() {
+			// If cloning the symlink fails on Windows because the user
+			// does not have the required privileges, ignore the error and
+			// fall back to copying the file contents.
+			//
+			// ERROR_PRIVILEGE_NOT_HELD is 1314 (0x522):
+			// https://msdn.microsoft.com/en-us/library/windows/desktop/ms681385(v=vs.85).aspx
+			if lerr, ok := err.(*os.LinkError); ok && lerr.Err != syscall.Errno(1314) {
+				return err
+			}
+			if err := copyFile(binary, dst, 0755); err != nil {
+				return err
+			}
+		} else {
+			return errors.Wrapf(err, "failed to create a symlink from %q to %q", binary, dst)
+		}
 	}
 	return nil
 }
@@ -159,7 +175,7 @@ func removeLink(path string) error {
 		return errors.Wrapf(err, "failed to read the symlink in %q", path)
 	}
 
-	if fi.Mode()&os.ModeSymlink == 0 {
+	if fi.Mode()&os.ModeSymlink == 0 && !IsWindows() {
 		return errors.Errorf("file %q is not a symlink (mode=%s)", path, fi.Mode())
 	}
 	if err := os.Remove(path); err != nil {
@@ -168,9 +184,9 @@ func removeLink(path string) error {
 	return nil
 }
 
-// pluginNameToBin creates the name of the symlink file for the plugin name.
+// PluginNameToBin creates the name of the symlink file for the plugin name.
 // It converts dashes to underscores.
-func pluginNameToBin(name string, isWindows bool) string {
+func PluginNameToBin(name string, isWindows bool) string {
 	name = strings.ReplaceAll(name, "-", "_")
 	name = "hasura-" + name
 	if isWindows {

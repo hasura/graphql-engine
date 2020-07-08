@@ -1,0 +1,45 @@
+description: Get 2nd page of articles with 2 items
+url: /v1beta1/relay
+status: 200
+query:
+  query: |
+    query {
+      article_connection(
+        first: 2
+        after: "eyJpZCIgOiAzfQ=="
+      ){
+        pageInfo{
+          startCursor
+          endCursor
+          hasPreviousPage
+          hasNextPage
+        }
+        edges{
+          cursor
+          node{
+            title
+            content
+            author_id
+          }
+        }
+      }
+    }
+response:
+  data:
+    article_connection:
+      pageInfo:
+        startCursor: eyJpZCIgOiA0fQ==
+        endCursor: eyJpZCIgOiA1fQ==
+        hasPreviousPage: true
+        hasNextPage: true
+      edges:
+      - cursor: eyJpZCIgOiA0fQ==
+        node:
+          title: Article 4
+          content: Sample article content 4
+          author_id: 2
+      - cursor: eyJpZCIgOiA1fQ==
+        node:
+          title: Article 5
+          content: Sample article content 5
+          author_id: 2

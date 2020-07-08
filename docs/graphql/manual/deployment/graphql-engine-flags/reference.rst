@@ -46,12 +46,23 @@ Or you can specify the following options *(only via flags)*:
 
 .. code-block:: none
 
-      --host               Postgres server host
-  -p, --port               Postgres server port
-  -u, --user               Database user name
-  -p, --password           Password of the user
-  -d, --dbname             Database name to connect to
+      --host                      Postgres server host
+  -p, --port                      Postgres server port
+  -u, --user                      Database user name
+  -p, --password                  Password of the user
+  -d, --dbname                    Database name to connect to
+  -o, --pg-connection-options     PostgreSQL connection options
 
+.. note::
+
+   The default configuration of PostgreSQL 11 and older may result in loss of
+   precision when retrieving IEEE 754 style data, such as ``float4``, ``real``
+   or ``double precision`` values, from the database.  To avoid this, set the
+   ``extra_float_digits`` PostgreSQL connection parameter to 3.  This can be
+   done by passing ``'--pg-connection-options=-c extra_float_digits=3'`` to
+   ``graphql-engine``, or by passing this option as part of the database url:
+
+   ``postgres://admin:mypass@mydomain.com:5432/mydb?options=-c%20extra_float_digits%3D3``
 
 .. _command-flags:
 
@@ -110,8 +121,8 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - ``--cors-domain <DOMAINS>``
      - ``HASURA_GRAPHQL_CORS_DOMAIN``
-     - CSV of list of domains, excluding scheme (http/https) and including port,
-       to allow for CORS. Wildcard domains are allowed.
+     - CSV of list of domains, incuding scheme (http/https) and port, to allow for CORS. Wildcard
+       domains are allowed. (See :ref:`configure-cors`)
 
    * - ``--disable-cors``
      - ``HASURA_GRAPHQL_DISABLE_CORS``
@@ -130,11 +141,11 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - N/A
      - ``HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE``
-     - Max event threads
+     - Maximum number of concurrent http workers delivering events at any time (default: 100)
 
    * - N/A
      - ``HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL``
-     - Interval in milliseconds to sleep before trying to fetch events again after a fetch 
+     - Interval in milliseconds to sleep before trying to fetch events again after a fetch
        returned no events from postgres
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
@@ -144,8 +155,8 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - ``-c, --connections <NO_OF_CONNS>``
      - ``HASURA_GRAPHQL_PG_CONNECTIONS``
-     - Maximum number of Postgres connections that can be opened per stripe (default: 50). 
-       When the maximum is reached we will block until a new connection becomes available, 
+     - Maximum number of Postgres connections that can be opened per stripe (default: 50).
+       When the maximum is reached we will block until a new connection becomes available,
        even if there is capacity in other stripes.
 
    * - ``--timeout <SECONDS>``
@@ -200,6 +211,14 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - ``HASURA_GRAPHQL_LOG_LEVEL``
      - Set the logging level. Default: ``info``. Options: ``debug``, ``info``,
        ``warn``, ``error``.
+
+   * - ``--dev-mode``
+     - ``HASURA_GRAPHQL_DEV_MODE``
+     - Set dev mode for GraphQL requests; include the ``internal`` key in the errors extensions of the response (if required).
+
+   * - ``--admin-internal-errors``
+     - ``HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS``
+     - Include the ``internal`` key in the errors extensions of the response for GraphQL requests with the admin role (if required).
 
 .. note::
 

@@ -33,7 +33,6 @@ E.g.
 
    objects: [
      {
-       id: 1,
        int_col: 27
      }
    ]
@@ -50,10 +49,16 @@ E.g.
 
    objects: [
      {
-       id: 1,
        float_col: 0.8
      }
    ]
+
+.. note::
+
+   To avoid loss of data when retrieving IEEE 754 style data from the database,
+   please refer to the :ref:`server_flag_reference` for instructions on setting
+   the ``extra_float_digits`` parameter, which has a bad default value in
+   PostgreSQL 11 and older.
 
 .. _Numeric:
 
@@ -67,7 +72,6 @@ E.g.
 
    objects: [
      {
-       id: 1,
        numeric_col: 0.00000008
      }
    ]
@@ -84,7 +88,6 @@ E.g.
 
    objects: [
      {
-       id: 1,
        is_published: true
      }
    ]
@@ -101,7 +104,6 @@ E.g.
 
    objects: [
      {
-       id: 1,
        char_column: "a"
      }
    ]
@@ -120,7 +122,6 @@ E.g.
 
    objects: [
      {
-       id: 1,
        name: "Raven"
      }
    ]
@@ -138,7 +139,6 @@ E.g.
 
    objects: [
      {
-       id: 1,
        date: "1996-03-15"
      }
    ]
@@ -156,7 +156,6 @@ E.g.
 
    objects: [
      {
-       id: 1,
        time: "17:30:15+05:30"
      }
    ]
@@ -174,7 +173,6 @@ E.g.
 
    objects: [
      {
-       id: 1,
        timestamptz_col: "2016-07-20T17:30:15+05:30"
      }
    ]
@@ -191,7 +189,6 @@ E.g.
 
    objects: [
      {
-       id: 1,
        json_col: "{ \"name\": \"raven\" }"
      }
    ]
@@ -210,15 +207,13 @@ E.g.
      insert_test(
        objects: [
          {
-           id: 1,
            jsonb_col: $value
          }
        ]
      ) {
         affected_rows
         returning{
-          id
-          details
+          jsonb_col
         }
      }
    }
@@ -322,7 +317,6 @@ In ISO 8601 format
 
    objects: [
      {
-       id: 1,
        time_col: "04:05:06.789"
      }
    ]
@@ -333,7 +327,6 @@ E.g. For macaddr type
 
    objects: [
      {
-       id: 1,
        macaddr_col: "08:00:2b:01:02:03"
      }
    ]
@@ -341,5 +334,3 @@ E.g. For macaddr type
 .. Note::
 
    You can learn more about PostgreSQL data types `here <https://www.postgresql.org/docs/current/static/datatype.html>`__.
-
-

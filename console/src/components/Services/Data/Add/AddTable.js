@@ -111,6 +111,15 @@ class AddTable extends Component {
     dispatch(setTableName(e.target.value));
   };
 
+  trimTableName = tableName => {
+    const trimmedName = tableName ? tableName.trim() : tableName;
+    const { dispatch } = this.props;
+    if (tableName !== trimmedName) {
+      dispatch(setTableName(trimmedName));
+    }
+    return trimmedName;
+  };
+
   onTableCommentChange = e => {
     const { dispatch } = this.props;
     dispatch(setTableComment(e.target.value));
@@ -195,12 +204,12 @@ class AddTable extends Component {
     }
   }
 
-  tableNameEmptyCheck() {
-    return this.props.tableName !== null;
+  tableNameEmptyCheck(name) {
+    return name !== null;
   }
 
-  tableNameCheck() {
-    return gqlPattern.test(this.props.tableName);
+  tableNameCheck(name) {
+    return gqlPattern.test(name);
   }
 
   isModified(x) {
@@ -226,6 +235,20 @@ class AddTable extends Component {
       c = c.slice(0, c.length - 1);
     }
     return c;
+  }
+
+  trimColumnNames(columns) {
+    const trimmedColumns = columns.map((column, index) => {
+      const trimmedColumn = column.name.trim();
+      if (trimmedColumn !== column.name) {
+        this.props.dispatch(setColName(trimmedColumn, index, column.nullable));
+      }
+      return {
+        ...column,
+        name: trimmedColumn,
+      };
+    });
+    return trimmedColumns;
   }
 
   validateEnoughColumns(cols) {
@@ -297,11 +320,11 @@ class AddTable extends Component {
     return '';
   }
 
-  /* eslint-disable no-unused-vars */
-  isValidDefault(type, d) {
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  isValidDefault() {
     return true;
   }
-  /* eslint-enable no-unused-vars */
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   /* punting for now
     isValidDefault(type, d) {
@@ -358,28 +381,39 @@ class AddTable extends Component {
   validateAndSubmit() {
     this.props.dispatch(resetValidation());
     const validColumns = this.trimEmptyColumns(this.props.columns);
+    // trim white spaces on table name.
+    const tableNameTrimmed = this.trimTableName(this.props.tableName);
+
+    // trim all validColumns names
+    const trimmedColumns = this.trimColumnNames(validColumns);
 
     if (
-      this.checkAndNotify(this.tableNameEmptyCheck(), tableNameNullNotif) &&
-      this.checkAndNotify(this.tableNameCheck(), gqlTableErrorNotif) &&
       this.checkAndNotify(
-        this.validateEnoughColumns(validColumns),
+        this.tableNameEmptyCheck(tableNameTrimmed),
+        tableNameNullNotif
+      ) &&
+      this.checkAndNotify(
+        this.tableNameCheck(tableNameTrimmed),
+        gqlTableErrorNotif
+      ) &&
+      this.checkAndNotify(
+        this.validateEnoughColumns(trimmedColumns),
         tableEnufColumnsNotif
       ) &&
       this.checkAndNotify(
-        this.validateColumnNames(validColumns),
+        this.validateColumnNames(trimmedColumns),
         gqlColumnErrorNotif
       ) &&
       this.checkAndNotify(
-        this.validateNoDupNames(validColumns),
+        this.validateNoDupNames(trimmedColumns),
         tableColumnNoDupsNotif
       ) &&
       this.checkAndNotify(
-        this.validateColumnTypes(validColumns),
+        this.validateColumnTypes(trimmedColumns),
         tableColumnTypesNotif
       ) &&
       this.checkAndNotify(
-        this.validateColumnDefaults(validColumns),
+        this.validateColumnDefaults(trimmedColumns),
         tableColumnDefaultsNotif
       ) &&
       this.checkAndNotify(this.minPrimaryKeyCheck(), tableMinPrimaryKeyNotif)
@@ -427,11 +461,9 @@ class AddTable extends Component {
 
     return (
       <div
-        className={`${styles.addTablesBody} ${styles.clear_fix} ${
-          styles.padd_left
-        }`}
+        className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
       >
-        <Helmet title="Add Table - Data | Hasura" />
+        <Helmet title={`Add Table - Data | Hasura`} />
         <div className={styles.subHeader}>
           <h2 className={styles.heading_text}>Add a new table</h2>
           <div className="clearfix" />

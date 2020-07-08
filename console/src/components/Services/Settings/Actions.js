@@ -1,4 +1,5 @@
 import requestAction from '../../../utils/requestAction';
+import { clearIntrospectionSchemaCache } from '../RemoteSchema/graphqlUtils';
 import { push } from 'react-router-redux';
 import globals from '../../../Globals';
 import endpoints, { globalCookiePolicy } from '../../../Endpoints';
@@ -234,8 +235,8 @@ export const loadInconsistentObjects = (reloadConfig, successCb, failureCb) => {
 
     const loadQuery = shouldReloadMetadata
       ? getReloadCacheAndGetInconsistentObjectsQuery(
-        shouldReloadRemoteSchemas === false ? false : true
-      )
+          shouldReloadRemoteSchemas === false ? false : true
+        )
       : inconsistentObjectsQuery;
 
     dispatch({ type: LOADING_METADATA });
@@ -255,6 +256,9 @@ export const loadInconsistentObjects = (reloadConfig, successCb, failureCb) => {
 
         if (successCb) {
           successCb();
+        }
+        if (shouldReloadRemoteSchemas) {
+          clearIntrospectionSchemaCache();
         }
       },
       error => {
@@ -290,6 +294,8 @@ export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
         const inconsistentObjects = data[1].inconsistent_objects;
 
         dispatch(handleInconsistentObjects(inconsistentObjects));
+
+        clearIntrospectionSchemaCache();
 
         if (successCb) {
           successCb();
@@ -340,6 +346,7 @@ export const dropInconsistentObjects = (successCb, failureCb) => {
         dispatch({ type: DROPPED_INCONSISTENT_METADATA });
         dispatch(showSuccessNotification('Dropped inconsistent metadata'));
         dispatch(loadInconsistentObjects({ shouldReloadRemoteSchemas: false }));
+        clearIntrospectionSchemaCache();
         if (successCb) {
           successCb();
         }
@@ -475,7 +482,7 @@ export const loadAllowedQueries = () => {
       },
       error => {
         console.error(error);
-        dispatch(showErrorNotification('Fetching allowed queries failed'));
+        dispatch(showErrorNotification('Fetching allow list failed'));
       }
     );
   };
@@ -676,7 +683,7 @@ export const metadataReducer = (state = defaultState, action) => {
         ...state,
         allowedQueries: [
           ...state.allowedQueries.map(q =>
-            (q.name === action.data.queryName ? action.data.newQuery : q)
+            q.name === action.data.queryName ? action.data.newQuery : q
           ),
         ],
       };
