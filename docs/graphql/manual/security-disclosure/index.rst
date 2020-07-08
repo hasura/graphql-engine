@@ -4,7 +4,7 @@
 
 .. _security_protocol:
 
-Security vulnerability protocol
+Security Vulnerability Protocol
 ===============================
 
 .. contents:: Table of contents
