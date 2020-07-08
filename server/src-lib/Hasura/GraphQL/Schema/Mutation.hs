@@ -342,8 +342,6 @@ mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
              , RQL.uqp1AllCols = columns
              }
   where
-    -- FIXME!!!
-    -- OpExps should also include preset columns
     permissionFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ upiFilter updatePerms
     checkExp = maybe annBoolExpTrue (fmapAnnBoolExp partialSQLExpToUnpreparedValue) $ upiCheck updatePerms
 
@@ -399,17 +397,19 @@ updateOperators table updatePermissions = do
     pure $ fmap (concat . catMaybes) (sequenceA $ snd <$> parsers)
       `P.bindFields` \opExps -> do
         -- there needs to be at least one column in the update
-        -- FIXME this is wrong: if there are pre-sets values we shouldn't fail here
-        when (null opExps) $ parseError $
-          "at lease one of " <> (T.intercalate ", " allowedOperators) <> " is expected"
+        let presetColumns = Map.toList $ RQL.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
+        when (null opExps && null presetColumns) $ parseError $
+          "at least any one of " <> (T.intercalate ", " allowedOperators) <> " is expected"
+
         -- no column should appear twice
         let groupedExps   = L.groupBy ((==) `on` fst) $ sortOn (getPGColTxt . fst) opExps
             erroneousExps = concat $ filter ((> 1) . length) groupedExps
         when (not $ null erroneousExps) $ parseError $ "column found in multiple operators; "
           <> (T.intercalate ", " $ flip map erroneousExps \(column, opExp) ->
                  getPGColTxt column <> " in " <> RQL.updateOperatorText opExp)
-        -- FIXME: validate JSON parsing here?
-        pure opExps
+
+        -- FIXME: validate JSON strings
+        pure $ presetColumns <> opExps
   where
     columnParser columnInfo = fmap P.mkParameter <$> P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
     textParser   _          = fmap P.mkParameter <$> P.column (PGColumnScalar PGText)    (G.Nullability False)
