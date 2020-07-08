@@ -566,21 +566,38 @@ article ol ol {
   font-weight: bold;
 }
 
-.toc-table,
-.toc-table th,
-.toc-table tr,
-.toc-table td {
-  border: none !important; /* override djangodocs.css */
+.toc-list {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  padding: 0;
 }
 
-.toc-table th {
+.toc-list:before {
+  display: none; /* override djangosite.css */
+}
+
+.toc-list .container {
+  padding: 0;
+  margin: initial;
+}
+
+.toc-list-head {
   text-transform: uppercase;
   letter-spacing: 1.2px;
-  padding: 15px 5px 10px 5px !important; /* override djangodocs.css */
+  padding: 15px 5px 10px 0 !important; /* override djangodocs.css */
+  font-weight: bold;
 }
 
-.toc-table td {
-  padding: 5px !important; /* override djangodocs.css */
+@media (max-width: 1300px) {
+  .toc-list {
+    grid-template-columns: repeat(2, auto);
+  }
+}
+
+@media (max-width: 660px) {
+  .toc-list {
+    grid-template-columns: auto;
+  }
 }
 
 /*** Table of contents END ***/

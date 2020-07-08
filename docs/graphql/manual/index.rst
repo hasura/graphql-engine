@@ -12,57 +12,92 @@ Hasura GraphQL Engine Documentation
   :depth: 1
   :local:
 
-The Hasura GraphQL engine connects to your databases & microservices and auto-generates a production-ready GraphQL backend in minutes.
+The Hasura GraphQL engine makes your data instantly accessible over a real-time GraphQL API, so you can build and ship modern apps and APIs faster. Hasura connects to your databases, REST servers, GraphQL servers, and third party APIs to provide a unified realtime GraphQL API across all your data sources.
 
-.. list-table::
-   :header-rows: 1
-   :class: toc-table
+.. container:: toc-list
+  
+  .. container:: toc-list-section
 
-   * - Basics
-     - Business Logic
-     - Auth
-   * - `Getting Started <getting-started/index>`_
-     - `Actions <actions/index>`_
-     - `Authentication <auth/authentication/index>`_
-   * - `Schema <schema/index>`_
-     - `Remote Schemas <remote-schemas/index>`_
-     - `Auth Using Webhooks <auth/authentication/webhook>`_
-   * - `Queries <queries/index>`_
-     - `Event Triggers <event-triggers/index>`_
-     - `Auth Using JWT <auth/authentication/jwt>`_
-   * - `Mutations <mutations/index>`_
-     - `Scheduled Triggers <scheduled-triggers/index>`_
-     - `Unauthenticated / Public Access <auth/authentication/unauthenticated-access>`_
-   * - `Subscriptions <subscriptions/index>`_
-     - 
-     - `Authorization / Access Control <auth/authorization/index>`_
+    .. container:: toc-list-head
 
-.. list-table::
-   :header-rows: 1
-   :class: toc-table
+      Basics
 
-   * - Migrate & Deploy
-     - Reference
-     - Learn
-   * - `Basics <migrations/basics>`_
-     - `Hasura CLI <hasura-cli/index>`_
-     - `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
-   * - `Setting Up Migrations <migrations/migrations-setup>`_
-     - `API Reference <api-reference/index>`_
-     - `GraphQL & Hasura Courses <https://hasura.io/learn/>`__
-   * - `Managing Metadata <migrations/manage-metadata>`_
-     - `How It Works <how-it-works/index>`_
-     - `Guides & Resources <guides/index>`_
-   * - `Deploy Using Hasura Cloud <https://hasura.io/docs/cloud/1.0/manual/index.html>`__
-     - `Troubleshooting <troubleshooting/index>`_
-     - 
-   * - `Deploy Using Docker <deployment/docker/index>`_
-     - `Security Vulnerability Protocol <security-disclosure/index>`_
-     - 
-   * - `Deploy Using Kubernetes <deployment/kubernetes/index>`_
-     - 
-     - 
-    
+    .. container:: toc-list-content
+
+      - `Getting Started <getting-started/index>`_
+      - `Schema <schema/index>`_
+      - `Queries <queries/index>`_
+      - `Mutations <mutations/index>`_
+      - `Subscriptions <subscriptions/index>`_
+
+  .. container:: toc-list-section
+
+    .. container:: toc-list-head
+
+      Business Logic
+
+    .. container:: toc-list-content
+
+      - `Actions <actions/index>`_
+      - `Remote Schemas <remote-schemas/index>`_
+      - `Event Triggers <event-triggers/index>`_
+      - `Scheduled Triggers <scheduled-triggers/index>`_
+
+  .. container:: toc-list-section
+
+    .. container:: toc-list-head
+
+      Auth
+
+    .. container:: toc-list-content
+
+      - `Authentication <auth/authentication/index>`_
+      - `Auth Using Webhooks <auth/authentication/webhook>`_
+      - `Auth Using JWT <auth/authentication/jwt>`_
+      - `Unauthenticated / Public Access <auth/authentication/unauthenticated-access>`_
+      - `Authorization / Access Control <auth/authorization/index>`_
+
+  .. container:: toc-list-section
+
+    .. container:: toc-list-head
+
+      Migrate & Deploy
+
+    .. container:: toc-list-content
+
+      - `Basics <migrations/basics>`_
+      - `Setting Up Migrations <migrations/migrations-setup>`_
+      - `Managing Metadata <migrations/manage-metadata>`_
+      - `Deploy Using Hasura Cloud <https://hasura.io/docs/cloud/1.0/manual/index.html>`__
+      - `Deploy Using Docker <deployment/docker/index>`_
+      - `Deploy Using Kubernetes <deployment/kubernetes/index>`_
+
+  .. container:: toc-list-section
+
+    .. container:: toc-list-head
+
+      Reference
+
+    .. container:: toc-list-content
+
+      - `Hasura CLI <hasura-cli/index>`_
+      - `API Reference <api-reference/index>`_
+      - `How It Works <how-it-works/index>`_
+      - `Troubleshooting <troubleshooting/index>`_
+      - `Security Vulnerability Protocol <security-disclosure/index>`_
+
+  .. container:: toc-list-section
+
+    .. container:: toc-list-head
+
+      Learn
+
+    .. container:: toc-list-content
+
+      - `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
+      - `GraphQL & Hasura Courses <https://hasura.io/learn/>`__
+      - `Guides & Resources <guides/index>`_
+
 
 .. toctree::
   :maxdepth: 1
