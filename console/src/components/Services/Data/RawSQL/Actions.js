@@ -40,17 +40,18 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
   dispatch(showSuccessNotification('Executing the Query...'));
 
   const { isTableTrackChecked, isCascadeChecked } = getState().rawSQL;
-  const { currMigrationMode, readOnlyMode } = getState().main;
+  const { migrationMode, readOnlyMode } = getState().main;
 
-  const migrateUrl = returnMigrateUrl(currMigrationMode);
+  const migrateUrl = returnMigrateUrl(migrationMode);
 
   let url = Endpoints.rawSQL;
 
   const schemaChangesUp = [];
 
-  const sql = statementTimeout
-    ? `${getStatementTimeoutSql(statementTimeout)} ${getState().rawSQL.sql}`
-    : getState().rawSQL.sql;
+  const sql =
+    statementTimeout && !isMigration
+      ? `${getStatementTimeoutSql(statementTimeout)} ${getState().rawSQL.sql}`
+      : getState().rawSQL.sql;
 
   schemaChangesUp.push(getRunSqlQuery(sql, isCascadeChecked, readOnlyMode));
   // check if track view enabled

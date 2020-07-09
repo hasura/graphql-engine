@@ -36,7 +36,7 @@ The Hasura GraphQL engine needs access to your Postgres database with the follow
 
 - (required) Read & write access on 2 schemas: ``hdb_catalog`` and ``hdb_views``.
 - (required) Read access to the ``information_schema`` and ``pg_catalog`` schemas, to query for list of tables.
-  Note that these permissions are usually available by default to all postgres users via `PUBLIC <https://www.postgresql.org/docs/current/sql-grant.html>`_ grant.
+  Note that these permissions are usually available by default to all postgres users via `PUBLIC <https://www.postgresql.org/docs/current/sql-grant.html>`__ grant.
 - (required) Read access to the schemas (public or otherwise) if you only want to support queries.
 - (optional) Write access to the schemas if you want to support mutations as well.
 - (optional) To create tables and views via the Hasura console (the admin UI) you'll need the privilege to create

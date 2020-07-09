@@ -3,9 +3,7 @@ import styles from './Styles.scss';
 import Helmet from 'react-helmet';
 import HandlerEditor from '../Common/components/HandlerEditor';
 import KindEditor from '../Common/components/KindEditor';
-import ActionDefinitionEditor from '../Common/components/ActionDefinitionEditor';
 import HeaderConfEditor from '../Common/components/HeaderConfEditor';
-import TypeDefinitionEditor from '../Common/components/TypeDefinitionEditor';
 import Button from '../../../Common/Button';
 import { getModifyState } from './utils';
 import {
@@ -19,6 +17,14 @@ import {
 } from './reducer';
 import { saveAction, deleteAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
+import GraphQLEditor from '../Common/components/GraphQLEditor';
+import { typeDefinitionInfo } from '../Add/Add';
+
+export const actionDefinitionInfo = {
+  label: 'Action definition',
+  tooltip:
+    'Define the action as a query or a mutation using GraphQL SDL. You can use the custom types already defined by you or define new types in the new types definition editor below.',
+};
 
 const ActionEditor = ({
   currentAction,
@@ -50,7 +56,7 @@ const ActionEditor = ({
     const modifyState = getModifyState(currentAction, allTypes);
     dispatch(setModifyState(modifyState));
   };
-  React.useEffect(init, [currentAction]);
+  React.useEffect(init, [currentAction, allTypes, dispatch]);
 
   const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
   const kindOnChange = k => dispatch(setActionKind(k));
@@ -98,22 +104,25 @@ const ActionEditor = ({
   return (
     <div>
       <Helmet title={`Modify Action - ${actionName} - Actions | Hasura`} />
-      <ActionDefinitionEditor
+      <GraphQLEditor
         value={actionDefinitionSdl}
         error={actionDefinitionError}
         onChange={actionDefinitionOnChange}
         timer={actionDefinitionTimer}
-        placeholder={''}
         readOnlyMode={readOnlyMode}
+        label={actionDefinitionInfo.label}
+        tooltip={actionDefinitionInfo.tooltip}
       />
       <hr />
-      <TypeDefinitionEditor
+      <GraphQLEditor
         value={typesDefinitionSdl}
         error={typesDefinitionError}
         onChange={typeDefinitionOnChange}
         timer={typeDefinitionTimer}
-        placeholder={''}
         readOnlyMode={readOnlyMode}
+        label={typeDefinitionInfo.label}
+        tooltip={typeDefinitionInfo.tooltip}
+        allowEmpty
       />
       <hr />
       <HandlerEditor

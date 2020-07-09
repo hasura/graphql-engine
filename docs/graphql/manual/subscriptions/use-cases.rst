@@ -224,7 +224,7 @@ First, create a view ``poll_results`` to give the result of the poll:
 This view will have the following fields: ``poll_id``, ``option_id`` and ``votes``, i.e. it gives the number of votes
 received by each option for a poll.
 
-Next, :ref:`setup relationships <relationships>` ``poll`` and ``option`` between the ``poll_results`` view
+Next, :ref:`set up relationships <table_relationships>` ``poll`` and ``option`` between the ``poll_results`` view
 and the ``poll`` and ``option`` tables using the ``poll_id`` and ``option_id`` fields respectively.
 
 Now we can use the following subscription to display the latest poll result:

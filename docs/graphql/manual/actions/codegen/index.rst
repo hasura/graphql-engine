@@ -125,7 +125,7 @@ Building your own codegen
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you wish to build a code generator for your framework
-`read the contrib guide <https://github.com/hasura/codegen-builder-contrib/>`_.
+`read the contrib guide <https://github.com/hasura/codegen-assets/blob/master/builder-kit/README.md>`__.
 
 
   
