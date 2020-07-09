@@ -43,7 +43,7 @@ import { ADMIN_SECRET_HEADER_KEY } from '../../../../constants';
 import {
   getLSItem,
   removeLSItem,
-  lsKeys,
+  LS_KEYS,
 } from '../../../../utils/localStorage';
 
 /* When the page is loaded for the first time, hydrate the header state from the localStorage
@@ -69,9 +69,9 @@ class ApiRequest extends Component {
     };
 
     if (this.props.numberOfTables !== 0) {
-      const graphqlQueryInLS = getLSItem(lsKeys.graphiqlQuery);
+      const graphqlQueryInLS = getLSItem(LS_KEYS.graphiqlQuery);
       if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {
-        removeLSItem(lsKeys.graphiqlQuery);
+        removeLSItem(LS_KEYS.graphiqlQuery);
       }
     }
 

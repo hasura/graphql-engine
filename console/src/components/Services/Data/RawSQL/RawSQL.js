@@ -29,7 +29,7 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
-import { getLSItem, setLSItem, lsKeys } from '../../../../utils/localStorage';
+import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
 
 /**
  * # RawSQL React FC
@@ -73,18 +73,18 @@ const RawSQL = ({
   const sqlRef = useRef(sql);
 
   const [statementTimeout, setStatementTimeout] = useState(
-    Number(getLSItem(lsKeys.rawSqlStatementTimeout)) || 10
+    Number(getLSItem(LS_KEYS.rawSqlStatementTimeout)) || 10
   );
 
   useEffect(() => {
     if (!sql) {
-      const sqlFromLocalStorage = getLSItem(lsKeys.rawSQLKey);
+      const sqlFromLocalStorage = getLSItem(LS_KEYS.rawSQLKey);
       if (sqlFromLocalStorage) {
         dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
       }
     }
     return () => {
-      setLSItem(lsKeys.rawSQLKey, sqlRef.current);
+      setLSItem(LS_KEYS.rawSQLKey, sqlRef.current);
     };
   }, [dispatch, sql]);
   // set SQL to sqlRef
@@ -96,7 +96,7 @@ const RawSQL = ({
 
   const submitSQL = () => {
     // set SQL to LS
-    setLSItem(lsKeys.rawSQLKey, sql);
+    setLSItem(LS_KEYS.rawSQLKey, sql);
 
     // check migration mode global
     if (migrationMode) {
@@ -421,7 +421,7 @@ const RawSQL = ({
   const updateStatementTimeout = value => {
     const timeoutInSeconds = Number(value.trim());
     const isValidTimeout = timeoutInSeconds > 0 && !isNaN(timeoutInSeconds);
-    setLSItem(lsKeys.rawSqlStatementTimeout, timeoutInSeconds);
+    setLSItem(LS_KEYS.rawSqlStatementTimeout, timeoutInSeconds);
     setStatementTimeout(isValidTimeout ? timeoutInSeconds : 0);
   };
 

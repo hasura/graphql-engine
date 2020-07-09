@@ -1,4 +1,4 @@
-import { getLSItem, setLSItem, lsKeys } from '../../../../utils/localStorage';
+import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
 
 export const parseLSState = (data: any) => {
   try {
@@ -18,14 +18,14 @@ export const persistColumnCollapseChange = (
   schemaName: string,
   collapsedData: CollapseEntry
 ) => {
-  const state = getLSItem(lsKeys.dataColumnsCollapsedKey);
+  const state = getLSItem(LS_KEYS.dataColumnsCollapsedKey);
   const currentCollapsed = parseLSState(state) || {};
   const newCollapsed = {
     ...currentCollapsed,
     [`${schemaName}.${tableName}`]: collapsedData,
   };
 
-  setLSItem(lsKeys.dataColumnsCollapsedKey, JSON.stringify(newCollapsed));
+  setLSItem(LS_KEYS.dataColumnsCollapsedKey, JSON.stringify(newCollapsed));
 };
 
 export const getPersistedCollapsedColumns = (
@@ -33,7 +33,7 @@ export const getPersistedCollapsedColumns = (
   schemaName: string
 ) => {
   const collapsedData =
-    parseLSState(getLSItem(lsKeys.dataColumnsCollapsedKey)) || {};
+    parseLSState(getLSItem(LS_KEYS.dataColumnsCollapsedKey)) || {};
   return collapsedData[`${schemaName}.${tableName}`];
 };
 
@@ -87,9 +87,9 @@ export const getPersistedColumnsOrder = (
 };
 
 export const persistPageSizeChange = (pageSize: number) => {
-  setLSItem(lsKeys.dataPageSizeKey, JSON.stringify(pageSize));
+  setLSItem(LS_KEYS.dataPageSizeKey, JSON.stringify(pageSize));
 };
 
 export const getPersistedPageSize = () => {
-  return parseLSState(getLSItem(lsKeys.dataPageSizeKey));
+  return parseLSState(getLSItem(LS_KEYS.dataPageSizeKey));
 };

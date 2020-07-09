@@ -3,29 +3,29 @@ import {
   getLSItem,
   setLSItem,
   removeLSItem,
-  lsKeys,
+  LS_KEYS,
 } from '../utils/localStorage';
 
 const loadAppState = () =>
-  JSON.parse(getLSItem(lsKeys.consoleLocalInfo) as string);
+  JSON.parse(getLSItem(LS_KEYS.consoleLocalInfo) as string);
 
 const saveAppState = (state: string) => {
-  setLSItem(lsKeys.consoleLocalInfo, JSON.stringify(state));
+  setLSItem(LS_KEYS.consoleLocalInfo, JSON.stringify(state));
 };
 
-const loadAdminSecretState = () => getLSItem(lsKeys.consoleAdminSecret);
+const loadAdminSecretState = () => getLSItem(LS_KEYS.consoleAdminSecret);
 
 const saveAdminSecretState = (state: string) => {
-  setLSItem(lsKeys.consoleAdminSecret, state);
+  setLSItem(LS_KEYS.consoleAdminSecret, state);
 };
 
 const clearAdminSecretState = () => {
-  removeLSItem(lsKeys.consoleAdminSecret);
+  removeLSItem(LS_KEYS.consoleAdminSecret);
 
   globals.adminSecret = null;
 };
 
-const clearState = () => removeLSItem(lsKeys.consoleLocalInfo);
+const clearState = () => removeLSItem(LS_KEYS.consoleLocalInfo);
 
 export {
   saveAppState,

@@ -56,7 +56,7 @@ export const listLSKeys = () => {
 };
 
 // This is the list of the localStorage keys that are being used.
-export const lsKeys = {
+export const LS_KEYS = {
   consoleAdminSecret: 'CONSOLE_ADMIN_SECRET',
   consoleLocalInfo: `CONSOLE_LOCAL_INFO:${globals.dataApiUrl}`,
   versionUpdateCheckLastClosed: 'versionUpdateCheck: lastClosed',

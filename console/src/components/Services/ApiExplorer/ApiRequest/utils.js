@@ -8,29 +8,29 @@ import {
   setLSItem,
   getLSItem,
   removeLSItem,
-  lsKeys,
+  LS_KEYS,
 } from '../../../../utils/localStorage';
 
 export const setEndPointSectionIsOpen = isOpen => {
-  setLSItem(lsKeys.apiExplorerEndpointSectionIsOpen, isOpen);
+  setLSItem(LS_KEYS.apiExplorerEndpointSectionIsOpen, isOpen);
 };
 
 export const getEndPointSectionIsOpen = () => {
   const defaultIsOpen = true;
 
-  const isOpen = getLSItem(lsKeys.apiExplorerEndpointSectionIsOpen);
+  const isOpen = getLSItem(LS_KEYS.apiExplorerEndpointSectionIsOpen);
 
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
 
 export const setHeadersSectionIsOpen = isOpen => {
-  setLSItem(lsKeys.apiExplorerHeaderSectionIsOpen, isOpen);
+  setLSItem(LS_KEYS.apiExplorerHeaderSectionIsOpen, isOpen);
 };
 
 export const getHeadersSectionIsOpen = () => {
   const defaultIsOpen = true;
 
-  const isOpen = getLSItem(lsKeys.apiExplorerHeaderSectionIsOpen);
+  const isOpen = getLSItem(LS_KEYS.apiExplorerHeaderSectionIsOpen);
 
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
@@ -50,15 +50,15 @@ export const getAdminSecret = () => {
 };
 
 export const persistAdminSecretHeaderWasAdded = () => {
-  setLSItem(lsKeys.apiExplorerAdminSecretWasAdded, 'true');
+  setLSItem(LS_KEYS.apiExplorerAdminSecretWasAdded, 'true');
 };
 
 export const removePersistedAdminSecretHeaderWasAdded = () => {
-  removeLSItem(lsKeys.apiExplorerAdminSecretWasAdded);
+  removeLSItem(LS_KEYS.apiExplorerAdminSecretWasAdded);
 };
 
 export const getPersistedAdminSecretHeaderWasAdded = () => {
-  const lsValue = getLSItem(lsKeys.apiExplorerAdminSecretWasAdded);
+  const lsValue = getLSItem(LS_KEYS.apiExplorerAdminSecretWasAdded);
 
   return lsValue ? lsValue === 'true' : false;
 };
@@ -79,13 +79,13 @@ export const persistGraphiQLHeaders = headers => {
   });
 
   setLSItem(
-    lsKeys.apiExplorerConsoleGraphQLHeaders,
+    LS_KEYS.apiExplorerConsoleGraphQLHeaders,
     JSON.stringify(maskedHeaders)
   );
 };
 
 export const getPersistedGraphiQLHeaders = () => {
-  const headersString = getLSItem(lsKeys.apiExplorerConsoleGraphQLHeaders);
+  const headersString = getLSItem(LS_KEYS.apiExplorerConsoleGraphQLHeaders);
 
   let headers = null;
   if (headersString) {
@@ -141,9 +141,9 @@ export const parseAuthHeader = header => {
 };
 
 export const persistGraphiQLMode = mode => {
-  setLSItem(lsKeys.apiExplorerGraphiqlMode, mode);
+  setLSItem(LS_KEYS.apiExplorerGraphiqlMode, mode);
 };
 
 export const getPersistedGraphiQLMode = () => {
-  return getLSItem(lsKeys.apiExplorerGraphiqlMode) || 'graphql';
+  return getLSItem(LS_KEYS.apiExplorerGraphiqlMode) || 'graphql';
 };

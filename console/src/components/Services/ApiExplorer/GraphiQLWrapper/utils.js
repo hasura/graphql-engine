@@ -1,7 +1,7 @@
-import { getLSItem, lsKeys } from '../../../../utils/localStorage';
+import { getLSItem, LS_KEYS } from '../../../../utils/localStorage';
 
 export const getGraphiQLQueryFromLocalStorage = () => {
-  return getLSItem(lsKeys.graphiqlQuery);
+  return getLSItem(LS_KEYS.graphiqlQuery);
 };
 
 export const clearCodeMirrorHints = () => {

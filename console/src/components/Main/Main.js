@@ -40,7 +40,7 @@ import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
 import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 import { Icon } from '../UIKit/atoms/Icon';
-import { getLSItem, setLSItem, lsKeys } from '../../utils/localStorage';
+import { getLSItem, setLSItem, LS_KEYS } from '../../utils/localStorage';
 import { ProPopup } from './components/ProPopup';
 
 class Main extends React.Component {
@@ -110,7 +110,7 @@ class Main extends React.Component {
 
     try {
       const lastUpdateCheckClosed = getLSItem(
-        lsKeys.versionUpdateCheckLastClosed
+        LS_KEYS.versionUpdateCheckLastClosed
       );
 
       if (lastUpdateCheckClosed !== latestServerVersionToCheck) {
@@ -184,7 +184,7 @@ class Main extends React.Component {
 
   closeUpdateBanner() {
     const { updateNotificationVersion } = this.state;
-    setLSItem(lsKeys.versionUpdateCheckLastClosed, updateNotificationVersion);
+    setLSItem(LS_KEYS.versionUpdateCheckLastClosed, updateNotificationVersion);
     this.setState({ updateNotificationVersion: null });
   }
 
