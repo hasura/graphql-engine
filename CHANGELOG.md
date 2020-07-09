@@ -6,6 +6,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- console: display line number that error originated from in GraphQL editor (close #4849) (#4942)
 
 ## `v1.3.0-beta.4`
 
