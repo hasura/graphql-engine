@@ -5,6 +5,7 @@
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
+- cli: fix cli-migrations-v2 image failing to run as a non root user (close #4651, close #5333)
 
 
 ## `v1.3.0-beta.4`
