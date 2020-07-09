@@ -43,7 +43,6 @@ import { Icon } from '../UIKit/atoms/Icon';
 import { getLSItem, setLSItem, lsKeys } from '../../utils/localStorage';
 import { ProPopup } from './components/ProPopup';
 
-
 class Main extends React.Component {
   constructor(props) {
     super(props);
