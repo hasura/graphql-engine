@@ -16,9 +16,9 @@ Introduction
 ------------
 
 As of now, Hasura provides codegen for a few frameworks (``nodejs-express``,
-``typescript-zeit``, etc). 
+``typescript-zeit``, ``python-flask`` and many more). You can see the full list in the ``Codegen`` tab after you've :ref:`created an action <create_actions>`. 
 
-This page contains examples of using these codegens.
+We will continue adding more examples to the documentation.
 
 Examples
 --------

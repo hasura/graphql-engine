@@ -109,17 +109,12 @@ Generating handler code for your action
 Codegen for your framework
 --------------------------
 
-As of now, Hasura provides codegen for a few frameworks (``nodejs-express``,
-``typescript-zeit``, etc). 
-
-Refer to this page for examples using codegen:
+Refer to the following page for examples about using existing codegen:
 
 .. toctree::
   :maxdepth: 1
 
   Codegen examples <examples/index>
-
-We will continue adding more examples to the documentation.
 
 Building your own codegen
 ^^^^^^^^^^^^^^^^^^^^^^^^^
