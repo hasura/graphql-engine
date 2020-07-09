@@ -27,7 +27,7 @@ const RSHeadersDisplay = ({ data }) =>
             .map((header, index) => [
               <tr key={header}>
                 <td>
-                  {header.name}:{' '}
+                  {`${header.name}: `}
                   {header.type === 'static'
                     ? header.value
                     : '<' + header.value + '>'}
@@ -42,16 +42,11 @@ const RSHeadersDisplay = ({ data }) =>
 const RSReloadSchema = ({ readOnlyMode, remoteSchemaName, ...props }) =>
   !readOnlyMode && remoteSchemaName ? (
     <div className={`${styles.commonBtn} ${styles.detailsRefreshButton}`}>
-      <span>
-        <ReloadRemoteSchema {...props} remoteSchemaName={remoteSchemaName} />
-      </span>
-      <span>
-        <ToolTip
-          icon="fa-question-circle"
-          placement="right"
-          message="If your remote schema has changed, you need to refresh the GraphQL Engine metadata to query the modified schema"
-        />
-      </span>
+      <ReloadRemoteSchema {...props} remoteSchemaName={remoteSchemaName} />
+      <ToolTip
+        placement="right"
+        message="If your remote schema has changed, you need to refresh the GraphQL Engine metadata to query the modified schema"
+      />
     </div>
   ) : null;
 
