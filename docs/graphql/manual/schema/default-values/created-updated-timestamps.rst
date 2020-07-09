@@ -38,7 +38,7 @@ Add a created_at timestamp
 
     :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to add a ``created_at`` timestamp field to the ``article`` table:
 
-    .. code-block:: SQL
+    .. code-block:: plpgsql
 
       ALTER TABLE ONLY "public"."article" ADD COLUMN "created_at" TIMESTAMP DEFAULT NOW();
 
@@ -89,7 +89,7 @@ Add an updated_at timestamp
     2. Define a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ to set the ``updated_at`` field to ``NOW()``.
     3. Create a `Postgres trigger <https://www.postgresql.org/docs/current/sql-createtrigger.html>`__ to call the defined function whenever an article is updated.
 
-    .. code-block:: SQL
+    .. code-block:: plpgsql
 
       ALTER TABLE ONLY "public"."article"
       ADD COLUMN "updated_at" TIMESTAMP DEFAULT NOW();
