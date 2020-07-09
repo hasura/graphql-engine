@@ -5,9 +5,7 @@ set -evo pipefail
 # check if yq is installed
 if ! command -v yq &> /dev/null
 then
-    curl -LO https://github.com/mikefarah/yq/releases/download/3.3.2/yq_linux_amd64 && \ 
-      chmod +x yq_linux_amd64 && \ 
-      mv yq_linux_amd64 /usr/local/bin/yq
+    curl -LO https://github.com/mikefarah/yq/releases/download/3.3.2/yq_linux_amd64 && chmod +x yq_linux_amd64 && mv yq_linux_amd64 /usr/local/bin/yq
 fi
 
 BUILD_DIR=/build
