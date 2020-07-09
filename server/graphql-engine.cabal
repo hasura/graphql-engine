@@ -271,8 +271,11 @@ library
                      , Hasura.Server.Migrate
                      , Hasura.Server.Compression
                      , Hasura.Server.API.PGDump
+
                      -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
+                     , Data.Parser.JSONPath
+                     , Hasura.Server.Auth.JWT
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Run
@@ -291,7 +294,6 @@ library
                      , Hasura.Incremental.Internal.Rule
 
                      , Hasura.Server.Auth.WebHook
-                     , Hasura.Server.Auth.JWT
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
@@ -446,7 +448,6 @@ library
                      , Data.HashMap.Strict.Extended
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.List.Extended
-                     , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.Text.Extended
@@ -487,7 +488,9 @@ test-suite graphql-engine-tests
     , hspec-core >=2.6.1 && <3
     , hspec-expectations-lifted
     , http-client
+    , http-types
     , http-client-tls
+    , jose
     , lifted-base
     , monad-control
     , mtl
@@ -501,16 +504,19 @@ test-suite graphql-engine-tests
     , time
     , transformers-base
     , unordered-containers
+    , text
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
     Data.Parser.CacheControlSpec
     Data.Parser.URLTemplate
+    Data.Parser.JSONPathSpec
     Data.TimeSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.Server.MigrateSpec
     Hasura.Server.TelemetrySpec
+    Hasura.Server.AuthSpec
 
 -- Benchmarks related to caching (e.g. the plan cache).
 --
