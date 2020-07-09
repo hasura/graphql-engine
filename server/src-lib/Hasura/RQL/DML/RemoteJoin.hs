@@ -282,7 +282,6 @@ data RemoteJoinField
   , _rjfAlias        :: !Alias -- ^ Top level alias of the field
   , _rjfField        :: !(G.Field G.NoFragments Variable) -- ^ The field AST
   , _rjfFieldCall    :: ![G.Name] -- ^ Path to remote join value
-  , _rjfVariables    :: ![(G.VariableDefinition,A.Value)] -- ^ Variables used in the AST
   } deriving (Show, Eq)
 
 -- | Generate composite JSON ('CompositeValue') parameterised over 'RemoteJoinField'
@@ -320,7 +319,6 @@ traverseQueryResponseJSON rjm =
                                  fieldAlias
                                  queryField
                                  (map fcName $ toList $ NE.tail fieldCall)
-                                 (concat $ mapMaybe _rfaVariable inputArgs)
           where
             ordJSONValueToGValue :: (MonadError QErr m) => AO.Value -> m (G.Value Void)
             ordJSONValueToGValue orderedVal =
@@ -365,8 +363,35 @@ traverseQueryResponseJSON rjm =
                            Nothing -> Just <$> traverseValue fieldPath value
           pure $ CVObject $ OMap.fromList processedFields
 
-convertFieldWithVariablesToName :: G.Field G.NoFragments Variable -> G.Field G.NoFragments G.Name -- Maybe will need to collect the variable definitions too
+convertFieldWithVariablesToName :: G.Field G.NoFragments Variable -> G.Field G.NoFragments G.Name
 convertFieldWithVariablesToName = fmap getName
+
+constGValueToJSON :: G.Value Void -> A.Value
+constGValueToJSON = \case
+  G.VNull                 -> A.Null
+  G.VInt i                -> A.toJSON i
+  G.VFloat f              -> A.toJSON f
+  G.VString _ t           -> A.toJSON t
+  G.VBoolean b            -> A.toJSON b
+  G.VEnum (G.EnumValue n) -> A.toJSON n
+  G.VList values          -> A.toJSON $ map constGValueToJSON values
+  G.VObject objects       -> A.toJSON $ fmap constGValueToJSON objects
+-- TODO: handle G.VVariable in case of G.Value Void
+--  G.VVariable _           -> _
+
+collectVariables :: G.Value Variable -> HashMap G.VariableDefinition A.Value
+collectVariables val =  case val of
+  G.VVariable var@(Variable _ gType val) ->
+    let (name,jVal) = (getName var, constGValueToJSON val)
+    in Map.singleton (G.VariableDefinition name gType $ Just val) jVal
+  G.VNull -> mempty
+  G.VInt _ -> mempty
+  G.VFloat _ -> mempty
+  G.VString _ _ -> mempty
+  G.VBoolean _ -> mempty
+  G.VEnum _ -> mempty
+  G.VList values -> foldl Map.union mempty $ map collectVariables values
+  G.VObject values -> foldl Map.union mempty $ map collectVariables $ Map.elems values
 
 -- | Fetch remote join field value from remote servers by batching respective 'RemoteJoinField's
 fetchRemoteJoinFields
@@ -384,7 +409,6 @@ fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins = do
     let batchList = toList batch
         gqlReq = fieldsToRequest G.OperationTypeQuery
                                  (map _rjfField batchList)
-                                 (concatMap _rjfVariables batchList)
         gqlReqUnparsed = (GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc) <$> gqlReq
     -- NOTE: discard remote headers (for now):
     (_, _, respBody) <- execRemoteGQ' manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
@@ -406,12 +430,13 @@ fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins = do
   where
     remoteSchemaBatch = Map.groupOnNE _rjfRemoteSchema remoteJoins
 
-    fieldsToRequest :: G.OperationType -> [G.Field G.NoFragments Variable] -> [(G.VariableDefinition,A.Value)] -> GQLReqParsed
-    fieldsToRequest opType gFields vars =
-      let gFields' = map (G.fmapFieldFragment G.inline . convertFieldWithVariablesToName) gFields
+    fieldsToRequest :: G.OperationType -> [G.Field G.NoFragments Variable] -> GQLReqParsed
+    fieldsToRequest opType gFields =
+      let variableInfos = Just <$> foldl Map.union mempty $ Map.elems $ fmap collectVariables $ G._fArguments $ head gFields
+          gFields' = map (G.fmapFieldFragment G.inline . convertFieldWithVariablesToName) gFields
       in
-      case vars of
-        [] ->
+      case variableInfos of
+        Nothing ->
           GQLReq
             { _grOperationName = Nothing
             , _grQuery =
@@ -426,24 +451,24 @@ fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins = do
                   ]
              , _grVariables = Nothing
              }
-        vars' ->
+
+        Just vars' ->
           GQLReq
             { _grOperationName = Nothing
             , _grQuery =
-                GQLExecDoc
-                  [ G.ExecutableDefinitionOperation
-                      (G.OperationDefinitionTyped
+               GQLExecDoc
+                 [ G.ExecutableDefinitionOperation
+                     (G.OperationDefinitionTyped
                        ( emptyOperationDefinition
-                            { G._todSelectionSet = map G.SelectionField gFields'
-                            , G._todVariableDefinitions = nub (map fst vars')
-                            }
-                        )
-                      )
+                           { G._todSelectionSet = map G.SelectionField gFields'
+                           , G._todVariableDefinitions = map fst $ Map.toList vars'
+                           }
+                       )
+                     )
                   ]
-            , _grVariables = Just $ Map.fromList
-                                      (map (\(varDef, val) -> (G._vdName varDef, val)) vars')
-            }
-
+             , _grVariables = Just $ Map.fromList
+                                      (map (\(varDef, val) -> (G._vdName varDef, val)) $ Map.toList vars')
+             }
       where
         emptyOperationDefinition =
           G.TypedOperationDefinition {

@@ -182,11 +182,11 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'query_with_arguments.yaml')
 
-    # def test_with_variables(self, hge_ctx):
-    #     check_query_f(hge_ctx, self.dir() + 'mixed_variables.yaml')
-    #     st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_args.yaml')
-    #     assert st_code == 200, resp
-    #     check_query_f(hge_ctx, self.dir() + 'remote_rel_variables.yaml')
+    def test_with_variables(self, hge_ctx):
+   #    check_query_f(hge_ctx, self.dir() + 'mixed_variables.yaml')  -- uses heterogenous execution, due to which this assert fails
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_args.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'remote_rel_variables.yaml')
 
     # def test_with_fragments(self, hge_ctx):
     #     check_query_f(hge_ctx, self.dir() + 'mixed_fragments.yaml')
