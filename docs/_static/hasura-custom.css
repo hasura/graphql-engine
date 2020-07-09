@@ -566,6 +566,40 @@ article ol ol {
   font-weight: bold;
 }
 
+.toc-list {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  padding: 0;
+}
+
+.toc-list:before {
+  display: none; /* override djangosite.css */
+}
+
+.toc-list .container {
+  padding: 0;
+  margin: initial;
+}
+
+.toc-list-head {
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 15px 5px 10px 0 !important; /* override djangodocs.css */
+  font-weight: bold;
+}
+
+@media (max-width: 1300px) {
+  .toc-list {
+    grid-template-columns: repeat(2, auto);
+  }
+}
+
+@media (max-width: 660px) {
+  .toc-list {
+    grid-template-columns: auto;
+  }
+}
+
 /*** Table of contents END ***/
 
 /*** Feedback section ***/
