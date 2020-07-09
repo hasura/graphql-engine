@@ -24,6 +24,12 @@ func (c *Config) findPluginManifestFiles(indexDir string) ([]string, error) {
 		Fs: afero.NewOsFs(),
 	}
 	fs.Walk(indexDir, func(path string, info os.FileInfo, err error) error {
+		if info == nil {
+			if err != nil {
+				return err
+			}
+			return nil
+		}
 		if info.Mode().IsRegular() && filepath.Ext(info.Name()) == paths.ManifestExtension {
 			out = append(out, path)
 		}
