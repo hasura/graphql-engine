@@ -12,6 +12,8 @@ Guides: Deployment
   :depth: 1
   :local:
 
+This section contains guides to deploy Hasura GraphQL engine on some specific platforms:
+
 - `One-click deployment with Hasura Cloud <https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html>`__
 - :ref:`One-click deployment with Heroku <heroku_one_click>`
 - :ref:`Digital Ocean One-click App on Marketplace <deploy_do_marketplace>`
@@ -20,11 +22,6 @@ Guides: Deployment
 - :ref:`Render One-click Deploy with Managed PostgreSQL <deploy_render>`
 - :ref:`Nhost One-click Deploy with Managed PostgreSQL, Storage, and Auth <deploy_nhost>`
 - `Blog: Instant GraphQL on AWS RDS <https://hasura.io/blog/instant-graphql-on-aws-rds-1edfb85b5985>`__
-
-.. note::
-   The above are guides to deploy the Hasura GraphQL engine on some specific platforms.
-
-   For more generic guides, see :ref:`deployment`.
 
 .. toctree::
    :maxdepth: 1

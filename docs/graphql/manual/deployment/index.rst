@@ -64,7 +64,7 @@ For access to Hasura GraphQL engine logs, check the below page for details:
    Using Kubernetes <kubernetes/index>
    Server configuration <graphql-engine-flags/index>
    postgres-requirements
-   securing-graphql-endpoint
+   Securing GraphQL endpoint <securing-graphql-endpoint/index>
    Server logs <logging>
    Enable HTTPS <enable-https>
    allow-list
@@ -73,3 +73,4 @@ For access to Hasura GraphQL engine logs, check the below page for details:
    Custom Docker images or binaries <custom-docker-images>
    Updating GraphQL engine <updating>
    Downgrading GraphQL engine <downgrading>
+   Deployment guides <guides/index>

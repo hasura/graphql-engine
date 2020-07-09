@@ -101,6 +101,6 @@ Advanced
    :titlesonly:
    :hidden:
 
-   Securing your GraphQL endpoint <securing-graphql-endpoint>
+   Securing your GraphQL endpoint <../securing-graphql-endpoint/kubernetes>
    GraphQL engine server logs <logging>
    Updating GraphQL engine <updating>
