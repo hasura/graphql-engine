@@ -35,6 +35,7 @@ import {
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
 import styles from '../../../Common/TableCommon/Table.scss';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 /**
  * # RawSQL React FC
@@ -121,7 +122,9 @@ const RawSQL = ({
         // if migration is not checked, check if is schema modification
         if (checkSchemaModification(sql)) {
           dispatch(modalOpen());
-          const confirmation = false;
+          // FIXME: I don;t understand what this is doing here
+          // this was initially just const confirmation = false;
+          const confirmation = getConfirmation('This is a question');
           if (confirmation) {
             dispatch(executeSQL(isMigration, migrationName, statementTimeout));
           }
@@ -188,21 +191,19 @@ const RawSQL = ({
           return [schema.table_schema, schema.table_name].join('.');
         });
 
-        for (let i = 0; i < objects.length; i++) {
-          const object = objects[i];
-
+        allObjectsTrackable = objects.every(object => {
           if (object.type === 'function') {
-            allObjectsTrackable = false;
-            break;
-          } else {
-            const objectName = [object.schema, object.name].join('.');
-
-            if (trackedObjectNames.includes(objectName)) {
-              allObjectsTrackable = false;
-              break;
-            }
+            return false;
           }
-        }
+
+          const objectName = [object.schema, object.name].join('.');
+
+          if (trackedObjectNames.includes(objectName)) {
+            return false;
+          }
+
+          return true;
+        });
 
         if (allObjectsTrackable) {
           dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
