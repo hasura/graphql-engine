@@ -13,7 +13,7 @@ Guides: Visual Studio Code Setup
   :local:
 
 
-If you use `Visual Studio code <https://code.visualstudio.com/>`_, the `Apollo GraphQL plugin <https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo>`_ can improve your development experience significantly by enabling a lot of cool features like syntax highlighting for GraphQL, auto completion for GraphQL requests and validating your GraphQL requests against a schema or an endpoint.
+If you use `Visual Studio code <https://code.visualstudio.com/>`__, the `Apollo GraphQL plugin <https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo>`__ can improve your development experience significantly by enabling a lot of cool features like syntax highlighting for GraphQL, auto completion for GraphQL requests and validating your GraphQL requests against a schema or an endpoint.
 
 This guide helps you configure the Apollo GraphQL plugin with Hasura to make your local development easier.
 
@@ -50,6 +50,6 @@ Notes:
 - Replace ``http://localhost:8080/v1/graphql`` with your GraphQL endpoint.
 - You can also add custom headers in the headers object if you wish to emulate the schema for some specific roles or tokens.
 
-For advanced configuration, check out the `docs for the plugin <https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo>`_.
+For advanced configuration, check out the `docs for the plugin <https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo>`__.
 
-Note: The `VSCode GraphQL <https://github.com/prisma/vscode-graphql>`_ plugin by Prisma does not currently work with Hasura because it has a hard dependency on batching and Hasura does not support batching as of now. Batching as a feature in GraphQL engine is tracked `here <https://github.com/hasura/graphql-engine/issues/1812>`_.
+Note: The `VSCode GraphQL <https://github.com/prisma/vscode-graphql>`__ plugin by Prisma does not currently work with Hasura because it has a hard dependency on batching and Hasura does not support batching as of now. Batching as a feature in GraphQL engine is tracked `here <https://github.com/hasura/graphql-engine/issues/1812>`__.
