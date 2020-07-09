@@ -27,3 +27,10 @@ access to your GraphQL endpoint and the Hasura console:
   If you're looking at adding access control rules for your data to your GraphQL API then head
   to :ref:`Authentication / access control <auth>`.
 
+.. toctree::
+   :titlesonly:
+   :hidden:
+
+   Heroku <heroku>
+   Docker <docker>
+   Kubernetes <kubernetes>

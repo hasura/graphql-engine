@@ -155,10 +155,3 @@ Advanced
 - :ref:`Updating GraphQL engine <docker_update>`
 - :ref:`Setting up migrations <migrations>`
 
-.. toctree::
-   :titlesonly:
-   :hidden:
-
-   Securing your GraphQL endpoint <../securing-graphql-endpoint/docker>
-   GraphQL engine server logs <logging>
-   Updating GraphQL engine <updating>
