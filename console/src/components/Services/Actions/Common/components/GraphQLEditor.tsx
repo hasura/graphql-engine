@@ -45,8 +45,8 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
     }
 
     const parseDebounceTimer = setTimeout(() => {
-      if (allowEmpty && v === '') {
-        return onChange(v, null, null, null);
+      if (allowEmpty && val === '') {
+        return onChange(val, null, null, null);
       }
       let timerError = null;
       let ast = null;
