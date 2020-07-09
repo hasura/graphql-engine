@@ -14,6 +14,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
 -- import           Hasura.GraphQL.Schema.Merge
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Deps
 
 import qualified Data.Aeson                  as J
 import qualified Data.HashMap.Strict         as Map
@@ -83,6 +84,10 @@ removeRemoteSchemaP1 rsn = do
   let rmSchemas = scRemoteSchemas sc
   void $ onNothing (Map.lookup rsn rmSchemas) $
     throw400 NotExists "no such remote schema"
+  let depObjs = getDependentObjs sc remoteSchemaDepId
+  when (depObjs /= []) $ reportDeps depObjs
+  where
+    remoteSchemaDepId = SORemoteSchema rsn
 
 runReloadRemoteSchema
   :: (QErrM m, CacheRWM m)
