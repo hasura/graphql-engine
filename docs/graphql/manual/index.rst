@@ -24,11 +24,11 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
 
     .. container:: toc-list-content
 
-      - `Getting Started <getting-started/index>`_
-      - `Schema <schema/index>`_
-      - `Queries <queries/index>`_
-      - `Mutations <mutations/index>`_
-      - `Subscriptions <subscriptions/index>`_
+      - :ref:`getting_started`
+      - :ref:`schema`
+      - :ref:`queries`
+      - :ref:`mutations`
+      - :ref:`subscriptions`
 
   .. container:: toc-list-section
 
@@ -38,10 +38,10 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
 
     .. container:: toc-list-content
 
-      - `Actions <actions/index>`_
-      - `Remote Schemas <remote-schemas/index>`_
-      - `Event Triggers <event-triggers/index>`_
-      - `Scheduled Triggers <scheduled-triggers/index>`_
+      - :ref:`actions`
+      - :ref:`remote_schemas`
+      - :ref:`event_triggers`
+      - :ref:`scheduled_triggers`
 
   .. container:: toc-list-section
 
@@ -51,11 +51,11 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
 
     .. container:: toc-list-content
 
-      - `Authentication <auth/authentication/index>`_
-      - `Auth Using Webhooks <auth/authentication/webhook>`_
-      - `Auth Using JWT <auth/authentication/jwt>`_
-      - `Unauthenticated / Public Access <auth/authentication/unauthenticated-access>`_
-      - `Authorization / Access Control <auth/authorization/index>`_
+      - :ref:`authentication`
+      - :ref:`Auth Using Webhooks <auth_webhooks>`
+      - :ref:`Auth Using JWT <auth_jwt>`
+      - :ref:`Unauthenticated / Public Access <unauthenticated_access>`
+      - :ref:`Authorization / Access Control <authorization>`
 
   .. container:: toc-list-section
 
@@ -65,12 +65,12 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
 
     .. container:: toc-list-content
 
-      - `Basics <migrations/basics>`_
-      - `Setting Up Migrations <migrations/migrations-setup>`_
-      - `Managing Metadata <migrations/manage-metadata>`_
+      - :ref:`Basics <migrations_basics>`
+      - :ref:`Setting Up Migrations <migrations_setup>`
+      - :ref:`Managing Metadata <manage_hasura_metadata>`
       - `Deploy Using Hasura Cloud <https://hasura.io/docs/cloud/1.0/manual/index.html>`__
-      - `Deploy Using Docker <deployment/docker/index>`_
-      - `Deploy Using Kubernetes <deployment/kubernetes/index>`_
+      - :ref:`Deploy Using Docker <deployment_docker>`
+      - :ref:`Deploy Using Kubernetes <deploy_kubernetes>`
 
   .. container:: toc-list-section
 
@@ -80,11 +80,11 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
 
     .. container:: toc-list-content
 
-      - `Hasura CLI <hasura-cli/index>`_
-      - `API Reference <api-reference/index>`_
-      - `How It Works <how-it-works/index>`_
-      - `Troubleshooting <troubleshooting/index>`_
-      - `Security Vulnerability Protocol <security-disclosure/index>`_
+      - :ref:`hasuracli_manual`
+      - :ref:`api_reference`
+      - :ref:`How It Works <how_it_works>`
+      - :ref:`Troubleshooting <troubleshooting>`
+      - :ref:`security_protocol`
 
   .. container:: toc-list-section
 
@@ -96,7 +96,7 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
 
       - `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
       - `GraphQL & Hasura Courses <https://hasura.io/learn/>`__
-      - `Guides & Resources <guides/index>`_
+      - :ref:`Guides & Resources <guides>`
 
 
 .. toctree::
