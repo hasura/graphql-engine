@@ -75,7 +75,8 @@ common common-all
 common common-exe
   ghc-options:
     -threaded -rtsopts
-    -- Re. `-I2` see #2565
+    -- `-I0` disables idle GC. We do this in application code now. See 'ourIdleGC' for details.
+    -- `-T` is required to collect the stats we use in 'ourIdleGC'.
     --
     -- `-qn2` limits the parallel GC to at most 2 capabilities. This came up in #3354/#3394, as the
     -- parallel GC was causing significant performance overhead. Folks in #ghc on freenode advised
@@ -90,7 +91,7 @@ common common-exe
     -- `--disable-delayed-os-memory-return` seems to help lower reported residency, in particular
     -- in situations where we seem to be dealing with haskell heap fragmentation. This is more a
     -- workaround for limitations in monitoring tools than anything...
-    "-with-rtsopts=-N -I2 -qn2 -kc8K --disable-delayed-os-memory-return"
+    "-with-rtsopts=-N -I0 -T -qn2 -kc8K --disable-delayed-os-memory-return"
 
 library
   import: common-all

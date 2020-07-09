@@ -5,6 +5,7 @@
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
+- server: adjustments to idle GC to try to free memory more eagerly (related to #3388)
 
 
 ## `v1.3.0-beta.4`
