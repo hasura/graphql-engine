@@ -87,6 +87,8 @@ const RawSQL = ({
     Number(getLocalStorageItem(LS_RAW_SQL_STATEMENT_TIMEOUT)) || 10
   );
 
+  const [sqlText, onChangeSQLText] = useState(sql);
+
   useEffect(() => {
     if (!sql) {
       const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
@@ -173,17 +175,18 @@ const RawSQL = ({
 
   const getSQLSection = () => {
     const handleSQLChange = val => {
-      dispatch({ type: SET_SQL, data: val });
+      onChangeSQLText(val);
+      dispatch({ type: SET_SQL, data: sqlText });
 
       // set migration checkbox true
-      if (checkSchemaModification(val)) {
+      if (checkSchemaModification(sqlText)) {
         dispatch({ type: SET_MIGRATION_CHECKED, data: true });
       } else {
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
       }
 
       // set track this checkbox true
-      const objects = parseCreateSQL(val);
+      const objects = parseCreateSQL(sqlText);
       if (objects.length) {
         let allObjectsTrackable = true;
 
@@ -223,7 +226,7 @@ const RawSQL = ({
           theme={ACE_EDITOR_THEME}
           fontSize={ACE_EDITOR_FONT_SIZE}
           name="raw_sql"
-          value={sql}
+          value={sqlText}
           minLines={15}
           maxLines={100}
           width="100%"
