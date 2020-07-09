@@ -9,7 +9,7 @@ import { push } from 'react-router-redux';
 import {
   fetchRemoteSchema,
   RESET,
-  getHeaderEvents,
+  RESET_HEADER,
 } from '../Add/addRemoteSchemaReducer';
 
 import { VIEW_REMOTE_SCHEMA } from '../Actions';
@@ -55,14 +55,7 @@ class ViewStitchedSchema extends React.Component {
     Promise.all([
       this.props.dispatch({ type: RESET }),
       this.props.dispatch({
-        type: getHeaderEvents.UPDATE_HEADERS,
-        data: [
-          {
-            name: '',
-            type: 'static',
-            value: '',
-          },
-        ],
+        type: RESET_HEADER,
       }),
       this.props.dispatch({ type: VIEW_REMOTE_SCHEMA, data: '' }),
     ]);

@@ -7,7 +7,7 @@ import {
   modifyRemoteSchema,
   RESET,
   TOGGLE_MODIFY,
-  getHeaderEvents,
+  RESET_HEADER,
 } from '../Add/addRemoteSchemaReducer';
 import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import { push } from 'react-router-redux';
@@ -22,19 +22,20 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { defaultHeader } from '../../../Common/Headers/Headers';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
 class Edit extends React.Component {
-  constructor() {
-    super();
-    this.editClicked = this.editClicked.bind(this);
-    this.modifyClick = this.modifyClick.bind(this);
-    this.handleDeleteRemoteSchema = this.handleDeleteRemoteSchema.bind(this);
-    this.handleCancelModify = this.handleCancelModify.bind(this);
-
-    this.state = {};
-    this.state.deleteConfirmationError = null;
+  constructor(props) {
+    super(props);
+    this.state = {
+      headers:
+        props.headers && props.headers.length > 0
+          ? props.headers
+          : [defaultHeader],
+      deleteConfirmationError: null,
+    };
   }
 
   componentDidMount() {
@@ -69,20 +70,13 @@ class Edit extends React.Component {
     Promise.all([
       this.props.dispatch({ type: RESET }),
       this.props.dispatch({
-        type: getHeaderEvents.UPDATE_HEADERS,
-        data: [
-          {
-            name: '',
-            type: 'static',
-            value: '',
-          },
-        ],
+        type: RESET_HEADER,
       }),
       this.props.dispatch({ type: VIEW_REMOTE_SCHEMA, data: '' }),
     ]);
   }
 
-  handleDeleteRemoteSchema(e) {
+  handleDeleteRemoteSchema = e => {
     e.preventDefault();
 
     const remoteSchemaName = this.props.params.remoteSchemaName;
@@ -96,19 +90,20 @@ class Edit extends React.Component {
         console.error(err);
       }
     }
-  }
+  };
 
-  modifyClick() {
+  modifyClick = () => {
     this.props.dispatch({ type: TOGGLE_MODIFY });
-  }
+  };
 
-  handleCancelModify() {
+  handleCancelModify = () => {
     this.props.dispatch({ type: TOGGLE_MODIFY });
-  }
+  };
 
-  editClicked() {
-    this.props.dispatch(modifyRemoteSchema());
-  }
+  editClicked = () => {
+    this.props.dispatch(modifyRemoteSchema(this.state.headers));
+  };
+  setHeaders = headers => this.setState({ headers });
 
   render() {
     const currentRemoteSchema = this.props.allRemoteSchemas.find(
@@ -240,7 +235,11 @@ class Edit extends React.Component {
               this.editClicked();
             }}
           >
-            <Common {...this.props} />
+            <Common
+              {...this.props}
+              headers={this.state.headers}
+              setHeaders={this.setHeaders}
+            />
             {generateMigrateBtns()}
           </form>
         )}
@@ -251,7 +250,6 @@ class Edit extends React.Component {
 const mapStateToProps = state => {
   return {
     ...state.remoteSchemas.addData,
-    ...state.remoteSchemas.headerData,
     allRemoteSchemas: state.remoteSchemas.listData.remoteSchemas,
     dataHeaders: { ...state.tables.dataHeaders },
   };

@@ -7,6 +7,10 @@ import { EventsState } from './components/Services/Events/state';
 import { RAEvents } from './components/Services/Events/types';
 import { TelemetryState } from './telemetry/state';
 
+// TODO clean this with approprate type once metadata reducer migrated to TS
+import metadataState from './components/Services/Settings/State';
+import { addState } from './components/Services/RemoteSchema/state';
+
 // Redux Utils
 export type ReduxState = {
   tables: {
@@ -19,8 +23,14 @@ export type ReduxState = {
     readOnlyMode: boolean;
     serverVersion: string;
     latestStableServerVersion: string;
+    migrationMode: boolean;
   };
   telemetry: TelemetryState;
+  // Todo change this after metadata reducer
+  metadata: typeof metadataState;
+  remoteSchemas: {
+    addData: typeof addState;
+  };
 };
 
 export type ReduxAction = RAEvents | RouterAction;
@@ -43,3 +53,9 @@ export type ReduxStore = Store<ReduxState, ReduxAction>;
 
 // Router Utils
 export type ReplaceRouterState = (route: string) => void;
+
+export type RawHeaderType = {
+  name: string;
+  value?: string;
+  value_from_env?: string;
+};
