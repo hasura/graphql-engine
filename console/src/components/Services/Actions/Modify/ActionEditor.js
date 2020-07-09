@@ -122,6 +122,7 @@ const ActionEditor = ({
         readOnlyMode={readOnlyMode}
         label={typeDefinitionInfo.label}
         tooltip={typeDefinitionInfo.tooltip}
+        allowEmpty
       />
       <hr />
       <HandlerEditor

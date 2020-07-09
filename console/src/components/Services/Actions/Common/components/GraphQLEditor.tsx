@@ -23,6 +23,7 @@ type GraphQLEditorProps = {
   label: string;
   tooltip: string;
   height?: string;
+  allowEmpty?: boolean;
 };
 
 const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
@@ -36,6 +37,7 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
   label,
   tooltip,
   height,
+  allowEmpty = false,
 }) => {
   const onChangeWithError = (val: string) => {
     if (timer) {
@@ -43,6 +45,9 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
     }
 
     const parseDebounceTimer = setTimeout(() => {
+      if (allowEmpty && v === '') {
+        return onChange(v, null, null, null);
+      }
       let timerError = null;
       let ast = null;
       try {

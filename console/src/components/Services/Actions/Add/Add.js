@@ -133,6 +133,7 @@ const AddAction = ({
         readOnlyMode={readOnlyMode}
         label={typeDefinitionInfo.label}
         tooltip={typeDefinitionInfo.tooltip}
+        allowEmpty
       />
       <hr />
       <HandlerEditor

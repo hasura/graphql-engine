@@ -61,6 +61,7 @@ const Manage = ({ allTypes, dispatch, readOnlyMode, ...manageProps }) => {
         tooltip={editorTooltip}
         height="600px"
         readOnlyMode={readOnlyMode}
+        allowEmpty
       />
       <hr />
       <Button
