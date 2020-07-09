@@ -376,8 +376,6 @@ constGValueToJSON = \case
   G.VEnum (G.EnumValue n) -> A.toJSON n
   G.VList values          -> A.toJSON $ map constGValueToJSON values
   G.VObject objects       -> A.toJSON $ fmap constGValueToJSON objects
--- TODO: handle G.VVariable in case of G.Value Void
---  G.VVariable _           -> _
 
 collectVariables :: G.Value Variable -> HashMap G.VariableDefinition A.Value
 collectVariables val =  case val of

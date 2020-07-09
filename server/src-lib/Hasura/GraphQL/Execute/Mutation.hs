@@ -14,6 +14,7 @@ import qualified Network.HTTP.Types                     as HTTP
 
 import qualified Hasura.RQL.DML.Delete                  as RQL
 import qualified Hasura.RQL.DML.Update                  as RQL
+import qualified Hasura.RQL.DML.Mutation                as RQL
 
 import           Hasura.Db
 import           Hasura.EncJSON
@@ -30,33 +31,38 @@ import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 import qualified Language.GraphQL.Draft.Syntax          as G
 
-
 convertDelete
-  :: SessionVariables
+  :: (HasVersion, MonadIO m)
+  => SessionVariables
+  -> RQL.MutationRemoteJoinCtx
   -> RQL.AnnDelG UnpreparedValue
   -> Bool
-  -> Q.TxE QErr EncJSON
-convertDelete usrVars deleteOperation stringifyNum =
-  RQL.deleteQueryToTx stringifyNum (preparedDelete, planVariablesSequence usrVars planningState)
+  -> m RespTx
+convertDelete usrVars rjCtx deleteOperation stringifyNum = do
+  return $ RQL.execDeleteQuery stringifyNum (Just rjCtx) (preparedDelete, planVariablesSequence usrVars planningState)
   where (preparedDelete, planningState) = runIdentity $ runPlan $ RQL.traverseAnnDel prepareWithPlan deleteOperation
 
 convertUpdate
-  :: SessionVariables
+  :: (HasVersion, MonadIO m)
+  => SessionVariables
+  -> RQL.MutationRemoteJoinCtx
   -> RQL.AnnUpdG UnpreparedValue
   -> Bool
-  -> RespTx
-convertUpdate usrVars updateOperation stringifyNum =
+  -> m RespTx
+convertUpdate usrVars rjCtx updateOperation stringifyNum = do
   -- FIXME: return empty mutation response if nothing to be inserted
-  RQL.updateQueryToTx stringifyNum (preparedUpdate, planVariablesSequence usrVars planningState)
+  return $ RQL.execUpdateQuery stringifyNum (Just rjCtx) (preparedUpdate, planVariablesSequence usrVars planningState)
   where (preparedUpdate, planningState) = runIdentity $ runPlan $ RQL.traverseAnnUpd prepareWithPlan updateOperation
 
 convertInsert
-  :: SessionVariables
+  :: (HasVersion, MonadIO m)
+  => SessionVariables
+  -> RQL.MutationRemoteJoinCtx
   -> AnnMultiInsert UnpreparedValue
   -> Bool
-  -> RespTx
-convertInsert usrVars insertOperation stringifyNum =
-  convertToSQLTransaction preparedUpdate (planVariablesSequence usrVars planningState) stringifyNum
+  -> m RespTx
+convertInsert usrVars rjCtx insertOperation stringifyNum = do
+  return $ convertToSQLTransaction preparedUpdate rjCtx (planVariablesSequence usrVars planningState) stringifyNum
   where (preparedUpdate, planningState) = runIdentity $ runPlan $ traverseAnnInsert prepareWithPlan insertOperation
 
 planVariablesSequence :: SessionVariables -> PlanningSt -> Seq.Seq Q.PrepArg
@@ -74,9 +80,9 @@ convertMutationRootField
   -> MutationRootField UnpreparedValue
   -> m (Either (LazyRespTx, HTTP.ResponseHeaders) RemoteField)
 convertMutationRootField userInfo manager reqHeaders stringifyNum = \case
-  RFDB (MDBInsert s)  -> noResponseHeaders $ convertInsert userSession s stringifyNum
-  RFDB (MDBUpdate s)  -> noResponseHeaders $ convertUpdate userSession s stringifyNum
-  RFDB (MDBDelete s)  -> noResponseHeaders $ convertDelete userSession s stringifyNum
+  RFDB (MDBInsert s)  -> noResponseHeaders =<< convertInsert userSession rjCtx s stringifyNum
+  RFDB (MDBUpdate s)  -> noResponseHeaders =<< convertUpdate userSession rjCtx s stringifyNum
+  RFDB (MDBDelete s)  -> noResponseHeaders =<< convertDelete userSession rjCtx s stringifyNum
   RFRemote remote     -> pure $ Right remote
   RFAction (AMSync s) -> Left <$> first liftTx <$> resolveActionExecution userInfo s actionExecContext
   RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders userSession
@@ -87,6 +93,8 @@ convertMutationRootField userInfo manager reqHeaders stringifyNum = \case
 
     userSession = _uiSession userInfo
     actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
+
+    rjCtx = (manager, reqHeaders, userInfo)
 
 convertMutationSelectionSet
   :: (HasVersion, MonadIO m, MonadError QErr m)

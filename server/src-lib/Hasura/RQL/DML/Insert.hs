@@ -3,7 +3,7 @@ module Hasura.RQL.DML.Insert
  , insertOrUpdateCheckExpr
  , mkInsertCTE
  , runInsert
- , insertP2
+ , execInsertQuery
  , toSQLConflict
  ) where
 
@@ -26,6 +26,7 @@ import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.Server.Version    (HasVersion)
 import           Hasura.SQL.Types
 import           Hasura.Session
 
@@ -237,10 +238,15 @@ convInsQ =
   sessVarFromCurrentSetting
   binRHSBuilder
 
-insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
-insertP2 strfyNum (u, p) =
+execInsertQuery
+  :: (HasVersion, MonadTx m, MonadIO m)
+  => Bool
+  -> Maybe MutationRemoteJoinCtx
+  -> (InsertQueryP1, DS.Seq Q.PrepArg)
+  -> m EncJSON
+execInsertQuery strfyNum remoteJoinCtx (u, p) =
   runMutation
-     $ Mutation (iqp1Table u) (insertCTE, p)
+     $ mkMutation remoteJoinCtx (iqp1Table u) (insertCTE, p)
                 (iqp1Output u) (iqp1AllCols u) strfyNum
   where
     insertCTE = mkInsertCTE u
@@ -319,10 +325,11 @@ insertOrUpdateCheckExpr _ _ insCheck _ =
   insertCheckExpr "insert check constraint failed" insCheck
 
 runInsert
-  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
-  => InsertQuery
-  -> m EncJSON
+  :: ( HasVersion, QErrM m, UserInfoM m
+     , CacheRM m, MonadTx m, HasSQLGenCtx m, MonadIO m
+     )
+  => InsertQuery -> m EncJSON
 runInsert q = do
   res <- convInsQ q
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  liftTx $ insertP2 strfyNum res
+  execInsertQuery strfyNum Nothing res
