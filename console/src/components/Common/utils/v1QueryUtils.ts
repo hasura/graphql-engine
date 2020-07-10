@@ -108,7 +108,7 @@ export const getInsertUpQuery = (
     args: {
       table: tableDef,
       returning: [],
-      object: insertion,
+      object: [insertion],
     },
   };
 };
