@@ -57,8 +57,6 @@ import           Hasura.Server.Version          (HasVersion)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import           Debug.Trace
-
 
 
 -- insert
@@ -401,7 +399,7 @@ updateOperators table updatePermissions = do
     pure $ fmap catMaybes (sequenceA $ snd <$> parsers)
       `P.bindFields` \opExps -> do
         -- there needs to be at least one operator in the update, even if it is empty
-        let presetColumns = trace ("preset: " ++ show (upiSet updatePermissions)) $ Map.toList $ RQL.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
+        let presetColumns = Map.toList $ RQL.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
         when (null opExps && null presetColumns) $ parseError $
           "at least any one of " <> (T.intercalate ", " allowedOperators) <> " is expected"
 
