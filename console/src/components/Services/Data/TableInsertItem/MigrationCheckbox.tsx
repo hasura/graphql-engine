@@ -11,17 +11,20 @@ const MigrationCheckBox: React.FC<MigrationCheckBoxProps> = ({
   isChecked,
   onChange,
 }) => (
-    <label className={styles.labelText}>
-      <input
-        type="checkbox"
-        checked={isChecked}
-        title="This is a migration"
-        onChange={onChange}
-        className={styles.migrationCheckbox}
-      />
+  <label className={styles.labelText}>
+    <input
+      type="checkbox"
+      checked={isChecked}
+      title="This is a migration"
+      onChange={onChange}
+      className={styles.migrationCheckbox}
+    />
     This is a migration
-      <ToolTip placement="right" message="create the current insertion as a migration" />
-    </label>
-  );
+    <ToolTip
+      placement="right"
+      message="create the current insertion as a migration"
+    />
+  </label>
+);
 
 export default MigrationCheckBox;
