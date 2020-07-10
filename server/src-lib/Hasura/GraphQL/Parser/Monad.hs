@@ -42,7 +42,7 @@ newtype SchemaT n m a = SchemaT
   { unSchemaT :: StateT (DMap ParserId (ParserById n)) m a
   } deriving (Functor, Applicative, Monad, MonadError e)
 
-runSchemaT :: Monad m => SchemaT n m a -> m a
+runSchemaT :: forall m n a . Monad m => SchemaT n m a -> m a
 runSchemaT = flip evalStateT mempty . unSchemaT
 
 -- | see Note [SchemaT requires MonadIO]

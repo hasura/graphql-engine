@@ -38,6 +38,8 @@ module Hasura.RQL.Types
   , module R
   ) where
 
+import           Control.Monad.Unique
+
 import           Hasura.Prelude
 import           Hasura.Session
 import           Hasura.SQL.Types
@@ -176,7 +178,7 @@ instance (Monoid w, HasSystemDefined m) => HasSystemDefined (WriterT w m) where
 
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
-  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadError e, MonadTx
+  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
            , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM )
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a

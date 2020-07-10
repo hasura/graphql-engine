@@ -7,6 +7,7 @@ import           Control.Exception                         (IOException, try)
 import           Control.Lens                              (view, _2)
 import           Control.Monad.Stateless
 import           Control.Monad.Trans.Control               (MonadBaseControl)
+import           Control.Monad.Unique
 import           Data.Aeson                                hiding (json)
 import           Data.Either                               (isRight)
 import           Data.Int                                  (Int64)
@@ -305,7 +306,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         Spock.lazyBytes compressedResp
 
 v1QueryHandler
-  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m)
+  :: (HasVersion, MonadIO m, MonadUnique m, MonadBaseControl IO m, MetadataApiAuthorization m)
   => RQLQuery -> Handler m (HttpResponse EncJSON)
 v1QueryHandler query = do
   userInfo <- asks hcUser
@@ -436,7 +437,7 @@ queryParsers =
       return $ f q
 
 legacyQueryHandler
-  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m)
+  :: (HasVersion, MonadIO m, MonadUnique m, MonadBaseControl IO m, MetadataApiAuthorization m)
   => TableName -> T.Text -> Object
   -> Handler m (HttpResponse EncJSON)
 legacyQueryHandler tn queryType req =
@@ -477,6 +478,7 @@ mkWaiApp
   :: forall m.
      ( HasVersion
      , MonadIO m
+     , MonadUnique m
      , MonadStateless IO m
      , LA.Forall (LA.Pure m)
      , ConsoleRenderer m
@@ -570,6 +572,7 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager 
 httpApp
   :: ( HasVersion
      , MonadIO m
+     , MonadUnique m
      , MonadBaseControl IO m
      , ConsoleRenderer m
      , HttpLog m

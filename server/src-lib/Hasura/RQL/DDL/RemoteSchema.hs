@@ -10,6 +10,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , runIntrospectRemoteSchema
   ) where
 
+import           Control.Monad.Unique
 import           Hasura.EncJSON
 -- import           Hasura.GraphQL.NormalForm
 import           Hasura.GraphQL.RemoteServer
@@ -33,6 +34,7 @@ runAddRemoteSchema
      , CacheRWM m
      , MonadTx m
      , MonadIO m
+     , MonadUnique m
      , HasHttpManager m
      )
   => AddRemoteSchemaQuery -> m EncJSON
@@ -54,7 +56,7 @@ addRemoteSchemaP1 name = do
     <> name <<> " already exists"
 
 addRemoteSchemaP2Setup
-  :: (HasVersion, QErrM m, MonadIO m, HasHttpManager m)
+  :: (HasVersion, QErrM m, MonadIO m, MonadUnique m, HasHttpManager m)
   => AddRemoteSchemaQuery -> m RemoteSchemaCtx
 addRemoteSchemaP2Setup (AddRemoteSchemaQuery name def _) = do
   httpMgr <- askHttpManager
@@ -67,7 +69,7 @@ addRemoteSchemaP2Setup (AddRemoteSchemaQuery name def _) = do
   pure $ RemoteSchemaCtx name introspection rsi rawIntrospectionResult
 
 addRemoteSchemaP2
-  :: (HasVersion, MonadTx m, MonadIO m, HasHttpManager m) => AddRemoteSchemaQuery -> m ()
+  :: (HasVersion, MonadTx m, MonadIO m, MonadUnique m, HasHttpManager m) => AddRemoteSchemaQuery -> m ()
 addRemoteSchemaP2 q = do
   void $ addRemoteSchemaP2Setup q
   liftTx $ addRemoteSchemaToCatalog q

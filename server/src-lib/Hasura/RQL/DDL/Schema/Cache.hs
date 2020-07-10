@@ -115,7 +115,7 @@ newtype CacheRWT m a
   -- Control.Monad.Trans.Writer.CPS) are leaky, and we don’t have that yet.
   = CacheRWT (StateT (RebuildableSchemaCache m, CacheInvalidations) m a)
   deriving
-    ( Functor, Applicative, Monad, MonadIO, MonadReader r, MonadError e, MonadTx
+    ( Functor, Applicative, Monad, MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
     , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined )
 
 runCacheRWT
@@ -219,7 +219,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
   where
     buildAndCollectInfo
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadTx m, MonadReader BuildReason m
+         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadUnique m, MonadTx m, MonadReader BuildReason m
          , HasHttpManager m, HasSQLGenCtx m )
       => (CatalogMetadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
     buildAndCollectInfo = proc (catalogMetadata, invalidationKeys) -> do
@@ -396,7 +396,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
 
     buildRemoteSchemas
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-         , Inc.ArrowCache m arr , MonadIO m, HasHttpManager m )
+         , Inc.ArrowCache m arr , MonadIO m, MonadUnique m, HasHttpManager m )
       => ( Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey)
          , [AddRemoteSchemaQuery]
          ) `arr` HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)

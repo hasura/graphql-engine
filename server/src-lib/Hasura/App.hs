@@ -9,6 +9,7 @@ import           Control.Monad.Catch                       (MonadCatch, MonadThr
 import           Control.Monad.Stateless
 import           Control.Monad.STM                         (atomically)
 import           Control.Monad.Trans.Control               (MonadBaseControl (..))
+import           Control.Monad.Unique
 import           Data.Aeson                                ((.=))
 import           Data.Time.Clock                           (UTCTime)
 import           GHC.AssertNF
@@ -141,7 +142,8 @@ data Loggers
   }
 
 newtype AppM a = AppM { unAppM :: IO a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO, MonadCatch, MonadThrow)
+  deriving ( Functor, Applicative, Monad, MonadIO, MonadUnique, MonadBase IO
+           , MonadBaseControl IO, MonadCatch, MonadThrow)
 
 -- | this function initializes the catalog and returns an @InitCtx@, based on the command given
 -- - for serve command it creates a proper PG connection pool
@@ -248,6 +250,7 @@ flushLogger loggerCtx = liftIO $ FL.flushLogStr $ _lcLoggerSet loggerCtx
 runHGEServer
   :: ( HasVersion
      , MonadIO m
+     , MonadUnique m
      , MonadCatch m
      , MonadStateless IO m
      , LA.Forall (LA.Pure m)
@@ -476,6 +479,7 @@ execQuery
      , CacheRWM m
      , MonadTx m
      , MonadIO m
+     , MonadUnique m
      , HasHttpManager m
      , HasSQLGenCtx m
      , UserInfoM m

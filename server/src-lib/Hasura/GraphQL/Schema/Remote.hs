@@ -9,6 +9,7 @@ module Hasura.GraphQL.Schema.Remote
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 import           Language.GraphQL.Draft.Syntax       as G
 import qualified Data.List.NonEmpty                  as NE
@@ -16,6 +17,8 @@ import           Data.Type.Equality
 
 import           Hasura.GraphQL.Parser               as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
+
+import Debug.Trace
 
 buildRemoteParser
   :: forall m n
@@ -102,9 +105,29 @@ remoteSchemaObject
   -> m (Parser 'Output n ())
 remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name interfaces _directives subFields) =
   P.memoizeOn 'remoteSchemaObject defn do
+  traceShowM defn
   subFieldParsers <- traverse (remoteField' schemaDoc) subFields
-  implements <- traverse (remoteSchemaInterface schemaDoc) $ catMaybes (map (lookupInterface schemaDoc) interfaces)
+  interfaceDefs <- traverse getInterface interfaces
+  implements <- traverse (remoteSchemaInterface schemaDoc) interfaceDefs
+  -- TODO: also check sub-interfaces
+  traverse (validateImplementsFields subFields) interfaceDefs
   pure $ () <$ P.selectionSetObject name description subFieldParsers implements
+  where
+    getInterface :: G.Name -> m G.InterfaceTypeDefinition
+    getInterface interfaceName =
+      onNothing (lookupInterface schemaDoc interfaceName) $
+        throw400 RemoteSchemaError $ "Could not find interface " <> squote interfaceName
+        <> " implemented by Object type " <> squote name
+    validateImplementsFields :: [G.FieldDefinition] -> G.InterfaceTypeDefinition -> m ()
+    validateImplementsFields fields interface =
+      traverse_ (validateImplementsField fields (_itdName interface)) (G._itdFieldsDefinition interface)
+    validateImplementsField :: [G.FieldDefinition] -> G.Name -> G.FieldDefinition -> m ()
+    validateImplementsField fields interfaceName interfaceField =
+      case interfaceField `elem` fields of
+        True -> pure ()
+        False -> throw400 RemoteSchemaError $
+          "Interface field " <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
+          <> " expected, but " <> squote name <> " does not provide it"
 
 objectsImplementingInterface
   :: SchemaDocument
@@ -142,6 +165,8 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
     objectsImplementingInterface schemaDoc name
   ifaces :: [Parser 'Output n ()] <- traverse (remoteSchemaInterface schemaDoc) $
     interfaceImplementingInterface schemaDoc name
+  when (null ifaces && null subFieldParsers) $
+    throw400 RemoteSchemaError $ "List of fields cannot be empty for interface " <> squote name
   pure $ () <$ (P.selectionSetInterface name description subFieldParsers objs ifaces)
 
 -- | 'remoteSchemaUnion' returns a output parser for a given 'UnionTypeDefinition'.
@@ -153,9 +178,20 @@ remoteSchemaUnion
   -> m (Parser 'Output n ())
 remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _directives objectNames) =
   P.memoizeOn 'remoteSchemaObject defn do
-  objs :: [Parser 'Output n ()] <- traverse (remoteSchemaObject schemaDoc) $
-    catMaybes $ map (lookupObject schemaDoc) objectNames
+  objDefs <- traverse getObject objectNames
+  objs :: [Parser 'Output n ()] <- traverse (remoteSchemaObject schemaDoc) $ objDefs
+  when (null objs) $
+    throw400 RemoteSchemaError $ "List of member types cannot be empty for union type " <> squote name
   pure $ () <$ (P.selectionSetUnion name description objs)
+  where
+    getObject :: G.Name -> m G.ObjectTypeDefinition
+    getObject objectName =
+      onNothing (lookupObject schemaDoc objectName) $
+        case (lookupInterface schemaDoc objectName) of
+          Nothing -> throw400 RemoteSchemaError $ "Could not find type " <> squote objectName
+            <> ", which is defined as a member type of Union " <> squote name
+          Just _  -> throw400 RemoteSchemaError $ "Union type " <> squote name <>
+            " can only include object types. It cannot include " <> squote objectName
 
 -- | remoteSchemaInputObject returns an input parser for a given 'G.InputObjectTypeDefinition'
 remoteSchemaInputObject

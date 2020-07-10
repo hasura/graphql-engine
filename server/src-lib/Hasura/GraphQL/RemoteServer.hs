@@ -10,6 +10,7 @@ import           Data.Aeson                    ((.:), (.:?))
 import           Data.FileEmbed                (embedStringFile)
 import           Hasura.HTTP
 import           Hasura.Prelude
+import           Control.Monad.Unique
 
 import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as BL
@@ -27,17 +28,20 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Server.Utils
 import           Hasura.Server.Version         (HasVersion)
 import           Hasura.Session
+import           Hasura.GraphQL.Schema.Remote
+import qualified Hasura.GraphQL.Parser.Monad   as P
 
 introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
 
 fetchRemoteSchema
-  :: (HasVersion, MonadIO m, MonadError QErr m)
+  :: forall m
+   . (HasVersion, MonadIO m, MonadUnique m, MonadError QErr m)
   => HTTP.Manager
   -> RemoteSchemaName
   -> RemoteSchemaInfo
   -> m (IntrospectionResult, BL.ByteString)
-fetchRemoteSchema manager _name (RemoteSchemaInfo url headerConf _ timeout) = do
+fetchRemoteSchema manager schemaName schemaInfo@(RemoteSchemaInfo url headerConf _ timeout) = do
   headers <- makeHeadersFromConf headerConf
   let hdrsWithDefaults = addDefaultHeaders headers
 
@@ -56,8 +60,14 @@ fetchRemoteSchema manager _name (RemoteSchemaInfo url headerConf _ timeout) = do
       statusCode = resp ^. Wreq.responseStatus . Wreq.statusCode
   when (statusCode /= 200) $ throwNon200 statusCode respData
 
+  -- Parse the JSON into flat GraphQL type AST
   (FromIntrospection introspectRes) :: (FromIntrospection IntrospectionResult) <-
     either (remoteSchemaErr . T.pack) return $ J.eitherDecode respData
+
+  -- Check that the parsed GraphQL type info is valid by running the schema generation
+  _ <- P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser
+    $ RemoteSchemaCtx schemaName introspectRes schemaInfo respData
+
   return (introspectRes, respData)
   where
     remoteSchemaErr :: (MonadError QErr m) => T.Text -> m a
@@ -259,9 +269,11 @@ instance J.FromJSON (FromIntrospection G.InterfaceTypeDefinition) where
     name  <- o .:  "name"
     desc  <- o .:? "description"
     fields <- o .:? "fields"
+    -- TODO parse possibleTypes and store it somewhere
     let flds = maybe [] (fmap fromIntrospection) fields
         desc' = fmap fromIntrospection desc
     when (kind /= "INTERFACE") $ kindErr kind "interface"
+    -- TODO track "implements" stuff
     let r = G.InterfaceTypeDefinition desc' name [] flds
     return $ FromIntrospection r
 

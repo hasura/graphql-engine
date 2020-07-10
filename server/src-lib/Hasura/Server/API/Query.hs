@@ -4,6 +4,7 @@
 module Hasura.Server.API.Query where
 
 import           Control.Lens
+import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -346,7 +347,7 @@ reconcileAccessModes (Just mode1) (Just mode2)
 
 runQueryM
   :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+     , MonadIO m, MonadUnique m, HasHttpManager m, HasSQLGenCtx m
      , HasSystemDefined m
      )
   => RQLQuery
