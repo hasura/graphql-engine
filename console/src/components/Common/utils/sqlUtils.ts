@@ -15,18 +15,12 @@ export const checkSchemaModification = (sql: string) => {
     .split(';')
     .map(sqlStr => sqlStr.trim());
 
-  const containsDDLStatements = sqlStatements.filter(
+  return sqlStatements.some(
     statement =>
       statement.startsWith('create ') ||
       statement.startsWith('alter ') ||
       statement.startsWith('drop ')
   );
-
-  if (containsDDLStatements.length) {
-    return true;
-  }
-
-  return false;
 };
 
 export const getCheckConstraintBoolExp = (check: string) => {
