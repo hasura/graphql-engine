@@ -61,7 +61,7 @@
     "graphiql-explorer": "0.6.2",
     "graphql": "14.5.8",
     "graphql-voyager": "1.0.0-rc.29",
-    "highlight.js": "^9.15.8",
+    "highlight.js": "9.15.8",
     "history": "3.3.0",
     "inflection": "1.12.0",
     "isomorphic-fetch": "2.2.1",
