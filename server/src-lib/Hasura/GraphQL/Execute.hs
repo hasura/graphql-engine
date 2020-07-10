@@ -122,7 +122,7 @@ getExecPlanPartial userInfo sc enableAL queryType req = do
       when (roleName /= adminRoleName) $ do
         let notInAllowlist =
               not $ _isQueryInAllowlist (_grQuery req) (scAllowlist sc)
-        when notInAllowlist $ modifyQErr modErr $ _throwVE "query is not allowed"
+        when notInAllowlist $ modifyQErr modErr $ throw400 ValidationFailed "query is not allowed"
 
     modErr e =
       let msg = "query is not in any of the allowlists"
@@ -144,7 +144,7 @@ getExecPlanPartial userInfo sc enableAL queryType req = do
         Nothing  -> defaultContext
         Just (C.RoleContext frontend backend) ->
           case _uiBackendOnlyFieldAccess userInfo of
-            BOFAAllowed -> fromMaybe frontend backend
+            BOFAAllowed    -> fromMaybe frontend backend
             BOFADisallowed -> frontend
         -- TODO FIXME implement backend-only field access
         {-
@@ -169,17 +169,17 @@ getExecPlanPartial userInfo sc enableAL queryType req = do
         (Just opName, [], _) -> do
           let n = _unOperationName opName
               opDefM = find (\opDef -> G._todName opDef == Just n) opDefs
-          onNothing opDefM $ _throwVE $
+          onNothing opDefM $ throw400 ValidationFailed $
             "no such operation found in the document: " <> _showName n
         (Just _, _, _)  ->
-          _throwVE $ "operationName cannot be used when " <>
+          throw400 ValidationFailed $ "operationName cannot be used when " <>
           "an anonymous operation exists in the document"
         (Nothing, [selSet], []) ->
           return $ G.TypedOperationDefinition G.OperationTypeQuery Nothing [] [] selSet
         (Nothing, [], [opDef])  ->
           return opDef
         (Nothing, _, _) ->
-          _throwVE $ "exactly one operation has to be present " <>
+          throw400 ValidationFailed $ "exactly one operation has to be present " <>
           "in the document when operationName is not specified"
 
 -- The graphql query is resolved into a sequence of execution operations
