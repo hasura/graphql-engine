@@ -95,7 +95,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
   let pgColumnsVariablesMap = HM.fromList pgColumnsVariables
   case HM.lookup remoteSchemaName remoteSchemaMap of
     Nothing -> throwError $ RemoteSchemaNotFound remoteSchemaName
-    Just (RemoteSchemaCtx rsName (schemaDoc@(G.SchemaDocument originalDefns),queryRootName,_,_) rsi _) -> do
+    Just (RemoteSchemaCtx rsName (schemaDoc@(G.SchemaIntrospection originalDefns),queryRootName,_,_) rsi _) -> do
       queryRoot <-
         case lookupObject schemaDoc queryRootName of
           Just obj -> pure obj
@@ -143,7 +143,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
             , _rfiRemoteSchema = rsi
             -- adding the new types after stripping the values to the
             -- schema document
-            , _rfiSchemaDoc = G.SchemaDocument $ originalDefns <> HM.elems leafTypeMap
+            , _rfiSchemaIntrospect = G.SchemaIntrospection $ originalDefns <> HM.elems leafTypeMap
             , _rfiRemoteSchemaName = rsName
             }
   where
@@ -165,10 +165,13 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
 -- provided by the user while querying a remote join field.
 stripInMap
   :: RemoteRelationship
-  -> G.SchemaDocument
+  -> G.SchemaIntrospection
   -> HM.HashMap G.Name G.InputValueDefinition
   -> HM.HashMap G.Name (G.Value G.Name)
-  -> StateT (HashMap G.Name G.TypeDefinition) (Either ValidationError) (HM.HashMap G.Name G.InputValueDefinition)
+  -> StateT
+       (HashMap G.Name (G.TypeDefinition [G.Name]))
+       (Either ValidationError)
+       (HM.HashMap G.Name G.InputValueDefinition)
 stripInMap remoteRelationship types schemaArguments providedArguments =
   fmap
     (HM.mapMaybe id)
@@ -188,10 +191,10 @@ stripInMap remoteRelationship types schemaArguments providedArguments =
 -- is atomic-ish.
 stripValue
   :: RemoteRelationship
-  -> G.SchemaDocument
+  -> G.SchemaIntrospection
   -> G.GType
   -> G.Value G.Name
-  -> StateT (HashMap G.Name G.TypeDefinition) (Either ValidationError) (Maybe G.GType)
+  -> StateT (HashMap G.Name (G.TypeDefinition [G.Name])) (Either ValidationError) (Maybe G.GType)
 stripValue remoteRelationshipName types gtype value = do
   case value of
     G.VVariable {} -> pure Nothing
@@ -212,10 +215,10 @@ stripValue remoteRelationshipName types gtype value = do
 -- -- | Produce a new type for the list, or strip it entirely.
 stripList
   :: RemoteRelationship
-  -> G.SchemaDocument
+  -> G.SchemaIntrospection
   -> G.GType
   -> G.Value G.Name
-  -> StateT (HashMap G.Name G.TypeDefinition) (Either ValidationError) (Maybe G.GType)
+  -> StateT (HashMap G.Name (G.TypeDefinition [G.Name])) (Either ValidationError) (Maybe G.GType)
 stripList remoteRelationshipName types originalOuterGType value =
   case originalOuterGType of
     G.TypeList nullability innerGType -> do
@@ -231,10 +234,10 @@ stripList remoteRelationshipName types originalOuterGType value =
 -- -- object.
 stripObject
   :: RemoteRelationship
-  -> G.SchemaDocument
+  -> G.SchemaIntrospection
   -> G.GType
   -> HashMap G.Name (G.Value G.Name)
-  -> StateT (HashMap G.Name G.TypeDefinition) (Either ValidationError) G.GType
+  -> StateT (HashMap G.Name (G.TypeDefinition [G.Name])) (Either ValidationError) G.GType
 stripObject remoteRelationshipName schemaDoc originalGtype templateArguments =
   case originalGtype of
     G.TypeNamed _ originalNamedType ->
@@ -304,7 +307,7 @@ validateRemoteArguments
   => HM.HashMap G.Name G.InputValueDefinition
   -> HM.HashMap G.Name (G.Value G.Name)
   -> HM.HashMap G.Name PGColumnInfo
-  -> G.SchemaDocument
+  -> G.SchemaIntrospection
   -> m ()
 validateRemoteArguments expectedArguments providedArguments permittedVariables schemaDocument = do
   traverse_ validateProvided (HM.toList providedArguments)
@@ -328,7 +331,7 @@ validateType
   => HM.HashMap G.Name PGColumnInfo
   -> G.Value G.Name
   -> G.GType
-  -> G.SchemaDocument
+  -> G.SchemaIntrospection
   -> m ()
 validateType permittedVariables value expectedGType schemaDocument =
   case value of

@@ -167,7 +167,7 @@ mkComputedFieldDep reason tn computedField =
 
 type WithDeps a = (a, [SchemaDependency])
 
-type IntrospectionResult = ( G.SchemaDocument
+type IntrospectionResult = ( G.SchemaIntrospection
                            , G.Name -- query_root
                            , Maybe G.Name -- mutation_root
                            , Maybe G.Name

@@ -208,7 +208,7 @@ instance J.FromJSON (FromIntrospection G.ObjectTypeDefinition) where
     name       <- o .:  "name"
     desc       <- o .:? "description"
     fields     <- o .:? "fields"
-    interfaces <- o .:? "interfaces"
+    interfaces :: Maybe [FromIntrospection (G.InterfaceTypeDefinition [G.Name])] <- o .:? "interfaces"
     when (kind /= "OBJECT") $ kindErr kind "object"
     let implIfaces = map G._itdName $ maybe [] (fmap fromIntrospection) interfaces
         flds = maybe [] (fmap fromIntrospection) fields
@@ -263,18 +263,20 @@ instance J.FromJSON (FromIntrospection (G.Value Void)) where
      let parseValueConst = G.runParser G.value
      in fmap FromIntrospection $ either (fail . T.unpack) return $ parseValueConst t
 
-instance J.FromJSON (FromIntrospection G.InterfaceTypeDefinition) where
+instance J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition [G.Name])) where
   parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do
     kind  <- o .: "kind"
     name  <- o .:  "name"
     desc  <- o .:? "description"
     fields <- o .:? "fields"
-    -- TODO parse possibleTypes and store it somewhere
+    possibleTypes :: Maybe [FromIntrospection G.ObjectTypeDefinition] <- o .:? "possibleTypes"
     let flds = maybe [] (fmap fromIntrospection) fields
         desc' = fmap fromIntrospection desc
+        possTps = map G._otdName $ maybe [] (fmap fromIntrospection) possibleTypes
     when (kind /= "INTERFACE") $ kindErr kind "interface"
-    -- TODO track "implements" stuff
-    let r = G.InterfaceTypeDefinition desc' name [] flds
+    -- TODO track which interfaces implement which other interfaces, after a
+    -- GraphQL spec > Jun 2018 is released.
+    let r = G.InterfaceTypeDefinition desc' name [] flds possTps
     return $ FromIntrospection r
 
 instance J.FromJSON (FromIntrospection G.UnionTypeDefinition) where
@@ -320,7 +322,7 @@ instance J.FromJSON (FromIntrospection G.InputObjectTypeDefinition) where
     let r = G.InputObjectTypeDefinition desc' name [] inputFields
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection G.TypeDefinition) where
+instance J.FromJSON (FromIntrospection (G.TypeDefinition [G.Name])) where
   parseJSON = J.withObject "TypeDefinition" $ \o -> do
     kind :: Text <- o .: "kind"
     r <- case kind of
@@ -362,7 +364,7 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
       Just subsType -> do
         subRoot <- subsType .: "name"
         return $ Just subRoot
-    let r = ( G.SchemaDocument (fmap fromIntrospection types)
+    let r = ( G.SchemaIntrospection (fmap fromIntrospection types)
             , queryRoot
             , mutationRoot
             , subsRoot

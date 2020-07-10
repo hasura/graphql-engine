@@ -61,8 +61,8 @@ data RemoteFieldInfo
   , _rfiHasuraFields     :: !(HashSet PGColumnInfo)
   , _rfiRemoteFields     :: !RemoteFields
   , _rfiRemoteSchema     :: !RemoteSchemaInfo
-  , _rfiSchemaDoc        :: G.SchemaDocument
-  -- ^ The schema document is used to make parsers for the arguments and the selection set
+  , _rfiSchemaIntrospect :: G.SchemaIntrospection
+  -- ^ The introspection data is used to make parsers for the arguments and the selection set
   , _rfiRemoteSchemaName :: !RemoteSchemaName -- TODO: maybe include this field in 'RemoteSchemaInfo'?
   -- ^ Name of the remote schema, that's used for joining
   } deriving (Show, Eq, Generic)
