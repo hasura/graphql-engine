@@ -54,7 +54,7 @@ Pre-requisites
 
 - Valid Azure Subscription with billing enabled or credits (`click
   here <https://azure.microsoft.com/en-us/free/>`__ for a free trial).
-- `Azure CLI <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli>`_.
+- `Azure CLI <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli>`__.
 
 The actions mentioned below can be executed using the Azure Portal and the Azure CLI. But,
 for the sake of simplicity in documentation, we are going to use Azure CLI, so

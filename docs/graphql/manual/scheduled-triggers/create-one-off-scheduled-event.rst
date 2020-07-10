@@ -2,7 +2,7 @@
    :description: Create a one-off scheduled event with Hasura
    :keywords: hasura, docs, one off scheduled event, scheduled trigger, create
 
-.. _create_one_off_scheduled_event:
+.. _creating_one_off_scheduled_event:
 
 Creating a one-off scheduled event
 ==================================

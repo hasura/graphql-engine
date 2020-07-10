@@ -2,7 +2,7 @@
    :description: Manage relationships between tables/views in Hasura
    :keywords: hasura, docs, schema, relationship
 
-.. _relationships:
+.. _table_relationships:
 
 Relationships between tables/views
 ==================================
@@ -12,12 +12,13 @@ Relationships between tables/views
   :depth: 1
   :local:
 
+Introduction
+------------
+
 To make :ref:`nested object queries <nested_object_queries>`, the tables/views in your database need to
 be connected via relationships.
 
 Let's say we have the following tables in our database: ``author``, ``passport_info``, ``article`` and ``tag``.
-
-.. _table_relationships:
 
 Table relationships
 -------------------

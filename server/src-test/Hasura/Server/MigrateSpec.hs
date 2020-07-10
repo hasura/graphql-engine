@@ -8,24 +8,27 @@ import           Control.Concurrent.MVar.Lifted
 import           Control.Monad.Trans.Control    (MonadBaseControl)
 import           Control.Monad.Unique
 import           Control.Natural                ((:~>) (..))
-import           Data.List                      (isPrefixOf, stripPrefix)
-import           Data.List.Split                (splitOn)
 import           Data.Time.Clock                (getCurrentTime)
 import           Data.Tuple                     (swap)
-import           System.Process                 (readProcess)
 import           Test.Hspec.Core.Spec
 import           Test.Hspec.Expectations.Lifted
 
 import qualified Database.PG.Query              as Q
-import qualified Safe
 
 import           Hasura.RQL.DDL.Metadata        (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.API.PGDump
-import           Hasura.Server.Init             (DowngradeOptions (..), downgradeShortcuts)
+import           Hasura.Server.Init             (DowngradeOptions (..))
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version          (HasVersion)
+
+-- -- NOTE: downgrade test disabled for now (see #5273)
+-- import           Data.List.Split                (splitOn)
+-- import           Data.List                      (isPrefixOf, stripPrefix)
+-- import           System.Process                 (readProcess)
+-- import qualified Safe
+-- import           Hasura.Server.Init             (downgradeShortcuts)
 
 newtype CacheRefT m a
   = CacheRefT { runCacheRefT :: MVar (RebuildableSchemaCache m) -> m a }
@@ -94,14 +97,18 @@ spec pgConnInfo = do
         _ -> False
       transact (upgradeToLatest time) `shouldReturn` MRMigrated "12"
 
-    it "supports downgrades for every Git tag" $ singleTransaction do
-      gitOutput <- liftIO $ readProcess "git" ["log", "--no-walk", "--tags", "--pretty=%D"] ""
-      let filterOldest = filter (not . isPrefixOf "v1.0.0-alpha")
-          extractTagName = Safe.headMay . splitOn ", " <=< stripPrefix "tag: "
-          supportedDowngrades = sort (map fst downgradeShortcuts)
-          gitTags = (sort . filterOldest . mapMaybe extractTagName . tail . lines) gitOutput
-      for_ gitTags \t ->
-        t `shouldSatisfy` (`elem` supportedDowngrades)
+    -- -- NOTE: this has been problematic in CI and we're not quite sure how to
+    -- --       make this work reliably given the way we do releases and create
+    -- --       beta tags and so on. Phil and Alexis are okay just commenting
+    -- --       this until we need revisit. See #5273:
+    -- it "supports downgrades for every Git tag" $ singleTransaction do
+    --   gitOutput <- liftIO $ readProcess "git" ["log", "--no-walk", "--tags", "--pretty=%D"] ""
+    --   let filterOldest = filter (not . isPrefixOf "v1.0.0-alpha")
+    --       extractTagName = Safe.headMay . splitOn ", " <=< stripPrefix "tag: "
+    --       supportedDowngrades = sort (map fst downgradeShortcuts)
+    --       gitTags = (sort . filterOldest . mapMaybe extractTagName . tail . lines) gitOutput
+    --   for_ gitTags \t ->
+    --     t `shouldSatisfy` (`elem` supportedDowngrades)
 
   describe "recreateSystemMetadata" $ do
     let dumpMetadata = execPGDump (PGDumpReqBody ["--schema=hdb_catalog"] (Just False)) pgConnInfo
