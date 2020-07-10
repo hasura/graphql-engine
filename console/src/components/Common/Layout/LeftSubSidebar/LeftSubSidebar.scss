@@ -150,7 +150,6 @@
 
       .tableIcon,
       .functionIcon {
-        //display: inline;
         margin-right: 5px;
         font-size: 12px;
         width: 12px;
@@ -158,10 +157,6 @@
 
       .icon_mar_left {
         margin-left: 5px;
-      }
-
-      .colorRed {
-        color: red;
       }
     }
   }
@@ -179,9 +174,12 @@
 
 .activeLink {
   a {
-    // border-left: 4px solid #FFC627;
     color: #fd9540 !important;
   }
+}
+
+.padLeft4 {
+  padding-left: 4px;
 }
 
 .floatRight {
