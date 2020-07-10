@@ -26,7 +26,7 @@ export interface BaseTableColumn {
   data_type: string;
 }
 
-export interface PrimaryKeyDetails {
+export interface PrimaryKey {
   table_name: string;
   table_schema: string;
   constraint_name: string;
