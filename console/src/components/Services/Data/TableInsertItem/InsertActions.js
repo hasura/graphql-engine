@@ -54,7 +54,7 @@ const createInsertMigration = (
     columns
   );
 
-  const migrationName = `insert_into_${tableInfo.name}`;
+  const migrationName = `insert_into_${tableInfo.schema}_${tableInfo.name}`;
   const customOnSuccess = () => {
     if (callback) {
       callback();
