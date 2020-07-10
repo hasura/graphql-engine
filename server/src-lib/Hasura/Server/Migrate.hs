@@ -28,6 +28,7 @@ import           Hasura.Prelude
 import qualified Data.Aeson                    as A
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
+import qualified Data.Environment              as Env
 import qualified Data.Text.IO                  as TIO
 import qualified Database.PG.Query             as Q
 import qualified Database.PG.Query.Connection  as Q
@@ -92,9 +93,10 @@ migrateCatalog
      , HasHttpManager m
      , HasSQLGenCtx m
      )
-  => UTCTime
+  => Env.Environment
+  -> UTCTime
   -> m (MigrationResult, RebuildableSchemaCache m)
-migrateCatalog migrationTime = do
+migrateCatalog env migrationTime = do
   doesSchemaExist (SchemaName "hdb_catalog") >>= \case
     False -> initialize True
     True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
@@ -144,7 +146,7 @@ migrateCatalog migrationTime = do
     migrateFrom :: T.Text -> m (MigrationResult, RebuildableSchemaCache m)
     migrateFrom previousVersion
       | previousVersion == latestCatalogVersionString = do
-          schemaCache <- buildRebuildableSchemaCache
+          schemaCache <- buildRebuildableSchemaCache env
           pure (MRNothingToDo, schemaCache)
       | [] <- neededMigrations =
           throw400 NotSupported $
@@ -163,7 +165,7 @@ migrateCatalog migrationTime = do
 
     buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
     buildCacheAndRecreateSystemMetadata = do
-      schemaCache <- buildRebuildableSchemaCache
+      schemaCache <- buildRebuildableSchemaCache env
       view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
 
     doesSchemaExist schemaName =

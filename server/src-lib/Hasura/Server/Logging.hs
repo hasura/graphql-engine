@@ -25,6 +25,13 @@ import qualified Data.Text                 as T
 import qualified Network.HTTP.Types        as HTTP
 import qualified Network.Wai.Extended      as Wai
 
+-- import qualified Data.ByteString.Lazy                   as BL
+-- import qualified Data.Text                              as T
+-- import qualified Network.HTTP.Types                     as HTTP
+-- import qualified Network.Wai                            as Wai
+
+-- import           Hasura.GraphQL.Execute.Query           (GeneratedSqlMap)
+-- import           Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
@@ -152,7 +159,6 @@ class (Monad m) => HttpLog m where
     -> [HTTP.Header]
     -- ^ list of request headers
     -> m ()
-
 
 -- | Log information about the HTTP request
 data HttpInfoLog

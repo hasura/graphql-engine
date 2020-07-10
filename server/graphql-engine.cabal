@@ -212,6 +212,7 @@ library
                      , ghc-heap-view
 
                      , directory
+                     
                      , semigroups >= 0.19.1
 
                      -- scheduled triggers
@@ -219,116 +220,114 @@ library
 
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
+                     , Control.Concurrent.Extended
+                     , Control.Lens.Extended
                      , Control.Monad.Stateless
                      , Control.Monad.Unique
-                     , Data.Time.Clock.Units
-
-                     -- exposed for tests
+                     , Data.Aeson.Extended
+                     , Data.Aeson.Ordered
+                     , Data.Environment
+                     , Data.HashMap.Strict.Extended
+                     , Data.HashMap.Strict.InsOrd.Extended
+                     , Data.List.Extended
                      , Data.Parser.CacheControl
-                     , Data.URL.Template
-
-                     , Hasura.Prelude
-                     , Hasura.App
-                     , Hasura.Db
-                     -- Exposed for benchmark:
-                     , Hasura.Cache.Types
-                     , Hasura.Cache.Bounded
-                     , Hasura.Cache.Unbounded
-                     , Hasura.Cache
-                     , Hasura.Logging
-                     , Hasura.HTTP
-                     , Hasura.Incremental
-
-                     , Hasura.Server.App
-                     , Hasura.Server.Auth
-                     , Hasura.Server.Cors
-                     , Hasura.Server.Init
-                     , Hasura.Server.Init.Config
-                     , Hasura.Server.API.Query
-                     , Hasura.Server.Utils
-                     , Hasura.Server.Version
-                     , Hasura.Server.Logging
-                     , Hasura.Server.Migrate
-                     , Hasura.Server.Compression
-                     , Hasura.Server.API.PGDump
-                     -- exposed for Pro
-                     , Hasura.Server.API.Config
-                     , Hasura.Server.Telemetry
-
-                     -- Exposed for testing:
-                     , Hasura.Server.Telemetry.Counters
+                     , Data.Parser.Expires
                      , Data.Parser.JSONPath
-                     , Hasura.Server.Auth.JWT
-
-                     -- exposed for Pro
+                     , Data.Sequence.NonEmpty
+                     , Data.TByteString
+                     , Data.Text.Extended
+                     , Data.Time.Clock.Units
+                     , Data.URL.Template
+                     , Hasura.App
+                     , Hasura.Cache
+                     , Hasura.Cache.Bounded
+                     , Hasura.Cache.Types
+                     , Hasura.Cache.Unbounded
+                     , Hasura.Db
+                     , Hasura.EncJSON
+                     , Hasura.Eventing.Common
+                     , Hasura.Eventing.EventTrigger
+                     , Hasura.Eventing.HTTP
+                     , Hasura.Eventing.ScheduledTrigger
+                     , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Execute
-                     , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Execute.LiveQuery
-                     , Hasura.GraphQL.Validate
+                     , Hasura.GraphQL.Execute.LiveQuery.Options
+                     , Hasura.GraphQL.Execute.LiveQuery.Plan
+                     , Hasura.GraphQL.Execute.LiveQuery.Poll
+                     , Hasura.GraphQL.Execute.LiveQuery.State
+                     , Hasura.GraphQL.Execute.LiveQuery.TMap
+                     , Hasura.GraphQL.Execute.Plan
+                     , Hasura.GraphQL.Execute.Query
+                     , Hasura.GraphQL.Explain
+                     , Hasura.GraphQL.Logging
+                     , Hasura.GraphQL.NormalForm
+                     , Hasura.GraphQL.RelaySchema
+                     , Hasura.GraphQL.RemoteServer
+                     , Hasura.GraphQL.Resolve
+                     , Hasura.GraphQL.Resolve.Action
+                     , Hasura.GraphQL.Resolve.BoolExp
+                     , Hasura.GraphQL.Resolve.Context
+                     , Hasura.GraphQL.Resolve.InputValue
+                     , Hasura.GraphQL.Resolve.Insert
+                     , Hasura.GraphQL.Resolve.Introspect
+                     , Hasura.GraphQL.Resolve.Mutation
+                     , Hasura.GraphQL.Resolve.Select
+                     , Hasura.GraphQL.Resolve.Types
+                     , Hasura.GraphQL.Schema
+                     , Hasura.GraphQL.Schema.Action
+                     , Hasura.GraphQL.Schema.BoolExp
+                     , Hasura.GraphQL.Schema.Builder
+                     , Hasura.GraphQL.Schema.Common
+                     , Hasura.GraphQL.Schema.CustomTypes
+                     , Hasura.GraphQL.Schema.Function
+                     , Hasura.GraphQL.Schema.Merge
+                     , Hasura.GraphQL.Schema.Mutation.Common
+                     , Hasura.GraphQL.Schema.Mutation.Delete
+                     , Hasura.GraphQL.Schema.Mutation.Insert
+                     , Hasura.GraphQL.Schema.Mutation.Update
+                     , Hasura.GraphQL.Schema.OrderBy
+                     , Hasura.GraphQL.Schema.Select
                      , Hasura.GraphQL.Transport.HTTP
+                     , Hasura.GraphQL.Transport.HTTP.Protocol
+                     , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Transport.WebSocket.Protocol
                      , Hasura.GraphQL.Transport.WebSocket.Server
-                     , Hasura.GraphQL.Logging
-
-                     , Hasura.RQL.Types
-                     , Hasura.RQL.Types.Run
-                     , Hasura.RQL.DDL.Metadata
-                     , Hasura.RQL.DDL.Metadata.Types
-                     , Hasura.RQL.DDL.Metadata.Generator
-                     , Hasura.RQL.DDL.Schema
-                     -- required for buildRebuildableSchemaCache and runCacheRWT to be exposed
-                     , Hasura.RQL.DDL.Schema.Cache
-                     , Hasura.EncJSON
-                     , Hasura.Session
-
-                     , Data.Aeson.Ordered
-                     , Data.TByteString
-
-                     , Network.Wai.Extended
-                     , Control.Concurrent.Extended
-
-  other-modules:       Hasura.Incremental.Select
+                     , Hasura.GraphQL.Utils
+                     , Hasura.GraphQL.Validate
+                     , Hasura.GraphQL.Validate.Context
+                     , Hasura.GraphQL.Validate.InputValue
+                     , Hasura.GraphQL.Validate.SelectionSet
+                     , Hasura.GraphQL.Validate.Types
+                     , Hasura.HTTP
+                     , Hasura.Incremental
                      , Hasura.Incremental.Internal.Cache
                      , Hasura.Incremental.Internal.Dependency
                      , Hasura.Incremental.Internal.Rule
-
-                     , Hasura.Server.Auth.WebHook
-                     , Hasura.Server.Middleware
-                     , Hasura.Server.CheckUpdates
-                     , Hasura.Server.SchemaUpdate
-                     , Hasura.Server.Migrate.Version
-                     , Hasura.Server.Auth.JWT.Internal
-                     , Hasura.Server.Auth.JWT.Logging
-
-                     , Hasura.RQL.Instances
-                     , Hasura.RQL.Types.SchemaCache
-                     , Hasura.RQL.Types.Table
-                     , Hasura.RQL.Types.SchemaCache.Build
-                     , Hasura.RQL.Types.SchemaCacheTypes
-                     , Hasura.RQL.Types.BoolExp
-                     , Hasura.RQL.Types.Function
-                     , Hasura.RQL.Types.Catalog
-                     , Hasura.RQL.Types.Column
-                     , Hasura.RQL.Types.Common
-                     , Hasura.RQL.Types.ComputedField
-                     , Hasura.RQL.Types.DML
-                     , Hasura.RQL.Types.Error
-                     , Hasura.RQL.Types.EventTrigger
-                     , Hasura.RQL.Types.Metadata
-                     , Hasura.RQL.Types.Permission
-                     , Hasura.RQL.Types.QueryCollection
-                     , Hasura.RQL.Types.Action
-                     , Hasura.RQL.Types.RemoteSchema
-                     , Hasura.RQL.Types.ScheduledTrigger
+                     , Hasura.Incremental.Select
+                     , Hasura.Logging
+                     , Hasura.Prelude
+                     , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ComputedField
-                     , Hasura.RQL.DDL.Relationship
-                     , Hasura.RQL.Types.CustomTypes
-                     , Hasura.RQL.Types.RemoteRelationship
+                     , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DDL.Deps
-                     , Hasura.RQL.DDL.Permission.Internal
+                     , Hasura.RQL.DDL.EventTrigger
+                     , Hasura.RQL.DDL.Headers
+                     , Hasura.RQL.DDL.Metadata
+                     , Hasura.RQL.DDL.Metadata.Generator
+                     , Hasura.RQL.DDL.Metadata.Types
                      , Hasura.RQL.DDL.Permission
+                     , Hasura.RQL.DDL.Permission.Internal
+                     , Hasura.RQL.DDL.QueryCollection
+                     , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.Relationship.Types
+                     , Hasura.RQL.DDL.RemoteRelationship
+                     , Hasura.RQL.DDL.RemoteRelationship.Validate
+                     , Hasura.RQL.DDL.RemoteSchema
+                     , Hasura.RQL.DDL.ScheduledTrigger
+                     , Hasura.RQL.DDL.Schema
+                     , Hasura.RQL.DDL.Schema.Cache
                      , Hasura.RQL.DDL.Schema.Cache.Common
                      , Hasura.RQL.DDL.Schema.Cache.Dependencies
                      , Hasura.RQL.DDL.Schema.Cache.Fields
@@ -340,85 +339,66 @@ library
                      , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Table
                      , Hasura.RQL.DDL.Utils
-                     , Hasura.RQL.DDL.EventTrigger
-                     , Hasura.RQL.DDL.ScheduledTrigger
-                     , Hasura.RQL.DDL.Headers
-                     , Hasura.RQL.DDL.RemoteSchema
-                     , Hasura.RQL.DDL.QueryCollection
-                     , Hasura.RQL.DDL.Action
-                     , Hasura.RQL.DDL.CustomTypes
-                     , Hasura.RQL.DDL.RemoteRelationship
-                     , Hasura.RQL.DDL.RemoteRelationship.Validate
+                     , Hasura.RQL.DML.Count
                      , Hasura.RQL.DML.Delete
-                     , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
+                     , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Mutation
+                     , Hasura.RQL.DML.RemoteJoin
                      , Hasura.RQL.DML.Returning
+                     , Hasura.RQL.DML.Select
                      , Hasura.RQL.DML.Select.Internal
                      , Hasura.RQL.DML.Select.Types
-                     , Hasura.RQL.DML.Select
                      , Hasura.RQL.DML.Update
-                     , Hasura.RQL.DML.Count
-                     , Hasura.RQL.DML.RemoteJoin
                      , Hasura.RQL.GBoolExp
-
-                     , Hasura.GraphQL.Transport.HTTP.Protocol
-                     , Hasura.GraphQL.Transport.WebSocket
-                     , Hasura.GraphQL.Schema.BoolExp
-                     , Hasura.GraphQL.Schema.Common
-                     , Hasura.GraphQL.Schema.CustomTypes
-                     , Hasura.GraphQL.Schema.Builder
-                     , Hasura.GraphQL.Schema.Action
-                     , Hasura.GraphQL.Schema.Function
-                     , Hasura.GraphQL.Schema.OrderBy
-                     , Hasura.GraphQL.Schema.Select
-                     , Hasura.GraphQL.Schema.Merge
-                     , Hasura.GraphQL.Schema.Mutation.Common
-                     , Hasura.GraphQL.Schema.Mutation.Insert
-                     , Hasura.GraphQL.Schema.Mutation.Update
-                     , Hasura.GraphQL.Schema.Mutation.Delete
-                     , Hasura.GraphQL.Schema
-                     , Hasura.GraphQL.RelaySchema
-                     , Hasura.GraphQL.Utils
-                     , Hasura.GraphQL.NormalForm
-                     , Hasura.GraphQL.Validate.Types
-                     , Hasura.GraphQL.Validate.Context
-                     , Hasura.GraphQL.Validate.SelectionSet
-                     , Hasura.GraphQL.Validate.InputValue
-                     , Hasura.GraphQL.Explain
-                     , Hasura.GraphQL.Execute.Plan
-                     , Hasura.GraphQL.Execute.LiveQuery.Options
-                     , Hasura.GraphQL.Execute.LiveQuery.Plan
-                     , Hasura.GraphQL.Execute.LiveQuery.Poll
-                     , Hasura.GraphQL.Execute.LiveQuery.State
-                     , Hasura.GraphQL.Execute.LiveQuery.TMap
-                     , Hasura.GraphQL.Resolve
-                     , Hasura.GraphQL.Resolve.Action
-                     , Hasura.GraphQL.Resolve.Types
-                     , Hasura.GraphQL.Resolve.Context
-                     , Hasura.GraphQL.Resolve.BoolExp
-                     , Hasura.GraphQL.Resolve.InputValue
-                     , Hasura.GraphQL.Resolve.Introspect
-                     , Hasura.GraphQL.Resolve.Insert
-                     , Hasura.GraphQL.Resolve.Mutation
-                     , Hasura.GraphQL.Resolve.Select
-                     , Hasura.GraphQL.RemoteServer
-                     , Hasura.GraphQL.Context
-
-                     , Hasura.Eventing.HTTP
-                     , Hasura.Eventing.EventTrigger
-                     , Hasura.Eventing.ScheduledTrigger
-                     , Hasura.Eventing.Common
-
-                     , Control.Lens.Extended
-                     , Data.Aeson.Extended
-                     , Data.List.Extended
-                     , Data.HashMap.Strict.Extended
-                     , Data.HashMap.Strict.InsOrd.Extended
-                     , Data.Sequence.NonEmpty
-                     , Data.Text.Extended
-                     , Data.Parser.Expires
-
+                     , Hasura.RQL.Instances
+                     , Hasura.RQL.Types
+                     , Hasura.RQL.Types.Action
+                     , Hasura.RQL.Types.BoolExp
+                     , Hasura.RQL.Types.Catalog
+                     , Hasura.RQL.Types.Column
+                     , Hasura.RQL.Types.Common
+                     , Hasura.RQL.Types.ComputedField
+                     , Hasura.RQL.Types.CustomTypes
+                     , Hasura.RQL.Types.DML
+                     , Hasura.RQL.Types.Error
+                     , Hasura.RQL.Types.EventTrigger
+                     , Hasura.RQL.Types.Function
+                     , Hasura.RQL.Types.Metadata
+                     , Hasura.RQL.Types.Permission
+                     , Hasura.RQL.Types.QueryCollection
+                     , Hasura.RQL.Types.RemoteRelationship
+                     , Hasura.RQL.Types.RemoteSchema
+                     , Hasura.RQL.Types.Run
+                     , Hasura.RQL.Types.ScheduledTrigger
+                     , Hasura.RQL.Types.SchemaCache
+                     , Hasura.RQL.Types.SchemaCache.Build
+                     , Hasura.RQL.Types.SchemaCacheTypes
+                     , Hasura.RQL.Types.Table
+                     , Hasura.Server.API.Config
+                     , Hasura.Server.API.PGDump
+                     , Hasura.Server.API.Query
+                     , Hasura.Server.App
+                     , Hasura.Server.Auth
+                     , Hasura.Server.Auth.JWT
+                     , Hasura.Server.Auth.JWT.Internal
+                     , Hasura.Server.Auth.JWT.Logging
+                     , Hasura.Server.Auth.WebHook
+                     , Hasura.Server.CheckUpdates
+                     , Hasura.Server.Compression
+                     , Hasura.Server.Cors
+                     , Hasura.Server.Init
+                     , Hasura.Server.Init.Config
+                     , Hasura.Server.Logging
+                     , Hasura.Server.Middleware
+                     , Hasura.Server.Migrate
+                     , Hasura.Server.Migrate.Version
+                     , Hasura.Server.SchemaUpdate
+                     , Hasura.Server.Telemetry
+                     , Hasura.Server.Telemetry.Counters
+                     , Hasura.Server.Utils
+                     , Hasura.Server.Version
+                     , Hasura.Session
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error
                      , Hasura.SQL.GeoJSON
@@ -426,10 +406,9 @@ library
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
                      , Hasura.SQL.Value
-
                      , Network.URI.Extended
+                     , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom
-
 executable graphql-engine
   import: common-all, common-exe
   hs-source-dirs:    src-exec

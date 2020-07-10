@@ -17,8 +17,9 @@ module Hasura.Server.Auth.JWT
   , defaultRoleClaim
   ) where
 
-import           Control.Exception               (try)
+import           Control.Exception.Lifted        (try)
 import           Control.Lens
+import           Control.Monad.Trans.Control     (MonadBaseControl)
 import           Control.Monad.Trans.Maybe
 import           Data.IORef                      (IORef, readIORef, writeIORef)
 import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
@@ -125,21 +126,22 @@ defaultClaimNs = "https://hasura.io/jwt/claims"
 
 -- | An action that refreshes the JWK at intervals in an infinite loop.
 jwkRefreshCtrl
-  :: HasVersion
+  :: (HasVersion, MonadIO m, MonadBaseControl IO m)
   => Logger Hasura
   -> HTTP.Manager
   -> URI
   -> IORef Jose.JWKSet
   -> DiffTime
-  -> IO void
-jwkRefreshCtrl logger manager url ref time = liftIO $ do
-    C.sleep time
-    forever $ do
+  -> m void
+jwkRefreshCtrl logger manager url ref time = do
+    liftIO $ C.sleep time
+    forever do
       res <- runExceptT $ updateJwkRef logger manager url ref
       mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
+      -- let delay = maybe (minutes 1) fromUnits mTime
       let delay = maybe (minutes 1) (convertDuration) mTime
-      C.sleep delay
+      liftIO $ C.sleep delay
   where
     logNotice = do
       let err = JwkRefreshLog LevelInfo (Just "retrying again in 60 secs") Nothing
@@ -149,6 +151,7 @@ jwkRefreshCtrl logger manager url ref time = liftIO $ do
 updateJwkRef
   :: ( HasVersion
      , MonadIO m
+     , MonadBaseControl IO m
      , MonadError JwkFetchError m
      )
   => Logger Hasura
@@ -157,11 +160,13 @@ updateJwkRef
   -> IORef Jose.JWKSet
   -> m (Maybe NominalDiffTime)
 updateJwkRef (Logger logger) manager url jwkRef = do
-  let options = wreqOptions manager []
-      urlT    = T.pack $ show url
+  let urlT    = T.pack $ show url
       infoMsg = "refreshing JWK from endpoint: " <> urlT
   liftIO $ logger $ JwkRefreshLog LevelInfo (Just infoMsg) Nothing
-  res  <- liftIO $ try $ Wreq.getWith options $ show url
+  res <- try do
+    initReq <- liftIO $ HTTP.parseRequest $ show url
+    let req = initReq { HTTP.requestHeaders = addDefaultHeaders (HTTP.requestHeaders initReq) }
+    liftIO $ HTTP.httpLbs req manager
   resp <- either logAndThrowHttp return res
   let status = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
@@ -275,10 +280,10 @@ processJwt_ processAuthZHeader_ jwtCtx headers mUnAuthRole =
       userInfo <- mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent $
                   mkSessionVariablesText $ Map.toList metadata
       pure (userInfo, expTimeM)
-    
+
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
-      userInfo <- mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $ 
+      userInfo <- mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $
         mkSessionVariables headers
       pure (userInfo, Nothing)
 
@@ -310,9 +315,9 @@ processAuthZHeader jwtCtx@JWTCtx{jcxClaimNs, jcxClaimsFormat} authzHeader = do
           ClaimNsPath path -> parseIValueJsonValue $ executeJSONPath path (J.toJSON $ claims ^. Jose.unregisteredClaims)
 
   hasuraClaimsV <- maybe claimsNotFound return mHasuraClaims
-
   -- return hasura claims value as an object. parse from string possibly
   (, expTimeM) <$> parseObjectFromString hasuraClaimsV
+
   where
     parseAuthzHeader = do
       let tokenParts = BLC.words authzHeader

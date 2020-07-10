@@ -134,7 +134,7 @@ type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON
 
 setHeadersTx :: SessionVariables -> Q.TxE QErr ()
-setHeadersTx session =
+setHeadersTx session = do
   Q.unitQE defaultTxErrorHandler setSess () False
   where
     setSess = Q.fromText $
@@ -182,7 +182,9 @@ withUserInfo :: UserInfo -> LazyTx QErr a -> LazyTx QErr a
 withUserInfo uInfo = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
-  LTTx tx  -> LTTx $ setHeadersTx (_uiSession uInfo) >> tx
+  LTTx tx  ->
+    let vars = _uiSession uInfo
+    in LTTx $ setHeadersTx vars >> tx
 
 instance Functor (LazyTx e) where
   fmap f = \case

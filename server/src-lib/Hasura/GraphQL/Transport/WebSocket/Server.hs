@@ -3,7 +3,8 @@
 
 module Hasura.GraphQL.Transport.WebSocket.Server
   ( WSId(..)
-
+  , WSLog(..)
+  , WSEvent(..)
   , WSConn
   , getData
   , getWSId
@@ -17,6 +18,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , WSHandlers(..)
 
   , WSServer
+  , HasuraServerApp
   , WSEventInfo(..)
   , WSQueueResponse(..)
   , ServerMsgType(..)
@@ -26,9 +28,6 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , shutdown
 
   , MonadWSLog (..)
-  , HasuraServerApp
-  , WSEvent(..)
-  , WSLog(..)
   ) where
 
 import qualified Control.Concurrent.Async                    as A
@@ -225,6 +224,9 @@ type OnConnH m a    = WSId -> WS.RequestHead -> IpAddress -> m (Either WS.Reject
 type OnCloseH m a   = WSConn a -> m ()
 type OnMessageH m a = WSConn a -> BL.ByteString -> m ()
 
+-- | aka generalized 'WS.ServerApp' over @m@, which takes an IPAddress
+type HasuraServerApp m = IpAddress -> WS.PendingConnection -> m ()
+
 data WSHandlers m a
   = WSHandlers
   { _hOnConn    :: OnConnH m a
@@ -232,16 +234,13 @@ data WSHandlers m a
   , _hOnClose   :: OnCloseH m a
   }
 
--- | aka generalized 'WS.ServerApp' over @m@, which takes an IPAddress
-type HasuraServerApp m = IpAddress -> WS.PendingConnection -> m ()
-
 createServerApp
   :: (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m), MonadWSLog m)
   => WSServer a
-  -- user provided handlers
   -> WSHandlers m a
-  -- aka WS.ServerApp
+  -- ^ user provided handlers
   -> HasuraServerApp m
+  -- ^ aka WS.ServerApp
 {-# INLINE createServerApp #-}
 createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !ipAddress !pendingConn = do
   wsId <- WSId <$> liftIO UUID.nextRandom
@@ -261,7 +260,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
     -- least log properly and re-raise:
     logUnexpectedExceptions = handle $ \(e :: SomeException) -> do
       writeLog $ L.UnstructuredLog L.LevelError $ fromString $
-        "Unexpected exception raised in websocket. Please report this as a bug: "<>show e
+        "Unexpected exception raised in websocket. Please report this as a bug: " <> show e
       throwIO e
 
     shuttingDownReject =
