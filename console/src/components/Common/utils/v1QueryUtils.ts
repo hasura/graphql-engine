@@ -7,7 +7,7 @@ import { transformHeaders } from '../Headers/utils';
 import {
   generateTableDef,
   BaseTableColumn,
-  PrimaryKeyDetails,
+  PrimaryKey,
   createPKClause,
 } from './pgUtils';
 import { Nullable } from './tsUtils';
@@ -116,7 +116,7 @@ export const getInsertUpQuery = (
 export const getInsertDownQuery = (
   tableDef: TableDefinition,
   insertion: Record<string, any>,
-  primaryKeyInfo: PrimaryKeyDetails,
+  primaryKeyInfo: PrimaryKey,
   columns: BaseTableColumn[]
 ) => {
   const whereClause = createPKClause(primaryKeyInfo, insertion, columns);
@@ -520,23 +520,23 @@ export const generateCreateEventTriggerQuery = (
         state.webhook.type === 'env' ? state.webhook.value.trim() : null,
       insert: state.operations.insert
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       update: state.operations.update
         ? {
-            columns: state.operationColumns
-              .filter(c => !!c.enabled)
-              .map(c => c.name),
-            payload: state.operationColumns
-              .filter(c => !!c.enabled)
-              .map(c => c.name),
-          }
+          columns: state.operationColumns
+            .filter(c => !!c.enabled)
+            .map(c => c.name),
+          payload: state.operationColumns
+            .filter(c => !!c.enabled)
+            .map(c => c.name),
+        }
         : null,
       delete: state.operations.delete
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       enable_manual: state.operations.enable_manual,
       retry_conf: state.retryConf,
