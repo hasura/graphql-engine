@@ -162,7 +162,7 @@ against that in your action handler.
   Adding an action secret is a simple way of securing an action
   handler against unauthorized access and will suffice in most use cases.
   However, if you have more profound security requirements, you might want to choose advanced
-  security solutions such as `HMAC <https://en.wikipedia.org/wiki/HMAC>`__.
+  security solutions tailored to your needs.
 
 
 Step 1: Configure your Hasura instance
