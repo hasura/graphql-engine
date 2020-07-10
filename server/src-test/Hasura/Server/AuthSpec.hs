@@ -1,19 +1,20 @@
 module Hasura.Server.AuthSpec (spec) where
 
+import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.Server.Version
-import           Hasura.Logging
 
-import qualified Crypto.JOSE.JWK         as Jose
-import qualified Data.Aeson              as J
-import           Data.Aeson              ((.=))
-import qualified Network.HTTP.Types      as N
+import qualified Crypto.JOSE.JWK        as Jose
+import           Data.Aeson             ((.=))
+import qualified Data.Aeson             as J
+import qualified Network.HTTP.Types     as N
 
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth      hiding (getUserInfoWithExpTime, processJwt)
+import           Hasura.Server.Auth     hiding (getUserInfoWithExpTime, processJwt)
+import           Hasura.Server.Auth.JWT hiding (processJwt)
 import           Hasura.Server.Utils
 import           Hasura.Session
-import           Hasura.Server.Auth.JWT  hiding (processJwt)
+import qualified Hasura.Tracing         as Tracing
 import           Test.Hspec
 
 spec :: Spec
@@ -26,13 +27,13 @@ spec = do
 getUserInfoWithExpTimeTests :: Spec
 getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
   ---- FUNCTION UNDER TEST:
-  let getUserInfoWithExpTime 
+  let getUserInfoWithExpTime
         :: J.Object
         -- ^ For JWT, inject the raw claims object as though returned from 'processAuthZHeader'
         -- acting on an 'Authorization' header from the request
         -> [N.Header] -> AuthMode -> IO (Either Code RoleName)
-      getUserInfoWithExpTime claims rawHeaders = 
-        runExceptT 
+      getUserInfoWithExpTime claims rawHeaders =
+        runExceptT
         . withExceptT qeCode -- just look at Code for purposes of tests
         . fmap _uiRole -- just look at RoleName for purposes of tests
         . fmap fst -- disregard Nothing expiration
@@ -43,15 +44,15 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
             (, Nothing) <$> _UserInfo "hook"
             where
               -- we don't care about details here; we'll just check role name in tests:
-              _UserInfo nm = 
+              _UserInfo nm =
                 mkUserInfo (URBFromSessionVariablesFallback $ mkRoleNameE nm)
-                           UAdminSecretNotSent 
+                           UAdminSecretNotSent
                            (mkSessionVariables mempty)
-          processJwt = processJwt_ $ 
+          processJwt = processJwt_ $
             -- processAuthZHeader:
             \_jwtCtx _authzHeader -> return (claims , Nothing)
 
-  let setupAuthMode'E a b c d = 
+  let setupAuthMode'E a b c d =
         either (const $ error "fixme") id <$> setupAuthMode' a b c d
 
   let ourUnauthRole = mkRoleNameE "an0nymous"
@@ -105,7 +106,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           `shouldReturn` Left AccessDenied
 
     describe "unauth role set" $ do
-      mode <- runIO $ 
+      mode <- runIO $
         setupAuthMode'E (Just $ hashAdminSecret "secret") Nothing Nothing (Just ourUnauthRole)
       it "accepts when admin secret matches" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
@@ -143,7 +144,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
   -- Unauthorized role is not supported for webhook
   describe "webhook" $ do
-    mode <- runIO $ 
+    mode <- runIO $
       setupAuthMode'E (Just $ hashAdminSecret "secret") (Just fakeAuthHook) Nothing Nothing
 
     it "accepts when admin secret matches" $ do
@@ -187,11 +188,11 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
   -- helper for generating mocked up verified JWT token claims, as though returned by 'processAuthZHeader':
   let unObject l = case J.object l of
         J.Object o -> o
-        _ -> error "impossible"
+        _          -> error "impossible"
 
   describe "JWT" $ do
     describe "unauth role NOT set" $ do
-      mode <- runIO $ 
+      mode <- runIO $
         setupAuthMode'E (Just $ hashAdminSecret "secret") Nothing (Just fakeJWTConfig) Nothing
 
       it "accepts when admin secret matches" $ do
@@ -223,8 +224,8 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           `shouldReturn` Left InvalidHeaders
 
     describe "unauth role set" $ do
-      mode <- runIO $ 
-        setupAuthMode'E (Just $ hashAdminSecret "secret") Nothing 
+      mode <- runIO $
+        setupAuthMode'E (Just $ hashAdminSecret "secret") Nothing
                         (Just fakeJWTConfig) (Just ourUnauthRole)
 
       it "accepts when admin secret matches" $ do
@@ -258,13 +259,13 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           `shouldReturn` Right ourUnauthRole
 
     describe "when Authorization header sent, and no admin secret" $ do
-      modeA <- runIO $ setupAuthMode'E (Just $ hashAdminSecret "secret") Nothing 
+      modeA <- runIO $ setupAuthMode'E (Just $ hashAdminSecret "secret") Nothing
                                        (Just fakeJWTConfig) (Just ourUnauthRole)
-      modeB <- runIO $ setupAuthMode'E (Just $ hashAdminSecret "secret") Nothing 
+      modeB <- runIO $ setupAuthMode'E (Just $ hashAdminSecret "secret") Nothing
                                        (Just fakeJWTConfig) Nothing
 
       -- Here the unauth role does not come into play at all, so map same tests over both modes:
-      forM_ [(modeA, "with unauth role set"), (modeB, "with unauth role NOT set")] $ 
+      forM_ [(modeA, "with unauth role set"), (modeB, "with unauth role NOT set")] $
         \(mode, modeMsg) -> describe modeMsg $ do
 
           it "authorizes successfully with JWT when requested role allowed" $ do
@@ -378,7 +379,7 @@ setupAuthModeTests = describe "setupAuthMode" $ do
       `shouldReturn` Left ()
 
 fakeJWTConfig :: JWTConfig
-fakeJWTConfig = 
+fakeJWTConfig =
   let jcKeyOrUrl = Left (Jose.fromOctets [])
       jcClaimNs = ClaimNs ""
       jcAudience = Nothing
@@ -392,17 +393,17 @@ fakeAuthHook = AuthHookG "http://fake" AHTGet
 mkRoleNameE :: Text -> RoleName
 mkRoleNameE = fromMaybe (error "fixme") . mkRoleName
 
-setupAuthMode' 
+setupAuthMode'
   :: Maybe AdminSecretHash
   -> Maybe AuthHook
   -> Maybe JWTConfig
   -> Maybe RoleName
   -> IO (Either () AuthMode)
-setupAuthMode'  mAdminSecretHash mWebHook mJwtSecret mUnAuthRole = 
-  withVersion (VersionDev "fake") $ 
+setupAuthMode'  mAdminSecretHash mWebHook mJwtSecret mUnAuthRole =
+  withVersion (VersionDev "fake") $
   -- just throw away the error message for ease of testing:
   fmap (either (const $ Left ()) Right) $
-  runExceptT $
-  setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole
-    -- NOTE: this won't do any http or launch threads if we don't specify JWT URL:
-    (error "H.Manager") (Logger $ void . return)
+  Tracing.runNoReporter . runExceptT $
+    setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole
+      -- NOTE: this won't do any http or launch threads if we don't specify JWT URL:
+      (error "H.Manager") (Logger $ void . return)

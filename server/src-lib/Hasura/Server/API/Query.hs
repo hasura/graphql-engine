@@ -42,6 +42,8 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
 
+import qualified Hasura.Tracing                     as Tracing
+
 data RQLQueryV1
   = RQAddExistingTableOrView !TrackTable
   | RQTrackTable !TrackTable
@@ -197,6 +199,8 @@ runQuery
 runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
   accessMode <- getQueryAccessMode query
   resE <- runQueryM env query
+    & Tracing.runTraceT "runQuery" -- turn off tracing here, until we can refactor
+    & Tracing.runNoReporter        -- things to use the AppM monad
     & runHasSystemDefinedT systemDefined
     & runCacheRWT sc
     & peelRun runCtx pgExecCtx accessMode
@@ -345,6 +349,7 @@ runQueryM
   :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
      , HasSystemDefined m
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> RQLQuery

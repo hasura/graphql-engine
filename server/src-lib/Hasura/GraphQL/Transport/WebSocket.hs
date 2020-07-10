@@ -42,6 +42,7 @@ import           Data.String
 import           GHC.AssertNF
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery(..))
 import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
@@ -63,6 +64,7 @@ import qualified Hasura.GraphQL.Execute.Query                as EQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
 import qualified Hasura.Server.Telemetry.Counters            as Telem
+import qualified Hasura.Tracing                              as Tracing
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
@@ -305,7 +307,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAddress = do
             <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
 onStart
-  :: forall m. (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m)
+  :: forall m. (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m, Tracing.MonadTrace m, MonadExecuteQuery m)
   => Env.Environment -> WSServerEnv -> WSConn -> StartMsg -> m ()
 onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   timerTot <- startTimer
@@ -339,7 +341,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   case execPlan of
     E.GExPHasura resolvedOp ->
-      runHasuraGQ timerTot telemCacheHit requestId q userInfo resolvedOp
+      runHasuraGQ timerTot telemCacheHit requestId q reqParsed userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
       runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
   where
@@ -349,17 +351,19 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       -> Telem.CacheHit
       -> RequestId
       -> GQLReqUnparsed
+      -> GQLReqParsed
       -> UserInfo
-      -> E.ExecOp (LazyTx QErr)
+      -> E.ExecOp (Tracing.TraceT (Tracing.NoReporter (LazyTx QErr)))
       -> ExceptT () m ()
-    runHasuraGQ timerTot telemCacheHit reqId query userInfo = \case
-      E.ExOpQuery opTx genSql _asts ->
+    runHasuraGQ timerTot telemCacheHit reqId query queryParsed userInfo = \case
+      E.ExOpQuery opTx genSql asts -> Tracing.trace "pg" $
         execQueryOrMut Telem.Query genSql . fmap snd $
-          ([],) <$> runLazyTx pgExecCtx Q.ReadOnly opTx
+          -- runQueryTx pgExecCtx opTx
+          Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly opTx
       -- Response headers discarded over websockets
-      E.ExOpMutation _ opTx -> do
+      E.ExOpMutation _ opTx -> Tracing.trace "pg" do
         execQueryOrMut Telem.Mutation Nothing $
-          runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo opTx
+          Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withUserInfo userInfo . Tracing.runNoReporter) opTx
       E.ExOpSubs lqOp -> do
         -- log the graphql query
         logQueryLog logger query Nothing reqId
@@ -504,15 +508,17 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 onMessage
   :: ( HasVersion
      , MonadIO m
-     , UserAuthentication m
+     , UserAuthentication (Tracing.TraceT m)
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
+     , Tracing.HasReporter m
+     , MonadExecuteQuery m
      )
   => Env.Environment
   -> AuthMode
   -> WSServerEnv
   -> WSConn -> BL.ByteString -> m ()
-onMessage env authMode serverEnv wsConn msgRaw = do
+onMessage env authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" do
   case J.eitherDecode msgRaw of
     Left e    -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
@@ -587,8 +593,8 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
         ODStopped    -> False
 
 onConnInit
-  :: (HasVersion, MonadIO m, UserAuthentication m)
-  => L.Logger L.Hasura -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
+  :: (HasVersion, MonadIO m, UserAuthentication (Tracing.TraceT m))
+  => L.Logger L.Hasura -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> Tracing.TraceT m ()
 onConnInit logger manager wsConn authMode connParamsM = do
   -- TODO: what should be the behaviour of connection_init message when a
   -- connection is already iniatilized? Currently, we seem to be doing
@@ -686,10 +692,12 @@ createWSServerApp
      , MonadIO m
      , MC.MonadBaseControl IO m
      , LA.Forall (LA.Pure m)
-     , UserAuthentication m
+     , UserAuthentication (Tracing.TraceT m)
      , E.MonadGQLExecutionCheck m
      , WS.MonadWSLog m
      , MonadQueryLog m
+     , Tracing.HasReporter m
+     , MonadExecuteQuery m
      )
   => Env.Environment
   -> AuthMode

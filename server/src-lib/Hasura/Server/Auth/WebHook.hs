@@ -30,6 +30,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Hasura.Session
+import qualified Hasura.Tracing              as Tracing
 
 
 data AuthHookType
@@ -61,7 +62,7 @@ hookMethod authHook = case ahType authHook of
 --   was returned.
 userInfoFromAuthHook
   :: forall m
-   . (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m)
+   . (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m)
   => Logger Hasura
   -> H.Manager
   -> AuthHook
@@ -74,22 +75,22 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
   mkUserInfoFromResp logger (ahUrl hook) (hookMethod hook) status respBody
   where
     performHTTPRequest :: m (Wreq.Response BL.ByteString)
-    performHTTPRequest = do
+    performHTTPRequest = Tracing.traceHttpRequest (ahUrl hook) do
       let url = T.unpack $ ahUrl hook
       req <- liftIO $ H.parseRequest url
-      liftIO do
+      pure $ Tracing.SuspendedRequest req \req' -> liftIO do
         case ahType hook of
           AHTGet  -> do
             let isCommonHeader  = (`elem` commonClientHeadersIgnored)
                 filteredHeaders = filter (not . isCommonHeader . fst) reqHeaders
-            H.httpLbs (req { H.requestHeaders = addDefaultHeaders filteredHeaders }) manager
+            H.httpLbs (req' { H.requestHeaders = addDefaultHeaders filteredHeaders }) manager
           AHTPost -> do
             let contentType = ("Content-Type", "application/json")
                 headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
-            H.httpLbs (req { H.method         = "POST"
-                           , H.requestHeaders = addDefaultHeaders [contentType] 
-                           , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload]
-                           }) manager
+            H.httpLbs (req' { H.method         = "POST"
+                            , H.requestHeaders = addDefaultHeaders [contentType] 
+                            , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload]
+                            }) manager
 
     logAndThrow :: H.HttpException -> m a
     logAndThrow err = do

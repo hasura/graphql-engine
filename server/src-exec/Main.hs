@@ -20,6 +20,7 @@ import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Environment           as Env
 import qualified Database.PG.Query          as Q
+import qualified Hasura.Tracing             as Tracing
 import qualified System.Exit                as Sys
 import qualified System.Posix.Signals       as Signals
 
@@ -68,6 +69,8 @@ runApp env (HGEOptionsG rci hgeCmd) =
       res <- runAsAdmin _icPgPool sqlGenCtx _icHttpManager $ do
         schemaCache <- buildRebuildableSchemaCache env
         execQuery env queryBs
+          & Tracing.runTraceT "execute"
+          & Tracing.runNoReporter
           & runHasSystemDefinedT (SystemDefined False)
           & runCacheRWT schemaCache
           & fmap (\(res, _, _) -> res)
