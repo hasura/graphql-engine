@@ -41,7 +41,7 @@ module Hasura.Eventing.EventTrigger
   ) where
 
 
-import           Control.Concurrent.Async    (wait, withAsync)
+import           Control.Concurrent.Async    (async, link, wait, withAsync)
 import           Control.Concurrent.Extended (sleep)
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.Catch         (MonadMask, bracket_)
@@ -189,10 +189,13 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       eventsNext <- withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
         forM_ events $ \event -> do
-             runReaderT (withEventEngineCtx eeCtx $ (processEvent event)) (logger, httpMgr)
+             t <- async $ runReaderT (withEventEngineCtx eeCtx $ (processEvent event)) (logger, httpMgr)
              -- removing an event from the _eeCtxLockedEvents after the event has
              -- been processed
              removeEventFromLockedEvents (eId event) leEvents
+             link t
+
+        -- return when next batch ready; some 'processEvent' threads may be running.
         wait eventsNextA
 
       let lenEvents = length events
