@@ -344,10 +344,9 @@ const modifyRemoteSchema = () => {
       },
     };
 
-    const requiredHeaders = getReqHeader(
+    resolveObj.definition.headers = getReqHeader(
       getState().remoteSchemas.headerData.headers
     );
-    resolveObj.definition.headers = requiredHeaders;
 
     if (resolveObj.definition.url) {
       delete resolveObj.definition.url_from_env;

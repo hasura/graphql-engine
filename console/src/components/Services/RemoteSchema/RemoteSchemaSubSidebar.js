@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
-import ToolTip from '../../Common/Tooltip/Tooltip';
+import WarningSymbol from '../../Common/WarningSymbol/WarningSymbol';
 
 const RemoteSchemaSubSidebar = ({
   appPrefix,
@@ -55,11 +55,6 @@ const RemoteSchemaSubSidebar = ({
       if (_dataList.length > 0) {
         childList = _dataList.map((d, i) => {
           let activeTableClass = '';
-          let isSchemaInconsistent = false;
-          let inconsistentCurrentSchema;
-          const filteredList = inconsistentRemoteSchemas.filter(
-            inconObject => inconObject.definition.name === d.name
-          );
 
           if (
             d.name === viewRemoteSchema &&
@@ -68,10 +63,9 @@ const RemoteSchemaSubSidebar = ({
             activeTableClass = styles.activeLink;
           }
 
-          if (filteredList.length) {
-            isSchemaInconsistent = true;
-            inconsistentCurrentSchema = filteredList[0];
-          }
+          const inconsistentCurrentSchema = inconsistentRemoteSchemas.find(
+            elem => elem.definition.name === d.name
+          );
 
           return (
             <li
@@ -88,13 +82,11 @@ const RemoteSchemaSubSidebar = ({
                   aria-hidden="true"
                 />
                 {d.name}
-                {isSchemaInconsistent ? (
-                  <ToolTip message={inconsistentCurrentSchema.reason}>
-                    <i
-                      className={`${styles.tableIcon} ${styles.icon_mar_left} fa fa-exclamation-triangle ${styles.colorRed}`}
-                      aria-hidden="true"
-                    />
-                  </ToolTip>
+                {inconsistentCurrentSchema ? (
+                  <WarningSymbol
+                    message={inconsistentCurrentSchema.reason}
+                    tooltipPlacement="right"
+                  />
                 ) : null}
               </Link>
             </li>
