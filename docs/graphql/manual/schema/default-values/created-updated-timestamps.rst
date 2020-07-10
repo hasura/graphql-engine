@@ -48,11 +48,12 @@ Add a created_at timestamp
 
       ALTER TABLE article DROP COLUMN created_at;
 
-    Apply the migration by running:
+    Apply the migration and reload the metadata:
 
     .. code-block:: bash
 
         hasura migrate apply
+        hasura metadata reload
 
   .. tab:: API
 
@@ -122,11 +123,12 @@ Add an updated_at timestamp
       DROP function trigger_set_timestamp();
       ALTER TABLE article DROP COLUMN updated_at;
 
-    Apply the migration by running:
+    Apply the migration and reload the metadata:
 
     .. code-block:: bash
 
         hasura migrate apply
+        hasura metadata reload
 
   .. tab:: API
 
