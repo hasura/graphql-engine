@@ -99,14 +99,6 @@ Date:   Mon Jul 13 22:56:53 2020 -0700
 
     Expose all modules in Cabal file (#5371)
 
-commit 0ef52292b5c8b5ac129dd877b8b8d913089c12b3
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Fri Jul 10 22:17:05 2020 +0530
-
-    server: call the webhook asynchronously in event triggers (#5352)
-
-    * server: call the webhook asynchronosly in event triggers
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
