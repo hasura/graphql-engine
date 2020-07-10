@@ -144,7 +144,7 @@ export const getInsertDownQuery = (
   return {
     type: 'run_sql',
     args: {
-      sql: `DELETE FROM ${tableDef.schema}.${tableDef.name} WHERE ${condition}`,
+      sql: `DELETE FROM ${tableDef.schema}.${tableDef.name} WHERE ${condition};`,
     },
   };
 };
@@ -539,23 +539,23 @@ export const generateCreateEventTriggerQuery = (
         state.webhook.type === 'env' ? state.webhook.value.trim() : null,
       insert: state.operations.insert
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       update: state.operations.update
         ? {
-            columns: state.operationColumns
-              .filter(c => !!c.enabled)
-              .map(c => c.name),
-            payload: state.operationColumns
-              .filter(c => !!c.enabled)
-              .map(c => c.name),
-          }
+          columns: state.operationColumns
+            .filter(c => !!c.enabled)
+            .map(c => c.name),
+          payload: state.operationColumns
+            .filter(c => !!c.enabled)
+            .map(c => c.name),
+        }
         : null,
       delete: state.operations.delete
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       enable_manual: state.operations.enable_manual,
       retry_conf: state.retryConf,
