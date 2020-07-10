@@ -71,7 +71,7 @@ Let's set up a project directory by executing the following command:
 
 .. code-block:: bash
 
-  hasura init --directory my-project --endpoint http://my-graphql.herokuapp.com
+  hasura init my-project --endpoint http://my-graphql.herokuapp.com
 
   cd my-project
 
