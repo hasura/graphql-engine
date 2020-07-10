@@ -84,7 +84,8 @@ const RemoteSchemaSubSidebar = ({
                 {d.name}
                 {inconsistentCurrentSchema ? (
                   <WarningSymbol
-                    message={inconsistentCurrentSchema.reason}
+                    customStyle={styles.padLeft4}
+                    tooltipText={inconsistentCurrentSchema.reason}
                     tooltipPlacement="right"
                   />
                 ) : null}
