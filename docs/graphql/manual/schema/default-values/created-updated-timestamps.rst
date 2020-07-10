@@ -36,11 +36,17 @@ Add a created_at timestamp
 
   .. tab:: CLI
 
-    :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to add a ``created_at`` timestamp field to the ``article`` table:
+    :ref:`Create a migration manually <manual_migrations>` and add the following SQL statement to the ``up.sql`` file:
 
     .. code-block:: plpgsql
 
       ALTER TABLE ONLY "public"."article" ADD COLUMN "created_at" TIMESTAMP DEFAULT NOW();
+
+    Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
+
+    .. code-block:: plpgsql
+
+      ALTER TABLE article DROP COLUMN created_at;
 
     Apply the migration by running:
 
@@ -83,7 +89,7 @@ Add an updated_at timestamp
 
   .. tab:: CLI
 
-    :ref:`Create a migration manually <manual_migrations>` and add the below SQL statement to achieve the following:
+    :ref:`Create a migration manually <manual_migrations>` and add the below SQL statement to the ``up.sql`` file:
     
     1. Add an ``updated_at`` timestamp field to the ``article`` table.
     2. Define a `Postgres function <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ to set the ``updated_at`` field to ``NOW()``.
@@ -107,6 +113,14 @@ Add an updated_at timestamp
       UPDATE ON article
       FOR EACH ROW
       EXECUTE PROCEDURE trigger_set_timestamp();
+
+    Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
+
+    .. code-block:: plpgsql
+
+      DROP trigger set_timestamp on article;
+      DROP function trigger_set_timestamp();
+      ALTER TABLE article DROP COLUMN updated_at;
 
     Apply the migration by running:
 
