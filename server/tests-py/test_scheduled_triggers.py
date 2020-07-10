@@ -80,7 +80,10 @@ class TestScheduledEvent(object):
         event = scheduled_triggers_evts_webhook.get_event(65)
         validate_event_webhook(event['path'],'/test')
         validate_event_headers(event['headers'],{"header-key":"header-value"})
-        assert event['body'] == self.webhook_payload
+        assert event['body']['payload'] == self.webhook_payload
+        payload_keys = dict.keys(event['body'])
+        for k in ["scheduled_time","created_at","id"]: # additional keys
+            assert k in payload_keys
         assert scheduled_triggers_evts_webhook.is_queue_empty()
 
     def test_check_events_statuses(self,hge_ctx):
