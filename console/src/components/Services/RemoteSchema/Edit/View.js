@@ -40,7 +40,7 @@ const RSHeadersDisplay = ({ data }) =>
   ) : null;
 
 const RSReloadSchema = ({ readOnlyMode, remoteSchemaName, ...props }) =>
-  !readOnlyMode && remoteSchemaName ? (
+  !readOnlyMode && remoteSchemaName && remoteSchemaName.length > 0 ? (
     <div className={`${styles.commonBtn} ${styles.detailsRefreshButton}`}>
       <ReloadRemoteSchema {...props} remoteSchemaName={remoteSchemaName} />
       <ToolTip
