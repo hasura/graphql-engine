@@ -18,8 +18,6 @@ import           Data.Type.Equality
 import           Hasura.GraphQL.Parser               as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 
-import Debug.Trace
-
 buildRemoteParser
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
@@ -105,11 +103,10 @@ remoteSchemaObject
   -> m (Parser 'Output n ())
 remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name interfaces _directives subFields) =
   P.memoizeOn 'remoteSchemaObject defn do
-  traceShowM defn
   subFieldParsers <- traverse (remoteField' schemaDoc) subFields
   interfaceDefs <- traverse getInterface interfaces
   implements <- traverse (remoteSchemaInterface schemaDoc) interfaceDefs
-  -- TODO: also check sub-interfaces
+  -- TODO: also check sub-interfaces, when these are supported in a future graphql spec
   traverse (validateImplementsFields subFields) interfaceDefs
   pure $ () <$ P.selectionSetObject name description subFieldParsers implements
   where
@@ -163,16 +160,33 @@ remoteSchemaInterface
   => SchemaIntrospection
   -> G.InterfaceTypeDefinition [G.Name]
   -> m (Parser 'Output n ())
-remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name _directives fields _) =
+remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name _directives fields possibleTypes) =
   P.memoizeOn 'remoteSchemaObject defn do
   subFieldParsers <- traverse (remoteField' schemaDoc) fields
-  objs :: [Parser 'Output n ()] <- traverse (remoteSchemaObject schemaDoc) $
-    objectsImplementingInterface schemaDoc name
+  objs :: [Parser 'Output n ()] <-
+    traverse (\objName -> getObject objName >>= remoteSchemaObject schemaDoc) $ possibleTypes
   ifaces :: [Parser 'Output n ()] <- traverse (remoteSchemaInterface schemaDoc) $
     interfaceImplementingInterface schemaDoc name
   when (null ifaces && null subFieldParsers) $
     throw400 RemoteSchemaError $ "List of fields cannot be empty for interface " <> squote name
+  let typesTooMany = filter (not . (`elem` fmap (getName . P.parserType) objs)) possibleTypes
+      typesTooFew  = filter (not . (`elem` possibleTypes)) $ fmap (getName . P.parserType) objs
+  unless (null typesTooMany) $
+    throw400 RemoteSchemaError $ "Interface " <> squote name <>
+    " should not implemented by " <> squote (head typesTooMany)
+  unless (null typesTooFew) $
+    throw400 RemoteSchemaError $ "Interface " <> squote name <>
+    " should be implemented by " <> squote (head typesTooMany) <> ", but it isn't"
   pure $ () <$ (P.selectionSetInterface name description subFieldParsers objs ifaces)
+  where
+    getObject :: G.Name -> m G.ObjectTypeDefinition
+    getObject objectName =
+      onNothing (lookupObject schemaDoc objectName) $
+        case (lookupInterface schemaDoc objectName) of
+          Nothing -> throw400 RemoteSchemaError $ "Could not find type " <> squote objectName
+            <> ", which is defined as a member type of Union " <> squote name
+          Just _  -> throw400 RemoteSchemaError $ "Union type " <> squote name <>
+            " can only include object types. It cannot include " <> squote objectName
 
 -- | 'remoteSchemaUnion' returns a output parser for a given 'UnionTypeDefinition'.
 remoteSchemaUnion
