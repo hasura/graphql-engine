@@ -88,11 +88,11 @@ export interface Table extends BaseTable {
   table_name: string;
   table_schema: string;
   table_type:
-  | 'TABLE'
-  | 'VIEW'
-  | 'MATERIALIZED VIEW'
-  | 'FOREIGN TABLE'
-  | 'PARTITIONED TABLE';
+    | 'TABLE'
+    | 'VIEW'
+    | 'MATERIALIZED VIEW'
+    | 'FOREIGN TABLE'
+    | 'PARTITIONED TABLE';
   is_table_tracked: boolean;
   columns: TableColumn[];
   relationships: TableRelationship[];

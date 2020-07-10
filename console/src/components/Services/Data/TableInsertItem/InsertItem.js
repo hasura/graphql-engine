@@ -12,6 +12,8 @@ import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { TableRow } from '../Common/Components/TableRow';
 import MigrationCheckBox from './MigrationCheckbox';
+import globals from '../../../../Globals';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 class InsertItem extends Component {
   constructor() {
@@ -62,6 +64,8 @@ class InsertItem extends Component {
       schemas,
       generateTableDef(tableName, currentSchema)
     );
+
+    const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
 
     // check if table exists
     if (!currentTable) {
@@ -230,10 +234,12 @@ class InsertItem extends Component {
                   dispatch={dispatch}
                   isEnum={currentTable.is_enum}
                 />
-                <MigrationCheckBox
-                  onChange={this.toggleMigrationCheckBox}
-                  isChecked={this.state.isMigrationChecked}
-                />
+                {isCLIMode ? (
+                  <MigrationCheckBox
+                    onChange={this.toggleMigrationCheckBox}
+                    isChecked={this.state.isMigrationChecked}
+                  />
+                ) : null}
               </div>
             </form>
           </div>
