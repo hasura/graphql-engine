@@ -39,9 +39,7 @@ class InsertItem extends Component {
   }
 
   toggleMigrationCheckBox = () => {
-    this.setState({
-      isMigrationChecked: !this.state.isMigrationChecked,
-    });
+    this.setState(prev => ({ isMigrationChecked: !prev.isMigrationChecked }));
   };
 
   render() {
