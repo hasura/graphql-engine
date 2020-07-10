@@ -13,8 +13,9 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
 import qualified Hasura.RQL.DML.Delete                  as RQL
-import qualified Hasura.RQL.DML.Update                  as RQL
 import qualified Hasura.RQL.DML.Mutation                as RQL
+import qualified Hasura.RQL.DML.Returning.Types         as RQL
+import qualified Hasura.RQL.DML.Update                  as RQL
 
 import           Hasura.Db
 import           Hasura.EncJSON
@@ -39,7 +40,7 @@ convertDelete
   -> Bool
   -> m RespTx
 convertDelete usrVars rjCtx deleteOperation stringifyNum = do
-  return $ RQL.execDeleteQuery stringifyNum (Just rjCtx) (preparedDelete, planVariablesSequence usrVars planningState)
+  pure $ RQL.execDeleteQuery stringifyNum (Just rjCtx) (preparedDelete, planVariablesSequence usrVars planningState)
   where (preparedDelete, planningState) = runIdentity $ runPlan $ RQL.traverseAnnDel prepareWithPlan deleteOperation
 
 convertUpdate
@@ -50,8 +51,9 @@ convertUpdate
   -> Bool
   -> m RespTx
 convertUpdate usrVars rjCtx updateOperation stringifyNum = do
-  -- FIXME: return empty mutation response if nothing to be inserted
-  return $ RQL.execUpdateQuery stringifyNum (Just rjCtx) (preparedUpdate, planVariablesSequence usrVars planningState)
+  pure $ if null $ RQL.uqp1OpExps updateOperation
+    then pure $ makeEmptyMutation $ RQL.uqp1Output preparedUpdate
+    else RQL.execUpdateQuery stringifyNum (Just rjCtx) (preparedUpdate, planVariablesSequence usrVars planningState)
   where (preparedUpdate, planningState) = runIdentity $ runPlan $ RQL.traverseAnnUpd prepareWithPlan updateOperation
 
 convertInsert
@@ -62,7 +64,7 @@ convertInsert
   -> Bool
   -> m RespTx
 convertInsert usrVars rjCtx insertOperation stringifyNum = do
-  return $ convertToSQLTransaction preparedUpdate rjCtx (planVariablesSequence usrVars planningState) stringifyNum
+  pure $ convertToSQLTransaction preparedUpdate rjCtx (planVariablesSequence usrVars planningState) stringifyNum
   where (preparedUpdate, planningState) = runIdentity $ runPlan $ traverseAnnInsert prepareWithPlan insertOperation
 
 planVariablesSequence :: SessionVariables -> PlanningSt -> Seq.Seq Q.PrepArg
@@ -165,3 +167,14 @@ convertMutationSelectionSet gqlContext userInfo manager reqHeaders fields varDef
       -> Maybe (G.Name, RemoteField)
     takeRemote (name, Right remote) = Just (name, remote)
     takeRemote _                    = Nothing
+
+
+makeEmptyMutation :: RQL.MutationOutput -> EncJSON
+makeEmptyMutation = \case
+  RQL.MOutMultirowFields mutFlds -> encJFromJValue $ OMap.fromList $ map (second convMutFld) mutFlds
+  RQL.MOutSinglerowObject _      -> encJFromJValue $ J.Object mempty
+  where
+    convMutFld = \case
+      RQL.MCount -> J.toJSON (0 :: Int)
+      RQL.MExp e -> J.toJSON e
+      RQL.MRet _ -> J.toJSON ([] :: [J.Value])

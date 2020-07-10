@@ -33,11 +33,11 @@ import qualified Hasura.RQL.DML.Insert          as RQL
 import qualified Hasura.RQL.DML.Insert.Types    as RQL
 import qualified Hasura.RQL.DML.Internal        as RQL
 import qualified Hasura.RQL.DML.Mutation        as RQL
+import qualified Hasura.RQL.DML.RemoteJoin      as RQL
 import qualified Hasura.RQL.DML.Returning       as RQL
 import qualified Hasura.RQL.DML.Returning.Types as RQL
 import qualified Hasura.RQL.DML.Update          as RQL
 import qualified Hasura.RQL.DML.Update.Types    as RQL
-import qualified Hasura.RQL.DML.RemoteJoin      as RQL
 import qualified Hasura.RQL.GBoolExp            as RQL
 import qualified Hasura.SQL.DML                 as S
 
@@ -53,9 +53,11 @@ import           Hasura.GraphQL.Schema.Insert
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.Server.Version           (HasVersion)
+import           Hasura.Server.Version          (HasVersion)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+
+import           Debug.Trace
 
 
 
@@ -396,22 +398,23 @@ updateOperators table updatePermissions = do
     ]
   whenMaybe (not $ null parsers) do
     let allowedOperators = fst <$> parsers
-    pure $ fmap (concat . catMaybes) (sequenceA $ snd <$> parsers)
+    pure $ fmap catMaybes (sequenceA $ snd <$> parsers)
       `P.bindFields` \opExps -> do
-        -- there needs to be at least one column in the update
-        let presetColumns = Map.toList $ RQL.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
+        -- there needs to be at least one operator in the update, even if it is empty
+        let presetColumns = trace ("preset: " ++ show (upiSet updatePermissions)) $ Map.toList $ RQL.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
         when (null opExps && null presetColumns) $ parseError $
           "at least any one of " <> (T.intercalate ", " allowedOperators) <> " is expected"
 
         -- no column should appear twice
-        let groupedExps   = L.groupBy ((==) `on` fst) $ sortOn (getPGColTxt . fst) opExps
+        let flattenedExps = concat opExps
+            groupedExps   = L.groupBy ((==) `on` fst) $ sortOn (getPGColTxt . fst) flattenedExps
             erroneousExps = concat $ filter ((> 1) . length) groupedExps
         when (not $ null erroneousExps) $ parseError $ "column found in multiple operators; "
           <> (T.intercalate ", " $ flip map erroneousExps \(column, opExp) ->
                  getPGColTxt column <> " in " <> RQL.updateOperatorText opExp)
 
         -- FIXME: validate JSON strings
-        pure $ presetColumns <> opExps
+        pure $ presetColumns <> flattenedExps
   where
     columnParser columnInfo = fmap P.mkParameter <$> P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
     textParser   _          = fmap P.mkParameter <$> P.column (PGColumnScalar PGText)    (G.Nullability False)
