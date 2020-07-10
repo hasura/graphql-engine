@@ -241,6 +241,10 @@ class Edit extends React.Component {
           >
             <Common {...this.props} />
             {generateMigrateBtns()}
+            <small>
+              Note: Please make sure to rectify the errors present in the schema
+              before trying to modify it's details.
+            </small>
           </form>
         )}
       </div>
