@@ -101,14 +101,24 @@ export const getDropPermissionQuery = (
 
 export const getInsertUpQuery = (
   tableDef: TableDefinition,
-  insertion: object
+  insertion: Record<string, any>
 ) => {
+  const columns = Object.keys(insertion).join(', ');
+  const insertValues = Object.values(insertion);
+
+  const values = insertValues.map(value => {
+    // NOTE: There might be other data types that we might have to handle
+    if (typeof value === 'string') {
+      return `'${value}'`;
+    }
+
+    return value;
+  });
+
   return {
-    type: 'insert',
+    type: 'run_sql',
     args: {
-      table: tableDef,
-      returning: [],
-      object: [insertion],
+      sql: `INSERT INTO ${tableDef.schema}.${tableDef.name}(${columns}) VALUES (${values});`,
     },
   };
 };
@@ -120,12 +130,21 @@ export const getInsertDownQuery = (
   columns: BaseTableColumn[]
 ) => {
   const whereClause = createPKClause(primaryKeyInfo, insertion, columns);
+  const clauses = Object.keys(whereClause).map(pk => {
+    const currVal = whereClause[pk];
+    if (typeof currVal === 'string') {
+      return `${pk} = '${currVal}'`;
+    }
+
+    return `${pk} = ${currVal}`;
+  });
+
+  const condition = clauses.join(' AND ');
 
   return {
-    type: 'delete',
+    type: 'run_sql',
     args: {
-      table: tableDef,
-      where: whereClause,
+      sql: `DELETE FROM ${tableDef.schema}.${tableDef.name} WHERE ${condition}`,
     },
   };
 };
