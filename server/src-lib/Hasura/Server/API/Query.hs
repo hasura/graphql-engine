@@ -396,7 +396,7 @@ runQueryM rq = withPathK "args" $ case rq of
       RQAddRemoteSchema    q       -> runAddRemoteSchema q
       RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q
       RQReloadRemoteSchema q       -> runReloadRemoteSchema q
-      -- RQIntrospectRemoteSchema q   -> runIntrospectRemoteSchema q
+      RQIntrospectRemoteSchema q   -> runIntrospectRemoteSchema q
 
       RQCreateRemoteRelationship q -> runCreateRemoteRelationship q
       RQUpdateRemoteRelationship q -> runUpdateRemoteRelationship q

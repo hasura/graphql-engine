@@ -145,6 +145,7 @@ import           Data.Aeson.TH
 import           System.Cron.Types
 
 import qualified Data.HashMap.Strict               as M
+import qualified Data.ByteString.Lazy              as BL
 import qualified Data.HashSet                      as HS
 import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
@@ -174,9 +175,10 @@ type IntrospectionResult = ( G.SchemaDocument
 
 data RemoteSchemaCtx
   = RemoteSchemaCtx
-  { rscName  :: !RemoteSchemaName
-  , rscIntro :: !IntrospectionResult
-  , rscInfo  :: !RemoteSchemaInfo
+  { rscName                   :: !RemoteSchemaName
+  , rscIntro                  :: !IntrospectionResult
+  , rscInfo                   :: !RemoteSchemaInfo
+  , rscRawIntrospectionResult :: !BL.ByteString
   } deriving (Show, Eq)
 
 instance ToJSON RemoteSchemaCtx where

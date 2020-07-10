@@ -7,6 +7,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , addRemoteSchemaP1
   , addRemoteSchemaP2Setup
   , addRemoteSchemaP2
+  , runIntrospectRemoteSchema
   ) where
 
 import           Hasura.EncJSON
@@ -58,8 +59,12 @@ addRemoteSchemaP2Setup
 addRemoteSchemaP2Setup (AddRemoteSchemaQuery name def _) = do
   httpMgr <- askHttpManager
   rsi <- validateRemoteSchemaDef def
-  introspection <- fetchRemoteSchema httpMgr name rsi
-  pure $ RemoteSchemaCtx name introspection rsi
+  -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
+  -- the introspection result of the remote server. We store this in the
+  -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
+  -- is called by simple encoding the result to JSON.
+  (introspection, rawIntrospectionResult) <- fetchRemoteSchema httpMgr name rsi
+  pure $ RemoteSchemaCtx name introspection rsi rawIntrospectionResult
 
 addRemoteSchemaP2
   :: (HasVersion, MonadTx m, MonadIO m, HasHttpManager m) => AddRemoteSchemaQuery -> m ()
@@ -130,33 +135,14 @@ fetchRemoteSchemas =
     fromRow (name, Q.AltJ def, comment) =
       AddRemoteSchemaQuery name def comment
 
--- runIntrospectRemoteSchema
---   :: (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
--- runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
---   sc <- askSchemaCache
---   rGCtx <-
---     case Map.lookup rsName (scRemoteSchemas sc) of
---       Nothing ->
---         throw400 NotExists $
---         "remote schema: " <> remoteSchemaNameToTxt rsName <> " not found"
---       Just rCtx -> mergeGCtx (rscGCtx rCtx) GC.emptyGCtx
---       -- merge with emptyGCtx to get default query fields
---   queryParts <- flip runReaderT rGCtx $ VQ.getQueryParts introspectionQuery
---   (rootSelSet, _) <- flip runReaderT rGCtx $ VT.runReusabilityT $ VQ.validateGQ queryParts
---   schemaField <-
---     case rootSelSet of
---       VQ.RQuery selSet -> getSchemaField $ toList $ unAliasedFields $
---                           unObjectSelectionSet selSet
---       _                -> throw500 "expected query for introspection"
---   (introRes, _) <- flip runReaderT rGCtx $ VT.runReusabilityT $ RI.schemaR schemaField
---   pure $ wrapInSpecKeys introRes
---   where
---     wrapInSpecKeys introObj =
---       encJFromAssocList
---         [ ( T.pack "data"
---           , encJFromAssocList [(T.pack "__schema", encJFromJValue introObj)])
---         ]
---     getSchemaField = \case
---         []  -> throw500 "found empty when looking for __schema field"
---         [f] -> pure f
---         _   -> throw500 "expected __schema field, found many fields"
+runIntrospectRemoteSchema
+  :: (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
+runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
+  sc <- askSchemaCache
+  (RemoteSchemaCtx _ _ _ introspectionByteString) <-
+    case Map.lookup rsName (scRemoteSchemas sc) of
+      Nothing ->
+        throw400 NotExists $
+        "remote schema: " <> rsName <<> " not found"
+      Just rCtx -> pure rCtx
+  pure $ encJFromLBS introspectionByteString

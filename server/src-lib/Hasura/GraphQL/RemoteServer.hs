@@ -36,7 +36,7 @@ fetchRemoteSchema
   => HTTP.Manager
   -> RemoteSchemaName
   -> RemoteSchemaInfo
-  -> m IntrospectionResult
+  -> m (IntrospectionResult, BL.ByteString)
 fetchRemoteSchema manager _name (RemoteSchemaInfo url headerConf _ timeout) = do
   headers <- makeHeadersFromConf headerConf
   let hdrsWithDefaults = addDefaultHeaders headers
@@ -58,7 +58,7 @@ fetchRemoteSchema manager _name (RemoteSchemaInfo url headerConf _ timeout) = do
 
   (FromIntrospection introspectRes) :: (FromIntrospection IntrospectionResult) <-
     either (remoteSchemaErr . T.pack) return $ J.eitherDecode respData
-  return introspectRes
+  return (introspectRes, respData)
   where
     remoteSchemaErr :: (MonadError QErr m) => T.Text -> m a
     remoteSchemaErr = throw400 RemoteSchemaError

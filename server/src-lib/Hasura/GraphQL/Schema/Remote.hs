@@ -24,7 +24,7 @@ buildRemoteParser
   -> m ( [P.FieldParser n (RemoteSchemaInfo, Field NoFragments Variable)]
        , Maybe [P.FieldParser n (RemoteSchemaInfo, Field NoFragments Variable)]
        , Maybe [P.FieldParser n (RemoteSchemaInfo, Field NoFragments Variable)])
-buildRemoteParser (RemoteSchemaCtx _name (sdoc, query_root, mutation_root, subscription_root) info) = do
+buildRemoteParser (RemoteSchemaCtx _name (sdoc, query_root, mutation_root, subscription_root) info _) = do
   queryT <- makeParsers query_root
   mutationT <- traverse makeParsers mutation_root
   subscriptionT <- traverse makeParsers subscription_root

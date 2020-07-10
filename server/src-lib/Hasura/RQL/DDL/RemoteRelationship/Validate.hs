@@ -95,7 +95,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
   let pgColumnsVariablesMap = HM.fromList pgColumnsVariables
   case HM.lookup remoteSchemaName remoteSchemaMap of
     Nothing -> throwError $ RemoteSchemaNotFound remoteSchemaName
-    Just (RemoteSchemaCtx rsName (schemaDoc@(G.SchemaDocument originalDefns),queryRootName,_,_) rsi) -> do
+    Just (RemoteSchemaCtx rsName (schemaDoc@(G.SchemaDocument originalDefns),queryRootName,_,_) rsi _) -> do
       queryRoot <-
         case lookupObject schemaDoc queryRootName of
           Just obj -> pure obj
