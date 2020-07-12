@@ -12,11 +12,46 @@ import { sanitiseRow } from '../../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { getEventStatusIcon, getEventDeliveryIcon } from './utils';
+import Button from '../../../../Common/Button';
 
-type Props = FilterTableProps;
+type CancelButtonProps = {
+  id: string;
+  onClickHandler: () => void;
+};
+
+const CancelEventButton: React.FC<CancelButtonProps> = ({
+  id,
+  onClickHandler,
+}) => (
+  <Button
+    key={id}
+    onClick={onClickHandler}
+    color="white"
+    size="xs"
+    title="Cancel Event"
+  >
+    <i className="fa fa-close" />
+  </Button>
+);
+
+interface Props extends FilterTableProps {
+  onCancelEvent?: (
+    id: string,
+    scheduledAt: string,
+    onSuccess: () => void
+  ) => void;
+}
 
 const EventsTable: React.FC<Props> = props => {
-  const { rows, count, filterState, runQuery, columns, identifier } = props;
+  const {
+    rows,
+    count,
+    filterState,
+    runQuery,
+    columns,
+    identifier,
+    onCancelEvent,
+  } = props;
 
   if (rows.length === 0) {
     return <div className={styles.add_mar_top}>No data available</div>;
@@ -58,6 +93,9 @@ const EventsTable: React.FC<Props> = props => {
   };
 
   const gridHeadings = sortedColumns.map(column => {
+    if (column === 'actions') {
+      return { Header: '', accessor: column, width: 50 };
+    }
     return {
       Header: column,
       accessor: column,
@@ -72,22 +110,35 @@ const EventsTable: React.FC<Props> = props => {
       accessor: column,
     };
   });
-  const rowsFormatted = rows.map(r => {
-    const formattedRow = Object.keys(r).reduce((fr, col) => {
+
+  const onCancelHandler = (id: string, scheduledAt: string) => {
+    if (onCancelEvent) {
+      onCancelEvent(id, scheduledAt, runQuery);
+    }
+  };
+
+  const rowsFormatted = rows.map(row => {
+    const formattedRow = Object.keys(row).reduce((fr, col) => {
       return {
         ...fr,
-        [col]: <div>{r[col]}</div>,
+        [col]: <div>{row[col]}</div>,
       };
     }, {});
     return {
       ...formattedRow,
-      delivered: getEventDeliveryIcon(r.delivered),
-      status: getEventStatusIcon(r.status),
-      scheduled_time: r.scheduled_time ? (
-        <div>{convertDateTimeToLocale(r.scheduled_time)}</div>
+      actions: columns.includes('actions') ? (
+        <CancelEventButton
+          id={row.id}
+          onClickHandler={() => onCancelHandler(row.id, row.scheduled_time)}
+        />
       ) : undefined,
-      created_at: r.created_at ? (
-        <div>{convertDateTimeToLocale(r.created_at)}</div>
+      delivered: getEventDeliveryIcon(row.delivered),
+      status: getEventStatusIcon(row.status),
+      scheduled_time: row.scheduled_time ? (
+        <div>{convertDateTimeToLocale(row.scheduled_time)}</div>
+      ) : undefined,
+      created_at: row.created_at ? (
+        <div>{convertDateTimeToLocale(row.created_at)}</div>
       ) : undefined,
     };
   });

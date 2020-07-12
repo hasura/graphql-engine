@@ -324,5 +324,5 @@ articles to return.
 .. admonition:: Caveat
 
   If this needs to be done over :ref:`subscriptions <subscriptions>`, two subscriptions will need to be run
-  as Hasura follows the `GraphQL spec <https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field>`_ which
+  as Hasura follows the `GraphQL spec <https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field>`__ which
   allows for only one root field in a subscription.

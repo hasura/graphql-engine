@@ -54,7 +54,11 @@ common common-exe
     -- `-kc8K` helps limit memory consumption in websockets (perhaps elsewhere) by making the 
     -- cost of a thread's first (and probably only) stack overflow less severe. 
     -- See:https://github.com/hasura/graphql-engine/issues/5190 
-    "-with-rtsopts=-N -I2 -qn2 -kc8K"
+    --
+    -- `--disable-delayed-os-memory-return` seems to help lower reported residency, in particular 
+    -- in situations where we seem to be dealing with haskell heap fragmentation. This is more a 
+    -- workaround for limitations in monitoring tools than anything...
+    "-with-rtsopts=-N -I2 -qn2 -kc8K --disable-delayed-os-memory-return"
 
 library
   import: common-all
@@ -404,6 +408,7 @@ library
                      , Hasura.Eventing.HTTP
                      , Hasura.Eventing.EventTrigger
                      , Hasura.Eventing.ScheduledTrigger
+                     , Hasura.Eventing.Common
 
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
