@@ -41,7 +41,7 @@ module Hasura.Eventing.EventTrigger
   ) where
 
 
-import           Control.Concurrent.Async    (wait, withAsync)
+import           Control.Concurrent.Async    (async, link, wait, withAsync)
 import           Control.Concurrent.Extended (sleep)
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.Catch         (MonadMask, bracket_)
@@ -55,6 +55,7 @@ import           Data.String
 import           Data.Time.Clock
 import           Data.Word
 import           Hasura.Eventing.HTTP
+import           Hasura.Eventing.Common
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
@@ -71,7 +72,6 @@ import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Client           as HTTP
 import qualified Database.PG.Query.PTI         as PTI
 import qualified PostgreSQL.Binary.Encoding    as PE
-import qualified Data.Set                      as Set
 
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
@@ -105,7 +105,6 @@ data EventEngineCtx
   = EventEngineCtx
   { _eeCtxEventThreadsCapacity :: TVar Int
   , _eeCtxFetchInterval        :: DiffTime
-  , _eeCtxLockedEvents         :: TVar (Set.Set EventId)
   }
 
 data DeliveryInfo
@@ -147,7 +146,6 @@ defaultFetchInterval = seconds 1
 initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
-  _eeCtxLockedEvents <- newTVar Set.empty
   return $ EventEngineCtx{..}
 
 -- | Service events from our in-DB queue.
@@ -161,9 +159,9 @@ initEventEngineCtx maxT _eeCtxFetchInterval = do
 --   - limit webhook HTTP concurrency per HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE
 processEventQueue
   :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
-  -> IO SchemaCache -> EventEngineCtx
+  -> IO SchemaCache -> EventEngineCtx -> LockedEventsCtx
   -> IO void
-processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx{..} = do
+processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx{..} LockedEventsCtx {leEvents}= do
   events0 <- popEventsBatch
   go events0 0 False
   where
@@ -175,25 +173,8 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
             L.unLogger logger $ EventInternalErr err
             return []
           Right events -> do
-            saveLockedEvents events
+            saveLockedEvents (map eId events) leEvents
             return events
-
-    -- After the events are fetched from the DB, we store the locked events
-    -- in a hash set(order doesn't matter and look ups are faster) in the
-    -- event engine context
-    saveLockedEvents :: [Event] -> IO ()
-    saveLockedEvents evts =
-      liftIO $ atomically $ do
-        lockedEvents <- readTVar _eeCtxLockedEvents
-        let evtsIds = map eId evts
-        let newLockedEvents = Set.union lockedEvents (Set.fromList evtsIds)
-        writeTVar _eeCtxLockedEvents $! newLockedEvents
-
-    removeEventFromLockedEvents :: EventId -> IO ()
-    removeEventFromLockedEvents eventId = do
-      liftIO $ atomically $ do
-        lockedEvents <- readTVar _eeCtxLockedEvents
-        writeTVar _eeCtxLockedEvents $! Set.delete eventId lockedEvents
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
@@ -208,10 +189,13 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       eventsNext <- withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
         forM_ events $ \event -> do
-             runReaderT (withEventEngineCtx eeCtx $ (processEvent event)) (logger, httpMgr)
+             t <- async $ runReaderT (withEventEngineCtx eeCtx $ (processEvent event)) (logger, httpMgr)
              -- removing an event from the _eeCtxLockedEvents after the event has
              -- been processed
-             removeEventFromLockedEvents (eId event)
+             removeEventFromLockedEvents (eId event) leEvents
+             link t
+
+        -- return when next batch ready; some 'processEvent' threads may be running.
         wait eventsNextA
 
       let lenEvents = length events
@@ -282,10 +266,10 @@ withEventEngineCtx ::
 withEventEngineCtx eeCtx = bracket_ (decrementThreadCount eeCtx) (incrementThreadCount eeCtx)
 
 incrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
-incrementThreadCount (EventEngineCtx c _ _) = liftIO $ atomically $ modifyTVar' c (+1)
+incrementThreadCount (EventEngineCtx c _) = liftIO $ atomically $ modifyTVar' c (+1)
 
 decrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
-decrementThreadCount (EventEngineCtx c _ _) = liftIO $ atomically $ do
+decrementThreadCount (EventEngineCtx c _)  = liftIO $ atomically $ do
   countThreads <- readTVar c
   if countThreads > 0
      then modifyTVar' c (\v -> v - 1)
