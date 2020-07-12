@@ -7,6 +7,7 @@
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - console: display line number that error originated from in GraphQL editor (close #4849) (#4942)
+- console: add a checkbox to flag an insertion as a migration (#1766) (#4933)
 
 ## `v1.3.0-beta.4`
 
@@ -44,7 +45,6 @@
 - console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
 - console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
 - console: fix styling of table row contents on tables on relationship page (#4974)
-- console: add a checkbox to flag an insertion as a migration on the schema page (#1766) (#4933)
 - cli: handle missing files during metadata apply (close #5163) (#5170)
 - docs: add pages on remote joins (close #4911) (#5132)
 - docs: add page on scheduled triggers (close #4913) (#5141)
