@@ -917,8 +917,14 @@
   color: #fff;
   cursor: pointer;
 
+  a {
+    color: #fff;
+    text-decoration: none;
+  }
+
   &:hover {
-    span {
+    span,
+    a {
       opacity: 0.7;
       font-weight: 600;
     }
@@ -1199,66 +1205,6 @@
   left: 4px;
   z-index: -1;
 }
-.helpWrapper {
-  position: relative;
-  padding: 12px 15px;
-  .helpPopUpWrapper {
-    position: absolute;
-    box-shadow: 0 3px 20px 0 rgba(0, 0, 0, 0.24);
-    background-color: #ffffff;
-    width: 250px;
-    z-index: 1;
-    top: 60px;
-    right: 10px;
-    text-transform: none;
-    font-size: 15px;
-    color: #303030;
-    font-weight: normal;
-    .helpPopClose {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 10px;
-      cursor: pointer;
-      &:hover {
-        opacity: 0.8;
-      }
-    }
-    ul {
-      padding-inline-start: 0px;
-      margin-bottom: 0;
-      li {
-        padding: 16px 24px;
-        list-style-type: none;
-        font-weight: normal;
-        border-bottom: 1px solid #ddd;
-        display: flex;
-        align-items: center;
-        .liveChatModeToggle {
-          margin-left: 16px;
-        }
-        &:last-child {
-          border-bottom: 0;
-        }
-        img {
-          margin-left: 8px;
-          transition: 200ms;
-        }
-        a {
-          color: #303030;
-          text-decoration: none;
-          &:hover {
-            text-decoration: none;
-            img {
-              transform: translateX(4px);
-            }
-          }
-        }
-
-      }
-    }
-  }
-}
 /* PRO popup section */
 .proWrapper {
   position: relative;
@@ -1369,8 +1315,7 @@
   }
 }
 
-@media(max-width: 1500px) {
-
+@media (max-width: 1500px) {
   .header_items {
     width: 52%;
   }
@@ -1398,9 +1343,10 @@
     font-size: 12px;
   }
 
-  .proWrapper{
-    .proName, .proNameClicked {
-      font-size: 12px
+  .proWrapper {
+    .proName,
+    .proNameClicked {
+      font-size: 12px;
     }
   }
 
@@ -1409,5 +1355,4 @@
       font-size: 12px;
     }
   }
-
 }

@@ -1,6 +1,6 @@
 import { Operator, OperatorDef, Filter } from './types';
 
-export const allOperators: OperatorDef[] = [
+export const allOperators = [
   { name: 'equals', operator: '$eq', alias: '_eq' },
   { name: 'not equals', operator: '$ne', alias: '_neq' },
   { name: 'in', operator: '$in', alias: '_in', default: '[]' },

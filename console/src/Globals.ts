@@ -29,7 +29,6 @@ declare global {
     };
     sqlFormatter: unknown;
     hljs: unknown;
-    Intercom?: (type: string, config?: object) => void;
   }
   const CONSOLE_ASSET_VERSION: string;
 }

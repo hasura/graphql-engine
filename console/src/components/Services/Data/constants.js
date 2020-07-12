@@ -1,4 +1,5 @@
 export const Operators = [
+  { name: 'is null', value: '$is_null', graphqlOp: '_is_null' },
   { name: 'equals', value: '$eq', graphqlOp: '_eq' },
   { name: 'not equals', value: '$ne', graphqlOp: '_neq' },
   { name: 'in', value: '$in', graphqlOp: '_in', defaultValue: '[]' },
