@@ -348,7 +348,7 @@ traverseQueryResponseJSON rjm =
                          <<> ", which is not a legal GraphQL name")
                       (name,) <$> go val
 
-            inputArgsToMap = Map.fromList . map (_rfaName &&& _rfaValue)
+            inputArgsToMap = Map.fromList . map (_rfaArgument &&& _rfaValue)
 
         traverseObject obj = do
           let fields = AO.toList obj

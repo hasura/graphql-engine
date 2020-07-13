@@ -132,7 +132,7 @@ resolveMultiplexedValue = \case
         modifying _2 (|> colVal)
         pure ["synthetic", T.pack $ show syntheticVarIndex]
     pure $ fromResVars (PGTypeScalar $ pstType $ pcvValue colVal) varJsonPath
-  UVSessionVar ty sessVar -> pure $ fromResVars ty ["session", _sessionVariableToText sessVar]
+  UVSessionVar ty sessVar -> pure $ fromResVars ty ["session", sessionVariableToText sessVar]
   UVLiteral sqlExp -> pure sqlExp
   UVSession -> pure $ fromResVars (PGTypeScalar PGJSON) ["session"]
   where
