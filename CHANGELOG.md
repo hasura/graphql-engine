@@ -22,7 +22,7 @@
 - server: have haskell runtime release blocks of memory back to the OS eagerly (related to #3388)
 - server: unlock locked scheduled events on graceful shutdown (#4928)
 - server: disable prepared statements for mutations as we end up with single-use objects which result in excessive memory consumption for mutation heavy workloads (#5255)
-- server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook. 
+- server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook.
 **WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
 - console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - console: support tracking partitioned tables (close #5071) (#5258)
@@ -498,6 +498,7 @@ See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-
 - console: misc actions fixes (#4059)
 - console: action relationship page improvements (fix #4062, #4130) (#4133)
 - console: add code exporter to graphiql (close #4531) #4652
+- console: fix default option selected when cloning row in data browser (close #5340) #5364
 - cli: fix init command to generate correct config (fix #4036) (#4038)
 - cli: fix parse error returned on console api (close #4126) (#4152)
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
