@@ -113,7 +113,7 @@ column columnType (Nullability isNullable) =
               graphQLToJSON >=>
               either (parseError . qeError) pure . runAesonParser (parsePGValue scalarType)
           }
-    PGColumnEnumReference (EnumReference tableName enumValues) ->
+    PGColumnEnumReference (EnumReference _tableName enumValues) ->
       case nonEmpty (M.toList enumValues) of
         Just enumValuesList -> do
           name <- mkColumnTypeName columnType

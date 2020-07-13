@@ -132,7 +132,7 @@ runQueryDB
   -> m (DiffTime, Telem.QueryType, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
-runQueryDB reqId query userInfo (tx, genSql) = do
+runQueryDB reqId query _userInfo (tx, genSql) = do
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
   (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ do
     -- log the generated SQL and the graphql query

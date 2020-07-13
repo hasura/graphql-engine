@@ -725,13 +725,13 @@ insertArrRel
   -> Bool
   -> ArrRelIns S.SQLExp
   -> m Int
-insertArrRel resCols rjCtx planVars stringifyNum arrRelIns = do
+insertArrRel _resCols rjCtx planVars stringifyNum arrRelIns = do
   resBS <- insertMultipleObjects multiObjIns rjCtx mutOutput planVars stringifyNum
   resObj <- decodeEncJSON resBS
   onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
     throw500 "affected_rows not returned in array rel insert"
   where
-    RelIns multiObjIns relInfo = arrRelIns
+    RelIns multiObjIns _relInfo = arrRelIns
     mutOutput = RQL.MOutMultirowFields [("affected_rows", RQL.MCount)]
 
 mkInsertQ
