@@ -175,10 +175,12 @@ actionOutputFields outputObject = do
               [ (unsafePGCol $ G.unName $ unObjectFieldName k, pgiColumn v)
               | (k, v) <- Map.toList fieldMapping
               ]
-            annotatedRelationship = RQL.AnnRelationSelectG tableRelName columnMapping selectExp
         in case relType of
-             ObjRel -> RQL.AFObjectRelation annotatedRelationship
-             ArrRel -> RQL.AFArrayRelation $ RQL.ASSimple annotatedRelationship
+              ObjRel -> RQL.AFObjectRelation $ RQL.AnnRelationSelectG tableRelName columnMapping $
+                        RQL.AnnObjectSelectG (RQL._asnFields selectExp) tableName $
+                        RQL._tpFilter $ RQL._asnPerm selectExp
+              ArrRel -> RQL.AFArrayRelation $ RQL.ASSimple $
+                        RQL.AnnRelationSelectG tableRelName columnMapping selectExp
 
 mkDefinitionList :: AnnotatedObjectType -> [(PGCol, PGScalarType)]
 mkDefinitionList annotatedOutputType =

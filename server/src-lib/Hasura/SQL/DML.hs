@@ -419,6 +419,10 @@ applyJsonBuildObj :: [SQLExp] -> SQLExp
 applyJsonBuildObj args =
   SEFnApp "json_build_object" args Nothing
 
+applyJsonBuildArray :: [SQLExp] -> SQLExp
+applyJsonBuildArray args =
+  SEFnApp "json_build_array" args Nothing
+
 applyRowToJson :: [Extractor] -> SQLExp
 applyRowToJson extrs =
   SEFnApp "row_to_json" [mkRowExp extrs] Nothing
@@ -536,6 +540,9 @@ instance Hashable FromItem
 
 mkSelFromItem :: Select -> Alias -> FromItem
 mkSelFromItem = FISelect (Lateral False)
+
+mkSelectWithFromItem :: SelectWithG Select -> Alias -> FromItem
+mkSelectWithFromItem = FISelectWith (Lateral False)
 
 mkLateralFromItem :: Select -> Alias -> FromItem
 mkLateralFromItem = FISelect (Lateral True)

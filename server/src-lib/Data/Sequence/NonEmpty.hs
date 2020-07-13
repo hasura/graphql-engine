@@ -9,16 +9,18 @@ module Data.Sequence.NonEmpty
   , head
   , tail
   , toSeq
+  , toNonEmpty
   ) where
 
-import           Prelude         hiding (head, tail)
+import           Prelude            hiding (head, tail)
 
-import qualified Data.Sequence   as Seq
+import qualified Data.List.NonEmpty as NE
+import qualified Data.Sequence      as Seq
 
-import           Control.DeepSeq (NFData)
+import           Control.DeepSeq    (NFData)
 import           Data.Aeson
 import           Data.Foldable
-import           GHC.Generics    (Generic)
+import           GHC.Generics       (Generic)
 
 data NESeq a = NESeq
   { head :: a
@@ -77,3 +79,7 @@ pattern xs :||> x <- (unsnoc->(!xs, x))
     (x Seq.:<| xs) :||> y = x :<|| (xs Seq.:|> y)
     Seq.Empty      :||> y = y :<|| Seq.Empty
 {-# COMPLETE (:||>) #-}
+
+toNonEmpty :: NESeq a -> NE.NonEmpty a
+toNonEmpty (NESeq head tail) =
+  head NE.:| toList tail

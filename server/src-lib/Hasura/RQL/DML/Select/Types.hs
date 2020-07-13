@@ -110,13 +110,32 @@ data AnnRelationSelectG a
   , aarAnnSelect        :: !a -- Current table. Almost ~ to SQL Select
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 
-type ObjectRelationSelectG v = AnnRelationSelectG (AnnSimpleSelG v)
-type ObjectRelationSelect = ObjectRelationSelectG S.SQLExp
-
 type ArrayRelationSelectG v = AnnRelationSelectG (AnnSimpleSelG v)
 type ArrayAggregateSelectG v = AnnRelationSelectG (AnnAggregateSelectG v)
 type ArrayConnectionSelect v = AnnRelationSelectG (ConnectionSelect v)
 type ArrayAggregateSelect = ArrayAggregateSelectG S.SQLExp
+
+data AnnObjectSelectG v
+  = AnnObjectSelectG
+  { _aosFields      :: !(AnnFieldsG v)
+  , _aosTableFrom   :: !QualifiedTable
+  , _aosTableFilter :: !(AnnBoolExp v)
+  } deriving (Show, Eq)
+
+type AnnObjectSelect = AnnObjectSelectG S.SQLExp
+
+traverseAnnObjectSelect
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnObjectSelectG a -> f (AnnObjectSelectG b)
+traverseAnnObjectSelect f (AnnObjectSelectG fields fromTable permissionFilter) =
+  AnnObjectSelectG
+  <$> traverseAnnFields f fields
+  <*> pure fromTable
+  <*> traverseAnnBoolExp f permissionFilter
+
+type ObjectRelationSelectG v = AnnRelationSelectG (AnnObjectSelectG v)
+type ObjectRelationSelect = ObjectRelationSelectG S.SQLExp
 
 data ComputedFieldScalarSelect v
   = ComputedFieldScalarSelect
@@ -182,7 +201,7 @@ data AnnColumnField
 
 data RemoteFieldArgument
   = RemoteFieldArgument
-  { _rfaName     :: !G.Name
+  { _rfaArgument :: !G.Name
   , _rfaValue    :: !(G.Value Variable)
   } deriving (Eq,Show)
 
@@ -193,7 +212,7 @@ data RemoteSelect
   , _rselHasuraColumns :: !(HashSet PGColumnInfo)
   , _rselFieldCall     :: !(NonEmpty FieldCall)
   , _rselRemoteSchema  :: !RemoteSchemaInfo
-  } deriving (Show,Eq)
+  } deriving (Show, Eq)
 
 data AnnFieldG v
   = AFColumn !AnnColumnField
@@ -201,7 +220,7 @@ data AnnFieldG v
   | AFArrayRelation !(ArraySelectG v)
   | AFComputedField !(ComputedFieldSelect v)
   | AFRemote !RemoteSelect
-  | AFNodeId !QualifiedTable !(NonEmpty PGColumnInfo)
+  | AFNodeId !QualifiedTable !PrimaryKeyColumns
   | AFExpression !T.Text
   deriving (Show, Eq)
 
@@ -218,7 +237,7 @@ traverseAnnField
   => (a -> f b) -> AnnFieldG a -> f (AnnFieldG b)
 traverseAnnField f = \case
   AFColumn colFld -> pure $ AFColumn colFld
-  AFObjectRelation sel -> AFObjectRelation <$> traverse (traverseAnnSimpleSelect f) sel
+  AFObjectRelation sel -> AFObjectRelation <$> traverse (traverseAnnObjectSelect f) sel
   AFArrayRelation sel -> AFArrayRelation <$> traverseArraySelect f sel
   AFComputedField sel -> AFComputedField <$> traverseComputedFieldSelect f sel
   AFRemote s -> pure $ AFRemote s
@@ -343,6 +362,7 @@ type TableAggregateFields = TableAggregateFieldsG S.SQLExp
 
 data ArgumentExp a
   = AETableRow !(Maybe Iden) -- ^ table row accessor
+  | AESession !a -- ^ JSON/JSONB hasura session variable object
   | AEInput !a
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 instance (Hashable v) => Hashable (ArgumentExp v)
@@ -452,7 +472,7 @@ traverseConnectionSplit f (ConnectionSplit k v ob) =
 
 data ConnectionSelect v
   = ConnectionSelect
-  { _csPrimaryKeyColumns :: !(NE.NonEmpty PGColumnInfo)
+  { _csPrimaryKeyColumns :: !PrimaryKeyColumns
   , _csSplit             :: !(Maybe (NE.NonEmpty (ConnectionSplit v)))
   , _csSlice             :: !(Maybe ConnectionSlice)
   , _csSelect            :: !(AnnSelectG (ConnectionFields v) v)
@@ -489,9 +509,9 @@ insertFunctionArg
   -> a
   -> FunctionArgsExpG a
   -> FunctionArgsExpG a
-insertFunctionArg argName index value (FunctionArgsExp positional named) =
-  if (index + 1) <= length positional then
-    FunctionArgsExp (insertAt index value positional) named
+insertFunctionArg argName idx value (FunctionArgsExp positional named) =
+  if (idx + 1) <= length positional then
+    FunctionArgsExp (insertAt idx value positional) named
   else FunctionArgsExp positional $
     HM.insert (getFuncArgNameTxt argName) value named
   where
@@ -529,11 +549,23 @@ instance Semigroup SelectNode where
   SelectNode lExtrs lJoinTree <> SelectNode rExtrs rJoinTree =
     SelectNode (lExtrs <> rExtrs) (lJoinTree <> rJoinTree)
 
+data ObjectSelectSource
+  = ObjectSelectSource
+  { _ossPrefix :: !Iden
+  , _ossFrom   :: !S.FromItem
+  , _ossWhere  :: !S.BoolExp
+  } deriving (Show, Eq, Generic)
+instance Hashable ObjectSelectSource
+
+objectSelectSourceToSelectSource :: ObjectSelectSource -> SelectSource
+objectSelectSourceToSelectSource ObjectSelectSource{..} =
+  SelectSource _ossPrefix _ossFrom Nothing _ossWhere Nothing Nothing Nothing
+
 data ObjectRelationSource
   = ObjectRelationSource
   { _orsRelationshipName :: !RelName
   , _orsRelationMapping  :: !(HM.HashMap PGCol PGCol)
-  , _orsSelectSource     :: !SelectSource
+  , _orsSelectSource     :: !ObjectSelectSource
   } deriving (Show, Eq, Generic)
 instance Hashable ObjectRelationSource
 

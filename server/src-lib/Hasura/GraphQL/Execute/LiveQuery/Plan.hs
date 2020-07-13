@@ -70,12 +70,15 @@ import           Hasura.SQL.Value
 newtype MultiplexedQuery = MultiplexedQuery { unMultiplexedQuery :: Q.Query }
   deriving (Show, Eq, Hashable, J.ToJSON)
 
-toSQLSelect :: SubscriptionRootFieldResolved -> S.Select
-toSQLSelect = \case
-  RFDB (QDBPrimaryKey s)  -> DS.mkSQLSelect DS.JASSingleObject s
-  RFDB (QDBSimple s)      -> DS.mkSQLSelect DS.JASMultipleRows s
-  RFDB (QDBAggregation s) -> DS.mkAggregateSelect s
-  RFAction s              -> DS.mkSQLSelect DS.JASSingleObject s
+toSQLFromItem :: S.Alias -> SubscriptionRootFieldResolved -> S.FromItem
+toSQLFromItem alias = \case
+  RFDB (QDBPrimaryKey s)  -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
+  RFDB (QDBSimple s)      -> fromSelect $ DS.mkSQLSelect DS.JASMultipleRows s
+  RFDB (QDBAggregation s) -> fromSelect $ DS.mkAggregateSelect s
+  RFDB (QDBConnection s)  -> S.mkSelectWithFromItem (DS.mkConnectionSelect s) alias
+  RFAction s              -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
+  where
+    fromSelect s = S.mkSelFromItem s alias
   -- QRFActionSelect s -> DS.mkSQLSelect DS.JASSingleObject s
   -- QRFActionExecuteObject s -> DS.mkSQLSelect DS.JASSingleObject s
   -- QRFActionExecuteList s -> DS.mkSQLSelect DS.JASSingleObject s
@@ -102,7 +105,7 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
       { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Iden "root")]
       , S.selFrom = Just . S.FromExp $
           flip map (Map.toList rootFields) $ \(fieldAlias, resolvedAST) ->
-            S.mkSelFromItem (toSQLSelect resolvedAST) (S.Alias $ aliasToIden fieldAlias)
+            toSQLFromItem (S.Alias $ aliasToIden fieldAlias) resolvedAST
       }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)

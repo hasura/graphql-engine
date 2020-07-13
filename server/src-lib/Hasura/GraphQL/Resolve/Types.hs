@@ -35,12 +35,12 @@ type NodeSelectMap = Map.HashMap G.NamedType SelOpCtx
 data QueryCtx
   = QCNodeSelect !NodeSelectMap
   | QCSelect !SelOpCtx
-  | QCSelectConnection !(NonEmpty PGColumnInfo) !SelOpCtx
+  | QCSelectConnection !(PrimaryKeyColumns) !SelOpCtx
   | QCSelectPkey !SelPkOpCtx
   | QCSelectAgg !SelOpCtx
   | QCFuncQuery !FuncQOpCtx
   | QCFuncAggQuery !FuncQOpCtx
-  | QCFuncConnection !(NonEmpty PGColumnInfo) !FuncQOpCtx
+  | QCFuncConnection !(PrimaryKeyColumns) !FuncQOpCtx
   | QCAsyncActionFetch !ActionSelectOpContext
   | QCAction !ActionExecutionContext
   deriving (Show, Eq)
@@ -141,7 +141,7 @@ type PGColGNameMap = Map.HashMap G.Name PGColumnInfo
 data RelationshipFieldKind
   = RFKAggregate
   | RFKSimple
-  | RFKConnection !(NonEmpty PGColumnInfo)
+  | RFKConnection !(PrimaryKeyColumns)
   deriving (Show, Eq)
 
 data RelationshipField
@@ -181,7 +181,7 @@ data ResolveField
   | RFRelationship !RelationshipField
   | RFComputedField !ComputedField
   | RFRemoteRelationship !RemoteFieldInfo
-  | RFNodeId !QualifiedTable !(NonEmpty PGColumnInfo)
+  | RFNodeId !QualifiedTable !(PrimaryKeyColumns)
   deriving (Show, Eq)
 
 type FieldMap = Map.HashMap (G.NamedType, G.Name) ResolveField

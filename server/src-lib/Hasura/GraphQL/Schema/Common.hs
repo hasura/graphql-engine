@@ -2,10 +2,12 @@ module Hasura.GraphQL.Schema.Common where
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 
 import           Language.GraphQL.Draft.Syntax as G
 
+import qualified Hasura.GraphQL.Execute.Types  as ET
 import qualified Hasura.GraphQL.Parser         as P
 import qualified Hasura.RQL.DML.Select.Types   as RQL
 
@@ -15,6 +17,7 @@ import           Hasura.SQL.Types
 data QueryContext =
   QueryContext
   { qcStringifyNum :: !Bool
+  , qcQueryType    :: !ET.GraphQLQueryType
   , qcRemoteFields :: !(HashMap RemoteSchemaName [P.Definition P.FieldInfo])
   }
 
@@ -55,3 +58,20 @@ numericAggOperators =
 
 comparisonAggOperators :: [G.Name]
 comparisonAggOperators = [$$(litName "max"), $$(litName "min")]
+
+data NodeIdVersion
+  = NIVersion1
+  deriving (Show, Eq)
+
+nodeIdVersionInt :: NodeIdVersion -> Int
+nodeIdVersionInt NIVersion1 = 1
+
+currentNodeIdVersion :: NodeIdVersion
+currentNodeIdVersion = NIVersion1
+
+instance J.FromJSON NodeIdVersion where
+  parseJSON v = do
+    versionInt :: Int <- J.parseJSON v
+    case versionInt of
+      1 -> pure NIVersion1
+      _ -> fail $ "expecting version 1 for node id, but got " <> show versionInt

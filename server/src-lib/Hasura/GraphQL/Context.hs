@@ -89,6 +89,7 @@ data QueryDB v
   = QDBSimple      (RQL.AnnSimpleSelG       v)
   | QDBPrimaryKey  (RQL.AnnSimpleSelG       v)
   | QDBAggregation (RQL.AnnAggregateSelectG v)
+  | QDBConnection  (RQL.ConnectionSelect    v)
 
 data ActionQuery v
   = AQQuery !(RQL.AnnActionExecution v)
@@ -114,4 +115,4 @@ type MutationRootField v =
   RootField (MutationDB v) RemoteField (ActionMutation v) J.Value
 
 type SubscriptionRootField v = RootField (QueryDB v) Void (RQL.AnnActionAsyncQuery v) Void
-type SubscriptionRootFieldResolved = RootField (QueryDB S.SQLExp) Void (RQL.AnnSimpleSel) Void
+type SubscriptionRootFieldResolved = RootField (QueryDB S.SQLExp) Void RQL.AnnSimpleSel Void

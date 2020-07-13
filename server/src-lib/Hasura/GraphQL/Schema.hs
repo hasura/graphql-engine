@@ -99,7 +99,7 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions non
       QueryHasura -> queryWithIntrospection (S.fromList $ Map.keys validTables)
                      validFunctions (queryRemotes remotes) (mutationRemotes remotes)
                      allActionInfos nonObjectCustomTypes
-      QueryRelay  -> relayWithIntrospection (S.fromList $ Map.keys validTables)
+      QueryRelay  -> relayWithIntrospection (S.fromList $ Map.keys validTables) validFunctions
 
     buildContextForRole :: RoleName -> m (RoleContext GQLContext)
     buildContextForRole roleName = do
@@ -115,7 +115,7 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions non
             <$> (finalizeParser <$> queryHasuraOrRelay remotes)
             <*> (fmap (fmap finalizeParser) $ mutation (S.fromList $ Map.keys validTables) (mutationRemotes remotes)
                  allActionInfos nonObjectCustomTypes)
-      flip runReaderT (queryType, roleName, allTables, scenario, QueryContext stringifyNum (queryRemotesMap remotes)) $
+      flip runReaderT (roleName, validTables, scenario, QueryContext stringifyNum queryType (queryRemotesMap remotes)) $
         P.runSchemaT gqlContext
 
     finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
@@ -183,6 +183,44 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
     toQrf2 f = fmap $ Just . fmap f
     toQrf3 f = fmap $ fmap $ fmap f
     conv fps = [Just $ fmap (fmap RFRemote) fps]
+
+-- | Similar to @query'@ but for Relay.
+relayQuery'
+  :: forall m n r
+   . ( MonadSchema n m
+     , MonadTableInfo r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
+  => HashSet QualifiedTable
+  -> [FunctionInfo]
+  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
+relayQuery' allTables allFunctions = do
+  tableConnectionSelectParsers <-
+    for (toList allTables) $ \table -> runMaybeT do
+      pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
+                     <$> askTableInfo table
+      selectPerms <- MaybeT $ tableSelectPermissions table
+      displayName <- P.qualifiedObjectToName table
+      let fieldName = displayName <> $$(G.litName "_connection")
+          fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> table
+      lift $ selectTableConnection table fieldName fieldDesc pkeyColumns selectPerms
+
+  functionConnectionSelectParsers <-
+    for allFunctions $ \function -> runMaybeT do
+      let returnTable = fiReturnType function
+          functionName = fiName function
+      pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
+                     <$> askTableInfo returnTable
+      selectPerms <- MaybeT $ tableSelectPermissions returnTable
+      displayName <- P.qualifiedObjectToName functionName
+      let fieldName = displayName <> $$(G.litName "_connection")
+          fieldDesc = Just $ G.Description $ "execute function " <> functionName
+                      <<> " which returns " <>> returnTable
+      lift $ selectFunctionConnection function fieldName fieldDesc pkeyColumns selectPerms
+
+  pure $ map ((RFDB . QDBConnection) <$>) $ catMaybes $
+         tableConnectionSelectParsers <> functionConnectionSelectParsers
 
 -- | Parse query-type GraphQL requests without introspection
 query
@@ -255,8 +293,6 @@ queryWithIntrospection
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
-     -- This context is here because we'll probably need it in Select.hs at some point
-     , Has GraphQLQueryType r
      , Has Scenario r
      )
   => HashSet QualifiedTable
@@ -303,17 +339,16 @@ relayWithIntrospection
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
-     -- This context is here because we'll probably need it in Select.hs at some point
-     , Has GraphQLQueryType r
      , Has Scenario r
      )
   => HashSet QualifiedTable
+  -> [FunctionInfo]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
-relayWithIntrospection allTables = do
-  nodeF <- nodeField allTables
+relayWithIntrospection allTables allFunctions = do
+  nodeFP <- fmap (RFDB . QDBPrimaryKey) <$> nodeField
+  basicQueryFP <- relayQuery' allTables allFunctions
   mutationP <- mutation allTables [] [] mempty
-  let basicQueryFP = (:[]) . (fmap (RFDB . QDBPrimaryKey)) $ nodeF
-      basicQueryP = queryRootFromFields basicQueryFP
+  let basicQueryP = queryRootFromFields $ nodeFP:basicQueryFP
   emptyIntro <- emptyIntrospection
   allBasicTypes <- collectTypes $
     [ P.parserType basicQueryP
@@ -333,7 +368,7 @@ relayWithIntrospection allTables = do
         , sDirectives = []
         }
   let partialQueryFields =
-        basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
+        nodeFP : basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
   pure $ P.selectionSet $$(G.litName "query_root") Nothing partialQueryFields
     <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 

@@ -508,7 +508,7 @@ fromConnectionField
      , Has OrdByCtx r, Has SQLGenCtx r
      )
   => RS.SelectFromG UnresolvedVal
-  -> NonEmpty PGColumnInfo
+  -> PrimaryKeyColumns
   -> AnnBoolExpPartialSQL
   -> Maybe Int
   -> Field -> m (RS.ConnectionSelect UnresolvedVal)
@@ -530,7 +530,7 @@ parseConnectionArgs
      ( MonadReusability m, MonadError QErr m, MonadReader r m
      , Has FieldMap r, Has OrdByCtx r
      )
-  => NonEmpty PGColumnInfo
+  => PrimaryKeyColumns
   -> ArgsMap
   -> m ( SelectArgs
        , Maybe RS.ConnectionSlice
@@ -639,7 +639,7 @@ convertConnectionSelect
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => NonEmpty PGColumnInfo -> SelOpCtx -> Field -> m (RS.ConnectionSelect UnresolvedVal)
+  => PrimaryKeyColumns -> SelOpCtx -> Field -> m (RS.ConnectionSelect UnresolvedVal)
 convertConnectionSelect pkCols opCtx fld =
   withPathK "selectionSet" $
   fromConnectionField (RS.FromTable qt) pkCols permFilter permLimit fld
@@ -737,7 +737,7 @@ convertConnectionFuncQuery
      , Has OrdByCtx r
      , Has SQLGenCtx r
      )
-  => NonEmpty PGColumnInfo -> FuncQOpCtx -> Field -> m (RS.ConnectionSelect UnresolvedVal)
+  => PrimaryKeyColumns -> FuncQOpCtx -> Field -> m (RS.ConnectionSelect UnresolvedVal)
 convertConnectionFuncQuery pkCols funcOpCtx fld =
   withPathK "selectionSet" $ fieldAsPath fld $ do
     selectFrom <- makeFunctionSelectFrom qf argSeq fld

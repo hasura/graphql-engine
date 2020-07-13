@@ -5,6 +5,7 @@ module Hasura.RQL.DML.Select
   , runSelect
   , selectQuerySQL
   , selectAggregateQuerySQL
+  , connectionSelectQuerySQL
   , module Hasura.RQL.DML.Select.Internal
   )
 where
@@ -240,7 +241,8 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   case relTy of
     ObjRel -> do
       when misused $ throw400 UnexpectedPayload objRelMisuseMsg
-      return $ Left $ AnnRelationSelectG (fromMaybe relName mAlias) colMapping annSel
+      return $ Left $ AnnRelationSelectG (fromMaybe relName mAlias) colMapping $
+        AnnObjectSelectG (_asnFields annSel) relTab $ _tpFilter $ _asnPerm annSel
     ArrRel ->
       return $ Right $ ASSimple $ AnnRelationSelectG (fromMaybe relName mAlias)
                colMapping annSel
@@ -286,6 +288,10 @@ selectQuerySQL jsonAggSelect sel =
 selectAggregateQuerySQL :: AnnAggregateSelect -> Q.Query
 selectAggregateQuerySQL =
   Q.fromBuilder . toSQL . mkAggregateSelect
+
+connectionSelectQuerySQL :: ConnectionSelect S.SQLExp -> Q.Query
+connectionSelectQuerySQL =
+  Q.fromBuilder . toSQL . mkConnectionSelect
 
 asSingleRowJsonResp :: Q.Query -> [Q.PrepArg] -> Q.TxE QErr EncJSON
 asSingleRowJsonResp query args =

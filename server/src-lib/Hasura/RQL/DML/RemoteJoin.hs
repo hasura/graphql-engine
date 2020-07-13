@@ -4,7 +4,7 @@ module Hasura.RQL.DML.RemoteJoin
   , getRemoteJoins
   , getRemoteJoinsAggregateSelect
   , getRemoteJoinsMutationOutput
---  , getRemoteJoinsConnectionSelect
+  , getRemoteJoinsConnectionSelect
   , RemoteJoins
   ) where
 
@@ -133,6 +133,12 @@ transformSelect path sel = do
   transformedFields <- transformAnnFields path fields
   pure sel{_asnFields = transformedFields}
 
+transformObjectSelect :: FieldPath -> AnnObjectSelect -> State RemoteJoinMap AnnObjectSelect
+transformObjectSelect path sel = do
+  let fields = _aosFields sel
+  transformedFields <- transformAnnFields path fields
+  pure sel{_aosFields = transformedFields}
+
 -- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
 getRemoteJoinsAggregateSelect :: AnnAggregateSelect -> (AnnAggregateSelect, Maybe RemoteJoins)
 getRemoteJoinsAggregateSelect =
@@ -215,9 +221,9 @@ transformAnnFields path fields = do
       AFNodeId qt pkeys -> pure $ AFNodeId qt pkeys
       AFColumn c -> pure $ AFColumn c
       AFObjectRelation annRel ->
-        AFObjectRelation <$> transformAnnRelation fieldPath annRel
+        AFObjectRelation <$> transformAnnRelation annRel (transformObjectSelect fieldPath)
       AFArrayRelation (ASSimple annRel) ->
-        AFArrayRelation . ASSimple <$> transformAnnRelation fieldPath annRel
+        AFArrayRelation . ASSimple <$> transformAnnRelation annRel (transformSelect fieldPath)
       AFArrayRelation (ASAggregate aggRel) ->
         AFArrayRelation . ASAggregate <$> transformAnnAggregateRelation fieldPath aggRel
       AFArrayRelation (ASConnection annRel) ->
@@ -238,9 +244,10 @@ transformAnnFields path fields = do
       pure $ transformedFields <> phantomColumns
     where
       getFields f = mapMaybe (sequence . second (^? f))
-      transformAnnRelation fieldPath annRel = do
+
+      transformAnnRelation annRel f = do
         let annSel = aarAnnSelect annRel
-        transformedSel <- transformSelect fieldPath annSel
+        transformedSel <- f annSel
         pure annRel{aarAnnSelect = transformedSel}
 
       transformAnnAggregateRelation fieldPath annRel = do

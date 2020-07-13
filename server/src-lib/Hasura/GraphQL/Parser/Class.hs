@@ -3,20 +3,20 @@ module Hasura.GraphQL.Parser.Class where
 
 import           Hasura.Prelude
 
-import qualified Language.Haskell.TH                   as TH
 import qualified Data.HashMap.Strict                   as Map
+import qualified Language.Haskell.TH                   as TH
 
+import           Data.Has
 import           Data.Parser.JSONPath
 import           Data.Tuple.Extended
 import           GHC.Stack                             (HasCallStack)
 import           Type.Reflection                       (Typeable)
-import           Data.Has
 
 import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Table                (TableCache, TableInfo)
-import           Hasura.SQL.Types
 import           Hasura.Session                        (RoleName)
+import           Hasura.SQL.Types
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~

@@ -166,6 +166,9 @@ irToRootFieldPlan vars prepped = \case
   QDBAggregation s ->
     let (annAggSel, aggRemoteJoins) = getRemoteJoinsAggregateSelect s
     in PGPlan (DS.selectAggregateQuerySQL annAggSel) vars prepped aggRemoteJoins
+  QDBConnection s ->
+    let (connSel, connRemoteJoins) = getRemoteJoinsConnectionSelect s
+    in PGPlan (DS.connectionSelectQuerySQL connSel) vars prepped connRemoteJoins
   where
     mkPGPlan f simpleSel =
       let (simpleSel',remoteJoins) = getRemoteJoins simpleSel
@@ -185,6 +188,7 @@ traverseQueryRootField f =
       QDBSimple s       -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
       QDBPrimaryKey s   -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
       QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
+      QDBConnection s   -> QDBConnection  <$> DS.traverseConnectionSelect f s
 
 convertQuerySelSet
   :: forall m. (HasVersion, MonadError QErr m, MonadIO m)
@@ -341,15 +345,3 @@ mkGeneratedSqlMap resolved =
                 RRSql ps        -> Just ps
                 RRActionQuery _ -> Nothing
     in (alias, res)
-
--- The GraphQL Query type
-data GraphQLQueryType
-  = QueryHasura
-  | QueryRelay
-  deriving (Show, Eq, Ord, Generic)
-instance Hashable GraphQLQueryType
-
-instance J.ToJSON GraphQLQueryType where
-  toJSON = \case
-    QueryHasura -> "hasura"
-    QueryRelay  -> "relay"

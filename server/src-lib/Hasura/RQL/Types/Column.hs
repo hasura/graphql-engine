@@ -16,6 +16,7 @@ module Hasura.RQL.Types.Column
 
   , PGColumnInfo(..)
   , PGRawColumnInfo(..)
+  , PrimaryKeyColumns
   , getColInfos
 
   , EnumReference(..)
@@ -169,6 +170,8 @@ instance NFData PGColumnInfo
 instance Cacheable PGColumnInfo
 instance Hashable PGColumnInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''PGColumnInfo)
+
+type PrimaryKeyColumns = NESeq PGColumnInfo
 
 onlyIntCols :: [PGColumnInfo] -> [PGColumnInfo]
 onlyIntCols = filter (isScalarColumnWhere isIntegerType . pgiType)
