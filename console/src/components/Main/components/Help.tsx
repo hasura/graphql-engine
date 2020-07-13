@@ -4,7 +4,6 @@ import { Link } from 'react-router';
 import styles from '../Main.scss';
 
 export const Help = ({ isSelected }: { isSelected: boolean }) => {
-  console.log({ isSelected });
   return (
     <Link to="/support/forums/">
       <div className={styles.headerRightNavbarBtn}>

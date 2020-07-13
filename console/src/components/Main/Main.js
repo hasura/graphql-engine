@@ -214,7 +214,6 @@ class Main extends React.Component {
 
     const currentLocation = location.pathname;
     const currentActiveBlock = getPathRoot(currentLocation);
-    console.log({ currentActiveBlock });
 
     const getMainContent = () => {
       let mainContent = null;
