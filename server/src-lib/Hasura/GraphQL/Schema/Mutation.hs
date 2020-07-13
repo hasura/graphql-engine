@@ -31,7 +31,6 @@ import qualified Hasura.GraphQL.Parser          as P
 import qualified Hasura.RQL.DML.Delete.Types    as RQL
 import qualified Hasura.RQL.DML.Insert          as RQL
 import qualified Hasura.RQL.DML.Insert.Types    as RQL
-import qualified Hasura.RQL.DML.Internal        as RQL
 import qualified Hasura.RQL.DML.Mutation        as RQL
 import qualified Hasura.RQL.DML.RemoteJoin      as RQL
 import qualified Hasura.RQL.DML.Returning       as RQL

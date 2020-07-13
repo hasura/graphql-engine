@@ -14,11 +14,6 @@ module Hasura.GraphQL.Resolve.Action
 
 import           Hasura.Prelude
 
-import           Control.Concurrent             (threadDelay)
-import           Control.Exception              (try)
-import           Control.Lens
-import           Data.IORef
-
 import qualified Control.Concurrent.Async       as A
 import qualified Data.Aeson                     as J
 import qualified Data.Aeson.Casing              as J
@@ -34,18 +29,15 @@ import qualified Network.HTTP.Client            as HTTP
 import qualified Network.HTTP.Types             as HTTP
 import qualified Network.Wreq                   as Wreq
 
-import qualified Hasura.RQL.DML.Select          as RS
+import           Control.Concurrent             (threadDelay)
+import           Control.Exception              (try)
+import           Control.Lens
+import           Data.IORef
 
-import qualified Control.Concurrent.Async       as A
-import qualified Data.Aeson                     as J
-import qualified Data.Aeson.Casing              as J
-import qualified Data.Aeson.TH                  as J
-import qualified Data.ByteString.Lazy           as BL
-import qualified Data.CaseInsensitive           as CI
-import qualified Data.HashMap.Strict            as Map
-import qualified Data.Text                      as T
-import qualified Data.UUID                      as UUID
-import qualified Database.PG.Query              as Q
+import qualified Hasura.RQL.DML.RemoteJoin      as RJ
+import qualified Hasura.RQL.DML.Select          as RS
+-- import qualified Hasura.GraphQL.Resolve.Select  as GRS
+
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser
@@ -61,31 +53,10 @@ import           Hasura.Server.Version          (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value               (PGScalarValue (..), toTxtValue)
-import qualified Language.GraphQL.Draft.Syntax  as G
-import qualified Network.HTTP.Client            as HTTP
-import qualified Network.HTTP.Types             as HTTP
-import qualified Network.Wreq                   as Wreq
-
--- import qualified Hasura.GraphQL.Resolve.Select     as GRS
-import qualified Hasura.RQL.DML.RemoteJoin      as RJ
-import qualified Hasura.RQL.DML.Select          as RS
-
-import           Hasura.EncJSON
 -- import           Hasura.GraphQL.Resolve.Context
 -- import           Hasura.GraphQL.Resolve.InputValue
 -- import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
 -- import           Hasura.GraphQL.Validate.SelectionSet
-import           Hasura.HTTP
-import           Hasura.RQL.DDL.Headers         (makeHeadersFromConf, toHeadersConf)
-import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.DML.Select          (asSingleRowJsonResp)
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Run
-import           Hasura.Server.Utils            (mkClientHeadersForward, mkSetCookieHeaders)
-import           Hasura.Server.Version          (HasVersion)
-import           Hasura.Session
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value               (PGScalarValue (..), toTxtValue)
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}

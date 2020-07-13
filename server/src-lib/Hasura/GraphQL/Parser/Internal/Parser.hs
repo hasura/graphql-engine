@@ -13,7 +13,6 @@ import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
 
 import           Control.Lens.Extended         hiding (enum, index)
-import           Data.GADT.Compare.Extended
 import           Data.Int                      (Int32)
 import           Data.Parser.JSONPath
 import           Data.Type.Equality

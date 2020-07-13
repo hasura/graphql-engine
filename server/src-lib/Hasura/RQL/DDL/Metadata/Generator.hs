@@ -3,12 +3,24 @@ module Hasura.RQL.DDL.Metadata.Generator
   (genReplaceMetadata)
 where
 
-import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.DDL.Metadata.Types
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
+
+import qualified Data.Aeson                                    as J
+import           Data.List.Extended                            (duplicates)
+import qualified Data.Text                                     as T
+import qualified Data.Vector                                   as V
+import qualified Language.GraphQL.Draft.Parser                 as G
+import qualified Language.GraphQL.Draft.Syntax                 as G
+import qualified Language.Haskell.TH.Syntax                    as TH
+import qualified Network.URI                                   as N
+import qualified System.Cron.Parser                            as Cr
+
+import           Data.Scientific
+import           System.Cron.Types
+import           Test.QuickCheck
+import           Test.QuickCheck.Instances.Semigroup           ()
+import           Test.QuickCheck.Instances.Time                ()
+import           Test.QuickCheck.Instances.UnorderedContainers ()
 
 import qualified Hasura.RQL.DDL.ComputedField                  as ComputedField
 import qualified Hasura.RQL.DDL.Permission                     as Permission
@@ -17,26 +29,12 @@ import qualified Hasura.RQL.DDL.QueryCollection                as Collection
 import qualified Hasura.RQL.DDL.Relationship                   as Relationship
 import qualified Hasura.RQL.DDL.Schema                         as Schema
 
-import           System.Cron.Types
+import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
+import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DDL.Metadata.Types
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
-import qualified Data.Aeson                                    as J
-import qualified Data.HashMap.Strict                           as HM
-import qualified Data.Text                                     as T
-import qualified Data.Vector                                   as V
-import qualified Language.GraphQL.Draft.Parser                 as G
-import qualified Language.GraphQL.Draft.Syntax                 as G
-import qualified Language.Haskell.TH.Syntax                    as TH
-import qualified Network.URI                                   as N
-import qualified System.Cron.Parser                            as Cr
-import qualified Data.List.NonEmpty                            as NEList
-
-
-import           Data.List.Extended                 (duplicates)
-import           Data.Scientific
-import           Test.QuickCheck
-import           Test.QuickCheck.Instances.Semigroup           ()
-import           Test.QuickCheck.Instances.Time                ()
-import           Test.QuickCheck.Instances.UnorderedContainers ()
 
 genReplaceMetadata :: Gen ReplaceMetadata
 genReplaceMetadata = do

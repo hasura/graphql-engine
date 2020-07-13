@@ -39,7 +39,6 @@ import qualified Control.Immortal                         as Immortal
 import qualified Crypto.Hash                              as CH
 import qualified Data.Aeson.Extended                      as J
 import qualified Data.ByteString                          as BS
-import qualified Data.ByteString.Lazy                     as BL
 import qualified Data.HashMap.Strict                      as Map
 import qualified Data.Time.Clock                          as Clock
 import qualified Data.UUID                                as UUID
@@ -58,7 +57,6 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.RQL.Types
 import           Hasura.Session
 
 -- -------------------------------------------------------------------------------------------------

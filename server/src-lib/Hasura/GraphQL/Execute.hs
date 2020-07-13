@@ -17,15 +17,11 @@ module Hasura.GraphQL.Execute
   , MonadGQLExecutionCheck(..)
   ) where
 
-import           Control.Exception                      (try)
-import           Control.Lens
-import           Data.Has
+import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashSet                           as Set
-import qualified Data.Sequence.NonEmpty                 as NESeq
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -34,18 +30,8 @@ import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 import qualified Network.Wreq                           as Wreq
 
-import           Hasura.EncJSON
-import           Hasura.GraphQL.Logging
-import           Hasura.GraphQL.Schema
-import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.HTTP
-import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
-                                                         mkSetCookieHeaders, userRoleHeader)
-import           Hasura.Server.Version                  (HasVersion)
-import           Hasura.Session
+import           Control.Exception                      (try)
+import           Control.Lens
 
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.Inline          as EI
@@ -55,9 +41,21 @@ import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Prepare         as EPr
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Execute.Types           as ET
-import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
+
+import           Hasura.EncJSON
+import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.HTTP
+import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.Types
+import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
+                                                         mkSetCookieHeaders)
+import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
+
+
 
 type QueryParts = G.TypedOperationDefinition G.FragmentSpread G.Name
 

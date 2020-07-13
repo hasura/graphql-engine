@@ -36,7 +36,6 @@ import qualified StmContainers.Map                           as STMMap
 import           Control.Concurrent.Extended                 (sleep)
 import           Control.Exception.Lifted
 import           Data.String
-import           GHC.AssertNF
 import qualified ListT
 
 import           Hasura.EncJSON

@@ -32,7 +32,6 @@ import qualified Data.ByteString.Lazy             as BL
 import qualified Data.HashMap.Strict              as Map
 import qualified Data.List                        as L
 import qualified Data.Text                        as T
-import qualified Language.GraphQL.Draft.Syntax    as G
 import qualified Network.HTTP.Client              as HTTP
 import qualified Network.HTTP.Types               as HTTP
 import qualified Network.Wreq                     as Wreq

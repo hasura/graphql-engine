@@ -7,7 +7,6 @@ import           Control.Lens.TH                     (makeLenses, makePrisms)
 import           Data.Aeson.Types
 import           Language.Haskell.TH.Syntax          (Lift)
 
-import qualified Data.Aeson                          as J
 import qualified Data.HashMap.Strict                 as HM
 import qualified Data.List.NonEmpty                  as NE
 import qualified Data.Sequence                       as Seq

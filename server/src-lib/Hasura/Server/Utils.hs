@@ -5,7 +5,6 @@ import           Control.Lens               ((^..))
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Char
-import           Data.List                  (find)
 import           Language.Haskell.TH.Syntax (Lift)
 import           System.Environment
 import           System.Exit

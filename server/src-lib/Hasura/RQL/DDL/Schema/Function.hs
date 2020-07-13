@@ -5,13 +5,12 @@ Description: Create/delete SQL functions to/from Hasura metadata.
 module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Utils          (showNames)
+import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils           (makeReasonMessage, englishList)
+import           Hasura.Server.Utils           (englishList, makeReasonMessage)
 import           Hasura.SQL.Types
-import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 
 import           Control.Lens
 import           Data.Aeson

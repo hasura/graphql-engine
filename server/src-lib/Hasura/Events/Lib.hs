@@ -37,8 +37,6 @@ import qualified Data.Set                    as Set
 import qualified Data.TByteString            as TBS
 import qualified Data.Text                   as T
 import qualified Data.Text.Encoding          as T
-import qualified Data.Text.Encoding          as TE
-import qualified Data.Text.Encoding.Error    as TE
 import qualified Data.Time.Clock             as Time
 import qualified Database.PG.Query           as Q
 import qualified Hasura.Logging              as L

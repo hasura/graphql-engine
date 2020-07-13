@@ -16,7 +16,6 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended          as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
-import qualified Data.Text                             as Text
 
 import           Language.GraphQL.Draft.Syntax
 

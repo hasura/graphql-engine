@@ -4,32 +4,32 @@ module Hasura.GraphQL.RemoteServer
   , execRemoteGQ'
   ) where
 
-import           Control.Exception             (try)
-import           Control.Lens                  ((^.))
-import           Data.Aeson                    ((.:), (.:?))
-import           Data.FileEmbed                (embedStringFile)
+import           Control.Exception                      (try)
+import           Control.Lens                           ((^.))
+import           Control.Monad.Unique
+import           Data.Aeson                             ((.:), (.:?))
+import           Data.FileEmbed                         (embedStringFile)
 import           Hasura.HTTP
 import           Hasura.Prelude
-import           Control.Monad.Unique
 
-import qualified Data.Aeson                    as J
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Parser as G
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Network.HTTP.Client           as HTTP
-import qualified Network.HTTP.Types            as N
-import qualified Network.Wreq                  as Wreq
+import qualified Data.Aeson                             as J
+import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.Text                              as T
+import qualified Language.GraphQL.Draft.Parser          as G
+import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Types                     as N
+import qualified Network.Wreq                           as Wreq
 
-import           Hasura.RQL.DDL.Headers        (makeHeadersFromConf)
-import           Hasura.RQL.Types
-import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.Server.Utils
-import           Hasura.Server.Version         (HasVersion)
-import           Hasura.Session
+import qualified Hasura.GraphQL.Parser.Monad            as P
 import           Hasura.GraphQL.Schema.Remote
-import qualified Hasura.GraphQL.Parser.Monad   as P
+import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.RQL.DDL.Headers                 (makeHeadersFromConf)
+import           Hasura.RQL.Types
+import           Hasura.Server.Utils
+import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
 
 introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")

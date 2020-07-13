@@ -41,7 +41,6 @@ import qualified Data.ByteString.Lazy             as L
 import           Data.Data
 import           Data.Functor
 import qualified Data.HashMap.Strict              as Map
-import           Data.HashMap.Strict.InsOrd       (InsOrdHashMap)
 import qualified Data.HashMap.Strict.InsOrd       as OMap
 import           Data.Scientific
 import qualified Data.Text                        as T

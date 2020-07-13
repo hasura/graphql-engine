@@ -37,14 +37,10 @@ module Hasura.RQL.Types.BoolExp
        , PreSetColsPartial
        ) where
 
-import           Hasura.Incremental          (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Permission
-import qualified Hasura.SQL.DML              as S
-import           Hasura.SQL.Types
-import           Hasura.Session
+
+import qualified Data.Aeson.Types           as J
+import qualified Data.HashMap.Strict        as M
 
 import           Control.Lens.Plated
 import           Control.Lens.TH
@@ -52,10 +48,17 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.Internal
 import           Data.Aeson.TH
-import qualified Data.Aeson.Types            as J
-import qualified Data.HashMap.Strict         as M
-import           Instances.TH.Lift           ()
-import           Language.Haskell.TH.Syntax  (Lift)
+import           Instances.TH.Lift          ()
+import           Language.Haskell.TH.Syntax (Lift)
+
+import qualified Hasura.SQL.DML             as S
+
+import           Hasura.Incremental         (Cacheable)
+import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
+import           Hasura.Session
+import           Hasura.SQL.Types
+
 
 
 data GExists a

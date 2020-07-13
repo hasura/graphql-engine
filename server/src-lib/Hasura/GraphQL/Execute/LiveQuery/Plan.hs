@@ -30,7 +30,6 @@ import qualified Data.Aeson.Extended                    as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Sequence                          as Seq
 import qualified Data.Text                              as T
 import qualified Data.UUID.V4                           as UUID
@@ -53,7 +52,6 @@ import qualified Hasura.SQL.DML                         as S
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Resolve.Action

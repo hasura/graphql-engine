@@ -11,7 +11,6 @@ module Hasura.RQL.DML.RemoteJoin
 import           Hasura.Prelude
 
 import           Control.Lens
-import           Data.List                              (nub)
 import           Data.Scientific                        (toBoundedInteger, toRealFloat)
 import           Data.Validation
 

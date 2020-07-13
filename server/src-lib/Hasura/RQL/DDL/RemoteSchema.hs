@@ -23,7 +23,6 @@ import qualified Data.HashMap.Strict         as Map
 import qualified Data.HashSet                as S
 import qualified Database.PG.Query           as Q
 
-import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.Types
 import           Hasura.Server.Version       (HasVersion)
 import           Hasura.SQL.Types

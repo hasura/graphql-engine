@@ -30,10 +30,6 @@ import           Type.Reflection                       ((:~:) (..), Typeable, ty
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.Table                (TableCache)
-import           Hasura.Session                        (RoleName)
-import           Hasura.SQL.Types
 
 -- -------------------------------------------------------------------------------------------------
 -- schema construction

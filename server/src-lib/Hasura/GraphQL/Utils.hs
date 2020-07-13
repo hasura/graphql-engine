@@ -8,7 +8,6 @@ module Hasura.GraphQL.Utils
   ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Error
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.List.NonEmpty            as NE

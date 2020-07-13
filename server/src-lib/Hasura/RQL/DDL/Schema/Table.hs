@@ -23,22 +23,12 @@ module Hasura.RQL.DDL.Schema.Table
   , processTableChanges
   ) where
 
-import           Hasura.EncJSON
-import           Hasura.GraphQL.Schema.Common       (textToName)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Schema.Cache.Common
-import           Hasura.RQL.DDL.Schema.Catalog
-import           Hasura.RQL.DDL.Schema.Diff
-import           Hasura.RQL.DDL.Schema.Enum
-import           Hasura.RQL.DDL.Schema.Rename
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Catalog
-import           Hasura.Server.Utils
-import           Hasura.SQL.Types
 
+import qualified Data.HashMap.Strict.Extended       as M
+import qualified Data.HashSet                       as S
+import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
-import qualified Hasura.Incremental                 as Inc
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Arrow.Extended
@@ -50,9 +40,21 @@ import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 import           Network.URI.Extended               ()
 
-import qualified Data.HashMap.Strict.Extended       as M
-import qualified Data.HashSet                       as S
-import qualified Data.Text                          as T
+import qualified Hasura.Incremental                 as Inc
+
+import           Hasura.EncJSON
+import           Hasura.GraphQL.Schema.Common       (textToName)
+import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.Schema.Cache.Common
+import           Hasura.RQL.DDL.Schema.Catalog
+import           Hasura.RQL.DDL.Schema.Diff
+import           Hasura.RQL.DDL.Schema.Enum
+import           Hasura.RQL.DDL.Schema.Rename
+import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Catalog
+import           Hasura.Server.Utils
+import           Hasura.SQL.Types
+
 
 data TrackTable
   = TrackTable

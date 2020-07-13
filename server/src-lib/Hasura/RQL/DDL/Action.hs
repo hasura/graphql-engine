@@ -34,7 +34,6 @@ import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashSet                  as Set
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G

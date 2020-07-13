@@ -59,7 +59,6 @@ import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.RQL.Types.QueryCollection
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.SQL.Types
 
