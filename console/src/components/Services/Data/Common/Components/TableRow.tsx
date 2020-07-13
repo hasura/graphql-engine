@@ -7,7 +7,11 @@ import {
 import styles from '../../../../Common/TableCommon/Table.scss';
 import { TypedInput } from './TypedInput';
 
-const getColumnInfo = (col: TableColumn, prevValue?: unknown) => {
+const getColumnInfo = (
+  col: TableColumn,
+  prevValue?: unknown,
+  clone?: Record<string, any>
+) => {
   const isEditing = prevValue !== undefined;
 
   const hasDefault = col.column_default
@@ -24,6 +28,12 @@ const getColumnInfo = (col: TableColumn, prevValue?: unknown) => {
 
   let columnValueType;
   switch (true) {
+    case clone &&
+      clone[col.column_name] &&
+      !isDisabled &&
+      !['uuid', 'timestamptz'].includes(col.udt_name):
+      columnValueType = 'value';
+      break;
     case !isEditing && (isIdentity || hasDefault || isGenerated):
     case identityGeneration === 'ALWAYS':
       columnValueType = 'default';
@@ -80,7 +90,7 @@ export const TableRow: React.FC<TableRowProps> = ({
     isNullable,
     hasDefault,
     columnValueType,
-  } = getColumnInfo(column, prevValue);
+  } = getColumnInfo(column, prevValue, clone);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
