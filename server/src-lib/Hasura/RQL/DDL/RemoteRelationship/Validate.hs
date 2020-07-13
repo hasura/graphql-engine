@@ -266,7 +266,7 @@ renameTypeForRelationship rtr text =
   where name = schema <> "_" <> table <> remoteRelationshipNameToText (rtrName rtr)
         QualifiedObject (SchemaName schema) (TableName table) = rtrTable rtr
 
--- -- | Rename a type.
+-- | Rename a type.
 renameNamedType :: (Text -> Text) -> G.Name -> G.Name
 renameNamedType rename =
   G.unsafeMkName . rename . G.unName

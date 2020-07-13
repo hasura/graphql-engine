@@ -54,9 +54,12 @@ data RemoteFieldInfo
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
   , _rfiParamMap         :: !(HashMap G.Name G.InputValueDefinition)
-  -- ^ Fully resolved arguments (no variable references, since this uses
-  -- 'G.ValueConst' not 'G.Value').
+  -- ^ Input arguments to the remote field info; The '_rfiParamMap' will only
+  --   include the arguments to the remote field that is being joined. The
+  --   names of the arguments here are modified, it will be in the format of
+  --   <Original Field Name>_remote_rel_<hasura table schema>_<hasura table name><remote relationship name>
   , _rfiHasuraFields     :: !(HashSet PGColumnInfo)
+  -- ^ Hasura fields used to join the remote schema node
   , _rfiRemoteFields     :: !RemoteFields
   , _rfiRemoteSchema     :: !RemoteSchemaInfo
   , _rfiSchemaIntrospect :: G.SchemaIntrospection
