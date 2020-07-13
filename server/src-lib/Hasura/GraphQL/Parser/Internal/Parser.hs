@@ -429,10 +429,8 @@ field
   -> Parser k m a
   -> InputFieldsParser m a
 field name description parser = case pType parser of
-  NonNullable _ -> InputFieldsParser
-    { ifDefinitions = [mkDefinition name description case pType parser of
-        NonNullable typ -> IFRequired typ
-        Nullable typ    -> IFOptional typ (Just VNull)]
+  NonNullable typ -> InputFieldsParser
+    { ifDefinitions = [mkDefinition name description $ IFRequired typ]
     , ifParser = \ values -> withPath (++[Key (unName name)]) do
         value <- onNothing (M.lookup name values) $
           parseError ("missing required field " <>> name)
