@@ -53,8 +53,6 @@ data RemoteFieldInfo
   { _rfiName             :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
-
---  , _rfiGType            :: G.GType -- do we need this for the PDV refactor?
   , _rfiParamMap         :: !(HashMap G.Name G.InputValueDefinition)
   -- ^ Fully resolved arguments (no variable references, since this uses
   -- 'G.ValueConst' not 'G.Value').
@@ -71,22 +69,12 @@ instance Cacheable RemoteFieldInfo
 instance ToJSON RemoteFieldInfo where
   toJSON RemoteFieldInfo{..} = object
     [ "name" .= _rfiName
---    , "g_type" .= toJsonGType _rfiGType
     , "param_map" .= fmap toJsonInpValInfo _rfiParamMap
     , "hasura_fields" .= _rfiHasuraFields
     , "remote_fields" .= _rfiRemoteFields
     , "remote_schema" .= _rfiRemoteSchema
     ]
     where
-      -- | Convert to JSON, using Either as an auxilliary type.
-      toJsonGType gtype =
-        toJSON
-          (case gtype of
-             G.TypeNamed (G.Nullability nullability) namedType ->
-               Left (nullability, namedType)
-             G.TypeList (G.Nullability nullability) listType ->
-               Right (nullability, (toJsonGType listType)))
-
       toJsonInpValInfo (G.InputValueDefinition desc name type' defVal)  =
         object
           [ "desc" .= desc
@@ -95,6 +83,7 @@ instance ToJSON RemoteFieldInfo where
           , "type" .= type'
           ]
 
+      gValueToJSONValue :: G.Value Void -> Value
       gValueToJSONValue =
         \case
           G.VNull       -> Null
@@ -105,7 +94,6 @@ instance ToJSON RemoteFieldInfo where
           G.VEnum s     -> toJSON s
           G.VList list  -> toJSON (map gValueToJSONValue list)
           G.VObject obj -> fieldsToObject obj
-          G.VVariable _ -> error "unexpected variable in remote field info" -- FIXME: use a throw500?
 
       fieldsToObject =
         Object .
