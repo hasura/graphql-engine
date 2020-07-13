@@ -55,7 +55,7 @@ import {
   persistColumnOrderChange,
   getPersistedColumnsOrder,
   persistPageSizeChange,
-} from './localStorageUtils';
+} from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
 import styles from '../../../Common/TableCommon/Table.scss';
 
