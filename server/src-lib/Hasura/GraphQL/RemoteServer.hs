@@ -70,10 +70,10 @@ fetchRemoteSchema manager schemaName schemaInfo@(RemoteSchemaInfo url headerConf
 
   return (introspectRes, respData)
   where
-    remoteSchemaErr :: (MonadError QErr m) => T.Text -> m a
+    remoteSchemaErr :: T.Text -> m a
     remoteSchemaErr = throw400 RemoteSchemaError
 
-    throwHttpErr :: (MonadError QErr m) => HTTP.HttpException -> m a
+    throwHttpErr :: HTTP.HttpException -> m a
     throwHttpErr = throwWithInternal httpExceptMsg . httpExceptToJSON
 
     throwNon200 st = throwWithInternal (non200Msg st) . decodeNon200Resp
