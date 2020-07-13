@@ -1,4 +1,8 @@
-import { setLSItem, LS_KEYS, getParsedLSItem } from '../../../../utils/localStorage';
+import {
+  setLSItem,
+  LS_KEYS,
+  getParsedLSItem,
+} from '../../../../utils/localStorage';
 
 type CollapseEntry = Record<string, boolean>;
 
@@ -7,7 +11,8 @@ export const persistColumnCollapseChange = (
   schemaName: string,
   collapsedData: CollapseEntry
 ) => {
-  const currentCollapsed = getParsedLSItem(LS_KEYS.dataColumnsCollapsedKey) || {};
+  const currentCollapsed =
+    getParsedLSItem(LS_KEYS.dataColumnsCollapsedKey) || {};
   const newCollapsed = {
     ...currentCollapsed,
     [`${schemaName}.${tableName}`]: collapsedData,

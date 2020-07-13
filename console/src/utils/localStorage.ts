@@ -5,7 +5,9 @@ export const setLSItem = (key: string, data: string) => {
 };
 
 export const getLSItem = (key: string) => {
-  if (!key) return null;
+  if (!key) {
+    return null;
+  }
 
   return window.localStorage.getItem(key);
 };
