@@ -35,8 +35,6 @@ import {
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
 import styles from '../../../Common/TableCommon/Table.scss';
-import { getConfirmation } from '../../../Common/utils/jsUtils';
-
 /**
  * # RawSQL React FC
  * ## renders raw SQL page on route `/data/sql`
@@ -109,7 +107,7 @@ const RawSQL = ({
 
   const submitSQL = () => {
     // set SQL to LS
-    localStorage.setItem(LS_RAW_SQL_SQL, sql);
+    localStorage.setItem(LS_RAW_SQL_SQL, sqlText);
 
     // check migration mode global
     if (migrationMode) {
@@ -122,23 +120,15 @@ const RawSQL = ({
       }
       if (!isMigration && globals.consoleMode === CLI_CONSOLE_MODE) {
         // if migration is not checked, check if is schema modification
-        if (checkSchemaModification(sql)) {
+        if (checkSchemaModification(sqlText)) {
           dispatch(modalOpen());
-          // FIXME: I don;t understand what this is doing here
-          // this was initially just const confirmation = false;
-          const confirmation = getConfirmation('This is a question');
-          if (confirmation) {
-            dispatch(executeSQL(isMigration, migrationName, statementTimeout));
-          }
-        } else {
-          dispatch(executeSQL(isMigration, migrationName, statementTimeout));
+          return;
         }
-      } else {
-        dispatch(executeSQL(isMigration, migrationName, statementTimeout));
       }
-    } else {
-      dispatch(executeSQL(false, '', statementTimeout));
+      dispatch(executeSQL(isMigration, migrationName, statementTimeout));
+      return;
     }
+    dispatch(executeSQL(false, '', statementTimeout));
   };
 
   const getMigrationWarningModal = () => {
@@ -176,17 +166,17 @@ const RawSQL = ({
   const getSQLSection = () => {
     const handleSQLChange = val => {
       onChangeSQLText(val);
-      dispatch({ type: SET_SQL, data: sqlText });
+      dispatch({ type: SET_SQL, data: val });
 
       // set migration checkbox true
-      if (checkSchemaModification(sqlText)) {
+      if (checkSchemaModification(val)) {
         dispatch({ type: SET_MIGRATION_CHECKED, data: true });
       } else {
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
       }
 
       // set track this checkbox true
-      const objects = parseCreateSQL(sqlText);
+      const objects = parseCreateSQL(val);
       if (objects.length) {
         let allObjectsTrackable = true;
 
