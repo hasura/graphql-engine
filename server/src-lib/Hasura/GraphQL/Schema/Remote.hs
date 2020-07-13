@@ -124,14 +124,45 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
         Nothing -> throw400 RemoteSchemaError $
           "Interface field " <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
           <> " expected, but " <> squote name <> " does not provide it"
-        Just f ->
+        Just f -> do
           unless (validateSubType (G._fldType f) (G._fldType interfaceField)) $
-          throw400 RemoteSchemaError $
-          "The type of Object field " <> squote name <> "." <> dquote (G._fldName f)
-          <> " (" <> G.showGT (G._fldType f)
-          <> ") is not the same type/sub type of Interface field "
-          <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
-          <> " (" <> G.showGT (G._fldType interfaceField) <> ")"
+            throw400 RemoteSchemaError $
+            "The type of Object field " <> squote name <> "." <> dquote (G._fldName f)
+            <> " (" <> G.showGT (G._fldType f)
+            <> ") is not the same type/sub type of Interface field "
+            <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
+            <> " (" <> G.showGT (G._fldType interfaceField) <> ")"
+          traverse_ (validateArgument (G._fldArgumentsDefinition f)) (G._fldArgumentsDefinition interfaceField)
+          traverse_ (validateNoExtraNonNull (G._fldArgumentsDefinition interfaceField)) (G._fldArgumentsDefinition f)
+            where
+              validateArgument :: G.ArgumentsDefinition -> G.InputValueDefinition -> m ()
+              validateArgument objectFieldArgs ifaceArgument =
+                case lookup (G._ivdName ifaceArgument) (zip (fmap G._ivdName objectFieldArgs) objectFieldArgs) of
+                  Nothing ->
+                    throw400 RemoteSchemaError $
+                      "Interface field argument " <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
+                      <> "(" <> dquote (G._ivdName ifaceArgument) <> ":) required, but Object field " <> squote name <> "." <> dquote (G._fldName f)
+                      <> " does not provide it"
+                  Just a -> do
+                    unless (G._ivdType a == G._ivdType ifaceArgument) $
+                      throw400 RemoteSchemaError $
+                      "Interface field argument " <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
+                      <> "(" <> dquote (G._ivdName ifaceArgument) <> ":) expects type "
+                      <> G.showGT (G._ivdType ifaceArgument)
+                      <> ", but " <> squote name <> "." <> dquote (G._fldName f) <> "("
+                      <> dquote (G._ivdName ifaceArgument) <> ":) has type "
+                      <> G.showGT (G._ivdType a)
+              validateNoExtraNonNull :: G.ArgumentsDefinition -> G.InputValueDefinition -> m ()
+              validateNoExtraNonNull ifaceArguments objectFieldArg =
+                case lookup (G._ivdName objectFieldArg) (zip (fmap G._ivdName ifaceArguments) ifaceArguments) of
+                  Just _ -> pure ()
+                  Nothing ->
+                    unless (G.isNullable (G._ivdType objectFieldArg)) $
+                    throw400 RemoteSchemaError $
+                    "Object field argument " <>  squote name <> "." <> dquote (G._fldName f) <> "("
+                      <> dquote (G._ivdName objectFieldArg) <> ":) is of required type "
+                      <> G.showGT (G._ivdType objectFieldArg) <> ", but is not provided by Interface field "
+                      <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
     validateSubType :: G.GType -> G.GType -> Bool
     -- TODO this ignores nullability which is probably wrong, even though the GraphQL spec is ambiguous
     validateSubType (G.TypeList _ x) (G.TypeList _ y) = validateSubType x y
