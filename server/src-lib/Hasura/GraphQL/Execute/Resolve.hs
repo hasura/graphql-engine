@@ -39,12 +39,23 @@ resolveVariables definitions jsonValues selSet = do
   (selSet', usedVariables) <- flip runStateT mempty $
     traverse (traverse (resolveVariable uniqueVariables)) selSet
   let variablesByNameSet = HS.fromList . Map.keys $ variablesByName
+      jsonVariableNames = HS.fromList $ Map.keys jsonValues
   when (usedVariables /= variablesByNameSet) $
     throw400 ValidationFailed $
     ("following variable(s) have been defined, but have not been used in the query - "
-     <> (T.concat $ L.intersperse ","
+     <> (T.concat $ L.intersperse ", "
          $ map G.unName $ HS.toList $
            HS.difference variablesByNameSet usedVariables))
+  -- There may be variables which have a default value and may not be
+  -- included in the variables JSON Map. So, we should only see, if a
+  -- variable is inlcuded in the JSON Map, then it must be used in the
+  -- query
+  when (HS.difference jsonVariableNames usedVariables /= HS.empty) $
+    throw400 ValidationFailed $
+      ("unexpected variables in variableValues: "
+       <> (T.concat $ L.intersperse ", "
+         $ map G.unName $ HS.toList $
+           HS.difference jsonVariableNames usedVariables))
   return selSet'
   where
     buildVariable :: G.VariableDefinition -> m Variable
