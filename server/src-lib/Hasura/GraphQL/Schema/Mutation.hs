@@ -271,18 +271,15 @@ conflictConstraint
 conflictConstraint table =
   memoizeOn 'conflictConstraint table do
   tableName <- qualifiedObjectToName table
+  constraints <- tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo <$> askTableInfo table
+  constraintEnumValues <- for constraints \constraint -> do
+    name <- textToName $ getConstraintTxt $ _cName constraint
+    pure ( P.mkDefinition name (Just "unique or primary key constraint") P.EnumValueInfo
+         , _cName constraint
+         )
   let enumName  = tableName <> $$(G.litName "_constraint")
       enumDesc  = G.Description $ "unique or primary key constraints on table " <> G.unName tableName <> "\""
-      idKeyName = tableName <> $$(G.litName "_id_key")
-      idKeyDesc = "unique or primary key constraint"
-      pKeyName  = tableName <> $$(G.litName "_pkey")
-      pKeyDesc  = "unique or primary key constraint"
-  pure $ P.enum enumName (Just enumDesc) $ NE.fromList
-    [ (define idKeyName idKeyDesc, ConstraintName $ G.unName idKeyName)
-    , (define pKeyName  pKeyDesc,  ConstraintName $ G.unName pKeyName)
-    ]
-  where
-    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
+  pure $ P.enum enumName (Just enumDesc) $ NE.fromList constraintEnumValues
 
 
 
