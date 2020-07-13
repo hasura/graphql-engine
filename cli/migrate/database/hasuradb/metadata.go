@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/metadata/types"
@@ -16,6 +17,10 @@ import (
 
 func (h *HasuraDB) SetMetadataPlugins(plugins types.MetadataPlugins) {
 	h.config.Plugins = plugins
+}
+
+func (h *HasuraDB) EnableCheckMetadataConsistency(enabled bool) {
+	h.config.enableCheckMetadataConsistency = enabled
 }
 
 func (h *HasuraDB) ExportMetadata() (map[string][]byte, error) {
@@ -147,6 +152,10 @@ func (h *HasuraDB) BuildMetadata() (yaml.MapSlice, error) {
 	for _, plg := range h.config.Plugins {
 		err := plg.Build(&tmpMeta)
 		if err != nil {
+			if os.IsNotExist(errors.Cause(err)) {
+				h.logger.Debugf("metadata file for %s was not found, assuming an empty file", plg.Name())
+				continue
+			}
 			return tmpMeta, errors.Wrap(err, fmt.Sprintf("cannot build %s from metadata", plg.Name()))
 		}
 	}

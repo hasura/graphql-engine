@@ -29,6 +29,20 @@
   background-color: #fff3d5 !important;
 }
 
+.permissionSymbolNA {
+  color: firebrick;
+}
+
+.permissionSymbolFA {
+  color: green;
+}
+
+.permissionSymbolNA,
+.permissionSymbolFA,
+.permissionSymbolPA {
+  font-size: 16px;
+}
+
 // TODO: make common with Permissions page
 .actionIcon {
   font-size: 12px;
@@ -57,4 +71,9 @@
   .flex_space_between > div:first-child {
     width: calc(100% - 20px);
   }
+}
+
+.tableHeaderActions {
+  width: 60px;
+  justify-content: space-evenly;
 }

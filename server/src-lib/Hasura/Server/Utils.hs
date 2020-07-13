@@ -1,11 +1,12 @@
-{-# LANGUAGE TypeApplications #-}
 module Hasura.Server.Utils where
+
+import           Hasura.Prelude
 
 import           Control.Lens               ((^..))
 import           Data.Aeson
+import           Data.Aeson.Internal
 import           Data.Char
-import           Data.List                  (find)
-import           Language.Haskell.TH.Syntax (Lift)
+import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
 import           System.Environment
 import           System.Exit
 import           System.Process
@@ -15,18 +16,19 @@ import qualified Data.CaseInsensitive       as CI
 import qualified Data.HashSet               as Set
 import qualified Data.List.NonEmpty         as NE
 import qualified Data.Text                  as T
-import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.IO               as TI
 import qualified Data.UUID                  as UUID
 import qualified Data.UUID.V4               as UUID
+import qualified Data.Vector                as V
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified Network.HTTP.Client        as HC
 import qualified Network.HTTP.Types         as HTTP
 import qualified Network.Wreq               as Wreq
 import qualified Text.Regex.TDFA            as TDFA
-import qualified Text.Regex.TDFA.ByteString as TDFA
+import qualified Text.Regex.TDFA.ReadRegex  as TDFA
+import qualified Text.Regex.TDFA.TDFA       as TDFA
 
-import           Hasura.Prelude
+import           Hasura.RQL.Instances       ()
 
 newtype RequestId
   = RequestId { unRequestId :: Text }
@@ -59,10 +61,26 @@ userIdHeader = "x-hasura-user-id"
 requestIdHeader :: IsString a => a
 requestIdHeader = "x-request-id"
 
+useBackendOnlyPermissionsHeader :: IsString a => a
+useBackendOnlyPermissionsHeader = "x-hasura-use-backend-only-permissions"
+
 getRequestHeader :: HTTP.HeaderName -> [HTTP.Header] -> Maybe B.ByteString
 getRequestHeader hdrName hdrs = snd <$> mHeader
   where
     mHeader = find (\h -> fst h == hdrName) hdrs
+
+parseStringAsBool :: String -> Either String Bool
+parseStringAsBool t
+  | map toLower t `elem` truthVals = Right True
+  | map toLower t `elem` falseVals = Right False
+  | otherwise = Left errMsg
+  where
+    truthVals = ["true", "t", "yes", "y"]
+    falseVals = ["false", "f", "no", "n"]
+
+    errMsg = " Not a valid boolean text. " ++ "True values are "
+             ++ show truthVals ++ " and  False values are " ++ show falseVals
+             ++ ". All values are case insensitive"
 
 getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
 getRequestId headers =
@@ -72,7 +90,7 @@ getRequestId headers =
     Just reqId -> return $ RequestId $ bsToTxt reqId
 
 -- Get an env var during compile time
-getValFromEnvOrScript :: String -> String -> TH.Q (TH.TExp String)
+getValFromEnvOrScript :: String -> String -> Q (TExp String)
 getValFromEnvOrScript n s = do
   maybeVal <- TH.runIO $ lookupEnv n
   case maybeVal of
@@ -80,7 +98,7 @@ getValFromEnvOrScript n s = do
     Nothing  -> runScript s
 
 -- Run a shell script during compile time
-runScript :: FilePath -> TH.Q (TH.TExp String)
+runScript :: FilePath -> Q (TExp String)
 runScript fp = do
   TH.addDependentFile fp
   fileContent <- TH.runIO $ TI.readFile fp
@@ -97,19 +115,11 @@ duplicates = mapMaybe greaterThanOne . group . sort
   where
     greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1
 
--- regex related
-matchRegex :: B.ByteString -> Bool -> T.Text -> Either String Bool
-matchRegex regex caseSensitive src =
-  fmap (`TDFA.match` TE.encodeUtf8 src) compiledRegexE
-  where
-    compOpt = TDFA.defaultCompOpt
-      { TDFA.caseSensitive = caseSensitive
-      , TDFA.multiline = True
-      , TDFA.lastStarGreedy = True
-      }
-    execOption = TDFA.defaultExecOpt {TDFA.captureGroups = False}
-    compiledRegexE = TDFA.compile compOpt execOption regex
-
+-- | Quotes a regex using Template Haskell so syntax errors can be reported at compile-time.
+quoteRegex :: TDFA.CompOption -> TDFA.ExecOption -> String -> Q (TExp TDFA.Regex)
+quoteRegex compOption execOption regexText = do
+  regex <- TDFA.parseRegex regexText `onLeft` (fail . show)
+  [|| TDFA.patternToRegex regex compOption execOption ||]
 
 fmapL :: (a -> a') -> Either a b -> Either a' b
 fmapL fn (Left e) = Left (fn e)
@@ -158,14 +168,14 @@ commonResponseHeadersIgnored =
   , "Content-Type", "Content-Length"
   ]
 
-isUserVar :: Text -> Bool
-isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
+isSessionVariable :: Text -> Bool
+isSessionVariable = T.isPrefixOf "x-hasura-" . T.toLower
 
 mkClientHeadersForward :: [HTTP.Header] -> [HTTP.Header]
 mkClientHeadersForward reqHeaders =
-  xForwardedHeaders <> (filterUserVars . filterRequestHeaders) reqHeaders
+  xForwardedHeaders <> (filterSessionVariables . filterRequestHeaders) reqHeaders
   where
-    filterUserVars = filter (\(k, _) -> not $ isUserVar $ bsToTxt $ CI.original k)
+    filterSessionVariables = filter (\(k, _) -> not $ isSessionVariable $ bsToTxt $ CI.original k)
     xForwardedHeaders = flip mapMaybe reqHeaders $ \(hdrName, hdrValue) ->
       case hdrName of
         "Host"       -> Just ("X-Forwarded-Host", hdrValue)
@@ -233,3 +243,17 @@ makeReasonMessage errors showError =
     [singleError] -> "because " <> showError singleError
     _ -> "for the following reasons:\n" <> T.unlines
          (map (("  • " <>) . showError) errors)
+
+executeJSONPath :: JSONPath -> Value -> IResult Value
+executeJSONPath jsonPath = iparse (valueParser jsonPath)
+  where
+    valueParser path value = case path of
+      []                      -> pure value
+      (pathElement:remaining) -> parseWithPathElement pathElement value >>=
+                                 ((<?> pathElement) . valueParser remaining)
+      where
+        parseWithPathElement = \case
+                  Key k   -> withObject "Object" (.: k)
+                  Index i -> withArray "Array" $
+                             maybe (fail "Array index out of range") pure . (V.!? i)
+

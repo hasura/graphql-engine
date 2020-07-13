@@ -190,18 +190,22 @@ const RelationshipEditor = ({
           onChange={setRelRefSchema}
           disabled={!name}
         >
-          {// default unselected option
+          {
+            // default unselected option
             refSchema === '' && (
               <option value={''} disabled>
                 {'-- reference schema --'}
               </option>
-            )}
-          {// all reference schema options
+            )
+          }
+          {
+            // all reference schema options
             orderedSchemaList.map((rs, j) => (
               <option key={j} value={rs}>
                 {rs}
               </option>
-            ))}
+            ))
+          }
         </select>
       </div>
     );
@@ -368,7 +372,7 @@ const RelationshipEditor = ({
 };
 
 const RelEditor = props => {
-  const { dispatch, relConfig, objectType, isNew } = props;
+  const { dispatch, relConfig, objectType, isNew, readOnlyMode } = props;
 
   const [relConfigState, setRelConfigState] = React.useState(null);
 
@@ -446,6 +450,7 @@ const RelEditor = props => {
       removeFunc={removeFunc}
       expandButtonText={expandButtonText}
       collapseButtonText={collapseButtonText}
+      readOnlyMode={readOnlyMode}
     />
   );
 };

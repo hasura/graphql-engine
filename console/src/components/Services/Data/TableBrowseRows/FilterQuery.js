@@ -1,8 +1,8 @@
 /*
-  Use state exactly the way columns in create table do.
-  dispatch actions using a given function,
-  but don't listen to state.
-  derive everything through viewtable as much as possible.
+Use state exactly the way columns in create table do.
+dispatch actions using a given function,
+but don't listen to state.
+derive everything through viewtable as much as possible.
 */
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -27,11 +27,24 @@ import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import { Icon } from '../../../UIKit/atoms';
 import styles from '../../../Common/FilterQuery/FilterQuery.scss';
+import { getPersistedPageSize } from './localStorageUtils';
+import { isEmpty } from '../../../Common/utils/jsUtils';
 
 const history = createHistory();
 
-const renderCols = (colName, tableSchema, onChange, usage, key) => {
-  const columns = tableSchema.columns.map(c => c.column_name);
+const renderCols = (
+  colName,
+  tableSchema,
+  onChange,
+  usage,
+  key,
+  skipColumns
+) => {
+  let columns = tableSchema.columns.map(c => c.column_name);
+  if (skipColumns) {
+    columns = columns.filter(n => !skipColumns.includes(n) || n === colName);
+  }
+
   return (
     <select
       className="form-control"
@@ -115,7 +128,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
     return (
       <div key={i} className={`${styles.inputRow} row`}>
         <div className="col-xs-4">
-          {renderCols(colName, tableSchema, dSetFilterCol, 'filter', i)}
+          {renderCols(colName, tableSchema, dSetFilterCol, 'filter', i, [])}
         </div>
         <div className="col-xs-3">{renderOps(opName, dSetFilterOp, i)}</div>
         <div className="col-xs-4">
@@ -139,6 +152,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
 };
 
 const renderSorts = (orderBy, tableSchema, dispatch) => {
+  const currentOrderBy = orderBy.map(o => o.column);
   return orderBy.map((c, i) => {
     const dSetOrderCol = e => {
       dispatch(setOrderCol(e.target.value, i));
@@ -164,7 +178,14 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
     return (
       <div key={i} className={`${styles.inputRow} row`}>
         <div className="col-xs-6">
-          {renderCols(c.column, tableSchema, dSetOrderCol, 'sort', i)}
+          {renderCols(
+            c.column,
+            tableSchema,
+            dSetOrderCol,
+            'sort',
+            i,
+            currentOrderBy
+          )}
         </div>
         <div className="col-xs-5">
           <select
@@ -190,9 +211,10 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
 
 class FilterQuery extends Component {
   componentDidMount() {
-    const dispatch = this.props.dispatch;
-    if (!this.props.urlQuery) {
-      dispatch(setDefaultQuery(this.props.curQuery));
+    const { dispatch, tableSchema, curQuery } = this.props;
+    const limit = getPersistedPageSize();
+    if (isEmpty(this.props.urlQuery)) {
+      dispatch(setDefaultQuery({ ...curQuery, limit }));
       return;
     }
 
@@ -227,8 +249,8 @@ class FilterQuery extends Component {
       return { column, type, nulls };
     });
 
-    dispatch(setDefaultQuery({ where, order_by }));
-    dispatch(runQuery(this.props.tableSchema));
+    dispatch(setDefaultQuery({ where, order_by, limit }));
+    dispatch(runQuery(tableSchema));
   }
 
   setParams(query = { filters: [], sorts: [] }) {

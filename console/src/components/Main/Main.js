@@ -12,6 +12,10 @@ import { getPathRoot } from '../Common/utils/urlUtils';
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
 import { Icon } from '../UIKit/atoms/';
+import logo from './images/white-logo.svg';
+import pixHeart from './images/pix-heart.svg';
+
+import styles from './Main.scss';
 
 import {
   loadServerVersion,
@@ -42,6 +46,7 @@ import {
 } from '../Common/utils/localStorageUtils';
 import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
+import { ProPopup } from './components/ProPopup';
 
 class Main extends React.Component {
   constructor(props) {
@@ -81,11 +86,11 @@ class Main extends React.Component {
     dispatch(fetchServerConfig());
   }
 
-  toggleProPopup() {
+  toggleProPopup = () => {
     const { dispatch } = this.props;
     dispatch(emitProClickedEvent({ open: !this.state.isPopUpOpen }));
     this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
-  }
+  };
 
   setShowUpdateNotification() {
     const {
@@ -177,10 +182,10 @@ class Main extends React.Component {
     }
   }
 
-  clickProIcon() {
+  onProIconClick = () => {
     this.updateLocalStorageState();
     this.toggleProPopup();
-  }
+  };
 
   closeUpdateBanner() {
     const { updateNotificationVersion } = this.state;
@@ -202,26 +207,13 @@ class Main extends React.Component {
       dispatch,
     } = this.props;
 
-    const { isProClicked } = this.state.proClickState;
-
-    const styles = require('./Main.scss');
+    const {
+      proClickState: { isProClicked },
+      isPopUpOpen,
+    } = this.state;
 
     const appPrefix = '';
 
-    const logo = require('./images/white-logo.svg');
-    const github = require('./images/Github.svg');
-    const discord = require('./images/Discord.svg');
-    const mail = require('./images/mail.svg');
-    const docs = require('./images/docs-logo.svg');
-    const about = require('./images/console-logo.svg');
-    const pixHeart = require('./images/pix-heart.svg');
-    const close = require('./images/x-circle.svg');
-    const monitoring = require('./images/monitoring.svg');
-    const rate = require('./images/rate.svg');
-    const regression = require('./images/regression.svg');
-    const management = require('./images/management.svg');
-    const allow = require('./images/allow.svg');
-    const arrowForwardRed = require('./images/arrow_forward-red.svg');
     const currentLocation = location.pathname;
     const currentActiveBlock = getPathRoot(currentLocation);
 
@@ -319,7 +311,10 @@ class Main extends React.Component {
               <a href={'#'} onClick={handlePreRelNotifOptOut}>
                 Opt out of pre-release notifications
               </a>
-              <ToolTip message={'Only be notified about stable releases'} />
+              <ToolTip
+                message={'Only be notified about stable releases'}
+                placement={'top'}
+              />
             </i>
           </React.Fragment>
         );
@@ -486,16 +481,6 @@ class Main extends React.Component {
       return loveSectionHtml;
     };
 
-    const getHelpDropdownPosStyle = () => {
-      let helpDropdownPosStyle = '';
-
-      if (this.state.loveConsentState.isDismissed) {
-        helpDropdownPosStyle = styles.help_dropdown_menu_heart_dismissed;
-      }
-
-      return helpDropdownPosStyle;
-    };
-
     const getSidebarItem = (
       title,
       icon,
@@ -538,108 +523,63 @@ class Main extends React.Component {
       );
     };
 
-    const renderProPopup = () => {
-      const { isPopUpOpen } = this.state;
-      if (isPopUpOpen) {
-        return (
-          <div className={styles.proPopUpWrapper}>
-            <div className={styles.popUpHeader}>
-              Hasura <span>PRO</span>
-              <img
-                onClick={this.toggleProPopup.bind(this)}
-                className={styles.popUpClose}
-                src={close}
-                alt={'Close'}
-              />
-            </div>
-            <div className={styles.popUpBodyWrapper}>
-              <div className={styles.featuresDescription}>
-                Hasura Pro is an enterprise-ready version of Hasura that comes
-                with the following features:
+    const getVulnerableVersionNotification = () => {
+      let vulnerableVersionNotificationHtml = null;
+
+      // vulnerable version to fixed version mapping
+      const vulnerableVersionsMapping = {
+        'v1.2.0-beta.5': 'v1.2.1',
+        'v1.2.0': 'v1.2.1',
+      };
+
+      if (Object.keys(vulnerableVersionsMapping).includes(serverVersion)) {
+        const fixedVersion = vulnerableVersionsMapping[serverVersion];
+
+        vulnerableVersionNotificationHtml = (
+          <div>
+            <div className={styles.phantom} />{' '}
+            {/* phantom div to prevent overlapping of banner with content. */}
+            <div
+              className={
+                styles.updateBannerWrapper +
+                ' ' +
+                styles.vulnerableVersionBannerWrapper
+              }
+            >
+              <div className={styles.updateBanner}>
+                <span>
+                  <Icon type={'warning'} /> <b>ATTENTION</b>
+                  <span className={styles.middot}> &middot; </span>
+                  This current server version has a security vulnerability.
+                  Please upgrade to <b>{fixedVersion}</b> immediately
+                </span>
+                <span className={styles.middot}> &middot; </span>
+                <a
+                  href={
+                    'https://github.com/hasura/graphql-engine/releases/tag/' +
+                    fixedVersion
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span>View Changelog</span>
+                </a>
+                <span className={styles.middot}> &middot; </span>
+                <a
+                  className={styles.updateLink}
+                  href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span>Update Now</span>
+                </a>
               </div>
-              <div className={styles.proFeaturesList}>
-                <div className={styles.featuresImg}>
-                  <img src={monitoring} alt={'Monitoring'} />
-                </div>
-                <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>
-                    Monitoring/Analytics
-                  </div>
-                  <div className={styles.featuresDescription}>
-                    Complete observability to troubleshoot errors and drill-down
-                    into individual operations.
-                  </div>
-                </div>
-              </div>
-              <div className={styles.proFeaturesList}>
-                <div className={styles.featuresImg}>
-                  <img src={rate} alt={'Rate'} />
-                </div>
-                <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>Rate Limiting</div>
-                  <div className={styles.featuresDescription}>
-                    Prevent abuse with role-based rate limits.
-                  </div>
-                </div>
-              </div>
-              <div className={styles.proFeaturesList}>
-                <div className={styles.featuresImg}>
-                  <img src={regression} alt={'Regression'} />
-                </div>
-                <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>Regression Testing</div>
-                  <div className={styles.featuresDescription}>
-                    Automatically create regression suites to prevent breaking
-                    changes.
-                  </div>
-                </div>
-              </div>
-              <div className={styles.proFeaturesList}>
-                <div className={styles.featuresImg}>
-                  <img src={management} alt={'Management'} />
-                </div>
-                <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>Team Management</div>
-                  <div className={styles.featuresDescription}>
-                    Login to a Hasura project with granular privileges.
-                  </div>
-                </div>
-              </div>
-              <div className={styles.proFeaturesList}>
-                <div className={styles.featuresImg}>
-                  <img src={allow} alt={'allow'} />
-                </div>
-                <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>
-                    Allow Listing Workflows
-                  </div>
-                  <div className={styles.featuresDescription}>
-                    Setup allow lists across dev, staging and production
-                    environments with easy workflows.
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className={styles.popUpFooter}>
-              <a
-                href={
-                  'https://hasura.io/getintouch?type=hasuraprodemo&utm_source=console'
-                }
-                target={'_blank'}
-                rel="noopener noreferrer"
-              >
-                Set up a chat to learn more{' '}
-                <img
-                  className={styles.arrow}
-                  src={arrowForwardRed}
-                  alt={'Arrow'}
-                />
-              </a>
             </div>
           </div>
         );
       }
-      return null;
+
+      return vulnerableVersionNotificationHtml;
     };
 
     return (
@@ -656,146 +596,70 @@ class Main extends React.Component {
                 <div className={styles.project_version}>{serverVersion}</div>
               </Link>
             </div>
-          </div>
-          <div className={styles.navigation_wrapper}>
-            <ul className={styles.sidebarItems}>
-              {getSidebarItem(
-                'GraphiQL',
-                'graphiQL',
-                tooltips.apiExplorer,
-                '/api-explorer',
-                true
-              )}
-              {getSidebarItem(
-                'Data',
-                'database',
-                tooltips.data,
-                getSchemaBaseRoute(currentSchema)
-              )}
-              {getSidebarItem(
-                'Actions',
-                'action',
-                tooltips.actions,
-                '/actions/manage/actions'
-              )}
-              {getSidebarItem(
-                'Remote Schemas',
-                'schema',
-                tooltips.remoteSchema,
-                '/remote-schemas/manage/schemas'
-              )}
-              {getSidebarItem(
-                'Events',
-                'event',
-                tooltips.events,
-                '/events/manage/triggers'
-              )}
-            </ul>
+            <div className={styles.header_items}>
+              <ul className={styles.sidebarItems}>
+                {getSidebarItem(
+                  'GraphiQL',
+                  'fa-flask',
+                  tooltips.apiExplorer,
+                  '/api-explorer',
+                  true
+                )}
+                {getSidebarItem(
+                  'Data',
+                  'fa-database',
+                  tooltips.data,
+                  getSchemaBaseRoute(currentSchema)
+                )}
+                {getSidebarItem(
+                  'Actions',
+                  'fa-cogs',
+                  tooltips.actions,
+                  '/actions/manage/actions'
+                )}
+                {getSidebarItem(
+                  'Remote Schemas',
+                  'fa-plug',
+                  tooltips.remoteSchema,
+                  '/remote-schemas/manage/schemas'
+                )}
+                {getSidebarItem(
+                  'Events',
+                  'fa-cloud',
+                  tooltips.events,
+                  '/events/data/manage'
+                )}
+              </ul>
+            </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
               {getAdminSecretSection()}
-              <div className={styles.helpSection + ' ' + styles.proWrapper}>
+              <div
+                className={`${styles.headerRightNavbarBtn} ${styles.proWrapper}`}
+                onClick={this.onProIconClick}
+              >
                 <span
-                  className={
-                    !isProClicked ? styles.proName : styles.proNameClicked
-                  }
-                  onClick={this.clickProIcon.bind(this)}
+                  className={`
+                    ${isProClicked ? styles.proNameClicked : styles.proName}
+                    ${isPopUpOpen ? styles.navActive : ''}`}
                 >
-                  PRO
+                  CLOUD
                 </span>
-                {renderProPopup()}
+                {isPopUpOpen && <ProPopup toggleOpen={this.toggleProPopup} />}
               </div>
               <Link to="/settings">
-                <div className={styles.helpSection + ' ' + styles.settingsIcon}>
+                <div className={styles.headerRightNavbarBtn}>
                   {getMetadataStatusIcon()}
                   {getSettingsSelectedMarker()}
                 </div>
               </Link>
-              <div className={styles.supportSection}>
-                <div
-                  id="help"
-                  className={styles.helpSection + ' dropdown-toggle'}
-                  data-toggle="dropdown"
-                  aria-expanded="false"
-                  aria-haspopup="true"
-                >
-                  <Icon type="question" className={styles.question} size={18} />
-                </div>
-                <ul
-                  className={
-                    'dropdown-menu ' +
-                    styles.help_dropdown_menu +
-                    ' ' +
-                    getHelpDropdownPosStyle()
-                  }
-                  aria-labelledby="help"
-                >
-                  <div className={styles.help_dropdown_menu_container}>
-                    <li className={'dropdown-item'}>
-                      <a
-                        href="https://github.com/hasura/graphql-engine/issues"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <img
-                          className={'img-responsive'}
-                          src={github}
-                          alt={'github'}
-                        />
-                        <span>Report bugs & suggest improvements</span>
-                      </a>
-                    </li>
-                    <li className={'dropdown-item'}>
-                      <a
-                        href="https://discordapp.com/invite/vBPpJkS"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <img
-                          className={'img-responsive'}
-                          src={discord}
-                          alt={'discord'}
-                        />
-                        <span>Join discord community forum</span>
-                      </a>
-                    </li>
-                    <li className={'dropdown-item'}>
-                      <a href="mailto:support@hasura.io">
-                        <img
-                          className={'img-responsive'}
-                          src={mail}
-                          alt={'mail'}
-                        />
-                        <span>Reach out ({'support@hasura.io'})</span>
-                      </a>
-                    </li>
-                    <li className={'dropdown-item'}>
-                      <a
-                        href="https://hasura.io/docs/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <img
-                          className={'img-responsive'}
-                          src={docs}
-                          alt={'docs'}
-                        />
-                        <span>Head to docs</span>
-                      </a>
-                    </li>
-                    <li className={'dropdown-item'}>
-                      <Link to="/about">
-                        <img
-                          className={'img-responsive'}
-                          src={about}
-                          alt={'about'}
-                        />
-                        <span>About</span>
-                      </Link>
-                    </li>
-                  </div>
-                </ul>
-              </div>
-
+              <a
+                id="help"
+                href="https://hasura.io/help"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className={styles.headerRightNavbarBtn}>HELP</div>
+              </a>
               {getLoveSection()}
             </div>
           </div>
@@ -806,6 +670,7 @@ class Main extends React.Component {
         </div>
 
         {getUpdateNotification()}
+        {getVulnerableVersionNotification()}
       </div>
     );
   }

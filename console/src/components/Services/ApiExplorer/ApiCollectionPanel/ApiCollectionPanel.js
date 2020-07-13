@@ -19,8 +19,6 @@ const ApiCollectionPanel = props => {
     authApiExpanded,
     apiSelectionCallback,
     authApiExpandCallback,
-    authApiExpandCallback,
-    apiSelectionCallback,
   } = props;
 
   const onClearHistoryClicked = () => {

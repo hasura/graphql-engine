@@ -12,10 +12,13 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Resolve.Action
 import           Hasura.GraphQL.Validate.Types          (evalReusabilityT, runReusabilityT)
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
+import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -24,15 +27,17 @@ import qualified Hasura.GraphQL.Execute.LiveQuery       as E
 import qualified Hasura.GraphQL.Resolve                 as RS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
+import qualified Hasura.GraphQL.Validate.SelectionSet   as GV
 import qualified Hasura.SQL.DML                         as S
 
 data GQLExplain
   = GQLExplain
-  { _gqeQuery :: !GH.GQLReqParsed
-  , _gqeUser  :: !(Maybe (Map.HashMap Text Text))
+  { _gqeQuery   :: !GH.GQLReqParsed
+  , _gqeUser    :: !(Maybe (Map.HashMap Text Text))
+  , _gqeIsRelay :: !(Maybe Bool)
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True}
   ''GQLExplain
  )
 
@@ -45,14 +50,14 @@ data FieldPlan
 
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
 
-type Explain r =
-  (ReaderT r (Except QErr))
+type Explain r m =
+  (ReaderT r (ExceptT QErr m))
 
 runExplain
   :: (MonadError QErr m)
-  => r -> Explain r a -> m a
+  => r -> Explain r m a -> m a
 runExplain ctx m =
-  either throwError return $ runExcept $ runReaderT m ctx
+  either throwError return =<< runExceptT (runReaderT m ctx)
 
 resolveVal
   :: (MonadError QErr m)
@@ -66,24 +71,29 @@ resolveVal userInfo = \case
       PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
       PGTypeArray _      -> sessVarVal
   RS.UVSQL sqlExp -> return sqlExp
-  RS.UVSession -> pure $ sessionInfoJsonExp $ userVars userInfo
+  RS.UVSession -> pure $ sessionInfoJsonExp $ _uiSession userInfo
 
 getSessVarVal
   :: (MonadError QErr m)
-  => UserInfo -> SessVar -> m SessVarVal
+  => UserInfo -> SessionVariable -> m Text
 getSessVarVal userInfo sessVar =
-  onNothing (getVarVal sessVar usrVars) $
+  onNothing (getSessionVariableValue sessVar sessionVariables) $
     throw400 UnexpectedPayload $
     "missing required session variable for role " <> rn <<>
-    " : " <> sessVar
+    " : " <> sessionVariableToText sessVar
   where
-    rn = userRole userInfo
-    usrVars = userVars userInfo
+    rn = _uiRole userInfo
+    sessionVariables = _uiSession userInfo
 
 explainField
-  :: (MonadTx m)
-  => UserInfo -> GCtx -> SQLGenCtx -> GV.Field -> m FieldPlan
-explainField userInfo gCtx sqlGenCtx fld =
+  :: (MonadError QErr m, MonadTx m, HasVersion, MonadIO m)
+  => UserInfo
+  -> GCtx
+  -> SQLGenCtx
+  -> QueryActionExecuter
+  -> GV.Field
+  -> m FieldPlan
+explainField userInfo gCtx sqlGenCtx actionExecuter fld =
   case fName of
     "__type"     -> return $ FieldPlan fName Nothing Nothing
     "__schema"   -> return $ FieldPlan fName Nothing Nothing
@@ -91,13 +101,17 @@ explainField userInfo gCtx sqlGenCtx fld =
     _            -> do
       unresolvedAST <-
         runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-          evalReusabilityT $ RS.queryFldToPGAST fld
-      resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo)
-                     unresolvedAST
-      let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
+          evalReusabilityT $ RS.queryFldToPGAST fld actionExecuter
+      resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo) unresolvedAST
+      let (query, remoteJoins) = RS.toPGQuery resolvedAST
+          txtSQL = Q.getQueryText query
+          -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+          -- query, resulting in potential privilege escalation:
           withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
+      -- Reject if query contains any remote joins
+      when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
       planLines <- liftTx $ map runIdentity <$>
-        Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
+                     Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
       return $ FieldPlan fName (Just txtSQL) $ Just planLines
   where
     fName = GV._fName fld
@@ -107,30 +121,36 @@ explainField userInfo gCtx sqlGenCtx fld =
     orderByCtx = _gOrdByCtx gCtx
 
 explainGQLQuery
-  :: (MonadError QErr m, MonadIO m)
+  :: (MonadError QErr m, MonadIO m, HasVersion)
   => PGExecCtx
   -> SchemaCache
   -> SQLGenCtx
-  -> Bool
+  -> QueryActionExecuter
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
+explainGQLQuery pgExecCtx sc sqlGenCtx actionExecuter (GQLExplain query userVarsRaw maybeIsRelay) = do
+  -- NOTE!: we will be executing what follows as though admin role. See e.g.
+  -- notes in explainField:
+  userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
+  -- we don't need to check in allow list as we consider it an admin endpoint
   (execPlan, queryReusability) <- runReusabilityT $
-    E.getExecPlanPartial userInfo sc enableAL query
+    E.getExecPlanPartial userInfo sc queryType query
   (gCtx, rootSelSet) <- case execPlan of
     E.GExPHasura (gCtx, rootSelSet) ->
       return (gCtx, rootSelSet)
-    E.GExPRemote _ _  ->
+    E.GExPRemote{}  ->
       throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
     GV.RQuery selSet ->
-      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx) (toList selSet)
+      runInTx $ encJFromJValue . map snd <$>
+        GV.traverseObjectSelectionSet selSet (explainField userInfo gCtx sqlGenCtx actionExecuter)
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
-    GV.RSubscription rootField -> do
-      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability rootField
+    GV.RSubscription fields -> do
+      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo
+                     queryReusability actionExecuter fields
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
-    usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
-    userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
+    queryType = bool E.QueryHasura E.QueryRelay $ fromMaybe False maybeIsRelay
+    sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly

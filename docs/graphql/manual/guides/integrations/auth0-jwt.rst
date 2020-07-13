@@ -22,7 +22,7 @@ Create an Auth0 Application
 - In the ``Create Application`` window, set a name for your application and select ``Single Page Web Applications``
   (assuming your application is React/Angular/Vue etc).
 
-.. thumbnail:: ../../../../img/graphql/manual/guides/create-client-popup.png
+.. thumbnail:: /img/graphql/manual/guides/create-client-popup.png
    :alt: Create an Auth0 application
 
 Configure Auth0 Rules & Callback URLs
@@ -189,7 +189,7 @@ The generated config can be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt
 The config generated from this page can be directly pasted in ``yaml`` files and command line arguments as it takes care of
 escaping new lines.
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
+.. thumbnail:: /img/graphql/manual/auth/jwt-config-generated.png
    :width: 75%
    :alt: Generated JWT config
 
@@ -197,7 +197,7 @@ Add Access Control Rules via Hasura Console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Auth0 is configured and ready to be used in the application. You can now set up access control rules that
-will automatically get applied whenever a client makes a graphql query with the Auth0 token.
+will automatically get applied whenever a client makes a GraphQL request with the Auth0 token.
 
 Refer to :ref:`auth_basics` for more information.
 
@@ -259,4 +259,4 @@ That’s it! This rule will be triggered on every successful signup/login and sy
 
 .. admonition:: Local dev with Auth0 rules
 
-   The sync step will require a reachable endpoint to Hasura and this is not possible in localhost. You can use `ngrok <https://ngrok.com/>`_ or similar services to expose your locally running Hasura with a public endpoint temporarily.
+   The sync step will require a reachable endpoint to Hasura and this is not possible in localhost. You can use `ngrok <https://ngrok.com/>`__ or similar services to expose your locally running Hasura with a public endpoint temporarily.

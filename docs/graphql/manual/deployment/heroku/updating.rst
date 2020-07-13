@@ -43,7 +43,7 @@ Step 2: Attach your Heroku app
 
 Let's say your Heroku app is called ``hasura-heroku`` and is running on ``https://hasura-heroku.herokuapp.com``.
 
-Navigate to your project directory, use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`_ to configure the git repo you cloned in Step 1
+Navigate to your project directory, use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`__ to configure the git repo you cloned in Step 1
 to be able to push to this app.
 
 .. code-block:: bash
@@ -73,12 +73,12 @@ at https://github.com/hasura/graphql-engine/releases.
 .. code-block:: Dockerfile
    :emphasize-lines: 1
 
-   FROM hasura/graphql-engine:v1.0.0-alpha01
+   FROM hasura/graphql-engine:v1.0.0
 
    ...
    ...
 
-Change ``v1.0.0-alpha01`` to ``v1.0.0-alpha02`` for example, and then ``git push heroku master`` to deploy.
+Change ``v1.0.0`` to ``v1.1.0`` for example, commit this and then ``git push heroku master`` to deploy.
 
 .. note::
 

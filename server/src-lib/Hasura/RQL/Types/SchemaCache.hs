@@ -114,9 +114,9 @@ module Hasura.RQL.Types.SchemaCache
   , FunctionCache
   , getFuncsOfTable
   , askFunctionInfo
+  , CronTriggerInfo(..)
+  , mergeRemoteTypesWithGCtx
   ) where
-
-import qualified Hasura.GraphQL.Context            as GC
 
 import           Hasura.Db
 import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
@@ -127,21 +127,27 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Types
 
+
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           System.Cron.Types
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
 import qualified Data.Text                         as T
+import qualified Hasura.GraphQL.Context            as GC
+import qualified Hasura.GraphQL.Validate.Types     as VT
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . sort . map reportSchemaObj
@@ -163,7 +169,7 @@ type WithDeps a = (a, [SchemaDependency])
 data RemoteSchemaCtx
   = RemoteSchemaCtx
   { rscName :: !RemoteSchemaName
-  , rscGCtx :: !GC.RemoteGCtx
+  , rscGCtx :: !GC.GCtx
   , rscInfo :: !RemoteSchemaInfo
   } deriving (Show, Eq)
 
@@ -173,6 +179,19 @@ instance ToJSON RemoteSchemaCtx where
 type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
+
+data CronTriggerInfo
+ = CronTriggerInfo
+   { ctiName        :: !TriggerName
+   , ctiSchedule    :: !CronSchedule
+   , ctiPayload     :: !(Maybe Value)
+   , ctiRetryConf   :: !STRetryConf
+   , ctiWebhookInfo :: !ResolvedWebhook
+   , ctiHeaders     :: ![EventHeaderInfo]
+   , ctiComment     :: !(Maybe Text)
+   } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 3 snakeCase) ''CronTriggerInfo)
 
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
@@ -198,8 +217,10 @@ data SchemaCache
   , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
+  , scRelayGCtxMap      :: !GC.RelayGCtxMap
   , scDepMap            :: !DepMap
   , scInconsistentObjs  :: ![InconsistentMetadata]
+  , scCronTriggers      :: !(M.HashMap TriggerName CronTriggerInfo)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 
@@ -284,3 +305,7 @@ getDependentObjsWith f sc objId =
     induces (SOTable tn1) (SOTableObj tn2 _) = tn1 == tn2
     induces objId1 objId2                    = objId1 == objId2
     -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc
+
+mergeRemoteTypesWithGCtx :: VT.TypeMap -> GC.GCtx -> GC.GCtx
+mergeRemoteTypesWithGCtx remoteTypeMap gctx =
+  gctx {GC._gTypes = remoteTypeMap <> GC._gTypes gctx }

@@ -74,13 +74,14 @@
   opacity: 0.1;
 }
 
-.panelInFocus {
-}
-
-.requestInFocus {
+.apiRequestBody {
+  margin: 20px 0;
+  height: 100%;
+  min-height: 60vh;
 }
 
 .apiExplorerWrapper {
+  margin-top: 20px;
   display: flex;
   height: $mainContainerHeight;
 
@@ -316,7 +317,6 @@
   }
 
   .apiRequestWrapper {
-    margin-top: 20px;
     .headerWrapper {
       margin-bottom: 20px;
     }
@@ -819,4 +819,8 @@ label {
       margin-bottom: 15px;
     }
   }
+}
+
+.graphiqlModeToggle {
+  float: right;
 }

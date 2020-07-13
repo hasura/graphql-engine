@@ -91,7 +91,7 @@ ActionDefinition
      - Schema
      - Description
    * - arguments
-     - true
+     - false
      - Array of InputArgument_
      - Input arguments
    * - output_type
@@ -101,7 +101,8 @@ ActionDefinition
    * - kind
      - false
      - [ ``synchronous`` | ``asynchronous`` ]
-     - The kind of the action (default: ``synchronous``)
+     - The kind of the mutation action (default: ``synchronous``). If the type of
+       the action is ``query`` then the ``kind`` field should be omitted.
    * - headers
      - false
      - [ :ref:`HeaderFromValue <HeaderFromValue>` | :ref:`HeaderFromEnv <HeaderFromEnv>` ]
@@ -114,6 +115,10 @@ ActionDefinition
      - true
      - :ref:`WebhookURL <WebhookURL>`
      - The action's webhook URL
+   * - type
+     - false
+     - [ ``mutation`` | ``query`` ]
+     - The type of the action (default: ``mutation``)
 
 .. _InputArgument:
 
@@ -277,7 +282,7 @@ Args syntax
      - Required
      - Schema
      - Description
-   * - name
+   * - action
      - true
      - :ref:`ActionName <ActionName>`
      - Name of the action

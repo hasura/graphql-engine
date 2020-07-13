@@ -21,6 +21,7 @@ const Permissions = ({
   permissionEdit,
   isEditing,
   isFetching,
+  readOnlyMode = false,
 }) => {
   React.useEffect(() => {
     dispatch(fetchRoleList());
@@ -81,7 +82,6 @@ const Permissions = ({
             dispatch(permCloseEdit());
           };
 
-          const isEditAllowed = role !== 'admin';
           const isCurrEdit =
             isEditing &&
             (permissionEdit.role === role ||
@@ -90,14 +90,15 @@ const Permissions = ({
           let className = '';
           // eslint-disable-next-line @typescript-eslint/no-empty-function
           let onClick = () => {};
-          if (isEditAllowed) {
+          if (role !== 'admin' && !readOnlyMode) {
             editIcon = getEditIcon();
 
-            className += styles.clickableCell;
-            onClick = dispatchOpenEdit(queryType);
             if (isCurrEdit) {
               onClick = dispatchCloseEdit;
               className += ` ${styles.currEdit}`;
+            } else {
+              className += styles.clickableCell;
+              onClick = dispatchOpenEdit(queryType);
             }
           }
 
@@ -172,12 +173,14 @@ const Permissions = ({
       />
       {getPermissionsTable()}
       <div className={`${styles.add_mar_bottom}`}>
-        <PermissionEditor
-          permissionEdit={permissionEdit}
-          dispatch={dispatch}
-          isFetching={isFetching}
-          isEditing={isEditing}
-        />
+        {!readOnlyMode && (
+          <PermissionEditor
+            permissionEdit={permissionEdit}
+            dispatch={dispatch}
+            isFetching={isFetching}
+            isEditing={isEditing}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,0 +1,22 @@
+description: Query node interface with an invalid column value in node id json array
+url: /v1beta1/relay
+status: 200
+query:
+  query: |
+    query {
+      node(id: "WzEsICJwdWJsaWMiLCAidXNlciIsIDEsICJsYXN0XzIiXQo="){
+        ... on user{
+          first_name
+          last_name
+          age
+          address
+        }
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: "$.selectionSet.node"
+      code: parse-failed
+    message: 'value of column "first_name" in node id: parsing Text failed, expected
+      String, but encountered Number'

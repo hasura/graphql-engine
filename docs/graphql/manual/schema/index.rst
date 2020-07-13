@@ -29,12 +29,15 @@ Postgres constructs.
   :maxdepth: 1
 
   Basics <basics>
-  Relationships <relationships/index>
-  Customise with views <views>
-  Customise with SQL functions <custom-functions>
+  Table relationships <table-relationships/index>
+  Remote relationships <remote-relationships/index>
+  Extend with views <views>
+  Extend with SQL functions <custom-functions>
   Default field values <default-values/index>
-  Enum type fields <enums>
+  enums
   computed-fields
   custom-field-names
+  data-validations
   Using an existing database <using-existing-database>
   Export GraphQL schema <export-graphql-schema>
+  relay-schema

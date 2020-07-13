@@ -1,0 +1,32 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE EXTENSION IF NOT EXISTS postgis;
+      CREATE EXTENSION IF NOT EXISTS postgis_topology;
+      DO $$
+      BEGIN
+        IF PostGIS_lib_version() ~ '^3.*' THEN
+          CREATE EXTENSION IF NOT EXISTS postgis_raster;
+        END IF;
+      END$$;
+
+      CREATE TABLE "user"(
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL,
+        location geography
+      );
+
+- type: track_table
+  args:
+    name: user
+    schema: public
+
+- type: set_custom_types
+  args:
+    objects:
+    - name: User
+      fields:
+      - name: user_id
+        type: ID!

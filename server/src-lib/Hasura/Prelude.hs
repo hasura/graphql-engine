@@ -1,14 +1,21 @@
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.Prelude
   ( module M
+  , alphabet
   , alphaNumerics
   , onNothing
   , onJust
   , onLeft
   , choice
+  , afold
   , bsToTxt
   , txtToBs
+  , base64Decode
   , spanMaybeM
+  -- * Efficient coercions
+  , coerce
+  , coerceSet
   , findWithIndex
   , mapFromL
   -- * Measuring and working with moments and durations
@@ -20,16 +27,14 @@ module Hasura.Prelude
 import           Control.Applicative               as M (Alternative (..))
 import           Control.Arrow                     as M (first, second, (&&&), (***), (<<<), (>>>))
 import           Control.DeepSeq                   as M (NFData, deepseq, force)
-import           Control.Monad                     as M (void, when)
 import           Control.Monad.Base                as M
 import           Control.Monad.Except              as M
-import           Control.Monad.Fail                as M (MonadFail)
 import           Control.Monad.Identity            as M
 import           Control.Monad.Reader              as M
 import           Control.Monad.State.Strict        as M
-import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..))
-import           Data.Align                        as M (Align (align, alignWith))
-import           Data.Align.Key                    as M (AlignWithKey (..))
+import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..),
+                                                         execWriterT, runWriterT)
+import           Data.Align                        as M (Semialign (align, alignWith))
 import           Data.Bool                         as M (bool)
 import           Data.Data                         as M (Data (..))
 import           Data.Either                       as M (lefts, partitionEithers, rights)
@@ -42,34 +47,44 @@ import           Data.HashSet                      as M (HashSet)
 import           Data.List                         as M (find, findIndex, foldl', group,
                                                          intercalate, intersect, lookup, sort,
                                                          sortBy, sortOn, union, unionBy, (\\))
-import           Data.List.NonEmpty                as M (NonEmpty(..))
+import           Data.List.NonEmpty                as M (NonEmpty (..))
 import           Data.Maybe                        as M (catMaybes, fromMaybe, isJust, isNothing,
                                                          listToMaybe, mapMaybe, maybeToList)
+import           Data.Monoid                       as M (getAlt)
 import           Data.Ord                          as M (comparing)
 import           Data.Semigroup                    as M (Semigroup (..))
 import           Data.Sequence                     as M (Seq)
 import           Data.String                       as M (IsString)
 import           Data.Text                         as M (Text)
 import           Data.These                        as M (These (..), fromThese, mergeThese,
-                                                         mergeTheseWith, these)
+                                                         mergeTheseWith, partitionThese, these)
+import           Data.Time.Clock.Units
 import           Data.Traversable                  as M (for)
 import           Data.Word                         as M (Word64)
 import           GHC.Generics                      as M (Generic)
 import           Prelude                           as M hiding (fail, init, lookup)
 import           Test.QuickCheck.Arbitrary.Generic as M
 import           Text.Read                         as M (readEither, readMaybe)
-import           Data.Time.Clock.Units
 
 import qualified Data.ByteString                   as B
+import qualified Data.ByteString.Lazy              as BL
+
+import qualified Data.ByteString.Base64.Lazy       as Base64
+import           Data.Coerce
 import qualified Data.HashMap.Strict               as Map
+import qualified Data.Set                          as Set
 import qualified Data.Text                         as T
 import qualified Data.Text.Encoding                as TE
 import qualified Data.Text.Encoding.Error          as TE
 import qualified GHC.Clock                         as Clock
 import qualified Test.QuickCheck                   as QC
+import           Unsafe.Coerce
+
+alphabet :: String
+alphabet = ['a'..'z'] ++ ['A'..'Z']
 
 alphaNumerics :: String
-alphaNumerics = ['a'..'z'] ++ ['A'..'Z'] ++ "0123456789 "
+alphaNumerics = alphabet ++ "0123456789"
 
 instance Arbitrary Text where
   arbitrary = T.pack <$> QC.listOf (QC.elements alphaNumerics)
@@ -86,11 +101,19 @@ onLeft e f = either f return e
 choice :: (Alternative f) => [f a] -> f a
 choice = asum
 
+afold :: (Foldable t, Alternative f) => t a -> f a
+afold = getAlt . foldMap pure
+
 bsToTxt :: B.ByteString -> Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
 
 txtToBs :: Text -> B.ByteString
 txtToBs = TE.encodeUtf8
+
+base64Decode :: Text -> BL.ByteString
+base64Decode =
+  Base64.decodeLenient . BL.fromStrict . txtToBs
+
 
 -- Like 'span', but monadic and with a function that produces 'Maybe' instead of 'Bool'
 spanMaybeM
@@ -102,6 +125,16 @@ spanMaybeM f = go . toList
     go l@(x:xs) = f x >>= \case
       Just y  -> first (y:) <$> go xs
       Nothing -> pure ([], l)
+
+-- | Efficiently coerce a set from one type to another.
+--
+-- This has the same safety properties as 'Set.mapMonotonic', and is equivalent
+-- to @Set.mapMonotonic coerce@ but is more efficient. This is safe to use when
+-- both @a@ and @b@ have automatically derived @Ord@ instances.
+--
+-- https://stackoverflow.com/q/57963881/176841
+coerceSet :: Coercible a b=> Set.Set a -> Set.Set b
+coerceSet = unsafeCoerce
 
 findWithIndex :: (a -> Bool) -> [a] -> Maybe (a, Int)
 findWithIndex p l = do

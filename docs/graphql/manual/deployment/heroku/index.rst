@@ -13,9 +13,9 @@ Run Hasura GraphQL engine on Heroku
   :local:
 
 This guide will help you get the Hasura GraphQL engine running as a "git push to deploy" app on
-`Heroku <https://www.heroku.com/platform>`_ and connecting it to a `Heroku Postgres <https://www.heroku.com/postgres>`_
-instance. If you want a simple, quick deployment on Heroku, follow this :ref:`Heroku quickstart
-guide <heroku_simple>`.
+`Heroku <https://www.heroku.com/platform>`__ and connecting it to a `Heroku Postgres <https://www.heroku.com/postgres>`__
+instance. If you want a simple, quick deployment on Heroku, follow this :ref:`Heroku one-click
+guide <heroku_one_click>`.
 
 Clone the Hasura GraphQL engine Heroku app
 ------------------------------------------
@@ -59,7 +59,7 @@ These are some sample deployment instructions while creating a new app.
 Step 1: Create an app with **--stack=container**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`_ to create a new Heroku app. Let's call
+Use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`__ to create a new Heroku app. Let's call
 the app ``graphql-on-postgres``.
 
 .. code-block:: bash
@@ -113,7 +113,7 @@ Advanced
 - :ref:`heroku_existing_db`
 - :ref:`GraphQL engine server logs <heroku_logs>`
 - :ref:`Updating GraphQL engine <heroku_update>`
-- :ref:`Setting up migrations <auth>`
+- :ref:`Setting up migrations <migrations>`
 
 .. toctree::
    :titlesonly:

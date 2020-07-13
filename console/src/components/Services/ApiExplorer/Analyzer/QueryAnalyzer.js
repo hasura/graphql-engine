@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Modal from 'react-modal';
+import RootFields from './RootFields';
 
 import { Icon } from '../../../UIKit/atoms';
 
@@ -25,7 +26,7 @@ export default class QueryAnalyser extends React.Component {
       })
       .then(data => {
         this.setState({
-          analyseData: data,
+          analyseData: Array.isArray(data) ? data : [data],
           activeNode: 0,
         });
       })
@@ -37,19 +38,6 @@ export default class QueryAnalyser extends React.Component {
 
   render() {
     const { show, clearAnalyse } = this.props;
-    const analysisList = this.state.analyseData.map((analysis, i) => {
-      return (
-        <li
-          className={i === this.state.activeNode ? 'active' : ''}
-          key={i}
-          data-key={i}
-          onClick={this.handleAnalyseNodeChange.bind(this)}
-        >
-          <Icon type="table" mr="sm" size={13} mb="-1px" />
-          {analysis.field}
-        </li>
-      );
-    });
 
     return (
       <Modal
@@ -69,7 +57,11 @@ export default class QueryAnalyser extends React.Component {
           <div className="wd25">
             <div className="topLevelNodesWrapper">
               <div className="title">Top level nodes</div>
-              <ul>{analysisList}</ul>
+              <RootFields
+                data={this.state.analyseData}
+                activeNode={this.state.activeNode}
+                onClick={this.handleAnalyseNodeChange}
+              />
             </div>
           </div>
           <div className="wd75">
@@ -150,8 +142,8 @@ export default class QueryAnalyser extends React.Component {
                       {this.state.activeNode >= 0 &&
                       this.state.analyseData.length > 0
                         ? this.state.analyseData[
-                          this.state.activeNode
-                        ].plan.join('\n')
+                            this.state.activeNode
+                          ].plan.join('\n')
                         : ''}
                     </code>
                   </pre>
@@ -177,22 +169,21 @@ export default class QueryAnalyser extends React.Component {
   }
   */
 
-  handleAnalyseNodeChange(e) {
+  handleAnalyseNodeChange = e => {
     const nodeKey = e.target.getAttribute('data-key');
     if (nodeKey) {
       this.setState({ activeNode: parseInt(nodeKey, 10) });
     }
-  }
-
+  };
   copyToClip(type, id) {
     let text = '';
     if (this.state.analyseData.length > 0) {
       if (type === 'sql') {
         text = window.sqlFormatter
           ? window.sqlFormatter.format(
-            this.state.analyseData[this.state.activeNode].sql,
-            { language: 'sql' }
-          )
+              this.state.analyseData[this.state.activeNode].sql,
+              { language: 'sql' }
+            )
           : this.state.analyseData[this.state.activeNode].sql;
       } else {
         text = this.state.analyseData[this.state.activeNode].plan.join('\n');
