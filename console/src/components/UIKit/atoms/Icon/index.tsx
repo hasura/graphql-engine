@@ -42,9 +42,8 @@ import {
   FaCaretLeft,
   FaRegClone,
   FaRegCaretSquareRight,
-  FaCopy,
+  FaRegCopy,
   FaExternalLinkAlt,
-  FaTable,
   FaFilter,
   FaWrench,
   FaRegPaperPlane,
@@ -54,6 +53,7 @@ import {
 } from 'react-icons/fa';
 
 import { StyledIcon, StyledIconProps } from './Icon';
+import { TableIcon } from './Table';
 
 const iconReferenceMap = {
   success: FaCheckCircle,
@@ -99,9 +99,9 @@ const iconReferenceMap = {
   caretRight: FaCaretRight,
   caretLeft: FaCaretLeft,
   clone: FaRegClone,
-  copy: FaCopy,
+  copy: FaRegCopy,
   link: FaExternalLinkAlt,
-  table: FaTable,
+  table: TableIcon,
   filter: FaFilter,
   wrench: FaWrench,
   send: FaRegPaperPlane,

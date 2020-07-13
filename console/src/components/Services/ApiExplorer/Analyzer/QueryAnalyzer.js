@@ -38,7 +38,6 @@ export default class QueryAnalyser extends React.Component {
 
   render() {
     const { show, clearAnalyse } = this.props;
-
     return (
       <Modal
         className="modalWrapper"

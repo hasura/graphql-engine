@@ -290,7 +290,7 @@ const RelationshipEditor = ({
             removeIcon = null;
           } else {
             removeIcon = (
-              <Icon type="close" onClick={removeField} ml="10px" size={15} />
+              <Icon type="close" onClick={removeField} pointer mt="sm" />
             );
           }
 

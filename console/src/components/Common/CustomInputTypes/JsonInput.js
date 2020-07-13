@@ -5,7 +5,7 @@ import 'brace/mode/markdown';
 import 'brace/theme/github';
 import { Icon } from '../../UIKit/atoms';
 
-const styles = require('./CustomInput.scss');
+import styles from './CustomInput.scss';
 
 const NORMALKEY = 'normal';
 const JSONKEY = 'json';
@@ -129,6 +129,7 @@ const JsonInput = props => {
       className={styles.modeToggleButton}
       type={editorType === JSONKEY ? 'compress' : 'expand'}
       onClick={() => updateState(toggleEditorType)}
+      size={12}
       title={
         (editorType === JSONKEY ? 'Collapse' : 'Expand') + ' (Ctrl + Space)'
       }

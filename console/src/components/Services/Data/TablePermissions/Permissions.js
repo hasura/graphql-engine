@@ -79,8 +79,6 @@ import {
   getTableSupportedQueries,
   QUERY_TYPES,
 } from '../../../Common/utils/pgUtils';
-import { Icon } from '../../../UIKit/atoms';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
   getFilterQueries,
@@ -91,6 +89,8 @@ import {
   getQuerySingleRowMutation,
 } from './utils';
 import PermButtonSection from './PermButtonsSection';
+import { Icon } from '../../../UIKit/atoms';
+import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 class Permissions extends Component {
   constructor() {
@@ -365,13 +365,18 @@ class Permissions extends Component {
           //   }
           // };
 
-          const getEditIcon = () => {
-            return (
-              <span className={styles.editPermsIcon}>
-                <Icon type="pencil" />
-              </span>
-            );
-          };
+          const getEditIcon = () => (
+            <Icon
+              type="pencil"
+              size={16}
+              position="absolute"
+              pointer
+              right="10px"
+              pt="4px"
+              color="#337ab7"
+              className={styles.editPermsIcon}
+            />
+          );
 
           const getRoleQueryPermission = queryType => {
             let _permission;
@@ -1446,6 +1451,7 @@ class Permissions extends Component {
               _deleteBtn = (
                 <Icon
                   type="close"
+                  pointer
                   onClick={deletePreset}
                   data-preset-column={preset.column}
                   data-index-id={index}
@@ -1659,6 +1665,7 @@ class Permissions extends Component {
                 _removeIcon = (
                   <Icon
                     type="close"
+                    pointer
                     className={styles.fontAwosomeClose}
                     onClick={removeApplyTo}
                   />

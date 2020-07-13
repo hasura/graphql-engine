@@ -445,6 +445,16 @@ export const UIComponents = () => (
     </Heading>
     <Icon type="fork" ml="xl" />
 
+    <Heading my="lg" as="h3">
+      {'<Icon type="github" />'}
+    </Heading>
+    <Icon type="github" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="download" />'}
+    </Heading>
+    <Icon type="download" ml="xl" />
+
     {/* ToolTip ********************************/}
     <Heading mb="lg" mt="xl" as="h2">
       ToolTip Component

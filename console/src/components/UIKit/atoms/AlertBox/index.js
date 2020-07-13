@@ -44,7 +44,7 @@ export const AlertBox = props => {
       color="black.text"
       {...props}
     >
-      <Icon type={type} />
+      <Icon type={type} color={borderColorValue} />
       {type && (
         <Text as="span" pl="md" fontWeight="medium">
           {type}

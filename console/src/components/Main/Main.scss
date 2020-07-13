@@ -147,7 +147,7 @@
 }
 
 .clusterInfoWrapper {
-  width: 35%;
+  width: auto;
   display: flex;
   justify-content: flex-end;
   position: relative;
@@ -887,6 +887,15 @@
       font-weight: 600;
     }
   }
+}
+
+.helpSection {
+  display: flex;
+  align-items: center;
+  // background-color: #22283b;
+  padding: 15px;
+  position: relative;
+  height: 50px;
 
   .selected {
     bottom: 0;
@@ -896,6 +905,12 @@
     height: 4px;
     width: 100%;
     left: 0px;
+  }
+}
+
+.settingsIcon {
+  a {
+    text-decoration: none;
   }
 }
 
@@ -917,7 +932,7 @@
 }
 
 .secureSection {
-  padding: 15px;
+  padding: 16px 15px 14px 15px;
 
   a {
     //color: #FFC627;
@@ -926,8 +941,8 @@
   }
 
   .secureSectionSymbol {
-    //color: #FFC627 !important;
     color: inherit !important;
+    padding-top: 3px;
   }
 }
 
@@ -1054,18 +1069,6 @@
 
     padding: 25px;
     position: relative;
-
-    .closeDropDown {
-      color: #43495a;
-      cursor: pointer;
-      position: absolute;
-      top: 10px;
-      left: 20px;
-
-      img {
-        width: 10px;
-      }
-    }
   }
 
   .arrow_up_dropdown {
@@ -1322,6 +1325,24 @@
     .proName,
     .proNameClicked {
       font-size: 12px;
+    }
+  }
+
+  .helpSection {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 1350px) {
+  .sidebar {
+    .sidebarItems {
+      li {
+        margin-left: 15px;
+
+        a {
+          padding: 0 5px;
+        }
+      }
     }
   }
 

@@ -8,7 +8,6 @@ const defaultFoldIconComponent = ({ collapsed, name }) => {
 
   if (collapsed) {
     icon = 'caretRight';
-    title = 'Expand column';
     title = name ? `Expand column "${name}"` : 'Expand column';
   } else {
     icon = 'caretLeft';
@@ -24,7 +23,7 @@ const defaultFoldButtonComponent = ({ header, collapsed, icon, onClick }) => {
     position: 'absolute',
     fontSize: '14px',
     top: 'calc(50% - 8px)',
-    left: '8px',
+    left: '6px',
     padding: '5px',
     margin: '-5px -5px -5px -5px',
   };

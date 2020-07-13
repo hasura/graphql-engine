@@ -25,10 +25,10 @@ import {
 import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
-import { Icon } from '../../../UIKit/atoms';
-import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 import { getPersistedPageSize } from './localStorageUtils';
 import { isEmpty } from '../../../Common/utils/jsUtils';
+import { Icon } from '../../../UIKit/atoms';
+import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 
 const history = createHistory();
 
@@ -115,10 +115,10 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
       removeIcon = (
         <Icon
           type="close"
+          pointer
           onClick={() => {
             dispatch(removeFilter(i));
           }}
-          pointer
           mt="sm"
           data-test={`clear-filter-${i}`}
         />
@@ -321,6 +321,7 @@ class FilterQuery extends Component {
             <ReloadEnumValuesButton
               dispatch={dispatch}
               isEnum={tableSchema.is_enum}
+              tooltipStyle={styles.add_mar_left_mid}
             />
             {/* <div className={styles.count + ' alert alert-info'}><i>Total <b>{tableName}</b> rows in the database for current query: {count} </i></div> */}
           </div>

@@ -321,7 +321,6 @@ class AddTable extends Component {
   }
 
   isValidDefault() {
-    // TODO
     return true;
   }
 

@@ -56,6 +56,7 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
             data-test={`remove-pk-column-${i}`}
             onClick={dispatchRemove}
             ml="10px"
+            mt="xs"
             size={15}
             pointer
           />

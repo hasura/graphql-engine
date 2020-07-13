@@ -3,9 +3,9 @@ import { push } from 'react-router-redux';
 import GraphiQL from 'graphiql';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+
 import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
-import { parse as sdlParse, print } from 'graphql';
 import AnalyzeButton from '../Analyzer/AnalyzeButton';
 import CodeExporter from 'graphiql-code-exporter';
 import {
@@ -19,6 +19,8 @@ import {
   copyToClipboard,
 } from './utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
+
+import { parse as sdlParse, print } from 'graphql';
 import deriveAction from '../../../../shared/utils/deriveAction';
 import {
   getActionDefinitionSdl,

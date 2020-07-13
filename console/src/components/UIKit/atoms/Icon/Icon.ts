@@ -4,6 +4,7 @@ import {
   typography,
   layout,
   space,
+  position,
   ColorProps,
   TypographyProps,
   LayoutProps,
@@ -43,6 +44,7 @@ export const StyledIcon = styled(Svg)<StyledIconOwnProps>`
   ${typography}
   ${layout}
   ${space}
+  ${position}
 `;
 
 export interface StyledIconProps extends SvgProps, StyledIconOwnProps {}

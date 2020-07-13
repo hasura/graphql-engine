@@ -75,7 +75,7 @@
     "react-datetime": "^2.16.3",
     "react-dom": "16.13.1",
     "react-helmet": "5.2.1",
-    "react-icons": "3.9.0",
+    "react-icons": "^3.10.0",
     "react-modal": "3.11.2",
     "react-notification-system-redux": "1.2.0",
     "react-progress-bar-plus": "1.3.1",

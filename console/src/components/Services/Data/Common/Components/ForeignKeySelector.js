@@ -214,6 +214,7 @@ const ForeignKeySelector = ({
                 ml="10px"
                 size={15}
                 pointer
+                mt="xs"
               />
             );
           }
