@@ -546,7 +546,7 @@ fieldSelection fieldInfo selectPermissions = do
       remoteFieldsArgumentsParser <-
         fmap sequenceA $ for (Map.toList $ _rfiParamMap remoteFieldInfo) $
         \(name, inpValDefn) ->
-          inputValueDefinitionParser (_rfiSchemaDoc remoteFieldInfo) inpValDefn
+          inputValueDefinitionParser (_rfiSchemaIntrospect remoteFieldInfo) inpValDefn
           <&> fmap (fmap (\gVal -> RQL.RemoteFieldArgument name gVal))
 
       -- This selection set parser, should be of the remote node's selection set parser, which comes

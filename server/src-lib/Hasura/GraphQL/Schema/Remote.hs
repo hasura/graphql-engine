@@ -169,14 +169,14 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
     interfaceImplementingInterface schemaDoc name
   when (null ifaces && null subFieldParsers) $
     throw400 RemoteSchemaError $ "List of fields cannot be empty for interface " <> squote name
-  let typesTooMany = filter (not . (`elem` fmap (getName . P.parserType) objs)) possibleTypes
-      typesTooFew  = filter (not . (`elem` possibleTypes)) $ fmap (getName . P.parserType) objs
-  unless (null typesTooMany) $
-    throw400 RemoteSchemaError $ "Interface " <> squote name <>
-    " should not implemented by " <> squote (head typesTooMany)
-  unless (null typesTooFew) $
-    throw400 RemoteSchemaError $ "Interface " <> squote name <>
-    " should be implemented by " <> squote (head typesTooMany) <> ", but it isn't"
+  -- let typesTooMany = filter (not . (`elem` fmap (getName . P.parserType) objs)) possibleTypes
+  --     typesTooFew  = filter (not . (`elem` possibleTypes)) $ fmap (getName . P.parserType) objs
+  -- unless (null typesTooMany) $
+  --   throw400 RemoteSchemaError $ "Interface " <> squote name <>
+  --   " should not implemented by " <> squote (head typesTooMany)
+  -- unless (null typesTooFew) $
+  --   throw400 RemoteSchemaError $ "Interface " <> squote name <>
+  --   " should be implemented by " <> squote (head typesTooMany) <> ", but it isn't"
   pure $ () <$ (P.selectionSetInterface name description subFieldParsers objs ifaces)
   where
     getObject :: G.Name -> m G.ObjectTypeDefinition
