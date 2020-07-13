@@ -10,6 +10,7 @@ module Hasura.GraphQL.Schema.Mutation
   -- FIXME: move somewhere else
   , traverseAnnInsert
   , convertToSQLTransaction
+  , buildEmptyMutResp
   ) where
 
 

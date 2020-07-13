@@ -14,7 +14,6 @@ import qualified Network.HTTP.Types                     as HTTP
 
 import qualified Hasura.RQL.DML.Delete                  as RQL
 import qualified Hasura.RQL.DML.Mutation                as RQL
-import qualified Hasura.RQL.DML.Returning.Types         as RQL
 import qualified Hasura.RQL.DML.Update                  as RQL
 
 import           Hasura.Db
@@ -25,7 +24,8 @@ import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Resolve.Action
 import           Hasura.GraphQL.Schema.Insert
-import           Hasura.GraphQL.Schema.Mutation         (convertToSQLTransaction, traverseAnnInsert)
+import           Hasura.GraphQL.Schema.Mutation         (buildEmptyMutResp, convertToSQLTransaction,
+                                                         traverseAnnInsert)
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
@@ -52,7 +52,7 @@ convertUpdate
   -> m RespTx
 convertUpdate usrVars rjCtx updateOperation stringifyNum = do
   pure $ if null $ RQL.uqp1OpExps updateOperation
-    then pure $ makeEmptyMutation $ RQL.uqp1Output preparedUpdate
+    then pure $ buildEmptyMutResp $ RQL.uqp1Output preparedUpdate
     else RQL.execUpdateQuery stringifyNum (Just rjCtx) (preparedUpdate, planVariablesSequence usrVars planningState)
   where (preparedUpdate, planningState) = runIdentity $ runPlan $ RQL.traverseAnnUpd prepareWithPlan updateOperation
 
@@ -167,14 +167,3 @@ convertMutationSelectionSet gqlContext userInfo manager reqHeaders fields varDef
       -> Maybe (G.Name, RemoteField)
     takeRemote (name, Right remote) = Just (name, remote)
     takeRemote _                    = Nothing
-
-
-makeEmptyMutation :: RQL.MutationOutput -> EncJSON
-makeEmptyMutation = \case
-  RQL.MOutMultirowFields mutFlds -> encJFromJValue $ OMap.fromList $ map (second convMutFld) mutFlds
-  RQL.MOutSinglerowObject _      -> encJFromJValue $ J.Object mempty
-  where
-    convMutFld = \case
-      RQL.MCount -> J.toJSON (0 :: Int)
-      RQL.MExp e -> J.toJSON e
-      RQL.MRet _ -> J.toJSON ([] :: [J.Value])
