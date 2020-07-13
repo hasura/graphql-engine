@@ -267,7 +267,7 @@ This is to indicate whether the Hasura specific claims are a regular JSON object
 or a stringified JSON.
 
 This is required because providers like AWS Cognito only allow strings in the
-JWT claims. `See #1176 <https://github.com/hasura/graphql-engine/issues/1176>`_.
+JWT claims. `See #1176 <https://github.com/hasura/graphql-engine/issues/1176>`__.
 
 Example:-
 

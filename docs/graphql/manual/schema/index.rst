@@ -29,7 +29,8 @@ Postgres constructs.
   :maxdepth: 1
 
   Basics <basics>
-  Relationships <relationships/index>
+  Table relationships <table-relationships/index>
+  Remote relationships <remote-relationships/index>
   Extend with views <views>
   Extend with SQL functions <custom-functions>
   Default field values <default-values/index>
