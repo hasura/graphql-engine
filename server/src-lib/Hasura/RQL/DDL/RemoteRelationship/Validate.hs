@@ -85,75 +85,66 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
   let remoteSchemaName = rtrRemoteSchema remoteRelationship
       table = rtrTable remoteRelationship
   hasuraFields <- forM (toList $ rtrHasuraFields remoteRelationship) $
-    \fieldName -> case find ((==) fieldName . fromPGCol . pgiColumn) pgColumns of
-                    Nothing -> throwError $ TableFieldNonexistent table fieldName
-                    Just r  -> pure r
+    \fieldName -> onNothing (find ((==) fieldName . fromPGCol . pgiColumn) pgColumns) $
+      throwError $ TableFieldNonexistent table fieldName
   pgColumnsVariables <- (mapM (\(k,v) -> do
                                   variableName <- pgColumnToVariable k
                                   pure $ (variableName,v)
                               )) $ (HM.toList $ mapFromL (pgiColumn) pgColumns)
   let pgColumnsVariablesMap = HM.fromList pgColumnsVariables
-  case HM.lookup remoteSchemaName remoteSchemaMap of
-    Nothing -> throwError $ RemoteSchemaNotFound remoteSchemaName
-    Just (RemoteSchemaCtx rsName (schemaDoc@(G.SchemaIntrospection originalDefns),queryRootName,_,_) rsi _) -> do
-      queryRoot <-
-        case lookupObject schemaDoc queryRootName of
-          Just obj -> pure obj
-          _ -> throwError $ FieldNotFoundInRemoteSchema queryRootName
-      (_, (leafParamMap, leafTypeMap)) <-
-        foldlM
-          (\(objTyInfo,(_,typeMap)) fieldCall -> do
-              objFldDefinition <- lookupField (fcName fieldCall) objTyInfo
-              let providedArguments = getRemoteArguments $ fcArguments fieldCall
-              (validateRemoteArguments
-                (mapFromL G._ivdName (G._fldArgumentsDefinition objFldDefinition))
-                providedArguments
-                pgColumnsVariablesMap
-                schemaDoc)
-              let eitherParamAndTypeMap =
-                    runStateT
-                      (stripInMap
-                         remoteRelationship
-                         schemaDoc
-                         (mapFromL G._ivdName (G._fldArgumentsDefinition objFldDefinition))
-                         providedArguments)
-                      $ typeMap
-              (newParamMap, newTypeMap) <-
-                case eitherParamAndTypeMap of
-                  Left err -> throwError err
-                  Right res -> pure res
-              innerObjTyInfo <-
-                case getObjTyInfoFromField schemaDoc objFldDefinition of
-                  Just obj -> pure obj
-                  Nothing ->
-                    bool (throwError $
-                                (InvalidType (G._fldType objFldDefinition) "only objects or scalar types expected"))
-                         (pure objTyInfo)
-                         (isScalarType schemaDoc objFldDefinition)
-              pure
-               ( innerObjTyInfo
-               , (newParamMap,newTypeMap)))
-          (queryRoot,(mempty,mempty))
-          (unRemoteFields $ rtrRemoteField remoteRelationship)
-      pure $ RemoteFieldInfo
-            { _rfiName = rtrName remoteRelationship
-            , _rfiParamMap = leafParamMap
-            , _rfiHasuraFields = HS.fromList hasuraFields
-            , _rfiRemoteFields = rtrRemoteField remoteRelationship
-            , _rfiRemoteSchema = rsi
-            -- adding the new types after stripping the values to the
-            -- schema document
-            , _rfiSchemaIntrospect = G.SchemaIntrospection $ originalDefns <> HM.elems leafTypeMap
-            , _rfiRemoteSchemaName = rsName
-            }
+  (RemoteSchemaCtx rsName (schemaDoc@(G.SchemaIntrospection originalDefns),queryRootName,_,_) rsi _) <-
+    onNothing (HM.lookup remoteSchemaName remoteSchemaMap) $
+    throwError $ RemoteSchemaNotFound remoteSchemaName
+  queryRoot <- onNothing (lookupObject schemaDoc queryRootName) $
+    throwError $ FieldNotFoundInRemoteSchema queryRootName
+  (_, (leafParamMap, leafTypeMap)) <-
+    foldlM
+    (buildRelationshipTypeInfo pgColumnsVariablesMap schemaDoc)
+    (queryRoot,(mempty,mempty))
+    (unRemoteFields $ rtrRemoteField remoteRelationship)
+  pure $ RemoteFieldInfo
+        { _rfiName = rtrName remoteRelationship
+        , _rfiParamMap = leafParamMap
+        , _rfiHasuraFields = HS.fromList hasuraFields
+        , _rfiRemoteFields = rtrRemoteField remoteRelationship
+        , _rfiRemoteSchema = rsi
+        -- adding the new types after stripping the values to the
+        -- schema document
+        , _rfiSchemaIntrospect = G.SchemaIntrospection $ originalDefns <> HM.elems leafTypeMap
+        , _rfiRemoteSchemaName = rsName
+        }
   where
     getObjTyInfoFromField schemaDoc field =
       let baseTy = G.getBaseType (G._fldType field)
       in lookupObject schemaDoc baseTy
-
     isScalarType schemaDoc field =
       let baseTy = G.getBaseType (G._fldType field)
       in isJust $ lookupScalar schemaDoc baseTy
+    buildRelationshipTypeInfo pgColumnsVariablesMap schemaDoc (objTyInfo,(_,typeMap)) fieldCall = do
+      objFldDefinition <- lookupField (fcName fieldCall) objTyInfo
+      let providedArguments = getRemoteArguments $ fcArguments fieldCall
+      (validateRemoteArguments
+        (mapFromL G._ivdName (G._fldArgumentsDefinition objFldDefinition))
+        providedArguments
+        pgColumnsVariablesMap
+        schemaDoc)
+      let eitherParamAndTypeMap =
+            runStateT
+              (stripInMap
+                 remoteRelationship
+                 schemaDoc
+                 (mapFromL G._ivdName (G._fldArgumentsDefinition objFldDefinition))
+                 providedArguments)
+              $ typeMap
+      (newParamMap, newTypeMap) <- onLeft eitherParamAndTypeMap $ throwError
+      innerObjTyInfo <- onNothing (getObjTyInfoFromField schemaDoc objFldDefinition) $
+        bool (throwError $
+                    (InvalidType (G._fldType objFldDefinition) "only objects or scalar types expected"))
+             (pure objTyInfo)
+             (isScalarType schemaDoc objFldDefinition)
+      pure
+       ( innerObjTyInfo
+       , (newParamMap,newTypeMap))
 
 -- | Return a map with keys deleted whose template argument is
 -- specified as an atomic (variable, constant), keys which are kept
