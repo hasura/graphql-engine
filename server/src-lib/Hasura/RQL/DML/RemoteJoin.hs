@@ -384,18 +384,18 @@ constGValueToJSON = \case
   G.VObject objects       -> A.toJSON $ fmap constGValueToJSON objects
 
 collectVariables :: G.Value Variable -> HashMap G.VariableDefinition A.Value
-collectVariables val =  case val of
+collectVariables = \case
+  G.VNull          -> mempty
+  G.VInt _         -> mempty
+  G.VFloat _       -> mempty
+  G.VString _ _    -> mempty
+  G.VBoolean _     -> mempty
+  G.VEnum _        -> mempty
+  G.VList values   -> foldl Map.union mempty $ map collectVariables values
+  G.VObject values -> foldl Map.union mempty $ map collectVariables $ Map.elems values
   G.VVariable var@(Variable _ gType val) ->
     let (name,jVal) = (getName var, constGValueToJSON val)
     in Map.singleton (G.VariableDefinition name gType $ Just val) jVal
-  G.VNull -> mempty
-  G.VInt _ -> mempty
-  G.VFloat _ -> mempty
-  G.VString _ _ -> mempty
-  G.VBoolean _ -> mempty
-  G.VEnum _ -> mempty
-  G.VList values -> foldl Map.union mempty $ map collectVariables values
-  G.VObject values -> foldl Map.union mempty $ map collectVariables $ Map.elems values
 
 -- | Fetch remote join field value from remote servers by batching respective 'RemoteJoinField's
 fetchRemoteJoinFields
