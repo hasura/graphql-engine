@@ -4,10 +4,12 @@ import {
   setLSItem,
   removeLSItem,
   LS_KEYS,
+  getParsedLSItem,
 } from '../utils/localStorage';
 
-const loadAppState = () =>
-  JSON.parse(getLSItem(LS_KEYS.consoleLocalInfo) as string);
+const loadAppState = () => {
+  return getParsedLSItem(LS_KEYS.consoleLocalInfo);
+};
 
 const saveAppState = (state: string) => {
   setLSItem(LS_KEYS.consoleLocalInfo, JSON.stringify(state));
