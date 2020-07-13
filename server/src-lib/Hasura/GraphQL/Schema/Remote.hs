@@ -181,7 +181,6 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
       = True -- TODO write appropriate check (may require saving 'possibleTypes' in Syntax.hs)
     validateSubTypeDefinition _ _ = False
 
-
 objectsImplementingInterface
   :: SchemaIntrospection
   -> G.Name
@@ -357,25 +356,28 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
               True -> fieldOptional name desc wrappedParser
               False -> fmap Just $ field name desc wrappedParser
           Just defaultVal -> fmap Just $ fieldWithDefault name desc defaultVal wrappedParser
+      doNullability :: forall k . 'Input <: k => G.Nullability -> Parser k n () -> Parser k n ()
+      doNullability (G.Nullability True)  = void . P.nullable
+      doNullability (G.Nullability False) = id
       buildField
         :: G.GType
         -> (forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Maybe (G.Value Variable)))
         -> m (InputFieldsParser n (Maybe (G.Value Variable)))
       buildField fieldType' fieldConstructor' = case fieldType' of
-       G.TypeNamed _ typeName ->
+       G.TypeNamed nullability typeName ->
          case lookupType schemaDoc typeName of
            Nothing -> throw500 $ "Could not find type with name " <> G.unName typeName -- should it be 400 instead?
            Just typeDef ->
              case typeDef of
                G.TypeDefinitionScalar (G.ScalarTypeDefinition _ name' _) ->
-                 fieldConstructor' <$> remoteFieldScalarParser name'
+                 fieldConstructor' . doNullability nullability <$> remoteFieldScalarParser name'
                G.TypeDefinitionEnum defn -> pure $ fieldConstructor' $ remoteFieldEnumParser defn
                G.TypeDefinitionObject _ -> throw500 $ "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
                G.TypeDefinitionInputObject defn ->
-                 pure . fieldConstructor' =<< remoteSchemaInputObject schemaDoc defn
+                 pure . fieldConstructor' . doNullability nullability =<< remoteSchemaInputObject schemaDoc defn
                G.TypeDefinitionUnion _ -> throw500 $ "expected input type, but got output type"
                G.TypeDefinitionInterface _ -> throw500 $ "expected input type, but got output type"
-       G.TypeList _ subType -> buildField subType (fieldConstructor' . void . P.list)
+       G.TypeList nullability subType -> buildField subType (fieldConstructor' . doNullability nullability . void . P.list)
   in buildField fieldType fieldConstructor
 
 argumentsParser
