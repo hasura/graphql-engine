@@ -17,13 +17,17 @@ export const getParsedLSItem = (key: string) => {
     return null;
   }
 
-  const jsonValue = JSON.parse(value);
+  try {
+    const jsonValue = JSON.parse(value);
 
-  if (!jsonValue) {
+    if (!jsonValue) {
+      return null;
+    }
+
+    return jsonValue;
+  } catch {
     return null;
   }
-
-  return jsonValue;
 };
 
 export const removeLSItem = (key: string) => {
