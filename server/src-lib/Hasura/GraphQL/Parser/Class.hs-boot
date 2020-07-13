@@ -1,3 +1,5 @@
 module Hasura.GraphQL.Parser.Class where
 
-class MonadParse (m :: * -> *)
+import Data.Kind (Type)
+
+class MonadParse (m :: Type -> Type)

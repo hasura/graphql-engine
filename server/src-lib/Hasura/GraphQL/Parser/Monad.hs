@@ -13,7 +13,7 @@ module Hasura.GraphQL.Parser.Monad
 import           Hasura.Prelude
 
 import qualified Data.Dependent.Map                    as DM
-import qualified Data.HashMap.Strict                   as M
+import qualified Data.Kind                             as K
 import qualified Data.Sequence.NonEmpty                as NE
 import qualified Language.Haskell.TH                   as TH
 
@@ -121,7 +121,7 @@ out, it should be able to support this more naturally, so we can fix it then. -}
 -- | A key used to distinguish calls to 'memoize'd functions. The 'TH.Name'
 -- distinguishes calls to completely different parsers, and the @a@ value
 -- records the arguments.
-data ParserId (t :: (Kind, *)) where
+data ParserId (t :: (Kind, K.Type)) where
   ParserId :: (Ord a, Typeable a, Typeable b, Typeable k) => TH.Name -> a -> ParserId '(k, b)
 
 instance GEq ParserId where
@@ -155,7 +155,7 @@ instance GCompare ParserId where
 -- This is really just a single newtype, but it’s implemented as a data family
 -- because GHC doesn’t allow ordinary datatype declarations to pattern-match on
 -- type parameters, and we want to match on the tuple.
-data family ParserById (m :: * -> *) (a :: (Kind, *))
+data family ParserById (m :: K.Type -> K.Type) (a :: (Kind, K.Type))
 newtype instance ParserById m '(k, a) = ParserById (Parser k m a)
 
 -- -------------------------------------------------------------------------------------------------

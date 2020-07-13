@@ -4,11 +4,13 @@ import           Hasura.Prelude
 
 import           Language.GraphQL.Draft.Syntax
 
+import qualified Data.Kind as K
+
 import {-# SOURCE #-} Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Schema
 
 type role Parser nominal representational nominal
-data Parser (k :: Kind) (m :: * -> *) (a :: *)
+data Parser (k :: Kind) (m :: K.Type -> K.Type) (a :: K.Type)
 
 runParser :: Parser k m a -> ParserInput k -> m a
 
