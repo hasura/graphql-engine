@@ -107,7 +107,7 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
   interfaceDefs <- traverse getInterface interfaces
   implements <- traverse (remoteSchemaInterface schemaDoc) interfaceDefs
   -- TODO: also check sub-interfaces, when these are supported in a future graphql spec
-  traverse (validateImplementsFields subFields) interfaceDefs
+  traverse validateImplementsFields interfaceDefs
   pure $ () <$ P.selectionSetObject name description subFieldParsers implements
   where
     getInterface :: G.Name -> m (G.InterfaceTypeDefinition [G.Name])
@@ -115,16 +115,41 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
       onNothing (lookupInterface schemaDoc interfaceName) $
         throw400 RemoteSchemaError $ "Could not find interface " <> squote interfaceName
         <> " implemented by Object type " <> squote name
-    validateImplementsFields :: [G.FieldDefinition] -> G.InterfaceTypeDefinition [G.Name] -> m ()
-    validateImplementsFields fields interface =
-      traverse_ (validateImplementsField fields (_itdName interface)) (G._itdFieldsDefinition interface)
-    validateImplementsField :: [G.FieldDefinition] -> G.Name -> G.FieldDefinition -> m ()
-    validateImplementsField fields interfaceName interfaceField =
-      case interfaceField `elem` fields of
-        True -> pure ()
-        False -> throw400 RemoteSchemaError $
+    validateImplementsFields :: G.InterfaceTypeDefinition [G.Name] -> m ()
+    validateImplementsFields interface =
+      traverse_ (validateImplementsField (_itdName interface)) (G._itdFieldsDefinition interface)
+    validateImplementsField :: G.Name -> G.FieldDefinition -> m ()
+    validateImplementsField interfaceName interfaceField =
+      case lookup (G._fldName interfaceField) (zip (fmap G._fldName subFields) subFields) of
+        Nothing -> throw400 RemoteSchemaError $
           "Interface field " <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
           <> " expected, but " <> squote name <> " does not provide it"
+        Just f ->
+          unless (validateSubType (G._fldType f) (G._fldType interfaceField)) $
+          throw400 RemoteSchemaError $
+          "The type of Object field " <> squote name <> "." <> dquote (G._fldName f)
+          <> " (" <> G.showGT (G._fldType f)
+          <> ") is not the same type/sub type of Interface field "
+          <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
+          <> " (" <> G.showGT (G._fldType interfaceField) <> ")"
+    validateSubType :: G.GType -> G.GType -> Bool
+    -- TODO this ignores nullability which is probably wrong, even though the GraphQL spec is ambiguous
+    validateSubType (G.TypeList _ x) (G.TypeList _ y) = validateSubType x y
+    -- It is OK to "upgrade" the strictness
+    validateSubType (G.TypeNamed (Nullability False) x) (G.TypeNamed (Nullability True) y) =
+      validateSubType (G.TypeNamed (Nullability True) x) (G.TypeNamed (Nullability True) y)
+    validateSubType (G.TypeNamed nx x) (G.TypeNamed ny y) =
+      case (lookupType schemaDoc x , lookupType schemaDoc y) of
+        (Just x' , Just y') -> nx == ny && validateSubTypeDefinition x' y'
+        _ -> False
+    validateSubType _ _ = False
+    validateSubTypeDefinition x' y' | x' == y' = True
+    validateSubTypeDefinition (TypeDefinitionObject otd) (TypeDefinitionInterface itd)
+      = G._otdName otd `elem` G._itdPossibleTypes itd
+    validateSubTypeDefinition (TypeDefinitionObject _otd) (TypeDefinitionUnion _utd)
+      = True -- TODO write appropriate check (may require saving 'possibleTypes' in Syntax.hs)
+    validateSubTypeDefinition _ _ = False
+
 
 objectsImplementingInterface
   :: SchemaIntrospection
@@ -169,14 +194,10 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
     interfaceImplementingInterface schemaDoc name
   when (null ifaces && null subFieldParsers) $
     throw400 RemoteSchemaError $ "List of fields cannot be empty for interface " <> squote name
-  -- let typesTooMany = filter (not . (`elem` fmap (getName . P.parserType) objs)) possibleTypes
-  --     typesTooFew  = filter (not . (`elem` possibleTypes)) $ fmap (getName . P.parserType) objs
-  -- unless (null typesTooMany) $
-  --   throw400 RemoteSchemaError $ "Interface " <> squote name <>
-  --   " should not implemented by " <> squote (head typesTooMany)
-  -- unless (null typesTooFew) $
-  --   throw400 RemoteSchemaError $ "Interface " <> squote name <>
-  --   " should be implemented by " <> squote (head typesTooMany) <> ", but it isn't"
+  -- TODO: another way to obtain 'possibleTypes' is to lookup all the object
+  -- types in the schema document that claim to implement this interface.  We
+  -- should have a check that expresses that that collection of objects is equal
+  -- to 'possibelTypes'.
   pure $ () <$ (P.selectionSetInterface name description subFieldParsers objs ifaces)
   where
     getObject :: G.Name -> m G.ObjectTypeDefinition

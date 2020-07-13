@@ -324,7 +324,20 @@ instance HasDefinition (NonNullableType k) (TypeInfo k) where
   definitionLens f (TList t)           = TList <$> definitionLens f t
 
 data ObjectInfo = ObjectInfo ~[Definition FieldInfo] ~[Definition InterfaceInfo]
+-- Note that we can't check for equality of the fields and the interfaces since
+-- there may be circularity. So we rather check for equality of names.
+instance Eq ObjectInfo where
+  ObjectInfo fields1 interfaces1 == ObjectInfo fields2 interfaces2
+    =  fmap dName fields1     == fmap dName fields2
+    && fmap dName interfaces1 == fmap dName interfaces2
 data InterfaceInfo = InterfaceInfo ~[Definition FieldInfo] ~[Definition InterfaceInfo] ~[Definition ObjectInfo]
+-- Note that we can't check for equality of the fields and the interfaces since
+-- there may be circularity. So we rather check for equality of names.
+instance Eq InterfaceInfo where
+  InterfaceInfo fields1 interfaces1 objects1 == InterfaceInfo fields2 interfaces2 objects2
+    =  fmap dName fields1     == fmap dName fields2
+    && fmap dName interfaces1 == fmap dName interfaces2
+    && fmap dName objects1    == fmap dName objects2
 data UnionInfo = UnionInfo ~[Definition ObjectInfo]
 
 data TypeInfo k where
@@ -343,17 +356,8 @@ eqTypeInfo :: TypeInfo k1 -> TypeInfo k2 -> Bool
 eqTypeInfo TIScalar                TIScalar                = True
 eqTypeInfo (TIEnum values1)        (TIEnum values2)        = values1 == values2
 eqTypeInfo (TIInputObject fields1) (TIInputObject fields2) = fields1 == fields2
--- Note that we can't check for equality of the fields and the interfaces since
--- there may be circularity. So we rather check for equality of names.
-eqTypeInfo (TIObject (ObjectInfo fields1 interfaces1)) (TIObject (ObjectInfo fields2 interfaces2))
-  =  fmap dName fields1     == fmap dName fields2
-  && fmap dName interfaces1 == fmap dName interfaces2
-eqTypeInfo
-  (TIInterface (InterfaceInfo fields1 interfaces1 objects1))
-  (TIInterface (InterfaceInfo fields2 interfaces2 objects2))
-  =  fmap dName fields1     == fmap dName fields2
-  && fmap dName interfaces1 == fmap dName interfaces2
-  && fmap dName objects1    == fmap dName objects2
+eqTypeInfo (TIObject oi1) (TIObject oi2)                   = oi1 == oi2
+eqTypeInfo (TIInterface ii1) (TIInterface ii2)             = ii1 == ii2
 eqTypeInfo (TIUnion (UnionInfo objects1))       (TIUnion (UnionInfo objects2))
   =  fmap dName objects1     == fmap dName objects2
 eqTypeInfo _                       _                       = False
