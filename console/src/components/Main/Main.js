@@ -44,8 +44,7 @@ import {
 import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 import { Icon } from '../UIKit/atoms/Icon';
-import { Help } from './Help';
-import { ProPopup } from './components/ProPopup';
+import { Help, ProPopup } from './components/';
 
 class Main extends React.Component {
   constructor(props) {
@@ -215,6 +214,7 @@ class Main extends React.Component {
 
     const currentLocation = location.pathname;
     const currentActiveBlock = getPathRoot(currentLocation);
+    console.log({ currentActiveBlock });
 
     const getMainContent = () => {
       let mainContent = null;
@@ -655,7 +655,7 @@ class Main extends React.Component {
                   {getSettingsSelectedMarker()}
                 </div>
               </Link>
-              <Help />
+              <Help isSelected={currentActiveBlock === 'support'} />
               {getLoveSection()}
             </div>
           </div>
