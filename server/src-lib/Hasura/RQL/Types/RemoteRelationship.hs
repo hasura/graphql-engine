@@ -97,14 +97,15 @@ instance ToJSON RemoteFieldInfo where
 
       gValueToJSONValue =
         \case
-          (G.VInt i) -> toJSON i
-          (G.VFloat f) -> toJSON f
-          (G.VString _ s) -> toJSON s
-          (G.VBoolean b) -> toJSON b
-          G.VNull -> Null
-          (G.VEnum s) -> toJSON s
-          (G.VList list) -> toJSON (map gValueToJSONValue list)
-          (G.VObject obj) -> fieldsToObject obj
+          G.VNull       -> Null
+          G.VInt i      -> toJSON i
+          G.VFloat f    -> toJSON f
+          G.VString _ s -> toJSON s
+          G.VBoolean b  -> toJSON b
+          G.VEnum s     -> toJSON s
+          G.VList list  -> toJSON (map gValueToJSONValue list)
+          G.VObject obj -> fieldsToObject obj
+          G.VVariable _ -> error "unexpected variable in remote field info" -- FIXME: use a throw500?
 
       fieldsToObject =
         Object .
