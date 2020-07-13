@@ -5,13 +5,35 @@ export const setLSItem = (key: string, data: string) => {
 };
 
 export const getLSItem = (key: string) => {
+  if (!key) return null;
+
   return window.localStorage.getItem(key);
 };
 
-export const removeLSItem = (key: string) => {
-  if (getLSItem(key)) {
-    window.localStorage.removeItem(key);
+export const getParsedLSItem = (key: string) => {
+  const value = getLSItem(key);
+
+  if (!value) {
+    return null;
   }
+
+  const jsonValue = JSON.parse(value);
+
+  if (!jsonValue) {
+    return null;
+  }
+
+  return jsonValue;
+};
+
+export const removeLSItem = (key: string) => {
+  const value = getLSItem(key);
+
+  if (!value) {
+    return null;
+  }
+
+  window.localStorage.removeItem(key);
 };
 
 type expiryValue = {
@@ -76,4 +98,5 @@ export const LS_KEYS = {
   rawSQLKey: 'rawSql:sql',
   dataColumnsCollapsedKey: 'data:collapsed',
   dataPageSizeKey: 'data:pageSize',
+  dataColumnsOrderKey: 'data:order',
 };
