@@ -658,7 +658,7 @@ insertObject singleObjIns rjCtx planVars stringifyNum = do
 
   cte <- mkInsertQ table onConflict finalInsCols defaultValues checkCond
 
-  MutateResp affRows colVals <- liftTx $ RQL.mutateAndFetchCols table allColumns (cte, Seq.empty) stringifyNum
+  MutateResp affRows colVals <- liftTx $ RQL.mutateAndFetchCols table allColumns (cte, planVars) stringifyNum
   colValM <- asSingleObject colVals
 
   arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null arrayRels
