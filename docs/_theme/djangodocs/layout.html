@@ -310,23 +310,24 @@
                     Stay up to date with product & security news
                     <a target="_blank" class="newsletter-link" href="https://us13.campaign-archive.com/home/?u=9b63e92a98ecdc99732456b0e&id=f5c4f66bcf" rel="noopener">See past editions</a>
                   </div>
-                  <form action="https://hasura.us13.list-manage.com/subscribe/post?u=9b63e92a98ecdc99732456b0e&amp;id=f5c4f66bcf" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate post-subscription-form mailchimp-form" target="_blank" rel="noopener" novalidate>
-                      <div class="full-width">
-                        <div class="input-box">
-                          <input type="email" name="EMAIL" id="mce-EMAIL" aria-label="Email" placeholder="Your Email Address" pattern="^([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22))*\x40([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d))*(\.\w{2,})+$" title="The domain portion of the email address is invalid (the portion after the @)." required>
+                  <form id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate post-subscription-form newsletter-form" target="_blank" rel="noopener" novalidate>
+                    <div class="full-width">
+                      <div class="input-box">
+                        <input type="email" name="EMAIL" id="mce-EMAIL" aria-label="Email" placeholder="Your Email Address" pattern="^([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22))*\x40([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d))*(\.\w{2,})+$" required>
+                      </div>
+                      <div id="mce-responses" class="clear display-inline">
+                        <div class="mce-error-response response error-message hide">
                         </div>
-                        <div id="mce-responses" class="clear display-inline">
-                          <div class="mce-error-response response error-message hide">
-                          </div>
-                          <div class="mce-success-response response success-message hide">
-                          </div>
+                        <div class="mce-success-response response success-message hide">
                         </div>
                       </div>
-                      <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_9b63e92a98ecdc99732456b0e_f5c4f66bcf" tabindex="-1" value=""></div>
-                      <div class="clear submit-box">
-                        <input type="submit" disabled="true" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
-                      </div>
+                    </div>
+                    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_9b63e92a98ecdc99732456b0e_f5c4f66bcf" tabindex="-1" value=""></div>
+                    <div class="clear submit-box">
+                      <input type="submit" disabled="true" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
+                    </div>
                   </form>
+
                 </div>
               </div>
               <div class="footer-hasura-custom">
@@ -539,8 +540,8 @@
   <!-- mailchimp -->
   <script type="text/javascript">
     $(document).ready( function() {
-        loadCss('//cdn-images.mailchimp.com/embedcode/classic-10_7.css', function(){});
-        loadScript("{{ pathto('_static/mailchimp/mailchimp.js', 1) }}", function(){});
+        loadCss("{{ pathto('_static/newsletter/newsletter.css', 1) }}", function(){});
+        loadScript("{{ pathto('_static/newsletter/newsletter.js', 1) }}", function(){});
     });
   </script>
   <script type='text/javascript'>
