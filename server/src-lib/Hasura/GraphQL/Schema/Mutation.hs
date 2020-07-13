@@ -616,7 +616,9 @@ insertMultipleObjects multiObjIns additionalColumns rjCtx mutationOutput planVar
     allInsArrRels = concatMap _aioArrRels insObjs
     anyRelsToInsert = not $ null allInsArrRels && null allInsObjRels
 
-    withoutRelsInsert =
+    withoutRelsInsert = do
+      for_ (_aioColumns <$> insObjs) \column ->
+        validateInsert (map fst column) [] (map fst additionalColumns)
       let columnValues = map (mkSQLRow defVals) $ union additionalColumns . _aioColumns <$> insObjs
           columnNames  = Map.keys defVals
           insertQuery  = RQL.InsertQueryP1
@@ -627,7 +629,7 @@ insertMultipleObjects multiObjIns additionalColumns rjCtx mutationOutput planVar
             checkCondition
             mutationOutput
             columnInfos
-      in RQL.execInsertQuery stringifyNum (Just rjCtx) (insertQuery, planVars)
+      RQL.execInsertQuery stringifyNum (Just rjCtx) (insertQuery, planVars)
 
     withRelsInsert = do
       insertRequests <- for insObjs \obj -> do
@@ -650,6 +652,8 @@ insertObject
   -> Bool
   -> m (Int, Maybe (ColumnValues TxtEncodedPGVal))
 insertObject singleObjIns additionalColumns rjCtx planVars stringifyNum = do
+  validateInsert (map fst columns) (map _riRelInfo objectRels) (map fst additionalColumns)
+
   -- insert all object relations and fetch this insert dependent column values
   objInsRes <- forM objectRels $ insertObjRel planVars rjCtx stringifyNum
 
@@ -736,6 +740,33 @@ insertArrRel resCols rjCtx planVars stringifyNum arrRelIns = do
     RelIns multiObjIns relInfo = arrRelIns
     mapping   = riMapping relInfo
     mutOutput = RQL.MOutMultirowFields [("affected_rows", RQL.MCount)]
+
+-- | validate an insert object based on insert columns,
+-- | insert object relations and additional columns from parent
+validateInsert
+  :: (MonadError QErr m)
+  => [PGCol] -- ^ inserting columns
+  -> [RelInfo] -- ^ object relation inserts
+  -> [PGCol] -- ^ additional fields from parent
+  -> m ()
+validateInsert insCols objRels addCols = do
+  -- validate insertCols
+  unless (null insConflictCols) $ throw400 ValidationFailed $
+    "cannot insert " <> showPGCols insConflictCols
+    <> " columns as their values are already being determined by parent insert"
+
+  forM_ objRels $ \relInfo -> do
+    let lCols = Map.keys $ riMapping relInfo
+        relName = riName relInfo
+        relNameTxt = relNameToTxt relName
+        lColConflicts = lCols `intersect` (addCols <> insCols)
+    withPathK relNameTxt $ unless (null lColConflicts) $ throw400 ValidationFailed $
+      "cannot insert object relation ship " <> relName
+      <<> " as " <> showPGCols lColConflicts
+      <> " column values are already determined"
+  where
+    insConflictCols = insCols `intersect` addCols
+
 
 mkInsertQ
   :: MonadError QErr m
