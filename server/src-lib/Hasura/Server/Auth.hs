@@ -1,6 +1,4 @@
 {-# LANGUAGE DerivingStrategies         #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE RecordWildCards            #-}
 
 module Hasura.Server.Auth
   ( getUserInfo
