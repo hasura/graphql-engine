@@ -28,6 +28,7 @@ import           Hasura.SQL.Types
 
 import qualified Database.PG.Query           as Q
 import qualified Hasura.SQL.DML              as S
+import qualified Data.Environment         as Env
 
 
 -- NOTE: This function can be improved, because we use
@@ -76,7 +77,6 @@ mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
     tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
     checkExpr = toSQLBoolExp (S.QualTable tn) chk
 
-
 expandOperator :: [PGColumnInfo] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
 expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of
   UpdSet          e -> e
@@ -96,18 +96,6 @@ expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of
       case find (\info -> pgiColumn info == column) infos <&> pgiType of
         Just (PGColumnScalar s) -> S.mkTypeAnn $ PGTypeScalar s
         _                       -> S.numericTypeAnn
-
-execUpdateQuery
-  :: (HasVersion, MonadTx m, MonadIO m)
-  => Bool
-  -> Maybe MutationRemoteJoinCtx
-  -> (AnnUpd, DS.Seq Q.PrepArg)
-  -> m EncJSON
-execUpdateQuery strfyNum remoteJoinCtx (u, p) =
-  runMutation $ mkMutation remoteJoinCtx (uqp1Table u) (updateCTE, p)
-                (uqp1Output u) (uqp1AllCols u) strfyNum
-  where
-    updateCTE = mkUpdateCTE u
 
 convInc
   :: (QErrM m)
@@ -259,11 +247,28 @@ validateUpdateQuery
 validateUpdateQuery =
   runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
 
+execUpdateQuery
+  ::
+  ( HasVersion
+  , MonadTx m
+  , MonadIO m
+  )
+  => Env.Environment
+  -> Bool
+  -> Maybe MutationRemoteJoinCtx
+  -> (AnnUpd, DS.Seq Q.PrepArg)
+  -> m EncJSON
+execUpdateQuery env strfyNum remoteJoinCtx (u, p) =
+  runMutation env $ mkMutation remoteJoinCtx (uqp1Table u) (updateCTE, p)
+                (uqp1Output u) (uqp1AllCols u) strfyNum
+  where
+    updateCTE = mkUpdateCTE u
+
 runUpdate
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
      , MonadTx m, HasSQLGenCtx m, MonadIO m
      )
-  => UpdateQuery -> m EncJSON
-runUpdate q = do
+  => Env.Environment -> UpdateQuery -> m EncJSON
+runUpdate env q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateUpdateQuery q >>= execUpdateQuery strfyNum Nothing
+  validateUpdateQuery q >>= execUpdateQuery env strfyNum Nothing

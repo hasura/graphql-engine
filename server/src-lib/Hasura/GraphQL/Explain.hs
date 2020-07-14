@@ -6,6 +6,7 @@ module Hasura.GraphQL.Explain
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
+import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Database.PG.Query                      as Q

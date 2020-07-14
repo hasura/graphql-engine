@@ -63,36 +63,6 @@ Date:   Wed Jul 15 03:40:48 2020 -0700
 
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
 
-commit 24592a516b2e920d3d41244b0aac4c060dc321ae
-Author: Lyndon Maydwell <lyndon@sordina.net>
-Date:   Wed Jul 15 05:00:58 2020 +1000
-
-    Pass environment variables around as a data structure, via @sordina (#5374)
-
-    * Pass environment variables around as a data structure, via @sordina
-
-    * Resolving build error
-
-    * Adding Environment passing note to changelog
-
-    * Removing references to ILTPollerLog as this seems to have been reintroduced from a bad merge
-
-    * removing commented-out imports
-
-    * Language pragmas already set by project
-
-    * Linking async thread
-
-    * Apply suggestions from code review
-
-    Use `runQueryTx` instead of `runLazyTx` for queries.
-
-    * remove the non-user facing entry in the changelog
-
-    Co-authored-by: Phil Freeman <paf31@cantab.net>
-    Co-authored-by: Phil Freeman <phil@hasura.io>
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>

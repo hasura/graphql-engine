@@ -61,6 +61,7 @@ data LiveQueryId
   , _lqiSubscriber :: !SubscriberId
   } deriving Show
 
+
 addLiveQuery
   :: L.Logger L.Hasura
   -> SubscriberMetadata
@@ -122,6 +123,7 @@ addLiveQuery logger subscriberMetadata lqState plan onResultAction = do
       TMap.insert newCohort cohortKey $ _pCohorts handler
 
     newPoller = Poller <$> TMap.new <*> STM.newEmptyTMVar
+
 
 removeLiveQuery
   :: L.Logger L.Hasura

@@ -14,29 +14,33 @@ module Hasura.GraphQL.Resolve.Action
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Async       as A
-import qualified Data.Aeson                     as J
-import qualified Data.Aeson.Casing              as J
-import qualified Data.Aeson.TH                  as J
-import qualified Data.ByteString.Lazy           as BL
-import qualified Data.CaseInsensitive           as CI
-import qualified Data.HashMap.Strict            as Map
-import qualified Data.Text                      as T
-import qualified Data.UUID                      as UUID
-import qualified Database.PG.Query              as Q
-import qualified Language.GraphQL.Draft.Syntax  as G
-import qualified Network.HTTP.Client            as HTTP
-import qualified Network.HTTP.Types             as HTTP
-import qualified Network.Wreq                   as Wreq
 
-import           Control.Concurrent             (threadDelay)
-import           Control.Exception              (try)
+import qualified Data.Aeson                           as J
+import qualified Data.Aeson.Casing                    as J
+import qualified Data.Aeson.TH                        as J
+import qualified Data.ByteString.Lazy                 as BL
+import qualified Data.CaseInsensitive                 as CI
+import qualified Data.HashMap.Strict                  as Map
+import qualified Data.Text                            as T
+import qualified Data.UUID                            as UUID
+import qualified Database.PG.Query                    as Q
+import qualified Language.GraphQL.Draft.Syntax        as G
+import qualified Network.HTTP.Client                  as HTTP
+import qualified Network.HTTP.Types                   as HTTP
+import qualified Network.Wreq                         as Wreq
+
+import           Control.Concurrent                   (threadDelay)
+import           Control.Exception                    (try)
 import           Control.Lens
 import           Data.IORef
 
-import qualified Hasura.RQL.DML.RemoteJoin      as RJ
-import qualified Hasura.RQL.DML.Select          as RS
+import qualified Hasura.RQL.DML.RemoteJoin            as RJ
+import qualified Hasura.RQL.DML.Select                as RS
 -- import qualified Hasura.GraphQL.Resolve.Select  as GRS
+import           Control.Monad.Trans.Control          (MonadBaseControl)
+
+import qualified Control.Concurrent.Async.Lifted.Safe as LA
+import qualified Data.Environment                     as Env
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
@@ -125,14 +129,15 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionInternalError)
 --      , Has HTTP.Manager r
 --      , Has [HTTP.Header] r
 --      )
+--   => Env.Environment
 --   => Field
 --   -> ActionMutationExecutionContext
 --   -> UserVars
 --   -> m (RespTx, HTTP.ResponseHeaders)
--- resolveActionMutation field executionContext sessionVariables =
+-- resolveActionMutation env field executionContext sessionVariables =
 --   case executionContext of
 --     ActionMutationSyncWebhook executionContextSync ->
---       resolveActionMutationSync field executionContextSync sessionVariables
+--       resolveActionMutationSync env field executionContextSync sessionVariables
 --     ActionMutationAsync ->
 --       (,[]) <$> resolveActionMutationAsync field sessionVariables
 
@@ -142,14 +147,15 @@ resolveActionExecution
      , MonadError QErr m
      , MonadIO m
      )
-  => UserInfo
+  => Env.Environment
+  -> UserInfo
   -> AnnActionExecution UnpreparedValue
   -> ActionExecContext
   -> m (RespTx, HTTP.ResponseHeaders)
-resolveActionExecution userInfo annAction execContext = do
+resolveActionExecution env userInfo annAction execContext = do
   let actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload
-  (webhookRes, respHeaders) <- callWebhook manager outputType outputFields reqHeaders confHeaders
+  (webhookRes, respHeaders) <- callWebhook env manager outputType outputFields reqHeaders confHeaders
                                forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVLiteral $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
@@ -163,7 +169,7 @@ resolveActionExecution userInfo annAction execContext = do
       Just remoteJoins ->
         let query = Q.fromBuilder $ toSQL $
                     RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
-        in RJ.executeQueryWithRemoteJoins manager reqHeaders userInfo query [] remoteJoins
+        in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query [] remoteJoins
       Nothing ->
         asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
   where
@@ -200,17 +206,18 @@ restrictActionExecuter errMsg _ =
 --      , Has OrdByCtx r
 --      , Has SQLGenCtx r
 --      )
---   => Field
+--   => Env.Environment
+--   -> Field
 --   -> ActionExecutionContext
 --   -> SessionVariables
 --   -> HTTP.Manager
 --   -> [HTTP.Header]
 --   -> m (RS.AnnSimpleSelG UnresolvedVal)
--- resolveActionQuery field executionContext sessionVariables httpManager reqHeaders = do
+-- resolveActionQuery env field executionContext sessionVariables httpManager reqHeaders = do
 --   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
 --       actionContext = ActionContext actionName
 --       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
---   (webhookRes, _) <- callWebhook httpManager outputType outputFields reqHeaders confHeaders
+--   (webhookRes, _) <- callWebhook env httpManager outputType outputFields reqHeaders confHeaders
 --                                forwardClientHeaders resolvedWebhook handlerPayload
 --   let webhookResponseExpression = RS.AEInput $ UVSQL $
 --         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
@@ -238,13 +245,14 @@ table provides the action response. See Note [Resolving async action query/subsc
 
 -- | Resolve asynchronous action mutation which returns only the action uuid
 resolveActionMutationAsync
-  :: (MonadError QErr m)
+  :: ( MonadError QErr m
+     , MonadTx tx)
   => AnnActionMutationAsync
   -> [HTTP.Header]
   -> SessionVariables
-  -> m RespTx
+  -> m (tx EncJSON)
 resolveActionMutationAsync annAction reqHeaders sessionVariables = do
-  pure $ do
+  pure $ liftTx do
     actionId <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
       INSERT INTO
           "hdb_catalog"."hdb_action_log"
@@ -302,9 +310,9 @@ resolveAsyncActionQuery userInfo annAction =
     actionLogTable = QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
 
     -- TODO (from master):- Avoid using PGColumnInfo
-    mkAnnFldFromPGCol column columnType =
+    mkAnnFldFromPGCol column' columnType =
       flip RS.mkAnnColumnField Nothing $
-      PGColumnInfo (unsafePGCol column) (G.unsafeMkName column) 0 (PGColumnScalar columnType) True Nothing
+      PGColumnInfo (unsafePGCol column') (G.unsafeMkName column') 0 (PGColumnScalar columnType) True Nothing
 
     tableBoolExpression =
       let actionIdColumnInfo = PGColumnInfo (unsafePGCol "id") $$(G.litName "id")
@@ -334,23 +342,29 @@ data ActionLogItem
 -- | Process async actions from hdb_catalog.hdb_action_log table. This functions is executed in a background thread.
 -- See Note [Async action architecture] above
 asyncActionsProcessor
-  :: HasVersion
-  => IORef (RebuildableSchemaCache Run, SchemaCacheVer)
+  :: forall m void
+   . ( HasVersion
+     , MonadIO m
+     , MonadBaseControl IO m
+     , LA.Forall (LA.Pure m)
+     )
+  => Env.Environment
+  -> IORef (RebuildableSchemaCache Run, SchemaCacheVer)
   -> Q.PGPool
   -> HTTP.Manager
-  -> IO void
-asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
-  asyncInvocations <- getUndeliveredEvents
-  actionCache <- scActions . lastBuiltSchemaCache . fst <$> readIORef cacheRef
-  A.mapConcurrently_ (callHandler actionCache) asyncInvocations
-  threadDelay (1 * 1000 * 1000)
+  -> m void
+asyncActionsProcessor env cacheRef pgPool httpManager = forever $ do
+  asyncInvocations <- liftIO getUndeliveredEvents
+  actionCache <- scActions . lastBuiltSchemaCache . fst <$> liftIO (readIORef cacheRef)
+  LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
+  liftIO $ threadDelay (1 * 1000 * 1000)
   where
     runTx :: (Monoid a) => Q.TxE QErr a -> IO a
     runTx q = do
       res <- runExceptT $ Q.runTx' pgPool q
       either mempty return res
 
-    callHandler :: ActionCache -> ActionLogItem -> IO ()
+    callHandler :: ActionCache -> ActionLogItem -> m ()
     callHandler actionCache actionLogItem = do
       let ActionLogItem actionId actionName reqHeaders
             sessionVariables inputPayload = actionLogItem
@@ -365,10 +379,10 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
               outputType = _adOutputType definition
               actionContext = ActionContext actionName
           eitherRes <- runExceptT $
-                       callWebhook httpManager outputType outputFields reqHeaders confHeaders
+                       callWebhook env httpManager outputType outputFields reqHeaders confHeaders
                          forwardClientHeaders webhookUrl $
                          ActionWebhookPayload actionContext sessionVariables inputPayload
-          case eitherRes of
+          liftIO $ case eitherRes of
             Left e                     -> setError actionId e
             Right (responsePayload, _) -> setCompleted actionId $ J.toJSON responsePayload
 
@@ -423,7 +437,8 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
 
 callWebhook
   :: forall m. (HasVersion, MonadIO m, MonadError QErr m)
-  => HTTP.Manager
+  => Env.Environment
+  -> HTTP.Manager
   -> GraphQLType
   -> ActionOutputFields
   -> [HTTP.Header]
@@ -432,18 +447,23 @@ callWebhook
   -> ResolvedWebhook
   -> ActionWebhookPayload
   -> m (ActionWebhookResponse, HTTP.ResponseHeaders)
-callWebhook manager outputType outputFields reqHeaders confHeaders
+callWebhook env manager outputType outputFields reqHeaders confHeaders
             forwardClientHeaders resolvedWebhook actionWebhookPayload = do
-  resolvedConfHeaders <- makeHeadersFromConf confHeaders
+  resolvedConfHeaders <- makeHeadersFromConf env confHeaders
   let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
       contentType = ("Content-Type", "application/json")
-      options = wreqOptions manager $
-                -- Using HashMap to avoid duplicate headers between configuration headers
-                -- and client headers where configuration headers are preferred
-                contentType : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
+      -- Using HashMap to avoid duplicate headers between configuration headers
+      -- and client headers where configuration headers are preferred
+      hdrs = contentType : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
       postPayload = J.toJSON actionWebhookPayload
       url = unResolvedWebhook resolvedWebhook
-  httpResponse <- liftIO $ try $ Wreq.postWith options (T.unpack url) postPayload
+  httpResponse <- do
+    initReq <- liftIO $ HTTP.parseRequest (T.unpack url)
+    let req = initReq { HTTP.method         = "POST"
+                      , HTTP.requestHeaders = addDefaultHeaders hdrs
+                      , HTTP.requestBody    = HTTP.RequestBodyLBS (J.encode postPayload)
+                      }
+    liftIO . try $ HTTP.httpLbs req manager
   let requestInfo = ActionRequestInfo url postPayload $
                      confHeaders <> toHeadersConf clientHeaders
   case httpResponse of

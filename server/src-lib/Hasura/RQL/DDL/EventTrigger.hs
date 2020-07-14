@@ -20,7 +20,6 @@ module Hasura.RQL.DDL.EventTrigger
   ) where
 
 import           Data.Aeson
-import           System.Environment      (lookupEnv)
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -32,6 +31,7 @@ import           Hasura.SQL.Types
 import qualified Hasura.SQL.DML          as S
 
 import qualified Data.Text               as T
+import qualified Data.Environment        as Env
 import qualified Data.Text.Lazy          as TL
 import qualified Database.PG.Query       as Q
 import qualified Text.Shakespeare.Text   as ST
@@ -208,16 +208,19 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual re
         SubCArray pgcols -> forM_ pgcols (assertPGCol (_tciFieldInfoMap ti) "")
 
 subTableP2Setup
-  :: (QErrM m, MonadIO m)
-  => QualifiedTable -> EventTriggerConf -> m (EventTriggerInfo, [SchemaDependency])
-subTableP2Setup qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
+  :: QErrM m
+  => Env.Environment
+  -> QualifiedTable
+  -> EventTriggerConf
+  -> m (EventTriggerInfo, [SchemaDependency])
+subTableP2Setup env qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
   webhookConf <- case (webhook, webhookFromEnv) of
     (Just w, Nothing)    -> return $ WCValue w
     (Nothing, Just wEnv) -> return $ WCEnv wEnv
     _                    -> throw500 "expected webhook or webhook_from_env"
   let headerConfs = fromMaybe [] mheaders
-  webhookInfo <- getWebhookInfoFromConf webhookConf
-  headerInfos <- getHeaderInfosFromConf headerConfs
+  webhookInfo <- getWebhookInfoFromConf env webhookConf
+  headerInfos <- getHeaderInfosFromConf env headerConfs
   let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos
       tabDep = SchemaDependency (SOTable qt) DRParent
   pure (eTrigInfo, tabDep:getTrigDefDeps qt def)
@@ -310,30 +313,35 @@ runInvokeEventTrigger (InvokeEventTriggerQuery name payload) = do
       _         -> throw400 NotSupported "manual mode is not enabled for event trigger"
 
 getHeaderInfosFromConf
-  :: (QErrM m, MonadIO m)
-  => [HeaderConf] -> m [EventHeaderInfo]
-getHeaderInfosFromConf = mapM getHeader
+  :: QErrM m
+  => Env.Environment
+  -> [HeaderConf]
+  -> m [EventHeaderInfo]
+getHeaderInfosFromConf env = mapM getHeader
   where
-    getHeader :: (QErrM m, MonadIO m) => HeaderConf -> m EventHeaderInfo
+    getHeader :: QErrM m => HeaderConf -> m EventHeaderInfo
     getHeader hconf = case hconf of
       (HeaderConf _ (HVValue val)) -> return $ EventHeaderInfo hconf val
       (HeaderConf _ (HVEnv val))   -> do
-        envVal <- getEnv val
+        envVal <- getEnv env val
         return $ EventHeaderInfo hconf envVal
 
 getWebhookInfoFromConf
-  :: (QErrM m, MonadIO m) => WebhookConf -> m WebhookConfInfo
-getWebhookInfoFromConf wc = case wc of
+  :: QErrM m
+  => Env.Environment
+  -> WebhookConf
+  -> m WebhookConfInfo
+getWebhookInfoFromConf env wc = case wc of
   WCValue w -> return $ WebhookConfInfo wc w
   WCEnv we -> do
-    envVal <- getEnv we
+    envVal <- getEnv env we
     return $ WebhookConfInfo wc envVal
 
-getEnv :: (QErrM m, MonadIO m) => T.Text -> m T.Text
-getEnv env = do
-  mEnv <- liftIO $ lookupEnv (T.unpack env)
+getEnv :: QErrM m => Env.Environment -> T.Text -> m T.Text
+getEnv env k = do
+  let mEnv = Env.lookupEnv env (T.unpack k)
   case mEnv of
-    Nothing     -> throw400 NotFound $ "environment variable '" <> env <> "' not set"
+    Nothing     -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
     Just envVal -> return (T.pack envVal)
 
 getEventTriggerDef
