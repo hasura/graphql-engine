@@ -137,7 +137,6 @@ import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Types
 
-
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -168,7 +167,7 @@ type WithDeps a = (a, [SchemaDependency])
 
 data RemoteSchemaCtx
   = RemoteSchemaCtx
-  { rscName :: !RemoteSchemaName
+  { rscName :: !RemoteSchemaName -- TODO: Name should already be in RemoteSchemaInfo
   , rscGCtx :: !GC.GCtx
   , rscInfo :: !RemoteSchemaInfo
   } deriving (Show, Eq)

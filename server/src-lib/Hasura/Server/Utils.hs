@@ -256,4 +256,3 @@ executeJSONPath jsonPath = iparse (valueParser jsonPath)
                   Key k   -> withObject "Object" (.: k)
                   Index i -> withArray "Array" $
                              maybe (fail "Array index out of range") pure . (V.!? i)
-

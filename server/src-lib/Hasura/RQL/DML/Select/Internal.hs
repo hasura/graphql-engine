@@ -6,6 +6,7 @@ module Hasura.RQL.DML.Select.Internal
   )
 where
 
+import           Instances.TH.Lift           ()
 import           Control.Lens                 hiding (op)
 import           Control.Monad.Writer.Strict
 

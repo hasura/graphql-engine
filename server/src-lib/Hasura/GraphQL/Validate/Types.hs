@@ -794,7 +794,7 @@ instance (MonadReusability m) => MonadReusability (StateT s m) where
   markNotReusable = lift markNotReusable
 
 newtype ReusabilityT m a = ReusabilityT { unReusabilityT :: StateT QueryReusability m a }
-  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r, MonadIO)
+  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r, MonadIO, MonadTrans)
 
 instance (Monad m) => MonadReusability (ReusabilityT m) where
   recordVariableUse varName varType = ReusabilityT $
