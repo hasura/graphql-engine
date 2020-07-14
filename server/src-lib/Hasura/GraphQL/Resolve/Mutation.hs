@@ -28,6 +28,7 @@ import qualified Hasura.RQL.DML.Update               as RU
 import qualified Hasura.RQL.DML.Select               as RS
 import qualified Hasura.SQL.DML                      as S
 import qualified Data.Environment                    as Env
+import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.BoolExp
@@ -221,6 +222,7 @@ convertUpdateGeneric
      , Has SQLGenCtx r 
      , MonadIO tx 
      , MonadTx tx 
+     , Tracing.MonadTrace tx 
      )
   => Env.Environment
   -> UpdOpCtx -- the update context
@@ -252,6 +254,7 @@ convertUpdate
      , Has SQLGenCtx r
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> UpdOpCtx -- the update context
@@ -271,6 +274,7 @@ convertUpdateByPk
      , Has SQLGenCtx r
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> UpdOpCtx -- the update context
@@ -291,6 +295,7 @@ convertDeleteGeneric
      , Has SQLGenCtx r
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> DelOpCtx -- the delete context
@@ -324,6 +329,7 @@ convertDelete
      , Has SQLGenCtx r
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> DelOpCtx -- the delete context
@@ -343,6 +349,7 @@ convertDeleteByPk
      , Has SQLGenCtx r
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> DelOpCtx -- the delete context

@@ -27,6 +27,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.GraphQL.Validate.SelectionSet   as V
 import qualified Hasura.SQL.DML                         as S
+import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -108,8 +109,10 @@ withPlan usrVars (PGPlan q reqVars prepMap rq) annVars = do
 mkCurPlanTx
   :: ( HasVersion
      , MonadError QErr m
+     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> HTTP.Manager
@@ -127,7 +130,7 @@ mkCurPlanTx env manager reqHdrs userInfo fldPlans = do
         return $ RRSql $ PreparedSql q args rq
     return (alias, fldResp)
 
-  pure (mkLazyRespTx env manager reqHdrs userInfo resolved, mkGeneratedSqlMap resolved)
+  (,) <$> mkLazyRespTx env manager reqHdrs userInfo resolved <*> pure (mkGeneratedSqlMap resolved)
 
 withSessionVariables :: SessionVariables -> [(Q.PrepArg, PGScalarValue)] -> [(Q.PrepArg, PGScalarValue)]
 withSessionVariables usrVars list =
@@ -202,8 +205,10 @@ convertQuerySelSet
      , Has UserInfo r
      , HasVersion
      , MonadIO m
+     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> HTTP.Manager
@@ -238,8 +243,10 @@ convertQuerySelSet env manager reqHdrs initialReusability selSet actionRunner = 
 queryOpFromPlan
   :: ( HasVersion
      , MonadError QErr m
+     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> HTTP.Manager
@@ -256,7 +263,7 @@ queryOpFromPlan env manager reqHdrs userInfo varValsM (ReusableQueryPlan varType
       RFPRaw resp        -> return $ RRRaw resp
       RFPPostgres pgPlan -> RRSql <$> withPlan (_uiSession userInfo) pgPlan validatedVars
 
-  pure (mkLazyRespTx env manager reqHdrs userInfo resolved, mkGeneratedSqlMap resolved)
+  (,) <$> mkLazyRespTx env manager reqHdrs userInfo resolved <*> pure (mkGeneratedSqlMap resolved)
 
 data PreparedSql
   = PreparedSql
@@ -290,17 +297,19 @@ type GeneratedSqlMap = [(G.Alias, Maybe PreparedSql)]
 
 mkLazyRespTx
   :: ( HasVersion
+     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment 
   -> HTTP.Manager 
   -> [N.Header] 
   -> UserInfo 
   -> [(G.Alias, ResolvedQuery)] 
-  -> tx EncJSON
-mkLazyRespTx env manager reqHdrs userInfo resolved =
-  encJFromAssocList <$> forM resolved \(alias, node) -> do
+  -> m (tx EncJSON)
+mkLazyRespTx env manager reqHdrs userInfo resolved = do
+  pure $ fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do
     resp <- case node of
       RRRaw bs                      -> return $ encJFromBS bs
       RRSql (PreparedSql q args maybeRemoteJoins) -> do

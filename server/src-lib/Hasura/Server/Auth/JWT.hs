@@ -40,6 +40,7 @@ import           Hasura.Server.Utils             (executeJSONPath, getRequestHea
                                                   isSessionVariable, userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
 import           Hasura.Session
+import qualified Hasura.Tracing                  as Tracing
 
 import qualified Control.Concurrent.Extended     as C
 import qualified Crypto.JWT                      as Jose
@@ -126,7 +127,7 @@ defaultClaimNs = "https://hasura.io/jwt/claims"
 
 -- | An action that refreshes the JWK at intervals in an infinite loop.
 jwkRefreshCtrl
-  :: (HasVersion, MonadIO m, MonadBaseControl IO m)
+  :: (HasVersion, MonadIO m, MonadBaseControl IO m, Tracing.HasReporter m)
   => Logger Hasura
   -> HTTP.Manager
   -> URI
@@ -135,7 +136,7 @@ jwkRefreshCtrl
   -> m void
 jwkRefreshCtrl logger manager url ref time = do
     liftIO $ C.sleep time
-    forever do
+    forever $ Tracing.runTraceT "jwk refresh" do
       res <- runExceptT $ updateJwkRef logger manager url ref
       mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
@@ -153,6 +154,7 @@ updateJwkRef
      , MonadIO m
      , MonadBaseControl IO m
      , MonadError JwkFetchError m
+     , Tracing.MonadTrace m
      )
   => Logger Hasura
   -> HTTP.Manager
@@ -163,10 +165,11 @@ updateJwkRef (Logger logger) manager url jwkRef = do
   let urlT    = T.pack $ show url
       infoMsg = "refreshing JWK from endpoint: " <> urlT
   liftIO $ logger $ JwkRefreshLog LevelInfo (Just infoMsg) Nothing
-  res <- try do
+  res <- try $ Tracing.traceHttpRequest urlT do
     initReq <- liftIO $ HTTP.parseRequest $ show url
     let req = initReq { HTTP.requestHeaders = addDefaultHeaders (HTTP.requestHeaders initReq) }
-    liftIO $ HTTP.httpLbs req manager
+    pure $ Tracing.SuspendedRequest req \req' -> do
+      liftIO $ HTTP.httpLbs req' manager
   resp <- either logAndThrowHttp return res
   let status = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
