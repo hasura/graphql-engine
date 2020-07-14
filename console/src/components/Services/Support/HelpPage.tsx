@@ -10,7 +10,7 @@ const CHECK_FORUMS = `
 If you need any help with developing on Hasura, you can check out
 these various Hasura forums. Our community members include some very
 experienced engineers from some of the world’s most exciting
-companies, and many of them have been using Hasura in Production for a
+companies, and many of them have been using Hasura in production for a
 long time.`;
 
 const supportListState = [
@@ -25,7 +25,7 @@ const supportListState = [
     brand: docs,
     title: 'Docs',
     description:
-      'Head to docs to search for what you’re looking for & if you can’t find it, please do one of other steps above :)',
+      'Head to docs to search for what you’re looking for.',
     link: 'https://hasura.io/docs/',
   },
   {
@@ -38,7 +38,7 @@ const supportListState = [
     brand: github,
     title: 'GitHub',
     description:
-      'Create an issue on GitHub to Report bugs, suggest improvements or give us a star!',
+      'Create an issue on GitHub to report bugs, suggest improvements or give us a star!',
     link: 'https://github.com/hasura/graphql-engine/',
   },
 ];
@@ -84,14 +84,14 @@ const HelpPage = () => {
           })}
         </div>
         <div className={`${styles.descriptionText} ${styles.wd60}`}>
-          If you want to talk to our Product Specialists, please email us at{' '}
-          <a href="mailto:support@hasura.io">support@hasura.io</a> or{' '}
+          If you want to talk to our Product Specialists, head to our{' '}
+          <a href="https://hasura.io/help/">help page</a> or{' '}
           <a
             href="https://calendly.com/hasura/prod-expert-call"
             // eslint-disable-next-line react/jsx-no-target-blank
             target="_blank"
           >
-            Set up a call
+            set up a call
           </a>
           .
         </div>
