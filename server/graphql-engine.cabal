@@ -225,6 +225,7 @@ library
                      , Control.Monad.Unique
                      , Data.Aeson.Extended
                      , Data.Aeson.Ordered
+                     , Data.Environment
                      , Data.HashMap.Strict.Extended
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.List.Extended
