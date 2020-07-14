@@ -42,7 +42,7 @@ buildRemoteParser (RemoteSchemaCtx _name (sdoc, query_root, mutation_root, subsc
       case lookupType sdoc rootName of
         Just (G.TypeDefinitionObject o) ->
           traverse makeFieldParser $ _otdFieldsDefinition o
-        _ -> throw500 "Root type of unexpected type" -- TODO show rootName
+        _ -> throw400 RemoteSchemaError $ "Root type of unexpected type" -- TODO show rootName
 
 -- | 'remoteFieldFullSchema' takes the 'SchemaIntrospection' and a 'G.Name' and will
 --   return a 'SelectionSet' parser if the 'G.Name' is found and is a 'TypeDefinitionObject',
@@ -58,7 +58,7 @@ remoteFieldFullSchema sdoc name =
   fieldObjectType <-
     case lookupType sdoc name of
       Just (G.TypeDefinitionObject o) -> pure o
-      _ -> throw500 $ "object with " <> G.unName name <> " not found"
+      _ -> throw400 RemoteSchemaError $ "object with " <> G.unName name <> " not found"
   fieldParser <- remoteSchemaObject sdoc fieldObjectType
   pure $ P.unsafeRawParser (P.pType fieldParser)
 
@@ -329,7 +329,7 @@ remoteFieldFromName
   -> m (FieldParser n ())
 remoteFieldFromName sdoc fieldName fieldTypeName argsDefns =
   case lookupType sdoc fieldTypeName of
-    Nothing -> throw500 $ "Could not find type with name " <> G.unName fieldName
+    Nothing -> throw400 RemoteSchemaError $ "Could not find type with name " <> G.unName fieldName
     Just typeDef -> remoteField sdoc fieldName argsDefns typeDef
 
 -- | 'inputValuefinitionParser' accepts a 'G.InputValueDefinition' and will return an
@@ -366,17 +366,17 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
       buildField fieldType' fieldConstructor' = case fieldType' of
        G.TypeNamed nullability typeName ->
          case lookupType schemaDoc typeName of
-           Nothing -> throw500 $ "Could not find type with name " <> G.unName typeName -- should it be 400 instead?
+           Nothing -> throw400 RemoteSchemaError $ "Could not find type with name " <> G.unName typeName
            Just typeDef ->
              case typeDef of
                G.TypeDefinitionScalar (G.ScalarTypeDefinition _ name' _) ->
                  fieldConstructor' . doNullability nullability <$> remoteFieldScalarParser name'
                G.TypeDefinitionEnum defn -> pure $ fieldConstructor' $ remoteFieldEnumParser defn
-               G.TypeDefinitionObject _ -> throw500 $ "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
+               G.TypeDefinitionObject _ -> throw400 RemoteSchemaError $ "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
                G.TypeDefinitionInputObject defn ->
                  pure . fieldConstructor' . doNullability nullability =<< remoteSchemaInputObject schemaDoc defn
-               G.TypeDefinitionUnion _ -> throw500 $ "expected input type, but got output type"
-               G.TypeDefinitionInterface _ -> throw500 $ "expected input type, but got output type"
+               G.TypeDefinitionUnion _ -> throw400 RemoteSchemaError $ "expected input type, but got output type"
+               G.TypeDefinitionInterface _ -> throw400 RemoteSchemaError $ "expected input type, but got output type"
        G.TypeList nullability subType -> buildField subType (fieldConstructor' . doNullability nullability . void . P.list)
   in buildField fieldType fieldConstructor
 
@@ -417,7 +417,7 @@ remoteField sdoc fieldName argsDefn typeDefn = do
     G.TypeDefinitionUnion unionTypeDefn -> do
       remoteSchemaObj <- remoteSchemaUnion sdoc unionTypeDefn
       pure $ () <$ P.subselection fieldName (G._utdDescription unionTypeDefn) argsParser remoteSchemaObj
-    _ -> throw500 $ "expected output type, but got input type"
+    _ -> throw400 RemoteSchemaError $ "expected output type, but got input type"
 
 remoteFieldScalarParser
   :: forall m n
