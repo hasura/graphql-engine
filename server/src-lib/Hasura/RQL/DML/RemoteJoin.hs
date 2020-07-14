@@ -11,7 +11,7 @@ module Hasura.RQL.DML.RemoteJoin
 import           Hasura.Prelude
 
 import           Control.Lens
-import           Data.Scientific                        (toBoundedInteger, toRealFloat)
+import           Data.Scientific                        (toBoundedInteger, toRealFloat, floatingOrInteger)
 import           Data.Validation
 
 import           Hasura.EncJSON
@@ -337,9 +337,10 @@ traverseQueryResponseJSON rjm =
                   A.Bool val -> pure $  G.VBoolean val
                   A.String val -> pure $  G.VString G.ExternalValue val
                   A.Number val ->
-                    case (toBoundedInteger val) of
-                      Just intVal -> pure $  G.VInt intVal
-                      Nothing     -> pure $  G.VFloat $ toRealFloat val
+                    -- TODO this is too optimistic as it saved integers in scientific notation as integers
+                    case floatingOrInteger val of
+                      Right intVal -> pure $  G.VInt intVal
+                      _            -> pure $  G.VFloat val
                   A.Array vals -> G.VList <$> traverse go (toList vals)
                   A.Object vals ->
                     G.VObject . Map.fromList <$> for (Map.toList vals) \(key, val) -> do

@@ -11,6 +11,7 @@ import qualified Data.Aeson                    as A
 import qualified Data.HashMap.Strict.Extended  as M
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
+import           Data.Scientific               (toBoundedRealFloat)
 
 import           Control.Lens.Extended         hiding (enum, index)
 import           Data.Int                      (Int32)
@@ -240,10 +241,18 @@ scalar name description representation = Parser
         VBoolean a -> pure a
         _          -> typeMismatch name "a boolean" v
       SRInt -> case v of
-        VInt a -> pure a
-        _      -> typeMismatch name "an integer" v
+        -- TODO avoid loss of data
+        VInt a ->
+          if (fromIntegral (minBound :: Int32)) <= a && a <= (fromIntegral (maxBound :: Int32))
+          then pure $ fromIntegral a
+          else typeMismatch name "a 32-bit integer" v
+        _      -> typeMismatch name "a 32-bit integer" v
       SRFloat -> case v of
-        VFloat a -> pure a
+        VFloat a ->
+          case toBoundedRealFloat a of
+            Left _ -> typeMismatch name "a double-precision float" v
+            Right y -> pure y
+        -- TODO avoid loss of data
         VInt   a -> pure $ fromIntegral a
         _        -> typeMismatch name "a float" v
       SRString -> case v of

@@ -170,9 +170,8 @@ instance FromJSON RemoteArguments where
                       Nothing    -> fail "Invalid variable name."
                       Just name' -> pure $ G.VVariable name'
               _ -> pure (G.VString G.ExternalValue text)
-          Number !val
-            | Just intVal <- toBoundedInteger val -> pure $ G.VInt intVal
-            | floatVal <- toRealFloat val         -> pure $ G.VFloat floatVal
+          Number !scientificNum ->
+            pure (either (\(_::Float) -> G.VFloat scientificNum) G.VInt (floatingOrInteger scientificNum))
           Bool !boolean -> pure (G.VBoolean boolean)
           Null -> pure G.VNull
 

@@ -15,7 +15,7 @@ import qualified Data.Text                              as T
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
-import           Data.Scientific                        (toBoundedInteger, toRealFloat)
+import           Data.Scientific                        (toBoundedInteger, toRealFloat, isInteger, floatingOrInteger)
 
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.Error
@@ -83,9 +83,10 @@ jsonToGqlValue :: MonadError QErr m => J.Value -> m (G.Value a)
 jsonToGqlValue J.Null         = pure $ G.VNull
 jsonToGqlValue (J.Bool val)   = pure $ G.VBoolean val
 jsonToGqlValue (J.String val) = pure $ G.VString G.ExternalValue val
+-- TODO this is too optimistic: not every number that happens to be an integer should be saved as an integer. All numbers in scientific notation should be saved as floats.
 jsonToGqlValue (J.Number val)
-  | Just intVal <- toBoundedInteger val = pure $ G.VInt intVal
-  | floatVal <- toRealFloat val         = pure $ G.VFloat floatVal
+  | Right intVal <- floatingOrInteger val = pure $ G.VInt $ fromInteger intVal
+  | otherwise                             = pure $ G.VFloat val
 jsonToGqlValue (J.Array vals) = G.VList <$> traverse jsonToGqlValue (toList vals)
 jsonToGqlValue (J.Object vals) =
   G.VObject . Map.fromList <$> for (Map.toList vals) \(key, val) -> do

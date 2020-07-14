@@ -97,8 +97,7 @@ flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
     -- The easy case: just a single field.
     flattenSelection (SelectionField field) =
       applyInclusionDirectives (_fDirectives field) $ pure [field]
-    -- This case has already been eliminated by the fragment inliner.
-    flattenSelection (SelectionFragmentSpread fragment) = case fragment of {}
+    -- The 'SelectionFragmentSpread' case has already been eliminated by the fragment inliner.
     -- The involved case: we have an inline fragment to process.
     flattenSelection (SelectionInlineFragment fragment) =
       applyInclusionDirectives (_ifDirectives fragment)
