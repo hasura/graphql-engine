@@ -16,6 +16,17 @@ own machine and how to contribute.
 The last two prerequisites can be installed on Debian with:
 
     $ sudo apt install libpq-dev python3 python3-pip python3-venv
+    
+### Haskell + HIE Devcontainer 
+
+VS Code provides the ability to develop applications inside of a Docker container (called _Devcontainers_)
+https://code.visualstudio.com/docs/remote/containers
+
+There is a community Devcontainer setup which installs and configures GHC + HIE 8.6.5 and the necessary VS Code extensions to integrate them into the editor.
+
+You can use this to create a base environment for development on the server, though you will still need to manually install the other dependencies (Node + npm) inside of the container.
+
+https://github.com/hmemcpy/haskell-hie-devcontainer
 
 Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
 
@@ -78,6 +89,54 @@ You can run the test suite with:
     $ scripts/dev.sh test
 
 This should run in isolation.  The output format is described in the [pytest documentation](https://docs.pytest.org/en/latest/usage.html#detailed-summary-report).  Errors and failures are indicated by `F`s and `E`s.
+
+### 
+
+### Installing and configuring Haskell IDE Engine (HIE) integration 
+
+Haskell IDE Engine (HIE) is an editor integration that includes diagnostics, `hlint` refactor suggestions, documentation-on-hover, GHC warnings and errors, and many other features.
+
+https://github.com/haskell/haskell-ide-engine
+
+> This project aims to be the universal interface to a growing number of Haskell tools, providing a fully-featured Language Server Protocol server for editors and IDEs that require Haskell-specific functionality.
+
+You can install HIE and its dependencies locally, or you can use the [community VS Code Devcontainer](https://github.com/hmemcpy/haskell-hie-devcontainer) to install GHC + HIE and the VS Code extension in an isolated container environment for you.
+
+HIE has a couple of requirements, namely that you have `stack` installed and in your path, and, depending on your OS, a few build tool libs that must be installed in order to compile correctly. You can follow the guide under `Installation from source` on the HIE repository page, or if you are on Arch, you can install it from the AUR:
+
+`aura -A haskell-ide-engine`
+
+**Do not install using** `nix` as this will cause fatal errors once `hie` attempts to build symbols & documentation for Hasura. You can build from source by doing:
+
+_(Note: this will take several minutes and is resource-intensive)_
+```bash
+git clone https://github.com/haskell/haskell-ide-engine --recurse-submodules
+cd haskell-ide-engine
+
+./cabal-hie-install hie-8.6.5
+./cabal-hie-install data
+```
+
+Once this is done, you will need to configure a `hie.yaml` in the root of `graphql-engine/server` so that HIE understands how to interface with the project symbols:
+
+```yaml
+# graphql-engine/server/hie.yaml
+
+cradle:
+  cabal:
+    - path: './src-lib'
+      component: 'lib:graphql-engine'
+    - path: './src-exec'
+      component: 'exe:graphql-engine'
+    - path: './src-test'
+      component: 'test:graphql-engine-tests'
+    - path: './src-bench-cache'
+      component: 'bench:cache'
+```
+
+After this, everything should now be properly configured and you can continue to the editor-specific configurations for HIE, located here:
+
+https://github.com/haskell/haskell-ide-engine#editor-integration
 
 ### Run and test manually
 
