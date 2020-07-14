@@ -12,16 +12,19 @@ Hasura GraphQL engine One-click App on DigitalOcean Marketplace
   :depth: 1
   :local:
 
+Introduction
+------------
+
 The Hasura GraphQL engine is available as a One-click app on the DigitalOcean
 Marketplace. It is packed with a `Postgres <https://www.postgresql.org/>`__
 database and `Caddy <https://caddyserver.com/>`__ webserver for easy and
 automatic HTTPS using `Let's Encrypt <https://letsencrypt.org/>`__.
 
-Quickstart
-----------
+Deploying Hasura on Digital Ocean
+---------------------------------
 
-1. Create a Hasura One-click Droplet
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1: Create a Hasura One-click Droplet
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Click the button below to create a new Hasura GraphQL engine Droplet through
 the DigitalOcean Marketplace. For first time users, the link also contains a
@@ -34,8 +37,8 @@ support most workloads. (``Ctrl+Click`` to open in a new tab)
    :class: no-shadow
    :target: https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=docs
 
-2. Open console
-~~~~~~~~~~~~~~~
+Step 2: Open console
+^^^^^^^^^^^^^^^^^^^^
 
 Once the Hasura GraphQL engine Droplet is ready, you can visit the Droplet IP to
 open the Hasura console, where you can create tables, explore GraphQL APIs etc.
@@ -62,8 +65,8 @@ can create a table on this Postgres instance and make your first GraphQL query.
    :class: no-shadow
    :alt: Hasura console
 
-3. Create a table
-~~~~~~~~~~~~~~~~~
+Step 3: Create a table
+^^^^^^^^^^^^^^^^^^^^^^
 
 Navigate to ``Data -> Create table`` on the console and create a table called ``profile`` with the following columns:
 
@@ -82,8 +85,8 @@ Choose ``id`` as the Primary key and click the ``Create`` button.
    :class: no-shadow
    :alt: Hasura console - create table
 
-4. Insert sample data
-~~~~~~~~~~~~~~~~~~~~~
+Step 4: Insert sample data
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once the table is created, go to the ``Insert Row`` tab and insert some sample rows:
 
@@ -99,8 +102,8 @@ Once the table is created, go to the ``Insert Row`` tab and insert some sample r
    :class: no-shadow
    :alt: Hasura console - insert data
 
-5. Try out GraphQL
-~~~~~~~~~~~~~~~~~~
+Step 5: Try out GraphQL
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Switch to the ``GraphiQL`` tab on top and execute the following GraphQL query:
 
@@ -117,6 +120,8 @@ Switch to the ``GraphiQL`` tab on top and execute the following GraphQL query:
    :class: no-shadow
    :alt: Hasura console - GraphiQL
 
+.. _digital_ocean_secure:
+
 Secure the GraphQL endpoint
 ---------------------------
 
@@ -127,41 +132,46 @@ tables.
 
 To add an admin secret key, follow the steps described below:
 
-1. Connect to the Droplet via SSH:
+Step 1: Connect to the Droplet via SSH
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. code-block:: bash
+.. code-block:: bash
 
-      ssh root@<your_droplet_ip>
-
-
-2. Go to the ``/etc/hasura`` directory:
-
-   .. code-block:: bash
-
-      cd /etc/hasura
+   ssh root@<your_droplet_ip>
 
 
-3. Edit ``docker-compose.yaml`` and un-comment the line that mentions admin secret key.
-   Also change it to some unique secret:
+Step 2: Go to the ``/etc/hasura`` directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. code-block:: bash
+.. code-block:: bash
 
-      vim docker-compose.yaml
-
-      ...
-      # un-comment next line to add an admin secret key
-      HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
-      ...
-
-      # type ESC followed by :wq to save and quit
+   cd /etc/hasura
 
 
-4. Update the container:
+Step 3: Set an admin secret
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. code-block:: bash
+Edit ``docker-compose.yaml`` and un-comment the line that mentions admin secret key. 
+Also change it to some unique secret:
 
-      docker-compose up -d
+.. code-block:: bash
 
+   vim docker-compose.yaml
+
+   ...
+   # un-comment next line to add an admin secret key
+   HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+   ...
+
+   # type ESC followed by :wq to save and quit
+
+
+Step 4: Update the container
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   docker-compose up -d
 
 That's it. Visit the console at ``http://<your_droplet_ip>/console`` and it should
 prompt for the admin secret key. Further API requests can be made by adding the

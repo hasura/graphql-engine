@@ -21,8 +21,12 @@ Choose from the following guides to deploy the Hasura GraphQL engine and connect
 - :ref:`Deploy using Heroku <deploy_heroku>`
 - :ref:`Deploy using Docker <deployment_docker>`
 - :ref:`Deploy using Kubernetes <deploy_kubernetes>`
-
-You can also check :ref:`guides_deployment` for more specific examples.
+- :ref:`Deploy using Digital Ocean One-click App on Marketplace <deploy_do_marketplace>`
+- :ref:`Deploy using Azure Container Instances with Postgres <deploy_azure_ci_pg>`
+- :ref:`Deploy using Google Cloud Platform with Kubernetes engine and Cloud SQL <deploy_gc_kubernetes>`
+- :ref:`Deploy using Render One-click Deploy with Managed PostgreSQL <deploy_render>`
+- :ref:`Deploy using Nhost One-click Deploy with Managed PostgreSQL, Storage, and Auth <deploy_nhost>`
+- `Deploy using Instant GraphQL on AWS RDS (blog) <https://hasura.io/blog/instant-graphql-on-aws-rds-1edfb85b5985>`__
 
 .. admonition:: Custom Docker images or binaries
 
@@ -55,13 +59,12 @@ For access to Hasura GraphQL engine logs, check the below page for details:
    Deploying Hasura GraphQL engine <deploying/index>
    Server configuration <graphql-engine-flags/index>
    postgres-requirements
-   Securing GraphQL endpoint <securing-graphql-endpoint/index>
-   Server logs <logging/index>
+   Securing GraphQL endpoint <securing-graphql-endpoint>
+   Server logs <logging>
    Enable HTTPS <enable-https>
    allow-list
    HTTP Compression <compression>
    Production checklist <production-checklist>
    Custom Docker images or binaries <custom-docker-images>
-   Updating GraphQL engine <updating/index>
+   Updating GraphQL engine <updating-graphql-engine>
    Downgrading GraphQL engine <downgrading>
-   Deployment guides <guides/index>
