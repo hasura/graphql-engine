@@ -201,12 +201,14 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       eventsNext <- LA.withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
         forM_ events $ \event -> do
-          processEvent event
+          t <- processEvent event
             & withEventEngineCtx eeCtx
             & flip runReaderT (logger, httpMgr)
+            & LA.async
           -- removing an event from the _eeCtxLockedEvents after the event has
           -- been processed
           removeEventFromLockedEvents (eId event) leEvents
+          LA.link t
         LA.wait eventsNextA
 
       let lenEvents = length events
