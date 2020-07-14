@@ -134,7 +134,7 @@ runHasuraGQ reqId (query, _queryParsed) userInfo resolvedOp = do
     E.ExOpQuery tx genSql _asts -> do
       -- log the generated SQL and the graphql query
       logQueryLog logger query genSql reqId
-      ([],) <$> runLazyTx pgExecCtx Q.ReadOnly tx
+      ([],) <$> runQueryTx pgExecCtx tx
 
     E.ExOpMutation respHeaders tx -> do
       logQueryLog logger query Nothing reqId
