@@ -84,15 +84,15 @@ const HelpPage = () => {
           })}
         </div>
         <div className={`${styles.descriptionText} ${styles.wd60}`}>
-          If you want to talk to our Product Specialists, head to our{' '}
+          If you would like to talk to our Product Specialists, head to our{' '}
           <a
             href="https://hasura.io/help"
             // eslint-disable-next-line react/jsx-no-target-blank
             target="_blank"
           >
             help page
-          </a>
-          or{' '}
+          </a>{' '}
+          to chat with us or{' '}
           <a
             href="https://calendly.com/hasura/prod-expert-call"
             // eslint-disable-next-line react/jsx-no-target-blank
