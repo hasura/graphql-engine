@@ -33,6 +33,7 @@ import           Hasura.SQL.Types
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
+import qualified Data.Environment              as Env
 import qualified Data.HashMap.Strict           as Map
 
 import qualified Database.PG.Query             as Q
@@ -74,7 +75,7 @@ persistCreateAction (CreateAction actionName actionDefinition comment) = do
       VALUES ($1, $2, $3)
   |] (actionName, Q.AltJ actionDefinition, comment) True
 
-{- Note [Postgres scalars in action input arguments]
+{-| Note [Postgres scalars in action input arguments]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 It's very comfortable to be able to reference Postgres scalars in actions
 input arguments. For example, see the following action mutation:
@@ -93,14 +94,15 @@ referred scalars.
 -}
 
 resolveAction
-  :: (QErrM m, MonadIO m)
-  => AnnotatedCustomTypes
+  :: QErrM m
+  => Env.Environment
+  -> AnnotatedCustomTypes
   -> ActionDefinitionInput
   -> HashSet PGScalarType -- See Note [Postgres scalars in custom types]
   -> m ( ResolvedActionDefinition
        , AnnotatedObjectType
        )
-resolveAction AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = do
+resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = do
   resolvedArguments <- forM _adArguments $ \argumentDefinition -> do
     forM argumentDefinition $ \argumentType -> do
       let gType = unGraphQLType argumentType
@@ -121,7 +123,7 @@ resolveAction AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = do
   outputObject <- onNothing (Map.lookup outputBaseType _actObjects) $
     throw400 NotExists $ "the type: " <> showName outputBaseType
     <> " is not an object type defined in custom types"
-  resolvedWebhook <- resolveWebhook _adHandler
+  resolvedWebhook <- resolveWebhook env _adHandler
   pure ( ActionDefinition resolvedArguments _adOutputType _adType
          _adHeaders _adForwardClientHeaders resolvedWebhook
        , outputObject
@@ -219,8 +221,9 @@ resolveAction
   -> m ( ResolvedActionDefinition
        , AnnotatedObjectType
        , HashSet PGScalarType
-       ) -- ^ see Note [Postgres scalars in action input arguments].
-resolveAction customTypes allPGScalars actionDefinition = do
+       -- ^ see Note [Postgres scalars in action input arguments].
+       )
+resolveAction env customTypes allPGScalars actionDefinition = do
   let responseType = unGraphQLType $ _adOutputType actionDefinition
       responseBaseType = G.getBaseType responseType
 
@@ -247,7 +250,7 @@ resolveAction customTypes allPGScalars actionDefinition = do
 
   -- Check if the response type is an object
   outputObject <- getObjectTypeInfo responseBaseType
-  resolvedDef <- traverse resolveWebhook actionDefinition
+  resolvedDef <- traverse (resolveWebhook env) actionDefinition
   pure (resolvedDef, outputObject, reusedPGScalars)
   where
     getNonObjectTypeInfo typeName =

@@ -14,10 +14,11 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Text                              as T
-import qualified Language.GraphQL.Draft.Parser          as G
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Language.GraphQL.Draft.Parser          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
@@ -37,12 +38,13 @@ introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
 fetchRemoteSchema
   :: forall m
    . (HasVersion, MonadIO m, MonadUnique m, MonadError QErr m)
-  => HTTP.Manager
+  => Env.Environment
+  -> HTTP.Manager
   -> RemoteSchemaName
   -> RemoteSchemaInfo
   -> m RemoteSchemaCtx
-fetchRemoteSchema manager schemaName schemaInfo@(RemoteSchemaInfo url headerConf _ timeout) = do
-  headers <- makeHeadersFromConf headerConf
+fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url headerConf _ timeout) = do
+  headers <- makeHeadersFromConf env headerConf
   let hdrsWithDefaults = addDefaultHeaders headers
 
   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
@@ -379,17 +381,18 @@ execRemoteGQ'
      , MonadIO m
      , MonadError QErr m
      )
-  => HTTP.Manager
+  => Env.Environment
+  -> HTTP.Manager
   -> UserInfo
   -> [N.Header]
   -> GQLReqUnparsed
   -> RemoteSchemaInfo
   -> G.OperationType
   -> m (DiffTime, [N.Header], BL.ByteString)
-execRemoteGQ' manager userInfo reqHdrs q rsi opType = do
+execRemoteGQ' env manager userInfo reqHdrs q rsi opType = do
   when (opType == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
-  confHdrs <- makeHeadersFromConf hdrConf
+  confHdrs <- makeHeadersFromConf env hdrConf
   let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
       -- filter out duplicate headers
       -- priority: conf headers > resolved userinfo vars > client headers
@@ -407,7 +410,6 @@ execRemoteGQ' manager userInfo reqHdrs q rsi opType = do
            , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
-
   (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
   pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)

@@ -10,6 +10,8 @@ import qualified Data.HashMap.Strict            as Map
 import qualified Data.Sequence                  as Seq
 import qualified Data.Text                      as T
 import qualified Database.PG.Query              as Q
+import qualified Data.Environment               as Env
+
 
 import qualified Hasura.RQL.DML.Insert          as RQL
 import qualified Hasura.RQL.DML.Insert.Types    as RQL
@@ -73,26 +75,28 @@ fmapAnnInsert f (annIns, mutationOutput) =
 
 convertToSQLTransaction
   :: (HasVersion, MonadTx m, MonadIO m)
-  => AnnMultiInsert S.SQLExp
+  => Env.Environment
+  -> AnnMultiInsert S.SQLExp
   -> RQL.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m EncJSON
-convertToSQLTransaction (annIns, mutationOutput) rjCtx planVars stringifyNum =
+convertToSQLTransaction env (annIns, mutationOutput) rjCtx planVars stringifyNum =
   if null $ _aiInsObj annIns
   then pure $ RQL.buildEmptyMutResp mutationOutput
-  else insertMultipleObjects annIns [] rjCtx mutationOutput planVars stringifyNum
+  else insertMultipleObjects env annIns [] rjCtx mutationOutput planVars stringifyNum
 
 insertMultipleObjects
   :: (HasVersion, MonadTx m, MonadIO m)
-  => MultiObjIns S.SQLExp
+  => Env.Environment
+  -> MultiObjIns S.SQLExp
   -> [(PGCol, S.SQLExp)]
   -> RQL.MutationRemoteJoinCtx
   -> RQL.MutationOutput
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m EncJSON
-insertMultipleObjects multiObjIns additionalColumns rjCtx mutationOutput planVars stringifyNum =
+insertMultipleObjects env multiObjIns additionalColumns rjCtx mutationOutput planVars stringifyNum =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
     AnnIns insObjs table conflictClause checkCondition columnInfos defVals = multiObjIns
@@ -113,33 +117,34 @@ insertMultipleObjects multiObjIns additionalColumns rjCtx mutationOutput planVar
             checkCondition
             mutationOutput
             columnInfos
-      RQL.execInsertQuery stringifyNum (Just rjCtx) (insertQuery, planVars)
+      RQL.execInsertQuery env stringifyNum (Just rjCtx) (insertQuery, planVars)
 
     withRelsInsert = do
       insertRequests <- for insObjs \obj -> do
         let singleObj = AnnIns obj table conflictClause checkCondition columnInfos defVals
-        insertObject singleObj additionalColumns rjCtx planVars stringifyNum
+        insertObject env singleObj additionalColumns rjCtx planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
           columnValues = catMaybes $ map snd insertRequests
       selectExpr <- RQL.mkSelCTEFromColVals table columnInfos columnValues
       let (mutOutputRJ, remoteJoins) = RQL.getRemoteJoinsMutationOutput mutationOutput
           sqlQuery = Q.fromBuilder $ toSQL $
                      RQL.mkMutationOutputExp table columnInfos (Just affectedRows) selectExpr mutOutputRJ stringifyNum
-      RQL.executeMutationOutputQuery sqlQuery [] $ (,rjCtx) <$> remoteJoins
+      RQL.executeMutationOutputQuery env sqlQuery [] $ (,rjCtx) <$> remoteJoins
 
 insertObject
   :: (HasVersion, MonadTx m, MonadIO m)
-  => SingleObjIns S.SQLExp
+  => Env.Environment
+  -> SingleObjIns S.SQLExp
   -> [(PGCol, S.SQLExp)]
   -> RQL.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m (Int, Maybe (ColumnValues TxtEncodedPGVal))
-insertObject singleObjIns additionalColumns rjCtx planVars stringifyNum = do
+insertObject env singleObjIns additionalColumns rjCtx planVars stringifyNum = do
   validateInsert (map fst columns) (map _riRelInfo objectRels) (map fst additionalColumns)
 
   -- insert all object relations and fetch this insert dependent column values
-  objInsRes <- forM objectRels $ insertObjRel planVars rjCtx stringifyNum
+  objInsRes <- forM objectRels $ insertObjRel env planVars rjCtx stringifyNum
 
   -- prepare final insert columns
   let objRelAffRows = sum $ map fst objInsRes
@@ -165,7 +170,7 @@ insertObject singleObjIns additionalColumns rjCtx planVars stringifyNum = do
     withArrRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
       arrDepColsWithVal <- fetchFromColVals colVal arrRelDepCols
-      arrInsARows <- forM arrayRels $ insertArrRel arrDepColsWithVal rjCtx planVars stringifyNum
+      arrInsARows <- forM arrayRels $ insertArrRel env arrDepColsWithVal rjCtx planVars stringifyNum
       return $ sum arrInsARows
 
     asSingleObject = \case
@@ -179,13 +184,14 @@ insertObject singleObjIns additionalColumns rjCtx planVars stringifyNum = do
 
 insertObjRel
   :: (HasVersion, MonadTx m, MonadIO m)
-  => Seq.Seq Q.PrepArg
+  => Env.Environment
+  -> Seq.Seq Q.PrepArg
   -> RQL.MutationRemoteJoinCtx
   -> Bool
   -> ObjRelIns S.SQLExp
   -> m (Int, [(PGCol, S.SQLExp)])
-insertObjRel planVars rjCtx stringifyNum objRelIns = do
-  (affRows, colValM) <- insertObject singleObjIns [] rjCtx planVars stringifyNum
+insertObjRel env planVars rjCtx stringifyNum objRelIns = do
+  (affRows, colValM) <- insertObject env singleObjIns [] rjCtx planVars stringifyNum
   colVal <- onNothing colValM $ throw400 NotSupported errMsg
   retColsWithVals <- fetchFromColVals colVal rColInfos
   let columns = flip mapMaybe (Map.toList mapCols) \(column, target) -> do
@@ -206,17 +212,18 @@ insertObjRel planVars rjCtx stringifyNum objRelIns = do
 
 insertArrRel
   :: (HasVersion, MonadTx m, MonadIO m)
-  => [(PGCol, S.SQLExp)]
+  => Env.Environment
+  -> [(PGCol, S.SQLExp)]
   -> RQL.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> ArrRelIns S.SQLExp
   -> m Int
-insertArrRel resCols rjCtx planVars stringifyNum arrRelIns = do
+insertArrRel env resCols rjCtx planVars stringifyNum arrRelIns = do
   let additionalColumns = flip mapMaybe resCols \(column, value) -> do
         target <- Map.lookup column mapping
         Just (target, value)
-  resBS <- insertMultipleObjects multiObjIns additionalColumns rjCtx mutOutput planVars stringifyNum
+  resBS <- insertMultipleObjects env multiObjIns additionalColumns rjCtx mutOutput planVars stringifyNum
   resObj <- decodeEncJSON resBS
   onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
     throw500 "affected_rows not returned in array rel insert"

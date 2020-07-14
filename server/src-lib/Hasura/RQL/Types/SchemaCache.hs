@@ -139,7 +139,6 @@ import           Hasura.RQL.Types.Table
 import           Hasura.Session
 import           Hasura.SQL.Types
 
-
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH

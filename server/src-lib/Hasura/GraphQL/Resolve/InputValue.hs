@@ -28,10 +28,8 @@ module Hasura.GraphQL.Resolve.InputValue
 
 import           Hasura.Prelude
 
-import qualified Text.Builder                  as TB
-
+import qualified Text.Builder                   as TB
 import qualified Language.GraphQL.Draft.Syntax  as G
-
 import qualified Hasura.RQL.Types               as RQL
 
 import           Hasura.GraphQL.Resolve.Context

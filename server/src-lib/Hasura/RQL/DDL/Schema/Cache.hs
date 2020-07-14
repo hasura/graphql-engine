@@ -23,6 +23,7 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended             as M
 import qualified Data.HashSet                             as HS
 import qualified Data.Text                                as T
+import qualified Data.Environment                         as Env
 import qualified Database.PG.Query                        as Q
 
 import           Control.Arrow.Extended
@@ -59,11 +60,12 @@ import           Hasura.SQL.Types
 
 buildRebuildableSchemaCache
   :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
-  => m (RebuildableSchemaCache m)
-buildRebuildableSchemaCache = do
+  => Env.Environment
+  -> m (RebuildableSchemaCache m)
+buildRebuildableSchemaCache env = do
   catalogMetadata <- liftTx fetchCatalogData
   result <- flip runReaderT CatalogSync $
-    Inc.build buildSchemaCacheRule (catalogMetadata, initialInvalidationKeys)
+    Inc.build (buildSchemaCacheRule env) (catalogMetadata, initialInvalidationKeys)
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
 newtype CacheRWT m a
@@ -113,8 +115,9 @@ buildSchemaCacheRule
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadUnique m, MonadTx m
      , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
-  => (CatalogMetadata, InvalidationKeys) `arr` SchemaCache
-buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
+  => Env.Environment
+  -> (CatalogMetadata, InvalidationKeys) `arr` SchemaCache
+buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
 
   -- Step 1: Process metadata and collect dependency information.
@@ -318,7 +321,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
 
     buildTableEventTriggers
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-         , Inc.ArrowCache m arr, MonadIO m, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
+         , Inc.ArrowCache m arr, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
       => (TableCoreInfo, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
     buildTableEventTriggers = buildInfoMap _cetName mkEventTriggerMetadataObject buildEventTrigger
       where
@@ -330,7 +333,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
           (| withRecordInconsistency (
              (| modifyErrA (do
                   etc <- bindErrorA -< decodeValue configuration
-                  (info, dependencies) <- bindErrorA -< subTableP2Setup qt etc
+                  (info, dependencies) <- bindErrorA -< subTableP2Setup env qt etc
                   let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
                   recreateViewIfNeeded -< (qt, tableColumns, trn, etcDefinition etc)
                   recordDependencies -< (metadataObject, schemaObjectId, dependencies)
@@ -344,6 +347,45 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
             when (buildReason == CatalogUpdate) $ do
               liftTx $ delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
               mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
+
+    buildCronTriggers
+      :: ( ArrowChoice arr
+         , Inc.ArrowDistribute arr
+         , ArrowWriter (Seq CollectedInfo) arr
+         , Inc.ArrowCache m arr
+         , MonadTx m)
+      => ((),[CatalogCronTrigger])
+         `arr` HashMap TriggerName CronTriggerInfo
+    buildCronTriggers = buildInfoMap _cctName mkCronTriggerMetadataObject buildCronTrigger
+      where
+        buildCronTrigger = proc (_,cronTrigger) -> do
+          let triggerName = triggerNameToTxt $ _cctName cronTrigger
+              addCronTriggerContext e = "in cron trigger " <> triggerName <> ": " <> e
+          (| withRecordInconsistency (
+            (| modifyErrA (bindErrorA -< resolveCronTrigger env cronTrigger)
+             |) addCronTriggerContext)
+           |) (mkCronTriggerMetadataObject cronTrigger)
+
+    buildActions
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
+         , ArrowWriter (Seq CollectedInfo) arr)
+      => ( (AnnotatedCustomTypes, HashSet PGScalarType)
+         , [ActionMetadata]
+         ) `arr` HashMap ActionName ActionInfo
+    buildActions = buildInfoMap _amName mkActionMetadataObject buildAction
+      where
+        buildAction = proc ((resolvedCustomTypes, pgScalars), action) -> do
+          let ActionMetadata name comment def actionPermissions = action
+              addActionContext e = "in action " <> name <<> "; " <> e
+          (| withRecordInconsistency (
+             (| modifyErrA (do
+                  (resolvedDef, outObject) <- liftEitherA <<< bindA -<
+                    runExceptT $ resolveAction env resolvedCustomTypes def pgScalars
+                  let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
+                      permissionMap = mapFromL _apiRole permissionInfos
+                  returnA -< ActionInfo name outObject resolvedDef permissionMap comment)
+              |) addActionContext)
+           |) (mkActionMetadataObject action)
 
     buildRemoteSchemas
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
@@ -359,48 +401,9 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
         buildRemoteSchema = Inc.cache proc (invalidationKeys, remoteSchema) -> do
           Inc.dependOn -< Inc.selectKeyD (_arsqName remoteSchema) invalidationKeys
           (| withRecordInconsistency (liftEitherA <<< bindA -<
-               runExceptT $ addRemoteSchemaP2Setup remoteSchema)
+               runExceptT $ addRemoteSchemaP2Setup env remoteSchema)
            |) (mkRemoteSchemaMetadataObject remoteSchema)
 
-    buildActions
-      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m )
-      => ( (AnnotatedCustomTypes, HashSet PGScalarType)
-         , [ActionMetadata]
-         ) `arr` HashMap ActionName ActionInfo
-    buildActions = buildInfoMap _amName mkActionMetadataObject buildAction
-      where
-        buildAction = proc ((resolvedCustomTypes, pgScalars), action) -> do
-          let ActionMetadata name comment def actionPermissions = action
-              addActionContext e = "in action " <> name <<> "; " <> e
-          (| withRecordInconsistency (
-             (| modifyErrA (do
-                  (resolvedDef, outObject) <- liftEitherA <<< bindA -<
-                    runExceptT $ resolveAction resolvedCustomTypes def pgScalars
-                  let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
-                      permissionMap = mapFromL _apiRole permissionInfos
-                  returnA -< ActionInfo name outObject resolvedDef permissionMap comment)
-              |) addActionContext)
-           |) (mkActionMetadataObject action)
-
-    buildCronTriggers
-      :: ( ArrowChoice arr
-         , Inc.ArrowDistribute arr
-         , ArrowWriter (Seq CollectedInfo) arr
-         , Inc.ArrowCache m arr
-         , MonadIO m
-         , MonadTx m)
-      => ((),[CatalogCronTrigger])
-         `arr` HashMap TriggerName CronTriggerInfo
-    buildCronTriggers = buildInfoMap _cctName mkCronTriggerMetadataObject buildCronTrigger
-      where
-        buildCronTrigger = proc (_,cronTrigger) -> do
-          let triggerName = triggerNameToTxt $ _cctName cronTrigger
-              addCronTriggerContext e = "in cron trigger " <> triggerName <> ": " <> e
-          (| withRecordInconsistency (
-            (| modifyErrA (bindErrorA -< resolveCronTrigger cronTrigger)
-             |) addCronTriggerContext)
-           |) (mkCronTriggerMetadataObject cronTrigger)
 
 
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a

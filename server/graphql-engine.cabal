@@ -449,6 +449,7 @@ library
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.List.Extended
                      , Data.Tuple.Extended
+                     , Data.Environment
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error
                      , Hasura.SQL.GeoJSON
