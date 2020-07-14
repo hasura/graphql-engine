@@ -586,9 +586,6 @@
       $('.thumb_up').on('click', handleThumbUpClick);
 
       const handleThumbDownClick = function(e) {
-        if (Intercom) {
-          Intercom('showNewMessage', 'Feedback on docs: ')
-        }
         sendFeedback('negative', 'Sorry to hear that. Please tell us what you were looking for:');
       };
       $('.thumb_down').on('click', handleThumbDownClick);
