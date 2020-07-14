@@ -238,6 +238,8 @@ Step 5: Restart the container
 
 Go to ``https://<your_domain>/console`` to visit the Hasura console.
 
+.. _do_updating:
+
 Updating to the latest version
 ------------------------------
 
@@ -350,6 +352,7 @@ If you need to configure the pool size or the timeout, you can use the below env
 
   If you still want to enable connection pooling on your managed database on DigitalOcean, you should do so in the ``session`` mode.
 
+.. _do_logs:
 
 Logs
 ----

@@ -225,6 +225,8 @@ Hasura is able to connect to the database.
 If you're using an existing/external database, make sure the firewall rules for
 the database allow connection for Azure services.
 
+.. _azure_logs:
+
 Checking logs
 ^^^^^^^^^^^^^
 

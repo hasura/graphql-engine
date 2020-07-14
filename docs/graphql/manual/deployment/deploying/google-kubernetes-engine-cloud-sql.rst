@@ -188,8 +188,10 @@ command below. It usually takes a couple of minutes.
 Once the IP is allocated, visit the IP in a browser and it should open the
 console.
 
-Troubleshooting
----------------
+.. _gc_kubernetes_logs:
+
+Logs
+----
 
 Check the status for pods to see if they are running. If there are any errors,
 check the logs of the GraphQL engine:
