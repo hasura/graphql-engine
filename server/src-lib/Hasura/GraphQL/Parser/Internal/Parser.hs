@@ -390,7 +390,7 @@ list parser = gcastWith (inputParserInput @k) Parser
   { pType = schemaType
   , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
       VList values -> for (zip [0..] values) \(index, value) ->
-        withPath (Index index :) $ pParser parser value
+        withPath (++[Index index]) $ pParser parser value
       -- List Input Coercion
       --
       -- According to section 3.11 of the GraphQL spec: iff the value
@@ -403,7 +403,7 @@ list parser = gcastWith (inputParserInput @k) Parser
       -- be returning `[null]` if the parser accepts a null value,
       -- which would contradict the spec.
       VNull -> parseError "expected a list, but found null"
-      other -> fmap pure $ withPath (Index 0 :) $ pParser parser other
+      other -> fmap pure $ withPath (++[Index 0]) $ pParser parser other
   }
   where
     schemaType = NonNullable $ TList $ pType parser
