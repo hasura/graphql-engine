@@ -24,8 +24,7 @@ const supportListState = [
   {
     brand: docs,
     title: 'Docs',
-    description:
-      'Head to docs to search for what you’re looking for.',
+    description: 'Head to docs to search for what you’re looking for.',
     link: 'https://hasura.io/docs/',
   },
   {
@@ -42,6 +41,7 @@ const supportListState = [
     link: 'https://github.com/hasura/graphql-engine/',
   },
 ];
+
 const HelpPage = () => {
   return (
     <div
@@ -85,7 +85,14 @@ const HelpPage = () => {
         </div>
         <div className={`${styles.descriptionText} ${styles.wd60}`}>
           If you want to talk to our Product Specialists, head to our{' '}
-          <a href="https://hasura.io/help/">help page</a> or{' '}
+          <a
+            href="https://hasura.io/help"
+            // eslint-disable-next-line react/jsx-no-target-blank
+            target="_blank"
+          >
+            help page
+          </a>
+          or{' '}
           <a
             href="https://calendly.com/hasura/prod-expert-call"
             // eslint-disable-next-line react/jsx-no-target-blank
