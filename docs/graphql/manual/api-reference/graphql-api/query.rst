@@ -158,7 +158,7 @@ Simple object
    * - path
      - false
      - Value
-     - ``path`` argument of ``json``/``jsonb`` follows simple `JSONPath specification <https://github.com/json-path/JsonPath>`_. However, prefix symbol ``$.`` is optional.
+     - ``path`` argument of ``json``/``jsonb`` follows simple `JSONPath specification <https://github.com/json-path/JsonPath>`__. However, prefix symbol ``$.`` is optional.
 
 *Example*
 
@@ -582,7 +582,7 @@ Operator
    * - ``_nin``
      - ``NOT IN``  
 
-(For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/current/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/current/functions-comparisons.html>`_.)
+(For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/current/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/current/functions-comparisons.html>`__.)
 
 .. _text_operators:
 
