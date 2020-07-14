@@ -25,11 +25,6 @@ import           Hasura.Server.Migrate
 import           Hasura.Server.Version          (HasVersion)
 
 -- -- NOTE: downgrade test disabled for now (see #5273)
--- import           Data.List.Split                (splitOn)
--- import           Data.List                      (isPrefixOf, stripPrefix)
--- import           System.Process                 (readProcess)
--- import qualified Safe
--- import           Hasura.Server.Init             (downgradeShortcuts)
 
 newtype CacheRefT m a
   = CacheRefT { runCacheRefT :: MVar (RebuildableSchemaCache m) -> m a }
