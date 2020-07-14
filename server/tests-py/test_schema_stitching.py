@@ -4,6 +4,7 @@ import string
 import random
 import ruamel.yaml as yaml
 import json
+import graphql
 import queue
 import requests
 import time
@@ -528,11 +529,19 @@ def compare_args(argH, argR):
         'remote_type' : argR['type'],
         'hasura_type' : argH['type']
     })
-    assert argR['defaultValue'] == argH['defaultValue'], yaml.dump({
-        'error' : 'Default values do not match for arg ' + arg_path,
-        'remote_default_value' : argR['defaultValue'],
-        'hasura_default_value' : argH['defaultValue']
-    })
+    compare_default_value(argR['defaultValue'], argH['defaultValue'])
+
+# There doesn't seem to be any Python code that can correctly compare GraphQL
+# 'Value's for equality. So we try to do it here.
+def compare_default_value(valH, valR):
+    a = graphql.parse_value(valH)
+    b = graphql.parse_value(valR)
+    if a == b:
+        return True
+    for field in a.fields:
+        assert field in b.fields
+    for field in b.fields:
+        assert field in a.fields
 
 def compare_flds(fldH, fldR):
     assert fldH['type'] == fldR['type'], yaml.dump({
