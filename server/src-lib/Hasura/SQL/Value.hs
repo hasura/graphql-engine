@@ -4,6 +4,8 @@ module Hasura.SQL.Value
   , pgScalarValueToJson
   , withConstructorFn
   , parsePGValue
+  , scientificToInteger
+  , scientificToFloat
 
   , TxtEncodedPGVal(..)
   , txtEncodedPGVal
@@ -124,6 +126,21 @@ withConstructorFn ty v
   | ty == PGRaster = S.SEFnApp "ST_RastFromHexWKB" [v] Nothing
   | otherwise = v
 
+
+scientificToInteger :: (Integral i, Bounded i) => Scientific -> AT.Parser i
+scientificToInteger num = case toBoundedInteger num of
+  Just parsed -> pure parsed
+  Nothing     -> fail $ "The value " ++ show num ++ " lies outside the "
+                     ++ "bounds or is not an integer.  Maybe it is a "
+                     ++ "float, or is there integer overflow?"
+
+scientificToFloat :: (RealFloat f) => Scientific -> AT.Parser f
+scientificToFloat num = case toBoundedRealFloat num of
+  Right parsed -> pure parsed
+  Left _       -> fail $ "The value " ++ show num ++ " lies outside the "
+                    ++ "bounds.  Is it overflowing the float bounds?"
+
+
 parsePGValue :: PGScalarType -> Value -> AT.Parser PGScalarValue
 parsePGValue ty val = case (ty, val) of
   (_          , Null)     -> pure $ PGNull ty
@@ -133,28 +150,11 @@ parsePGValue ty val = case (ty, val) of
   (_          , _)        -> parseTyped
   where
     parseBoundedInt :: forall i. (Integral i, Bounded i) => Value -> AT.Parser i
-    parseBoundedInt val' =
-      withScientific
-        ("Integer expected for input type: " ++ show ty)
-        go
-        val'
-      where
-        go num = case toBoundedInteger num of
-          Just parsed -> return parsed
-          Nothing     -> fail $ "The value " ++ show num ++ " lies outside the "
-                         ++ "bounds or is not an integer.  Maybe it is a "
-                         ++ "float, or is there integer overflow?"
+    parseBoundedInt = withScientific ("Integer expected for input type: " ++ show ty) scientificToInteger
+
     parseBoundedFloat :: forall a. (RealFloat a) => Value -> AT.Parser a
-    parseBoundedFloat val' =
-      withScientific
-        ("Float expected for input type: " ++ show ty)
-        go
-        val'
-      where
-        go num = case toBoundedRealFloat num of
-          Left _       -> fail $ "The value " ++ show num ++ " lies outside the "
-                          ++ "bounds.  Is it overflowing the float bounds?"
-          Right parsed -> return parsed
+    parseBoundedFloat = withScientific ("Float expected for input type: " ++ show ty) scientificToFloat
+
     parseTyped = case ty of
       PGSmallInt -> PGValSmallInt <$> parseBoundedInt val
       PGInteger -> PGValInteger <$> parseBoundedInt val

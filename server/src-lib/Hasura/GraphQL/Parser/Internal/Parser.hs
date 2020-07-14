@@ -11,7 +11,6 @@ import qualified Data.Aeson                    as A
 import qualified Data.HashMap.Strict.Extended  as M
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
-import           Data.Scientific               (toBoundedRealFloat)
 
 import           Control.Lens.Extended         hiding (enum, index)
 import           Data.Int                      (Int32)
@@ -22,8 +21,11 @@ import           Language.GraphQL.Draft.Syntax hiding (Definition)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Collect
 import           Hasura.GraphQL.Parser.Schema
+import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils           (englishList)
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value
+
 
 -- -----------------------------------------------------------------------------
 -- type definitions
@@ -241,33 +243,37 @@ scalar name description representation = Parser
         VBoolean a -> pure a
         _          -> typeMismatch name "a boolean" v
       SRInt -> case v of
-        -- TODO avoid loss of data
-        VInt a ->
-          if (fromIntegral (minBound :: Int32)) <= a && a <= (fromIntegral (maxBound :: Int32))
-          then pure $ fromIntegral a
-          else typeMismatch name "a 32-bit integer" v
+        VInt a -> convertWith scientificToInteger $ fromInteger a
         _      -> typeMismatch name "a 32-bit integer" v
       SRFloat -> case v of
-        VFloat a ->
-          case toBoundedRealFloat a of
-            Left _ -> typeMismatch name "a double-precision float" v
-            Right y -> pure y
-        -- TODO avoid loss of data
-        VInt   a -> pure $ fromIntegral a
+        VFloat a -> convertWith scientificToFloat a
+        VInt   a -> convertWith scientificToFloat $ fromInteger a
         _        -> typeMismatch name "a float" v
       SRString -> case v of
         VString _ a -> pure a
         _           -> typeMismatch name "a string" v
       SRAny -> case v of
-        VNull               -> pure A.Null
-        VInt i              -> pure $ A.toJSON i
-        VFloat f            -> pure $ A.toJSON f
-        VString _ t         -> pure $ A.toJSON t
-        VBoolean b          -> pure $ A.toJSON b
-        _                   -> typeMismatch name "a scalar" v
+        VNull        -> pure A.Null
+        VInt i       -> pure $ A.toJSON i
+        VFloat f     -> pure $ A.toJSON f
+        VString _ t  -> pure $ A.toJSON t
+        VBoolean b   -> pure $ A.toJSON b
+        _            -> typeMismatch name "a scalar" v
   }
   where
     schemaType = NonNullable $ TNamed $ mkDefinition name description TIScalar
+    convertWith f = either (parseError . qeError) pure . runAesonParser f
+
+{- WIP NOTE (FIXME: make into an actual note by expanding on it a bit)
+
+There's a delicate balance between GraphQL types and Postgres types.
+
+The mapping is done in the 'column' parser. But we want to only have
+one source of truth for parsing postgres values, which happens to be
+the JSON parsing code in SQL.Value. So here we reuse some of that code
+despite not having a JSON value.
+
+-}
 
 boolean :: MonadParse m => Parser 'Both m Bool
 boolean = scalar $$(litName "Boolean") Nothing SRBoolean
