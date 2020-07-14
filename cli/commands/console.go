@@ -1,10 +1,16 @@
 package commands
 
 import (
+	"net/http"
 	"os"
 	"sync"
 
+	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/static"
+	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
@@ -116,8 +122,7 @@ func (o *ConsoleOptions) Run() error {
 	templateProvider := console.NewDefaultTemplateProvider(basePath, templateFilename)
 	consoleTemplateVersion := templateProvider.GetTemplateVersion(o.EC.Version)
 	consoleAssetsVersion := templateProvider.GetAssetsVersion(o.EC.Version)
-    
-    /* TODO: Remove this and keep only appropriate changes
+
 	if o.CliExternalEndpoint == "" {
 		o.CliExternalEndpoint = "http://" + o.Address + ":" + o.APIPort
 	}
@@ -134,10 +139,9 @@ func (o *ConsoleOptions) Run() error {
 	r.router.Use(verifyAdminSecret())
 	r.setRoutes(o.EC.MigrationDir, o.EC.Logger)
 
-	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
-	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
-    */
-    
+	// consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
+	// consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
+
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
 	adminSecretHeader := cli.GetAdminSecretHeaderName(o.EC.Version)
@@ -195,6 +199,17 @@ func (o *ConsoleOptions) Run() error {
 	}
 
 	return console.Serve(serveOpts)
+}
+
+func verifyAdminSecret() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if ec.Config.ServerConfig.AdminSecret != "" {
+			if c.GetHeader(XHasuraAdminSecret) != ec.Config.ServerConfig.AdminSecret {
+				//reject
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
+			}
+		}
+	}
 }
 
 type cRouter struct {

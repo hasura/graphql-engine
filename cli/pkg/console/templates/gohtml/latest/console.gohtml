@@ -2,15 +2,11 @@
 <head>
     <script>
         window.__env = {
-            apiHost: {{.apiHost}},
-            apiPort: "{{.apiPort}}",
             cliVersion: {{.cliVersion}},
             dataApiUrl: {{.dataApiUrl}},
             dataApiVersion: {{.dataApiVersion}},
-            {{- if .hasAccessKey }}
-            accessKey: {{.adminSecret}},
-            {{ else }}
-            adminSecret: {{.adminSecret}},
+            {{- if .isAdminSecretSet }}
+            isAdminSecretSet: {{.isAdminSecretSet}},
             {{ end -}}
             urlPrefix: {{.urlPrefix}},
             consoleMode: "cli",
@@ -18,6 +14,7 @@
             enableTelemetry: {{.enableTelemetry}},
             assetsPath:"https://graphql-engine-cdn.hasura.io/console/assets",
             serverVersion: "{{.serverVersion}}",
+            migrateApiUrl: {{.migrateApiUrl}},
             migrateSkipExecution: {{.migrateSkipExecution}},
             cdnAssets: {{.cdnAssets}},
             assetsVersion: {{.assetsVersion}},
