@@ -120,6 +120,15 @@ p {
   position: relative !important;
   font-size: 16px;
 }
+.newsletter-link,
+.newsletter-link:hover,
+.newsletter-link:visited {
+  color: #001934 !important; /* override djangosite.css */
+  display: block;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 16px;
+}
 .full-width {
   flex: 1;
 }
@@ -521,6 +530,40 @@ article ol ol {
 
 #table-of-contents .topic-title {
   font-weight: bold;
+}
+
+.toc-list {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  padding: 0;
+}
+
+.toc-list:before {
+  display: none; /* override djangosite.css */
+}
+
+.toc-list .container {
+  padding: 0;
+  margin: initial;
+}
+
+.toc-list-head {
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 15px 5px 10px 0 !important; /* override djangodocs.css */
+  font-weight: bold;
+}
+
+@media (max-width: 1300px) {
+  .toc-list {
+    grid-template-columns: repeat(2, auto);
+  }
+}
+
+@media (max-width: 660px) {
+  .toc-list {
+    grid-template-columns: auto;
+  }
 }
 
 /*** Table of contents END ***/

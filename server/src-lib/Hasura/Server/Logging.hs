@@ -153,7 +153,6 @@ class (Monad m) => HttpLog m where
     -- ^ list of request headers
     -> m ()
 
-
 -- | Log information about the HTTP request
 data HttpInfoLog
   = HttpInfoLog

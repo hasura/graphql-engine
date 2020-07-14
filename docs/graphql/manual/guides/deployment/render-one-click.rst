@@ -18,7 +18,7 @@ One-Click Deploy on Render
 --------------------------
 
 .. note::
-   Make sure to `create a free Render account <https://render.com/register>`_ first.
+   Make sure to `create a free Render account <https://render.com/register>`__ first.
 
 Once you're logged into your Render account, click the button below to deploy Hasura and a
 new managed PostgreSQL database wired up to your Hasura instance.
