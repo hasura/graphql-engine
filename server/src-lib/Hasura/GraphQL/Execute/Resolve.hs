@@ -8,14 +8,15 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
 import qualified Data.HashMap.Strict.Extended           as Map
-import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Data.HashSet                           as HS
 import qualified Data.List                              as L
 import qualified Data.Text                              as T
+import qualified Language.GraphQL.Draft.Syntax          as G
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
-import           Data.Scientific                        (toBoundedInteger, toRealFloat, isInteger, floatingOrInteger)
+import           Data.Scientific                        (floatingOrInteger, isInteger,
+                                                         toBoundedInteger, toRealFloat)
 
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.Error
@@ -40,12 +41,15 @@ resolveVariables definitions jsonValues selSet = do
     traverse (traverse (resolveVariable uniqueVariables)) selSet
   let variablesByNameSet = HS.fromList . Map.keys $ variablesByName
       jsonVariableNames = HS.fromList $ Map.keys jsonValues
-  when (usedVariables /= variablesByNameSet) $
+      isVariableValidationEnabled = False
+
+  when (isVariableValidationEnabled && usedVariables /= variablesByNameSet) $
     throw400 ValidationFailed $
     ("following variable(s) have been defined, but have not been used in the query - "
      <> (T.concat $ L.intersperse ", "
          $ map G.unName $ HS.toList $
            HS.difference variablesByNameSet usedVariables))
+
   -- There may be variables which have a default value and may not be
   -- included in the variables JSON Map. So, we should only see, if a
   -- variable is inlcuded in the JSON Map, then it must be used in the
