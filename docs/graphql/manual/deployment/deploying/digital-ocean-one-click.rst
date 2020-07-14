@@ -189,43 +189,51 @@ If you own a domain, you can enable HTTPS on this Droplet by mapping the domain
 to the Droplet's IP. The Hasura GraphQL Droplet is configured with Caddy which is an
 HTTP/2 web server with automatic HTTPS using Let's Encrypt.
 
-1. Go to your domain's DNS dashboard and add an A record mapping the domain to the Droplet IP.
-2. Connect to the Droplet via SSH:
+Step 1: Add a record mapping
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
 
-   .. code-block:: bash
+Go to your domain's DNS dashboard and add an A record mapping the domain to the Droplet IP.
 
-      ssh root@<your_droplet_ip>
+Step 2: Connect to the Droplet via SSH
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. code-block:: bash
 
-3. Go to the ``/etc/hasura`` directory:
-
-   .. code-block:: bash
-
-      cd /etc/hasura
+   ssh root@<your_droplet_ip>
 
 
-4. Edit the ``Caddyfile`` and change ``:80`` to your domain:
+Step 3: Go to the ``/etc/hasura`` directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. code-block:: bash
+.. code-block:: bash
 
-      vim Caddyfile
+   cd /etc/hasura
 
-      ...
-      add_your-domain-here {
-        proxy / graphql-engine:8080 {
-          websocket
-        }
+
+Step 4: Edit the ``Caddyfile`` and change ``:80`` to your domain
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   vim Caddyfile
+
+   ...
+   add_your-domain-here {
+      proxy / graphql-engine:8080 {
+         websocket
       }
-      ...
+   }
+   ...
 
-      # type ESC followed by :wq to save and quit
+   # type ESC followed by :wq to save and quit
 
 
-5. Restart the container:
+Step 5: Restart the container
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. code-block:: bash
+.. code-block:: bash
 
-      docker-compose restart caddy
+   docker-compose restart caddy
 
 
 Go to ``https://<your_domain>/console`` to visit the Hasura console.
@@ -238,74 +246,87 @@ changing the version tag in ``docker-compose.yaml``. You can find the latest
 releases on the `GitHub releases page
 <https://github.com/hasura/graphql-engine/releases>`__.
 
-1. Connect to the Droplet via SSH:
+Step 1: Connect to the Droplet via SSH
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. code-block:: bash
+.. code-block:: bash
 
-      ssh root@<your_droplet_ip>
-
-
-2. Go to the ``/etc/hasura`` directory:
-
-   .. code-block:: bash
-
-      cd /etc/hasura
+   ssh root@<your_droplet_ip>
 
 
-3. Edit ``docker-compose.yaml`` and change the image tag to the latest one:
+Step 2: Go to the ``/etc/hasura`` directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. code-block:: bash
+.. code-block:: bash
 
-      vim docker-compose.yaml
-
-      ...
-      graphql-engine:
-        image: hasura/graphql-engine:latest_tag_here
-      ...
-
-      # type ESC followed by :wq to save and quit
+   cd /etc/hasura
 
 
-4. Restart the container:
+Step 3: Edit ``docker-compose.yaml`` and change the image tag to the latest one
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. code-block:: bash
+.. code-block:: bash
 
-      docker-compose up -d
+   vim docker-compose.yaml
+
+   ...
+   graphql-engine:
+      image: hasura/graphql-engine:latest_tag_here
+   ...
+
+   # type ESC followed by :wq to save and quit
+
+
+Step 4: Restart the container
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   docker-compose up -d
 
 
 Using DigitalOcean Managed Postgres Database
 --------------------------------------------
 
-1. Create a new Postgres Database from the DigitalOcean Console, preferably in the
-   same region as the Droplet.
-2. Once the database is created, under the "Overview" tab, from the "Connection
-   Details" section, choose "Connection string" from the dropdown.
-3. "Connection string" is the "Database URL". Copy it.
-4. Connect to the Droplet via SSH:
+Step 1: Create a Postgres database 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. code-block:: bash
+Create a new Postgres database from the DigitalOcean console, preferably in the same region as the Droplet.
 
-      ssh root@<your_droplet_ip>
+Step 2: Get the database URL
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once the database is created, under the "Overview" tab, from the "Connection Details" section, choose "Connection string" from the dropdown.
+"Connection string" is the "Database URL". Copy it.
+
+Step 3: Connect to the Droplet via SSH
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   ssh root@<your_droplet_ip>
 
 
-5. Go to the ``/etc/hasura`` directory:
+Step 4: Go to the ``/etc/hasura`` directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. code-block:: bash
+.. code-block:: bash
 
-      cd /etc/hasura
+   cd /etc/hasura
 
-6. Edit ``docker-compose.yaml`` and change the database URL:
+Step 5: Edit ``docker-compose.yaml`` and change the database URL
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. code-block:: bash
+.. code-block:: bash
 
-      vim docker-compose.yaml
+   vim docker-compose.yaml
 
-      ...
-      # change the url to use a different database
-      HASURA_GRAPHQL_DATABASE_URL: <database-url>
-      ...
+   ...
+   # change the url to use a different database
+   HASURA_GRAPHQL_DATABASE_URL: <database-url>
+   ...
 
-      # type ESC followed by :wq to save and quit
+   # type ESC followed by :wq to save and quit
 
 Similarly, the database URL can be changed to connect to any other Postgres
 database.
@@ -333,25 +354,29 @@ If you need to configure the pool size or the timeout, you can use the below env
 Logs
 ----
 
+Step 1: Connect to the Droplet via SSH
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. Connect to the Droplet via SSH:
+.. code-block:: bash
 
-   .. code-block:: bash
-
-      ssh root@<your_droplet_ip>
+   ssh root@<your_droplet_ip>
 
 
-2. Go to the ``/etc/hasura`` directory:
+Step 2: Go to the ``/etc/hasura`` directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. code-block:: bash
+.. code-block:: bash
 
-      cd /etc/hasura
+   cd /etc/hasura
 
-3. To checks logs for any container, use the following command:
+Step 3: Check logs
+^^^^^^^^^^^^^^^^^^
 
-   .. code-block:: bash
+To checks logs for any container, use the following command:
 
-      docker-compose logs <container_name>
+.. code-block:: bash
+
+   docker-compose logs <container_name>
 
 Where ``<container_name>`` is one of ``graphql-engine``, ``postgres`` or
 ``caddy``.

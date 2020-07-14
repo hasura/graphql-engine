@@ -12,6 +12,9 @@ Deploying Hasura GraphQL engine on Render
   :depth: 1
   :local:
 
+Introduction
+------------
+
 This guide shows how to deploy the Hasura GraphQL engine on `Render <https://render.com>`__.
 
 One-Click Deploy on Render
