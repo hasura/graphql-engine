@@ -160,7 +160,7 @@ If there are any errors, check the logs of the GraphQL engine:
 
    kubectl logs deployment/hasura -c graphql-engine
 
-Expose GraphQL engine
+Expose GraphQL engine (HTTP)
 ---------------------
 
 Now that we have Hasura running, let's expose it on an IP using a LoadBalancer.
@@ -171,10 +171,6 @@ Now that we have Hasura running, let's expose it on an IP using a LoadBalancer.
         --port 80 --target-port 8080 \
         --type LoadBalancer
 
-
-Open Hasura console
--------------------
-
 Wait for the external IP to be allocated, check the status using the
 command below. It usually takes a couple of minutes.
 
@@ -184,6 +180,67 @@ command below. It usually takes a couple of minutes.
 
 Once the IP is allocated, visit the IP in a browser and it should open the
 console.
+
+Expose GraphQL engine (HTTPS)
+---------------------
+
+Let's expose Hasura with `Ingres 
+<https://cloud.google.com/kubernetes-engine/docs/concepts/ingress/>`_. Create service:
+
+.. code-block:: yaml
+
+
+	apiVersion: v1
+	kind: Service
+	metadata:
+	  labels:
+	    app: hasura
+	  name: hasura
+	  namespace: default
+	spec:
+	  ports:
+	    - protocol: TCP
+	      port: 80
+	      targetPort: 8080
+	  selector:
+	    app: hasura
+	  type: NodePort
+
+Create Managed Certificate:
+
+.. code-block:: yaml
+
+	apiVersion: networking.gke.io/v1beta1
+	kind: ManagedCertificate
+	metadata:
+	  name: hasura-cert
+	spec:
+	  domains:
+	    - example.com
+
+
+Create Ingress:
+
+.. code-block:: yaml
+
+	apiVersion: extensions/v1beta1
+	kind: Ingress
+	metadata:
+	  name: basic-ingress
+	  annotations:
+	    networking.gke.io/managed-certificates: "hasura-cert"
+	spec:
+	  rules:
+	    - host: example.com
+	      http:
+	        paths:
+	          - backend:
+	              serviceName: hasura
+	              servicePort: 80
+
+
+
+
 
 Troubleshooting
 ---------------
