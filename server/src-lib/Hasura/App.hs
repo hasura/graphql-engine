@@ -16,7 +16,6 @@ import           GHC.AssertNF
 import           GHC.Stats
 import           Options.Applicative
 import           System.Environment                        (getEnvironment)
-import           System.Exit                               (exitFailure)
 import           System.Mem                                (performMajorGC)
 
 import qualified Control.Concurrent.Async.Lifted.Safe      as LA
@@ -317,8 +316,8 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp = d
   authModeRes <- runExceptT $ setupAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
                               _icHttpManager logger
 
-  authMode <- either (printErrExit . T.unpack) return authModeRes
-  
+  authMode <- either (printErrExit AuthConfigurationError . T.unpack) return authModeRes
+
   _idleGCThread <- C.forkImmortal "ourIdleGC" logger $ liftIO $ 
     ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
