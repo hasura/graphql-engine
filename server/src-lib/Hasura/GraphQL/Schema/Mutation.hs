@@ -283,6 +283,7 @@ conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
   pure $ P.enum enumName (Just enumDesc) constraintEnumValues
 
 
+
 -- update
 
 updateTable
@@ -359,7 +360,7 @@ updateOperators
 updateOperators table updatePermissions = do
   tableName <- qualifiedObjectToName table
   columns   <- tableUpdateColumns table updatePermissions
-  let intCols  = onlyIntCols   columns
+  let intCols  = onlyNumCols   columns
       jsonCols = onlyJSONBCols columns
   parsers <- catMaybes <$> sequenceA
     [ updateOperator tableName $$(G.litName "_set")
@@ -367,7 +368,7 @@ updateOperators table updatePermissions = do
         ("sets the columns of the filtered rows to the given values")
         (G.Description $ "input type for updating data in table \"" <> G.unName tableName <> "\"")
     , updateOperator tableName $$(G.litName "_inc")
-        intParser RQL.UpdInc intCols
+        columnParser RQL.UpdInc intCols
         ("increments the integer columns with given value of the filtered values")
         (G.Description $"input type for incrementing integer columns in table \"" <> G.unName tableName <> "\"")
 
@@ -377,11 +378,11 @@ updateOperators table updatePermissions = do
     -- the comments also mention "_concat", but it seems it never existed
     -- i am guessing that's what prepend and append are for?
     , updateOperator tableName $$(G.litName "_prepend")
-        textParser RQL.UpdPrepend jsonCols
+        columnParser RQL.UpdPrepend jsonCols
         "prepend existing jsonb value of filtered columns with new jsonb value"
         "prepend existing jsonb value of filtered columns with new jsonb value"
     , updateOperator tableName $$(G.litName "_append")
-        textParser RQL.UpdAppend jsonCols
+        columnParser RQL.UpdAppend jsonCols
         "append existing jsonb value of filtered columns with new jsonb value"
         "append existing jsonb value of filtered columns with new jsonb value"
     , updateOperator tableName $$(G.litName "_delete_key")
