@@ -21,10 +21,10 @@ Introduction
 Create an action relationship
 -----------------------------
 
-Step 0: Create an action
-^^^^^^^^^^^^^^^^^^^^^^^^
+Before you begin
+^^^^^^^^^^^^^^^^
 
-First, create an action, either :ref:`from scratch <create_actions>` or :ref:`derive it from an existing mutation <derive_actions>`.
+Create an action either :ref:`from scratch <create_actions>` or :ref:`derived from an existing mutation <derive_actions>`.
 
 Step 1: Open the action relationship section
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

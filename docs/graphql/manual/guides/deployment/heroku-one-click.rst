@@ -15,7 +15,7 @@ One-click deployment with Heroku
 Introduction
 ------------
 
-This guide will help you get the Hasura GraphQL engine and Postgres running on `Heroku's free tier <https://www.heroku.com/free>`_.
+This guide will help you get the Hasura GraphQL engine and Postgres running on `Heroku's free tier <https://www.heroku.com/free>`__.
 It is the easiest and fastest way of trying out Hasura.
 
 If you'd like to link this to an existing database, please head to this guide instead:

@@ -29,7 +29,7 @@ import qualified Network.URI                                   as N
 import qualified System.Cron.Parser                            as Cr
 
 
-import           Data.List.Extended                 (duplicates)
+import           Data.List.Extended                            (duplicates)
 import           Data.Scientific
 import           Test.QuickCheck
 import           Test.QuickCheck.Instances.Semigroup           ()

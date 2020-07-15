@@ -5,20 +5,21 @@ module Hasura.Server.Auth.WebHook
   , userInfoFromAuthHook
   ) where
 
-import           Control.Exception         (try)
+import           Control.Exception.Lifted    (try)
 import           Control.Lens
+import           Control.Monad.Trans.Control (MonadBaseControl)
 import           Control.Monad.Trans.Maybe
 import           Data.Aeson
-import           Data.Time.Clock           (UTCTime, addUTCTime, getCurrentTime)
-import           Hasura.Server.Version     (HasVersion)
+import           Data.Time.Clock             (UTCTime, addUTCTime, getCurrentTime)
+import           Hasura.Server.Version       (HasVersion)
 
-import qualified Data.Aeson                as J
-import qualified Data.ByteString.Lazy      as BL
-import qualified Data.HashMap.Strict       as Map
-import qualified Data.Text                 as T
-import qualified Network.HTTP.Client       as H
-import qualified Network.HTTP.Types        as N
-import qualified Network.Wreq              as Wreq
+import qualified Data.Aeson                  as J
+import qualified Data.ByteString.Lazy        as BL
+import qualified Data.HashMap.Strict         as Map
+import qualified Data.Text                   as T
+import qualified Network.HTTP.Client         as H
+import qualified Network.HTTP.Types          as N
+import qualified Network.Wreq                as Wreq
 
 import           Data.Parser.CacheControl
 import           Data.Parser.Expires
@@ -59,31 +60,38 @@ hookMethod authHook = case ahType authHook of
 --   UserInfo parsed from the response, plus an expiration time if one
 --   was returned.
 userInfoFromAuthHook
-  :: (HasVersion, MonadIO m, MonadError QErr m)
+  :: forall m
+   . (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m)
   => Logger Hasura
   -> H.Manager
   -> AuthHook
   -> [N.Header]
   -> m (UserInfo, Maybe UTCTime)
 userInfoFromAuthHook logger manager hook reqHeaders = do
-  resp <- (`onLeft` logAndThrow) =<< liftIO (try performHTTPRequest)
+  resp <- (`onLeft` logAndThrow) =<< try performHTTPRequest
   let status   = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
   mkUserInfoFromResp logger (ahUrl hook) (hookMethod hook) status respBody
   where
+    performHTTPRequest :: m (Wreq.Response BL.ByteString)
     performHTTPRequest = do
       let url = T.unpack $ ahUrl hook
-          mkOptions = wreqOptions manager
-      case ahType hook of
-        AHTGet  -> do
-          let isCommonHeader  = (`elem` commonClientHeadersIgnored)
-              filteredHeaders = filter (not . isCommonHeader . fst) reqHeaders
-          Wreq.getWith (mkOptions filteredHeaders) url
-        AHTPost -> do
-          let contentType    = ("Content-Type", "application/json")
-              headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
-          Wreq.postWith (mkOptions [contentType]) url $ object ["headers" J..= headersPayload]
+      req <- liftIO $ H.parseRequest url
+      liftIO do
+        case ahType hook of
+          AHTGet  -> do
+            let isCommonHeader  = (`elem` commonClientHeadersIgnored)
+                filteredHeaders = filter (not . isCommonHeader . fst) reqHeaders
+            H.httpLbs (req { H.requestHeaders = addDefaultHeaders filteredHeaders }) manager
+          AHTPost -> do
+            let contentType = ("Content-Type", "application/json")
+                headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
+            H.httpLbs (req { H.method         = "POST"
+                           , H.requestHeaders = addDefaultHeaders [contentType] 
+                           , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload]
+                           }) manager
 
+    logAndThrow :: H.HttpException -> m a
     logAndThrow err = do
       unLogger logger $
         WebHookLog LevelError Nothing (ahUrl hook) (hookMethod hook)
