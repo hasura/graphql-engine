@@ -30,6 +30,7 @@ import qualified Hasura.SQL.DML                         as S
 
 import qualified Data.Aeson                             as A
 import qualified Data.Aeson.Ordered                     as AO
+import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.Extended           as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
@@ -44,15 +45,19 @@ import qualified Network.HTTP.Types                     as N
 
 -- | Executes given query and fetch response JSON from Postgres. Substitutes remote relationship fields.
 executeQueryWithRemoteJoins
-  :: (HasVersion, MonadTx m, MonadIO m)
-  => HTTP.Manager
+  :: ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     )
+  => Env.Environment
+  -> HTTP.Manager
   -> [N.Header]
   -> UserInfo
   -> Q.Query
   -> [Q.PrepArg]
   -> RemoteJoins
   -> m EncJSON
-executeQueryWithRemoteJoins manager reqHdrs userInfo q prepArgs rjs = do
+executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs rjs = do
   -- Step 1: Perform the query on database and fetch the response
   pgRes <- runIdentity . Q.getRow <$> liftTx (Q.rawQE dmlTxErrorHandler q prepArgs True)
   jsonRes <- either (throw500 . T.pack) pure $ AO.eitherDecode pgRes
@@ -60,7 +65,7 @@ executeQueryWithRemoteJoins manager reqHdrs userInfo q prepArgs rjs = do
   compositeJson <- traverseQueryResponseJSON rjMap jsonRes
   let remoteJoins = collectRemoteFields compositeJson
   -- Step 3: Make queries to remote server and fetch graphql response
-  remoteServerResp <- fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins
+  remoteServerResp <- fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins
   -- Step 4: Replace remote fields in composite json with remote join values
   AO.toEncJSON <$> replaceRemoteFields compositeJson remoteServerResp
   where
@@ -347,12 +352,13 @@ fetchRemoteJoinFields
      , MonadError QErr m
      , MonadIO m
      )
-  => HTTP.Manager
+  => Env.Environment
+  -> HTTP.Manager
   -> [N.Header]
   -> UserInfo
   -> [RemoteJoinField]
   -> m AO.Object
-fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins = do
+fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
   results <- forM (Map.toList remoteSchemaBatch) $ \(rsi, batch) -> do
     let batchList = toList batch
         gqlReq = fieldsToRequest G.OperationTypeQuery
@@ -360,7 +366,7 @@ fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins = do
                                  (concatMap _rjfVariables batchList)
         gqlReqUnparsed = (GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc) <$> gqlReq
     -- NOTE: discard remote headers (for now):
-    (_, _, respBody) <- execRemoteGQ' manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
+    (_, _, respBody) <- execRemoteGQ' env manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
     case AO.eitherDecode respBody of
       Left e -> throw500 $ "Remote server response is not valid JSON: " <> T.pack e
       Right r -> do

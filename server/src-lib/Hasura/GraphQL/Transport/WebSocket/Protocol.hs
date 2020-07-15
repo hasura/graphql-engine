@@ -8,6 +8,7 @@ module Hasura.GraphQL.Transport.WebSocket.Protocol
   , ServerMsg(..)
   , ServerMsgType(..)
   , encodeServerMsg
+  , serverMsgType
   , DataMsg(..)
   , ErrorMsg(..)
   , ConnErrMsg(..)
@@ -114,6 +115,14 @@ instance Show ServerMsgType where
 
 instance J.ToJSON ServerMsgType where
   toJSON = J.toJSON . show
+
+serverMsgType :: ServerMsg -> ServerMsgType
+serverMsgType SMConnAck       = SMT_GQL_CONNECTION_ACK
+serverMsgType SMConnKeepAlive = SMT_GQL_CONNECTION_KEEP_ALIVE
+serverMsgType (SMConnErr _)   = SMT_GQL_CONNECTION_ERROR
+serverMsgType (SMData _)      = SMT_GQL_DATA
+serverMsgType (SMErr _)       = SMT_GQL_ERROR
+serverMsgType (SMComplete _)  = SMT_GQL_COMPLETE
 
 encodeServerMsg :: ServerMsg -> BL.ByteString
 encodeServerMsg msg =

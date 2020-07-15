@@ -12,6 +12,9 @@ Modelling one-to-one table relationships
   :depth: 1
   :local:
 
+Introduction
+------------
+
 A ``one-to-one`` relationship between two tables can be established via a **unique foreign key constraint**.
 
 Say we have the following two tables in our database schema:
@@ -35,8 +38,8 @@ These two tables are related via a ``one-to-one`` relationship. i.e.:
 - an ``author`` can have one ``passport_info``
 - a ``passport_info`` has one ``owner``
 
-Set up a table relationship in the database
--------------------------------------------
+Step 1: Set up a table relationship in the database
+---------------------------------------------------
 
 This ``one-to-one`` relationship can be established in the database by:
 
@@ -48,16 +51,16 @@ This ``one-to-one`` relationship can be established in the database by:
 This will ensure that the value of the ``owner_id`` column in ``passport_info`` table  is present in the ``id`` column of
 the ``author`` table and there will be only one row with a particular ``owner_id``.
 
-Set up GraphQL relationships
-----------------------------
+Step 2: Set up GraphQL relationships
+------------------------------------
 
 To access the nested objects via the GraphQL API, :ref:`create the following relationships <create_relationships>`:
 
 - Object relationship, ``passport_info`` from the ``author`` table using  ``id -> passport_info :: owner_id``
 - Object relationship, ``owner`` from the ``passport_info`` table using ``owner_id -> author :: id``
 
-Query using relationships
--------------------------
+Step 3: Query using relationships
+---------------------------------
 
 We can now:
 
