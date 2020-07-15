@@ -799,6 +799,7 @@ const cascadePGSqlQuery = sql => {
     return sql.substr(0, sql.length - 2) + ' CASCADE;';
   return sql + ' CASCADE;';
 };
+
 export const cascadeUpQueries = (upQueries = [], isPgCascade = false) =>
   upQueries.map((i = {}) => {
     if (i.type === 'run_sql' || i.type === 'untrack_table') {
