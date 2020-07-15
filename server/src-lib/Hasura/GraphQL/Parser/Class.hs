@@ -154,16 +154,6 @@ memoize4
   -> (a -> b -> c -> d -> m (Parser k n e))
 memoize4 name = curry4 . memoize name . uncurry4
 
-memoizeOnMaybe
-  :: (HasCallStack, MonadSchema n m, Ord a, Typeable a, Typeable b, Typeable k)
-  => TH.Name
-  -> a
-  -> m (Maybe (Parser k n b))
-  -> m (Maybe (Parser k n b))
-memoizeOnMaybe name a fp = runMaybeT do
-  p <- MaybeT fp
-  lift $ memoizeOn name a $ pure p
-
 -- | A class that provides functionality for parsing GraphQL queries, i.e.
 -- running a fully-constructed 'Parser'.
 class Monad m => MonadParse m where

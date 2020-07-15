@@ -247,7 +247,8 @@ conflictObject
 conflictObject table selectPerms updatePerms = runMaybeT $ do
   tableName        <- lift $ qualifiedObjectToName table
   columnsEnum      <- MaybeT $ tableUpdateColumnsEnum table updatePerms
-  constraintParser <- MaybeT $ conflictConstraint table
+  constraints      <- MaybeT $ tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo <$> askTableInfo table
+  constraintParser <- lift $ conflictConstraint constraints table
   whereExpParser   <- lift $ boolExp table selectPerms
   let objectName = tableName <> $$(G.litName "_on_conflict")
       objectDesc = G.Description $ "on conflict condition type for table \"" <> G.unName tableName <> "\""
@@ -267,11 +268,11 @@ conflictObject table selectPerms updatePerms = runMaybeT $ do
 
 conflictConstraint
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
-  => QualifiedTable
-  -> m (Maybe (Parser 'Both n ConstraintName))
-conflictConstraint table = memoizeOnMaybe 'conflictConstraint table $ runMaybeT do
+  => NonEmpty Constraint
+  -> QualifiedTable
+  -> m (Parser 'Both n ConstraintName)
+conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
   tableName <- qualifiedObjectToName table
-  constraints <- MaybeT $ tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo <$> askTableInfo table
   constraintEnumValues <- for constraints \constraint -> do
     name <- textToName $ getConstraintTxt $ _cName constraint
     pure ( P.mkDefinition name (Just "unique or primary key constraint") P.EnumValueInfo
@@ -280,7 +281,6 @@ conflictConstraint table = memoizeOnMaybe 'conflictConstraint table $ runMaybeT 
   let enumName  = tableName <> $$(G.litName "_constraint")
       enumDesc  = G.Description $ "unique or primary key constraints on table " <> G.unName tableName <> "\""
   pure $ P.enum enumName (Just enumDesc) constraintEnumValues
-
 
 
 -- update
