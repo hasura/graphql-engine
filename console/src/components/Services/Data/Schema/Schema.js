@@ -130,7 +130,7 @@ const DeleteSchemaButton = ({ dispatch, migrationMode }) => {
   return (
     migrationMode && (
       <Button
-        color="white"
+        color="red"
         size="xs"
         onClick={handleDelete}
         title="Delete current schema"
