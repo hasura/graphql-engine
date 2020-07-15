@@ -150,3 +150,22 @@
 .ReactTable .rt-thead [role='columnheader'] {
   outline: 0;
 }
+
+/* Event Trigger */
+
+.ReactTable .rt-table .rt-thead .rt-tr .rt-th:first-child,
+.ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-odd .rt-td:first-child,
+.ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-even .rt-td:first-child {
+  min-width: 75px !important;
+}
+
+.ReactTable .rt-tbody .rt-th,
+.ReactTable .rt-tbody .rt-td {
+  display: flex;
+  justify-content: center;
+}
+
+.ReactTable .rt-thead .rt-resizable-header-content {
+  display: flex;
+  justify-content: center;
+}

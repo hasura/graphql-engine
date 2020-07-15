@@ -14,48 +14,50 @@ module Hasura.GraphQL.Resolve.Action
 
 import           Hasura.Prelude
 
-import           Control.Concurrent                (threadDelay)
-import           Control.Exception                 (try)
+import           Control.Concurrent                   (threadDelay)
+import           Control.Exception                    (try)
 import           Control.Lens
+import           Control.Monad.Trans.Control       (MonadBaseControl)
 import           Data.Has
 import           Data.IORef
 
-import qualified Control.Concurrent.Async          as A
-import qualified Data.Aeson                        as J
-import qualified Data.Aeson.Casing                 as J
-import qualified Data.Aeson.TH                     as J
-import qualified Data.ByteString.Lazy              as BL
-import qualified Data.CaseInsensitive              as CI
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.Text                         as T
-import qualified Data.UUID                         as UUID
-import qualified Database.PG.Query                 as Q
-import qualified Language.GraphQL.Draft.Syntax     as G
-import qualified Network.HTTP.Client               as HTTP
-import qualified Network.HTTP.Types                as HTTP
-import qualified Network.Wreq                      as Wreq
+import qualified Control.Concurrent.Async.Lifted.Safe as LA
+import qualified Data.Environment                     as Env
+import qualified Data.Aeson                           as J
+import qualified Data.Aeson.Casing                    as J
+import qualified Data.Aeson.TH                        as J
+import qualified Data.ByteString.Lazy                 as BL
+import qualified Data.CaseInsensitive                 as CI
+import qualified Data.HashMap.Strict                  as Map
+import qualified Data.Text                            as T
+import qualified Data.UUID                            as UUID
+import qualified Database.PG.Query                    as Q
+import qualified Language.GraphQL.Draft.Syntax        as G
+import qualified Network.HTTP.Client                  as HTTP
+import qualified Network.HTTP.Types                   as HTTP
+import qualified Network.Wreq                         as Wreq
 
-import qualified Hasura.GraphQL.Resolve.Select     as GRS
-import qualified Hasura.RQL.DML.Select             as RS
+import qualified Hasura.GraphQL.Resolve.Select        as GRS
+import qualified Hasura.RQL.DML.RemoteJoin            as RJ
+import qualified Hasura.RQL.DML.Select                as RS
+import qualified Hasura.Tracing                    as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
-import           Hasura.GraphQL.Validate.Field
-import           Hasura.GraphQL.Validate.Types
+import           Hasura.GraphQL.Resolve.Select        (processTableSelectionSet)
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.HTTP
-import           Hasura.RQL.DDL.Headers            (makeHeadersFromConf, toHeadersConf)
+import           Hasura.RQL.DDL.Headers               (makeHeadersFromConf, toHeadersConf)
 import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
+import           Hasura.RQL.DML.Select                (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Utils               (mkClientHeadersForward, mkSetCookieHeaders)
-import           Hasura.Server.Version             (HasVersion)
+import           Hasura.Server.Utils                  (mkClientHeadersForward, mkSetCookieHeaders)
+import           Hasura.Server.Version                (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
-                                                    toTxtValue)
+import           Hasura.SQL.Value                     (PGScalarValue (..), toTxtValue)
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -127,17 +129,22 @@ resolveActionMutation
      , Has SQLGenCtx r
      , Has HTTP.Manager r
      , Has [HTTP.Header] r
+     , Tracing.MonadTrace m
+     , MonadIO tx
+     , MonadTx tx
+     , Tracing.MonadTrace tx
      )
-  => Field
+  => Env.Environment
+  -> Field
   -> ActionMutationExecutionContext
-  -> SessionVariables
-  -> m (RespTx, HTTP.ResponseHeaders)
-resolveActionMutation field executionContext sessionVariables =
+  -> UserInfo
+  -> m (tx EncJSON, HTTP.ResponseHeaders)
+resolveActionMutation env field executionContext userInfo =
   case executionContext of
     ActionMutationSyncWebhook executionContextSync ->
-      resolveActionMutationSync field executionContextSync sessionVariables
+      resolveActionMutationSync env field executionContextSync userInfo
     ActionMutationAsync ->
-      (,[]) <$> resolveActionMutationAsync field sessionVariables
+      (,[]) <$> resolveActionMutationAsync field userInfo
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionMutationSync
@@ -151,27 +158,43 @@ resolveActionMutationSync
      , Has SQLGenCtx r
      , Has HTTP.Manager r
      , Has [HTTP.Header] r
+     , Tracing.MonadTrace m
+     , MonadIO tx
+     , MonadTx tx
+     , Tracing.MonadTrace tx
      )
-  => Field
+  => Env.Environment
+  -> Field
   -> ActionExecutionContext
-  -> SessionVariables
-  -> m (RespTx, HTTP.ResponseHeaders)
-resolveActionMutationSync field executionContext sessionVariables = do
+  -> UserInfo
+  -> m (tx EncJSON, HTTP.ResponseHeaders)
+resolveActionMutationSync env field executionContext userInfo = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
       actionContext = ActionContext actionName
+      sessionVariables = _uiSession userInfo
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
   manager <- asks getter
   reqHeaders <- asks getter
-  (webhookRes, respHeaders) <- callWebhook manager outputType outputFields reqHeaders confHeaders
+  (webhookRes, respHeaders) <- callWebhook env manager outputType outputFields reqHeaders confHeaders
                                forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
+  selSet <- asObjectSelectionSet $ _fSelSet field
   selectAstUnresolved <-
     processOutputSelectionSet webhookResponseExpression outputType definitionList
-    (_fType field) $ _fSelSet field
-  astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
-  let jsonAggType = mkJsonAggSelect outputType
-  return $ (,respHeaders) $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
+    (_fType field) selSet
+  astResolved <- RS.traverseAnnSimpleSelect resolveValTxt selectAstUnresolved
+  let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
+      jsonAggType = mkJsonAggSelect outputType
+  return $ (,respHeaders) $
+    case maybeRemoteJoins of
+      Just remoteJoins ->
+        let query = Q.fromBuilder $ toSQL $
+                    RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
+        in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query [] remoteJoins
+      Nothing ->
+        liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
+
   where
     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
@@ -203,24 +226,27 @@ resolveActionQuery
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r
+     , Tracing.MonadTrace m
      )
-  => Field
+  => Env.Environment
+  -> Field
   -> ActionExecutionContext
   -> SessionVariables
   -> HTTP.Manager
   -> [HTTP.Header]
   -> m (RS.AnnSimpleSelG UnresolvedVal)
-resolveActionQuery field executionContext sessionVariables httpManager reqHeaders = do
+resolveActionQuery env field executionContext sessionVariables httpManager reqHeaders = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
       actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
-  (webhookRes, _) <- callWebhook httpManager outputType outputFields reqHeaders confHeaders
+  (webhookRes, _) <- callWebhook env httpManager outputType outputFields reqHeaders confHeaders
                                forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
+  selSet <- asObjectSelectionSet $ _fSelSet field
   selectAstUnresolved <-
     processOutputSelectionSet webhookResponseExpression outputType definitionList
-    (_fType field) $ _fSelSet field
+    (_fType field) selSet
   return selectAstUnresolved
   where
     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
@@ -241,16 +267,19 @@ table provides the action response. See Note [Resolving async action query/subsc
 
 -- | Resolve asynchronous action mutation which returns only the action uuid
 resolveActionMutationAsync
-  :: ( MonadError QErr m, MonadReader r m
+  :: ( MonadError QErr m
+     , MonadReader r m
      , Has [HTTP.Header] r
+     , MonadTx tx
      )
   => Field
-  -> SessionVariables
-  -> m RespTx
-resolveActionMutationAsync field sessionVariables = do
+  -> UserInfo
+  -> m (tx EncJSON)
+resolveActionMutationAsync field userInfo = do
+  let sessionVariables = _uiSession userInfo
   reqHeaders <- asks getter
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
-  pure $ do
+  pure $ liftTx do
     actionId <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
       INSERT INTO
           "hdb_catalog"."hdb_action_log"
@@ -293,37 +322,40 @@ resolveAsyncActionQuery userInfo selectOpCtx field = do
   actionId <- withArg (_fArguments field) "id" parseActionId
   stringifyNumerics <- stringifyNum <$> asks getter
 
-  annotatedFields <- fmap (map (first FieldName)) $ withSelSet (_fSelSet field) $ \fld ->
+  selSet <- asObjectSelectionSet $ _fSelSet field
+
+  annotatedFields <- fmap (map (first FieldName)) $ traverseObjectSelectionSet selSet $ \fld ->
     case _fName fld of
-      "__typename" -> return $ RS.FExp $ G.unName $ G.unNamedType $ _fType field
+      "__typename" -> return $ RS.AFExpression $ G.unName $ G.unNamedType $ _fType field
       "output"     -> do
         -- See Note [Resolving async action query/subscription]
         let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
             ActionSelectOpContext outputType definitionList = selectOpCtx
             jsonAggSelect = mkJsonAggSelect outputType
-        (RS.FComputedField . RS.CFSTable jsonAggSelect)
+        fldSelSet <- asObjectSelectionSet $ _fSelSet fld
+        (RS.AFComputedField . RS.CFSTable jsonAggSelect)
           <$> processOutputSelectionSet inputTableArgument outputType
-              definitionList (_fType fld) (_fSelSet fld)
+              definitionList (_fType fld) fldSelSet
 
       -- The metadata columns
-      "id"         -> return $ mkAnnFldFromPGCol "id" PGUUID
-      "created_at" -> return $ mkAnnFldFromPGCol "created_at" PGTimeStampTZ
-      "errors"     -> return $ mkAnnFldFromPGCol "errors" PGJSONB
+      "id"         -> return $ mkAnnFieldFromPGCol "id" PGUUID
+      "created_at" -> return $ mkAnnFieldFromPGCol "created_at" PGTimeStampTZ
+      "errors"     -> return $ mkAnnFieldFromPGCol "errors" PGJSONB
       G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
 
   let tableFromExp = RS.FromTable actionLogTable
-      tableArguments = RS.noTableArgs
-                       { RS._taWhere = Just $ mkTableBoolExpression actionId}
+      tableArguments = RS.noSelectArgs
+                       { RS._saWhere = Just $ mkTableBoolExpression actionId}
       tablePermissions = RS.TablePerm annBoolExpTrue Nothing
-      selectAstUnresolved = RS.AnnSelG annotatedFields tableFromExp tablePermissions
+      selectAstUnresolved = RS.AnnSelectG annotatedFields tableFromExp tablePermissions
                             tableArguments stringifyNumerics
   return selectAstUnresolved
   where
     actionLogTable = QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
 
     -- TODO:- Avoid using PGColumnInfo
-    mkAnnFldFromPGCol column columnType =
-      flip RS.mkAnnColField Nothing $
+    mkAnnFieldFromPGCol column columnType =
+      flip RS.mkAnnColumnField Nothing $
       PGColumnInfo (unsafePGCol column) (G.Name column) 0 (PGColumnScalar columnType) True Nothing
 
     parseActionId annInpValue = mkParameterizablePGValue <$> asPGColumnValue annInpValue
@@ -355,24 +387,31 @@ data ActionLogItem
 -- | Process async actions from hdb_catalog.hdb_action_log table. This functions is executed in a background thread.
 -- See Note [Async action architecture] above
 asyncActionsProcessor
-  :: HasVersion
-  => IORef (RebuildableSchemaCache Run, SchemaCacheVer)
+  :: forall m void
+   . ( HasVersion
+     , MonadIO m
+     , MonadBaseControl IO m
+     , LA.Forall (LA.Pure m)
+     , Tracing.HasReporter m
+     )
+  => Env.Environment
+  -> IORef (RebuildableSchemaCache Run, SchemaCacheVer)
   -> Q.PGPool
   -> HTTP.Manager
-  -> IO void
-asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
-  asyncInvocations <- getUndeliveredEvents
-  actionCache <- scActions . lastBuiltSchemaCache . fst <$> readIORef cacheRef
-  A.mapConcurrently_ (callHandler actionCache) asyncInvocations
-  threadDelay (1 * 1000 * 1000)
+  -> m void
+asyncActionsProcessor env cacheRef pgPool httpManager = forever $ do
+  asyncInvocations <- liftIO getUndeliveredEvents
+  actionCache <- scActions . lastBuiltSchemaCache . fst <$> liftIO (readIORef cacheRef)
+  LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
+  liftIO $ threadDelay (1 * 1000 * 1000)
   where
     runTx :: (Monoid a) => Q.TxE QErr a -> IO a
     runTx q = do
       res <- runExceptT $ Q.runTx' pgPool q
       either mempty return res
 
-    callHandler :: ActionCache -> ActionLogItem -> IO ()
-    callHandler actionCache actionLogItem = do
+    callHandler :: ActionCache -> ActionLogItem -> m ()
+    callHandler actionCache actionLogItem = Tracing.runTraceT "async actions processor" do
       let ActionLogItem actionId actionName reqHeaders
             sessionVariables inputPayload = actionLogItem
       case Map.lookup actionName actionCache of
@@ -386,10 +425,10 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
               outputType = _adOutputType definition
               actionContext = ActionContext actionName
           eitherRes <- runExceptT $
-                       callWebhook httpManager outputType outputFields reqHeaders confHeaders
+                       callWebhook env httpManager outputType outputFields reqHeaders confHeaders
                          forwardClientHeaders webhookUrl $
                          ActionWebhookPayload actionContext sessionVariables inputPayload
-          case eitherRes of
+          liftIO $ case eitherRes of
             Left e                     -> setError actionId e
             Right (responsePayload, _) -> setCompleted actionId $ J.toJSON responsePayload
 
@@ -443,8 +482,9 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
     getUndeliveredEvents = runTx undeliveredEventsQuery
 
 callWebhook
-  :: forall m. (HasVersion, MonadIO m, MonadError QErr m)
-  => HTTP.Manager
+  :: forall m. (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
+  => Env.Environment
+  -> HTTP.Manager
   -> GraphQLType
   -> ActionOutputFields
   -> [HTTP.Header]
@@ -453,18 +493,24 @@ callWebhook
   -> ResolvedWebhook
   -> ActionWebhookPayload
   -> m (ActionWebhookResponse, HTTP.ResponseHeaders)
-callWebhook manager outputType outputFields reqHeaders confHeaders
+callWebhook env manager outputType outputFields reqHeaders confHeaders
             forwardClientHeaders resolvedWebhook actionWebhookPayload = do
-  resolvedConfHeaders <- makeHeadersFromConf confHeaders
+  resolvedConfHeaders <- makeHeadersFromConf env confHeaders
   let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
       contentType = ("Content-Type", "application/json")
-      options = wreqOptions manager $
-                -- Using HashMap to avoid duplicate headers between configuration headers
-                -- and client headers where configuration headers are preferred
-                contentType : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
+      -- Using HashMap to avoid duplicate headers between configuration headers
+      -- and client headers where configuration headers are preferred
+      hdrs = contentType : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
       postPayload = J.toJSON actionWebhookPayload
       url = unResolvedWebhook resolvedWebhook
-  httpResponse <- liftIO $ try $ Wreq.postWith options (T.unpack url) postPayload
+  httpResponse <- Tracing.traceHttpRequest url do
+    initReq <- liftIO $ HTTP.parseRequest (T.unpack url)
+    let req = initReq { HTTP.method         = "POST"
+                      , HTTP.requestHeaders = addDefaultHeaders hdrs
+                      , HTTP.requestBody    = HTTP.RequestBodyLBS (J.encode postPayload)
+                      }
+    pure $ Tracing.SuspendedRequest req \req' ->
+      liftIO . try $ HTTP.httpLbs req' manager
   let requestInfo = ActionRequestInfo url postPayload $
                      confHeaders <> toHeadersConf clientHeaders
   case httpResponse of
@@ -536,16 +582,6 @@ callWebhook manager outputType outputFields reqHeaders confHeaders
             Just v -> when (v == J.Null) $ throwUnexpected $
                       "expecting not null value for field " <>> fieldName
 
-annInpValueToJson :: AnnInpVal -> J.Value
-annInpValueToJson annInpValue =
-  case _aivValue annInpValue of
-    AGScalar _ pgColumnValueM -> maybe J.Null pgScalarValueToJson pgColumnValueM
-    AGEnum _ enumValue        -> case enumValue of
-      AGESynthetic enumValueM   -> J.toJSON enumValueM
-      AGEReference _ enumValueM -> J.toJSON enumValueM
-    AGObject _ objectM        -> J.toJSON $ fmap (fmap annInpValueToJson) objectM
-    AGArray _ valuesM         -> J.toJSON $ fmap (fmap annInpValueToJson) valuesM
-
 mkJsonAggSelect :: GraphQLType -> RS.JsonAggSelect
 mkJsonAggSelect =
   bool RS.JASSingleObject RS.JASMultipleRows . isListType
@@ -561,12 +597,12 @@ processOutputSelectionSet
   => RS.ArgumentExp UnresolvedVal
   -> GraphQLType
   -> [(PGCol, PGScalarType)]
-  -> G.NamedType -> SelSet -> m GRS.AnnSimpleSelect
+  -> G.NamedType -> ObjectSelectionSet -> m GRS.AnnSimpleSelect
 processOutputSelectionSet tableRowInput actionOutputType definitionList fldTy flds = do
   stringifyNumerics <- stringifyNum <$> asks getter
   annotatedFields <- processTableSelectionSet fldTy flds
-  let annSel = RS.AnnSelG annotatedFields selectFrom
-                  RS.noTablePermissions RS.noTableArgs stringifyNumerics
+  let annSel = RS.AnnSelectG annotatedFields selectFrom
+                  RS.noTablePermissions RS.noSelectArgs stringifyNumerics
   pure annSel
   where
     jsonbToPostgresRecordFunction =

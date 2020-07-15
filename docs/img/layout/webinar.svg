@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="21.75" viewBox="0 0 24 21.75">
+    <defs>
+        <style>
+            .prefix__cls-1{fill:none;stroke:#fff;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.5px}
+        </style>
+    </defs>
+    <g id="prefix__streamline-icon-meeting-monitor-webcam_24x24" data-name="streamline-icon-meeting-monitor-webcam@24x24" transform="translate(0 -1.5)">
+        <path id="prefix__Path_6316" d="M12 2.25a.375.375 0 1 0 .375.375A.375.375 0 0 0 12 2.25" class="prefix__cls-1" data-name="Path 6316"/>
+        <path id="prefix__Path_6317" d="M12 7.5a2.25 2.25 0 1 1-2.25 2.25A2.25 2.25 0 0 1 12 7.5z" class="prefix__cls-1" data-name="Path 6317"/>
+        <path id="prefix__Path_6318" d="M15.75 15a4.25 4.25 0 0 0-7.5 0" class="prefix__cls-1" data-name="Path 6318"/>
+        <path id="prefix__Path_6319" d="M15.75 3h6a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5H2.25a1.5 1.5 0 0 1-1.5-1.5v-12A1.5 1.5 0 0 1 2.25 3h6" class="prefix__cls-1" data-name="Path 6319"/>
+        <path id="prefix__Path_6320" d="M15.75 22.5h-7.5L9 18h6z" class="prefix__cls-1" data-name="Path 6320"/>
+        <path id="prefix__Path_6321" d="M6 22.5h12" class="prefix__cls-1" data-name="Path 6321"/>
+    </g>
+</svg>

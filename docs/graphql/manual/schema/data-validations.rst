@@ -282,17 +282,17 @@ If the validation requires complex custom business logic and/or needs informatio
 from external sources, you can use :ref:`Actions <actions>` to perform your
 validation.
 
-**Example:** Check with an external service that an author's name is not black-listed
+**Example:** Check with an external service that an author's name is not deny-listed
 before inserting them.
 
-Let's assume we have an external service that stores and manages black-listed authors.
-Before inserting an author we need to check with this service if they are black-listed
+Let's assume we have an external service that stores and manages deny-listed authors.
+Before inserting an author we need to check with this service if they are deny-listed
 or not.
 
 The validation process looks as follows:
 
-.. thumbnail:: /img/graphql/manual/schema/actions-data-validation.png
-   :alt: validation using actions: article not blacklisted
+.. thumbnail:: /img/graphql/manual/schema/diagram-actions-data-validation.png
+   :alt: validation using actions: article not deny-listed
    :width: 60%
 
 
@@ -311,26 +311,26 @@ The following is a sample code that could be added to the event handler to imple
 
 .. code-block:: javascript
 
-  function getBlacklistedAuthorsFromApi() {
-    // make external api call & return black-listed authors list
+  function getDenylistedAuthorsFromApi() {
+    // make external api call & return deny-listed authors list
   }
 
   function insertAuthorViaHasura() {
     // run insert_author mutation & return response
   }
 
-  const blacklistedAuthors = getBlacklistedAuthorsFromApi();
+  const denylistedAuthors = getDenylistedAuthorsFromApi();
 
-  if (blacklistedAuthors.includes(author.name)) {
-    return res.status(400).json({ message: "Author is blacklisted" });
+  if (denylistedAuthors.includes(author.name)) {
+    return res.status(400).json({ message: "Author is deny-listed" });
   } else {
     const insertAuthorResponse = insertAuthorViaHasura();
 
     return res.json(insertAuthorResponse);
   }
 
-When we now insert an author, our action handler will be called and it will check if the author is black-listed.
-If it's not, the author will be inserted and the ``id`` will be returned. If the author is black-listed,
+When we now insert an author, our action handler will be called and it will check if the author is deny-listed.
+If it's not, the author will be inserted and the ``id`` will be returned. If the author is deny-listed,
 we get the following error message:
 
 .. graphiql::
@@ -349,7 +349,7 @@ we get the following error message:
             "path": "$",
             "code": "unexpected"
           },
-          "message": "Author is blacklisted"
+          "message": "Author is deny-listed"
         }
       ]
     }

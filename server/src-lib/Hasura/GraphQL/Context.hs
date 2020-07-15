@@ -58,6 +58,7 @@ data RoleContext a
 $(deriveToJSON (aesonDrop 5 snakeCase) ''RoleContext)
 
 type GCtxMap = Map.HashMap RoleName (RoleContext GCtx)
+type RelayGCtxMap = Map.HashMap RoleName GCtx
 
 queryRootNamedType :: G.NamedType
 queryRootNamedType = G.NamedType "query_root"

@@ -65,6 +65,14 @@ Here is a sample ``Caddyfile`` to proxy requests to Hasura:
      websocket
    }
 
+The sample ``Caddyfile`` for Caddy 2: 
+
+.. code-block:: bash
+
+   hasura.my-domain.com {
+     reverse_proxy localhost:8080
+   }
+
 Caddy has SSL provisioning built-in with Let's Encrypt. You can find the docs at
 `Caddy website <https://caddyserver.com/docs/automatic-https>`__.
    

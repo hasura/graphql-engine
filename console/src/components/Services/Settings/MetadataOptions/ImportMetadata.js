@@ -33,8 +33,6 @@ class ImportMetadata extends Component {
   render() {
     const styles = require('../Settings.scss');
 
-    const { dispatch } = this.props;
-
     const { isImporting } = this.state;
 
     const handleImport = e => {
@@ -42,7 +40,7 @@ class ImportMetadata extends Component {
 
       this.setState({ isImporting: true });
 
-      dispatch(uploadFile(this.importMetadata, 'json'));
+      uploadFile(this.importMetadata, 'json');
     };
 
     return (

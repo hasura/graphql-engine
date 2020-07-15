@@ -1,12 +1,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-
 import jwt from 'jsonwebtoken';
 
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 import Modal from '../../../Common/Modal/Modal';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 import {
   changeRequestHeader,
@@ -15,9 +13,11 @@ import {
   unfocusTypingHeader,
   verifyJWTToken,
   setHeadersBulk,
+  switchGraphiQLMode,
 } from '../Actions';
 
 import GraphiQLWrapper from '../GraphiQLWrapper/GraphiQLWrapper';
+import Toggle from '../../../Common/Toggle/Toggle';
 
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 
@@ -34,18 +34,12 @@ import {
   getPersistedAdminSecretHeaderWasAdded,
   persistAdminSecretHeaderWasAdded,
   removePersistedAdminSecretHeaderWasAdded,
+  persistGraphiQLMode,
 } from './utils';
+import { getGraphQLEndpoint } from '../utils';
 
 import styles from '../ApiExplorer.scss';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../../constants';
-
-const inspectJWTTooltip = (
-  <Tooltip id="tooltip-inspect-jwt">Decode JWT</Tooltip>
-);
-
-const jwtValidityStatus = message => (
-  <Tooltip id="tooltip-jwt-validity-status">{message}</Tooltip>
-);
 
 /* When the page is loaded for the first time, hydrate the header state from the localStorage
  * Keep syncing the localStorage state when user modifies.
@@ -207,6 +201,7 @@ class ApiRequest extends Component {
   }
 
   render() {
+    const { mode, dispatch, loading } = this.props;
     const { isAnalyzingToken, tokenInfo, analyzingHeaderRow } = this.state;
 
     const { is_jwt_set: isJWTSet = false } = this.props.serverConfig;
@@ -227,6 +222,13 @@ class ApiRequest extends Component {
         this.setState({ endpointSectionIsOpen: newIsOpen });
       };
 
+      const toggleGraphiqlMode = () => {
+        if (loading) return;
+        const newMode = mode === 'relay' ? 'graphql' : 'relay';
+        persistGraphiQLMode(newMode);
+        dispatch(switchGraphiQLMode(newMode));
+      };
+
       return (
         <CollapsibleToggle
           title={'GraphQL Endpoint'}
@@ -244,7 +246,9 @@ class ApiRequest extends Component {
               styles.stickyHeader
             }
           >
-            <div className={'col-xs-12 ' + styles.padd_remove}>
+            <div
+              className={`col-xs-12 ${styles.padd_remove} ${styles.add_mar_bottom_mid}`}
+            >
               <div
                 className={
                   'input-group ' +
@@ -259,15 +263,33 @@ class ApiRequest extends Component {
                   </button>
                 </div>
                 <input
-                  onChange={this.onUrlChanged}
-                  value={this.props.url || ''}
+                  value={getGraphQLEndpoint(mode)}
                   type="text"
                   readOnly
                   className={styles.inputGroupInput + ' form-control '}
                 />
               </div>
             </div>
-            <div className={styles.stickySeparator} />
+            <div
+              className={`${styles.display_flex} ${styles.graphiqlModeToggle} ${styles.cursorPointer}`}
+              onClick={toggleGraphiqlMode}
+            >
+              <Toggle
+                checked={mode === 'relay'}
+                className={`${styles.display_flex} ${styles.add_mar_right_mid}`}
+                readOnly
+                disabled={loading}
+                icons={false}
+              />
+              <span className={styles.add_mar_right_mid}>Relay API</span>
+              <Tooltip
+                id="relay-mode-toggle"
+                placement="left"
+                message={
+                  'Toggle to point this GraphiQL to a relay-compliant GraphQL API served at /v1beta1/relay'
+                }
+              />
+            </div>
           </div>
         </CollapsibleToggle>
       );
@@ -417,12 +439,18 @@ class ApiRequest extends Component {
 
             if (isAdminSecret) {
               headerAdminVal = (
-                <i
-                  className={styles.showAdminSecret + ' fa fa-eye'}
-                  data-header-id={i}
-                  aria-hidden="true"
-                  onClick={onShowAdminSecretClicked}
-                />
+                <Tooltip
+                  id="admin-secret-show"
+                  placement="left"
+                  message="Show admin secret"
+                >
+                  <i
+                    className={styles.showAdminSecret + ' fa fa-eye'}
+                    data-header-id={i}
+                    aria-hidden="true"
+                    onClick={onShowAdminSecretClicked}
+                  />
+                </Tooltip>
               );
             }
 
@@ -462,9 +490,13 @@ class ApiRequest extends Component {
 
             if (isAuthHeader && isJWTSet) {
               inspectorIcon = (
-                <OverlayTrigger placement="top" overlay={inspectJWTTooltip}>
+                <Tooltip
+                  id="tooltip-inspect-jwt"
+                  message="Decode JWT"
+                  placement="left"
+                >
                   {getAnalyzeIcon()}
-                </OverlayTrigger>
+                </Tooltip>
               );
             }
 
@@ -564,6 +596,7 @@ class ApiRequest extends Component {
           return (
             <div className={styles.apiRequestBody}>
               <GraphiQLWrapper
+                mode={mode}
                 data={this.props}
                 numberOfTables={this.props.numberOfTables}
                 dispatch={this.props.dispatch}
@@ -606,14 +639,14 @@ class ApiRequest extends Component {
           switch (true) {
             case tokenVerified:
               return (
-                <OverlayTrigger
-                  placement="top"
-                  overlay={jwtValidityStatus('Valid JWT token')}
+                <Tooltip
+                  id="tooltip-jwt-validity-status"
+                  message="Valid JWT token"
                 >
                   <span className={styles.valid_jwt_token}>
                     <i className="fa fa-check" />
                   </span>
-                </OverlayTrigger>
+                </Tooltip>
               );
             case !tokenVerified && JWTError.length > 0:
               return (

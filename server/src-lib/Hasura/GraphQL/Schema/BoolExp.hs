@@ -290,3 +290,4 @@ mkBoolExpInp tn fields =
             remoteTable = riRTable $  _rfiInfo relationshipField
         in Just $ mk (mkRelName relationshipName) (mkBoolExpTy remoteTable)
       SFComputedField _ -> Nothing -- TODO: support computed fields in bool exps
+      SFRemoteRelationship{} -> Nothing

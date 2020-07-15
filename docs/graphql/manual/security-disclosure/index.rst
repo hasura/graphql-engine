@@ -1,11 +1,11 @@
 .. meta::
-   :description: Hasura security vulnerability reporting and disclosure
+   :description: Hasura security vulnerability protocol
    :keywords: hasura, docs, security, security disclosure, vulnerability
 
-.. _security_vulnerability:
+.. _security_protocol:
 
-Security vulnerability reporting and disclosure
-===============================================
+Security Vulnerability Protocol
+===============================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -22,7 +22,7 @@ This page describes the Hasura security vulnerability reporting and disclosure p
 Security announcements
 ----------------------
 
-Join the `Hasura Security Announcements <https://groups.google.com/forum/#!forum/hasura-security-announce>`_ group for emails about security announcements.
+Join the `Hasura Security Announcements <https://groups.google.com/forum/#!forum/hasura-security-announce>`__ group for emails about security announcements.
 
 Reporting vulnerabilities
 -------------------------
@@ -46,7 +46,7 @@ When should I NOT report a vulnerability?
 - You need help applying security related updates.
 - Your issue is not security related.
 
-In these cases you can join our `Discord server <http://hasura.io/discord>`_ where the community will be happy to help you out.
+In these cases you can join our `Discord server <https://hasura.io/discord>`__ where the community will be happy to help you out.
 
 Vulnerability report response
 -----------------------------

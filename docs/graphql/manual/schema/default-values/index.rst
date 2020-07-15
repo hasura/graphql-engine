@@ -24,6 +24,7 @@ the following ways:
 - :ref:`Role based column presets <column_presets>`: set up presets, using session variables or fixed values, that are
   applied when a new row is created with a particular :ref:`user role <roles_variables>`.
   E.g. set a ``user_id`` field automatically from a session variable/authorization header.
+- :ref:`Created_at / updated_at timestamps <created_updated_timestamps>`: set up ``created_at`` and ``updated_at`` timestamp values.
 
 .. toctree::
   :maxdepth: 1
@@ -32,4 +33,5 @@ the following ways:
   Postgres defaults <postgres-defaults>
   Custom SQL functions/stored procedures <sql-functions>
   Role based column presets <column-presets>
+  Created_at / updated_at timestamps <created-updated-timestamps>
 

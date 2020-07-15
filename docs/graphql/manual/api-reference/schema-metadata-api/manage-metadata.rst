@@ -41,16 +41,16 @@ replace_metadata
 ``replace_metadata`` is used to replace/import metadata into Hasura. Existing
 metadata will be replaced with the new one.
 
-.. code-block:: none
+.. code-block:: http
 
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
+    POST /v1/query HTTP/1.1
+    Content-Type: application/json
+    X-Hasura-Role: admin
 
-   {
-       "type" : "replace_metadata",
-       "args": <metadata-as-json-object>
-   }
+    {
+        "type" : "replace_metadata",
+        "args": "<metadata-as-json-object>"
+    }
 
 .. _replace_metadata_syntax:
 
@@ -137,7 +137,7 @@ get_inconsistent_metadata
        "args": {}
    }
 
-Response:-
+Response:
 
 .. code-block:: json
 

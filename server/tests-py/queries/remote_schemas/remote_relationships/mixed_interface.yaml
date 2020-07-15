@@ -1,0 +1,27 @@
+description: Simple Mixed GraphQL query with interface
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - id: 1
+      - id: 2
+      - id: 3
+    communications:
+      - id: 1
+        msg: You win!
+      - id: 2
+        msg: You lose!
+      - id: 3
+        msg: Another alice
+query:
+  query: |
+    query {
+      profiles {
+        id
+      }
+      communications {
+        id
+        msg
+      }
+    }

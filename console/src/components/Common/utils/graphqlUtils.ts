@@ -6,6 +6,14 @@ import {
 import React from 'react';
 import endpoints from '../../../Endpoints';
 
+export const getGraphQLQueryPayload = (
+  query: string,
+  variables: Record<string, any>
+) => ({
+  query,
+  variables,
+});
+
 export const useIntrospectionSchema = (headers = {}) => {
   const [schema, setSchema] = React.useState<GraphQLSchema | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -17,7 +25,7 @@ export const useIntrospectionSchema = (headers = {}) => {
     fetch(endpoints.graphQLUrl, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ query: getIntrospectionQuery() }),
+      body: JSON.stringify(getGraphQLQueryPayload(getIntrospectionQuery(), {})),
     })
       .then(r => r.json())
       .then(response => {
