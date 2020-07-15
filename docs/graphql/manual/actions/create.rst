@@ -203,6 +203,11 @@ Now, set the handler for the action:
   e.g. ``https://my-handler-endpoint/addNumbers`` can be templated to ``{{ACTION_BASE_ENDPOINT}}/addNumbers``
   where ``ACTION_BASE_ENDPOINT`` is an ENV variable whose value is set to ``https://my-handler-endpoint``
 
+.. note::
+
+  During local development with the action handler on localhost, ensure that the Hasura Docker container can reach the handler endpoint on the host.
+  See :ref:`this page <docker_networking>` for Docker networking.
+
 Step 3: Finish action creation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
