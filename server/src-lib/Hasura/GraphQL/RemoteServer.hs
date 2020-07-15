@@ -9,10 +9,11 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Text                              as T
-import qualified Language.GraphQL.Draft.Parser          as G
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Language.GraphQL.Draft.Parser          as G
 import qualified Language.Haskell.TH.Syntax             as TH
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
@@ -29,6 +30,7 @@ import           Hasura.Session
 import qualified Hasura.GraphQL.Context                 as GC
 import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Validate.Types          as VT
+import qualified Hasura.Tracing                         as Tracing
 
 introspectionQuery :: GQLReqParsed
 introspectionQuery =
@@ -43,9 +45,12 @@ introspectionQuery =
 
 fetchRemoteSchema
   :: (HasVersion, MonadIO m, MonadError QErr m)
-  => HTTP.Manager -> RemoteSchemaInfo -> m GC.RemoteGCtx
-fetchRemoteSchema manager def@(RemoteSchemaInfo name url headerConf _ timeout) = do
-  headers <- makeHeadersFromConf headerConf
+  => Env.Environment
+  -> HTTP.Manager
+  -> RemoteSchemaInfo
+  -> m GC.RemoteGCtx
+fetchRemoteSchema env manager def@(RemoteSchemaInfo name url headerConf _ timeout) = do
+  headers <- makeHeadersFromConf env headerConf
   let hdrsWithDefaults = addDefaultHeaders headers
 
   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
@@ -344,18 +349,20 @@ execRemoteGQ'
   :: ( HasVersion
      , MonadIO m
      , MonadError QErr m
+     , Tracing.MonadTrace m
      )
-  => HTTP.Manager
+  => Env.Environment
+  -> HTTP.Manager
   -> UserInfo
   -> [N.Header]
   -> GQLReqUnparsed
   -> RemoteSchemaInfo
   -> G.OperationType
   -> m (DiffTime, [N.Header], BL.ByteString)
-execRemoteGQ' manager userInfo reqHdrs q rsi opType = do
+execRemoteGQ' env manager userInfo reqHdrs q rsi opType = Tracing.traceHttpRequest (T.pack (show url)) $ do
   when (opType == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
-  confHdrs <- makeHeadersFromConf hdrConf
+  confHdrs <- makeHeadersFromConf env hdrConf
   let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
       -- filter out duplicate headers
       -- priority: conf headers > resolved userinfo vars > client headers
@@ -373,10 +380,10 @@ execRemoteGQ' manager userInfo reqHdrs q rsi opType = do
            , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
-
-  (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req manager
-  resp <- either httpThrow return res
-  pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
+  pure $ Tracing.SuspendedRequest req \req' -> do
+    (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
+    resp <- either httpThrow return res
+    pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
     RemoteSchemaInfo _ url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a

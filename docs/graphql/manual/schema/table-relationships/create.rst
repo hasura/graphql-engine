@@ -12,6 +12,9 @@ Creating relationships
   :depth: 2
   :local:
 
+Introduction
+------------
+
 A relationship from one table/view to another can be created by defining a link between a column of the table/view to a
 column of the other table/view.
 

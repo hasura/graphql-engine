@@ -33,7 +33,7 @@ Hasura needs 2 pieces of information to recreate your GraphQL API, the underlyin
 PG database schema and the Hasura metadata which is used to describe the exposed
 GraphQL API.
 
-The :ref:`Hasura CLI <hasuracli-manual>` lets you manage these pieces of
+The :ref:`Hasura CLI <hasuracli_manual>` lets you manage these pieces of
 information as you build your project via:
 
 Database migration files

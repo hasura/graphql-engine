@@ -35,6 +35,8 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   , LiveQueryMetadata(..)
   ) where
 
+import           Data.List.Split                          (chunksOf)
+import           GHC.AssertNF
 import           Hasura.Prelude
 
 import qualified Control.Concurrent.Async                 as A
@@ -53,8 +55,6 @@ import qualified Database.PG.Query                        as Q
 import qualified ListT
 import qualified StmContainers.Map                        as STMMap
 
-import           Data.List.Split                          (chunksOf)
-import           GHC.AssertNF
 import           Control.Lens
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
@@ -100,7 +100,6 @@ data Subscriber
 data LiveQueryMetadata
   = LiveQueryMetadata
   { _lqmExecutionTime :: !Clock.DiffTime
-  -- ^ Time spent waiting on the generated query to execute on postgres or the remote.
   }
 
 data LiveQueryResponse
@@ -255,10 +254,10 @@ data Poller
 
 data PollerIOState
   = PollerIOState
-  { _pThread  :: !Immortal.Thread
+  { _pThread :: !Immortal.Thread
   -- ^ a handle on the poller’s worker thread that can be used to
   -- 'Immortal.stop' it if all its cohorts stop listening
-  , _pId :: !PollerId
+  , _pId     :: !PollerId
   }
 
 data PollerKey
@@ -438,7 +437,6 @@ pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap = do
                       , _pdTotalTime = totalTime
                       }
   where
-
     LiveQueriesOptions batchSize _ = lqOpts
 
     getCohortSnapshot (cohortVars, handlerC) = do

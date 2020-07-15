@@ -85,6 +85,7 @@ const ViewRows = ({
   triggeredFunction,
   location,
   readOnlyMode,
+  shouldHidePagination,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   useEffect(() => {
@@ -950,6 +951,7 @@ const ViewRows = ({
           persistColumnOrderChange(curTableName, currentSchema, reorderData)
         }
         defaultReorders={columnsOrder}
+        showPagination={!shouldHidePagination}
       />
     );
   };

@@ -2,7 +2,7 @@
    :description: Create a cron trigger with Hasura
    :keywords: hasura, docs, cron trigger, scheduled trigger, create
 
-.. _create_cron_trigger:
+.. _creating_cron_trigger:
 
 Creating a cron trigger
 =======================
