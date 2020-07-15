@@ -791,11 +791,12 @@ export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
 const cascadePGSqlQuery = sql => {
-  let prefix;
-  if (sql[sql.length - 1] === ';') prefix = sql.substr(0, sql.length - 1);
+  if (sql[sql.length - 1] === ';')
+    return sql.substr(0, sql.length - 1) + ' CASCADE;';
   // SQL might have  a " at the end
-  else if (sql[sql.length - 2] === ';') prefix = sql.substr(0, sql.length - 2);
-  return prefix + ' CASCADE;';
+  else if (sql[sql.length - 2] === ';')
+    return sql.substr(0, sql.length - 2) + ' CASCADE;';
+  return sql + ' CASCADE;';
 };
 export const cascadeUpQueries = (upQueries = [], isPgCascade = false) =>
   upQueries.map((i = {}) => {
@@ -813,7 +814,6 @@ export const cascadeUpQueries = (upQueries = [], isPgCascade = false) =>
   });
 
 export const getDependencyError = (err = {}) => {
-  const dflt = {};
   if (err.code == ERROR_CODES.dependencyError.code) {
     // direct dependency error
     return { dependencyError: err };
@@ -834,5 +834,5 @@ export const getDependencyError = (err = {}) => {
         pgDependencyError: { ...actualError, message: actualError.error },
       };
   }
-  return dflt;
+  return {};
 };
