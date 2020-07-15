@@ -313,11 +313,18 @@ updateTableByPk
   -> SelPermInfo          -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (RQL.AnnUpdG UnpreparedValue)))
 updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT $ do
+  tableName <- qualifiedObjectToName table
   columns   <- lift   $ tableSelectColumns table selectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
   opArgs    <- MaybeT $ updateOperators table updatePerms
   selection <- lift $ tableSelectionSet table selectPerms Nothing
-  let argsParser = liftA2 (,) opArgs pkArgs
+  let pkFieldName  = $$(G.litName "pk_columns")
+      pkObjectName = tableName <> $$(G.litName "_pk_columns_input")
+      pkObjectDesc = G.Description $ "primary key columns input for table: " <> G.unName tableName
+      argsParser   = do
+        operators <- opArgs
+        primaryKeys <- P.field pkFieldName Nothing $ P.object pkObjectName (Just pkObjectDesc) pkArgs
+        pure (operators, primaryKeys)
   pure $ P.subselection fieldName description argsParser selection
     <&> mkUpdateObject table columns updatePerms . fmap RQL.MOutSinglerowObject
 
