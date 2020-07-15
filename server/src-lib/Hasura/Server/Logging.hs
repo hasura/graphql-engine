@@ -32,6 +32,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Compression
 import           Hasura.Server.Utils
 import           Hasura.Session
+import           Hasura.Tracing            (TraceT)
 
 data StartupLog
   = StartupLog
@@ -152,6 +153,10 @@ class (Monad m) => HttpLog m where
     -> [HTTP.Header]
     -- ^ list of request headers
     -> m ()
+
+instance HttpLog m => HttpLog (TraceT m) where
+  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+  logHttpSuccess a b c d e f g h i j = lift $ logHttpSuccess a b c d e f g h i j
 
 -- | Log information about the HTTP request
 data HttpInfoLog
