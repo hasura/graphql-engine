@@ -158,7 +158,7 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
         ArrRel -> do
           parser <- arrayRelationshipInput otherTable insPerms selPerms updPerms
           pure $ P.fieldOptional relFieldName Nothing parser `mapField`
-            \arrRelIns -> AnnInsObj [] [] [RelIns arrRelIns relationshipInfo]
+            \arrRelIns -> AnnInsObj [] [] [RelIns arrRelIns relationshipInfo | not $ null $ _aiInsObj arrRelIns]
   let objectName = tableName <> $$(G.litName "_insert_input")
       objectDesc = G.Description $ "input type for inserting data into table \"" <> G.unName tableName <> "\""
   pure $ P.object objectName (Just objectDesc) $ catMaybes <$> sequenceA objectFields
