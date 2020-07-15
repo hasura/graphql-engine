@@ -719,7 +719,6 @@ func (ec *ExecutionContext) readConfig() error {
 		return errors.Wrap(err, "setting up TLS config failed")
 	}
 	return ec.Config.ServerConfig.SetHTTPClient()
-	return nil
 }
 
 // setupSpinner creates a default spinner if the context does not already have
