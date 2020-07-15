@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
-import { Connect } from 'react-redux';
+import { connect, ConnectedProps } from 'react-redux';
 import { GraphQLVoyager } from 'graphql-voyager';
 import fetch from 'isomorphic-fetch';
 
 import Endpoints from '../../../Endpoints';
 import '../../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
+import requestAction from '../../../utils/requestAction';
 
 interface VoyagerViewProps {
   headers: Headers;
@@ -21,16 +22,27 @@ interface State {
     dataHeaders: Headers;
   };
 }
+const mapState = (state: State) => {
+  return {
+    headers: state.tables.dataHeaders,
+  };
+};
+const mapDispatch = {
+  requestAction,
+};
 
-type Props = VoyagerViewProps & StateProps;
+const connector = connect(mapState, mapDispatch);
+type PropsFromRedux = ConnectedProps<typeof connector>;
+
+type Props = PropsFromRedux & VoyagerViewProps & StateProps;
 
 class VoyagerView extends Component<Props, State> {
   introspectionProvider = (query: string) => {
-    return fetch(Endpoints.graphQLUrl, {
+    return this.props.requestAction(Endpoints.graphQLUrl, {
       method: 'POST',
       headers: this.props.headers,
       body: JSON.stringify({ query }),
-    }).then(response => response.json());
+    });
   };
 
   render() {
@@ -43,13 +55,4 @@ class VoyagerView extends Component<Props, State> {
   }
 }
 
-const generatedVoyagerConnector = (connect: Connect) => {
-  const mapStateToProps = (state: State) => {
-    return {
-      headers: state.tables.dataHeaders,
-    };
-  };
-  return connect(mapStateToProps)(VoyagerView);
-};
-
-export default generatedVoyagerConnector;
+export default connector(VoyagerView);
