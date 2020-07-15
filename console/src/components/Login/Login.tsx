@@ -5,8 +5,6 @@ import Helmet from 'react-helmet';
 import Button from '../Common/Button/Button';
 import globals from '../../Globals';
 import { verifyLogin } from './Actions';
-import { CLI_CONSOLE_MODE } from '../../constants';
-import { getAdminSecret } from '../Services/ApiExplorer/ApiRequest/utils';
 import { ConnectInjectedProps } from '../../types';
 
 const styles = require('./Login.scss');
@@ -111,32 +109,6 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
     );
   };
 
-  const getCLIAdminSecretErrorMessage = () => {
-    const adminSecret = getAdminSecret();
-
-    const missingAdminSecretMessage = (
-      <span>
-        Seems like your Hasura GraphQL engine instance has an admin-secret
-        configured.
-        <br />
-        Run console with the admin-secret using:
-        <br />
-        <br />
-        hasura console --admin-secret=&lt;your-admin-secret&gt;
-      </span>
-    );
-
-    const invalidAdminSecretMessage = (
-      <span>Invalid admin-secret passed from CLI</span>
-    );
-
-    return (
-      <div className={styles.text_center}>
-        {adminSecret ? invalidAdminSecretMessage : missingAdminSecretMessage}
-      </div>
-    );
-  };
-
   return (
     <div className={`${styles.mainWrapper} container-fluid`}>
       <div className={`${styles.container} container`} id="login">
@@ -146,9 +118,7 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
             <img src={hasuraLogo} alt="Hasura" />
           </div>
           <div className={styles.loginWrapper}>
-            {globals.consoleMode !== CLI_CONSOLE_MODE
-              ? getLoginForm()
-              : getCLIAdminSecretErrorMessage()}
+            {getLoginForm()}
           </div>
         </div>
       </div>

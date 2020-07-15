@@ -14,8 +14,8 @@ declare global {
   interface Window {
     __env: {
       nodeEnv: string;
-      apiHost: string;
-      apiPort: string;
+      apiHost?: string;
+      apiPort?: string;
       dataApiUrl: string;
       urlPrefix: string;
       adminSecret: string;
@@ -26,6 +26,7 @@ declare global {
       serverVersion: string;
       consolePath: string;
       cliUUID: string;
+      migrateApiUrl: string;
     };
     sqlFormatter: unknown;
     hljs: unknown;
@@ -48,8 +49,6 @@ if (
 const isProduction = window.__env.nodeEnv !== 'development';
 
 const globals = {
-  apiHost: window.__env.apiHost,
-  apiPort: window.__env.apiPort,
   dataApiUrl: stripTrailingSlash(window.__env.dataApiUrl), // overridden below if server mode
   urlPrefix: stripTrailingSlash(window.__env.urlPrefix || '/'), // overridden below if server mode in production
   adminSecret: window.__env.adminSecret || null, // gets updated after login/logout in server mode
@@ -70,6 +69,7 @@ const globals = {
   hasuraUUID: '',
   telemetryNotificationShown: false,
   isProduction,
+  migrateApiUrl: window.__env.migrateApiUrl,
 };
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (isProduction) {

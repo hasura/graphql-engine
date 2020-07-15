@@ -1,10 +1,10 @@
 import globals from './Globals';
 
 const baseUrl = globals.dataApiUrl;
-const hasuractlApiHost = globals.apiHost;
-const hasuractlApiPort = globals.apiPort;
+// const hasuractlApiHost = globals.apiHost;
+// const hasuractlApiPort = globals.apiPort;
 
-const hasuractlUrl = `${hasuractlApiHost}:${hasuractlApiPort}`;
+const hasuractlUrl = globals.migrateApiUrl;
 
 const Endpoints = {
   getSchema: `${baseUrl}/v1/query`,
