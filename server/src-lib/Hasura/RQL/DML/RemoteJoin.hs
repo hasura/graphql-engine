@@ -38,6 +38,7 @@ import qualified Data.HashSet                           as HS
 import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
+import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Printer.Text    as G
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
@@ -48,6 +49,7 @@ executeQueryWithRemoteJoins
   :: ( HasVersion
      , MonadTx m
      , MonadIO m
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> HTTP.Manager
@@ -351,6 +353,7 @@ fetchRemoteJoinFields
   :: ( HasVersion
      , MonadError QErr m
      , MonadIO m
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> HTTP.Manager

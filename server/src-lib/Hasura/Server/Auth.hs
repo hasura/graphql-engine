@@ -44,6 +44,7 @@ import           Hasura.Server.Auth.JWT               hiding (processJwt_)
 import           Hasura.Server.Auth.WebHook
 import           Hasura.Server.Utils
 import           Hasura.Session
+import qualified Hasura.Tracing                       as Tracing
 
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
@@ -102,6 +103,7 @@ setupAuthMode
      , MonadIO m
      , MonadBaseControl IO m
      , LA.Forall (LA.Pure m)
+     , Tracing.HasReporter m
      )
   => Maybe AdminSecretHash
   -> Maybe AuthHook
@@ -147,6 +149,7 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
          , MonadIO m
          , MonadBaseControl IO m
          , LA.Forall (LA.Pure m)
+         , Tracing.HasReporter m
          )
       => JWTConfig
       -> ExceptT T.Text m JWTCtx
@@ -161,7 +164,7 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
         -- header), do not start a background thread for refreshing the JWK
         getJwkFromUrl url = do
           ref <- liftIO $ newIORef $ JWKSet []
-          maybeExpiry <- withJwkError $ updateJwkRef logger httpManager url ref
+          maybeExpiry <- withJwkError $ Tracing.runTraceT "jwk init" $ updateJwkRef logger httpManager url ref
           case maybeExpiry of
             Nothing   -> return ref
             Just time -> do
@@ -181,7 +184,7 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
               JFEExpiryParseError _ _ -> return Nothing
 
 getUserInfo
-  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m)
+  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m)
   => Logger Hasura
   -> H.Manager
   -> [N.Header]
@@ -191,7 +194,7 @@ getUserInfo l m r a = fst <$> getUserInfoWithExpTime l m r a
 
 -- | Authenticate the request using the headers and the configured 'AuthMode'.
 getUserInfoWithExpTime
-  :: forall m. (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m)
+  :: forall m. (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m)
   => Logger Hasura
   -> H.Manager
   -> [N.Header]

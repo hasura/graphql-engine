@@ -212,6 +212,10 @@ library
 
                      , directory
                      
+                     , random
+                     , mmorph
+                     , http-api-data
+                     
                      , semigroups >= 0.19.1
 
                      -- scheduled triggers
@@ -405,6 +409,7 @@ library
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
                      , Hasura.SQL.Value
+                     , Hasura.Tracing
                      , Network.URI.Extended
                      , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom

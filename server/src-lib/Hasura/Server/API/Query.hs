@@ -42,6 +42,8 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
 
+import qualified Hasura.Tracing                     as Tracing
+
 data RQLQueryV1
   = RQAddExistingTableOrView !TrackTable
   | RQTrackTable !TrackTable
@@ -190,18 +192,21 @@ recordSchemaUpdate instanceId invalidations =
             |] (instanceId, Q.AltJ invalidations) True
 
 runQuery
-  :: (HasVersion, MonadIO m, MonadError QErr m)
+  :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
   => Env.Environment -> PGExecCtx -> InstanceId
   -> UserInfo -> RebuildableSchemaCache Run -> HTTP.Manager
   -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
 runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
   accessMode <- getQueryAccessMode query
-  resE <- runQueryM env query
-    & runHasSystemDefinedT systemDefined
-    & runCacheRWT sc
-    & peelRun runCtx pgExecCtx accessMode
-    & runExceptT
-    & liftIO
+  resE <- runQueryM env query & Tracing.interpTraceT \x -> do
+    a <- x & runHasSystemDefinedT systemDefined
+           & runCacheRWT sc
+           & peelRun runCtx pgExecCtx accessMode
+           & runExceptT
+           & liftIO
+    pure (either 
+      ((, mempty) . Left)
+      (\((js, meta), rsc, ci) -> (Right (js, rsc, ci), meta)) a)
   either throwError withReload resE
   where
     runCtx = RunCtx userInfo hMgr sqlGenCtx
@@ -345,6 +350,7 @@ runQueryM
   :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
      , HasSystemDefined m
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> RQLQuery

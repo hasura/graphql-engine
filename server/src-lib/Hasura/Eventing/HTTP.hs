@@ -60,6 +60,7 @@ import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.Tracing
 
 type LogEnvHeaders = Bool
 
@@ -284,13 +285,14 @@ tryWebhook ::
   , Has HTTP.Manager r
   , MonadIO m
   , MonadError (HTTPErr a) m
+  , MonadTrace m
   )
   => [HTTP.Header]
   -> HTTP.ResponseTimeout
   -> Value
   -> String
   -> m (HTTPResp a)
-tryWebhook headers timeout payload webhook = do
+tryWebhook headers timeout payload webhook = traceHttpRequest (T.pack webhook) do
   initReqE <- liftIO $ try $ HTTP.parseRequest webhook
   manager <- asks getter
   case initReqE of
@@ -303,8 +305,9 @@ tryWebhook headers timeout payload webhook = do
               , HTTP.requestBody = HTTP.RequestBodyLBS (encode payload)
               , HTTP.responseTimeout = timeout
               }
-      eitherResp <- runHTTP manager req
-      onLeft eitherResp throwError
+      pure $ SuspendedRequest req \req' -> do
+        eitherResp <- runHTTP manager req'
+        onLeft eitherResp throwError
 
 mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response a
 mkResp status payload headers =
