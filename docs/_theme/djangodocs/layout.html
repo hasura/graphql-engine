@@ -6,6 +6,8 @@
 
 {% set css_files = css_files + ['_static/djangosite.css', '_static/hasura-custom.css'] %}
 
+{% set script_files = script_files + ['_static/utils.js'] %}
+
 {%- if is_landing_page %}
   {% set css_files = css_files + ['_static/landing.css'] %}
 {%- endif %}
@@ -751,7 +753,7 @@
           })
           .then(data => {
             const githubStar = data[0].star_count
-            $(".gitHubCount").html(githubStar);
+            $(".gitHubCount").html(hasuraUtils.formatNumber(githubStar));
             $(".gitHubBtn").removeClass("hide");
           })
           .catch(e => {
