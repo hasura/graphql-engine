@@ -6,6 +6,7 @@ module Hasura.GraphQL.Explain
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
+import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -87,13 +88,14 @@ getSessVarVal userInfo sessVar =
 
 explainField
   :: (MonadError QErr m, MonadTx m, HasVersion, MonadIO m)
-  => UserInfo
+  => Env.Environment
+  -> UserInfo
   -> GCtx
   -> SQLGenCtx
   -> QueryActionExecuter
   -> GV.Field
   -> m FieldPlan
-explainField userInfo gCtx sqlGenCtx actionExecuter fld =
+explainField env userInfo gCtx sqlGenCtx actionExecuter fld =
   case fName of
     "__type"     -> return $ FieldPlan fName Nothing Nothing
     "__schema"   -> return $ FieldPlan fName Nothing Nothing
@@ -101,7 +103,7 @@ explainField userInfo gCtx sqlGenCtx actionExecuter fld =
     _            -> do
       unresolvedAST <-
         runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-          evalReusabilityT $ RS.queryFldToPGAST fld actionExecuter
+          evalReusabilityT $ RS.queryFldToPGAST env fld actionExecuter
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo) unresolvedAST
       let (query, remoteJoins) = RS.toPGQuery resolvedAST
           txtSQL = Q.getQueryText query
@@ -121,14 +123,21 @@ explainField userInfo gCtx sqlGenCtx actionExecuter fld =
     orderByCtx = _gOrdByCtx gCtx
 
 explainGQLQuery
-  :: (MonadError QErr m, MonadIO m, HasVersion)
-  => PGExecCtx
+  :: ( HasVersion
+     , MonadError QErr m
+     , MonadIO m
+     , MonadIO tx
+     , MonadTx tx
+     )
+  => Env.Environment
+  -> PGExecCtx
+  -> (tx EncJSON -> m EncJSON)
   -> SchemaCache
   -> SQLGenCtx
   -> QueryActionExecuter
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx actionExecuter (GQLExplain query userVarsRaw maybeIsRelay) = do
+explainGQLQuery env pgExecCtx runInTx sc sqlGenCtx actionExecuter (GQLExplain query userVarsRaw maybeIsRelay) = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g.
   -- notes in explainField:
   userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
@@ -143,14 +152,13 @@ explainGQLQuery pgExecCtx sc sqlGenCtx actionExecuter (GQLExplain query userVars
   case rootSelSet of
     GV.RQuery selSet ->
       runInTx $ encJFromJValue . map snd <$>
-        GV.traverseObjectSelectionSet selSet (explainField userInfo gCtx sqlGenCtx actionExecuter)
+        GV.traverseObjectSelectionSet selSet (explainField env userInfo gCtx sqlGenCtx actionExecuter)
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
     GV.RSubscription fields -> do
-      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo
+      (plan, _) <- E.getSubsOp env pgExecCtx gCtx sqlGenCtx userInfo
                      queryReusability actionExecuter fields
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     queryType = bool E.QueryHasura E.QueryRelay $ fromMaybe False maybeIsRelay
     sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
-    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly

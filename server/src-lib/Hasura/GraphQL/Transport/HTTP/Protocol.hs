@@ -52,7 +52,7 @@ newtype GQLExecDoc
   deriving (Ord, Show, Eq, Hashable, Lift)
 
 instance J.FromJSON GQLExecDoc where
-  parseJSON v = (GQLExecDoc . G.getExecutableDefinitions) <$> J.parseJSON v
+  parseJSON v = GQLExecDoc . G.getExecutableDefinitions <$> J.parseJSON v
 
 instance J.ToJSON GQLExecDoc where
   toJSON = J.toJSON . G.ExecutableDocument . unGQLExecDoc

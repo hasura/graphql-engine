@@ -35,7 +35,7 @@ Get started from scratch
 Get started using an existing database
 --------------------------------------
 
-- `Using Hasura Cloud <https://hasura.io/docs/cloud/1.0/manual/projects/create.html>`__ **(recommended)**: Create a new Hasura Cloud project connected to an existing Postgres database.
+- `Using Hasura Cloud <https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html>`__ **(recommended)**: Create a new Hasura Cloud project connected to an existing Postgres database.
 - :ref:`Using Docker <deployment_docker>`: Run as a docker container and connect to an existing Postgres
   database.
 - :ref:`Using Heroku <heroku_existing_db>`: Run on Heroku using an existing Heroku
