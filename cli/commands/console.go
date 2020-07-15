@@ -130,7 +130,7 @@ func (o *ConsoleOptions) Run() error {
 		o.ServerExternalEndpoint = o.EC.Config.ServerConfig.Endpoint
 	}
 
-	// My Router struct
+	// FIXME: My Router struct
 	r := &cRouter{
 		g,
 		t,
@@ -204,7 +204,7 @@ func (o *ConsoleOptions) Run() error {
 func verifyAdminSecret() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if ec.Config.ServerConfig.AdminSecret != "" {
-			if c.GetHeader(XHasuraAdminSecret) != ec.Config.ServerConfig.AdminSecret {
+			if c.GetHeader(cli.XHasuraAdminSecret) != ec.Config.ServerConfig.AdminSecret {
 				//reject
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
 			}
@@ -255,6 +255,7 @@ func setMigrate(t *migrate.Migrate) gin.HandlerFunc {
 
 func setFilePath(dir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// FIXME
 		host := getFilePath(dir)
 		c.Set("filedir", host)
 		c.Next()
@@ -285,8 +286,8 @@ func setLogger(logger *logrus.Logger) gin.HandlerFunc {
 func allowCors() gin.HandlerFunc {
 	config := cors.DefaultConfig()
 	config.AddAllowHeaders("X-Hasura-User-Id")
-	config.AddAllowHeaders(XHasuraAccessKey)
-	config.AddAllowHeaders(XHasuraAdminSecret)
+	config.AddAllowHeaders(cli.XHasuraAccessKey)
+	config.AddAllowHeaders(cli.XHasuraAdminSecret)
 	config.AddAllowHeaders("X-Hasura-Role")
 	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
 	config.AddAllowMethods("DELETE")
@@ -299,11 +300,13 @@ func serveConsole(assetsVersion, staticDir string, opts gin.H) (*gin.Engine, err
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	r := gin.New()
 
+	// FIXME: DoAssetExist
 	if !util.DoAssetExist("assets/" + assetsVersion + "/console.html") {
 		assetsVersion = "latest"
 	}
 
 	// Template console.html
+	// FIXME: LoadTemplates
 	templateRender, err := util.LoadTemplates("assets/"+assetsVersion+"/", "console.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch template")
