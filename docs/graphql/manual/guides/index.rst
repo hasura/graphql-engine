@@ -18,6 +18,7 @@ Guides / Tutorials / Resources
 
    Data modelling guides <data-modelling/index>
    Deployment guides <deployment/index>
+   Docker networking <docker-networking>
    Sample apps & boilerplates <sample-apps/index>
    Integration/migration tutorials <integrations/index>
    Integrating with monitoring frameworks <monitoring/index>

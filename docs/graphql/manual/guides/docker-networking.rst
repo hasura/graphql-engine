@@ -2,7 +2,7 @@
    :description: Docker networking with Hasura
    :keywords: hasura, docs, deployment, network, docker
 
-.. _networking:
+.. _docker_networking:
 
 Docker networking 
 =================
@@ -63,4 +63,4 @@ Network config
 
 .. note::
 
-  Learn more about Docker specific networking in the `Docker documentation <https://runnable.com/docker/basic-docker-networking>`__.
+  Learn more about Docker specific networking in the `Docker documentation <https://docs.docker.com/network/>`__.
