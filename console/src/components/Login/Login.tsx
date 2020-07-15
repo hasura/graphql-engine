@@ -117,9 +117,7 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
           <div className={styles.hasuraLogo}>
             <img src={hasuraLogo} alt="Hasura" />
           </div>
-          <div className={styles.loginWrapper}>
-            {getLoginForm()}
-          </div>
+          <div className={styles.loginWrapper}>{getLoginForm()}</div>
         </div>
       </div>
     </div>
