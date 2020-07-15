@@ -122,8 +122,8 @@ Switch to the ``GraphiQL`` tab on top and execute the following GraphQL query:
 
 .. _digital_ocean_secure:
 
-Secure the GraphQL endpoint
----------------------------
+Securing the GraphQL endpoint
+-----------------------------
 
 By default Hasura is exposed without any admin secret. Anyone can read and write
 to your database using GraphQL. When deploying to production, you should secure
