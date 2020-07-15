@@ -11,6 +11,7 @@ where
 
 import           Hasura.Prelude
 
+import qualified Data.Environment          as Env
 import qualified Data.HashMap.Strict       as Map
 import qualified Data.Sequence             as DS
 import qualified Database.PG.Query         as Q
@@ -57,17 +58,29 @@ mkMutation ctx table query output' allCols strfyNum =
   in Mutation table query output allCols remoteJoinsCtx strfyNum
 
 runMutation
-  :: (HasVersion, MonadTx m, MonadIO m)
-  => Mutation -> m EncJSON
-runMutation mut =
-  bool (mutateAndReturn mut) (mutateAndSel mut) $
+  ::
+  ( HasVersion
+  , MonadTx m
+  , MonadIO m
+  )
+  => Env.Environment
+  -> Mutation
+  -> m EncJSON
+runMutation env mut =
+  bool (mutateAndReturn env mut) (mutateAndSel env mut) $
     hasNestedFld $ _mOutput mut
 
 mutateAndReturn
-  :: (HasVersion, MonadTx m, MonadIO m)
-  => Mutation -> m EncJSON
-mutateAndReturn (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
-  executeMutationOutputQuery sqlQuery (toList p) remoteJoins
+  ::
+  ( HasVersion
+  , MonadTx m
+  , MonadIO m
+  )
+  => Env.Environment
+  -> Mutation
+  -> m EncJSON
+mutateAndReturn env (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
+  executeMutationOutputQuery env sqlQuery (toList p) remoteJoins
   where
     sqlQuery = Q.fromBuilder $ toSQL $
                mkMutationOutputExp qt allCols Nothing cte mutationOutput strfyNum
@@ -87,29 +100,40 @@ conditions **might** see some degradation.
 -}
 
 mutateAndSel
-  :: (HasVersion, MonadTx m, MonadIO m)
-  => Mutation -> m EncJSON
-mutateAndSel (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = do
+  ::
+  ( HasVersion
+  , MonadTx m
+  , MonadIO m
+  )
+  => Env.Environment
+  -> Mutation
+  -> m EncJSON
+mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = do
   -- Perform mutation and fetch unique columns
   MutateResp _ columnVals <- liftTx $ mutateAndFetchCols qt allCols q strfyNum
   selCTE <- mkSelCTEFromColVals qt allCols columnVals
   let selWith = mkMutationOutputExp qt allCols Nothing selCTE mutationOutput strfyNum
   -- Perform select query and fetch returning fields
-  executeMutationOutputQuery (Q.fromBuilder $ toSQL selWith) [] remoteJoins
+  executeMutationOutputQuery env (Q.fromBuilder $ toSQL selWith) [] remoteJoins
 
 executeMutationOutputQuery
-  :: (HasVersion, MonadTx m, MonadIO m)
-  => Q.Query -- ^ SQL query
+  ::
+  ( HasVersion
+  , MonadTx m
+  , MonadIO m
+  )
+  => Env.Environment
+  -> Q.Query -- ^ SQL query
   -> [Q.PrepArg] -- ^ Prepared params
   -> Maybe (RemoteJoins, MutationRemoteJoinCtx)  -- ^ Remote joins context
   -> m EncJSON
-executeMutationOutputQuery query prepArgs = \case
+executeMutationOutputQuery env query prepArgs = \case
   Nothing ->
     runIdentity . Q.getRow
       -- See Note [Prepared statements in Mutations]
       <$> liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
   Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
-    executeQueryWithRemoteJoins httpManager reqHeaders userInfo query prepArgs remoteJoins
+    executeQueryWithRemoteJoins env httpManager reqHeaders userInfo query prepArgs remoteJoins
 
 
 mutateAndFetchCols

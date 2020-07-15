@@ -29,6 +29,7 @@ import           Hasura.SQL.Types
 
 import qualified Database.PG.Query        as Q
 import qualified Hasura.SQL.DML           as S
+import qualified Data.Environment         as Env
 
 data AnnUpdG v
   = AnnUpd
@@ -225,13 +226,18 @@ validateUpdateQuery =
   runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
 
 execUpdateQuery
-  :: (HasVersion, MonadTx m, MonadIO m)
-  => Bool
+  ::
+  ( HasVersion
+  , MonadTx m
+  , MonadIO m
+  )
+  => Env.Environment
+  -> Bool
   -> Maybe MutationRemoteJoinCtx
   -> (AnnUpd, DS.Seq Q.PrepArg)
   -> m EncJSON
-execUpdateQuery strfyNum remoteJoinCtx (u, p) =
-  runMutation $ mkMutation remoteJoinCtx (uqp1Table u) (updateCTE, p)
+execUpdateQuery env strfyNum remoteJoinCtx (u, p) =
+  runMutation env $ mkMutation remoteJoinCtx (uqp1Table u) (updateCTE, p)
                 (uqp1Output u) (uqp1AllCols u) strfyNum
   where
     updateCTE = mkUpdateCTE u
@@ -240,7 +246,7 @@ runUpdate
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
      , MonadTx m, HasSQLGenCtx m, MonadIO m
      )
-  => UpdateQuery -> m EncJSON
-runUpdate q = do
+  => Env.Environment -> UpdateQuery -> m EncJSON
+runUpdate env q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateUpdateQuery q >>= execUpdateQuery strfyNum Nothing
+  validateUpdateQuery q >>= execUpdateQuery env strfyNum Nothing

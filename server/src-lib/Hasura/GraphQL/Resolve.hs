@@ -21,12 +21,14 @@ module Hasura.GraphQL.Resolve
 import           Data.Has
 import           Hasura.Session
 
+import qualified Data.Environment                  as Env
 import qualified Data.HashMap.Strict               as Map
 import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
 import qualified Network.HTTP.Client               as HTTP
 import qualified Network.HTTP.Types                as HTTP
 
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -107,10 +109,11 @@ queryFldToPGAST
      , HasVersion
      , MonadIO m
      )
-  => V.Field
+  => Env.Environment
+  -> V.Field
   -> RA.QueryActionExecuter
   -> m QueryRootFldUnresolved
-queryFldToPGAST fld actionExecuter = do
+queryFldToPGAST env fld actionExecuter = do
   opCtx <- getOpCtx $ V._fName fld
   userInfo <- asks getter
   case opCtx of
@@ -149,7 +152,7 @@ queryFldToPGAST fld actionExecuter = do
           f = case jsonAggType of
              DS.JASMultipleRows -> QRFActionExecuteList
              DS.JASSingleObject -> QRFActionExecuteObject
-      f <$> actionExecuter (RA.resolveActionQuery fld ctx (_uiSession userInfo))
+      f <$> actionExecuter (RA.resolveActionQuery env fld ctx (_uiSession userInfo))
     QCSelectConnection pk ctx -> do
       validateHdrs userInfo (_socHeaders ctx)
       QRFConnection <$> RS.convertConnectionSelect pk ctx fld
@@ -171,10 +174,13 @@ mutFldToTx
      , Has HTTP.Manager r
      , Has [HTTP.Header] r
      , MonadIO m
+     , MonadIO tx
+     , MonadTx tx
      )
-  => V.Field
-  -> m (RespTx, HTTP.ResponseHeaders)
-mutFldToTx fld = do
+  => Env.Environment
+  -> V.Field
+  -> m (tx EncJSON, HTTP.ResponseHeaders)
+mutFldToTx env fld = do
   userInfo <- asks getter
   reqHeaders <- asks getter
   httpManager <- asks getter
@@ -185,24 +191,24 @@ mutFldToTx fld = do
   case opCtx of
     MCInsert ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsert rjCtx roleName (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsert env rjCtx roleName (_iocTable ctx) fld
     MCInsertOne ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsertOne rjCtx roleName (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsertOne env rjCtx roleName (_iocTable ctx) fld
     MCUpdate ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
-      noRespHeaders $ RM.convertUpdate ctx rjCtx fld
+      noRespHeaders $ RM.convertUpdate env ctx rjCtx fld
     MCUpdateByPk ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
-      noRespHeaders $ RM.convertUpdateByPk ctx rjCtx fld
+      noRespHeaders $ RM.convertUpdateByPk env ctx rjCtx fld
     MCDelete ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
-      noRespHeaders $ RM.convertDelete ctx rjCtx fld
+      noRespHeaders $ RM.convertDelete env ctx rjCtx fld
     MCDeleteByPk ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
-      noRespHeaders $ RM.convertDeleteByPk ctx rjCtx fld
+      noRespHeaders $ RM.convertDeleteByPk env ctx rjCtx fld
     MCAction ctx ->
-      RA.resolveActionMutation fld ctx userInfo
+      RA.resolveActionMutation env fld ctx userInfo
 
 getOpCtx
   :: ( MonadReusability m

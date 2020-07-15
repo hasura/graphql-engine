@@ -19,6 +19,7 @@ import           Hasura.Server.Version    (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
 
+import qualified Data.Environment         as Env
 import qualified Database.PG.Query        as Q
 import qualified Hasura.SQL.DML           as S
 
@@ -252,12 +253,16 @@ convInsQ =
   binRHSBuilder
 
 execInsertQuery
-  :: (HasVersion, MonadTx m, MonadIO m)
-  => Bool
+  :: ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     )
+  => Env.Environment
+  -> Bool
   -> Maybe MutationRemoteJoinCtx
   -> (InsertQueryP1, DS.Seq Q.PrepArg) -> m EncJSON
-execInsertQuery strfyNum remoteJoinCtx (u, p) =
-  runMutation $ mkMutation remoteJoinCtx (iqp1Table u) (insertCTE, p)
+execInsertQuery env strfyNum remoteJoinCtx (u, p) =
+  runMutation env $ mkMutation remoteJoinCtx (iqp1Table u) (insertCTE, p)
                 (iqp1Output u) (iqp1AllCols u) strfyNum
   where
     insertCTE = mkInsertCTE u
@@ -339,8 +344,8 @@ runInsert
   :: ( HasVersion, QErrM m, UserInfoM m
      , CacheRM m, MonadTx m, HasSQLGenCtx m, MonadIO m
      )
-  => InsertQuery -> m EncJSON
-runInsert q = do
+  => Env.Environment -> InsertQuery -> m EncJSON
+runInsert env q = do
   res <- convInsQ q
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  execInsertQuery strfyNum Nothing res
+  execInsertQuery env strfyNum Nothing res
