@@ -7,7 +7,7 @@ import           Hasura.Prelude
 import qualified Data.Aeson                            as J
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
-import qualified Data.HashSet                          as S
+import qualified Data.HashSet                          as Set
 import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Control.Lens.Extended
@@ -36,11 +36,6 @@ import           Hasura.SQL.Types
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
 
--- TODO So far, we're *always* generating a query_root, mutation_root and
--- subscription_root.  But is this valid?  We may end up generating objects with
--- 0 (exposed) fields.  Perhaps we should be a bit more careful.  I suppose
--- `query` always exists because `__typename` is exposed... right?
-
 buildGQLContext
   :: forall m
    . ( MonadIO m -- see Note [SchemaT requires MonadIO] in Hasura.GraphQL.Parser.Monad
@@ -55,13 +50,13 @@ buildGQLContext
   -> NonObjectTypeMap
   -> m (HashMap RoleName (RoleContext GQLContext), GQLContext)
 buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions nonObjectCustomTypes = do
-  roleContexts <- (S.toMap allRoles & Map.traverseWithKey \roleName () ->
+  roleContexts <- (Set.toMap allRoles & Map.traverseWithKey \roleName () ->
                       buildContextForRole roleName)
   unauthenticated <- unauthenticatedContext
   return (roleContexts, unauthenticated)
   where
     allRoles :: HashSet RoleName
-    allRoles = S.insert adminRoleName $
+    allRoles = Set.insert adminRoleName $
       (allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded)
       <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
 
@@ -76,7 +71,19 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions non
          ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
          , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
          , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]))
-    allRemoteParsers = P.runSchemaT $ traverse (buildRemoteParser . fst) allRemoteSchemas
+    allRemoteParsers =
+      case queryType of
+        QueryRelay -> return mempty
+        QueryHasura -> do
+          rems <- P.runSchemaT $ traverse (buildRemoteParser . fst) allRemoteSchemas
+          let (queryFields, mutationFields, subscriptionFields) = unzip3 $ Map.elems rems
+              allQueryFields = concat queryFields
+              allMutationFields = concat $ catMaybes mutationFields
+              allSubscriptionFields = concat $ catMaybes subscriptionFields
+          checkFieldNamesUnique allQueryFields (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
+          checkFieldNamesUnique allMutationFields (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
+          checkFieldNamesUnique allSubscriptionFields (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
+          return rems
 
     unauthenticatedContext :: m GQLContext
     unauthenticatedContext = do
@@ -98,10 +105,10 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions non
     mutationRemotes remotes = concat $ fmap concat $ map (\(_,m,_)->m) $ Map.elems remotes
     allActionInfos = Map.elems allActions
     queryHasuraOrRelay remotes = case queryType of
-      QueryHasura -> queryWithIntrospection (S.fromList $ Map.keys validTables)
+      QueryHasura -> queryWithIntrospection (Set.fromList $ Map.keys validTables)
                      validFunctions (queryRemotes remotes) (mutationRemotes remotes)
                      allActionInfos nonObjectCustomTypes
-      QueryRelay  -> relayWithIntrospection (S.fromList $ Map.keys validTables) validFunctions
+      QueryRelay  -> relayWithIntrospection (Set.fromList $ Map.keys validTables) validFunctions
 
     buildContextForRole :: RoleName -> m (RoleContext GQLContext)
     buildContextForRole roleName = do
@@ -115,7 +122,7 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions non
       remotes <- allRemoteParsers
       let gqlContext = GQLContext
             <$> (finalizeParser <$> queryHasuraOrRelay remotes)
-            <*> (fmap (fmap finalizeParser) $ mutation (S.fromList $ Map.keys validTables) (mutationRemotes remotes)
+            <*> (fmap (fmap finalizeParser) $ mutation (Set.fromList $ Map.keys validTables) (mutationRemotes remotes)
                  allActionInfos nonObjectCustomTypes)
       flip runReaderT (roleName, validTables, scenario, QueryContext stringifyNum queryType (queryRemotesMap remotes)) $
         P.runSchemaT gqlContext
@@ -508,3 +515,22 @@ unauthenticatedSubscription
 unauthenticatedSubscription =
  P.selectionSet $$(G.litName "subscription_root") Nothing []
  <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
+
+checkFieldNamesUnique
+  :: forall m n a
+   . ( Monad m
+     )
+  => [P.FieldParser n a]
+  -- ^ list of fields whose names are to be checked for uniqueness
+  -> (G.Name -> m ())
+  -- ^ error action
+  -> m ()
+checkFieldNamesUnique fields err = do
+  foldM_ go mempty fields
+  where
+    go :: Set.HashSet G.Name -> P.FieldParser n a -> m (Set.HashSet G.Name)
+    go previous field = do
+      let name = P.getName $ fDefinition field
+      when (name `Set.member` previous) $
+        err name
+      return $ name `Set.insert` previous

@@ -36,11 +36,13 @@ import qualified Hasura.Incremental                       as Inc
 -- import qualified Language.GraphQL.Draft.Syntax            as G
 
 import           Hasura.Db
+import           Hasura.Session
 -- import           Hasura.GraphQL.RemoteServer
 -- import           Hasura.GraphQL.Schema.CustomTypes
 -- import           Hasura.GraphQL.Utils                     (showNames)
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
+import           Hasura.GraphQL.Context
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
@@ -168,32 +170,24 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     resolveDependencies -< (outputs, unresolvedDependencies)
 
   -- Step 3: Build the GraphQL schema.
-  gqlContext <- bindA -< buildGQLContext
-    QueryHasura
-    (_boTables    resolvedOutputs)
-    (_boFunctions resolvedOutputs)
-    (_boRemoteSchemas resolvedOutputs)
-    (_boActions resolvedOutputs)
-    (_actNonObjects $ _boCustomTypes resolvedOutputs)
-  relayContext <- bindA -< buildGQLContext
-    QueryRelay
-    (_boTables    resolvedOutputs)
-    (_boFunctions resolvedOutputs)
-    (_boRemoteSchemas resolvedOutputs)
-    (_boActions resolvedOutputs)
-    (_actNonObjects $ _boCustomTypes resolvedOutputs)
-  -- (remoteSchemaMap, gqlSchema, remoteGQLSchema)
-  --   <- _buildGQLSchema -< ( _boTables resolvedOutputs
-  --                                   , _boFunctions resolvedOutputs
-  --                                   , _boRemoteSchemas resolvedOutputs
-  --                                   , _boCustomTypes resolvedOutputs
-  --                                   , _boActions resolvedOutputs
-  --                                   )
-
-
+  (gqlContext, gqlSchemaInconsistentObjects) <- runWriterA buildGQLSchema -<
+    ( QueryHasura
+    , (_boTables    resolvedOutputs)
+    , (_boFunctions resolvedOutputs)
+    , (_boRemoteSchemas resolvedOutputs)
+    , (_boActions resolvedOutputs)
+    , (_actNonObjects $ _boCustomTypes resolvedOutputs)
+    )
 
   -- Step 4: Build the relay GraphQL schema
-  -- relayGQLSchema <- bindA -< Relay.mkRelayGCtxMap (_boTables resolvedOutputs) (_boFunctions resolvedOutputs)
+  (relayContext, relaySchemaInconsistentObjects) <- runWriterA buildGQLSchema -<
+    ( QueryRelay
+    , (_boTables    resolvedOutputs)
+    , (_boFunctions resolvedOutputs)
+    , (_boRemoteSchemas resolvedOutputs)
+    , (_boActions resolvedOutputs)
+    , (_actNonObjects $ _boCustomTypes resolvedOutputs)
+    )
 
   returnA -< SchemaCache
     { scTables = _boTables resolvedOutputs
@@ -213,7 +207,10 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     , scDepMap = resolvedDependencies
     , scCronTriggers = _boCronTriggers resolvedOutputs
     , scInconsistentObjs =
-        inconsistentObjects <> dependencyInconsistentObjects -- <> toList gqlSchemaInconsistentObjects
+           inconsistentObjects
+        <> dependencyInconsistentObjects
+        <> toList gqlSchemaInconsistentObjects
+        <> toList relaySchemaInconsistentObjects
     }
   where
     buildAndCollectInfo
@@ -451,37 +448,30 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
              |) addCronTriggerContext)
            |) (mkCronTriggerMetadataObject cronTrigger)
 
-    -- -- Builds the GraphQL schema and merges in remote schemas. This function is kind of gross, as
-    -- -- it’s possible for the remote schema merging to fail, at which point we have to mark them
-    -- -- inconsistent. This means we have to accumulate the consistent remote schemas as we go, in
-    -- -- addition to the built GraphQL context.
-    -- buildGQLSchema
-    --   :: ( ArrowChoice arr, ArrowWriter (Seq InconsistentMetadata) arr, ArrowKleisli m arr
-    --      , MonadError QErr m )
-    --   => ( TableCache
-    --      , FunctionCache
-    --      , HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
-    --      , (NonObjectTypeMap, AnnotatedObjects)
-    --      , ActionCache
-    --      ) `arr` (RemoteSchemaMap, GS.GCtxMap, GS.GCtx)
-    -- buildGQLSchema = proc (tableCache, functionCache, remoteSchemas, customTypes, actionCache) -> do
-    --   baseGQLSchema <- bindA -< GS.mkGCtxMap tableCache functionCache actionCache
-    --   (| foldlA' (\(remoteSchemaMap, gqlSchemas, remoteGQLSchemas)
-    --                (remoteSchemaName, (remoteSchema, metadataObject)) ->
-    --        (| withRecordInconsistency (do
-    --             let gqlSchema = convRemoteGCtx $ rscGCtx remoteSchema
-    --             mergedGQLSchemas <- bindErrorA -< mergeRemoteSchema gqlSchemas gqlSchema
-    --             mergedRemoteGQLSchemas <- bindErrorA -< mergeGCtx remoteGQLSchemas gqlSchema
-    --             let mergedRemoteSchemaMap = M.insert remoteSchemaName remoteSchema remoteSchemaMap
-    --             returnA -< (mergedRemoteSchemaMap, mergedGQLSchemas, mergedRemoteGQLSchemas))
-    --        |) metadataObject
-    --        >-> (| onNothingA ((remoteSchemaMap, gqlSchemas, remoteGQLSchemas) >- returnA) |))
-    --    |) (M.empty, baseGQLSchema, GC.emptyGCtx) (M.toList remoteSchemas)
-    --    -- merge the custom types into schema
-    --    >-> (\(remoteSchemaMap, gqlSchema, defGqlCtx) -> do
-    --            (schemaWithCT, defCtxWithCT) <- bindA -< mergeCustomTypes gqlSchema defGqlCtx customTypes
-    --            returnA -< (remoteSchemaMap, schemaWithCT, defCtxWithCT)
-    --        )
+    buildGQLSchema
+      :: ( ArrowChoice arr, ArrowWriter (Seq InconsistentMetadata) arr, ArrowKleisli m arr
+         , MonadError QErr m, MonadIO m, MonadUnique m, HasSQLGenCtx m )
+      => ( GraphQLQueryType
+         , TableCache
+         , FunctionCache
+         , HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
+         , ActionCache
+         , NonObjectTypeMap
+         ) `arr` (HashMap RoleName (RoleContext GQLContext) , GQLContext)
+    buildGQLSchema = proc (queryType, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
+      baseGQLSchema <- bindA -< buildGQLContext queryType allTables allFunctions mempty allActions nonObjectCustomTypes
+
+      fullGQLSchema <- withRecordInconsistency (proc ((queryType, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes), _) -> do
+        bindErrorA -< buildGQLContext
+                          queryType
+                          allTables
+                          allFunctions
+                          allRemoteSchemas
+                          allActions
+                          nonObjectCustomTypes
+        ) -< ((queryType, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes), (snd $ head $ M.elems allRemoteSchemas , ())) -- TODO this is not passing the right MetadataObject
+
+      returnA -< fromMaybe baseGQLSchema fullGQLSchema
 
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and
