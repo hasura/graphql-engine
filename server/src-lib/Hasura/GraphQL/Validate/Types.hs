@@ -107,6 +107,7 @@ import qualified Language.Haskell.TH.Syntax    as TH
 import           Control.Lens                  (makePrisms)
 
 import qualified Hasura.RQL.Types.Column       as RQL
+import qualified Hasura.Tracing                as Tracing
 
 import           Hasura.GraphQL.NormalForm
 import           Hasura.GraphQL.Utils
@@ -794,12 +795,18 @@ instance (MonadReusability m) => MonadReusability (StateT s m) where
   markNotReusable = lift markNotReusable
 
 newtype ReusabilityT m a = ReusabilityT { unReusabilityT :: StateT QueryReusability m a }
-  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r, MonadIO)
+  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r, MonadIO, MonadTrans)
 
 instance (Monad m) => MonadReusability (ReusabilityT m) where
   recordVariableUse varName varType = ReusabilityT $
     modify' (<> Reusable (ReusableVariableTypes $ Map.singleton varName varType))
   markNotReusable = ReusabilityT $ put NotReusable
+
+instance Tracing.MonadTrace m => Tracing.MonadTrace (ReusabilityT m) where
+  trace name (ReusabilityT ma) = ReusabilityT (Tracing.trace name ma)
+  currentContext = lift Tracing.currentContext
+  currentReporter = lift Tracing.currentReporter
+  attachMetadata = lift . Tracing.attachMetadata
 
 runReusabilityT :: ReusabilityT m a -> m (a, QueryReusability)
 runReusabilityT = runReusabilityTWith mempty

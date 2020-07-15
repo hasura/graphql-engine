@@ -12,6 +12,8 @@ import           Data.Aeson
 import           Instances.TH.Lift        ()
 
 import qualified Data.Sequence            as DS
+import qualified Data.Environment         as Env
+import qualified Hasura.Tracing           as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -114,13 +116,19 @@ validateDeleteQ =
   runDMLP1T . validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder
 
 execDeleteQuery
-  :: (HasVersion, MonadTx m, MonadIO m)
-  => Bool
+  ::
+  ( HasVersion
+  , MonadTx m
+  , MonadIO m
+  , Tracing.MonadTrace m
+  )
+  => Env.Environment
+  -> Bool
   -> Maybe MutationRemoteJoinCtx
   -> (AnnDel, DS.Seq Q.PrepArg)
   -> m EncJSON
-execDeleteQuery strfyNum remoteJoinCtx (u, p) =
-  runMutation $ mkMutation remoteJoinCtx (dqp1Table u) (deleteCTE, p)
+execDeleteQuery env strfyNum remoteJoinCtx (u, p) =
+  runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (deleteCTE, p)
                 (dqp1Output u) (dqp1AllCols u) strfyNum
   where
     deleteCTE = mkDeleteCTE u
@@ -128,8 +136,11 @@ execDeleteQuery strfyNum remoteJoinCtx (u, p) =
 runDelete
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
      , MonadTx m, HasSQLGenCtx m, MonadIO m
+     , Tracing.MonadTrace m
      )
-  => DeleteQuery -> m EncJSON
-runDelete q = do
+  => Env.Environment
+  -> DeleteQuery
+  -> m EncJSON
+runDelete env q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateDeleteQ q >>= execDeleteQuery strfyNum Nothing
+  validateDeleteQ q >>= execDeleteQuery env strfyNum Nothing

@@ -62,6 +62,7 @@ import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
+import qualified Data.Environment              as Env
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
@@ -302,8 +303,8 @@ instance FromJSON InputWebhook where
       Left e  -> fail $ "Parsing URL template failed: " ++ e
       Right v -> pure $ InputWebhook v
 
-resolveWebhook :: (QErrM m,MonadIO m) => InputWebhook -> m ResolvedWebhook
-resolveWebhook (InputWebhook urlTemplate) = do
-  eitherRenderedTemplate <- renderURLTemplate urlTemplate
+resolveWebhook :: QErrM m => Env.Environment -> InputWebhook -> m ResolvedWebhook
+resolveWebhook env (InputWebhook urlTemplate) = do
+  let eitherRenderedTemplate = renderURLTemplate env urlTemplate
   either (throw400 Unexpected . T.pack)
     (pure . ResolvedWebhook) eitherRenderedTemplate

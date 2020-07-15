@@ -31,8 +31,8 @@ Let's say we have the following two tables in our schema:
 
 Now we want to set up migrations starting with this schema.
 
-Step 0: Disable the console on the server
------------------------------------------
+Before you begin
+----------------
 
 To use migrations effectively, the console on the server (which is served at
 ``/console``) should be disabled and all changes must go through the console
@@ -71,7 +71,7 @@ Let's set up a project directory by executing the following command:
 
 .. code-block:: bash
 
-  hasura init --directory my-project --endpoint http://my-graphql.herokuapp.com
+  hasura init my-project --endpoint http://my-graphql.herokuapp.com
 
   cd my-project
 

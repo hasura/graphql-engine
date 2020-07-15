@@ -31,6 +31,7 @@ import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.Extended                    as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.ByteString                        as B
+import qualified Data.Environment                       as E
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Text                              as T
@@ -50,6 +51,7 @@ import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.SQL.DML                         as S
+import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Db
 import           Hasura.GraphQL.Resolve.Action
@@ -276,21 +278,23 @@ buildLiveQueryPlan
      , Has QueryCtxMap r
      , Has SQLGenCtx r
      , MonadIO m
+     , Tracing.MonadTrace m
      , HasVersion
      )
-  => PGExecCtx
+  => E.Environment
+  -> PGExecCtx
   -> QueryReusability
   -> QueryActionExecuter
   -> ObjectSelectionSet
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
-buildLiveQueryPlan pgExecCtx initialReusability actionExecuter selectionSet = do
+buildLiveQueryPlan env pgExecCtx initialReusability actionExecuter selectionSet = do
   ((resolvedASTMap, (queryVariableValues, syntheticVariableValues)), finalReusability) <-
     runReusabilityTWith initialReusability $
       flip runStateT mempty $ flip OMap.traverseWithKey (unAliasedFields $ unObjectSelectionSet selectionSet) $
       \_ field -> case GV._fName field of
         "__typename" -> throwVE "you cannot create a subscription on '__typename' field"
         _ -> do
-          unresolvedAST <- GR.queryFldToPGAST field actionExecuter
+          unresolvedAST <- GR.queryFldToPGAST env field actionExecuter
           resolvedAST <- GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
 
           let (_, remoteJoins) = GR.toPGQuery resolvedAST
