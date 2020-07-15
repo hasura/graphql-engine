@@ -43,11 +43,10 @@ For example,
 Upgrade steps
 -------------
 
-Step 0: Take a backup
-^^^^^^^^^^^^^^^^^^^^^
+Before you begin
+^^^^^^^^^^^^^^^^
 
-It is recommended that you take a backup of your Hasura project before attempting
-to upgrade to ``config v2``
+Make sure you take a backup of your Hasura project before upgrading to ``config v2``.
 
 Step 1: Upgrade to the latest CLI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
