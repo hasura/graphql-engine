@@ -52,9 +52,15 @@ Configuration
 By default, Hasura GraphQL engine runs in a very permissive mode for easier development. Check out the below pages
 to configure the Hasura GraphQL engine for your production environment:
 
-- :ref:`securing_graphql_endpoint`
-- :ref:`postgres_permissions`
 - :ref:`GraphQL engine server configuration <hge_flags>`
+- :ref:`Postgres requirements <postgres_permissions>`
+- :ref:`Securing the GraphQL endpoint <securing_graphql_endpoint>`
+- :ref:`Enable HTTPS <enable_https>`
+- :ref:`Allow-list of operations <allow_list>`
+- :ref:`HTTP compression <http_compression>`
+- :ref:`Updating GraphQL engine <update_hge>`
+- :ref:`Downgrading GraphQL engine <downgrade_hge>`
+
 
 Logs
 ----
@@ -63,6 +69,19 @@ For access to Hasura GraphQL engine logs, check the below page for details:
 
 - :ref:`Logging <hge_logs>`
 
+Production checklist
+--------------------
+
+If you're moving your Hasura GraphQL engine to production, consult the following guide:
+
+- :ref:`Production checklist <production_checklist>`
+
+Custom Docker images or binaries
+--------------------------------
+
+If you need a custom Docker image or binary, check out the following guide:
+
+- :ref:`Custom Docker images or binaries <custom_docker_image>`
 
 .. toctree::
    :maxdepth: 1
