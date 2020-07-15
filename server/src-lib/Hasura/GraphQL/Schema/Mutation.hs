@@ -8,7 +8,7 @@ module Hasura.GraphQL.Schema.Mutation
   , deleteFromTable
   , deleteFromTableByPk
   -- FIXME: move somewhere else
-  , traverseAnnInsert
+  , fmapAnnInsert
   , convertToSQLTransaction
   , buildEmptyMutResp
   ) where
@@ -22,7 +22,6 @@ import qualified Data.HashMap.Strict            as Map
 import qualified Data.HashMap.Strict.InsOrd     as OMap
 import qualified Data.HashSet                   as Set
 import qualified Data.List                      as L
-import qualified Data.List.NonEmpty             as NE
 import qualified Data.Sequence                  as Seq
 import qualified Data.Text                      as T
 import qualified Database.PG.Query              as Q
@@ -156,9 +155,10 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
           pure $ P.fieldOptional relFieldName Nothing parser `mapField`
             \objRelIns -> AnnInsObj [] [RelIns objRelIns relationshipInfo] []
         ArrRel -> do
-          parser <- arrayRelationshipInput otherTable insPerms selPerms updPerms
-          pure $ P.fieldOptional relFieldName Nothing parser `mapField`
-            \arrRelIns -> AnnInsObj [] [] [RelIns arrRelIns relationshipInfo | not $ null $ _aiInsObj arrRelIns]
+          parser <- P.nullable <$> arrayRelationshipInput otherTable insPerms selPerms updPerms
+          pure $ P.fieldOptional relFieldName Nothing parser <&> \arrRelIns -> do
+            rel <- join arrRelIns
+            Just $ AnnInsObj [] [] [RelIns rel relationshipInfo | not $ null $ _aiInsObj rel]
   let objectName = tableName <> $$(G.litName "_insert_input")
       objectDesc = G.Description $ "input type for inserting data into table \"" <> G.unName tableName <> "\""
   pure $ P.object objectName (Just objectDesc) $ catMaybes <$> sequenceA objectFields
@@ -188,7 +188,7 @@ objectRelationshipInput table insertPerms selectPerms updatePerms =
           conflictParser
         object <- P.field objectName Nothing objectParser
         pure $ mkInsertObject object table columns conflictClause insertPerms updatePerms
-  pure $ P.object inputName (Just inputDesc) inputParser <&> undefined
+  pure $ P.object inputName (Just inputDesc) inputParser
 
 arrayRelationshipInput
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
@@ -551,39 +551,34 @@ third f (a,b,c) = (a,b,f c)
 -- - is some of this code dead or unused? are there paths never taken?
 --   can it be simplified?
 
-traverseAnnInsert
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnMultiInsert a
-  -> f (AnnMultiInsert b)
-traverseAnnInsert f (annIns, mutationOutput) =
-  (,) <$> traverseMulti annIns
-      <*> RQL.traverseMutationOutput f mutationOutput
+fmapAnnInsert :: (a -> b) -> AnnMultiInsert a -> AnnMultiInsert b
+fmapAnnInsert f (annIns, mutationOutput) =
+  ( fmapMulti annIns
+  , runIdentity $ RQL.traverseMutationOutput (pure . f) mutationOutput
+  )
   where
-    traverseMulti (AnnIns objs table conflictClause (insertCheck, updateCheck) columns defaultValues) =
-      AnnIns <$> traverse traverseObject objs
-             <*> pure table
-             <*> traverse (traverse f) conflictClause
-             <*> ( (,) <$> traverseAnnBoolExp f insertCheck
-                       <*> traverse (traverseAnnBoolExp f) updateCheck
-                 )
-             <*> pure columns
-             <*> traverse f defaultValues
-    traverseSingle (AnnIns obj table conflictClause (insertCheck, updateCheck) columns defaultValues) =
-      AnnIns <$> traverseObject obj
-             <*> pure table
-             <*> traverse (traverse f) conflictClause
-             <*> ( (,) <$> traverseAnnBoolExp f insertCheck
-                       <*> traverse (traverseAnnBoolExp f) updateCheck
-                 )
-             <*> pure columns
-             <*> traverse f defaultValues
-    traverseObject (AnnInsObj columns objRels arrRels) =
-      AnnInsObj <$> traverse (traverse f) columns
-                <*> traverse (traverseRel traverseSingle) objRels
-                <*> traverse (traverseRel traverseMulti)  arrRels
-    traverseRel t (RelIns object relInfo) =
-      RelIns <$> t object <*> pure relInfo
+    fmapMulti (AnnIns objs table conflictClause (insertCheck, updateCheck) columns defaultValues) =
+      AnnIns
+        (fmap fmapObject objs)
+        table
+        (fmap (fmap f) conflictClause)
+        (fmapAnnBoolExp f insertCheck, fmap (fmapAnnBoolExp f) updateCheck)
+        columns
+        (fmap f defaultValues)
+    fmapSingle (AnnIns obj table conflictClause (insertCheck, updateCheck) columns defaultValues) =
+      AnnIns
+        (fmapObject obj)
+        table
+        (fmap (fmap f) conflictClause)
+        (fmapAnnBoolExp f insertCheck, fmap (fmapAnnBoolExp f) updateCheck)
+        columns
+        (fmap f defaultValues)
+    fmapObject (AnnInsObj columns objRels arrRels) =
+      AnnInsObj
+        (fmap (fmap f) columns)
+        (fmap (fmapRel fmapSingle) objRels)
+        (fmap (fmapRel fmapMulti)  arrRels)
+    fmapRel t (RelIns object relInfo) = RelIns (t object) relInfo
 
 
 convertToSQLTransaction
