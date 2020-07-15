@@ -76,12 +76,6 @@ If you're moving your Hasura GraphQL engine to production, consult the following
 
 - :ref:`Production checklist <production_checklist>`
 
-Custom Docker images or binaries
---------------------------------
-
-If you need a custom Docker image or binary, check out the following guide:
-
-- :ref:`Custom Docker images or binaries <custom_docker_image>`
 
 .. toctree::
    :maxdepth: 1
