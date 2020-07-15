@@ -80,7 +80,7 @@ module Hasura.RQL.Types.Table
 
 -- import qualified Hasura.GraphQL.Context            as GC
 
-import           Hasura.Incremental             (Cacheable)
+import           Hasura.Incremental                  (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
@@ -90,20 +90,21 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
-import           Hasura.Server.Utils            (duplicates, englishList)
-import           Hasura.SQL.Types
+import           Hasura.Server.Utils                 (duplicates, englishList)
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax     (Lift)
+import           Language.Haskell.TH.Syntax          (Lift)
 
-import qualified Data.HashMap.Strict            as M
-import qualified Data.HashSet                   as HS
-import qualified Data.Text                      as T
-import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashSet                        as HS
+import qualified Data.List.NonEmpty                  as NE
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 data TableCustomRootFields
   = TableCustomRootFields
@@ -418,8 +419,8 @@ type TableRawInfo = TableCoreInfoG PGColumnInfo PGColumnInfo
 -- | Fully-processed table info that includes non-column fields.
 type TableCoreInfo = TableCoreInfoG FieldInfo PGColumnInfo
 
-tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG a b -> [Constraint]
-tciUniqueOrPrimaryKeyConstraints info =
+tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG a b -> Maybe (NonEmpty Constraint)
+tciUniqueOrPrimaryKeyConstraints info = NE.nonEmpty $
   maybeToList (_pkConstraint <$> _tciPrimaryKey info) <> toList (_tciUniqueConstraints info)
 
 data TableInfo

@@ -529,7 +529,7 @@ fieldOptional name description parser = InputFieldsParser
   { ifDefinitions = [mkDefinition name description $
       IFOptional (discardNullability $ pType parser) Nothing]
   , ifParser = M.lookup name >>> withPath (++[Key (unName name)])
-      . fmap join . traverse (pInputParser $ nullable parser)
+      . traverse (pInputParser parser)
   }
 
 -- | A variant of 'selectionSetObject' which doesn't implement any interfaces

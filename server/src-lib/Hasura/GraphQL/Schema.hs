@@ -61,7 +61,9 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions non
   return (roleContexts, unauthenticated)
   where
     allRoles :: HashSet RoleName
-    allRoles = S.insert adminRoleName $ allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded
+    allRoles = S.insert adminRoleName $
+      (allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded)
+      <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
 
     tableFilter    = not . isSystemDefined . _tciSystemDefined
     functionFilter = not . isSystemDefined . fiSystemDefined
@@ -173,8 +175,7 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
       ActionMutation (ActionAsynchronous) ->
         fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
       ActionQuery ->
-        fmap (fmap (RFAction . AQQuery)) <$>
-        actionExecute nonObjectCustomTypes actionInfo
+        fmap (fmap (RFAction . AQQuery)) <$> actionExecute nonObjectCustomTypes actionInfo
   pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers <> conv allRemotes)
          <> catMaybes actionParsers
   where
@@ -477,11 +478,9 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
       ActionMutation (ActionSynchronous) ->
-        fmap (fmap (RFAction . AMSync)) <$>
-        actionExecute nonObjectCustomTypes actionInfo
+        fmap (fmap (RFAction . AMSync)) <$> actionExecute nonObjectCustomTypes actionInfo
       ActionMutation (ActionAsynchronous) ->
-        fmap (fmap (RFAction . AMAsync)) <$>
-        actionAsyncMutation nonObjectCustomTypes actionInfo
+        fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
       ActionQuery -> pure Nothing
 
   let mutationFieldsParser = concat (catMaybes mutationParsers) <> catMaybes actionParsers <> (fmap (fmap RFRemote)) allRemotes

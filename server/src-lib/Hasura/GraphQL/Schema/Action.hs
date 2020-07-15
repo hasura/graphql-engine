@@ -36,7 +36,7 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
   let fieldName = unActionName actionName
       description = G.Description <$> comment
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
-  selectionSet <- actionOutputFields outputObject
+  selectionSet <- lift $ actionOutputFields outputObject
   stringifyNum <- asks $ qcStringifyNum . getter
   pure $ P.subselection fieldName description inputArguments selectionSet
          <&> \(argsJson, fields) -> AnnActionExecution
@@ -79,7 +79,7 @@ actionAsyncQuery actionInfo = runMaybeT do
   roleName <- lift askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   actionId <- lift actionIdParser
-  actionOutputParser <- actionOutputFields outputObject
+  actionOutputParser <- lift $ actionOutputFields outputObject
   createdAtFieldParser <-
     lift $ P.column (PGColumnScalar PGTimeStampTZ) (G.Nullability False)
   errorsFieldParser <-
@@ -132,12 +132,12 @@ actionIdParser =
 actionOutputFields
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => AnnotatedObjectType
-  -> MaybeT m (Parser 'Output n (RQL.AnnFieldsG UnpreparedValue))
+  -> m (Parser 'Output n (RQL.AnnFieldsG UnpreparedValue))
 actionOutputFields outputObject = do
   let scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
   relationshipFields <- forM (_otdRelationships outputObject) $ traverse relationshipFieldParser
   let allFieldParsers = scalarOrEnumFields <>
-                        maybe [] toList relationshipFields
+                        maybe [] (catMaybes . toList) relationshipFields
       outputTypeName = unObjectTypeName $ _otdName outputObject
       outputTypeDescription = _otdDescription outputObject
   pure $ P.selectionSet outputTypeName outputTypeDescription allFieldParsers
@@ -153,16 +153,16 @@ actionOutputFields outputObject = do
           pgColumnInfo = PGColumnInfo (unsafePGCol $ G.unName fieldName)
                          fieldName 0 (PGColumnScalar PGJSON) (G.isNullable gType) Nothing
           fieldParser = case objectFieldType of
-            AOFTScalar def -> customScalarParser def
-            AOFTEnum def   -> customEnumParser def
+            AOFTScalar def _ -> customScalarParser def
+            AOFTEnum def     -> customEnumParser def
       in bool P.nonNullableField id (G.isNullable gType) $
          P.selection_ (unObjectFieldName name) description fieldParser
          $> RQL.mkAnnColumnField pgColumnInfo Nothing
 
     relationshipFieldParser
       :: TypeRelationship TableInfo PGColumnInfo
-      -> MaybeT m (FieldParser n (RQL.AnnFieldG UnpreparedValue))
-    relationshipFieldParser typeRelationship = do
+      -> m (Maybe (FieldParser n (RQL.AnnFieldG UnpreparedValue)))
+    relationshipFieldParser typeRelationship = runMaybeT do
       let TypeRelationship relName relType tableInfo fieldMapping = typeRelationship
           tableName = _tciName $ _tiCoreInfo tableInfo
           fieldName = unRelationshipName relName
@@ -183,11 +183,12 @@ actionOutputFields outputObject = do
                         RQL.AnnRelationSelectG tableRelName columnMapping selectExp
 
 mkDefinitionList :: AnnotatedObjectType -> [(PGCol, PGScalarType)]
-mkDefinitionList annotatedOutputType =
-  [ (unsafePGCol $ G.unName k,  PGJSON) -- FIXME? - Use relationship mapping references
-  | k <- map (unObjectFieldName . _ofdName) $
-         toList $ _otdFields annotatedOutputType
-  ]
+mkDefinitionList =
+  map (
+    (unsafePGCol . G.unName . unObjectFieldName . _ofdName) &&&
+    (fieldTypeToScalarType . snd . _ofdType)
+  ) . toList . _otdFields
+
 
 -- This should into schema/action.hs
 actionInputArguments
@@ -215,35 +216,46 @@ actionInputArguments nonObjectTypeMap arguments = do
       -> G.GType
       -> NonObjectCustomType
       -> m (InputFieldsParser n (Maybe J.Value))
-    argumentParser name description gType nonObjectType =
-      case nonObjectType of
-        NOCTScalar def -> pure $ P.fieldOptional name description $ mkParserModifier gType $ customScalarParser def
-        NOCTEnum def -> pure $ P.fieldOptional name description $ mkParserModifier gType $ customEnumParser def
-        NOCTInputObject def -> do
-          let InputObjectTypeDefinition typeName objectDescription inputFields = def
-              objectName = unInputObjectTypeName typeName
-          inputFieldsParsers <- forM (toList inputFields) $ \inputField -> do
-            let InputObjectFieldName fieldName = _iofdName inputField
-                GraphQLType fieldType = _iofdType inputField
-            nonObjectFieldType <-
-              onNothing (Map.lookup (G.getBaseType fieldType) nonObjectTypeMap) $
-                throw500 "object type for a field found in custom input object type"
-            (fieldName,) <$> argumentParser fieldName (_iofdDescription inputField) fieldType nonObjectFieldType
+    argumentParser name description gType = \case
+      NOCTScalar def -> pure $ mkArgumentInputFieldParser name description gType $ customScalarParser def
+      NOCTEnum def -> pure $ mkArgumentInputFieldParser name description gType $ customEnumParser def
+      NOCTInputObject def -> do
+        let InputObjectTypeDefinition typeName objectDescription inputFields = def
+            objectName = unInputObjectTypeName typeName
+        inputFieldsParsers <- forM (toList inputFields) $ \inputField -> do
+          let InputObjectFieldName fieldName = _iofdName inputField
+              GraphQLType fieldType = _iofdType inputField
+          nonObjectFieldType <-
+            onNothing (Map.lookup (G.getBaseType fieldType) nonObjectTypeMap) $
+              throw500 "object type for a field found in custom input object type"
+          (fieldName,) <$> argumentParser fieldName (_iofdDescription inputField) fieldType nonObjectFieldType
 
-          pure $ P.fieldOptional name description $ mkParserModifier gType $
-                 P.object objectName objectDescription $
-                 J.Object <$> inputFieldsToObject inputFieldsParsers
+        pure $ mkArgumentInputFieldParser name description gType $
+               P.object objectName objectDescription $
+               J.Object <$> inputFieldsToObject inputFieldsParsers
 
-mkParserModifier
-  :: (MonadParse m, 'Input P.<: k)
-  => G.GType -> Parser k m J.Value -> Parser k m J.Value
-mkParserModifier = \case
-  G.TypeNamed nullable _    -> nullableModifier nullable
-  G.TypeList nullable gType ->
-    nullableModifier nullable . fmap J.toJSON . P.list . mkParserModifier gType
+mkArgumentInputFieldParser
+  :: forall m k. (MonadParse m, 'Input P.<: k)
+  => G.Name
+  -> Maybe G.Description
+  -> G.GType
+  -> Parser k m J.Value
+  -> InputFieldsParser m (Maybe J.Value)
+mkArgumentInputFieldParser name description gType parser =
+  if (G.isNullable gType) then P.fieldOptional name description modifiedParser
+  else Just <$> P.field name description modifiedParser
   where
-    nullableModifier =
-      bool (fmap J.toJSON) (fmap J.toJSON . P.nullable) . G.unNullability
+    modifiedParser = parserModifier gType parser
+
+    parserModifier
+      :: G.GType -> Parser k m J.Value -> Parser k m J.Value
+    parserModifier = \case
+      G.TypeNamed nullable _    -> nullableModifier nullable
+      G.TypeList nullable ty ->
+        nullableModifier nullable . fmap J.toJSON . P.list . parserModifier ty
+      where
+        nullableModifier =
+          bool (fmap J.toJSON) (fmap J.toJSON . P.nullable) . G.unNullability
 
 customScalarParser
   :: MonadParse m

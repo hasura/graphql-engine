@@ -26,9 +26,9 @@ import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
-import           Hasura.Server.Version    (HasVersion)
-import           Hasura.SQL.Types
+import           Hasura.Server.Version       (HasVersion)
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
@@ -138,7 +138,8 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
         \pgCol -> askPGType fieldInfoMap pgCol ""
 
     validateConstraint c = do
-      let tableConsNames = _cName <$> tciUniqueOrPrimaryKeyConstraints coreInfo
+      let tableConsNames = maybe [] toList $
+                           fmap _cName <$> tciUniqueOrPrimaryKeyConstraints coreInfo
       withPathK "constraint" $
        unless (c `elem` tableConsNames) $
        throw400 Unexpected $ "constraint " <> getConstraintTxt c

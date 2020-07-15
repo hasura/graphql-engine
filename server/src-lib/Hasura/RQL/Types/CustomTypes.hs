@@ -7,6 +7,7 @@ module Hasura.RQL.Types.CustomTypes
   , EnumValueDefinition(..)
   , EnumTypeDefinition(..)
   , ScalarTypeDefinition(..)
+  , defaultScalars
   , InputObjectFieldName(..)
   , InputObjectFieldDefinition(..)
   , InputObjectTypeName(..)
@@ -22,6 +23,7 @@ module Hasura.RQL.Types.CustomTypes
   , NonObjectCustomType(..)
   , NonObjectTypeMap
   , AnnotatedObjectFieldType(..)
+  , fieldTypeToScalarType
   , AnnotatedObjectType
   , AnnotatedObjects
   , AnnotatedCustomTypes(..)
@@ -161,6 +163,19 @@ instance Cacheable ScalarTypeDefinition
 instance Hashable ScalarTypeDefinition
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ScalarTypeDefinition)
 
+-- default scalar names
+intScalar, floatScalar, stringScalar, boolScalar, idScalar :: G.Name
+intScalar    = $$(G.litName "Int")
+floatScalar  = $$(G.litName "Float")
+stringScalar = $$(G.litName "String")
+boolScalar   = $$(G.litName "Boolean")
+idScalar     = $$(G.litName "ID")
+
+defaultScalars :: [ScalarTypeDefinition]
+defaultScalars =
+  map (flip ScalarTypeDefinition Nothing)
+  [intScalar, floatScalar, stringScalar, boolScalar, idScalar]
+
 newtype EnumTypeName
   = EnumTypeName { unEnumTypeName :: G.Name }
   deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, DQuote, Lift, Generic, NFData, Cacheable)
@@ -212,10 +227,22 @@ $(J.deriveJSON J.defaultOptions ''NonObjectCustomType)
 type NonObjectTypeMap = Map.HashMap G.Name NonObjectCustomType
 
 data AnnotatedObjectFieldType
-  = AOFTScalar !ScalarTypeDefinition
+  = AOFTScalar !ScalarTypeDefinition !(Maybe PGScalarType)
   | AOFTEnum !EnumTypeDefinition
   deriving (Show, Eq)
 $(J.deriveToJSON J.defaultOptions ''AnnotatedObjectFieldType)
+
+fieldTypeToScalarType :: AnnotatedObjectFieldType -> PGScalarType
+fieldTypeToScalarType = \case
+  AOFTScalar ScalarTypeDefinition{..} maybePgScalar ->
+    flip fromMaybe maybePgScalar $
+      if | _stdName == idScalar     -> PGText
+         | _stdName == intScalar    -> PGInteger
+         | _stdName == floatScalar  -> PGFloat
+         | _stdName == stringScalar -> PGText
+         | _stdName == boolScalar   -> PGBoolean
+         | otherwise                -> PGJSON
+  AOFTEnum _                        -> PGText
 
 type AnnotatedObjectType =
   ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) TableInfo PGColumnInfo

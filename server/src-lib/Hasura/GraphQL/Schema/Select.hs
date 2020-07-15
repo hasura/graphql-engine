@@ -289,9 +289,14 @@ tableSelectionSet
 tableSelectionSet table selectPermissions interfaceM = memoizeOn 'tableSelectionSet table do
   tableInfo <- _tiCoreInfo <$> askTableInfo table
   tableName <- qualifiedObjectToName table
+  queryType <- asks $ qcQueryType . getter
   let tableFields = Map.elems  $ _tciFieldInfoMap tableInfo
       tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableInfo
-  fieldParsers <- fmap concat $ for tableFields \fieldInfo ->
+      nodeIdFieldParser = case queryType of
+        ET.QueryHasura -> Nothing
+        ET.QueryRelay  -> tablePkeyColumns <&> \pkeyColumns ->
+          P.selection_ $$(G.litName "id") Nothing P.identifier $> RQL.AFNodeId table pkeyColumns
+  fieldParsers <- concat <$> for tableFields \fieldInfo ->
     fieldSelection table tablePkeyColumns fieldInfo selectPermissions
 
   -- We don't check *here* that the subselection set is non-empty,
@@ -303,7 +308,8 @@ tableSelectionSet table selectPermissions interfaceM = memoizeOn 'tableSelection
   -- for the construction of invalid queries.
 
   let description  = G.Description . getPGDescription <$> _tciDescription tableInfo
-  pure $ P.selectionSetObject tableName description fieldParsers (toList interfaceM)
+      allParsers = fieldParsers <> maybeToList nodeIdFieldParser
+  pure $ P.selectionSetObject tableName description allParsers (toList interfaceM)
     <&> parsedSelectionsToFields RQL.AFExpression
 
 tableConnectionSelectionSet
