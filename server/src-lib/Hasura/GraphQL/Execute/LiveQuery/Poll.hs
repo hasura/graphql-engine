@@ -29,6 +29,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   , newSubscriberId
   , SubscriberMetadata
   , mkSubscriberMetadata
+  , unSubscriberMetadata
   , SubscriberMap
   , OnChange
   , LGQResponse
