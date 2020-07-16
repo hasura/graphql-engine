@@ -282,7 +282,6 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadIO m
-     , HasVersion
      )
   => PGExecCtx
   -> UserInfo

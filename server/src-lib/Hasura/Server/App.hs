@@ -38,7 +38,7 @@ import           Web.Spock.Core                            ((<//>))
 
 import qualified Hasura.GraphQL.Execute                    as E
 import qualified Hasura.GraphQL.Execute.LiveQuery          as EL
--- import qualified Hasura.GraphQL.Explain                 as GE
+import qualified Hasura.GraphQL.Explain                    as GE
 import qualified Hasura.GraphQL.Transport.HTTP             as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
 import qualified Hasura.GraphQL.Transport.WebSocket        as WS
@@ -359,16 +359,15 @@ v1GQRelayHandler
   => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
 
--- gqlExplainHandler :: (HasVersion, MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
--- gqlExplainHandler query = do
---   onlyAdmin
---   scRef <- scCacheRef . hcServerCtx <$> ask
---   sc <- getSCFromRef scRef
---   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
---   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
---   enableAL <- scEnableAllowlist . hcServerCtx <$> ask
---   res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (restrictActionExecuter "query actions cannot be explained") query
---   return $ HttpResponse res []
+gqlExplainHandler :: (HasVersion, MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
+gqlExplainHandler query = do
+  onlyAdmin
+  scRef <- scCacheRef . hcServerCtx <$> ask
+  sc <- getSCFromRef scRef
+  pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
+  enableAL <- scEnableAllowlist . hcServerCtx <$> ask
+  res <- GE.explainGQLQuery pgExecCtx sc enableAL query
+  return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m) => PGD.PGDumpReqBody -> Handler m APIResp
 v1Alpha1PGDumpHandler b = do
@@ -612,9 +611,9 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     when enableMetadata $ do
 
-      -- Spock.post "v1/graphql/explain" gqlExplainAction
+      Spock.post "v1/graphql/explain" gqlExplainAction
 
-      -- Spock.post "v1alpha1/graphql/explain" gqlExplainAction
+      Spock.post "v1alpha1/graphql/explain" gqlExplainAction
 
       Spock.post "v1/query" $ spockAction encodeQErr id $
         mkPostHandler $ mkAPIRespHandler v1QueryHandler
@@ -681,9 +680,9 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     -- all graphql errors should be of type 200
     allMod200 qe = qe { qeStatus = HTTP.status200 }
 
-    -- gqlExplainAction =
-    --   spockAction encodeQErr id $ mkPostHandler $
-    --     mkAPIRespHandler gqlExplainHandler
+    gqlExplainAction =
+      spockAction encodeQErr id $ mkPostHandler $
+        mkAPIRespHandler gqlExplainHandler
 
     enableGraphQL = isGraphQLEnabled serverCtx
     enableMetadata = isMetadataEnabled serverCtx

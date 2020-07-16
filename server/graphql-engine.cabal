@@ -382,7 +382,7 @@ library
                      -- , Hasura.GraphQL.Validate.Context
                      -- , Hasura.GraphQL.Validate.Field
                      -- , Hasura.GraphQL.Validate.InputValue
-                     -- , Hasura.GraphQL.Explain
+                     , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.Inline
                      , Hasura.GraphQL.Execute.Plan

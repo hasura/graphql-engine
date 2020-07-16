@@ -6,6 +6,7 @@ module Hasura.GraphQL.Execute.Query
   , PreparedSql(..)
   , traverseQueryRootField -- for live query planning
   , irToRootFieldPlan
+  , parseGraphQLQuery
   ) where
 
 import qualified Data.Aeson                             as J
@@ -30,8 +31,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Resolve
-import           Hasura.GraphQL.Parser.Column
-import           Hasura.GraphQL.Parser.Monad
+import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Resolve.Action
 import           Hasura.Prelude
 import           Hasura.RQL.DML.RemoteJoin
@@ -190,6 +190,26 @@ traverseQueryRootField f =
       QDBAggregation s  -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
       QDBConnection s   -> QDBConnection  <$> DS.traverseConnectionSelect f s
 
+parseGraphQLQuery
+  :: MonadError QErr m
+  => GQLContext
+  -> [G.VariableDefinition]
+  -> Maybe (HashMap G.Name J.Value)
+  -> G.SelectionSet G.NoFragments G.Name
+  -> m ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
+       , QueryReusability
+       )
+parseGraphQLQuery gqlContext varDefs varValsM fields =
+  resolveVariables varDefs (fromMaybe Map.empty varValsM) fields
+  >>= (gqlQueryParser gqlContext >>> (`onLeft` reportParseErrors))
+  where
+    reportParseErrors errs = case NESeq.head errs of
+      -- TODO: Our error reporting machinery doesn’t currently support reporting
+      -- multiple errors at once, so we’re throwing away all but the first one
+      -- here. It would be nice to report all of them!
+      ParseError{ pePath, peMessage } ->
+        throwError (err400 ValidationFailed peMessage){ qePath = pePath }
+
 convertQuerySelSet
   :: forall m. (HasVersion, MonadError QErr m, MonadIO m)
   => GQLContext
@@ -205,9 +225,7 @@ convertQuerySelSet
        )
 convertQuerySelSet gqlContext userInfo manager reqHeaders fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
-  (unpreparedQueries, _reusability)
-    <-  resolveVariables varDefs (fromMaybe Map.empty varValsM) fields
-    >>= (gqlQueryParser gqlContext >>> (`onLeft` reportParseErrors))
+  (unpreparedQueries, _reusability) <- parseGraphQLQuery gqlContext varDefs varValsM fields
 
   -- Transform the RQL AST into a prepared SQL query
   queryPlans <- for unpreparedQueries \unpreparedQuery -> do
@@ -258,12 +276,6 @@ convertQuerySelSet gqlContext userInfo manager reqHeaders fields varDefs varVals
   pure (executionPlan, Nothing, unpreparedQueries) -- FIXME ReusableQueryPlan
   where
     usrVars = _uiSession userInfo
-    reportParseErrors errs = case NESeq.head errs of
-      -- TODO: Our error reporting machinery doesn’t currently support reporting
-      -- multiple errors at once, so we’re throwing away all but the first one
-      -- here. It would be nice to report all of them!
-      ParseError{ pePath, peMessage } ->
-        throwError (err400 ValidationFailed peMessage){ qePath = pePath }
 
     convertActionQuery
       :: ActionQuery UnpreparedValue -> StateT PlanningSt m ActionQueryPlan

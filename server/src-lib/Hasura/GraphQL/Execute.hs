@@ -3,7 +3,9 @@ module Hasura.GraphQL.Execute
   , ResolvedExecutionPlan(..)
   , ET.GraphQLQueryType(..)
   , getResolvedExecPlan
+  , getExecPlanPartial
   , execRemoteGQ
+  , validateSubscriptionRootField
   -- , getSubsOp
 
   , EP.PlanCache
@@ -189,6 +191,16 @@ data ResolvedExecutionPlan
   | SubscriptionExecutionPlan (EPr.ExecutionPlan EL.LiveQueryPlan Void Void)
   -- ^ live query execution; remote schemas and introspection not supported
 
+validateSubscriptionRootField
+  :: MonadError QErr m
+  => C.QueryRootField v -> m (C.SubscriptionRootField v)
+validateSubscriptionRootField = \case
+  C.RFDB x -> pure $ C.RFDB x
+  C.RFAction (C.AQAsync s) -> pure $ C.RFAction s
+  C.RFAction (C.AQQuery _) -> throw400 NotSupported "action queries are not supported over subscriptions"
+  C.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
+  C.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
+
 getResolvedExecPlan
   :: forall m . (HasVersion, MonadError QErr m, MonadIO m)
   => PGExecCtx
@@ -256,12 +268,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
           -- Parse as query to check correctness
           (_execPlan, _plan, unpreparedAST) <-
             EQ.convertQuerySelSet gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
-          validSubscriptionAST <- for unpreparedAST $ \case
-            C.RFDB x -> pure $ C.RFDB x
-            C.RFAction (C.AQAsync s) -> pure $ C.RFAction s
-            C.RFAction (C.AQQuery _) -> throw400 NotSupported "action queries are not supported over subscriptions"
-            C.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
-            C.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
+          validSubscriptionAST <- for unpreparedAST validateSubscriptionRootField
           -- TODO we should check that there's only one root field (unless the appropriate directive is set)
           (lqOp, plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
           -- getSubsOpM pgExecCtx userInfo inlinedSelSet
