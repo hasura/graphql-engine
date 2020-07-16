@@ -87,11 +87,8 @@ extensions = [
     "graphiql",
     "lexer_jsx",
     "lexer_graphql",
-    "sphinx_sitemap",
 ]
 
-# Set base url
-html_baseurl = 'http://localhost:8000/graphql/manual'
 
 images_config = {
     "default_image_width": "auto"
