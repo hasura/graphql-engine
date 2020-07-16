@@ -11,7 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -141,10 +140,10 @@ func ConsoleAPI(c *gin.Context) {
 	}
 
 	// Get Logger
-	loggerPtr, ok := c.Get("logger")
-	if !ok {
-		return
-	}
+	// loggerPtr, ok := c.Get("logger")
+	// if !ok {
+	// 	return
+	// }
 
 	// Get version
 	version := c.GetInt("version")
@@ -152,7 +151,6 @@ func ConsoleAPI(c *gin.Context) {
 	// Convert to url.URL
 	t := migratePtr.(*migrate.Migrate)
 	sourceURL := sourcePtr.(*url.URL)
-	logger := loggerPtr.(*logrus.Logger)
 
 	migrationVersion := c.Param("migrationVersion")
 
@@ -179,8 +177,7 @@ func ConsoleAPI(c *gin.Context) {
 		upMigrationData, downMigrationData, err := getMigrationInfo(*&sourceURL.Path, migrationDirName, version)
 
 		if err != nil {
-			// TODO: send the errorred response too?
-			logger.Error("There has been an error: ", err.Error())
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 		}
 
 		c.JSON(http.StatusOK, &MigrationDataResponse{
