@@ -47,14 +47,6 @@ Date:   Mon Jul 20 13:45:15 2020 +0530
 
     update pg-client (#5421)
 
-commit 1eb36bbbb30b79f38a0c7408ecec88f4b2a94cd6 (origin-hasura/master, master)
-Author: Anon Ray <ecthiender@users.noreply.github.com>
-Date:   Thu Jul 16 18:49:42 2020 +0530
-
-    server: refactor 'pollQuery' to have a hook to process 'PollDetails' (#5391)
-
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-
 commit 0dddbe9e9d519de98662643d66c7d04a45d8d670
 Author: Phil Freeman <phil@hasura.io>
 Date:   Wed Jul 15 03:40:48 2020 -0700

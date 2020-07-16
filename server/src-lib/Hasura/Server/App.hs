@@ -34,17 +34,6 @@ import qualified System.Metrics.Json                       as EKG
 import qualified Text.Mustache                             as M
 import qualified Web.Spock.Core                            as Spock
 
-import qualified Hasura.GraphQL.Execute                    as E
-import qualified Hasura.GraphQL.Execute.LiveQuery          as EL
-import qualified Hasura.GraphQL.Explain                    as GE
-import qualified Hasura.GraphQL.Transport.HTTP             as GH
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
-import qualified Hasura.GraphQL.Transport.WebSocket        as WS
-import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
-import qualified Hasura.Logging                            as L
-import qualified Hasura.Server.API.PGDump                  as PGD
-import qualified Network.Wai.Handler.WebSockets.Custom     as WSC
-
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..))
@@ -64,6 +53,18 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
 import           Hasura.SQL.Types
+
+import qualified Hasura.GraphQL.Execute                    as E
+import qualified Hasura.GraphQL.Execute.LiveQuery          as EL
+import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
+import qualified Hasura.GraphQL.Explain                    as GE
+import qualified Hasura.GraphQL.Transport.HTTP             as GH
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
+import qualified Hasura.GraphQL.Transport.WebSocket        as WS
+import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
+import qualified Hasura.Logging                            as L
+import qualified Hasura.Server.API.PGDump                  as PGD
+import qualified Network.Wai.Handler.WebSockets.Custom     as WSC
 
 data SchemaCacheRef
   = SchemaCacheRef
@@ -528,18 +529,20 @@ mkWaiApp
   -> EL.LiveQueriesOptions
   -> E.PlanCacheOptions
   -> ResponseInternalErrorsConfig
+  -> Maybe EL.LiveQueryPostPollHook
   -> (RebuildableSchemaCache Run, Maybe UTCTime)
   -> m HasuraApp
 mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig (schemaCache, cacheBuiltTime) = do
+         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) = do
 
     (planCache, schemaCacheRef) <- initialiseCache
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
         pgExecCtx = fromMaybe (mkPGExecCtx isoLevel pool) pgExecCtxCustom
+        postPollHook = fromMaybe (EL.defaultLiveQueryPostPollHook logger) liveQueryHook
 
-    lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx
+    lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx postPollHook
     wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
                                         corsPolicy sqlGenCtx enableAL planCache
 
