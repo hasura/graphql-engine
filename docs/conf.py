@@ -89,7 +89,6 @@ extensions = [
     "lexer_graphql",
 ]
 
-
 images_config = {
     "default_image_width": "auto"
 }
