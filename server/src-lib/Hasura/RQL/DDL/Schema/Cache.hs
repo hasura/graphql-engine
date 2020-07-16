@@ -31,18 +31,11 @@ import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.List                                (nub)
 
--- import qualified Hasura.GraphQL.Schema                    as GS
 import qualified Hasura.Incremental                       as Inc
--- import qualified Language.GraphQL.Draft.Syntax            as G
 
 import           Hasura.Db
-import           Hasura.Session
--- import           Hasura.GraphQL.RemoteServer
--- import           Hasura.GraphQL.Schema.CustomTypes
--- import           Hasura.GraphQL.Utils                     (showNames)
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
-import           Hasura.GraphQL.Context
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
@@ -170,7 +163,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     resolveDependencies -< (outputs, unresolvedDependencies)
 
   -- Step 3: Build the GraphQL schema.
-  (gqlContext, gqlSchemaInconsistentObjects) <- runWriterA buildGQLSchema -<
+  (gqlContext, gqlSchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryHasura
     , (_boTables    resolvedOutputs)
     , (_boFunctions resolvedOutputs)
@@ -180,7 +173,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     )
 
   -- Step 4: Build the relay GraphQL schema
-  (relayContext, relaySchemaInconsistentObjects) <- runWriterA buildGQLSchema -<
+  (relayContext, relaySchemaInconsistentObjects) <- runWriterA buildGQLContext -<
     ( QueryRelay
     , (_boTables    resolvedOutputs)
     , (_boFunctions resolvedOutputs)
@@ -448,30 +441,6 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
              |) addCronTriggerContext)
            |) (mkCronTriggerMetadataObject cronTrigger)
 
-    buildGQLSchema
-      :: ( ArrowChoice arr, ArrowWriter (Seq InconsistentMetadata) arr, ArrowKleisli m arr
-         , MonadError QErr m, MonadIO m, MonadUnique m, HasSQLGenCtx m )
-      => ( GraphQLQueryType
-         , TableCache
-         , FunctionCache
-         , HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
-         , ActionCache
-         , NonObjectTypeMap
-         ) `arr` (HashMap RoleName (RoleContext GQLContext) , GQLContext)
-    buildGQLSchema = proc (queryType, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
-      baseGQLSchema <- bindA -< buildGQLContext queryType allTables allFunctions mempty allActions nonObjectCustomTypes
-
-      fullGQLSchema <- withRecordInconsistency (proc ((queryType, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes), _) -> do
-        bindErrorA -< buildGQLContext
-                          queryType
-                          allTables
-                          allFunctions
-                          allRemoteSchemas
-                          allActions
-                          nonObjectCustomTypes
-        ) -< ((queryType, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes), (snd $ head $ M.elems allRemoteSchemas , ())) -- TODO this is not passing the right MetadataObject
-
-      returnA -< fromMaybe baseGQLSchema fullGQLSchema
 
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and

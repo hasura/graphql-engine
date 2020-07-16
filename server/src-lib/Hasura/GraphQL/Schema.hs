@@ -1,3 +1,4 @@
+{-# LANGUAGE Arrows           #-}
 module Hasura.GraphQL.Schema
   ( buildGQLContext
   ) where
@@ -10,6 +11,7 @@ import qualified Data.HashMap.Strict.InsOrd            as OMap
 import qualified Data.HashSet                          as Set
 import qualified Language.GraphQL.Draft.Syntax         as G
 
+import           Control.Arrow.Extended
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Has
@@ -36,98 +38,110 @@ import           Hasura.SQL.Types
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
 
 buildGQLContext
-  :: forall m
-   . ( MonadIO m -- see Note [SchemaT requires MonadIO] in Hasura.GraphQL.Parser.Monad
-     , MonadUnique m
+  :: forall arr m
+   . ( ArrowChoice arr
+     , ArrowWriter (Seq InconsistentMetadata) arr
+     , ArrowKleisli m arr
      , MonadError QErr m
-     , HasSQLGenCtx m )
-  => GraphQLQueryType
-  -> TableCache
-  -> FunctionCache
-  -> HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
-  -> ActionCache
-  -> NonObjectTypeMap
-  -> m (HashMap RoleName (RoleContext GQLContext), GQLContext)
-buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions nonObjectCustomTypes = do
-  roleContexts <- (Set.toMap allRoles & Map.traverseWithKey \roleName () ->
-                      buildContextForRole roleName)
-  unauthenticated <- unauthenticatedContext
-  return (roleContexts, unauthenticated)
-  where
-    allRoles :: HashSet RoleName
-    allRoles = Set.insert adminRoleName $
-      (allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded)
-      <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
+     , MonadIO m
+     , MonadUnique m
+     , HasSQLGenCtx m
+     )
+  => ( GraphQLQueryType
+     , TableCache
+     , FunctionCache
+     , HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
+     , ActionCache
+     , NonObjectTypeMap
+     )
+     `arr`
+     ( HashMap RoleName (RoleContext GQLContext)
+     , GQLContext
+     )
+buildGQLContext =
+  proc (queryType, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
 
-    tableFilter    = not . isSystemDefined . _tciSystemDefined
-    functionFilter = not . isSystemDefined . fiSystemDefined
+    -- Scroll down a few pages for the actual body...
 
-    validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
-    validFunctions = Map.elems $ Map.filter functionFilter allFunctions
+    let allRoles = Set.insert adminRoleName $
+             (allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded)
+          <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
 
-    allRemoteParsers ::
-      m (HashMap RemoteSchemaName
-         ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-         , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-         , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]))
-    allRemoteParsers =
-      case queryType of
-        QueryRelay -> return mempty
-        QueryHasura -> do
-          let rems = fmap (rscParsed . fst) allRemoteSchemas
-              (queryFields, mutationFields, subscriptionFields) = unzip3 $ Map.elems rems
-              allQueryFields = concat queryFields
-              allMutationFields = concat $ catMaybes mutationFields
-              allSubscriptionFields = concat $ catMaybes subscriptionFields
-          checkFieldNamesUnique allQueryFields (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
-          checkFieldNamesUnique allMutationFields (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
-          checkFieldNamesUnique allSubscriptionFields (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
+        tableFilter    = not . isSystemDefined . _tciSystemDefined
+        functionFilter = not . isSystemDefined . fiSystemDefined
+
+        validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
+        validFunctions = Map.elems $ Map.filter functionFilter allFunctions
+
+        rems = fmap (rscParsed . fst) allRemoteSchemas
+        (queryFields, mutationFields, subscriptionFields) = unzip3 $ Map.elems rems
+        allQueryFields = concat queryFields
+        allMutationFields = concat $ catMaybes mutationFields
+        allSubscriptionFields = concat $ catMaybes subscriptionFields
+        allActionInfos = Map.elems allActions
+
+    remotes ::
+          (HashMap RemoteSchemaName
+             ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+             , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+             , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]))
+          <- bindA -< do
+          checkFieldNamesUnique allQueryFields
+            (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
+          checkFieldNamesUnique allMutationFields
+            (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
+          checkFieldNamesUnique allSubscriptionFields
+            (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
           return rems
 
-    unauthenticatedContext :: m GQLContext
-    unauthenticatedContext = do
-      remotes <- allRemoteParsers
-      let gqlContext = GQLContext . finalizeParser <$>
-            unauthenticatedQueryWithIntrospection (queryRemotes remotes) (mutationRemotes remotes)
-      halfContext <- P.runSchemaT gqlContext
-      return $ halfContext $ finalizeParser <$> (unauthenticatedMutation (mutationRemotes remotes))
+    let unauthenticatedContext :: m GQLContext
+        unauthenticatedContext = do
+          let gqlContext = GQLContext . finalizeParser <$>
+                unauthenticatedQueryWithIntrospection queryRemotes mutationRemotes
+          halfContext <- P.runSchemaT gqlContext
+          return $ halfContext $ finalizeParser <$> (unauthenticatedMutation mutationRemotes)
 
-    -- | The 'query' type of the remotes. TODO: also expose mutation
-    -- remotes. NOT TODO: subscriptions, as we do not yet aim to support
-    -- these.
-    queryRemotes remotes = concat $ map (\(q,_,_)->q) $ Map.elems remotes
-    queryRemotesMap remotes =
-      Map.fromList $
-      map (\(remoteSchemaName, (queryFieldParser, _, _) ) ->
-             (remoteSchemaName, map (\(FieldParser defn _) -> defn) queryFieldParser))
-      $ Map.toList remotes
-    mutationRemotes remotes = concat $ fmap concat $ map (\(_,m,_)->m) $ Map.elems remotes
-    allActionInfos = Map.elems allActions
-    queryHasuraOrRelay remotes = case queryType of
-      QueryHasura -> queryWithIntrospection (Set.fromList $ Map.keys validTables)
-                     validFunctions (queryRemotes remotes) (mutationRemotes remotes)
-                     allActionInfos nonObjectCustomTypes
-      QueryRelay  -> relayWithIntrospection (Set.fromList $ Map.keys validTables) validFunctions
+        -- | The 'query' type of the remotes. TODO: also expose mutation
+        -- remotes. NOT TODO: subscriptions, as we do not yet aim to support
+        -- these.
+        queryRemotes = concat $ map (\(q,_,_)->q) $ Map.elems remotes
+        queryRemotesMap =
+          Map.fromList $
+          map (\(remoteSchemaName, (queryFieldParser, _, _) ) ->
+                 (remoteSchemaName, map (\(FieldParser defn _) -> defn) queryFieldParser))
+          $ Map.toList remotes
+        mutationRemotes = concat $ fmap concat $ map (\(_,m,_)->m) $ Map.elems remotes
+        queryHasuraOrRelay = case queryType of
+          QueryHasura -> queryWithIntrospection (Set.fromList $ Map.keys validTables)
+                         validFunctions queryRemotes mutationRemotes
+                         allActionInfos nonObjectCustomTypes
+          QueryRelay  -> relayWithIntrospection (Set.fromList $ Map.keys validTables) validFunctions
 
-    buildContextForRole :: RoleName -> m (RoleContext GQLContext)
-    buildContextForRole roleName = do
-      frontend <- buildContextForRoleAndScenario roleName Frontend
-      backend <- buildContextForRoleAndScenario roleName Backend
-      return $ RoleContext frontend $ Just backend
+        buildContextForRole :: RoleName -> m (RoleContext GQLContext)
+        buildContextForRole roleName = do
+          frontend <- buildContextForRoleAndScenario roleName Frontend
+          backend <- buildContextForRoleAndScenario roleName Backend
+          return $ RoleContext frontend $ Just backend
 
-    buildContextForRoleAndScenario :: RoleName -> Scenario -> m GQLContext
-    buildContextForRoleAndScenario roleName scenario = do
-      SQLGenCtx{ stringifyNum } <- askSQLGenCtx
-      remotes <- allRemoteParsers
-      let gqlContext = GQLContext
-            <$> (finalizeParser <$> queryHasuraOrRelay remotes)
-            <*> (fmap (fmap finalizeParser) $ mutation (Set.fromList $ Map.keys validTables) (mutationRemotes remotes)
-                 allActionInfos nonObjectCustomTypes)
-      flip runReaderT (roleName, validTables, scenario, QueryContext stringifyNum queryType (queryRemotesMap remotes)) $
-        P.runSchemaT gqlContext
+        buildContextForRoleAndScenario :: RoleName -> Scenario -> m GQLContext
+        buildContextForRoleAndScenario roleName scenario = do
+          SQLGenCtx{ stringifyNum } <- askSQLGenCtx
+          let gqlContext = GQLContext
+                <$> (finalizeParser <$> queryHasuraOrRelay)
+                <*> (fmap (fmap finalizeParser) $ mutation (Set.fromList $ Map.keys validTables) mutationRemotes
+                     allActionInfos nonObjectCustomTypes)
+          flip runReaderT (roleName, validTables, scenario, QueryContext stringifyNum queryType queryRemotesMap) $
+            P.runSchemaT gqlContext
 
-    finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
-    finalizeParser parser = runIdentity . P.runParseT . P.runParser parser
+        finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
+        finalizeParser parser = runIdentity . P.runParseT . P.runParser parser
+
+    -- Here, finally the body starts.
+
+    roleContexts <- bindA -< (Set.toMap allRoles & Map.traverseWithKey \roleName () ->
+                        buildContextForRole roleName)
+    unauthenticated <- bindA -< unauthenticatedContext
+    returnA -< (roleContexts, unauthenticated)
 
 -- | Generate all the field parsers for query-type GraphQL requests.  We don't
 -- actually collect these into a @Parser@ using @selectionSet@ so that we can
