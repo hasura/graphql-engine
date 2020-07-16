@@ -46,10 +46,9 @@ auth service with GraphQL engine. You can just:
 
 Follow the example at :ref:`access control basics <auth_basics>`.
 
-Learn tutorial
-^^^^^^^^^^^^^^
+.. admonition:: Learn course
 
-If you'd like to learn about access control by following a tutorial, check out our Learn course, `Authentication with Hasura <https://hasura.io/learn/graphql/hasura-auth-slack/introduction/>`__.
+  If you'd like to learn about access control by following a tutorial, check out our Learn course, `Authentication with Hasura <https://hasura.io/learn/graphql/hasura-auth-slack/introduction/>`__.
 
 **See:**
 
