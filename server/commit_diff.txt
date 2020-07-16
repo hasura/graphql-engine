@@ -1312,29 +1312,6 @@ Date:   Thu Apr 9 12:03:33 2020 +0530
 
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
 
-commit b02cd336d04b88c864a03b41457f24f481f56871
-Author: Francisco Sales <franciscofsales@users.noreply.github.com>
-Date:   Wed Apr 8 08:36:56 2020 +0100
-
-    server: Don’t expose DB implementation in error message (#4294)
-
-commit b948e26751c00fc845f57452d986d6851a0d4ddf
-Author: Anon Ray <ecthiender@users.noreply.github.com>
-Date:   Wed Apr 8 13:01:30 2020 +0530
-
-    server: Add a Haskell style guide (#2175)
-
-    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
-
-commit b2461c5899a881183ad2d269ebe8a2c6f55e46af
-Author: Shahidh K Muhammed <shahidh@hasura.io>
-Date:   Mon Apr 6 10:23:58 2020 +0530
-
-    server: add more info about server to config api (#3412)
-
-    Co-authored-by: Toan Nguyen <hgiasac@gmail.com>
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-
 commit a07a87066ecc14af368c7807d998d2b00ccbf92b
 Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
 Date:   Sat Apr 4 05:51:52 2020 +0530
@@ -1367,12 +1344,6 @@ Date:   Fri Apr 3 01:00:13 2020 +0100
     solves both those problems.
 
     Co-authored-by: Alexis King <lexi.lambda@gmail.com>
-
-commit 85b7c552afb9b3737614a376dd82873f2d253788
-Author: Lyndon Maydwell <lyndon@sordina.net>
-Date:   Thu Apr 2 16:27:43 2020 +1100
-
-    Allow field names to start with reserved keywords (fix #3597) (#3927)
 
 commit 5b74b2e2df512135b3b6ad25583c0dea96f6f3a8
 Author: Antoine Leblanc <antoine@hasura.io>
@@ -1444,28 +1415,6 @@ Date:   Fri Mar 27 17:46:22 2020 +0530
 
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
 
-commit 04e5a20dc017ddd2e2e5c707aab1d3ddb78526f1
-Merge: eafdda4f 11426891
-Author: Vamshi Surabhi <0x777@users.noreply.github.com>
-Date:   Fri Mar 27 15:01:05 2020 +0530
-
-    Merge pull request #4080 from rakeshkky/issue-4035-check-computed-field
-
-    fix postgres query error when computed fields are included in returning (fix #4035)
-
-commit 114268910a11486d51fc508a8c17d5378aea9fdc
-Merge: c12dd1ba eafdda4f
-Author: Vamshi Surabhi <0x777@users.noreply.github.com>
-Date:   Fri Mar 27 14:12:59 2020 +0530
-
-    Merge branch 'master' into issue-4035-check-computed-field
-
-commit eafdda4f33d239c7f51293a1b5cb240da1a8b2b5
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Fri Mar 27 00:50:45 2020 -0400
-
-    Add missing migration to initialise.sql for #3839 (#4212)
-
 commit 4ce4eb1d2faa52d5f3ac19db6aeefa79093ec3eb
 Author: Phil Freeman <phil@hasura.io>
 Date:   Thu Mar 26 13:42:33 2020 -0700
@@ -1516,44 +1465,6 @@ Date:   Thu Mar 26 17:22:20 2020 +0530
     Co-authored-by: Alexis King <lexi.lambda@gmail.com>
     Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
 
-commit eb81d6947aeaf2a6aa3b65652bd5c06f86a7d67a
-Author: Antoine Leblanc <crucuny@gmail.com>
-Date:   Tue Mar 24 07:05:34 2020 +0000
-
-    server: add tests for track_table of a materialized view (#4155)
-
-    * server: add tests for track_table of a materialized view
-
-    In the context of #91, we discovered that materialized views were
-    already "automagically" supported; to ensure we don't regress on this
-    accidental but welcome change, this patch adds simple tests.
-
-    This is basically just a copy of `track_untrack_table`, but for
-    materialized views.
-
-    * Expand abbreviations
-
-    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
-
-commit d9fa2997507093458d236ad2749d76d37c66cd78
-Author: Antoine Leblanc <crucuny@gmail.com>
-Date:   Tue Mar 24 01:48:09 2020 +0000
-
-    server: fix all EWKT warnings in python tests (#4154)
-
-    The setup in several tests was using `ST_GeomFromText`, which expects
-    data in the OGC WKT format, but was providing the SRID in the text
-    itself, which is part of the EWKT format.
-
-    The fix was simply to replace all calls to `ST_GeomFromText` to
-    `ST_GeomFromEWKT`.
-
-commit 4f44741f3bc0a7a58c193c6605c98235962be3d2
-Author: Antoine Leblanc <crucuny@gmail.com>
-Date:   Tue Mar 24 01:46:09 2020 +0000
-
-    server: add missing mention of postgis to CONTRIBUTING.md (#4156)
-
 commit f80b69e9317bcf4489028e932741ef191e4b1da4
 Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
 Date:   Fri Mar 20 12:16:45 2020 +0530
@@ -1571,14 +1482,6 @@ Date:   Fri Mar 20 12:16:45 2020 +0530
     * update CHANGELOG.md
 
     * no-op refactor, use types from http-network more
-
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-
-commit 2d3313e643b0ce4db8712bbf5d0715ed984a7edc
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Wed Mar 18 13:15:41 2020 -0400
-
-    Try again to fix flaky TestEventFlood test (#4088)
 
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
 
@@ -1605,59 +1508,3 @@ Date:   Tue Mar 17 21:31:22 2020 -0400
 
     Also simplified codepaths that use `AcceptWith`, which has unnecessary
     `Maybe` fields.
-
-commit b65e9fc1b28e7e8aacf6eb8375b24434be17b78e
-Author: Alexis King <lexi.lambda@gmail.com>
-Date:   Sat Mar 14 20:38:26 2020 -0500
-
-    server: Fix buggy rewrite rule for Rule
-
-    We’re lucky that this never bit us. For the most part, these rules
-    aren’t actually used; most code programs against ArrowCache and doesn’t
-    get specialized enough for these rules to fire.
-
-    Even if we did have code that could trigger this rule, the situations
-    where it would actually fire are slim. In order for the rule to
-    typecheck at all, both sides of the pair being passed through the arrow
-    must have exactly the same type. Of course, that would just make this
-    even more hellish to debug.
-
-    Rewrite rules are dangerous.
-
-commit 889f375ae265029d1ce8802be7d9409360b39012
-Merge: 8c2b5ad9 e031e99d
-Author: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
-Date:   Thu Mar 12 10:21:43 2020 +0530
-
-    Merge branch 'master' into issue-4035-check-computed-field
-
-    Resolve Conflicts:
-            CHANGELOG.md
-
-commit 8c2b5ad9d395f80f88270b4b63c34895f7c9e0fe
-Author: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
-Date:   Wed Mar 11 14:45:02 2020 +0530
-
-    mark skip server upgrade test for new tests
-
-commit bb2b631fae0f4a3456212ce71cdf938e27ec5cc2
-Merge: 27d1401e c425b554
-Author: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
-Date:   Wed Mar 11 12:09:19 2020 +0530
-
-    Merge branch 'master' into issue-4035-check-computed-field
-
-    Resolve Conflicts:
-            CHANGELOG.md
-
-commit 27d1401ee6853438b5c1c5b22e69ec5ffa1642ba
-Author: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
-Date:   Wed Mar 11 11:02:58 2020 +0530
-
-    update CHANGELOG.md
-
-commit 9128c69a805060e9d19ad46c0ebf11f183a42014
-Author: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
-Date:   Tue Mar 10 18:15:47 2020 +0530
-
-    fix postgres query error when computed fields included in mutation response, fix #4035
