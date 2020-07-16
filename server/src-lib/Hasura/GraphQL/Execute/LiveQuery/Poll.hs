@@ -13,6 +13,8 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   , PollDetails(..)
   , BatchExecutionDetails(..)
   , CohortExecutionDetails(..)
+  , LiveQueryPostPollHook
+  , defaultLiveQueryPostPollHook
 
   -- * Cohorts
   , Cohort(..)
@@ -28,6 +30,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   , newSubscriberId
   , SubscriberMetadata
   , mkSubscriberMetadata
+  , unSubscriberMetadata
   , SubscriberMap
   , OnChange
   , LGQResponse
@@ -382,17 +385,23 @@ pollDetailMinimal (PollDetails{..}) =
 instance L.ToEngineLog PollDetails L.Hasura where
   toEngineLog pl = (L.LevelInfo, L.ELTLivequeryPollerLog, pollDetailMinimal pl)
 
+type LiveQueryPostPollHook = PollDetails -> IO ()
+
+-- the default LiveQueryPostPollHook
+defaultLiveQueryPostPollHook :: L.Logger L.Hasura -> LiveQueryPostPollHook
+defaultLiveQueryPostPollHook logger pd = L.unLogger logger pd
+
 -- | Where the magic happens: the top-level action run periodically by each
 -- active 'Poller'. This needs to be async exception safe.
 pollQuery
-  :: L.Logger L.Hasura
-  -> PollerId
+  :: PollerId
   -> LiveQueriesOptions
   -> PGExecCtx
   -> MultiplexedQuery
   -> CohortMap
+  -> LiveQueryPostPollHook
   -> IO ()
-pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap = do
+pollQuery pollerId lqOpts pgExecCtx pgQuery cohortMap postPollHook = do
   (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
 
     -- snapshot the current cohorts and split them into batches
@@ -428,14 +437,15 @@ pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap = do
 
     pure (snapshotTime, batchesDetails)
 
-  L.unLogger logger $ PollDetails
-                      { _pdPollerId = pollerId
-                      , _pdGeneratedSql = unMultiplexedQuery pgQuery
-                      , _pdSnapshotTime = snapshotTime
-                      , _pdBatches = batchesDetails
-                      , _pdLiveQueryOptions = lqOpts
-                      , _pdTotalTime = totalTime
-                      }
+  let pollDetails = PollDetails
+                    { _pdPollerId = pollerId
+                    , _pdGeneratedSql = unMultiplexedQuery pgQuery
+                    , _pdSnapshotTime = snapshotTime
+                    , _pdBatches = batchesDetails
+                    , _pdLiveQueryOptions = lqOpts
+                    , _pdTotalTime = totalTime
+                    }
+  postPollHook pollDetails
   where
     LiveQueriesOptions batchSize _ = lqOpts
 
