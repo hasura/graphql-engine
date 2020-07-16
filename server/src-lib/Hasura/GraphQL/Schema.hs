@@ -26,7 +26,6 @@ import           Hasura.GraphQL.Schema.Action
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Introspect
 import           Hasura.GraphQL.Schema.Mutation
-import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
@@ -75,8 +74,8 @@ buildGQLContext queryType allTables allFunctions allRemoteSchemas allActions non
       case queryType of
         QueryRelay -> return mempty
         QueryHasura -> do
-          rems <- P.runSchemaT $ traverse (buildRemoteParser . fst) allRemoteSchemas
-          let (queryFields, mutationFields, subscriptionFields) = unzip3 $ Map.elems rems
+          let rems = fmap (rscParsed . fst) allRemoteSchemas
+              (queryFields, mutationFields, subscriptionFields) = unzip3 $ Map.elems rems
               allQueryFields = concat queryFields
               allMutationFields = concat $ catMaybes mutationFields
               allSubscriptionFields = concat $ catMaybes subscriptionFields

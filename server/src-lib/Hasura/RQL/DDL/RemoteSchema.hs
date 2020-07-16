@@ -60,12 +60,7 @@ addRemoteSchemaP2Setup
 addRemoteSchemaP2Setup (AddRemoteSchemaQuery name def _) = do
   httpMgr <- askHttpManager
   rsi <- validateRemoteSchemaDef def
-  -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
-  -- the introspection result of the remote server. We store this in the
-  -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
-  -- is called by simple encoding the result to JSON.
-  (introspection, rawIntrospectionResult) <- fetchRemoteSchema httpMgr name rsi
-  pure $ RemoteSchemaCtx name introspection rsi rawIntrospectionResult
+  fetchRemoteSchema httpMgr name rsi
 
 addRemoteSchemaP2
   :: (HasVersion, MonadTx m, MonadIO m, MonadUnique m, HasHttpManager m) => AddRemoteSchemaQuery -> m ()
@@ -140,10 +135,8 @@ runIntrospectRemoteSchema
   :: (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
 runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
   sc <- askSchemaCache
-  (RemoteSchemaCtx _ _ _ introspectionByteString) <-
-    case Map.lookup rsName (scRemoteSchemas sc) of
-      Nothing ->
-        throw400 NotExists $
-        "remote schema: " <> rsName <<> " not found"
-      Just rCtx -> pure rCtx
+  (RemoteSchemaCtx _ _ _ introspectionByteString _) <-
+    onNothing (Map.lookup rsName (scRemoteSchemas sc)) $
+    throw400 NotExists $
+    "remote schema: " <> rsName <<> " not found"
   pure $ encJFromLBS introspectionByteString

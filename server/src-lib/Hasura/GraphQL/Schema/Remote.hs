@@ -21,11 +21,12 @@ import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 buildRemoteParser
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
-  => RemoteSchemaCtx
+  => IntrospectionResult
+  -> RemoteSchemaInfo
   -> m ( [P.FieldParser n (RemoteSchemaInfo, Field NoFragments Variable)]
        , Maybe [P.FieldParser n (RemoteSchemaInfo, Field NoFragments Variable)]
        , Maybe [P.FieldParser n (RemoteSchemaInfo, Field NoFragments Variable)])
-buildRemoteParser (RemoteSchemaCtx _name (sdoc, query_root, mutation_root, subscription_root) info _) = do
+buildRemoteParser (sdoc, query_root, mutation_root, subscription_root) info = do
   queryT <- makeParsers query_root
   mutationT <- traverse makeParsers mutation_root
   subscriptionT <- traverse makeParsers subscription_root

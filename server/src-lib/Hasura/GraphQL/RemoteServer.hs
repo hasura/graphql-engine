@@ -40,7 +40,7 @@ fetchRemoteSchema
   => HTTP.Manager
   -> RemoteSchemaName
   -> RemoteSchemaInfo
-  -> m (IntrospectionResult, BL.ByteString)
+  -> m RemoteSchemaCtx
 fetchRemoteSchema manager schemaName schemaInfo@(RemoteSchemaInfo url headerConf _ timeout) = do
   headers <- makeHeadersFromConf headerConf
   let hdrsWithDefaults = addDefaultHeaders headers
@@ -65,10 +65,13 @@ fetchRemoteSchema manager schemaName schemaInfo@(RemoteSchemaInfo url headerConf
     either (remoteSchemaErr . T.pack) return $ J.eitherDecode respData
 
   -- Check that the parsed GraphQL type info is valid by running the schema generation
-  _ <- P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser
-    $ RemoteSchemaCtx schemaName introspectRes schemaInfo respData
+  parsers <- P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes schemaInfo
 
-  return (introspectRes, respData)
+  -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
+  -- the introspection result of the remote server. We store this in the
+  -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
+  -- is called by simple encoding the result to JSON.
+  return $ RemoteSchemaCtx schemaName introspectRes schemaInfo respData parsers
   where
     remoteSchemaErr :: T.Text -> m a
     remoteSchemaErr = throw400 RemoteSchemaError

@@ -119,6 +119,7 @@ module Hasura.RQL.Types.SchemaCache
 
 import           Hasura.Db
 import           Hasura.GraphQL.Context            (GQLContext, RoleContext)
+import qualified Hasura.GraphQL.Parser             as P
 import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
@@ -173,13 +174,19 @@ type IntrospectionResult = ( G.SchemaIntrospection
                            , Maybe G.Name
                            )
 
+type ParsedIntrospection =
+  ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+  , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)])
+
 data RemoteSchemaCtx
   = RemoteSchemaCtx
   { rscName                   :: !RemoteSchemaName
   , rscIntro                  :: !IntrospectionResult
   , rscInfo                   :: !RemoteSchemaInfo
   , rscRawIntrospectionResult :: !BL.ByteString
-  } deriving (Show, Eq)
+  , rscParsed                 :: ParsedIntrospection
+  }
 
 instance ToJSON RemoteSchemaCtx where
   toJSON = toJSON . rscInfo

@@ -62,7 +62,7 @@ data BuildOutputs
   , _boAllowlist     :: !(HS.HashSet GQLQuery)
   , _boCustomTypes   :: !AnnotatedCustomTypes
   , _boCronTriggers  :: !(M.HashMap TriggerName CronTriggerInfo)
-  } deriving (Show, Eq)
+  }
 $(makeLenses ''BuildOutputs)
 
 data RebuildableSchemaCache m
