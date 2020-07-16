@@ -1,1 +1,6 @@
-endpoint: https://hasura-realtime-dashboard.herokuapp.com
+version: 2
+endpoint: https://stagingpixie.herokuapp.com
+metadata_directory: metadata
+actions:
+  kind: synchronous
+  handler_webhook_baseurl: http://localhost:3000

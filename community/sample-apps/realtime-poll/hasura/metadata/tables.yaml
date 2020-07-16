@@ -1,0 +1,18 @@
+- table:
+    schema: public
+    name: online_users
+- table:
+    schema: public
+    name: option
+- table:
+    schema: public
+    name: poll
+- table:
+    schema: public
+    name: poll_results
+- table:
+    schema: public
+    name: user
+- table:
+    schema: public
+    name: vote
