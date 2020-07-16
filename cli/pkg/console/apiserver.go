@@ -63,7 +63,7 @@ func (r *APIServer) setRoutes(migrationDir string, logger *logrus.Logger) {
 		{
 			consoleAPIs := migrateAPIs.Group("/console")
 			{
-				consoleAPIs.GET("/:migrationID", api.ConsoleAPI)
+				consoleAPIs.Any("/:migrationVersion", api.ConsoleAPI)
 			}
 			settingsAPIs := migrateAPIs.Group("/settings")
 			{
