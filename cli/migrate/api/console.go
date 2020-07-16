@@ -1,5 +1,7 @@
 package api
 
+// NOTE: Should this be covered by tests?
+
 import (
 	"io/ioutil"
 	"net/http"
@@ -17,13 +19,19 @@ const (
 	down = "down"
 )
 
+type UpdateMigrationRequest struct {
+	FileName    string `json:"filename"`
+	FileContent string `json:"content"`
+	// NOTE: we could also keep a log of the changes? would that be necessary?
+}
+
 type MigrationData struct {
 	FileContent      string `json:"content"`
 	FileType         string `json:"type"`
 	MigrationVersion int    `json:"version"`
 }
 
-type ConsoleAPIResponse struct {
+type MigrationDataResponse struct {
 	Version           string                  `json:"version"`
 	UpMigrationData   MigrationData           `json:"up"`
 	DownMigrationData MigrationData           `json:"down"`
@@ -39,6 +47,7 @@ func convertToUInt64(param string) uint64 {
 	return num
 }
 
+// FIXME: May need to change this as well
 func getFileType(ext string) string {
 	if ext == ".yml" || ext == ".yaml" {
 		return "yaml"
@@ -49,6 +58,14 @@ func getFileType(ext string) string {
 
 	// TODO: this should also be an error probably
 	return ""
+}
+
+func getMigrationDirName(version string, name string) string {
+	if name == "" {
+		return version
+	}
+
+	return version + "_" + name
 }
 
 func isFilePresent(path string) bool {
@@ -113,8 +130,6 @@ func getMigrationInfo(path string, migrationName string, version int) (Migration
 }
 
 func ConsoleAPI(c *gin.Context) {
-	migrationID := c.Param("migrationID")
-
 	migratePtr, ok := c.Get("migrate")
 	if !ok {
 		return
@@ -139,6 +154,9 @@ func ConsoleAPI(c *gin.Context) {
 	sourceURL := sourcePtr.(*url.URL)
 	logger := loggerPtr.(*logrus.Logger)
 
+	migrationVersion := c.Param("migrationVersion")
+
+	// for reading the contents of the
 	if c.Request.Method == http.MethodGet {
 		err := t.ReScan()
 		if err != nil {
@@ -148,26 +166,100 @@ func ConsoleAPI(c *gin.Context) {
 
 		status, err := t.GetStatus()
 
-		migrStatus, ok := status.Read(convertToUInt64(migrationID))
+		migrStatus, ok := status.Read(convertToUInt64(migrationVersion))
 		if !ok {
-			// TODO: have to change this
-			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+			// TODO: have to change this code for not a valid migration
+			c.JSON(http.StatusBadRequest, &Response{Code: "bad_request", Message: "This is not a valid migration version"})
 			return
 		}
 		// logger.Info("Here's some info", migrStatus.Name, "\n")
-		migrationName := migrationID + "_" + migrStatus.Name
-		upMigrationData, downMigrationData, err := getMigrationInfo(*&sourceURL.Path, migrationName, version)
+
+		// can be made into a function, also check if migrStatus.Name is not ""
+		migrationDirName := getMigrationDirName(migrationVersion, migrStatus.Name)
+		upMigrationData, downMigrationData, err := getMigrationInfo(*&sourceURL.Path, migrationDirName, version)
 
 		if err != nil {
+			// TODO: send the errorred response too?
 			logger.Error("There has been an error: ", err.Error())
 		}
 
-		c.JSON(http.StatusOK, &ConsoleAPIResponse{
-			Version:           migrationID,
+		c.JSON(http.StatusOK, &MigrationDataResponse{
+			Version:           migrationVersion,
 			UpMigrationData:   upMigrationData,
 			DownMigrationData: downMigrationData,
 			MigrationStatus:   *migrStatus,
 		})
+		return
+	}
+
+	// update the contents of specific migration files
+	if c.Request.Method == http.MethodPut {
+		err := t.ReScan()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+			return
+		}
+
+		status, err := t.GetStatus()
+
+		migrStatus, ok := status.Read(convertToUInt64(migrationVersion))
+		if !ok {
+			// TODO: have to change this
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: ""})
+			return
+		}
+
+		migrationName := migrStatus.Name
+
+		// NOTE: we perhaps have to check migrStatus and based on the values update the values...
+		// or this could just serve as a check if this particular version/timestamp is valid
+
+		var request UpdateMigrationRequest
+
+		if c.Bind(&request) != nil {
+			c.JSON(http.StatusBadRequest, &Response{Code: "bad_request", Message: "incorrect update request"})
+			return
+		}
+
+		fullPath := sourceURL.Path + "/" + getMigrationDirName(migrationVersion, migrationName) + "/" + request.FileName
+
+		err = ioutil.WriteFile(fullPath, []byte(request.FileContent), 0644)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "failed to update migration"})
+			return
+		}
+
+		c.JSON(http.StatusAccepted, &gin.H{"message": "updated migration files", "file": migrationName, "fileContent": request.FileContent})
+		return
+	}
+
+	// delete the migration files
+	if c.Request.Method == http.MethodDelete {
+		err := t.ReScan()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+			return
+		}
+
+		status, err := t.GetStatus()
+
+		migrStatus, ok := status.Read(convertToUInt64(migrationVersion))
+		if !ok {
+			// TODO: have to change this
+			c.JSON(http.StatusBadRequest, &Response{Code: "bad_request", Message: "migration version not found"})
+			return
+		}
+
+		migrationDir := getMigrationDirName(migrationVersion, migrStatus.Name)
+		fullPath := sourceURL.Path + "/" + migrationDir
+
+		if os.RemoveAll(fullPath) != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "migration deletion was unsuccessful"})
+			return
+		}
+
+		c.JSON(http.StatusAccepted, &gin.H{"message": "deleted migration data", "folder": migrationDir})
 		return
 	}
 
