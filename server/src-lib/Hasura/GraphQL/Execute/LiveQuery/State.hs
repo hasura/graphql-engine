@@ -69,8 +69,9 @@ addLiveQuery
   -> LiveQueryPlan
   -> OnChange
   -- ^ the action to be executed when result changes
+  -> ProcessLiveQueryMetrics
   -> IO LiveQueryId
-addLiveQuery logger subscriberMetadata lqState plan onResultAction = do
+addLiveQuery logger subscriberMetadata lqState plan onResultAction processLQMetrics = do
   -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
   -- disposable UUIDs:
@@ -100,7 +101,7 @@ addLiveQuery logger subscriberMetadata lqState plan onResultAction = do
   onJust handlerM $ \handler -> do
     pollerId <- PollerId <$> UUID.nextRandom
     threadRef <- forkImmortal ("pollQuery." <> show pollerId) logger $ forever $ do
-      pollQuery logger pollerId lqOpts pgExecCtx query $ _pCohorts handler
+      pollQuery logger pollerId lqOpts pgExecCtx query (_pCohorts handler) processLQMetrics
       sleep $ unRefetchInterval refetchInterval
     let !pState = PollerIOState threadRef pollerId
     $assertNFHere pState  -- so we don't write thunks to mutable vars

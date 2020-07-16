@@ -307,9 +307,21 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAddress = do
             <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
 onStart
-  :: forall m. (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m, Tracing.MonadTrace m, MonadExecuteQuery m)
-  => Env.Environment -> WSServerEnv -> WSConn -> StartMsg -> m ()
-onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
+  :: forall m.
+  ( HasVersion
+  , MonadIO m
+  , E.MonadGQLExecutionCheck m
+  , MonadQueryLog m
+  , Tracing.MonadTrace m
+  , MonadExecuteQuery m
+  )
+  => Env.Environment
+  -> LQ.ProcessLiveQueryMetrics
+  -> WSServerEnv
+  -> WSConn
+  -> StartMsg
+  -> m ()
+onStart env processLQMetrics serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   timerTot <- startTimer
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
@@ -372,7 +384,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                                  ]
         -- NOTE!: we mask async exceptions higher in the call stack, but it's
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
-        !lqId <- liftIO $ LQ.addLiveQuery logger subscriberMetadata lqMap lqOp liveQOnChange
+        !lqId <- liftIO $ LQ.addLiveQuery logger subscriberMetadata lqMap lqOp liveQOnChange processLQMetrics
         let !opName = _grOperationName q
         liftIO $ $assertNFHere $! (lqId, opName)  -- so we don't write thunks to mutable vars
 
@@ -514,10 +526,11 @@ onMessage
      , MonadExecuteQuery m
      )
   => Env.Environment
+  -> LQ.ProcessLiveQueryMetrics
   -> AuthMode
   -> WSServerEnv
   -> WSConn -> BL.ByteString -> m ()
-onMessage env authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" do
+onMessage env processLQMetrics authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" do
   case J.eitherDecode msgRaw of
     Left e    -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
@@ -528,7 +541,7 @@ onMessage env authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" d
       CMConnInit params -> onConnInit (_wseLogger serverEnv)
                            (_wseHManager serverEnv)
                            wsConn authMode params
-      CMStart startMsg  -> onStart env serverEnv wsConn startMsg
+      CMStart startMsg  -> onStart env processLQMetrics serverEnv wsConn startMsg
       CMStop stopMsg    -> liftIO $ onStop serverEnv wsConn stopMsg
       -- The idea is cleanup will be handled by 'onClose', but...
       -- NOTE: we need to close the websocket connection when we receive the
@@ -699,18 +712,19 @@ createWSServerApp
      , MonadExecuteQuery m
      )
   => Env.Environment
+  -> LQ.ProcessLiveQueryMetrics
   -> AuthMode
   -> WSServerEnv
   -> WS.HasuraServerApp m
 --   -- ^ aka generalized 'WS.ServerApp'
-createWSServerApp env authMode serverEnv = \ !ipAddress !pendingConn ->
+createWSServerApp env processLQMetrics authMode serverEnv = \ !ipAddress !pendingConn ->
   WS.createServerApp (_wseServer serverEnv) handlers ipAddress pendingConn
   where
     handlers =
       WS.WSHandlers
       -- Mask async exceptions during event processing to help maintain integrity of mutable vars:
       (\rid rh ip -> mask_ $ onConn (_wseLogger serverEnv) (_wseCorsPolicy serverEnv) rid rh ip)
-      (\conn bs -> mask_ $ onMessage env authMode serverEnv conn bs)
+      (\conn bs -> mask_ $ onMessage env processLQMetrics authMode serverEnv conn bs)
       (\conn ->    mask_ $ onClose (_wseLogger serverEnv) (_wseLiveQMap serverEnv) conn)
 
 stopWSServerApp :: WSServerEnv -> IO ()

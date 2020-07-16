@@ -13,6 +13,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   , PollDetails(..)
   , BatchExecutionDetails(..)
   , CohortExecutionDetails(..)
+  , ProcessLiveQueryMetrics
 
   -- * Cohorts
   , Cohort(..)
@@ -382,6 +383,8 @@ pollDetailMinimal (PollDetails{..}) =
 instance L.ToEngineLog PollDetails L.Hasura where
   toEngineLog pl = (L.LevelInfo, L.ELTLivequeryPollerLog, pollDetailMinimal pl)
 
+type ProcessLiveQueryMetrics = Maybe (PollDetails -> IO ())
+
 -- | Where the magic happens: the top-level action run periodically by each
 -- active 'Poller'. This needs to be async exception safe.
 pollQuery
@@ -391,8 +394,9 @@ pollQuery
   -> PGExecCtx
   -> MultiplexedQuery
   -> CohortMap
+  -> ProcessLiveQueryMetrics
   -> IO ()
-pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap = do
+pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap processLQMetrics = do
   (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
 
     -- snapshot the current cohorts and split them into batches
@@ -428,14 +432,17 @@ pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap = do
 
     pure (snapshotTime, batchesDetails)
 
-  L.unLogger logger $ PollDetails
-                      { _pdPollerId = pollerId
-                      , _pdGeneratedSql = unMultiplexedQuery pgQuery
-                      , _pdSnapshotTime = snapshotTime
-                      , _pdBatches = batchesDetails
-                      , _pdLiveQueryOptions = lqOpts
-                      , _pdTotalTime = totalTime
-                      }
+  let pollDetails = PollDetails
+                    { _pdPollerId = pollerId
+                    , _pdGeneratedSql = unMultiplexedQuery pgQuery
+                    , _pdSnapshotTime = snapshotTime
+                    , _pdBatches = batchesDetails
+                    , _pdLiveQueryOptions = lqOpts
+                    , _pdTotalTime = totalTime
+                    }
+  case processLQMetrics of
+    Nothing             -> L.unLogger logger pollDetails
+    Just processMetrics -> processMetrics pollDetails
   where
     LiveQueriesOptions batchSize _ = lqOpts
 

@@ -62,6 +62,7 @@ import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Execute                    as E
 import qualified Hasura.GraphQL.Execute.LiveQuery          as EL
+import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Explain                    as GE
 import qualified Hasura.GraphQL.Transport.HTTP             as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
@@ -578,10 +579,12 @@ mkWaiApp
   -> EL.LiveQueriesOptions
   -> E.PlanCacheOptions
   -> ResponseInternalErrorsConfig
+  -> EL.ProcessLiveQueryMetrics
+  -- ^ function to pass to live query poller
   -> (RebuildableSchemaCache Run, Maybe UTCTime)
   -> m HasuraApp
 mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig (schemaCache, cacheBuiltTime) = do
+         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig processLQMetrics (schemaCache, cacheBuiltTime) = do
 
     (planCache, schemaCacheRef) <- initialiseCache
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
@@ -621,7 +624,8 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
       Spock.spockAsApp $ Spock.spockT lowerIO $
         httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
 
-    let wsServerApp  = WS.createWSServerApp env mode wsServerEnv -- TODO: Lyndon: Can we pass environment through wsServerEnv?
+    -- TODO: Lyndon: Can we pass environment through wsServerEnv?
+    let wsServerApp  = WS.createWSServerApp env processLQMetrics mode wsServerEnv
         stopWSServer = WS.stopWSServerApp wsServerEnv
 
     waiApp <- liftWithStateless $ \lowerIO ->
