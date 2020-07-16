@@ -13,7 +13,8 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   , PollDetails(..)
   , BatchExecutionDetails(..)
   , CohortExecutionDetails(..)
-  , ProcessLiveQueryMetrics
+  , LiveQueryPostPollHook
+  , defaultLiveQueryPostPollHook
 
   -- * Cohorts
   , Cohort(..)
@@ -384,20 +385,23 @@ pollDetailMinimal (PollDetails{..}) =
 instance L.ToEngineLog PollDetails L.Hasura where
   toEngineLog pl = (L.LevelInfo, L.ELTLivequeryPollerLog, pollDetailMinimal pl)
 
-type ProcessLiveQueryMetrics = Maybe (PollDetails -> IO ())
+type LiveQueryPostPollHook = PollDetails -> IO ()
+
+-- the default LiveQueryPostPollHook
+defaultLiveQueryPostPollHook :: L.Logger L.Hasura -> LiveQueryPostPollHook
+defaultLiveQueryPostPollHook logger pd = L.unLogger logger pd
 
 -- | Where the magic happens: the top-level action run periodically by each
 -- active 'Poller'. This needs to be async exception safe.
 pollQuery
-  :: L.Logger L.Hasura
-  -> PollerId
+  :: PollerId
   -> LiveQueriesOptions
   -> PGExecCtx
   -> MultiplexedQuery
   -> CohortMap
-  -> ProcessLiveQueryMetrics
+  -> LiveQueryPostPollHook
   -> IO ()
-pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap processLQMetrics = do
+pollQuery pollerId lqOpts pgExecCtx pgQuery cohortMap postPollHook = do
   (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
 
     -- snapshot the current cohorts and split them into batches
@@ -441,9 +445,7 @@ pollQuery logger pollerId lqOpts pgExecCtx pgQuery cohortMap processLQMetrics = 
                     , _pdLiveQueryOptions = lqOpts
                     , _pdTotalTime = totalTime
                     }
-  case processLQMetrics of
-    Nothing             -> L.unLogger logger pollDetails
-    Just processMetrics -> processMetrics pollDetails
+  postPollHook pollDetails
   where
     LiveQueriesOptions batchSize _ = lqOpts
 

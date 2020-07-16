@@ -306,9 +306,9 @@ runHGEServer
   -- ^ start time
   -> IO ()
   -- ^ shutdown function
-  -> EL.ProcessLiveQueryMetrics
+  -> Maybe EL.LiveQueryPostPollHook
   -> m ()
-runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp processLQMetrics = do
+runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp postPollHook = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -348,7 +348,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pro
              soLiveQueryOpts
              soPlanCacheOptions
              soResponseInternalErrorsConfig
-             processLQMetrics
+             postPollHook
              _icSchemaCache
 
   -- log inconsistent schema objects
