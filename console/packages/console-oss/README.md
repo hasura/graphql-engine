@@ -1,5 +1,7 @@
 Package history
 
+0.0.6-1.3.0-beta.4.1 - Merge changes from master branch of oss
+0.0.6-1.3.0-beta.4 - Merge changes from internal multitenant branch with last tagged release for console/server
 0.0.6-1.3.0-beta.3 - Merges stable branch of 1.3.0 and releases 
   Updates the directory structure
   Changes the event trigger exports

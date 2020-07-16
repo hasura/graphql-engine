@@ -61,6 +61,9 @@ import telemetryReducer from './src/telemetry/Actions';
 
 // React components
 import Spinner from './src/components/Common/Spinner/Spinner';
+
+import invokeEventTriggerReducer from './src/components/Services/Events/EventTriggers/InvokeManualTrigger/InvokeManualTriggerAction';
+
 // import Button from './src/components/Common/Button/Button';
 // Css modules
 const CommonScss = require('./src/components/Common/Common.scss');
@@ -146,7 +149,7 @@ export { ADMIN_SECRET_ERROR, UPDATE_CURRENT_SCHEMA, UPDATE_DATA_HEADERS };
 export { dataHeaders };
 
 // export Event Tab parts
-export { getEventsRouter, eventsReducer};
+export { getEventsRouter, eventsReducer, invokeEventTriggerReducer};
 
 // export Remote Schema parts
 export { getRemoteSchemaRouter, remoteSchemaReducer };
