@@ -980,12 +980,6 @@ Date:   Fri Apr 24 10:58:42 2020 +0530
 
     Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
 
-commit f3558d5278a7099b24b8a1ee82cc76911d6ae257
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Thu Apr 23 16:06:33 2020 +0530
-
-    make arguments field optional in ActionDefinition (#4521)
-
 commit 246a0b7ab80b74f1d79bef28801efcd39f3d7164
 Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
 Date:   Thu Apr 23 02:33:23 2020 +0530
@@ -997,20 +991,6 @@ Date:   Thu Apr 23 02:33:23 2020 +0530
     exposes the logic run_sql uses to determine whether to use the
     metadata check to make the check more precise.
 
-commit 2e8234f1b6fccabcbb5d33f3ac3bcfc54c2303f8
-Author: Toan Nguyen <hgiasac@gmail.com>
-Date:   Thu Apr 23 03:33:51 2020 +0700
-
-    fix nested errors array in ws-server response log (#3971)
-
-commit a9051b3e59fe067f26e9fb63c41aa1283022f1df
-Author: Avi Moondra <avimoondra@gmail.com>
-Date:   Tue Apr 21 23:23:25 2020 -0700
-
-    fix typo in jsonb query filters to match operator api (#4505)
-
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
 commit e983b1596ea02ee9d370b9db1030a95a669ac560
 Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
 Date:   Wed Apr 22 11:29:14 2020 +0530
@@ -1018,132 +998,6 @@ Date:   Wed Apr 22 11:29:14 2020 +0530
     fix recreating action's permission, fix #4377 (#4495)
 
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-
-commit fac2d18d6f088d318c1fb9b0a1ce03f976b01b75
-Author: Auke Booij <auke@hasura.io>
-Date:   Tue Apr 21 21:03:35 2020 +0200
-
-    Add a hint on avoiding recompilation during typical dev workflow (#4427)
-
-commit b2ad3ee2ee9a6d27d6fb489d3b07dbdefbe8f756
-Author: Auke Booij <auke@hasura.io>
-Date:   Tue Apr 21 15:56:15 2020 +0200
-
-    server: avoid integer overflows (fix #576) (fix #4368) (#4435)
-
-    * Update graphql-parser-hs and hence use `Scientific` directly
-
-    The new version of graphql-parser-hs returns Scientific and Integer
-    rather than Double and Int32, respectively.  So we now need to do less
-    work in graphql-engine, and we can process larger numbers.
-
-    In practice, this means that when inserting a bigint, we no longer
-    need to specify the inserted integer as text.  This is also
-    represented in the updated tests.
-
-    * Generate int overflow error on insert
-
-    * Document bigint insertion support in changelog
-
-commit cd2e09c6ade63e87b8f4828f3ea6499ce0f51d9d
-Author: Auke Booij <auke@hasura.io>
-Date:   Tue Apr 21 14:30:48 2020 +0200
-
-    server: add support for timestamps without timezone to graphql-engine (fix #1217) (#4452)
-
-    * Add support for timestamps without timezone to graphql-engine
-
-    * Add tests for aggregations on timestamps without timezones
-
-commit 9b7781ee6b41131f75e7a0982df62e32ed3eba7d
-Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
-Date:   Tue Apr 21 15:55:56 2020 +0530
-
-    introduce effective timeout in actions async tests (#4363)
-
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
-commit 82cdad155689c3149e5bff90965f601bf6f166e8
-Author: Auke Booij <auke@hasura.io>
-Date:   Tue Apr 21 11:29:16 2020 +0200
-
-    Link to pytest docs in the server test suite READMEs (#4425)
-
-commit ced6275ff0339fc5850de8bea03d7f07f7b2dab1
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Tue Apr 21 14:54:35 2020 +0530
-
-    add additional tests for testing claims_namespace_path in JWT tokens (#4481)
-
-    * add additional tests for testing claims_namespace_path in JWT tokens
-
-    - add tests for at root level and at a nested level
-
-    * modify the JWT tests
-
-    * combine the claims_namespace_path tests together in test-server.sh
-
-    * change the order of the claims_namespace_path tests
-
-    * change the order of the claims_namespace_path tests
-
-commit 5f846695680aa9bf606aff1c4354c92461106421
-Author: Toan Nguyen <hgiasac@gmail.com>
-Date:   Tue Apr 21 15:06:11 2020 +0700
-
-    server: support single $ as root json path (#4482)
-
-    * support single $ json path
-
-    * support sql query with root json path
-
-    * update changelog
-
-    * update changelog
-
-    Co-authored-by: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
-commit be28a3b95c2aa570b0af8f44daeaefba14bc8d65
-Author: Auke Booij <auke@hasura.io>
-Date:   Tue Apr 21 08:36:30 2020 +0200
-
-    Move changelog entry to the right section (#4493)
-
-commit 15c0ebf1ef77ea646f789bbe5264feef51d8a776
-Author: Toan Nguyen <hgiasac@gmail.com>
-Date:   Mon Apr 20 15:55:09 2020 +0700
-
-    allow special characters in json path's property name (close #3890) (#3892)
-
-    * allow underscore prefix and special characters in json path
-
-    * server: Rewrite/refactor JSONPath parser
-
-    The JSONPath parser is also rewritten, the previous implementation
-    was written in a very explicitly “recursive descent” style, but the whole
-    point of using attoparsec is to be able to backtrack! Taking advantage
-    of the combinators makes for a much simpler parser.
-
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
-    Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>
-    Co-authored-by: Shahidh K Muhammed <shahidh@hasura.io>
-
-commit b2d65d16d3c9de367d07a8b6251167610b786a08
-Author: Auke Booij <auke@hasura.io>
-Date:   Fri Apr 17 11:32:09 2020 +0200
-
-    server: _inc for non-integer numeric types (fix #3573) (#4429)
-
-    * Allow `_inc` to update other numeric types in addition to integers
-
-    * Add support for PostgreSQL's `money` field type
-
-    * Add support for _inc on money types
-
-    * Add note of generalized `_inc` support to changelog
 
 commit 5116e16e18f624fcdaf98aa0a0275e571fe34a2d
 Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
@@ -1190,15 +1044,6 @@ Date:   Thu Apr 16 12:15:21 2020 +0530
     Co-authored-by: Marion Schleifer <marion@hasura.io>
     Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
     Co-authored-by: Tirumarai Selvan <tirumarai.selvan@gmail.com>
-
-commit dbf0c43ca8abb2d2bbf8874d4c57e5d1409dee3c
-Author: Auke Booij <auke@tulcod.com>
-Date:   Wed Apr 15 18:13:53 2020 +0200
-
-    server: Avoid duplicated test runs (#4420)
-
-    This avoids re-running tests when a parameterized test is specified
-    that doesn't actually depend on its parameter.
 
 commit dc31b835e1957f3120ef70502937bdde91993f77
 Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
@@ -1290,12 +1135,6 @@ Date:   Fri Apr 10 19:25:59 2020 +0530
 
     Co-authored-by: Alexis King <lexi.lambda@gmail.com>
 
-commit 8b85c86ebe1ea0299bf0f046c18f6d7666f5b80e
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Wed Apr 8 11:59:46 2020 -0400
-
-    Fix erroneous error logging in WebSocket.onStop
-
 commit ca15ef8c96bfd70a75b4ae3be26704345b11f1ed
 Author: Tirumarai Selvan <tiru@hasura.io>
 Date:   Thu Apr 9 13:11:24 2020 +0530
@@ -1303,14 +1142,6 @@ Date:   Thu Apr 9 13:11:24 2020 +0530
     Refactor initialisation and relax tx isolation levels where possible (#3901)
 
     Co-authored-by: Alexis King <lexi.lambda@gmail.com>
-
-commit ebb3bb39109477f2ab6dfdaef732f51262e5786d
-Author: Tirumarai Selvan <tiru@hasura.io>
-Date:   Thu Apr 9 12:03:33 2020 +0530
-
-    unlock event if event trigger info is not found in cache (#4213)
-
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
 
 commit a07a87066ecc14af368c7807d998d2b00ccbf92b
 Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
