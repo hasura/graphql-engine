@@ -542,62 +542,6 @@ Date:   Thu Jun 4 22:55:21 2020 +0530
 
     Co-authored-by: Anon Ray <rayanon004@gmail.com>
 
-commit 7e2d6370ce6ce18255958309d0d71a674437e2c0
-Author: George Kormaris <mail@gekorm.com>
-Date:   Wed Jun 3 17:01:04 2020 +0100
-
-    Fix typo in error message (#4923)
-
-    "confilct" to "conflict"
-
-    Co-authored-by: Rikin Kachhia <54616969+rikinsk@users.noreply.github.com>
-
-commit 34a41e56326d97ec340beba55d82723f62103ee5
-Author: Phil Freeman <phil@hasura.io>
-Date:   Tue Jun 2 16:31:50 2020 -0700
-
-    Add some useful FromJSON instances (#4707)
-
-    These data types already had ToJSON instances, and it is useful to be able to parse the resulting JSON values back into Haskell values.
-
-commit cd468761ce0ded12f563c510246c641a056bfa26
-Author: Phil Freeman <phil@hasura.io>
-Date:   Tue Jun 2 14:27:14 2020 -0700
-
-    Refactor the WAI shutdownHandler to use an MVar (#4667)
-
-commit 81f338cc39b3f069bdc6f15688135f1b5c8f05b9
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Tue Jun 2 22:47:58 2020 +0530
-
-    remove event from the saved locked events after processing it (#4932)
-
-    * remove event from the saved locked events after processing it
-
-commit 2d2def8ecb1eb901c4e644481a50587c46a5e20a
-Author: Vamshi Surabhi <vamshi@hasura.io>
-Date:   Mon Jun 1 13:06:26 2020 +0530
-
-    Disables optimizations on Hasura.Server.Init module
-
-    When compiling the graphql-engine binary with `-O2`, ghc-8.10 seems to
-    be stuck at the module `Server.Init` while consuming `17G` of RAM (for 5
-    minutes at least before I forcefully terminated the compilation). With
-    this pragma, ghc-8.10 now takes under `12G` to compile graphql-engine
-    binary.
-
-commit f14900e7dabedf8913fd590d4ccfe433c6dc8995
-Author: Vamshi Surabhi <vamshi@hasura.io>
-Date:   Fri May 29 18:51:39 2020 +0530
-
-    bump dependencies
-
-commit 7eab3a7b54c7cb8154f4a3bf2c80c1d153f0e14b
-Author: Vamshi Surabhi <vamshi@hasura.io>
-Date:   Fri May 29 18:37:37 2020 +0530
-
-    fix haddock comment
-
 commit c0d2bc66533e714606f0625d3dc4137b630c1a00
 Author: Tirumarai Selvan <tiru@hasura.io>
 Date:   Wed May 27 20:32:58 2020 +0530
@@ -625,21 +569,6 @@ Date:   Wed May 27 20:32:58 2020 +0530
     Co-authored-by: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
     Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>
 
-commit 756614c326fc320f1b32986318e130c7a8856916
-Author: Tirumarai Selvan <tiru@hasura.io>
-Date:   Tue May 26 14:43:58 2020 +0530
-
-    update auth-webhook boilerplates for node (#4885)
-
-    1) split nodejs-express boilerplate into nodejs-express and nodejs-firebase
-    2) update deploy instructions for heroku
-
-commit e347ef3e45d17123013ac777998a22b96ec6c03e
-Author: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
-Date:   Thu May 21 21:20:25 2020 +0530
-
-    fix explain queries with role permissions, fix #4816
-
 commit ff99b24031b07ca2a6a9c2b4734823a887293d51
 Author: Vamshi Surabhi <0x777@users.noreply.github.com>
 Date:   Wed May 6 01:27:17 2020 +0530
@@ -655,26 +584,6 @@ Date:   Thu May 21 13:43:44 2020 +0530
     * flush log buffer on exception in mkWaiApp
 
     * add comment to explain the introduced change
-
-    * add changelog
-
-commit ac3076796c756776fd0423dc2772f9ed762b556f
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Wed May 20 11:46:26 2020 +0530
-
-    Allowlist metadata Import bug (#4762)
-
-    fix bug which was not allowing the allowlist to be imported
-
-commit 6597e986f272cbc0697a1e70a6aa9b77edecaf83
-Author: Tirumarai Selvan <tiru@hasura.io>
-Date:   Tue May 19 13:19:30 2020 +0530
-
-    flush logger on shutdown (#4800)
-
-    * flush logger on shutdown
-
-    * use rmLoggerSet instead of flushLogStr
 
     * add changelog
 
@@ -698,40 +607,6 @@ Date:   Mon May 18 14:27:56 2020 +0200
 
     Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
 
-commit 9b247d4ed79e6e82409d994c70b52c561c832230
-Merge: cc8e2ccc a77bb057
-Author: Brandon Simmons <brandon@hasura.io>
-Date:   Wed May 13 20:34:38 2020 -0400
-
-    Merge pull request #4518 from jberryman/ghc-8.10-migration
-
-    Migrate to GHC 8.10, upgrade dependencies. Closes #4517
-
-commit a77bb0570f4210fb826985e17a84ddcc4c95d3ea
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Mon Apr 27 14:06:44 2020 -0400
-
-    In websockets: rethrow resourceVanished as ConnectionClosed. Closes #4344
-
-    ...hopefully. At least I no longer can easily induce any unexpected
-    exceptions after this and the GHC 8.10 + libs upgrade commit.
-
-commit ff62d5e0bfd5bfe1cd768978febbe86a857393c8
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Fri Apr 3 13:54:51 2020 +0530
-
-    Migrate to GHC 8.10, upgrade dependencies. Closes #4517
-
-    This also seems to squash a stubborn space leak we see with
-    subscriptions (linking to canonical #3388 for reference).
-
-    This may also fix some of the "Unexpected exception" websockets
-    exceptions we are now surfacing (see e.g. #4344)
-
-    Also: dev.sh: fix hpc reporting
-
-    Initial work on this done by Vamshi.
-
 commit 69f24d47b3fe06e5dce5dbb36300f4d0f68d2301
 Author: Brandon Simmons <brandon.m.simmons@gmail.com>
 Date:   Wed May 13 17:38:16 2020 -0400
@@ -750,30 +625,6 @@ Date:   Wed May 13 18:03:16 2020 +0530
     Co-authored-by: Marion Schleifer <marion@hasura.io>
     Co-authored-by: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
     Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>
-
-commit 2735d284c101e66f0aa6e6c24612abb43a1ebf7b
-Author: Auke Booij <auke@hasura.io>
-Date:   Wed May 13 12:10:46 2020 +0200
-
-    server: use a new version of graphql-parser-hs to avoid loss of precision (#4741)
-
-    Fixes #4733.  See also hasura/graphql-parser-hs#29.
-
-commit e17e47ef8cdbd20c2bef3398c13d8526aee5fdc3
-Author: Auke Booij <auke@hasura.io>
-Date:   Wed May 13 11:17:32 2020 +0200
-
-    server: avoid code duplication using type classes (#4624)
-
-    There are two implementations of a Cache, namely a bounded and an
-    unbounded variant.  This can be elegantly captured in a type class.
-    In addition to reducing the amount of error-prone code in the
-    definition of the cache, this version reduces the amount of
-    error-prone code in usage sites of the cache, as it makes the cache
-    into an abstract object, so that a calling site cannot distinguish
-    between cache types.  Any decision about what should be cached should
-    be made through the interface of a cache, rather than at the callsite,
-    and this is captured by this variant.
 
 commit 4d10a610f4ade66db758d459e3ddf02a43996e45
 Author: Auke Booij <auke@hasura.io>
@@ -955,16 +806,6 @@ Date:   Fri Apr 24 13:25:51 2020 +0530
 
     Co-authored-by: Marion Schleifer <marion@hasura.io>
     Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
-commit a8affc2cda8ca3b7a6c6e96ad4eecd37662ddb0e
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Fri Apr 24 11:39:00 2020 +0530
-
-    fix intermittent errors occur when query actions used with variables (#4527)
-
-    * don't add query actions to the plan cache
-
-    Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
 
 commit b51a8ece4d3cca12aafa62e0cb7cb337974c1910
 Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
