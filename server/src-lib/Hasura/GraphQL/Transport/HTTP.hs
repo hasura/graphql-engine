@@ -15,6 +15,7 @@ module Hasura.GraphQL.Transport.HTTP
 
 import           Control.Monad.Morph                    (hoist)
 
+import           Hasura.Db                              (withTraceContext)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -25,6 +26,7 @@ import           Hasura.Server.Init.Config
 import           Hasura.Server.Utils                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
+import           Hasura.SQL.Types                       (toSQLTxt)
 import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
 
 import qualified Data.Environment                       as Env
@@ -172,7 +174,8 @@ runHasuraGQ reqId (query, queryParsed) userInfo resolvedOp = do
 
     E.ExOpMutation respHeaders tx -> trace "pg" $ do
       logQueryLog logger query Nothing reqId
-      (respHeaders,) <$> Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withUserInfo userInfo) tx
+      ctx <- Tracing.currentContext
+      (respHeaders,) <$> Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
 
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload

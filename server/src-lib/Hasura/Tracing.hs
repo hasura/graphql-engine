@@ -17,18 +17,24 @@ module Hasura.Tracing
   , SuspendedRequest(..)
   , extractHttpContext
   , traceHttpRequest
+  , extractEventContext
   ) where
 
 import           Hasura.Prelude
+import           Control.Lens                ((^?))
 import           Control.Monad.Trans.Control
 import           Control.Monad.Morph
 import           Control.Monad.Unique
 import           Data.String                 (fromString)
 
+import qualified Data.Aeson                  as J
+import qualified Data.Aeson.Lens             as JL
 import qualified Data.ByteString             as BS
 import qualified Data.ByteString.Lazy        as BL
+import qualified Data.Text                   as T
 import qualified Network.HTTP.Client         as HTTP
 import qualified Network.HTTP.Types.Header   as HTTP
+import qualified Safe
 import qualified System.Random               as Rand
 import qualified Web.HttpApiData             as HTTP
 
@@ -207,6 +213,14 @@ extractHttpContext hdrs = do
     <$> (HTTP.parseHeaderMaybe =<< lookup "X-Hasura-TraceId" hdrs)
     <*> pure freshSpanId
     <*> pure (HTTP.parseHeaderMaybe =<< lookup "X-Hasura-SpanId" hdrs)
+
+extractEventContext :: J.Value -> IO (Maybe TraceContext)
+extractEventContext e = do
+  freshSpanId <- liftIO Rand.randomIO
+  pure $ TraceContext
+    <$> ((e ^? JL.key "trace_id" . JL._String) >>= Safe.readMay . T.unpack)
+    <*> pure freshSpanId
+    <*> pure ((e ^? JL.key "span_id" . JL._String) >>= Safe.readMay . T.unpack)
 
 traceHttpRequest
   :: MonadTrace m

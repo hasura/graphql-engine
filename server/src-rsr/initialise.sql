@@ -619,7 +619,9 @@ CREATE OR REPLACE FUNCTION
     payload := json_build_object(
       'op', op,
       'data', row_data,
-      'session_variables', session_variables
+      'session_variables', session_variables,
+      'trace_id', current_setting('hasura.tracing.traceid'),
+      'span_id', current_setting('hasura.tracing.spanid')
     );
     INSERT INTO hdb_catalog.event_log
                 (id, schema_name, table_name, trigger_name, payload)
