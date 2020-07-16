@@ -1,0 +1,1663 @@
+commit 1eb36bbbb30b79f38a0c7408ecec88f4b2a94cd6 (origin-hasura/master, master)
+Author: Anon Ray <ecthiender@users.noreply.github.com>
+Date:   Thu Jul 16 18:49:42 2020 +0530
+
+    server: refactor 'pollQuery' to have a hook to process 'PollDetails' (#5391)
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit 0dddbe9e9d519de98662643d66c7d04a45d8d670
+Author: Phil Freeman <phil@hasura.io>
+Date:   Wed Jul 15 03:40:48 2020 -0700
+
+    Add MonadTrace and MonadExecuteQuery abstractions (#5383)
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit 24592a516b2e920d3d41244b0aac4c060dc321ae
+Author: Lyndon Maydwell <lyndon@sordina.net>
+Date:   Wed Jul 15 05:00:58 2020 +1000
+
+    Pass environment variables around as a data structure, via @sordina (#5374)
+
+    * Pass environment variables around as a data structure, via @sordina
+
+    * Resolving build error
+
+    * Adding Environment passing note to changelog
+
+    * Removing references to ILTPollerLog as this seems to have been reintroduced from a bad merge
+
+    * removing commented-out imports
+
+    * Language pragmas already set by project
+
+    * Linking async thread
+
+    * Apply suggestions from code review
+
+    Use `runQueryTx` instead of `runLazyTx` for queries.
+
+    * remove the non-user facing entry in the changelog
+
+    Co-authored-by: Phil Freeman <paf31@cantab.net>
+    Co-authored-by: Phil Freeman <phil@hasura.io>
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit 66551acac4a1bc6ee68be7e4fcc59835c773d86d
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Wed Jul 8 21:25:36 2020 -0400
+
+    Replace idle GC with a custom GC thread
+
+    The current idle GC settings seem never to cause idle GC to trigger.
+    The changes here at least help memory usage to look more reasonable when
+    running certain benchmarks, and speculatively could partially fix some
+    memory leaks users have reported.
+
+    See ourIdleGC for details.
+
+    Referencing canonical memory issue #3388
+
+commit 505ac06d9ec8439e88d360c2aa4bfc3e65f22f8c
+Author: Phil Freeman <phil@hasura.io>
+Date:   Mon Jul 13 22:56:53 2020 -0700
+
+    Expose all modules in Cabal file (#5371)
+
+commit 0ef52292b5c8b5ac129dd877b8b8d913089c12b3
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Fri Jul 10 22:17:05 2020 +0530
+
+    server: call the webhook asynchronously in event triggers (#5352)
+
+    * server: call the webhook asynchronosly in event triggers
+
+commit 6d235be29ccf008124191c4e161c3b0334c2e35f
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Sat Jul 4 22:53:19 2020 -0400
+
+    Add --disable-delayed-os-memory-return to default rtsopts
+
+    https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/runtime_control.html#rts-flag---disable-delayed-os-memory-return
+
+    Referencing canonical memory issue #3388
+
+    This is a bit of a mystery. It didn't seem to have any effect in early
+    repros we had. But now, running an introspection query benchmark I see:
+
+      Running 400 concurrent connections:
+        before this change: max residency ~450M
+        after: ~140M
+        No difference in latency was observed.
+
+      ...BUT: if I give graphql-engine a warmup of 10 requests with 1
+      connection (i.e. no concurrency): I see both have a max residency of
+      ~140M (i.e. the flag doesn't help)
+
+      ...also interestingly: a single warmup request doesn't seem to have
+      any effect (ending RES is still high), 2 requests gets max RES down to
+      ~180M.
+
+    I suspect many concurrent connections are spraying pinned data over a
+    bunch of blocks which are then not released to the OS barring memory
+    pressure. Whatever this is is maybe thread-local or "per-capability" in
+    some sense...
+
+commit 2fe353a2943d771cd4d0932e084c64a718dc6981
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Fri Jul 3 12:00:35 2020 +0530
+
+    allow array relation connection fields regardless of aggregation permission & change relay endpoint to '/v1beta1/relay' (fix #5218) (#5257)
+
+    * fix error when array relation connections are queried, fix #5218
+
+    * change relay endpoint to '/v1beta1/relay'
+
+    * Update CHANGELOG.md
+
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit 9ef6de51133342acca3857c4392c6d853d3256ea
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Fri Jul 3 06:25:07 2020 +0530
+
+    server: include additional fields in scheduled trigger webhook payload (#5262)
+
+    * include scheduled triggers metadata in the webhook body
+
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit 9e423a3c5574a3fbfaade8cc14b62b87dc05e3ec
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Thu Jul 2 10:55:46 2020 -0400
+
+    Fix buggy parsing of new --conn-lifetime flag in 2b0e3774
+
+commit 97b1155bf83bbed223c763c681b88abfac5521e0
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Thu Jul 2 17:27:09 2020 +0530
+
+    server: unlock scheduled events on graceful shutdown (#4928)
+
+commit 9ccbd1c0f6b4816f954b1a9e0eef168625dbaecb
+Author: Vamshi Surabhi <0x777@users.noreply.github.com>
+Date:   Thu Jul 2 12:11:08 2020 +0530
+
+    bump pg-client-hs version (fixes a build issue on some environments) (#5267)
+
+commit d464208515ef6649bde5d7266fd783ad488dc859
+Merge: a78f17b7 cfffade1
+Author: Vamshi Surabhi <0x777@users.noreply.github.com>
+Date:   Thu Jul 2 10:50:25 2020 +0530
+
+    Merge pull request #5255 from 0x777/issue-2012-mutations-no-prepared-statements
+
+    do not use prepared statements for mutations, close #2012
+
+commit cfffade11589488cfae356e35e735f53df23ae6e
+Author: Vamshi Surabhi <vamshi@hasura.io>
+Date:   Wed Jul 1 17:44:19 2020 +0530
+
+    do not use prepared statements for mutations
+
+commit 2b0e3774a3fa00d23aa0e9ee9b43767b536ba54d
+Author: Brandon Simmons <brandon@hasura.io>
+Date:   Tue Jun 30 23:53:10 2020 -0400
+
+    5087 libpq pool leak (#5089)
+
+    Shrink libpq buffers to 1MB before returning connection to pool. Closes #5087
+
+    See: https://github.com/hasura/pg-client-hs/pull/19
+
+    Also related: #3388 #4077
+
+commit bc3d735bf3be806b433eee1fcd70d38146caf710
+Author: Auke Booij <auke@hasura.io>
+Date:   Tue Jun 30 10:39:25 2020 +0200
+
+    server/docs: add instructions to fix loss of float precision in PostgreSQL <= 11 (#5187)
+
+    This adds a server flag, --pg-connection-options, that can be used to set a PostgreSQL connection parameter, extra_float_digits, that needs to be used to avoid loss of data on older versions of PostgreSQL, which have odd default behavior when returning float values. (fixes #5092)
+
+commit 93104e616f53ed46503577032c9eacf9be31575a
+Merge: 6c689992 1dbe5cd1
+Author: Brandon Simmons <brandon@hasura.io>
+Date:   Fri Jun 26 18:24:53 2020 -0400
+
+    Merge pull request #5214 from jberryman/5190-improve-websockets-idle-memory-v2-only-kc8
+
+    Lower stack chunk size in RTS to reduce thread STACK memory (closes #5190)
+
+commit 1dbe5cd1ab4a68dd2518f9e57a656517f708e900
+Merge: f9b5b838 6c689992
+Author: Brandon Simmons <brandon@hasura.io>
+Date:   Fri Jun 26 15:02:49 2020 -0400
+
+    Merge branch 'master' into 5190-improve-websockets-idle-memory-v2-only-kc8
+
+commit f9b5b8382cbd41a589d1096c720805d3184153d4
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Tue Jun 23 20:35:36 2020 -0400
+
+    Lower stack chunk size in RTS to reduce thread STACK memory (closes #5190)
+
+    This reduces memory consumption for new idle subscriptions significantly
+    (see linked ticket).
+
+    The hypothesis is: we fork a lot of threads per websocket, and some of
+    these use slightly more than the initial 1K stack size, so the first
+    overflow balloons to 32K, when significantly less is required.
+
+    However: running with `+RTS -K1K -xc` did not seem to show evidence of
+    any overflows! So it's a mystery why this improves things.
+
+    GHC should probably also be doubling the stack buffer at each overflow
+    or doing something even smarter; the knobs we have aren't so helpful.
+
+commit 8b49f472a210960a8ef17a40ee7095062d11e715
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Thu Jun 25 09:03:37 2020 +0530
+
+    fix postgres query error for object relationship with permission limit, fix #5148 (#5177)
+
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit c7ffd882d0e468f64687a9ed07fe930445821c6f
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Wed Jun 24 19:25:50 2020 +0530
+
+    fix relay introspection when remote relationships are defined, fix #5144 (#5145)
+
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit 6a58c144f540508e3a75c977585577e0b757d550
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Tue Jun 23 20:51:34 2020 +0530
+
+    server: fix updating of headers behaviour in the update cron trigger API and create future events immediately (#5151)
+
+    * server: fix bug to update headers in an existing cron trigger and create future events
+
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit ea2357104977065ae889014a6c09bb58d9fbbe0b
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Tue Jun 23 15:35:54 2020 +0530
+
+    fix introspection faling when multiple actions defined with PG scalar types (fix #5166) (#5173)
+
+    Introspection query is failing with `type info not found for xxxx` error message if multiple actions are defined with reused PG scalars. The fix for the same.
+
+commit f8a7312a304e40c1ff632b42f24ab9bd42811d63
+Author: nizar-m <19857260+nizar-m@users.noreply.github.com>
+Date:   Fri Jun 19 22:40:17 2020 +0530
+
+    Regression benchmarks setup (#3310)
+
+    * Benchmark GraphQL queries using wrk
+
+    * fix console assets dir
+
+    * Store wrk parameters as well
+
+    * Add details about storing results in Readme
+
+    * Remove files in bench-wrk while computing server shasum
+
+    * Instead of just getting maximum throughput per query per version,
+    create plots using wrk2 for a given set of requests per second.
+    The maximum throughput is used to see what values of requests per second are feasible.
+
+    * Add id for version dropdown
+
+    * Allow specifiying env and args for GraphQL Engine
+
+    1) Arguments defined after -- will be applied as arguments to Hasura GraphQL Engine
+    2) Script will also pass the environmental variables to Hasura GraphQL Engine instances
+
+    Hasura GraphQL engine can be run with the given environmental variables and arguments as follows
+
+    $ export HASURA_GRAPHQL_...=....
+    $ python3 hge_wrk_bench.py -- --hge_arg1 val1 --hge_arg2 val2 ...
+
+    * Use matplotlib instead of plotly for figures
+
+    * Show throughput graph also.
+
+    It maybe useful in checking performance regression across versions
+
+    * Support storing results in s3
+
+    Use --upload-root-uri 's3://bucket/path' to upload results inside the
+    given path.When specified, the results will be uploaded to the bucket,
+    including latencies, latency histogram, and the test setup info.
+    The s3 credentials should be provided as given in AWS boto3 documentation.
+
+    * Allow specifying a name for the test scenario
+
+    * Fix open latency uri bug
+
+    * Update wrk docker image
+
+    * Keep ylim a little higher than maximum so that the throughput plot is clearly visible
+
+    * Show throughput plots for multiple queries at the same time
+
+    * 1) Adjust size of dropdowns
+    2) Make label for requests/sec invisible when plot type is throughput
+
+    * 1) Adding boto3 to requirements.txt
+    2) Removing CPU Key print line
+    3) Adding info about the tests that will be run with wrk2
+
+    * Docker builder fo wrk-websocket-server
+
+    * Make it optional to setup remote graphql-engine
+
+    * Listen on all interfaces and enable ping thread
+
+    * Add bench_scripts to wrk-websocket-server docker
+
+    * Use 127.0.0.1 instead of 'localhost' to address local hge
+
+    For some reason it seems wrk was hanging trying to resolve 'localhost'.
+    ping was able to fine from the same container, so I'm not sure what the
+    deal was. Probably some local misconfiguration on my machine, but maybe
+    this change will also help others.
+
+    * Store latency samples in subdirectory, server_shasum just once at start, additional docs
+
+    * Add a note on running the benchmarks in the simplest way
+
+    * Add a new section on how to run benchmarks on a new linux hosted instance
+
+    Co-authored-by: Nizar Malangadan <nizar-m@users.noreply.github.com>
+    Co-authored-by: Brandon Simmons <brandon.m.simmons@gmail.com>
+    Co-authored-by: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+    Co-authored-by: Brandon Simmons <brandon@hasura.io>
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit a7a60c2dfe42f9257d57d748a231bd47b164337b
+Author: Anon Ray <ecthiender@users.noreply.github.com>
+Date:   Fri Jun 19 12:12:32 2020 +0530
+
+    server: changes catalog initialization and logging for pro customization (#5139)
+
+    * new typeclass to abstract the logic of QueryLog-ing
+
+    * abstract the logic of logging websocket-server logs
+
+      introduce a MonadWSLog typeclass
+
+    * move catalog initialization to init step
+
+      expose a helper function to migrate catalog
+      create schema cache in initialiseCtx
+
+    * expose various modules and functions for pro
+
+commit d064959ac32a450ec0f150799415f057ba8d3a8c
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Wed Jun 17 13:18:31 2020 +0530
+
+    server: drop catalog dependencies when parent column/table is dropped containing a remote relationship (#5119)
+
+commit 6fc404329ad2a2408e9fee0fad4b45e54fb98b87
+Author: Vamshi Surabhi <0x777@users.noreply.github.com>
+Date:   Tue Jun 16 23:14:59 2020 +0530
+
+    generalize query execution logic on Postgres (#5110)
+
+    * generalize PGExecCtx to support specialized functions for various operations
+
+    * fix tests compilation
+
+    * allow customising PGExecCtx when starting the web server
+
+commit 0cf4cbc5c6dac9c989d8a19fa420583e7774bd78
+Author: Anon Ray <ecthiender@users.noreply.github.com>
+Date:   Tue Jun 16 20:53:06 2020 +0530
+
+    server: refactor GQL execution check and config API (#5094)
+
+    Co-authored-by: Vamshi Surabhi <vamshi@hasura.io>
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit 4e229dc568fc125f01a738cd1b4937885042b1fd
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Tue Jun 16 19:55:49 2020 +0530
+
+    relay fixes (#5013)
+
+    * fix relay introspection failing if any views exist, fix #5020
+
+    * reduce base64 encoded node id length, close #5037
+
+    * make node field type non-nullable in an edge
+
+    * more relay tests with permissions & complete restructure of test yaml files
+
+    Co-authored-by: Aravind <aravindkp@outlook.in>
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit 4c9362c91b7d5b302e37498d6d5d4971caa630a4
+Merge: cc2878de d862afb4
+Author: Vamshi Surabhi <0x777@users.noreply.github.com>
+Date:   Thu Jun 11 23:11:26 2020 +0530
+
+    Merge pull request #4919 from jberryman/4736-security-testing
+
+    #4736 Improvements to auth testing
+
+commit d862afb4f848b97ba4c645ec2a29a341fbdd275d
+Merge: cf8cf4f5 cc2878de
+Author: Brandon Simmons <brandon@hasura.io>
+Date:   Thu Jun 11 13:21:48 2020 -0400
+
+    Merge branch 'master' into 4736-security-testing
+
+commit cf8cf4f5aa75d99de0f4fd1cd69236b67a2e14df
+Merge: 5e373505 b782986e
+Author: Brandon Simmons <brandon@hasura.io>
+Date:   Tue Jun 9 10:50:35 2020 -0400
+
+    Merge branch 'master' into 4736-security-testing
+
+commit b782986e48aa3107e57033cf8bc3cf52a079929d
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Tue Jun 9 19:59:39 2020 +0530
+
+    fix bug which arised when renaming a column/table if it was used to create the remote relationship (#5005)
+
+commit 5e373505618fe76aa2623804af19a27139df2bac
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Thu May 28 12:18:26 2020 -0400
+
+    Refactor and unit test authentication code paths (closes #4736)
+
+    The bulk of changes here is some shifting of code around and a little
+    parameterizing of functions for easier testing.
+
+    Also: comments, some renaming for clarity/less-chance-for-misue.
+
+commit d747bc1148027143a4e606ab3255e873859453b4
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Tue May 19 10:48:49 2020 -0400
+
+    Tighten up handling of admin secret, more docs
+
+    Store the admin secret only as a hash to prevent leaking the secret
+    inadvertently, and to prevent timing attacks on the secret.
+
+    NOTE: best practice for stored user passwords is a function with a
+    tunable cost like bcrypt, but our threat model is quite different (even
+    if we thought we could reasonably protect the secret from an attacker
+    who could read arbitrary regions of memory), and bcrypt is far too slow
+    (by design) to perform on each request. We'd have to rely on our
+    (technically savvy) users to choose high entropy passwords in any case.
+
+    Referencing #4736
+
+commit 2a9bc2354f1a13b2d8acbb2864b9a3f554dc8918
+Author: Vamshi Surabhi <0x777@users.noreply.github.com>
+Date:   Mon Jun 8 17:43:01 2020 +0530
+
+    add relay modern support (#4458)
+
+    * validation support for unions and interfaces
+
+    * refactor SQL generation logic for improved readability
+
+    * '/v1/relay' endpoint for relay schema
+
+    * implement 'Node' interface and top level 'node' field resolver
+
+    * add relay toggle on graphiql
+
+    * fix explain api response & index plan id with query type
+
+    * add hasura mutations to relay
+
+    * add relay pytests
+
+    * update CHANGELOG.md
+
+    Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
+    Co-authored-by: Rishichandra Wawhal <rishi@hasura.io>
+    Co-authored-by: Rikin Kachhia <54616969+rikinsk@users.noreply.github.com>
+
+commit 5de647b9261d151665d9e5be827b31828b309840
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Thu Jun 4 16:20:06 2020 -0400
+
+    Don't compile in developer APIs by default
+
+commit 2bb038d0f834713338565f9680f986db06d9fd41
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Mon Jun 8 10:19:48 2020 +0530
+
+    remove the Events/HTTP module (#4930)
+
+    The Hasura.Events.HTTP module has now been moved to Hasura.Eventing.HTTP. This module might have been added again due to a bad merge.
+
+commit d6de3592eda71cafafce7fb2cb642e0d55c06946
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Fri Jun 5 17:33:18 2020 +0530
+
+    actions: fix behaviour when using remote relationship in mutation action's relationship (#4982)
+
+    * resolve the remote server when a remote join query used in action mutation
+
+commit ae75c6c06edfc8e604af8401f95f55c4160f742b
+Author: Vamshi Surabhi <0x777@users.noreply.github.com>
+Date:   Thu Jun 4 22:55:21 2020 +0530
+
+    allow logging details of a live query polling thread (#4959)
+
+    * changes for poller-log
+
+    add various multiplexed query info in poller-log
+
+    * minor cleanup, also fixes a bug which will return duplicate data
+
+    * Live query poller stats can now be logged
+
+    This also removes in-memory stats that are collected about batched
+    query execution as the log lines when piped into an monitoring tool
+    will give us better insights.
+
+    * allow poller-log to be configurable
+
+    * log minimal information in the livequery-poller-log
+
+    Other information can be retrieved from /dev/subscriptions/extended
+
+    * fix few review comments
+
+    * avoid marshalling and unmarshalling from ByteString to EncJSON
+
+    * separate out SubscriberId and SubscriberMetadata
+
+    Co-authored-by: Anon Ray <rayanon004@gmail.com>
+
+commit 7e2d6370ce6ce18255958309d0d71a674437e2c0
+Author: George Kormaris <mail@gekorm.com>
+Date:   Wed Jun 3 17:01:04 2020 +0100
+
+    Fix typo in error message (#4923)
+
+    "confilct" to "conflict"
+
+    Co-authored-by: Rikin Kachhia <54616969+rikinsk@users.noreply.github.com>
+
+commit 34a41e56326d97ec340beba55d82723f62103ee5
+Author: Phil Freeman <phil@hasura.io>
+Date:   Tue Jun 2 16:31:50 2020 -0700
+
+    Add some useful FromJSON instances (#4707)
+
+    These data types already had ToJSON instances, and it is useful to be able to parse the resulting JSON values back into Haskell values.
+
+commit cd468761ce0ded12f563c510246c641a056bfa26
+Author: Phil Freeman <phil@hasura.io>
+Date:   Tue Jun 2 14:27:14 2020 -0700
+
+    Refactor the WAI shutdownHandler to use an MVar (#4667)
+
+commit 81f338cc39b3f069bdc6f15688135f1b5c8f05b9
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Tue Jun 2 22:47:58 2020 +0530
+
+    remove event from the saved locked events after processing it (#4932)
+
+    * remove event from the saved locked events after processing it
+
+commit 2d2def8ecb1eb901c4e644481a50587c46a5e20a
+Author: Vamshi Surabhi <vamshi@hasura.io>
+Date:   Mon Jun 1 13:06:26 2020 +0530
+
+    Disables optimizations on Hasura.Server.Init module
+
+    When compiling the graphql-engine binary with `-O2`, ghc-8.10 seems to
+    be stuck at the module `Server.Init` while consuming `17G` of RAM (for 5
+    minutes at least before I forcefully terminated the compilation). With
+    this pragma, ghc-8.10 now takes under `12G` to compile graphql-engine
+    binary.
+
+commit f14900e7dabedf8913fd590d4ccfe433c6dc8995
+Author: Vamshi Surabhi <vamshi@hasura.io>
+Date:   Fri May 29 18:51:39 2020 +0530
+
+    bump dependencies
+
+commit 7eab3a7b54c7cb8154f4a3bf2c80c1d153f0e14b
+Author: Vamshi Surabhi <vamshi@hasura.io>
+Date:   Fri May 29 18:37:37 2020 +0530
+
+    fix haddock comment
+
+commit c0d2bc66533e714606f0625d3dc4137b630c1a00
+Author: Tirumarai Selvan <tiru@hasura.io>
+Date:   Wed May 27 20:32:58 2020 +0530
+
+    Remote Joins: Create relationships across database and remote schemas (#2392)
+
+    add remote joins: Create relationships across database and remote schemas (#2392)
+
+    Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>
+
+    Co-authored-by: Chris Done <chrisdone@gmail.com>
+    Co-authored-by: Chris Done <github@chrisdone.com>
+    Co-authored-by: wawhal <rishichandra.wawhal@gmail.com>
+    Co-authored-by: Aravind Shankar <aravind@hasura.io>
+    Co-authored-by: Brandon Simmons <brandon.m.simmons@gmail.com>
+    Co-authored-by: Rishichandra Wawhal <rishi@hasura.io>
+    Co-authored-by: Brandon Simmons <brandon@hasura.io>
+    Co-authored-by: nizar-m <19857260+nizar-m@users.noreply.github.com>
+    Co-authored-by: Praveen Durairaju <praveend.web@gmail.com>
+    Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
+    Co-authored-by: Anon Ray <rayanon004@gmail.com>
+    Co-authored-by: Shahidh K Muhammed <shahidh@hasura.io>
+    Co-authored-by: soorajshankar <soorajshankar@users.noreply.github.com>
+    Co-authored-by: Sooraj Sanker <sooraj@Soorajs-MacBook-Pro.local>
+    Co-authored-by: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+    Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>
+
+commit 756614c326fc320f1b32986318e130c7a8856916
+Author: Tirumarai Selvan <tiru@hasura.io>
+Date:   Tue May 26 14:43:58 2020 +0530
+
+    update auth-webhook boilerplates for node (#4885)
+
+    1) split nodejs-express boilerplate into nodejs-express and nodejs-firebase
+    2) update deploy instructions for heroku
+
+commit e347ef3e45d17123013ac777998a22b96ec6c03e
+Author: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
+Date:   Thu May 21 21:20:25 2020 +0530
+
+    fix explain queries with role permissions, fix #4816
+
+commit ff99b24031b07ca2a6a9c2b4734823a887293d51
+Author: Vamshi Surabhi <0x777@users.noreply.github.com>
+Date:   Wed May 6 01:27:17 2020 +0530
+
+    fix a security issue with 1.2
+
+commit 9c55940b6dde79ced4fd202cbd8cb0e6f9dbc01c
+Author: Tirumarai Selvan <tiru@hasura.io>
+Date:   Thu May 21 13:43:44 2020 +0530
+
+    flush log buffer on exception in mkWaiApp ( fix #4772 ) (#4801)
+
+    * flush log buffer on exception in mkWaiApp
+
+    * add comment to explain the introduced change
+
+    * add changelog
+
+commit ac3076796c756776fd0423dc2772f9ed762b556f
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Wed May 20 11:46:26 2020 +0530
+
+    Allowlist metadata Import bug (#4762)
+
+    fix bug which was not allowing the allowlist to be imported
+
+commit 6597e986f272cbc0697a1e70a6aa9b77edecaf83
+Author: Tirumarai Selvan <tiru@hasura.io>
+Date:   Tue May 19 13:19:30 2020 +0530
+
+    flush logger on shutdown (#4800)
+
+    * flush logger on shutdown
+
+    * use rmLoggerSet instead of flushLogStr
+
+    * add changelog
+
+commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
+Author: Auke Booij <auke@hasura.io>
+Date:   Mon May 18 14:27:56 2020 +0200
+
+    server: fix an introspection query caching issue (fix #4547) (#4661)
+
+    Introspection queries accept variables, but we need to make sure to
+    also touch the variables that we ignore, so that an introspection
+    query is marked not reusable if we are not able to build a correct
+    query plan for it.
+
+    A better solution here would be to deal with such unused variables
+    correctly, so that more introspection queries become reusable.
+
+    An even better solution would be to type-safely track *how* to reuse
+    which variables, rather than to split the reusage marking from the
+    planning.
+
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit 9b247d4ed79e6e82409d994c70b52c561c832230
+Merge: cc8e2ccc a77bb057
+Author: Brandon Simmons <brandon@hasura.io>
+Date:   Wed May 13 20:34:38 2020 -0400
+
+    Merge pull request #4518 from jberryman/ghc-8.10-migration
+
+    Migrate to GHC 8.10, upgrade dependencies. Closes #4517
+
+commit a77bb0570f4210fb826985e17a84ddcc4c95d3ea
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Mon Apr 27 14:06:44 2020 -0400
+
+    In websockets: rethrow resourceVanished as ConnectionClosed. Closes #4344
+
+    ...hopefully. At least I no longer can easily induce any unexpected
+    exceptions after this and the GHC 8.10 + libs upgrade commit.
+
+commit ff62d5e0bfd5bfe1cd768978febbe86a857393c8
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Fri Apr 3 13:54:51 2020 +0530
+
+    Migrate to GHC 8.10, upgrade dependencies. Closes #4517
+
+    This also seems to squash a stubborn space leak we see with
+    subscriptions (linking to canonical #3388 for reference).
+
+    This may also fix some of the "Unexpected exception" websockets
+    exceptions we are now surfacing (see e.g. #4344)
+
+    Also: dev.sh: fix hpc reporting
+
+    Initial work on this done by Vamshi.
+
+commit 69f24d47b3fe06e5dce5dbb36300f4d0f68d2301
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Wed May 13 17:38:16 2020 -0400
+
+    dev.sh: bump version due to addition of croniter python dependency
+
+commit cc8e2ccc78bf154c5da90fea0967bd5ac2ca8b4b
+Author: Tirumarai Selvan <tiru@hasura.io>
+Date:   Wed May 13 18:03:16 2020 +0530
+
+    Scheduled triggers (close #1914) (#3553)
+
+    server: add scheduled triggers
+
+    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
+    Co-authored-by: Marion Schleifer <marion@hasura.io>
+    Co-authored-by: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+    Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>
+
+commit 2735d284c101e66f0aa6e6c24612abb43a1ebf7b
+Author: Auke Booij <auke@hasura.io>
+Date:   Wed May 13 12:10:46 2020 +0200
+
+    server: use a new version of graphql-parser-hs to avoid loss of precision (#4741)
+
+    Fixes #4733.  See also hasura/graphql-parser-hs#29.
+
+commit e17e47ef8cdbd20c2bef3398c13d8526aee5fdc3
+Author: Auke Booij <auke@hasura.io>
+Date:   Wed May 13 11:17:32 2020 +0200
+
+    server: avoid code duplication using type classes (#4624)
+
+    There are two implementations of a Cache, namely a bounded and an
+    unbounded variant.  This can be elegantly captured in a type class.
+    In addition to reducing the amount of error-prone code in the
+    definition of the cache, this version reduces the amount of
+    error-prone code in usage sites of the cache, as it makes the cache
+    into an abstract object, so that a calling site cannot distinguish
+    between cache types.  Any decision about what should be cached should
+    be made through the interface of a cache, rather than at the callsite,
+    and this is captured by this variant.
+
+commit 4d10a610f4ade66db758d459e3ddf02a43996e45
+Author: Auke Booij <auke@hasura.io>
+Date:   Wed May 13 10:09:44 2020 +0200
+
+    server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239) (#4551)
+
+    * Add support for multiple top-level fields in a subscription to improve testability of subscriptions
+
+    * Add an internal flag to enable multiple subscriptions
+
+    * Add missing call to withConstructorFn in live queries (fix #3239)
+
+    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
+
+commit ee7c7b16729c0eef01c2957e5532b4bfd3ee5e4f
+Author: Auke Booij <auke@hasura.io>
+Date:   Mon Apr 27 17:07:03 2020 +0200
+
+    server: allow computed fields to have access to Hasura's session variables (fix #3846) (#4486)
+
+    * Allow computed fields to have access to Hasura's session variables
+
+    * Inform about session args for computed fields in changelog and docs
+
+    * Add tests for session arguments for computed fields (and the respective errors)
+
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+    Co-authored-by: Marion Schleifer <marion@hasura.io>
+    Co-authored-by: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+
+commit d52bfcda4ebf5ac6f4f013b2d5ed698010d72a51
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Fri Apr 24 14:40:53 2020 +0530
+
+    backend only insert permissions (rfc #4120) (#4224)
+
+    * move user info related code to Hasura.User module
+
+    * the RFC #4120 implementation; insert permissions with admin secret
+
+    * revert back to old RoleName based schema maps
+
+    An attempt made to avoid duplication of schema contexts in types
+    if any role doesn't possess any admin secret specific schema
+
+    * fix compile errors in haskell test
+
+    * keep 'user_vars' for session variables in http-logs
+
+    * no-op refacto
+
+    * tests for admin only inserts
+
+    * update docs for admin only inserts
+
+    * updated CHANGELOG.md
+
+    * default behaviour when admin secret is not set
+
+    * fix x-hasura-role to X-Hasura-Role in pytests
+
+    * introduce effective timeout in actions async tests
+
+    * update docs for admin-secret not configured case
+
+    * Update docs/graphql/manual/api-reference/schema-metadata-api/permission.rst
+
+    Co-Authored-By: Marion Schleifer <marion@hasura.io>
+
+    * Apply suggestions from code review
+
+    Co-Authored-By: Marion Schleifer <marion@hasura.io>
+
+    * a complete iteration
+
+    backend insert permissions accessable via 'x-hasura-backend-privilege'
+    session variable
+
+    * console changes for backend-only permissions
+
+    * provide tooltip id; update labels and tooltips;
+
+    * requested changes
+
+    * requested changes
+
+    - remove className from Toggle component
+    - use appropriate function name (capitalizeFirstChar -> capitalize)
+
+    * use toggle props from definitelyTyped
+
+    * fix accidental commit
+
+    * Revert "introduce effective timeout in actions async tests"
+
+    This reverts commit b7a59c19d643520cfde6af579889e1038038438a.
+
+    * generate complete schema for both 'default' and 'backend' sessions
+
+    * Apply suggestions from code review
+
+    Co-Authored-By: Marion Schleifer <marion@hasura.io>
+
+    * remove unnecessary import, export Toggle as is
+
+    * update session variable in tooltip
+
+    * 'x-hasura-use-backend-only-permissions' variable to switch
+
+    * update help texts
+
+    * update docs
+
+    * update docs
+
+    * update console help text
+
+    * regenerate package-lock
+
+    * serve no backend schema when backend_only: false and header set to true
+
+    - Few type name refactor as suggested by @0x777
+
+    * update CHANGELOG.md
+
+    * Update CHANGELOG.md
+
+    * Update CHANGELOG.md
+
+    * fix a merge bug where a certain entity didn't get removed
+
+    Co-authored-by: Marion Schleifer <marion@hasura.io>
+    Co-authored-by: Rishichandra Wawhal <rishi@hasura.io>
+    Co-authored-by: rikinsk <rikin.kachhia@gmail.com>
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit 6f100e0009c36d693bf470ba514b3e24d84491a6
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Fri Apr 24 13:25:51 2020 +0530
+
+    improve debug information in actions errors response (close #4031) (#4432)
+
+    * config options for internal errors for non-admin role, close #4031
+
+    More detailed action debug info is added in response 'internal' field
+
+    * add docs
+
+    * update CHANGELOG.md
+
+    * set admin graphql errors option in ci tests, minor changes to docs
+
+    * fix tests
+
+    Don't use any auth for sync actions error tests. The request body
+    changes based on auth type in session_variables (x-hasura-auth-mode)
+
+    * Apply suggestions from code review
+
+    Co-Authored-By: Marion Schleifer <marion@hasura.io>
+
+    * use a new sum type to represent the inclusion of internal errors
+
+    As suggested in review by @0x777
+    -> Move around few modules in to specific API folder
+    -> Saperate types from Init.hs
+
+    * fix tests
+
+    Don't use any auth for sync actions error tests. The request body
+    changes based on auth type in session_variables (x-hasura-auth-mode)
+
+    * move 'HttpResponse' to 'Hasura.HTTP' module
+
+    * update change log with breaking change warning
+
+    * Update CHANGELOG.md
+
+    Co-authored-by: Marion Schleifer <marion@hasura.io>
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit a8affc2cda8ca3b7a6c6e96ad4eecd37662ddb0e
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Fri Apr 24 11:39:00 2020 +0530
+
+    fix intermittent errors occur when query actions used with variables (#4527)
+
+    * don't add query actions to the plan cache
+
+    Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
+
+commit b51a8ece4d3cca12aafa62e0cb7cb337974c1910
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Fri Apr 24 10:58:42 2020 +0530
+
+    fix creating relationships for custom object types with fields reusing Postgres scalars (fix #4447) (#4455)
+
+    * fix creating relationships for custom object types with fields reusing Postgres scalars, close #4447
+
+    * fix changelog entry
+
+    * rearrange entries
+
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit f3558d5278a7099b24b8a1ee82cc76911d6ae257
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Thu Apr 23 16:06:33 2020 +0530
+
+    make arguments field optional in ActionDefinition (#4521)
+
+commit 246a0b7ab80b74f1d79bef28801efcd39f3d7164
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Thu Apr 23 02:33:23 2020 +0530
+
+    server: Improve `queryModifiesSchemaCache` check for run_sql (#4283)
+
+    The previous check was too conservative and acquired a lock on the
+    schema cache in situations where it was unnecessary. This change
+    exposes the logic run_sql uses to determine whether to use the
+    metadata check to make the check more precise.
+
+commit 2e8234f1b6fccabcbb5d33f3ac3bcfc54c2303f8
+Author: Toan Nguyen <hgiasac@gmail.com>
+Date:   Thu Apr 23 03:33:51 2020 +0700
+
+    fix nested errors array in ws-server response log (#3971)
+
+commit a9051b3e59fe067f26e9fb63c41aa1283022f1df
+Author: Avi Moondra <avimoondra@gmail.com>
+Date:   Tue Apr 21 23:23:25 2020 -0700
+
+    fix typo in jsonb query filters to match operator api (#4505)
+
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit e983b1596ea02ee9d370b9db1030a95a669ac560
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Wed Apr 22 11:29:14 2020 +0530
+
+    fix recreating action's permission, fix #4377 (#4495)
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit fac2d18d6f088d318c1fb9b0a1ce03f976b01b75
+Author: Auke Booij <auke@hasura.io>
+Date:   Tue Apr 21 21:03:35 2020 +0200
+
+    Add a hint on avoiding recompilation during typical dev workflow (#4427)
+
+commit b2ad3ee2ee9a6d27d6fb489d3b07dbdefbe8f756
+Author: Auke Booij <auke@hasura.io>
+Date:   Tue Apr 21 15:56:15 2020 +0200
+
+    server: avoid integer overflows (fix #576) (fix #4368) (#4435)
+
+    * Update graphql-parser-hs and hence use `Scientific` directly
+
+    The new version of graphql-parser-hs returns Scientific and Integer
+    rather than Double and Int32, respectively.  So we now need to do less
+    work in graphql-engine, and we can process larger numbers.
+
+    In practice, this means that when inserting a bigint, we no longer
+    need to specify the inserted integer as text.  This is also
+    represented in the updated tests.
+
+    * Generate int overflow error on insert
+
+    * Document bigint insertion support in changelog
+
+commit cd2e09c6ade63e87b8f4828f3ea6499ce0f51d9d
+Author: Auke Booij <auke@hasura.io>
+Date:   Tue Apr 21 14:30:48 2020 +0200
+
+    server: add support for timestamps without timezone to graphql-engine (fix #1217) (#4452)
+
+    * Add support for timestamps without timezone to graphql-engine
+
+    * Add tests for aggregations on timestamps without timezones
+
+commit 9b7781ee6b41131f75e7a0982df62e32ed3eba7d
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Tue Apr 21 15:55:56 2020 +0530
+
+    introduce effective timeout in actions async tests (#4363)
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit 82cdad155689c3149e5bff90965f601bf6f166e8
+Author: Auke Booij <auke@hasura.io>
+Date:   Tue Apr 21 11:29:16 2020 +0200
+
+    Link to pytest docs in the server test suite READMEs (#4425)
+
+commit ced6275ff0339fc5850de8bea03d7f07f7b2dab1
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Tue Apr 21 14:54:35 2020 +0530
+
+    add additional tests for testing claims_namespace_path in JWT tokens (#4481)
+
+    * add additional tests for testing claims_namespace_path in JWT tokens
+
+    - add tests for at root level and at a nested level
+
+    * modify the JWT tests
+
+    * combine the claims_namespace_path tests together in test-server.sh
+
+    * change the order of the claims_namespace_path tests
+
+    * change the order of the claims_namespace_path tests
+
+commit 5f846695680aa9bf606aff1c4354c92461106421
+Author: Toan Nguyen <hgiasac@gmail.com>
+Date:   Tue Apr 21 15:06:11 2020 +0700
+
+    server: support single $ as root json path (#4482)
+
+    * support single $ json path
+
+    * support sql query with root json path
+
+    * update changelog
+
+    * update changelog
+
+    Co-authored-by: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit be28a3b95c2aa570b0af8f44daeaefba14bc8d65
+Author: Auke Booij <auke@hasura.io>
+Date:   Tue Apr 21 08:36:30 2020 +0200
+
+    Move changelog entry to the right section (#4493)
+
+commit 15c0ebf1ef77ea646f789bbe5264feef51d8a776
+Author: Toan Nguyen <hgiasac@gmail.com>
+Date:   Mon Apr 20 15:55:09 2020 +0700
+
+    allow special characters in json path's property name (close #3890) (#3892)
+
+    * allow underscore prefix and special characters in json path
+
+    * server: Rewrite/refactor JSONPath parser
+
+    The JSONPath parser is also rewritten, the previous implementation
+    was written in a very explicitly “recursive descent” style, but the whole
+    point of using attoparsec is to be able to backtrack! Taking advantage
+    of the combinators makes for a much simpler parser.
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
+    Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>
+    Co-authored-by: Shahidh K Muhammed <shahidh@hasura.io>
+
+commit b2d65d16d3c9de367d07a8b6251167610b786a08
+Author: Auke Booij <auke@hasura.io>
+Date:   Fri Apr 17 11:32:09 2020 +0200
+
+    server: _inc for non-integer numeric types (fix #3573) (#4429)
+
+    * Allow `_inc` to update other numeric types in addition to integers
+
+    * Add support for PostgreSQL's `money` field type
+
+    * Add support for _inc on money types
+
+    * Add note of generalized `_inc` support to changelog
+
+commit 5116e16e18f624fcdaf98aa0a0275e571fe34a2d
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Thu Apr 16 12:55:19 2020 +0530
+
+    server(actions): add support for queries (close #4032) (#4309)
+
+    * add support for action queries
+
+    * a new parameter `type` is added in the ArgumentDefinition, its value
+      can be either `query` or `mutation` and it defaults to the latter
+
+    * throw 400 when a query action is tried to explain
+
+    * update the actions docs to include query actions
+
+    * refactor the ToJSON and ToOrdJSON of ActionDefinition
+
+    Co-authored-by: Rishichandra Wawhal <rishi@hasura.io>
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit a26bc80496954477c912364e9e11aebe4e121669
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Thu Apr 16 12:15:21 2020 +0530
+
+    accept a new argument `claims_namespace_path` in JWT config (#4365)
+
+    * add new optional field `claims_namespace_path` in JWT config
+
+    * return value when empty array is found in executeJSONPath
+
+    * update the docs related to claims_namespace_path
+
+    * improve encodeJSONPath, add property tests for parseJSONPath
+
+    * throw error if both claims_namespace_path and claims_namespace are set
+
+    * refactor the Data.Parser.JsonPath to Data.Parser.JSONPathSpec
+
+    * update the JWT docs
+
+    Co-Authored-By: Marion Schleifer <marion@hasura.io>
+
+    Co-authored-by: Marion Schleifer <marion@hasura.io>
+    Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
+    Co-authored-by: Tirumarai Selvan <tirumarai.selvan@gmail.com>
+
+commit dbf0c43ca8abb2d2bbf8874d4c57e5d1409dee3c
+Author: Auke Booij <auke@tulcod.com>
+Date:   Wed Apr 15 18:13:53 2020 +0200
+
+    server: Avoid duplicated test runs (#4420)
+
+    This avoids re-running tests when a parameterized test is specified
+    that doesn't actually depend on its parameter.
+
+commit dc31b835e1957f3120ef70502937bdde91993f77
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Wed Apr 15 17:33:13 2020 +0530
+
+    allow reusing Postgres scalars in custom types & actions (close #4125) (#4333)
+
+    * allow re-using Postgres scalars in custom types, close #4125
+
+    * add pytest tests
+
+    * update CHANGELOG.md
+
+    * add a doc pointer for reusable postgres scalars
+
+    * document the code, improve the CHANGELOG entry
+
+    As suggested by @lexi-lambda
+
+    * a bit more source code documentation, use WriterT to collect reused scalars
+
+    * Apply suggestions from code review
+
+    Co-Authored-By: Marion Schleifer <marion@hasura.io>
+
+    * improve doc for Postgres scalars in custom graphql types
+
+    * Add some more references to Note; fix Haddock syntax
+
+    Also a few very minor tweaks:
+      * Use HashSet instead of [] more pervasively
+      * Export execWriterT from Hasura.Prelude
+      * Use pattern guards in multi-way if
+      * Tweak a few names/comments
+
+    * Pull buildActions out of buildAndCollectInfo, use buildInfoMap
+
+    * Tweak wording in documentation
+
+    * incorporate changes in console code
+
+    * account Postgres scalars for action input arguments
+
+    -> Avoid unnecessary 'throw500' in making action schema
+
+    * Review changes
+
+    Co-authored-by: Marion Schleifer <marion@hasura.io>
+    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+    Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>
+
+commit a23c633bd7a90952a8e482cda45b87a624e99140
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Tue Apr 14 11:31:50 2020 +0530
+
+    unlock inflight events when gracefully shutdown (close #3548) (#4214)
+
+    * unlock the locked-events during graceful shutdown
+
+    * Some events can still be delivered multiple times due to
+      ungraceful shutdown
+
+    * modify the preparevents documentation
+
+    * modify the prepareEvents doc
+
+    * update changelog
+
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit 76fbe90b60a80303e5b3bf284d85604a2fce3f5f
+Author: Tirumarai Selvan <tiru@hasura.io>
+Date:   Fri Apr 10 19:25:59 2020 +0530
+
+    type is not required for jwk_url in JWT config (#4334)
+
+    * type is not required for jwk_url
+
+    * remove type from JWTConfig
+
+    * Omit type field in JWTConfig serialization if jwk_url is provided
+
+    * remove type from jwk_url test suite
+
+    * add changelog
+
+    * fix docs with new format
+
+    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
+
+commit 8b85c86ebe1ea0299bf0f046c18f6d7666f5b80e
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Wed Apr 8 11:59:46 2020 -0400
+
+    Fix erroneous error logging in WebSocket.onStop
+
+commit ca15ef8c96bfd70a75b4ae3be26704345b11f1ed
+Author: Tirumarai Selvan <tiru@hasura.io>
+Date:   Thu Apr 9 13:11:24 2020 +0530
+
+    Refactor initialisation and relax tx isolation levels where possible (#3901)
+
+    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
+
+commit ebb3bb39109477f2ab6dfdaef732f51262e5786d
+Author: Tirumarai Selvan <tiru@hasura.io>
+Date:   Thu Apr 9 12:03:33 2020 +0530
+
+    unlock event if event trigger info is not found in cache (#4213)
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit b02cd336d04b88c864a03b41457f24f481f56871
+Author: Francisco Sales <franciscofsales@users.noreply.github.com>
+Date:   Wed Apr 8 08:36:56 2020 +0100
+
+    server: Don’t expose DB implementation in error message (#4294)
+
+commit b948e26751c00fc845f57452d986d6851a0d4ddf
+Author: Anon Ray <ecthiender@users.noreply.github.com>
+Date:   Wed Apr 8 13:01:30 2020 +0530
+
+    server: Add a Haskell style guide (#2175)
+
+    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
+
+commit b2461c5899a881183ad2d269ebe8a2c6f55e46af
+Author: Shahidh K Muhammed <shahidh@hasura.io>
+Date:   Mon Apr 6 10:23:58 2020 +0530
+
+    server: add more info about server to config api (#3412)
+
+    Co-authored-by: Toan Nguyen <hgiasac@gmail.com>
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit a07a87066ecc14af368c7807d998d2b00ccbf92b
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Sat Apr 4 05:51:52 2020 +0530
+
+    make the arguments field optional in ActionDefinition (#4285)
+
+commit 5b54f9d76629383da854cc16fb9667ea36b96218
+Author: Antoine Leblanc <antoine@hasura.io>
+Date:   Fri Apr 3 01:00:13 2020 +0100
+
+    server: add support for webhook connection expiration (#4196)
+
+    * add expiry time to webhook user info
+
+    This also adds an optional message to webhook errors: if we fail to
+    parse an expiry time, we will log a warning with the parse error.
+
+    * refactored Auth
+
+    This change had one main goal: put in common all expiry time
+    extraction code between the JWT and WebHook parts of the
+    code. Furthermore, this change also moves all WebHook specific code to
+    its own module, similarly to what is done for JWT.
+
+    * Remove dependency on string-conversions in favor of text-conversions
+
+    string-conversions silently uses UTF8 instead of being explicit about
+    it, and it uses lenientDecode when decoding ByteStrings when it’s
+    usually better to reject invalid UTF8 input outright. text-conversions
+    solves both those problems.
+
+    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
+
+commit 85b7c552afb9b3737614a376dd82873f2d253788
+Author: Lyndon Maydwell <lyndon@sordina.net>
+Date:   Thu Apr 2 16:27:43 2020 +1100
+
+    Allow field names to start with reserved keywords (fix #3597) (#3927)
+
+commit 5b74b2e2df512135b3b6ad25583c0dea96f6f3a8
+Author: Antoine Leblanc <antoine@hasura.io>
+Date:   Thu Apr 2 00:22:55 2020 +0100
+
+    server: prevent metadata checks in read-only mode (#4250)
+
+    * do not perform the metadata check in read-only mode
+    * improve the isAltrDropReplace regex
+    * quote the regex at compile-time to handle syntax errors statically
+
+    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
+
+commit 1264fad97e33249f5a798bb58af51756abd25285
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Thu Apr 2 03:23:02 2020 +0530
+
+    fix unnecessary schema update event in run_sql API (#4266)
+
+    When consistent_metadata_check is set to false, then a new schema update
+    event should not be created.
+
+commit 54dd3c94b9439f36b38cd4f9cbc59c8243f89f0c
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Wed Apr 1 20:44:26 2020 +0530
+
+    include postgres version of the database while sending telemetry data (#4122)
+
+    * add new column "pg_version" while sending telemetry data
+
+    * make a new type for PGVersion and use serverVersion func
+
+    * define runTxIO action to run transaction(which exits on error)
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit 58ba01f31c29e8b8576d10307fb5abc82315d90e
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Tue Mar 31 10:00:12 2020 -0400
+
+    Improve performance of replace_metadata on tracking tables. Closes #3802 (#4182)
+
+    * Improve performance of replace_metadata on tracking tables. Closes #3802
+
+    On the 1000 table track case this went from >20min to 8 seconds, the
+    bottleneck being all the former calls (for each table) to
+    buildSchemaCache.
+
+    * refactor replace metadata
+
+    Only save metadata in hdb_catalog schema and build schema cache (strictly)
+
+    * remove `withBuildSchemaCache` function
+
+    Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit 482fa41e8365073f065e472ab3e9c87ae5edffdc
+Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
+Date:   Fri Mar 27 17:46:22 2020 +0530
+
+    add metrics for actions (#4139)
+
+    - The metrics will include
+      - no of synchronous actions
+      - no of asynchronous actions
+      - no of type relationships with the output
+      - no of custom types defined
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit 04e5a20dc017ddd2e2e5c707aab1d3ddb78526f1
+Merge: eafdda4f 11426891
+Author: Vamshi Surabhi <0x777@users.noreply.github.com>
+Date:   Fri Mar 27 15:01:05 2020 +0530
+
+    Merge pull request #4080 from rakeshkky/issue-4035-check-computed-field
+
+    fix postgres query error when computed fields are included in returning (fix #4035)
+
+commit 114268910a11486d51fc508a8c17d5378aea9fdc
+Merge: c12dd1ba eafdda4f
+Author: Vamshi Surabhi <0x777@users.noreply.github.com>
+Date:   Fri Mar 27 14:12:59 2020 +0530
+
+    Merge branch 'master' into issue-4035-check-computed-field
+
+commit eafdda4f33d239c7f51293a1b5cb240da1a8b2b5
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Fri Mar 27 00:50:45 2020 -0400
+
+    Add missing migration to initialise.sql for #3839 (#4212)
+
+commit 4ce4eb1d2faa52d5f3ac19db6aeefa79093ec3eb
+Author: Phil Freeman <phil@hasura.io>
+Date:   Thu Mar 26 13:42:33 2020 -0700
+
+    Remove any outstanding hdb_views (fixes #3940) (#3965)
+
+commit fd6535b861384c262f38936382deed2c0381a66e
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Thu Mar 26 17:22:20 2020 +0530
+
+    option to reload remote schemas in 'reload metadata' (fix #3792, #4117) (#4141)
+
+    * option to reload remote schemas in 'reload_metadata' API, fix #3792, #4117
+
+    * add tests
+
+    * update changelog
+
+    * update docs api reference for 'reload_metadata'
+
+    * send reload_remote_schemas: true with the reload_metadata query
+
+    * add reload remote schemas checkbox; minor refactor
+
+    * Add a Note about cache invalidation and inconsistent metadata objects
+
+    * Small pluralization agreement tweak in docs
+
+    * Remove duplicated line in CHANGELOG
+
+    * no-op refactor
+
+    Suggested by Alexis @lexi-lambda
+
+    * Update server/src-lib/Hasura/RQL/DDL/RemoteSchema.hs
+
+    As suggested by @lexi-lambda
+
+    Co-Authored-By: Alexis King <lexi.lambda@gmail.com>
+
+    * fix tests
+
+    * requested changes
+
+    * comment 'replaceMetadataToOrdJson' unit tests
+
+    Co-authored-by: Rishichandra Wawhal <rishi@hasura.io>
+    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
+    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
+
+commit eb81d6947aeaf2a6aa3b65652bd5c06f86a7d67a
+Author: Antoine Leblanc <crucuny@gmail.com>
+Date:   Tue Mar 24 07:05:34 2020 +0000
+
+    server: add tests for track_table of a materialized view (#4155)
+
+    * server: add tests for track_table of a materialized view
+
+    In the context of #91, we discovered that materialized views were
+    already "automagically" supported; to ensure we don't regress on this
+    accidental but welcome change, this patch adds simple tests.
+
+    This is basically just a copy of `track_untrack_table`, but for
+    materialized views.
+
+    * Expand abbreviations
+
+    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
+
+commit d9fa2997507093458d236ad2749d76d37c66cd78
+Author: Antoine Leblanc <crucuny@gmail.com>
+Date:   Tue Mar 24 01:48:09 2020 +0000
+
+    server: fix all EWKT warnings in python tests (#4154)
+
+    The setup in several tests was using `ST_GeomFromText`, which expects
+    data in the OGC WKT format, but was providing the SRID in the text
+    itself, which is part of the EWKT format.
+
+    The fix was simply to replace all calls to `ST_GeomFromText` to
+    `ST_GeomFromEWKT`.
+
+commit 4f44741f3bc0a7a58c193c6605c98235962be3d2
+Author: Antoine Leblanc <crucuny@gmail.com>
+Date:   Tue Mar 24 01:46:09 2020 +0000
+
+    server: add missing mention of postgis to CONTRIBUTING.md (#4156)
+
+commit f80b69e9317bcf4489028e932741ef191e4b1da4
+Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
+Date:   Fri Mar 20 12:16:45 2020 +0530
+
+    few actions' fixes and improvements (fix #3977, #4061 & close #4021) (#4109)
+
+    * add 'ID' to default scalars for custom types, fix #4061
+
+    * preserve cookie headers from sync action webhook, close #4021
+
+    * validate action webhook response to conform to output type, fix #3977
+
+    * fix tests, don't run actions' tests on PG version < 10
+
+    * update CHANGELOG.md
+
+    * no-op refactor, use types from http-network more
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit 2d3313e643b0ce4db8712bbf5d0715ed984a7edc
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Wed Mar 18 13:15:41 2020 -0400
+
+    Try again to fix flaky TestEventFlood test (#4088)
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit 4d2dbe68fa244ea100356ca1f104f7fb1c6ee2ae
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Tue Mar 17 21:31:22 2020 -0400
+
+    Use AssertNF for leak prophylaxis when doing mutable writes. Closes #3937 (#4097)
+
+    Writing to a mutable var is a particularly potent source of leaks since
+    it mostly defeats GHC's analysis. Here we add assertions to all mutable
+    writes, and fix a couple spots where we wrote some thunks to a mutable
+    var (compiled with -O2).
+
+    Some of these thunks were probably benign, but others looked liked they
+    might be retaining big args. Didn't do much analysis, just fixed.
+
+    Actually pretty happy with how easy this was to use and as a diagnostic,
+    once I sorted out some issues. We should consider using it elsewhere,
+    and maybe extending so that we can use it with tests, enable when
+    `-fenable-assertsions` etc.
+
+    Relates #3388
+
+    Also simplified codepaths that use `AcceptWith`, which has unnecessary
+    `Maybe` fields.
+
+commit b65e9fc1b28e7e8aacf6eb8375b24434be17b78e
+Author: Alexis King <lexi.lambda@gmail.com>
+Date:   Sat Mar 14 20:38:26 2020 -0500
+
+    server: Fix buggy rewrite rule for Rule
+
+    We’re lucky that this never bit us. For the most part, these rules
+    aren’t actually used; most code programs against ArrowCache and doesn’t
+    get specialized enough for these rules to fire.
+
+    Even if we did have code that could trigger this rule, the situations
+    where it would actually fire are slim. In order for the rule to
+    typecheck at all, both sides of the pair being passed through the arrow
+    must have exactly the same type. Of course, that would just make this
+    even more hellish to debug.
+
+    Rewrite rules are dangerous.
+
+commit 889f375ae265029d1ce8802be7d9409360b39012
+Merge: 8c2b5ad9 e031e99d
+Author: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
+Date:   Thu Mar 12 10:21:43 2020 +0530
+
+    Merge branch 'master' into issue-4035-check-computed-field
+
+    Resolve Conflicts:
+            CHANGELOG.md
+
+commit 8c2b5ad9d395f80f88270b4b63c34895f7c9e0fe
+Author: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
+Date:   Wed Mar 11 14:45:02 2020 +0530
+
+    mark skip server upgrade test for new tests
+
+commit bb2b631fae0f4a3456212ce71cdf938e27ec5cc2
+Merge: 27d1401e c425b554
+Author: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
+Date:   Wed Mar 11 12:09:19 2020 +0530
+
+    Merge branch 'master' into issue-4035-check-computed-field
+
+    Resolve Conflicts:
+            CHANGELOG.md
+
+commit 27d1401ee6853438b5c1c5b22e69ec5ffa1642ba
+Author: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
+Date:   Wed Mar 11 11:02:58 2020 +0530
+
+    update CHANGELOG.md
+
+commit 9128c69a805060e9d19ad46c0ebf11f183a42014
+Author: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
+Date:   Tue Mar 10 18:15:47 2020 +0530
+
+    fix postgres query error when computed fields included in mutation response, fix #4035
