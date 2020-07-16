@@ -43,27 +43,22 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/doc
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
-- [Hasura GraphQL Engine](#hasura-graphql-engine)
-  - [Features](#features)
-  - [Table of contents](#table-of-contents)
-  - [Quickstart:](#quickstart)
+- [Quickstart:](#quickstart)
     - [One-click deployment on Hasura Cloud](#one-click-deployment-on-hasura-cloud)
-    - [Other one-click deployment options](#other-one-click-deployment-options)
     - [Other deployment methods](#other-deployment-methods)
-  - [Architecture](#architecture)
-  - [Client-side tooling](#client-side-tooling)
-  - [Add business logic](#add-business-logic)
+- [Architecture](#architecture)
+- [Client-side tooling](#client-side-tooling)
+- [Add business logic](#add-business-logic)
     - [Remote schemas](#remote-schemas)
     - [Trigger webhooks on database events](#trigger-webhooks-on-database-events)
-    - [Derived data or data transformations](#derived-data-or-data-transformations)
-  - [Demos](#demos)
+- [Demos](#demos)
     - [Realtime applications](#realtime-applications)
     - [Videos](#videos)
-  - [Support & Troubleshooting](#support--troubleshooting)
-  - [Contributing](#contributing)
-  - [Brand assets](#brand-assets)
-  - [License](#license)
-  - [Translations](#translations)
+- [Support & Troubleshooting](#support--troubleshooting)
+- [Contributing](#contributing)
+- [Brand assets](#brand-assets)
+- [License](#license)
+- [Translations](#translations)
 
 <!-- markdown-toc end -->
 
