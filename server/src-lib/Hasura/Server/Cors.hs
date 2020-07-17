@@ -60,8 +60,8 @@ instance J.ToJSON CorsConfig where
         J.object [ "disabled" J..= dis
                  , "ws_read_cookie" J..= mWsRC
                  , "allowed_origins" J..= origs
-                 ]
-
+                 ]   
+                 
 instance J.FromJSON CorsConfig where
   parseJSON = J.withObject "cors config" \o -> do
     let parseAllowAll "*" = pure CCAllowAll
