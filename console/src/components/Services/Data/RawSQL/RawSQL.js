@@ -106,6 +106,10 @@ const RawSQL = ({
   /* hooks - end */
 
   const submitSQL = () => {
+    if (!sqlText) {
+      localStorage.setItem(LS_RAW_SQL_SQL, '');
+      return;
+    }
     // set SQL to LS
     localStorage.setItem(LS_RAW_SQL_SQL, sqlText);
 
