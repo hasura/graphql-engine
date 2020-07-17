@@ -166,9 +166,7 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
                     $ Map.map _tiEventTriggerInfoMap userTables
       _mtRemoteSchemas   = Map.size $ scRemoteSchemas sc
       _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) $ scFunctions sc
-
-      -- FIXME:
-      _mtActions = ActionMetric 0 0 0 0 0 -- computeActionsMetrics (scActions sc) (snd . scCustomTypes $ sc)
+      _mtActions = computeActionsMetrics $ scActions sc
 
   in Metrics{..}
 
@@ -182,26 +180,22 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
     permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
--- computeActionsMetrics :: ActionCache -> AnnotatedObjects -> ActionMetric
--- computeActionsMetrics ac ao =
---   ActionMetric syncActionsLen asyncActionsLen queryActionsLen typeRelationships customTypesLen
---   where actions = Map.elems ac
---         syncActionsLen  = length . filter ((==(ActionMutation ActionSynchronous)) . _adType . _aiDefinition) $ actions
---         asyncActionsLen  = length . filter ((==(ActionMutation ActionAsynchronous)) . _adType . _aiDefinition) $ actions
---         queryActionsLen = length . filter ((==ActionQuery) . _adType . _aiDefinition) $ actions
+computeActionsMetrics :: ActionCache -> ActionMetric
+computeActionsMetrics actionCache =
+  ActionMetric syncActionsLen asyncActionsLen queryActionsLen typeRelationships customTypesLen
+  where actions = Map.elems actionCache
+        syncActionsLen  = length . filter ((== ActionMutation ActionSynchronous) . _adType . _aiDefinition) $ actions
+        asyncActionsLen  = length . filter ((== ActionMutation ActionAsynchronous) . _adType . _aiDefinition) $ actions
+        queryActionsLen = length . filter ((== ActionQuery) . _adType . _aiDefinition) $ actions
 
---         outputTypesLen = length . nub . (map (_adOutputType . _aiDefinition)) $ actions
---         inputTypesLen = length . nub . concat . (map ((map _argType) . _adArguments . _aiDefinition)) $ actions
---         customTypesLen = inputTypesLen + outputTypesLen
+        outputTypesLen = length . L.nub . map (_adOutputType . _aiDefinition) $ actions
+        inputTypesLen = length . L.nub . concatMap (map _argType . _adArguments . _aiDefinition) $ actions
+        customTypesLen = inputTypesLen + outputTypesLen
 
---         typeRelationships = length . nub . concat . map ((getActionTypeRelationshipNames ao) . _aiDefinition) $ actions
-
---         -- gives the count of relationships associated with an action
---         getActionTypeRelationshipNames :: AnnotatedObjects -> ResolvedActionDefinition -> [RelationshipName]
---         getActionTypeRelationshipNames annotatedObjs actionDefn =
---           let typeName = G.getBaseType $ unGraphQLType $ _adOutputType actionDefn
---               annotatedObj = Map.lookup (ObjectTypeName typeName) annotatedObjs
---           in maybe [] (Map.keys . _aotRelationships) annotatedObj
+        typeRelationships =
+          length . L.nub . concatMap
+          (map _trName . maybe [] toList . _otdRelationships . _aiOutputObject) $
+          actions
 
 -- | Logging related
 
