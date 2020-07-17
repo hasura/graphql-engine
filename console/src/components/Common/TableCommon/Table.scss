@@ -35,11 +35,14 @@
   border-left: 1px solid #ddd;
 }
 
-.tableHeaderCell i {
-  font-size: 12px;
-  position: absolute;
-  top: calc(50% - 5px);
-  right: 8px;
+.tableHeaderCell {
+  text-align: left;
+  i {
+    font-size: 12px;
+    position: absolute;
+    top: calc(50% - 5px);
+    right: 8px;
+  }
 }
 
 .insertContainer {

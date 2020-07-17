@@ -162,10 +162,10 @@
 .ReactTable .rt-tbody .rt-th,
 .ReactTable .rt-tbody .rt-td {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .ReactTable .rt-thead .rt-resizable-header-content {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
 }
