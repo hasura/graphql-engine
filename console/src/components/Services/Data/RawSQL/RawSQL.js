@@ -92,12 +92,13 @@ const RawSQL = ({
       const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
       if (sqlFromLocalStorage) {
         dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
+        onChangeSQLText(sqlFromLocalStorage);
       }
     }
     return () => {
-      localStorage.setItem(LS_RAW_SQL_SQL, sqlRef.current);
+      localStorage.setItem(LS_RAW_SQL_SQL, sqlText);
     };
-  }, [dispatch, sql]);
+  }, [dispatch, sql, sqlText]);
   // set SQL to sqlRef
   useEffect(() => {
     sqlRef.current = sql;
