@@ -149,6 +149,7 @@ const RemoteRelEditor: React.FC<Props> = ({
             handleArgValueChange={handleArgValueChange}
             remoteSchemaName={state.remoteSchema}
             columns={tableColumns}
+            dispatch={dispatch}
           />
         </div>
       </div>

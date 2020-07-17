@@ -14,7 +14,7 @@ import { globalCookiePolicy } from '../Endpoints';
 
 const requestAction = (
   url: string,
-  options: RequestInit,
+  options: RequestInit = {},
   SUCCESS?: string,
   ERROR?: string,
   includeCredentials = true,

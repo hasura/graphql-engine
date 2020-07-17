@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
-import AnalyzeButton from '../Analyzer/AnalyzeButton';
+import AnalyseButton from '../Analyzer/AnalyzeButton';
 import CodeExporter from 'graphiql-code-exporter';
 import {
   getPersistedCodeExporterOpen,
@@ -93,7 +93,8 @@ class GraphiQLWrapper extends Component {
       return graphQLFetcherFinal(
         graphQLParams,
         getGraphQLEndpoint(mode),
-        graphqlNetworkData.headers
+        graphqlNetworkData.headers,
+        dispatch
       );
     };
 
@@ -232,9 +233,10 @@ class GraphiQLWrapper extends Component {
             <GraphiQL.Logo>GraphiQL</GraphiQL.Logo>
             <GraphiQL.Toolbar>
               {getGraphiqlButtons()}
-              <AnalyzeButton
+              <AnalyseButton
                 operations={graphiqlContext && graphiqlContext.state.operations}
                 analyzeFetcher={analyzeFetcherInstance}
+                dispatch={dispatch}
                 {...analyzerProps}
               />
             </GraphiQL.Toolbar>

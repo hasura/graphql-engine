@@ -6,7 +6,7 @@ import { print, parse } from 'graphql';
 import { isValidGraphQLOperation } from '../utils';
 import { getGraphQLQueryPayload } from '../../../Common/utils/graphqlUtils';
 
-export default class AnalyzeButton extends React.Component {
+export default class AnalyseButton extends React.Component {
   constructor(props) {
     super(props);
     // Ensure props are correct
@@ -173,7 +173,7 @@ export default class AnalyzeButton extends React.Component {
   };
 }
 
-AnalyzeButton.propTypes = {
+AnalyseButton.propTypes = {
   operations: PropTypes.array,
   query: PropTypes.string,
   variables: PropTypes.string,

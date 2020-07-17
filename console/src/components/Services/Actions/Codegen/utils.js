@@ -20,6 +20,7 @@ const {
 const { camelize } = require('inflection');
 import { getPersistedDerivedAction } from '../lsUtils';
 import requestAction from '../../../../utils/requestAction';
+import requestActionPlain from '../../../../utils/requestActionPlain';
 
 export const getCodegenFilePath = framework => {
   return `${BASE_CODEGEN_PATH}/${framework}/actions-codegen.js`;
@@ -42,9 +43,8 @@ export const getAllCodegenFrameworks = dispatch => {
   return dispatch(requestAction(ALL_FRAMEWORKS_FILE_PATH, {}));
 };
 
-export const getCodegenFunc = framework => {
-  return fetch(getCodegenFilePath(framework))
-    .then(r => r.text())
+export const getCodegenFunc = (framework, dispatch) => {
+  return dispatch(requestActionPlain(getCodegenFilePath(framework)))
     .then(rawJsString => {
       const { codegen } = require('@graphql-codegen/core');
       const typescriptPlugin = require('@graphql-codegen/typescript');
@@ -61,9 +61,10 @@ export const getFrameworkCodegen = (
   framework,
   actionName,
   actionsSdl,
-  parentOperation
+  parentOperation,
+  dispatch
 ) => {
-  return getCodegenFunc(framework)
+  return getCodegenFunc(framework, dispatch)
     .then(codegenerator => {
       const derive = {
         operation: parentOperation,

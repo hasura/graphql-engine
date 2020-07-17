@@ -12,6 +12,7 @@ import { LoadingSkeleton, NoRemoteSchemaPlaceholder } from './PlaceHolder';
 import ArgElement from './ArgElement';
 import FieldElement from './FieldElement';
 import styles from '../SchemaExplorer.scss';
+import { Thunk } from '../../../../../../types';
 
 type Props = {
   relationship: RemoteRelationship;
@@ -21,6 +22,7 @@ type Props = {
   handleArgValueChange: (a: TreeArgElement, value: string) => void;
   remoteSchemaName: string;
   columns: string[];
+  dispatch: Thunk;
 };
 
 const Explorer: React.FC<Props> = ({
@@ -31,12 +33,14 @@ const Explorer: React.FC<Props> = ({
   handleArgValueKindChange,
   remoteSchemaName,
   columns,
+  dispatch,
 }) => {
   const { loading, error, schema, introspect } = useIntrospectionSchemaRemote(
     remoteSchemaName,
     {
       'x-hasura-admin-secret': globals.adminSecret,
-    }
+    },
+    dispatch
   );
 
   if (!remoteSchemaName) {

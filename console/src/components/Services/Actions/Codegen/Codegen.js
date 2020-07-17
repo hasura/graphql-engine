@@ -188,6 +188,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
           currentAction={currentAction}
           shouldDerive={shouldDerive}
           parentMutation={parentMutation}
+          dispatch={dispatch}
         />
       </div>
       <hr />
