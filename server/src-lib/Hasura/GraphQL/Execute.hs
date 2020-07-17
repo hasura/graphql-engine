@@ -61,6 +61,7 @@ import qualified Hasura.GraphQL.Validate.SelectionSet   as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
+import qualified Hasura.Tracing                         as Tracing
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
@@ -109,6 +110,10 @@ instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ExceptT e m) where
     lift $ checkGQLExecution ui det enableAL sc req
 
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ReaderT r m) where
+  checkGQLExecution ui det enableAL sc req =
+    lift $ checkGQLExecution ui det enableAL sc req
+
+instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (Tracing.TraceT m) where
   checkGQLExecution ui det enableAL sc req =
     lift $ checkGQLExecution ui det enableAL sc req
 
@@ -212,8 +217,10 @@ getResolvedExecPlan
    . ( HasVersion
      , MonadError QErr m
      , MonadIO m
+     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> PGExecCtx
@@ -304,8 +311,10 @@ getQueryOp
   :: ( HasVersion
      , MonadError QErr m
      , MonadIO m
+     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> GCtx
@@ -333,8 +342,10 @@ resolveMutSelSet
      , Has HTTP.Manager r
      , Has [HTTP.Header] r
      , MonadIO m
+     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> VQ.ObjectSelectionSet
@@ -360,8 +371,10 @@ getMutOp
   :: ( HasVersion
      , MonadError QErr m
      , MonadIO m
+     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> GCtx
@@ -392,6 +405,7 @@ getSubsOp
   :: ( MonadError QErr m
      , MonadIO m
      , HasVersion
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> PGExecCtx
@@ -412,6 +426,7 @@ execRemoteGQ
      , MonadError QErr m
      , MonadReader ExecutionCtx m
      , MonadQueryLog m
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> RequestId

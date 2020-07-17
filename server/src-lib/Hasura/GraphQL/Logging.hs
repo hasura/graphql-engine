@@ -14,6 +14,7 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import           Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import           Hasura.Prelude
 import           Hasura.Server.Utils                    (RequestId)
+import           Hasura.Tracing                         (TraceT)
 
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.Logging                         as L
@@ -62,4 +63,7 @@ instance MonadQueryLog m => MonadQueryLog (ExceptT e m) where
   logQueryLog l req sqlMap reqId = lift $ logQueryLog l req sqlMap reqId
 
 instance MonadQueryLog m => MonadQueryLog (ReaderT r m) where
+  logQueryLog l req sqlMap reqId = lift $ logQueryLog l req sqlMap reqId
+
+instance MonadQueryLog m => MonadQueryLog (TraceT m) where
   logQueryLog l req sqlMap reqId = lift $ logQueryLog l req sqlMap reqId
