@@ -95,9 +95,6 @@ data ActionQuery v
   = AQQuery !(RQL.AnnActionExecution v)
   | AQAsync !(RQL.AnnActionAsyncQuery v)
 
--- TODO this should maybe take a G.Field rather than a
--- G.TypedOperationDefinition -- the operation would get built when we pass to
--- the execution phase.
 type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments Variable)
 
 type QueryRootField v = RootField (QueryDB v) RemoteField (ActionQuery v) J.Value
