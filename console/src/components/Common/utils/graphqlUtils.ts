@@ -50,7 +50,7 @@ export const useIntrospectionSchema = (headers = {}, dispatch: Dispatch) => {
     return () => setSchema(null);
   };
 
-  React.useEffect(introspect, []);
+  React.useEffect(introspect, [dispatch, headers]);
 
   return {
     schema,

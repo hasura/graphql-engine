@@ -62,7 +62,7 @@ export const useIntrospectionSchemaRemote = (
       });
   };
 
-  useEffect(introspectSchema, [remoteSchemaName]);
+  useEffect(introspectSchema, [remoteSchemaName, dispatch, headers]);
 
   return {
     schema,
