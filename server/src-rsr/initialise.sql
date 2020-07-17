@@ -604,8 +604,7 @@ CREATE OR REPLACE FUNCTION
     payload json;
     session_variables json;
     server_version_num int;
-    trace_id text;
-    span_id text;
+    trace_context json;
   BEGIN
     id := gen_random_uuid();
     server_version_num := current_setting('server_version_num');
@@ -619,18 +618,15 @@ CREATE OR REPLACE FUNCTION
       END;
     END IF;
     BEGIN
-      trace_id := current_setting('hasura.tracing.traceid');
-      span_id := current_setting('hasura.tracing.spanid');
+      trace_context := current_setting('hasura.tracecontext');
     EXCEPTION WHEN OTHERS THEN
-      trace_id := NULL;
-      span_id := NULL;
+      trace_context := NULL;
     END;
     payload := json_build_object(
       'op', op,
       'data', row_data,
       'session_variables', session_variables,
-      'trace_id', trace_id,
-      'span_id', span_id
+      'trace_context', trace_context
     );
     INSERT INTO hdb_catalog.event_log
                 (id, schema_name, table_name, trigger_name, payload)

@@ -17,6 +17,7 @@ module Hasura.Tracing
   , SuspendedRequest(..)
   , extractHttpContext
   , traceHttpRequest
+  , injectEventContext
   , extractEventContext
   ) where
 
@@ -214,13 +215,20 @@ extractHttpContext hdrs = do
     <*> pure freshSpanId
     <*> pure (HTTP.parseHeaderMaybe =<< lookup "X-Hasura-SpanId" hdrs)
 
+injectEventContext :: TraceContext -> J.Value
+injectEventContext ctx =
+  J.object
+    [ "trace_id" J..= tcCurrentTrace ctx
+    , "span_id"  J..= tcCurrentSpan ctx
+    ]
+
 extractEventContext :: J.Value -> IO (Maybe TraceContext)
 extractEventContext e = do
   freshSpanId <- liftIO Rand.randomIO
   pure $ TraceContext
-    <$> ((e ^? JL.key "trace_id" . JL._String) >>= Safe.readMay . T.unpack)
+    <$> (e ^? JL.key "trace_context" . JL.key "trace_id" . JL._Integral)
     <*> pure freshSpanId
-    <*> pure ((e ^? JL.key "span_id" . JL._String) >>= Safe.readMay . T.unpack)
+    <*> pure (e ^? JL.key "trace_context" . JL.key "span_id" . JL._Integral)
 
 traceHttpRequest
   :: MonadTrace m

@@ -28,7 +28,6 @@ import           Control.Monad.Validate
 import           Data.Either                  (isRight)
 
 import qualified Data.Aeson.Extended          as J
-import qualified Data.Text                    as T
 import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 
@@ -196,17 +195,15 @@ withTraceContext
   -> LazyTx QErr a
   -> LazyTx QErr a
 withTraceContext ctx = \case
-    LTErr e  -> LTErr e
-    LTNoTx a -> LTNoTx a
-    LTTx tx  -> LTTx do
-      Q.unitQE defaultTxErrorHandler setTraceId () False
-      Q.unitQE defaultTxErrorHandler setSpanId () False
-      tx
-  where
-    setTraceId = Q.fromText $
-      "SET LOCAL \"hasura.tracing.traceid\" = " <> toSQLTxt (S.SELit (T.pack (show (Tracing.tcCurrentTrace ctx))))
-    setSpanId = Q.fromText $
-      "SET LOCAL \"hasura.tracing.spanid\" = " <> toSQLTxt (S.SELit (T.pack (show (Tracing.tcCurrentSpan ctx))))
+  LTErr e  -> LTErr e
+  LTNoTx a -> LTNoTx a
+  LTTx tx  -> 
+    let sql = Q.fromText $
+          "SET LOCAL \"hasura.tracecontext\" = " <> 
+            toSQLTxt (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
+        setTraceContext = 
+          Q.unitQE defaultTxErrorHandler sql () False
+     in LTTx $ setTraceContext >> tx
 
 instance Functor (LazyTx e) where
   fmap f = \case
