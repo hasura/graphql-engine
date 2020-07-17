@@ -190,6 +190,8 @@ withUserInfo uInfo = \case
     let vars = _uiSession uInfo
     in LTTx $ setHeadersTx vars >> tx
 
+-- | Inject the trace context as a transaction-local variable,
+-- so that it can be picked up by any triggers (including event triggers).
 withTraceContext
   :: Tracing.TraceContext
   -> LazyTx QErr a

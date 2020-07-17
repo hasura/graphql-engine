@@ -201,6 +201,14 @@ instance MonadTrace m => MonadTrace (ExceptT e m) where
 -- | A HTTP request, which can be modified before execution.
 data SuspendedRequest m a = SuspendedRequest HTTP.Request (HTTP.Request -> m a)
 
+-- | Inject the trace context as a set of HTTP headers.
+injectHttpContext :: TraceContext -> [HTTP.Header]
+injectHttpContext TraceContext{..} = 
+  [ ("X-Hasura-TraceId", fromString (show tcCurrentTrace))
+  , ("X-Hasura-SpanId", fromString (show tcCurrentSpan))
+  ]
+    
+
 -- | Extract the trace and parent span headers from a HTTP request
 -- and create a new 'TraceContext'. The new context will contain
 -- a fresh span ID, and the provided span ID will be assigned as
@@ -213,6 +221,8 @@ extractHttpContext hdrs = do
     <*> pure freshSpanId
     <*> pure (HTTP.parseHeaderMaybe =<< lookup "X-Hasura-SpanId" hdrs)
 
+-- | Inject the trace context as a JSON value, appropriate for 
+-- storing in (e.g.) an event trigger payload.
 injectEventContext :: TraceContext -> J.Value
 injectEventContext ctx =
   J.object
@@ -220,6 +230,7 @@ injectEventContext ctx =
     , "span_id"  J..= tcCurrentSpan ctx
     ]
 
+-- | Extract a trace context from an event trigger payload.
 extractEventContext :: J.Value -> IO (Maybe TraceContext)
 extractEventContext e = do
   freshSpanId <- liftIO Rand.randomIO
@@ -246,12 +257,8 @@ traceHttpRequest name f = trace name do
         _ -> Nothing
   for_ reqBytes \b ->
     attachMetadata [("request_body_bytes", fromString (show b))]
-  TraceContext{..} <- currentContext
-  let tracingHeaders =
-        [ ("X-Hasura-TraceId", fromString (show tcCurrentTrace))
-        , ("X-Hasura-SpanId", fromString (show tcCurrentSpan))
-        ]
-      req' = req { HTTP.requestHeaders =
-                     tracingHeaders <> HTTP.requestHeaders req
+  ctx <- currentContext
+  let req' = req { HTTP.requestHeaders =
+                     injectHttpContext ctx <> HTTP.requestHeaders req
                  }
   next req'
