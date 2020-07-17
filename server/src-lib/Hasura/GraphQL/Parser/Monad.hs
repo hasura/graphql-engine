@@ -186,4 +186,5 @@ instance Monad m => MonadParse (ParseT m) where
 
 data ParseError = ParseError
   { pePath    :: JSONPath
-  , peMessage :: Text }
+  , peMessage :: Text
+  }
