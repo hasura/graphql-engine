@@ -178,6 +178,7 @@ func ConsoleAPI(c *gin.Context) {
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+			return
 		}
 
 		c.JSON(http.StatusOK, &MigrationDataResponse{
