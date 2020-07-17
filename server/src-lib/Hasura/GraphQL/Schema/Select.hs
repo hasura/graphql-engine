@@ -516,12 +516,12 @@ tableArgs table selectPermissions = do
   whereParser   <- tableWhere table selectPermissions
   orderByParser <- tableOrderBy table selectPermissions
   distinctParser <- tableDistinctOn table selectPermissions
-  pure $ do
-    whereF   <- whereParser
-    orderBy  <- orderByParser
-    limit    <- fmap join $ P.fieldOptional limitName   limitDesc   $ P.nullable positiveInt
-    offset   <- fmap join $ P.fieldOptional offsetName  offsetDesc  $ P.nullable positiveInt
-    distinct <- distinctParser
+  let selectArgs = do
+        whereF   <- whereParser
+        orderBy  <- orderByParser
+        limit    <- fmap join $ P.fieldOptional limitName   limitDesc   $ P.nullable positiveInt
+        offset   <- fmap join $ P.fieldOptional offsetName  offsetDesc  $ P.nullable positiveInt
+        distinct <- distinctParser
 
     -- TODO: offset should be a bigint
     --
@@ -536,16 +536,17 @@ tableArgs table selectPermissions = do
     -- itself as an int, but also accepts strings, to replicate the old
     -- behaviour, a much better approach would be to use custom scalar types.
 
-    -- TODO: distinct_on must be validated ungainst order_by
-    -- the check at Resolve/Select.hs:152 must be ported here
-
-    pure $ RQL.SelectArgs
-      { RQL._saWhere    = whereF
-      , RQL._saOrderBy  = orderBy
-      , RQL._saLimit    = fromIntegral <$> limit
-      , RQL._saOffset   = txtEncoder . PGValInteger <$> offset
-      , RQL._saDistinct = distinct
-      }
+        pure $ RQL.SelectArgs
+          { RQL._saWhere    = whereF
+          , RQL._saOrderBy  = orderBy
+          , RQL._saLimit    = fromIntegral <$> limit
+          , RQL._saOffset   = txtEncoder . PGValInteger <$> offset
+          , RQL._saDistinct = distinct
+          }
+  pure $ selectArgs `P.bindFields`
+   \args -> do
+      traverse_ (validateDistinctOn $ RQL._saOrderBy args) $ RQL._saDistinct args
+      pure args
   where
     -- TH splices mess up ApplicativeDo
     -- see (FIXME: link to bug here)
@@ -553,6 +554,19 @@ tableArgs table selectPermissions = do
     offsetName     = $$(G.litName "offset")
     limitDesc      = Just $ G.Description "limit the number of rows returned"
     offsetDesc     = Just $ G.Description "skip the first n rows. Use only with order_by"
+
+    validateDistinctOn Nothing _ = return ()
+    validateDistinctOn (Just orderByCols) distinctOnCols = do
+      let colsLen = length distinctOnCols
+          initOrderBys = take colsLen $ NE.toList orderByCols
+          initOrdByCols = flip mapMaybe initOrderBys $ \ob ->
+            case obiColumn ob of
+              RQL.AOCColumn pgCol -> Just $ pgiColumn pgCol
+              _               -> Nothing
+          isValid = (colsLen == length initOrdByCols)
+                    && all (`elem` initOrdByCols) (toList distinctOnCols)
+      unless isValid $ parseError $
+        "\"distinct_on\" columns must match3232 initial \"order_by\" columns"
 
 -- TODO:
 -- this should either be moved to Common, or to Parser itself; even better,
