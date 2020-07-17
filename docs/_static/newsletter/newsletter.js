@@ -84,11 +84,11 @@ const submitNewsletterForm = function (form) {
         submit_btn.value = 'Subscribe';
         submit_btn.disabled = false;
         if(data && data.data && data.data.signupNewsletter.affected_rows) {
-            mcStatusSuccess.innerHTML = 'Thank you for registering!';
+            mcStatusSuccess.innerHTML = 'Thank you for subscribing!';
             mcStatusSuccess.classList.remove('hide');
         } else {
             if(data.errors && data.errors[0].extensions.code === 'constraint-violation') {
-                mcStatusError.innerHTML = 'You have already registered';
+                mcStatusError.innerHTML = 'You have already subscribed';
             } else {
                 mcStatusError.innerHTML = 'Something went wrong';
             }
