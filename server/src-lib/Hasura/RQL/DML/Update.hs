@@ -23,8 +23,8 @@ import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances        ()
 import           Hasura.RQL.Types
 import           Hasura.Server.Version       (HasVersion)
-import           Hasura.SQL.Types
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 import qualified Database.PG.Query           as Q
 import qualified Hasura.SQL.DML              as S
@@ -58,7 +58,7 @@ traverseAnnUpd f annUpd =
 
 mkUpdateCTE
   :: AnnUpd -> S.CTE
-mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ _) =
+mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
   S.CTEUpdate update
   where
     update =
@@ -68,16 +68,16 @@ mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ _) =
         $ [ S.selectStar
           , S.Extractor (insertCheckExpr "update check constraint failed" checkExpr) Nothing
           ]
-    setExp    = S.SetExp $ map expandOperator opExps
+    setExp    = S.SetExp $ map (expandOperator columnsInfo) opExps
     tableFltr = Just $ S.WhereFrag tableFltrExpr
     tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
     checkExpr = toSQLBoolExp (S.QualTable tn) chk
 
 
-expandOperator :: (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
-expandOperator (column, op) = S.SetExpItem $ (column,) $ case op of
+expandOperator :: [PGColumnInfo] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
+expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of
   UpdSet          e -> e
-  UpdInc          e -> S.mkSQLOpExp S.incOp               identifier (asInt  e)
+  UpdInc          e -> S.mkSQLOpExp S.incOp               identifier (asNum  e)
   UpdAppend       e -> S.mkSQLOpExp S.jsonbConcatOp       identifier (asJSON e)
   UpdPrepend      e -> S.mkSQLOpExp S.jsonbConcatOp       (asJSON e) identifier
   UpdDeleteKey    e -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asText e)
@@ -89,6 +89,10 @@ expandOperator (column, op) = S.SetExpItem $ (column,) $ case op of
     asText e   = S.SETyAnn e S.textTypeAnn
     asJSON e   = S.SETyAnn e S.jsonbTypeAnn
     asArray a  = S.SETyAnn (S.SEArray a) S.textArrTypeAnn
+    asNum  e   = S.SETyAnn e $
+      case find (\info -> pgiColumn info == column) infos <&> pgiType of
+        Just (PGColumnScalar s) -> S.mkTypeAnn $ PGTypeScalar s
+        _                       -> S.numericTypeAnn
 
 execUpdateQuery
   :: (HasVersion, MonadTx m, MonadIO m)

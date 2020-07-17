@@ -360,15 +360,15 @@ updateOperators
 updateOperators table updatePermissions = do
   tableName <- qualifiedObjectToName table
   columns   <- tableUpdateColumns table updatePermissions
-  let intCols  = onlyNumCols   columns
-      jsonCols = onlyJSONBCols columns
+  let numericCols = onlyNumCols   columns
+      jsonCols    = onlyJSONBCols columns
   parsers <- catMaybes <$> sequenceA
     [ updateOperator tableName $$(G.litName "_set")
         columnParser RQL.UpdSet columns
         ("sets the columns of the filtered rows to the given values")
         (G.Description $ "input type for updating data in table \"" <> G.unName tableName <> "\"")
     , updateOperator tableName $$(G.litName "_inc")
-        columnParser RQL.UpdInc intCols
+        columnParser RQL.UpdInc numericCols
         ("increments the integer columns with given value of the filtered values")
         (G.Description $"input type for incrementing integer columns in table \"" <> G.unName tableName <> "\"")
 
