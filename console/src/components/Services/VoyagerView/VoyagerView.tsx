@@ -1,49 +1,46 @@
 import React, { Component } from 'react';
-import { connect, ConnectedProps } from 'react-redux';
+import { Connect } from 'react-redux';
 import { GraphQLVoyager } from 'graphql-voyager';
-import fetch from 'isomorphic-fetch';
 
 import Endpoints from '../../../Endpoints';
 import '../../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
 import requestAction from '../../../utils/requestAction';
+import { Dispatch } from '../../../types';
 
 interface VoyagerViewProps {
   headers: Headers;
 }
 
-interface StateProps {
-  headers: Headers;
-}
-
+const mapStateToProps = (state: State) => {
+  return {
+    headers: state.tables.dataHeaders,
+  };
+};
+const mapDispatchToProps = (dispatch: Dispatch) => {
+  return {
+    requestAction: (url: string, options: RequestInit) =>
+      dispatch(requestAction(url, options)),
+  };
+};
 // TODO: replace by redux State when it's defined
 interface State {
   tables: {
     dataHeaders: Headers;
   };
 }
-const mapState = (state: State) => {
-  return {
-    headers: state.tables.dataHeaders,
-  };
-};
-const mapDispatch = {
-  requestAction,
-};
 
-const connector = connect(mapState, mapDispatch);
-type PropsFromRedux = ConnectedProps<typeof connector>;
-
-type Props = PropsFromRedux & VoyagerViewProps & StateProps;
+type Props = VoyagerViewProps &
+  ReturnType<typeof mapStateToProps> &
+  ReturnType<typeof mapDispatchToProps>;
 
 class VoyagerView extends Component<Props, State> {
-  introspectionProvider = (query: string) => {
-    return this.props.requestAction(Endpoints.graphQLUrl, {
+  introspectionProvider = (query: string) =>
+    this.props.requestAction(Endpoints.graphQLUrl, {
       method: 'POST',
       headers: this.props.headers,
       body: JSON.stringify({ query }),
     });
-  };
 
   render() {
     return (
@@ -55,4 +52,8 @@ class VoyagerView extends Component<Props, State> {
   }
 }
 
-export default connector(VoyagerView);
+const generatedVoyagerConnector = (connect: Connect) => {
+  return connect(mapStateToProps, mapDispatchToProps)(VoyagerView);
+};
+
+export default generatedVoyagerConnector;

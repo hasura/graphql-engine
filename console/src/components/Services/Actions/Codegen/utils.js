@@ -19,6 +19,7 @@ const {
 } = require('graphql');
 const { camelize } = require('inflection');
 import { getPersistedDerivedAction } from '../lsUtils';
+import requestAction from '../../../../utils/requestAction';
 
 export const getCodegenFilePath = framework => {
   return `${BASE_CODEGEN_PATH}/${framework}/actions-codegen.js`;
@@ -37,13 +38,8 @@ export const getGlitchProjectURL = () => {
 
 export const GLITCH_PROJECT_URL = '';
 
-export const getAllCodegenFrameworks = () => {
-  return fetch(ALL_FRAMEWORKS_FILE_PATH)
-    .then(r => r.json())
-    .catch(e => {
-      console.error('could not fetch the latest codegen file');
-      throw e;
-    });
+export const getAllCodegenFrameworks = dispatch => {
+  return dispatch(requestAction(ALL_FRAMEWORKS_FILE_PATH, {}));
 };
 
 export const getCodegenFunc = framework => {
