@@ -226,7 +226,9 @@ const RawSQL = ({
               name: 'submit',
               bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
               exec: () => {
-                submitSQL();
+                if (sqlText) {
+                  submitSQL();
+                }
               },
             },
           ]}
@@ -468,6 +470,7 @@ const RawSQL = ({
             color="yellow"
             size="sm"
             data-test="run-sql"
+            disabled={!sqlText.length}
           >
             Run!
           </Button>
