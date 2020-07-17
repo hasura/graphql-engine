@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
@@ -76,11 +76,6 @@ const RawSQL = ({
   // local storage key for SQL
   const LS_RAW_SQL_SQL = 'rawSql:sql';
 
-  /* hooks */
-
-  // set up sqlRef to use in unmount
-  const sqlRef = useRef(sql);
-
   const [statementTimeout, setStatementTimeout] = useState(
     Number(getLocalStorageItem(LS_RAW_SQL_STATEMENT_TIMEOUT)) || 10
   );
@@ -99,12 +94,6 @@ const RawSQL = ({
       localStorage.setItem(LS_RAW_SQL_SQL, sqlText);
     };
   }, [dispatch, sql, sqlText]);
-  // set SQL to sqlRef
-  useEffect(() => {
-    sqlRef.current = sql;
-  }, [sql]);
-
-  /* hooks - end */
 
   const submitSQL = () => {
     if (!sqlText) {
