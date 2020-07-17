@@ -44,8 +44,9 @@ GRAPHIQL_DEFAULT_ENDPOINT = "http://localhost:8080/v1/graphql"
 # Get from env if set
 if os.getenv("GRAPHIQL_DEFAULT_ENDPOINT"):
     GRAPHIQL_DEFAULT_ENDPOINT = os.getenv("GRAPHIQL_DEFAULT_ENDPOINT")
-    sitemap_domain = "https://hasura-stg.hasura-app.io/docs/"
-    
+
+sitemap_domain = "https://hasura-stg.hasura-app.io/docs/"
+
 if(RELEASE_MODE == "production"):
     sitemap_domain = "https://hasura.io/docs/"
 
