@@ -30,7 +30,11 @@ import qualified Database.PG.Query           as Q
 import qualified Hasura.SQL.DML              as S
 
 
--- FIXME: avoid this?
+-- FIXME: This function can be improved, because we use
+-- the literal values defined below in the 'updateOperators'
+-- function in 'Hasura.GraphQL.Schema.Mutation'. It would
+-- be nice if we could avoid duplicating the string literal
+-- values
 updateOperatorText :: UpdOpExpG a -> Text
 updateOperatorText (UpdSet          _) = "_set"
 updateOperatorText (UpdInc          _) = "_inc"
@@ -39,7 +43,6 @@ updateOperatorText (UpdPrepend      _) = "_prepend"
 updateOperatorText (UpdDeleteKey    _) = "_delete_key"
 updateOperatorText (UpdDeleteElem   _) = "_delete_elem"
 updateOperatorText (UpdDeleteAtPath _) = "_delete_at_path"
-
 
 traverseAnnUpd
   :: (Applicative f)

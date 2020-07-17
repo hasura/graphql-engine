@@ -146,16 +146,6 @@ getExecPlanPartial userInfo sc enableAL queryType req = do
           case _uiBackendOnlyFieldAccess userInfo of
             BOFAAllowed    -> fromMaybe frontend backend
             BOFADisallowed -> frontend
-        -- TODO FIXME implement backend-only field access
-        {-
-        Just (RoleContext defaultGCtx maybeBackendGCtx)   ->
-          case backendOnlyFieldAccess of
-            BOFAAllowed    ->
-              -- When backend field access is allowed and if there's no 'backend_only'
-              -- permissions defined, we should allow access to non backend only fields
-              fromMaybe defaultGCtx maybeBackendGCtx
-            BOFADisallowed -> defaultGCtx
-        -}
 
     -- | Depending on the request parameters, fetch the correct typed operation
     -- definition from the GraphQL query
@@ -185,9 +175,9 @@ getExecPlanPartial userInfo sc enableAL queryType req = do
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan
   = QueryExecutionPlan (EPr.ExecutionPlan (LazyRespTx, EQ.GeneratedSqlMap) EPr.RemoteCall (G.Name, J.Value))
-  -- ^ query execution; remote schemas and introspection possible (TODO implement remote)
+  -- ^ query execution; remote schemas and introspection possible
   | MutationExecutionPlan (EPr.ExecutionPlan (LazyRespTx, HTTP.ResponseHeaders) EPr.RemoteCall (G.Name, J.Value))
-  -- ^ mutation execution; only __typename introspection supported (TODO implement remote)
+  -- ^ mutation execution; only __typename introspection supported
   | SubscriptionExecutionPlan (EPr.ExecutionPlan EL.LiveQueryPlan Void Void)
   -- ^ live query execution; remote schemas and introspection not supported
 
