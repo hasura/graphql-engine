@@ -30,6 +30,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.GraphQL.Validate.SelectionSet   as GV
 import qualified Hasura.SQL.DML                         as S
+import qualified Hasura.Tracing                         as Tracing
 
 data GQLExplain
   = GQLExplain
@@ -87,7 +88,7 @@ getSessVarVal userInfo sessVar =
     sessionVariables = _uiSession userInfo
 
 explainField
-  :: (MonadError QErr m, MonadTx m, HasVersion, MonadIO m)
+  :: (MonadError QErr m, MonadTx m, HasVersion, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
   -> UserInfo
   -> GCtx
@@ -126,8 +127,10 @@ explainGQLQuery
   :: ( HasVersion
      , MonadError QErr m
      , MonadIO m
+     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> PGExecCtx

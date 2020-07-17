@@ -38,6 +38,7 @@ import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 
 import qualified Hasura.SQL.DML               as S
+import qualified Hasura.Tracing               as Tracing
 
 data PGExecCtx
   = PGExecCtx
@@ -80,6 +81,8 @@ instance (MonadTx m) => MonadTx (ReaderT s m) where
 instance (Monoid w, MonadTx m) => MonadTx (WriterT w m) where
   liftTx = lift . liftTx
 instance (MonadTx m) => MonadTx (ValidateT e m) where
+  liftTx = lift . liftTx
+instance (MonadTx m) => MonadTx (Tracing.TraceT m) where
   liftTx = lift . liftTx
 
 -- | Like 'Q.TxE', but defers acquiring a Postgres connection until the first
