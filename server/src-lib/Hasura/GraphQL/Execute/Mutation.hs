@@ -53,8 +53,8 @@ convertUpdate
 convertUpdate usrVars rjCtx updateOperation stringifyNum = do
   pure $ if null $ RQL.uqp1OpExps updateOperation
     then pure $ buildEmptyMutResp $ RQL.uqp1Output preparedUpdate
-    else RQL.execUpdateQuery stringifyNum (Just rjCtx) (preparedUpdate, planVariablesSequence usrVars planningState)
-  where (preparedUpdate, planningState) = runIdentity $ runPlan $ RQL.traverseAnnUpd prepareWithPlan updateOperation
+    else RQL.execUpdateQuery stringifyNum (Just rjCtx) (preparedUpdate, Seq.empty)
+  where preparedUpdate = runIdentity $ RQL.traverseAnnUpd (pure . unpreparedToTextSQL) updateOperation
 
 convertInsert
   :: (HasVersion, MonadIO m)
