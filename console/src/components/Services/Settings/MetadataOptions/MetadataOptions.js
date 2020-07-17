@@ -3,11 +3,13 @@ import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
+import ExportSchema from './ExportSchema';
+
+import styles from '../Settings.scss';
+
 
 const MetadataOptions = props => {
-  const styles = require('../Settings.scss');
-
-  const getMetadataImportExportSection = () => {
+  const MetadataImportExportSection = () => {
     return (
       <div>
         <div className={styles.intro_note}>
@@ -28,7 +30,7 @@ const MetadataOptions = props => {
     );
   };
 
-  const getMetadataUpdateSection = () => {
+  const MetadataUpdateSection = () => {
     return (
       <div>
         <div key="meta_data_1" className={styles.intro_note}>
@@ -80,9 +82,10 @@ const MetadataOptions = props => {
           </a>
         </div>
 
-        {getMetadataImportExportSection()}
+        <MetadataImportExportSection />
+        <ExportSchema />
 
-        {getMetadataUpdateSection()}
+        <MetadataUpdateSection />
       </div>
     </div>
   );
