@@ -32,13 +32,11 @@ import qualified Data.Aeson                  as J
 import qualified Data.Aeson.Lens             as JL
 import qualified Data.ByteString             as BS
 import qualified Data.ByteString.Lazy        as BL
-import qualified Data.Text                   as T
 import qualified Network.HTTP.Client         as HTTP
 import qualified Network.HTTP.Types.Header   as HTTP
-import qualified Safe
 import qualified System.Random               as Rand
 import qualified Web.HttpApiData             as HTTP
-
+ 
 -- | Any additional human-readable key-value pairs relevant
 -- to the execution of a block of code.
 type TracingMetadata = [(Text, Text)]
