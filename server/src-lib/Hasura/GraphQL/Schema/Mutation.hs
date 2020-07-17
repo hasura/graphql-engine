@@ -706,9 +706,9 @@ insertObjRel planVars rjCtx stringifyNum objRelIns = do
   (affRows, colValM) <- insertObject singleObjIns [] rjCtx planVars stringifyNum
   colVal <- onNothing colValM $ throw400 NotSupported errMsg
   retColsWithVals <- fetchFromColVals colVal rColInfos
-  let columns = flip mapMaybe retColsWithVals \(column, value) -> do
-        target <- Map.lookup column mapCols
-        Just (target, value)
+  let columns = flip mapMaybe (Map.toList mapCols) \(column, target) -> do
+        value <- lookup target retColsWithVals
+        Just (column, value)
   return (affRows, columns)
   where
     RelIns singleObjIns relInfo = objRelIns
