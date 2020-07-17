@@ -1,4 +1,5 @@
 import React from 'react';
+import { ThunkAction } from 'redux-thunk';
 import globals from '../../../../../../Globals';
 import { useIntrospectionSchemaRemote } from '../../../../RemoteSchema/graphqlUtils';
 import {
@@ -12,7 +13,7 @@ import { LoadingSkeleton, NoRemoteSchemaPlaceholder } from './PlaceHolder';
 import ArgElement from './ArgElement';
 import FieldElement from './FieldElement';
 import styles from '../SchemaExplorer.scss';
-import { Thunk } from '../../../../../../types';
+import {  ReduxState, ReduxAction } from '../../../../../../types';
 
 type Props = {
   relationship: RemoteRelationship;
@@ -22,7 +23,7 @@ type Props = {
   handleArgValueChange: (a: TreeArgElement, value: string) => void;
   remoteSchemaName: string;
   columns: string[];
-  dispatch: Thunk;
+  dispatch: ThunkAction<void, ReduxState, unknown, ReduxAction>;
 };
 
 const Explorer: React.FC<Props> = ({
