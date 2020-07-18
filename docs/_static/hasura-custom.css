@@ -683,6 +683,10 @@ article ol ol {
   font-family: 'Khula';
 }
 
+#sidebar .sphinxsidebar .sphinxsidebarwrapper > ul:not(.current) {
+  display: none;
+}
+
 #sidebar .sphinxsidebar .sphinxsidebarwrapper ul li {
   /* list-style-type: none; */
   /* color: #fff; */
