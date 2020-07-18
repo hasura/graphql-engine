@@ -561,12 +561,6 @@ Date:   Wed May 27 20:32:58 2020 +0530
     Co-authored-by: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
     Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>
 
-commit ff99b24031b07ca2a6a9c2b4734823a887293d51
-Author: Vamshi Surabhi <0x777@users.noreply.github.com>
-Date:   Wed May 6 01:27:17 2020 +0530
-
-    fix a security issue with 1.2
-
 commit 9c55940b6dde79ced4fd202cbd8cb0e6f9dbc01c
 Author: Tirumarai Selvan <tiru@hasura.io>
 Date:   Thu May 21 13:43:44 2020 +0530
