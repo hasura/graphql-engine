@@ -13,12 +13,23 @@ import {
   TypographyProps,
   LayoutProps,
   SpaceProps,
-  ShadowProps
+  ShadowProps,
 } from 'styled-system';
 
-import { AlertBoxProps } from './index';
+import{ BoxProps, Box } from '../Box';
 
-export const StyledAlertBox = styled.div<AlertBoxProps & FlexboxProps & ColorProps & BorderProps & TypographyProps & LayoutProps & SpaceProps & ShadowProps>`
+interface StyledAlertBoxOwnProps
+  extends FlexboxProps,
+    ColorProps,
+    BorderProps,
+    TypographyProps,
+    LayoutProps,
+    SpaceProps,
+    ShadowProps {}
+
+export interface StyledAlertBoxProps extends StyledAlertBoxOwnProps, BoxProps {}
+
+export const StyledAlertBox = styled(Box)<StyledAlertBoxProps>`
   ${flexbox};
   ${color}
   ${border}
