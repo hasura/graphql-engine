@@ -1,15 +1,14 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 
-import { theme } from '../../theme';
+import { theme, Theme } from '../../theme';
 import { Icon, IconProps } from '../Icon';
-import { StyledAlertBox } from './AlertBox';
+import { StyledAlertBox, StyledAlertBoxProps } from './AlertBox';
 import { Text } from '../Typography';
 
 const alertBoxWidth = "866";
 
-export interface AlertBoxProps extends IconProps {
-  type: 'success' | 'info' | 'warning' | 'error' | 'default' ;
-  children?: ReactNode;
+export interface AlertBoxProps extends IconProps, Omit<StyledAlertBoxProps, 'size'> {
+  type: keyof Theme['alertBox'] ;
 }
 
 
