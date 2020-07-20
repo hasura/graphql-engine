@@ -44,21 +44,6 @@ Date:   Wed Jul 15 05:00:58 2020 +1000
     Co-authored-by: Phil Freeman <phil@hasura.io>
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
 
-commit 66551acac4a1bc6ee68be7e4fcc59835c773d86d
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Wed Jul 8 21:25:36 2020 -0400
-
-    Replace idle GC with a custom GC thread
-
-    The current idle GC settings seem never to cause idle GC to trigger.
-    The changes here at least help memory usage to look more reasonable when
-    running certain benchmarks, and speculatively could partially fix some
-    memory leaks users have reported.
-
-    See ourIdleGC for details.
-
-    Referencing canonical memory issue #3388
-
 commit 505ac06d9ec8439e88d360c2aa4bfc3e65f22f8c
 Author: Phil Freeman <phil@hasura.io>
 Date:   Mon Jul 13 22:56:53 2020 -0700
@@ -72,37 +57,6 @@ Date:   Fri Jul 10 22:17:05 2020 +0530
     server: call the webhook asynchronously in event triggers (#5352)
 
     * server: call the webhook asynchronosly in event triggers
-
-commit 6d235be29ccf008124191c4e161c3b0334c2e35f
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Sat Jul 4 22:53:19 2020 -0400
-
-    Add --disable-delayed-os-memory-return to default rtsopts
-
-    https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/runtime_control.html#rts-flag---disable-delayed-os-memory-return
-
-    Referencing canonical memory issue #3388
-
-    This is a bit of a mystery. It didn't seem to have any effect in early
-    repros we had. But now, running an introspection query benchmark I see:
-
-      Running 400 concurrent connections:
-        before this change: max residency ~450M
-        after: ~140M
-        No difference in latency was observed.
-
-      ...BUT: if I give graphql-engine a warmup of 10 requests with 1
-      connection (i.e. no concurrency): I see both have a max residency of
-      ~140M (i.e. the flag doesn't help)
-
-      ...also interestingly: a single warmup request doesn't seem to have
-      any effect (ending RES is still high), 2 requests gets max RES down to
-      ~180M.
-
-    I suspect many concurrent connections are spraying pinned data over a
-    bunch of blocks which are then not released to the OS barring memory
-    pressure. Whatever this is is maybe thread-local or "per-capability" in
-    some sense...
 
 commit 2fe353a2943d771cd4d0932e084c64a718dc6981
 Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
