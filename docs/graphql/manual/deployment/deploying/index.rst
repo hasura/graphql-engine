@@ -21,7 +21,7 @@ Choose from the below guides to deploy the Hasura GraphQL engine and connect it 
 
 .. _one_click_deployment_guides:
 
-One-Click deployment guides
+One-click deployment guides
 ---------------------------
 
 If you want to take Hasura for a spin and check out the features, the following one-click deployments will be useful for you:
