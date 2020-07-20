@@ -4,7 +4,7 @@ import Button from '../../../Common/Button/Button';
 import { downloadStringAsPlainFile } from '../../../Common/utils/jsUtils';
 
 interface Props {
-  exportSchema: () => Promise<unknown>;
+  exportSchema: () => Promise<string>;
 }
 
 const ExportSchema: React.FC<Props> = ({ exportSchema }) => {
