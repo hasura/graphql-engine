@@ -61,6 +61,7 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                (HasVersion)
 import           Hasura.SQL.Types
+import qualified Hasura.Tracing                       as Tracing
 
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
 import qualified Data.HashMap.Strict                  as M
@@ -161,6 +162,7 @@ processEventQueue
   :: forall m void
    . ( HasVersion
      , MonadIO m
+     , Tracing.HasReporter m
      , MonadBaseControl IO m
      , LA.Forall (LA.Pure m)
      , MonadMask m
@@ -202,6 +204,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
         forM_ events $ \event -> do
           t <- processEvent event
+            & Tracing.runTraceT "process event"
             & withEventEngineCtx eeCtx
             & flip runReaderT (logger, httpMgr)
             & LA.async
@@ -238,6 +241,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
          , MonadReader r io
          , Has HTTP.Manager r
          , Has (L.Logger L.Hasura) r
+         , Tracing.MonadTrace io
          )
       => Event -> io ()
     processEvent e = do
