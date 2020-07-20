@@ -15,7 +15,7 @@
 packages: .
 
 constraints:
-  -- ensure we don’t end up with a freeze file that forces an incompatible
+  -- ensure we don't end up with a freeze file that forces an incompatible
   -- version in CI for Setup.hs scripts.
   setup.Cabal <3.4
 
