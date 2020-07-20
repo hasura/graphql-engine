@@ -27,6 +27,8 @@ class ImportMetadata extends Component {
       this.setState({ isImporting: false });
     };
 
+    this.setState({ isImporting: true });
+
     dispatch(replaceMetadataFromFile(fileContent, successCb, errorCb));
   }
 
@@ -37,8 +39,6 @@ class ImportMetadata extends Component {
 
     const handleImport = e => {
       e.preventDefault();
-
-      this.setState({ isImporting: true });
 
       uploadFile(this.importMetadata, 'json');
     };
