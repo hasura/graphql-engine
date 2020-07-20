@@ -25,13 +25,20 @@ export const useIntrospectionSchema = (headers = {}, dispatch: Dispatch) => {
     setLoading(true);
 
     dispatch(
-      requestAction(endpoints.graphQLUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(
-          getGraphQLQueryPayload(getIntrospectionQuery(), {})
-        ),
-      })
+      requestAction(
+        endpoints.graphQLUrl,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(
+            getGraphQLQueryPayload(getIntrospectionQuery(), {})
+          ),
+        },
+        undefined,
+        undefined,
+        true,
+        true
+      )
     )
       .then(response => {
         if (response.data) {

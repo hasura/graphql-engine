@@ -39,15 +39,22 @@ export const useIntrospectionSchemaRemote = (
     setLoading(true);
     setError(null);
     dispatch(
-      requestAction(endpoints.query, {
-        method: 'POST',
-        headers: {
-          ...headers,
+      requestAction(
+        endpoints.query,
+        {
+          method: 'POST',
+          headers: {
+            ...headers,
+          },
+          body: JSON.stringify(
+            getRemoteSchemaIntrospectionQuery(remoteSchemaName)
+          ),
         },
-        body: JSON.stringify(
-          getRemoteSchemaIntrospectionQuery(remoteSchemaName)
-        ),
-      })
+        undefined,
+        undefined,
+        true,
+        true
+      )
     )
       .then(response => {
         const clientSchema = buildClientSchema(response.data);
