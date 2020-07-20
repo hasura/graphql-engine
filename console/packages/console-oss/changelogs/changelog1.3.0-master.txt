@@ -1,0 +1,4 @@
+- [] 4a116c793bc330d175fa0fefd593883eee18be85 console: use requestAction instead of fetch (#5406)
+- [] d193af7d11a68209a0744f32f62e98614ae9241f console: fix clear text issue on RawSQL page (#5351)
+- [] a677c62daede0c76df7db6add9d58d3426e58c3b console: fix custom root field placeholder for insert one mutation (close #5345) (#5346)
+- [] d8055a7ca6699d358291a905a505cde3cc9ae84b console: add tooltips to certain headers on API Explorer (#5286)
