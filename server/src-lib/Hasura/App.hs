@@ -73,6 +73,7 @@ import           Hasura.Session
 
 import qualified Hasura.Tracing                            as Tracing
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
+import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 
 data ExitCode
   = InvalidEnvironmentVariableOptionsError
@@ -305,8 +306,9 @@ runHGEServer
   -- ^ start time
   -> IO ()
   -- ^ shutdown function
+  -> Maybe EL.LiveQueryPostPollHook
   -> m ()
-runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp = do
+runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp postPollHook = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -323,7 +325,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp = d
 
   authMode <- either (printErrExit AuthConfigurationError . T.unpack) return authModeRes
 
-  _idleGCThread <- C.forkImmortal "ourIdleGC" logger $ liftIO $ 
+  _idleGCThread <- C.forkImmortal "ourIdleGC" logger $ liftIO $
     ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
   HasuraApp app cacheRef cacheInitTime stopWsServer <- flip onException (flushLogger loggerCtx) $
@@ -346,6 +348,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp = d
              soLiveQueryOpts
              soPlanCacheOptions
              soResponseInternalErrorsConfig
+             postPollHook
              _icSchemaCache
 
   -- log inconsistent schema objects
