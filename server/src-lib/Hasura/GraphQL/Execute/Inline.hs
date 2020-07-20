@@ -40,6 +40,9 @@ module Hasura.GraphQL.Execute.Inline
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended  as Map
+import qualified Data.HashSet                  as Set
+import qualified Data.List                     as L
+import qualified Data.Text                     as T
 
 import           Control.Lens
 import           Language.GraphQL.Draft.Syntax
@@ -86,11 +89,29 @@ inlineSelectionSet fragmentDefinitions selectionSet = do
       case fragmentDefinitions' of
         a :| [] -> return a
         _       -> throw400 ParseFailed $ "multiple definitions for fragment " <>> fragmentName
+  let usedFragmentNames = Set.fromList $ fragmentsInSelectionSet selectionSet
+      definedFragmentNames = Set.fromList $ Map.keys uniqueFragmentDefinitions
+      isFragmentValidationEnabled = False
+  when (isFragmentValidationEnabled && (usedFragmentNames /= definedFragmentNames)) $
+    throw400 ValidationFailed $
+    ("following fragment(s) have been defined, but have not been used in the query - "
+    <> (T.concat $ L.intersperse ", "
+       $ map unName $ Set.toList $
+       Set.difference definedFragmentNames usedFragmentNames))
   traverse inlineSelection selectionSet
     & flip evalStateT InlineState{ _isFragmentCache = mempty }
     & flip runReaderT InlineEnv
     { _ieFragmentDefinitions = uniqueFragmentDefinitions
     , _ieFragmentStack = [] }
+  where
+    fragmentsInSelectionSet :: SelectionSet FragmentSpread var -> [Name]
+    fragmentsInSelectionSet selectionSet' = concat $ map getFragFromSelection selectionSet'
+
+    getFragFromSelection :: Selection FragmentSpread var -> [Name]
+    getFragFromSelection = \case
+      SelectionField fld -> fragmentsInSelectionSet $ _fSelectionSet fld
+      SelectionFragmentSpread fragmentSpread -> [_fsName fragmentSpread]
+      SelectionInlineFragment inlineFragment -> fragmentsInSelectionSet $ _ifSelectionSet inlineFragment
 
 inlineSelection
   :: MonadInline var m

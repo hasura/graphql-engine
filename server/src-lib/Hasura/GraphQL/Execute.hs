@@ -234,8 +234,6 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       let takeFragment = \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
           fragments =
             mapMaybe takeFragment $ unGQLExecDoc $ _grQuery req
-        -- TODO check that all defined fragments are used, see:
-        -- http://spec.graphql.org/June2018/#sec-Fragments-Must-Be-Used
       (gCtx, queryParts) <- getExecPlanPartial userInfo sc enableAL queryType req
       case queryParts of
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
