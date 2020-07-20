@@ -32,6 +32,7 @@ const EditorWrapper: React.FC<Props> = ({
       isLast={isLast}
       state={state}
       dispatch={dispatch}
+      reduxDispatch={reduxDispatch}
     />
   );
 
