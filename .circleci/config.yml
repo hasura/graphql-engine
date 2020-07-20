@@ -156,7 +156,7 @@ jobs:
   build_server:
     docker:
     - image: *server_builder_image
-    resource_class: large
+    resource_class: xlarge
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
