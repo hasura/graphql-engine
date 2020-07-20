@@ -115,29 +115,31 @@ export const getTypeFromAstDef = astDef => {
         error: 'Interface types are not supported',
       };
     default:
-      return;
+      return {
+        error: `You seem to using an unsupported type definition.
+         Hasura currently only supports scalars and enums within custom type definitions`,
+      };
   }
 };
 
 export const getTypesFromSdl = sdl => {
-  const typeDefinition = {
-    types: [],
-    error: null,
-  };
-
   if (!sdl || (sdl && sdl.trim() === '')) {
-    return typeDefinition;
+    return { types: [], error: null };
   }
 
   const schemaAst = sdlParse(sdl);
 
-  schemaAst.definitions.forEach(def => {
-    const typeDef = getTypeFromAstDef(def);
-    typeDefinition.error = typeDef.error;
-    typeDefinition.types.push(typeDef);
-  });
+  const typeDefs = schemaAst.definitions.map(typeDef =>
+    getTypeFromAstDef(typeDef)
+  );
+  const types = typeDefs.filter(typeDef => !typeDef.error);
+  const typeError = typeDefs.find(typeDef => typeDef.error);
 
-  return typeDefinition;
+  if (typeError) {
+    return { types, error: typeError.error };
+  }
+
+  return { types, error: null };
 };
 
 const getActionFromOperationAstDef = astDef => {
