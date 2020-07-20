@@ -24,7 +24,9 @@ import {
   exportMetadataQuery,
   generateReplaceMetadataQuery,
   resetMetadataQuery,
+  exportSchemaQueryParams,
 } from '../../Common/utils/v1QueryUtils';
+import requestActionPlain from '../../../utils/requestActionPlain';
 
 const LOAD_INCONSISTENT_OBJECTS = 'Metadata/LOAD_INCONSISTENT_OBJECTS';
 const LOADING_METADATA = 'Metadata/LOADING_METADATA';
@@ -78,6 +80,20 @@ export const exportMetadata = (successCb, errorCb) => (dispatch, getState) => {
     .catch(err => {
       errorCb(err);
     });
+};
+
+export const exportSchema = () => (dispatch, getState) => {
+  const { dataHeaders } = getState().tables;
+
+  const options = {
+    method: 'POST',
+    headers: {
+      ...dataHeaders,
+    },
+    body: JSON.stringify(exportSchemaQueryParams),
+  };
+
+  return dispatch(requestActionPlain(endpoints.pgDump, options));
 };
 
 export const replaceMetadata = (newMetadata, successCb, errorCb) => (

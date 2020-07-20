@@ -9,6 +9,7 @@ const hasuractlUrl = `${hasuractlApiHost}:${hasuractlApiPort}`;
 const Endpoints = {
   getSchema: `${baseUrl}/v1/query`,
   serverConfig: `${baseUrl}/v1alpha1/config`,
+  pgDump: `${baseUrl}/v1alpha1/pg_dump`,
   graphQLUrl: `${baseUrl}/v1/graphql`,
   relayURL: `${baseUrl}/v1beta1/relay`,
   schemaChange: `${baseUrl}/v1/query`,

@@ -431,6 +431,11 @@ export const exportMetadataQuery = {
   args: {},
 };
 
+export const exportSchemaQueryParams = {
+  opts: ['-O', '-x', '--schema-only', '--schema', 'public'],
+  clean_output: true,
+};
+
 // type the metadata
 export const generateReplaceMetadataQuery = (metadataJson: any) => ({
   type: 'replace_metadata',

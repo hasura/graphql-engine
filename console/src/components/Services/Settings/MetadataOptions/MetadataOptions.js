@@ -6,7 +6,8 @@ import ResetMetadata from './ResetMetadata';
 import ExportSchema from './ExportSchema';
 
 import styles from '../Settings.scss';
-
+import requestAction from '../../../../utils/requestAction';
+import { exportSchema } from '../Actions';
 
 const MetadataOptions = props => {
   const MetadataImportExportSection = () => {
@@ -83,7 +84,7 @@ const MetadataOptions = props => {
         </div>
 
         <MetadataImportExportSection />
-        <ExportSchema />
+        <ExportSchema exportSchema={props.exportSchema} />
 
         <MetadataUpdateSection />
       </div>
@@ -98,8 +99,14 @@ const mapStateToProps = state => {
     dataHeaders: { ...state.tables.dataHeaders },
   };
 };
-
+const mapDispatchToProps = dispatch => {
+  return {
+    // dispatching plain actions
+    exportSchema: () => dispatch(exportSchema()),
+    dispatch,
+  };
+};
 const metadataOptsConnector = connect =>
-  connect(mapStateToProps)(MetadataOptions);
+  connect(mapStateToProps, mapDispatchToProps)(MetadataOptions);
 
 export default metadataOptsConnector;

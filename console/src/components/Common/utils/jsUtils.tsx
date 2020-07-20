@@ -323,6 +323,13 @@ export const downloadObjectAsJsonFile = (fileName: string, object: any) => {
 
   downloadFile(fileNameWithSuffix, dataString);
 };
+export const downloadStringAsPlainFile = (fileName: string, object: any) => {
+  const contentType = 'data:text/plain;charset=utf-8,';
+
+  const dataString = `data:${contentType},${encodeURIComponent(object)}`;
+
+  downloadFile(fileName, dataString);
+};
 
 export const getFileExtensionFromFilename = (filename: string) => {
   const matches = filename.match(/\.[0-9a-z]+$/i);

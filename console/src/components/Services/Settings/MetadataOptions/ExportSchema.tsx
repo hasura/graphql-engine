@@ -1,8 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from '../Settings.scss';
 import Button from '../../../Common/Button/Button';
+import { downloadStringAsPlainFile } from '../../../Common/utils/jsUtils';
 
-const ExportSchema = props => {
+interface Props {
+  exportSchema: () => Promise<unknown>;
+}
+
+const ExportSchema: React.FC<Props> = ({ exportSchema }) => {
+  const [loading, setLoading] = useState(false);
+  const downloadSchema = () => {
+    setLoading(true);
+    exportSchema()
+      .then(data => {
+        downloadStringAsPlainFile('db.sql', data);
+        setLoading(false);
+      })
+      .catch(e => {
+        setLoading(false);
+        console.error(e);
+      });
+  };
   return (
     <div>
       <div className={styles.intro_note}>
@@ -16,8 +34,9 @@ const ExportSchema = props => {
           className={styles.margin_right}
           size="sm"
           color="white"
+          onClick={downloadSchema}
         >
-          Export Schema
+          {loading ? 'Exporting' : 'Export Schema'}
         </Button>
       </div>
     </div>
