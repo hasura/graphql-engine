@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import QueryAnalyser from './QueryAnalyzer';
+import QueryAnalyzer from './QueryAnalyzer';
 import GraphiQL from 'graphiql';
 import { print, parse } from 'graphql';
 import { isValidGraphQLOperation } from '../utils';
@@ -66,7 +66,7 @@ export default class AnalyzeButton extends React.Component {
         />
         {options}
         {this.state.analyseQuery && (
-          <QueryAnalyser
+          <QueryAnalyzer
             show={this.state.isAnalysing}
             mode={mode}
             analyseQuery={this.state.analyseQuery}
