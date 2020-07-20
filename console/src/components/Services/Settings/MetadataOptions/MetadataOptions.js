@@ -6,7 +6,6 @@ import ResetMetadata from './ResetMetadata';
 import ExportSchema from './ExportSchema';
 
 import styles from '../Settings.scss';
-import requestAction from '../../../../utils/requestAction';
 import { exportSchema } from '../Actions';
 
 const MetadataOptions = props => {
