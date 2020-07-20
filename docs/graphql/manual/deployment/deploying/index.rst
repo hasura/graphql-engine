@@ -2,10 +2,10 @@
    :description: Deploy Hasura GraphQL engine
    :keywords: hasura, docs, deployment
 
-.. _deploying:
+.. _deployment_guides:
 
-Deploying Hasura GraphQL engine
-===============================
+Deployment guides
+=================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -19,6 +19,8 @@ The Hasura GraphQL engine is a binary that is shipped as a Docker container.
 
 Choose from the below guides to deploy the Hasura GraphQL engine and connect it to a Postgres database.
 
+.. _one_click_deployment_guides:
+
 One-Click deployment guides
 ---------------------------
 
@@ -28,6 +30,8 @@ If you want to take Hasura for a spin and check out the features, the following 
 - :ref:`Deploy using Heroku <heroku_one_click>`
 - :ref:`Deploy using Render One-click Deploy with Managed PostgreSQL <deploy_render>`
 - :ref:`Deploy using Nhost One-click Deploy with Managed PostgreSQL, Storage, and Auth <deploy_nhost>`
+
+.. _production_deployment_guides:
 
 Production deployment guides
 ----------------------------
