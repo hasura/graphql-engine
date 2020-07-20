@@ -494,14 +494,6 @@ Date:   Thu Jun 4 16:20:06 2020 -0400
 
     Don't compile in developer APIs by default
 
-commit 2bb038d0f834713338565f9680f986db06d9fd41
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Mon Jun 8 10:19:48 2020 +0530
-
-    remove the Events/HTTP module (#4930)
-
-    The Hasura.Events.HTTP module has now been moved to Hasura.Eventing.HTTP. This module might have been added again due to a bad merge.
-
 commit d6de3592eda71cafafce7fb2cb642e0d55c06946
 Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
 Date:   Fri Jun 5 17:33:18 2020 +0530

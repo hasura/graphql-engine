@@ -431,14 +431,10 @@ library
                      , Hasura.GraphQL.Schema.Select
                      , Hasura.GraphQL.Schema.Table
 
-                     , Hasura.Events.Lib
-                     , Hasura.Events.HTTP
-
                      , Hasura.Eventing.HTTP
                      , Hasura.Eventing.EventTrigger
                      , Hasura.Eventing.ScheduledTrigger
                      , Hasura.Eventing.Common
-
 
                      , Network.Wai.Extended
                      , Control.Concurrent.Extended
