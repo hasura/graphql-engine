@@ -34,7 +34,7 @@ const RootFieldEditor = ({
       return rfType.replace('select', tableName);
     }
     if (rfType.includes('one')) {
-      return rfType.replace('one', tableName) + '_one'
+      return rfType.replace('one', tableName) + '_one';
     }
     return `${rfType}_${tableName}`;
   };
