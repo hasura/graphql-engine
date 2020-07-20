@@ -3,17 +3,18 @@ module Hasura.GraphQL.Schema.Introspect where
 import           Hasura.Prelude
 -- import qualified Hasura.RQL.Types
 
-import qualified Language.GraphQL.Draft.Syntax       as G
-import qualified Language.GraphQL.Draft.Printer      as GP
-import qualified Language.GraphQL.Draft.Printer.Text as GPT
 import qualified Data.Aeson                          as J
 import qualified Data.HashMap.Strict                 as Map
 import qualified Data.HashMap.Strict.InsOrd          as OMap
+import qualified Data.List.NonEmpty                  as NE
 import qualified Data.Vector                         as V
+import qualified Language.GraphQL.Draft.Printer      as GP
+import qualified Language.GraphQL.Draft.Printer.Text as GPT
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import qualified Hasura.GraphQL.Parser               as P
 
-import           Hasura.GraphQL.Parser          (FieldParser, Kind (..), Parser, Schema (..))
+import           Hasura.GraphQL.Parser               (FieldParser, Kind (..), Parser, Schema (..))
 import           Hasura.GraphQL.Parser.Class
 
 {-
@@ -333,13 +334,13 @@ inputValue =
     typeF = do
       printer <- P.subselection_ $$(G.litName "type") Nothing typeField
       return $ \defInfo -> case P.dInfo defInfo of
-        P.IFRequired tp -> printer $ SomeType $ P.NonNullable tp
+        P.IFRequired tp   -> printer $ SomeType $ P.NonNullable tp
         P.IFOptional tp _ -> printer $ SomeType $ P.Nullable tp
     defaultValue :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
     defaultValue = P.selection_ $$(G.litName "defaultValue") Nothing P.string $>
       \defInfo -> case P.dInfo defInfo of
         P.IFOptional _ (Just val) -> J.String $ GPT.render GP.value val
-        _ -> J.Null
+        _                         -> J.Null
   in
     applyPrinter <$>
     P.selectionSet
@@ -391,14 +392,14 @@ enumValue =
 
 {-
 enum __TypeKind {
-  SCALAR
-  OBJECT
-  INTERFACE
-  UNION
   ENUM
   INPUT_OBJECT
+  INTERFACE
   LIST
   NON_NULL
+  OBJECT
+  SCALAR
+  UNION
 }
 -}
 typeKind
@@ -408,15 +409,18 @@ typeKind
 typeKind = P.enum
   $$(G.litName "__TypeKind")
   Nothing
-  ( (P.Definition $$(G.litName "SCALAR") Nothing Nothing P.EnumValueInfo, ()) :|
-    [ (P.Definition $$(G.litName "OBJECT") Nothing Nothing P.EnumValueInfo, ())
-    , (P.Definition $$(G.litName "INTERFACE") Nothing Nothing P.EnumValueInfo, ())
-    , (P.Definition $$(G.litName "UNION") Nothing Nothing P.EnumValueInfo, ())
-    , (P.Definition $$(G.litName "ENUM") Nothing Nothing P.EnumValueInfo, ())
-    , (P.Definition $$(G.litName "INPUT_OBJECT") Nothing Nothing P.EnumValueInfo, ())
-    , (P.Definition $$(G.litName "LIST") Nothing Nothing P.EnumValueInfo, ())
-    , (P.Definition $$(G.litName "NON_NULL") Nothing Nothing P.EnumValueInfo, ())
+  (NE.fromList
+    [ mkDefinition $$(G.litName "ENUM")
+    , mkDefinition $$(G.litName "INPUT_OBJECT")
+    , mkDefinition $$(G.litName "INTERFACE")
+    , mkDefinition $$(G.litName "LIST")
+    , mkDefinition $$(G.litName "NON_NULL")
+    , mkDefinition $$(G.litName "OBJECT")
+    , mkDefinition $$(G.litName "SCALAR")
+    , mkDefinition $$(G.litName "UNION")
     ])
+  where
+    mkDefinition name = (P.Definition name Nothing Nothing P.EnumValueInfo, ())
 
 {-
 type __Field {
@@ -440,7 +444,7 @@ fieldField =
     description :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
     description = P.selection_ $$(G.litName "description") Nothing P.string $> \defInfo ->
       case P.dDescription defInfo of
-      Nothing -> J.Null
+      Nothing   -> J.Null
       Just desc -> J.String (G.unDescription desc)
     args :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
     args = do
@@ -530,7 +534,7 @@ schemaSet fakeSchema =
     description = P.selection_ $$(G.litName "description") Nothing P.string $>
       case sDescription fakeSchema of
         Nothing -> J.Null
-        Just s -> J.String $ G.unDescription s
+        Just s  -> J.String $ G.unDescription s
     types :: FieldParser n J.Value
     types = do
       printer <- P.subselection_ $$(G.litName "types") Nothing typeField
