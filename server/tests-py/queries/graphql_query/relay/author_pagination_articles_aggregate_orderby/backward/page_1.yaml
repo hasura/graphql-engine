@@ -1,5 +1,5 @@
 description: Fetch 1st page from last of articles ordered by their article count
-url: /v1/relay
+url: /v1beta1/relay
 status: 200
 query:
   query: |

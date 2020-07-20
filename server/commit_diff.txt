@@ -58,20 +58,6 @@ Date:   Fri Jul 10 22:17:05 2020 +0530
 
     * server: call the webhook asynchronosly in event triggers
 
-commit 2fe353a2943d771cd4d0932e084c64a718dc6981
-Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
-Date:   Fri Jul 3 12:00:35 2020 +0530
-
-    allow array relation connection fields regardless of aggregation permission & change relay endpoint to '/v1beta1/relay' (fix #5218) (#5257)
-
-    * fix error when array relation connections are queried, fix #5218
-
-    * change relay endpoint to '/v1beta1/relay'
-
-    * Update CHANGELOG.md
-
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
 commit 9ef6de51133342acca3857c4392c6d853d3256ea
 Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
 Date:   Fri Jul 3 06:25:07 2020 +0530
@@ -383,7 +369,7 @@ Date:   Mon Jun 8 17:43:01 2020 +0530
 
     * refactor SQL generation logic for improved readability
 
-    * '/v1/relay' endpoint for relay schema
+    * '/v1beta1/relay' endpoint for relay schema
 
     * implement 'Node' interface and top level 'node' field resolver
 

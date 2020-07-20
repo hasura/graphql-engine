@@ -286,7 +286,7 @@ class ApiRequest extends Component {
                 id="relay-mode-toggle"
                 placement="left"
                 message={
-                  'Toggle to point this GraphiQL to a relay-compliant GraphQL API served at /v1/relay'
+                  'Toggle to point this GraphiQL to a relay-compliant GraphQL API served at /v1beta1/relay'
                 }
               />
             </div>

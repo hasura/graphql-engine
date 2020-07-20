@@ -4,7 +4,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson     as J
 
--- graphql-engine supports two GraphQL interfaces: one at v1/graphql, and a Relay one at v1/relay
+-- graphql-engine supports two GraphQL interfaces: one at v1/graphql, and a Relay one at v1beta1/relay
 data GraphQLQueryType
   = QueryHasura
   | QueryRelay

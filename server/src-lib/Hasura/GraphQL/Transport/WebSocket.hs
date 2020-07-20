@@ -256,7 +256,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAdress = do
     checkPath = case WS.requestPath requestHead of
       "/v1alpha1/graphql" -> return (ERTLegacy, E.QueryHasura)
       "/v1/graphql"       -> return (ERTGraphqlCompliant, E.QueryHasura)
-      "/v1/relay"         -> return (ERTGraphqlCompliant, E.QueryRelay)
+      "/v1beta1/relay"    -> return (ERTGraphqlCompliant, E.QueryRelay)
       _                   ->
         throw404 "only '/v1/graphql', '/v1alpha1/graphql' are supported on websockets"
 
