@@ -25,7 +25,9 @@ const ExportSchema: React.FC<Props> = ({ exportSchema }) => {
     <div>
       <div className={styles.intro_note}>
         <h4>Export database schema</h4>
-        <div className={styles.content_width}>Get database schema as SQL file.</div>
+        <div className={styles.content_width}>
+          Get database schema as SQL file.
+        </div>
       </div>
 
       <div className={styles.display_inline}>
