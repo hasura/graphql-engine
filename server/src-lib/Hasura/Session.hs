@@ -44,7 +44,7 @@ import qualified Database.PG.Query          as Q
 import qualified Network.HTTP.Types         as HTTP
 
 newtype RoleName
-  = RoleName {getRoleTxt :: NonEmptyText}
+  = RoleName { getRoleTxt :: NonEmptyText }
   deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
            , ToJSON, Q.FromCol, Q.ToPrepArg, Lift, Generic, Arbitrary, NFData, Cacheable )
 
