@@ -13,7 +13,7 @@ const ExportSchema: React.FC<Props> = ({ exportSchema }) => {
     setLoading(true);
     exportSchema()
       .then(data => {
-        downloadStringAsPlainFile('db.sql', data);
+        downloadStringAsPlainFile('schema.sql', data);
         setLoading(false);
       })
       .catch(e => {
