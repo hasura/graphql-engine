@@ -339,23 +339,6 @@ Date:   Tue Jun 16 20:53:06 2020 +0530
     Co-authored-by: Vamshi Surabhi <vamshi@hasura.io>
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
 
-commit 4e229dc568fc125f01a738cd1b4937885042b1fd
-Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
-Date:   Tue Jun 16 19:55:49 2020 +0530
-
-    relay fixes (#5013)
-
-    * fix relay introspection failing if any views exist, fix #5020
-
-    * reduce base64 encoded node id length, close #5037
-
-    * make node field type non-nullable in an edge
-
-    * more relay tests with permissions & complete restructure of test yaml files
-
-    Co-authored-by: Aravind <aravindkp@outlook.in>
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-
 commit 4c9362c91b7d5b302e37498d6d5d4971caa630a4
 Merge: cc2878de d862afb4
 Author: Vamshi Surabhi <0x777@users.noreply.github.com>
@@ -596,171 +579,6 @@ Date:   Mon Apr 27 17:07:03 2020 +0200
     Co-authored-by: Marion Schleifer <marion@hasura.io>
     Co-authored-by: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
 
-commit d52bfcda4ebf5ac6f4f013b2d5ed698010d72a51
-Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
-Date:   Fri Apr 24 14:40:53 2020 +0530
-
-    backend only insert permissions (rfc #4120) (#4224)
-
-    * move user info related code to Hasura.User module
-
-    * the RFC #4120 implementation; insert permissions with admin secret
-
-    * revert back to old RoleName based schema maps
-
-    An attempt made to avoid duplication of schema contexts in types
-    if any role doesn't possess any admin secret specific schema
-
-    * fix compile errors in haskell test
-
-    * keep 'user_vars' for session variables in http-logs
-
-    * no-op refacto
-
-    * tests for admin only inserts
-
-    * update docs for admin only inserts
-
-    * updated CHANGELOG.md
-
-    * default behaviour when admin secret is not set
-
-    * fix x-hasura-role to X-Hasura-Role in pytests
-
-    * introduce effective timeout in actions async tests
-
-    * update docs for admin-secret not configured case
-
-    * Update docs/graphql/manual/api-reference/schema-metadata-api/permission.rst
-
-    Co-Authored-By: Marion Schleifer <marion@hasura.io>
-
-    * Apply suggestions from code review
-
-    Co-Authored-By: Marion Schleifer <marion@hasura.io>
-
-    * a complete iteration
-
-    backend insert permissions accessable via 'x-hasura-backend-privilege'
-    session variable
-
-    * console changes for backend-only permissions
-
-    * provide tooltip id; update labels and tooltips;
-
-    * requested changes
-
-    * requested changes
-
-    - remove className from Toggle component
-    - use appropriate function name (capitalizeFirstChar -> capitalize)
-
-    * use toggle props from definitelyTyped
-
-    * fix accidental commit
-
-    * Revert "introduce effective timeout in actions async tests"
-
-    This reverts commit b7a59c19d643520cfde6af579889e1038038438a.
-
-    * generate complete schema for both 'default' and 'backend' sessions
-
-    * Apply suggestions from code review
-
-    Co-Authored-By: Marion Schleifer <marion@hasura.io>
-
-    * remove unnecessary import, export Toggle as is
-
-    * update session variable in tooltip
-
-    * 'x-hasura-use-backend-only-permissions' variable to switch
-
-    * update help texts
-
-    * update docs
-
-    * update docs
-
-    * update console help text
-
-    * regenerate package-lock
-
-    * serve no backend schema when backend_only: false and header set to true
-
-    - Few type name refactor as suggested by @0x777
-
-    * update CHANGELOG.md
-
-    * Update CHANGELOG.md
-
-    * Update CHANGELOG.md
-
-    * fix a merge bug where a certain entity didn't get removed
-
-    Co-authored-by: Marion Schleifer <marion@hasura.io>
-    Co-authored-by: Rishichandra Wawhal <rishi@hasura.io>
-    Co-authored-by: rikinsk <rikin.kachhia@gmail.com>
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
-commit 6f100e0009c36d693bf470ba514b3e24d84491a6
-Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
-Date:   Fri Apr 24 13:25:51 2020 +0530
-
-    improve debug information in actions errors response (close #4031) (#4432)
-
-    * config options for internal errors for non-admin role, close #4031
-
-    More detailed action debug info is added in response 'internal' field
-
-    * add docs
-
-    * update CHANGELOG.md
-
-    * set admin graphql errors option in ci tests, minor changes to docs
-
-    * fix tests
-
-    Don't use any auth for sync actions error tests. The request body
-    changes based on auth type in session_variables (x-hasura-auth-mode)
-
-    * Apply suggestions from code review
-
-    Co-Authored-By: Marion Schleifer <marion@hasura.io>
-
-    * use a new sum type to represent the inclusion of internal errors
-
-    As suggested in review by @0x777
-    -> Move around few modules in to specific API folder
-    -> Saperate types from Init.hs
-
-    * fix tests
-
-    Don't use any auth for sync actions error tests. The request body
-    changes based on auth type in session_variables (x-hasura-auth-mode)
-
-    * move 'HttpResponse' to 'Hasura.HTTP' module
-
-    * update change log with breaking change warning
-
-    * Update CHANGELOG.md
-
-    Co-authored-by: Marion Schleifer <marion@hasura.io>
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
-commit b51a8ece4d3cca12aafa62e0cb7cb337974c1910
-Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
-Date:   Fri Apr 24 10:58:42 2020 +0530
-
-    fix creating relationships for custom object types with fields reusing Postgres scalars (fix #4447) (#4455)
-
-    * fix creating relationships for custom object types with fields reusing Postgres scalars, close #4447
-
-    * fix changelog entry
-
-    * rearrange entries
-
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
 commit 246a0b7ab80b74f1d79bef28801efcd39f3d7164
 Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
 Date:   Thu Apr 23 02:33:23 2020 +0530
@@ -771,14 +589,6 @@ Date:   Thu Apr 23 02:33:23 2020 +0530
     schema cache in situations where it was unnecessary. This change
     exposes the logic run_sql uses to determine whether to use the
     metadata check to make the check more precise.
-
-commit e983b1596ea02ee9d370b9db1030a95a669ac560
-Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
-Date:   Wed Apr 22 11:29:14 2020 +0530
-
-    fix recreating action's permission, fix #4377 (#4495)
-
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
 
 commit 5116e16e18f624fcdaf98aa0a0275e571fe34a2d
 Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
@@ -825,57 +635,6 @@ Date:   Thu Apr 16 12:15:21 2020 +0530
     Co-authored-by: Marion Schleifer <marion@hasura.io>
     Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
     Co-authored-by: Tirumarai Selvan <tirumarai.selvan@gmail.com>
-
-commit dc31b835e1957f3120ef70502937bdde91993f77
-Author: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
-Date:   Wed Apr 15 17:33:13 2020 +0530
-
-    allow reusing Postgres scalars in custom types & actions (close #4125) (#4333)
-
-    * allow re-using Postgres scalars in custom types, close #4125
-
-    * add pytest tests
-
-    * update CHANGELOG.md
-
-    * add a doc pointer for reusable postgres scalars
-
-    * document the code, improve the CHANGELOG entry
-
-    As suggested by @lexi-lambda
-
-    * a bit more source code documentation, use WriterT to collect reused scalars
-
-    * Apply suggestions from code review
-
-    Co-Authored-By: Marion Schleifer <marion@hasura.io>
-
-    * improve doc for Postgres scalars in custom graphql types
-
-    * Add some more references to Note; fix Haddock syntax
-
-    Also a few very minor tweaks:
-      * Use HashSet instead of [] more pervasively
-      * Export execWriterT from Hasura.Prelude
-      * Use pattern guards in multi-way if
-      * Tweak a few names/comments
-
-    * Pull buildActions out of buildAndCollectInfo, use buildInfoMap
-
-    * Tweak wording in documentation
-
-    * incorporate changes in console code
-
-    * account Postgres scalars for action input arguments
-
-    -> Avoid unnecessary 'throw500' in making action schema
-
-    * Review changes
-
-    Co-authored-by: Marion Schleifer <marion@hasura.io>
-    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-    Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>
 
 commit a23c633bd7a90952a8e482cda45b87a624e99140
 Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
@@ -1011,20 +770,6 @@ Date:   Tue Mar 31 10:00:12 2020 -0400
     * remove `withBuildSchemaCache` function
 
     Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-
-commit 482fa41e8365073f065e472ab3e9c87ae5edffdc
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Fri Mar 27 17:46:22 2020 +0530
-
-    add metrics for actions (#4139)
-
-    - The metrics will include
-      - no of synchronous actions
-      - no of asynchronous actions
-      - no of type relationships with the output
-      - no of custom types defined
-
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
 
 commit 4ce4eb1d2faa52d5f3ac19db6aeefa79093ec3eb
