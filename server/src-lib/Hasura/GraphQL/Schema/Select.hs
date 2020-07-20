@@ -566,7 +566,7 @@ tableArgs table selectPermissions = do
           isValid = (colsLen == length initOrdByCols)
                     && all (`elem` initOrdByCols) (toList distinctOnCols)
       unless isValid $ parseError $
-        "\"distinct_on\" columns must match3232 initial \"order_by\" columns"
+        "\"distinct_on\" columns must match initial \"order_by\" columns"
 
 -- TODO:
 -- this should either be moved to Common, or to Parser itself; even better,
