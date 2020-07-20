@@ -359,34 +359,6 @@ Date:   Tue May 19 10:48:49 2020 -0400
 
     Referencing #4736
 
-commit 2a9bc2354f1a13b2d8acbb2864b9a3f554dc8918
-Author: Vamshi Surabhi <0x777@users.noreply.github.com>
-Date:   Mon Jun 8 17:43:01 2020 +0530
-
-    add relay modern support (#4458)
-
-    * validation support for unions and interfaces
-
-    * refactor SQL generation logic for improved readability
-
-    * '/v1beta1/relay' endpoint for relay schema
-
-    * implement 'Node' interface and top level 'node' field resolver
-
-    * add relay toggle on graphiql
-
-    * fix explain api response & index plan id with query type
-
-    * add hasura mutations to relay
-
-    * add relay pytests
-
-    * update CHANGELOG.md
-
-    Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
-    Co-authored-by: Rishichandra Wawhal <rishi@hasura.io>
-    Co-authored-by: Rikin Kachhia <54616969+rikinsk@users.noreply.github.com>
-
 commit 5de647b9261d151665d9e5be827b31828b309840
 Author: Brandon Simmons <brandon.m.simmons@gmail.com>
 Date:   Thu Jun 4 16:20:06 2020 -0400
