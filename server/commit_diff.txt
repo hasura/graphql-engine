@@ -274,12 +274,6 @@ Date:   Fri Jun 19 12:12:32 2020 +0530
 
     * expose various modules and functions for pro
 
-commit d064959ac32a450ec0f150799415f057ba8d3a8c
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Wed Jun 17 13:18:31 2020 +0530
-
-    server: drop catalog dependencies when parent column/table is dropped containing a remote relationship (#5119)
-
 commit 6fc404329ad2a2408e9fee0fad4b45e54fb98b87
 Author: Vamshi Surabhi <0x777@users.noreply.github.com>
 Date:   Tue Jun 16 23:14:59 2020 +0530
@@ -324,12 +318,6 @@ Date:   Tue Jun 9 10:50:35 2020 -0400
 
     Merge branch 'master' into 4736-security-testing
 
-commit b782986e48aa3107e57033cf8bc3cf52a079929d
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Tue Jun 9 19:59:39 2020 +0530
-
-    fix bug which arised when renaming a column/table if it was used to create the remote relationship (#5005)
-
 commit 5e373505618fe76aa2623804af19a27139df2bac
 Author: Brandon Simmons <brandon.m.simmons@gmail.com>
 Date:   Thu May 28 12:18:26 2020 -0400
@@ -365,14 +353,6 @@ Date:   Thu Jun 4 16:20:06 2020 -0400
 
     Don't compile in developer APIs by default
 
-commit d6de3592eda71cafafce7fb2cb642e0d55c06946
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Fri Jun 5 17:33:18 2020 +0530
-
-    actions: fix behaviour when using remote relationship in mutation action's relationship (#4982)
-
-    * resolve the remote server when a remote join query used in action mutation
-
 commit ae75c6c06edfc8e604af8401f95f55c4160f742b
 Author: Vamshi Surabhi <0x777@users.noreply.github.com>
 Date:   Thu Jun 4 22:55:21 2020 +0530
@@ -404,33 +384,6 @@ Date:   Thu Jun 4 22:55:21 2020 +0530
     * separate out SubscriberId and SubscriberMetadata
 
     Co-authored-by: Anon Ray <rayanon004@gmail.com>
-
-commit c0d2bc66533e714606f0625d3dc4137b630c1a00
-Author: Tirumarai Selvan <tiru@hasura.io>
-Date:   Wed May 27 20:32:58 2020 +0530
-
-    Remote Joins: Create relationships across database and remote schemas (#2392)
-
-    add remote joins: Create relationships across database and remote schemas (#2392)
-
-    Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>
-
-    Co-authored-by: Chris Done <chrisdone@gmail.com>
-    Co-authored-by: Chris Done <github@chrisdone.com>
-    Co-authored-by: wawhal <rishichandra.wawhal@gmail.com>
-    Co-authored-by: Aravind Shankar <aravind@hasura.io>
-    Co-authored-by: Brandon Simmons <brandon.m.simmons@gmail.com>
-    Co-authored-by: Rishichandra Wawhal <rishi@hasura.io>
-    Co-authored-by: Brandon Simmons <brandon@hasura.io>
-    Co-authored-by: nizar-m <19857260+nizar-m@users.noreply.github.com>
-    Co-authored-by: Praveen Durairaju <praveend.web@gmail.com>
-    Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
-    Co-authored-by: Anon Ray <rayanon004@gmail.com>
-    Co-authored-by: Shahidh K Muhammed <shahidh@hasura.io>
-    Co-authored-by: soorajshankar <soorajshankar@users.noreply.github.com>
-    Co-authored-by: Sooraj Sanker <sooraj@Soorajs-MacBook-Pro.local>
-    Co-authored-by: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-    Co-authored-by: Aleksandra Sikora <ola.zxcvbnm@gmail.com>
 
 commit 9c55940b6dde79ced4fd202cbd8cb0e6f9dbc01c
 Author: Tirumarai Selvan <tiru@hasura.io>
@@ -524,26 +477,6 @@ Date:   Thu Apr 23 02:33:23 2020 +0530
     exposes the logic run_sql uses to determine whether to use the
     metadata check to make the check more precise.
 
-commit 5116e16e18f624fcdaf98aa0a0275e571fe34a2d
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Thu Apr 16 12:55:19 2020 +0530
-
-    server(actions): add support for queries (close #4032) (#4309)
-
-    * add support for action queries
-
-    * a new parameter `type` is added in the ArgumentDefinition, its value
-      can be either `query` or `mutation` and it defaults to the latter
-
-    * throw 400 when a query action is tried to explain
-
-    * update the actions docs to include query actions
-
-    * refactor the ToJSON and ToOrdJSON of ActionDefinition
-
-    Co-authored-by: Rishichandra Wawhal <rishi@hasura.io>
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
 commit a26bc80496954477c912364e9e11aebe4e121669
 Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
 Date:   Thu Apr 16 12:15:21 2020 +0530
@@ -617,12 +550,6 @@ Date:   Thu Apr 9 13:11:24 2020 +0530
 
     Co-authored-by: Alexis King <lexi.lambda@gmail.com>
 
-commit a07a87066ecc14af368c7807d998d2b00ccbf92b
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Sat Apr 4 05:51:52 2020 +0530
-
-    make the arguments field optional in ActionDefinition (#4285)
-
 commit 5b54f9d76629383da854cc16fb9667ea36b96218
 Author: Antoine Leblanc <antoine@hasura.io>
 Date:   Fri Apr 3 01:00:13 2020 +0100
@@ -670,20 +597,6 @@ Date:   Thu Apr 2 03:23:02 2020 +0530
 
     When consistent_metadata_check is set to false, then a new schema update
     event should not be created.
-
-commit 54dd3c94b9439f36b38cd4f9cbc59c8243f89f0c
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Wed Apr 1 20:44:26 2020 +0530
-
-    include postgres version of the database while sending telemetry data (#4122)
-
-    * add new column "pg_version" while sending telemetry data
-
-    * make a new type for PGVersion and use serverVersion func
-
-    * define runTxIO action to run transaction(which exits on error)
-
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
 
 commit 58ba01f31c29e8b8576d10307fb5abc82315d90e
 Author: Brandon Simmons <brandon.m.simmons@gmail.com>
