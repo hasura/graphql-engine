@@ -421,24 +421,22 @@ const Relationships = ({
 
     if (relAdd.isActive) {
       addRelSection = (
-        <>
-          <div className={styles.activeEdit}>
-            <AddRelationship
-              tableName={tableName}
-              currentSchema={currentSchema}
-              allSchemas={allSchemas}
-              cachedRelationshipData={relAdd}
-              dispatch={dispatch}
-            />
-            <AddManualRelationship
-              tableSchema={tableSchema}
-              allSchemas={allSchemas}
-              schemaList={schemaList}
-              relAdd={manualRelAdd}
-              dispatch={dispatch}
-            />
-          </div>
-        </>
+        <div className={styles.activeEdit}>
+          <AddRelationship
+            tableName={tableName}
+            currentSchema={currentSchema}
+            allSchemas={allSchemas}
+            cachedRelationshipData={relAdd}
+            dispatch={dispatch}
+          />
+          <AddManualRelationship
+            tableSchema={tableSchema}
+            allSchemas={allSchemas}
+            schemaList={schemaList}
+            relAdd={manualRelAdd}
+            dispatch={dispatch}
+          />
+        </div>
       );
     } else {
       addRelSection = (
