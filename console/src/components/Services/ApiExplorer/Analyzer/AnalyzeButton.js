@@ -6,7 +6,7 @@ import { print, parse } from 'graphql';
 import { isValidGraphQLOperation } from '../utils';
 import { getGraphQLQueryPayload } from '../../../Common/utils/graphqlUtils';
 
-export default class AnalyseButton extends React.Component {
+export default class AnalyzeButton extends React.Component {
   constructor(props) {
     super(props);
     // Ensure props are correct
@@ -71,6 +71,7 @@ export default class AnalyseButton extends React.Component {
             mode={mode}
             analyseQuery={this.state.analyseQuery}
             clearAnalyse={this.clearAnalyse.bind(this)}
+            dispatch={this.props.dispatch}
             {...this.props}
           />
         )}
@@ -172,7 +173,7 @@ export default class AnalyseButton extends React.Component {
   };
 }
 
-AnalyseButton.propTypes = {
+AnalyzeButton.propTypes = {
   operations: PropTypes.array,
   query: PropTypes.string,
   variables: PropTypes.string,
