@@ -44,7 +44,7 @@ const LeftSidebar = ({
   const getActionIcon = action => {
     switch (action.action_defn.type) {
       case 'mutation':
-        return 'fa-pencil';
+        return 'fa-pencil-square-o';
       case 'query':
         return 'fa-book';
       default:
