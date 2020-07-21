@@ -45,6 +45,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/doc
 
 - [Quickstart:](#quickstart)
     - [One-click deployment on Hasura Cloud](#one-click-deployment-on-hasura-cloud)
+    - [Other one-click deployment options](#other-one-click-deployment-options)
     - [Other deployment methods](#other-deployment-methods)
 - [Architecture](#architecture)
 - [Client-side tooling](#client-side-tooling)
