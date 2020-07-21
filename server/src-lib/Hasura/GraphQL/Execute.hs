@@ -31,6 +31,7 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 import qualified Network.Wreq                           as Wreq
+import qualified Data.List.NonEmpty                     as NE
 
 import           Control.Exception                      (try)
 import           Control.Lens
@@ -250,14 +251,62 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
                      inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ MutationExecutionPlan $ queryTx
-        G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs _ selSet -> do
+        G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
+          -- A subscription should have exactly one root field
+          -- As an internal testing feature, we support subscribing to multiple
+          -- root fields in a subcription. First, we check if the corresponding directive
+          -- (@_multiple_top_level_fields) is set.
+          -- NOTE: While running a subscription with multiple root fields, sometimes
+          -- the result is not returned in the order that we have queried them in. This
+          -- does not happen every time though. An example of a query which gives the
+          -- above behaviour is
+
+          -- subscription @_multiple_top_level_fields   {
+          --   users {                                    "data": {
+          --     id                                         "users_by_pk": {
+          --     last_name                                    "id": 3,
+          --     first_name                                   "first_name": "hello",
+          --   }                                              "last_name": "bello"
+          --   users_by_pk(id: 3) {                         },
+          --     id                                         "users": [
+          --     first_name                                   {
+          --     last_name                                      "id": 3,
+          --   }                                                "last_name": "bello",
+          --   users_alias: users {                             "first_name": "hello"
+          --     id                                           },
+          --     first_name                                   {
+          --     last_name                                      "id": 4,
+          --   }                                                "last_name": "bello",
+          -- }                                                  "first_name": "hello"
+          --                                                  }
+          --                                                ],
+          --                                                "users_alias": [
+          --                                                  {
+          --                                                    "id": 3,
+          --                                                    "first_name": "hello",
+          --                                                    "last_name": "bello"
+          --                                                  },
+          --                                                  {
+          --                                                    "id": 4,
+          --                                                    "first_name": "hello",
+          --                                                    "last_name": "bello"
+          --                                                  }
+          --                                                ]
+          --                                              }
+          --                                            }
+          case NE.nonEmpty inlinedSelSet of
+            Nothing -> throw500 "empty selset for subscription"
+            Just (_ :| rst) ->
+              let multipleAllowed = G.Directive $$(G.litName "_multiple_top_level_fields") mempty `elem` directives
+              in
+              unless (multipleAllowed || null rst) $
+                throw400 ValidationFailed $  "subscriptions must select one top level field"
           -- Parse as query to check correctness
           (_execPlan, _plan, unpreparedAST) <-
             EQ.convertQuerySelSet gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           validSubscriptionAST <- for unpreparedAST validateSubscriptionRootField
-          -- TODO we should check that there's only one root field (unless the appropriate directive is set)
           (lqOp, plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
           -- getSubsOpM pgExecCtx userInfo inlinedSelSet
           return $ SubscriptionExecutionPlan $ EPr.ExecStepDB lqOp
