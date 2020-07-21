@@ -464,7 +464,10 @@ const ViewRows = ({
         manualTriggersButton = getManualTriggersButton();
 
         return (
-          <div key={rowIndex} className={styles.tableCellCenterAligned}>
+          <div
+            key={rowIndex}
+            className={`${styles.tableCenterContent} ${styles.overflowUnset}`}
+          >
             {cloneButton}
             {editButton}
             {deleteButton}
@@ -923,7 +926,7 @@ const ViewRows = ({
 
     return (
       <DragFoldTable
-        className="-highlight -fit-content"
+        className="dataTable -highlight -fit-content"
         data={_gridRows}
         columns={_gridHeadings}
         headerTitle={'Click to sort / Drag to rearrange'}

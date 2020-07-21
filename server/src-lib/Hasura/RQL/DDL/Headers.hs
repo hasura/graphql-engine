@@ -6,10 +6,10 @@ import           Hasura.Prelude
 import           Hasura.RQL.Instances       ()
 import           Hasura.RQL.Types.Error
 import           Language.Haskell.TH.Syntax (Lift)
-import           System.Environment         (lookupEnv)
 
 import qualified Data.CaseInsensitive       as CI
 import qualified Data.Text                  as T
+import qualified Data.Environment           as Env
 import qualified Network.HTTP.Types         as HTTP
 
 
@@ -46,15 +46,15 @@ instance ToJSON HeaderConf where
 
 -- | Resolve configuration headers
 makeHeadersFromConf
-  :: (MonadError QErr m, MonadIO m) => [HeaderConf] -> m [HTTP.Header]
-makeHeadersFromConf = mapM getHeader
+  :: MonadError QErr m => Env.Environment -> [HeaderConf] -> m [HTTP.Header]
+makeHeadersFromConf env = mapM getHeader
   where
     getHeader hconf =
       ((CI.mk . txtToBs) *** txtToBs) <$>
         case hconf of
           (HeaderConf name (HVValue val)) -> return (name, val)
           (HeaderConf name (HVEnv val))   -> do
-            mEnv <- liftIO $ lookupEnv (T.unpack val)
+            let mEnv = Env.lookupEnv env (T.unpack val)
             case mEnv of
               Nothing     -> throw400 NotFound $ "environment variable '" <> val <> "' not set"
               Just envval -> pure (name, T.pack envval)

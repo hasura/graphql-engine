@@ -39,11 +39,25 @@ import {
 import { getGraphQLEndpoint } from '../utils';
 
 import styles from '../ApiExplorer.scss';
-import { ADMIN_SECRET_HEADER_KEY } from '../../../../constants';
+import {
+  ADMIN_SECRET_HEADER_KEY,
+  HASURA_CLIENT_NAME,
+  HASURA_COLLABORATOR_TOKEN,
+} from '../../../../constants';
 
 /* When the page is loaded for the first time, hydrate the header state from the localStorage
  * Keep syncing the localStorage state when user modifies.
  * */
+
+const ActionIcon = ({ message, dataHeaderID }) => (
+  <Tooltip placement="left" message={message}>
+    <i
+      className={`${styles.headerInfoIcon} fa fa-question-circle`}
+      data-header-id={dataHeaderID}
+      aria-hidden="true"
+    />
+  </Tooltip>
+);
 
 class ApiRequest extends Component {
   constructor(props) {
@@ -332,6 +346,14 @@ class ApiRequest extends Component {
           const isAdminSecret =
             header.key.toLowerCase() === ADMIN_SECRET_HEADER_KEY;
 
+          const consoleId = window.__env.consoleId;
+
+          const isClientName =
+            header.key.toLowerCase() === HASURA_CLIENT_NAME && consoleId;
+
+          const isCollaboratorToken =
+            header.key.toLowerCase() === HASURA_COLLABORATOR_TOKEN && consoleId;
+
           const getHeaderActiveCheckBox = () => {
             let headerActiveCheckbox = null;
 
@@ -523,6 +545,18 @@ class ApiRequest extends Component {
                   {getHeaderAdminVal()}
                   {getJWTInspectorIcon()}
                   {getHeaderRemoveBtn()}
+                  {isClientName && (
+                    <ActionIcon
+                      message="Hasura client name is a header that indicates where the request is being made from. This is used by GraphQL Engine for providing detailed metrics."
+                      dataHeaderID={i}
+                    />
+                  )}
+                  {isCollaboratorToken && (
+                    <ActionIcon
+                      message="Hasura collaborator token is an admin-secret alternative when you login using Hasura. This is used by GraphQL Engine to authorise your requests."
+                      dataHeaderID={i}
+                    />
+                  )}
                 </td>
               );
             }

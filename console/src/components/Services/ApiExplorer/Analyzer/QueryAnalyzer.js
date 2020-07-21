@@ -14,14 +14,9 @@ export default class QueryAnalyser extends React.Component {
   }
 
   componentDidMount() {
+    const { dispatch, analyseQuery } = this.props;
     this.props
-      .analyzeFetcher(this.props.analyseQuery.query)
-      .then(r => {
-        if (r.ok) {
-          return r.json();
-        }
-        return r.text().then(rText => Promise.reject(new Error(rText)));
-      })
+      .analyzeFetcher(analyseQuery.query, dispatch)
       .then(data => {
         this.setState({
           analyseData: Array.isArray(data) ? data : [data],

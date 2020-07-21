@@ -532,9 +532,13 @@ class Schema extends Component {
       };
 
       const heading = getSectionHeading(
-        'Untracked foreign-key relations',
+        'Untracked foreign-key relationships',
         'Relationships inferred via foreign-keys that are not exposed over the GraphQL API',
-        getTrackAllBtn()
+        <>
+          <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/table-relationships/index.html" />
+          &nbsp;
+          {getTrackAllBtn()}
+        </>
       );
 
       return (
@@ -621,14 +625,14 @@ class Schema extends Component {
       const heading = getSectionHeading(
         'Untracked custom functions',
         'Custom functions that are not exposed over the GraphQL API',
-        <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/queries/custom-functions.html" />
+        <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/custom-functions.html" />
       );
 
       return (
         <div className={styles.add_mar_top} key={'custom-functions-content'}>
           <CollapsibleToggle
             title={heading}
-            isOpen={!noTrackableFunctions}
+            isOpen
             testId={'toggle-trackable-functions'}
           >
             <div className={`${styles.padd_left_remove} col-xs-12`}>
@@ -689,7 +693,7 @@ class Schema extends Component {
           className={styles.add_mar_top}
           key={'non-trackable-custom-functions'}
         >
-          <CollapsibleToggle title={heading} isOpen={false}>
+          <CollapsibleToggle title={heading} isOpen>
             <div className={`${styles.padd_left_remove} col-xs-12`}>
               {getNonTrackableFuncList()}
             </div>
