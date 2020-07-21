@@ -33,8 +33,10 @@ Network config
    * - **Hasura to API (outside Docker)**
      - ``host.docker.internal:3000``
      - ``docker.for.win.localhost:3000``
-     - ``localhost:3000`` with (``--net=host``) / ``172.17.0.1:3000`` (see docker bridge ip via ``ifconfig``)
-     - Assuming the API is running on port ``3000``
+     - 1. With ``--net=host``, e.g. ``localhost:3000 --net=host``
+       2. Otherwise, ``<docker-bridge-ip>:3000``, e.g. ``172.17.0.1:3000`` 
+     - 1. Assuming the API is running on port ``3000``  
+       2. The Docker bridge IP can be found via ``ifconfig``
    * - **API (outside Docker) to Hasura** 
      - ``localhost:8080``
      - ``localhost:8080``
