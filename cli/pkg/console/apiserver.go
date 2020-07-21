@@ -61,6 +61,10 @@ func (r *APIServer) setRoutes(migrationDir string, logger *logrus.Logger) {
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
+			applyAPIs := migrateAPIs.Group("/apply")
+			{
+				applyAPIs.Any("", api.ApplyMigrationAPI)
+			}
 			consoleAPIs := migrateAPIs.Group("/console")
 			{
 				consoleAPIs.Any("/:migrationVersion", api.ConsoleAPI)
