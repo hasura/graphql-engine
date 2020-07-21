@@ -32,7 +32,7 @@ By default updates are delivered to clients every **1 sec**. This interval can b
 ``--live-queries-multiplexed-refetch-interval`` flag. See the
 :ref:`server flag reference <server_flag_reference>` for info on setting the flag/env var.
 
-You can read more about the implementation of subscriptions in the `architecture doc <https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md>`_.
+You can read more about the implementation of subscriptions in the `architecture doc <https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md>`__.
 
 Convert a query to a subscription
 ---------------------------------
@@ -41,7 +41,7 @@ You can turn any query into a subscription by simply replacing ``query`` with ``
 
 .. admonition:: Caveat
 
-  Hasura follows the `GraphQL spec <https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field>`_ which
+  Hasura follows the `GraphQL spec <https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field>`__ which
   allows for only one root field in a subscription.
 
 Use cases
@@ -55,8 +55,8 @@ Communication protocol
 ----------------------
 
 Hasura GraphQL engine uses the `GraphQL over WebSocket Protocol
-<https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md>`_ by the
-`apollographql/subscriptions-transport-ws <https://github.com/apollographql/subscriptions-transport-ws>`_ library
+<https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md>`__ by the
+`apollographql/subscriptions-transport-ws <https://github.com/apollographql/subscriptions-transport-ws>`__ library
 for sending and receiving events.
 
 .. admonition:: Setting headers for subscriptions with Apollo client
@@ -78,7 +78,7 @@ for sending and receiving events.
       }
     });
 
-  See `this <https://www.apollographql.com/docs/react/data/subscriptions/#authentication-over-websocket>`_ for more
+  See `this <https://www.apollographql.com/docs/react/data/subscriptions/#authentication-over-websocket>`__ for more
   info on using ``connectionParams``.
 
 

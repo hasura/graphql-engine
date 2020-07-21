@@ -2,12 +2,12 @@
    :description: Use Hasura's command line tooling
    :keywords: hasura, docs, CLI
 
-.. _hasuracli-manual:
-
-.. highlight:: bash
+.. _hasuracli_manual:
 
 Hasura CLI
 ==========
+
+.. highlight:: bash
 
 .. contents:: Table of contents
   :backlinks: none
@@ -16,7 +16,7 @@ Hasura CLI
 
 The ``Hasura CLI`` is a command line tool which is the primary mode of managing Hasura projects and migrations.
 
-.. _hasuractl-installation:
+.. _hasuractl_installation:
 
 Installation
 ------------

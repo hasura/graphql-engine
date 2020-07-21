@@ -312,7 +312,7 @@ Operator
    * - ``"$nin"``
      - ``NOT IN``
 
-(For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/current/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/current/functions-comparisons.html>`_.)
+(For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/current/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/current/functions-comparisons.html>`__.)
 
 **Text related operators :**
 

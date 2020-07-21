@@ -2,6 +2,7 @@
 module Hasura.Server.Init.Config where
 
 import qualified Data.Aeson                       as J
+import qualified Data.Aeson.Casing                as J
 import qualified Data.Aeson.TH                    as J
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
@@ -60,6 +61,9 @@ data RawServeOptions impl
   , rsoPlanCacheSize       :: !(Maybe Cache.CacheSize)
   , rsoDevMode             :: !Bool
   , rsoAdminInternalErrors :: !(Maybe Bool)
+  , rsoEventsHttpPoolSize  :: !(Maybe Int)
+  , rsoEventsFetchInterval :: !(Maybe Milliseconds)
+  , rsoLogHeadersFromEnv   :: !Bool
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -99,6 +103,9 @@ data ServeOptions impl
   , soLogLevel                     :: !L.LogLevel
   , soPlanCacheOptions             :: !E.PlanCacheOptions
   , soResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig
+  , soEventsHttpPoolSize           :: !(Maybe Int)
+  , soEventsFetchInterval          :: !(Maybe Milliseconds)
+  , soLogHeadersFromEnv            :: !Bool
   }
 
 data DowngradeOptions
@@ -135,10 +142,13 @@ data API
   | DEVELOPER
   | CONFIG
   deriving (Show, Eq, Read, Generic)
+  
 $(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
   ''API)
 
 instance Hashable API
+
+$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True} ''RawConnInfo)
 
 type HGECommand impl = HGECommandG (ServeOptions impl)
 type RawHGECommand impl = HGECommandG (RawServeOptions impl)
@@ -251,6 +261,9 @@ instance FromEnv LQ.BatchSize where
 
 instance FromEnv LQ.RefetchInterval where
   fromEnv = fmap (LQ.RefetchInterval . milliseconds . fromInteger) . readEither
+
+instance FromEnv Milliseconds where
+  fromEnv = fmap fromInteger . readEither
 
 instance FromEnv JWTConfig where
   fromEnv = readJson
