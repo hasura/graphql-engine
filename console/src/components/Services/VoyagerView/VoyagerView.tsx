@@ -4,11 +4,10 @@ import { GraphQLVoyager } from 'graphql-voyager';
 
 import Endpoints from '../../../Endpoints';
 import VoyagerViewErrorBoundary from './VoyagerViewErrorBoundary';
-import { ReduxState } from '../../../types';
+import { Dispatch } from '../../../types';
 import '../../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
 import requestAction from '../../../utils/requestAction';
-import { Dispatch } from '../../../types';
 
 interface VoyagerViewProps {
   headers: Headers | Record<string, string>;
