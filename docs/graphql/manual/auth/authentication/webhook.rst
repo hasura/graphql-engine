@@ -87,6 +87,8 @@ POST request
 
 If you configure your webhook to use ``POST``, then Hasura **will send all client headers in payload**.
 
+.. _webhook_response:
+
 Response
 ^^^^^^^^
 

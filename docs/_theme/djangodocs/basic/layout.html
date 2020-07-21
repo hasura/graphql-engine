@@ -130,6 +130,11 @@
     {%- block htmltitle %}
     <title>{{ title|striptags|e }}{{ titlesuffix }}</title>
     <meta name="title" content="{{ title|striptags|e }}{{ titlesuffix }}" />
+
+    {%- if RELEASE_MODE != "production" %}
+    <meta name="robots" content="noindex">
+    {%- endif %}
+
     {%- endblock %}
     {%- block csss %}
     {{- css() }}

@@ -139,16 +139,16 @@ setting the status code as ``4xx``.
 
 .. _securing_action_handlers:
 
-Securing your action handler
-----------------------------
+Restrict access to your action handler
+--------------------------------------
 
-You might want to make sure that an action handler can only get called by your
+You might want to restrict access to your action handler in order to ensure that it can only get called by your
 Hasura instance and not by third parties.
 
 Adding an action secret
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-One possible way of securing an action handler is by adding a header to the action
+One possible way of restricting access to an action handler is by adding a header to the action
 that is automatically sent with each request to the webhook, and then adding a check
 against that in your action handler.
 
@@ -159,10 +159,9 @@ against that in your action handler.
 
 .. note::
 
-  Adding an action secret is a simple way of securing an action
-  handler against unauthorized access and will suffice in most use cases.
+  Adding an action secret is a simple way of restricting access to an action handler and will suffice in most use cases.
   However, if you have more profound security requirements, you might want to choose advanced
-  security solutions such as `HMAC <https://en.wikipedia.org/wiki/HMAC>`__.
+  security solutions tailored to your needs.
 
 
 Step 1: Configure your Hasura instance

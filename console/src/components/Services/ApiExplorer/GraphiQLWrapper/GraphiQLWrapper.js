@@ -93,7 +93,8 @@ class GraphiQLWrapper extends Component {
       return graphQLFetcherFinal(
         graphQLParams,
         getGraphQLEndpoint(mode),
-        graphqlNetworkData.headers
+        graphqlNetworkData.headers,
+        dispatch
       );
     };
 
@@ -235,6 +236,7 @@ class GraphiQLWrapper extends Component {
               <AnalyzeButton
                 operations={graphiqlContext && graphiqlContext.state.operations}
                 analyzeFetcher={analyzeFetcherInstance}
+                dispatch={dispatch}
                 {...analyzerProps}
               />
             </GraphiQL.Toolbar>

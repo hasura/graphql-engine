@@ -18,11 +18,11 @@ Introduction
 It is a common requirement to have requests which are accessible to all users without the need for any authentication
 (logging in). For example, to display a public feed of events.
 
-Once you have configured authentication, by default Hasura GraphQL engine will reject any unauthenticated request it
+Once you have configured an :ref:`admin secret <securing_graphql_endpoint>`, by default Hasura GraphQL engine will reject any unauthenticated request it
 receives. 
 
 You can configure Hasura GraphQL engine to allow access to unauthenticated users by defining a specific role
-which will be set for all unauthenticated requests. Once an unauthenticated role is configured, unaunthenticated requests will 
+which will be set for all unauthenticated requests. Once an unauthenticated role is configured, unauthenticated requests will 
 not be rejected and instead the request will be made with the configured role.
 
 This role can then be used to define the permissions for unauthenticated users as described in :ref:`authorization`.
@@ -31,21 +31,30 @@ A guide on setting up unauthenticated user permissions can be found :ref:`here <
 Configuring unauthenticated / public access
 -------------------------------------------
 
-Depending on your auth setup an unauthenticated role can be configured as follows:
+An unauthenticated role can be configured for the following scenarios: no auth setup, webhook auth setup or JWT auth setup.
+
+No auth setup
+^^^^^^^^^^^^^
+
+With no auth setup, every request is considered an unauthenticated request.
+
+You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or the ``--unauthorized-role`` flag to set a role
+for unauthenticated (non-logged in) users. See :ref:`server_flag_reference` for more details
+on setting this flag/env var.
 
 Webhooks
 ^^^^^^^^
 
-For :ref:`webhook authentication <auth_webhooks>`, an unauthenticated request is any request for which the webhook returns a ``401 Unauthorized`` response.
+For :ref:`webhook authentication <auth_webhooks>`, any request for which the webhook returns a ``401 Unauthorized`` response 
+is considered an unauthenticated request.
 
-For unauthenticated access, you can return a ``200`` status response with your defined unauthenticated role, e.g: ``{ "x-hasura-role": "<anonymous-role>" }``.
+To allow unauthenticated access, the auth webhook should return a ``200`` status response with your unauthenticated role in the headers. For details on the webhook response, refer to :ref:`this section <webhook_response>`.
 
 JWT
 ^^^
 
-For :ref:`JWT authentication <auth_jwt>`, an unauthenticated request is any request which does not contain a JWT token.
+For :ref:`JWT authentication <auth_jwt>`, any request which does not contain a JWT token is considered an unauthenticated request.
 
-You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or ``--unauthorized-role`` flag to set a role
+You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or the ``--unauthorized-role`` flag to set a role
 for unauthenticated (non-logged in) users. See :ref:`server_flag_reference` for more details
 on setting this flag/env var.
-

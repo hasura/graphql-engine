@@ -30,4 +30,4 @@ Guides / Tutorials / Resources
 .. note::
 
   If you are new to GraphQL you can check out some front-end and back-end tutorials for building applications using
-  GraphQL at `hasura.io/learn <https://hasura.io/learn/>`_.
+  GraphQL at `hasura.io/learn <https://hasura.io/learn/>`__.

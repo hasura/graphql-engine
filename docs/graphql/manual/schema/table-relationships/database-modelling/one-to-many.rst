@@ -12,6 +12,9 @@ Modelling one-to-many table relationships
   :depth: 1
   :local:
 
+Introduction
+------------
+
 A ``one-to-many`` relationship between two tables can be established via a **foreign key constraint**.
 
 Say we have the following two tables in our database schema:
@@ -35,8 +38,8 @@ These two tables are related via a ``one-to-many`` relationship. i.e:
 - an ``author`` can have many ``articles``
 - an ``article`` has one ``author``
 
-Set up a table relationship in the database
--------------------------------------------
+Step 1: Set up a table relationship in the database
+---------------------------------------------------
 
 This ``one-to-many`` relationship can be established in the database by:
 
@@ -46,16 +49,16 @@ This ``one-to-many`` relationship can be established in the database by:
 This will ensure that the value of ``author_id`` column in the ``article`` table  is present in the ``id`` column of
 the ``author`` table.
 
-Set up GraphQL relationships
-----------------------------
+Step 2: Set up GraphQL relationships
+------------------------------------
 
 To access the nested objects via the GraphQL API, :ref:`create the following relationships <create_relationships>`:
 
 - Array relationship, ``articles`` from ``author`` table using  ``article :: author_id  ->  id``
 - Object relationship, ``author`` from ``article`` table using ``author_id -> author :: id``
 
-Query using relationships
--------------------------
+Step 3: Query using relationships
+---------------------------------
 
 We can now:
 

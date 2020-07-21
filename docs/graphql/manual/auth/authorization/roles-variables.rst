@@ -38,6 +38,7 @@ See :ref:`this page <permission_rules>` on how to configure permission rules.
   For every role that you create, Hasura automatically publishes a different GraphQL schema that represents the
   right queries, fields, and mutations that are available to that role.
 
+.. _dynamic_session_variables:
 
 Dynamic session variables
 -------------------------
@@ -93,7 +94,7 @@ Examples:
 
 .. admonition:: ABAC
 
-  Session variables are analogous to *attributes* in a typical `attribute-based access control <https://en.wikipedia.org/wiki/Attribute-based_access_control>`_ (ABAC) system.
+  Session variables are analogous to *attributes* in a typical `attribute-based access control <https://en.wikipedia.org/wiki/Attribute-based_access_control>`__ (ABAC) system.
 
 
 Modelling Roles in Hasura
@@ -236,9 +237,9 @@ type ``integer``, then the values of ``X-Hasura-User-Id`` and  ``X-Hasura-Allowe
 be of type ``integer`` and ``integer[]`` (an integer array) respectively. To pass say a value ``1`` for
 ``X-Hasura-User-Id``, it'll be "``1``" and if the allowed organisations are ``1``, ``2`` and ``3``, then
 ``X-Hasura-Allowed-Organisations`` will be "``{1,2,3}``". ``{}`` is the syntax for specifying
-`arrays in Postgres <https://www.postgresql.org/docs/current/arrays.html#ARRAYS-INPUT>`_.
+`arrays in Postgres <https://www.postgresql.org/docs/current/arrays.html#ARRAYS-INPUT>`__.
 
-The types and their formats are detailed `here <https://www.postgresql.org/docs/current/datatype.html>`_. When
+The types and their formats are detailed `here <https://www.postgresql.org/docs/current/datatype.html>`__. When
 in doubt about the Postgres format for a type, you can always test it in the SQL window. To check
 if ``s`` is a valid literal for type ``t`` then, you can check it as follows:
 
