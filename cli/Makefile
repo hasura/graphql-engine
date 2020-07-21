@@ -1,8 +1,6 @@
 PWD := $(shell pwd)
 PARENT_DIR := $(shell dirname $(PWD))
 VERSION ?= $(shell ../scripts/get-version.sh)
-PLUGINS_BRANCH ?= master
-OS ?= linux darwin windows
 OUTPUT_DIR := _output
 
 HAS_GOX := $(shell command -v gox;)
@@ -28,12 +26,7 @@ endif
 .PHONY: build
 build: export CGO_ENABLED=0
 build:
-	gox -ldflags '-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -X github.com/hasura/graphql-engine/cli/plugins.IndexBranchRef=$(PLUGINS_BRANCH) -s -w -extldflags "-static"' \
-	-rebuild \
-	-os="$(OS)" \
-	-arch="amd64" \
-	-output="$(OUTPUT_DIR)/$(VERSION)/cli-hasura-{{.OS}}-{{.Arch}}" \
-	./cmd/hasura/
+	scripts/build-cli.sh
 
 # compress
 .PHONY: compress
@@ -68,6 +61,3 @@ all-in-docker:
 	-v $(PARENT_DIR):/go/src/github.com/hasura/graphql-engine \
 	hasura-graphql-cli-builder \
 	make all
-
-patch-release-file:
-	./scripts/patch_releases.sh create-patch-release-file
