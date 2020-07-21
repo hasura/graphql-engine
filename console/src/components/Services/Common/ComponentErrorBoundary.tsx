@@ -11,9 +11,11 @@ interface ErrorState {
 
 type Props = {
   children: ReactNode;
+  title: string;
+  message: string;
 };
 
-class VoyagerViewErrorBoundary extends Component<Props, ErrorState> {
+class ComponentErrorBoundary extends Component<Props, ErrorState> {
   state: ErrorState = {
     hasError: false,
     error: new Error(''),
@@ -33,11 +35,10 @@ class VoyagerViewErrorBoundary extends Component<Props, ErrorState> {
           <div className={`container ${styles.centerContent}`}>
             <div className={`row ${styles.message}`}>
               <div className="col-xs-8">
-                <h1>Error in Voyager View</h1>
+                <h1>{this.props.title}</h1>
                 <br />
                 <h4 className={styles.errorDescription}>
-                  You might be seeing this because your schema is too large to
-                  be rendered.
+                  {this.props.message}
                 </h4>
                 <div>
                   <pre className={styles.errorStack}>
@@ -50,8 +51,7 @@ class VoyagerViewErrorBoundary extends Component<Props, ErrorState> {
                 <img
                   src={errorImageSrc}
                   className="img-responsive"
-                  title="Error on Voyager View"
-                  alt=""
+                  title={this.props.title}
                 />
               </div>
             </div>
@@ -64,4 +64,4 @@ class VoyagerViewErrorBoundary extends Component<Props, ErrorState> {
   }
 }
 
-export default VoyagerViewErrorBoundary;
+export default ComponentErrorBoundary;
