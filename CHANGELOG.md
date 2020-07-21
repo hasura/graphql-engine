@@ -4,8 +4,7 @@
 
 ### Bug fixes and improvements
 
-(Add entries here in the order of: server, console, cli, docs, others)
-
+- server: mutations now store the tracing context so that distributed tracing can correlate mutations with the event triggers they invoke.
 
 ## `v1.3.0`
 
