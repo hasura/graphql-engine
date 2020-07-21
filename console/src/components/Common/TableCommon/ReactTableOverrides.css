@@ -159,13 +159,19 @@
   min-width: 75px !important;
 }
 
-.ReactTable .rt-tbody .rt-th,
-.ReactTable .rt-tbody .rt-td {
+.dataTable.ReactTable .rt-tbody .rt-th,
+.dataTable.ReactTable .rt-tbody .rt-td {
   display: flex;
-  justify-content: flex-start;
+  width: 100%;
+}
+
+.triggerTable.ReactTable .rt-tbody .rt-th,
+.triggerTable.ReactTable .rt-tbody .rt-td {
+  display: flex;
+  justify-content: center;
 }
 
 .ReactTable .rt-thead .rt-resizable-header-content {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
 }
