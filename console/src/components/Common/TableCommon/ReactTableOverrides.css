@@ -163,12 +163,14 @@
 .dataTable.ReactTable .rt-tbody .rt-td {
   display: flex;
   justify-content: left;
+  align-items: center;
 }
 
 .ReactTable .rt-tbody .rt-th,
 .ReactTable .rt-tbody .rt-td {
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 .ReactTable .rt-thead .rt-resizable-header-content {
