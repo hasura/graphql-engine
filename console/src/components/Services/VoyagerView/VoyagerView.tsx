@@ -57,12 +57,16 @@ class VoyagerView extends Component<Props, State> {
     return new Worker(workerURL);
   };
 
-  errorBoundaryTitle = "Error in Voyager View";
-  errorBoundaryMessage = "You might be seeing this because your schema is too large to be rendered.";
+  errorBoundaryTitle = 'Error in Voyager View';
+  errorBoundaryMessage =
+    'You might be seeing this because your schema is too large to be rendered.';
 
   render() {
     return (
-      <ComponentErrorBoundary title={this.errorBoundaryTitle} message={this.errorBoundaryMessage}>
+      <ComponentErrorBoundary
+        title={this.errorBoundaryTitle}
+        message={this.errorBoundaryMessage}
+      >
         <GraphQLVoyager
           introspection={this.introspectionProvider}
           loadWorker={this.loadWorker}
