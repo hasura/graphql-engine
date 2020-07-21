@@ -136,7 +136,7 @@ validateVariablesForReuse (ReusableVariableTypes varTypes) varValsM =
       withPathK (G.unName $ G.unVariable varName) $ do
         varVal <- onNothing (Map.lookup varName varVals) $
           throwVE "expected a value for non-nullable variable"
-          -- TODO: we don't have the graphql type
+          -- TODO (Not used in PDV): we don't have the graphql type
           -- <> " of type: " <> T.pack (show varType)
         parsePGScalarValue varType varVal
     where
@@ -303,7 +303,7 @@ unValidateInpVal (AnnInpVal _ var val) = fromMaybe G.VNull $
       PGValBigInt i   -> G.VInt $ fromIntegral i
       PGValFloat f    -> G.VFloat $ realToFrac f
       PGValDouble d   -> G.VFloat $ realToFrac d
-      -- TODO: Scientific is a danger zone; use its safe conv function.
+      -- TODO (Not used in PDV): Scientific is a danger zone; use its safe conv function.
       PGValNumeric sc -> G.VFloat $ realToFrac sc
       PGValMoney m    -> G.VFloat $ realToFrac m
       PGValBoolean b  -> G.VBoolean b

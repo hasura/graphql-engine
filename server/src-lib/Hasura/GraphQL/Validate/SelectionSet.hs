@@ -188,7 +188,7 @@ parseFragment parentTyInfo fragmentTyInfo directives fragmentSelectionSet = do
     validateSpread = do
       let commonTypes = parentTypeMembers `Set.intersection` fragmentTypeMembers
       if null commonTypes then
-          -- TODO: better error location by capturing the fragment source -
+          -- TODO (not used in PDV): better error location by capturing the fragment source -
           -- named or otherwise
           -- throwVE $ "cannot spread fragment " <> showName name <> " defined on " <>
           throwVE $ "cannot spread fragment  defined on " <> showNamedTy fragmentType

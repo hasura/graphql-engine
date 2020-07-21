@@ -127,7 +127,7 @@ data RootSelectionSet
 --     mkExecutableDefinition operationType selectionSet =
 --       G.ExecutableDefinitionOperation $ G.OperationDefinitionTyped $
 --       G.TypedOperationDefinition
---         { G._todName = Nothing -- TODO, store the name too?
+--         { G._todName = Nothing -- TODO (not used in PDV), store the name too?
 --         , G._todDirectives = []
 --         , G._todType = operationType
 --         , G._todVariableDefinitions = []
@@ -184,7 +184,7 @@ toGraphQLField :: G.Alias -> Field -> G.Field
 toGraphQLField alias Field{..} =
   G.Field
     { G._fName = _fName
-    , G._fArguments = [] -- TODO
+    , G._fArguments = [] -- TODO (not used in PDV)
     , G._fDirectives = []
     , G._fAlias = Just alias
     , G._fSelectionSet =  toGraphQLSelectionSet _fSelSet

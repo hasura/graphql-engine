@@ -112,7 +112,7 @@ data HasuraClaims
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''HasuraClaims)
 
 
--- NOTE: these must stay lowercase; TODO consider using "Data.CaseInsensitive"
+-- NOTE: these must stay lowercase; TODO(from master) consider using "Data.CaseInsensitive"
 allowedRolesClaim :: T.Text
 allowedRolesClaim = "x-hasura-allowed-roles"
 
@@ -465,7 +465,7 @@ instance J.FromJSON JWTConfig where
           "RS256" -> runEither $ parseRsaKey rawKey
           "RS384" -> runEither $ parseRsaKey rawKey
           "RS512" -> runEither $ parseRsaKey rawKey
-          -- TODO: support ES256, ES384, ES512, PS256, PS384
+          -- TODO(from master): support ES256, ES384, ES512, PS256, PS384
           _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
 
       runEither = either (invalidJwk . T.unpack) return

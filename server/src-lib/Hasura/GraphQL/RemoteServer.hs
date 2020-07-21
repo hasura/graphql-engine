@@ -277,7 +277,7 @@ instance J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition [G.Name])) whe
         desc' = fmap fromIntrospection desc
         possTps = map G._otdName $ maybe [] (fmap fromIntrospection) possibleTypes
     when (kind /= "INTERFACE") $ kindErr kind "interface"
-    -- TODO track which interfaces implement which other interfaces, after a
+    -- TODO (non PDV) track which interfaces implement which other interfaces, after a
     -- GraphQL spec > Jun 2018 is released.
     let r = G.InterfaceTypeDefinition desc' name [] flds possTps
     return $ FromIntrospection r

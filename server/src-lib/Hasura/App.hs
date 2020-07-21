@@ -133,7 +133,7 @@ data InitCtx
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
--- TODO: better naming?
+-- TODO (from master): better naming?
 data Loggers
   = Loggers
   { _lsLoggerCtx :: !(LoggerCtx Hasura)

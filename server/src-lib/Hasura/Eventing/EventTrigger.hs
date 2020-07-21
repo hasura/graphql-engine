@@ -154,7 +154,7 @@ initEventEngineCtx maxT _eeCtxFetchInterval = do
 --   - fetch events in batches for lower DB pressure
 --   - don't fetch more than N at a time (since that can mean: space leak, less
 --     effective scale out, possible double sends for events we've checked out
---     on exit (TODO clean shutdown procedure))
+--     on exit (TODO (from master):  clean shutdown procedure))
 --   - try not to cause webhook workers to stall waiting on DB fetch
 --   - limit webhook HTTP concurrency per HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE
 processEventQueue

@@ -78,7 +78,7 @@ data ExecutionCtx
 -- before a GraphQL query should be allowed to be executed. In OSS, the safety
 -- check is to check in the query is in the allow list.
 
--- | TODO: Limitation: This parses the query, which is not ideal if we already
+-- | TODO (depends on query caching): Limitation: This parses the query, which is not ideal if we already
 -- have the query cached. The parsing happens unnecessary. But getting this to
 -- either return a plan or parse was tricky and complicated.
 class Monad m => MonadGQLExecutionCheck m where

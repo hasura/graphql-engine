@@ -328,7 +328,7 @@ inputValueR fld (InpValInfo descM n defM ty) =
     "name"         -> retJ $ G.unName n
     "description"  -> retJ $ fmap G.unDescription descM
     "type"         -> J.toJSON <$> gtypeR ty subFld
-    -- TODO: figure out what the spec means by 'string encoding'
+    -- TODO(not in PDV): figure out what the spec means by 'string encoding'
     "defaultValue" -> retJ $ pPrintValueC <$> defM
     _              -> return J.Null
 

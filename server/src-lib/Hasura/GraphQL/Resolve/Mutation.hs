@@ -111,7 +111,7 @@ convObjWithOp colGNameMap opFn val =
   flip withObject val $ \_ obj -> forM (OMap.toList obj) $ \(k, v) -> do
   colVal <- openOpaqueValue =<< asPGColumnValue v
   pgCol <- pgiColumn <$> resolvePGCol colGNameMap k
-  -- TODO: why are we using txtEncoder here?
+  -- TODO (from master): why are we using txtEncoder here?
   let encVal = txtEncoder $ pstValue $ _apvValue colVal
       sqlExp = opFn (pgCol, encVal)
   return (pgCol, UVSQL sqlExp)

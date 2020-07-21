@@ -183,8 +183,8 @@ resolveAction customTypes allPGScalars actionDefinition = do
 
       if | Just argTypeInfo <- maybeArgTypeInfo ->
              case argTypeInfo of
-               aoeu -> error "TODO VT.TIScalar VT.TIEnum VT.TIInpObj"
-               -- pure () -- TODO VT.TIScalar VT.TIEnum VT.TIInpObj
+               aoeu -> error "TODO (commented code) VT.TIScalar VT.TIEnum VT.TIInpObj"
+               -- pure () -- TODO (commented code) VT.TIScalar VT.TIEnum VT.TIInpObj
                _ -> throw400 InvalidParams $ "the argument's base type: "
                    <> showName argumentBaseType <>
                    " should be a scalar/enum/input_object"
@@ -202,7 +202,7 @@ resolveAction customTypes allPGScalars actionDefinition = do
   where
     getNonObjectTypeInfo typeName =
       let nonObjectTypeMap = fst $ customTypes
-          inputTypeInfos = nonObjectTypeMap <> mapFromL _getNamedTy [] -- TODO defaultTypes
+          inputTypeInfos = nonObjectTypeMap <> mapFromL _getNamedTy [] -- TODO (commented code) defaultTypes
       in Map.lookup typeName inputTypeInfos
 
     lookupPGScalar baseType = -- see Note [Postgres scalars in custom types]

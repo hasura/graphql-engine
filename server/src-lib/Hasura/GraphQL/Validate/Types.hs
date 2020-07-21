@@ -592,7 +592,7 @@ validateIsSubType tyMap subFldTy supFldTy = do
       G.TypeList  {} -> "List"
       G.TypeNamed {} -> "Named"
 
--- TODO Should we check the schema location as well?
+-- TODO(not used in PDV) Should we check the schema location as well?
 isSubTypeBase :: (MonadError Text m) => TypeInfo -> TypeInfo -> m ()
 isSubTypeBase subTyInfo supTyInfo = case (subTyInfo,supTyInfo) of
   (TIObj obj, TIIFace iFace) -> unless (_ifName iFace `elem` _otiImplIFaces obj) notSubTyErr
@@ -684,7 +684,7 @@ data DirectiveInfo
   , _diLocations   :: ![G.DirectiveLocation]
   } deriving (Show, Eq)
 
--- TODO: generate this from template haskell once we have a parser for directive defs
+-- TODO(not used in PDV): generate this from template haskell once we have a parser for directive defs
 -- directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 defaultDirectives :: [DirectiveInfo]
 defaultDirectives =

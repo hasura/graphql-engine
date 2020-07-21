@@ -559,7 +559,7 @@ data WithScalarType a
 -- 'Hasura.RQL.Types.PGColumnType' to handle arrays, not just scalars, then the parameterization can
 -- go away.
 --
--- TODO: This is incorrect modeling, as 'PGScalarType' will capture anything (under 'PGUnknown').
+-- TODO (from master): This is incorrect modeling, as 'PGScalarType' will capture anything (under 'PGUnknown').
 -- This should be fixed when support for all types is merged.
 data PGType a
   = PGTypeScalar !a

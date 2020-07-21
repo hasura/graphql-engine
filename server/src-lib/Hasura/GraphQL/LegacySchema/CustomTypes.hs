@@ -39,7 +39,7 @@ buildObjectTypeInfo roleName annotatedObjectType =
                 ObjRel -> G.toGT $ mkTableTy remoteTableName
                 ArrRel -> G.toGT $ G.toLT $ mkTableTy remoteTableName
           in VT.ObjFldInfo
-             { VT._fiDesc = Nothing -- TODO
+             { VT._fiDesc = Nothing -- TODO (not in PDV)
              , VT._fiName = unRelationshipName name
              , VT._fiParams = mempty
              , VT._fiTy = fieldTy

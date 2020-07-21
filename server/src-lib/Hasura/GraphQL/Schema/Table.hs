@@ -136,7 +136,8 @@ tableSelectFields table permissions = do
           pure $ Set.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
         CFRSetofTable tableName ->
           isJust <$> tableSelectPermissions tableName
-    canBeSelected (FIRemoteRelationship _) = pure True   -- TODO: Are there permissions for remote join fields?
+    -- TODO (from master): Derive permissions for remote relationships
+    canBeSelected (FIRemoteRelationship _) = pure True
 
 tableColumns
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m)

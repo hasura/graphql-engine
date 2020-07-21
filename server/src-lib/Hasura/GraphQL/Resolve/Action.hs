@@ -301,7 +301,7 @@ resolveAsyncActionQuery userInfo annAction =
     AnnActionAsyncQuery actionName actionId outputType asyncFields definitionList stringifyNumerics = annAction
     actionLogTable = QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
 
-    -- TODO:- Avoid using PGColumnInfo
+    -- TODO (from master):- Avoid using PGColumnInfo
     mkAnnFldFromPGCol column columnType =
       flip RS.mkAnnColumnField Nothing $
       PGColumnInfo (unsafePGCol column) (G.unsafeMkName column) 0 (PGColumnScalar columnType) True Nothing

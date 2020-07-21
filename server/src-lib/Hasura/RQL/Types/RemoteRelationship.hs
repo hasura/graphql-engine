@@ -64,7 +64,7 @@ data RemoteFieldInfo
   , _rfiRemoteSchema     :: !RemoteSchemaInfo
   , _rfiSchemaIntrospect :: G.SchemaIntrospection
   -- ^ The introspection data is used to make parsers for the arguments and the selection set
-  , _rfiRemoteSchemaName :: !RemoteSchemaName -- TODO: maybe include this field in 'RemoteSchemaInfo'?
+  , _rfiRemoteSchemaName :: !RemoteSchemaName
   -- ^ Name of the remote schema, that's used for joining
   } deriving (Show, Eq, Generic)
 instance Cacheable RemoteFieldInfo
@@ -179,7 +179,7 @@ instance FromJSON RemoteArguments where
 --
 -- https://graphql.github.io/graphql-spec/June2018/#sec-Language.Arguments
 --
--- TODO we don't seem to support empty RemoteArguments (like 'hello'), but this seems arbitrary:
+-- TODO (from master) we don't seem to support empty RemoteArguments (like 'hello'), but this seems arbitrary:
 data FieldCall =
   FieldCall
     { fcName      :: !G.Name
@@ -244,7 +244,7 @@ data RemoteRelationship =
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
     , rtrTable        :: !QualifiedTable
-    , rtrHasuraFields :: !(Set FieldName) -- TODO? change to PGCol
+    , rtrHasuraFields :: !(Set FieldName) -- TODO (from master)? change to PGCol
     -- ^ The hasura fields from 'rtrTable' that will be in scope when resolving
     -- the remote objects in 'rtrRemoteField'.
     , rtrRemoteSchema :: !RemoteSchemaName

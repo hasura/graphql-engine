@@ -81,7 +81,7 @@ data InputObjectFieldDefinition
   { _iofdName        :: !InputObjectFieldName
   , _iofdDescription :: !(Maybe G.Description)
   , _iofdType        :: !GraphQLType
-  -- TODO: default
+  -- TODO (from master): default
   } deriving (Show, Eq, Lift, Generic)
 instance NFData InputObjectFieldDefinition
 instance Cacheable InputObjectFieldDefinition

@@ -133,7 +133,7 @@ findWithIndex p l = do
   i <- findIndex p l
   pure (v, i)
 
--- TODO: Move to Data.HashMap.Strict.Extended; rename to fromListWith?
+-- TODO (from master): Move to Data.HashMap.Strict.Extended; rename to fromListWith?
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f = Map.fromList . map (\v -> (f v, v))
 
