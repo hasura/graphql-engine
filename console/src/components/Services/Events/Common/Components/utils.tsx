@@ -8,7 +8,6 @@ export const getEventStatusIcon = (status: string) => {
   switch (status) {
     case 'scheduled':
       return <ClockIcon title="This event has been scheduled" />;
-
     case 'dead':
       return <Skull title="This event is dead and will never be delivered" />;
     case 'delivered':
