@@ -3,7 +3,7 @@ import { Connect } from 'react-redux';
 import { GraphQLVoyager } from 'graphql-voyager';
 
 import Endpoints from '../../../Endpoints';
-import VoyagerViewErrorBoundary from './VoyagerViewErrorBoundary';
+import ComponentErrorBoundary from '../Common/ComponentErrorBoundary';
 import { Dispatch } from '../../../types';
 import '../../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
@@ -57,14 +57,17 @@ class VoyagerView extends Component<Props, State> {
     return new Worker(workerURL);
   };
 
+  errorBoundaryTitle = "Error in Voyager View";
+  errorBoundaryMessage = "You might be seeing this because your schema is too large to be rendered.";
+
   render() {
     return (
-      <VoyagerViewErrorBoundary>
+      <ComponentErrorBoundary title={this.errorBoundaryTitle} message={this.errorBoundaryMessage}>
         <GraphQLVoyager
           introspection={this.introspectionProvider}
           loadWorker={this.loadWorker}
         />
-      </VoyagerViewErrorBoundary>
+      </ComponentErrorBoundary>
     );
   }
 }
