@@ -28,19 +28,6 @@ Date:   Thu Jul 23 13:39:26 2020 -0700
 
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
 
-commit 2eab6a89aa7d00152dc5b10986f06937c8e6f71f
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Mon Jul 20 22:28:12 2020 -0400
-
-    Fix latency buckets for telemetry data
-
-    These must have gotten messed up during a refactor. As a consequence
-    almost all samples received so far fall into the single erroneous 0 to
-    1K seconds (originally supposed to be 1ms?) bucket.
-
-    I also re-thought what the numbers should be, but these are still
-    arbitrary and might want adjusting in the future.
-
 commit 0dddbe9e9d519de98662643d66c7d04a45d8d670
 Author: Phil Freeman <phil@hasura.io>
 Date:   Wed Jul 15 03:40:48 2020 -0700
