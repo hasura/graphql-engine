@@ -49,7 +49,7 @@ const EditorWrapper: React.FC<Props> = ({
       }
     : null;
 
-  const expandButtonText = isLast ? 'Add a remote relationship' : 'Edit';
+  const expandButtonText = isLast ? 'Add a remote schema relationship' : 'Edit';
   const collapseButtonText = isLast ? 'Cancel' : 'Close';
   return (
     <ExpandableEditor
