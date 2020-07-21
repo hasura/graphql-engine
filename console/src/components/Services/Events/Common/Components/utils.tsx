@@ -7,36 +7,26 @@ import Skull from '../../../../Common/Icons/Invalid';
 export const getEventStatusIcon = (status: string) => {
   switch (status) {
     case 'scheduled':
-      return <ClockIcon className="" title="This event has been scheduled" />;
-      break;
+      return <ClockIcon title="This event has been scheduled" />;
     case 'dead':
-      return (
-        <Skull
-          className=""
-          title="This event is dead and will never be delivered"
-        />
-      );
-      break;
+      return <Skull title="This event is dead and will never be delivered" />;
     case 'delivered':
-      return <CheckIcon className="" title="This event has been delivered" />;
-      break;
+      return <CheckIcon title="This event has been delivered" />;
     case 'error':
-      return <CrossIcon className="" title="This event failed with an error" />;
-      break;
+      return <CrossIcon title="This event failed with an error" />;
     default:
       return null;
-      break;
   }
 };
 
 export const getEventDeliveryIcon = (delivered: boolean) => {
   return delivered ? (
-    <CheckIcon className="" title="This event has been delivered" />
+    <CheckIcon title="This event has been delivered" />
   ) : (
-    <CrossIcon className="" title="This event has not been delivered" />
+    <CrossIcon title="This event has not been delivered" />
   );
 };
 
 export const getInvocationLogStatus = (status: number) => {
-  return status < 300 ? <CheckIcon className="" /> : <CrossIcon className="" />;
+  return status < 300 ? <CheckIcon /> : <CrossIcon />;
 };
