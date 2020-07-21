@@ -153,9 +153,6 @@ a.expanded {
   text-overflow: ellipsis;
 }
 
-.sqlBody {
-}
-
 .tablesBody {
   padding-top: 20px;
 }
@@ -173,11 +170,6 @@ a.expanded {
   padding-bottom: 10px;
 }
 
-.tableCellCenterAligned {
-  text-align: center;
-  overflow: unset !important;
-}
-
 .tableCellCenterAlignedOverflow {
   text-align: center;
   overflow: hidden !important;
@@ -189,8 +181,8 @@ a.expanded {
 
 .tableCenterContent {
   display: flex;
+  width: 100%;
   justify-content: center;
-  align-items: center;
 }
 
 .bulkDeleteButton {
