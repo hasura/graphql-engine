@@ -169,6 +169,7 @@
 .triggerTable.ReactTable .rt-tbody .rt-td {
   display: flex;
   justify-content: center;
+  width: 100%;
 }
 
 .ReactTable .rt-thead .rt-resizable-header-content {
