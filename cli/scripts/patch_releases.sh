@@ -24,6 +24,14 @@ create_patch_release_file() {
   # TODO: append asset urls to file
 }
 
+is_patch_release() {
+  # expected to run on CI
+  PR_NUMBER="5432"
+  # check if the number of files is 
+  NO_OF_FILES=$(curl -s https://api.github.com/repos/hasura/graphql-engine/pulls/5432/files | jq '. | length')
+  FILENAME=$(curl -s https://api.github.com/repos/hasura/graphql-engine/pulls/5432/files | jq '.[].filename')
+  echo "FILENAME: ${FILENAME}"
+}
 
 
 if [ "$#" -lt 1 ]; then
@@ -34,5 +42,8 @@ fi
 case $1 in 
   "create-patch-release-file")
     create_patch_release_file
+    ;;
+  "is_patch_release")
+    is_patch_release
     ;;
 esac
