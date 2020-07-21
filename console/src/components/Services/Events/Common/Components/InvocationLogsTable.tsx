@@ -175,7 +175,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
 
   return (
     <ReactTable
-      className="triggerTable -highlight"
+      className="-highlight"
       data={rowsFormatted}
       columns={gridHeadings}
       minRows={0}

@@ -185,6 +185,10 @@ a.expanded {
   justify-content: center;
 }
 
+.overflowUnset {
+  overflow: unset !important;
+}
+
 .bulkDeleteButton {
   margin: 10px;
   font-size: 16px;

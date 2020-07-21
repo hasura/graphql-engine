@@ -464,7 +464,10 @@ const ViewRows = ({
         manualTriggersButton = getManualTriggersButton();
 
         return (
-          <div key={rowIndex} className={styles.tableCenterContent}>
+          <div
+            key={rowIndex}
+            className={`${styles.tableCenterContent} ${styles.overflowUnset}`}
+          >
             {cloneButton}
             {editButton}
             {deleteButton}

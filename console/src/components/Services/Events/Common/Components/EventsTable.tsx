@@ -175,7 +175,7 @@ const EventsTable: React.FC<Props> = props => {
 
   return (
     <ReactTable
-      className="triggerTable -highlight"
+      className="-highlight"
       data-test="events-table"
       data={rowsFormatted}
       columns={gridHeadings}

@@ -162,14 +162,13 @@
 .dataTable.ReactTable .rt-tbody .rt-th,
 .dataTable.ReactTable .rt-tbody .rt-td {
   display: flex;
-  width: 100%;
+  justify-content: left;
 }
 
-.triggerTable.ReactTable .rt-tbody .rt-th,
-.triggerTable.ReactTable .rt-tbody .rt-td {
+.ReactTable .rt-tbody .rt-th,
+.ReactTable .rt-tbody .rt-td {
   display: flex;
   justify-content: center;
-  width: 100%;
 }
 
 .ReactTable .rt-thead .rt-resizable-header-content {
