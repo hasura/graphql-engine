@@ -78,7 +78,10 @@ class TestScheduledEvent(object):
         assert st == 200, resp
 
     def test_check_fired_webhook_event(self,hge_ctx,scheduled_triggers_evts_webhook):
-        event = scheduled_triggers_evts_webhook.get_event(65)
+        # Ideally, the timeout should be 60 seconds, within which a scheduled event
+        # should be delivered, but this test is flaky while it's run in CI. So,
+        # increasing the timeout to 120 seconds.
+        event = scheduled_triggers_evts_webhook.get_event(120)
         validate_event_webhook(event['path'],'/test')
         validate_event_headers(event['headers'],{"header-key":"header-value"})
         assert event['body']['payload'] == self.webhook_payload
