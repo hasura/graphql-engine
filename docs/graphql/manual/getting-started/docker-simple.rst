@@ -29,7 +29,7 @@ Prerequisites
 Step 1: Get the docker-compose file
 ----------------------------------- 
 
-The `hasura/graphql-engine/install-manifests <https://github.com/hasura/graphql-engine/tree/stable/install-manifests>`_ repo
+The `hasura/graphql-engine/install-manifests <https://github.com/hasura/graphql-engine/tree/stable/install-manifests>`__ repo
 contains all installation manifests required to deploy Hasura anywhere. Get the docker compose file from there:
 
 .. code-block:: bash

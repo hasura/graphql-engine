@@ -17,6 +17,7 @@ import { getStatementTimeoutSql, parseCreateSQL } from './utils';
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import requestAction from '../../../../utils/requestAction';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -97,76 +98,47 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     headers: dataHeaders(getState),
     body: JSON.stringify(requestBody),
   };
-  fetch(url, options).then(
-    response => {
-      if (response.ok) {
-        response.json().then(
-          data => {
-            if (isMigration) {
-              dispatch(loadMigrationStatus());
-            }
-            dispatch(showSuccessNotification('SQL executed!'));
-            dispatch(fetchDataInit()).then(() => {
-              dispatch({ type: REQUEST_SUCCESS, data });
-            });
-            dispatch(fetchTrackedFunctions());
-          },
-          err => {
-            const parsedErrorMsg = err;
-            parsedErrorMsg.message = JSON.parse(err.message);
-            dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
-            dispatch(
-              showErrorNotification(
-                'SQL execution failed!',
-                'Something is wrong. Received an invalid response json.',
-                parsedErrorMsg
-              )
-            );
-            dispatch({
-              type: REQUEST_ERROR,
-              data: 'Something is wrong. Received an invalid response json.',
-            });
-            console.err('RunSQL error: ', err);
-          }
-        );
-        return;
-      }
-      response.json().then(
-        errorMsg => {
-          const title = 'SQL Execution Failed';
-          dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: errorMsg });
-          dispatch({ type: REQUEST_ERROR, data: errorMsg });
-          if (isMigration) {
-            dispatch(handleMigrationErrors(title, errorMsg));
-          } else {
-            dispatch(showErrorNotification(title, errorMsg.code, errorMsg));
-          }
-        },
-        () => {
-          dispatch(
-            showErrorNotification(
-              'SQL execution failed!',
-              'Something is wrong. Please check your configuration again'
-            )
-          );
-          dispatch({
-            type: REQUEST_ERROR,
-            data: 'Something is wrong. Please check your configuration again',
-          });
+
+  return dispatch(requestAction(url, options))
+    .then(
+      data => {
+        if (isMigration) {
+          dispatch(loadMigrationStatus());
         }
-      );
-    },
-    error => {
-      console.error(error);
-      dispatch(
-        showErrorNotification(
-          'SQL execution failed',
-          'Cannot connect to server'
-        )
-      );
-      dispatch({ type: REQUEST_ERROR, data: 'server-connection-failed' });
-    }
-  );
+        dispatch(showSuccessNotification('SQL executed!'));
+        dispatch(fetchDataInit()).then(() => {
+          dispatch({ type: REQUEST_SUCCESS, data });
+        });
+        dispatch(fetchTrackedFunctions());
+      },
+      err => {
+        const parsedErrorMsg = err;
+        parsedErrorMsg.message = JSON.parse(err.message);
+        dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+        dispatch(
+          showErrorNotification(
+            'SQL execution failed!',
+            'Something is wrong. Received an invalid response json.',
+            parsedErrorMsg
+          )
+        );
+        dispatch({
+          type: REQUEST_ERROR,
+          data: 'Something is wrong. Received an invalid response json.',
+        });
+        console.err('RunSQL error: ', err);
+      }
+    )
+    .catch(errorMsg => {
+      const title = 'SQL Execution Failed';
+      dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: errorMsg });
+      dispatch({ type: REQUEST_ERROR, data: errorMsg });
+      if (isMigration) {
+        dispatch(handleMigrationErrors(title, errorMsg));
+      } else {
+        dispatch(showErrorNotification(title, errorMsg.code, errorMsg));
+      }
+    });
 };
 
 const rawSQLReducer = (state = defaultState, action) => {

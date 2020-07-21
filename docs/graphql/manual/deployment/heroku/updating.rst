@@ -43,7 +43,7 @@ Step 2: Attach your Heroku app
 
 Let's say your Heroku app is called ``hasura-heroku`` and is running on ``https://hasura-heroku.herokuapp.com``.
 
-Navigate to your project directory, use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`_ to configure the git repo you cloned in Step 1
+Navigate to your project directory, use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`__ to configure the git repo you cloned in Step 1
 to be able to push to this app.
 
 .. code-block:: bash
