@@ -282,7 +282,7 @@ Args syntax
      - Required
      - Schema
      - Description
-   * - name
+   * - action
      - true
      - :ref:`ActionName <ActionName>`
      - Name of the action

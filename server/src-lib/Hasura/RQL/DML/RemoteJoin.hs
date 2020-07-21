@@ -30,6 +30,7 @@ import qualified Hasura.SQL.DML                         as S
 
 import qualified Data.Aeson                             as A
 import qualified Data.Aeson.Ordered                     as AO
+import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.Extended           as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
@@ -37,6 +38,7 @@ import qualified Data.HashSet                           as HS
 import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
+import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Printer.Text    as G
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
@@ -44,15 +46,20 @@ import qualified Network.HTTP.Types                     as N
 
 -- | Executes given query and fetch response JSON from Postgres. Substitutes remote relationship fields.
 executeQueryWithRemoteJoins
-  :: (HasVersion, MonadTx m, MonadIO m)
-  => HTTP.Manager
+  :: ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     )
+  => Env.Environment
+  -> HTTP.Manager
   -> [N.Header]
   -> UserInfo
   -> Q.Query
   -> [Q.PrepArg]
   -> RemoteJoins
   -> m EncJSON
-executeQueryWithRemoteJoins manager reqHdrs userInfo q prepArgs rjs = do
+executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs rjs = do
   -- Step 1: Perform the query on database and fetch the response
   pgRes <- runIdentity . Q.getRow <$> liftTx (Q.rawQE dmlTxErrorHandler q prepArgs True)
   jsonRes <- either (throw500 . T.pack) pure $ AO.eitherDecode pgRes
@@ -60,7 +67,7 @@ executeQueryWithRemoteJoins manager reqHdrs userInfo q prepArgs rjs = do
   compositeJson <- traverseQueryResponseJSON rjMap jsonRes
   let remoteJoins = collectRemoteFields compositeJson
   -- Step 3: Make queries to remote server and fetch graphql response
-  remoteServerResp <- fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins
+  remoteServerResp <- fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins
   -- Step 4: Replace remote fields in composite json with remote join values
   AO.toEncJSON <$> replaceRemoteFields compositeJson remoteServerResp
   where
@@ -124,6 +131,12 @@ transformSelect path sel = do
   -- Transform selects in array, object and computed fields
   transformedFields <- transformAnnFields path fields
   pure sel{_asnFields = transformedFields}
+
+transformObjectSelect :: FieldPath -> AnnObjectSelect -> State RemoteJoinMap AnnObjectSelect
+transformObjectSelect path sel = do
+  let fields = _aosFields sel
+  transformedFields <- transformAnnFields path fields
+  pure sel{_aosFields = transformedFields}
 
 -- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
 getRemoteJoinsAggregateSelect :: AnnAggregateSelect -> (AnnAggregateSelect, Maybe RemoteJoins)
@@ -208,9 +221,9 @@ transformAnnFields path fields = do
       AFNodeId qt pkeys -> pure $ AFNodeId qt pkeys
       AFColumn c -> pure $ AFColumn c
       AFObjectRelation annRel ->
-        AFObjectRelation <$> transformAnnRelation fieldPath annRel
+        AFObjectRelation <$> transformAnnRelation annRel (transformObjectSelect fieldPath)
       AFArrayRelation (ASSimple annRel) ->
-        AFArrayRelation . ASSimple <$> transformAnnRelation fieldPath annRel
+        AFArrayRelation . ASSimple <$> transformAnnRelation annRel (transformSelect fieldPath)
       AFArrayRelation (ASAggregate aggRel) ->
         AFArrayRelation . ASAggregate <$> transformAnnAggregateRelation fieldPath aggRel
       AFArrayRelation (ASConnection annRel) ->
@@ -231,9 +244,10 @@ transformAnnFields path fields = do
       pure $ transformedFields <> phantomColumns
     where
       getFields f = mapMaybe (sequence . second (^? f))
-      transformAnnRelation fieldPath annRel = do
+
+      transformAnnRelation annRel f = do
         let annSel = aarAnnSelect annRel
-        transformedSel <- transformSelect fieldPath annSel
+        transformedSel <- f annSel
         pure annRel{aarAnnSelect = transformedSel}
 
       transformAnnAggregateRelation fieldPath annRel = do
@@ -339,13 +353,15 @@ fetchRemoteJoinFields
   :: ( HasVersion
      , MonadError QErr m
      , MonadIO m
+     , Tracing.MonadTrace m
      )
-  => HTTP.Manager
+  => Env.Environment
+  -> HTTP.Manager
   -> [N.Header]
   -> UserInfo
   -> [RemoteJoinField]
   -> m AO.Object
-fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins = do
+fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
   results <- forM (Map.toList remoteSchemaBatch) $ \(rsi, batch) -> do
     let batchList = toList batch
         gqlReq = fieldsToRequest G.OperationTypeQuery
@@ -353,7 +369,7 @@ fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins = do
                                  (concatMap _rjfVariables batchList)
         gqlReqUnparsed = (GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc) <$> gqlReq
     -- NOTE: discard remote headers (for now):
-    (_, _, respBody) <- execRemoteGQ' manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
+    (_, _, respBody) <- execRemoteGQ' env manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
     case AO.eitherDecode respBody of
       Left e -> throw500 $ "Remote server response is not valid JSON: " <> T.pack e
       Right r -> do

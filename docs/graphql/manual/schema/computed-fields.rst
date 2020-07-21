@@ -102,7 +102,7 @@ The return table must be tracked to define such a computed field.
 
 **Example:**
 
-In a simple ``author <-> article`` schema, we can define a :ref:`relationship <relationships>` on the ``author``
+In a simple ``author <-> article`` schema, we can define a :ref:`table relationship <table_relationships>` on the ``author``
 table to fetch authors along with their articles.
 
 We can make use of computed fields to fetch the author's articles with a search parameter.

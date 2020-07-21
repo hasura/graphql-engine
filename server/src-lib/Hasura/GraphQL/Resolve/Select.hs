@@ -128,12 +128,18 @@ processTableSelectionSet fldTy flds =
                 colMapping = riMapping relInfo
                 rn = riName relInfo
             case fieldKind of
-              RFKSimple -> do
-                annSel <- fromField (RS.FromTable relTN) colGNameMap tableFilter tableLimit fld
-                let annRel = RS.AnnRelationSelectG rn colMapping annSel
-                pure $ case riType relInfo of
-                  ObjRel -> RS.AFObjectRelation annRel
-                  ArrRel -> RS.AFArrayRelation $ RS.ASSimple annRel
+              RFKSimple ->
+                case riType relInfo of
+                  ObjRel -> do
+                    annFields <- asObjectSelectionSet (_fSelSet fld)
+                                 >>= processTableSelectionSet (_fType fld)
+                    pure $ RS.AFObjectRelation $ RS.AnnRelationSelectG rn colMapping $
+                           RS.AnnObjectSelectG annFields relTN $
+                           fmapAnnBoolExp partialSQLExpToUnresolvedVal tableFilter
+                  ArrRel -> do
+                    annSel <- fromField (RS.FromTable relTN) colGNameMap tableFilter tableLimit fld
+                    pure $ RS.AFArrayRelation $ RS.ASSimple $
+                           RS.AnnRelationSelectG rn colMapping annSel
               RFKAggregate -> do
                 aggSel <- fromAggField (RS.FromTable relTN) colGNameMap tableFilter tableLimit fld
                 pure $ RS.AFArrayRelation $ RS.ASAggregate $ RS.AnnRelationSelectG rn colMapping aggSel

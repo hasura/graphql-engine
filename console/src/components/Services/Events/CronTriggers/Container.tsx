@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import {
@@ -21,7 +21,12 @@ interface Props {
   allTriggers: Triggers;
   tabName: STTab;
   dispatch: Dispatch;
+  eventsLoading?: boolean;
 }
+type TriggerPresence =
+  | 'not-missing'
+  | { type: 'timeout'; timeoutHandle: number }
+  | 'error-not-found';
 
 const STContainer: React.FC<Props> = ({
   triggerName,
@@ -29,7 +34,11 @@ const STContainer: React.FC<Props> = ({
   allTriggers,
   tabName,
   dispatch,
+  eventsLoading,
 }) => {
+  const [triggerPresence, setTriggerPresence] = useState<TriggerPresence>(
+    'not-missing'
+  );
   React.useEffect(() => {
     dispatch(setCurrentTrigger(triggerName));
     return () => {
@@ -39,8 +48,28 @@ const STContainer: React.FC<Props> = ({
 
   const currentTrigger = findScheduledTrigger(allTriggers, triggerName);
 
+  // TODO: This is a hack to deal with renaming cron triggers and stale props
+  // https://react-redux.js.org/api/hooks#stale-props-and-zombie-children
+  // Needs remodelling the state and careful handling of cron triggers rename
+  useEffect(() => {
+    if (currentTrigger) {
+      if (
+        typeof triggerPresence === 'object' &&
+        triggerPresence.type === 'timeout'
+      ) {
+        window.clearTimeout(triggerPresence.timeoutHandle);
+        setTriggerPresence('not-missing');
+      }
+    } else if (triggerPresence === 'not-missing') {
+      const timeoutHandle = window.setTimeout(() => {
+        setTriggerPresence('error-not-found');
+      }, 1200 /* arbitrary value */);
+      setTriggerPresence({ type: 'timeout', timeoutHandle });
+    }
+  }, [currentTrigger]);
+
   if (!currentTrigger) {
-    dispatch(setCurrentTrigger(''));
+    if (eventsLoading || triggerPresence !== 'error-not-found') return null;
     throw new NotFoundError();
   }
 

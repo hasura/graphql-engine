@@ -2,6 +2,7 @@
 module Hasura.Server.Init.Config where
 
 import qualified Data.Aeson                       as J
+import qualified Data.Aeson.Casing                as J
 import qualified Data.Aeson.TH                    as J
 import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
@@ -9,6 +10,7 @@ import qualified Data.Text                        as T
 import qualified Database.PG.Query                as Q
 
 import           Data.Char                        (toLower)
+import           Data.Time
 import           Network.Wai.Handler.Warp         (HostPreference)
 
 import qualified Hasura.Cache                     as Cache
@@ -26,6 +28,9 @@ data RawConnParams
   { rcpStripes      :: !(Maybe Int)
   , rcpConns        :: !(Maybe Int)
   , rcpIdleTime     :: !(Maybe Int)
+  , rcpConnLifetime :: !(Maybe NominalDiffTime)
+  -- ^ Time from connection creation after which to destroy a connection and
+  -- choose a different/new one.
   , rcpAllowPrepare :: !(Maybe Bool)
   } deriving (Show, Eq)
 
@@ -56,6 +61,9 @@ data RawServeOptions impl
   , rsoPlanCacheSize       :: !(Maybe Cache.CacheSize)
   , rsoDevMode             :: !Bool
   , rsoAdminInternalErrors :: !(Maybe Bool)
+  , rsoEventsHttpPoolSize  :: !(Maybe Int)
+  , rsoEventsFetchInterval :: !(Maybe Milliseconds)
+  , rsoLogHeadersFromEnv   :: !Bool
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -95,6 +103,9 @@ data ServeOptions impl
   , soLogLevel                     :: !L.LogLevel
   , soPlanCacheOptions             :: !E.PlanCacheOptions
   , soResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig
+  , soEventsHttpPoolSize           :: !(Maybe Int)
+  , soEventsFetchInterval          :: !(Maybe Milliseconds)
+  , soLogHeadersFromEnv            :: !Bool
   }
 
 data DowngradeOptions
@@ -131,10 +142,13 @@ data API
   | DEVELOPER
   | CONFIG
   deriving (Show, Eq, Read, Generic)
+  
 $(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
   ''API)
 
 instance Hashable API
+
+$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True} ''RawConnInfo)
 
 type HGECommand impl = HGECommandG (ServeOptions impl)
 type RawHGECommand impl = HGECommandG (RawServeOptions impl)
@@ -202,6 +216,11 @@ readJson = J.eitherDecodeStrict . txtToBs . T.pack
 class FromEnv a where
   fromEnv :: String -> Either String a
 
+-- Deserialize from seconds, in the usual way
+instance FromEnv NominalDiffTime where
+  fromEnv s = maybe (Left "could not parse as a Double") (Right . realToFrac) $
+                (readMaybe s :: Maybe Double)
+
 instance FromEnv String where
   fromEnv = Right
 
@@ -242,6 +261,9 @@ instance FromEnv LQ.BatchSize where
 
 instance FromEnv LQ.RefetchInterval where
   fromEnv = fmap (LQ.RefetchInterval . milliseconds . fromInteger) . readEither
+
+instance FromEnv Milliseconds where
+  fromEnv = fmap fromInteger . readEither
 
 instance FromEnv JWTConfig where
   fromEnv = readJson

@@ -9,7 +9,7 @@ Postgres requirements
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 .. _postgres_version_support:
@@ -36,13 +36,13 @@ The Hasura GraphQL engine needs access to your Postgres database with the follow
 
 - (required) Read & write access on 2 schemas: ``hdb_catalog`` and ``hdb_views``.
 - (required) Read access to the ``information_schema`` and ``pg_catalog`` schemas, to query for list of tables.
+  Note that these permissions are usually available by default to all postgres users via `PUBLIC <https://www.postgresql.org/docs/current/sql-grant.html>`__ grant.
 - (required) Read access to the schemas (public or otherwise) if you only want to support queries.
 - (optional) Write access to the schemas if you want to support mutations as well.
 - (optional) To create tables and views via the Hasura console (the admin UI) you'll need the privilege to create
   tables/views. This might not be required when you're working with an existing database.
 
-
-Here's a sample SQL block that you can run on your database to create the right credentials:
+Here's a sample SQL block that you can run on your database (as a **superuser**) to create the right credentials for a sample Hasura user:
 
 .. code-block:: sql
 
@@ -66,12 +66,13 @@ Here's a sample SQL block that you can run on your database to create the right 
     ALTER SCHEMA hdb_views OWNER TO hasurauser;
 
     -- grant select permissions on information_schema and pg_catalog. This is
-    -- required for hasura to query list of available tables
+    -- required for hasura to query the list of available tables.
+    -- NOTE: these permissions are usually available by default to all users via PUBLIC grant
     GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO hasurauser;
     GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO hasurauser;
 
-    -- Below permissions are optional. This is dependent on what access to your
-    -- tables/schemas - you want give to hasura. If you want expose the public
+    -- The below permissions are optional. This is dependent on what access to your
+    -- tables/schemas you want give to hasura. If you want expose the public
     -- schema for GraphQL query then give permissions on public schema to the
     -- hasura user.
     -- Be careful to use these in your production db. Consult the postgres manual or
@@ -85,10 +86,48 @@ Here's a sample SQL block that you can run on your database to create the right 
     GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO hasurauser;
     GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO hasurauser;
 
-    -- Similarly add this for other schemas, if you have any.
+    -- Similarly add these for other schemas as well, if you have any.
     -- GRANT USAGE ON SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
+    -- GRANT ALL ON ALL FUNCTIONS IN SCHEMA <schema-name> TO hasurauser;
+
+Notes for managed databases (AWS RDS, GCP Cloud SQL, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Hasura works out of the box with the default superuser, usually called "postgres", created by most managed cloud database providers.
+
+On some cloud providers, like **Google Cloud SQL**, if you are creating a new user and giving the :ref:`above <postgres_permissions>` privileges, 
+then you may notice that the following commands may throw warnings/errors:
+
+.. code-block:: sql
+
+   postgres=> ALTER SCHEMA hdb_catalog OWNER TO hasurauser;
+   ERROR:  must be member of role "hasurauser"
+
+This happens because the superuser created by the cloud provider sometimes has different permissions. To fix this, you can run the following command first:
+
+.. code-block:: sql
+
+   -- assuming "postgres" is the superuser that you are running the commands with.
+   postgres=> GRANT hasurauser to postgres;
+   GRANT
+   postgres=> ALTER SCHEMA hdb_catalog OWNER TO hasurauser;
+
+You may also notice the following commands throw warnings/errors:
+
+.. code-block:: sql
+
+  postgres=> GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO hasurauser;
+  WARNING:  no privileges were granted for "sql_packages"
+  WARNING:  no privileges were granted for "sql_features"
+  WARNING:  no privileges were granted for "sql_implementation_info"
+  ERROR:  permission denied for table sql_parts
+
+  postgres=> GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO hasurauser;
+  ERROR:  permission denied for table pg_statistic
+
+You can **ignore** these warnings/errors or skip granting these permission as usually all users have relevant access to ``information_schema`` and ``pg_catalog`` schemas by default (see keyword `PUBLIC <https://www.postgresql.org/docs/current/sql-grant.html>`_).
 
 **pgcrypto** in PG search path
 ------------------------------

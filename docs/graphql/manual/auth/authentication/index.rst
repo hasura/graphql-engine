@@ -61,4 +61,4 @@ Here's how a GraphQL query is processed in JWT mode:
 
   Using webhooks <webhook>
   Using JWT <jwt>
-  Unauthenticated access <unauthenticated-access>
+  Unauthenticated / Public access <unauthenticated-access>

@@ -46,7 +46,7 @@ Auto-generated query field schema
       id: Int!
     ): author
 
-See the :ref:`Query API reference <graphql_api_query>` for the full specifications
+See the :ref:`Query API reference <graphql_api_query>` for the full specifications.
 
 .. note::
 

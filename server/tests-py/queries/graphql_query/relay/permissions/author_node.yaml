@@ -1,5 +1,5 @@
 description: Query author node with id belongs to same user id
-url: /v1/relay
+url: /v1beta1/relay
 status: 200
 headers:
   X-Hasura-Role: user

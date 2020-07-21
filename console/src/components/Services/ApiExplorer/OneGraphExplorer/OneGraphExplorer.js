@@ -17,6 +17,8 @@ import { getHeadersAsJSON } from '../utils';
 
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
+import { showErrorNotification } from '../../Common/Notification';
+import requestAction from '../../../../utils/requestAction';
 
 class OneGraphExplorer extends React.Component {
   state = {
@@ -52,13 +54,15 @@ class OneGraphExplorer extends React.Component {
   }
 
   setPersistedQuery() {
-    const { urlParams, numberOfTables } = this.props;
+    const { urlParams, numberOfTables, dispatch } = this.props;
 
     const queryFile = urlParams ? urlParams.query_file : null;
 
     if (queryFile) {
-      getRemoteQueries(queryFile, remoteQuery =>
-        this.setState({ query: remoteQuery })
+      getRemoteQueries(
+        queryFile,
+        remoteQuery => this.setState({ query: remoteQuery }),
+        dispatch
       );
     } else if (numberOfTables === 0) {
       const NO_TABLES_MESSAGE = `# Looks like you do not have any tables.
@@ -95,15 +99,30 @@ class OneGraphExplorer extends React.Component {
     const headers = JSON.parse(JSON.stringify(headers_));
     dispatch(setLoading(true));
     this.setState({ schema: null });
-    fetch(endpoint, {
-      method: 'POST',
-      headers: getHeadersAsJSON(headers || []),
-      body: JSON.stringify({
-        query: getIntrospectionQuery(),
-      }),
-    })
-      .then(response => response.json())
+    dispatch(
+      requestAction(endpoint, {
+        method: 'POST',
+        headers: getHeadersAsJSON(headers || []),
+        body: JSON.stringify({
+          query: getIntrospectionQuery(),
+        }),
+      })
+    )
       .then(result => {
+        if (result.errors && result.errors.length > 0) {
+          const errorMessage = result.errors[0].message;
+          dispatch(
+            showErrorNotification(
+              'Schema introspection query failed',
+              errorMessage
+            )
+          );
+          this.setState({
+            schema: null,
+            previousIntrospectionHeaders: headers,
+          });
+          return;
+        }
         this.setState({
           schema: buildClientSchema(result.data),
           previousIntrospectionHeaders: headers,
@@ -176,19 +195,6 @@ class OneGraphExplorer extends React.Component {
 
     const { renderGraphiql } = this.props;
 
-    const explorer = (
-      <GraphiQLExplorer
-        schema={schema}
-        query={query}
-        onEdit={this.editQuery}
-        explorerIsOpen={explorerOpen}
-        onToggleExplorer={this.handleToggle}
-        getDefaultScalarArgValue={getDefaultScalarArgValue}
-        makeDefaultArg={makeDefaultArg}
-        width={explorerWidth}
-      />
-    );
-
     let explorerSeparator;
     if (explorerOpen) {
       explorerSeparator = (
@@ -215,7 +221,16 @@ class OneGraphExplorer extends React.Component {
         onMouseUp={this.handleExplorerResizeStop}
       >
         <div className="gqlexplorer">
-          {explorer}
+          <GraphiQLExplorer
+            schema={schema}
+            query={query}
+            onEdit={this.editQuery}
+            explorerIsOpen={explorerOpen}
+            onToggleExplorer={this.handleToggle}
+            getDefaultScalarArgValue={getDefaultScalarArgValue}
+            makeDefaultArg={makeDefaultArg}
+            width={explorerWidth}
+          />
           {explorerSeparator}
         </div>
         {graphiql}

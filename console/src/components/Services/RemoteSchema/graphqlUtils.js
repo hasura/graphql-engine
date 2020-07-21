@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import endpoints from '../../../Endpoints';
 import { getRemoteSchemaIntrospectionQuery } from '../../Common/utils/v1QueryUtils';
 import { buildClientSchema, isWrappingType, isObjectType } from 'graphql';
+import requestAction from '../../../utils/requestAction';
 
 // local cache where introspection schema is cached
 let introspectionSchemaCache = {};
@@ -14,7 +15,11 @@ export const clearIntrospectionSchemaCache = remoteSchemaName => {
 };
 
 // custom hook for introspecting remote schema
-export const useIntrospectionSchemaRemote = (remoteSchemaName, headers) => {
+export const useIntrospectionSchemaRemote = (
+  remoteSchemaName,
+  headers,
+  dispatch
+) => {
   const [schema, setSchema] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,14 +38,24 @@ export const useIntrospectionSchemaRemote = (remoteSchemaName, headers) => {
     // perform introspection
     setLoading(true);
     setError(null);
-    fetch(endpoints.query, {
-      method: 'POST',
-      headers: {
-        ...headers,
-      },
-      body: JSON.stringify(getRemoteSchemaIntrospectionQuery(remoteSchemaName)),
-    })
-      .then(r => r.json())
+    dispatch(
+      requestAction(
+        endpoints.query,
+        {
+          method: 'POST',
+          headers: {
+            ...headers,
+          },
+          body: JSON.stringify(
+            getRemoteSchemaIntrospectionQuery(remoteSchemaName)
+          ),
+        },
+        undefined,
+        undefined,
+        true,
+        true
+      )
+    )
       .then(response => {
         const clientSchema = buildClientSchema(response.data);
         setSchema(clientSchema);
@@ -54,7 +69,7 @@ export const useIntrospectionSchemaRemote = (remoteSchemaName, headers) => {
       });
   };
 
-  useEffect(introspectSchema, [remoteSchemaName]);
+  useEffect(introspectSchema, [remoteSchemaName, dispatch]);
 
   return {
     schema,

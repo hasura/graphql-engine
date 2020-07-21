@@ -18,6 +18,7 @@ import qualified Language.Haskell.TH.Syntax       as TH
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Data.FileEmbed                   (embedStringFile)
+import           Data.Time                        (NominalDiffTime)
 import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
 
@@ -164,25 +165,31 @@ mkServeOptions rso = do
            | adminInternalErrors -> InternalErrorsAdminOnly
            | otherwise           -> InternalErrorsDisabled
 
+  eventsHttpPoolSize <- withEnv (rsoEventsHttpPoolSize rso) (fst eventsHttpPoolSizeEnv)
+  eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
+  logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
-                        internalErrorsConfig
+                        internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
+                        logHeadersFromEnv
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
 #else
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
 #endif
-    mkConnParams (RawConnParams s c i p) = do
+    mkConnParams (RawConnParams s c i cl p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
+      connLifetime <- withEnv cl (fst pgConnLifetimeEnv)
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
-      return $ Q.ConnParams stripes conns iTime allowPrepare
+      return $ Q.ConnParams stripes conns iTime allowPrepare connLifetime
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
@@ -215,7 +222,6 @@ mkServeOptions rso = do
       mxRefetchIntM <- withEnv (rsoMxRefetchInt rso) $ fst mxRefetchDelayEnv
       mxBatchSizeM <- withEnv (rsoMxBatchSize rso) $ fst mxBatchSizeEnv
       return $ LQ.mkLiveQueriesOptions mxBatchSizeM mxRefetchIntM
-
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -310,15 +316,25 @@ serveCmdFooter =
       , adminInternalErrorsEnv
       ]
 
-    eventEnvs =
-      [ ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-        , "Max event threads"
-        )
-      , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Interval in milliseconds to sleep before trying to fetch events again after a "
-          <> "fetch returned no events from postgres."
-        )
-      ]
+    eventEnvs = [ eventsHttpPoolSizeEnv, eventsFetchIntervalEnv ]
+
+eventsHttpPoolSizeEnv :: (String, String)
+eventsHttpPoolSizeEnv = 
+  ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+  , "Max event threads"
+  )
+
+eventsFetchIntervalEnv :: (String, String)
+eventsFetchIntervalEnv =
+  ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+  , "Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres."
+  )
+
+logHeadersFromEnvEnv :: (String, String)
+logHeadersFromEnvEnv =
+  ( "HASURA_GRAPHQL_LOG_HEADERS_FROM_ENV"
+  , "Log headers sent instead of logging referenced environment variables."
+  )
 
 retriesNumEnv :: (String, String)
 retriesNumEnv =
@@ -357,6 +373,13 @@ pgTimeoutEnv :: (String, String)
 pgTimeoutEnv =
   ( "HASURA_GRAPHQL_PG_TIMEOUT"
   , "Each connection's idle time before it is closed (default: 180 sec)"
+  )
+
+pgConnLifetimeEnv :: (String, String)
+pgConnLifetimeEnv =
+  ( "HASURA_GRAPHQL_PG_CONN_LIFETIME"
+  , "Time from connection creation after which the connection should be destroyed and a new one " 
+    <> "created. (default: none)"
   )
 
 pgUsePrepareEnv :: (String, String)
@@ -492,7 +515,7 @@ adminInternalErrorsEnv =
 parseRawConnInfo :: Parser RawConnInfo
 parseRawConnInfo =
   RawConnInfo <$> host <*> port <*> user <*> password
-              <*> dbUrl <*> dbName <*> pure Nothing
+              <*> dbUrl <*> dbName <*> options
               <*> retries
   where
     host = optional $
@@ -532,6 +555,14 @@ parseRawConnInfo =
                   metavar "<DBNAME>" <>
                   help "Database name to connect to"
                 )
+
+    options = optional $
+      strOption ( long "pg-connection-options" <>
+                  short 'o' <>
+                  metavar "<DATABASE-OPTIONS>" <>
+                  help "PostgreSQL options"
+                )
+
     retries = optional $
       option auto ( long "retries" <>
                     metavar "NO OF RETRIES" <>
@@ -566,7 +597,7 @@ parseTxIsolation = optional $
 
 parseConnParams :: Parser RawConnParams
 parseConnParams =
-  RawConnParams <$> stripes <*> conns <*> timeout <*> allowPrepare
+  RawConnParams <$> stripes <*> conns <*> idleTimeout <*> connLifetime <*> allowPrepare
   where
     stripes = optional $
       option auto
@@ -584,12 +615,20 @@ parseConnParams =
                help (snd pgConnsEnv)
             )
 
-    timeout = optional $
+    idleTimeout = optional $
       option auto
               ( long "timeout" <>
                 metavar "<SECONDS>" <>
                 help (snd pgTimeoutEnv)
               )
+
+    connLifetime = fmap (fmap (realToFrac :: Int -> NominalDiffTime)) $ optional $
+      option auto
+              ( long "conn-lifetime" <>
+                metavar "<SECONDS>" <>
+                help (snd pgConnLifetimeEnv)
+              )
+
     allowPrepare = optional $
       option (eitherReader parseStringAsBool)
               ( long "use-prepared-statements" <>
@@ -760,6 +799,28 @@ parseGraphqlAdminInternalErrors = optional $
            help (snd adminInternalErrorsEnv)
          )
 
+parseGraphqlEventsHttpPoolSize :: Parser (Maybe Int)
+parseGraphqlEventsHttpPoolSize = optional $
+  option (eitherReader fromEnv)
+  ( long "events-http-pool-size" <>
+    metavar (fst eventsHttpPoolSizeEnv)  <>
+    help (snd eventsHttpPoolSizeEnv)
+  )
+
+parseGraphqlEventsFetchInterval :: Parser (Maybe Milliseconds)
+parseGraphqlEventsFetchInterval = optional $
+  option (eitherReader readEither)
+  ( long "events-fetch-interval" <>
+    metavar (fst eventsFetchIntervalEnv)  <>
+    help (snd eventsFetchIntervalEnv)
+  )
+
+parseLogHeadersFromEnv :: Parser Bool
+parseLogHeadersFromEnv =
+  switch ( long "log-headers-from-env" <>
+           help (snd devModeEnv)
+         )
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
@@ -904,6 +965,9 @@ serveOptionsParser =
   <*> parsePlanCacheSize
   <*> parseGraphqlDevMode
   <*> parseGraphqlAdminInternalErrors
+  <*> parseGraphqlEventsHttpPoolSize
+  <*> parseGraphqlEventsFetchInterval
+  <*> parseLogHeadersFromEnv
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
