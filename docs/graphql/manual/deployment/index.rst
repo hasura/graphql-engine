@@ -46,7 +46,6 @@ to configure the Hasura GraphQL engine for your production environment:
 - :ref:`postgres_permissions`
 - :ref:`GraphQL engine server configuration <hge_flags>`
 
-
 Logs
 ----
 
