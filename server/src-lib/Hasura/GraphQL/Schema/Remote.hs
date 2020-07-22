@@ -43,7 +43,7 @@ buildRemoteParser (sdoc, query_root, mutation_root, subscription_root) info = do
       case lookupType sdoc rootName of
         Just (G.TypeDefinitionObject o) ->
           traverse makeFieldParser $ _otdFieldsDefinition o
-        _ -> throw400 RemoteSchemaError $ "Root type of unexpected type" -- TODO show rootName
+        _ -> throw400 Unexpected $ rootName <<> " has to be an object type"
 
 -- | 'remoteFieldFullSchema' takes the 'SchemaIntrospection' and a 'G.Name' and will
 --   return a 'SelectionSet' parser if the 'G.Name' is found and is a 'TypeDefinitionObject',
