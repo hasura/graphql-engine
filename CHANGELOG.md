@@ -4,7 +4,8 @@
 
 ### Bug fixes and improvements
 
-- server: mutations now store the tracing context so that distributed tracing can correlate mutations with the event triggers they invoke.
+- server: mutations now propagate the tracing context to any event triggers they invoke
+- console: update sidebar icons for different action and trigger types
 
 ## `v1.3.0`
 
