@@ -16,6 +16,8 @@ Action relationships
 Introduction
 ------------
 
+Action relationships allow you to join data across tables and actions. Once you create relationships between types from your database and types created from actions, you can then "join" them by running GraphQL queries.
+
 :ref:`Actions <actions>` are a way to extend Hasura’s schema with custom business logic using custom queries and mutations. The resolvers for these custom fields are written in REST endpoints. They are especially useful for setting up serverless functions as resolvers.
 
 Create an action relationship
