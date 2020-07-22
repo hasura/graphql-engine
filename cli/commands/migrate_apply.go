@@ -118,7 +118,7 @@ type MigrateApplyOptions struct {
 }
 
 func (o *MigrateApplyOptions) Run() error {
-	migrationType, step, err := getMigrationTypeAndStep(o.UpMigration, o.DownMigration, o.VersionMigration, o.MigrationType, o.GotoVersion, o.SkipExecution)
+	migrationType, step, err := GetMigrationTypeAndStep(o.UpMigration, o.DownMigration, o.VersionMigration, o.MigrationType, o.GotoVersion, o.SkipExecution)
 	if err != nil {
 		return errors.Wrap(err, "error validating flags")
 	}
@@ -133,9 +133,9 @@ func (o *MigrateApplyOptions) Run() error {
 	return ExecuteMigration(migrationType, migrateDrv, step)
 }
 
-// Only one flag out of up, down and version can be set at a time. This function
-// checks whether that is the case and returns an error is not
-func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migrationType, gotoVersion string, skipExecution bool) (string, int64, error) {
+// GetMigrationTypeAndStep ensures that only one flag out of up, down and version
+// can be set at a time.
+func GetMigrationTypeAndStep(upMigration, downMigration, versionMigration, migrationType, gotoVersion string, skipExecution bool) (string, int64, error) {
 	var flagCount = 0
 	var stepString = "all"
 	var migrationName = "up"
