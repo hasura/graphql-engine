@@ -11,18 +11,19 @@ CREATE OR REPLACE FUNCTION hdb_catalog.insert_event_log(schema_name text, table_
     server_version_num := current_setting('server_version_num');
     IF server_version_num >= 90600 THEN
       session_variables := current_setting('hasura.user', 't');
+      trace_context := current_setting('hasura.tracecontext', 't');
     ELSE
       BEGIN
         session_variables := current_setting('hasura.user');
       EXCEPTION WHEN OTHERS THEN
                   session_variables := NULL;
       END;
+      BEGIN
+        trace_context := current_setting('hasura.tracecontext');
+      EXCEPTION WHEN OTHERS THEN
+        trace_context := NULL;
+      END;
     END IF;
-    BEGIN
-      trace_context := current_setting('hasura.tracecontext');
-    EXCEPTION WHEN OTHERS THEN
-      trace_context := NULL;
-    END;
     payload := json_build_object(
       'op', op,
       'data', row_data,

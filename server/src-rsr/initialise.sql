@@ -610,7 +610,7 @@ CREATE OR REPLACE FUNCTION
     server_version_num := current_setting('server_version_num');
     IF server_version_num >= 90600 THEN
       session_variables := current_setting('hasura.user', 't');
-      trace_context := current_setting('hasura.tracecontext');
+      trace_context := current_setting('hasura.tracecontext', 't');
     ELSE
       BEGIN
         session_variables := current_setting('hasura.user');
