@@ -335,7 +335,7 @@ export const downloadObjectAsCsvFile = (
           i =>
             `"${
               typeof i === 'string' && isJsonString(i)
-                ? i.replace(/"/g, `'`)
+                ? i.replace(/"/g, `'`) // in csv, a cell with double quotes and comma will result is bad formating
                 : i
             }"`
         )
