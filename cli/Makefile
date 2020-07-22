@@ -61,3 +61,6 @@ all-in-docker:
 	-v $(PARENT_DIR):/go/src/github.com/hasura/graphql-engine \
 	hasura-graphql-cli-builder \
 	make all
+
+patch-release-file:
+	./scripts/patch-releases.sh create-patch-release-file

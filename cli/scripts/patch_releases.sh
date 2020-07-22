@@ -19,18 +19,48 @@ create_patch_release_file() {
   PATCH_RELEASE_FILENAME=${LATEST_TAG}+cli.${PATCH_NUMBER}
 
   # create patch release file with template
-  cp ${ROOT}/cli/scripts/patch-release-template.md ${ROOT}/cli/patch_releases/${PATCH_RELEASE_FILENAME}
+  cp ${ROOT}/cli/scripts/patch-release-template.md ${ROOT}/cli/patch_releases/${PATCH_RELEASE_FILENAME}.md
 
   # TODO: append asset urls to file
 }
 
 is_patch_release() {
-  # expected to run on CI
-  PR_NUMBER="5432"
-  # check if the number of files is 
-  NO_OF_FILES=$(curl -s https://api.github.com/repos/hasura/graphql-engine/pulls/5432/files | jq '. | length')
-  FILENAME=$(curl -s https://api.github.com/repos/hasura/graphql-engine/pulls/5432/files | jq '.[].filename')
-  echo "FILENAME: ${FILENAME}"
+  if [ -n "${CIRCLECI}" ]; then
+    echo "getting PR number from circle CI"
+    PR_NUMBER=${CIRCLE_PR_NUMBER}
+  else
+    # get PR number as an argument
+    PR_NUMBER=$1
+  fi
+  
+  if [ ! -n "${PR_NUMBER}" ]; then
+    echo "cannot determine PR number :( exiting"
+    exit 1
+  fi
+
+  SEMVER_REGEX='((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)'
+  FILE_REGEX="^cli\/patch_releases\/v${SEMVER_REGEX}\.md$"
+
+  # check if the number of files is (using github API)
+  NO_OF_FILES=$(curl -s https://api.github.com/repos/hasura/graphql-engine/pulls/${PR_NUMBER}/files | jq '. | length')
+  PR_JSON=$(curl -s https://api.github.com/repos/hasura/graphql-engine/pulls/${PR_NUMBER}/files | jq )
+
+  if [[ ! $NO_OF_FILES -eq 1 ]] 
+  then
+    echo "diff has more than one file change, this is not expected. exiting"
+    echo $PR_JSON | jq 
+    exit 1
+  fi
+
+  FILENAME=$(echo ${PR_JSON} | '.[].filename')
+  
+  # if a file inside cli/patch_releases/<semver>.md changed exit with success
+  # grep options: -o means output the match, -P means use Perl regex
+  if (echo $FILENAME | grep -oP ${FILE_REGEX}) then
+    exit 0
+  fi
+  
+  exit 1
 }
 
 
@@ -44,6 +74,6 @@ case $1 in
     create_patch_release_file
     ;;
   "is_patch_release")
-    is_patch_release
+    is_patch_release $2
     ;;
 esac
