@@ -29,13 +29,6 @@ a.reference em { font-style: normal; }
 #sidebar a { font-size: 0.9em; }
 #sidebar ul ul { margin-top:0; margin-bottom:0; }
 #sidebar li { margin-top: 0.2em; margin-bottom: 0.2em; }
-/***
-#sidebar h3, #sidebar h4 { color: white; font-size: 125%; }
-#sidebar a { color: white; }
-***/
-
-/*** nav ***/
-/* div.nav { margin: 0; font-size: 11px; text-align: right; color: #487858;} */
 
 /*** content ***/
 
@@ -72,34 +65,6 @@ table.docutils thead th { border-bottom:2px solid #dfdfdf; text-align:left; font
 table.docutils thead th p { margin: 0; padding: 0; }
 table.docutils { border-collapse:collapse; border: 1px solid #CFE3DC;}
 
-/*** code blocks
-.literal { color:#234f32; white-space:nowrap; }
-dt > tt.literal { white-space: normal; }
-#sidebar .literal { color:white; background:transparent; font-size:11px; }
-h4 .literal { color: #234f32; font-size: 13px; }
-pre { font-size:small; background:#E0FFB8; border:1px solid #94da3a; border-width:1px 0; margin: 1em 0; padding: .3em .4em; overflow: hidden; line-height: 1.3em; white-space: pre-wrap;}
-dt .literal, table .literal { background:none; }
-#bd a.reference { text-decoration: none; }
-#bd a.reference tt.literal { border-bottom: 1px #234f32 dotted; }
-div.snippet-filename { color: white; background-color: #234F32; margin: 0; padding: 2px 5px; width: 100%; font-family: monospace; font-size: small; line-height: 1.3em; }
-div.snippet-filename + div.highlight > pre { margin-top: 0; }
-div.snippet-filename + pre { margin-top: 0; }
-*/
-
-/* Restore colors of pygments hyperlinked code */
-
-
-/*** notes & admonitions ***/
-/*
-.note, .admonition { padding:.8em 1em .8em; margin: 1em 0; border:1px solid #94da3a; }
-.admonition-title { font-weight:bold; margin-top:0 !important; margin-bottom:0 !important;}
-.admonition .last { margin-bottom:0 !important; }
-.note, .admonition { padding-left:65px; background:url(docicons-note.png) .8em .8em no-repeat;}
-div.admonition-philosophy { padding-left:65px; background:url(docicons-philosophy.png) .8em .8em no-repeat;}
-div.admonition-behind-the-scenes { padding-left:65px; background:url(docicons-behindscenes.png) .8em .8em no-repeat;}
-.admonition.warning { background:url(docicons-warning.png) .8em .8em no-repeat; border:1px solid #ffc83c;}
-*/
-
 /*** versionadded/changes ***/
  div.deprecated { color:#555; }
 
@@ -107,13 +72,7 @@ div.admonition-behind-the-scenes { padding-left:65px; background:url(docicons-be
 a.headerlink { color: #c60f0f; font-size: 0.8em; padding: 0 4px 0 4px; text-decoration: none; visibility: hidden; }
 h1:hover > a.headerlink, h2:hover > a.headerlink, h3:hover > a.headerlink, h4:hover > a.headerlink, h5:hover > a.headerlink, h6:hover > a.headerlink, dt:hover > a.headerlink { visibility: visible; }
 
-/*** index ***/
-
 /*** page-specific overrides ***/
 div#contents ul { margin-bottom: 0;}
 div#contents ul li { margin-bottom: 0;}
 div#contents ul ul li { margin-top: 0.3em;}
-
-/*** IE hacks
-* pre { width: 100%; }
-**/
