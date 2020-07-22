@@ -52,7 +52,7 @@ class ComponentErrorBoundary extends Component<Props, ErrorState> {
                   src={errorImageSrc}
                   className="img-responsive"
                   title={this.props.title}
-                  alt=""
+                  alt="hasura-logo"
                 />
               </div>
             </div>
