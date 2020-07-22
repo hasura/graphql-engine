@@ -101,6 +101,7 @@ convertMutationRootField userInfo manager reqHeaders stringifyNum = \case
 convertMutationSelectionSet
   :: (HasVersion, MonadIO m, MonadError QErr m)
   => GQLContext
+  -> SQLGenCtx
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
@@ -108,7 +109,7 @@ convertMutationSelectionSet
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> m (ExecutionPlan (LazyRespTx, HTTP.ResponseHeaders) RemoteCall (G.Name, J.Value))
-convertMutationSelectionSet gqlContext userInfo manager reqHeaders fields varDefs varValsM = do
+convertMutationSelectionSet gqlContext sqlGenCtx userInfo manager reqHeaders fields varDefs varValsM = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"
   -- Parse the GraphQL query into the RQL AST
@@ -118,8 +119,7 @@ convertMutationSelectionSet gqlContext userInfo manager reqHeaders fields varDef
     >>= (mutationParser >>> (`onLeft` reportParseErrors))
 
   -- Transform the RQL AST into a prepared SQL query
-  -- TODO pass the correct stringifyNum somewhere rather than True
-  txs <- for unpreparedQueries $ convertMutationRootField userInfo manager reqHeaders True
+  txs <- for unpreparedQueries $ convertMutationRootField userInfo manager reqHeaders (stringifyNum sqlGenCtx)
   let txList = OMap.toList txs
   case (mapMaybe takeTx txList, mapMaybe takeRemote txList) of
     (dbPlans, []) -> do
