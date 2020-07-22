@@ -124,9 +124,9 @@ func ApplyMigrationAPI(c *gin.Context) {
 			return
 		}
 
-		// there is some metadata part within the NewMigrate method, I'd have to perform those actions here
-
 		t.SkipExecution = skipExecution
+
+		// there is some metadata part within the NewMigrate method, I'd have to perform those actions here
 
 		err = executeMigration(migrateType, t, step)
 
