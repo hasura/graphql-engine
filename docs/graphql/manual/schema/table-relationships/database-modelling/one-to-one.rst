@@ -143,8 +143,57 @@ We can now:
         }
       }
 
+Insert using relationships
+--------------------------
+
+We can now:
+
+- insert ``passport_infos`` with their ``owner``:
+
+  .. graphiql::
+    :view_only:
+    :query:
+        mutation insertPwInfoWithOwner {
+          insert_passport_info(objects: [
+            {
+              passport_number: "X98978765",
+              owner: {
+                data: {
+                  name: "Kelly"
+                }
+              }
+            }
+          ]) {
+            returning {
+              owner_id
+              passport_number
+              owner {
+                id
+                name
+              }
+            }
+          }
+        }
+    :response:
+      {
+        "data": {
+          "insert_passport_info": {
+            "returning": [
+              {
+                "owner_id": 2,
+                "passport_number": "X98978765",
+                "owner": {
+                  "id": 2,
+                  "name": "Kelly"
+                }
+              }
+            ]
+          }
+        }
+      }
+
 Current limitations with nested mutations
------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 With one-to-one relationships, currently nested mutations will work only in one of the two directions.
 

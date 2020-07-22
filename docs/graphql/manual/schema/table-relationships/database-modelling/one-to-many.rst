@@ -152,3 +152,126 @@ We can now:
           ]
         }
       }
+
+Insert using relationships
+--------------------------
+
+- insert an ``author`` with their ``articles``:
+
+  .. graphiql::
+    :view_only:
+    :query:
+      mutation insertAuthorWithArticles {
+        insert_author(objects: 
+          {
+            name: "Jenny",
+            articles: {
+              data: [
+                {
+                  title: "Article 1"
+                },
+                {
+                  title: "Article 2"
+                }
+              ]
+            }
+          }) {
+          returning {
+            id
+            name
+            articles {
+              id
+              title
+              author_id
+            }
+          }
+        }
+      }
+    :response:
+      {
+        "data": {
+          "insert_author": {
+            "returning": [
+              {
+                "id": 4,
+                "name": "Jenny",
+                "articles": [
+                  {
+                    "id": 1,
+                    "title": "Article 1",
+                    "author_id": 4
+                  },
+                  {
+                    "id": 2,
+                    "title": "Article 2",
+                    "author_id": 4
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+
+- insert a list of ``articles`` with their ``author``:
+
+  .. graphiql::
+    :view_only:
+    :query:
+      mutation insertArticlesWithAuthor {
+        insert_article(objects: [
+          {
+            title: "Article 1",
+            author: {
+              data: {
+                name: "Kevin"
+              }
+            }
+          },
+          {
+            title: "Article 2",
+            author: {
+              data: {
+                name: "Kevin"
+              }
+            }
+          }
+        ]) {
+          returning {
+            id
+            title
+            author_id
+            author {
+              id
+              name
+            }
+          }
+        }
+      }
+    :response:
+      {
+        "data": {
+          "insert_article": {
+            "returning": [
+              {
+                "id": 3,
+                "title": "Article 1",
+                "author_id": 5,
+                "author": {
+                  "id": 5,
+                  "name": "Kevin"
+                }
+              },
+              {
+                "id": 4,
+                "title": "Article 2",
+                "author_id": 6,
+                "author": {
+                  "id": 6,
+                  "name": "Kevin"
+                }
+              }
+            ]
+          }
+        }
+      }

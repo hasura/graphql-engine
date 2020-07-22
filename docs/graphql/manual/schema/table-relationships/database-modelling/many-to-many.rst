@@ -398,3 +398,216 @@ We can now:
   without setting up a new relationship to the ``author`` table from the ``tag_articles_view`` view.
 
   In our opinion, the cons of this approach seem to outweigh the pros.
+
+Insert using relationships
+--------------------------
+
+We can now:
+
+- insert a list of ``articles`` with their ``tags``:
+
+  .. graphiql::
+    :view_only:
+    :query:
+      mutation insertArticlesWithTags {
+        insert_article(objects: [
+          {
+            title: "How to make fajitas",
+            article_tags: {
+              data: [
+                {
+                  tag: {
+                    data: {
+                      tag_value: "Recipes"
+                    }
+                  }
+                },
+                {
+                  tag: {
+                    data: {
+                      tag_value: "Cooking"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            title: "How to become a ballerina",
+            article_tags: {
+              data: [
+                {
+                  tag: {
+                    data: {
+                      tag_value: "Dancing"
+                    }
+                  }
+                },
+                {
+                  tag: {
+                    data: {
+                      tag_value: "Ballet"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]) {
+          returning {
+            title
+            article_tags {
+              tag {
+                tag_value
+              }
+            }
+          }
+        }
+      }
+    :response:
+      {
+        "data": {
+          "insert_article": {
+            "returning": [
+              {
+                "title": "How to make fajitas",
+                "article_tags": [
+                  {
+                    "tag": {
+                      "tag_value": "Recipes"
+                    }
+                  },
+                  {
+                    "tag": {
+                      "tag_value": "Cooking"
+                    }
+                  }
+                ]
+              },
+              {
+                "title": "How to become a ballerina",
+                "article_tags": [
+                  {
+                    "tag": {
+                      "tag_value": "Dancing"
+                    }
+                  },
+                  {
+                    "tag": {
+                      "tag_value": "Broadway"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+
+- insert a list of ``tags`` with their ``articles``:
+
+  .. graphiql::
+    :view_only:
+    :query:
+      mutation insertTagsWithArticles {
+        insert_tag(objects: [
+          {
+            tag_value: "Recipes",
+            article_tags: {
+              data: [
+                {
+                  article: {
+                    data: {
+                      title: "How to make fajitas"
+                    }
+                  }
+                },
+                {
+                  article: {
+                    data: {
+                      title: "Best breakfast recipes"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            tag_value: "Broadway",
+            article_tags: {
+              data: [
+                {
+                  article: {
+                    data: {
+                      title: "How to become a ballerina"
+                    }
+                  }
+                },
+                {
+                  article: {
+                    data: {
+                      title: "Top 10 Broadway shows"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]) {
+          returning {
+            id
+            tag_value
+            article_tags {
+              article {
+                id
+                title
+              }
+            }
+          }
+        }
+      }
+    :response:
+      {
+        "data": {
+          "insert_tag": {
+            "returning": [
+              {
+                "id": 8,
+                "tag_value": "Recipes",
+                "article_tags": [
+                  {
+                    "article": {
+                      "id": 9,
+                      "title": "How to make fajitas"
+                    }
+                  },
+                  {
+                    "article": {
+                      "id": 10,
+                      "title": "Best breakfast recipes"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": 9,
+                "tag_value": "Broadway",
+                "article_tags": [
+                  {
+                    "article": {
+                      "id": 11,
+                      "title": "How to become a ballerina"
+                    }
+                  },
+                  {
+                    "article": {
+                      "id": 12,
+                      "title": "Top 10 Broadway shows"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
