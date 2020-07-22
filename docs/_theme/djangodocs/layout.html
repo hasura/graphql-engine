@@ -65,14 +65,6 @@
             </div>
             <div class="navBlueBG">
               <ul class="navBarUL">
-                <!-- <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
-                  {%- if version == '1.0' %}
-                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.x</option>
-                  {%- else -%}
-                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.x</option>
-                  {% endif %}
-                </select> -->
-
                 <li>v1.x</li>
                 <li class='navListActive'>
                   <a href="/docs/">Docs</a>
@@ -196,7 +188,7 @@
           {% set pagenameSplit = pagename.split('/') %}
 
           {% block sidebarwrapper %}
-            <div class="yui-b mobile-hide" id="sidebar">
+            <div class="mobile-hide" id="sidebar">
               <div id='sidebar-close' class='mobile-only closeIcon'>
                 <img src="{{ pathto('_images/layout/close-icon.svg', 1) }}" alt="Close"/>
               </div>

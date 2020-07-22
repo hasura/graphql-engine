@@ -5,10 +5,6 @@ html {
   background-color: #f8f8f8 !important;
 }
 
-::-moz-selection { /* Code for Firefox */
-  background: #b2d7fe !important;
-}
-
 ::selection {
   background: #b2d7fe !important;
 }
@@ -137,12 +133,6 @@ p {
   display: inline-block;
   position: relative;
 }
-#error-for-mce-EMAIL {
-  position: absolute;
-  bottom: -18px;
-  left: 16px;
-  font-size: 12px !important;
-}
 .input-box input {
   margin: 0 0 !important;
   border-radius: 5px !important;
@@ -155,9 +145,9 @@ p {
   width: calc(100% - 32px) !important;
 }
 .input-box input:-webkit-autofill, .input-box input:-webkit-autofill {
-  -webkit-animation-name: autofill;
-  -webkit-animation-fill-mode: both;
-  -webkit-box-shadow: 0 0 0px 1000px white inset;
+  animation-name: autofill;
+  animation-fill-mode: both;
+  box-shadow: 0 0 0px 1000px white inset;
   background-color: transparent;
   font-size: 16px;
 }
@@ -165,7 +155,7 @@ p {
 .input-box input:-webkit-autofill:hover,
 .input-box input:-webkit-autofill:focus,
 .input-box input:-webkit-autofill:active  {
-  -webkit-box-shadow: 0 0 0 35px #1bd5c8 inset !important;
+  box-shadow: 0 0 0 35px #1bd5c8 inset !important;
   -webkit-text-fill-color: #001934 !important;
   font-size: 16px;
   caret-color: #001934;
@@ -273,8 +263,7 @@ p {
 }
 
 #docs-content .note,
-#docs-content .admonition,
-#docs-content .help-block {
+#docs-content .admonition {
   background: #f1f9ff;
   border: 1px solid #c9e0f0;
 }
@@ -291,15 +280,6 @@ p {
   border-radius: 3px;
 }
 
-#docs-content .figure {
-  width:  45%;
-  display:  inline-block;
-}
-
-#docs-content .figure img {
-  width:  100%;
-}
-
 #docs-content table caption {
   position: relative;
 }
@@ -310,9 +290,7 @@ p {
 
 /*** random overrides ***/
 
-.wy-plain-list-decimal ol,
-.rst-content .section ol ol,
-.rst-content ol.arabic ol,
+
 article ol ol {
   margin-bottom: 0;
 }
@@ -432,11 +410,6 @@ article ol ol {
 
 #nav_tree_icon {
   position: relative;
-}
-
-#nav_tree_icon .fa-bars {
-  font-size: 18px;
-  color: #1CD3C6;
 }
 #nav_tree_icon .docs-menu {
   font-weight: 600;
@@ -1149,22 +1122,11 @@ article ol ol {
  .navBarToggle:focus {
 	 outline: none;
 }
- .navWhiteBG .navBarToggle {
-	 border: 1px solid #001934 !important;
-}
- .navWhiteBG .navBarToggle .iconBar {
-	 background-color: #001934 !important;
-}
  .navBlueBG .navBarToggle {
 	 border: 1px solid #fff !important;
 }
  .navBlueBG .navBarToggle .iconBar {
 	 background-color: #fff !important;
-}
- .headerSticky {
-	 position: fixed;
-	 width: 100%;
-	 z-index: 100;
 }
  .headerWrapper {
 	 height: 60px;
@@ -1264,7 +1226,7 @@ article ol ol {
   padding-left: 0;
   margin: 2px 0 0;
 }
- .headerWrapper .navBlueBG .navBarUL li, .headerWrapper .navWhiteBG .navBarUL li {
+ .headerWrapper .navBlueBG .navBarUL li {
    font-size: 16px;
 	 list-style-type: none;
 	 display: inline-block;
@@ -1314,10 +1276,10 @@ article ol ol {
 .versionTxt select::-moz-focus-inner, .versionTxt select option::-moz-focus-inner {
   border: 0;
 }
- .headerWrapper .navBlueBG .navBarUL li a:hover, .headerWrapper .navWhiteBG .navBarUL li a:hover {
+ .headerWrapper .navBlueBG .navBarUL li a:hover {
 	 text-decoration: none;
 }
- .headerWrapper .navBlueBG .navBarUL li:last-child, .headerWrapper .navWhiteBG .navBarUL li:last-child {
+ .headerWrapper .navBlueBG .navBarUL li:last-child {
 	 padding: 0 0;
 	 margin-left: 0px;
 }
@@ -1332,24 +1294,11 @@ article ol ol {
 	 color: #fff;
 	 border-bottom: 2px solid #fff;
 }
- .headerWrapper .navWhiteBG .navBarUL li a {
-	 color: #6e6e6e;
-}
- .headerWrapper .navWhiteBG .navBarUL li a:hover {
-	 color: #505050;
-}
- .headerWrapper .navWhiteBG .navBarUL .navListActive a {
-	 color: #505050;
-	 border-bottom: 2px solid #505050;
-}
  @media (min-width: 768px) and (max-width: 1200px) {
    .versionTxt select {
      margin-right: 0;
      margin-left: 8px;
    }
-	 .headerSticky {
-		 position: static;
-	}
 	 .headerWrapper {
 		 position: relative;
 		 display: block;
@@ -1395,9 +1344,6 @@ article ol ol {
   .versionTxt select {
     margin-right: 0;
     margin-left: 8px;
-  }
-  .headerSticky {
-    position: static;
   }
   .headerWrapper {
     display: block;
