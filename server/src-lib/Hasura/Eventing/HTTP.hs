@@ -292,7 +292,7 @@ tryWebhook ::
   -> Value
   -> String
   -> m (HTTPResp a)
-tryWebhook headers timeout payload webhook = traceHttpRequest (T.pack webhook) do
+tryWebhook headers timeout payload webhook = do
   initReqE <- liftIO $ try $ HTTP.parseRequest webhook
   manager <- asks getter
   case initReqE of
@@ -305,7 +305,7 @@ tryWebhook headers timeout payload webhook = traceHttpRequest (T.pack webhook) d
               , HTTP.requestBody = HTTP.RequestBodyLBS (encode payload)
               , HTTP.responseTimeout = timeout
               }
-      pure $ SuspendedRequest req \req' -> do
+      tracedHttpRequest req \req' -> do
         eitherResp <- runHTTP manager req'
         onLeft eitherResp throwError
 
