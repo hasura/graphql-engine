@@ -6,6 +6,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: configure total header size limit via `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH` or `--max-total-header-length` (default: 100KB)
 
 ## `v1.3.0`
 

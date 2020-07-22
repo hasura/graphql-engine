@@ -168,13 +168,14 @@ mkServeOptions rso = do
   eventsHttpPoolSize <- withEnv (rsoEventsHttpPoolSize rso) (fst eventsHttpPoolSizeEnv)
   eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
   logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
+  maxTotalHeaderLength <- withEnv (rsoMaxTotalHeaderLength rso) (fst maxTotalHeaderLengthEnv)
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
-                        logHeadersFromEnv
+                        logHeadersFromEnv maxTotalHeaderLength
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -305,7 +306,7 @@ serveCmdFooter =
         ]
       ]
 
-    envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
+    envVarDoc = mkEnvVarDoc envVars
     envVars =
       [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv
       , pgStripesEnv, pgConnsEnv, pgTimeoutEnv, pgUsePrepareEnv, txIsoEnv
@@ -313,13 +314,12 @@ serveCmdFooter =
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, corsDisableEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
       , enableAllowlistEnv, enabledLogsEnv, logLevelEnv, devModeEnv
-      , adminInternalErrorsEnv
+      , adminInternalErrorsEnv, eventsHttpPoolSizeEnv, eventsFetchIntervalEnv
+      , maxTotalHeaderLengthEnv
       ]
 
-    eventEnvs = [ eventsHttpPoolSizeEnv, eventsFetchIntervalEnv ]
-
 eventsHttpPoolSizeEnv :: (String, String)
-eventsHttpPoolSizeEnv = 
+eventsHttpPoolSizeEnv =
   ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
   , "Max event threads"
   )
@@ -378,7 +378,7 @@ pgTimeoutEnv =
 pgConnLifetimeEnv :: (String, String)
 pgConnLifetimeEnv =
   ( "HASURA_GRAPHQL_PG_CONN_LIFETIME"
-  , "Time from connection creation after which the connection should be destroyed and a new one " 
+  , "Time from connection creation after which the connection should be destroyed and a new one "
     <> "created. (default: none)"
   )
 
@@ -510,6 +510,12 @@ adminInternalErrorsEnv :: (String, String)
 adminInternalErrorsEnv =
   ( "HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS"
   , "Enables including 'internal' information in an error response for requests made by an 'admin' (default: true)"
+  )
+
+maxTotalHeaderLengthEnv :: (String, String)
+maxTotalHeaderLengthEnv =
+  ( "HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH"
+  , "Max cumulative length of all headers in bytes (default: 100 * 1024)"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -818,8 +824,16 @@ parseGraphqlEventsFetchInterval = optional $
 parseLogHeadersFromEnv :: Parser Bool
 parseLogHeadersFromEnv =
   switch ( long "log-headers-from-env" <>
-           help (snd devModeEnv)
+           help (snd logHeadersFromEnvEnv)
          )
+
+parseMaxTotalHeaderLength :: Parser (Maybe Int)
+parseMaxTotalHeaderLength = optional $
+  option (eitherReader fromEnv)
+  ( long "max-total-header-length" <>
+    metavar (fst maxTotalHeaderLengthEnv)  <>
+    help (snd maxTotalHeaderLengthEnv)
+  )
 
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
@@ -968,6 +982,7 @@ serveOptionsParser =
   <*> parseGraphqlEventsHttpPoolSize
   <*> parseGraphqlEventsFetchInterval
   <*> parseLogHeadersFromEnv
+  <*> parseMaxTotalHeaderLength
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
