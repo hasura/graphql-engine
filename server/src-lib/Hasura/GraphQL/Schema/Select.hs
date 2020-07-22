@@ -751,7 +751,7 @@ tableAggregationFields table selectPermissions = do
       typenameRepr = (FieldName "__typename", RQL.AFExp $ G.unName selectName)
   numFields  <- mkFields numColumns
   compFields <- mkFields compColumns
-  -- TODO: this can be heavily simplified
+  -- TODO(PDV): this can be heavily simplified
   aggFields <- fmap concat $ sequenceA $ catMaybes
     [ -- count
       Just $ do

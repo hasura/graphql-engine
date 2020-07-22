@@ -609,7 +609,7 @@ onConnInit
   :: (HasVersion, MonadIO m, UserAuthentication m)
   => L.Logger L.Hasura -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
 onConnInit logger manager wsConn authMode connParamsM = do
-  -- TODO: what should be the behaviour of connection_init message when a
+  -- TODO(from master): what should be the behaviour of connection_init message when a
   -- connection is already iniatilized? Currently, we seem to be doing
   -- something arbitrary which isn't correct. Ideally, we should stick to
   -- this:
@@ -627,7 +627,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
         Left e  -> do
           let !initErr = CSInitError $ qeError e
           liftIO $ do
-            -- TODO disabled for now; printing odd errors: $assertNFHere initErr  -- so we don't write thunks to mutable vars
+            -- TODO(PDV) disabled for now; printing odd errors: $assertNFHere initErr  -- so we don't write thunks to mutable vars
             STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) initErr
 
           let connErr = ConnErrMsg $ qeError e
@@ -636,11 +636,11 @@ onConnInit logger manager wsConn authMode connParamsM = do
         Right (userInfo, expTimeM) -> do
           let !csInit =  CSInitialised $ WsClientState userInfo expTimeM paramHeaders ipAddress
           liftIO $ do
-            -- TODO disabled for now; printing odd errors: $assertNFHere csInit  -- so we don't write thunks to mutable vars
+            -- TODO(PDV) disabled for now; printing odd errors: $assertNFHere csInit  -- so we don't write thunks to mutable vars
             STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) csInit
 
           sendMsg wsConn SMConnAck
-          -- TODO: send it periodically? Why doesn't apollo's protocol use
+          -- TODO(from master): send it periodically? Why doesn't apollo's protocol use
           -- ping/pong frames of websocket spec?
           sendMsg wsConn SMConnKeepAlive
   where

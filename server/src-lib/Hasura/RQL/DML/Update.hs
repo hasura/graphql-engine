@@ -30,7 +30,7 @@ import qualified Database.PG.Query           as Q
 import qualified Hasura.SQL.DML              as S
 
 
--- FIXME: This function can be improved, because we use
+-- NOTE: This function can be improved, because we use
 -- the literal values defined below in the 'updateOperators'
 -- function in 'Hasura.GraphQL.Schema.Mutation'. It would
 -- be nice if we could avoid duplicating the string literal

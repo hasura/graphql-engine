@@ -337,7 +337,7 @@ traverseQueryResponseJSON rjm =
                   A.Bool val -> pure $  G.VBoolean val
                   A.String val -> pure $  G.VString G.ExternalValue val
                   A.Number val ->
-                    -- TODO this is too optimistic as it saved integers in scientific notation as integers
+                    -- TODO(PDV) this is too optimistic as it saved integers in scientific notation as integers
                     case floatingOrInteger val of
                       Right intVal -> pure $  G.VInt intVal
                       _            -> pure $  G.VFloat val

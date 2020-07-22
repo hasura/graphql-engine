@@ -581,7 +581,7 @@ instance MonadGQLExecutionCheck AppM where
   checkGQLExecution userInfo _ enableAL sc query = runExceptT $ do
     req <- toParsed query
 
-    -- TODO FIXME
+    -- TODO FIXME (PDV)
 
     -- The following check is currently done in Execute.hs.  This code is
     -- commented out in the PDV branch because in the PDV refactor we are so far

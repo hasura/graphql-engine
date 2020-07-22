@@ -227,7 +227,7 @@ data ScalarRepresentation a where
   SRInt :: ScalarRepresentation Int32
   SRFloat :: ScalarRepresentation Double
   SRString :: ScalarRepresentation Text
-  -- TODO should this have an "others" case?
+  -- TODO(PDV) should this have an "others" case?
   SRAny :: ScalarRepresentation A.Value
 
 scalar
@@ -567,7 +567,7 @@ selectionSetObject name description parsers implementsInterfaces = Parser
       when (null input) $
         parseError $ "missing selection set for " <>> name
 
-      -- TODO This probably accepts invalid queries, namely queries that use
+      -- TODO(PDV) This probably accepts invalid queries, namely queries that use
       -- type names that do not exist.
       fields <- collectFields (name:parsedInterfaceNames) input
       for fields \selectionField@Field{ _fName, _fAlias } -> if
@@ -609,7 +609,7 @@ selectionSetInterface name description fields objectImplementations implementsIn
   { pType = Nullable $ TNamed $ mkDefinition name description $
       TIInterface $ InterfaceInfo (map fDefinition fields) interfaces objects
   , pParser = \input -> for objectImplementations (($ input) . pParser)
-  -- TODO: This is somewhat suboptimal, since it parses a query against any
+  -- TODO(PDV): This is somewhat suboptimal, since it parses a query against any
   -- possible object implementing this.  But in our intended use case (Relay),
   -- based on a field argument, we can decide which object we are about to
   -- retrieve.  So this implementation could save some work by only running that

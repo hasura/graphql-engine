@@ -106,7 +106,7 @@ objRelP2Setup qt foreignKeys (RelDef rn ru _) = case ru of
           -- neither the using_col nor the constraint name will help.
           , SchemaDependency (SOTable foreignTable) DRRemoteTable
           ]
-    -- TODO: this is too optimistic. Some object relationships are nullable, but
+    -- TODO(PDV?): this is too optimistic. Some object relationships are nullable, but
     -- we are marking some as non-nullable here.  This should really be done by
     -- checking nullability in the SQL schema.
     pure (RelInfo rn ObjRel colMap foreignTable False False, dependencies)

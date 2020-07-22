@@ -24,7 +24,7 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
--- TODO move code around so that we don't import an internal module here
+-- TODO(PDV) move code around so that we don't import an internal module here
 import           Hasura.RQL.DML.Internal
 import           Hasura.Session
 
@@ -86,7 +86,7 @@ tableUpdateColumnsEnum table updatePermissions = do
     define name =
       P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
 
--- TODO deduplicate with @askPermInfo'@?
+-- TODO(PDV) deduplicate with @askPermInfo'@?
 tablePermissions
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
@@ -122,7 +122,7 @@ tableSelectFields
   -> SelPermInfo
   -> m [FieldInfo]
 tableSelectFields table permissions = do
-  -- TODO: memoize this?
+  -- TODO(PDV): memoize this?
   tableFields <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   filterM canBeSelected $ Map.elems tableFields
   where
@@ -167,12 +167,12 @@ tableUpdateColumns
   -> m [PGColumnInfo]
 tableUpdateColumns table permissions = do
   -- TODO: memoize this?
-  -- TODO: check that colums that have presets are NOT included in this
   tableFields <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   pure $ mapMaybe isUpdatable $ Map.elems tableFields
   where
     isUpdatable (FIColumn columnInfo) =
       if Set.member (pgiColumn columnInfo) (upiCols permissions)
+         && (not $ (Map.member (pgiColumn columnInfo) (upiSet permissions)))
       then Just columnInfo
       else Nothing
     isUpdatable _ = Nothing
