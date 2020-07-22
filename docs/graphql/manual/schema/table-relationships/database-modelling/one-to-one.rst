@@ -153,37 +153,39 @@ We can now:
   .. graphiql::
     :view_only:
     :query:
-        mutation insertPwInfoWithOwner {
-          insert_passport_info(objects: [
-            {
-              passport_number: "X98978765",
-              owner: {
-                data: {
-                  name: "Kelly"
-                }
-              }
-            }
-          ]) {
-            returning {
-              owner_id
-              passport_number
-              owner {
-                id
-                name
+      mutation insertPwInfoWithOwner {
+        insert_passport_info(objects: [
+          {
+            passport_number: "X98978765",
+            owner: {
+              data: {
+                name: "Kelly"
               }
             }
           }
+        ]) {
+          returning {
+            id
+            owner_id
+            passport_number
+            owner {
+              id
+              name
+            }
+          }
         }
+      }
     :response:
       {
         "data": {
           "insert_passport_info": {
             "returning": [
               {
-                "owner_id": 2,
+                "id": 14,
+                "owner_id": 11,
                 "passport_number": "X98978765",
                 "owner": {
-                  "id": 2,
+                  "id": 11,
                   "name": "Kelly"
                 }
               }

@@ -156,6 +156,8 @@ We can now:
 Insert using relationships
 --------------------------
 
+We can now:
+
 - insert an ``author`` with their ``articles``:
 
   .. graphiql::

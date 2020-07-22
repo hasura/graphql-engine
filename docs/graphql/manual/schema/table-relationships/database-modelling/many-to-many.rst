@@ -455,9 +455,11 @@ We can now:
           }
         ]) {
           returning {
+            id
             title
             article_tags {
               tag {
+                id
                 tag_value
               }
             }
@@ -470,31 +472,37 @@ We can now:
           "insert_article": {
             "returning": [
               {
+                "id": 43,
                 "title": "How to make fajitas",
                 "article_tags": [
                   {
                     "tag": {
+                      "id": 44,
                       "tag_value": "Recipes"
                     }
                   },
                   {
                     "tag": {
+                      "id": 45,
                       "tag_value": "Cooking"
                     }
                   }
                 ]
               },
               {
+                "id": 44,
                 "title": "How to become a ballerina",
                 "article_tags": [
                   {
                     "tag": {
+                      "id": 46,
                       "tag_value": "Dancing"
                     }
                   },
                   {
                     "tag": {
-                      "tag_value": "Broadway"
+                      "id": 47,
+                      "tag_value": "Ballet"
                     }
                   }
                 ]
