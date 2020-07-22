@@ -25,6 +25,18 @@ create_patch_release_file() {
 }
 
 is_patch_release() {
+  # check if a Github PR is a valid candidate for a patch release
+  # this function can take an argument
+  # which is expected to be the PR number
+  # if this script is running in a circle CI environment then 
+  # then PR number will be procured from the corresponding 
+  # environment variable
+  #
+  # the conditions for a PR to be valid patch release are
+  # * one an only one file should be changed in the PR
+  # * this file should be cli/patch_releases/<semver>.md
+  # * PR should have `c/cli` and `k/patch_release` labels
+
   if [ -n "${CIRCLECI}" ]; then
     echo "getting PR number from circle CI"
     PR_NUMBER=${CIRCLE_PR_NUMBER}
@@ -38,29 +50,35 @@ is_patch_release() {
     exit 1
   fi
 
+  GITHUB_API_BASE_URL="https://api.github.com/repos/hasura/graphql-engine/pulls"
   SEMVER_REGEX='((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)'
   FILE_REGEX="^cli\/patch_releases\/v${SEMVER_REGEX}\.md$"
 
-  # check if the number of files is (using github API)
-  NO_OF_FILES=$(curl -s https://api.github.com/repos/hasura/graphql-engine/pulls/${PR_NUMBER}/files | jq '. | length')
-  PR_JSON=$(curl -s https://api.github.com/repos/hasura/graphql-engine/pulls/${PR_NUMBER}/files | jq )
+  NO_OF_FILES=$(curl -s ${GITHUB_API_BASE_URL}/${PR_NUMBER}/files | jq '. | length')
+  PR_FILES=$(curl -s ${GITHUB_API_BASE_URL}/${PR_NUMBER}/files | jq )
 
+  # validate number of changed files
   if [[ ! $NO_OF_FILES -eq 1 ]] 
   then
     echo "diff has more than one file change, this is not expected. exiting"
-    echo $PR_JSON | jq 
+    echo $PR_FILES | jq 
     exit 1
   fi
 
-  FILENAME=$(echo ${PR_JSON} | '.[].filename')
-  
+  # validate a patch_release file was changed  
+  FILENAME=$(echo ${PR_FILES} | '.[].filename')
   # if a file inside cli/patch_releases/<semver>.md changed exit with success
   # grep options: -o means output the match, -P means use Perl regex
   if (echo $FILENAME | grep -oP ${FILE_REGEX}) then
-    exit 0
+    # validate PR has `c/cli` and `k/patch_release` label
+    LABEL_COUNT=$(curl -s ${GITHUB_API_BASE_URL/${PR_NUMBER}} | jq '.labels[] | select( .name | contains("c/cli", "k/patch_release")) | .name' | wc -l)
+    if [[ ! ${LABEL_COUNT} -eq 2 ]]
+    then
+      exit 1
+    fi
   fi
   
-  exit 1
+  exit 0
 }
 
 
