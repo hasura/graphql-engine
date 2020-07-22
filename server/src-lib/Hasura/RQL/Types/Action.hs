@@ -29,7 +29,6 @@ module Hasura.RQL.Types.Action
   , aiName
   , aiOutputObject
   , aiDefinition
-  , aiPgScalars
   , aiPermissions
   , aiComment
   , ActionPermissionInfo(..)
@@ -53,8 +52,8 @@ import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Select.Types
-import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.CustomTypes
 import           Hasura.Session
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax    (Lift)
@@ -180,7 +179,6 @@ data ActionInfo
   , _aiOutputObject :: !AnnotatedObjectType
   , _aiDefinition   :: !ResolvedActionDefinition
   , _aiPermissions  :: !ActionPermissionMap
-  , _aiPgScalars    :: !(HashSet PGScalarType)
   , _aiComment      :: !(Maybe Text)
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)

@@ -382,8 +382,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
                     runExceptT $ resolveAction resolvedCustomTypes def pgScalars
                   let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
                       permissionMap = mapFromL _apiRole permissionInfos
-                  returnA -< ActionInfo name outObject resolvedDef permissionMap mempty comment)
-                  -- TODO reusedPGScalars ---------------------------------------^^^^^
+                  returnA -< ActionInfo name outObject resolvedDef permissionMap comment)
               |) addActionContext)
            |) (mkActionMetadataObject action)
 
