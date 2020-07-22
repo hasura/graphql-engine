@@ -1064,14 +1064,15 @@ computedFieldFunctionArgs ComputedFieldFunction{..} =
 jsonPathArg :: MonadParse n => PGColumnType -> InputFieldsParser n (Maybe RQL.ColumnOp)
 jsonPathArg columnType
   | isScalarColumnWhere isJSONType columnType =
-      P.fieldOptional fieldName description P.string `P.bindFields` traverse toColExp
+      P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
   | otherwise = pure Nothing
   where
     fieldName = $$(G.litName "path")
     description = Just "JSON select path"
     toColExp textValue = case parseJSONPath textValue of
       Left err     -> parseError $ T.pack $ "parse json path error: " ++ err
-      Right jPaths -> return $ RQL.ColumnOp SQL.jsonbPathOp $ SQL.SEArray $ map elToColExp jPaths
+      Right []     -> pure Nothing
+      Right jPaths -> pure $ Just $ RQL.ColumnOp SQL.jsonbPathOp $ SQL.SEArray $ map elToColExp jPaths
     elToColExp (Key k)   = SQL.SELit k
     elToColExp (Index i) = SQL.SELit $ T.pack (show i)
 
