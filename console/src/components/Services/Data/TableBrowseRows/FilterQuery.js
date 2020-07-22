@@ -283,7 +283,7 @@ class FilterQuery extends Component {
   render() {
     const { dispatch, whereAnd, tableSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
     const exportData = type => {
-      dispatch(exportDataQuery(tableSchema,type));
+      dispatch(exportDataQuery(tableSchema, type));
     };
 
     return (

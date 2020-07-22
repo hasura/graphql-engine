@@ -5,7 +5,7 @@
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
-- console: added export data option on data module (close #1438)
+- console: added export data option on data module (close #1438 #5158)
 
 
 ## `v1.3.0`
