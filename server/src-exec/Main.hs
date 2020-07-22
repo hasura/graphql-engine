@@ -20,6 +20,7 @@ import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Environment           as Env
 import qualified Database.PG.Query          as Q
+import qualified Hasura.Tracing             as Tracing
 import qualified System.Exit                as Sys
 import qualified System.Posix.Signals       as Signals
 
@@ -40,7 +41,7 @@ runApp env (HGEOptionsG rci hgeCmd) =
     HCServe serveOptions -> do
       (initCtx, initTime) <- initialiseCtx env hgeCmd rci
       let shutdownApp = return ()
-      -- Catches the SIGTERM signal and initiates a graceful shutdown. 
+      -- Catches the SIGTERM signal and initiates a graceful shutdown.
       -- Graceful shutdown for regular HTTP requests is already implemented in
       -- Warp, and is triggered by invoking the 'closeSocket' callback.
       -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C
@@ -49,7 +50,7 @@ runApp env (HGEOptionsG rci hgeCmd) =
         Signals.sigTERM
         (Signals.CatchOnce (shutdownGracefully initCtx))
         Nothing
-      runHGEServer env serveOptions initCtx Nothing initTime shutdownApp
+      runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing
 
     HCExport -> do
       (initCtx, _) <- initialiseCtx env hgeCmd rci
@@ -68,6 +69,7 @@ runApp env (HGEOptionsG rci hgeCmd) =
       res <- runAsAdmin _icPgPool sqlGenCtx _icHttpManager $ do
         schemaCache <- buildRebuildableSchemaCache env
         execQuery env queryBs
+          & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
           & runHasSystemDefinedT (SystemDefined False)
           & runCacheRWT schemaCache
           & fmap (\(res, _, _) -> res)

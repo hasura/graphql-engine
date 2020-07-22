@@ -22,6 +22,7 @@ import           Hasura.SQL.Types
 import qualified Data.Environment         as Env
 import qualified Database.PG.Query        as Q
 import qualified Hasura.SQL.DML           as S
+import qualified Hasura.Tracing           as Tracing
 
 data ConflictTarget
   = CTColumn ![PGCol]
@@ -256,6 +257,7 @@ execInsertQuery
   :: ( HasVersion
      , MonadTx m
      , MonadIO m
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> Bool
@@ -343,6 +345,7 @@ insertOrUpdateCheckExpr _ _ insCheck _ =
 runInsert
   :: ( HasVersion, QErrM m, UserInfoM m
      , CacheRM m, MonadTx m, HasSQLGenCtx m, MonadIO m
+     , Tracing.MonadTrace m
      )
   => Env.Environment -> InsertQuery -> m EncJSON
 runInsert env q = do
