@@ -419,6 +419,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
                      . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers immortalThreads stopWsServer lockedEventsCtx _icPgPool)
+                     . Warp.setMaxTotalHeaderLength (1024 * 1024) -- 1MB header size limit (warp default: 50KB)
                      $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 
