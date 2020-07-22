@@ -3,6 +3,7 @@ package api
 // NOTE: Should this be covered by tests?
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -18,18 +19,24 @@ const (
 	down = "down"
 )
 
+var (
+	validExtensions = []string{".sql", ".yml", ".yaml"}
+)
+
+// UpdateMigrationRequest is the request to be used for updating any of the migration files
 type UpdateMigrationRequest struct {
 	FileName    string `json:"filename"`
 	FileContent string `json:"content"`
-	// NOTE: we could also keep a log of the changes? would that be necessary?
 }
 
+// MigrationData is a struct used within MigrationDataResponse
 type MigrationData struct {
 	FileContent      string `json:"content"`
 	FileType         string `json:"type"`
 	MigrationVersion int    `json:"version"`
 }
 
+// MigrationDataResponse is the response provided on a successful GET request to /migrate/console/
 type MigrationDataResponse struct {
 	Version           string                  `json:"version"`
 	UpMigrationData   MigrationData           `json:"up"`
@@ -37,26 +44,24 @@ type MigrationDataResponse struct {
 	MigrationStatus   migrate.MigrationStatus `json:"status"`
 }
 
-func convertToUInt64(param string) uint64 {
+func convertToUInt64(param string) (uint64, error) {
 	num, err := strconv.ParseUint(param, 10, 64)
 	if err != nil {
-		return 1
+		return 1, errors.New("invalid migration version provided")
 	}
 
-	return num
+	return num, nil
 }
 
-// FIXME: May need to change this as well
-func getFileType(ext string) string {
+func getFileType(ext string) (string, error) {
 	if ext == ".yml" || ext == ".yaml" {
-		return "yaml"
+		return "yaml", nil
 	}
 	if ext == ".sql" {
-		return "sql"
+		return "sql", nil
 	}
 
-	// TODO: this should also be an error probably
-	return ""
+	return "", errors.New("could not locate valid sql or yaml files")
 }
 
 func getMigrationDirName(version string, name string) string {
@@ -84,28 +89,32 @@ func getMigrationFileContents(path string) (string, error) {
 	return string(content), nil
 }
 
-func getValidFilePath(path string, migrationType string, extensions []string) (string, string) {
-	for _, ext := range extensions {
+func getValidFilePath(path string, migrationType string) (string, string, error) {
+	for _, ext := range validExtensions {
 		fullPath := path + migrationType + ext
 		exists := isFilePresent(fullPath)
 		if exists {
-			return fullPath, ext
+			return fullPath, ext, nil
 		}
 	}
-	// TODO: this should probably be an error
-	return "", ""
+	return "", "", errors.New("could not locate valid migration files")
 }
 
 func getMigrationInfo(path string, migrationName string, version int) (MigrationData, MigrationData, error) {
 	// returns the type of file yml, yaml or sql
 	// the respective contents of the file
-	// this function will only look for up.* and down.* for now
+	// this function will only look for up.* and down.* for now (might have to change this behavior)
 
 	fullPath := path + "/" + migrationName + "/"
-	validExtensions := []string{".yaml", ".sql", ".yml"}
 
-	upSource, upExt := getValidFilePath(fullPath, up, validExtensions)
-	downSource, downExt := getValidFilePath(fullPath, down, validExtensions)
+	upSource, upExt, err := getValidFilePath(fullPath, up)
+	if err != nil {
+		return MigrationData{}, MigrationData{}, err
+	}
+	downSource, downExt, err := getValidFilePath(fullPath, down)
+	if err != nil {
+		return MigrationData{}, MigrationData{}, err
+	}
 
 	upContent, err := getMigrationFileContents(upSource)
 	if err != nil {
@@ -117,17 +126,28 @@ func getMigrationInfo(path string, migrationName string, version int) (Migration
 		return MigrationData{}, MigrationData{}, err
 	}
 
+	upFileType, err := getFileType(upExt)
+	if err != nil {
+		return MigrationData{}, MigrationData{}, err
+	}
+
+	downFileType, err := getFileType(downExt)
+	if err != nil {
+		return MigrationData{}, MigrationData{}, err
+	}
+
 	return MigrationData{
 			FileContent:      upContent,
-			FileType:         getFileType(upExt),
+			FileType:         upFileType,
 			MigrationVersion: version,
 		}, MigrationData{
 			FileContent:      downContent,
-			FileType:         getFileType(downExt),
+			FileType:         downFileType,
 			MigrationVersion: version,
 		}, nil
 }
 
+// ConsoleAPI method handles all requests on the /migrate/console/ route
 func ConsoleAPI(c *gin.Context) {
 	migratePtr, ok := c.Get("migrate")
 	if !ok {
@@ -139,12 +159,6 @@ func ConsoleAPI(c *gin.Context) {
 		return
 	}
 
-	// Get Logger
-	// loggerPtr, ok := c.Get("logger")
-	// if !ok {
-	// 	return
-	// }
-
 	// Get version
 	version := c.GetInt("version")
 
@@ -154,7 +168,7 @@ func ConsoleAPI(c *gin.Context) {
 
 	migrationVersion := c.Param("migrationVersion")
 
-	// for reading the contents of the
+	// for reading the contents of the migration files
 	if c.Request.Method == http.MethodGet {
 		err := t.ReScan()
 		if err != nil {
@@ -164,13 +178,17 @@ func ConsoleAPI(c *gin.Context) {
 
 		status, err := t.GetStatus()
 
-		migrStatus, ok := status.Read(convertToUInt64(migrationVersion))
+		intMigrationVersion, err := convertToUInt64(migrationVersion)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+		}
+
+		migrStatus, ok := status.Read(intMigrationVersion)
 		if !ok {
 			// TODO: have to change this code for not a valid migration
 			c.JSON(http.StatusBadRequest, &Response{Code: "bad_request", Message: "This is not a valid migration version"})
 			return
 		}
-		// logger.Info("Here's some info", migrStatus.Name, "\n")
 
 		// can be made into a function, also check if migrStatus.Name is not ""
 		migrationDirName := getMigrationDirName(migrationVersion, migrStatus.Name)
@@ -200,10 +218,15 @@ func ConsoleAPI(c *gin.Context) {
 
 		status, err := t.GetStatus()
 
-		migrStatus, ok := status.Read(convertToUInt64(migrationVersion))
+		intMigrationVersion, err := convertToUInt64(migrationVersion)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+		}
+
+		migrStatus, ok := status.Read(intMigrationVersion)
 		if !ok {
 			// TODO: have to change this
-			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: ""})
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "incorrect migration step/version supplied"})
 			return
 		}
 
@@ -234,6 +257,7 @@ func ConsoleAPI(c *gin.Context) {
 
 	// delete the migration files
 	if c.Request.Method == http.MethodDelete {
+		// TODO?: should this entry be deleted from the database too?
 		err := t.ReScan()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
@@ -242,7 +266,12 @@ func ConsoleAPI(c *gin.Context) {
 
 		status, err := t.GetStatus()
 
-		migrStatus, ok := status.Read(convertToUInt64(migrationVersion))
+		intMigrationVersion, err := convertToUInt64(migrationVersion)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+		}
+
+		migrStatus, ok := status.Read(intMigrationVersion)
 		if !ok {
 			// TODO: have to change this
 			c.JSON(http.StatusBadRequest, &Response{Code: "bad_request", Message: "migration version not found"})
