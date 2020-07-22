@@ -392,7 +392,7 @@ nonNullableParser :: forall m a . Parser 'Output m a -> Parser 'Output m a
 nonNullableParser parser = parser { pType = nonNullableType (pType parser) }
 
 multiple :: Parser 'Output m a -> Parser 'Output m a
-multiple parser = parser { pType = NonNullable $ TList $ pType parser }
+multiple parser = parser { pType = Nullable $ TList $ pType parser }
 
 list :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m [a]
 list parser = gcastWith (inputParserInput @k) Parser

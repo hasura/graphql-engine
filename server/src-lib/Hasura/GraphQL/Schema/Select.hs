@@ -130,7 +130,7 @@ selectTableConnection
 selectTableConnection table fieldName description pkeyColumns selectPermissions = do
   stringifyNum       <- asks $ qcStringifyNum . getter
   selectArgsParser   <- tableConnectionArgs pkeyColumns table selectPermissions
-  selectionSetParser <- tableConnectionSelectionSet table selectPermissions
+  selectionSetParser <- P.nonNullableParser <$> tableConnectionSelectionSet table selectPermissions
   pure $ P.subselection fieldName description selectArgsParser selectionSetParser
     <&> \((args, split, slice), fields) -> RQL.ConnectionSelect
       { RQL._csPrimaryKeyColumns = pkeyColumns
@@ -192,7 +192,7 @@ selectTableByPk table fieldName description selectPermissions = runMaybeT do
 -- > table_aggregate(limit: 10) {
 -- >   aggregate: table_aggregate_fields
 -- >   nodes: [table!]!
--- > } :: table_aggregate
+-- > } :: table_aggregate!
 --
 -- Returns Nothing if there's nothing that can be selected with
 -- current permissions.
@@ -472,6 +472,8 @@ selectFunctionConnection function fieldName description pkeyColumns selectPermis
         , RQL._asnStrfyNum = stringifyNum
         }
       }
+
+
 
 -- 2. local parsers
 -- Parsers that are used but not exported: sub-components
