@@ -7,6 +7,7 @@ import qualified Data.HashMap.Strict.InsOrd    as OMap
 
 import           Language.GraphQL.Draft.Syntax as G
 
+import qualified Data.Text                     as T
 import qualified Hasura.GraphQL.Execute.Types  as ET
 import qualified Hasura.GraphQL.Parser         as P
 import qualified Hasura.RQL.DML.Select.Types   as RQL
@@ -75,3 +76,8 @@ instance J.FromJSON NodeIdVersion where
     case versionInt of
       1 -> pure NIVersion1
       _ -> fail $ "expecting version 1 for node id, but got " <> show versionInt
+
+mkDescriptionWith :: Maybe PGDescription -> Text -> G.Description
+mkDescriptionWith descM defaultTxt = G.Description $ case descM of
+  Nothing                      -> defaultTxt
+  Just (PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]

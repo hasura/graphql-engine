@@ -10,6 +10,7 @@ module Hasura.GraphQL.Schema.Select
   , selectFunctionAggregate
   , selectFunctionConnection
   , tableSelectionSet
+  , tableSelectionList
   , nodeField
   ) where
 
@@ -89,7 +90,7 @@ selectTable
 selectTable table fieldName description selectPermissions = do
   stringifyNum <- asks $ qcStringifyNum . getter
   tableArgsParser    <- tableArgs table selectPermissions
-  selectionSetParser <- tableSelectionSet table selectPermissions Nothing
+  selectionSetParser <- tableSelectionList table selectPermissions
   pure $ P.subselection fieldName description tableArgsParser selectionSetParser
     <&> \(args, fields) -> RQL.AnnSelectG
       { RQL._asnFields   = fields
@@ -150,7 +151,7 @@ selectTableConnection table fieldName description pkeyColumns selectPermissions 
 -- > table_name(id: 42) {
 -- >   col1: col1_type
 -- >   col2: col2_type
--- > }: [table!]
+-- > }: table
 --
 -- Returns Nothing if there's nothing that can be selected with
 -- current permissions or if there are primary keys the user
@@ -170,7 +171,7 @@ selectTableByPk table fieldName description selectPermissions = runMaybeT do
     field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
     pure $ BoolFld . AVCol columnInfo . pure . AEQ True . mkParameter <$>
       P.field (pgiName columnInfo) (pgiDescription columnInfo) field
-  selectionSetParser <- lift $ tableSelectionSet table selectPermissions Nothing
+  selectionSetParser <- lift $ tableSelectionSet table selectPermissions
   pure $ P.subselection fieldName description argsParser selectionSetParser
     <&> \(boolExpr, fields) ->
       let defaultPerms = tablePermissionsInfo selectPermissions
@@ -208,8 +209,9 @@ selectTableAggregate table fieldName description selectPermissions = runMaybeT d
   tableArgsParser <- lift $ tableArgs table selectPermissions
   aggregateParser <- lift $ tableAggregationFields table selectPermissions
   selectionName   <- lift $ qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
-  nodesParser     <- lift $ tableSelectionSet table selectPermissions Nothing
-  let aggregationParser = parsedSelectionsToFields RQL.TAFExp <$>
+  nodesParser     <- lift $ tableSelectionList table selectPermissions
+  let aggregationParser = P.nonNullableParser $
+        parsedSelectionsToFields RQL.TAFExp <$>
         P.selectionSet selectionName Nothing
         [ RQL.TAFNodes <$> P.subselection_ $$(G.litName "nodes") Nothing nodesParser
         , RQL.TAFAgg <$> P.subselection_ $$(G.litName "aggregate") Nothing aggregateParser
@@ -283,19 +285,14 @@ tableSelectionSet
      )
   => QualifiedTable
   -> SelPermInfo
-  -> Maybe (Parser 'Output n b)
-  -- ^ An interface that this object claims to implement (used for Relay)
   -> m (Parser 'Output n AnnotatedFields)
-tableSelectionSet table selectPermissions interfaceM = memoizeOn 'tableSelectionSet table do
+tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table do
   tableInfo <- _tiCoreInfo <$> askTableInfo table
   tableName <- qualifiedObjectToName table
-  queryType <- asks $ qcQueryType . getter
   let tableFields = Map.elems  $ _tciFieldInfoMap tableInfo
       tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableInfo
-      nodeIdFieldParser = case queryType of
-        ET.QueryHasura -> Nothing
-        ET.QueryRelay  -> tablePkeyColumns <&> \pkeyColumns ->
-          P.selection_ $$(G.litName "id") Nothing P.identifier $> RQL.AFNodeId table pkeyColumns
+      description  = Just $ mkDescriptionWith (_tciDescription tableInfo) $
+                     "columns and relationships of " <>> table
   fieldParsers <- concat <$> for tableFields \fieldInfo ->
     fieldSelection table tablePkeyColumns fieldInfo selectPermissions
 
@@ -307,10 +304,38 @@ tableSelectionSet table selectPermissions interfaceM = memoizeOn 'tableSelection
   -- required, meaning that not having this check here does not allow
   -- for the construction of invalid queries.
 
-  let description  = G.Description . getPGDescription <$> _tciDescription tableInfo
-      allParsers = fieldParsers <> maybeToList nodeIdFieldParser
-  pure $ P.selectionSetObject tableName description allParsers (toList interfaceM)
-    <&> parsedSelectionsToFields RQL.AFExpression
+  queryType <- asks $ qcQueryType . getter
+  case (queryType, tablePkeyColumns) of
+    -- A relay table
+    (ET.QueryRelay, Just pkeyColumns) -> do
+      let nodeIdFieldParser =
+            P.selection_ $$(G.litName "id") Nothing P.identifier $> RQL.AFNodeId table pkeyColumns
+          allFieldParsers = fieldParsers <> [nodeIdFieldParser]
+      nodeInterface <- node
+      pure $ P.selectionSetObject tableName description allFieldParsers [nodeInterface]
+            <&> parsedSelectionsToFields RQL.AFExpression
+    _                                 ->
+      pure $ P.selectionSetObject tableName description fieldParsers []
+            <&> parsedSelectionsToFields RQL.AFExpression
+
+-- | List of table fields object.
+-- Just a @'nonNullableObjectList' wrapper over @'tableSelectionSet'.
+tableSelectionList
+  :: ( MonadSchema n m
+     , MonadTableInfo r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
+  => QualifiedTable
+  -> SelPermInfo
+  -> m (Parser 'Output n AnnotatedFields)
+tableSelectionList table selectPermissions =
+  nonNullableObjectList <$> tableSelectionSet table selectPermissions
+
+-- | Converts an output type parser from object_type to [object_type!]!
+nonNullableObjectList :: Parser 'Output m a -> Parser 'Output m a
+nonNullableObjectList =
+  P.nonNullableParser . P.multiple . P.nonNullableParser
 
 tableConnectionSelectionSet
   :: forall m n r. ( MonadSchema n m
@@ -329,7 +354,9 @@ tableConnectionSelectionSet table selectPermissions = do
                  pageInfoSelectionSet <&> RQL.ConnectionPageInfo
       edges = P.subselection_ $$(G.litName "edges") Nothing
               edgesParser <&> RQL.ConnectionEdges
-  pure $ P.selectionSet connectionTypeName Nothing [pageInfo, edges]
+      connectionDescription = G.Description $ "A Relay connection object on " <>> table
+  pure $ P.nonNullableParser $
+         P.selectionSet connectionTypeName (Just connectionDescription) [pageInfo, edges]
          <&> parsedSelectionsToFields RQL.ConnectionTypename
   where
     pageInfoSelectionSet :: Parser 'Output n RQL.PageInfoFields
@@ -342,25 +369,24 @@ tableConnectionSelectionSet table selectPermissions = do
                                  P.boolean $> RQL.PageInfoHasNextPage
           hasPreviousPageField = P.selection_ $$(G.litName "hasPreviousPage") Nothing
                                  P.boolean $> RQL.PageInfoHasPreviousPage
-          allFields =
+          allFields            =
             [ startCursorField, endCursorField
             , hasNextPageField, hasPreviousPageField
             ]
-      in P.selectionSet $$(G.litName "PageInfo") Nothing allFields
+      in P.nonNullableParser $ P.selectionSet $$(G.litName "PageInfo") Nothing allFields
          <&> parsedSelectionsToFields RQL.PageInfoTypename
 
     tableEdgesSelectionSet
       :: m (Parser 'Output n (RQL.EdgeFields UnpreparedValue))
     tableEdgesSelectionSet = do
       tableName           <- qualifiedObjectToName table
-      nodeInterfaceParser <- node
-      edgeNodeParser      <- tableSelectionSet table selectPermissions $ Just nodeInterfaceParser
+      edgeNodeParser      <- P.nonNullableParser <$> tableSelectionSet table selectPermissions
       let edgesType = tableName <> $$(G.litName "Edge")
           cursor    = P.selection_ $$(G.litName "cursor") Nothing
                       P.string $> RQL.EdgeCursor
           edgeNode  = P.subselection_ $$(G.litName "node") Nothing
                       edgeNodeParser <&> RQL.EdgeNode
-      pure $ P.selectionSet edgesType Nothing [cursor, edgeNode]
+      pure $ nonNullableObjectList $ P.selectionSet edgesType Nothing [cursor, edgeNode]
              <&> parsedSelectionsToFields RQL.EdgeTypename
 
 -- | User-defined function (AKA custom function)
@@ -376,7 +402,7 @@ selectFunction function fieldName description selectPermissions = do
   let table = fiReturnType function
   tableArgsParser    <- tableArgs table selectPermissions
   functionArgsParser <- customSQLFunctionArgs function
-  selectionSetParser <- tableSelectionSet table selectPermissions Nothing
+  selectionSetParser <- tableSelectionSet table selectPermissions
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
   pure $ P.subselection fieldName description argsParser selectionSetParser
     <&> \((funcArgs, tableArgs'), fields) -> RQL.AnnSelectG
@@ -402,7 +428,7 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
   functionArgsParser <- lift $ customSQLFunctionArgs function
   aggregateParser    <- lift $ tableAggregationFields table selectPermissions
   selectionName      <- lift $ qualifiedObjectToName table <&> (<> $$(G.litName "_aggregate"))
-  nodesParser        <- lift $ tableSelectionSet table selectPermissions Nothing
+  nodesParser        <- lift $ tableSelectionSet table selectPermissions
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
       aggregationParser = parsedSelectionsToFields RQL.TAFExp <$>
         P.selectionSet selectionName Nothing
@@ -565,7 +591,7 @@ tableArgs table selectPermissions = do
               _                   -> Nothing
           isValid = (colsLen == length initOrdByCols)
                     && all (`elem` initOrdByCols) (toList distinctOnCols)
-      unless isValid $ parseError $
+      unless isValid $ parseError
         "\"distinct_on\" columns must match initial \"order_by\" columns"
 
 -- TODO:
@@ -792,7 +818,7 @@ lookupRemoteField fieldInfos (fieldCall :| rest) =
     Just rest' -> do
       (P.FieldInfo _ type') <- lookupRemoteField' fieldInfos fieldCall
       (P.Definition _ _ _ (P.ObjectInfo objFieldInfos _))
-       <- onNothing (P.getObjectInfo $ type') $
+       <- onNothing (P.getObjectInfo type') $
           throw400 RemoteSchemaError $ "field " <> fcName fieldCall <<> " is expected to be an object"
       lookupRemoteField objFieldInfos rest'
 
@@ -829,23 +855,22 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions = do
           colMapping = riMapping relationshipInfo
           relName    = riName    relationshipInfo
           nullable   = riIsNullable relationshipInfo
-          desc       = Just $ G.Description $ case riType relationshipInfo of
-            ObjRel -> "An object relationship"
-            ArrRel -> "An array relationship"
       remotePerms      <- MaybeT $ tableSelectPermissions otherTable
       relFieldName     <- lift $ textToName $ relNameToTxt relName
-      otherTableParser <- lift $ selectTable otherTable relFieldName desc remotePerms
-      let field = otherTableParser <&> \selectExp ->
-            case riType relationshipInfo of
-              ObjRel -> RQL.AFObjectRelation $ RQL.AnnRelationSelectG relName colMapping $
-                        RQL.AnnObjectSelectG (RQL._asnFields selectExp) otherTable $
-                        RQL._tpFilter $ RQL._asnPerm selectExp
-              ArrRel -> RQL.AFArrayRelation $ RQL.ASSimple $
-                          RQL.AnnRelationSelectG relName colMapping selectExp
       case riType relationshipInfo of
-        ObjRel -> pure [field]
+        ObjRel -> do
+          let desc = Just $ G.Description "An object relationship"
+          selectionSetParser <- lift $ tableSelectionSet otherTable remotePerms
+          pure $ pure $ P.subselection_ relFieldName desc selectionSetParser
+                 <&> \fields -> RQL.AFObjectRelation $ RQL.AnnRelationSelectG relName colMapping $
+                        RQL.AnnObjectSelectG fields otherTable $
+                        RQL._tpFilter $ tablePermissionsInfo remotePerms
         ArrRel -> do
-          let relAggFieldName = relFieldName <> $$(G.litName "_aggregate")
+          let arrayRelDesc = Just $ G.Description "An array relationship"
+          otherTableParser <- lift $ selectTable otherTable relFieldName arrayRelDesc remotePerms
+          let arrayRelField = otherTableParser <&> \selectExp -> RQL.AFArrayRelation $
+                RQL.ASSimple $ RQL.AnnRelationSelectG relName colMapping selectExp
+              relAggFieldName = relFieldName <> $$(G.litName "_aggregate")
               relAggDesc      = Just $ G.Description "An aggregate relationship"
           remoteAggField <- lift $ selectTableAggregate otherTable relAggFieldName relAggDesc remotePerms
           remoteConnectionField <- runMaybeT $ do
@@ -857,7 +882,7 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions = do
                 relConnectionDesc = Just $ G.Description "An array relationship connection"
             lift $ lift $ selectTableConnection otherTable relConnectionName
                           relConnectionDesc pkeyColumns remotePerms
-          pure $ catMaybes [ Just field
+          pure $ catMaybes [ Just arrayRelField
                            , fmap (RQL.AFArrayRelation . RQL.ASAggregate . RQL.AnnRelationSelectG relName colMapping) <$> remoteAggField
                            , fmap (RQL.AFArrayRelation . RQL.ASConnection . RQL.AnnRelationSelectG relName colMapping) <$> remoteConnectionField
                            ]
@@ -1074,7 +1099,7 @@ computedField ComputedFieldInfo{..} selectPermissions = runMaybeT do
     CFRSetofTable tableName -> do
       remotePerms        <- MaybeT $ tableSelectPermissions tableName
       selectArgsParser   <- lift   $ tableArgs tableName remotePerms
-      selectionSetParser <- lift   $ tableSelectionSet tableName remotePerms Nothing
+      selectionSetParser <- lift   $ tableSelectionSet tableName remotePerms
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure $ P.subselection fieldName Nothing fieldArgsParser selectionSetParser <&>
         \((functionArgs', args), fields) ->
@@ -1177,7 +1202,6 @@ node
      )
   => m (P.Parser 'Output n (HashMap QualifiedTable (SelPermInfo, PrimaryKeyColumns, AnnotatedFields)))
 node = memoizeOn 'node () do
-  myself <- node
   let idDescription = G.Description "A globally unique identifier"
       idField = P.selection_ $$(G.litName "id") (Just idDescription) P.identifier
       nodeInterfaceDescription = G.Description "An object with globally unique ID"
@@ -1186,7 +1210,7 @@ node = memoizeOn 'node () do
     Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table _ -> runMaybeT do
       tablePkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns) <$> askTableInfo table
       selectPermissions <- MaybeT $ tableSelectPermissions table
-      annotatedFieldsParser <- lift $ tableSelectionSet table selectPermissions $ Just myself
+      annotatedFieldsParser <- lift $ tableSelectionSet table selectPermissions
       pure $ (selectPermissions, tablePkeyColumns,) <$> annotatedFieldsParser
   pure $ P.selectionSetInterface $$(G.litName "Node")
          (Just nodeInterfaceDescription) [idField] tables []
