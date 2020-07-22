@@ -1,4 +1,4 @@
-{-# LANGUAGE Arrows           #-}
+{-# LANGUAGE Arrows #-}
 module Hasura.GraphQL.Schema
   ( buildGQLContext
   ) where
@@ -378,10 +378,14 @@ relayWithIntrospection allTables allFunctions = do
   nodeFP <- fmap (RFDB . QDBPrimaryKey) <$> nodeField
   basicQueryFP <- relayQuery' allTables allFunctions
   mutationP <- mutation allTables [] [] mempty
-  let basicQueryP = queryRootFromFields $ nodeFP:basicQueryFP
+  let relayQueryFP = nodeFP:basicQueryFP
+      subscriptionP = P.selectionSet $$(G.litName "subscription_root") Nothing relayQueryFP
+                      <&> fmap (P.handleTypename (RFRaw . J.String. G.unName))
+      basicQueryP = queryRootFromFields relayQueryFP
   emptyIntro <- emptyIntrospection
   allBasicTypes <- collectTypes $
     [ P.parserType basicQueryP
+    , P.parserType subscriptionP
     ]
     ++ maybeToList (P.parserType <$> mutationP)
   allIntrospectionTypes <- collectTypes (P.parserType (queryRootFromFields emptyIntro))
@@ -394,7 +398,7 @@ relayWithIntrospection allTables allFunctions = do
         , sTypes = allTypes
         , sQueryType = P.parserType basicQueryP
         , sMutationType = P.parserType <$> mutationP
-        , sSubscriptionType = Nothing
+        , sSubscriptionType = Just $ P.parserType subscriptionP
         , sDirectives = []
         }
   let partialQueryFields =
