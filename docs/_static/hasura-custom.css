@@ -1,6 +1,3 @@
-@import url('https://fonts.googleapis.com/css?family=Khula:400,700');
-@import url('https://fonts.googleapis.com/css?family=Poppins:300,400,500,600&display=swap');
-
 html {
   background-color: #f8f8f8 !important;
 }
@@ -639,22 +636,6 @@ article ol ol {
   top: 10px;
   cursor: pointer;
 }
-#sidebar .sphinxsidebar .sphinxsidebarwrapper h3 {
-  padding-top: 10px;
-  /*
-  color: #fff;
-  */
-  color: rgba(214,214,214,1);
-  font-family: 'Khula';
-}
-
-#sidebar .sphinxsidebar .sphinxsidebarwrapper h4 {
-  /*
-  color: #fff;
-  */
-  color: rgba(214,214,214,1);
-  font-family: 'Khula';
-}
 
 #sidebar .sphinxsidebar .sphinxsidebarwrapper ul li {
   /* list-style-type: none; */
@@ -925,7 +906,6 @@ article ol ol {
 .loading_overlay .subhead_wrapper_loader {
   color: #4d4d4d;
   font-size: 20px;
-  font-family: 'Khula';
   font-weight: 300;
 }
 
@@ -1185,7 +1165,6 @@ article ol ol {
    border-radius: 4px;
    color: #001934;
    border: solid 1px #d1d2d3;
-   font-family: 'Poppins';
    font-size: 11px;
    font-weight: 600;
    display: flex;
