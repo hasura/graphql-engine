@@ -16,6 +16,7 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended          as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
+import qualified Data.List.NonEmpty                    as NE
 
 import           Language.GraphQL.Draft.Syntax
 
@@ -23,6 +24,7 @@ import           Hasura.GraphQL.Parser.Class
 import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser (boolean, runParser)
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.SQL.Types
+import           Hasura.GraphQL.Utils                       (showNames)
 
 -- | Collects the effective set of fields queried by a selection set by
 -- flattening fragments and merging duplicate fields.
@@ -96,41 +98,41 @@ flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
   where
     -- The easy case: just a single field.
     flattenSelection (SelectionField field) = do
-      validateDirectives (_fDirectives field)
+      void $ validateDirectives (_fDirectives field)
       applyInclusionDirectives (_fDirectives field) $ pure [field]
     -- The 'SelectionFragmentSpread' case has already been eliminated by the fragment inliner.
     -- The involved case: we have an inline fragment to process.
     flattenSelection (SelectionInlineFragment fragment) = do
       validateDirectives (_ifDirectives fragment)
-      let fragments =
+      let fields =
             case _ifTypeCondition fragment of
-              -- No type condition, so the fragment unconditionally applies.
-             Nothing -> flattenInlineFragment fragment
-             Just typeName
-               -- There is a type condition, but it is just the type of the
-               -- selection set; the fragment trivially applies.
-               | typeName `elem` objectTypeNames -> flattenInlineFragment fragment
+             -- No type condition, so the fragment unconditionally applies.
+              Nothing -> flattenInlineFragment fragment
+              Just typeName
+                -- There is a type condition, but it is just the type of the
+                -- selection set; the fragment trivially applies.
+                | typeName `elem` objectTypeNames -> flattenInlineFragment fragment
 
-               -- TODO implement this check:
-               -- http://spec.graphql.org/June2018/#sec-Fragment-Spread-Type-Existence
+                -- TODO implement this check:
+                -- http://spec.graphql.org/June2018/#sec-Fragment-Spread-Type-Existence
 
-               -- TODO we are now starting to support interfaces and unions; fix the below
+                -- TODO we are now starting to support interfaces and unions; fix the below
 
-               -- Otherwise, the fragment must not apply, because we do not currently
-               -- support interfaces or unions. According to the GraphQL spec, it is
-               -- an *error* to select a fragment that cannot possibly apply to the
-               -- given type; see
-               -- http://spec.graphql.org/June2018/#sec-Fragment-spread-is-possible.
-               -- Therefore, we raise an error.
-               | otherwise -> return []
-                 {- parseError $ "illegal type condition in fragment; type "
-                   <> typeName <<> " is unrelated to any of the types " <>
-                   Text.intercalate ", " (fmap dquoteTxt (toList objectTypeNames))
-                 -}
-      applyInclusionDirectives (_ifDirectives fragment) fragments
+                -- Otherwise, the fragment must not apply, because we do not currently
+                -- support interfaces or unions. According to the GraphQL spec, it is
+                -- an *error* to select a fragment that cannot possibly apply to the
+                -- given type; see
+                -- http://spec.graphql.org/June2018/#sec-Fragment-spread-is-possible.
+                -- Therefore, we raise an error.
+                | otherwise -> return []
+                  {- parseError $ "illegal type condition in fragment; type "
+                    <> typeName <<> " is unrelated to any of the types " <>
+                    Text.intercalate ", " (fmap dquoteTxt (toList objectTypeNames))
+                  -}
+      applyInclusionDirectives (_ifDirectives fragment) fields
 
     flattenInlineFragment InlineFragment{ _ifDirectives, _ifSelectionSet  } = do
-      validateDirectives _ifDirectives
+      void $ validateDirectives _ifDirectives
       flattenSelectionSet objectTypeNames _ifSelectionSet
 
     applyInclusionDirectives directives continue
@@ -146,12 +148,18 @@ flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
       value <- runParser boolean ifArgument
       if adjust value then continue else pure []
 
-    validateDirectives directives = do
+    validateDirectives directives =
       let directivesMap = Map.toList $ Map.groupOnNE _dName directives
-      flip traverse_ directivesMap $ \(k, res) ->
-        case res of
-          (_ :| []) -> pure ()
-          _         -> parseError $ "the following directives are used more than once: " <> unName k
+          multipleDefinedDirectives = NE.nonEmpty $ catMaybes $ flip map directivesMap $ \(k, res) ->
+            case res of
+             (_ :| []) -> Nothing
+             _         -> Just k
+      in
+      case multipleDefinedDirectives of
+        Nothing -> pure ()
+        Just directiveNames ->
+          parseError $ "the following directives are used more than once: " <>
+           (showNames directiveNames)
 
 -- | Merges fields according to the rules in the GraphQL specification, specifically
 -- <§ 5.3.2 Field Selection Merging http://spec.graphql.org/June2018/#sec-Field-Selection-Merging>.
