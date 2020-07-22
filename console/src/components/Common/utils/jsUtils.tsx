@@ -323,7 +323,33 @@ export const downloadObjectAsJsonFile = (fileName: string, object: any) => {
 
   downloadFile(fileNameWithSuffix, dataString);
 };
+export const downloadObjectAsCsvFile = (
+  fileName: string,
+  rows: object[] = []
+) => {
+  const titleRowString = Object.keys(rows[0]).join(',');
+  const rowsString = rows
+    .map(e =>
+      Object.values(e)
+        .map(
+          i =>
+            `"${
+              typeof i === 'string' && isJsonString(i)
+                ? i.replace(/"/g, `'`)
+                : i
+            }"`
+        )
+        .join(',')
+    )
+    .join('\n');
+  const csvContent = `data:text/csv;charset=utf-8,${titleRowString}\n${rowsString}`;
 
+  const fileNameWithSuffix = `${fileName}.csv`;
+
+  const encodedUri = encodeURI(csvContent);
+
+  downloadFile(fileNameWithSuffix, encodedUri);
+};
 export const getFileExtensionFromFilename = (filename: string) => {
   const matches = filename.match(/\.[0-9a-z]+$/i);
   return matches ? matches[0] : null;
