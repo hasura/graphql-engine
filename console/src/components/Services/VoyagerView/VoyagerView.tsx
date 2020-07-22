@@ -43,8 +43,7 @@ class VoyagerView extends Component<Props, State> {
     });
 
   loadWorker = async () => {
-    const url =
-      'https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.30/dist/voyager.worker.min.js';
+    const url = Endpoints.voyagerWorker;
     const response = await fetch(url);
     const payload = await response.text();
     // HACK: to increase viz.js memory size from 16mb to 512mb
