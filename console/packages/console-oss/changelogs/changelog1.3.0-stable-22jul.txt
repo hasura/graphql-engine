@@ -1,0 +1,2 @@
+- [] 0b972ea41bdf9cf3185c0b0d18b3a541023018fe console: update sidebar icons for different action and trigger types (#5445) (#5447)
+- [] c2a7896cfef399363a2e429af7f3eee9d4287558 console: misc fixes (#5346, #5351, #5415, #5427, #5408) (#5435)

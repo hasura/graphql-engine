@@ -1,5 +1,6 @@
 Package history
 
+0.0.6-1.3.0.2 - Merge changes from stable branch of oss (hot fixes) and release
 0.0.6-1.3.0.1 - Merge changes from master branch of oss (rj fix) and release
 0.0.6-1.3.0-beta.4.1 - Merge changes from master branch of oss
 0.0.6-1.3.0-beta.4 - Merge changes from internal multitenant branch with last tagged release for console/server
