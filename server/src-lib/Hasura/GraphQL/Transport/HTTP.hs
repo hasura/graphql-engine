@@ -224,7 +224,7 @@ runMutationDB reqId query userInfo tx =  do
   logQueryLog logger query Nothing reqId
   ctx <- Tracing.currentContext
   (telemTimeIO, respE) <- withElapsedTime $  runExceptT $ trace "pg" $ do
-    Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite .  withUserInfo userInfo)  tx
+    Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx .  withUserInfo userInfo)  tx
   resp <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
       telemQueryType = Telem.Mutation
@@ -256,7 +256,8 @@ runHasuraGQ reqId (query, queryParsed) userInfo resolvedOp = do
 
     E.ExOpMutation respHeaders tx -> trace "pg" $ do
       logQueryLog logger query Nothing reqId
-      (respHeaders,) <$> Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withUserInfo userInfo) tx
+      ctx <- Tracing.currentContext
+      (respHeaders,) <$> Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
 
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload

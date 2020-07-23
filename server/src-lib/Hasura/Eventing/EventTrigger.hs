@@ -203,8 +203,13 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       eventsNext <- LA.withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
         forM_ events $ \event -> do
+          tracingCtx <- liftIO (Tracing.extractEventContext (eEvent event))
+          let runTraceT = maybe
+                Tracing.runTraceT
+                Tracing.runTraceTInContext
+                tracingCtx
           t <- processEvent event
-            & Tracing.runTraceT "process event"
+            & runTraceT "process event"
             & withEventEngineCtx eeCtx
             & flip runReaderT (logger, httpMgr)
             & LA.async

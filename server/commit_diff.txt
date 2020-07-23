@@ -110,33 +110,3 @@ Date:   Tue Jul 28 23:22:44 2020 +0530
       in their logs.
 
     * add changelog entry
-
-commit 0ae53841156800dcf8758ed1a861e87dbb10fe11
-Author: Phil Freeman <phil@hasura.io>
-Date:   Thu Jul 23 13:39:26 2020 -0700
-
-    Propagate the trace context to event triggers (#5409)
-
-    * Propagate the trace context to event triggers
-
-    * Handle missing trace and span IDs
-
-    * Store trace context as one LOCAL
-
-    * Add migrations
-
-    * Documentation
-
-    * changelog
-
-    * Fix warnings
-
-    * Respond to code review suggestions
-
-    * Respond to code review
-
-    * Undo changelog
-
-    * Update CHANGELOG.md
-
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
