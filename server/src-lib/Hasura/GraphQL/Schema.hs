@@ -31,6 +31,7 @@ import           Hasura.GraphQL.Schema.Mutation
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
+import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.Session
 import           Hasura.SQL.Types
 
@@ -81,18 +82,32 @@ buildGQLContext =
         allActionInfos = Map.elems allActions
 
     remotes ::
-          (HashMap RemoteSchemaName
-             ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-             , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
-             , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]))
-          <- bindA -< do
-          checkFieldNamesUnique allQueryFields
-            (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
-          checkFieldNamesUnique allMutationFields
-            (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
-          checkFieldNamesUnique allSubscriptionFields
-            (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
-          return rems
+      ( [ ( RemoteSchemaName
+          , ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+            , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+            , Maybe [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
+            )
+          )
+        ]
+      ) <- (| foldlA' (\okSchemas (newSchemaName, (newSchemaContext, newMetadataObject)) -> do
+                checkedDuplicates <- (| withRecordInconsistency (do
+                     let (queryOld, mutationOld, subscriptionOld) = unzip3 $ fmap snd okSchemas
+                     let (queryNew, mutationNew, subscriptionNew) = rscParsed newSchemaContext
+                     bindErrorA -<
+                       checkFieldNamesUnique (queryNew ++ concat queryOld)
+                       (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
+                     case mutationNew of
+                       Nothing -> returnA -< ()
+                       Just ms -> bindErrorA -<
+                         checkFieldNamesUnique (ms ++ (concat $ catMaybes mutationOld))
+                         (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
+                     -- No need to check subscriptions as these are not supported
+                     returnA -< ())
+                  |) newMetadataObject
+                case checkedDuplicates of
+                  Nothing -> returnA -< okSchemas
+                  Just _  -> returnA -< (newSchemaName, rscParsed newSchemaContext):okSchemas
+              ) |) [] (Map.toList allRemoteSchemas)
 
     let unauthenticatedContext :: m GQLContext
         unauthenticatedContext = do
@@ -104,13 +119,13 @@ buildGQLContext =
         -- | The 'query' type of the remotes. TODO: also expose mutation
         -- remotes. NOT TODO: subscriptions, as we do not yet aim to support
         -- these.
-        queryRemotes = concat $ map (\(q,_,_)->q) $ Map.elems remotes
+        queryRemotes = concat $ map (\(q,_,_)->q) $ map snd remotes
         queryRemotesMap =
           Map.fromList $
           map (\(remoteSchemaName, (queryFieldParser, _, _) ) ->
                  (remoteSchemaName, map (\(FieldParser defn _) -> defn) queryFieldParser))
-          $ Map.toList remotes
-        mutationRemotes = concat $ fmap concat $ map (\(_,m,_)->m) $ Map.elems remotes
+          $ Map.toList $ fmap (rscParsed . fst) allRemoteSchemas
+        mutationRemotes = concat $ fmap concat $ map (\(_,m,_)->m) $ map snd remotes
         queryHasuraOrRelay = case queryType of
           QueryHasura -> queryWithIntrospection (Set.fromList $ Map.keys validTables)
                          validFunctions queryRemotes mutationRemotes
