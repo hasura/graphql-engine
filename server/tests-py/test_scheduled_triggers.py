@@ -9,13 +9,14 @@ import json
 import time
 
 # The create and delete tests should ideally go in setup and teardown YAML files,
-# We can't use that here because, the payload is dynamic i.e. in case of adhoc Scheduled Triggers
-# the value is the current timestamp and in case of cron  Triggers, the cron schedule is
+# We can't use that here because, the payload is dynamic i.e. in case of one-off scheduled
+# events the value is the current timestamp and in case of cron triggers, the cron schedule is
 # derived based on the current timestamp
 
 def stringify_datetime(dt):
     return dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
+@pytest.mark.serial
 class TestScheduledEvent(object):
 
     webhook_payload = {"foo":"baz"}
@@ -80,8 +81,8 @@ class TestScheduledEvent(object):
     def test_check_fired_webhook_event(self,hge_ctx,scheduled_triggers_evts_webhook):
         # Ideally, the timeout should be 60 seconds, within which a scheduled event
         # should be delivered, but this test is flaky while it's run in CI. So,
-        # increasing the timeout to 70 seconds.
-        event = scheduled_triggers_evts_webhook.get_event(70)
+        # increasing the timeout to 65 seconds.
+        event = scheduled_triggers_evts_webhook.get_event(65)
         validate_event_webhook(event['path'],'/test')
         validate_event_headers(event['headers'],{"header-key":"header-value"})
         assert event['body']['payload'] == self.webhook_payload
@@ -119,6 +120,7 @@ class TestScheduledEvent(object):
         st, resp = hge_ctx.v1q(query)
         assert st == 200,resp
 
+@pytest.mark.serial
 class TestCronTrigger(object):
 
     cron_trigger_name = "cron_trigger"
