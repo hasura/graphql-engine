@@ -126,21 +126,22 @@ instance A.FromJSON Transport
 -- | The timings and counts here were from requests with total time longer than
 -- 'bucketGreaterThan' (but less than any larger bucket cutoff times).
 newtype RunningTimeBucket = RunningTimeBucket { bucketGreaterThan :: Seconds }
-  deriving (Fractional, Num, Ord, Eq, Show, Generic, A.ToJSON, A.FromJSON, Hashable)
+  deriving (Ord, Eq, Show, Generic, A.ToJSON, A.FromJSON, Hashable)
 
 
 -- NOTE: an HDR histogram is a nice way to collect metrics when you don't know
 -- a priori what the most useful binning is. It's not clear how we'd make use
--- of that here though.
+-- of that here though. So these buckets are arbitrary, and can be adjusted as
+-- needed, but we shouldn't have more than a handful to keep payload size down.
 totalTimeBuckets :: [RunningTimeBucket]
-totalTimeBuckets = [0, 1000, 10*1000, 100*1000]
+totalTimeBuckets = coerce [0.000, 0.001, 0.050, 1.000, 3600.000 :: Seconds]
 
 -- | Save a timing metric sample in our in-memory store. These will be
 -- accumulated and uploaded periodically in "Hasura.Server.Telemetry".
 recordTimingMetric :: MonadIO m=> RequestDimensions -> RequestTimings -> m ()
 recordTimingMetric reqDimensions RequestTimings{..} = liftIO $ do
-  let ourBucket = fromMaybe 0 $ -- although we expect 'head' would be safe here
-        listToMaybe $ dropWhile (> realToFrac telemTimeTot) $
+  let ourBucket = fromMaybe (RunningTimeBucket 0) $ -- although we expect 'head' would be safe here
+        listToMaybe $ dropWhile (> coerce telemTimeTot) $
         reverse $ sort totalTimeBuckets
   atomicModifyIORef' requestCounters $ (,()) .
     HM.insertWith (<>) (reqDimensions, ourBucket) RequestTimingsCount{telemCount = 1, ..}

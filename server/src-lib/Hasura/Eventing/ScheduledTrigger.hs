@@ -103,6 +103,7 @@ import qualified Data.Text                   as T
 import qualified Database.PG.Query           as Q
 import qualified Database.PG.Query.PTI       as PTI
 import qualified Hasura.Logging              as L
+import qualified Hasura.Tracing              as Tracing
 import qualified Network.HTTP.Client         as HTTP
 import qualified PostgreSQL.Binary.Decoding  as PD
 import qualified PostgreSQL.Binary.Encoding  as PE
@@ -338,7 +339,7 @@ generateScheduleTimes from n cron = take n $ go from
     go = unfoldr (fmap dup . nextMatch cron)
 
 processCronEvents
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadIO m, Tracing.HasReporter m)
   => L.Logger L.Hasura
   -> LogEnvHeaders
   -> HTTP.Manager
@@ -374,7 +375,7 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
                                        ctiRetryConf
                                        ctiHeaders
                                        ctiComment
-            finally <- runExceptT $
+            finally <- Tracing.runTraceT "scheduled event" . runExceptT $
               runReaderT (processScheduledEvent logEnv pgpool scheduledEvent CronScheduledEvent) (logger, httpMgr)
             removeEventFromLockedEvents id' lockedCronEvents
             either logInternalError pure finally
@@ -383,7 +384,7 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
 processStandAloneEvents
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadIO m, Tracing.HasReporter m)
   => Env.Environment
   -> L.Logger L.Hasura
   -> LogEnvHeaders
@@ -429,7 +430,7 @@ processStandAloneEvents env logger logEnv httpMgr pgpool lockedStandAloneEvents 
                                                         retryConf
                                                         headerInfo'
                                                         comment
-                finally <- runExceptT $
+                finally <- Tracing.runTraceT "scheduled event" . runExceptT $
                   runReaderT (processScheduledEvent logEnv pgpool scheduledEvent StandAloneEvent) $
                                  (logger, httpMgr)
                 removeEventFromLockedEvents id' lockedStandAloneEvents
@@ -444,7 +445,7 @@ processStandAloneEvents env logger logEnv httpMgr pgpool lockedStandAloneEvents 
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
 processScheduledTriggers
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadIO m, Tracing.HasReporter m)
   => Env.Environment
   -> L.Logger L.Hasura
   -> LogEnvHeaders
@@ -466,6 +467,7 @@ processScheduledEvent ::
   , HasVersion
   , MonadIO m
   , MonadError QErr m
+  , Tracing.MonadTrace m
   )
   => LogEnvHeaders
   -> Q.PGPool
