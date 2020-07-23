@@ -752,7 +752,6 @@ class TestRelayQueriesPermissions:
     def test_article_pagination_backward(self, hge_ctx, transport):
         _test_relay_pagination(hge_ctx, transport, self.dir() + '/article_pagination/backward', 2)
 
-
 def _test_relay_pagination(hge_ctx, transport, test_file_prefix, no_of_pages):
     for i in range(no_of_pages):
         page_no = i + 1
