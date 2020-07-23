@@ -8,11 +8,11 @@ export type ConsoleNotification = {
   content: string;
   type: AllowedBadges | null;
   is_active?: boolean;
-  created_at: NotificationDate;
+  created_at?: NotificationDate;
   external_link?: string | null;
-  start_date: NotificationDate;
-  priority: number;
-  expiry_date: NotificationDate;
+  start_date?: NotificationDate;
+  priority?: number;
+  expiry_date?: NotificationDate;
 };
 
 export const defaultNotification: ConsoleNotification = {
