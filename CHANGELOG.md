@@ -7,6 +7,7 @@
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - console: update sidebar icons for different action and trigger types
+- console: add ErrorBoundary for VoyagerView and fix memory requirements of viz.js (close #4818) (#4856)
 
 ## `v1.3.0`
 
@@ -55,7 +56,6 @@
 - console: allow manual edit of column types and handle array data types (close #2544, #3335, #2583) (#4546)
 - console: add the ability to delete a role in permissions summary page (close #3353) (#4987)
 - console: fix styling of table row contents on tables on relationship page (#4974)
-- console: add error boundary to wrap VoyagerView (#4818)
 - cli: handle missing files during metadata apply (close #5163) (#5170)
 - docs: add pages on remote joins (close #4911) (#5132)
 - docs: add page on scheduled triggers (close #4913) (#5141)
