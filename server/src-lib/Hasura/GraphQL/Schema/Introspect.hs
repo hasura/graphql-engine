@@ -223,8 +223,8 @@ typeField =
     name :: FieldParser n (SomeType -> J.Value)
     name = P.selection_ $$(G.litName "name") Nothing P.string $>
       \case SomeType tp ->
-              case P.discardNullability tp of
-                P.TNamed (P.Definition name' _ _ _) ->
+              case tp of
+                P.Nullable (P.TNamed (P.Definition name' _ _ _)) ->
                   nameAsJSON name'
                 _ -> J.Null
     description :: FieldParser n (SomeType -> J.Value)

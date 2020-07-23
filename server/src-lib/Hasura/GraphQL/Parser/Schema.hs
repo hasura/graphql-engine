@@ -48,11 +48,15 @@ module Hasura.GraphQL.Parser.Schema (
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended  as Map
+import qualified Data.HashSet                  as Set
 
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Functor.Classes
-import           Language.GraphQL.Draft.Syntax (Description (..), Name (..), Value (..), Nullability(..), GType (..), Directive(..))
+import           Language.GraphQL.Draft.Syntax ( Description (..), Name (..)
+                                               , Value (..), Nullability(..)
+                                               , GType (..), Directive(..)
+                                               )
 
 class HasName a where
   getName :: a -> Name
@@ -328,16 +332,16 @@ data ObjectInfo = ObjectInfo ~[Definition FieldInfo] ~[Definition InterfaceInfo]
 -- there may be circularity. So we rather check for equality of names.
 instance Eq ObjectInfo where
   ObjectInfo fields1 interfaces1 == ObjectInfo fields2 interfaces2
-    =  fmap dName fields1     == fmap dName fields2
-    && fmap dName interfaces1 == fmap dName interfaces2
+    =  Set.fromList (fmap dName fields1    ) == Set.fromList (fmap dName fields2    )
+    && Set.fromList (fmap dName interfaces1) == Set.fromList (fmap dName interfaces2)
 data InterfaceInfo = InterfaceInfo ~[Definition FieldInfo] ~[Definition InterfaceInfo] ~[Definition ObjectInfo]
 -- Note that we can't check for equality of the fields and the interfaces since
 -- there may be circularity. So we rather check for equality of names.
 instance Eq InterfaceInfo where
   InterfaceInfo fields1 interfaces1 objects1 == InterfaceInfo fields2 interfaces2 objects2
-    =  fmap dName fields1     == fmap dName fields2
-    && fmap dName interfaces1 == fmap dName interfaces2
-    && fmap dName objects1    == fmap dName objects2
+    =  Set.fromList (fmap dName fields1    ) == Set.fromList (fmap dName fields2    )
+    && Set.fromList (fmap dName interfaces1) == Set.fromList (fmap dName interfaces2)
+    && Set.fromList (fmap dName objects1   ) == Set.fromList (fmap dName objects2   )
 data UnionInfo = UnionInfo ~[Definition ObjectInfo]
 
 data TypeInfo k where
@@ -359,7 +363,7 @@ eqTypeInfo (TIInputObject fields1) (TIInputObject fields2) = fields1 == fields2
 eqTypeInfo (TIObject oi1) (TIObject oi2)                   = oi1 == oi2
 eqTypeInfo (TIInterface ii1) (TIInterface ii2)             = ii1 == ii2
 eqTypeInfo (TIUnion (UnionInfo objects1))       (TIUnion (UnionInfo objects2))
-  =  fmap dName objects1     == fmap dName objects2
+  =  Set.fromList (fmap dName objects1) == Set.fromList (fmap dName objects2)
 eqTypeInfo _                       _                       = False
 
 getObjectInfo :: Type k -> Maybe (Definition ObjectInfo)
