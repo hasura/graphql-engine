@@ -36,11 +36,7 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
         url: '',
       },
       {
-        title: 'Manage',
-        url: getDataEventsLandingRoute(),
-      },
-      {
-        title: 'Data Events',
+        title: 'Data Triggers',
         url: getDataEventsLandingRoute(),
       },
       {

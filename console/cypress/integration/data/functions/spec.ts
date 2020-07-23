@@ -47,7 +47,6 @@ export const unTrackFunction = () => {
 };
 
 export const trackFunction = () => {
-  cy.get(getElementFromAlias('toggle-trackable-functions')).click();
   cy.get(
     getElementFromAlias(`add-track-function-${getCustomFunctionName(1)}`)
   ).should('exist');

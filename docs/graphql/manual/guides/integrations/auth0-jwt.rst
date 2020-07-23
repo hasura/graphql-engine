@@ -259,4 +259,4 @@ That’s it! This rule will be triggered on every successful signup/login and sy
 
 .. admonition:: Local dev with Auth0 rules
 
-   The sync step will require a reachable endpoint to Hasura and this is not possible in localhost. You can use `ngrok <https://ngrok.com/>`_ or similar services to expose your locally running Hasura with a public endpoint temporarily.
+   The sync step will require a reachable endpoint to Hasura and this is not possible in localhost. You can use `ngrok <https://ngrok.com/>`__ or similar services to expose your locally running Hasura with a public endpoint temporarily.
