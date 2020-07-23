@@ -36,7 +36,7 @@ If you want to take Hasura for a spin and check out the features, the following 
 Deployment guides
 -----------------
 
-If you're looking to use Hasura in a production-like environment, choose from the following guides:
+Choose from the full list of deployment guides:
 
 - `Deploy using Hasura Cloud <https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html>`__ (**recommended**)
 - :ref:`Deploy using Docker <deployment_docker>`
