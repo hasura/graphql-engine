@@ -14,7 +14,7 @@ interface BadgeProps {
   type: AllowedBadges;
 }
 
-interface ExtendedBadgeProps extends BadgeProps, StyledOwnBadgeProps { }
+interface ExtendedBadgeProps extends BadgeProps, StyledOwnBadgeProps {}
 
 // NOTE: update the colors once they are decided
 export const Badge: React.FC<ExtendedBadgeProps> = ({

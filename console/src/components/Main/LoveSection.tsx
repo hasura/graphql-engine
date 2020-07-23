@@ -106,7 +106,7 @@ type HasuraNotificationProps = {
   closeDropDown: () => void;
 };
 
-interface Props extends HasuraNotificationProps, StateProps { }
+interface Props extends HasuraNotificationProps, StateProps {}
 
 const HasuraNotifications: React.FC<Props> = ({
   consoleNotifications,
