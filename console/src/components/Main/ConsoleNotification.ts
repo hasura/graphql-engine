@@ -1,13 +1,18 @@
 import { AllowedBadges } from '../UIKit/atoms/Badge';
 
+export type NotificationDate = string | number | Date | null;
+
 export type ConsoleNotification = {
-  subject: string;
-  created_at: string | number | Date;
-  content: string;
-  type: AllowedBadges;
   id?: number;
+  subject: string;
+  content: string;
+  type: AllowedBadges | null;
   is_active?: boolean;
-  external_link?: string;
+  created_at: NotificationDate;
+  external_link?: string | null;
+  start_date: NotificationDate;
+  priority: number;
+  expiry_date: NotificationDate;
 };
 
 export const defaultNotification: ConsoleNotification = {
@@ -15,7 +20,10 @@ export const defaultNotification: ConsoleNotification = {
   created_at: Date.now(),
   content:
     "You're all caught up! \n There are no updates available at this point in time.",
-  type: 'no updates',
+  type: null,
+  start_date: Date.now(),
+  priority: 1,
+  expiry_date: null,
 };
 
 export const errorNotification: ConsoleNotification = {
@@ -23,5 +31,8 @@ export const errorNotification: ConsoleNotification = {
   created_at: Date.now(),
   content:
     'There was an error in fetching notifications. Try again in some time.',
-  type: 'error',
+  type: null,
+  start_date: null,
+  priority: 1,
+  expiry_date: null,
 };

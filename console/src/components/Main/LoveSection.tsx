@@ -2,14 +2,17 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
-import { ConsoleNotification } from './ConsoleNotification';
+import { ConsoleNotification, NotificationDate } from './ConsoleNotification';
 import styles from './Main.scss';
 import PixelHeart from './images/components/PixelHeart';
 import ConsoleLogo from './images/components/ConsoleLogo';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
 import { ReduxState } from '../../types';
 
-const getDateString = (date: string | number | Date) => {
+const getDateString = (date: NotificationDate) => {
+  if (!date) {
+    return '';
+  }
   return new Date(date).toLocaleString().split(', ')[0];
 };
 
@@ -103,7 +106,7 @@ type HasuraNotificationProps = {
   closeDropDown: () => void;
 };
 
-interface Props extends HasuraNotificationProps, StateProps {}
+interface Props extends HasuraNotificationProps, StateProps { }
 
 const HasuraNotifications: React.FC<Props> = ({
   consoleNotifications,
