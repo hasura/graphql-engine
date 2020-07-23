@@ -9,24 +9,23 @@ Run Hasura GraphQL engine on Heroku
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Introduction
 ------------
 
-This guide shows how to deploy Hasura GraphQL engine on Heroku. If you're looking to take Hasura for a spin, check out the :ref:`Heroku one-click deployment <heroku_one_click>`.
-If you're looking for a production environment, refer to the subsequent sections.
+This guide shows how to deploy Hasura GraphQL engine on Heroku. 
+
+Deploying Hasura with a new Postgres DB
+---------------------------------------
 
 .. _heroku_one_click:
 
-One-click deployment
---------------------
+Option 1: One-click deployment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can deploy Hasura on Heroku within a few seconds. Follow these steps to do so:
-
-Step 1: Deploy to Heroku
-^^^^^^^^^^^^^^^^^^^^^^^^
+Click the below button to deploy Hasura on Heroku in a few seconds:
 
 .. image:: https://camo.githubusercontent.com/83b0e95b38892b49184e07ad572c94c8038323fb/68747470733a2f2f7777772e6865726f6b7563646e2e636f6d2f6465706c6f792f627574746f6e2e737667
   :width: 200px
@@ -41,35 +40,17 @@ Step 1: Deploy to Heroku
 .. thumbnail:: /img/graphql/manual/guides/heroku-app.png
    :alt: Deploy to Heroku 
 
-Note that **Heroku's free Postgres add-on** is also automatically provisioned!
+Heroku's free Postgres add-on is automatically provisioned.
 
-Step 2: Open the Hasura console
+.. _heroku_cli_deployment:
+
+Option 2: Deploy via Heroku CLI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-That's it!  Head to ``https://<YOUR_HEROKU_APP>.herokuapp.com`` and open your app.
-You should see the Hasura console.
-
-.. thumbnail:: /img/graphql/manual/guides/heroku-app-deployed.png
-   :alt: Open the Hasura console
-
-Step 3: Hello World (GraphQL or event triggers)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Make your :ref:`first graphql query <first_graphql_query>`
-
-OR
-
-Set up your :ref:`first event trigger <first_event_trigger>`
-
-.. _heroku_new_app:
-
-Deploying with a new Postgres instance
---------------------------------------
 
 These are some sample deployment instructions while creating a new app.
 
 Step 1: Create an app with **--stack=container**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+************************************************
 
 Use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`__ to create a new Heroku app. Let's call
 the app ``graphql-on-postgres``.
@@ -88,7 +69,7 @@ the app ``graphql-on-postgres``.
 - ``HEROKU_APP_URL``: `https://graphql-on-postgres.herokuapp.com/`
 
 Step 2: Create the Heroku Postgres add-on
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*****************************************
 
 Create the Postgres add-on in your Heroku app.
 
@@ -104,7 +85,8 @@ Create the Postgres add-on in your Heroku app.
     Use heroku addons:docs heroku-postgresql to view documentation
 
 Step 3: **git push** to deploy
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+******************************
+
 Remember to change ``HEROKU_GIT_REMOTE`` to your git remote below. In our case:
 ``https://git.heroku.com/graphql-on-postgres.git``.
 
@@ -120,8 +102,11 @@ you should see the Hasura console.
 
 .. _heroku_existing_db:
 
-Deploying using an existing database
-------------------------------------
+Deploying using an existing Postgres DB
+---------------------------------------
+
+Option 1: Via Heroku UI
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Let's say you have an existing `Heroku Postgres <https://www.heroku.com/postgres>`__ database with data in it, and you'd
 like add GraphQL on it.
@@ -132,7 +117,7 @@ like add GraphQL on it.
    for the console and the GraphQL endpoint.
 
 Step 1: Deploy Hasura on Heroku
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*******************************
 
 Deploy Hasura on Heroku by clicking on this button:
 
@@ -148,7 +133,7 @@ to the **Manage App** screen on your Heroku dashboard.
 This will deploy Hasura with a free Postgres add-on automatically provisioned.
 
 Step 2: Remove the created Postgres add-on in the app
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*****************************************************
 
 Head to your Heroku dashboard and delete the Postgres add-on created in the previous step:
 
@@ -156,7 +141,7 @@ Head to your Heroku dashboard and delete the Postgres add-on created in the prev
    :alt: Delete the Postgres add-on
 
 Step 3: Configure environment variables
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+***************************************
 
 Now configure the ``DATABASE_URL`` with your existing Heroku Postgres database URL and a ``HASURA_GRAPHQL_ADMIN_SECRET``
 if you want to secure your endpoint.
@@ -170,27 +155,27 @@ if you want to secure your endpoint.
   :ref:`Postgres permissions <postgres_permissions>`.
 
 Step 4: Track tables and relationships
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**************************************
 
 Wait for the GraphQL engine to restart and then see :ref:`schema_existing_db` to enable GraphQL
 over the database.
 
-Configuring the database setup manually
----------------------------------------
+Option 2: Via Heroku CLI
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can set up the Hasura GraphQL engine as a "git push to deploy" app on
 `Heroku <https://www.heroku.com/platform>`__ and connect it to a `Heroku Postgres <https://www.heroku.com/postgres>`__
 instance. 
 
 Step 1: Clone the Hasura GraphQL engine Heroku app
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**************************************************
 
 The Hasura app with Heroku buildpack/configuration is available at:
 
 https://github.com/hasura/graphql-engine-heroku
 
 Step 2: Configure the database URL
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**********************************
 
 Edit the command in the ``Dockerfile`` to change which database the Hasura GraphQL engine connects to.
 By default, it connects to the primary database in your app which is available at ``DATABASE_URL``.
@@ -226,7 +211,7 @@ configure an admin secret key.
 
 
 Add the HASURA_GRAPHQL_ADMIN_SECRET env var
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*******************************************
 
 Head to the config-vars URL on your Heroku dashboard and set the ``HASURA_GRAPHQL_ADMIN_SECRET`` environment variable.
 
@@ -247,7 +232,7 @@ prompted for the admin secret key.
 
 
 (optional) Use the admin secret with the CLI
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+********************************************
 
 In case you're using the CLI to open the Hasura console, use the ``admin-secret`` flag when you open the console:
 
@@ -293,7 +278,7 @@ The current latest version is:
 Follow these steps to update Hasura GraphQL engine to the lastest version:
 
 Step 1: Clone the Hasura GraphQL engine Heroku app
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**************************************************
 
 The Hasura app with Heroku buildpack/configuration is available at:
 https://github.com/hasura/graphql-engine-heroku.
@@ -308,7 +293,7 @@ Clone the above repository.
 If you already have this, then pull the latest changes which will have the updated GraphQL engine Docker image.
 
 Step 2: Attach your Heroku app
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+******************************
 
 Let's say your Heroku app is called ``hasura-heroku`` and is running on ``https://hasura-heroku.herokuapp.com``.
 
@@ -324,7 +309,7 @@ to be able to push to this app.
 You can find your Heroku git repo in your Heroku - Settings - Info - Heroku Git URL
 
 Step 3: **git push** to deploy the latest Hasura GraphQL engine
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+***************************************************************
 
 When you ``git push`` to deploy, the Heroku app will get updated with the latest changes:
 
@@ -333,7 +318,7 @@ When you ``git push`` to deploy, the Heroku app will get updated with the latest
    git push heroku master
 
 Deploy a specific version of the Hasura GraphQL engine
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+******************************************************
 
 Head to the ``Dockerfile`` in the git repo you cloned in step 1.
 Change the ``FROM`` line to the specific version you want. A list of all releases can be found

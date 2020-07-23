@@ -15,14 +15,19 @@ Deploying Hasura GraphQL engine
 Deployment guides
 -----------------
 
-Deploy the Hasura GraphQL engine and connect it to a Postgres database:
+This section contains guides to deploy the Hasura GraphQL engine and connect it to a Postgres database.
+
+If you're looking for quick deployment options, check out the following guides:
 
 - :ref:`One-click deployment guides <one_click_deployment_guides>`
-- :ref:`Production deployment guides <production_deployment_guides>`
+
+The following is a list of all deployment guides:
+
+- :ref:`Deployment guides <all_deployment_guides>`
 
 .. admonition:: Custom Docker images or binaries
 
-  If you need a custom Docker image or binary for GraphQL engine, please see :ref:`this page <custom_docker_image>`
+  If you need a custom Docker image or binary for GraphQL engine, please see :ref:`this page <custom_docker_image>`.
 
 
 Configuration
