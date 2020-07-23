@@ -1,10 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styles from './Styles.scss';
 import Helmet from 'react-helmet';
 import HandlerEditor from '../Common/components/HandlerEditor';
 import KindEditor from '../Common/components/KindEditor';
-import ActionDefinitionEditor from '../Common/components/ActionDefinitionEditor';
-import TypeDefinitionEditor from '../Common/components/TypeDefinitionEditor';
 import HeadersConfEditor from '../Common/components/HeaderConfEditor';
 import Button from '../../../Common/Button';
 import {
@@ -19,6 +17,16 @@ import {
 } from './reducer';
 import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import { showWarningNotification } from '../../Common/Notification';
+import GraphQLEditor from '../Common/components/GraphQLEditor';
+import { actionDefinitionInfo } from '../Modify/ActionEditor';
+
+export const typeDefinitionInfo = {
+  label: 'New types definition',
+  tooltip:
+    'You can define new GraphQL types that you can use in the action definition above',
+};
 
 const AddAction = ({
   handler,
@@ -30,8 +38,17 @@ const AddAction = ({
   headers,
   forwardClientHeaders,
   derive,
+  readOnlyMode,
 }) => {
-  React.useEffect(() => {
+  useEffect(() => {
+    if (readOnlyMode)
+      dispatch(
+        showWarningNotification(
+          'Adding new action is not allowed in Read only mode!'
+        )
+      );
+  }, [dispatch, readOnlyMode]);
+  useEffect(() => {
     if (!derive.operation) {
       dispatch(setDefaults());
     }
@@ -80,6 +97,7 @@ const AddAction = ({
     !typesDefinitionError &&
     !actionDefinitionError &&
     !actionParseTimer &&
+    !readOnlyMode &&
     !typedefParseTimer;
 
   let actionType;
@@ -97,20 +115,25 @@ const AddAction = ({
     <div>
       <Helmet title={'Add Action - Actions | Hasura'} />
       <div className={styles.heading_text}>Add a new action</div>
-      <ActionDefinitionEditor
+      <GraphQLEditor
         value={actionDefinitionSdl}
         error={actionDefinitionError}
         onChange={actionDefinitionOnChange}
         timer={actionParseTimer}
-        placeholder={''}
+        readOnlyMode={readOnlyMode}
+        label={actionDefinitionInfo.label}
+        tooltip={actionDefinitionInfo.tooltip}
       />
       <hr />
-      <TypeDefinitionEditor
+      <GraphQLEditor
         value={typesDefinitionSdl}
         error={typesDefinitionError}
         timer={typedefParseTimer}
         onChange={typeDefinitionOnChange}
-        placeholder={''}
+        readOnlyMode={readOnlyMode}
+        label={typeDefinitionInfo.label}
+        tooltip={typeDefinitionInfo.tooltip}
+        allowEmpty
       />
       <hr />
       <HandlerEditor
@@ -119,6 +142,7 @@ const AddAction = ({
         placeholder="action handler"
         className={styles.add_mar_bottom_mid}
         service="create-action"
+        disabled={readOnlyMode}
       />
       <hr />
       {actionType === 'query' ? null : (
@@ -127,6 +151,7 @@ const AddAction = ({
             value={kind}
             onChange={kindOnChange}
             className={styles.add_mar_bottom_mid}
+            disabled={readOnlyMode}
           />
           <hr />
         </React.Fragment>
@@ -136,6 +161,7 @@ const AddAction = ({
         toggleForwardClientHeaders={toggleForwardClientHeaders}
         headers={headers}
         setHeaders={setHeaders}
+        disabled={readOnlyMode}
       />
       <hr />
       <Button
@@ -147,6 +173,12 @@ const AddAction = ({
       >
         Create
       </Button>
+      {readOnlyMode && (
+        <ToolTip
+          id="tooltip-actions-add-readonlymode"
+          message="Adding new action is not allowed in Read only mode!"
+        />
+      )}
     </div>
   );
 };

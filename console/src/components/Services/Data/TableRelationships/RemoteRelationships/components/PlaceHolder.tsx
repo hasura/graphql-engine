@@ -21,9 +21,11 @@ export const LoadingSkeleton = () => {
   );
   return (
     <div className={`${styles.schemaExplorerContainer} ${styles.overflowAuto}`}>
-      {Array(5).fill(null).map((_, i) => (
-        <div key={i}>{skeletonItem}</div>
-      ))}
+      {Array(5)
+        .fill(null)
+        .map((_, i) => (
+          <div key={i}>{skeletonItem}</div>
+        ))}
     </div>
   );
 };

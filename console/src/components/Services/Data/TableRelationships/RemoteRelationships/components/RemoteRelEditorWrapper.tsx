@@ -5,13 +5,15 @@ import RemoteRelEditor from './RemoteRelEditor';
 import RemoteRelCollapsedLabel from './EditorCollapsed';
 import { useRemoteRelationship } from '../state';
 import { saveRemoteRelationship, dropRemoteRelationship } from '../../Actions';
+import { Table } from '../../../../../Common/utils/pgUtils';
+import { Dispatch } from '../../../../../../types';
 
 type Props = {
   relationship?: RemoteRelationshipServer;
-  table: any;
+  table: Table;
   isLast: boolean;
   remoteSchemas: string[];
-  reduxDispatch: any; // TODO use Dispatch after ST is merged
+  reduxDispatch: Dispatch;
 };
 
 const EditorWrapper: React.FC<Props> = ({
@@ -30,6 +32,7 @@ const EditorWrapper: React.FC<Props> = ({
       isLast={isLast}
       state={state}
       dispatch={dispatch}
+      reduxDispatch={reduxDispatch}
     />
   );
 
@@ -47,7 +50,7 @@ const EditorWrapper: React.FC<Props> = ({
       }
     : null;
 
-  const expandButtonText = isLast ? 'Add a remote relationship' : 'Edit';
+  const expandButtonText = isLast ? 'Add a remote schema relationship' : 'Edit';
   const collapseButtonText = isLast ? 'Cancel' : 'Close';
   return (
     <ExpandableEditor

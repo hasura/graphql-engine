@@ -1,5 +1,3 @@
-import { defaultRemoteRelationship } from './TableRelationships/Actions';
-
 const defaultCurFilter = {
   where: { $and: [{ '': { '': '' } }] },
   limit: 10,
@@ -121,8 +119,6 @@ const defaultModifyState = {
   },
   remoteRelationships: {
     remoteSchema: {},
-    relationships: [{ ...defaultRemoteRelationship }],
-    fetchedRemoteRelationships: false,
   },
   rootFieldsEdit: {
     select: '',
@@ -142,6 +138,7 @@ const defaultModifyState = {
   lastSuccess: null,
   viewDefinition: null,
   viewDefinitionError: null,
+  viewDefSql: '',
   tableCommentEdit: { enabled: false, editedValue: null },
   alterColumnOptions: [], // Store supported implicit column -> column casts
   alterColumnOptionsFetchErr: null,

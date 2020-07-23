@@ -6,13 +6,15 @@ import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
+import styles from '../Actions.scss';
+
 // import TryItOut from '../../Common/Landing/TryItOut';
 
 const actionsArchDiagram = `${globals.assetsPath}/common/img/actions.png`;
 
 class Landing extends React.Component {
   render() {
-    const styles = require('../Actions.scss');
+    const { readOnlyMode } = this.props;
 
     const { dispatch } = this.props;
     const getIntroSection = () => {
@@ -36,7 +38,7 @@ class Landing extends React.Component {
         dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
       };
 
-      const addBtn = (
+      const addBtn = !readOnlyMode && (
         <Button
           data-test="data-create-actions"
           color="yellow"

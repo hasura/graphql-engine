@@ -23,7 +23,7 @@ module Hasura.GraphQL.Resolve.Context
 
   , txtConverter
 
-  , withSelSet
+  , traverseObjectSelectionSet
   , fieldAsPath
   , resolvePGCol
   , module Hasura.GraphQL.Utils
@@ -33,21 +33,21 @@ module Hasura.GraphQL.Resolve.Context
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Sequence                 as Seq
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict                  as Map
+import qualified Data.Sequence                        as Seq
+import qualified Database.PG.Query                    as Q
+import qualified Language.GraphQL.Draft.Syntax        as G
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Utils
-import           Hasura.GraphQL.Validate.Field
+import           Hasura.GraphQL.Validate.SelectionSet
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Internal       (currentSession, sessVarFromCurrentSetting)
+import           Hasura.RQL.DML.Internal              (currentSession, sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.SQL.DML                       as S
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
@@ -69,6 +69,7 @@ getPGColInfo nt n = do
     RFRelationship _       -> throw500 $ mkErrMsg "relation"
     RFComputedField _      -> throw500 $ mkErrMsg "computed field"
     RFRemoteRelationship _ -> throw500 $ mkErrMsg "remote relationship"
+    RFNodeId _ _           -> throw500 $ mkErrMsg "node id"
   where
     mkErrMsg ty =
       "found " <> ty <> " when expecting pgcolinfo for "
@@ -139,12 +140,6 @@ prepareColVal (WithScalarType scalarType colVal) = do
 
 txtConverter :: Applicative f => AnnPGVal -> f S.SQLExp
 txtConverter (AnnPGVal _ _ scalarValue) = pure $ toTxtValue scalarValue
-
-withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
-withSelSet selSet f =
-  forM (toList selSet) $ \fld -> do
-    res <- f fld
-    return (G.unName $ G.unAlias $ _fAlias fld, res)
 
 fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath = nameAsPath . _fName

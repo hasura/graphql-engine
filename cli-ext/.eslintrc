@@ -2,8 +2,9 @@
   "env": {
     "node": true
   },
-  "extends": "airbnb-base",
-  "plugins": ["promise"],
+  "extends": ["airbnb-base", "plugin:@typescript-eslint/recommended"],
+  "plugins": ["promise", "@typescript-eslint/eslint-plugin"],
+  "parser": "@typescript-eslint/parser",
   "rules": {
     "no-console": "off",
     "consistent-return": "off",
@@ -24,6 +25,10 @@
     "promise/no-promise-in-callback": "error",
     "promise/no-callback-in-promise": "error",
     "promise/no-return-in-finally": "error",
-    "prefer-arrow-callback": "error"
+    "prefer-arrow-callback": "error",
+    "@typescript-eslint/no-var-requires": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/camelcase": "off"
   }
 }

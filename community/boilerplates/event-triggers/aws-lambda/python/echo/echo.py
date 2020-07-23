@@ -19,7 +19,7 @@ def lambda_handler(event, context):
     elif body['table']['name'] == 'notes' and body['event']['op'] == 'UPDATE':
         message = 'Note {} updated, with data: {}'.format(data['new']['id'], data['new']['note'])
 
-    elif body['table'] == 'notes' and body['op'] == 'DELETE':
+    elif body['table'] == 'notes' and body['event']['op'] == 'DELETE':
         message = 'Note {} deleted, with data: {}'.format(data['old']['id'], data['old']['note'])
     return {
         "statusCode": 200,

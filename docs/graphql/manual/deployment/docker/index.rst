@@ -153,7 +153,7 @@ Advanced
 - :ref:`Securing your GraphQL endpoint <docker_secure>`
 - :ref:`GraphQL engine server logs <docker_logs>`
 - :ref:`Updating GraphQL engine <docker_update>`
-- :ref:`Setting up migrations <auth>`
+- :ref:`Setting up migrations <migrations>`
 
 .. toctree::
    :titlesonly:

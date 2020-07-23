@@ -143,7 +143,7 @@ The configuration file can be configured with the following config keys:
 
 .. note::
 
-  The above structure is for ``config v2`` file which is supported since ``v1.2.0``
+  The above structure is for the ``config v2`` file which is supported since ``v1.2.0``. Refer to :ref:`this page <migrations_upgrade_v2>` on how to upgrade to ``config v2``.
 
   A ``config v1`` file of your Hasura project would look like:
 

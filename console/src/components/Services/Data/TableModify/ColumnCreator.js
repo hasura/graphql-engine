@@ -3,7 +3,6 @@ import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
 import { commonDataTypes } from '../utils';
 
-import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
 import {
@@ -17,6 +16,7 @@ import { addColSql } from '../TableModify/ModifyActions';
 
 import styles from './ModifyTable.scss';
 import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
+import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
 
 const useColumnEditor = (dispatch, tableName) => {
   const initialState = {
@@ -178,15 +178,14 @@ const ColumnCreator = ({
     };
 
     return (
-      <span className={`${styles.select}`} data-test="col-type-0">
-        <SearchableSelectBox
+      <span className={styles.select} data-test="col-type-0">
+        <ColumnTypeSelector
           options={columnDataTypes}
           onChange={colType.onChange}
-          value={colType.value && columnTypeValueMap[colType.value]}
+          value={columnTypeValueMap[colType.value] || colType.value}
+          colIdentifier={0}
           bsClass={`col-type-${0} modify_select`}
           styleOverrides={customSelectBoxStyles}
-          filterOption={'prefix'}
-          placeholder="column_type"
         />
       </span>
     );

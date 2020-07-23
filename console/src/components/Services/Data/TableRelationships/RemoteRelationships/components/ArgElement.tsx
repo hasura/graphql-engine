@@ -18,13 +18,12 @@ const ArgElement: React.FC<Props> = ({
   handleArgValueKindChange,
   columns,
 }) => {
-  const style = {
-    marginLeft: `${(arg.depth + arg.parentFieldDepth) * 20 + 20}px`,
-  };
   const toggle = () => handleToggle(arg);
   return (
     <div
-      style={style}
+      style={{
+        marginLeft: `${(arg.depth + arg.parentFieldDepth) * 20 + 20}px`,
+      }}
       className={`${styles.display_flex} ${styles.add_mar_bottom_mid} ${styles.argElement}`}
     >
       <div

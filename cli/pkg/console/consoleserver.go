@@ -15,11 +15,6 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
-const (
-	XHasuraAdminSecret = "X-Hasura-Admin-Secret"
-	XHasuraAccessKey   = "X-Hasura-Access-Key"
-)
-
 type ConsoleServer struct {
 	Logger          *logrus.Logger
 	Port            string

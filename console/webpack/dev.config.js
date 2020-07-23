@@ -1,5 +1,3 @@
-// require('babel-polyfill');
-
 // Webpack config for development
 const fs = require('fs');
 const path = require('path');
@@ -16,8 +14,6 @@ const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
   require('./webpack-isomorphic-tools')
 );
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-
-// const { UnusedFilesWebpackPlugin } = require('unused-files-webpack-plugin');
 
 module.exports = {
   mode: 'development',
