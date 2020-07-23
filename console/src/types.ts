@@ -19,6 +19,7 @@ export type ReduxState = {
   main: {
     readOnlyMode: boolean;
     serverVersion: string;
+    latestPreReleaseServerVersion: string;
     latestStableServerVersion: string;
     consoleNotifications: ConsoleNotification[];
   };
