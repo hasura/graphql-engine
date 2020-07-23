@@ -4,6 +4,8 @@
 
 ### Bug fixes and improvements
 
+(Add entries here in the order of: server, console, cli, docs, others)
+
 - console: update sidebar icons for different action and trigger types
 
 ## `v1.3.0`
