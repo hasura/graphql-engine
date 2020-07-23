@@ -66,7 +66,7 @@ If you're moving your Hasura GraphQL engine to production, consult the following
    :titlesonly:
    :hidden:
 
-   Deployment guides <deploying/index>
+   Deployment guides <deployment-guides/index>
    Server configuration <graphql-engine-flags/index>
    postgres-requirements
    Securing GraphQL endpoint <securing-graphql-endpoint>
