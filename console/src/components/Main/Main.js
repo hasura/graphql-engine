@@ -12,7 +12,7 @@ import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
 import logo from './images/white-logo.svg';
 
-import LoveSection from './LoveSection';
+import NotificationSection from './NotificationSection';
 
 import styles from './Main.scss';
 
@@ -519,7 +519,7 @@ class Main extends React.Component {
               >
                 <div className={styles.headerRightNavbarBtn}>HELP</div>
               </a>
-              <LoveSection
+              <NotificationSection
                 closeDropDown={this.closeDropDown}
                 toggleDropDown={this.toggleDropDown}
               />
