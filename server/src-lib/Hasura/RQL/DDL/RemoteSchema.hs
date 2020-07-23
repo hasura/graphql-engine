@@ -27,6 +27,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types
 
+import qualified Data.Environment            as Env
 import qualified Hasura.GraphQL.Context            as GC
 import qualified Hasura.GraphQL.Resolve.Introspect as RI
 import qualified Hasura.GraphQL.Schema             as GS
@@ -41,10 +42,12 @@ runAddRemoteSchema
      , MonadIO m
      , HasHttpManager m
      )
-  => AddRemoteSchemaQuery -> m EncJSON
-runAddRemoteSchema q = do
+  => Env.Environment
+  -> AddRemoteSchemaQuery
+  -> m EncJSON
+runAddRemoteSchema env q = do
   addRemoteSchemaP1 name
-  addRemoteSchemaP2 q
+  addRemoteSchemaP2 env q
   buildSchemaCacheFor $ MORemoteSchema name
   pure successMsg
   where
@@ -61,11 +64,13 @@ addRemoteSchemaP1 name = do
 
 addRemoteSchemaP2Setup
   :: (HasVersion, QErrM m, MonadIO m, HasHttpManager m)
-  => AddRemoteSchemaQuery -> m RemoteSchemaCtx
-addRemoteSchemaP2Setup (AddRemoteSchemaQuery name def _) = do
+  => Env.Environment
+  -> AddRemoteSchemaQuery
+  -> m RemoteSchemaCtx
+addRemoteSchemaP2Setup env (AddRemoteSchemaQuery name def _) = do
   httpMgr <- askHttpManager
-  rsi <- validateRemoteSchemaDef name def
-  gCtx <- fetchRemoteSchema httpMgr rsi
+  rsi <- validateRemoteSchemaDef env name def
+  gCtx <- fetchRemoteSchema env httpMgr rsi
   pure $ RemoteSchemaCtx name (convRemoteGCtx gCtx) rsi
   where
     convRemoteGCtx rmGCtx =
@@ -76,9 +81,9 @@ addRemoteSchemaP2Setup (AddRemoteSchemaQuery name def _) = do
                    }
 
 addRemoteSchemaP2
-  :: (HasVersion, MonadTx m, MonadIO m, HasHttpManager m) => AddRemoteSchemaQuery -> m ()
-addRemoteSchemaP2 q = do
-  void $ addRemoteSchemaP2Setup q
+  :: (HasVersion, MonadTx m, MonadIO m, HasHttpManager m) => Env.Environment -> AddRemoteSchemaQuery -> m ()
+addRemoteSchemaP2 env q = do
+  void $ addRemoteSchemaP2Setup env q
   liftTx $ addRemoteSchemaToCatalog q
 
 runRemoveRemoteSchema
