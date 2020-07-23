@@ -3,11 +3,11 @@ import React from 'react';
 import StyledBadge, { StyledOwnBadgeProps } from './Badge';
 
 export type AllowedBadges =
-  | 'error'
-  | 'no updates'
+  | 'version update'
   | 'community'
   | 'update'
-  | 'event';
+  | 'event'
+  | 'security';
 
 interface BadgeProps {
   type: AllowedBadges;
@@ -15,6 +15,7 @@ interface BadgeProps {
 
 interface ExtendedBadgeProps extends BadgeProps, StyledOwnBadgeProps {}
 
+// NOTE: update the colors once they are decided
 export const Badge: React.FC<ExtendedBadgeProps> = ({
   type = '',
   ...props
@@ -23,7 +24,7 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
     case 'event':
       return (
         <StyledBadge {...props} bg="#001934" color="white">
-          events
+          event
         </StyledBadge>
       );
     case 'community':
@@ -38,16 +39,16 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
           version update
         </StyledBadge>
       );
-    case 'error':
+    case 'version update':
       return (
         <StyledBadge {...props} bg="#E52D2D" color="white">
-          error
+          version update
         </StyledBadge>
       );
-    case 'no updates':
+    case 'security':
       return (
         <StyledBadge {...props} bg="#001934" color="white">
-          no updates
+          security
         </StyledBadge>
       );
     default:
