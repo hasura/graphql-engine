@@ -74,13 +74,51 @@ buildGQLContext =
         validTables = Map.filter (tableFilter . _tiCoreInfo) allTables
         validFunctions = Map.elems $ Map.filter functionFilter allFunctions
 
-        rems = fmap (rscParsed . fst) allRemoteSchemas
-        (queryFields, mutationFields, subscriptionFields) = unzip3 $ Map.elems rems
-        allQueryFields = concat queryFields
-        allMutationFields = concat $ catMaybes mutationFields
-        allSubscriptionFields = concat $ catMaybes subscriptionFields
         allActionInfos = Map.elems allActions
+        queryRemotesMap =
+          Map.fromList $
+          map (\(remoteSchemaName, (queryFieldParser, _, _) ) ->
+                 (remoteSchemaName, map (\(FieldParser defn _) -> defn) queryFieldParser))
+          $ Map.toList $ fmap (rscParsed . fst) allRemoteSchemas
+        buildFullestDBSchema
+          :: m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+               , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+               )
+        buildFullestDBSchema = do
+          SQLGenCtx{ stringifyNum } <- askSQLGenCtx
+          let gqlContext =
+                (,)
+                <$> ( queryWithIntrospection (Set.fromMap $ validTables $> ())
+                      validFunctions mempty mempty
+                      allActionInfos nonObjectCustomTypes)
+                <*> (mutation (Set.fromMap $ validTables $> ()) mempty
+                     allActionInfos nonObjectCustomTypes)
+          flip runReaderT (adminRoleName, validTables, Frontend, QueryContext stringifyNum queryType queryRemotesMap) $
+            P.runSchemaT gqlContext
 
+    -- build the admin context so that we can check against name clashes with remotes
+    adminHasuraContext <- bindA -< buildFullestDBSchema
+
+    let queryFieldNames :: [G.Name]
+        queryFieldNames =
+          case P.discardNullability $ P.parserType $ fst adminHasuraContext of
+            P.TList _ -> []
+            P.TNamed def ->
+              case P.dInfo def of
+                -- It really ought to be this case; anything else is a programming error.
+                P.TIObject (P.ObjectInfo rootFields _interfaces) -> fmap P.dName rootFields
+                _ -> []
+    let mutationFieldNames :: [G.Name]
+        mutationFieldNames =
+          case P.discardNullability . P.parserType <$> snd adminHasuraContext of
+            Just (P.TNamed def) ->
+              case P.dInfo def of
+                -- It really ought to be this case; anything else is a programming error.
+                P.TIObject (P.ObjectInfo rootFields _interfaces) -> fmap P.dName rootFields
+                _ -> []
+            _ -> []
+
+    -- This block of code checks that there are no conflicting root field names between remotes.
     remotes ::
       ( [ ( RemoteSchemaName
           , ( [P.FieldParser (P.ParseT Identity) (RemoteSchemaInfo, G.Field G.NoFragments P.Variable)]
@@ -91,16 +129,27 @@ buildGQLContext =
         ]
       ) <- (| foldlA' (\okSchemas (newSchemaName, (newSchemaContext, newMetadataObject)) -> do
                 checkedDuplicates <- (| withRecordInconsistency (do
-                     let (queryOld, mutationOld, subscriptionOld) = unzip3 $ fmap snd okSchemas
-                     let (queryNew, mutationNew, subscriptionNew) = rscParsed newSchemaContext
+                     let (queryOld, mutationOld, _subscriptionOld) = unzip3 $ fmap snd okSchemas
+                     let (queryNew, mutationNew, _subscriptionNew) = rscParsed newSchemaContext
+                     -- Check for conflicts between remotes
                      bindErrorA -<
-                       checkFieldNamesUnique (queryNew ++ concat queryOld)
+                       checkFieldNamesUnique (fmap (P.getName . fDefinition) (queryNew ++ concat queryOld))
                        (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
+                     -- Check for conflicts between this remote and the tables
+                     bindErrorA -<
+                       checkFieldNamesUnique (fmap (P.getName . fDefinition) queryNew ++ queryFieldNames)
+                       (\name -> throw400 RemoteSchemaConflicts $ "Field cannot be overwritten by remote field " <> squote name)
+                     -- Ditto, but for mutations
                      case mutationNew of
                        Nothing -> returnA -< ()
-                       Just ms -> bindErrorA -<
-                         checkFieldNamesUnique (ms ++ (concat $ catMaybes mutationOld))
-                         (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
+                       Just ms -> do
+                         bindErrorA -<
+                           checkFieldNamesUnique (fmap (P.getName . fDefinition) (ms ++ (concat $ catMaybes mutationOld)))
+                           (\name -> throw400 Unexpected $ "Duplicate remote field " <> squote name)
+                         -- Ditto, but for mutations
+                         bindErrorA -<
+                           checkFieldNamesUnique (fmap (P.getName . fDefinition) ms ++ mutationFieldNames)
+                           (\name -> throw400 Unexpected $ "Field cannot be overwritten by remote field " <> squote name)
                      -- No need to check subscriptions as these are not supported
                      returnA -< ())
                   |) newMetadataObject
@@ -120,23 +169,12 @@ buildGQLContext =
         -- remotes. NOT TODO: subscriptions, as we do not yet aim to support
         -- these.
         queryRemotes = concat $ map (\(q,_,_)->q) $ map snd remotes
-        queryRemotesMap =
-          Map.fromList $
-          map (\(remoteSchemaName, (queryFieldParser, _, _) ) ->
-                 (remoteSchemaName, map (\(FieldParser defn _) -> defn) queryFieldParser))
-          $ Map.toList $ fmap (rscParsed . fst) allRemoteSchemas
         mutationRemotes = concat $ fmap concat $ map (\(_,m,_)->m) $ map snd remotes
         queryHasuraOrRelay = case queryType of
-          QueryHasura -> queryWithIntrospection (Set.fromList $ Map.keys validTables)
+          QueryHasura -> queryWithIntrospection (Set.fromMap $ validTables $> ())
                          validFunctions queryRemotes mutationRemotes
                          allActionInfos nonObjectCustomTypes
-          QueryRelay  -> relayWithIntrospection (Set.fromList $ Map.keys validTables) validFunctions
-
-        buildContextForRole :: RoleName -> m (RoleContext GQLContext)
-        buildContextForRole roleName = do
-          frontend <- buildContextForRoleAndScenario roleName Frontend
-          backend <- buildContextForRoleAndScenario roleName Backend
-          return $ RoleContext frontend $ Just backend
+          QueryRelay  -> relayWithIntrospection (Set.fromMap $ validTables $> ()) validFunctions
 
         buildContextForRoleAndScenario :: RoleName -> Scenario -> m GQLContext
         buildContextForRoleAndScenario roleName scenario = do
@@ -147,6 +185,12 @@ buildGQLContext =
                      allActionInfos nonObjectCustomTypes)
           flip runReaderT (roleName, validTables, scenario, QueryContext stringifyNum queryType queryRemotesMap) $
             P.runSchemaT gqlContext
+
+        buildContextForRole :: RoleName -> m (RoleContext GQLContext)
+        buildContextForRole roleName = do
+          frontend <- buildContextForRoleAndScenario roleName Frontend
+          backend <- buildContextForRoleAndScenario roleName Backend
+          return $ RoleContext frontend $ Just backend
 
         finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
         finalizeParser parser = runIdentity . P.runParseT . P.runParser parser
@@ -535,10 +579,10 @@ unauthenticatedSubscription =
  <&> fmap (P.handleTypename (RFRaw . J.String . G.unName))
 
 checkFieldNamesUnique
-  :: forall m n a
+  :: forall m
    . ( Monad m
      )
-  => [P.FieldParser n a]
+  => [G.Name]
   -- ^ list of fields whose names are to be checked for uniqueness
   -> (G.Name -> m ())
   -- ^ error action
@@ -546,9 +590,8 @@ checkFieldNamesUnique
 checkFieldNamesUnique fields err = do
   foldM_ go mempty fields
   where
-    go :: Set.HashSet G.Name -> P.FieldParser n a -> m (Set.HashSet G.Name)
+    go :: Set.HashSet G.Name -> G.Name -> m (Set.HashSet G.Name)
     go previous field = do
-      let name = P.getName $ fDefinition field
-      when (name `Set.member` previous) $
-        err name
-      return $ name `Set.insert` previous
+      when (field `Set.member` previous) $
+        err field
+      return $ field `Set.insert` previous
