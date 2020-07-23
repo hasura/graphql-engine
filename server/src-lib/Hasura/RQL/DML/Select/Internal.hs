@@ -208,7 +208,7 @@ fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
       S.FunctionArgs positional named
     toSQLExp (AETableRow Nothing)    = S.SERowIden $ mkBaseTableAlias pfx
     toSQLExp (AETableRow (Just acc)) = S.mkQIdenExp (mkBaseTableAlias pfx) acc
-    -- toSQLExp (AESession s)           = s
+    toSQLExp (AESession s)           = s
     toSQLExp (AEInput s)             = s
 
 -- uses row_to_json to build a json object
