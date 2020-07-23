@@ -4,7 +4,6 @@
 
 ### Bug fixes and improvements
 
-- server: mutations now propagate the tracing context to any event triggers they invoke
 - console: update sidebar icons for different action and trigger types
 
 ## `v1.3.0`
