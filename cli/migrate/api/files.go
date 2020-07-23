@@ -147,8 +147,8 @@ func getMigrationInfo(path string, migrationName string, version int) (Migration
 		}, nil
 }
 
-// ConsoleAPI method handles all requests on the /migrate/console/ route
-func ConsoleAPI(c *gin.Context) {
+// FilesAPI method handles all requests on the /migrate/console/ route
+func FilesAPI(c *gin.Context) {
 	migratePtr, ok := c.Get("migrate")
 	if !ok {
 		return
