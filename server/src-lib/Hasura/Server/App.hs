@@ -278,7 +278,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     requestId <- getRequestId headers    
     
     mapActionT runTraceT $ do
-      -- Add the request ID to the tracing metadata so that where
+      -- Add the request ID to the tracing metadata so that we
       -- can correlate requests and traces
       lift $ Tracing.attachMetadata [("request_id", unRequestId requestId)]
 
