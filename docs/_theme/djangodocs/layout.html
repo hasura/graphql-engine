@@ -28,7 +28,6 @@
 {% endblock %}
 
 {% block document %}
-  <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if not is_landing_page else '' }}{% endblock %}">
     <div class="main_container_wrapper">
       {% include 'pages/loading.html' %}
       <header
@@ -336,7 +335,6 @@
         {%- endif %}
       </div>
     </div>
-  </div>
 {% endblock %}
 
 {# Empty some default blocks out #}

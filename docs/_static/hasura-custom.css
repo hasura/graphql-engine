@@ -1,5 +1,5 @@
 html {
-  background-color: #f8f8f8 !important;
+  background-color: #f8f8f8;
 }
 
 ::selection {
@@ -8,13 +8,13 @@ html {
 
 /* override djangosite.css */
 body, p, #docs-content, #sidebar,
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6, dl dt, dl dd {
   font-family: 'Open Sans', Helvetica, Arial, sans-serif;
 }
 
 body, p, #docs-content, #sidebar, #sidebar a,
 tt, code, kbd, pre, pre.literal-block, samp,
-.graphiql .graphiql-container .CodeMirror {
+dl dt, dl dd, .graphiql .graphiql-container .CodeMirror {
   font-size: 16px;
 }
 
@@ -595,7 +595,10 @@ article ol ol {
 /*** Footer ***/
 
 .footer-hasura-custom {
+  padding: 30px;
   font-size: 16px;
+  font-family: sans-serif;
+  font-weight: 300;
   text-align: center;
   background-color: #eee;
   margin: 20px 0;
@@ -617,6 +620,11 @@ article ol ol {
 
 /*** Sidebar ***/
 
+.sphinxsidebarwrapper {
+  font-size: 92%;
+  margin: 15px;
+}
+
 #sidebar {
   background-color: #001934;
   width: 24% !important;
@@ -626,10 +634,7 @@ article ol ol {
   position: sticky;
   top: 0;
 }
-#sidebar li {
-  margin-top: 5px;
-  margin-bottom: 5px;
-}
+
 #sidebar .closeIcon {
   position: absolute;
   right: 10px;
@@ -637,24 +642,28 @@ article ol ol {
   cursor: pointer;
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper ul li {
-  /* list-style-type: none; */
-  /* color: #fff; */
-  color: rgba(214,214,214,1);
+#sidebar ul ul {
+  margin-top:0;
+  margin-bottom:0;
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a {
-  /* color: #fff; */
+#sidebar ul li {
+  color: rgba(214,214,214,1);
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+#sidebar ul li a {
   color: rgba(214,214,214,1);
   text-decoration: none;
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper ul li a code {
+#sidebar ul li a code {
   color: #32A061;
   text-decoration: none;
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper .header_main_logo {
+#sidebar .header_main_logo {
   display: flex;
   align-items: center;
   padding: 18px 0;
@@ -669,25 +678,23 @@ article ol ol {
   border-bottom: 1px solid #4F5763;
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper .header_main_logo a {
+#sidebar .header_main_logo a {
   color: #fff;
   text-decoration: none;
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper .header_main_logo a:hover {
+#sidebar .header_main_logo a:hover {
   opacity: 0.6;
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper .header_main_logo .version_txt {
+#sidebar .header_main_logo .version_txt {
   color: rgba(255,198,39,1);
   margin-top: 6px;
   margin-left: 10px;
   cursor: pointer;
 }
 
-
-
-#sidebar .sphinxsidebar .sphinxsidebarwrapper .header_main_logo .version_txt select {
+#sidebar .header_main_logo .version_txt select {
   cursor: pointer;
   background-color: transparent;
   border: 0;
@@ -708,19 +715,19 @@ article ol ol {
 
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper .header_main_logo .version_txt select:focus {
+#sidebar .header_main_logo .version_txt select:focus {
   outline: none;
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper .header_main_logo .version_txt .option_val {
+#sidebar .header_main_logo .version_txt .option_val {
   color: #000;
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper .header_main_logo .docs_label {
+#sidebar .header_main_logo .docs_label {
   margin-top: 5px;
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper .header_main_logo .docs_label .hero {
+#sidebar .header_main_logo .docs_label .hero {
   display: inline-block;
   vertical-align: middle;
   font-size: 21px;
@@ -728,11 +735,11 @@ article ol ol {
   margin-left: calc(24vw - 240px);
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper a.current.reference.internal {
+#sidebar a.current.reference.internal {
   color: #1CD3C6 !important;
 }
 
-#sidebar .sphinxsidebar .sphinxsidebarwrapper a.reference.internal > code.docutils.literal {
+#sidebar a.reference.internal > code.docutils.literal {
   color: rgba(214,214,214,1) !important;
 }
 
