@@ -47,12 +47,19 @@ Heroku's free Postgres add-on is automatically provisioned.
 Option 2: Deploy via Heroku CLI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-These are some sample deployment instructions while creating a new app.
+Follow these instructions to create a new Heroku app with a Postgres add-on.
 
-Step 1: Create an app with **--stack=container**
+Step 1: Clone the Hasura GraphQL engine Heroku app
+**************************************************
+
+The Hasura app with Heroku buildpack/configuration is available at:
+
+https://github.com/hasura/graphql-engine-heroku
+
+Step 2: Create an app with **--stack=container**
 ************************************************
 
-Use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`__ to create a new Heroku app. Let's call
+Use the `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`__ to create a new Heroku app from inside the cloned directory. Let's call
 the app ``graphql-on-postgres``.
 
 .. code-block:: bash
@@ -68,7 +75,7 @@ the app ``graphql-on-postgres``.
 - ``HEROKU_GIT_REMOTE``: `https://git.heroku.com/graphql-on-postgres.git`
 - ``HEROKU_APP_URL``: `https://graphql-on-postgres.herokuapp.com/`
 
-Step 2: Create the Heroku Postgres add-on
+Step 3: Create the Heroku Postgres add-on
 *****************************************
 
 Create the Postgres add-on in your Heroku app.
@@ -84,7 +91,7 @@ Create the Postgres add-on in your Heroku app.
     Created postgresql-angular-20334 as DATABASE_URL
     Use heroku addons:docs heroku-postgresql to view documentation
 
-Step 3: **git push** to deploy
+Step 4: **git push** to deploy
 ******************************
 
 Remember to change ``HEROKU_GIT_REMOTE`` to your git remote below. In our case:
@@ -105,32 +112,21 @@ you should see the Hasura console.
 Deploying using an existing Postgres DB
 ---------------------------------------
 
-Option 1: Via Heroku UI
-^^^^^^^^^^^^^^^^^^^^^^^
-
 Let's say you have an existing `Heroku Postgres <https://www.heroku.com/postgres>`__ database with data in it, and you'd
-like add GraphQL on it.
+like to add GraphQL on it.
 
 .. note::
 
    In case you're exposing an existing database (esp. if it is production), please configure an admin secret key
    for the console and the GraphQL endpoint.
 
+Option 1: Via Heroku UI
+^^^^^^^^^^^^^^^^^^^^^^^
+
 Step 1: Deploy Hasura on Heroku
 *******************************
 
-Deploy Hasura on Heroku by clicking on this button:
-
-.. image:: https://camo.githubusercontent.com/83b0e95b38892b49184e07ad572c94c8038323fb/68747470733a2f2f7777772e6865726f6b7563646e2e636f6d2f6465706c6f792f627574746f6e2e737667
-  :width: 200px
-  :alt: heroku_deploy_button
-  :class: no-shadow
-  :target: https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku
-
-Follow the Heroku instructions to deploy, check if the Hasura console loads up when you click on **View app** and then head
-to the **Manage App** screen on your Heroku dashboard.
-
-This will deploy Hasura with a free Postgres add-on automatically provisioned.
+Deploy Hasura on Heroku as described in :ref:`this section <heroku_one_click>`. 
 
 Step 2: Remove the created Postgres add-on in the app
 *****************************************************
@@ -144,7 +140,7 @@ Step 3: Configure environment variables
 ***************************************
 
 Now configure the ``DATABASE_URL`` with your existing Heroku Postgres database URL and a ``HASURA_GRAPHQL_ADMIN_SECRET``
-if you want to secure your endpoint.
+if you want to :ref:`secure your endpoint <heroku_secure>`.
 
 .. thumbnail:: /img/graphql/manual/deployment/heroku-database-url-access.png
    :alt: Configure environment variables
