@@ -215,6 +215,8 @@ library
                      , random
                      , mmorph
                      , http-api-data
+                     , lens-aeson
+                     , safe
                      
                      , semigroups >= 0.19.1
 
