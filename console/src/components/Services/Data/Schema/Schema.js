@@ -536,8 +536,7 @@ class Schema extends Component {
         'Relationships inferred via foreign-keys that are not exposed over the GraphQL API',
         <>
           <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/table-relationships/index.html" />
-          &nbsp;
-          {getTrackAllBtn()}
+          <span className={styles.add_mar_left}>{getTrackAllBtn()}</span>
         </>
       );
 
