@@ -123,7 +123,7 @@ export const getInsertUpQuery = (
         return `'${JSON.stringify(value)}'`;
       }
 
-      if (typeof value === 'undefined') {
+      if (typeof value === 'undefined' || value === null) {
         return '';
       }
 
@@ -157,7 +157,7 @@ export const getInsertDownQuery = (
     }
 
     if (typeof currVal === 'object') {
-      return `"${pk} = '${JSON.stringify(currVal)}'"`;
+      return `"${pk}" = '${JSON.stringify(currVal)}'`;
     }
 
     return `"${pk}" = ${currVal}`;
