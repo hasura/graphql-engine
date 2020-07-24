@@ -22,7 +22,7 @@ const MigrationCheckBox: React.FC<MigrationCheckBoxProps> = ({
     This is a migration
     <ToolTip
       placement="right"
-      message="create the current insertion as a migration"
+      message="Create a migration file with the current insertion"
     />
   </label>
 );
