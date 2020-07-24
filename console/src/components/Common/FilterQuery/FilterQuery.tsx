@@ -78,10 +78,12 @@ const FilterQuery: React.FC<Props> = props => {
           >
             Run query
           </Button>
-          {table.is_enum ? <ReloadEnumValuesButton
-            dispatch={dispatch}
-            tooltipStyle={styles.add_mar_left_mid}
-          /> : null}
+          {table.is_enum ? (
+            <ReloadEnumValuesButton
+              dispatch={dispatch}
+              tooltipStyle={styles.add_mar_left_mid}
+            />
+          ) : null}
         </div>
       </form>
       {/* TODO: Handle loading state */}
