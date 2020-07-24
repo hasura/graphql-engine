@@ -232,6 +232,11 @@ class InsertItem extends Component {
                 ) : null}
                 {isCLIMode ? (
                   <MigrationCheckBox
+                    className={`${
+                      currentTable.is_enum || this.state.insertedRows > 0
+                        ? styles.m10
+                        : ''
+                    }`}
                     onChange={this.toggleMigrationCheckBox}
                     isChecked={this.state.isMigrationChecked}
                   />

@@ -206,6 +206,10 @@ a.expanded {
   display: inline-block;
   margin-left: 52px;
   font-size: 14px;
+  margin-top: 3px;
+  &.m10 {
+    margin: 3px 10px;
+  }
 }
 
 input[type='checkbox'].migrationCheckbox {

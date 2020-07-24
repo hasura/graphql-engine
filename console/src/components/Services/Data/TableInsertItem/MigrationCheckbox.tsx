@@ -5,13 +5,15 @@ import ToolTip from '../../../Common/Tooltip/Tooltip';
 type MigrationCheckBoxProps = {
   isChecked: boolean;
   onChange: () => void;
+  className: string;
 };
 
 const MigrationCheckBox: React.FC<MigrationCheckBoxProps> = ({
   isChecked,
   onChange,
+  className,
 }) => (
-  <label className={styles.labelText}>
+  <label className={`${styles.labelText} ${className}`}>
     <input
       type="checkbox"
       checked={isChecked}
