@@ -31,7 +31,7 @@ from sphinx.util import compat
 compat.make_admonition = BaseAdmonition
 
 # from sphinx.util.osutil import relative_uri
-StandaloneHTMLBuilder.script_files = ["_static/vendor.js"]
+StandaloneHTMLBuilder.script_files = ["_static/scripts/vendor.js"]
 # StandaloneHTMLBuilder.imgpath = relative_uri("v0.13", '_images')
 
 # Defaults to development
@@ -85,7 +85,6 @@ extensions = [
     "sphinxcontrib.httpdomain",
     "sphinxcontrib.images",
     "sphinx.ext.todo",
-    "global_tabs",
     "sphinx_tabs.tabs",
     "graphiql",
     "lexer_jsx",
