@@ -172,7 +172,8 @@ runHasuraGQ reqId (query, queryParsed) userInfo resolvedOp = do
 
     E.ExOpMutation respHeaders tx -> trace "pg" $ do
       logQueryLog logger query Nothing reqId
-      (respHeaders,) <$> Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withUserInfo userInfo) tx
+      ctx <- Tracing.currentContext
+      (respHeaders,) <$> Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withTraceContext ctx . withUserInfo userInfo) tx
 
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
