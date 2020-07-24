@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import { ConsoleNotification, NotificationDate } from './ConsoleNotification';
 import styles from './Main.scss';
-import PixelHeart from './images/components/PixelHeart';
 import ConsoleLogo from './images/components/ConsoleLogo';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
 import { ReduxState } from '../../types';
@@ -32,8 +31,8 @@ const Update: React.FC<ConsoleNotification> = ({
   }
 
   return (
-    <Box>
-      <Flex height={35} px="25px" pt="5px" justifyContent="space-between">
+    <Box className={styles.updateBox}>
+      <Flex px="25px" justifyContent="space-between">
         <Flex justifyContent="space-between" bg="white">
           {type ? <Badge type={type} mr="12px" /> : null}
           <Heading as="h4" color="#1cd3c6" fontSize="16px">
@@ -44,7 +43,7 @@ const Update: React.FC<ConsoleNotification> = ({
           {props?.start_date ? getDateString(props.start_date) : null}
         </Text>
       </Flex>
-      <Flex borderBottom="1px solid #f7f7f7">
+      <Flex pt="4px">
         <Text fontSize={15} fontWeight="normal" px={25} py={2}>
           {content}
           <br />
@@ -81,7 +80,6 @@ const VersionUpdateNotification: React.FC<Pick<
     content={`Hey There! There's a new server version ${latestVersion} available.`}
     start_date={Date.now()}
   >
-    <span className={styles.middot}> &middot; </span>
     <a
       href={`https://github.com/hasura/graphql-engine/releases/tag/${latestVersion}`}
       target="_blank"
@@ -107,11 +105,16 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       className={`dropdown-menu ${styles.consoleNotificationPanel}`}
       ref={ref}
     >
-      <Flex justifyContent="space-between" px={20} py={3}>
+      {/* TODO: Use style system colors here */}
+      <Flex alignItems="center" p={20} bg="#e1e1e1" top={0} position="sticky">
         <Heading as="h2" color="#000" fontSize="20px">
           Latest updates
-          <ConsoleLogo className={styles.consoleLogoNotifications} width={20} />
         </Heading>
+        <ConsoleLogo
+          className={styles.consoleLogoNotifications}
+          width={24}
+          height={24}
+        />
       </Flex>
       {showVersionUpdate ? (
         <VersionUpdateNotification latestVersion={latestVersion} />
@@ -150,7 +153,7 @@ const checkVersionUpdate = (
     latestServerVersionToCheck = latestPreRelease;
   }
 
-  // TODO: update with LS utils PR methods
+  // TODO: update with LS utils methods once PR is merged
   const versionCheckKey = 'versionUpdateCheck: lastClosed';
 
   try {
@@ -233,12 +236,13 @@ const HasuraNotifications: React.FC<Props> = ({
         onClick={toggleDropDown}
         ref={wrapperRef}
       >
-        <PixelHeart className="img-responsive" width={32} height={20} />
+        <ConsoleLogo width={25} height={25} />
       </div>
       <Notifications
         data={consoleNotifications}
         ref={dropDownRef}
         showVersionUpdate={displayNewVersionNotif}
+        // TODO: remove this later showVersionUpdate={0 > -1}
         latestVersion={latestVersion}
       />
     </>
