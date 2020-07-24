@@ -213,16 +213,13 @@ class InsertItem extends Component {
                     const inputs = form.getElementsByTagName('input');
                     for (let i = 0; i < inputs.length; i++) {
                       switch (inputs[i].type) {
-                        // case 'hidden':
                         case 'text':
                           inputs[i].value = '';
                           break;
                         case 'radio':
                         case 'checkbox':
-                          // inputs[i].checked = false;
                           break;
                         default:
-                        // pass
                       }
                     }
                   }}
@@ -230,10 +227,9 @@ class InsertItem extends Component {
                 >
                   Clear
                 </Button>
-                <ReloadEnumValuesButton
-                  dispatch={dispatch}
-                  isEnum={currentTable.is_enum}
-                />
+                {currentTable.is_enum ? (
+                  <ReloadEnumValuesButton dispatch={dispatch} />
+                ) : null}
                 {isCLIMode ? (
                   <MigrationCheckBox
                     onChange={this.toggleMigrationCheckBox}
