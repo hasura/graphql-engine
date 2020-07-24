@@ -5,11 +5,13 @@ import {
   flexbox,
   border,
   color,
+  position,
   FlexboxProps,
   SpaceProps,
   LayoutProps,
   BorderProps,
   ColorProps,
+  PositionProps,
 } from 'styled-system';
 
 import { Box, BoxProps } from '../Box';
@@ -20,7 +22,8 @@ interface FlexOwnProps
     SpaceProps,
     LayoutProps,
     BorderProps,
-    ColorProps {}
+    ColorProps,
+    PositionProps {}
 
 export const Flex = styled(Box)<FlexOwnProps>`
   display: flex;
@@ -30,4 +33,5 @@ export const Flex = styled(Box)<FlexOwnProps>`
   ${layout}
   ${flexbox}
   ${border}
+  ${position}
 `;
