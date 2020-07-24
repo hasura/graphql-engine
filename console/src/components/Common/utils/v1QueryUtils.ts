@@ -103,22 +103,33 @@ export const getInsertUpQuery = (
   tableDef: TableDefinition,
   insertion: Record<string, any>
 ) => {
-  const columns = Object.keys(insertion).join(', ');
+  const columns = Object.keys(insertion)
+    .map(key => `"${key}"`)
+    .join(', ');
   const insertValues = Object.values(insertion);
 
-  const values = insertValues.map(value => {
-    // NOTE: There might be other data types that we might have to handle
-    if (typeof value === 'string') {
-      return `'${value}'`;
-    }
+  const values = insertValues
+    .map(value => {
+      if (typeof value === 'string') {
+        return `'${value}'`;
+      }
 
-    return value;
-  });
+      if (typeof value === 'object') {
+        return `'${JSON.stringify(value)}'`;
+      }
+
+      if (typeof value === 'undefined') {
+        return '';
+      }
+
+      return value;
+    })
+    .join(', ');
 
   return {
     type: 'run_sql',
     args: {
-      sql: `INSERT INTO ${tableDef.schema}.${tableDef.name}(${columns}) VALUES (${values});`,
+      sql: `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columns}) VALUES (${values});`,
     },
   };
 };
@@ -133,10 +144,14 @@ export const getInsertDownQuery = (
   const clauses = Object.keys(whereClause).map(pk => {
     const currVal = whereClause[pk];
     if (typeof currVal === 'string') {
-      return `${pk} = '${currVal}'`;
+      return `"${pk}" = '${currVal}'`;
     }
 
-    return `${pk} = ${currVal}`;
+    if (typeof currVal === 'object') {
+      return `"${pk} = '${JSON.stringify(currVal)}'"`;
+    }
+
+    return `"${pk}" = ${currVal}`;
   });
 
   const condition = clauses.join(' AND ');
@@ -144,7 +159,7 @@ export const getInsertDownQuery = (
   return {
     type: 'run_sql',
     args: {
-      sql: `DELETE FROM ${tableDef.schema}.${tableDef.name} WHERE ${condition};`,
+      sql: `DELETE FROM "${tableDef.schema}"."${tableDef.name}" WHERE ${condition};`,
     },
   };
 };
