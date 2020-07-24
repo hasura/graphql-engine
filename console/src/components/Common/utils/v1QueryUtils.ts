@@ -9,6 +9,7 @@ import {
   BaseTableColumn,
   PrimaryKey,
   createPKClause,
+  arrayToPostgresArray,
 } from './pgUtils';
 import { Nullable } from './tsUtils';
 
@@ -114,6 +115,10 @@ export const getInsertUpQuery = (
         return `'${value}'`;
       }
 
+      if (Array.isArray(value)) {
+        return arrayToPostgresArray(value);
+      }
+
       if (typeof value === 'object') {
         return `'${JSON.stringify(value)}'`;
       }
@@ -145,6 +150,10 @@ export const getInsertDownQuery = (
     const currVal = whereClause[pk];
     if (typeof currVal === 'string') {
       return `"${pk}" = '${currVal}'`;
+    }
+
+    if (Array.isArray(currVal)) {
+      return `"${pk}" = ${arrayToPostgresArray(currVal)}`;
     }
 
     if (typeof currVal === 'object') {
@@ -554,20 +563,20 @@ export const generateCreateEventTriggerQuery = (
         state.webhook.type === 'env' ? state.webhook.value.trim() : null,
       insert: state.operations.insert
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       update: state.operations.update
         ? {
-            columns: state.operationColumns
-              .filter(c => !!c.enabled)
-              .map(c => c.name),
-          }
+          columns: state.operationColumns
+            .filter(c => !!c.enabled)
+            .map(c => c.name),
+        }
         : null,
       delete: state.operations.delete
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       enable_manual: state.operations.enable_manual,
       retry_conf: state.retryConf,
