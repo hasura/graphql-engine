@@ -184,7 +184,7 @@ console.
 Expose GraphQL engine (HTTPS)
 ---------------------
 
-Let's expose Hasura with `Ingres 
+Let's expose Hasura with `Ingress 
 <https://cloud.google.com/kubernetes-engine/docs/concepts/ingress/>`_. Create service:
 
 .. code-block:: yaml
