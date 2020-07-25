@@ -196,7 +196,6 @@ Let's expose Hasura with `Ingres
 	  labels:
 	    app: hasura
 	  name: hasura
-	  namespace: default
 	spec:
 	  ports:
 	    - protocol: TCP
