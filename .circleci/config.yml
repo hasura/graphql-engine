@@ -399,9 +399,9 @@ jobs:
         paths:
         - /go/pkg
     - *wait_for_postgres
-    - run:
-        name: test cli
-        command: .circleci/test-cli.sh
+    # - run:
+    #     name: test cli
+    #     command: .circleci/test-cli.sh
     - run:
         name: build cli
         working_directory: cli
