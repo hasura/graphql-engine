@@ -134,3 +134,4 @@ case $1 in
     build_and_push_patch_release
     ;;
 esac
+
