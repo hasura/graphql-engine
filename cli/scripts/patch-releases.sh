@@ -26,8 +26,12 @@ create_patch_release_file() {
 
   # create patch release file with template
   cp "${ROOT}/cli/scripts/patch-release-template.md" "${PATCH_RELEASES_DIRECTORY}/${PATCH_RELEASE_FILENAME}"
-
-  # TODO: append asset urls to file
+  
+  # add assets links
+  CDN_ROOT_URL="https://storage.googleapis.com/hasura-oss-cli-cdn/test-releases/${PATCH_RELEASE_FILENAME_HEAD}${PATCH_NUMBER}"
+  echo [linux]'('${CDN_ROOT_URL}/cli-hasura-linux-amd64')' >> "${PATCH_RELEASES_DIRECTORY}/${PATCH_RELEASE_FILENAME}"
+  echo [macos]'('${CDN_ROOT_URL}/cli-hasura-darwin-amd64')' >> "${PATCH_RELEASES_DIRECTORY}/${PATCH_RELEASE_FILENAME}" 
+  echo [windows]'('${CDN_ROOT_URL}/cli-hasura-windows-amd64.exe')' >> "${PATCH_RELEASES_DIRECTORY}/${PATCH_RELEASE_FILENAME}" 
 }
 
 is_patch_release() {
@@ -91,29 +95,27 @@ build_and_push_patch_release() {
   # find the latest patch release file
   PATCH_NUMBER=1
 
-  for (( PATCH_NUMBER=50; PATCH_NUMBER >= 0; --PATCH_NUMBER ))
+  for (( PATCH_NUMBER=50; PATCH_NUMBER > 0; --PATCH_NUMBER ))
   do
     FILENAME="${PATCH_RELEASES_DIRECTORY}/${PATCH_RELEASE_FILENAME_HEAD}${PATCH_NUMBER}${PATCH_RELEASE_FILENAME_TAIL}"
-    echo "$FILENAME"
     if [ -f  "${FILENAME}" ]; then
         PATCH_VERSION_MD=$(basename -- "$FILENAME")
         PATCH_VERSION="${PATCH_VERSION_MD%.*}"
         break
     fi
   done
-  echo $PATCH_NUMBER
   if [ $PATCH_NUMBER -eq 0 ]
   then
     echo "no patch release found for ${LATEST_TAG}"
     exit 1
   fi
-
+  echo "building binaries for patch release " ${PATCH_VERSION}
   # build binaries
   "${ROOT}"/cli/scripts/build-cli.sh "${PATCH_VERSION}"
-	# ls "${OUTPUT_DIR}"/"${PATCH_VERSION}"/cli-hasura-* | xargs upx
+	ls "${OUTPUT_DIR}"/"${PATCH_VERSION}"/cli-hasura-* | xargs upx
 
   # push binaries to gcloud bucket
-  gsutil -m cp -r "${ROOT}"/cli/_output/"${PATCH_VERSION}" ${PATCH_RELEASES_GCLOUD_BUCKET}/"${PATCH_VERSION}"
+  gsutil -m cp -r "${ROOT}"/cli/_output/"${PATCH_VERSION}/*" ${PATCH_RELEASES_GCLOUD_BUCKET}/"${PATCH_VERSION}/"
 }
 
 if [ "$#" -lt 1 ]; then
