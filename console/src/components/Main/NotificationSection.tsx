@@ -11,6 +11,7 @@ import { TelemetryState } from '../../telemetry/state';
 import { versionGT, checkStableVersion } from '../../helpers/versionUtils';
 import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
+import Button from '../Common/Button';
 
 const getDateString = (date: NotificationDate) => {
   if (!date) {
@@ -140,15 +141,21 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       ref={ref}
     >
       {/* TODO: Use style system colors here */}
-      <Flex alignItems="center" p={20} bg="#e1e1e1">
-        <Heading as="h2" color="#000" fontSize="20px">
-          Latest updates
-        </Heading>
-        <ConsoleLogo
-          className={styles.consoleLogoNotifications}
-          width={24}
-          height={24}
-        />
+      <Flex alignItems="center" p={20} bg="#e1e1e1" justifyContent="space-between">
+        <Flex alignItems="center" justifyContent="center">
+          <Heading as="h2" color="#000" fontSize="20px">
+            Latest updates
+          </Heading>
+          <ConsoleLogo
+            className={styles.consoleLogoNotifications}
+            width={24}
+            height={24}
+          />
+        </Flex>
+        {/* TODO: add mark all as read functionality -> clear the badge, clear db value and..... also this might be a little too large? */}
+        <Button title="Mark all as read" onClick={() => { console.log('Read all!') }}>
+          Mark all as read
+        </Button>
       </Flex>
       <Box className={styles.notificationsContainer}>
         {showVersionUpdate ? (
