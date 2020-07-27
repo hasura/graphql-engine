@@ -1,3 +1,52 @@
+commit 0ae53841156800dcf8758ed1a861e87dbb10fe11
+Author: Phil Freeman <phil@hasura.io>
+Date:   Thu Jul 23 13:39:26 2020 -0700
+
+    Propagate the trace context to event triggers (#5409)
+
+    * Propagate the trace context to event triggers
+
+    * Handle missing trace and span IDs
+
+    * Store trace context as one LOCAL
+
+    * Add migrations
+
+    * Documentation
+
+    * changelog
+
+    * Fix warnings
+
+    * Respond to code review suggestions
+
+    * Respond to code review
+
+    * Undo changelog
+
+    * Update CHANGELOG.md
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit 2eab6a89aa7d00152dc5b10986f06937c8e6f71f
+Author: Brandon Simmons <brandon.m.simmons@gmail.com>
+Date:   Mon Jul 20 22:28:12 2020 -0400
+
+    Fix latency buckets for telemetry data
+
+    These must have gotten messed up during a refactor. As a consequence
+    almost all samples received so far fall into the single erroneous 0 to
+    1K seconds (originally supposed to be 1ms?) bucket.
+
+    I also re-thought what the numbers should be, but these are still
+    arbitrary and might want adjusting in the future.
+
+commit 709460b9ce9cfc11309afe362f81d3db1e548a38
+Author: Tirumarai Selvan <tiru@hasura.io>
+Date:   Mon Jul 20 13:45:15 2020 +0530
+
+    update pg-client (#5421)
+
 commit 1eb36bbbb30b79f38a0c7408ecec88f4b2a94cd6 (origin-hasura/master, master)
 Author: Anon Ray <ecthiender@users.noreply.github.com>
 Date:   Thu Jul 16 18:49:42 2020 +0530
@@ -112,14 +161,6 @@ Date:   Tue Jun 30 23:53:10 2020 -0400
     See: https://github.com/hasura/pg-client-hs/pull/19
 
     Also related: #3388 #4077
-
-commit bc3d735bf3be806b433eee1fcd70d38146caf710
-Author: Auke Booij <auke@hasura.io>
-Date:   Tue Jun 30 10:39:25 2020 +0200
-
-    server/docs: add instructions to fix loss of float precision in PostgreSQL <= 11 (#5187)
-
-    This adds a server flag, --pg-connection-options, that can be used to set a PostgreSQL connection parameter, extra_float_digits, that needs to be used to avoid loss of data on older versions of PostgreSQL, which have odd default behavior when returning float values. (fixes #5092)
 
 commit 93104e616f53ed46503577032c9eacf9be31575a
 Merge: 6c689992 1dbe5cd1
