@@ -7,6 +7,7 @@ module Hasura.GraphQL.Execute.LiveQuery.State
   , dumpLiveQueriesState
 
   , LiveQueryId
+  , LiveQueryPostPollHook
   , addLiveQuery
   , removeLiveQuery
   ) where
@@ -41,13 +42,16 @@ data LiveQueriesState
   { _lqsOptions      :: !LiveQueriesOptions
   , _lqsPGExecTx     :: !PGExecCtx
   , _lqsLiveQueryMap :: !PollerMap
+  , _lqsPostPollHook :: !LiveQueryPostPollHook
+  -- ^ A hook function which is run after each fetch cycle
   }
 
-initLiveQueriesState :: LiveQueriesOptions -> PGExecCtx -> IO LiveQueriesState
-initLiveQueriesState options pgCtx = LiveQueriesState options pgCtx <$> STMMap.newIO
+initLiveQueriesState :: LiveQueriesOptions -> PGExecCtx -> LiveQueryPostPollHook -> IO LiveQueriesState
+initLiveQueriesState options pgCtx pollHook =
+  LiveQueriesState options pgCtx <$> STMMap.newIO <*> pure pollHook
 
 dumpLiveQueriesState :: Bool -> LiveQueriesState -> IO J.Value
-dumpLiveQueriesState extended (LiveQueriesState opts _ lqMap) = do
+dumpLiveQueriesState extended (LiveQueriesState opts _ lqMap _) = do
   lqMapJ <- dumpPollerMap extended lqMap
   return $ J.object
     [ "options" J..= opts
@@ -60,6 +64,7 @@ data LiveQueryId
   , _lqiCohort     :: !CohortKey
   , _lqiSubscriber :: !SubscriberId
   } deriving Show
+
 
 addLiveQuery
   :: L.Logger L.Hasura
@@ -99,7 +104,7 @@ addLiveQuery logger subscriberMetadata lqState plan onResultAction = do
   onJust handlerM $ \handler -> do
     pollerId <- PollerId <$> UUID.nextRandom
     threadRef <- forkImmortal ("pollQuery." <> show pollerId) logger $ forever $ do
-      pollQuery logger pollerId lqOpts pgExecCtx query $ _pCohorts handler
+      pollQuery pollerId lqOpts pgExecCtx query (_pCohorts handler) postPollHook
       sleep $ unRefetchInterval refetchInterval
     let !pState = PollerIOState threadRef pollerId
     $assertNFHere pState  -- so we don't write thunks to mutable vars
@@ -107,7 +112,7 @@ addLiveQuery logger subscriberMetadata lqState plan onResultAction = do
 
   pure $ LiveQueryId handlerId cohortKey subscriberId
   where
-    LiveQueriesState lqOpts pgExecCtx lqMap = lqState
+    LiveQueriesState lqOpts pgExecCtx lqMap postPollHook = lqState
     LiveQueriesOptions _ refetchInterval = lqOpts
     LiveQueryPlan (ParameterizedLiveQueryPlan role query) cohortKey = plan
 
@@ -122,6 +127,7 @@ addLiveQuery logger subscriberMetadata lqState plan onResultAction = do
       TMap.insert newCohort cohortKey $ _pCohorts handler
 
     newPoller = Poller <$> TMap.new <*> STM.newEmptyTMVar
+
 
 removeLiveQuery
   :: L.Logger L.Hasura
