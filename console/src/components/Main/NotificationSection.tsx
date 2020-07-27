@@ -140,7 +140,7 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       ref={ref}
     >
       {/* TODO: Use style system colors here */}
-      <Flex alignItems="center" p={20} bg="#e1e1e1" top={0} position="sticky">
+      <Flex alignItems="center" p={20} bg="#e1e1e1">
         <Heading as="h2" color="#000" fontSize="20px">
           Latest updates
         </Heading>
@@ -150,23 +150,25 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
           height={24}
         />
       </Flex>
-      {showVersionUpdate ? (
-        <VersionUpdateNotification
-          latestVersion={latestVersion}
-          optOutCallback={optOutCallback}
-        />
-      ) : null}
-      {data.length &&
-        data.map(({ subject, content, is_active, ...props }) => (
-          <Update
-            key={subject}
-            subject={subject}
-            content={content}
-            type={props.type}
-            is_active={is_active}
-            {...props}
+      <Box className={styles.notificationsContainer}>
+        {showVersionUpdate ? (
+          <VersionUpdateNotification
+            latestVersion={latestVersion}
+            optOutCallback={optOutCallback}
           />
-        ))}
+        ) : null}
+        {data.length &&
+          data.map(({ subject, content, is_active, ...props }) => (
+            <Update
+              key={subject}
+              subject={subject}
+              content={content}
+              type={props.type}
+              is_active={is_active}
+              {...props}
+            />
+          ))}
+      </Box>
     </Box>
   )
 );
@@ -214,6 +216,27 @@ const checkVersionUpdate = (
   }
 
   return [false, ''];
+};
+
+type ToReadBadgeProps = {
+  numberNotifications: number;
+};
+
+// TODO: add the read part as well (perhaps at the level of HasuraNotifications)
+const ToReadBadge: React.FC<ToReadBadgeProps> = ({ numberNotifications }) => {
+  if (!numberNotifications || numberNotifications < 0) {
+    return null;
+  }
+
+  let display = `${numberNotifications}`;
+  if (numberNotifications > 20) {
+    display = '20+';
+  }
+
+  return (
+    // TODO: change to design system colors
+    <Flex className={styles.numBadge}>{display}</Flex>
+  );
 };
 
 function mapStateToProps(state: ReduxState) {
@@ -273,6 +296,10 @@ const HasuraNotifications: React.FC<Props> = ({
     props.dispatch(setPreReleaseNotificationOptOutInDB());
   };
 
+  const numberNotifications =
+    consoleNotifications.length + (displayNewVersionNotif ? 1 : 0);
+  // TODO: handle read logic here and send the appropriate number
+
   return (
     <>
       <div
@@ -282,7 +309,7 @@ const HasuraNotifications: React.FC<Props> = ({
         ref={wrapperRef}
       >
         <ConsoleLogo width={25} height={25} />
-        {/* TODO: add the badge for showing the number of notifications (unread?) */}
+        <ToReadBadge numberNotifications={numberNotifications} />
       </div>
       <Notifications
         data={consoleNotifications}
