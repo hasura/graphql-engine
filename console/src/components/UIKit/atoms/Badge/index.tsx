@@ -37,7 +37,8 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
     case 'update':
       return (
         <StyledBadge {...props} bg="#55DED4" color="#001934">
-          version update
+          {/* TODO: Change this/Remove this if not required */}
+          random update
         </StyledBadge>
       );
     case 'version update':
