@@ -30,8 +30,8 @@ import           Hasura.GraphQL.Schema.Introspect
 import           Hasura.GraphQL.Schema.Mutation
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
-import           Hasura.RQL.Types
 import           Hasura.RQL.DDL.Schema.Cache.Common
+import           Hasura.RQL.Types
 import           Hasura.Session
 import           Hasura.SQL.Types
 
@@ -107,7 +107,7 @@ buildGQLContext =
               case P.dInfo def of
                 -- It really ought to be this case; anything else is a programming error.
                 P.TIObject (P.ObjectInfo rootFields _interfaces) -> fmap P.dName rootFields
-                _ -> []
+                _                                                -> []
     let mutationFieldNames :: [G.Name]
         mutationFieldNames =
           case P.discardNullability . P.parserType <$> snd adminHasuraContext of
@@ -115,7 +115,7 @@ buildGQLContext =
               case P.dInfo def of
                 -- It really ought to be this case; anything else is a programming error.
                 P.TIObject (P.ObjectInfo rootFields _interfaces) -> fmap P.dName rootFields
-                _ -> []
+                _                                                -> []
             _ -> []
 
     -- This block of code checks that there are no conflicting root field names between remotes.
@@ -391,7 +391,7 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
         , sQueryType = P.parserType basicQueryP
         , sMutationType = P.parserType <$> mutationP
         , sSubscriptionType = Just $ P.parserType subscriptionP
-        , sDirectives = []
+        , sDirectives = defaultDirectives
         }
   let partialQueryFields =
         basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
@@ -458,7 +458,7 @@ relayWithIntrospection allTables allFunctions = do
         , sQueryType = P.parserType basicQueryP
         , sMutationType = P.parserType <$> mutationP
         , sSubscriptionType = Just $ P.parserType subscriptionP
-        , sDirectives = []
+        , sDirectives = defaultDirectives
         }
   let partialQueryFields =
         nodeFP : basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])

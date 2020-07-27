@@ -43,6 +43,7 @@ module Hasura.GraphQL.Parser.Schema (
   , HasName(..)
   , Variable(..)
   , VariableInfo(..)
+  , DirectiveInfo(..)
   ) where
 
 import           Hasura.Prelude
@@ -55,7 +56,7 @@ import           Control.Monad.Unique
 import           Data.Functor.Classes
 import           Language.GraphQL.Draft.Syntax ( Description (..), Name (..)
                                                , Value (..), Nullability(..)
-                                               , GType (..), Directive(..)
+                                               , GType (..), DirectiveLocation(..)
                                                )
 
 class HasName a where
@@ -486,6 +487,14 @@ instance HasName VariableInfo where
 -- -----------------------------------------------------------------------------
 -- support for introspection queries
 
+-- | This type represents the directives information to be served over GraphQL introspection
+data DirectiveInfo = DirectiveInfo
+  { diName        :: !Name
+  , diDescription :: !(Maybe Description)
+  , diArguments   :: ![Definition InputFieldInfo]
+  , diLocations   :: ![DirectiveLocation]
+  }
+
 -- | This type contains all the information needed to efficiently serve GraphQL
 -- introspection queries. It corresponds to the GraphQL @__Schema@ type defined
 -- in <§ 4.5 Schema Introspection http://spec.graphql.org/June2018/#sec-Introspection>.
@@ -495,7 +504,7 @@ data Schema = Schema
   , sQueryType        :: Type 'Output
   , sMutationType     :: Maybe (Type 'Output)
   , sSubscriptionType :: Maybe (Type 'Output)
-  , sDirectives       :: [Directive Void]
+  , sDirectives       :: [DirectiveInfo]
   }
 
 -- | Recursively collects all type definitions accessible from the given value.

@@ -7,6 +7,7 @@ import qualified Data.Aeson                          as J
 import qualified Data.HashMap.Strict                 as Map
 import qualified Data.HashMap.Strict.InsOrd          as OMap
 import qualified Data.List.NonEmpty                  as NE
+import qualified Data.Text                           as T
 import qualified Data.Vector                         as V
 import qualified Language.GraphQL.Draft.Printer      as GP
 import qualified Language.GraphQL.Draft.Printer.Text as GPT
@@ -482,36 +483,42 @@ type __Directive {
 }
 -}
 
--- TODO actually output data.  Directives should be collected and saved in the Schema datatype.
 directiveSet
   :: forall n
    . MonadParse n
-  => Parser 'Output n J.Value
+  => Parser 'Output n (P.DirectiveInfo -> J.Value)
 directiveSet =
   let
-    name :: FieldParser n J.Value
+    name :: FieldParser n (P.DirectiveInfo -> J.Value)
     name = P.selection_ $$(G.litName "name") Nothing P.string $>
-      J.Null
-    description :: FieldParser n J.Value
+      (J.toJSON . P.diName)
+    description :: FieldParser n (P.DirectiveInfo -> J.Value)
     description = P.selection_ $$(G.litName "description") Nothing P.string $>
-      J.Null
-    locations :: FieldParser n J.Value
+      (J.toJSON . P.diDescription)
+    locations :: FieldParser n (P.DirectiveInfo -> J.Value)
     locations = P.selection_ $$(G.litName "locations") Nothing P.string $>
-      J.Null
-    args :: FieldParser n J.Value
-    args = P.subselection_ $$(G.litName "args") Nothing inputValue $>
-      J.Null
-    isRepeatable :: FieldParser n J.Value
+      (J.toJSON . map showDirLoc . P.diLocations)
+    args :: FieldParser n (P.DirectiveInfo -> J.Value)
+    args = do
+      printer <- P.subselection_ $$(G.litName "args") Nothing inputValue
+      pure $ J.toJSON . map printer . P.diArguments
+    isRepeatable :: FieldParser n (P.DirectiveInfo -> J.Value)
     isRepeatable = P.selection_ $$(G.litName "isRepeatable") Nothing P.string $>
-      J.Null
+      const J.Null
   in
-    J.Null <$ P.selectionSet $$(G.litName "__Directive") Nothing
+    applyPrinter <$> P.selectionSet $$(G.litName "__Directive") Nothing
     [ name
     , description
     , locations
     , args
     , isRepeatable
     ]
+  where
+    showDirLoc :: G.DirectiveLocation -> Text
+    showDirLoc = \case
+      G.DLExecutable edl  -> T.pack $ drop 3 $ show edl
+      G.DLTypeSystem tsdl -> T.pack $ drop 4 $ show tsdl
+
 
 {-
 type __Schema {
@@ -563,7 +570,9 @@ schemaSet fakeSchema =
         Nothing -> J.Null
         Just tp -> printer $ SomeType tp
     directives :: FieldParser n J.Value
-    directives = J.Array mempty <$ P.subselection_ $$(G.litName "directives") Nothing directiveSet
+    directives = do
+      printer <- P.subselection_ $$(G.litName "directives") Nothing directiveSet
+      return $ J.toJSON $ map printer $ sDirectives fakeSchema
   in
     selectionSetToJSON . fmap (P.handleTypename nameAsJSON) <$>
     P.selectionSet

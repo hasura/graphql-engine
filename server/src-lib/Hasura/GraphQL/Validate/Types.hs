@@ -684,8 +684,6 @@ data DirectiveInfo
   , _diLocations   :: ![G.DirectiveLocation]
   } deriving (Show, Eq)
 
--- TODO(not used in PDV): generate this from template haskell once we have a parser for directive defs
--- directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 defaultDirectives :: [DirectiveInfo]
 defaultDirectives =
   [mkDirective "skip", mkDirective "include"]

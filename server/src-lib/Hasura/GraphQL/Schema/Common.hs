@@ -81,3 +81,16 @@ mkDescriptionWith :: Maybe PGDescription -> Text -> G.Description
 mkDescriptionWith descM defaultTxt = G.Description $ case descM of
   Nothing                      -> defaultTxt
   Just (PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]
+
+-- | The default @'skip' and @'include' directives
+defaultDirectives :: [P.DirectiveInfo]
+defaultDirectives =
+  [mkDirective $$(G.litName "skip"), mkDirective $$(G.litName "include")]
+  where
+    mkDirective name =
+      let ifInputField =
+            P.mkDefinition $$(G.litName "if") Nothing $ P.IFRequired $ P.TNamed $
+            P.mkDefinition $$(G.litName "Boolean") Nothing P.TIScalar
+          dirLocs = map G.DLExecutable
+            [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
+      in P.DirectiveInfo name Nothing [ifInputField] dirLocs
