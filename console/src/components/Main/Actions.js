@@ -46,7 +46,7 @@ const fetchConsoleNotifications = () => dispatch => {
   const url = Endpoints.consoleNotifications;
   const requestBody = {
     args: {
-      limit: 5,
+      limit: 20,
       table: 'console_notification',
       columns: ['*'],
       order_by: [
