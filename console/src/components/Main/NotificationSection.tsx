@@ -134,6 +134,31 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
   );
 };
 
+type BadgeViewMoreProps = {
+  // TODO: add read number props here
+  numberNotifications: number;
+};
+
+const ViewMoreOptions: React.FC<BadgeViewMoreProps> = ({
+  numberNotifications,
+}) => {
+  let buttonText = 'View More Notifications';
+  // FIXME: should be <= not just <
+  if (numberNotifications > 0 && numberNotifications < 20) {
+    return null;
+  }
+
+  // if all read - no button
+  // new > read notifs - See More notifications
+  // if current < old - See older notifications
+
+  if (numberNotifications === 10) {
+    buttonText = 'View Older Notifications';
+  }
+
+  return <Button style={{ width: '100%' }}>{buttonText}</Button>;
+};
+
 const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
   ({ data, showVersionUpdate, latestVersion, optOutCallback }, ref) => (
     <Box
@@ -141,7 +166,12 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       ref={ref}
     >
       {/* TODO: Use style system colors here */}
-      <Flex alignItems="center" p={20} bg="#e1e1e1" justifyContent="space-between">
+      <Flex
+        alignItems="center"
+        p={20}
+        bg="#e1e1e1"
+        justifyContent="space-between"
+      >
         <Flex alignItems="center" justifyContent="center">
           <Heading as="h2" color="#000" fontSize="20px">
             Latest updates
@@ -153,7 +183,12 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
           />
         </Flex>
         {/* TODO: add mark all as read functionality -> clear the badge, clear db value and..... also this might be a little too large? */}
-        <Button title="Mark all as read" onClick={() => { console.log('Read all!') }}>
+        <Button
+          title="Mark all as read"
+          onClick={() => {
+            console.log('Read all!');
+          }}
+        >
           Mark all as read
         </Button>
       </Flex>
@@ -176,6 +211,8 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
             />
           ))}
       </Box>
+      {/* TODO: update styling on this button */}
+      <ViewMoreOptions numberNotifications={data.length} />
     </Box>
   )
 );
@@ -225,12 +262,8 @@ const checkVersionUpdate = (
   return [false, ''];
 };
 
-type ToReadBadgeProps = {
-  numberNotifications: number;
-};
-
 // TODO: add the read part as well (perhaps at the level of HasuraNotifications)
-const ToReadBadge: React.FC<ToReadBadgeProps> = ({ numberNotifications }) => {
+const ToReadBadge: React.FC<BadgeViewMoreProps> = ({ numberNotifications }) => {
   if (!numberNotifications || numberNotifications < 0) {
     return null;
   }
