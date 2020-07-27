@@ -6,11 +6,8 @@ import { Dispatch } from '../../../types';
 
 export const LOADING_TRIGGERS = 'Events/LOADING_TRIGGERS';
 export const LOADED_TRIGGERS = 'Events/LOADED_TRIGGERS';
-export const LOADING_SCHEDULED_TRIGGERS = 'Events/LOADING_SCHEDULED_TRIGGERS';
 export const LOADED_SCHEDULED_TRIGGERS = 'Events/LOADED_SCHEDULED_TRIGGERS';
-export const LOADING_EVENT_TRIGGERS = 'Events/LOADING_EVENT_TRIGGERS';
 export const LOADED_EVENT_TRIGGERS = 'Events/LOADED_EVENT_TRIGGERS';
-export const LOADING_TRIGGERS_ERROR = 'Events/LOADING_TRIGGERS_ERROR';
 export const SET_CURRENT_TRIGGER = 'Events/SET_CURRENT_TRIGGER';
 export const LOAD_PENDING_DATA_EVENTS = 'Events/LOAD_PENDING_DATA_EVENTS';
 
@@ -161,4 +158,5 @@ export type RAEvents =
   | RASetAllTriggers
   | RASetScheduledTriggers
   | RASetEventTriggers
-  | RASetCurrentTrigger;
+  | RASetCurrentTrigger
+  | { type: typeof LOADING_TRIGGERS };

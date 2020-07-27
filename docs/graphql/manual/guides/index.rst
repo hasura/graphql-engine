@@ -17,7 +17,6 @@ Guides / Tutorials / Resources
    :titlesonly:
 
    Data modelling guides <data-modelling/index>
-   Deployment guides <deployment/index>
    Sample apps & boilerplates <sample-apps/index>
    Integration/migration tutorials <integrations/index>
    Integrating with monitoring frameworks <monitoring/index>
@@ -30,4 +29,4 @@ Guides / Tutorials / Resources
 .. note::
 
   If you are new to GraphQL you can check out some front-end and back-end tutorials for building applications using
-  GraphQL at `hasura.io/learn <https://hasura.io/learn/>`_.
+  GraphQL at `hasura.io/learn <https://hasura.io/learn/>`__.

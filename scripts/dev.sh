@@ -215,7 +215,7 @@ if [ "$MODE" = "graphql-engine" ]; then
   echo_pretty "    $ $0 postgres"
   echo_pretty ""
 
-  RUN_INVOCATION=(cabal new-run --project-file=cabal.project.dev-sh --RTS --
+  RUN_INVOCATION=(cabal new-run --project-file=cabal.project.dev-sh --RTS -- 
     exe:graphql-engine +RTS -N -T -s -RTS serve
     --enable-console --console-assets-dir "$PROJECT_ROOT/console/static/dist"
     )

@@ -124,7 +124,7 @@ Add access control rules via the Hasura console
 -----------------------------------------------
 
 Cognito is configured and ready to be used in the application. You can now set up access control rules that
-will automatically get applied whenever a client makes a GraphQL query with the Cognito token.
+will automatically get applied whenever a client makes a GraphQL request with the Cognito token.
 
 Refer to :ref:`auth_basics` for more information.
 

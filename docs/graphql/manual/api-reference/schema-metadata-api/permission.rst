@@ -67,7 +67,9 @@ This reads as follows - for the ``user`` role:
 * When this insert happens, the value of the column ``id`` will be automatically ``set`` to the value of the resolved session variable ``X-HASURA-USER-ID``.
 
 
-The argument for ``check`` is a boolean expression which has the same syntax as the ``where`` clause in the ``select`` query, making it extremely expressive. For example,
+The argument for ``check`` is a boolean expression which has the same syntax as the ``where`` clause in the ``select`` query, making it extremely expressive. 
+
+An example:
 
 .. code-block:: http
 
@@ -247,7 +249,7 @@ This reads as follows - For the ``user`` role:
 
 * Allow selecting all columns (because the ``columns`` key is set to  ``*``).
 
-* ``limit`` the numbers of rows returned by this query to a maximum of 10.
+* ``limit`` the numbers of rows returned by a query to the ``article`` table by the ``user`` role to a maximum of 10.
 
 * Allow aggregate queries.
 

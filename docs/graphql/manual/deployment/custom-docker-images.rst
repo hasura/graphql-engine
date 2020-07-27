@@ -14,10 +14,10 @@ Custom Docker images or binaries for Hasura GraphQL engine
 
 If you need a binary for Hasura GraphQL engine to run in a non-Docker environment or you require
 custom Docker images, we can make them available via a support plan. A possible use case could be that the default base image *(alpine)* is not compatible with your security scanning tool
-(`Anchore <https://anchore.com/>`_, `Sysdig Secure <https://sysdig.com/products/kubernetes-security/image-scanning/>`_, etc.).
+(`Anchore <https://anchore.com/>`__, `Sysdig Secure <https://sysdig.com/products/kubernetes-security/image-scanning/>`__, etc.).
 
 To set up such a support plan, please contact us using the form on our
-`contact page <https://hasura.io/contact-us/>`_ and make sure to include the Linux flavor
+`contact page <https://hasura.io/contact-us/>`__ and make sure to include the Linux flavor
 (*CentOS, Debian slim, etc.*) or the target architecture for the binary you'd be
 interested in.
 

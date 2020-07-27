@@ -17,6 +17,8 @@ import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { getRelDef, getObjArrRelList } from './utils';
 
 import Button from '../../../Common/Button/Button';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import AddManualRelationship from './AddManualRelationship';
 import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import suggestedRelationshipsRaw from './autoRelations';
@@ -70,7 +72,7 @@ const addRelationshipCellView = (
   };
   return (
     <td>
-      <div>
+      <div className={styles.textNoNewLine}>
         {selectedRelationship === rel ? null : (
           <Button
             size="xs"
@@ -141,10 +143,9 @@ const AddRelationship = ({
     suggestedRelationshipsData.arrayRel.length < 1
   ) {
     return (
-      <div className={`${styles.remove_margin_bottom} form-group`}>
-        <label>
-          You have no new relationships that can be added via foreign-keys
-        </label>
+      <div className={styles.add_mar_bottom}>
+        You have <b>no new relationships</b> that can be added{' '}
+        <b>via foreign-keys</b>
       </div>
     );
   }
@@ -250,7 +251,7 @@ const AddRelationship = ({
   return (
     <div>
       <div>
-        <label> Add new relationships via foreign-keys </label>
+        Add new relationships <b>via foreign-keys</b>
       </div>
       <div className={tableStyles.tableContainer}>
         <table
@@ -428,7 +429,6 @@ const Relationships = ({
             cachedRelationshipData={relAdd}
             dispatch={dispatch}
           />
-          <hr />
           <AddManualRelationship
             tableSchema={tableSchema}
             allSchemas={allSchemas}
@@ -471,13 +471,16 @@ const Relationships = ({
         <div
           className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
         >
-          <h4 className={styles.subheading_text}>Table Relationships</h4>
+          <h4 className={styles.subheading_text}>
+            Table Relationships
+            <ToolTip message={'Relationships to tables / views'} />
+            &nbsp;
+            <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/table-relationships/index.html" />
+          </h4>
           {addedRelationshipsView}
-          <br />
           {getAddRelSection()}
         </div>
         <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-          <h4 className={styles.subheading_text}>Remote Relationships</h4>
           <RemoteRelationships
             relationships={existingRemoteRelationships}
             reduxDispatch={dispatch}

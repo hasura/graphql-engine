@@ -72,6 +72,8 @@
     "react/no-unescaped-entities": 0,
     "react/sort-comp": 0,
     "react/jsx-indent": 0,
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
     "jsx-a11y/click-events-have-key-events": 0,
     "jsx-a11y/no-static-element-interactions": 0,
     "jsx-a11y/no-noninteractive-element-interactions": 0,
@@ -84,26 +86,14 @@
     "no-continue": 0,
     "no-new": 0,
     "eqeqeq": 0,
-    "no-nested-ternary": 0,
-    "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": 2,
-    "@typescript-eslint/indent": 0,
-    "@typescript-eslint/explicit-function-return-type": 0,
-    "@typescript-eslint/prefer-interface": 0,
-    "@typescript-eslint/no-namespace": "off",
-    "@typescript-eslint/camelcase": 0,
-    "@typescript-eslint/explicit-member-accessibility": 0,
-    "@typescript-eslint/no-non-null-assertion": 0,
-    "@typescript-eslint/no-object-literal-type-assertion": "off",
-    "@typescript-eslint/no-empty-function": "off",
-    "@typescript-eslint/no-empty-interface": "off",
-    "@typescript-eslint/no-parameter-properties": "off",
-    "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-var-requires": "off",
-    "@typescript-eslint/no-useless-constructor": "error",
-    "@typescript-eslint/no-unused-expressions": ["error"]
+    "no-nested-ternary": 0
   },
-  "plugins": ["react", "import", "@typescript-eslint/eslint-plugin"],
+  "plugins": [
+    "react",
+    "import",
+    "@typescript-eslint/eslint-plugin",
+    "react-hooks"
+  ],
   "settings": {
     "import/resolve": {
       "moduleDirectory": ["node_modules", "src"]

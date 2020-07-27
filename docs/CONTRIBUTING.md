@@ -28,6 +28,8 @@ community [Discord](https://discord.gg/vBPpJkS).
 
 ## Steps for contributing
 
+We use the [fork-and-branch git workflow](https://blog.scottlowe.org/2015/01/27/using-fork-branch-git-workflow/).
+
 - Fork the repo and clone it:
   ```bash
   git clone https://github.com/<your-username>/graphql-engine

@@ -11,8 +11,8 @@ import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
 import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
-import { TypedInput } from '../Common/Components/TypedInput';
 import { fetchEnumOptions } from './EditActions';
+import { TableRow } from '../Common/Components/TableRow';
 
 class EditItem extends Component {
   constructor() {
@@ -66,75 +66,26 @@ class EditItem extends Component {
     const refs = {};
 
     const elements = columns.map((col, i) => {
-      const colName = col.column_name;
-      const hasDefault = col.column_default && col.column_default.trim() !== '';
-      const isNullable = col.is_nullable && col.is_nullable !== 'NO';
-      const isIdentity = col.is_identity && col.is_identity !== 'NO';
+      const { column_name: colName } = col;
 
       const prevValue = oldItem[colName];
 
       refs[colName] = {
+        insertRadioNode: null,
         valueNode: null,
-        valueInput: null,
         nullNode: null,
         defaultNode: null,
       };
 
       return (
-        <div key={i} className="form-group">
-          <label
-            className={'col-sm-3 control-label ' + styles.insertBoxLabel}
-            title={colName}
-          >
-            {colName}
-          </label>
-          <label className={styles.radioLabel + ' radio-inline'}>
-            <input
-              type="radio"
-              ref={node => {
-                refs[colName].valueNode = node;
-              }}
-              name={colName + '-value'}
-              value="option1"
-            />
-            <TypedInput
-              inputRef={node => {
-                refs[colName].valueInput = node;
-              }}
-              prevValue={prevValue}
-              enumOptions={enumOptions}
-              col={col}
-              index={i}
-              hasDefault={hasDefault}
-            />
-          </label>
-          <label className={styles.radioLabel + ' radio-inline'}>
-            <input
-              type="radio"
-              ref={node => {
-                refs[colName].nullNode = node;
-              }}
-              disabled={!isNullable}
-              name={colName + '-value'}
-              value="NULL"
-              defaultChecked={prevValue === null}
-            />
-            <span className={styles.radioSpan}>NULL</span>
-          </label>
-          <label className={styles.radioLabel + ' radio-inline'}>
-            <input
-              type="radio"
-              ref={node => {
-                refs[colName].defaultNode = node;
-              }}
-              name={colName + '-value'}
-              value="option3"
-              disabled={!hasDefault && !isIdentity}
-              defaultChecked={isIdentity}
-            />
-            <span className={styles.radioSpan}>Default</span>
-          </label>
-        </div>
+        <TableRow
+          key={i}
+          column={col}
+          setRef={(key, node) => (refs[colName][key] = node)}
+          enumOptions={enumOptions}
+          index={i}
+          prevValue={prevValue}
+        />
       );
     });
 
@@ -172,11 +123,11 @@ class EditItem extends Component {
         } else if (refs[colName].defaultNode.checked) {
           // default
           inputValues[colName] = { default: true };
-        } else if (refs[colName].valueNode.checked) {
+        } else if (refs[colName].insertRadioNode.checked) {
           inputValues[colName] =
-            refs[colName].valueInput.props !== undefined
-              ? refs[colName].valueInput.props.value
-              : refs[colName].valueInput.value;
+            refs[colName].valueNode.props !== undefined
+              ? refs[colName].valueNode.props.value
+              : refs[colName].valueNode.value;
         }
       });
 

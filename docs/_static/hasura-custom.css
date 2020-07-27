@@ -22,7 +22,7 @@ h1, h2, h3, h4, h5, h6 {
 body, p, #docs-content, #sidebar, #sidebar a,
 tt, code, kbd, pre, pre.literal-block, samp,
 .graphiql .graphiql-container .CodeMirror {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 [role="main"] {
@@ -36,39 +36,15 @@ tt, code, kbd, pre, pre.literal-block, samp,
 }
 
 [role="main"] h2 {
-  font-size: 26px;
-}
-
-[role="main"] h3 {
   font-size: 24px;
 }
 
-[role="main"] h4 {
+[role="main"] h3 {
   font-size: 20px;
 }
 
-@media (max-width: 1200px) {
-  body, p, #docs-content, #sidebar, #sidebar a,
-  tt, code, kbd, pre, pre.literal-block, samp,
-  .graphiql .graphiql-container .CodeMirror {
-    font-size: 16px;
-  }
-
-  [role="main"] h1 {
-    font-size: 32px;
-  }
-
-  [role="main"] h2 {
-    font-size: 24px;
-  }
-
-  [role="main"] h3 {
-    font-size: 20px;
-  }
-
-  [role="main"] h4 {
-    font-size: 18px;
-  }
+[role="main"] h4 {
+  font-size: 18px;
 }
 
 form input[type="search"], form input[type="text"],
@@ -95,7 +71,6 @@ h6 a:visited {
 
 h3 {
   font-weight: 500;
-  margin: 0 !important;
 }
 
 p {
@@ -144,6 +119,15 @@ p {
   flex: 1 !important;
   position: relative !important;
   font-size: 16px;
+}
+.newsletter-link,
+.newsletter-link:hover,
+.newsletter-link:visited {
+  color: #001934 !important; /* override djangosite.css */
+  display: block;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 16px;
 }
 .full-width {
   flex: 1;
@@ -239,94 +223,6 @@ p {
 #mce-responses .success-message {
   color: #1cd3c6 !important;
 }
-.bannerStripWrapper {
-  background-color: #3D1BB7;
-  box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.4);
-  position: relative;
-  min-height: 56px;
-  max-height: 56px;
-  display: flex;
-  align-items: center;
-}
-.bannerStripWrapper .bannerInnerWrapper {
-  padding: 0 15px;
-}
-.bannerStripWrapper .displayFlex
-{
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-.bannerStripWrapper .displayFlex a {
-  flex: 1;
-  text-decoration: none;
-}
-.bannerStripWrapper .bannerStripImg {
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-.bannerStripWrapper .bannerStripImg img {
-  max-height: 56px;
-  opacity: .4;
-}
-.bannerStripWrapper .bannerStrip
-{
-  padding: 8px 0px;
-  display: flex;
-  align-items: center;
-  position: relative;
-  z-index: 10;
-}
-.bannerStripWrapper .bannerStrip .announceIcon {
-  display: inline-flex;
-}
-.bannerStripWrapper .bannerStrip .announceIcon img {
-  margin-top: 4px;
-  margin-right: 16px;
-  width: 32px;
-}
-.bannerStripWrapper .displayFlex a:hover, .bannerStripWrapper .displayFlex a:focus {
-  text-decoration: none;
-}
-.bannerStripWrapper .closeBanner {
-  cursor: pointer;
-  text-align: right;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 11;
-  margin-left: auto;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: rgba(61,27,183,.8);
-}
-.bannerStripWrapper .closeBanner img {
-  margin-right: 0;
-}
-.bannerStripWrapper .bannerStrip .bodyTextSmall
-{
-  font-family: Poppins;
-  text-align: left;
-  padding-top: 0;
-  letter-spacing: normal;
-  font-weight: 600;
-  display: inline-block;
-  line-height: 17px;
-  color: #fff;
-  padding-bottom: 0;
-  padding-right: 10px;
-}
-.bannerStripWrapper .bannerStrip .bodyTextSmall .fontNormal {
-  font-weight: 400;
-}
-.bannerStripWrapper .bannerStrip .bodyTextSmall .mLeft15 {
-  margin-left: 15px;
-}
-.bannerStripWrapper .bannerStrip .bodyTextSmall .underLine {
-  text-decoration: underline;
-}
 .content_inner_wrapper {
   width: 75% !important;
   /* height: 100vh; */
@@ -349,9 +245,6 @@ p {
 }
 
 #docs-content a.reference {
-  /*color: #1CD3C6 !important;*/
-  /*color: #1CD3C6 !important;*/
-  /* color: #FF3264 !important; */
   color: #DB0037 !important;
   background-color: transparent !important;
 }
@@ -490,80 +383,36 @@ article ol ol {
 /*** Header ***/
 
 #docs-header-actions {
+  display: flex;
+  align-items: center;
   margin-top: 30px;
 }
 
-#docs-header-actions .header_links {
-  min-width: 33%;
-  text-align: right;
+.edit-github-btn-wrap {
+ margin-left: auto;
 }
 
-#docs-header-actions .header_links.inline-block .header_links_content {
-  float: left;
-}
-
-#docs-header-actions .header_links.inline-block .buttons {
-  float: right;
-}
-
-#docs-header-actions .social_icons_wrapper {
-  padding-left: 10px;
-  display: flex;
-  align-items: center;
-}
-
-#docs-header-actions .social_icons_wrapper .social_icons {
-  display: inline-block;
-  padding: 10px 5px;
-  opacity: 0.7;
-  vertical-align: middle;
-  display: flex;
-  align-items: center;
-}
-
-#docs-header-actions .social_icons_wrapper .social_icons:hover {
-  opacity: 1;
-}
-
-#docs-header-actions .social_icons_wrapper .social_icons img {
-  box-shadow: none !important;
-  -webkit-box-shadow: none !important;
-  -moz-box-shadow: none !important;
-  width: 30px;
-  display: inline-block;
-}
-
-#docs-header-actions .social_icons_wrapper .social_icons a {
-  text-decoration: none;
-  color: #DB0037;
-  display: contents;
-}
-
-#docs-header-actions .social_icons_wrapper .social_icons iframe {
-  height: 20px;
-}
-
-#docs-header-actions .tooltip {
-  position: relative;
-}
-
-#docs-header-actions .tooltip .tooltip_text {
-  visibility: hidden;
-  width: 272px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 2px;
-  position: absolute;
-  z-index: 1;
-  right: 0;
-  top: 36px;
+.edit-github-btn,
+.edit-github-btn:hover
+.edit-github-btn:visited {
   font-size: 14px;
+  padding: 4px 6px;
+  color: #333 !important; /* override django-site.css */
+  border-radius: 4px;
+  border: solid 1px #d1d2d3;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  white-space: nowrap;
+  margin-left: 8px;
 }
-
-#docs-header-actions .tooltip:hover .tooltip_text {
-  visibility: visible;
+.edit-github-btn:hover {
+  background-color: rgb(245,247,249);
+}
+.edit-github-btn img {
+  width: 16px;
+  margin-right: 4px;
 }
 
 /*** Header END ***/
@@ -655,6 +504,19 @@ article ol ol {
   color:#ccc;
 }
 
+#search_help {
+  position: absolute;
+  top: 100px;
+  z-index: 1000;
+}
+
+@media (max-width: 768px) {
+  #search_help {
+    top: -20px;
+    left: 10px;
+  }
+}
+
 /*** Search box END ***/
 
 /*** Table of contents ***/
@@ -668,6 +530,40 @@ article ol ol {
 
 #table-of-contents .topic-title {
   font-weight: bold;
+}
+
+.toc-list {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  padding: 0;
+}
+
+.toc-list:before {
+  display: none; /* override djangosite.css */
+}
+
+.toc-list .container {
+  padding: 0;
+  margin: initial;
+}
+
+.toc-list-head {
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 15px 5px 10px 0 !important; /* override djangodocs.css */
+  font-weight: bold;
+}
+
+@media (max-width: 1300px) {
+  .toc-list {
+    grid-template-columns: repeat(2, auto);
+  }
+}
+
+@media (max-width: 660px) {
+  .toc-list {
+    grid-template-columns: auto;
+  }
 }
 
 /*** Table of contents END ***/
@@ -756,14 +652,13 @@ article ol ol {
   width: 24% !important;
   height: 100vh;
   overflow-y: auto;
-  padding-left: 15px !important;
+  padding-left: 0 !important;
   position: sticky;
   top: 0;
-  padding-top: 20px;
 }
 #sidebar li {
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 #sidebar .closeIcon {
   position: absolute;
@@ -1126,13 +1021,6 @@ article ol ol {
     margin-left: 0;
     margin-right: 0;
   }
-  #docs-header-actions {
-    display: flex;
-    align-items: center;
-  }
-  #docs-header-actions {
-    margin-top: 20px;
-  }
 
   #input_search_box {
     flex: 1;
@@ -1147,21 +1035,6 @@ article ol ol {
   }
 }
 @media (min-width: 768px) and (max-width: 1385px) {
-  .bannerStripWrapper {
-    /* padding-left: 4vw; */
-  }
-  .bannerStripWrapper .bannerStrip .bodyTextSmall {
-    line-height: 21px;
-  }
-  .bannerStripWrapper .bannerStripImg {
-    display: none;
-  }
-  .bannerStripWrapper .bannerStrip .displayFlex {
-    justify-content: flex-start;
-  }
-  .bannerStripWrapper .closeBanner {
-    right: 0;
-  }
   #mc_embed_signup form {
     padding-top: 10px !important;
   }
@@ -1178,27 +1051,6 @@ article ol ol {
 }
 /*** Mobile overrides ***/
 @media (max-width: 767px) {
-  .bannerStripWrapper {
-      max-height: none;
-      padding: 0 0px;
-    }
-    .bannerStripWrapper .bannerStrip {
-      padding-left: 0px;
-    }
-    .bannerStripWrapper .bannerStrip .bodyTextSmall {
-      padding-left: 8px;
-      line-height: 120%;
-      font-size: 15px;
-    }
-    .bannerStripWrapper .bannerStripImg {
-      display: none;
-    }
-    .bannerStripWrapper .bannerStrip .bodyTextSmall {
-      padding-left: 0;
-    }
-    .bannerStripWrapper .bannerStrip .bodyTextSmall .mLeft15 {
-      margin-left: 5px;
-    }
   #sidebar {
     top: 170px;
     height: calc(100% - 170px);
@@ -1229,15 +1081,6 @@ article ol ol {
     left: -34px !important;
     max-width: calc(111% + 10px);
     min-width: calc(111% + 10px);  /* 1 / width(input_search_box) + 10px */
-  }
-
-  #docs-header-actions .header_links {
-    width: 100%;
-    margin-top: 10px;
-  }
-
-  #docs-header-actions .header_links.inline-block .buttons {
-    float: none !important;
   }
 
   .api-tabs .ui.tab {
@@ -1279,14 +1122,6 @@ article ol ol {
 .navBtnHome:hover {
   background-color: rgba(28, 211, 198, 1);
   border: 1px solid rgba(28, 211, 198, 1);
-}
-.navBtnContactHome {
-  background-color: #001934;
-  border: 1px solid #1CD3C6;
-  color: #1CD3C6;
-}
-.navBtnContactHome:hover {
-  background-color: #00244b;
 }
  .visibleMobile {
 	 display: none;
@@ -1619,4 +1454,37 @@ article ol ol {
 .navContainerWrapper {
     width: calc(100% - 30px);
     padding: 0 15px !important;
+}
+
+.tabbarContainerWrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.tabbarContainerWrapper a {
+  display: inline-block;
+  font-size: 16px !important;
+  font-weight: 600;
+  padding: 16px 4px;
+  text-decoration: none;
+}
+
+.tabbarContainerWrapper a:not(:first-child) {
+  margin-left: 2em;
+}
+
+.tabbarContainerWrapper a span {
+  color: rgba(255, 255, 255, .6);
+  cursor: pointer;
+  padding-bottom: 3px;
+  border-bottom: 2px solid transparent;
+}
+
+.tabbarContainerWrapper a:hover span {
+  color: rgba(255, 255, 255, 1);
+}
+
+.tabbarContainerWrapper .tabbarTabActive span {
+  color: rgba(255, 255, 255, 1) !important;
+  border-bottom: 2px solid white !important;
 }

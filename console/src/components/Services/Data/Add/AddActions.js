@@ -293,9 +293,7 @@ const createTableSql = () => {
           return;
         }
 
-        tableDefSql += `, CONSTRAINT "${constraint.name}" CHECK (${
-          constraint.check
-        })`;
+        tableDefSql += `, CONSTRAINT "${constraint.name}" CHECK (${constraint.check})`;
       });
     }
 

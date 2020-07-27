@@ -20,15 +20,15 @@ export const getRelDef = relMeta => {
       : relMeta.rcol[0];
 
   return relMeta.isObjRel ? (
-    <span>
+    <>
       {relMeta.lTable} . {lcol} &nbsp;&rarr;&nbsp;
       {relMeta.rTable} . {rcol}
-    </span>
+    </>
   ) : (
-    <span>
+    <>
       {relMeta.rTable} . {rcol} &nbsp;&rarr;&nbsp;
       {relMeta.lTable} . {lcol}
-    </span>
+    </>
   );
 };
 

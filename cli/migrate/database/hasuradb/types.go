@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mitchellh/mapstructure"
+
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 
 	"github.com/qor/transition"
@@ -60,6 +62,67 @@ type createRemoteRelationshipInput struct {
 }
 type updateRemoteRelationshipInput struct {
 	*createRemoteRelationshipInput
+}
+
+type createCronTriggerInput struct {
+	Name              string      `json:"name" yaml:"name"`
+	Webhook           string      `json:"webhook" yaml:"webhook"`
+	Schedule          string      `json:"schedule" yaml:"schedule"`
+	Payload           interface{} `json:"payload,omitempty" yaml:"payload,omitempty"`
+	Headers           interface{} `json:"headers,omitempty" yaml:"headers,omitempty"`
+	RetryConf         interface{} `json:"retry_conf,omitempty" yaml:"retry_conf,omitempty"`
+	IncludeInMetadata *bool       `json:"include_in_metadata,omitempty" yaml:"include_in_metadata,omitempty"`
+	Comment           string      `json:"comment,omitempty" yaml:"comment,omitempty"`
+	Replace           *bool       `json:"replace,omitempty" yaml:"replace,omitempty"`
+}
+
+type deleteCronTriggerInput struct {
+	Name string `json:"name" yaml:"name"`
+}
+
+type actionDefinition struct {
+	Name       interface{} `json:"name,omitempty" yaml:"name,omitempty"`
+	Definition interface{} `json:"definition,omitempty" yaml:"definition,omitempty"`
+}
+
+type createActionInput struct {
+	actionDefinition
+	Comment string `json:"comment,omitempty" yaml:"comment,omitempty"`
+}
+
+type actionAndPermission struct {
+	actionDefinition
+	Permissions []PermissionDefinition `json:"permissions" yaml:"permissions"`
+}
+
+type dropActionInput struct {
+	Name      interface{} `json:"name,omitempty" yaml:"name,omitempty"`
+	ClearData bool        `json:"clear_data,omitempty" yaml:"clear_data,omitempty"`
+}
+
+type updateActionInput struct {
+	actionDefinition
+}
+
+type PermissionDefinition struct {
+	Role    interface{} `json:"role,omitempty" yaml:"role,omitempty"`
+	Comment string      `json:"comment,omitempty" yaml:"comment,omitempty"`
+}
+type createActionPermissionInput struct {
+	Action interface{} `json:"action,omitempty" yaml:"action,omitempty"`
+	PermissionDefinition
+}
+
+type dropActionPermissionInput struct {
+	Action interface{} `json:"action,omitempty" yaml:"action,omitempty"`
+	PermissionDefinition
+}
+
+type setCustomTypesInput struct {
+	InputObjects interface{} `json:"input_objects,omitempty" yaml:"input_objects,omitempty"`
+	Objects      interface{} `json:"objects,omitempty" yaml:"objects,omitempty"`
+	Scalars      interface{} `json:"scalars,omitempty" yaml:"scalars,omitempty"`
+	Enums        interface{} `json:"enums,omitempty" yaml:"enums,omitempty"`
 }
 
 func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
@@ -153,6 +216,22 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		q.Args = &createRemoteRelationshipInput{}
 	case updateRemoteRelationship:
 		q.Args = &createRemoteRelationshipInput{}
+	case createCronTrigger:
+		q.Args = &createCronTriggerInput{}
+	case deleteCronTrigger:
+		q.Args = &deleteCronTriggerInput{}
+	case createAction:
+		q.Args = &createActionInput{}
+	case dropAction:
+		q.Args = &dropActionInput{}
+	case updateAction:
+		q.Args = &updateActionInput{}
+	case createActionPermission:
+		q.Args = &createActionPermissionInput{}
+	case dropActionPermission:
+		q.Args = &dropActionPermissionInput{}
+	case setCustomTypes:
+		q.Args = &setCustomTypesInput{}
 	default:
 		return fmt.Errorf("cannot squash type %s", q.Type)
 	}
@@ -203,25 +282,25 @@ type HasuraError struct {
 	// MigrationFile is used internally for hasuractl
 	migrationFile  string
 	migrationQuery string
-	Path           string            `json:"path"`
-	ErrorMessage   string            `json:"error"`
-	Internal       *SQLInternalError `json:"internal,omitempty"`
-	Message        string            `json:"message,omitempty"`
-	Code           string            `json:"code"`
+	Path           string      `json:"path"`
+	ErrorMessage   string      `json:"error"`
+	Internal       interface{} `json:"internal,omitempty"`
+	Message        string      `json:"message,omitempty"`
+	Code           string      `json:"code"`
 }
 
 type SQLInternalError struct {
-	Arguments []string      `json:"arguments"`
-	Error     PostgresError `json:"error"`
-	Prepared  bool          `json:"prepared"`
-	Statement string        `json:"statement"`
+	Arguments []string      `json:"arguments" mapstructure:"arguments,omitempty"`
+	Error     PostgresError `json:"error" mapstructure:"error,omitempty"`
+	Prepared  bool          `json:"prepared" mapstructure:"prepared,omitempty"`
+	Statement string        `json:"statement" mapstructure:"statement,omitempty"`
 }
 type PostgresError struct {
-	StatusCode  string `json:"status_code"`
-	ExecStatus  string `json:"exec_status"`
-	Message     string `json:"message"`
-	Description string `json:"description"`
-	Hint        string `json:"hint"`
+	StatusCode  string `json:"status_code" mapstructure:"status_code,omitempty"`
+	ExecStatus  string `json:"exec_status" mapstructure:"exec_status,omitempty"`
+	Message     string `json:"message" mapstructure:"message,omitempty"`
+	Description string `json:"description" mapstructure:"description,omitempty"`
+	Hint        string `json:"hint" mapstructure:"hint,omitempty"`
 }
 
 type SchemaDump struct {
@@ -238,14 +317,34 @@ func (h HasuraError) Error() string {
 	if h.migrationQuery != "" {
 		errorStrings = append(errorStrings, fmt.Sprintf("%s", h.migrationQuery))
 	}
-	if h.Internal != nil {
-		// postgres error
-		errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", h.Internal.Error.StatusCode, h.Internal.Error.ExecStatus, h.Internal.Error.Message))
-		if len(h.Internal.Error.Description) > 0 {
-			errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", h.Internal.Error.Description))
+	var internalError SQLInternalError
+	var internalErrors []SQLInternalError
+	if v, ok := h.Internal.(map[string]interface{}); ok {
+		err := mapstructure.Decode(v, &internalError)
+		if err == nil {
+			// postgres error
+			errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", internalError.Error.StatusCode, internalError.Error.ExecStatus, internalError.Error.Message))
+			if len(internalError.Error.Description) > 0 {
+				errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", internalError.Error.Description))
+			}
+			if len(internalError.Error.Hint) > 0 {
+				errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", internalError.Error.Hint))
+			}
 		}
-		if len(h.Internal.Error.Hint) > 0 {
-			errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", h.Internal.Error.Hint))
+	}
+	if v, ok := h.Internal.([]interface{}); ok {
+		err := mapstructure.Decode(v, &internalErrors)
+		if err == nil {
+			for _, internalError := range internalErrors {
+				// postgres error
+				errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", internalError.Error.StatusCode, internalError.Error.ExecStatus, internalError.Error.Message))
+				if len(internalError.Error.Description) > 0 {
+					errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", internalError.Error.Description))
+				}
+				if len(internalError.Error.Hint) > 0 {
+					errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", internalError.Error.Hint))
+				}
+			}
 		}
 	}
 	return strings.Join(errorStrings, "\r\n")
@@ -313,6 +412,14 @@ const (
 	createRemoteRelationship                 = "create_remote_relationship"
 	updateRemoteRelationship                 = "update_remote_relationship"
 	deleteRemoteRelationship                 = "delete_remote_relationship"
+	createCronTrigger                        = "create_cron_trigger"
+	deleteCronTrigger                        = "delete_cron_trigger"
+	createAction                             = "create_action"
+	dropAction                               = "drop_action"
+	updateAction                             = "update_action"
+	createActionPermission                   = "create_action_permission"
+	dropActionPermission                     = "drop_action_permission"
+	setCustomTypes                           = "set_custom_types"
 )
 
 type tableMap struct {
@@ -655,6 +762,9 @@ type replaceMetadataInput struct {
 	QueryCollections []*createQueryCollectionInput    `json:"query_collections" yaml:"query_collections"`
 	AllowList        []*addCollectionToAllowListInput `json:"allowlist" yaml:"allowlist"`
 	RemoteSchemas    []*addRemoteSchemaInput          `json:"remote_schemas" yaml:"remote_schemas"`
+	CronTriggers     []*createCronTriggerInput        `json:"cron_triggers" yaml:"cron_triggers"`
+	Actions          []*actionAndPermission           `json:"actions" yaml:"actions"`
+	CustomTypes      *setCustomTypesInput             `json:"custom_types" yaml:"custom_types"`
 }
 
 func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList) {
@@ -761,15 +871,17 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	}
 
 	for _, table := range rmi.Tables {
-		for _, remoteRelationship := range *table.RemoteRelationships {
-			r := createRemoteRelationshipInput{
-				remoteRelationshipDefinition: remoteRelationship.Definiton,
-				Table: tableSchema{
-					Name:   table.Table.Name,
-					Schema: table.Table.Schema,
-				},
+		if table.RemoteRelationships != nil {
+			for _, remoteRelationship := range *table.RemoteRelationships {
+				r := createRemoteRelationshipInput{
+					remoteRelationshipDefinition: remoteRelationship.Definiton,
+					Table: tableSchema{
+						Name:   table.Table.Name,
+						Schema: table.Table.Schema,
+					},
+				}
+				l.PushBack(r)
 			}
-			l.PushBack(r)
 		}
 	}
 
@@ -791,6 +903,31 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	// track remote schemas
 	for _, rs := range rmi.RemoteSchemas {
 		l.PushBack(rs)
+	}
+
+	// track cron triggers
+	for _, ct := range rmi.CronTriggers {
+		l.PushBack(ct)
+	}
+
+	// track actions
+	for _, action := range rmi.Actions {
+		// action definition
+		a := &createActionInput{
+			actionDefinition: action.actionDefinition,
+		}
+		l.PushBack(a)
+		// permission
+		for _, permission := range action.Permissions {
+			p := &createActionPermissionInput{
+				Action:               action.Name,
+				PermissionDefinition: permission,
+			}
+			l.PushBack(p)
+		}
+	}
+	if rmi.CustomTypes != nil {
+		l.PushBack(rmi.CustomTypes)
 	}
 }
 
@@ -970,5 +1107,19 @@ type allowListConfig struct {
 
 type remoteRelationshipConfig struct {
 	tableName, schemaName, name string
+	transition.Transition
+}
+
+type cronTriggerConfig struct {
+	name string
+	transition.Transition
+}
+
+type actionConfig struct {
+	name string
+	transition.Transition
+}
+type actionPermissionConfig struct {
+	action string
 	transition.Transition
 }

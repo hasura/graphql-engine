@@ -197,7 +197,7 @@ Add Access Control Rules via Hasura Console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Auth0 is configured and ready to be used in the application. You can now set up access control rules that
-will automatically get applied whenever a client makes a graphql query with the Auth0 token.
+will automatically get applied whenever a client makes a GraphQL request with the Auth0 token.
 
 Refer to :ref:`auth_basics` for more information.
 
@@ -259,4 +259,4 @@ That’s it! This rule will be triggered on every successful signup/login and sy
 
 .. admonition:: Local dev with Auth0 rules
 
-   The sync step will require a reachable endpoint to Hasura and this is not possible in localhost. You can use `ngrok <https://ngrok.com/>`_ or similar services to expose your locally running Hasura with a public endpoint temporarily.
+   The sync step will require a reachable endpoint to Hasura and this is not possible in localhost. You can use `ngrok <https://ngrok.com/>`__ or similar services to expose your locally running Hasura with a public endpoint temporarily.
