@@ -7,10 +7,23 @@ services:
     - db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: postgrespassword
+    command: -p 5432
+    ports:
+      - "5432:5432"
+    
+  postgres2:
+    image: postgres:12
+    restart: always
+    volumes:
+    - db_data:/var/lib/pgsql/data2
+    environment:
+      POSTGRES_PASSWORD: postgrespassword
+    command: -p 5431
+    ports:
+      - "5431:5431"
+
   graphql-engine:
     image: hasura/graphql-engine:v1.3.0
-    ports:
-    - "8080:8080"
     depends_on:
     - "postgres"
     restart: always
@@ -23,6 +36,27 @@ services:
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
       ## uncomment next line to set an admin secret
       # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+      HASURA_GRAPHQL_SERVER_PORT: 5000
+    ports:
+      - "5000:5000"
+
+  graphql-engine2:
+    image: hasura/graphql-engine:v1.3.0
+    depends_on:
+    - "postgres2"
+    restart: always
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres2:5431/postgres
+      ## enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
+      ## enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      ## uncomment next line to set an admin secret
+      # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+      HASURA_GRAPHQL_SERVER_PORT: 5001
+    ports:
+      - "5001:5001"
 volumes:
   db_data:
 
