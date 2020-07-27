@@ -12,7 +12,6 @@ import Alert from '../../../Common/Alert';
 import StatementTimeout from './StatementTimeout';
 import { parseCreateSQL } from './utils';
 import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
-import styles from '../../../Common/TableCommon/Table.scss';
 
 import {
   executeSQL,
@@ -84,13 +83,13 @@ const RawSQL = ({
       }
     }
     return () => {
-      setLSItem(LS_KEYS.rawSQLKey, sqlRef.sqlText);
+      setLSItem(LS_KEYS.rawSQLKey, sqlText);
     };
   }, [dispatch, sql, sqlText]);
 
   const submitSQL = () => {
     if (!sqlText) {
-      localStorage.setItem(LS_RAW_SQL_SQL, '');
+      setLSItem(LS_KEYS.rawSQLKey, '');
       return;
     }
     // set SQL to LS
