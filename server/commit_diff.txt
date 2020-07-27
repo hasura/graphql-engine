@@ -22,15 +22,3 @@ Author: Brandon Simmons <brandon.m.simmons@gmail.com>
 Date:   Tue Jul 28 19:02:44 2020 -0400
 
     Support only the bounded cache, with default HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE of 4000. Closes #5363
-
-commit 3a6b2ec74431c6a4ebed255ff492c54fbbc2aed9
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Mon Jul 27 18:21:24 2020 -0400
-
-    Bugfix to support 0-size HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE
-
-    Also some minor refactoring of bounded cache module:
-     - the maxBound check in `trim` was confusing and unnecessary
-     - consequently trim was unnecessary for lookupPure
-
-    Also add some basic tests
