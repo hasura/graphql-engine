@@ -6,9 +6,11 @@ import { ConsoleNotification, NotificationDate } from './ConsoleNotification';
 import styles from './Main.scss';
 import ConsoleLogo from './images/components/ConsoleLogo';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
-import { ReduxState } from '../../types';
+import { ReduxState, Dispatch } from '../../types';
 import { TelemetryState } from '../../telemetry/state';
-import { versionGT } from '../../helpers/versionUtils';
+import { versionGT, checkStableVersion } from '../../helpers/versionUtils';
+import ToolTip from '../Common/Tooltip/Tooltip';
+import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 
 const getDateString = (date: NotificationDate) => {
   if (!date) {
@@ -68,39 +70,71 @@ type NotificationProps = {
   data: ConsoleNotification[];
   showVersionUpdate: boolean;
   latestVersion: string;
+  optOutCallback: () => void;
 };
 
-const VersionUpdateNotification: React.FC<Pick<
-  NotificationProps,
-  'latestVersion'
->> = ({ latestVersion }) => (
-  <Update
-    subject="New Update Available!"
-    type="version update"
-    content={`Hey There! There's a new server version ${latestVersion} available.`}
-    start_date={Date.now()}
-  >
-    <a
-      href={`https://github.com/hasura/graphql-engine/releases/tag/${latestVersion}`}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <span>View Changelog</span>
-    </a>
-    <span className={styles.middot}> &middot; </span>
-    <a
-      className={styles.updateLink}
-      href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <span>Update Now</span>
-    </a>
-  </Update>
+type PreReleaseProps = Pick<NotificationProps, 'optOutCallback'>;
+
+const PreReleaseNote: React.FC<PreReleaseProps> = ({ optOutCallback }) => (
+  <Flex pt={4}>
+    <i>
+      This is a pre-release version. Not recommended for production use.
+      <br />
+      <a href="#" onClick={optOutCallback}>
+        Opt out of pre-release notifications
+      </a>
+      <ToolTip
+        message="Only be notified about stable releases"
+        placement="top"
+      />
+    </i>
+  </Flex>
 );
 
+type VersionUpdateNotificationProps = Pick<
+  NotificationProps,
+  'latestVersion' | 'optOutCallback'
+>;
+
+const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
+  latestVersion,
+  optOutCallback,
+}) => {
+  const isStableRelease = checkStableVersion(latestVersion);
+  return (
+    <Update
+      subject="New Update Available!"
+      type="version update"
+      content={`Hey There! There's a new server version ${latestVersion} available.`}
+      start_date={Date.now()}
+    >
+      <a
+        href={
+          latestVersion
+            ? `https://github.com/hasura/graphql-engine/releases/tag/${latestVersion}`
+            : 'https://github.com/hasura/graphql-engine/releases'
+        }
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span>View Changelog</span>
+      </a>
+      <span className={styles.middot}> &middot; </span>
+      <a
+        className={styles.updateLink}
+        href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span>Update Now</span>
+      </a>
+      {!isStableRelease && <PreReleaseNote optOutCallback={optOutCallback} />}
+    </Update>
+  );
+};
+
 const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
-  ({ data, showVersionUpdate, latestVersion }, ref) => (
+  ({ data, showVersionUpdate, latestVersion, optOutCallback }, ref) => (
     <Box
       className={`dropdown-menu ${styles.consoleNotificationPanel}`}
       ref={ref}
@@ -117,7 +151,10 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
         />
       </Flex>
       {showVersionUpdate ? (
-        <VersionUpdateNotification latestVersion={latestVersion} />
+        <VersionUpdateNotification
+          latestVersion={latestVersion}
+          optOutCallback={optOutCallback}
+        />
       ) : null}
       {data.length &&
         data.map(({ subject, content, is_active, ...props }) => (
@@ -196,7 +233,9 @@ type HasuraNotificationProps = {
   closeDropDown: () => void;
 };
 
-interface Props extends HasuraNotificationProps, StateProps {}
+interface Props extends HasuraNotificationProps, StateProps {
+  dispatch: Dispatch;
+}
 
 const HasuraNotifications: React.FC<Props> = ({
   consoleNotifications,
@@ -224,9 +263,15 @@ const HasuraNotifications: React.FC<Props> = ({
 
     if (versionUpdateCheck) {
       setDisplayNewVersionNotif(true);
-      // TODO: add the false case, or the dismiss case
+      return;
     }
-  }, []);
+
+    setDisplayNewVersionNotif(false);
+  }, [props]);
+
+  const optOutCallback = () => {
+    props.dispatch(setPreReleaseNotificationOptOutInDB());
+  };
 
   return (
     <>
@@ -237,13 +282,14 @@ const HasuraNotifications: React.FC<Props> = ({
         ref={wrapperRef}
       >
         <ConsoleLogo width={25} height={25} />
+        {/* TODO: add the badge for showing the number of notifications (unread?) */}
       </div>
       <Notifications
         data={consoleNotifications}
         ref={dropDownRef}
         showVersionUpdate={displayNewVersionNotif}
-        // TODO: remove this later showVersionUpdate={0 > -1}
         latestVersion={latestVersion}
+        optOutCallback={optOutCallback}
       />
     </>
   );
