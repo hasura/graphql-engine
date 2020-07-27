@@ -157,6 +157,14 @@ trackExistingTableOrViewP2
   => QualifiedTable -> Bool -> TableConfig -> m EncJSON
 trackExistingTableOrViewP2 tableName isEnum config = do
   sc <- askSchemaCache
+  {-
+  The next line does more than what it says on the tin.  Removing the following
+  call to 'checkConflictingNode' causes memory usage to spike when newly
+  tracking a large amount (~100) of tables.  The memory usage can be triggered
+  by first creating a large amount of tables through SQL, without tracking the
+  tables, and then clicking "track all" in the console.  Curiously, this high
+  memory usage happens even when no substantial GraphQL schema is generated.
+  -}
   checkConflictingNode sc $ snakeCaseQualObject tableName
   saveTableToCatalog tableName isEnum config
   buildSchemaCacheFor (MOTable tableName)
