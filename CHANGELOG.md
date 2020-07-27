@@ -7,6 +7,7 @@
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - console: update sidebar icons for different action and trigger types
+- docker: docker-compose.yaml example to create multiple instances of hasura inside docker
 
 ## `v1.3.0`
 
