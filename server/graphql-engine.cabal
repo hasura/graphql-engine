@@ -467,6 +467,7 @@ test-suite graphql-engine-tests
     Hasura.RQL.MetadataSpec
     Hasura.Server.MigrateSpec
     Hasura.Server.TelemetrySpec
+    Hasura.CacheBoundedSpec
     Hasura.Server.AuthSpec
 
 -- Benchmarks related to caching (e.g. the plan cache).
