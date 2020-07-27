@@ -31,16 +31,11 @@ import {
 } from '../Services/Settings/Actions';
 
 import { getProClickState, setProClickState } from './utils';
-
-import { checkStableVersion, versionGT } from '../../helpers/versionUtils';
 import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
 import {
-  getLocalStorageItem,
   LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
   setLocalStorageItem,
 } from '../Common/utils/localStorageUtils';
-import ToolTip from '../Common/Tooltip/Tooltip';
-import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 import { Icon } from '../UIKit/atoms/Icon';
 import { ProPopup } from './components/ProPopup';
 
@@ -68,13 +63,11 @@ class Main extends React.Component {
         }
       );
 
-      dispatch(loadLatestServerVersion()).then(() => {
-        this.setShowUpdateNotification();
-      });
+      dispatch(loadLatestServerVersion());
     });
 
-    dispatch(fetchServerConfig());
     dispatch(fetchConsoleNotifications());
+    dispatch(fetchServerConfig());
   }
 
   toggleProPopup = () => {
@@ -82,49 +75,6 @@ class Main extends React.Component {
     dispatch(emitProClickedEvent({ open: !this.state.isPopUpOpen }));
     this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
   };
-
-  setShowUpdateNotification() {
-    const {
-      latestStableServerVersion,
-      latestPreReleaseServerVersion,
-      serverVersion,
-      console_opts,
-    } = this.props;
-
-    const allowPreReleaseNotifications =
-      !console_opts || !console_opts.disablePreReleaseUpdateNotifications;
-
-    let latestServerVersionToCheck;
-    if (
-      allowPreReleaseNotifications &&
-      versionGT(latestPreReleaseServerVersion, latestStableServerVersion)
-    ) {
-      latestServerVersionToCheck = latestPreReleaseServerVersion;
-    } else {
-      latestServerVersionToCheck = latestStableServerVersion;
-    }
-
-    try {
-      const lastUpdateCheckClosed = getLocalStorageItem(
-        LS_VERSION_UPDATE_CHECK_LAST_CLOSED
-      );
-
-      if (lastUpdateCheckClosed !== latestServerVersionToCheck) {
-        const isUpdateAvailable = versionGT(
-          latestServerVersionToCheck,
-          serverVersion
-        );
-
-        if (isUpdateAvailable) {
-          this.setState({
-            updateNotificationVersion: latestServerVersionToCheck,
-          });
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }
 
   handleMetadataRedirect() {
     if (this.props.metadata.inconsistentObjects.length > 0) {
@@ -178,7 +128,6 @@ class Main extends React.Component {
       currentSchema,
       serverVersion,
       metadata,
-      dispatch,
     } = this.props;
 
     const {
@@ -256,90 +205,6 @@ class Main extends React.Component {
         );
       }
       return adminSecretHtml;
-    };
-
-    const getUpdateNotification = () => {
-      let updateNotificationHtml = null;
-
-      const { updateNotificationVersion } = this.state;
-
-      const isStableRelease = checkStableVersion(updateNotificationVersion);
-
-      const getPreReleaseNote = () => {
-        const handlePreRelNotifOptOut = e => {
-          e.preventDefault();
-          e.stopPropagation();
-
-          this.closeUpdateBanner();
-
-          dispatch(setPreReleaseNotificationOptOutInDB());
-        };
-
-        return (
-          <React.Fragment>
-            <span className={styles.middot}> &middot; </span>
-            <i>
-              This is a pre-release version. Not recommended for production use.
-              <span className={styles.middot}> &middot; </span>
-              <a href={'#'} onClick={handlePreRelNotifOptOut}>
-                Opt out of pre-release notifications
-              </a>
-              <ToolTip
-                message={'Only be notified about stable releases'}
-                placement={'top'}
-              />
-            </i>
-          </React.Fragment>
-        );
-      };
-
-      if (updateNotificationVersion) {
-        updateNotificationHtml = (
-          <div>
-            <div className={styles.phantom} />{' '}
-            {/* phantom div to prevent overlapping of banner with content. */}
-            <div className={styles.updateBannerWrapper}>
-              <div className={styles.updateBanner}>
-                <span> Hey there! A new server version </span>
-                <span className={styles.versionUpdateText}>
-                  {' '}
-                  {updateNotificationVersion}
-                </span>
-                <span> is available </span>
-                <span className={styles.middot}> &middot; </span>
-                <a
-                  href={
-                    'https://github.com/hasura/graphql-engine/releases/tag/' +
-                    updateNotificationVersion
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span>View Changelog</span>
-                </a>
-                <span className={styles.middot}> &middot; </span>
-                <a
-                  className={styles.updateLink}
-                  href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span>Update Now</span>
-                </a>
-                {!isStableRelease && getPreReleaseNote()}
-                <span
-                  className={styles.updateBannerClose}
-                  onClick={this.closeUpdateBanner.bind(this)}
-                >
-                  <i className={'fa fa-times'} />
-                </span>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      return updateNotificationHtml;
     };
 
     const getSidebarItem = (
@@ -529,8 +394,6 @@ class Main extends React.Component {
           <div className={styles.main + ' container-fluid'}>
             {getMainContent()}
           </div>
-
-          {getUpdateNotification()}
           {getVulnerableVersionNotification()}
         </div>
       </div>
