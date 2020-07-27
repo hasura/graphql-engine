@@ -56,11 +56,11 @@ const Operations = ({
         key={o.name}
         className={`${styles.display_inline} ${styles.add_mar_right}`}
       >
-        <label>
+        <label className={styles.cursorPointer}>
           <input
             onChange={o.onChange}
             data-test={o.testIdentifier}
-            className={`${styles.display_inline} ${styles.add_mar_right}`}
+            className={`${styles.display_inline} ${styles.add_mar_right_small} ${styles.cursorPointer}`}
             type="checkbox"
             name={o.name}
             checked={o.isChecked}
@@ -72,7 +72,7 @@ const Operations = ({
     ));
   };
 
-  return <div className={styles.add_mar_left_small}>{getOperationsList()}</div>;
+  return <div>{getOperationsList()}</div>;
 };
 
 export default Operations;

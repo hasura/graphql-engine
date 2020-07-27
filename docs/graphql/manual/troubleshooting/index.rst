@@ -64,6 +64,6 @@ Discord
 -------
 
 If you didn't find a solution in any of the above mentioned sections or if you prefer to troubleshoot with the community,
-feel free to join our `Discord server <http://hasura.io/discord>`__. Other users might have come across the same issues, 
+feel free to join our `Discord server <https://hasura.io/discord>`__. Other users might have come across the same issues, 
 and the Hasura community on Discord is very active and helpful. 
 

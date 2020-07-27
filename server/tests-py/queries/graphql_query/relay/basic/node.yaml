@@ -1,12 +1,13 @@
 description: Query the relay Node interface
-url: /v1/relay
+url: /v1beta1/relay
 status: 200
 query:
   variables:
-    author_id: eyJ0YWJsZSIgOiB7InNjaGVtYSIgOiAicHVibGljIiwgIm5hbWUiIDogImF1dGhvciJ9LCAiY29sdW1ucyIgOiB7ImlkIiA6IDJ9fQ==
-    article_id: eyJ0YWJsZSIgOiB7InNjaGVtYSIgOiAicHVibGljIiwgIm5hbWUiIDogImFydGljbGUifSwgImNvbHVtbnMiIDogeyJpZCIgOiAzfX0=
+    author_id: WzEsICJwdWJsaWMiLCJhdXRob3IiLDJdCg==
+    article_id: WzEsInB1YmxpYyIsImFydGljbGUiLDNdCg==
+    non_exist_article_id: WzEsInB1YmxpYyIsImFydGljbGUiLDEwMF0K
   query: |
-    query nodeQuery($author_id: ID!, $article_id: ID!){
+    query nodeQuery($author_id: ID!, $article_id: ID!, $non_exist_article_id: ID!){
       author_node: node(id: $author_id){
         __typename
         ... on author{
@@ -41,6 +42,12 @@ query:
           }
         }
       }
+      non_exist_article: node(id: $non_exist_article_id){
+        ... on article{
+          title
+          content
+        }
+      }
     }
 response:
   data:
@@ -58,10 +65,11 @@ response:
             title: Article 5
             content: Sample article content 5
     article_node_with_author_id:
-      id: eyJ0YWJsZSIgOiB7InNjaGVtYSIgOiAicHVibGljIiwgIm5hbWUiIDogImF1dGhvciJ9LCAiY29sdW1ucyIgOiB7ImlkIiA6IDJ9fQ==
+      id: WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgMl0=
     article_node:
       __typename: article
       title: Article 3
       content: Sample article content 3
       author:
         name: Author 1
+    non_exist_article: null

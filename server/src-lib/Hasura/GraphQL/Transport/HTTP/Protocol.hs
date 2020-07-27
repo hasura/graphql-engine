@@ -52,7 +52,7 @@ newtype GQLExecDoc
   deriving (Ord, Show, Eq, Hashable, Lift)
 
 instance J.FromJSON GQLExecDoc where
-  parseJSON v = (GQLExecDoc . G.getExecutableDefinitions) <$> J.parseJSON v
+  parseJSON v = GQLExecDoc . G.getExecutableDefinitions <$> J.parseJSON v
 
 instance J.ToJSON GQLExecDoc where
   toJSON = J.toJSON . G.ExecutableDocument . unGQLExecDoc
@@ -73,9 +73,7 @@ data GQLReq a
   , _grVariables     :: !(Maybe VariableValues)
   } deriving (Show, Eq, Generic, Functor, Lift)
 
-$(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True}
-  ''GQLReq
- )
+$(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True} ''GQLReq)
 
 instance (Hashable a) => Hashable (GQLReq a)
 
@@ -100,7 +98,7 @@ instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
 newtype GQLQueryText
   = GQLQueryText
   { _unGQLQueryText :: Text
-  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable, Lift)
+  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable, Lift, IsString)
 
 type GQLReqUnparsed = GQLReq GQLQueryText
 type GQLReqParsed = GQLReq GQLExecDoc

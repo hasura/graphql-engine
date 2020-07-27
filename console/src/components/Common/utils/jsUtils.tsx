@@ -135,6 +135,15 @@ export const arrayDiff = (arr1: unknown[], arr2: unknown[]) => {
   return arr1.filter(v => !arr2.includes(v));
 };
 
+export const isStringArray = (str: string): boolean => {
+  try {
+    const arr = JSON.parse(str);
+    return Array.isArray(arr);
+  } catch {
+    return false;
+  }
+};
+
 /* JSON utils */
 
 export function getAllJsonPaths(json: any, leafKeys: any[], prefix = '') {

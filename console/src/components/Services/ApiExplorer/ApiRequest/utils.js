@@ -148,10 +148,12 @@ export const parseAuthHeader = header => {
   return { isAuthHeader, token };
 };
 
+const GRAPHIQL_MODE_LS = 'ApiExplorer:GraphiQLMode';
+
 export const persistGraphiQLMode = mode => {
-  window.localStorage.setItem('ApiExplorer:GraphiQLMode', mode);
+  window.localStorage.setItem(GRAPHIQL_MODE_LS, mode);
 };
 
 export const getPersistedGraphiQLMode = () => {
-  return window.localStorage.getItem('ApiExplorer:GraphiQLMode');
+  return window.localStorage.getItem(GRAPHIQL_MODE_LS) || 'graphql';
 };

@@ -526,7 +526,8 @@ getSelPerm tableCache fields roleName selPermInfo = do
     FIRelationship relInfo -> do
       remTableInfo <- getTabInfo tableCache $ riRTable relInfo
       let remTableSelPermM = getSelPermission remTableInfo roleName
-          remTableFlds = _tciFieldInfoMap $ _tiCoreInfo remTableInfo
+          remTableCoreInfo = _tiCoreInfo remTableInfo
+          remTableFlds = _tciFieldInfoMap remTableCoreInfo
           remTableColGNameMap =
             mkPGColGNameMap $ getValidCols remTableFlds
       return $ flip fmap remTableSelPermM $
@@ -536,8 +537,7 @@ getSelPerm tableCache fields roleName selPermInfo = do
                              , _rfiColumns    = remTableColGNameMap
                              , _rfiPermFilter = spiFilter rmSelPermM
                              , _rfiPermLimit  = spiLimit rmSelPermM
-                             , _rfiPrimaryKeyColumns = _pkColumns <$>
-                                 _tciPrimaryKey (_tiCoreInfo remTableInfo)
+                             , _rfiPrimaryKeyColumns = _pkColumns <$> _tciPrimaryKey remTableCoreInfo
                              , _rfiIsNullable = isRelNullable fields relInfo
                              }
     FIComputedField info -> do
@@ -913,7 +913,6 @@ mkGCtx tyAgg (RootFields queryFields mutationFields) insCtxMap =
                             , TIObj <$> mutRootM
                             , TIObj <$> subRootM
                             , TIEnum <$> ordByEnumTyM
-                            , Just $ TIObj mkPageInfoObj
                             ] <>
                   scalarTys <> compTys <> defaultTypes <> wiredInGeoInputTypes
                   <> wiredInRastInputTypes

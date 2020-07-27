@@ -46,6 +46,7 @@ import {
   getRelationshipRefTable,
   getTableName,
   getTableSchema,
+  arrayToPostgresArray,
 } from '../../../Common/utils/pgUtils';
 import { updateSchemaInfo } from '../DataActions';
 import {
@@ -84,6 +85,7 @@ const ViewRows = ({
   triggeredFunction,
   location,
   readOnlyMode,
+  shouldHidePagination,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   useEffect(() => {
@@ -234,6 +236,12 @@ const ViewRows = ({
         pkClause[k.column_name] = row[k.column_name];
       });
     }
+
+    Object.keys(pkClause).forEach(key => {
+      if (Array.isArray(pkClause[key])) {
+        pkClause[key] = arrayToPostgresArray(pkClause[key]);
+      }
+    });
 
     return pkClause;
   };
@@ -456,7 +464,10 @@ const ViewRows = ({
         manualTriggersButton = getManualTriggersButton();
 
         return (
-          <div key={rowIndex} className={styles.tableCellCenterAligned}>
+          <div
+            key={rowIndex}
+            className={`${styles.tableCenterContent} ${styles.overflowUnset}`}
+          >
             {cloneButton}
             {editButton}
             {deleteButton}
@@ -915,7 +926,7 @@ const ViewRows = ({
 
     return (
       <DragFoldTable
-        className="-highlight -fit-content"
+        className="dataTable -highlight -fit-content"
         data={_gridRows}
         columns={_gridHeadings}
         headerTitle={'Click to sort / Drag to rearrange'}
@@ -943,6 +954,7 @@ const ViewRows = ({
           persistColumnOrderChange(curTableName, currentSchema, reorderData)
         }
         defaultReorders={columnsOrder}
+        showPagination={!shouldHidePagination}
       />
     );
   };

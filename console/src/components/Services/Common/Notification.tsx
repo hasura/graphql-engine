@@ -12,7 +12,7 @@ import { Json } from '../../Common/utils/tsUtils';
 import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
 
-const styles = require('./Notification/Notification.scss');
+import styles from './Notification/Notification.scss';
 
 export interface Notification {
   title?: string | JSX.Element;
@@ -29,7 +29,7 @@ export interface Notification {
   };
 }
 
-const showNotification = (
+export const showNotification = (
   options: Notification,
   level: NotificationLevel
 ): Thunk => {
@@ -74,59 +74,60 @@ const getNotificationDetails = (
     </div>
   );
 };
+export const getErrorMessage = (
+  message: string | null,
+  error?: Record<string, any>
+) => {
+  let notificationMessage;
 
+  if (error) {
+    if (isString(error)) {
+      notificationMessage = error;
+    } else if (
+      error.message &&
+      (error.message.error === 'postgres query error' ||
+        error.message.error === 'query execution failed')
+    ) {
+      if (error.message.internal) {
+        notificationMessage = `${error.message.code}: ${error.message.internal.error.message}`;
+      } else {
+        notificationMessage = `${error.code}: ${error.message.error}`;
+      }
+    } else if ('info' in error) {
+      notificationMessage = error.info;
+    } else if ('message' in error) {
+      if (error.code) {
+        if (error.message.error) {
+          notificationMessage = error.message.error.message;
+        } else {
+          notificationMessage = error.message;
+        }
+      } else if (error.message && isString(error.message)) {
+        notificationMessage = error.message;
+      } else if (error.message && 'code' in error.message) {
+        notificationMessage = `${error.message.code} : ${message}`;
+      } else {
+        notificationMessage = error.code;
+      }
+    } else if ('internal' in error && 'error' in error.internal) {
+      notificationMessage = `${error.code} : ${error.internal.error.message}`;
+    } else if ('custom' in error) {
+      notificationMessage = error.custom;
+    } else if ('code' in error && 'error' in error && 'path' in error) {
+      // Data API error
+      notificationMessage = error.error;
+    }
+  } else {
+    notificationMessage = message;
+  }
+
+  return notificationMessage;
+};
 const showErrorNotification = (
   title: string,
   message: string | null,
   error?: Record<string, any>
 ): Thunk => {
-  const getErrorMessage = () => {
-    let notificationMessage;
-
-    if (error) {
-      if (isString(error)) {
-        notificationMessage = error;
-      } else if (
-        error.message &&
-        (error.message.error === 'postgres query error' ||
-          error.message.error === 'query execution failed')
-      ) {
-        if (error.message.internal) {
-          notificationMessage = `${error.message.code}: ${error.message.internal.error.message}`;
-        } else {
-          notificationMessage = `${error.code}: ${error.message.error}`;
-        }
-      } else if ('info' in error) {
-        notificationMessage = error.info;
-      } else if ('message' in error) {
-        if (error.code) {
-          if (error.message.error) {
-            notificationMessage = error.message.error.message;
-          } else {
-            notificationMessage = error.message;
-          }
-        } else if (error.message && isString(error.message)) {
-          notificationMessage = error.message;
-        } else if (error.message && 'code' in error.message) {
-          notificationMessage = `${error.message.code} : ${message}`;
-        } else {
-          notificationMessage = error.code;
-        }
-      } else if ('internal' in error && 'error' in error.internal) {
-        notificationMessage = `${error.code} : ${error.internal.error.message}`;
-      } else if ('custom' in error) {
-        notificationMessage = error.custom;
-      } else if ('code' in error && 'error' in error && 'path' in error) {
-        // Data API error
-        notificationMessage = error.error;
-      }
-    } else {
-      notificationMessage = message;
-    }
-
-    return notificationMessage;
-  };
-
   const getRefreshBtn = () => {
     if (error && 'action' in error) {
       return (
@@ -162,7 +163,7 @@ const showErrorNotification = (
     return errorJson;
   };
 
-  const errorMessage = getErrorMessage();
+  const errorMessage = getErrorMessage(message, error);
   const errorJson = getErrorJson();
 
   return dispatch => {

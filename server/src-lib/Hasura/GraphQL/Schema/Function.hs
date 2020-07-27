@@ -107,7 +107,7 @@ mkFuncQueryConnectionFld funInfo descM =
            <<> " which returns " <>> retTable
     fldName = qualObjectToName funcName <> "_connection"
 
-    ty = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableConnectionTy retTable
+    ty = G.toGT $ G.toNT $ mkTableConnectionTy retTable
 
 {-
 

@@ -31,6 +31,7 @@ import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.Extended                    as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.ByteString                        as B
+import qualified Data.Environment                       as E
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Text                              as T
@@ -50,6 +51,7 @@ import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.SQL.DML                         as S
+import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Db
 import           Hasura.GraphQL.Resolve.Action
@@ -224,15 +226,15 @@ validateVariables
   -> m (ValidatedVariables f)
 validateVariables pgExecCtx variableValues = do
   let valSel = mkValidationSel $ toList variableValues
-  Q.Discard () <- runTx' $ liftTx $
+  Q.Discard () <- runQueryTx_ $ liftTx $
     Q.rawQE dataExnErrHandler (Q.fromBuilder $ toSQL valSel) [] False
   pure . ValidatedVariables $ fmap (txtEncodedPGVal . pstValue) variableValues
   where
     mkExtrs = map (flip S.Extractor Nothing . toTxtValue)
     mkValidationSel vars =
       S.mkSelect { S.selExtr = mkExtrs vars }
-    runTx' tx = do
-      res <- liftIO $ runExceptT (runLazyTx' pgExecCtx tx)
+    runQueryTx_ tx = do
+      res <- liftIO $ runExceptT (runQueryTx pgExecCtx tx)
       liftEither res
 
     -- Explicitly look for the class of errors raised when the format of a value provided
@@ -276,21 +278,23 @@ buildLiveQueryPlan
      , Has QueryCtxMap r
      , Has SQLGenCtx r
      , MonadIO m
+     , Tracing.MonadTrace m
      , HasVersion
      )
-  => PGExecCtx
+  => E.Environment
+  -> PGExecCtx
   -> QueryReusability
   -> QueryActionExecuter
   -> ObjectSelectionSet
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
-buildLiveQueryPlan pgExecCtx initialReusability actionExecuter selectionSet = do
+buildLiveQueryPlan env pgExecCtx initialReusability actionExecuter selectionSet = do
   ((resolvedASTMap, (queryVariableValues, syntheticVariableValues)), finalReusability) <-
     runReusabilityTWith initialReusability $
       flip runStateT mempty $ flip OMap.traverseWithKey (unAliasedFields $ unObjectSelectionSet selectionSet) $
       \_ field -> case GV._fName field of
         "__typename" -> throwVE "you cannot create a subscription on '__typename' field"
         _ -> do
-          unresolvedAST <- GR.queryFldToPGAST field actionExecuter
+          unresolvedAST <- GR.queryFldToPGAST env field actionExecuter
           resolvedAST <- GR.traverseQueryRootFldAST resolveMultiplexedValue unresolvedAST
 
           let (_, remoteJoins) = GR.toPGQuery resolvedAST
@@ -340,6 +344,8 @@ explainLiveQueryPlan :: (MonadTx m, MonadIO m) => LiveQueryPlan -> m LiveQueryPl
 explainLiveQueryPlan plan = do
   let parameterizedPlan = _lqpParameterizedPlan plan
       queryText = Q.getQueryText . unMultiplexedQuery $ _plqpQuery parameterizedPlan
+      -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+      -- query, maybe resulting in privilege escalation:
       explainQuery = Q.fromText $ "EXPLAIN (FORMAT TEXT) " <> queryText
   cohortId <- newCohortId
   explanationLines <- map runIdentity <$> executeQuery explainQuery [(cohortId, _lqpVariables plan)]

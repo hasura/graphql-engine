@@ -425,6 +425,10 @@ applyJsonBuildObj :: [SQLExp] -> SQLExp
 applyJsonBuildObj args =
   SEFnApp "json_build_object" args Nothing
 
+applyJsonBuildArray :: [SQLExp] -> SQLExp
+applyJsonBuildArray args =
+  SEFnApp "json_build_array" args Nothing
+
 applyRowToJson :: [Extractor] -> SQLExp
 applyRowToJson extrs =
   SEFnApp "row_to_json" [mkRowExp extrs] Nothing

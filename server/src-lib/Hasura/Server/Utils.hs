@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 module Hasura.Server.Utils where
 
 import           Hasura.Prelude

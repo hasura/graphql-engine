@@ -72,6 +72,8 @@
     "react/no-unescaped-entities": 0,
     "react/sort-comp": 0,
     "react/jsx-indent": 0,
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
     "jsx-a11y/click-events-have-key-events": 0,
     "jsx-a11y/no-static-element-interactions": 0,
     "jsx-a11y/no-noninteractive-element-interactions": 0,
@@ -86,7 +88,12 @@
     "eqeqeq": 0,
     "no-nested-ternary": 0
   },
-  "plugins": ["react", "import", "@typescript-eslint/eslint-plugin"],
+  "plugins": [
+    "react",
+    "import",
+    "@typescript-eslint/eslint-plugin",
+    "react-hooks"
+  ],
   "settings": {
     "import/resolve": {
       "moduleDirectory": ["node_modules", "src"]
@@ -126,6 +133,8 @@
         "react/jsx-filename-extension": 0,
         "no-unused-vars": "off",
         "camelcase": "off",
+        "no-param-reassign": "off",
+        "consistent-return": "off",
         "@typescript-eslint/no-unused-vars": 2,
         "@typescript-eslint/indent": 0,
         "@typescript-eslint/explicit-function-return-type": 0,
@@ -170,7 +179,8 @@
         "jsx-a11y/interactive-supports-focus": "off",
         "no-restricted-properties": "off",
         "react/no-danger": "off",
-        "react/no-array-index-key": "off"
+        "react/no-array-index-key": "off",
+        "no-case-declarations": 0
       }
     }
   ]

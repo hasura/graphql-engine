@@ -46,21 +46,23 @@ module Hasura.RQL.Types.Common
 import           Hasura.EncJSON
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.SQL.Types
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.DDL.Headers        ()
+import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Types
 
 
 import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Sequence.NonEmpty
 import           Data.URL.Template
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
+import qualified Data.Environment              as Env
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
@@ -226,7 +228,7 @@ $(deriveJSON (aesonDrop 2 snakeCase) ''Constraint)
 data PrimaryKey a
   = PrimaryKey
   { _pkConstraint :: !Constraint
-  , _pkColumns    :: !(NonEmpty a)
+  , _pkColumns    :: !(NESeq a)
   } deriving (Show, Eq, Generic, Foldable)
 instance (NFData a) => NFData (PrimaryKey a)
 instance (Cacheable a) => Cacheable (PrimaryKey a)
@@ -279,7 +281,7 @@ newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: Dif
 instance FromJSON NonNegativeDiffTime where
   parseJSON = withScientific "NonNegativeDiffTime" $ \t -> do
     case (t > 0) of
-      True -> return $ NonNegativeDiffTime . realToFrac $ t
+      True  -> return $ NonNegativeDiffTime . realToFrac $ t
       False -> fail "negative value not allowed"
 
 newtype ResolvedWebhook
@@ -301,8 +303,8 @@ instance FromJSON InputWebhook where
       Left e  -> fail $ "Parsing URL template failed: " ++ e
       Right v -> pure $ InputWebhook v
 
-resolveWebhook :: (QErrM m,MonadIO m) => InputWebhook -> m ResolvedWebhook
-resolveWebhook (InputWebhook urlTemplate) = do
-  eitherRenderedTemplate <- renderURLTemplate urlTemplate
+resolveWebhook :: QErrM m => Env.Environment -> InputWebhook -> m ResolvedWebhook
+resolveWebhook env (InputWebhook urlTemplate) = do
+  let eitherRenderedTemplate = renderURLTemplate env urlTemplate
   either (throw400 Unexpected . T.pack)
     (pure . ResolvedWebhook) eitherRenderedTemplate

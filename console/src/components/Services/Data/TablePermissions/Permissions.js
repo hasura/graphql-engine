@@ -87,6 +87,7 @@ import {
   updateFilterTypeLabel,
   getDefaultFilterType,
   getUpdateTooltip,
+  getQuerySingleRowMutation,
 } from './utils';
 import PermButtonSection from './PermButtonsSection';
 
@@ -909,6 +910,7 @@ class Permissions extends Component {
         };
 
         const rowSectionTitle = 'Row ' + query + ' permissions';
+        const singleRowMutation = getQuerySingleRowMutation(query);
 
         return (
           <CollapsibleToggle
@@ -937,6 +939,17 @@ class Permissions extends Component {
                 )}
               </div>
               <div className={styles.add_mar_top}>{getLimitSection()}</div>
+              <div className={styles.add_mar_top}>
+                {singleRowMutation && (
+                  <span>
+                    The single row mutation <b>{singleRowMutation}</b> shares
+                    the returning type with the query field. Hence if no{' '}
+                    <b>select</b> permissions are defined, the{' '}
+                    <b>{singleRowMutation}</b> field will also be omitted from
+                    the GraphQL schema.
+                  </span>
+                )}
+              </div>
             </div>
           </CollapsibleToggle>
         );

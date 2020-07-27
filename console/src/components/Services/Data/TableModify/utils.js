@@ -42,6 +42,13 @@ const getValidAlterOptions = (alterTypeOptions, colName) => {
   };
 };
 
+export const convertToArrayOptions = options => {
+  return options.map(opt => ({
+    value: opt.value + '[]',
+    label: opt.label + '[]',
+  }));
+};
+
 const fetchColumnCastsQuery = `
 SELECT ts.typname AS "Source Type",
        pg_catalog.format_type(castsource, NULL) AS "Source Info",

@@ -26,6 +26,12 @@ const HandlerEditor = ({ value, onChange, className, disabled = false }) => {
         placeholder={'http://custom-logic.com/api'}
         className={`form-control ${styles.inputWidthLarge}`}
       />
+      <br />
+      <small>
+        Note: You can use an env var to template the handler URL if you have
+        different URLs for multiple environments. e.g.{' '}
+        <i>{'{{ACTION_BASE_URL}}/handler'}</i>
+      </small>
     </div>
   );
 };

@@ -1,0 +1,18 @@
+description: Query author node with id belongs to another user id
+url: /v1beta1/relay
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+query:
+  query: |
+    query {
+      node(id: "WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgMl0K"){
+        ... on author{
+          name
+        }
+      }
+    }
+response:
+  data:
+    node: null

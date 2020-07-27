@@ -7,6 +7,7 @@ import {
   unTrackFunction,
   trackFunction,
   verifyPermissionTab,
+  testSessVariable,
 } from './spec';
 
 const setup = () => {
@@ -28,6 +29,7 @@ export const runCreateCustomFunctionsTableTests = () => {
     it('Track custom function', trackFunction);
     it('Verify permission tab', verifyPermissionTab);
     it('Delete custom function', deleteCustomFunction);
+    it('Test custom function with Session Argument', testSessVariable);
   });
 };
 
