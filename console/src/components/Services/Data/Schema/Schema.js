@@ -118,9 +118,20 @@ const CreateSchemaSection = React.forwardRef(
     )
 );
 
-const DeleteSchemaButton = ({ dispatch, migrationMode }) => {
+const DeleteSchemaButton = ({
+  dispatch,
+  migrationMode,
+  schemaList,
+  currentSchema,
+}) => {
   const successCb = () => {
-    dispatch(updateCurrentSchema('public'));
+    dispatch(
+      updateCurrentSchema(
+        'public',
+        true,
+        schemaList.filter(({ schema_name }) => schema_name !== currentSchema)
+      )
+    );
   };
 
   const handleDelete = () => {
@@ -275,131 +286,6 @@ class Schema extends Component {
         ));
       };
 
-      const getCreateSchemaSection = () => {
-        let createSchemaSection = null;
-
-        if (migrationMode) {
-          const { createSchemaOpen, schemaNameEdit } = this.state;
-
-          const handleCreateNewClick = () => {
-            this.setState({ createSchemaOpen: true });
-          };
-
-          const handleSchemaNameChange = e => {
-            this.setState({ schemaNameEdit: e.target.value });
-          };
-
-          const handleCreateClick = () => {
-            const schemaName = schemaNameEdit.trim();
-
-            if (!schemaName) {
-              document.getElementById('schema-name-input').focus();
-              return;
-            }
-
-            const successCb = () => {
-              dispatch(updateCurrentSchema(schemaName));
-
-              this.setState({
-                schemaNameEdit: '',
-                createSchemaOpen: false,
-              });
-            };
-
-            dispatch(createNewSchema(schemaName, successCb));
-          };
-
-          const handleCancelCreateNewSchema = () => {
-            this.setState({
-              createSchemaOpen: false,
-            });
-          };
-
-          const closedCreateSection = (
-            <Button
-              color="white"
-              size="xs"
-              onClick={handleCreateNewClick}
-              title="Create new schema"
-            >
-              <i className="fa fa-plus" aria-hidden="true" />
-            </Button>
-          );
-
-          const openCreateSection = (
-            <div className={styles.display_inline + ' ' + styles.add_mar_left}>
-              <div className={styles.display_inline}>
-                <input
-                  id="schema-name-input"
-                  type="text"
-                  value={schemaNameEdit}
-                  onChange={handleSchemaNameChange}
-                  placeholder="schema_name"
-                  className={'form-control input-sm ' + styles.display_inline}
-                />
-              </div>
-              <Button
-                color="white"
-                size="xs"
-                onClick={handleCreateClick}
-                className={styles.add_mar_left_mid}
-              >
-                Create
-              </Button>
-              <Button
-                color="white"
-                size="xs"
-                onClick={handleCancelCreateNewSchema}
-                className={styles.add_mar_left_mid}
-              >
-                Cancel
-              </Button>
-            </div>
-          );
-
-          createSchemaSection = createSchemaOpen
-            ? openCreateSection
-            : closedCreateSection;
-        }
-
-        return createSchemaSection;
-      };
-
-      const getDeleteSchemaBtn = () => {
-        let deleteSchemaBtn = null;
-
-        if (migrationMode) {
-          const handleDelete = () => {
-            const successCb = () => {
-              dispatch(
-                updateCurrentSchema(
-                  'public',
-                  true,
-                  schemaList.filter(
-                    ({ schema_name }) => schema_name !== currentSchema
-                  )
-                )
-              );
-            };
-
-            dispatch(deleteCurrentSchema(successCb));
-          };
-
-          deleteSchemaBtn = (
-            <Button
-              color="white"
-              size="xs"
-              onClick={handleDelete}
-              title="Delete current schema"
-            >
-              <i className="fa fa-trash" aria-hidden="true" />
-            </Button>
-          );
-        }
-
-        return deleteSchemaBtn;
-      };
-
       return (
         <div className={styles.add_mar_top}>
           <div className={styles.display_inline}>Current Postgres schema</div>
@@ -417,6 +303,8 @@ class Schema extends Component {
               <DeleteSchemaButton
                 dispatch={dispatch}
                 migrationMode={migrationMode}
+                schemaList={schemaList}
+                currentSchema={currentSchema}
               />
             </div>
             <div
