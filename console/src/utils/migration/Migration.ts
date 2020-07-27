@@ -1,6 +1,6 @@
 import { getDownQueryComments } from './utils';
 import { RunSqlType } from '../../types';
-// todo use well typed interface after generating
+// TODO use well typed interface after generating
 export interface RunSQLQueryType {
   type: string;
   args: object | RunSQLQueryType[];
