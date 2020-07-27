@@ -17,7 +17,7 @@ query:
         type: LineString
   query: |
     mutation insertRoad($roads: [road_insert_input!]!) {
-      insert_straight_road(objects: $roads) {
+      insert_road(objects: $roads) {
         returning{
           id
           name
