@@ -73,7 +73,8 @@ $(makeLenses ''InlineState)
 type MonadInline var m =
   ( MonadError QErr m
   , MonadReader InlineEnv m
-  , MonadState (InlineState var) m )
+  , MonadState (InlineState var) m
+  )
 
 -- | Inlines all fragment spreads in a 'SelectionSet'; see the module
 -- documentation for "Hasura.GraphQL.Execute.Inline" for details.
