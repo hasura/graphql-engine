@@ -125,12 +125,7 @@ orderByAggregation table selectPermissions = do
       -> InputFieldsParser n (Maybe [OrderByItemG RQL.AnnAggregateOrderBy])
     parseOperator operator tableName columns =
       let opText     = G.unName operator
-          -- FIXME: isn't G.Name a Monoid?
-          objectName = foldr1 (<>) [ tableName
-                                   , $$(G.litName "_")
-                                   , operator
-                                   , $$(G.litName "_order_by")
-                                   ]
+          objectName = tableName <> $$(G.litName "_") <> operator <> $$(G.litName "_order_by")
           objectDesc = Just $ G.Description $ mconcat [ "order by"
                                                       , opText
                                                       , "() on columns of table "

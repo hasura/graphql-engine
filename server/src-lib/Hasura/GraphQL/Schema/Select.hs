@@ -175,13 +175,13 @@ selectTableByPk table fieldName description selectPermissions = runMaybeT do
   pure $ P.subselection fieldName description argsParser selectionSetParser
     <&> \(boolExpr, fields) ->
       let defaultPerms = tablePermissionsInfo selectPermissions
+          -- Do not account permission limit since the result is just a nullable object
+          permissions  = defaultPerms { RQL._tpLimit = Nothing }
           whereExpr    = Just $ BoolAnd $ toList boolExpr
       in RQL.AnnSelectG
            { RQL._asnFields   = fields
            , RQL._asnFrom     = RQL.FromTable table
-           , RQL._asnPerm     = defaultPerms { RQL._tpLimit = Nothing }
-             -- TODO: check whether this is necessary:        ^^^^^^^
-             -- This is how it was in legacy code.
+           , RQL._asnPerm     = permissions
            , RQL._asnArgs     = RQL.noSelectArgs { RQL._saWhere = whereExpr }
            , RQL._asnStrfyNum = stringifyNum
            }
@@ -744,53 +744,61 @@ tableAggregationFields
 tableAggregationFields table selectPermissions = do
   tableName  <- qualifiedObjectToName table
   allColumns <- tableSelectColumns table selectPermissions
-  let numColumns   = onlyNumCols allColumns
-      compColumns  = onlyComparableCols allColumns
+  let numericColumns   = onlyNumCols allColumns
+      comparableColumns  = onlyComparableCols allColumns
       selectName   = tableName <> $$(G.litName "_aggregate_fields")
       description  = G.Description $ "aggregate fields of \"" <> G.unName tableName <> "\""
-      typenameRepr = (FieldName "__typename", RQL.AFExp $ G.unName selectName)
-  numFields  <- mkFields numColumns
-  compFields <- mkFields compColumns
-  -- TODO(PDV): this can be heavily simplified
-  aggFields <- fmap concat $ sequenceA $ catMaybes
-    [ -- count
-      Just $ do
-        columnsEnum <- tableSelectColumnsEnum table selectPermissions
-        let columnsName  = $$(G.litName "columns")
-            distinctName = $$(G.litName "distinct")
-            args = do
-              distinct <- P.fieldOptional distinctName Nothing P.boolean
-              columns  <- maybe (pure Nothing) (P.fieldOptional columnsName Nothing . P.list) columnsEnum
-              pure $ case columns of
-                       Nothing   -> SQL.CTStar
-                       Just cols -> if fromMaybe False distinct
-                                    then SQL.CTDistinct cols
-                                    else SQL.CTSimple   cols
-        pure [RQL.AFCount <$> P.selection $$(G.litName "count") Nothing args P.int]
-    , -- operators on numeric columns
-      if null numColumns then Nothing else Just $ pure $
-      numericAggOperators & map \operator ->
-        parseOperator operator tableName numFields
+  count     <- countField
+  numericAndComparable <- fmap concat $ sequenceA $ catMaybes
+    [ -- operators on numeric columns
+      if null numericColumns then Nothing else Just $
+        for numericAggOperators $ \operator -> do
+          numFields <- mkNumericAggFields operator numericColumns
+          pure $ parseAggOperator operator tableName numFields
     , -- operators on comparable columns
-      if null compColumns then Nothing else Just $ pure $
-      comparisonAggOperators & map \operator ->
-        parseOperator operator tableName compFields
+      if null comparableColumns then Nothing else Just $ do
+        comparableFields <- traverse mkColumnAggField comparableColumns
+        pure $ comparisonAggOperators & map \operator ->
+               parseAggOperator operator tableName comparableFields
     ]
-  pure $ P.selectionSet selectName (Just description) aggFields
-    <&> parsedSelectionsToFields RQL.AFExp
+  let aggregateFields = count : numericAndComparable
+  pure $ P.selectionSet selectName (Just description) aggregateFields
+        <&> parsedSelectionsToFields RQL.AFExp
   where
-    mkFields :: [PGColumnInfo] -> m [FieldParser n RQL.PGColFld]
-    mkFields columns = for columns \columnInfo -> do
-      field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+    mkNumericAggFields :: G.Name -> [PGColumnInfo] -> m [FieldParser n RQL.PGColFld]
+    mkNumericAggFields name
+      | name == $$(G.litName "sum") = traverse mkColumnAggField
+      | otherwise                   = traverse \columnInfo ->
+          pure $ P.selection_ (pgiName columnInfo) (pgiDescription columnInfo)
+                 (P.nullable P.float) $> RQL.PCFCol (pgiColumn columnInfo)
+
+    mkColumnAggField :: PGColumnInfo -> m (FieldParser n RQL.PGColFld)
+    mkColumnAggField columnInfo = do
+      field <- P.column (pgiType columnInfo) (G.Nullability True)
       pure $ P.selection_ (pgiName columnInfo) (pgiDescription columnInfo) field
         $> RQL.PCFCol (pgiColumn columnInfo)
 
-    parseOperator
+    countField :: m (FieldParser n RQL.AggregateField)
+    countField = do
+      columnsEnum <- tableSelectColumnsEnum table selectPermissions
+      let columnsName  = $$(G.litName "columns")
+          distinctName = $$(G.litName "distinct")
+          args = do
+            distinct <- P.fieldOptional distinctName Nothing P.boolean
+            columns  <- maybe (pure Nothing) (P.fieldOptional columnsName Nothing . P.list) columnsEnum
+            pure $ case columns of
+                     Nothing   -> SQL.CTStar
+                     Just cols -> if fromMaybe False distinct
+                                  then SQL.CTDistinct cols
+                                  else SQL.CTSimple   cols
+      pure $ RQL.AFCount <$> P.selection $$(G.litName "count") Nothing args P.int
+
+    parseAggOperator
       :: G.Name
       -> G.Name
       -> [FieldParser n RQL.PGColFld]
       -> FieldParser n RQL.AggregateField
-    parseOperator operator tableName columns =
+    parseAggOperator operator tableName columns =
       let opText  = G.unName operator
           setName = tableName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
