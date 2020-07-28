@@ -356,11 +356,11 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       -> E.ExecOp (Tracing.TraceT (LazyTx QErr))
       -> ExceptT () m ()
     runHasuraGQ timerTot telemCacheHit reqId query queryParsed userInfo = \case
-      E.ExOpQuery opTx genSql asts -> Tracing.trace "pg" $
+      E.ExOpQuery opTx genSql asts -> Tracing.trace "Query" $
         execQueryOrMut Telem.Query genSql . fmap snd $
           Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly opTx
       -- Response headers discarded over websockets
-      E.ExOpMutation _ opTx -> Tracing.trace "pg" do
+      E.ExOpMutation _ opTx -> Tracing.trace "Mutation" do
         execQueryOrMut Telem.Mutation Nothing $
           Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withUserInfo userInfo) opTx
       E.ExOpSubs lqOp -> do
@@ -517,7 +517,7 @@ onMessage
   -> AuthMode
   -> WSServerEnv
   -> WSConn -> BL.ByteString -> m ()
-onMessage env authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" do
+onMessage env authMode serverEnv wsConn msgRaw = Tracing.runTraceT "Websocket" do
   case J.eitherDecode msgRaw of
     Left e    -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
