@@ -19,7 +19,7 @@ import qualified Data.Aeson.TH                          as J
 import           Hasura.RQL.Types
 import           Hasura.Session
 
-import qualified Hasura.Cache                           as Cache
+import qualified Hasura.Cache.Bounded                   as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery       as LQ
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Execute.Types           as ET
@@ -48,10 +48,10 @@ instance J.ToJSON PlanId where
     ]
 
 newtype PlanCache
-  = PlanCache {_unPlanCache :: Cache.Cache PlanId ReusablePlan}
+  = PlanCache {_unPlanCache :: Cache.BoundedCache PlanId ReusablePlan}
 
 data ReusablePlan
-  = RPQuery !EQ.ReusableQueryPlan -- TODO (if we do query plan caching) [QueryRootFldUnresolved]
+  = RPQuery !EQ.ReusableQueryPlan
   | RPSubs !LQ.ReusableLiveQueryPlan
 
 instance J.ToJSON ReusablePlan where
@@ -60,11 +60,11 @@ instance J.ToJSON ReusablePlan where
     RPSubs subsPlan    -> J.toJSON subsPlan
 
 newtype PlanCacheOptions
-  = PlanCacheOptions { unPlanCacheSize :: Maybe Cache.CacheSize }
+  = PlanCacheOptions { unPlanCacheSize :: Cache.CacheSize }
   deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''PlanCacheOptions)
 
-mkPlanCacheOptions :: Maybe Cache.CacheSize -> PlanCacheOptions
+mkPlanCacheOptions :: Cache.CacheSize -> PlanCacheOptions
 mkPlanCacheOptions = PlanCacheOptions
 
 initPlanCache :: PlanCacheOptions -> IO PlanCache

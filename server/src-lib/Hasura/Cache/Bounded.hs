@@ -10,18 +10,21 @@ module Hasura.Cache.Bounded
   , parseCacheSize
 
   , initialise
+  , initialiseStripes
   , insertAllStripes
+  , lookup
+  , insert
+  , clear
+  , getEntries
 
   -- * Exposed for testing
   , checkInvariants
   , getEntriesRecency
-  , CacheObj(..)
   ) where
 
 import           Hasura.Prelude     hiding (lookup)
-import           Hasura.Cache.Types
 
-import           Control.Concurrent (myThreadId, threadCapability)
+import           Control.Concurrent (getNumCapabilities, myThreadId, threadCapability)
 import           Data.Word          (Word16)
 
 import qualified Data.Aeson         as J
@@ -146,25 +149,39 @@ insertLocal (LocalCacheRef ref) k v =
 -- accessed in parallel.
 newtype BoundedCache k v = BoundedCache (V.Vector (LocalCacheRef k v))
 
-instance (Hashable k, Ord k) => CacheObj (BoundedCache k v) k v where
-  clear (BoundedCache caches) =
-    V.mapM_ clearLocal caches
-  insert k v striped = do
-    localHandle <- getLocal striped
-    insertLocal localHandle k v
-  lookup k striped = do
-    localHandle <- getLocal striped
-    lookupLocal localHandle k
-  getEntries (BoundedCache localCaches) =
-    mapM getLocalEntries $ V.toList localCaches
+
+
+lookup :: (Hashable k, Ord k) => k -> BoundedCache k v -> IO (Maybe v)
+lookup k striped = do
+  localHandle <- getLocal striped
+  lookupLocal localHandle k
+
+insert :: (Hashable k, Ord k) => k -> v -> BoundedCache k v -> IO ()
+insert k v striped = do
+  localHandle <- getLocal striped
+  insertLocal localHandle k v
+
+clear :: BoundedCache k v -> IO ()
+clear (BoundedCache caches) =
+  V.mapM_ clearLocal caches
+
+getEntries :: (Hashable k, Ord k)=> BoundedCache k v -> IO [[(k, v)]]
+getEntries (BoundedCache localCaches) =
+  mapM getLocalEntries $ V.toList localCaches
+
+-- | Creates a new BoundedCache of the specified size, with one stripe per capability.
+initialise :: CacheSize -> IO (BoundedCache k v)
+initialise sz = do 
+  caps <- getNumCapabilities
+  initialiseStripes caps sz
 
 -- | Creates a new BoundedCache of the specified size, for each stripe
-initialise 
+initialiseStripes
   :: Int 
   -- ^ Stripes; to minimize contention this should probably match the number of capabilities.
   -> CacheSize 
   -> IO (BoundedCache k v)
-initialise stripes capacity = do
+initialiseStripes stripes capacity = do
   BoundedCache <$> V.replicateM stripes (initLocalCache capacity)
 
 

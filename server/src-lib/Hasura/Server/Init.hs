@@ -22,7 +22,7 @@ import           Data.Time                        (NominalDiffTime)
 import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
 
-import qualified Hasura.Cache                     as Cache
+import qualified Hasura.Cache.Bounded             as Cache
 import qualified Hasura.GraphQL.Execute           as E
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.Logging                   as L
@@ -156,7 +156,8 @@ mkServeOptions rso = do
   enabledLogs <- maybe L.defaultEnabledLogTypes (Set.fromList) <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
-  planCacheOptions <- E.PlanCacheOptions <$> withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
+  planCacheOptions <- E.PlanCacheOptions . fromMaybe 4000 <$>
+                      withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
   devMode <- withEnvBool (rsoDevMode rso) $ fst devModeEnv
   adminInternalErrors <- fromMaybe True <$> -- Default to `true` to enable backwards compatibility
                                 withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
@@ -841,12 +842,19 @@ enableAllowlistEnv =
   , "Only accept allowed GraphQL queries"
   )
 
+-- NOTES re. default:
+--     There's a lot of guesswork and estimation here. Based on our test suite
+--   the average in-memory payload for a cache entry is 7kb, with the largest
+--   being 70kb. 128mb per-HEC seems like a reasonable default upper bound
+--   (note there is a distinct stripe per-HEC, for now; so this would give 1GB
+--   for an 8-core machine), which gives us a range of 2,000 to 18,000 here.
+--     Analysis of telemetry is hazy here; see 
+--   https://github.com/hasura/graphql-engine/issues/5363 for some discussion.
 planCacheSizeEnv :: (String, String)
 planCacheSizeEnv =
   ( "HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE"
   , "The maximum number of query plans that can be cached, allowed values: 0-65535, " <>
-    "0 disables the cache. If this value is not set, there is no limit on the number " <>
-    "of plans that are cached"
+    "0 disables the cache. Default 4000"
   )
 
 parsePlanCacheSize :: Parser (Maybe Cache.CacheSize)

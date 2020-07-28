@@ -16,9 +16,3 @@ Date:   Thu Jul 30 15:01:47 2020 -0400
     Merge pull request #5474 from jberryman/5363-default-bounded-plan-cache
 
     Support only bounded plan cache, with default of 4000
-
-commit 1d4ec4eafb7db03a6fe9a10aec9150bf2032aeb3
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Tue Jul 28 19:02:44 2020 -0400
-
-    Support only the bounded cache, with default HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE of 4000. Closes #5363
