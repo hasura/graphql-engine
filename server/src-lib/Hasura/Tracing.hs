@@ -14,9 +14,8 @@ module Hasura.Tracing
   , noReporter
   , HasReporter(..)
   , TracingMetadata
-  , SuspendedRequest(..)
   , extractHttpContext
-  , traceHttpRequest
+  , tracedHttpRequest
   , injectEventContext
   , extractEventContext
   ) where
@@ -198,17 +197,13 @@ instance MonadTrace m => MonadTrace (ExceptT e m) where
   currentReporter = lift currentReporter
   attachMetadata = lift . attachMetadata
 
--- | A HTTP request, which can be modified before execution.
-data SuspendedRequest m a = SuspendedRequest HTTP.Request (HTTP.Request -> m a)
-
 -- | Inject the trace context as a set of HTTP headers.
 injectHttpContext :: TraceContext -> [HTTP.Header]
 injectHttpContext TraceContext{..} = 
   [ ("X-Hasura-TraceId", fromString (show tcCurrentTrace))
   , ("X-Hasura-SpanId", fromString (show tcCurrentSpan))
   ]
-    
-
+  
 -- | Extract the trace and parent span headers from a HTTP request
 -- and create a new 'TraceContext'. The new context will contain
 -- a fresh span ID, and the provided span ID will be assigned as
@@ -239,16 +234,15 @@ extractEventContext e = do
     <*> pure freshSpanId
     <*> pure (e ^? JL.key "trace_context" . JL.key "span_id" . JL._Integral)
 
-traceHttpRequest
-  :: MonadTrace m
-  => Text
-  -- ^ human-readable name for this block of code
-  -> m (SuspendedRequest m a)
-  -- ^ an action which yields the request about to be executed and suspends
-  -- before actually executing it
+-- | Perform HTTP request which supports Trace headers
+tracedHttpRequest 
+  :: MonadTrace m 
+  =>  HTTP.Request
+  -- ^ http request that needs to be made
+  -> (HTTP.Request -> m a)
+  -- ^ a function that takes the traced request and executes it
   -> m a
-traceHttpRequest name f = trace name do
-  SuspendedRequest req next <- f
+tracedHttpRequest req f = trace (bsToTxt (HTTP.path req)) do
   let reqBytes = case HTTP.requestBody req of
         HTTP.RequestBodyBS bs -> Just (fromIntegral (BS.length bs))
         HTTP.RequestBodyLBS bs -> Just (BL.length bs)
@@ -261,4 +255,4 @@ traceHttpRequest name f = trace name do
   let req' = req { HTTP.requestHeaders =
                      injectHttpContext ctx <> HTTP.requestHeaders req
                  }
-  next req'
+  f req'

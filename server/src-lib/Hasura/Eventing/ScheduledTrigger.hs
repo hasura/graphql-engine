@@ -95,6 +95,7 @@ import           System.Cron
 import qualified Data.Aeson                  as J
 import qualified Data.Aeson.Casing           as J
 import qualified Data.Aeson.TH               as J
+import qualified Data.ByteString.Lazy        as BL
 import qualified Data.Environment            as Env
 import qualified Data.HashMap.Strict         as Map
 import qualified Data.Set                    as Set
@@ -489,8 +490,10 @@ processScheduledEvent
           webhookReqPayload =
             ScheduledEventWebhookPayload sefId sefName sefScheduledTime sefPayload sefComment currentTime
           webhookReqBodyJson = J.toJSON webhookReqPayload
-      res <- runExceptT $ tryWebhook headers httpTimeout webhookReqBodyJson (T.unpack sefWebhook)
-      logHTTPForST res extraLogCtx
+          webhookReqBody = J.encode webhookReqBodyJson
+          requestDetails = RequestDetails $ BL.length webhookReqBody
+      res <- runExceptT $ tryWebhook headers httpTimeout webhookReqBody (T.unpack sefWebhook)
+      logHTTPForST res extraLogCtx requestDetails
       let decodedHeaders = map (decodeHeader logEnv sefHeaders) headers
       either
         (processError pgpool se decodedHeaders type' webhookReqBodyJson)
