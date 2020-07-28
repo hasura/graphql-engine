@@ -1,3 +1,4 @@
+/*eslint no-unused-vars: 0*/
 import React from 'react';
 import ColumnEditor from './ColumnEditor';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
@@ -9,6 +10,7 @@ import {
   resetColumnEdit,
   editColumn,
   isColumnUnique,
+  setPrimaryKeys,
 } from '../TableModify/ModifyActions';
 import { ordinalColSort, ARRAY } from '../utils';
 import { defaultDataTypeToCast } from '../constants';
@@ -70,7 +72,6 @@ const ColumnEditorList = ({
       }
       return col.data_type;
     };
-
     const getType = () =>
       isArrayDataType ? col.udt_name.replace('_', '') + '[]' : col.udt_name;
 
@@ -104,6 +105,31 @@ const ColumnEditorList = ({
 
       const isOk = getConfirmation(confirmMessage, true, colName);
       if (isOk) {
+        const pk = [];
+        let flag = true;
+        for (const [_,value1] of tableSchema.primary_key.columns.entries()) {
+          for (const [index2, value2] of tableSchema.columns.entries()) {
+            if (value2.column_name.localeCompare(colName) == 0) {
+              flag = false;
+            } else {
+              if (
+                flag == true &&
+                value1.localeCompare(value2.column_name) == 0
+              ) {
+                pk.push(index2);
+              } else if (value1.localeCompare(value2.column_name) == 0) {
+                pk.push(index2 - 1);
+              }
+            }
+          }
+          flag = true;
+        }
+        const pks = [];
+        for (const [_,value1] of pk.sort().entries()) {
+          pks.push(value1.toString());
+        }
+        pks.push('');
+        dispatch(setPrimaryKeys(pks));
         dispatch(deleteColumnSql(col, tableSchema));
       }
     };
@@ -121,7 +147,6 @@ const ColumnEditorList = ({
       const propertiesDisplay = [];
 
       const propertiesList = [];
-
       propertiesList.push(columnProperties.display_type_name);
 
       if (columnProperties.pkConstraint) {
