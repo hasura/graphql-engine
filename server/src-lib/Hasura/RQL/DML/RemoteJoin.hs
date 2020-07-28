@@ -11,8 +11,7 @@ module Hasura.RQL.DML.RemoteJoin
 import           Hasura.Prelude
 
 import           Control.Lens
-import           Data.Scientific                        (floatingOrInteger, toBoundedInteger,
-                                                         toRealFloat)
+import           Data.Scientific                        (floatingOrInteger)
 import           Data.Validation
 
 import           Hasura.EncJSON
@@ -336,7 +335,7 @@ traverseQueryResponseJSON rjm =
                 go = \case
                   A.Null -> pure $  G.VNull
                   A.Bool val -> pure $  G.VBoolean val
-                  A.String val -> pure $  G.VString G.ExternalValue val
+                  A.String val -> pure $  G.VString val
                   A.Number val ->
                     -- TODO(PDV) this is too optimistic as it saved integers in scientific notation as integers
                     case floatingOrInteger val of
@@ -392,7 +391,7 @@ collectVariables = \case
   G.VNull          -> mempty
   G.VInt _         -> mempty
   G.VFloat _       -> mempty
-  G.VString _ _    -> mempty
+  G.VString _      -> mempty
   G.VBoolean _     -> mempty
   G.VEnum _        -> mempty
   G.VList values   -> foldl Map.union mempty $ map collectVariables values
@@ -582,7 +581,7 @@ substituteVariables
   -> Validation [Text] (HashMap G.Name (G.Value Void))
 substituteVariables values = traverse go
   where
-    go v = case v of
+    go = \case
       G.VVariable variableName ->
         case Map.lookup variableName values of
           Nothing    -> Failure ["Value for variable " <> variableName <<> " not provided"]
@@ -593,7 +592,7 @@ substituteVariables values = traverse go
         fmap G.VObject (traverse go objectValue)
       G.VInt i -> pure $ G.VInt i
       G.VFloat d -> pure $ G.VFloat d
-      G.VString origin txt -> pure $ G.VString origin txt
+      G.VString txt -> pure $ G.VString txt
       G.VEnum e -> pure $ G.VEnum e
       G.VBoolean b -> pure $ G.VBoolean b
       G.VNull -> pure $ G.VNull

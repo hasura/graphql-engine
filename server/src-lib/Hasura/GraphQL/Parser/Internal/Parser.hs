@@ -256,20 +256,20 @@ scalar name description representation = Parser
         JSONValue    (A.Number n) -> convertWith scientificToFloat n
         _                         -> typeMismatch name "a float" v
       SRString -> case v of
-        GraphQLValue (VString _ s) -> pure s
-        JSONValue    (A.String  s) -> pure s
-        _                          -> typeMismatch name "a string" v
+        GraphQLValue (VString  s) -> pure s
+        JSONValue    (A.String s) -> pure s
+        _                         -> typeMismatch name "a string" v
       SRAny -> case v of
-        GraphQLValue (VNull)       -> pure A.Null
-        GraphQLValue (VInt i)      -> pure $ A.toJSON i
-        GraphQLValue (VFloat f)    -> pure $ A.toJSON f
-        GraphQLValue (VString _ t) -> pure $ A.toJSON t
-        GraphQLValue (VBoolean b)  -> pure $ A.toJSON b
-        JSONValue (A.Null)         -> pure A.Null
-        JSONValue (A.Number n)     -> pure $ A.Number n
-        JSONValue (A.String s)     -> pure $ A.String s
-        JSONValue (A.Bool b)       -> pure $ A.Bool b
-        _                          -> typeMismatch name "a scalar" v
+        GraphQLValue (VNull)      -> pure A.Null
+        GraphQLValue (VInt i)     -> pure $ A.toJSON i
+        GraphQLValue (VFloat f)   -> pure $ A.toJSON f
+        GraphQLValue (VString t)  -> pure $ A.toJSON t
+        GraphQLValue (VBoolean b) -> pure $ A.toJSON b
+        JSONValue (A.Null)        -> pure A.Null
+        JSONValue (A.Number n)    -> pure $ A.Number n
+        JSONValue (A.String s)    -> pure $ A.String s
+        JSONValue (A.Bool b)      -> pure $ A.Bool b
+        _                         -> typeMismatch name "a scalar" v
   }
   where
     schemaType = NonNullable $ TNamed $ mkDefinition name description TIScalar
@@ -774,7 +774,7 @@ valueToJSON = peelVariable Nothing >=> \case
       VNull               -> pure A.Null
       VInt i              -> pure $ A.toJSON i
       VFloat f            -> pure $ A.toJSON f
-      VString _ t         -> pure $ A.toJSON t
+      VString t           -> pure $ A.toJSON t
       VBoolean b          -> pure $ A.toJSON b
       VEnum (EnumValue n) -> pure $ A.toJSON n
       VList values        -> A.toJSON <$> traverse graphQLToJSON values
@@ -790,7 +790,7 @@ valueToGraphQL = peelVariable Nothing >=> \case
     jsonToGraphQL = \case
       A.Null        -> pure $ VNull
       A.Bool val    -> pure $ VBoolean val
-      A.String val  -> pure $ VString undefined val
+      A.String val  -> pure $ VString val
       A.Number val  -> case floatingOrInteger val of
         Right intVal -> pure $ VInt $ fromInteger intVal
         _            -> pure $ VFloat val
@@ -841,7 +841,7 @@ describeValueWith describeVariable = \case
       VVariable var -> describeVariable var
       VInt _        -> "an integer"
       VFloat _      -> "a float"
-      VString _ _   -> "a string"
+      VString _     -> "a string"
       VBoolean _    -> "a boolean"
       VNull         -> "null"
       VEnum _       -> "an enum value"

@@ -92,7 +92,7 @@ instance ToJSON RemoteFieldInfo where
           G.VNull       -> Null
           G.VInt i      -> toJSON i
           G.VFloat f    -> toJSON f
-          G.VString _ s -> toJSON s
+          G.VString s   -> toJSON s
           G.VBoolean b  -> toJSON b
           G.VEnum s     -> toJSON s
           G.VList list  -> toJSON (map gValueToJSONValue list)
@@ -127,15 +127,15 @@ instance ToJSON RemoteArguments where
 
       gValueToValue =
         \case
-          (G.VVariable v) -> toJSON ("$" <> G.unName v)
-          (G.VInt i) -> toJSON i
-          (G.VFloat f) -> toJSON f
-          (G.VString _ s) -> toJSON s
-          (G.VBoolean b) -> toJSON b
-          G.VNull -> Null
-          (G.VEnum s) -> toJSON s
-          (G.VList list) -> toJSON (map gValueToValue list)
-          (G.VObject obj) -> fieldsToObject obj
+          G.VVariable v -> toJSON ("$" <> G.unName v)
+          G.VInt i      -> toJSON i
+          G.VFloat f    -> toJSON f
+          G.VString s   -> toJSON s
+          G.VBoolean b  -> toJSON b
+          G.VNull       -> Null
+          G.VEnum s     -> toJSON s
+          G.VList list  -> toJSON (map gValueToValue list)
+          G.VObject obj -> fieldsToObject obj
 
 instance FromJSON RemoteArguments where
   parseJSON = \case
@@ -169,7 +169,7 @@ instance FromJSON RemoteArguments where
                     case G.mkName rest of
                       Nothing    -> fail "Invalid variable name."
                       Just name' -> pure $ G.VVariable name'
-              _ -> pure (G.VString G.ExternalValue text)
+              _ -> pure (G.VString text)
           Number !scientificNum ->
             pure (either (\(_::Float) -> G.VFloat scientificNum) G.VInt (floatingOrInteger scientificNum))
           Bool !boolean -> pure (G.VBoolean boolean)

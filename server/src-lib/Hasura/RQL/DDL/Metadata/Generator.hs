@@ -296,9 +296,6 @@ instance Arbitrary ActionMetadata where
 
 deriving instance Arbitrary RemoteArguments
 
-instance Arbitrary G.Origin where
-  arbitrary = genericArbitrary
-
 instance Arbitrary a => Arbitrary (G.Value a) where
   arbitrary = genericArbitrary
 

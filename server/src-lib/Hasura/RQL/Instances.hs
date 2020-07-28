@@ -9,19 +9,19 @@ import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict           as M
 import qualified Data.HashSet                  as S
 import qualified Data.URL.Template             as UT
+import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
 import qualified Text.Regex.TDFA               as TDFA
 import qualified Text.Regex.TDFA.Pattern       as TDFA
-import qualified Database.PG.Query             as Q
 
 import           Control.DeepSeq               (NFData (..))
 import           Data.Functor.Product
 import           Data.GADT.Compare
+import           Data.Text
 import           Instances.TH.Lift             ()
 import           System.Cron.Parser
 import           System.Cron.Types
-import           Data.Text
 
 instance NFData G.FragmentDefinition
 instance NFData G.GType
@@ -42,7 +42,6 @@ instance (NFData (a b), NFData b) => NFData (G.InlineFragment a b)
 instance (NFData (a b), NFData b) => NFData (G.OperationDefinition a b)
 instance (NFData (a b), NFData b) => NFData (G.Selection a b)
 instance (NFData (a b), NFData b) => NFData (G.TypedOperationDefinition a b)
-instance NFData G.Origin
 instance NFData a => NFData (G.Value a)
 
 deriving instance NFData G.Description
@@ -110,5 +109,5 @@ instance Q.FromCol CronSchedule where
       Left err -> Left err
       Right dbCron ->
         case parseCronSchedule dbCron of
-          Left err' -> Left $ "invalid cron schedule " <> pack err'
+          Left err'  -> Left $ "invalid cron schedule " <> pack err'
           Right cron -> Right cron

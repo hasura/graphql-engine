@@ -237,7 +237,6 @@ instance (Cacheable (a b), Cacheable b) => Cacheable (G.InlineFragment a b)
 instance (Cacheable (a b), Cacheable b) => Cacheable (G.OperationDefinition a b)
 instance (Cacheable (a b), Cacheable b) => Cacheable (G.Selection a b)
 instance (Cacheable (a b), Cacheable b) => Cacheable (G.TypedOperationDefinition a b)
-instance Cacheable G.Origin
 
 instance Cacheable a => Cacheable (G.Value a)
 
