@@ -107,7 +107,7 @@ const ColumnEditorList = ({
       if (isOk) {
         const pk = [];
         let flag = true;
-        for (const [_,value1] of tableSchema.primary_key.columns.entries()) {
+        for (const [_, value1] of tableSchema.primary_key.columns.entries()) {
           for (const [index2, value2] of tableSchema.columns.entries()) {
             if (value2.column_name.localeCompare(colName) == 0) {
               flag = false;
@@ -125,7 +125,7 @@ const ColumnEditorList = ({
           flag = true;
         }
         const pks = [];
-        for (const [_,value1] of pk.sort().entries()) {
+        for (const [_, value1] of pk.sort().entries()) {
           pks.push(value1.toString());
         }
         pks.push('');
