@@ -1356,6 +1356,20 @@
   margin-left: 8px;
 }
 
+.viewMoreNotifications {
+  width: 100%;
+  background-color: white;
+  border: none;
+  outline: none;
+  font-size: medium;
+  height: 40px;
+  border-radius: 0;
+  &:hover {
+    text-decoration: underline;
+    color: rgb(233, 44, 76);
+  }
+}
+
 .linkContainer {
   margin-top: 4px;
   font-weight: 500;
