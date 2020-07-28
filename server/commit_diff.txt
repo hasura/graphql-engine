@@ -52,37 +52,3 @@ Date:   Wed Jul 29 19:00:29 2020 +0530
     * change action-handler log type from internal to non-internal
 
     * fix action-handler-log name
-
-commit df51a8eb181cda2df5b3d5f852df6d20b046597d
-Author: Phil Freeman <phil@hasura.io>
-Date:   Tue Jul 28 13:06:54 2020 -0700
-
-    Attach request ID as tracing metadata (#5456)
-
-    * Propagate the trace context to event triggers
-
-    * Handle missing trace and span IDs
-
-    * Store trace context as one LOCAL
-
-    * Add migrations
-
-    * Documentation
-
-    * Include the request ID as trace metadata
-
-    * changelog
-
-    * Fix warnings
-
-    * Respond to code review suggestions
-
-    * Respond to code review
-
-    * Undo changelog
-
-    * Update CHANGELOG.md
-
-    * Typo
-
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
