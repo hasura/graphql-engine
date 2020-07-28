@@ -412,7 +412,7 @@ fetchEvents limitI =
       WHERE id IN ( SELECT l.id
                     FROM hdb_catalog.event_log l
                     WHERE l.delivered = 'f' and l.error = 'f' 
-                          and (l.locked IS NULL or l.locked < NOW() - interval '30 minute')
+                          and (l.locked IS NULL or l.locked < (NOW() - interval '30 minute'))
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
                           and l.archived = 'f'
                     ORDER BY created_at

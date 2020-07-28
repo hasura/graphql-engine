@@ -302,6 +302,7 @@ CREATE TABLE hdb_catalog.event_log
   error BOOLEAN NOT NULL DEFAULT FALSE,
   tries INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
+  /* when locked IS NULL the event is unlocked and can be processed */
   locked TIMESTAMP,
   next_retry_at TIMESTAMP,
   archived BOOLEAN NOT NULL DEFAULT FALSE

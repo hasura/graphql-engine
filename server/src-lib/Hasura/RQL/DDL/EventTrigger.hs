@@ -158,7 +158,7 @@ fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
 fetchEvent eid = do
   events <- Q.listQE defaultTxErrorHandler
             [Q.sql|
-              SELECT l.id, l.locked IS NOT NULL AND l.locked >= NOW() - interval '30 minute'
+              SELECT l.id, l.locked IS NOT NULL AND l.locked >= (NOW() - interval '30 minute')
               FROM hdb_catalog.event_log l
               JOIN hdb_catalog.event_triggers e
               ON l.trigger_name = e.name
