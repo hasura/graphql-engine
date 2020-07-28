@@ -16,7 +16,7 @@ spec = describe "Bounded cache data structure" $ do
           _ -> error "stripes wrong"
 
   it "works for 0 size" $ do
-    c <- Cache.initialise 1 0
+    c <- Cache.initialiseStripes 1 0
     Cache.lookup 'X' c `shouldReturn` Nothing
     Cache.insert 'Y' 'Y' c
     Cache.lookup 'Y' c `shouldReturn` Nothing
@@ -24,7 +24,7 @@ spec = describe "Bounded cache data structure" $ do
 
   -- basic functionality check:
   it "seems to be working right" $ do
-    c <- Cache.initialise 1 3
+    c <- Cache.initialiseStripes 1 3
 
     Cache.insert 'A' 'A' c
     checkEntries c [('A', 0, 'A')]
