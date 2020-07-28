@@ -117,12 +117,6 @@ Date:   Fri Jul 3 06:25:07 2020 +0530
 
     Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
 
-commit 9e423a3c5574a3fbfaade8cc14b62b87dc05e3ec
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Thu Jul 2 10:55:46 2020 -0400
-
-    Fix buggy parsing of new --conn-lifetime flag in 2b0e3774
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
