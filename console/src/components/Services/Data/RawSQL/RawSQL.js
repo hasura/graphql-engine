@@ -12,7 +12,7 @@ import Alert from '../../../Common/Alert';
 import StatementTimeout from './StatementTimeout';
 import { parseCreateSQL } from './utils';
 import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
-
+import styles from '../../../Common/TableCommon/Table.scss';
 import {
   executeSQL,
   SET_SQL,
@@ -29,7 +29,6 @@ import {
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
 import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
-import styles from '../../../Common/TableCommon/Table.scss';
 /**
  * # RawSQL React FC
  * ## renders raw SQL page on route `/data/sql`
