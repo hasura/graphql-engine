@@ -129,7 +129,7 @@ data ActionHandlerLog
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''ActionHandlerLog)
 
 instance L.ToEngineLog ActionHandlerLog L.Hasura where
-  toEngineLog ahl = (L.LevelInfo, L.ELTInternal L.ILTActionHandler, J.toJSON ahl)
+  toEngineLog ahl = (L.LevelInfo, L.ELTActionHandler, J.toJSON ahl)
 
 resolveActionMutation
   :: ( HasVersion
