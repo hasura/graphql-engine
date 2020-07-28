@@ -97,16 +97,3 @@ Date:   Wed Jul 29 00:21:56 2020 +0530
     the tracing of HTTP Requests.
 
     Co-authored-by: Phil Freeman <phil@hasura.io>
-
-commit 434c78267c3a9f78acba26dc797c41049c2f8377
-Author: Anon Ray <ecthiender@users.noreply.github.com>
-Date:   Tue Jul 28 23:22:44 2020 +0530
-
-    server: log request/response sizes for event triggers (#5463)
-
-    * server: log request/response sizes for event triggers
-
-      event triggers (and scheduled triggers) now have request/response size
-      in their logs.
-
-    * add changelog entry
