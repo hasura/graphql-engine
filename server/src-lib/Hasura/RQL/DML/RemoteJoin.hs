@@ -373,18 +373,25 @@ traverseQueryResponseJSON rjm =
 convertFieldWithVariablesToName :: G.Field G.NoFragments Variable -> G.Field G.NoFragments G.Name
 convertFieldWithVariablesToName = fmap getName
 
-{-
-constGValueToJSON :: G.Value Void -> A.Value
-constGValueToJSON = \case
-  G.VNull                 -> A.Null
-  G.VInt i                -> A.toJSON i
-  G.VFloat f              -> A.toJSON f
-  G.VString _ t           -> A.toJSON t
-  G.VBoolean b            -> A.toJSON b
-  G.VEnum (G.EnumValue n) -> A.toJSON n
-  G.VList values          -> A.toJSON $ map constGValueToJSON values
-  G.VObject objects       -> A.toJSON $ fmap constGValueToJSON objects
--}
+inputValueToJSON :: InputValue Void -> A.Value
+inputValueToJSON = \case
+  JSONValue    j -> j
+  GraphQLValue g -> graphQLValueToJSON g
+  where
+    graphQLValueToJSON = \case
+      G.VNull                 -> A.Null
+      G.VInt i                -> A.toJSON i
+      G.VFloat f              -> A.toJSON f
+      G.VString t             -> A.toJSON t
+      G.VBoolean b            -> A.toJSON b
+      G.VEnum (G.EnumValue n) -> A.toJSON n
+      G.VList values          -> A.toJSON $ graphQLValueToJSON <$> values
+      G.VObject objects       -> A.toJSON $ graphQLValueToJSON <$> objects
+
+defaultValue :: InputValue Void -> Maybe (G.Value Void)
+defaultValue = \case
+  JSONValue    _ -> Nothing
+  GraphQLValue g -> Just g
 
 collectVariables :: G.Value Variable -> HashMap G.VariableDefinition A.Value
 collectVariables = \case
@@ -397,8 +404,10 @@ collectVariables = \case
   G.VList values   -> foldl Map.union mempty $ map collectVariables values
   G.VObject values -> foldl Map.union mempty $ map collectVariables $ Map.elems values
   G.VVariable var@(Variable _ gType val) ->
-    let (name,jVal) = (getName var, {-constGValueToJSON-} undefined val)
-    in Map.singleton (G.VariableDefinition name gType $ undefined {- Just val -}) jVal
+    let name       = getName var
+        jsonVal    = inputValueToJSON val
+        defaultVal = defaultValue val
+    in Map.singleton (G.VariableDefinition name gType defaultVal) jsonVal
 
 -- | Fetch remote join field value from remote servers by batching respective 'RemoteJoinField's
 fetchRemoteJoinFields
@@ -516,9 +525,10 @@ replaceRemoteFields compositeJson remoteServerResponse =
 -- selection set at the leaf of the tree we construct.
 fieldCallsToField
   :: forall m. MonadError QErr m
-  => Map.HashMap G.Name (G.Value Variable) -- ^ user input arguments to the remote join field
+  => Map.HashMap G.Name (InputValue Variable)
+  -- ^ user input arguments to the remote join field
   -> Map.HashMap G.Name (G.Value Void)
-  -- ^ Contains the values of the variables that have been defined in the remote join defition
+  -- ^ Contains the values of the variables that have been defined in the remote join definition
   -> G.SelectionSet G.NoFragments Variable
   -- ^ Inserted at leaf of nested FieldCalls
   -> Alias
@@ -532,13 +542,14 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
     nest :: NonEmpty FieldCall -> m (G.Field G.NoFragments Variable)
     nest ((FieldCall name remoteArgs) :| rest) = do
       templatedArguments <- convert <$> createArguments variables remoteArgs
+      graphQLarguments <- traverse peel rrArguments
       (args, selSet) <- case NE.nonEmpty rest of
             Just f -> do
               s <- nest f
               pure (templatedArguments, [G.SelectionField s])
             Nothing ->
               let arguments = Map.unionWith mergeValue
-                                rrArguments
+                                graphQLarguments
                                 -- converting (G.Value Void) -> (G.Value Variable) to merge the
                                 -- 'rrArguments' with the 'variables'
                                 templatedArguments
@@ -547,6 +558,17 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
 
     convert :: Map.HashMap G.Name (G.Value Void) -> Map.HashMap G.Name (G.Value Variable)
     convert = fmap G.literal
+
+    peel :: InputValue Variable -> m (G.Value Variable)
+    peel = \case
+      GraphQLValue v -> pure v
+      JSONValue _ ->
+        -- At this point, it is theoretically impossible that we have
+        -- unpacked a variable into a JSONValue, as there's no "outer
+        -- scope" at which this value could have been peeled.
+        -- FIXME: check that this is correct!
+        throw500 "internal error: encountered an already expanded variable when folding remote field arguments"
+        -- FIXME: better error message
 
 -- This is a kind of "deep merge".
 -- For e.g. suppose the input argument of the remote field is something like:

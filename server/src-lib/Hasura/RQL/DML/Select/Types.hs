@@ -201,7 +201,7 @@ data AnnColumnField
 data RemoteFieldArgument
   = RemoteFieldArgument
   { _rfaArgument :: !G.Name
-  , _rfaValue    :: !(G.Value Variable)
+  , _rfaValue    :: !(InputValue Variable)
   } deriving (Eq,Show)
 
 data RemoteSelect

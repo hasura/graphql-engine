@@ -919,7 +919,7 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions = do
         remoteFieldsArgumentsParser <-
           sequenceA <$> for (Map.toList $ _rfiParamMap remoteFieldInfo) \(name, inpValDefn) -> do
             parser <- inputValueDefinitionParser (_rfiSchemaIntrospect remoteFieldInfo) inpValDefn
-            pure $ parser `P.bindFields` traverse (fmap (RQL.RemoteFieldArgument name . fmap absurd) . P.valueToGraphQL)
+            pure $ parser `mapField` RQL.RemoteFieldArgument name
 
         -- This selection set parser, should be of the remote node's selection set parser, which comes
         -- from the fieldCall
