@@ -86,14 +86,3 @@ Date:   Tue Jul 28 13:06:54 2020 -0700
     * Typo
 
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-
-commit 664e9df9c6175cbeaf68667c415101f18c2c33aa
-Author: Naveen Naidu <naveennaidu479@gmail.com>
-Date:   Wed Jul 29 00:21:56 2020 +0530
-
-    Tracing: Simplify HTTP traced request (#5451)
-
-    Remove the Inversion of Control (SuspendRequest) and simplify
-    the tracing of HTTP Requests.
-
-    Co-authored-by: Phil Freeman <phil@hasura.io>
