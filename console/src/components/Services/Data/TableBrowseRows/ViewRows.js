@@ -533,6 +533,9 @@ const ViewRows = ({
             typeof rowColumnValue === 'object'
           ) {
             cellValue = JSON.stringify(rowColumnValue, null, 4);
+            if (cellValue.length > 5000)
+              // trim 5000 chars which prevents browser freezing if there is large JSONB values
+              cellValue = cellValue.substring(1, 5000) + '...';
             cellTitle = cellValue;
           } else {
             cellValue = rowColumnValue.toString();
