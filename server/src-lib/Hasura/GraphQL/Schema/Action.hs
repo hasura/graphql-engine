@@ -149,7 +149,7 @@ actionOutputFields outputObject = do
     scalarOrEnumFieldParser (ObjectFieldDefinition name _ description ty) =
       let (gType, objectFieldType) = ty
           fieldName = unObjectFieldName name
-          -- FIXME?
+          -- FIXME? (from master)
           pgColumnInfo = PGColumnInfo (unsafePGCol $ G.unName fieldName)
                          fieldName 0 (PGColumnScalar PGJSON) (G.isNullable gType) Nothing
           fieldParser = case objectFieldType of

@@ -56,11 +56,14 @@ askPermInfo' pa tableInfo = do
 
 getPermInfoMaybe :: RoleName -> PermAccessor c -> TableInfo -> Maybe c
 getPermInfoMaybe roleName pa tableInfo =
-  getRolePermInfo >>= (^. permAccToLens pa)
-  where
-    getRolePermInfo
-      | roleName == adminRoleName = Just $ mkAdminRolePermInfo (_tiCoreInfo tableInfo)
-      | otherwise             = M.lookup roleName (_tiRolePermInfoMap tableInfo)
+  getRolePermInfo roleName tableInfo >>= (^. permAccToLens pa)
+
+getRolePermInfo :: RoleName -> TableInfo -> Maybe RolePermInfo
+getRolePermInfo roleName tableInfo
+  | roleName == adminRoleName =
+    Just $ mkAdminRolePermInfo (_tiCoreInfo tableInfo)
+  | otherwise                 =
+    M.lookup roleName (_tiRolePermInfoMap tableInfo)
 
 askPermInfo
   :: (UserInfoM m, QErrM m)

@@ -76,11 +76,11 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
         -- Using computed fields in boolean expressions is not currently supported.
         FIComputedField _ -> empty
 
-        -- TODO: Check if remote relationship fields are supported in boolean expressions
+        -- Using remote relationship fields in boolean expressions is not supported.
         FIRemoteRelationship _ -> empty
 
 comparisonExps
-  :: (MonadSchema n m, MonadError QErr m)
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
   => PGColumnType -> m (Parser 'Input n [ComparisonExp])
 comparisonExps = P.memoize 'comparisonExps \columnType -> do
   geogInputParser <- geographyWithinDistanceInput
@@ -91,24 +91,29 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
   columnParser       <- P.column columnType (G.Nullability False)
   nullableTextParser <- P.column (PGColumnScalar PGText) (G.Nullability True)
   textParser         <- P.column (PGColumnScalar PGText) (G.Nullability False)
-  castParser         <- castExp columnType
+  maybeCastParser    <- castExp columnType
   let name = P.getName columnParser <> $$(G.litName "_comparison_exp")
       textListParser = P.list textParser `P.bind` traverse P.openOpaque
       columnListParser = P.list columnParser `P.bind` traverse P.openOpaque
   pure $ P.object name Nothing $ fmap catMaybes $ sequenceA $ concat
-    [ [ P.fieldOptional $$(G.litName "_cast")    Nothing (ACast <$> castParser)
-      , P.fieldOptional $$(G.litName "_is_null") Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
+    [ flip (maybe []) maybeCastParser $ \castParser ->
+      [ P.fieldOptional $$(G.litName "_cast")    Nothing (ACast <$> castParser)
+      ]
+    -- Common ops for all types
+    , [ P.fieldOptional $$(G.litName "_is_null") Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
       , P.fieldOptional $$(G.litName "_eq")      Nothing (AEQ True . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_neq")     Nothing (ANE True . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_in")      Nothing (AIN  . mkListLiteral columnType <$> columnListParser)
       , P.fieldOptional $$(G.litName "_nin")     Nothing (ANIN . mkListLiteral columnType <$> columnListParser)
       ]
+    -- Comparison ops for non Raster types
     , guard (isScalarColumnWhere (/= PGRaster) columnType) *>
       [ P.fieldOptional $$(G.litName "_gt")  Nothing (AGT  . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_lt")  Nothing (ALT  . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_gte") Nothing (AGTE . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_lte") Nothing (ALTE . mkParameter <$> columnParser)
       ]
+    -- Ops for Raster types
     , guard (isScalarColumnWhere (== PGRaster) columnType) *>
       [ P.fieldOptional $$(G.litName "_st_intersects_rast")
         Nothing
@@ -120,6 +125,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         Nothing
         (ASTIntersectsGeomNband <$> ignInputParser)
       ]
+    -- Ops for String like types
     , guard (isScalarColumnWhere isStringType columnType) *>
       [ P.fieldOptional $$(G.litName "_like")
         (Just "does the column match the given pattern")
@@ -140,6 +146,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         (Just "does the column NOT match the given SQL regular expression")
         (ANSIMILAR . mkParameter <$> columnParser)
       ]
+    -- Ops for JSONB type
     , guard (isScalarColumnWhere (== PGJSONB) columnType) *>
       [ P.fieldOptional $$(G.litName "_contains")
         (Just "does the column contain the given json value at the top level")
@@ -157,6 +164,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         (Just "do all of these strings exist as top-level keys in the column")
         (AHasKeysAll . mkListLiteral (PGColumnScalar PGText) <$> textListParser)
       ]
+    -- Ops for Geography type
     , guard (isScalarColumnWhere (== PGGeography) columnType) *>
       [ P.fieldOptional $$(G.litName "_st_intersects")
         (Just $ "does the column spatially intersect the given geography value")
@@ -165,6 +173,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         (Just $ "is the column within a given distance from the given geography value")
         (ASTDWithinGeog <$> geogInputParser)
       ]
+    -- Ops for Geometry type
     , guard (isScalarColumnWhere (== PGGeometry) columnType) *>
       [ P.fieldOptional $$(G.litName "_st_contains")
         (Just $ "does the column contain the given geometry value")
@@ -198,25 +207,19 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
       (SEArray $ txtEncoder . pstValue . P.pcvValue <$> columnValues)
       (mkTypeAnn $ PGTypeArray $ unsafePGColumnToRepresentation columnType)
 
+    castExp :: PGColumnType -> m (Maybe (Parser 'Input n (CastExp UnpreparedValue)))
+    castExp sourceType = do
+      let maybeScalars = case sourceType of
+            PGColumnScalar PGGeography -> Just (PGGeography, PGGeometry)
+            PGColumnScalar PGGeometry  -> Just (PGGeometry, PGGeography)
+            _                          -> Nothing
 
-castExp
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => PGColumnType -> m (Parser 'Input n (CastExp UnpreparedValue))
-castExp sourceType = do
-  sourceName <- P.mkColumnTypeName sourceType <&> (<> $$(G.litName "_cast_exp"))
-  fields <- sequenceA <$> traverse mkField targetTypes
-  pure $ P.object sourceName Nothing $ M.fromList . catMaybes <$> fields
-  where
-    targetTypes = case sourceType of
-      PGColumnScalar PGGeometry  -> [PGGeography]
-      PGColumnScalar PGGeography -> [PGGeometry]
-      _                          -> []
-
-    mkField :: PGScalarType -> m (InputFieldsParser n (Maybe (PGScalarType, [ComparisonExp])))
-    mkField targetType = do
-      targetName <- P.mkScalarTypeName targetType
-      value <- comparisonExps (PGColumnScalar targetType)
-      pure $ P.fieldOptional targetName Nothing $ (targetType,) <$> value
+      forM maybeScalars $ \(sourceScalar, targetScalar) -> do
+        sourceName   <- P.mkScalarTypeName sourceScalar <&> (<> $$(G.litName "_cast_exp"))
+        targetName   <- P.mkScalarTypeName targetScalar
+        targetOpExps <- comparisonExps $ PGColumnScalar targetScalar
+        let field = P.fieldOptional targetName Nothing $ (targetScalar, ) <$> targetOpExps
+        pure $ P.object sourceName Nothing $ M.fromList . maybeToList <$> field
 
 geographyWithinDistanceInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)

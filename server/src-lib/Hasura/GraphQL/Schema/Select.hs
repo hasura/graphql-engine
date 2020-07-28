@@ -17,7 +17,7 @@ module Hasura.GraphQL.Schema.Select
 
 import           Hasura.Prelude
 
-import           Control.Lens
+import           Control.Lens                          hiding (index)
 import           Data.Has
 import           Data.Int                              (Int32)
 import           Data.Maybe                            (fromJust)
@@ -917,9 +917,9 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions = do
 
         fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteFieldInfo
         remoteFieldsArgumentsParser <-
-          fmap sequenceA $ for (Map.toList $ _rfiParamMap remoteFieldInfo) \(name, inpValDefn) -> do
+          sequenceA <$> for (Map.toList $ _rfiParamMap remoteFieldInfo) \(name, inpValDefn) -> do
             parser <- inputValueDefinitionParser (_rfiSchemaIntrospect remoteFieldInfo) inpValDefn
-            pure $ parser `P.bindFields` traverse (\gVal -> RQL.RemoteFieldArgument name . fmap absurd <$> P.valueToGraphQL gVal)
+            pure $ parser `P.bindFields` traverse (fmap (RQL.RemoteFieldArgument name . fmap absurd) . P.valueToGraphQL)
 
         -- This selection set parser, should be of the remote node's selection set parser, which comes
         -- from the fieldCall
@@ -1097,7 +1097,7 @@ computedField
   -> m (Maybe (FieldParser n AnnotatedField))
 computedField ComputedFieldInfo{..} selectPermissions = runMaybeT do
   stringifyNum <- asks $ qcStringifyNum . getter
-  fieldName <- lift $ textToName $ computedFieldNameToText $ _cfiName
+  fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
   functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
   case _cfiReturnType of
     CFRScalar scalarReturnType -> do

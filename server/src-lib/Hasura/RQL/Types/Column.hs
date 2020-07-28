@@ -44,7 +44,7 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 newtype EnumValue
-  = EnumValue { getEnumValue :: T.Text }
+  = EnumValue { getEnumValue :: G.Name }
   deriving (Show, Eq, Ord, Lift, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey, Cacheable)
 
 newtype EnumValueInfo
@@ -112,13 +112,13 @@ parsePGScalarValue columnType value = case columnType of
   PGColumnEnumReference (EnumReference tableName enumValues) ->
     WithScalarType PGText <$> (maybe (pure $ PGNull PGText) parseEnumValue =<< decodeValue value)
     where
-      parseEnumValue :: Text -> m PGScalarValue
-      parseEnumValue textValue = do
-        let enumTextValues = map getEnumValue $ M.keys enumValues
-        unless (textValue `elem` enumTextValues) $ throw400 UnexpectedPayload
-          $ "expected one of the values " <> T.intercalate ", " (map dquote enumTextValues)
-          <> " for type " <> snakeCaseQualObject tableName <<> ", given " <>> textValue
-        pure $ PGValText textValue
+      parseEnumValue :: G.Name -> m PGScalarValue
+      parseEnumValue enumValueName = do
+        let enums = map getEnumValue $ M.keys enumValues
+        unless (enumValueName `elem` enums) $ throw400 UnexpectedPayload
+          $ "expected one of the values " <> T.intercalate ", " (map dquote enums)
+          <> " for type " <> snakeCaseQualObject tableName <<> ", given " <>> enumValueName
+        pure $ PGValText $ G.unName enumValueName
 
 parsePGScalarValues
   :: (MonadError QErr m)

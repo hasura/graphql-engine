@@ -22,11 +22,10 @@ import qualified Hasura.GraphQL.Parser         as P
 import           Hasura.GraphQL.Parser         (Kind (..), Parser)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
+import           Hasura.RQL.DML.Internal       (getRolePermInfo)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
--- TODO(PDV) move code around so that we don't import an internal module here
-import           Hasura.RQL.DML.Internal
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 -- | Table select columns enum
 --
@@ -86,7 +85,6 @@ tableUpdateColumnsEnum table updatePermissions = do
     define name =
       P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
 
--- TODO(PDV) deduplicate with @askPermInfo'@?
 tablePermissions
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
@@ -94,9 +92,7 @@ tablePermissions
 tablePermissions table = do
   roleName  <- askRoleName
   tableInfo <- askTableInfo table
-  pure $ if roleName == adminRoleName
-    then Just $ mkAdminRolePermInfo $ _tiCoreInfo tableInfo
-    else Map.lookup roleName $ _tiRolePermInfoMap tableInfo
+  pure $ getRolePermInfo roleName tableInfo
 
 tableSelectPermissions
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
@@ -172,7 +168,7 @@ tableUpdateColumns table permissions = do
   where
     isUpdatable (FIColumn columnInfo) =
       if Set.member (pgiColumn columnInfo) (upiCols permissions)
-         && (not $ (Map.member (pgiColumn columnInfo) (upiSet permissions)))
+         && not (Map.member (pgiColumn columnInfo) (upiSet permissions))
       then Just columnInfo
       else Nothing
     isUpdatable _ = Nothing

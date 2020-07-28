@@ -3,7 +3,6 @@
 module Hasura.GraphQL.Parser.Column
   ( PGColumnValue(..)
   , column
-  , mkColumnTypeName
   , mkScalarTypeName
   , qualifiedObjectToName
 
@@ -19,9 +18,9 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended          as M
 import qualified Database.PG.Query                     as Q
 
-import           Language.GraphQL.Draft.Syntax         (Description (..), Name, Nullability (..),
-                                                        Value (..), litName, literal, mkName,
-                                                        unsafeMkName)
+import           Language.GraphQL.Draft.Syntax         (Description (..), Name (..),
+                                                        Nullability (..), Value (..), litName,
+                                                        mkName)
 
 import qualified Hasura.RQL.Types.Column               as RQL
 
@@ -106,19 +105,19 @@ column columnType (Nullability isNullable) =
       --   might also have a slight performance cost, we will need to check. And
       --   finally, while not the most important criterion, it *feels* wrong.
       _  -> do
-        name <- mkColumnTypeName columnType
+        name <- mkScalarTypeName scalarType
         pure $ Parser
           { pType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
           , pParser =
               valueToJSON >=>
               either (parseError . qeError) pure . runAesonParser (parsePGValue scalarType)
           }
-    PGColumnEnumReference (EnumReference _tableName enumValues) ->
+    PGColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (M.toList enumValues) of
         Just enumValuesList -> do
-          name <- mkColumnTypeName columnType
+          name <- qualifiedObjectToName tableName <&> (<> $$(litName "_enum"))
           pure $ withScalarType PGText $ enum name Nothing (mkEnumValue <$> enumValuesList)
-        Nothing -> error "empty enum values" -- FIXME
+        Nothing -> throw400 ValidationFailed "empty enum values"
   where
     -- Sadly, this combinator is not sound in general, so we can’t export it
     -- for general-purpose use. If we did, someone could write this:
@@ -150,16 +149,10 @@ column columnType (Nullability isNullable) =
       | isNullable = fmap (fromMaybe $ PGNull scalarType) . nullable
       | otherwise  = id
 
-    -- FIXME: unify these types, avoid unsafe conversion to Name
     mkEnumValue (RQL.EnumValue value, RQL.EnumValueInfo description) =
-      ( mkDefinition (unsafeMkName value) (Description <$> description) EnumValueInfo
-      , PGValText value )
-
-mkColumnTypeName :: MonadError QErr m => PGColumnType -> m Name
-mkColumnTypeName = \case
-  PGColumnScalar scalarType -> mkScalarTypeName scalarType
-  PGColumnEnumReference (EnumReference tableName _) ->
-    qualifiedObjectToName tableName <&> (<> $$(litName "_enum"))
+      ( mkDefinition value (Description <$> description) EnumValueInfo
+      , PGValText $ unName value
+      )
 
 mkScalarTypeName :: MonadError QErr m => PGScalarType -> m Name
 mkScalarTypeName PGInteger  = pure $$(litName "Int")

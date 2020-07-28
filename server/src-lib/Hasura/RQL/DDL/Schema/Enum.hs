@@ -79,9 +79,7 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
     fetchAndValidate = do
       primaryKeyColumn <- tolerate validatePrimaryKey
       maybeCommentColumn <- validateColumns primaryKeyColumn
-      enumValues <- maybe (refute mempty) (fetchEnumValues maybeCommentColumn) primaryKeyColumn
-      validateEnumValues enumValues
-      pure enumValues
+      maybe (refute mempty) (fetchEnumValues maybeCommentColumn) primaryKeyColumn
       where
         validatePrimaryKey = case maybePrimaryKey of
           Nothing -> refute [EnumTableMissingPrimaryKey]
@@ -106,22 +104,23 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
               query = Q.fromBuilder $ toSQL S.mkSelect
                 { S.selFrom = Just $ S.mkSimpleFromExp tableName
                 , S.selExtr = [S.mkExtr (prciName primaryKeyColumn), commentExtr] }
-          fmap mkEnumValues . liftTx $ Q.withQE defaultTxErrorHandler query () True
-
-        mkEnumValues rows = M.fromList . flip map rows $ \(key, comment) ->
-          (EnumValue key, EnumValueInfo comment)
-
-        validateEnumValues enumValues = do
-          when (M.null enumValues) $
-            refute [EnumTableNoEnumValues]
-          let enumNames = map getEnumValue $ M.keys enumValues
-              badNames = filter (not . isValidEnumName) enumNames
-          for_ (NE.nonEmpty badNames) $ \someBadNames ->
-            refute [EnumTableInvalidEnumValueNames someBadNames]
+          rawEnumValues <- liftTx $ Q.withQE defaultTxErrorHandler query () True
+          when (null rawEnumValues) $ dispute [EnumTableNoEnumValues]
+          let enumValues = flip map rawEnumValues $
+                \(enumValueText, comment) ->
+                  case mkValidEnumValueName enumValueText of
+                    Nothing        -> Left enumValueText
+                    Just enumValue -> Right (EnumValue enumValue, EnumValueInfo comment)
+              badNames = lefts enumValues
+              validEnums = rights enumValues
+          case NE.nonEmpty badNames of
+            Just someBadNames -> refute [EnumTableInvalidEnumValueNames someBadNames]
+            Nothing           -> pure $ M.fromList validEnums
 
         -- https://graphql.github.io/graphql-spec/June2018/#EnumValue
-        isValidEnumName name =
-          isJust (G.mkName name) && name `notElem` ["true", "false", "null"]
+        mkValidEnumValueName name =
+          if name `elem` ["true", "false", "null"] then Nothing
+          else G.mkName name
 
     showErrors :: [EnumTableIntegrityError] -> T.Text
     showErrors allErrors =
