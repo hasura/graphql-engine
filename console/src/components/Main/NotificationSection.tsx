@@ -156,7 +156,11 @@ const ViewMoreOptions: React.FC<BadgeViewMoreProps> = ({
     buttonText = 'View Older Notifications';
   }
 
-  return <Button style={{ width: '100%' }}>{buttonText}</Button>;
+  return (
+    <Button className={styles.viewMoreNotifications}>
+      {buttonText} &rarr;{' '}
+    </Button>
+  );
 };
 
 const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
@@ -210,9 +214,9 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
               {...props}
             />
           ))}
+        {/* TODO: update styling on this button and functionality */}
+        <ViewMoreOptions numberNotifications={data.length} />
       </Box>
-      {/* TODO: update styling on this button */}
-      <ViewMoreOptions numberNotifications={data.length} />
     </Box>
   )
 );
