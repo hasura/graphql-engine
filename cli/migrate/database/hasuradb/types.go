@@ -80,6 +80,51 @@ type deleteCronTriggerInput struct {
 	Name string `json:"name" yaml:"name"`
 }
 
+type actionDefinition struct {
+	Name       interface{} `json:"name,omitempty" yaml:"name,omitempty"`
+	Definition interface{} `json:"definition,omitempty" yaml:"definition,omitempty"`
+}
+
+type createActionInput struct {
+	actionDefinition
+	Comment string `json:"comment,omitempty" yaml:"comment,omitempty"`
+}
+
+type actionAndPermission struct {
+	actionDefinition
+	Permissions []PermissionDefinition `json:"permissions" yaml:"permissions"`
+}
+
+type dropActionInput struct {
+	Name      interface{} `json:"name,omitempty" yaml:"name,omitempty"`
+	ClearData bool        `json:"clear_data,omitempty" yaml:"clear_data,omitempty"`
+}
+
+type updateActionInput struct {
+	actionDefinition
+}
+
+type PermissionDefinition struct {
+	Role    interface{} `json:"role,omitempty" yaml:"role,omitempty"`
+	Comment string      `json:"comment,omitempty" yaml:"comment,omitempty"`
+}
+type createActionPermissionInput struct {
+	Action interface{} `json:"action,omitempty" yaml:"action,omitempty"`
+	PermissionDefinition
+}
+
+type dropActionPermissionInput struct {
+	Action interface{} `json:"action,omitempty" yaml:"action,omitempty"`
+	PermissionDefinition
+}
+
+type setCustomTypesInput struct {
+	InputObjects interface{} `json:"input_objects,omitempty" yaml:"input_objects,omitempty"`
+	Objects      interface{} `json:"objects,omitempty" yaml:"objects,omitempty"`
+	Scalars      interface{} `json:"scalars,omitempty" yaml:"scalars,omitempty"`
+	Enums        interface{} `json:"enums,omitempty" yaml:"enums,omitempty"`
+}
+
 func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 	type t newHasuraIntefaceQuery
 	var q t
@@ -175,6 +220,18 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		q.Args = &createCronTriggerInput{}
 	case deleteCronTrigger:
 		q.Args = &deleteCronTriggerInput{}
+	case createAction:
+		q.Args = &createActionInput{}
+	case dropAction:
+		q.Args = &dropActionInput{}
+	case updateAction:
+		q.Args = &updateActionInput{}
+	case createActionPermission:
+		q.Args = &createActionPermissionInput{}
+	case dropActionPermission:
+		q.Args = &dropActionPermissionInput{}
+	case setCustomTypes:
+		q.Args = &setCustomTypesInput{}
 	default:
 		return fmt.Errorf("cannot squash type %s", q.Type)
 	}
@@ -357,6 +414,12 @@ const (
 	deleteRemoteRelationship                 = "delete_remote_relationship"
 	createCronTrigger                        = "create_cron_trigger"
 	deleteCronTrigger                        = "delete_cron_trigger"
+	createAction                             = "create_action"
+	dropAction                               = "drop_action"
+	updateAction                             = "update_action"
+	createActionPermission                   = "create_action_permission"
+	dropActionPermission                     = "drop_action_permission"
+	setCustomTypes                           = "set_custom_types"
 )
 
 type tableMap struct {
@@ -700,6 +763,8 @@ type replaceMetadataInput struct {
 	AllowList        []*addCollectionToAllowListInput `json:"allowlist" yaml:"allowlist"`
 	RemoteSchemas    []*addRemoteSchemaInput          `json:"remote_schemas" yaml:"remote_schemas"`
 	CronTriggers     []*createCronTriggerInput        `json:"cron_triggers" yaml:"cron_triggers"`
+	Actions          []*actionAndPermission           `json:"actions" yaml:"actions"`
+	CustomTypes      *setCustomTypesInput             `json:"custom_types" yaml:"custom_types"`
 }
 
 func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList) {
@@ -806,15 +871,17 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	}
 
 	for _, table := range rmi.Tables {
-		for _, remoteRelationship := range *table.RemoteRelationships {
-			r := createRemoteRelationshipInput{
-				remoteRelationshipDefinition: remoteRelationship.Definiton,
-				Table: tableSchema{
-					Name:   table.Table.Name,
-					Schema: table.Table.Schema,
-				},
+		if table.RemoteRelationships != nil {
+			for _, remoteRelationship := range *table.RemoteRelationships {
+				r := createRemoteRelationshipInput{
+					remoteRelationshipDefinition: remoteRelationship.Definiton,
+					Table: tableSchema{
+						Name:   table.Table.Name,
+						Schema: table.Table.Schema,
+					},
+				}
+				l.PushBack(r)
 			}
-			l.PushBack(r)
 		}
 	}
 
@@ -841,6 +908,26 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	// track cron triggers
 	for _, ct := range rmi.CronTriggers {
 		l.PushBack(ct)
+	}
+
+	// track actions
+	for _, action := range rmi.Actions {
+		// action definition
+		a := &createActionInput{
+			actionDefinition: action.actionDefinition,
+		}
+		l.PushBack(a)
+		// permission
+		for _, permission := range action.Permissions {
+			p := &createActionPermissionInput{
+				Action:               action.Name,
+				PermissionDefinition: permission,
+			}
+			l.PushBack(p)
+		}
+	}
+	if rmi.CustomTypes != nil {
+		l.PushBack(rmi.CustomTypes)
 	}
 }
 
@@ -1022,7 +1109,17 @@ type remoteRelationshipConfig struct {
 	tableName, schemaName, name string
 	transition.Transition
 }
+
 type cronTriggerConfig struct {
 	name string
+	transition.Transition
+}
+
+type actionConfig struct {
+	name string
+	transition.Transition
+}
+type actionPermissionConfig struct {
+	action string
 	transition.Transition
 }

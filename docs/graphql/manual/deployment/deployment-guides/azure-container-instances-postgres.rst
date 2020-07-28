@@ -12,6 +12,9 @@ Hasura GraphQL engine on Azure with Container Instances and Postgres
   :depth: 1
   :local:
 
+Introduction
+------------
+
 This guide talks about how to deploy the Hasura GraphQL engine on `Azure
 <https://azure.microsoft.com>`__ using `Container Instances
 <https://azure.microsoft.com/en-us/services/container-instances/>`__ with `Azure
@@ -221,6 +224,8 @@ Hasura is able to connect to the database.
 
 If you're using an existing/external database, make sure the firewall rules for
 the database allow connection for Azure services.
+
+.. _azure_logs:
 
 Checking logs
 ^^^^^^^^^^^^^
