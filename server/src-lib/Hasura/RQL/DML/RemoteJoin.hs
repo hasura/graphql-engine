@@ -11,7 +11,8 @@ module Hasura.RQL.DML.RemoteJoin
 import           Hasura.Prelude
 
 import           Control.Lens
-import           Data.Scientific                        (toBoundedInteger, toRealFloat, floatingOrInteger)
+import           Data.Scientific                        (floatingOrInteger, toBoundedInteger,
+                                                         toRealFloat)
 import           Data.Validation
 
 import           Hasura.EncJSON
@@ -373,6 +374,7 @@ traverseQueryResponseJSON rjm =
 convertFieldWithVariablesToName :: G.Field G.NoFragments Variable -> G.Field G.NoFragments G.Name
 convertFieldWithVariablesToName = fmap getName
 
+{-
 constGValueToJSON :: G.Value Void -> A.Value
 constGValueToJSON = \case
   G.VNull                 -> A.Null
@@ -383,6 +385,7 @@ constGValueToJSON = \case
   G.VEnum (G.EnumValue n) -> A.toJSON n
   G.VList values          -> A.toJSON $ map constGValueToJSON values
   G.VObject objects       -> A.toJSON $ fmap constGValueToJSON objects
+-}
 
 collectVariables :: G.Value Variable -> HashMap G.VariableDefinition A.Value
 collectVariables = \case
@@ -395,8 +398,8 @@ collectVariables = \case
   G.VList values   -> foldl Map.union mempty $ map collectVariables values
   G.VObject values -> foldl Map.union mempty $ map collectVariables $ Map.elems values
   G.VVariable var@(Variable _ gType val) ->
-    let (name,jVal) = (getName var, constGValueToJSON val)
-    in Map.singleton (G.VariableDefinition name gType $ Just val) jVal
+    let (name,jVal) = (getName var, {-constGValueToJSON-} undefined val)
+    in Map.singleton (G.VariableDefinition name gType $ undefined {- Just val -}) jVal
 
 -- | Fetch remote join field value from remote servers by batching respective 'RemoteJoinField's
 fetchRemoteJoinFields

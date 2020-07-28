@@ -41,6 +41,7 @@ module Hasura.GraphQL.Parser.Schema (
 
   -- * Miscellany
   , HasName(..)
+  , InputValue(..)
   , Variable(..)
   , VariableInfo(..)
   , DirectiveInfo(..)
@@ -48,6 +49,7 @@ module Hasura.GraphQL.Parser.Schema (
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict.Extended  as Map
 import qualified Data.HashSet                  as Set
 
@@ -462,13 +464,18 @@ data FieldInfo = forall k. ('Output <: k) => FieldInfo
 instance Eq FieldInfo where
   FieldInfo args1 t1 == FieldInfo args2 t2 = args1 == args2 && eqType t1 t2
 
+data InputValue v = GraphQLValue (Value v)
+                  | JSONValue J.Value
+                  deriving (Show, Eq, Functor)
+
 data Variable = Variable
   { vInfo  :: VariableInfo
   , vType  :: GType
-  , vValue :: Value Void
+  , vValue :: InputValue Void
   -- ^ Note: if the variable was null or was not provided and the field has a
   -- non-null default value, this field contains the default value, not 'VNull'.
   } deriving (Show,Eq)
+
 
 data VariableInfo
   = VIRequired Name

@@ -110,7 +110,7 @@ column columnType (Nullability isNullable) =
         pure $ Parser
           { pType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
           , pParser =
-              graphQLToJSON >=>
+              valueToJSON >=>
               either (parseError . qeError) pure . runAesonParser (parsePGValue scalarType)
           }
     PGColumnEnumReference (EnumReference _tableName enumValues) ->
@@ -138,9 +138,10 @@ column columnType (Nullability isNullable) =
     opaque :: MonadParse m => Parser 'Both m a -> Parser 'Both m (Opaque a)
     opaque parser = parser
       { pParser = \case
-          VVariable (var@Variable{ vInfo, vValue }) -> do
-            typeCheck (toGraphQLType $ pType parser) var
-            Opaque (Just vInfo) <$> pParser parser (literal vValue)
+          GraphQLValue (VVariable (var@Variable{ vInfo, vValue })) -> do
+            -- FIXME: add typechecking
+            -- typeCheck (toGraphQLType $ pType parser) var
+            Opaque (Just vInfo) <$> pParser parser (absurd <$> vValue)
           value -> Opaque Nothing <$> pParser parser value
       }
 

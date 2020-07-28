@@ -23,8 +23,8 @@ import           Language.GraphQL.Draft.Syntax
 import           Hasura.GraphQL.Parser.Class
 import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser (boolean, runParser)
 import           Hasura.GraphQL.Parser.Schema
+import           Hasura.GraphQL.Utils                  (showNames)
 import           Hasura.SQL.Types
-import           Hasura.GraphQL.Utils                       (showNames)
 
 -- | Collects the effective set of fields queried by a selection set by
 -- flattening fragments and merging duplicate fields.
@@ -145,7 +145,7 @@ flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
     applyInclusionDirective adjust Directive{ _dName, _dArguments } continue = do
       ifArgument <- Map.lookup $$(litName "if") _dArguments `onNothing`
         parseError ("missing \"if\" argument for " <> _dName <<> " directive")
-      value <- runParser boolean ifArgument
+      value <- runParser boolean $ GraphQLValue ifArgument
       if adjust value then continue else pure []
 
     validateDirectives directives =

@@ -66,9 +66,9 @@ resolveVariables definitions jsonValues selSet = do
     buildVariable G.VariableDefinition{ G._vdName, G._vdType, G._vdDefaultValue } = do
       let defaultValue = fromMaybe G.VNull _vdDefaultValue
       value <- case Map.lookup _vdName jsonValues of
-        Just jsonValue -> jsonToGqlValue jsonValue
+        Just jsonValue -> pure $ JSONValue jsonValue
         Nothing
-          | G.isNullable _vdType -> pure defaultValue
+          | G.isNullable _vdType -> pure $ GraphQLValue $ absurd <$> defaultValue
           | otherwise -> throw400 ValidationFailed $
             "expecting a value for non-nullable variable: " <>> _vdName
       pure $! Variable
@@ -82,19 +82,3 @@ resolveVariables definitions jsonValues selSet = do
     resolveVariable variables name = case Map.lookup name variables of
       Just variable -> modify (HS.insert name) >> pure variable
       Nothing       -> throw400 ValidationFailed $ "unbound variable " <>> name
-
-jsonToGqlValue :: MonadError QErr m => J.Value -> m (G.Value a)
-jsonToGqlValue J.Null         = pure $ G.VNull
-jsonToGqlValue (J.Bool val)   = pure $ G.VBoolean val
-jsonToGqlValue (J.String val) = pure $ G.VString G.ExternalValue val
--- TODO this is too optimistic: not every number that happens to be an integer should be saved as an integer. All numbers in scientific notation should be saved as floats.
-jsonToGqlValue (J.Number val)
-  | Right intVal <- floatingOrInteger val = pure $ G.VInt $ fromInteger intVal
-  | otherwise                             = pure $ G.VFloat val
-jsonToGqlValue (J.Array vals) = G.VList <$> traverse jsonToGqlValue (toList vals)
-jsonToGqlValue (J.Object vals) =
-  G.VObject . Map.fromList <$> for (Map.toList vals) \(key, val) -> do
-    name <- G.mkName key `onNothing` throw400 ValidationFailed
-      ("variable value contains object with key " <> key
-       <<> ", which is not a legal GraphQL name")
-    (name,) <$> jsonToGqlValue val

@@ -1,6 +1,7 @@
 {-# OPTIONS_HADDOCK not-home #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE StrictData          #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 -- | Defines the 'Parser' type and its primitive combinators.
 module Hasura.GraphQL.Parser.Internal.Parser where
@@ -14,6 +15,7 @@ import qualified Data.HashSet                  as S
 
 import           Control.Lens.Extended         hiding (enum, index)
 import           Data.Int                      (Int32)
+import           Data.Scientific               (floatingOrInteger)
 import           Data.Parser.JSONPath
 import           Data.Type.Equality
 import           Language.GraphQL.Draft.Syntax hiding (Definition)
@@ -87,8 +89,8 @@ instance HasDefinition (Parser k m a) (TypeInfo k) where
 
 type family ParserInput k where
   -- see Note [The 'Both kind] in Hasura.GraphQL.Parser.Schema
-  ParserInput 'Both = Value Variable
-  ParserInput 'Input = Value Variable
+  ParserInput 'Both = InputValue Variable
+  ParserInput 'Input = InputValue Variable
   -- see Note [The meaning of Parser 'Output]
   ParserInput 'Output = SelectionSet NoFragments Variable
 
@@ -161,10 +163,10 @@ output type isn’t an output value but a selection set. -}
 -- | The constraint @(''Input' '<:' k)@ entails @('ParserInput' k ~ 'Value')@,
 -- but GHC can’t figure that out on its own, so we have to be explicit to give
 -- it a little help.
-inputParserInput :: forall k. 'Input <: k => ParserInput k :~: Value Variable
+inputParserInput :: forall k. 'Input <: k => ParserInput k :~: InputValue Variable
 inputParserInput = case subKind @'Input @k of { KRefl -> Refl; KBoth -> Refl }
 
-pInputParser :: forall k m a. 'Input <: k => Parser k m a -> Value Variable -> m a
+pInputParser :: forall k m a. 'Input <: k => Parser k m a -> InputValue Variable -> m a
 pInputParser = gcastWith (inputParserInput @k) pParser
 
 infixl 1 `bind`
@@ -181,7 +183,7 @@ data InputFieldsParser m a = InputFieldsParser
   --             (ReaderT (HashMap Name (FieldInput k)) m) a
   -- but working with that type sucks.
   { ifDefinitions :: [Definition InputFieldInfo]
-  , ifParser      :: HashMap Name (Value Variable) -> m a
+  , ifParser      :: HashMap Name (InputValue Variable) -> m a
   } deriving (Functor)
 
 infixl 1 `bindFields`
@@ -240,25 +242,34 @@ scalar name description representation = Parser
   { pType = schemaType
   , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \v -> case representation of
       SRBoolean -> case v of
-        VBoolean a -> pure a
-        _          -> typeMismatch name "a boolean" v
+        GraphQLValue (VBoolean b) -> pure b
+        JSONValue    (A.Bool   b) -> pure b
+        _                         -> typeMismatch name "a boolean" v
       SRInt -> case v of
-        VInt a -> convertWith scientificToInteger $ fromInteger a
-        _      -> typeMismatch name "a 32-bit integer" v
+        GraphQLValue (VInt i) -> convertWith scientificToInteger $ fromInteger i
+        JSONValue (A.Number n)
+          | Right i <- floatingOrInteger n -> pure i
+        _  -> typeMismatch name "a 32-bit integer" v
       SRFloat -> case v of
-        VFloat a -> convertWith scientificToFloat a
-        VInt   a -> convertWith scientificToFloat $ fromInteger a
-        _        -> typeMismatch name "a float" v
+        GraphQLValue (VFloat f)   -> convertWith scientificToFloat f
+        GraphQLValue (VInt   i)   -> convertWith scientificToFloat $ fromInteger i
+        JSONValue    (A.Number n) -> convertWith scientificToFloat n
+        _                         -> typeMismatch name "a float" v
       SRString -> case v of
-        VString _ a -> pure a
-        _           -> typeMismatch name "a string" v
+        GraphQLValue (VString _ s) -> pure s
+        JSONValue    (A.String  s) -> pure s
+        _                          -> typeMismatch name "a string" v
       SRAny -> case v of
-        VNull        -> pure A.Null
-        VInt i       -> pure $ A.toJSON i
-        VFloat f     -> pure $ A.toJSON f
-        VString _ t  -> pure $ A.toJSON t
-        VBoolean b   -> pure $ A.toJSON b
-        _            -> typeMismatch name "a scalar" v
+        GraphQLValue (VNull)       -> pure A.Null
+        GraphQLValue (VInt i)      -> pure $ A.toJSON i
+        GraphQLValue (VFloat f)    -> pure $ A.toJSON f
+        GraphQLValue (VString _ t) -> pure $ A.toJSON t
+        GraphQLValue (VBoolean b)  -> pure $ A.toJSON b
+        JSONValue (A.Null)         -> pure A.Null
+        JSONValue (A.Number n)     -> pure $ A.Number n
+        JSONValue (A.String s)     -> pure $ A.String s
+        JSONValue (A.Bool b)       -> pure $ A.Bool b
+        _                          -> typeMismatch name "a scalar" v
   }
   where
     schemaType = NonNullable $ TNamed $ mkDefinition name description TIScalar
@@ -300,7 +311,7 @@ jsonScalar name description = scalar name description SRAny
 namedJSON :: MonadParse m => Name -> Parser 'Both m A.Value
 namedJSON name = Parser
   { pType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
-  , pParser = graphQLToJSON
+  , pParser = valueToJSON
   }
 
 json, jsonb :: MonadParse m => Parser 'Both m A.Value
@@ -313,7 +324,7 @@ unsafeRawScalar
   :: MonadParse n
   => Name
   -> Maybe Description
-  -> Parser 'Both n (Value Variable)
+  -> Parser 'Both n (InputValue Variable)
 unsafeRawScalar name description = Parser
   { pType = NonNullable $ TNamed $ mkDefinition name description TIScalar
   , pParser = pure
@@ -327,12 +338,11 @@ enum
   -> Parser 'Both m a
 enum name description values = Parser
   { pType = schemaType
-  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \value -> case value of
-      VString origin stringValue -> case (origin, mkName stringValue) of
-        (ExternalValue, Just enumValue) -> validate enumValue
-        _ -> typeMismatch name "an enum value" value
-      VEnum (EnumValue enumValue) -> validate enumValue
-      _ -> typeMismatch name "an enum value" value
+  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
+      JSONValue (A.String stringValue)
+        | Just enumValue <- mkName stringValue -> validate enumValue
+      GraphQLValue (VEnum (EnumValue enumValue)) -> validate enumValue
+      other -> typeMismatch name "an enum value" other
   }
   where
     schemaType = NonNullable $ TNamed $ mkDefinition name description $ TIEnum (fst <$> values)
@@ -347,8 +357,9 @@ nullable :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser 
 nullable parser = gcastWith (inputParserInput @k) Parser
   { pType = schemaType
   , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
-      VNull -> pure Nothing
-      other -> Just <$> pParser parser other
+      JSONValue    A.Null -> pure Nothing
+      GraphQLValue VNull  -> pure Nothing
+      value               -> Just <$> pParser parser value
   }
   where
     schemaType = case pType parser of
@@ -398,8 +409,10 @@ list :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m 
 list parser = gcastWith (inputParserInput @k) Parser
   { pType = schemaType
   , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
-      VList values -> for (zip [0..] values) \(index, value) ->
-        withPath (++[Index index]) $ pParser parser value
+      GraphQLValue (VList values) -> for (zip [0..] values) \(index, value) ->
+        withPath (++[Index index]) $ pParser parser $ GraphQLValue value
+      JSONValue (A.Array values) -> for (zip [0..] $ toList values) \(index, value) ->
+        withPath (++[Index index]) $ pParser parser $ JSONValue value
       -- List Input Coercion
       --
       -- According to section 3.11 of the GraphQL spec: iff the value
@@ -411,7 +424,8 @@ list parser = gcastWith (inputParserInput @k) Parser
       -- We need to explicitly test for VNull here, otherwise we could
       -- be returning `[null]` if the parser accepts a null value,
       -- which would contradict the spec.
-      VNull -> parseError "expected a list, but found null"
+      GraphQLValue VNull  -> parseError "expected a list, but found null"
+      JSONValue    A.Null -> parseError "expected a list, but found null"
       other -> fmap pure $ withPath (++[Index 0]) $ pParser parser other
   }
   where
@@ -426,19 +440,26 @@ object
 object name description parser = Parser
   { pType = schemaType
   , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
-      VObject fields -> do
-        -- check for extraneous fields here, since the InputFieldsParser just
-        -- handles parsing the fields it cares about
-        for_ (M.keys fields) \fieldName -> do
-          unless (fieldName `S.member` fieldNames) $
-            parseError $ name <<> " has no field named " <>> fieldName
-        ifParser parser fields
+      GraphQLValue (VObject fields) -> parseFields $ GraphQLValue <$> fields
+      JSONValue (A.Object fields) -> do
+        translatedFields <- M.fromList <$> for (M.toList fields) \(key, val) -> do
+          name <- mkName key `onNothing` parseError
+            ("variable value contains object with key " <> key <<> ", which is not a legal GraphQL name")
+          pure (name, JSONValue val)
+        parseFields translatedFields
       other -> typeMismatch name "an object" other
   }
   where
     schemaType = NonNullable $ TNamed $ mkDefinition name description $
                  TIInputObject (ifDefinitions parser)
     fieldNames = S.fromList (dName <$> ifDefinitions parser)
+    parseFields fields = do
+      -- check for extraneous fields here, since the InputFieldsParser just
+      -- handles parsing the fields it cares about
+      for_ (M.keys fields) \fieldName -> do
+        unless (fieldName `S.member` fieldNames) $
+          parseError $ name <<> " has no field named " <>> fieldName
+      ifParser parser fields
 
 field
   :: (MonadParse m, 'Input <: k)
@@ -469,11 +490,15 @@ fieldWithDefault name description defaultValue parser = InputFieldsParser
       IFOptional (discardNullability $ pType parser) (Just defaultValue)]
   , ifParser = M.lookup name >>> withPath (++[Key (unName name)]) . \case
       Just value -> parseValue (toGraphQLType $ pType parser) value
-      Nothing    -> pInputParser parser $ literal defaultValue
+      Nothing    -> pInputParser parser $ GraphQLValue $ literal defaultValue
       -- FIXME: we use the literal without checking that its value can
       -- in theory be assigned to the declared type
   }
   where
+    parseValue _ value = pInputParser parser value
+    {-
+    FIXME!!!!
+    FIXME!!!!
     parseValue expectedType value = case value of
       VVariable (var@Variable { vInfo, vValue }) -> do
         typeCheck expectedType var
@@ -513,6 +538,7 @@ fieldWithDefault name description defaultValue parser = InputFieldsParser
           VIOptional _ _ -> markNotReusable *> parseValue expectedType (literal vValue)
       VNull -> pInputParser parser $ literal defaultValue
       _     -> pInputParser parser value
+     -}
 
 -- | A nullable field with no default value. If the field is omitted, the
 -- provided parser /will not be called/. This allows a field to distinguish an
@@ -684,7 +710,7 @@ selection name description argumentsParser resultParser = FieldParser
       for_ (M.keys _fArguments) \argumentName -> do
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
-      withPath (++[Key "args"]) $ ifParser argumentsParser _fArguments
+      withPath (++[Key "args"]) $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
   }
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
@@ -710,7 +736,7 @@ subselection name description argumentsParser bodyParser = FieldParser
       for_ (M.keys _fArguments) \argumentName -> do
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
-      (,) <$> withPath (++[Key "args"]) (ifParser argumentsParser _fArguments)
+      (,) <$> withPath (++[Key "args"]) (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
           <*> pParser bodyParser _fSelectionSet
   }
   where
@@ -739,51 +765,90 @@ subselection_ name description bodyParser =
 -- -----------------------------------------------------------------------------
 -- helpers
 
-graphQLToJSON :: MonadParse m => Value Variable -> m A.Value
-graphQLToJSON = peelVariable Nothing >=> \case
-  VNull               -> pure A.Null
-  VInt i              -> pure $ A.toJSON i
-  VFloat f            -> pure $ A.toJSON f
-  VString _ t         -> pure $ A.toJSON t
-  VBoolean b          -> pure $ A.toJSON b
-  VEnum (EnumValue n) -> pure $ A.toJSON n
-  VList values        -> A.toJSON <$> traverse graphQLToJSON values
-  VObject objects     -> A.toJSON <$> traverse graphQLToJSON objects
-  -- this should not be possible, as we peel any variable first
-  VVariable _         -> error "FIMXE: this should be a 500 with a descriptive message"
+valueToJSON :: MonadParse m => InputValue Variable -> m A.Value
+valueToJSON = peelVariable Nothing >=> \case
+  JSONValue    j -> pure j
+  GraphQLValue g -> graphQLToJSON g
+  where
+    graphQLToJSON = \case
+      VNull               -> pure A.Null
+      VInt i              -> pure $ A.toJSON i
+      VFloat f            -> pure $ A.toJSON f
+      VString _ t         -> pure $ A.toJSON t
+      VBoolean b          -> pure $ A.toJSON b
+      VEnum (EnumValue n) -> pure $ A.toJSON n
+      VList values        -> A.toJSON <$> traverse graphQLToJSON values
+      VObject objects     -> A.toJSON <$> traverse graphQLToJSON objects
+      -- this should not be possible, as we peel any variable first
+      VVariable _         -> error "FIMXE(this should be a 500 with a descriptive message): found variable within variable"
 
-peelVariable :: MonadParse m => Maybe GType -> Value Variable -> m (Value Variable)
-peelVariable expected (VVariable (var@Variable { vValue })) = do
-  onJust expected \locationType -> typeCheck locationType var
-  pure $ literal vValue
-peelVariable _ value = pure value
+valueToGraphQL :: MonadParse m => InputValue Variable -> m (Value Void)
+valueToGraphQL = peelVariable Nothing >=> \case
+  JSONValue    j -> jsonToGraphQL j
+  GraphQLValue g -> pure $ error "FIMXE(this should be a 500 with a descriptive message): found variable within variable" <$> g
+  where
+    jsonToGraphQL = \case
+      A.Null        -> pure $ VNull
+      A.Bool val    -> pure $ VBoolean val
+      A.String val  -> pure $ VString undefined val
+      A.Number val  -> case floatingOrInteger val of
+        Right intVal -> pure $ VInt $ fromInteger intVal
+        _            -> pure $ VFloat val
+      A.Array vals  -> VList <$> traverse jsonToGraphQL (toList vals)
+      A.Object vals -> VObject . M.fromList <$> for (M.toList vals) \(key, val) -> do
+        name <- mkName key `onNothing` parseError
+          ("variable value contains object with key " <> key <<> ", which is not a legal GraphQL name")
+        (name,) <$> jsonToGraphQL val
 
+peelVariable :: MonadParse m => Maybe GType -> InputValue Variable -> m (InputValue Variable)
+peelVariable expected = \case
+  GraphQLValue (VVariable var) -> do
+    -- TODO: typecheck here?
+    -- onJust expected \locationType -> typeCheck locationType var
+    -- TODO: mark as not reusable?
+    pure $ absurd <$> vValue var
+  value -> pure value
+
+{-
 typeCheck :: MonadParse m => GType -> Variable -> m ()
 typeCheck expectedType (Variable { vInfo, vType }) =
   unless (True {-expectedType `accepts` vType -}) $ parseError
     $ "variable " <> unName (getName vInfo) <> " of type "
     <> showGT vType <> " is used in position expecting "
     <> showGT expectedType
+-}
 
-typeMismatch :: MonadParse m => Name -> Text -> Value Variable -> m a
+typeMismatch :: MonadParse m => Name -> Text -> InputValue Variable -> m a
 typeMismatch name expected given = parseError $
   "expected " <> expected <> " for type " <> name <<> ", but found " <> describeValue given
 
-describeValue :: Value Variable -> Text
+describeValue :: InputValue Variable -> Text
 describeValue = describeValueWith (describeValueWith absurd . vValue)
 
-describeValueWith :: (var -> Text) -> Value var -> Text
+describeValueWith :: (var -> Text) -> InputValue var -> Text
 describeValueWith describeVariable = \case
-  VVariable var -> describeVariable var
-  VInt _ -> "an integer"
-  VFloat _ -> "a float"
-  VString _ _ -> "a string"
-  VBoolean _ -> "a boolean"
-  VNull -> "null"
-  VEnum _ -> "an enum value"
-  VList _ -> "a list"
-  VObject _ -> "an object"
+  JSONValue    jval -> describeJSON    jval
+  GraphQLValue gval -> describeGraphQL gval
+  where
+    describeJSON = \case
+      A.Null     -> "null"
+      A.Bool _   -> "a boolean"
+      A.String _ -> "a string"
+      A.Number _ -> "a number"
+      A.Array  _ -> "a list"
+      A.Object _ -> "an object"
+    describeGraphQL = \case
+      VVariable var -> describeVariable var
+      VInt _        -> "an integer"
+      VFloat _      -> "a float"
+      VString _ _   -> "a string"
+      VBoolean _    -> "a boolean"
+      VNull         -> "null"
+      VEnum _       -> "an enum value"
+      VList _       -> "a list"
+      VObject _     -> "an object"
 
+{-
 -- | Checks whether the type of a variable is compatible with the type
 --   at the location at which it is used.
 accepts :: GType -> GType -> Bool
@@ -796,3 +861,4 @@ expected `accepts` actual = case (expected, actual) of
   where
     checkNullability (Nullability expectedNullability) (Nullability actualNullability) =
       expectedNullability || not actualNullability
+-}

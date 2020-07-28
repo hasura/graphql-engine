@@ -341,11 +341,11 @@ inputValueDefinitionParser
    . (MonadSchema n m, MonadError QErr m)
   => G.SchemaIntrospection
   -> G.InputValueDefinition
-  -> m (InputFieldsParser n (Maybe (G.Value Variable)))
+  -> m (InputFieldsParser n (Maybe (InputValue Variable)))
 inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType maybeDefaultVal) =
-  let fieldConstructor :: forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Maybe (Value Variable))
+  let fieldConstructor :: forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Maybe (InputValue Variable))
       fieldConstructor parser =
-        let wrappedParser :: Parser k n (Value Variable)
+        let wrappedParser :: Parser k n (InputValue Variable)
             wrappedParser =
               P.Parser
                 { P.pType   = P.pType parser
@@ -362,8 +362,8 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
       doNullability (G.Nullability False) = id
       buildField
         :: G.GType
-        -> (forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Maybe (G.Value Variable)))
-        -> m (InputFieldsParser n (Maybe (G.Value Variable)))
+        -> (forall k. 'Input <: k => Parser k n () -> InputFieldsParser n (Maybe (InputValue Variable)))
+        -> m (InputFieldsParser n (Maybe (InputValue Variable)))
       buildField fieldType' fieldConstructor' = case fieldType' of
        G.TypeNamed nullability typeName ->
          case lookupType schemaDoc typeName of
