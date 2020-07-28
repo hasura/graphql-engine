@@ -43,8 +43,8 @@ import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
                                                             checkQueryInAllowlist)
+import           Hasura.GraphQL.Execute.Action             (asyncActionsProcessor)
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
-import           Hasura.GraphQL.Resolve.Action             (asyncActionsProcessor)
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
 import           Hasura.Logging
 import           Hasura.Prelude

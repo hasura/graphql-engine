@@ -21,8 +21,8 @@ module Hasura.GraphQL.Context
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
-import           Data.Aeson.TH
 import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Hasura.RQL.DML.Delete.Types   as RQL
@@ -51,7 +51,7 @@ data GQLContext = GQLContext
   }
 
 instance J.ToJSON GQLContext where
-  toJSON GQLContext{} = J.object [] -- FIXME
+  toJSON GQLContext{} = J.String "The GraphQL schema parsers"
 
 type ParserFn a
   =  G.SelectionSet G.NoFragments Variable

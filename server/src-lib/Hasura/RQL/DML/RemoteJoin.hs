@@ -11,11 +11,10 @@ module Hasura.RQL.DML.RemoteJoin
 import           Hasura.Prelude
 
 import           Control.Lens
-import           Data.Scientific                        (floatingOrInteger)
 import           Data.Validation
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Parser
+import           Hasura.GraphQL.Parser                  hiding (field)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.DML.Internal
@@ -327,27 +326,8 @@ traverseQueryResponseJSON rjm =
                                  (map fcName $ toList $ NE.tail fieldCall)
           where
             ordJSONValueToGValue :: (MonadError QErr m) => AO.Value -> m (G.Value Void)
-            ordJSONValueToGValue orderedVal =
-              let jsonVal = AO.fromOrdered orderedVal
-              in go jsonVal
-              where
-                go :: (MonadError QErr m) => A.Value -> m (G.Value Void)
-                go = \case
-                  A.Null -> pure $  G.VNull
-                  A.Bool val -> pure $  G.VBoolean val
-                  A.String val -> pure $  G.VString val
-                  A.Number val ->
-                    -- TODO(PDV) this is too optimistic as it saved integers in scientific notation as integers
-                    case floatingOrInteger val of
-                      Right intVal -> pure $  G.VInt intVal
-                      _            -> pure $  G.VFloat val
-                  A.Array vals -> G.VList <$> traverse go (toList vals)
-                  A.Object vals ->
-                    G.VObject . Map.fromList <$> for (Map.toList vals) \(key, val) -> do
-                      name <- G.mkName key `onNothing` throw400 ValidationFailed
-                        ("variable value contains object with key " <> key
-                         <<> ", which is not a legal GraphQL name")
-                      (name,) <$> go val
+            ordJSONValueToGValue =
+              either (throw400 ValidationFailed) pure . jsonToGraphQL . AO.fromOrdered
 
             inputArgsToMap = Map.fromList . map (_rfaArgument &&& _rfaValue)
 

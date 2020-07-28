@@ -19,10 +19,10 @@ import qualified Hasura.RQL.DML.Update                  as RQL
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
-import           Hasura.GraphQL.Resolve.Action
 import           Hasura.GraphQL.Schema.Insert
 import           Hasura.GraphQL.Schema.Mutation         (buildEmptyMutResp, convertToSQLTransaction,
                                                          fmapAnnInsert)

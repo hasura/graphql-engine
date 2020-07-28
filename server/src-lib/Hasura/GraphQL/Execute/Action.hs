@@ -1,5 +1,4 @@
---- In PDV this module is moved to Hasura.GraphQL.Execute.Action
-module Hasura.GraphQL.Resolve.Action
+module Hasura.GraphQL.Execute.Action
   ( resolveAsyncActionQuery
   , asyncActionsProcessor
   , resolveActionExecution

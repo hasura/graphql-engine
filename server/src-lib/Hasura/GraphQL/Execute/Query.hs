@@ -29,10 +29,10 @@ import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
-import           Hasura.GraphQL.Resolve.Action
 import           Hasura.Prelude
 import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)

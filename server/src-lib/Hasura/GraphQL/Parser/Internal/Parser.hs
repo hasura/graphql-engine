@@ -14,8 +14,8 @@ import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as S
 
 import           Control.Lens.Extended         hiding (enum, index)
-import           Data.Int                      (Int32)
-import           Data.Scientific               (floatingOrInteger)
+import           Data.Int                      (Int32, Int64)
+import           Data.Scientific               (toBoundedInteger)
 import           Data.Parser.JSONPath
 import           Data.Type.Equality
 import           Language.GraphQL.Draft.Syntax hiding (Definition)
@@ -229,7 +229,6 @@ data ScalarRepresentation a where
   SRInt :: ScalarRepresentation Int32
   SRFloat :: ScalarRepresentation Double
   SRString :: ScalarRepresentation Text
-  -- TODO(PDV) should this have an "others" case?
   SRAny :: ScalarRepresentation A.Value
 
 scalar
@@ -248,7 +247,7 @@ scalar name description representation = Parser
       SRInt -> case v of
         GraphQLValue (VInt i) -> convertWith scientificToInteger $ fromInteger i
         JSONValue (A.Number n)
-          | Right i <- floatingOrInteger n -> pure i
+          | Just i <- toBoundedInteger n -> pure i
         _  -> typeMismatch name "a 32-bit integer" v
       SRFloat -> case v of
         GraphQLValue (VFloat f)   -> convertWith scientificToFloat f
@@ -300,13 +299,6 @@ string = scalar $$(litName "String") Nothing SRString
 
 identifier :: MonadParse m => Parser 'Both m Text
 identifier = scalar $$(litName "ID") Nothing SRString
-
-{-
-jsonScalar
-  :: MonadParse m
-  => Name -> Maybe Description -> Parser 'Both m A.Value
-jsonScalar name description = scalar name description SRAny
--}
 
 namedJSON :: MonadParse m => Name -> Parser 'Both m A.Value
 namedJSON name = Parser
@@ -784,21 +776,22 @@ valueToJSON = peelVariable Nothing >=> \case
 
 valueToGraphQL :: MonadParse m => InputValue Variable -> m (Value Void)
 valueToGraphQL = peelVariable Nothing >=> \case
-  JSONValue    j -> jsonToGraphQL j
+  JSONValue    j -> either parseError pure $ jsonToGraphQL j
   GraphQLValue g -> pure $ error "FIMXE(this should be a 500 with a descriptive message): found variable within variable" <$> g
-  where
-    jsonToGraphQL = \case
-      A.Null        -> pure $ VNull
-      A.Bool val    -> pure $ VBoolean val
-      A.String val  -> pure $ VString val
-      A.Number val  -> case floatingOrInteger val of
-        Right intVal -> pure $ VInt $ fromInteger intVal
-        _            -> pure $ VFloat val
-      A.Array vals  -> VList <$> traverse jsonToGraphQL (toList vals)
-      A.Object vals -> VObject . M.fromList <$> for (M.toList vals) \(key, val) -> do
-        name <- mkName key `onNothing` parseError
-          ("variable value contains object with key " <> key <<> ", which is not a legal GraphQL name")
-        (name,) <$> jsonToGraphQL val
+
+jsonToGraphQL :: (MonadError Text m) => A.Value -> m (Value Void)
+jsonToGraphQL = \case
+  A.Null        -> pure $ VNull
+  A.Bool val    -> pure $ VBoolean val
+  A.String val  -> pure $ VString val
+  A.Number val  -> case toBoundedInteger val of
+    Just intVal -> pure $ VInt $ fromIntegral @Int64 intVal
+    Nothing     -> pure $ VFloat val
+  A.Array vals  -> VList <$> traverse jsonToGraphQL (toList vals)
+  A.Object vals -> VObject . M.fromList <$> for (M.toList vals) \(key, val) -> do
+    graphQLName <- onNothing (mkName key) $ throwError $
+      "variable value contains object with key " <> key <<> ", which is not a legal GraphQL name"
+    (graphQLName,) <$> jsonToGraphQL val
 
 peelVariable :: MonadParse m => Maybe GType -> InputValue Variable -> m (InputValue Variable)
 peelVariable expected = \case

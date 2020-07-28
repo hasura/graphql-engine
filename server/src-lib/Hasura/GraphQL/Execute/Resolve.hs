@@ -6,7 +6,6 @@ module Hasura.GraphQL.Execute.Resolve
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
 import qualified Data.HashMap.Strict.Extended           as Map
 import qualified Data.HashSet                           as HS
 import qualified Data.List                              as L
@@ -14,9 +13,6 @@ import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-
-import           Data.Scientific                        (floatingOrInteger, isInteger,
-                                                         toBoundedInteger, toRealFloat)
 
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.Error

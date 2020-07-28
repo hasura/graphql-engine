@@ -49,13 +49,12 @@ import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.RQL.DML.Select                  as DS
 import qualified Hasura.SQL.DML                         as S
---import qualified Hasura.GraphQL.Execute.Query           as GEQ
 
 import           Hasura.Db
 import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
-import           Hasura.GraphQL.Resolve.Action
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session

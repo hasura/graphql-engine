@@ -27,7 +27,6 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Data.URL.Template
 import           Hasura.Session
 import           Hasura.SQL.Types
 
@@ -35,7 +34,6 @@ import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
-import qualified Data.Text                     as T
 
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -129,10 +127,6 @@ resolveAction AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = do
        , outputObject
        )
   where
-    resolveWebhook (InputWebhook urlTemplate) = do
-      eitherRenderedTemplate <- renderURLTemplate urlTemplate
-      either (throw400 Unexpected . T.pack) (pure . ResolvedWebhook) eitherRenderedTemplate
-
     lookupPGScalar baseType = -- see Note [Postgres scalars in custom types]
       fmap (flip ScalarTypeDefinition Nothing) $
       find ((==) baseType) $ mapMaybe (G.mkName . toSQLTxt) $

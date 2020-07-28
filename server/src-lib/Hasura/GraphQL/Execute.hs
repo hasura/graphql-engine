@@ -29,14 +29,14 @@ import qualified Data.Aeson                             as J
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
 
+import qualified Data.HashSet                           as HS
+import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 import qualified Network.Wreq                           as Wreq
-import qualified Data.List.NonEmpty                     as NE
-import qualified Data.HashSet                           as HS
 
 import           Control.Exception                      (try)
 import           Control.Lens
@@ -54,9 +54,9 @@ import qualified Hasura.Server.Telemetry.Counters       as Telem
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
-import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
@@ -177,7 +177,7 @@ data ResolvedExecutionPlan
   -- ^ query execution; remote schemas and introspection possible
   | MutationExecutionPlan (EPr.ExecutionPlan (LazyRespTx, HTTP.ResponseHeaders) EPr.RemoteCall (G.Name, J.Value))
   -- ^ mutation execution; only __typename introspection supported
-  | SubscriptionExecutionPlan (EPr.ExecutionPlan EL.LiveQueryPlan Void Void)
+  | SubscriptionExecutionPlan EL.LiveQueryPlan
   -- ^ live query execution; remote schemas and introspection not supported
 
 validateSubscriptionRootField
@@ -326,9 +326,9 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
           (_execPlan, _plan, unpreparedAST) <-
             EQ.convertQuerySelSet gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           validSubscriptionAST <- for unpreparedAST validateSubscriptionRootField
-          (lqOp, plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
+          (lqOp, _plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
           -- getSubsOpM pgExecCtx userInfo inlinedSelSet
-          return $ SubscriptionExecutionPlan $ EPr.ExecStepDB lqOp
+          return $ SubscriptionExecutionPlan lqOp
 
       -- forM partialExecPlan $ \(gCtx, rootSelSet) ->
       --   case rootSelSet of

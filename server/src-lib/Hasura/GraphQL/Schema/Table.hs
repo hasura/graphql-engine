@@ -24,7 +24,6 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.RQL.DML.Internal       (getRolePermInfo)
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
 
 -- | Table select columns enum

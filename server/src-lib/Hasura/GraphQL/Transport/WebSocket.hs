@@ -37,7 +37,7 @@ import qualified StmContainers.Map                           as STMMap
 import           Control.Concurrent.Extended                 (sleep)
 import           Control.Exception.Lifted
 import           Data.String
--- import           GHC.AssertNF
+import           GHC.AssertNF
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
@@ -334,7 +334,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache sc scVer httpMgr enableAL
 
   case execPlan of
-    E.QueryExecutionPlan queryPlan -> do
+    E.QueryExecutionPlan queryPlan ->
       case queryPlan of
         E.ExecStepDB (tx, genSql) ->
           execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local (Just genSql) requestId q $
@@ -344,7 +344,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepRaw (name, json) ->
           execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local Nothing requestId q $
           return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
-    E.MutationExecutionPlan mutationPlan -> do
+    E.MutationExecutionPlan mutationPlan ->
       case mutationPlan of
         E.ExecStepDB tx ->
           execQueryOrMut timerTot Telem.Mutation telemCacheHit Telem.Local Nothing requestId q $
@@ -354,26 +354,22 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.ExecStepRaw (name, json) ->
           execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local Nothing requestId q $
           return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
-    E.SubscriptionExecutionPlan subscriptionPlan ->
-      case subscriptionPlan of
-        E.ExecStepDB lqOp -> do
-          -- log the graphql query
-          logQueryLog logger q Nothing requestId
-          let subscriberMetadata = LQ.mkSubscriberMetadata $ J.object
-                                   [ "websocket_id" J..= WS.getWSId wsConn
-                                   , "operation_id" J..= opId
-                                   ]
-          -- NOTE!: we mask async exceptions higher in the call stack, but it's
-          -- crucial we don't lose lqId after addLiveQuery returns successfully.
-          !lqId <- liftIO $ LQ.addLiveQuery logger subscriberMetadata lqMap lqOp liveQOnChange
-          -- let !opName = _grOperationName q -- TODO: uncomment this
-          -- liftIO $ $assertNFHere $! (lqId, opName)  -- so we don't write thunks to mutable vars
-          liftIO $ STM.atomically $
-            -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
-            STMMap.insert (lqId, _grOperationName q) opId opMap
-          logOpEv ODStarted (Just requestId)
-        E.ExecStepRemote x -> case x of -- remote subscriptions not allowed
-        E.ExecStepRaw x -> case x of -- introspection not allowed
+    E.SubscriptionExecutionPlan lqOp -> do
+      -- log the graphql query
+      logQueryLog logger q Nothing requestId
+      let subscriberMetadata = LQ.mkSubscriberMetadata $ J.object
+                               [ "websocket_id" J..= WS.getWSId wsConn
+                               , "operation_id" J..= opId
+                               ]
+      -- NOTE!: we mask async exceptions higher in the call stack, but it's
+      -- crucial we don't lose lqId after addLiveQuery returns successfully.
+      !lqId <- liftIO $ LQ.addLiveQuery logger subscriberMetadata lqMap lqOp liveQOnChange
+      let !opName = _grOperationName q
+      liftIO $ $assertNFHere $! (lqId, opName)  -- so we don't write thunks to mutable vars
+      liftIO $ STM.atomically $
+        -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
+        STMMap.insert (lqId, opName) opId opMap
+      logOpEv ODStarted (Just requestId)
 
   -- case execPlan of
   --   E.GExPHasura resolvedOp ->
@@ -645,7 +641,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
         Left e  -> do
           let !initErr = CSInitError $ qeError e
           liftIO $ do
-            -- TODO(PDV) disabled for now; printing odd errors: $assertNFHere initErr  -- so we don't write thunks to mutable vars
+            $assertNFHere initErr  -- so we don't write thunks to mutable vars
             STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) initErr
 
           let connErr = ConnErrMsg $ qeError e
@@ -654,7 +650,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
         Right (userInfo, expTimeM) -> do
           let !csInit =  CSInitialised $ WsClientState userInfo expTimeM paramHeaders ipAddress
           liftIO $ do
-            -- TODO(PDV) disabled for now; printing odd errors: $assertNFHere csInit  -- so we don't write thunks to mutable vars
+            $assertNFHere csInit  -- so we don't write thunks to mutable vars
             STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) csInit
 
           sendMsg wsConn SMConnAck

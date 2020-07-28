@@ -36,6 +36,8 @@ module Hasura.GraphQL.Parser
   , subselection
   , subselection_
 
+  , jsonToGraphQL
+
   , module Hasura.GraphQL.Parser.Class
   , module Hasura.GraphQL.Parser.Column
   , module Hasura.GraphQL.Parser.Monad
