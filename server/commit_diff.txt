@@ -93,12 +93,6 @@ Date:   Wed Jul 15 05:00:58 2020 +1000
     Co-authored-by: Phil Freeman <phil@hasura.io>
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
 
-commit 505ac06d9ec8439e88d360c2aa4bfc3e65f22f8c
-Author: Phil Freeman <phil@hasura.io>
-Date:   Mon Jul 13 22:56:53 2020 -0700
-
-    Expose all modules in Cabal file (#5371)
-
 (Done, but we should re-visit this, if we do query plan caching)
 commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
 Author: Auke Booij <auke@hasura.io>
