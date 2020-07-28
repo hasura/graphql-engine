@@ -64,6 +64,7 @@ data Hasura
 data instance EngineLogType Hasura
   = ELTHttpLog
   | ELTWebsocketLog
+  | ELTWebsocketMessageLog
   | ELTWebhookLog
   | ELTQueryLog
   | ELTStartup
@@ -78,6 +79,7 @@ instance J.ToJSON (EngineLogType Hasura) where
   toJSON = \case
     ELTHttpLog -> "http-log"
     ELTWebsocketLog -> "websocket-log"
+    ELTWebsocketMessageLog -> "websocket-message-log"
     ELTWebhookLog -> "webhook-log"
     ELTQueryLog -> "query-log"
     ELTStartup -> "startup"
@@ -90,6 +92,7 @@ instance J.FromJSON (EngineLogType Hasura) where
     "http-log" -> return ELTHttpLog
     "webhook-log" -> return ELTWebhookLog
     "websocket-log" -> return ELTWebsocketLog
+    "websocket-message-log" -> return ELTWebsocketMessageLog
     "query-log" -> return ELTQueryLog
     "livequery-poller-log" -> return ELTLivequeryPollerLog
     _ -> fail $ "Valid list of comma-separated log types: "
