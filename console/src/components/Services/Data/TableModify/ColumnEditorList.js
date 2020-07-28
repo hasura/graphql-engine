@@ -109,15 +109,15 @@ const ColumnEditorList = ({
         let flag = true;
         for (const [_, value1] of tableSchema.primary_key.columns.entries()) {
           for (const [index2, value2] of tableSchema.columns.entries()) {
-            if (value2.column_name.localeCompare(colName) == 0) {
+            if (!value2.column_name.localeCompare(colName)) {
               flag = false;
             } else {
               if (
                 flag == true &&
-                value1.localeCompare(value2.column_name) == 0
+                !value1.localeCompare(value2.column_name)
               ) {
                 pk.push(index2);
-              } else if (value1.localeCompare(value2.column_name) == 0) {
+              } else if (!value1.localeCompare(value2.column_name)) {
                 pk.push(index2 - 1);
               }
             }
