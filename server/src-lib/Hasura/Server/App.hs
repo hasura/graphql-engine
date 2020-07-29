@@ -275,9 +275,13 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           tracingCtx
           (fromString (B8.unpack pathInfo))
 
-    requestId <- getRequestId headers
-
+    requestId <- getRequestId headers    
+    
     mapActionT runTraceT $ do
+      -- Add the request ID to the tracing metadata so that we
+      -- can correlate requests and traces
+      lift $ Tracing.attachMetadata [("request_id", unRequestId requestId)]
+
       userInfoE <- fmap fst <$> lift (resolveUserInfo logger manager headers authMode)
       userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
                   return userInfoE

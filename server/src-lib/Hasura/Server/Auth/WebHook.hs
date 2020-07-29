@@ -75,10 +75,10 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
   mkUserInfoFromResp logger (ahUrl hook) (hookMethod hook) status respBody
   where
     performHTTPRequest :: m (Wreq.Response BL.ByteString)
-    performHTTPRequest = Tracing.traceHttpRequest (ahUrl hook) do
+    performHTTPRequest =  do
       let url = T.unpack $ ahUrl hook
       req <- liftIO $ H.parseRequest url
-      pure $ Tracing.SuspendedRequest req \req' -> liftIO do
+      Tracing.tracedHttpRequest req \req' -> liftIO do
         case ahType hook of
           AHTGet  -> do
             let isCommonHeader  = (`elem` commonClientHeadersIgnored)

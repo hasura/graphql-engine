@@ -529,13 +529,13 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
       requestBody = J.encode postPayload
       requestBodySize = BL.length requestBody
       url = unResolvedWebhook resolvedWebhook
-  httpResponse <- Tracing.traceHttpRequest url do
+  httpResponse <-  do
     initReq <- liftIO $ HTTP.parseRequest (T.unpack url)
     let req = initReq { HTTP.method         = "POST"
                       , HTTP.requestHeaders = addDefaultHeaders hdrs
                       , HTTP.requestBody    = HTTP.RequestBodyLBS requestBody
                       }
-    pure $ Tracing.SuspendedRequest req \req' ->
+    Tracing.tracedHttpRequest req \req' ->
       liftIO . try $ HTTP.httpLbs req' manager
   let requestInfo = ActionRequestInfo url postPayload $
                      confHeaders <> toHeadersConf clientHeaders

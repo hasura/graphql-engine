@@ -359,7 +359,7 @@ execRemoteGQ'
   -> RemoteSchemaInfo
   -> G.OperationType
   -> m (DiffTime, [N.Header], BL.ByteString)
-execRemoteGQ' env manager userInfo reqHdrs q rsi opType = Tracing.traceHttpRequest (T.pack (show url)) $ do
+execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
   when (opType == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   confHdrs <- makeHeadersFromConf env hdrConf
@@ -380,7 +380,7 @@ execRemoteGQ' env manager userInfo reqHdrs q rsi opType = Tracing.traceHttpReque
            , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
-  pure $ Tracing.SuspendedRequest req \req' -> do
+  Tracing.tracedHttpRequest req \req' -> do
     (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
     resp <- either httpThrow return res
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
