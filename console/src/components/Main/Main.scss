@@ -1319,7 +1319,8 @@
 .notificationsContainer {
   box-shadow: 0px 12px 27px 0px rgba(0, 0, 0, 0.2);
   background: white;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
   max-height: 60vh;
   text-transform: none;
   border-bottom-right-radius: 5px;
