@@ -32,6 +32,7 @@ import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Resolve                 as R
+import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -71,6 +72,7 @@ runGQ
      , MonadExecuteQuery m
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> RequestId
   -> UserInfo
   -> Wai.IpAddress
@@ -78,7 +80,7 @@ runGQ
   -> E.GraphQLQueryType
   -> GQLReqUnparsed
   -> m (HttpResponse EncJSON)
-runGQ env reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
+runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   -- The response and misc telemetry data:
   let telemTransport = Telem.HTTP
   (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
@@ -88,7 +90,7 @@ runGQ env reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     reqParsed <- E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
                  >>= flip onLeft throwError
 
-    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env pgExecCtx planCache
+    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env logger pgExecCtx planCache
                                  userInfo sqlGenCtx sc scVer queryType
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     case execPlan of
@@ -119,6 +121,7 @@ runGQBatched
      , MonadExecuteQuery m
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> RequestId
   -> ResponseInternalErrorsConfig
   -> UserInfo
@@ -128,10 +131,10 @@ runGQBatched
   -> GQLBatchedReqs GQLQueryText
   -- ^ the batched request with unparsed GraphQL query
   -> m (HttpResponse EncJSON)
-runGQBatched env reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query = do
+runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query = do
   case query of
     GQLSingleRequest req ->
-      runGQ env reqId userInfo ipAddress reqHdrs queryType req
+      runGQ env logger reqId userInfo ipAddress reqHdrs queryType req
     GQLBatchedReqs reqs -> do
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
@@ -142,7 +145,7 @@ runGQBatched env reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType
             . encJFromList
             . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
 
-      removeHeaders <$> traverse (try . runGQ env reqId userInfo ipAddress reqHdrs queryType) reqs
+      removeHeaders <$> traverse (try . runGQ env logger reqId userInfo ipAddress reqHdrs queryType) reqs
   where
     try = flip catchError (pure . Left) . fmap Right
 
