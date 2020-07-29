@@ -34,52 +34,52 @@ const setConsoleOptsInDB = (
   dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
   getState: GetReduxState
 ) => {
-    const url = Endpoints.getSchema;
+  const url = Endpoints.getSchema;
 
-    const { hasura_uuid, console_opts } = getState().telemetry;
+  const { hasura_uuid, console_opts } = getState().telemetry;
 
-    const consoleState = {
-      ...console_opts,
-      ...opts,
-    };
-
-    if (!hasura_uuid) {
-      dispatch(
-        showErrorNotification(
-          'Opt out of pre-release notifications failed',
-          'Internal error: missing hasura_uuid'
-        )
-      );
-      return;
-    }
-
-    const options: RequestInit = {
-      credentials: globalCookiePolicy,
-      method: 'POST',
-      headers: dataHeaders(getState),
-      body: JSON.stringify(
-        getRunSqlQuery(
-          `update hdb_catalog.hdb_version set console_state = '${JSON.stringify(
-            consoleState
-          )}' where hasura_uuid='${hasura_uuid}';`
-        )
-      ),
-    };
-
-    // eslint-disable-next-line consistent-return
-    return dispatch(requestAction(url, options)).then(
-      (data: object) => {
-        if (successCb) {
-          successCb(data);
-        }
-      },
-      (error: Error) => {
-        if (errorCb) {
-          errorCb(error);
-        }
-      }
-    );
+  const consoleState = {
+    ...console_opts,
+    ...opts,
   };
+
+  if (!hasura_uuid) {
+    dispatch(
+      showErrorNotification(
+        'Opt out of pre-release notifications failed',
+        'Internal error: missing hasura_uuid'
+      )
+    );
+    return;
+  }
+
+  const options: RequestInit = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(
+      getRunSqlQuery(
+        `update hdb_catalog.hdb_version set console_state = '${JSON.stringify(
+          consoleState
+        )}' where hasura_uuid='${hasura_uuid}';`
+      )
+    ),
+  };
+
+  // eslint-disable-next-line consistent-return
+  return dispatch(requestAction(url, options)).then(
+    (data: object) => {
+      if (successCb) {
+        successCb(data);
+      }
+    },
+    (error: Error) => {
+      if (errorCb) {
+        errorCb(error);
+      }
+    }
+  );
+};
 
 const telemetryNotificationShown = () => (
   dispatch: Dispatch<TelemetryActionTypes>
@@ -162,24 +162,26 @@ const updateConsoleNotificationsInDB = (
       headers: dataHeaders(getState),
       body: JSON.stringify(updatedReadNotifications),
     };
-    return dispatch(requestAction(url, options))
-      // TODO: perhaps need to change the type for `data` here
-      .then((data: any) => {
-        if (onSuccessText) {
-          dispatch(showSuccessNotification(onSuccessText));
-        }
-        dispatch({
-          type: UPDATE_CONSOLE_NOTIFICATIONS,
-          data: data.returning[0].console_state.console_notifications,
-        });
-      })
-      .catch(error => {
-        console.error(
-          'There was an error in updating the console notifications.',
-          error
-        );
-        return error;
-      });
+    return (
+      dispatch(requestAction(url, options))
+        // TODO: perhaps need to change the type for `data` here
+        .then((data: any) => {
+          if (onSuccessText) {
+            dispatch(showSuccessNotification(onSuccessText));
+          }
+          dispatch({
+            type: UPDATE_CONSOLE_NOTIFICATIONS,
+            data: data.returning[0].console_state.console_notifications,
+          });
+        })
+        .catch(error => {
+          console.error(
+            'There was an error in updating the console notifications.',
+            error
+          );
+          return error;
+        })
+    );
   };
 };
 
