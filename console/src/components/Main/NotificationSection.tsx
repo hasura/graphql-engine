@@ -79,6 +79,7 @@ type NotificationProps = {
   optOutCallback: () => void;
   uuid: string;
   dispatch: Dispatch;
+  disableMarkAllAsReadBtn: boolean;
 };
 
 type PreReleaseProps = Pick<NotificationProps, 'optOutCallback'>;
@@ -174,7 +175,7 @@ const onClickMarkAllAsRead = (dispatch: Dispatch, uuid: string) => {
   if (!uuid) {
     dispatch(
       showErrorNotification(
-        'Hasura-uuid absent in the server',
+        'hasura-uuid absent in the server',
         'You may need to update the server version in order to fix this'
       )
     );
@@ -197,7 +198,15 @@ const onClickMarkAllAsRead = (dispatch: Dispatch, uuid: string) => {
 
 const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
   (
-    { data, showVersionUpdate, latestVersion, optOutCallback, uuid, dispatch },
+    {
+      data,
+      showVersionUpdate,
+      latestVersion,
+      optOutCallback,
+      uuid,
+      dispatch,
+      disableMarkAllAsReadBtn,
+    },
     forwardedRef
   ) => (
     <Box
@@ -224,6 +233,8 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
         <Button
           title="Mark all as read"
           onClick={() => onClickMarkAllAsRead(dispatch, uuid)}
+          // TODO: this can change to a state dependent on when all we show the `View more button`
+          disabled={disableMarkAllAsReadBtn}
         >
           Mark all as read
         </Button>
@@ -298,7 +309,7 @@ const checkVersionUpdate = (
 };
 
 const ToReadBadge: React.FC<BadgeViewMoreProps> = ({ numberNotifications }) => {
-  if (!numberNotifications || numberNotifications < 0) {
+  if (!numberNotifications || numberNotifications <= 0) {
     return null;
   }
 
@@ -371,9 +382,15 @@ const HasuraNotifications: React.FC<Props> = ({
     props.dispatch(setPreReleaseNotificationOptOutInDB());
   };
 
-  const numberNotifications =
+  let numberNotifications =
     consoleNotifications.length + (displayNewVersionNotif ? 1 : 0);
   // TODO: handle read logic here and send the appropriate number
+  if (props.console_opts?.console_notifications) {
+    if (props.console_opts.console_notifications.read === 'all') {
+      // after `Mark all as read` or no new notifications case
+      numberNotifications = 0;
+    }
+  }
 
   return (
     <>
@@ -394,6 +411,7 @@ const HasuraNotifications: React.FC<Props> = ({
         optOutCallback={optOutCallback}
         uuid={props.hasura_uuid}
         dispatch={props.dispatch}
+        disableMarkAllAsReadBtn={!numberNotifications}
       />
     </>
   );
