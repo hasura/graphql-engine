@@ -378,7 +378,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 
   -- start a backgroud thread to handle async actions
   asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $
-    asyncActionsProcessor env (_scrCache cacheRef) _icPgPool _icHttpManager
+    asyncActionsProcessor env logger (_scrCache cacheRef) _icPgPool _icHttpManager
 
   -- start a background thread to create new cron events
   void $ liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
@@ -604,13 +604,13 @@ execQuery env queryBs = do
 instance Tracing.HasReporter AppM
 
 instance HttpLog AppM where
-  logHttpError logger userInfoM reqId httpReq req qErr headers =
+  logHttpError logger userInfoM reqId waiReq req qErr headers =
     unLogger logger $ mkHttpLog $
-      mkHttpErrorLogContext userInfoM reqId httpReq qErr req Nothing Nothing headers
+      mkHttpErrorLogContext userInfoM reqId waiReq req qErr Nothing Nothing headers
 
-  logHttpSuccess logger userInfoM reqId httpReq _ _ compressedResponse qTime cType headers =
+  logHttpSuccess logger userInfoM reqId waiReq _reqBody _response compressedResponse qTime cType headers =
     unLogger logger $ mkHttpLog $
-      mkHttpAccessLogContext userInfoM reqId httpReq compressedResponse qTime cType headers
+      mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
 instance MonadExecuteQuery AppM where
   executeQuery _ _ _ pgCtx _txAccess tx =
