@@ -21,6 +21,7 @@ access to your GraphQL endpoint and the Hasura console:
 - :ref:`For Heroku <heroku_secure>`
 - :ref:`For Docker <docker_secure>`
 - :ref:`For Kubernetes <kubernetes_secure>`
+- :ref:`For Digital Ocean <digital_ocean_secure>`
 
 .. note::
 
