@@ -272,8 +272,8 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           tracingCtx
           (fromString (B8.unpack pathInfo))
 
-    requestId <- getRequestId headers    
-    
+    requestId <- getRequestId headers
+
     mapActionT runTraceT $ do
       -- Add the request ID to the tracing metadata so that we
       -- can correlate requests and traces
@@ -369,8 +369,15 @@ v1QueryHandler query = do
       runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
 v1Alpha1GQHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m, Tracing.MonadTrace m, GH.MonadExecuteQuery m)
-  => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
+  :: ( HasVersion
+     , MonadIO m
+     , E.MonadGQLExecutionCheck m
+     , MonadQueryLog m
+     , Tracing.MonadTrace m
+     , GH.MonadExecuteQuery m
+     )
+  => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText
+  -> Handler m (HttpResponse EncJSON)
 v1Alpha1GQHandler queryType query = do
   userInfo             <- asks hcUser
   reqHeaders           <- asks hcReqHeaders
@@ -391,16 +398,28 @@ v1Alpha1GQHandler queryType query = do
                 (lastBuiltSchemaCache sc) scVer manager enableAL
 
   flip runReaderT execCtx $
-    GH.runGQBatched env requestId responseErrorsConfig userInfo ipAddress reqHeaders queryType query
+    GH.runGQBatched env logger requestId responseErrorsConfig userInfo ipAddress reqHeaders queryType query
 
 v1GQHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m, Tracing.MonadTrace m, GH.MonadExecuteQuery m)
+  :: ( HasVersion
+     , MonadIO m
+     , E.MonadGQLExecutionCheck m
+     , MonadQueryLog m
+     , Tracing.MonadTrace m
+     , GH.MonadExecuteQuery m
+     )
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler E.QueryHasura
 
 v1GQRelayHandler
-  :: (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m, Tracing.MonadTrace m, GH.MonadExecuteQuery m)
+  :: ( HasVersion
+     , MonadIO m
+     , E.MonadGQLExecutionCheck m
+     , MonadQueryLog m
+     , Tracing.MonadTrace m
+     , GH.MonadExecuteQuery m
+     )
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
 v1GQRelayHandler = v1Alpha1GQHandler E.QueryRelay
@@ -416,6 +435,8 @@ gqlExplainHandler query = do
   pgExecCtx <- asks (scPGExecCtx . hcServerCtx)
 --  sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
 --  env       <- asks (scEnvironment . hcServerCtx)
+--  logger    <- asks (scLogger . hcServerCtx)
+
 
   -- let runTx :: ReaderT HandlerCtx (Tracing.TraceT (Tracing.NoReporter (LazyTx QErr))) a
   --           -> ExceptT QErr (ReaderT HandlerCtx (Tracing.TraceT m)) a

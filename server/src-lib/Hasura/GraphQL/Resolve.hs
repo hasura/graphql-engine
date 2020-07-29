@@ -41,6 +41,8 @@ import qualified Hasura.GraphQL.Resolve.Mutation   as RM
 import qualified Hasura.GraphQL.Resolve.Select     as RS
 import qualified Hasura.GraphQL.Schema.Common      as GS
 import qualified Hasura.GraphQL.Validate           as V
+import qualified Hasura.Logging                    as L
+import qualified Hasura.RQL.DML.RemoteJoin         as RR
 import qualified Hasura.RQL.DML.Select             as DS
 import qualified Hasura.SQL.DML                    as S
 import qualified Hasura.Tracing                    as Tracing
@@ -105,6 +107,7 @@ queryFldToPGAST
      , Has SQLGenCtx r
      , Has UserInfo r
      , Has QueryCtxMap r
+     , Has (L.Logger L.Hasura) r
      , HasVersion
      , MonadIO m
      , Tracing.MonadTrace m
@@ -172,6 +175,7 @@ mutFldToTx
      , Has InsCtxMap r
      , Has HTTP.Manager r
      , Has [HTTP.Header] r
+     , Has (L.Logger L.Hasura) r
      , MonadIO m
      , Tracing.MonadTrace m
      , MonadIO tx

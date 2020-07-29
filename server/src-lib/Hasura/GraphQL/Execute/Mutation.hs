@@ -21,6 +21,7 @@ import qualified Hasura.RQL.DML.Mutation                as RQL
 import qualified Hasura.RQL.DML.Returning.Types         as RQL
 import qualified Hasura.RQL.DML.Update                  as RQL
 import qualified Hasura.Tracing                         as Tracing
+import qualified Hasura.Logging                         as L
 
 
 import           Hasura.Db
@@ -105,18 +106,19 @@ convertMutationRootField
     , MonadTx tx
     )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
   -> Bool
   -> MutationRootField UnpreparedValue
   -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
-convertMutationRootField env userInfo manager reqHeaders stringifyNum = \case
+convertMutationRootField env logger userInfo manager reqHeaders stringifyNum = \case
   RFDB (MDBInsert s)  -> noResponseHeaders =<< convertInsert env userSession rjCtx s stringifyNum
   RFDB (MDBUpdate s)  -> noResponseHeaders =<< convertUpdate env userSession rjCtx s stringifyNum
   RFDB (MDBDelete s)  -> noResponseHeaders =<< convertDelete env userSession rjCtx s stringifyNum
   RFRemote remote     -> pure $ Right remote
-  RFAction (AMSync s) -> Left . (_aerTransaction &&& _aerHeaders) <$> resolveActionExecution env userInfo s actionExecContext
+  RFAction (AMSync s) -> Left . (_aerTransaction &&& _aerHeaders) <$> resolveActionExecution env logger userInfo s actionExecContext
   RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders userSession
   RFRaw s              -> noResponseHeaders $ pure $ encJFromJValue s
   where
@@ -139,6 +141,7 @@ convertMutationSelectionSet
      , MonadIO tx
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> GQLContext
   -> SQLGenCtx
   -> UserInfo
@@ -148,7 +151,7 @@ convertMutationSelectionSet
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> m (ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders) RemoteCall (G.Name, J.Value))
-convertMutationSelectionSet env gqlContext sqlGenCtx userInfo manager reqHeaders fields varDefs varValsM = do
+convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager reqHeaders fields varDefs varValsM = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"
   -- Parse the GraphQL query into the RQL AST
@@ -158,7 +161,7 @@ convertMutationSelectionSet env gqlContext sqlGenCtx userInfo manager reqHeaders
     >>= (mutationParser >>> (`onLeft` reportParseErrors))
 
   -- Transform the RQL AST into a prepared SQL query
-  txs <- for unpreparedQueries $ convertMutationRootField env userInfo manager reqHeaders (stringifyNum sqlGenCtx)
+  txs <- for unpreparedQueries $ convertMutationRootField env logger userInfo manager reqHeaders (stringifyNum sqlGenCtx)
   let txList = OMap.toList txs
   case (mapMaybe takeTx txList, mapMaybe takeRemote txList) of
     (dbPlans, []) -> do

@@ -38,17 +38,3 @@ Date:   Wed Jul 29 20:18:36 2020 +0530
     * fix review comments
 
     Co-authored-by: Phil Freeman <phil@hasura.io>
-
-commit 6c7e63791fa160a30d9b2a207bcd0e667cad3dfa
-Author: Anon Ray <ecthiender@users.noreply.github.com>
-Date:   Wed Jul 29 19:00:29 2020 +0530
-
-    server: add logging for action handlers (#5471)
-
-    * server: add logging for action handlers
-
-    * add changelog entry
-
-    * change action-handler log type from internal to non-internal
-
-    * fix action-handler-log name

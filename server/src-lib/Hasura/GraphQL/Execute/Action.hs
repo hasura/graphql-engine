@@ -27,6 +27,8 @@ import qualified Network.Wreq                         as Wreq
 import           Control.Concurrent                   (threadDelay)
 import           Control.Exception                    (try)
 import           Control.Lens
+import           Data.Has
+import           Data.Int                             (Int64)
 import           Data.IORef
 
 import qualified Hasura.RQL.DML.RemoteJoin            as RJ
@@ -37,6 +39,7 @@ import           Control.Monad.Trans.Control          (MonadBaseControl)
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
 import qualified Data.Environment                     as Env
 import qualified Hasura.Tracing                       as Tracing
+import qualified Hasura.Logging                       as L
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
@@ -116,6 +119,18 @@ data ActionInternalError
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionInternalError)
 
+-- * Action handler logging related
+data ActionHandlerLog
+  = ActionHandlerLog
+  { _ahlRequestSize  :: !Int64
+  , _ahlResponseSize :: !Int64
+  } deriving (Show)
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''ActionHandlerLog)
+
+instance L.ToEngineLog ActionHandlerLog L.Hasura where
+  toEngineLog ahl = (L.LevelInfo, L.ELTActionHandler, J.toJSON ahl)
+
+
 -- resolveActionMutation
 --   :: ( HasVersion
 --      , MonadError QErr m
@@ -151,14 +166,15 @@ resolveActionExecution
      , Tracing.MonadTrace m
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> UserInfo
   -> AnnActionExecution UnpreparedValue
   -> ActionExecContext
   -> m ActionExecuteResult
-resolveActionExecution env userInfo annAction execContext = do
+resolveActionExecution env logger userInfo annAction execContext = do
   let actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload
-  (webhookRes, respHeaders) <- callWebhook env manager outputType outputFields reqHeaders confHeaders
+  (webhookRes, respHeaders) <- flip runReaderT logger $ callWebhook env manager outputType outputFields reqHeaders confHeaders
                                forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVLiteral $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
@@ -202,8 +218,7 @@ table provides the action response. See Note [Resolving async action query/subsc
 resolveActionMutationAsync
   :: ( MonadError QErr m
      , MonadTx tx
-     , Tracing.MonadTrace m
-     , Tracing.MonadTrace tx)
+     )
   => AnnActionMutationAsync
   -> [HTTP.Header]
   -> SessionVariables
@@ -309,11 +324,12 @@ asyncActionsProcessor
      , Tracing.HasReporter m
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> IORef (RebuildableSchemaCache Run, SchemaCacheVer)
   -> Q.PGPool
   -> HTTP.Manager
   -> m void
-asyncActionsProcessor env cacheRef pgPool httpManager = forever $ do
+asyncActionsProcessor env logger cacheRef pgPool httpManager = forever $ do
   asyncInvocations <- liftIO getUndeliveredEvents
   actionCache <- scActions . lastBuiltSchemaCache . fst <$> liftIO (readIORef cacheRef)
   LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
@@ -338,7 +354,7 @@ asyncActionsProcessor env cacheRef pgPool httpManager = forever $ do
               confHeaders = _adHeaders definition
               outputType = _adOutputType definition
               actionContext = ActionContext actionName
-          eitherRes <- runExceptT $
+          eitherRes <- runExceptT $ flip runReaderT logger $
                        callWebhook env httpManager outputType outputFields reqHeaders confHeaders
                          forwardClientHeaders webhookUrl $
                          ActionWebhookPayload actionContext sessionVariables inputPayload
@@ -396,7 +412,14 @@ asyncActionsProcessor env cacheRef pgPool httpManager = forever $ do
     getUndeliveredEvents = runTx undeliveredEventsQuery
 
 callWebhook
-  :: forall m. (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
+  :: forall m r.
+  ( HasVersion
+  , MonadIO m
+  , MonadError QErr m
+  , Tracing.MonadTrace m
+  , MonadReader r m
+  , Has (L.Logger L.Hasura) r
+  )
   => Env.Environment
   -> HTTP.Manager
   -> GraphQLType
@@ -416,12 +439,14 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
       -- and client headers where configuration headers are preferred
       hdrs = contentType : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
       postPayload = J.toJSON actionWebhookPayload
+      requestBody = J.encode postPayload
+      requestBodySize = BL.length requestBody
       url = unResolvedWebhook resolvedWebhook
   httpResponse <- do
     initReq <- liftIO $ HTTP.parseRequest (T.unpack url)
     let req = initReq { HTTP.method         = "POST"
                       , HTTP.requestHeaders = addDefaultHeaders hdrs
-                      , HTTP.requestBody    = HTTP.RequestBodyLBS (J.encode postPayload)
+                      , HTTP.requestBody    = HTTP.RequestBodyLBS requestBody
                       }
     Tracing.tracedHttpRequest req \req' ->
       liftIO . try $ HTTP.httpLbs req' manager
@@ -434,10 +459,16 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
 
     Right responseWreq -> do
       let responseBody = responseWreq ^. Wreq.responseBody
+          responseBodySize = BL.length responseBody
           responseStatus = responseWreq ^. Wreq.responseStatus
           mkResponseInfo respBody =
             ActionResponseInfo (HTTP.statusCode responseStatus) respBody $
             toHeadersConf $ responseWreq ^. Wreq.responseHeaders
+
+      -- log the request and response to/from the action handler
+      logger :: (L.Logger L.Hasura) <- asks getter
+      L.unLogger logger $ ActionHandlerLog requestBodySize responseBodySize
+
       case J.eitherDecode responseBody of
         Left e -> do
           let responseInfo = mkResponseInfo $ J.String $ bsToTxt $ BL.toStrict responseBody

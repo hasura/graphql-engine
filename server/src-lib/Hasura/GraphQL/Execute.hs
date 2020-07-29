@@ -210,6 +210,7 @@ getResolvedExecPlan
      , Tracing.MonadTrace tx
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> PGExecCtx
   -> EP.PlanCache
   -> UserInfo
@@ -221,7 +222,7 @@ getResolvedExecPlan
   -> [HTTP.Header]
   -> (GQLReqUnparsed, GQLReqParsed)
   -> m (Telem.CacheHit, ResolvedExecutionPlan tx)
-getResolvedExecPlan env pgExecCtx planCache userInfo sqlGenCtx
+getResolvedExecPlan env logger pgExecCtx planCache userInfo sqlGenCtx
   sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = do
 
   planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo) opNameM queryStr
@@ -256,13 +257,13 @@ getResolvedExecPlan env pgExecCtx planCache userInfo sqlGenCtx
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           (execPlan, plan, _unprepared) <-
-            EQ.convertQuerySelSet env gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
+            EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ QueryExecutionPlan $ execPlan
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          queryTx <- EM.convertMutationSelectionSet env gCtx sqlGenCtx userInfo httpManager reqHeaders
+          queryTx <- EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders
                      inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ MutationExecutionPlan $ queryTx
@@ -314,7 +315,7 @@ getResolvedExecPlan env pgExecCtx planCache userInfo sqlGenCtx
           -- Parse as query to check correctness
           (_execPlan :: EPr.ExecutionPlan (tx EncJSON, EQ.GeneratedSqlMap) EPr.RemoteCall (G.Name,J.Value)
             , _plan, unpreparedAST) <-
-            EQ.convertQuerySelSet env gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
+            EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
           case NE.nonEmpty inlinedSelSet of
             Nothing -> throw500 "empty selset for subscription"
             Just (_ :| rst) ->
@@ -340,7 +341,6 @@ getResolvedExecPlan env pgExecCtx planCache userInfo sqlGenCtx
       --       (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability (restrictActionExecuter "query actions cannot be run as a subscription") fld
       --       traverse_ (addPlanToCache . EP.RPSubs) plan
       --       return $ ExOpSubs lqOp
-
 execRemoteGQ
   :: ( HasVersion
      , MonadIO m

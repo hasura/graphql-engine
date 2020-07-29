@@ -26,6 +26,7 @@ import qualified Network.HTTP.Types                     as HTTP
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import           Hasura.Server.Version                  (HasVersion)
+import qualified Hasura.Logging                         as L
 import qualified Hasura.SQL.DML                         as S
 import qualified Hasura.Tracing                         as Tracing
 
@@ -209,6 +210,7 @@ convertQuerySelSet
      , Tracing.MonadTrace tx
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> GQLContext
   -> UserInfo
   -> HTTP.Manager
@@ -220,7 +222,7 @@ convertQuerySelSet
        , Maybe ReusableQueryPlan
        , InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
        )
-convertQuerySelSet env gqlContext userInfo manager reqHeaders fields varDefs varValsM = do
+convertQuerySelSet env logger gqlContext userInfo manager reqHeaders fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability) <- parseGraphQLQuery gqlContext varDefs varValsM fields
 
@@ -279,7 +281,7 @@ convertQuerySelSet env gqlContext userInfo manager reqHeaders fields varDefs var
       :: ActionQuery UnpreparedValue -> StateT PlanningSt m ActionQueryPlan
     convertActionQuery = \case
       AQQuery s -> lift $ do
-        result <- resolveActionExecution env userInfo s $ ActionExecContext manager reqHeaders usrVars
+        result <- resolveActionExecution env logger userInfo s $ ActionExecContext manager reqHeaders usrVars
         pure $ AQPQuery $ _aerTransaction result
       AQAsync s -> AQPAsyncQuery <$>
         DS.traverseAnnSimpleSelect prepareWithPlan (resolveAsyncActionQuery userInfo s)
