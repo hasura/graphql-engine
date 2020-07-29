@@ -1,10 +1,15 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
 
+export type TelemetryConsoleNotification = {
+  read: string | string[];
+  date: string;
+};
+
 export type TelemetryState = {
   console_opts: Nullable<{
     telemetryNotificationShown?: boolean;
     disablePreReleaseUpdateNotifications?: boolean;
-    consoleNotifications?: Record<string, any>;
+    console_notifications?: TelemetryConsoleNotification;
   }>;
   hasura_uuid: string;
 };

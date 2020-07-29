@@ -13,7 +13,10 @@ import {
   showSuccessNotification,
 } from '../components/Services/Common/Notification';
 import globals from '../Globals';
-import defaultTelemetryState, { TelemetryState } from './state';
+import defaultTelemetryState, {
+  TelemetryState,
+  TelemetryConsoleNotification,
+} from './state';
 import { GetReduxState, ReduxState } from '../types';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
@@ -140,7 +143,7 @@ const getReadAllNotificationsState = () => {
 };
 
 const updateConsoleNotificationsInDB = (
-  updatedState: Record<string, any>,
+  updatedState: TelemetryConsoleNotification,
   onSuccessText?: string
 ) => {
   return (
