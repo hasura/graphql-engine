@@ -378,7 +378,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 
   -- start a backgroud thread to handle async actions
   asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $
-    asyncActionsProcessor env (_scrCache cacheRef) _icPgPool _icHttpManager
+    asyncActionsProcessor env logger (_scrCache cacheRef) _icPgPool _icHttpManager
 
   -- start a background thread to create new cron events
   void $ liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
