@@ -43,7 +43,9 @@ const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 /* End */
 
 const fetchConsoleNotifications = () => dispatch => {
-  const url = Endpoints.consoleNotifications;
+  const url = globals.isProduction
+    ? Endpoints.consoleNotificationsProd
+    : Endpoints.consoleNotificationsStg;
   const requestBody = {
     args: {
       limit: 20,
