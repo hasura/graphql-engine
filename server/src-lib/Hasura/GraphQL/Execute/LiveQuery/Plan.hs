@@ -51,6 +51,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.RQL.DML.Select                  as DS
 import qualified Hasura.SQL.DML                         as S
 --import qualified Hasura.GraphQL.Execute.Query           as GEQ
+import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Db
 import           Hasura.GraphQL.Context
@@ -287,6 +288,7 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 buildLiveQueryPlan
   :: ( MonadError QErr m
      , MonadIO m
+     , Tracing.MonadTrace m
      )
   => PGExecCtx
   -> UserInfo

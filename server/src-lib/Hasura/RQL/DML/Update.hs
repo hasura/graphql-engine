@@ -29,6 +29,7 @@ import           Hasura.SQL.Types
 import qualified Database.PG.Query           as Q
 import qualified Hasura.SQL.DML              as S
 import qualified Data.Environment         as Env
+import qualified Hasura.Tracing           as Tracing
 
 
 -- NOTE: This function can be improved, because we use
@@ -252,6 +253,7 @@ execUpdateQuery
   ( HasVersion
   , MonadTx m
   , MonadIO m
+  , Tracing.MonadTrace m
   )
   => Env.Environment
   -> Bool
@@ -267,6 +269,7 @@ execUpdateQuery env strfyNum remoteJoinCtx (u, p) =
 runUpdate
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
      , MonadTx m, HasSQLGenCtx m, MonadIO m
+     , Tracing.MonadTrace m
      )
   => Env.Environment -> UpdateQuery -> m EncJSON
 runUpdate env q = do

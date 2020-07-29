@@ -18,7 +18,8 @@ import qualified Database.PG.Query         as Q
 import qualified Network.HTTP.Client       as HTTP
 import qualified Network.HTTP.Types        as N
 
-import qualified Hasura.SQL.DML                 as S
+import qualified Hasura.SQL.DML            as S
+import qualified Hasura.Tracing            as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
@@ -63,6 +64,7 @@ runMutation
   ( HasVersion
   , MonadTx m
   , MonadIO m
+  , Tracing.MonadTrace m
   )
   => Env.Environment
   -> Mutation
@@ -76,6 +78,7 @@ mutateAndReturn
   ( HasVersion
   , MonadTx m
   , MonadIO m
+  , Tracing.MonadTrace m
   )
   => Env.Environment
   -> Mutation
@@ -105,6 +108,7 @@ mutateAndSel
   ( HasVersion
   , MonadTx m
   , MonadIO m
+  , Tracing.MonadTrace m
   )
   => Env.Environment
   -> Mutation
@@ -122,6 +126,7 @@ executeMutationOutputQuery
   ( HasVersion
   , MonadTx m
   , MonadIO m
+  , Tracing.MonadTrace m
   )
   => Env.Environment
   -> Q.Query -- ^ SQL query

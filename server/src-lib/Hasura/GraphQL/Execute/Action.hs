@@ -1,7 +1,4 @@
--- This pragma is needed for allowQueryActionExecuter
-{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
-
-module Hasura.GraphQL.Resolve.Action
+module Hasura.GraphQL.Execute.Action
   ( ActionExecuteTx
   , ActionExecuteResult(..)
   , resolveAsyncActionQuery

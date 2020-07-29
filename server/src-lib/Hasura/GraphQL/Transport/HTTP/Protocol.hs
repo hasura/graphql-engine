@@ -34,7 +34,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 newtype GQLExecDoc
   = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition G.Name] }
-  deriving (Ord, Show, Eq, Hashable)
+  deriving (Ord, Show, Eq, Hashable,Lift)
 
 instance J.FromJSON GQLExecDoc where
   parseJSON v = GQLExecDoc . G.getExecutableDefinitions <$> J.parseJSON v
@@ -44,7 +44,7 @@ instance J.ToJSON GQLExecDoc where
 
 newtype OperationName
   = OperationName { _unOperationName :: G.Name }
-  deriving (Ord, Show, Eq, Hashable, J.ToJSON)
+  deriving (Ord, Show, Eq, Hashable, J.ToJSON, Lift)
 
 instance J.FromJSON OperationName where
   parseJSON v = OperationName <$> J.parseJSON v
@@ -56,7 +56,7 @@ data GQLReq a
   { _grOperationName :: !(Maybe OperationName)
   , _grQuery         :: !a
   , _grVariables     :: !(Maybe VariableValues)
-  } deriving (Show, Eq, Generic, Functor)
+  } deriving (Show, Eq, Generic, Functor, Lift)
 
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True} ''GQLReq)
 

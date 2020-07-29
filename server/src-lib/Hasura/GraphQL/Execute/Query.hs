@@ -27,9 +27,10 @@ import qualified Network.HTTP.Types                     as HTTP
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import           Hasura.Server.Version                  (HasVersion)
 import qualified Hasura.SQL.DML                         as S
+import qualified Hasura.Tracing                         as Tracing
 
-import           Hasura.EncJSON
 import           Hasura.Db
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Resolve
@@ -63,7 +64,7 @@ instance J.ToJSON PGPlan where
 data RootFieldPlan
   = RFPRaw !B.ByteString
   | RFPPostgres !PGPlan
-  | RFPActionQuery !LazyRespTx
+  | RFPActionQuery !ActionExecuteTx
 
 instance J.ToJSON RootFieldPlan where
   toJSON = \case
@@ -75,14 +76,14 @@ type FieldPlans = [(G.Name, RootFieldPlan)]
 
 data ActionQueryPlan
   = AQPAsyncQuery !DS.AnnSimpleSel -- ^ Cacheable plan
-  | AQPQuery !RespTx -- ^ Non cacheable transaction
+  | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
 
 actionQueryToRootFieldPlan
   :: PlanVariables -> PrepArgMap -> ActionQueryPlan -> RootFieldPlan
 actionQueryToRootFieldPlan vars prepped = \case
   AQPAsyncQuery s -> RFPPostgres $
     PGPlan (DS.selectQuerySQL DS.JASSingleObject s) vars prepped Nothing
-  AQPQuery tx     -> RFPActionQuery (liftTx tx)
+  AQPQuery tx     -> RFPActionQuery tx
 
 data ReusableVariableTypes  -- FIXME
 data ReusableVariableValues -- FIXME
@@ -118,8 +119,10 @@ withPlan usrVars (PGPlan q reqVars prepMap remoteJoins) annVars = do
 mkCurPlanTx
   :: ( HasVersion
      , MonadError QErr m
+     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> HTTP.Manager
@@ -138,7 +141,7 @@ mkCurPlanTx env manager reqHdrs userInfo fldPlans = do
       RFPActionQuery tx -> pure $ RRActionQuery tx
     return (alias, fldResp)
 
-  pure (mkLazyRespTx env manager reqHdrs userInfo resolved, mkGeneratedSqlMap resolved)
+  (,) <$> mkLazyRespTx env manager reqHdrs userInfo resolved <*> pure (mkGeneratedSqlMap resolved)
 
 getVarArgNum :: (MonadState PlanningSt m) => G.Name -> m Int
 getVarArgNum var = do
@@ -218,7 +221,15 @@ parseGraphQLQuery gqlContext varDefs varValsM fields =
         throwError (err400 ValidationFailed peMessage){ qePath = pePath }
 
 convertQuerySelSet
-  :: forall m tx . (HasVersion, MonadError QErr m, MonadIO m, MonadIO tx, MonadTx tx)
+  :: forall m tx .
+     ( MonadError QErr m
+     , HasVersion
+     , MonadIO m
+     , Tracing.MonadTrace m
+     , MonadIO tx
+     , MonadTx tx
+     , Tracing.MonadTrace tx
+     )
   => Env.Environment
   -> GQLContext
   -> UserInfo
@@ -288,8 +299,9 @@ convertQuerySelSet env gqlContext userInfo manager reqHeaders fields varDefs var
     convertActionQuery
       :: ActionQuery UnpreparedValue -> StateT PlanningSt m ActionQueryPlan
     convertActionQuery = \case
-      AQQuery s -> (AQPQuery . fst) <$>
-        lift (resolveActionExecution env userInfo s $ ActionExecContext manager reqHeaders usrVars)
+      AQQuery s -> lift $ do
+        result <- resolveActionExecution env userInfo s $ ActionExecContext manager reqHeaders usrVars
+        pure $ AQPQuery $ _aerTransaction result
       AQAsync s -> AQPAsyncQuery <$>
         DS.traverseAnnSimpleSelect prepareWithPlan (resolveAsyncActionQuery userInfo s)
 
@@ -297,8 +309,10 @@ convertQuerySelSet env gqlContext userInfo manager reqHeaders fields varDefs var
 queryOpFromPlan
   :: ( HasVersion
      , MonadError QErr m
+     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> HTTP.Manager
@@ -315,7 +329,7 @@ queryOpFromPlan env  manager reqHdrs userInfo varValsM (ReusableQueryPlan varTyp
       RFPRaw resp        -> return $ RRRaw resp
       RFPPostgres pgPlan -> RRSql <$> withPlan (_uiSession userInfo) pgPlan validatedVars
 
-  pure (mkLazyRespTx env manager reqHdrs userInfo resolved, mkGeneratedSqlMap resolved)
+  (,) <$> mkLazyRespTx env manager reqHdrs userInfo resolved <*> pure (mkGeneratedSqlMap resolved)
 
 data PreparedSql
   = PreparedSql
@@ -340,7 +354,7 @@ instance J.ToJSON PreparedSql where
 data ResolvedQuery
   = RRRaw !B.ByteString
   | RRSql !PreparedSql
-  | RRActionQuery !LazyRespTx
+  | RRActionQuery !ActionExecuteTx
 
 -- | The computed SQL with alias which can be logged. Nothing here represents no
 -- SQL for cases like introspection responses. Tuple of alias to a (maybe)
@@ -349,17 +363,19 @@ type GeneratedSqlMap = [(G.Name, Maybe PreparedSql)]
 
 mkLazyRespTx
   :: ( HasVersion
+     , Tracing.MonadTrace m
      , MonadIO tx
      , MonadTx tx
+     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> HTTP.Manager
   -> [HTTP.Header]
   -> UserInfo
   -> [(G.Name, ResolvedQuery)]
-  -> tx EncJSON
+  -> m (tx EncJSON)
 mkLazyRespTx env manager reqHdrs userInfo resolved =
-  encJFromAssocList <$> forM resolved  \(alias, node) -> do
+  pure $ fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do
     resp <- case node of
      RRRaw bs                   -> return $ encJFromBS bs
      RRSql (PreparedSql q args maybeRemoteJoins) -> do
@@ -368,7 +384,7 @@ mkLazyRespTx env manager reqHdrs userInfo resolved =
           Nothing -> liftTx $ asSingleRowJsonResp q (map fst args)
           Just remoteJoins ->
             executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
-     RRActionQuery tx'           -> liftTx $ lazyTxToQTx tx'
+     RRActionQuery actionTx           -> actionTx
     return (G.unName alias, resp)
 
 mkGeneratedSqlMap :: [(G.Name, ResolvedQuery)] -> GeneratedSqlMap

@@ -31,6 +31,7 @@ import           Hasura.Session
 import           Hasura.SQL.Types
 
 import qualified Data.Environment            as Env
+import qualified Hasura.Tracing           as Tracing
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
 mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
@@ -244,6 +245,7 @@ execInsertQuery
   :: ( HasVersion
      , MonadTx m
      , MonadIO m
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> Bool
@@ -333,6 +335,7 @@ insertOrUpdateCheckExpr _ _ insCheck _ =
 runInsert
   :: ( HasVersion, QErrM m, UserInfoM m
      , CacheRM m, MonadTx m, HasSQLGenCtx m, MonadIO m
+     , Tracing.MonadTrace m
      )
   => Env.Environment -> InsertQuery -> m EncJSON
 runInsert env q = do

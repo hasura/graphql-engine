@@ -1,7 +1,8 @@
 -- | Execution of GraphQL queries over HTTP transport
 {-# LANGUAGE RecordWildCards #-}
 module Hasura.GraphQL.Transport.HTTP
-  ( runGQ
+  ( MonadExecuteQuery(..)
+  , runGQ
   , runGQBatched
   -- * imported from HTTP.Protocol; required by pro
   , GQLReq(..)
@@ -11,6 +12,8 @@ module Hasura.GraphQL.Transport.HTTP
   , OperationName(..)
   , GQLQueryText(..)
   ) where
+
+import           Control.Monad.Morph                    (hoist)
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
@@ -22,17 +25,40 @@ import           Hasura.Server.Init.Config
 import           Hasura.Server.Utils                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
+import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
 
 import qualified Data.Aeson                             as J
-import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Environment                       as Env
+import qualified Data.HashMap.Strict                    as Map
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Query           as EQ
+-- import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.Server.Telemetry.Counters       as Telem
+import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
+
+
+class Monad m => MonadExecuteQuery m where
+  executeQuery
+    :: GQLReqParsed
+    -> Maybe EQ.GeneratedSqlMap
+    -> PGExecCtx
+    -> Q.TxAccess
+    -> TraceT (LazyTx QErr) EncJSON
+    -> TraceT (ExceptT QErr m) (HTTP.ResponseHeaders, EncJSON)
+
+instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
+  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
+
+instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
+  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
+
+instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
+  executeQuery a b c d e = hoist (hoist lift) $ executeQuery a b c d e
+
 
 -- | Run (execute) a single GraphQL query
 runGQ
@@ -42,6 +68,8 @@ runGQ
      , MonadReader E.ExecutionCtx m
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
+     , MonadTrace m
+     , MonadExecuteQuery m
      )
   => Env.Environment
   -> RequestId
@@ -68,7 +96,7 @@ runGQ env reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       E.QueryExecutionPlan queryPlan -> do
         case queryPlan of
           E.ExecStepDB txGenSql -> do
-            (telemTimeIO, telemQueryType, resp) <- runQueryDB reqId reqUnparsed userInfo txGenSql
+            (telemTimeIO, telemQueryType, resp) <- runQueryDB reqId (reqUnparsed,reqParsed) userInfo txGenSql
             return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp []))
           E.ExecStepRemote (rsi, opDef, _varValsM) ->
             runRemoteGQ telemCacheHit rsi opDef
@@ -118,6 +146,8 @@ runGQBatched
      , MonadReader E.ExecutionCtx m
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
+     , MonadTrace m
+     , MonadExecuteQuery m
      )
   => Env.Environment
   -> RequestId
@@ -153,22 +183,24 @@ runQueryDB
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
      , MonadQueryLog m
+     , MonadTrace m
+     , MonadExecuteQuery m
      )
   => RequestId
-  -> GQLReqUnparsed
+  -> (GQLReqUnparsed, GQLReqParsed)
   -> UserInfo
-  -> (LazyRespTx, EQ.GeneratedSqlMap)
+  -> (Tracing.TraceT (LazyTx QErr) EncJSON, EQ.GeneratedSqlMap)
   -> m (DiffTime, Telem.QueryType, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
-runQueryDB reqId query _userInfo (tx, genSql) = do
+runQueryDB reqId (query, queryParsed) _userInfo (tx, genSql) =  do
   -- log the generated SQL and the graphql query
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
   logQueryLog logger query (Just genSql) reqId
-  (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ do
-    runQueryTx pgExecCtx tx
+  (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ trace "pg" $ do
+    Tracing.interpTraceT id $ executeQuery queryParsed (Just genSql) pgExecCtx Q.ReadOnly tx
   resp <- liftEither respE
-  let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
+  let !json = encodeGQResp $ GQSuccess $ encJToLBS $ snd resp
       telemQueryType = Telem.Query
   return (telemTimeIO, telemQueryType, json)
 
@@ -177,20 +209,22 @@ runMutationDB
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
      , MonadQueryLog m
+     , MonadTrace m
      )
   => RequestId
   -> GQLReqUnparsed
   -> UserInfo
-  -> LazyRespTx
+  -> Tracing.TraceT (LazyTx QErr) EncJSON
   -> m (DiffTime, Telem.QueryType, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
-runMutationDB reqId query userInfo tx = do
+runMutationDB reqId query userInfo tx =  do
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
   -- log the graphql query
   logQueryLog logger query Nothing reqId
-  (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ do
-    runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo tx
+  ctx <- Tracing.currentContext
+  (telemTimeIO, respE) <- withElapsedTime $  runExceptT $ trace "pg" $ do
+    Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite .  withUserInfo userInfo)  tx
   resp <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
       telemQueryType = Telem.Mutation
@@ -202,24 +236,28 @@ runHasuraGQ
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
      , MonadQueryLog m
+     , MonadTrace m
+     , MonadExecuteQuery m
      )
   => RequestId
   -> (GQLReqUnparsed, GQLReqParsed)
   -> UserInfo
-  -> E.ExecOp (LazyTx QErr)
+  -> E.ExecOp (Tracing.TraceT (LazyTx QErr))
   -> m (DiffTime, Telem.QueryType, HTTP.ResponseHeaders, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
-runHasuraGQ reqId (query, _queryParsed) userInfo resolvedOp = do
+runHasuraGQ reqId (query, queryParsed) userInfo resolvedOp = do
   (E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _) <- ask
   (telemTimeIO, respE) <- withElapsedTime $ runExceptT $ case resolvedOp of
-    E.ExOpQuery tx genSql _asts -> do
+    E.ExOpQuery tx genSql asts -> trace "pg" $ do
       -- log the generated SQL and the graphql query
       logQueryLog logger query genSql reqId
-      ([],) <$> runQueryTx pgExecCtx tx
-    E.ExOpMutation respHeaders tx -> do
+      Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly tx
+
+    E.ExOpMutation respHeaders tx -> trace "pg" $ do
       logQueryLog logger query Nothing reqId
-      (respHeaders,) <$> runLazyTx pgExecCtx Q.ReadWrite (withUserInfo userInfo tx)
+      (respHeaders,) <$> Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withUserInfo userInfo) tx
+
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"

@@ -19,9 +19,12 @@ import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Language.GraphQL.Draft.Parser          as G
+import qualified Language.Haskell.TH.Syntax             as TH
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
+import qualified Hasura.Tracing                         as Tracing
+
 
 import qualified Hasura.GraphQL.Parser.Monad            as P
 import           Hasura.GraphQL.Schema.Remote
@@ -32,8 +35,19 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
-introspectionQuery :: BL.ByteString
-introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
+-- introspectionQuery :: BL.ByteString
+-- introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
+
+introspectionQuery :: GQLReqParsed
+introspectionQuery =
+  $(do
+       let fp = "src-rsr/introspection.json"
+       TH.qAddDependentFile fp
+       eitherResult <- TH.runIO $ J.eitherDecodeFileStrict fp
+       case eitherResult of
+         Left e                  -> fail e
+         Right (r::GQLReqParsed) -> TH.lift r
+   )
 
 fetchRemoteSchema
   :: forall m
@@ -52,7 +66,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
   let req = initReq
            { HTTP.method = "POST"
            , HTTP.requestHeaders = hdrsWithDefaults
-           , HTTP.requestBody = HTTP.RequestBodyLBS introspectionQuery
+           , HTTP.requestBody = HTTP.RequestBodyLBS $ J.encode introspectionQuery
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
   res  <- liftIO $ try $ HTTP.httpLbs req manager
@@ -380,6 +394,7 @@ execRemoteGQ'
   :: ( HasVersion
      , MonadIO m
      , MonadError QErr m
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> HTTP.Manager
@@ -389,7 +404,7 @@ execRemoteGQ'
   -> RemoteSchemaInfo
   -> G.OperationType
   -> m (DiffTime, [N.Header], BL.ByteString)
-execRemoteGQ' env manager userInfo reqHdrs q rsi opType = do
+execRemoteGQ' env manager userInfo reqHdrs q rsi opType = Tracing.traceHttpRequest (T.pack (show url)) $ do
   when (opType == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   confHdrs <- makeHeadersFromConf env hdrConf
@@ -410,9 +425,10 @@ execRemoteGQ' env manager userInfo reqHdrs q rsi opType = do
            , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
-  (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req manager
-  resp <- either httpThrow return res
-  pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
+  pure $ Tracing.SuspendedRequest req \req' -> do
+    (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
+    resp <- either httpThrow return res
+    pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a

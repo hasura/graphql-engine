@@ -42,6 +42,7 @@ import           Data.String
 -- import           GHC.AssertNF
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery(..))
 import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
@@ -63,6 +64,7 @@ import qualified Hasura.GraphQL.Execute.Query                as EQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
 import qualified Hasura.Server.Telemetry.Counters            as Telem
+import qualified Hasura.Tracing                              as Tracing
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
@@ -305,7 +307,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead ipAddress = do
             <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
 onStart
-  :: forall m. (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m)
+  :: forall m. (HasVersion, MonadIO m, E.MonadGQLExecutionCheck m, MonadQueryLog m, Tracing.MonadTrace m, MonadExecuteQuery m)
   => Env.Environment -> WSServerEnv -> WSConn -> StartMsg -> m ()
 onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   timerTot <- startTimer
@@ -340,23 +342,23 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   case execPlan of
     E.QueryExecutionPlan queryPlan -> do
       case queryPlan of
-        E.ExecStepDB (tx, genSql) ->
-          execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local (Just genSql) requestId q $
-            runQueryTx pgExecCtx tx
+        E.ExecStepDB (tx, genSql) -> Tracing.trace "pg" $
+          execQueryOrMut timerTot Telem.Query telemCacheHit (Just genSql) requestId $
+            fmap snd $ Tracing.interpTraceT id $ executeQuery reqParsed (Just genSql) pgExecCtx Q.ReadOnly tx
         E.ExecStepRemote (rsi, opDef, _varValsM) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
         E.ExecStepRaw (name, json) ->
-          execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local Nothing requestId q $
+          execQueryOrMut timerTot Telem.Query telemCacheHit Nothing requestId $
           return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
     E.MutationExecutionPlan mutationPlan -> do
       case mutationPlan of
-        E.ExecStepDB tx ->
-          execQueryOrMut timerTot Telem.Mutation telemCacheHit Telem.Local Nothing requestId q $
-            runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo $ fst tx
+        E.ExecStepDB (tx, _) -> Tracing.trace "pg" $
+          execQueryOrMut timerTot Telem.Mutation telemCacheHit Nothing requestId $
+            Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withUserInfo userInfo) tx
         E.ExecStepRemote (rsi, opDef, _varValsM) ->
           runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
         E.ExecStepRaw (name, json) ->
-          execQueryOrMut timerTot Telem.Query telemCacheHit Telem.Local Nothing requestId q $
+          execQueryOrMut timerTot Telem.Query telemCacheHit Nothing requestId $
           return $ encJFromJValue $ J.Object $ Map.singleton (G.unName name) json
     E.SubscriptionExecutionPlan subscriptionPlan ->
       case subscriptionPlan of
@@ -386,11 +388,20 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   --     runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
   where
     telemTransport = Telem.HTTP
-    execQueryOrMut timerTot telemQueryType telemCacheHit telemLocality genSql requestId q' action = do
+    execQueryOrMut
+      :: ExceptT () m DiffTime
+      -> Telem.QueryType
+      -> Telem.CacheHit
+      -> Maybe EQ.GeneratedSqlMap
+      -> RequestId
+      -> ExceptT QErr (ExceptT () m) EncJSON
+      -> ExceptT () m ()
+    execQueryOrMut timerTot telemQueryType telemCacheHit genSql requestId action = do
+      let telemLocality = Telem.Local
       logOpEv ODStarted (Just requestId)
       -- log the generated SQL and the graphql query
-      logQueryLog logger q' genSql requestId
-      (withElapsedTime $ liftIO $ runExceptT action) >>= \case
+      logQueryLog logger q genSql requestId
+      (withElapsedTime $ runExceptT action) >>= \case
         (_,      Left err) -> postExecErr requestId err
         (telemTimeIO_DT, Right encJson) -> do
           -- Telemetry. NOTE: don't time network IO:
@@ -407,10 +418,31 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     runHasuraGQ timerTot telemCacheHit reqId query userInfo = \case
       E.ExOpQuery opTx genSql _asts ->
         execQueryOrMut Telem.Query genSql $ runQueryTx pgExecCtx opTx
+=======
+    E.GExPHasura resolvedOp ->
+      runHasuraGQ timerTot telemCacheHit requestId q reqParsed userInfo resolvedOp
+    E.GExPRemote rsi opDef  ->
+      runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
+  where
+    telemTransport = Telem.HTTP
+    runHasuraGQ
+      :: ExceptT () m DiffTime
+      -> Telem.CacheHit
+      -> RequestId
+      -> GQLReqUnparsed
+      -> GQLReqParsed
+      -> UserInfo
+      -> E.ExecOp (Tracing.TraceT (LazyTx QErr))
+      -> ExceptT () m ()
+    runHasuraGQ timerTot telemCacheHit reqId query queryParsed userInfo = \case
+      E.ExOpQuery opTx genSql asts -> Tracing.trace "pg" $
+        execQueryOrMut Telem.Query genSql . fmap snd $
+          Tracing.interpTraceT id $ executeQuery queryParsed asts genSql pgExecCtx Q.ReadOnly opTx
+>>>>>>> 0dddbe9e9... Add MonadTrace and MonadExecuteQuery abstractions (#5383)
       -- Response headers discarded over websockets
-      E.ExOpMutation _ opTx -> do
+      E.ExOpMutation _ opTx -> Tracing.trace "pg" do
         execQueryOrMut Telem.Mutation Nothing $
-          runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo opTx
+          Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadWrite . withUserInfo userInfo) opTx
       E.ExOpSubs lqOp -> do
         -- log the graphql query
         logQueryLog logger query Nothing reqId
@@ -556,15 +588,17 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 onMessage
   :: ( HasVersion
      , MonadIO m
-     , UserAuthentication m
+     , UserAuthentication (Tracing.TraceT m)
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
+     , Tracing.HasReporter m
+     , MonadExecuteQuery m
      )
   => Env.Environment
   -> AuthMode
   -> WSServerEnv
   -> WSConn -> BL.ByteString -> m ()
-onMessage env authMode serverEnv wsConn msgRaw = do
+onMessage env authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" do
   case J.eitherDecode msgRaw of
     Left e    -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
@@ -639,8 +673,8 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
         ODStopped    -> False
 
 onConnInit
-  :: (HasVersion, MonadIO m, UserAuthentication m)
-  => L.Logger L.Hasura -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
+  :: (HasVersion, MonadIO m, UserAuthentication (Tracing.TraceT m))
+  => L.Logger L.Hasura -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> Tracing.TraceT m ()
 onConnInit logger manager wsConn authMode connParamsM = do
   -- TODO(from master): what should be the behaviour of connection_init message when a
   -- connection is already iniatilized? Currently, we seem to be doing
@@ -738,10 +772,12 @@ createWSServerApp
      , MonadIO m
      , MC.MonadBaseControl IO m
      , LA.Forall (LA.Pure m)
-     , UserAuthentication m
+     , UserAuthentication (Tracing.TraceT m)
      , E.MonadGQLExecutionCheck m
      , WS.MonadWSLog m
      , MonadQueryLog m
+     , Tracing.HasReporter m
+     , MonadExecuteQuery m
      )
   => Env.Environment
   -> AuthMode

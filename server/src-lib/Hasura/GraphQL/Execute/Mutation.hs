@@ -16,6 +16,8 @@ import qualified Network.HTTP.Types                     as HTTP
 import qualified Hasura.RQL.DML.Delete                  as RQL
 import qualified Hasura.RQL.DML.Mutation                as RQL
 import qualified Hasura.RQL.DML.Update                  as RQL
+import qualified Hasura.Tracing                         as Tracing
+
 
 import           Hasura.Db
 import           Hasura.EncJSON
@@ -34,25 +36,25 @@ import           Hasura.Session
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 convertDelete
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadIO m, MonadTx tx, Tracing.MonadTrace tx, MonadIO tx)
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
   -> RQL.AnnDelG UnpreparedValue
   -> Bool
-  -> m RespTx
+  -> m (tx EncJSON)
 convertDelete env usrVars rjCtx deleteOperation stringifyNum = do
   pure $ RQL.execDeleteQuery env stringifyNum (Just rjCtx) (preparedDelete, planVariablesSequence usrVars planningState)
   where (preparedDelete, planningState) = runIdentity $ runPlan $ RQL.traverseAnnDel prepareWithPlan deleteOperation
 
 convertUpdate
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadIO m, MonadTx tx, Tracing.MonadTrace tx, MonadIO tx)
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
   -> RQL.AnnUpdG UnpreparedValue
   -> Bool
-  -> m RespTx
+  -> m (tx EncJSON)
 convertUpdate env usrVars rjCtx updateOperation stringifyNum = do
   pure $ if null $ RQL.uqp1OpExps updateOperation
     then pure $ buildEmptyMutResp $ RQL.uqp1Output preparedUpdate
@@ -60,13 +62,13 @@ convertUpdate env usrVars rjCtx updateOperation stringifyNum = do
   where preparedUpdate = runIdentity $ RQL.traverseAnnUpd (pure . unpreparedToTextSQL) updateOperation
 
 convertInsert
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadIO m, MonadTx tx, Tracing.MonadTrace tx, MonadIO tx)
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
   -> AnnMultiInsert UnpreparedValue
   -> Bool
-  -> m RespTx
+  -> m (tx EncJSON)
 convertInsert env usrVars rjCtx insertOperation stringifyNum = do
   pure $ convertToSQLTransaction env preparedInsert rjCtx Seq.empty stringifyNum
   where preparedInsert = fmapAnnInsert unpreparedToTextSQL insertOperation
@@ -75,28 +77,33 @@ planVariablesSequence :: SessionVariables -> PlanningSt -> Seq.Seq Q.PrepArg
 planVariablesSequence usrVars = Seq.fromList . map fst . withUserVars usrVars . IntMap.elems . _psPrepped
 
 convertMutationRootField
-  :: forall m. ( HasVersion
-               , MonadIO m
-               , MonadError QErr m
-               )
+  :: forall m tx
+  . ( HasVersion
+    , MonadIO m
+    , MonadError QErr m
+    , Tracing.MonadTrace m
+    , Tracing.MonadTrace tx
+    , MonadIO tx
+    , MonadTx tx
+    )
   => Env.Environment
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
   -> Bool
   -> MutationRootField UnpreparedValue
-  -> m (Either (LazyRespTx, HTTP.ResponseHeaders) RemoteField)
+  -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
 convertMutationRootField env userInfo manager reqHeaders stringifyNum = \case
   RFDB (MDBInsert s)  -> noResponseHeaders =<< convertInsert env userSession rjCtx s stringifyNum
   RFDB (MDBUpdate s)  -> noResponseHeaders =<< convertUpdate env userSession rjCtx s stringifyNum
   RFDB (MDBDelete s)  -> noResponseHeaders =<< convertDelete env userSession rjCtx s stringifyNum
   RFRemote remote     -> pure $ Right remote
-  RFAction (AMSync s) -> Left <$> first liftTx <$> resolveActionExecution env userInfo s actionExecContext
+  RFAction (AMSync s) -> Left . (_aerTransaction &&& _aerHeaders) <$> resolveActionExecution env userInfo s actionExecContext
   RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders userSession
-  RFRaw s             -> noResponseHeaders $ pure $ encJFromJValue s
+  RFRaw s              -> noResponseHeaders $ pure $ encJFromJValue s
   where
-    noResponseHeaders :: RespTx -> m (Either (LazyRespTx, HTTP.ResponseHeaders) RemoteField)
-    noResponseHeaders rTx = pure $ Left (liftTx rTx, [])
+    noResponseHeaders :: tx EncJSON -> m (Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
+    noResponseHeaders rTx = pure $ Left (rTx, [])
 
     userSession = _uiSession userInfo
     actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
@@ -104,10 +111,14 @@ convertMutationRootField env userInfo manager reqHeaders stringifyNum = \case
     rjCtx = (manager, reqHeaders, userInfo)
 
 convertMutationSelectionSet
-  :: ( HasVersion
+  :: forall m tx
+   . ( HasVersion
+     , Tracing.MonadTrace m
      , MonadIO m
      , MonadError QErr m
      , MonadTx tx
+     , Tracing.MonadTrace tx
+     , MonadIO tx
      )
   => Env.Environment
   -> GQLContext
@@ -135,7 +146,7 @@ convertMutationSelectionSet env gqlContext sqlGenCtx userInfo manager reqHeaders
     (dbPlans, []) -> do
       let allHeaders = concatMap (snd . snd) dbPlans
           combinedTx = toSingleTx $ map (G.unName *** fst) dbPlans
-      pure $ ExecStepDB (liftTx $ lazyTxToQTx combinedTx, allHeaders)
+      pure $ ExecStepDB (combinedTx, allHeaders)
     ([], remotes@(firstRemote:_)) -> do
       let (remoteOperation, varValsM') =
             buildTypedOperation
@@ -163,17 +174,17 @@ convertMutationSelectionSet env gqlContext sqlGenCtx userInfo manager reqHeaders
     -- are converted into a single transaction as follows
     --
     -- > Tx {"f1": r1, "f2": r2}
-    toSingleTx :: [(Text, LazyRespTx)] -> LazyRespTx
+    toSingleTx :: [(Text, tx EncJSON)] -> tx EncJSON
     toSingleTx aliasedTxs =
       fmap encJFromAssocList $
       forM aliasedTxs $ \(al, tx) -> (,) al <$> tx
     takeTx
-      :: (G.Name, Either (LazyRespTx, HTTP.ResponseHeaders) RemoteField)
-      -> Maybe (G.Name, (LazyRespTx, HTTP.ResponseHeaders))
+      :: (G.Name, Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
+      -> Maybe (G.Name, (tx EncJSON, HTTP.ResponseHeaders))
     takeTx (name, Left tx) = Just (name, tx)
     takeTx _               = Nothing
     takeRemote
-      :: (G.Name, Either (LazyRespTx, HTTP.ResponseHeaders) RemoteField)
+      :: (G.Name, Either (tx EncJSON, HTTP.ResponseHeaders) RemoteField)
       -> Maybe (G.Name, RemoteField)
     takeRemote (name, Right remote) = Just (name, remote)
     takeRemote _                    = Nothing

@@ -2,11 +2,13 @@
 
 module Hasura.App where
 
-import           Control.Concurrent.STM.TVar               (readTVarIO, TVar)
+import           Control.Concurrent.STM.TVar               (TVar, readTVarIO)
 import           Control.Exception                         (throwIO)
 import           Control.Lens                              (view, _2)
 import           Control.Monad.Base
-import           Control.Monad.Catch                       (MonadCatch, MonadMask, MonadThrow, onException, Exception)
+import           Control.Monad.Catch                       (Exception, MonadCatch, MonadMask,
+                                                            MonadThrow, onException)
+import           Control.Monad.Morph                       (hoist)
 import           Control.Monad.Stateless
 import           Control.Monad.STM                         (atomically)
 import           Control.Monad.Trans.Control               (MonadBaseControl (..))
@@ -21,12 +23,13 @@ import           System.Mem                                (performMajorGC)
 
 import qualified Control.Concurrent.Async.Lifted.Safe      as LA
 import qualified Control.Concurrent.Extended               as C
+import qualified Control.Immortal                          as Immortal
 import qualified Data.Aeson                                as A
 import qualified Data.ByteString.Char8                     as BC
 import qualified Data.ByteString.Lazy.Char8                as BLC
+import qualified Data.Environment                          as Env
 import qualified Data.Set                                  as Set
 import qualified Data.Text                                 as T
-import qualified Data.Environment                          as Env
 import qualified Data.Time.Clock                           as Clock
 import qualified Data.Yaml                                 as Y
 import qualified Database.PG.Query                         as Q
@@ -35,7 +38,6 @@ import qualified Network.HTTP.Client.TLS                   as HTTP
 import qualified Network.Wai.Handler.Warp                  as Warp
 import qualified System.Log.FastLogger                     as FL
 import qualified Text.Mustache.Compile                     as M
-import qualified Control.Immortal                          as Immortal
 
 import           Hasura.Db
 import           Hasura.EncJSON
@@ -46,6 +48,7 @@ import           Hasura.GraphQL.Execute                    (MonadGQLExecutionChe
                                                             checkQueryInAllowlist)
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
 import           Hasura.GraphQL.Resolve.Action             (asyncActionsProcessor)
+import           Hasura.GraphQL.Transport.HTTP             (MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
 import           Hasura.Logging
 import           Hasura.Prelude
@@ -71,6 +74,7 @@ import           Hasura.Server.Version
 import           Hasura.Session
 
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
+import qualified Hasura.Tracing                            as Tracing
 
 data ExitCode
   = InvalidEnvironmentVariableOptionsError
@@ -282,7 +286,7 @@ runHGEServer
      , MonadMask m
      , MonadStateless IO m
      , LA.Forall (LA.Pure m)
-     , UserAuthentication m
+     , UserAuthentication (Tracing.TraceT m)
      , HttpLog m
      , ConsoleRenderer m
      , MetadataApiAuthorization m
@@ -290,6 +294,8 @@ runHGEServer
      , MonadConfigApiHandler m
      , MonadQueryLog m
      , WS.MonadWSLog m
+     , MonadExecuteQuery m
+     , Tracing.HasReporter m
      )
   => Env.Environment
   -> ServeOptions impl
@@ -583,6 +589,7 @@ execQuery
      , HasSQLGenCtx m
      , UserInfoM m
      , HasSystemDefined m
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> BLC.ByteString
@@ -594,6 +601,8 @@ execQuery env queryBs = do
   buildSchemaCacheStrict
   encJToLBS <$> runQueryM env query
 
+instance Tracing.HasReporter AppM
+
 instance HttpLog AppM where
   logHttpError logger userInfoM reqId httpReq req qErr headers =
     unLogger logger $ mkHttpLog $
@@ -603,7 +612,11 @@ instance HttpLog AppM where
     unLogger logger $ mkHttpLog $
       mkHttpAccessLogContext userInfoM reqId httpReq compressedResponse qTime cType headers
 
-instance UserAuthentication AppM where
+instance MonadExecuteQuery AppM where
+  executeQuery _ _ pgCtx _txAccess tx =
+    ([],) <$> hoist (runQueryTx pgCtx) tx
+
+instance UserAuthentication (Tracing.TraceT AppM) where
   resolveUserInfo logger manager headers authMode =
     runExceptT $ getUserInfoWithExpTime logger manager headers authMode
 

@@ -22,6 +22,7 @@ import qualified Hasura.RQL.DML.Insert                as RI
 import qualified Hasura.RQL.DML.Returning             as RR
 
 import qualified Hasura.SQL.DML                       as S
+import qualified Hasura.Tracing                       as Tracing
 
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context

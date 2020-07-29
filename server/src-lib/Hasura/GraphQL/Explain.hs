@@ -6,7 +6,6 @@ module Hasura.GraphQL.Explain
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
-import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Database.PG.Query                      as Q
@@ -27,8 +26,10 @@ import qualified Hasura.GraphQL.Execute.Inline          as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as E
 import qualified Hasura.GraphQL.Execute.Query           as E
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.RQL.DML.RemoteJoin              as RR
 import qualified Hasura.RQL.DML.Select                  as DS
 import qualified Hasura.SQL.DML                         as S
+import qualified Hasura.Tracing                         as Tracing
 
 data GQLExplain
   = GQLExplain
@@ -82,21 +83,27 @@ explainQueryField userInfo fieldName rootField = do
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
     RFRaw _    -> pure $ FieldPlan fieldName Nothing Nothing
     RFDB qDB   -> do
-      let querySQL = case qDB of
-            QDBSimple s      -> DS.selectQuerySQL DS.JASMultipleRows s
-            QDBPrimaryKey s  -> DS.selectQuerySQL DS.JASSingleObject s
-            QDBAggregation s -> DS.selectAggregateQuerySQL s
-            QDBConnection s  -> DS.connectionSelectQuerySQL s
+      let (querySQL, remoteJoins) = case qDB of
+            QDBSimple s      -> first (DS.selectQuerySQL DS.JASMultipleRows) $ RR.getRemoteJoins s
+            QDBPrimaryKey s  -> first (DS.selectQuerySQL DS.JASSingleObject) $ RR.getRemoteJoins s
+            QDBAggregation s -> first DS.selectAggregateQuerySQL $ RR.getRemoteJoinsAggregateSelect s
+            QDBConnection s  -> first DS.connectionSelectQuerySQL $ RR.getRemoteJoinsConnectionSelect s
           textSQL = Q.getQueryText querySQL
           -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
           -- query, maybe resulting in privilege escalation:
           withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
+      -- Reject if query contains any remote joins
+      when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
       planLines <- liftTx $ map runIdentity <$>
                    Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
       pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
 
 explainGQLQuery
-  :: forall m. (MonadError QErr m, MonadIO m)
+  :: forall m
+  . ( MonadError QErr m
+    , MonadIO m
+    , Tracing.MonadTrace m
+    )
   => PGExecCtx
   -> SchemaCache
   -> GQLExplain
