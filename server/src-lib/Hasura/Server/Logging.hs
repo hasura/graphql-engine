@@ -246,7 +246,6 @@ mkHttpErrorLogContext
   -> RequestId
   -> Wai.Request
   -> (BL.ByteString, Maybe Value)
-  -- ^ (request body, if parsed request)
   -> QErr
   -> Maybe (DiffTime, DiffTime)
   -> Maybe CompressionType
@@ -269,7 +268,7 @@ mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming co
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming
            , olQuery              = parsedReq
-           , olRawQuery           = Just $ bsToTxt $ BL.toStrict reqBody
+           , olRawQuery           = maybe (Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
            , olError              = Just err
            }
   in HttpLogContext http op

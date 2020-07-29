@@ -517,7 +517,7 @@ onMessage
   -> AuthMode
   -> WSServerEnv
   -> WSConn -> BL.ByteString -> m ()
-onMessage env authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" $ do
+onMessage env authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" do
   case J.eitherDecode msgRaw of
     Left e    -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
@@ -526,8 +526,8 @@ onMessage env authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" $
 
     Right msg -> case msg of
       CMConnInit params -> onConnInit (_wseLogger serverEnv)
-                          (_wseHManager serverEnv)
-                          wsConn authMode params
+                           (_wseHManager serverEnv)
+                           wsConn authMode params
       CMStart startMsg  -> onStart env serverEnv wsConn startMsg
       CMStop stopMsg    -> liftIO $ onStop serverEnv wsConn stopMsg
       -- The idea is cleanup will be handled by 'onClose', but...

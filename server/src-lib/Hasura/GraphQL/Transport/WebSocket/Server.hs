@@ -6,7 +6,6 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , WSLog(..)
   , WSEvent(..)
   , MessageDetails(..)
-  , MessageSize(..)
   , WSConn
   , getData
   , getWSId
@@ -66,15 +65,11 @@ instance J.ToJSON WSId where
   toJSON (WSId uuid) =
     J.toJSON $ UUID.toText uuid
 
-newtype MessageSize
-  = MessageSize { unMessageSize :: Int64 }
-  deriving (Show, Eq, Generic, J.ToJSON)
-
--- | A websocket message and other details
+-- | Websocket message and other details
 data MessageDetails
   = MessageDetails
   { _mdMessage     :: !TBS.TByteString
-  , _mdMessageSize :: !MessageSize
+  , _mdMessageSize :: !Int64
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''MessageDetails)
 
@@ -329,13 +324,13 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
                   -- Regardless this should be safe:
                   handleJust (guard . E.isResourceVanishedError) (\()-> throw WS.ConnectionClosed) $
                     WS.receiveData conn
-                let message = MessageDetails (TBS.fromLBS msg) (MessageSize $ BL.length msg)
+                let message = MessageDetails (TBS.fromLBS msg) (BL.length msg)
                 logWSLog logger $ WSLog wsId (EMessageReceived message) Nothing
                 _hOnMessage wsHandlers wsConn msg
 
           let send = forever $ do
                 WSQueueResponse msg wsInfo <- liftIO $ STM.atomically $ STM.readTQueue sendQ
-                let message = MessageDetails (TBS.fromLBS msg) (MessageSize $ BL.length msg)
+                let message = MessageDetails (TBS.fromLBS msg) (BL.length msg)
                 liftIO $ WS.sendTextData conn msg
                 logWSLog logger $ WSLog wsId (EMessageSent message) wsInfo
 
