@@ -688,7 +688,7 @@ export const getUpdateConsoleNotificationsQuery = (
     type: 'update',
     args: {
       table: { name: 'hdb_version', schema: 'hdb_catalog' },
-      $set: { console_state: `'${JSON.stringify(updatedConsoleState)}'` },
+      $set: { console_state: updatedConsoleState },
       where: { hasura_uuid },
       returning: ['console_state'],
     },
