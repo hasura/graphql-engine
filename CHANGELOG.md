@@ -6,6 +6,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add request/response sizes in event triggers (and scheduled trigger) logs
 - console: update sidebar icons for different action and trigger types
 - console: fix primary key selector issue on deletion of column (closes #4226) (#5469)
 
