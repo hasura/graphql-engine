@@ -8,8 +8,9 @@
 
 - server: bugfix to allow HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE of 0 (#5363)
 - server: support only a bounded plan cache, with a default size of 4000 (closes #5363)
-- console: update sidebar icons for different action and trigger types
+- server: add logs for action handlers
 - server: add request/response sizes in event triggers (and scheduled trigger) logs
+- console: update sidebar icons for different action and trigger types
 
 ## `v1.3.0`
 
