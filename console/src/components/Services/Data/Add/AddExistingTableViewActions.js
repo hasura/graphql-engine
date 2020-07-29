@@ -14,8 +14,9 @@ import {
 } from '../../../Common/utils/routesUtils';
 import { checkIfTable } from '../../../Common/utils/pgUtils';
 import { exportMetadata } from '../../Settings/Actions';
-import { makeMetadataFromTableList } from '../utils';
+import { createMetadataFromTableList } from '../utils';
 import { isMetadataEmpty } from '../TableRelationships/utils';
+import { replaceMetadataMigration } from '../TableRelationships/Actions';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -155,86 +156,48 @@ const addExistingFunction = name => {
     );
   };
 };
-const replaceMetadataTrackAllTables = (
-  metadata,
-  errorCallback,
-  { migrationName, requestMsg, successMsg, errorMsg }
-) => {
-  return (dispatch, getState) => {
-    dispatch({ type: MAKING_REQUEST });
 
-    const requestBodyUp = {
-      type: 'replace_metadata',
-      args: metadata,
-    };
-    const requestBodyDown = {
-      // set default metadata
-      type: 'replace_metadata',
-      args: {
-        version: 2,
-        tables: [],
-      },
-    };
 
-    const customOnSuccess = () => {};
-    const customOnError = err => {
-      dispatch({ type: REQUEST_ERROR, data: err });
-      if (errorCallback) errorCallback();
-    };
 
-    makeMigrationCall(
-      dispatch,
-      getState,
-      [requestBodyUp],
-      [requestBodyDown],
-      migrationName,
-      customOnSuccess,
-      customOnError,
-      requestMsg,
-      successMsg,
-      errorMsg
-    );
-  };
-};
-const tryMetadataReplace = (dispatch, tableList, retryFn, constants) => {
-  const fallBack = () => dispatch(retryFn(tableList, true));
-  dispatch(
-    exportMetadata(metadata => {
-      if (isMetadataEmpty(metadata)) {
-        // nothing in the metadata
-        //replace tablelist
-        const newMetadata = makeMetadataFromTableList(tableList);
-        if (tableList.length > 0 && newMetadata)
-          return dispatch(
-            replaceMetadataTrackAllTables(newMetadata, fallBack, constants)
-          );
-      }
-      fallBack();
-    }, fallBack)
-  );
-};
 
-const addAllUntrackedTablesSql = (tableList, skipCheck = false) => {
+const addAllUntrackedTablesSql = (tableList, skipMetadataReplace = false) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
 
     const migrationName = 'add_all_existing_table_or_view_' + currentSchema;
 
-    const requestMsg = 'Adding existing table/view...';
-    const successMsg = 'Existing table/view added';
-    const errorMsg = 'Adding existing table/view failed';
-    if (!skipCheck) {
+    const requestMsg = 'Adding existing tables/views...';
+    const successMsg = 'Existing tables/views added';
+    const errorMsg = 'Adding existing tables/views failed';
+    if (!skipMetadataReplace) {
+      // try metadata replace
       // metadata replace is a fast solution to track all tables, which can be used when there is no exisitng metadata
-      return tryMetadataReplace(dispatch, tableList, addAllUntrackedTablesSql, {
-        migrationName,
-        requestMsg,
-        successMsg,
-        errorMsg,
-      });
+      const fallback = () =>
+        dispatch(addAllUntrackedTablesSql(tableList, true));
+      dispatch(
+        exportMetadata(metadata => {
+          if (isMetadataEmpty(metadata)) {
+            // nothing in the metadata => replace tablelist
+            const newMetadata = createMetadataFromTableList(tableList);
+            if (tableList.length > 0 && newMetadata)
+              dispatch({ type: MAKING_REQUEST });
+
+            return dispatch(
+              replaceMetadataMigration(newMetadata, null, fallback, {
+                migrationName,
+                requestMsg,
+                successMsg,
+                errorMsg,
+              })
+            );
+          }
+          fallback();
+        }, fallback)
+      );
     }
 
     dispatch({ type: MAKING_REQUEST });
-    dispatch(showSuccessNotification('Existing table/view added!'));
+    dispatch(showSuccessNotification(successMsg));
     const bulkQueryUp = [];
     const bulkQueryDown = [];
     for (let i = 0; i < tableList.length; i++) {

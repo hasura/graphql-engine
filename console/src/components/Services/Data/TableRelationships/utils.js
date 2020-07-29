@@ -376,8 +376,8 @@ export const getRemoteRelConfig = (rel, tableName, styles) => {
   );
 };
 
-export const hasAnyRelationshipInMetadata = ({ tables = [] }) =>
-  tables.find(table => !table.table || Object.keys(table).length > 1);
+export const hasRelationshipsMetadata = ({ tables = [] }) =>
+  tables.find(item => !item.table || Object.keys(item).length > 1);
 
 const findTableIndex = (tables, { name, schema }) =>
   tables.findIndex(
@@ -386,6 +386,7 @@ const findTableIndex = (tables, { name, schema }) =>
 const getRelationKey = type => {
   if (type === 'create_array_relationship') return 'array_relationships';
   if (type === 'create_object_relationship') return 'object_relationships';
+  return null;
 };
 
 const getPrevRelationships = (tables, tableIx, relationshipType) =>

@@ -15,7 +15,7 @@ import {
 } from './RemoteRelationships/utils';
 import { exportMetadata } from '../../Settings/Actions';
 import {
-  hasAnyRelationshipInMetadata,
+  hasRelationshipsMetadata,
   createMetadataWithRelationships,
 } from './utils';
 
@@ -705,9 +705,13 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
 
   return { bulkRelTrack: bulkRelTrack, bulkRelTrackDown: bulkRelTrackDown };
 };
-const replaceMetadataTrackAllRelationships = (
+
+const replaceMetadataMigration = (
   metadata,
-  oldMetadata,
+  oldMetadata = {
+    version: 2,
+    tables: [],
+  },
   errorCallback,
   { migrationName, requestMsg, successMsg, errorMsg }
 ) => {
@@ -717,9 +721,11 @@ const replaceMetadataTrackAllRelationships = (
       args: metadata,
     };
     const requestBodyDown = {
+      // set default metadata
       type: 'replace_metadata',
       args: oldMetadata,
     };
+
     const customOnSuccess = () => {};
     const customOnError = () => {
       if (errorCallback) errorCallback();
@@ -740,28 +746,7 @@ const replaceMetadataTrackAllRelationships = (
   };
 };
 
-const tryMetaDataReplace = (dispatch, trackPayload, retry, consts) => {
-  const fallback = () => dispatch(retry(trackPayload, true));
-  dispatch(
-    exportMetadata(metadata => {
-      if (hasAnyRelationshipInMetadata(metadata)) return fallback();
-      const newMetaData = createMetadataWithRelationships(
-        { ...metadata },
-        trackPayload
-      );
-      return dispatch(
-        replaceMetadataTrackAllRelationships(
-          newMetaData,
-          metadata,
-          fallback,
-          consts
-        )
-      );
-    })
-  );
-};
-
-const replaceMetadata = (autoTrackData, skipCheck = false) => (
+const replaceMetadata = (autoTrackData, skipMetadataCheck = false) => (
   dispatch,
   getState
 ) => {
@@ -772,13 +757,25 @@ const replaceMetadata = (autoTrackData, skipCheck = false) => (
   const successMsg = 'Relationship created';
   const errorMsg = 'Creating relationship failed';
 
-  if (!skipCheck) {
-    return tryMetaDataReplace(dispatch, autoTrackData, replaceMetadata, {
-      migrationName,
-      requestMsg,
-      successMsg,
-      errorMsg,
-    });
+  if (!skipMetadataCheck) {
+    const fallback = () => dispatch(replaceMetadata(autoTrackData, true));
+    return dispatch(
+      exportMetadata(metadata => {
+        if (hasRelationshipsMetadata(metadata)) return fallback();
+        const newMetaData = createMetadataWithRelationships(
+          { ...metadata },
+          autoTrackData
+        );
+        return dispatch(
+          replaceMetadataMigration(newMetaData, metadata, fallback, {
+            migrationName,
+            requestMsg,
+            successMsg,
+            errorMsg,
+          })
+        );
+      })
+    );
   }
   const relChangesUp = autoTrackData.map(data => data.upQuery);
   const relChangesDown = autoTrackData.map(data => data.downQuery);
@@ -856,4 +853,5 @@ export {
   getAllUnTrackedRelations,
   saveRenameRelationship,
   getExistingFieldsMap,
+  replaceMetadataMigration,
 };
