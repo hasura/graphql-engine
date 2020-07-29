@@ -131,12 +131,9 @@ export const getInsertUpQuery = (
     })
     .join(', ');
 
-  return {
-    type: 'run_sql',
-    args: {
-      sql: `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columns}) VALUES (${values});`,
-    },
-  };
+  const sql = `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columns}) VALUES (${values});`;
+
+  return getRunSqlQuery(sql);
 };
 
 export const getInsertDownQuery = (
@@ -164,13 +161,9 @@ export const getInsertDownQuery = (
   });
 
   const condition = clauses.join(' AND ');
+  const sql = `DELETE FROM "${tableDef.schema}"."${tableDef.name}" WHERE ${condition};`;
 
-  return {
-    type: 'run_sql',
-    args: {
-      sql: `DELETE FROM "${tableDef.schema}"."${tableDef.name}" WHERE ${condition};`,
-    },
-  };
+  return getRunSqlQuery(sql);
 };
 
 type CustomTypeScalar = {
