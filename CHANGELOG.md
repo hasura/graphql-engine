@@ -6,6 +6,7 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add request/response sizes in event triggers (and scheduled trigger) logs
 - console: update sidebar icons for different action and trigger types
 - console: add option to flag an insertion as a migration (closes #1766) (#4933)
 
