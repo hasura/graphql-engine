@@ -157,9 +157,6 @@ const addExistingFunction = name => {
   };
 };
 
-
-
-
 const addAllUntrackedTablesSql = (tableList, skipMetadataReplace = false) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
