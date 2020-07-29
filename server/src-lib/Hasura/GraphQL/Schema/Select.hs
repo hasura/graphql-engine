@@ -1020,7 +1020,7 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
   queryType <- asks $ qcQueryType . getter
   -- https://github.com/hasura/graphql-engine/issues/5144
   -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
-  guard $ queryType == ET.QueryRelay
+  guard $ queryType == ET.QueryHasura
   remoteSchemasFieldDefns <- asks $ qcRemoteFields . getter
   let remoteSchemaName = _rfiRemoteSchemaName remoteFieldInfo
   fieldDefns <-
