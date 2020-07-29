@@ -15,26 +15,3 @@ Date:   Thu Jul 30 08:04:50 2020 +0530
     Co-authored-by: Phil Freeman <phil@hasura.io>
     Co-authored-by: Phil Freeman <paf31@cantab.net>
     Co-authored-by: Karthikeyan Chinnakonda <chkarthikeyan95@gmail.com>
-
-commit 046a783a143e2907c3e766380f773e5890a92807
-Author: Anon Ray <ecthiender@users.noreply.github.com>
-Date:   Wed Jul 29 20:18:36 2020 +0530
-
-    server: pass http and websocket request to logging context (#5470)
-
-    * pass request body to logging context in all cases
-
-    * add message size logging on the websocket API
-
-      this is required by graphql-engine-pro/#416
-
-    * message size logging on websocket API
-
-      As we need to log all messages recieved/sent by the websocket server,
-      it makes sense to log them as part of the websocket server event logs.
-      Previously message recieved were logged inside the onMessage handler,
-      and messages sent were logged only for "data" messages (as a server event log)
-
-    * fix review comments
-
-    Co-authored-by: Phil Freeman <phil@hasura.io>

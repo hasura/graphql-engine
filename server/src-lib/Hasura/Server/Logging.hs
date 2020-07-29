@@ -122,8 +122,8 @@ class (Monad m) => HttpLog m where
     -- ^ request id of the request
     -> Wai.Request
     -- ^ the Wai.Request object
-    -> Either BL.ByteString Value
-    -- ^ the actual request body (bytestring if unparsed, Aeson value if parsed)
+    -> (BL.ByteString, Maybe Value)
+    -- ^ the request body and parsed request
     -> QErr
     -- ^ the error
     -> [HTTP.Header]
@@ -139,8 +139,8 @@ class (Monad m) => HttpLog m where
     -- ^ request id of the request
     -> Wai.Request
     -- ^ the Wai.Request object
-    -> Maybe Value
-    -- ^ the actual request body, if present
+    -> (BL.ByteString, Maybe Value)
+    -- ^ the request body and parsed request
     -> BL.ByteString
     -- ^ the response bytes
     -> BL.ByteString
@@ -196,9 +196,7 @@ data OperationLog
   , olError              :: !(Maybe QErr)
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase)
-  { omitNothingFields = True
-  } ''OperationLog)
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields = True} ''OperationLog)
 
 data HttpLogContext
   = HttpLogContext
@@ -247,20 +245,20 @@ mkHttpErrorLogContext
   -- ^ Maybe because it may not have been resolved
   -> RequestId
   -> Wai.Request
+  -> (BL.ByteString, Maybe Value)
   -> QErr
-  -> Either BL.ByteString Value
   -> Maybe (DiffTime, DiffTime)
   -> Maybe CompressionType
   -> [HTTP.Header]
   -> HttpLogContext
-mkHttpErrorLogContext userInfoM reqId req err query mTiming compressTypeM headers =
+mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = qeStatus err
-             , hlMethod      = bsToTxt $ Wai.requestMethod req
-             , hlSource      = Wai.getSourceFromFallback req
-             , hlPath        = bsToTxt $ Wai.rawPathInfo req
-             , hlHttpVersion = Wai.httpVersion req
-             , hlCompression  = compressTypeM
+             , hlMethod      = bsToTxt $ Wai.requestMethod waiReq
+             , hlSource      = Wai.getSourceFromFallback waiReq
+             , hlPath        = bsToTxt $ Wai.rawPathInfo waiReq
+             , hlHttpVersion = Wai.httpVersion waiReq
+             , hlCompression = compressTypeM
              , hlHeaders     = headers
              }
       op = OperationLog
@@ -269,8 +267,8 @@ mkHttpErrorLogContext userInfoM reqId req err query mTiming compressTypeM header
            , olResponseSize       = Just $ BL.length $ encode err
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming
-           , olQuery              = either (const Nothing) Just query
-           , olRawQuery           = either (Just . bsToTxt . BL.toStrict) (const Nothing) query
+           , olQuery              = parsedReq
+           , olRawQuery           = maybe (Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
            , olError              = Just err
            }
   in HttpLogContext http op
