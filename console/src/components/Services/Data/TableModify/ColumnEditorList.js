@@ -124,8 +124,8 @@ const ColumnEditorList = ({
           });
           pkPresentflag = true;
         });
-        const pkString = [...pk.sort(), ''];
-        dispatch(setPrimaryKeys(pkString));
+        const pkKeys = [...pk.sort(), ''];
+        dispatch(setPrimaryKeys(pkKeys));
         dispatch(deleteColumnSql(col, tableSchema));
       }
     };
