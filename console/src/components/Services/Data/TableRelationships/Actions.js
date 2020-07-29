@@ -14,7 +14,10 @@ import {
   parseRemoteRelationship,
 } from './RemoteRelationships/utils';
 import { exportMetadata } from '../../Settings/Actions';
-import { hasAnyRelationshipInMetadata, makeMetadataWithRltns } from './utils';
+import {
+  hasAnyRelationshipInMetadata,
+  createMetadataWithRelationships,
+} from './utils';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
 export const MANUAL_REL_SET_TYPE = 'ModifyTable/MANUAL_REL_SET_TYPE';
@@ -742,7 +745,10 @@ const tryMetaDataReplace = (dispatch, trackPayload, retry, consts) => {
   dispatch(
     exportMetadata(metadata => {
       if (hasAnyRelationshipInMetadata(metadata)) return fallback();
-      const newMetaData = makeMetadataWithRltns({ ...metadata }, trackPayload);
+      const newMetaData = createMetadataWithRelationships(
+        { ...metadata },
+        trackPayload
+      );
       return dispatch(
         replaceMetadataTrackAllRelationships(
           newMetaData,
@@ -755,7 +761,7 @@ const tryMetaDataReplace = (dispatch, trackPayload, retry, consts) => {
   );
 };
 
-const autoTrackRelations = (autoTrackData, skipCheck = false) => (
+const replaceMetadata = (autoTrackData, skipCheck = false) => (
   dispatch,
   getState
 ) => {
@@ -767,7 +773,7 @@ const autoTrackRelations = (autoTrackData, skipCheck = false) => (
   const errorMsg = 'Creating relationship failed';
 
   if (!skipCheck) {
-    return tryMetaDataReplace(dispatch, autoTrackData, autoTrackRelations, {
+    return tryMetaDataReplace(dispatch, autoTrackData, replaceMetadata, {
       migrationName,
       requestMsg,
       successMsg,
@@ -844,7 +850,7 @@ export {
   relNameChanged,
   resetRelationshipForm,
   resetManualRelationshipForm,
-  autoTrackRelations,
+  replaceMetadata,
   autoAddRelName,
   formRelName,
   getAllUnTrackedRelations,

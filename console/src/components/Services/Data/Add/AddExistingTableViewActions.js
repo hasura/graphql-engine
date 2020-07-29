@@ -14,7 +14,8 @@ import {
 } from '../../../Common/utils/routesUtils';
 import { checkIfTable } from '../../../Common/utils/pgUtils';
 import { exportMetadata } from '../../Settings/Actions';
-import { makeMetadataFromTableList, isMetadataEmpty } from '../utils';
+import { makeMetadataFromTableList } from '../utils';
+import { isMetadataEmpty } from '../TableRelationships/utils';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';

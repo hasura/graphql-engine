@@ -376,13 +376,10 @@ export const getRemoteRelConfig = (rel, tableName, styles) => {
   );
 };
 
-export const hasAnyRelationshipInMetadata = ({ tables = [] }) => {
-  return tables.find(table => {
-    if (!table.table || Object.keys(table).length > 1) return true;
-  });
-};
+export const hasAnyRelationshipInMetadata = ({ tables = [] }) =>
+  tables.find(table => !table.table || Object.keys(table).length > 1);
 
-const findTableIx = (tables, { name, schema }) =>
+const findTableIndex = (tables, { name, schema }) =>
   tables.findIndex(
     tbl => tbl.table.name === name && tbl.table.schema === schema
   );
@@ -391,31 +388,43 @@ const getRelationKey = type => {
   if (type === 'create_object_relationship') return 'object_relationships';
 };
 
-const getPrevRelationships = (tables, tableIx, relationshipType) => {
-  let result;
-  try {
-    result = tables[tableIx][relationshipType];
-  } catch (e) {
-    result = [];
-  }
-  return result;
-};
-export const makeMetadataWithRltns = (metadata, trackPayload) => {
+const getPrevRelationships = (tables, tableIx, relationshipType) =>
+  tables && tables[tableIx] && tables[tableIx][relationshipType]
+    ? tables[tableIx][relationshipType]
+    : [];
+
+export const createMetadataWithRelationships = (metadata, trackPayload) => {
   const result = { ...metadata, tables: [...metadata.tables] };
   trackPayload.forEach(({ upQuery = {} }) => {
     const { name, using, table } = upQuery.args;
-    const tableIx = findTableIx(result.tables, table);
-    if (tableIx >= 0) {
+    const tableIndex = findTableIndex(result.tables, table);
+    if (tableIndex >= 0) {
       const relationshipType = getRelationKey(upQuery.type);
-      const prevRel =
-        getPrevRelationships([...result.tables], tableIx, relationshipType) ||
-        []; // possibility of previous iterations
+      if (relationshipType) {
+        const prevRel =
+          getPrevRelationships(
+            [...result.tables],
+            tableIndex,
+            relationshipType
+          ) || [];
 
-      result.tables[tableIx] = {
-        ...result.tables[tableIx],
-        [relationshipType]: [...prevRel, { name, using }],
-      };
+        result.tables[tableIndex] = {
+          ...result.tables[tableIndex],
+          [relationshipType]: [...prevRel, { name, using }],
+        };
+      }
     }
   });
   return result;
 };
+
+/**
+ * # isMetadataEmpty
+ *
+ * @param {*} metadata : generated metadata
+ * @returns boolean
+ */
+export const isMetadataEmpty = metadata =>
+  Object.keys(metadata).length === 2 &&
+  metadata.tables &&
+  metadata.tables.length === 0;

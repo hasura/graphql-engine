@@ -16,10 +16,7 @@ import {
   fetchFunctionInit,
   updateCurrentSchema,
 } from '../DataActions';
-import {
-  autoAddRelName,
-  autoTrackRelations,
-} from '../TableRelationships/Actions';
+import { autoAddRelName, replaceMetadata } from '../TableRelationships/Actions';
 import { getRelDef } from '../TableRelationships/utils';
 import {
   getSchemaAddTableRoute,
@@ -447,7 +444,7 @@ class Schema extends Component {
             return;
           }
 
-          this.props.dispatch(autoTrackRelations(untrackedRelations));
+          this.props.dispatch(replaceMetadata(untrackedRelations));
         };
 
         if (untrackedRelations.length > 0) {
