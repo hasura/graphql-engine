@@ -410,15 +410,14 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
     else return Nothing
 
   -- all the immortal threads are collected so that they can be stopped when gracefully shutting down
-  let immortalThreads = [ Just schemaSyncListenerThread
-                        , Just schemaSyncProcessorThread
-                        , Just updateThread
-                        , Just asyncActionsThread
-                        , Just eventQueueThread
-                        , Just scheduledEventsThread
-                        , Just cronEventsThread
-                        , telemetryThread
-                        ]
+  let immortalThreads = [ schemaSyncListenerThread
+                        , schemaSyncProcessorThread
+                        , updateThread
+                        , asyncActionsThread
+                        , eventQueueThread
+                        , scheduledEventsThread
+                        , cronEventsThread
+                        ] <> maybe [] pure telemetryThread
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
@@ -500,7 +499,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
     -- we want to control shutdown.
     shutdownHandler
       :: Loggers
-      -> [Maybe Immortal.Thread]
+      -> [Immortal.Thread]
       -> IO ()
       -- ^ the stop websocket server function
       -> LockedEventsCtx
@@ -517,7 +516,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
         stopWsServer
         -- kill all the background immortal threads
         logger $ mkGenericStrLog LevelInfo "server" "killing all background immortal threads"
-        forM_ immortalThreads $ \maybeThread -> forM_ maybeThread $ \thread -> do
+        forM_ immortalThreads $ \thread -> do
           logger $ mkGenericStrLog LevelInfo "server" $ "killing thread: " <> show (Immortal.threadId thread)
           Immortal.stop thread
         shutdownApp
