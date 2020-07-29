@@ -5,6 +5,8 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   ( WSId(..)
   , WSLog(..)
   , WSEvent(..)
+  , MessageDetails(..)
+  , MessageSize(..)
   , WSConn
   , getData
   , getWSId
@@ -64,12 +66,24 @@ instance J.ToJSON WSId where
   toJSON (WSId uuid) =
     J.toJSON $ UUID.toText uuid
 
+newtype MessageSize
+  = MessageSize { unMessageSize :: Int64 }
+  deriving (Show, Eq, Generic, J.ToJSON)
+
+-- | A websocket message and other details
+data MessageDetails
+  = MessageDetails
+  { _mdMessage     :: !TBS.TByteString
+  , _mdMessageSize :: !MessageSize
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''MessageDetails)
+
 data WSEvent
   = EConnectionRequest
   | EAccepted
   | ERejected
-  | EMessageReceived !TBS.TByteString
-  | EMessageSent !TBS.TByteString
+  | EMessageReceived !MessageDetails
+  | EMessageSent !MessageDetails
   | EJwtExpired
   | ECloseReceived
   | ECloseSent !TBS.TByteString
@@ -315,13 +329,15 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
                   -- Regardless this should be safe:
                   handleJust (guard . E.isResourceVanishedError) (\()-> throw WS.ConnectionClosed) $
                     WS.receiveData conn
-                logWSLog logger $ WSLog wsId (EMessageReceived $ TBS.fromLBS msg) Nothing
+                let message = MessageDetails (TBS.fromLBS msg) (MessageSize $ BL.length msg)
+                logWSLog logger $ WSLog wsId (EMessageReceived message) Nothing
                 _hOnMessage wsHandlers wsConn msg
 
           let send = forever $ do
                 WSQueueResponse msg wsInfo <- liftIO $ STM.atomically $ STM.readTQueue sendQ
+                let message = MessageDetails (TBS.fromLBS msg) (MessageSize $ BL.length msg)
                 liftIO $ WS.sendTextData conn msg
-                logWSLog logger $ WSLog wsId (EMessageSent $ TBS.fromLBS msg) wsInfo
+                logWSLog logger $ WSLog wsId (EMessageSent message) wsInfo
 
           -- withAsync lets us be very sure that if e.g. an async exception is raised while we're
           -- forking that the threads we launched will be cleaned up. See also below.

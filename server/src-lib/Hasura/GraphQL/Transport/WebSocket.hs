@@ -39,7 +39,6 @@ import qualified Data.Environment                            as Env
 import           Control.Concurrent.Extended                 (sleep)
 import           Control.Exception.Lifted
 import           Data.String
-import           Data.Int                                    (Int64)
 import           GHC.AssertNF
 
 import           Hasura.EncJSON
@@ -199,17 +198,6 @@ data WSLog
 instance L.ToEngineLog WSLog L.Hasura where
   toEngineLog (WSLog logLevel wsLog) =
     (logLevel, L.ELTWebsocketLog, J.toJSON wsLog)
-
--- | We have a requirement of logging the websocket payload size (see
--- https://github.com/hasura/graphql-engine-pro/issues/416 ). This is not to be
--- confused with 'WSLog' type which is used for logging all kinds of websocket
--- events. Among all events, only few have message payload size. Hence we use a
--- different type for logging websocket messages.
-newtype WSMessageLog = WSMessageLog { _wsmlMessageSize :: Int64 }
-
-instance L.ToEngineLog WSMessageLog L.Hasura where
-  toEngineLog (WSMessageLog size) =
-    (L.LevelInfo, L.ELTWebsocketMessageLog, J.object ["message_size" J..= size])
 
 mkWsInfoLog :: Maybe SessionVariables -> WsConnInfo -> WSEvent -> WSLog
 mkWsInfoLog uv ci ev =
@@ -529,26 +517,24 @@ onMessage
   -> AuthMode
   -> WSServerEnv
   -> WSConn -> BL.ByteString -> m ()
-onMessage env authMode serverEnv wsConn msgRaw = do
-  L.unLogger logger $ WSMessageLog (BL.length msgRaw)
-  Tracing.runTraceT "websocket" $ do
-    case J.eitherDecode msgRaw of
-      Left e    -> do
-        let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
-        logWSEvent logger wsConn $ EConnErr err
-        sendMsg wsConn $ SMConnErr err
+onMessage env authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" $ do
+  case J.eitherDecode msgRaw of
+    Left e    -> do
+      let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
+      logWSEvent logger wsConn $ EConnErr err
+      sendMsg wsConn $ SMConnErr err
 
-      Right msg -> case msg of
-        CMConnInit params -> onConnInit (_wseLogger serverEnv)
-                            (_wseHManager serverEnv)
-                            wsConn authMode params
-        CMStart startMsg  -> onStart env serverEnv wsConn startMsg
-        CMStop stopMsg    -> liftIO $ onStop serverEnv wsConn stopMsg
-        -- The idea is cleanup will be handled by 'onClose', but...
-        -- NOTE: we need to close the websocket connection when we receive the
-        -- CMConnTerm message and calling WS.closeConn will definitely throw an
-        -- exception, but I'm not sure if 'closeConn' is the correct thing here....
-        CMConnTerm        -> liftIO $ WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
+    Right msg -> case msg of
+      CMConnInit params -> onConnInit (_wseLogger serverEnv)
+                          (_wseHManager serverEnv)
+                          wsConn authMode params
+      CMStart startMsg  -> onStart env serverEnv wsConn startMsg
+      CMStop stopMsg    -> liftIO $ onStop serverEnv wsConn stopMsg
+      -- The idea is cleanup will be handled by 'onClose', but...
+      -- NOTE: we need to close the websocket connection when we receive the
+      -- CMConnTerm message and calling WS.closeConn will definitely throw an
+      -- exception, but I'm not sure if 'closeConn' is the correct thing here....
+      CMConnTerm        -> liftIO $ WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
   where
     logger = _wseLogger serverEnv
 
