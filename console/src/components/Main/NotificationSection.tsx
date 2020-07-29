@@ -10,8 +10,13 @@ import { ReduxState, Dispatch } from '../../types';
 import { TelemetryState } from '../../telemetry/state';
 import { versionGT, checkStableVersion } from '../../helpers/versionUtils';
 import ToolTip from '../Common/Tooltip/Tooltip';
-import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
+import {
+  setPreReleaseNotificationOptOutInDB,
+  updateConsoleNotificationsInDB,
+  getReadAllNotificationsState,
+} from '../../telemetry/Actions';
 import Button from '../Common/Button';
+import { showErrorNotification } from '../Services/Common/Notification';
 
 const getDateString = (date: NotificationDate) => {
   if (!date) {
@@ -72,6 +77,8 @@ type NotificationProps = {
   showVersionUpdate: boolean;
   latestVersion: string;
   optOutCallback: () => void;
+  uuid: string;
+  dispatch: Dispatch;
 };
 
 type PreReleaseProps = Pick<NotificationProps, 'optOutCallback'>;
@@ -163,11 +170,39 @@ const ViewMoreOptions: React.FC<BadgeViewMoreProps> = ({
   );
 };
 
+const onClickMarkAllAsRead = (dispatch: Dispatch, uuid: string) => {
+  if (!uuid) {
+    dispatch(
+      showErrorNotification(
+        'Hasura-uuid absent in the server',
+        'You may need to update the server version in order to fix this'
+      )
+    );
+    return;
+  }
+  try {
+    const readAllState = getReadAllNotificationsState();
+    dispatch(
+      updateConsoleNotificationsInDB(
+        readAllState,
+        'Successfully marked all notifications as read'
+      )
+    );
+  } catch (err) {
+    dispatch(
+      showErrorNotification('Failed to mark all notifications as read', err)
+    );
+  }
+};
+
 const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
-  ({ data, showVersionUpdate, latestVersion, optOutCallback }, ref) => (
+  (
+    { data, showVersionUpdate, latestVersion, optOutCallback, uuid, dispatch },
+    forwardedRef
+  ) => (
     <Box
       className={`dropdown-menu ${styles.consoleNotificationPanel}`}
-      ref={ref}
+      ref={forwardedRef}
     >
       {/* TODO: Use style system colors here */}
       <Flex
@@ -186,12 +221,9 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
             height={24}
           />
         </Flex>
-        {/* TODO: add mark all as read functionality -> clear the badge, clear db value and..... also this might be a little too large? */}
         <Button
           title="Mark all as read"
-          onClick={() => {
-            console.log('Read all!');
-          }}
+          onClick={() => onClickMarkAllAsRead(dispatch, uuid)}
         >
           Mark all as read
         </Button>
@@ -214,7 +246,6 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
               {...props}
             />
           ))}
-        {/* TODO: update styling on this button and functionality */}
         <ViewMoreOptions numberNotifications={data.length} />
       </Box>
     </Box>
@@ -266,7 +297,6 @@ const checkVersionUpdate = (
   return [false, ''];
 };
 
-// TODO: add the read part as well (perhaps at the level of HasuraNotifications)
 const ToReadBadge: React.FC<BadgeViewMoreProps> = ({ numberNotifications }) => {
   if (!numberNotifications || numberNotifications < 0) {
     return null;
@@ -290,6 +320,7 @@ function mapStateToProps(state: ReduxState) {
     latestStableServerVersion: state.main.latestStableServerVersion,
     serverVersion: state.main.serverVersion,
     console_opts: state.telemetry.console_opts,
+    hasura_uuid: state.telemetry.hasura_uuid,
   };
 }
 
@@ -356,11 +387,13 @@ const HasuraNotifications: React.FC<Props> = ({
         <ToReadBadge numberNotifications={numberNotifications} />
       </div>
       <Notifications
-        data={consoleNotifications}
         ref={dropDownRef}
+        data={consoleNotifications}
         showVersionUpdate={displayNewVersionNotif}
         latestVersion={latestVersion}
         optOutCallback={optOutCallback}
+        uuid={props.hasura_uuid}
+        dispatch={props.dispatch}
       />
     </>
   );
