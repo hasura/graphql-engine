@@ -283,8 +283,8 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
       lift $ Tracing.attachMetadata [("request_id", unRequestId requestId)]
 
       userInfoE <- fmap fst <$> lift (resolveUserInfo logger manager headers authMode)
-      userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
-                  return userInfoE
+      userInfo  <- either (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
+                   return userInfoE
 
       let handlerState = HandlerCtx serverCtx userInfo headers requestId ipAddress
           includeInternal = shouldIncludeInternal (_uiRole userInfo) $
@@ -296,7 +296,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           return (res, Nothing)
         AHPost handler -> do
           parsedReqE <- runExceptT $ parseBody reqBody
-          parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (Left reqBody) includeInternal headers . qErrModifier)
+          parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal headers . qErrModifier)
                         return parsedReqE
           res <- lift $ runReaderT (runExceptT $ handler parsedReq) handlerState
           return (res, Just parsedReq)
@@ -306,9 +306,8 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
       -- log and return result
       case modResult of
-        Left err  -> let jErr = maybe (Left reqBody) (Right . toJSON) q
-                    in logErrorAndResp (Just userInfo) requestId req jErr includeInternal headers err
-        Right res -> logSuccessAndResp (Just userInfo) requestId req (fmap toJSON q) res (Just (ioWaitTime, serviceTime)) headers
+        Left err  -> logErrorAndResp (Just userInfo) requestId req (reqBody, toJSON <$> q) includeInternal headers err
+        Right res -> logSuccessAndResp (Just userInfo) requestId req (reqBody, toJSON <$> q) res (Just (ioWaitTime, serviceTime)) headers
 
     where
       logger = scLogger serverCtx
@@ -318,31 +317,31 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         => Maybe UserInfo
         -> RequestId
         -> Wai.Request
-        -> Either BL.ByteString Value
+        -> (BL.ByteString, Maybe Value)
         -> Bool
         -> [HTTP.Header]
         -> QErr
         -> Spock.ActionCtxT ctx m a
-      logErrorAndResp userInfo reqId req reqBody includeInternal headers qErr = do
-        lift $ logHttpError logger userInfo reqId req reqBody qErr headers
+      logErrorAndResp userInfo reqId waiReq req includeInternal headers qErr = do
+        lift $ logHttpError logger userInfo reqId waiReq req qErr headers
         Spock.setStatus $ qeStatus qErr
         Spock.json $ qErrEncoder includeInternal qErr
 
-      logSuccessAndResp userInfo reqId req reqBody result qTime reqHeaders =
+      logSuccessAndResp userInfo reqId waiReq reqBody result qTime reqHeaders =
         case result of
           JSONResp (HttpResponse encJson h) ->
-            possiblyCompressedLazyBytes userInfo reqId req reqBody qTime (encJToLBS encJson)
+            possiblyCompressedLazyBytes userInfo reqId waiReq reqBody qTime (encJToLBS encJson)
               (pure jsonHeader <> h) reqHeaders
           RawResp (HttpResponse rawBytes h) ->
-            possiblyCompressedLazyBytes userInfo reqId req reqBody qTime rawBytes h reqHeaders
+            possiblyCompressedLazyBytes userInfo reqId waiReq reqBody qTime rawBytes h reqHeaders
 
-      possiblyCompressedLazyBytes userInfo reqId req reqBody qTime respBytes respHeaders reqHeaders = do
+      possiblyCompressedLazyBytes userInfo reqId waiReq req qTime respBytes respHeaders reqHeaders = do
         let (compressedResp, mEncodingHeader, mCompressionType) =
-              compressResponse (Wai.requestHeaders req) respBytes
+              compressResponse (Wai.requestHeaders waiReq) respBytes
             encodingHeader = maybe [] pure mEncodingHeader
             reqIdHeader = (requestIdHeader, txtToBs $ unRequestId reqId)
             allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
-        lift $ logHttpSuccess logger userInfo reqId req reqBody respBytes compressedResp qTime mCompressionType reqHeaders
+        lift $ logHttpSuccess logger userInfo reqId waiReq req respBytes compressedResp qTime mCompressionType reqHeaders
         mapM_ setHeader allRespHeaders
         Spock.lazyBytes compressedResp
 
@@ -814,7 +813,7 @@ raiseGenericApiError logger headers qErr = do
   req <- Spock.request
   reqBody <- liftIO $ Wai.strictRequestBody req
   reqId <- getRequestId $ Wai.requestHeaders req
-  lift $ logHttpError logger Nothing reqId req (Left reqBody) qErr headers
+  lift $ logHttpError logger Nothing reqId req (reqBody, Nothing) qErr headers
   setHeader jsonHeader
   Spock.setStatus $ qeStatus qErr
   Spock.lazyBytes $ encode qErr
