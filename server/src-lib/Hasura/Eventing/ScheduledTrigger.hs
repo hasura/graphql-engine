@@ -376,7 +376,7 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
                                        ctiRetryConf
                                        ctiHeaders
                                        ctiComment
-            finally <- Tracing.runTraceT "Scheduled event" . runExceptT $
+            finally <- Tracing.runTraceT "scheduled event" . runExceptT $
               runReaderT (processScheduledEvent logEnv pgpool scheduledEvent CronScheduledEvent) (logger, httpMgr)
             removeEventFromLockedEvents id' lockedCronEvents
             either logInternalError pure finally
@@ -431,7 +431,7 @@ processStandAloneEvents env logger logEnv httpMgr pgpool lockedStandAloneEvents 
                                                         retryConf
                                                         headerInfo'
                                                         comment
-                finally <- Tracing.runTraceT "Scheduled event" . runExceptT $
+                finally <- Tracing.runTraceT "scheduled event" . runExceptT $
                   runReaderT (processScheduledEvent logEnv pgpool scheduledEvent StandAloneEvent) $
                                  (logger, httpMgr)
                 removeEventFromLockedEvents id' lockedStandAloneEvents

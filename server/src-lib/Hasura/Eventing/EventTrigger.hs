@@ -210,7 +210,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
                 Tracing.runTraceTInContext
                 tracingCtx
           t <- processEvent event
-            & runTraceT "Event trigger"
+            & runTraceT "process event"
             & withEventEngineCtx eeCtx
             & flip runReaderT (logger, httpMgr)
             & LA.async

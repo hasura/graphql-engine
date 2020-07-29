@@ -428,7 +428,7 @@ asyncActionsProcessor env logger cacheRef pgPool httpManager = forever $ do
       either mempty return res
 
     callHandler :: ActionCache -> ActionLogItem -> m ()
-    callHandler actionCache actionLogItem = Tracing.runTraceT "Async actions processor" do
+    callHandler actionCache actionLogItem = Tracing.runTraceT "async actions processor" do
       let ActionLogItem actionId actionName reqHeaders
             sessionVariables inputPayload = actionLogItem
       case Map.lookup actionName actionCache of
