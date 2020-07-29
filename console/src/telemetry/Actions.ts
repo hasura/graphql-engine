@@ -6,6 +6,7 @@ import dataHeaders from '../components/Services/Data/Common/Headers';
 import {
   getRunSqlQuery,
   getConsoleOptsQuery,
+  getUpdateConsoleNotificationsQuery,
 } from '../components/Common/utils/v1QueryUtils';
 import {
   showErrorNotification,
@@ -18,6 +19,7 @@ import { GetReduxState, ReduxState } from '../types';
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
 const SET_HASURA_UUID = 'Telemetry/SET_HASURA_UUID';
+const UPDATE_CONSOLE_NOTIFICATIONS = 'Telemetry/UPDATE_CONSOLE_NOTIFICATIONS';
 
 type Telemetry = {
   console_state: TelemetryState['console_opts'];
@@ -32,52 +34,52 @@ const setConsoleOptsInDB = (
   dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
   getState: GetReduxState
 ) => {
-  const url = Endpoints.getSchema;
+    const url = Endpoints.getSchema;
 
-  const { hasura_uuid, console_opts } = getState().telemetry;
+    const { hasura_uuid, console_opts } = getState().telemetry;
 
-  const consoleState = {
-    ...console_opts,
-    ...opts,
-  };
+    const consoleState = {
+      ...console_opts,
+      ...opts,
+    };
 
-  if (!hasura_uuid) {
-    dispatch(
-      showErrorNotification(
-        'Opt out of pre-release notifications failed',
-        'Internal error: missing hasura_uuid'
-      )
-    );
-    return;
-  }
-
-  const options: RequestInit = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(
-      getRunSqlQuery(
-        `update hdb_catalog.hdb_version set console_state = '${JSON.stringify(
-          consoleState
-        )}' where hasura_uuid='${hasura_uuid}';`
-      )
-    ),
-  };
-
-  // eslint-disable-next-line consistent-return
-  return dispatch(requestAction(url, options)).then(
-    (data: object) => {
-      if (successCb) {
-        successCb(data);
-      }
-    },
-    (error: Error) => {
-      if (errorCb) {
-        errorCb(error);
-      }
+    if (!hasura_uuid) {
+      dispatch(
+        showErrorNotification(
+          'Opt out of pre-release notifications failed',
+          'Internal error: missing hasura_uuid'
+        )
+      );
+      return;
     }
-  );
-};
+
+    const options: RequestInit = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(
+        getRunSqlQuery(
+          `update hdb_catalog.hdb_version set console_state = '${JSON.stringify(
+            consoleState
+          )}' where hasura_uuid='${hasura_uuid}';`
+        )
+      ),
+    };
+
+    // eslint-disable-next-line consistent-return
+    return dispatch(requestAction(url, options)).then(
+      (data: object) => {
+        if (successCb) {
+          successCb(data);
+        }
+      },
+      (error: Error) => {
+        if (errorCb) {
+          errorCb(error);
+        }
+      }
+    );
+  };
 
 const telemetryNotificationShown = () => (
   dispatch: Dispatch<TelemetryActionTypes>
@@ -128,6 +130,57 @@ const setPreReleaseNotificationOptOutInDB = () => (
   };
 
   return dispatch(setConsoleOptsInDB(options, successCb, errorCb));
+};
+
+const getReadAllNotificationsState = () => {
+  return {
+    read: 'all',
+    date: new Date().toISOString(),
+  };
+};
+
+const updateConsoleNotificationsInDB = (
+  updatedState: Record<string, any>,
+  onSuccessText?: string
+) => {
+  return (
+    dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
+    getState: GetReduxState
+  ) => {
+    const url = Endpoints.schemaChange;
+    const composedUpdatedState = {
+      ...getState().telemetry.console_opts,
+      console_notifications: updatedState,
+    };
+    const updatedReadNotifications = getUpdateConsoleNotificationsQuery(
+      composedUpdatedState,
+      getState().telemetry.hasura_uuid
+    );
+    const options: RequestInit = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(updatedReadNotifications),
+    };
+    return dispatch(requestAction(url, options))
+      // TODO: perhaps need to change the type for `data` here
+      .then((data: any) => {
+        if (onSuccessText) {
+          dispatch(showSuccessNotification(onSuccessText));
+        }
+        dispatch({
+          type: UPDATE_CONSOLE_NOTIFICATIONS,
+          data: data.returning[0].console_state.console_notifications,
+        });
+      })
+      .catch(error => {
+        console.error(
+          'There was an error in updating the console notifications.',
+          error
+        );
+        return error;
+      });
+  };
 };
 
 const loadConsoleOpts = () => {
@@ -185,10 +238,16 @@ interface SetHasuraUuid {
   data: string;
 }
 
+interface UpdateConsoleNotifications {
+  type: typeof UPDATE_CONSOLE_NOTIFICATIONS;
+  data: Record<string, any>;
+}
+
 type TelemetryActionTypes =
   | SetConsoleOptsAction
   | SetNotificationShowAction
-  | SetHasuraUuid;
+  | SetHasuraUuid
+  | UpdateConsoleNotifications;
 
 export const requireConsoleOpts = ({
   dispatch,
@@ -223,6 +282,14 @@ const telemetryReducer = (
         ...state,
         hasura_uuid: action.data,
       };
+    case UPDATE_CONSOLE_NOTIFICATIONS:
+      return {
+        ...state,
+        console_opts: {
+          ...state.console_opts,
+          console_notifications: action.data,
+        },
+      };
     default:
       return state;
   }
@@ -235,4 +302,6 @@ export {
   telemetryNotificationShown,
   setPreReleaseNotificationOptOutInDB,
   setTelemetryNotificationShownInDB,
+  updateConsoleNotificationsInDB,
+  getReadAllNotificationsState,
 };
