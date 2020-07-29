@@ -104,26 +104,28 @@ const ColumnEditorList = ({
 
       const isOk = getConfirmation(confirmMessage, true, colName);
       if (isOk) {
+        // pk contains Indexes of primary keys,
         const pk = [];
-        let flag = true;
+        // pkPresentflag represents whether the colName is below or above the primary Key
+        let pkPresentflag = true;
         tableSchema.primary_key.columns.forEach(pkCol => {
           const currentPKCol = pkCol;
           tableSchema.columns.forEach((nonPKCol, colIndex) => {
-            if (!nonPKCol.column_name.localeCompare(colName)) {
-              flag = false;
-            } else {
-              if (flag && !currentPKCol.localeCompare(nonPKCol.column_name)) {
+            if (nonPKCol.column_name === colName) {
+              pkPresentflag = false;
+            }
+            if (currentPKCol === nonPKCol.column_name) {
+              if (pkPresentflag) {
                 pk.push(colIndex);
-              } else if (!currentPKCol.localeCompare(nonPKCol.column_name)) {
+              } else {
                 pk.push(colIndex - 1);
               }
             }
           });
-          flag = true;
+          pkPresentflag = true;
         });
-
-        const pks = [...pk.sort(), ''];
-        dispatch(setPrimaryKeys(pks));
+        const pkString = [...pk.sort(), ''];
+        dispatch(setPrimaryKeys(pkString));
         dispatch(deleteColumnSql(col, tableSchema));
       }
     };
