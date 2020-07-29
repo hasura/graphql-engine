@@ -4,6 +4,7 @@ export type TelemetryState = {
   console_opts: Nullable<{
     telemetryNotificationShown?: boolean;
     disablePreReleaseUpdateNotifications?: boolean;
+    consoleNotifications?: Record<string, any>;
   }>;
   hasura_uuid: string;
 };
