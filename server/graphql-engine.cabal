@@ -409,6 +409,7 @@ library
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute.Action
                      , Hasura.GraphQL.Execute.Inline
+                     , Hasura.GraphQL.Execute.Insert
                      , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Execute.Mutation

@@ -9,28 +9,28 @@ import qualified Data.IntMap                            as IntMap
 import qualified Data.Sequence                          as Seq
 import qualified Data.Sequence.NonEmpty                 as NE
 import qualified Database.PG.Query                      as Q
+import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.RQL.DML.Delete                  as RQL
 import qualified Hasura.RQL.DML.Mutation                as RQL
+import qualified Hasura.RQL.DML.Returning.Types         as RQL
 import qualified Hasura.RQL.DML.Update                  as RQL
 
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
+import           Hasura.GraphQL.Execute.Insert          (convertToSQLTransaction, fmapAnnInsert)
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Insert
-import           Hasura.GraphQL.Schema.Mutation         (buildEmptyMutResp, convertToSQLTransaction,
-                                                         fmapAnnInsert)
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
-import qualified Language.GraphQL.Draft.Syntax          as G
 
 convertDelete
   :: (HasVersion, MonadIO m)
@@ -52,7 +52,7 @@ convertUpdate
   -> m RespTx
 convertUpdate usrVars rjCtx updateOperation stringifyNum = do
   pure $ if null $ RQL.uqp1OpExps updateOperation
-    then pure $ buildEmptyMutResp $ RQL.uqp1Output preparedUpdate
+    then pure $ RQL.buildEmptyMutResp $ RQL.uqp1Output preparedUpdate
     else RQL.execUpdateQuery stringifyNum (Just rjCtx) (preparedUpdate, Seq.empty)
   where preparedUpdate = runIdentity $ RQL.traverseAnnUpd (pure . unpreparedToTextSQL) updateOperation
 
@@ -86,7 +86,7 @@ convertMutationRootField userInfo manager reqHeaders stringifyNum = \case
   RFDB (MDBUpdate s)  -> noResponseHeaders =<< convertUpdate userSession rjCtx s stringifyNum
   RFDB (MDBDelete s)  -> noResponseHeaders =<< convertDelete userSession rjCtx s stringifyNum
   RFRemote remote     -> pure $ Right remote
-  RFAction (AMSync s) -> Left <$> first liftTx <$> resolveActionExecution userInfo s actionExecContext
+  RFAction (AMSync s) -> Left . first liftTx <$> resolveActionExecution userInfo s actionExecContext
   RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders userSession
   RFRaw s             -> noResponseHeaders $ pure $ encJFromJValue s
   where
