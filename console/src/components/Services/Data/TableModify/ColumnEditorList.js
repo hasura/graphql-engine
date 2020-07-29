@@ -1,4 +1,3 @@
-/*eslint no-unused-vars: 0*/
 import React from 'react';
 import ColumnEditor from './ColumnEditor';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
@@ -107,33 +106,27 @@ const ColumnEditorList = ({
       if (isOk) {
         const pk = [];
         let flag = true;
-        for (const [_, value1] of tableSchema.primary_key.columns.entries()) {
-          for (const [index2, value2] of tableSchema.columns.entries()) {
-            if (!value2.column_name.localeCompare(colName)) {
+        tableSchema.primary_key.columns.forEach(pkCol => {
+          const currentPKCol = pkCol;
+          tableSchema.columns.forEach((nonPKCol, colIndex) => {
+            if (!nonPKCol.column_name.localeCompare(colName)) {
               flag = false;
             } else {
-              if (
-                flag == true &&
-                !value1.localeCompare(value2.column_name)
-              ) {
-                pk.push(index2);
-              } else if (!value1.localeCompare(value2.column_name)) {
-                pk.push(index2 - 1);
+              if (flag && !currentPKCol.localeCompare(nonPKCol.column_name)) {
+                pk.push(colIndex);
+              } else if (!currentPKCol.localeCompare(nonPKCol.column_name)) {
+                pk.push(colIndex - 1);
               }
             }
-          }
+          });
           flag = true;
-        }
-        const pks = [];
-        for (const [_, value1] of pk.sort().entries()) {
-          pks.push(value1.toString());
-        }
-        pks.push('');
+        });
+
+        const pks = [...pk.sort(), ''];
         dispatch(setPrimaryKeys(pks));
         dispatch(deleteColumnSql(col, tableSchema));
       }
     };
-
     const gqlCompatibilityWarning = () => {
       return (
         <GqlCompatibilityWarning
