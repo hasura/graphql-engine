@@ -3,7 +3,7 @@ import { Connect } from 'react-redux';
 import { GraphQLVoyager } from 'graphql-voyager';
 
 import Endpoints from '../../../Endpoints';
-import ComponentErrorBoundary from '../Common/ComponentErrorBoundary';
+import ErrorBoundary from '../Common/ErrorBoundary';
 import { Dispatch } from '../../../types';
 import '../../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
@@ -62,7 +62,7 @@ class VoyagerView extends Component<Props, State> {
 
   render() {
     return (
-      <ComponentErrorBoundary
+      <ErrorBoundary
         title={this.errorBoundaryTitle}
         message={this.errorBoundaryMessage}
       >
@@ -70,7 +70,7 @@ class VoyagerView extends Component<Props, State> {
           introspection={this.introspectionProvider}
           loadWorker={this.loadWorker}
         />
-      </ComponentErrorBoundary>
+      </ErrorBoundary>
     );
   }
 }
