@@ -1,4 +1,115 @@
-**** Latest commit compared against master - 0ae53841156800dcf8758ed1a861e87dbb10fe11
+**** Latest commit compared against master - 2c397f9f4f7628d6eb893974e273ecf3884d8a17
+
+commit 2c397f9f4f7628d6eb893974e273ecf3884d8a17 (HEAD -> master, upstream/master)
+Author: Anon Ray <ecthiender@users.noreply.github.com>
+Date:   Thu Jul 30 08:04:50 2020 +0530
+
+    server: stop eventing subsystem threads when shutting down (#5479)
+
+    * server: stop eventing subsystem threads when shutting down
+
+    * Apply suggestions from code review
+
+    Co-authored-by: Karthikeyan Chinnakonda <chkarthikeyan95@gmail.com>
+
+    Co-authored-by: Phil Freeman <phil@hasura.io>
+    Co-authored-by: Phil Freeman <paf31@cantab.net>
+    Co-authored-by: Karthikeyan Chinnakonda <chkarthikeyan95@gmail.com>
+
+commit 046a783a143e2907c3e766380f773e5890a92807
+Author: Anon Ray <ecthiender@users.noreply.github.com>
+Date:   Wed Jul 29 20:18:36 2020 +0530
+
+    server: pass http and websocket request to logging context (#5470)
+
+    * pass request body to logging context in all cases
+
+    * add message size logging on the websocket API
+
+      this is required by graphql-engine-pro/#416
+
+    * message size logging on websocket API
+
+      As we need to log all messages recieved/sent by the websocket server,
+      it makes sense to log them as part of the websocket server event logs.
+      Previously message recieved were logged inside the onMessage handler,
+      and messages sent were logged only for "data" messages (as a server event log)
+
+    * fix review comments
+
+    Co-authored-by: Phil Freeman <phil@hasura.io>
+
+commit 6c7e63791fa160a30d9b2a207bcd0e667cad3dfa
+Author: Anon Ray <ecthiender@users.noreply.github.com>
+Date:   Wed Jul 29 19:00:29 2020 +0530
+
+    server: add logging for action handlers (#5471)
+
+    * server: add logging for action handlers
+
+    * add changelog entry
+
+    * change action-handler log type from internal to non-internal
+
+    * fix action-handler-log name
+
+commit df51a8eb181cda2df5b3d5f852df6d20b046597d
+Author: Phil Freeman <phil@hasura.io>
+Date:   Tue Jul 28 13:06:54 2020 -0700
+
+    Attach request ID as tracing metadata (#5456)
+
+    * Propagate the trace context to event triggers
+
+    * Handle missing trace and span IDs
+
+    * Store trace context as one LOCAL
+
+    * Add migrations
+
+    * Documentation
+
+    * Include the request ID as trace metadata
+
+    * changelog
+
+    * Fix warnings
+
+    * Respond to code review suggestions
+
+    * Respond to code review
+
+    * Undo changelog
+
+    * Update CHANGELOG.md
+
+    * Typo
+
+    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
+
+commit 664e9df9c6175cbeaf68667c415101f18c2c33aa
+Author: Naveen Naidu <naveennaidu479@gmail.com>
+Date:   Wed Jul 29 00:21:56 2020 +0530
+
+    Tracing: Simplify HTTP traced request (#5451)
+
+    Remove the Inversion of Control (SuspendRequest) and simplify
+    the tracing of HTTP Requests.
+
+    Co-authored-by: Phil Freeman <phil@hasura.io>
+
+commit 434c78267c3a9f78acba26dc797c41049c2f8377
+Author: Anon Ray <ecthiender@users.noreply.github.com>
+Date:   Tue Jul 28 23:22:44 2020 +0530
+
+    server: log request/response sizes for event triggers (#5463)
+
+    * server: log request/response sizes for event triggers
+
+      event triggers (and scheduled triggers) now have request/response size
+      in their logs.
+
+    * add changelog entry
 
 commit 0ae53841156800dcf8758ed1a861e87dbb10fe11
 Author: Phil Freeman <phil@hasura.io>
