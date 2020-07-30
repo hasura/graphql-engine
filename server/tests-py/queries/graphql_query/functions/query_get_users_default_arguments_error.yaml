@@ -6,7 +6,7 @@ response:
   - extensions:
       path: "$.selectionSet.get_users.args.args"
       code: not-supported
-    message: Non default arguments cannot be omitted
+    message: Only last set of positional arguments can be omitted
 query:
   query: |
     query {
