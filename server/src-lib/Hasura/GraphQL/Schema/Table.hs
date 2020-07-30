@@ -44,7 +44,7 @@ tableSelectColumnsEnum table selectPermissions = do
   columns   <- tableSelectColumns table selectPermissions
   let enumName    = tableName <> $$(G.litName "_select_column")
       description = Just $ G.Description $
-        "select columns of table \"" <> G.unName tableName <> "\""
+        "select columns of table " <>> table
   pure $ P.enum enumName description <$> nonEmpty
     [ ( define $ pgiName column
       , pgiColumn column
@@ -73,7 +73,7 @@ tableUpdateColumnsEnum table updatePermissions = do
   columns   <- tableUpdateColumns table updatePermissions
   let enumName    = tableName <> $$(G.litName "_update_column")
       description = Just $ G.Description $
-        "update columns of table \"" <> G.unName tableName <> "\""
+        "update columns of table " <>> table
   pure $ P.enum enumName description <$> nonEmpty
     [ ( define $ pgiName column
       , pgiColumn column

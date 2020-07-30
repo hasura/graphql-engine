@@ -110,7 +110,7 @@ orderByAggregation table selectPermissions = do
             parseOperator operator tableName compFields
         ]
   let objectName  = tableName <> $$(G.litName "_aggregate_order_by")
-      description = G.Description $ "order by aggregate values of table \"" <> table <<> "\""
+      description = G.Description $ "order by aggregate values of table " <>> table
   pure $ P.object objectName (Just description) aggFields
   where
     mkField :: PGColumnInfo -> InputFieldsParser n (Maybe (PGColumnInfo, OrderInfo))
@@ -126,12 +126,7 @@ orderByAggregation table selectPermissions = do
     parseOperator operator tableName columns =
       let opText     = G.unName operator
           objectName = tableName <> $$(G.litName "_") <> operator <> $$(G.litName "_order_by")
-          objectDesc = Just $ G.Description $ mconcat [ "order by"
-                                                      , opText
-                                                      , "() on columns of table "
-                                                      , G.unName tableName
-                                                      , "\""
-                                                      ]
+          objectDesc = Just $ G.Description $ "order by " <> opText <> "() on columns of table " <>> table
       in  P.fieldOptional operator Nothing (P.object objectName objectDesc columns)
         `mapField` map (\(col, info) -> mkOrderByItemG (RQL.AAOOp opText col) info)
 

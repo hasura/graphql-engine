@@ -224,29 +224,28 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
     for selectPerms \perms -> do
       displayName <- P.qualifiedObjectToName table
-      let fieldsDesc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName table) <> "\""
+      let fieldsDesc = G.Description $ "fetch data from the table: " <>> table
           aggName = displayName <> $$(G.litName "_aggregate")
-          aggDesc = G.Description $ "fetch aggregated fields from the table: \"" <> getTableTxt (qName table) <> "\""
+          aggDesc = G.Description $ "fetch aggregated fields from the table: " <>> table
           pkName = displayName <> $$(G.litName "_by_pk")
-          pkDesc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName table) <> "\" using primary key columns"
+          pkDesc = G.Description $ "fetch data from the table: " <> table <<> " using primary key columns"
       catMaybes <$> sequenceA
-        [ toQrf2 (RFDB . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
-        , toQrf3 (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
-        , toQrf3 (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
+        [ requiredFieldParser (RFDB . QDBSimple)      $ selectTable          table (fromMaybe displayName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
+        , mapMaybeFieldParser (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName      $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
+        , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName     $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
   functionSelectExpParsers <- for allFunctions \function -> do
     let targetTable = fiReturnType function
+        functionName = fiName function
     selectPerms <- tableSelectPermissions targetTable
     for selectPerms \perms -> do
-      displayName <- P.qualifiedObjectToName $ fiName function
-      let tableName = getTableTxt $ qName targetTable
-          functionName = getFunctionTxt $ qName $ fiName function
-          functionDesc = G.Description $ "execute function \"" <> functionName <> "\" which returns \"" <> tableName <> "\""
+      displayName <- P.qualifiedObjectToName functionName
+      let functionDesc = G.Description $ "execute function " <> functionName <<> " which returns " <>> targetTable
           aggName = displayName <> $$(G.litName "_aggregate")
-          aggDesc = G.Description $ "execute function \"" <> functionName <> "\" and query aggregates on result of table type \"" <> tableName <> "\""
+          aggDesc = G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> targetTable
       catMaybes <$> sequenceA
-        [ toQrf2 (RFDB . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
-        , toQrf3 (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
+        [ requiredFieldParser (RFDB . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
+        , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
         ]
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
@@ -255,14 +254,16 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
         fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
       ActionQuery ->
         fmap (fmap (RFAction . AQQuery)) <$> actionExecute nonObjectCustomTypes actionInfo
-  pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers <> conv allRemotes)
+  pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers <> toRemoteFieldParser allRemotes)
          <> catMaybes actionParsers
   where
-    -- TODO: this is a terrible name, there must be something better
-    toQrf2 :: (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
-    toQrf2 f = fmap $ Just . fmap f
-    toQrf3 f = fmap $ fmap $ fmap f
-    conv fps = [Just $ fmap (fmap RFRemote) fps]
+    requiredFieldParser :: (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
+    requiredFieldParser f = fmap $ Just . fmap f
+
+    mapMaybeFieldParser :: (a -> b) -> m (Maybe (P.FieldParser n a)) -> m (Maybe (P.FieldParser n b))
+    mapMaybeFieldParser f = fmap $ fmap $ fmap f
+
+    toRemoteFieldParser p = [Just $ fmap (fmap RFRemote) p]
 
 -- | Similar to @query'@ but for Relay.
 relayQuery'
@@ -506,9 +507,9 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
               else return insertPermission
       inserts <- for scenarioInsertPermissionM \insertPerms -> do
         let insertName = $$(G.litName "insert_") <> displayName
-            insertDesc = G.Description $ "insert data into the table: \"" <> G.unName displayName <> "\""
+            insertDesc = G.Description $ "insert data into the table: " <>> table
             insertOneName = $$(G.litName "insert_") <> displayName <> $$(G.litName "_one")
-            insertOneDesc = G.Description $ "insert a single row into the table: \"" <> G.unName displayName <> "\""
+            insertOneDesc = G.Description $ "insert a single row into the table: " <>> table
         insert <- insertIntoTable table (fromMaybe insertName $ _tcrfInsert customRootFields) (Just insertDesc) insertPerms selectPerms (_permUpd permissions)
         -- select permissions are required for InsertOne: the
         -- selection set is the same as a select on that table, and it
@@ -520,9 +521,9 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
 
       updates <- for (_permUpd permissions) \updatePerms -> do
         let updateName = $$(G.litName "update_") <> displayName
-            updateDesc = G.Description $ "update data of the table: \"" <> G.unName displayName <> "\""
+            updateDesc = G.Description $ "update data of the table: " <>> table
             updateByPkName = $$(G.litName "update_") <> displayName <> $$(G.litName "_by_pk")
-            updateByPkDesc = G.Description $ "update single row of the table: \"" <> G.unName displayName <> "\""
+            updateByPkDesc = G.Description $ "update single row of the table: " <>> table
         update <- updateTable table (fromMaybe updateName $ _tcrfUpdate customRootFields) (Just updateDesc) updatePerms selectPerms
         -- likewise; furthermore, primary keys can only be tested in
         -- the `where` clause if the user has select permissions for
@@ -533,9 +534,9 @@ mutation allTables allRemotes allActions nonObjectCustomTypes = do
 
       deletes <- for (_permDel permissions) \deletePerms -> do
         let deleteName = $$(G.litName "delete_") <> displayName
-            deleteDesc = G.Description $ "delete data from the table: \"" <> G.unName displayName <> "\""
+            deleteDesc = G.Description $ "delete data from the table: " <>> table
             deleteByPkName = $$(G.litName "delete_") <> displayName <> $$(G.litName "_by_pk")
-            deleteByPkDesc = G.Description $ "delete single row from the table: \"" <> G.unName displayName <> "\""
+            deleteByPkDesc = G.Description $ "delete single row from the table: " <>> table
         delete <- deleteFromTable table (fromMaybe deleteName $ _tcrfDelete customRootFields) (Just deleteDesc) deletePerms selectPerms
         -- ditto
         deleteByPk <- join <$> for selectPerms \selPerms ->

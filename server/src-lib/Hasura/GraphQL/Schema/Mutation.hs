@@ -143,7 +143,7 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
             rel <- join arrRelIns
             Just $ AnnInsObj [] [] [RelIns rel relationshipInfo | not $ null $ _aiInsObj rel]
   let objectName = tableName <> $$(G.litName "_insert_input")
-      objectDesc = G.Description $ "input type for inserting data into table \"" <> G.unName tableName <> "\""
+      objectDesc = G.Description $ "input type for inserting data into table " <>> table
   pure $ P.object objectName (Just objectDesc) $ catMaybes <$> sequenceA objectFields
     <&> mconcat
 
@@ -163,7 +163,7 @@ objectRelationshipInput table insertPerms selectPerms updatePerms =
   let conflictName = $$(G.litName "on_conflict")
       objectName   = $$(G.litName "data")
       inputName    = tableName <> $$(G.litName "_obj_rel_insert_input")
-      inputDesc    = G.Description $ "input type for inserting object relation for remote table \"" <> G.unName tableName <> "\""
+      inputDesc    = G.Description $ "input type for inserting object relation for remote table " <>> table
       inputParser = do
         conflictClause <- maybe
           (pure Nothing)
@@ -189,7 +189,7 @@ arrayRelationshipInput table insertPerms selectPerms updatePerms =
   let conflictName = $$(G.litName "on_conflict")
       objectsName  = $$(G.litName "data")
       inputName    = tableName <> $$(G.litName "_arr_rel_insert_input")
-      inputDesc    = G.Description $ "input type for inserting array relation for remote table \"" <> G.unName tableName <> "\""
+      inputDesc    = G.Description $ "input type for inserting array relation for remote table " <>> table
       inputParser = do
         conflictClause <- maybe
           (pure Nothing)
@@ -234,7 +234,7 @@ conflictObject table selectPerms updatePerms = runMaybeT $ do
   constraintParser <- lift $ conflictConstraint constraints table
   whereExpParser   <- lift $ boolExp table selectPerms
   let objectName = tableName <> $$(G.litName "_on_conflict")
-      objectDesc = G.Description $ "on conflict condition type for table \"" <> G.unName tableName <> "\""
+      objectDesc = G.Description $ "on conflict condition type for table " <>> table
       constraintName = $$(G.litName "constraint")
       columnsName    = $$(G.litName "update_columns")
       whereExpName   = $$(G.litName "where")
@@ -262,7 +262,7 @@ conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
          , _cName constraint
          )
   let enumName  = tableName <> $$(G.litName "_constraint")
-      enumDesc  = G.Description $ "unique or primary key constraints on table " <> G.unName tableName <> "\""
+      enumDesc  = G.Description $ "unique or primary key constraints on table " <>> table
   pure $ P.enum enumName (Just enumDesc) constraintEnumValues
 
 
@@ -368,7 +368,8 @@ updateOperators table updatePermissions = do
       in updateOperator tableName $$(G.litName "_delete_key")
          textParser RQL.UpdDeleteKey jsonCols desc desc
 
-    , let desc = "delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array"
+    , let desc = "delete the array element with specified index (negative integers count from the end). "
+                 <> "throws an error if top level container is not an array"
       in updateOperator tableName $$(G.litName "_delete_elem")
          intParser RQL.UpdDeleteElem jsonCols desc desc
 
@@ -393,7 +394,6 @@ updateOperators table updatePermissions = do
           <> (T.intercalate ", " $ flip map erroneousExps \(column, opExp) ->
                  getPGColTxt column <> " in " <> RQL.updateOperatorText opExp)
 
-        -- FIXME: validate JSON strings
         pure $ presetColumns <> flattenedExps
   where
     columnParser columnInfo = fmap P.mkParameter <$> P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
@@ -495,7 +495,7 @@ mutationSelectionSet table selectPerms =
   let affectedRowsName = $$(G.litName "affected_rows")
       affectedRowsDesc = "number of rows affected by the mutation"
       selectionName    = tableName <> $$(G.litName "_mutation_response")
-      selectionDesc    = G.Description $ "response of any mutation on the table \"" <> G.unName tableName <> "\""
+      selectionDesc    = G.Description $ "response of any mutation on the table " <>> table
 
       selectionFields  = catMaybes
         [ Just $ RQL.MCount <$
