@@ -100,6 +100,11 @@ export const getDropPermissionQuery = (
   };
 };
 
+const cleanUpNulls = (values: string) => {
+  const re = /'null'/gi;
+  return values.replace(re, 'null');
+};
+
 export const getInsertUpQuery = (
   tableDef: TableDefinition,
   insertion: Record<string, any>
@@ -109,7 +114,7 @@ export const getInsertUpQuery = (
     .join(', ');
   const insertValues = Object.values(insertion);
 
-  const values = insertValues
+  const convertedValues = insertValues
     .map(value => {
       if (typeof value === 'string') {
         return `'${value}'`;
@@ -123,13 +128,15 @@ export const getInsertUpQuery = (
         return `'${JSON.stringify(value)}'`;
       }
 
-      if (typeof value === 'undefined' || value === null) {
+      if (value === undefined) {
         return '';
       }
 
       return value;
     })
     .join(', ');
+
+  const values = cleanUpNulls(convertedValues);
 
   const sql = `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columns}) VALUES (${values});`;
 
@@ -556,20 +563,20 @@ export const generateCreateEventTriggerQuery = (
         state.webhook.type === 'env' ? state.webhook.value.trim() : null,
       insert: state.operations.insert
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       update: state.operations.update
         ? {
-            columns: state.operationColumns
-              .filter(c => !!c.enabled)
-              .map(c => c.name),
-          }
+          columns: state.operationColumns
+            .filter(c => !!c.enabled)
+            .map(c => c.name),
+        }
         : null,
       delete: state.operations.delete
         ? {
-            columns: '*',
-          }
+          columns: '*',
+        }
         : null,
       enable_manual: state.operations.enable_manual,
       retry_conf: state.retryConf,
