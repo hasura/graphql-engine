@@ -272,7 +272,7 @@ scalar name description representation = Parser
   }
   where
     schemaType = NonNullable $ TNamed $ mkDefinition name description TIScalar
-    convertWith f = either (parseError . qeError) pure . runAesonParser f
+    convertWith f = either (parseErrorWith ParseFailed . qeError) pure . runAesonParser f
 
 {- WIP NOTE (FIXME: make into an actual note by expanding on it a bit)
 
