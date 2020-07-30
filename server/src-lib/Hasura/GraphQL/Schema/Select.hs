@@ -1169,7 +1169,7 @@ functionArgs functionName (toList -> inputArgs) = do
         IASessionVariables _ -> pure (name, parsedValue)
         IAUserProvided arg   -> case faName arg of
           Just _  -> pure (name, parsedValue)
-          Nothing -> parseError "Only last set of positional arguments can be omitted"
+          Nothing -> parseErrorWith NotSupported "Only last set of positional arguments can be omitted"
 
 
 -- | The "path" argument for json column fields
