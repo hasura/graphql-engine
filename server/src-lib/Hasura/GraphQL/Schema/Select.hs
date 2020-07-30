@@ -922,14 +922,14 @@ relationshipField relationshipInfo = runMaybeT do
     ObjRel -> do
       let desc = Just $ G.Description "An object relationship"
       selectionSetParser <- lift $ tableSelectionSet otherTable remotePerms
-      pure $ pure $ P.subselection_ relFieldName desc selectionSetParser
+      pure $ pure $ (if nullable then id else P.nonNullableField) $
+        P.subselection_ relFieldName desc selectionSetParser
              <&> \fields -> RQL.AFObjectRelation $ RQL.AnnRelationSelectG relName colMapping $
                     RQL.AnnObjectSelectG fields otherTable $
                     RQL._tpFilter $ tablePermissionsInfo remotePerms
     ArrRel -> do
       let arrayRelDesc = Just $ G.Description "An array relationship"
-      otherTableParser <- lift $ (if nullable then id else fmap P.nonNullableField) $
-        selectTable otherTable relFieldName arrayRelDesc remotePerms
+      otherTableParser <- lift $ selectTable otherTable relFieldName arrayRelDesc remotePerms
       let arrayRelField = otherTableParser <&> \selectExp -> RQL.AFArrayRelation $
             RQL.ASSimple $ RQL.AnnRelationSelectG relName colMapping selectExp
           relAggFieldName = relFieldName <> $$(G.litName "_aggregate")
