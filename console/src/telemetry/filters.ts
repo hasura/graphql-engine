@@ -11,7 +11,6 @@ const filterEventsBlockList = [
 ];
 
 const DATA_PATH = '/data';
-const API_EXPLORER_PATH = '/api-explorer';
 const REMOTE_SCHEMAS_PATH = '/remote-schemas';
 const EVENTS_PATH = '/events';
 const ACTIONS_PATH = '/actions';
@@ -22,10 +21,6 @@ const dataHandler = (path: string) => {
     .replace(/(\/schema\/.*\/tables\/)[^/]*(\/.*)?/, '$1TABLE_NAME$2')
     .replace(/(\/schema\/.*\/views\/)[^/]*(\/.*)?/, '$1VIEW_NAME$2')
     .replace(/(\/schema\/.*\/functions\/)[^/]*(\/.*)?/, '$1FUNCTION_NAME$2');
-};
-
-const apiExplorerHandler = (path: string) => {
-  return path;
 };
 
 const remoteSchemasHandler = (path: string) => {
@@ -47,9 +42,6 @@ const sanitiseUrl = (rawPath: string) => {
   const path = rawPath.replace(new RegExp(globals.urlPrefix, 'g'), '');
   if (path.startsWith(DATA_PATH)) {
     return dataHandler(path);
-  }
-  if (path.startsWith(API_EXPLORER_PATH)) {
-    return apiExplorerHandler(path);
   }
   if (path.startsWith(REMOTE_SCHEMAS_PATH)) {
     return remoteSchemasHandler(path);
