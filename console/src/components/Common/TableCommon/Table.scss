@@ -10,6 +10,11 @@
   padding-right: 5px; // removes scrollbar if width is enough
 }
 
+.form_flex {
+  display: flex;
+  flex-direction: column;
+}
+
 .schemaWrapper {
   width: 100%;
 
@@ -204,12 +209,12 @@ a.expanded {
 
 .labelText {
   display: inline-block;
-  margin-left: 52px;
   font-size: 14px;
-  margin-top: 3px;
-  &.m10 {
-    margin: 3px 10px;
-  }
+}
+
+.migrationBoxPosStyles {
+  width: 100%;
+  padding-left: 25.85%;
 }
 
 input[type='checkbox'].migrationCheckbox {
