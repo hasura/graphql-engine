@@ -1,17 +1,1 @@
 **** Latest commit compared against master - 2c397f9f4f7628d6eb893974e273ecf3884d8a17
-
-commit 2c397f9f4f7628d6eb893974e273ecf3884d8a17 (HEAD -> master, upstream/master)
-Author: Anon Ray <ecthiender@users.noreply.github.com>
-Date:   Thu Jul 30 08:04:50 2020 +0530
-
-    server: stop eventing subsystem threads when shutting down (#5479)
-
-    * server: stop eventing subsystem threads when shutting down
-
-    * Apply suggestions from code review
-
-    Co-authored-by: Karthikeyan Chinnakonda <chkarthikeyan95@gmail.com>
-
-    Co-authored-by: Phil Freeman <phil@hasura.io>
-    Co-authored-by: Phil Freeman <paf31@cantab.net>
-    Co-authored-by: Karthikeyan Chinnakonda <chkarthikeyan95@gmail.com>
