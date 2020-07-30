@@ -18,13 +18,10 @@ const ACTIONS_PATH = '/actions';
 
 const dataHandler = (path: string) => {
   return path
-    .replace(/\/schema\/([^/]*)(\/)?/, '/schema/SCHEMA_NAME$2')
-    .replace(/(\/schema\/.*)\/tables\/([^/]*)(\/.*)?/, '$1/tables/TABLE_NAME$3')
-    .replace(/(\/schema\/.*)\/views\/([^/]*)(\/.*)?/, '$1/views/VIEW_NAME$3')
-    .replace(
-      /(\/schema\/.*)\/functions\/([^/]*)(\/.*)?/,
-      '$1/functions/FUNCTION_NAME$3'
-    );
+    .replace(/(\/schema\/)[^/]*(\/)?/, '$1SCHEMA_NAME$2')
+    .replace(/(\/schema\/.*\/tables\/)[^/]*(\/.*)?/, '$1TABLE_NAME$2')
+    .replace(/(\/schema\/.*\/views\/)[^/]*(\/.*)?/, '$1VIEW_NAME$2')
+    .replace(/(\/schema\/.*\/functions\/)[^/]*(\/.*)?/, '$1FUNCTION_NAME$3');
 };
 
 const apiExplorerHandler = (path: string) => {
@@ -38,12 +35,12 @@ const remoteSchemasHandler = (path: string) => {
 const eventsHandler = (path: string) => {
   return path
     .replace(/(\/manage\/triggers\/)[^/]*(\/\w+.*)$/, '$1TRIGGER_NAME$2')
-    .replace(/\/data\/([^/]*)\/(.*)+$/, '/data/DATA_TRIGGER_NAME/$2')
-    .replace(/\/cron\/([^/]*)\/(.*)+$/, '/cron/CRON_TRIGGER_NAME/$2');
+    .replace(/(\/data\/)[^/]*\/(.*)+$/, '$1DATA_TRIGGER_NAME/$2')
+    .replace(/(\/cron\/)[^/]*\/(.*)+$/, '$1CRON_TRIGGER_NAME/$2');
 };
 
 const actionsHandler = (path: string) => {
-  return path.replace(/\/manage\/([^/]*)\/(.*)+$/, '/manage/ACTION_NAME/$2');
+  return path.replace(/(\/manage\/)[^/]*\/(.*)+$/, '$1ACTION_NAME/$2');
 };
 
 const sanitiseUrl = (rawPath: string) => {
