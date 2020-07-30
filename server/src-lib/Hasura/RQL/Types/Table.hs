@@ -39,6 +39,7 @@ module Hasura.RQL.Types.Table
        , _FIColumn
        , _FIRelationship
        , _FIComputedField
+       , _FIRemoteRelationship
        , fieldInfoName
        , fieldInfoGraphQLName
        , fieldInfoGraphQLNames
