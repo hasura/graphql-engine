@@ -38,7 +38,7 @@ const LeftSidebar: React.FC<Props> = props => {
     },
     items: triggers,
     currentItem: currentTrigger,
-    service,
+    service: 'triggers',
   });
 
   // TODO, move to common utils
