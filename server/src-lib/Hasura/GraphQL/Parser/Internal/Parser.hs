@@ -245,10 +245,9 @@ scalar name description representation = Parser
         JSONValue    (A.Bool   b) -> pure b
         _                         -> typeMismatch name "a boolean" v
       SRInt -> case v of
-        GraphQLValue (VInt i) -> convertWith scientificToInteger $ fromInteger i
-        JSONValue (A.Number n)
-          | Just i <- toBoundedInteger n -> pure i
-        _  -> typeMismatch name "a 32-bit integer" v
+        GraphQLValue (VInt i)     -> convertWith scientificToInteger $ fromInteger i
+        JSONValue (A.Number n)    -> convertWith scientificToInteger n
+        _                         -> typeMismatch name "a 32-bit integer" v
       SRFloat -> case v of
         GraphQLValue (VFloat f)   -> convertWith scientificToFloat f
         GraphQLValue (VInt   i)   -> convertWith scientificToFloat $ fromInteger i
