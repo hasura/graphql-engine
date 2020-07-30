@@ -30,6 +30,7 @@ import           Type.Reflection                       ((:~:) (..), Typeable, ty
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
+import           Hasura.RQL.Types.Error                (Code)
 
 -- -------------------------------------------------------------------------------------------------
 -- schema construction
@@ -179,12 +180,13 @@ instance MonadTrans ParseT where
 
 instance Monad m => MonadParse (ParseT m) where
   withPath f x = ParseT $ withReaderT f $ unParseT x
-  parseError text = ParseT $ do
+  parseErrorWith code text = ParseT $ do
     path <- ask
-    lift $ refute $ NE.singleton ParseError{ pePath = path, peMessage = text }
+    lift $ refute $ NE.singleton ParseError{ peCode = code, pePath = path, peMessage = text }
   markNotReusable = ParseT $ lift $ put NotReusable
 
 data ParseError = ParseError
   { pePath    :: JSONPath
   , peMessage :: Text
+  , peCode    :: Code
   }

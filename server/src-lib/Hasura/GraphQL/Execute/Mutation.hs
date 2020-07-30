@@ -158,8 +158,8 @@ convertMutationSelectionSet env gqlContext sqlGenCtx userInfo manager reqHeaders
       -- TODO: Our error reporting machinery doesn’t currently support reporting
       -- multiple errors at once, so we’re throwing away all but the first one
       -- here. It would be nice to report all of them!
-      ParseError{ pePath, peMessage } ->
-        throwError (err400 ValidationFailed peMessage){ qePath = pePath }
+      ParseError{ pePath, peMessage, peCode } ->
+        throwError (err400 peCode peMessage){ qePath = pePath }
 
     -- | A list of aliased transactions for eg
     --

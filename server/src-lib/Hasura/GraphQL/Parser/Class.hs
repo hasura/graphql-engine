@@ -160,9 +160,12 @@ class Monad m => MonadParse m where
   withPath :: (JSONPath -> JSONPath) -> m a -> m a
   -- | Not the full power of 'MonadError' because parse errors cannot be
   -- caught.
-  parseError :: Text -> m a
+  parseErrorWith :: Code -> Text -> m a
   -- | See 'QueryReusability'.
   markNotReusable :: m ()
+
+parseError :: MonadParse m => Text -> m a
+parseError = parseErrorWith ValidationFailed
 
 -- | Tracks whether or not a query is /reusable/. Reusable queries are nice,
 -- since we can cache their resolved ASTs and avoid re-resolving them if we

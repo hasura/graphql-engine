@@ -28,8 +28,8 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import           Hasura.Server.Version                  (HasVersion)
 import qualified Hasura.SQL.DML                         as S
 
-import           Hasura.EncJSON
 import           Hasura.Db
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Prepare
@@ -192,8 +192,8 @@ parseGraphQLQuery gqlContext varDefs varValsM fields =
       -- TODO: Our error reporting machinery doesn’t currently support reporting
       -- multiple errors at once, so we’re throwing away all but the first one
       -- here. It would be nice to report all of them!
-      ParseError{ pePath, peMessage } ->
-        throwError (err400 ValidationFailed peMessage){ qePath = pePath }
+      ParseError{ pePath, peMessage, peCode } ->
+        throwError (err400 peCode peMessage){ qePath = pePath }
 
 convertQuerySelSet
   :: forall m tx . (HasVersion, MonadError QErr m, MonadIO m, MonadIO tx, MonadTx tx)
