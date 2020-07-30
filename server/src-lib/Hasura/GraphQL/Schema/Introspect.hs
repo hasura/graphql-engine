@@ -243,9 +243,9 @@ typeField =
         \case SomeType tp ->
                 case tp of
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo fields' _interfaces')))) ->
-                    J.Array $ V.fromList $ fmap (snd nameAndPrinter) fields'
+                    J.Array $ V.fromList $ fmap (snd nameAndPrinter) $ sortOn P.dName fields'
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo fields' _interfaces' _objects')))) ->
-                    J.Array $ V.fromList $ fmap (snd nameAndPrinter) fields'
+                    J.Array $ V.fromList $ fmap (snd nameAndPrinter) $ sortOn P.dName fields'
                   _ -> J.Null
     interfaces :: FieldParser n (SomeType -> J.Value)
     interfaces = do
@@ -254,9 +254,9 @@ typeField =
         \case SomeType tp ->
                 case tp of
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo _fields' interfaces')))) ->
-                    J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIInterface) interfaces'
+                    J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIInterface) $ sortOn P.dName interfaces'
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo _fields' interfaces' _objects)))) ->
-                    J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIInterface) interfaces'
+                    J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIInterface) $ sortOn P.dName interfaces'
                   _ -> J.Null
     possibleTypes :: FieldParser n (SomeType -> J.Value)
     possibleTypes = do
@@ -265,9 +265,9 @@ typeField =
         \case SomeType tp ->
                 case tp of
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo _fields' _interfaces' objects')))) ->
-                    J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIObject) objects'
+                    J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIObject) $ sortOn P.dName objects'
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIUnion (P.UnionInfo objects')))) ->
-                    J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIObject) objects'
+                    J.Array $ V.fromList $ fmap (printer . SomeType . P.Nullable . P.TNamed . fmap P.TIObject) $ sortOn P.dName objects'
                   _ -> J.Null
     enumValues :: FieldParser n (SomeType -> J.Value)
     enumValues = do
@@ -276,7 +276,7 @@ typeField =
         \case SomeType tp ->
                 case tp of
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIEnum vals))) ->
-                    J.Array $ V.fromList $ toList $ fmap (snd nameAndPrinter) vals
+                    J.Array $ V.fromList $ fmap (snd nameAndPrinter) $ sortOn P.dName $ toList vals
                   _ -> J.Null
     inputFields :: FieldParser n (SomeType -> J.Value)
     inputFields = do
@@ -285,7 +285,7 @@ typeField =
         \case SomeType tp ->
                 case tp of
                   P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInputObject fieldDefs))) ->
-                    J.Array $ V.fromList $ map printer fieldDefs
+                    J.Array $ V.fromList $ map printer $ sortOn P.dName fieldDefs
                   _ -> J.Null
     ofType :: FieldParser n (SomeType -> J.Value)
     ofType = do
@@ -450,7 +450,7 @@ fieldField =
     args :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
     args = do
       printer <- P.subselection_ $$(G.litName "args") Nothing inputValue
-      return $ J.Array . V.fromList . map printer . P.fArguments . P.dInfo
+      return $ J.Array . V.fromList . map printer . sortOn P.dName . P.fArguments . P.dInfo
     typeF :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
     typeF = do
       printer <- P.subselection_ $$(G.litName "type") Nothing typeField
@@ -546,7 +546,7 @@ schemaSet fakeSchema =
     types = do
       printer <- P.subselection_ $$(G.litName "types") Nothing typeField
       return $ J.Array $ V.fromList $ map (printer . schemaTypeToSomeType) $
-        Map.elems $ sTypes fakeSchema
+        sortOn P.dName $ Map.elems $ sTypes fakeSchema
         where
           schemaTypeToSomeType
             :: P.Definition P.SomeTypeInfo
