@@ -630,10 +630,10 @@ tableArgs table selectPermissions = do
 
 -- TODO:
 -- this should either be moved to Common, or to Parser itself; even better,
--- we could think of exposing a "PositiveInt" custom scalar type in the schema.
+-- we could think of exposing a "PositiveInt" custom scalar type in the schema
 positiveInt :: MonadParse n => Parser 'Both n Int32
 positiveInt = P.int `P.bind` \value -> do
-  when (value < 0) $ parseError "expecting a positive integer"
+  when (value < 0) $ parseErrorWith NotSupported "unexpected negative value"
   pure value
 
 -- | Arguments for a table connection selection
