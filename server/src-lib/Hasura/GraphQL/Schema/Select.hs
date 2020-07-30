@@ -929,7 +929,8 @@ relationshipField relationshipInfo = runMaybeT do
                     RQL._tpFilter $ tablePermissionsInfo remotePerms
     ArrRel -> do
       let arrayRelDesc = Just $ G.Description "An array relationship"
-      otherTableParser <- lift $ selectTable otherTable relFieldName arrayRelDesc remotePerms
+      otherTableParser <- lift $ (if nullable then id else fmap P.nonNullableField) $
+        selectTable otherTable relFieldName arrayRelDesc remotePerms
       let arrayRelField = otherTableParser <&> \selectExp -> RQL.AFArrayRelation $
             RQL.ASSimple $ RQL.AnnRelationSelectG relName colMapping selectExp
           relAggFieldName = relFieldName <> $$(G.litName "_aggregate")
