@@ -3,7 +3,9 @@
 
 module Hasura.GraphQL.Transport.WebSocket.Server
   ( WSId(..)
-
+  , WSLog(..)
+  , WSEvent(..)
+  , MessageDetails(..)
   , WSConn
   , getData
   , getWSId
@@ -17,6 +19,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , WSHandlers(..)
 
   , WSServer
+  , HasuraServerApp
   , WSEventInfo(..)
   , WSQueueResponse(..)
   , ServerMsgType(..)
@@ -26,9 +29,6 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , shutdown
 
   , MonadWSLog (..)
-  , HasuraServerApp
-  , WSEvent(..)
-  , WSLog(..)
   ) where
 
 import qualified Control.Concurrent.Async                    as A
@@ -65,12 +65,20 @@ instance J.ToJSON WSId where
   toJSON (WSId uuid) =
     J.toJSON $ UUID.toText uuid
 
+-- | Websocket message and other details
+data MessageDetails
+  = MessageDetails
+  { _mdMessage     :: !TBS.TByteString
+  , _mdMessageSize :: !Int64
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''MessageDetails)
+
 data WSEvent
   = EConnectionRequest
   | EAccepted
   | ERejected
-  | EMessageReceived !TBS.TByteString
-  | EMessageSent !TBS.TByteString
+  | EMessageReceived !MessageDetails
+  | EMessageSent !MessageDetails
   | EJwtExpired
   | ECloseReceived
   | ECloseSent !TBS.TByteString
@@ -225,6 +233,9 @@ type OnConnH m a    = WSId -> WS.RequestHead -> IpAddress -> m (Either WS.Reject
 type OnCloseH m a   = WSConn a -> m ()
 type OnMessageH m a = WSConn a -> BL.ByteString -> m ()
 
+-- | aka generalized 'WS.ServerApp' over @m@, which takes an IPAddress
+type HasuraServerApp m = IpAddress -> WS.PendingConnection -> m ()
+
 data WSHandlers m a
   = WSHandlers
   { _hOnConn    :: OnConnH m a
@@ -232,16 +243,13 @@ data WSHandlers m a
   , _hOnClose   :: OnCloseH m a
   }
 
--- | aka generalized 'WS.ServerApp' over @m@, which takes an IPAddress
-type HasuraServerApp m = IpAddress -> WS.PendingConnection -> m ()
-
 createServerApp
   :: (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m), MonadWSLog m)
   => WSServer a
-  -- user provided handlers
   -> WSHandlers m a
-  -- aka WS.ServerApp
+  -- ^ user provided handlers
   -> HasuraServerApp m
+  -- ^ aka WS.ServerApp
 {-# INLINE createServerApp #-}
 createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !ipAddress !pendingConn = do
   wsId <- WSId <$> liftIO UUID.nextRandom
@@ -261,7 +269,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
     -- least log properly and re-raise:
     logUnexpectedExceptions = handle $ \(e :: SomeException) -> do
       writeLog $ L.UnstructuredLog L.LevelError $ fromString $
-        "Unexpected exception raised in websocket. Please report this as a bug: "<>show e
+        "Unexpected exception raised in websocket. Please report this as a bug: " <> show e
       throwIO e
 
     shuttingDownReject =
@@ -316,13 +324,15 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
                   -- Regardless this should be safe:
                   handleJust (guard . E.isResourceVanishedError) (\()-> throw WS.ConnectionClosed) $
                     WS.receiveData conn
-                logWSLog logger $ WSLog wsId (EMessageReceived $ TBS.fromLBS msg) Nothing
+                let message = MessageDetails (TBS.fromLBS msg) (BL.length msg)
+                logWSLog logger $ WSLog wsId (EMessageReceived message) Nothing
                 _hOnMessage wsHandlers wsConn msg
 
           let send = forever $ do
                 WSQueueResponse msg wsInfo <- liftIO $ STM.atomically $ STM.readTQueue sendQ
+                let message = MessageDetails (TBS.fromLBS msg) (BL.length msg)
                 liftIO $ WS.sendTextData conn msg
-                logWSLog logger $ WSLog wsId (EMessageSent $ TBS.fromLBS msg) wsInfo
+                logWSLog logger $ WSLog wsId (EMessageSent message) wsInfo
 
           -- withAsync lets us be very sure that if e.g. an async exception is raised while we're
           -- forking that the threads we launched will be cleaned up. See also below.

@@ -18,6 +18,7 @@ import           Hasura.Eventing.ScheduledTrigger
 import qualified Database.PG.Query     as Q
 import qualified Data.Time.Clock       as C
 import qualified Data.HashMap.Strict   as Map
+import qualified Data.Environment      as Env
 
 -- | runCreateCronTrigger will update a existing cron trigger when the 'replace'
 --   value is set to @true@ and when replace is @false@ a new cron trigger will
@@ -61,11 +62,13 @@ addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
   insertCronEvents $ map (CronEventSeed ctName) scheduleTimes
 
 resolveCronTrigger
-  :: (QErrM m, MonadIO m)
-  => CatalogCronTrigger -> m CronTriggerInfo
-resolveCronTrigger CatalogCronTrigger {..} = do
-  webhookInfo <- resolveWebhook _cctWebhookConf
-  headerInfo <- getHeaderInfosFromConf headers
+  :: (QErrM m)
+  => Env.Environment
+  -> CatalogCronTrigger
+  -> m CronTriggerInfo
+resolveCronTrigger env CatalogCronTrigger {..} = do
+  webhookInfo <- resolveWebhook env _cctWebhookConf
+  headerInfo <- getHeaderInfosFromConf env headers
   pure $
     CronTriggerInfo _cctName
                     _cctCronSchedule
