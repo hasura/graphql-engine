@@ -110,7 +110,7 @@ column columnType (Nullability isNullable) =
           { pType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
           , pParser =
               valueToJSON >=>
-              either (parseError . qeError) pure . runAesonParser (parsePGValue scalarType)
+              either (parseErrorWith ParseFailed . qeError) pure . runAesonParser (parsePGValue scalarType)
           }
     PGColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (M.toList enumValues) of
