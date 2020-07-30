@@ -21,7 +21,7 @@ const dataHandler = (path: string) => {
     .replace(/(\/schema\/)[^/]*(\/)?/, '$1SCHEMA_NAME$2')
     .replace(/(\/schema\/.*\/tables\/)[^/]*(\/.*)?/, '$1TABLE_NAME$2')
     .replace(/(\/schema\/.*\/views\/)[^/]*(\/.*)?/, '$1VIEW_NAME$2')
-    .replace(/(\/schema\/.*\/functions\/)[^/]*(\/.*)?/, '$1FUNCTION_NAME$3');
+    .replace(/(\/schema\/.*\/functions\/)[^/]*(\/.*)?/, '$1FUNCTION_NAME$2');
 };
 
 const apiExplorerHandler = (path: string) => {
