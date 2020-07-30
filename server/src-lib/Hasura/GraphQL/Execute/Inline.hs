@@ -118,11 +118,13 @@ inlineSelection
   :: MonadInline var m
   => Selection FragmentSpread var
   -> m (Selection NoFragments var)
-inlineSelection (SelectionField field@Field{ _fSelectionSet }) = do
-  selectionSet <- traverse inlineSelection _fSelectionSet
-  pure $! SelectionField field{ _fSelectionSet = selectionSet }
+inlineSelection (SelectionField field@Field{ _fSelectionSet }) =
+  withPathK "selectionSet" $ withPathK (unName $ _fName field) $ do
+    selectionSet <- traverse inlineSelection _fSelectionSet
+    pure $! SelectionField field{ _fSelectionSet = selectionSet }
 inlineSelection (SelectionFragmentSpread spread) =
-  SelectionInlineFragment <$> inlineFragmentSpread spread
+  withPathK "selectionSet" $ do
+    SelectionInlineFragment <$> inlineFragmentSpread spread
 inlineSelection (SelectionInlineFragment fragment@InlineFragment{ _ifSelectionSet }) = do
   selectionSet <- traverse inlineSelection _ifSelectionSet
   pure $! SelectionInlineFragment fragment{ _ifSelectionSet = selectionSet }
@@ -149,7 +151,7 @@ inlineFragmentSpread FragmentSpread{ _fsName, _fsDirectives } = do
      -- We didn’t hit the fragment cache, so look up the definition and convert
      -- it to an inline fragment.
      | Just FragmentDefinition{ _fdTypeCondition, _fdSelectionSet }
-         <- Map.lookup _fsName _ieFragmentDefinitions -> do
+         <- Map.lookup _fsName _ieFragmentDefinitions -> withPathK (unName $ _fsName) $ do
 
        selectionSet <- locally ieFragmentStack (_fsName :) $
          traverse inlineSelection (fmap absurd <$> _fdSelectionSet)
