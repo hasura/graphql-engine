@@ -6,11 +6,11 @@ module Hasura.GraphQL.Execute.Insert
 import           Hasura.Prelude
 
 import qualified Data.Aeson                     as J
+import qualified Data.Environment               as Env
 import qualified Data.HashMap.Strict            as Map
 import qualified Data.Sequence                  as Seq
 import qualified Data.Text                      as T
 import qualified Database.PG.Query              as Q
-import qualified Data.Environment               as Env
 
 
 import qualified Hasura.RQL.DML.Insert          as RQL
@@ -31,17 +31,6 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
 -- insert translation
-
--- FIXME:
--- Furthermore, this has been lifted almost verbatim from Resolve
--- and is unlikely to be correct on the first try. For instance:
--- - all calls to "validate" have been removed, since everything they
---   do should be baked directly into the parsers above.
--- - some paths still throw errors; is this something we're okay with
---   or should this operation be total? what should we move to our
---   internal representation, to avoid errors here?
--- - is some of this code dead or unused? are there paths never taken?
---   can it be simplified?
 
 traverseAnnInsert
   :: (Applicative f)

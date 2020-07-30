@@ -4,7 +4,6 @@ module Hasura.GraphQL.Parser.Column
   ( PGColumnValue(..)
   , column
   , mkScalarTypeName
-  , qualifiedObjectToName
 
   , UnpreparedValue(..)
 
@@ -163,11 +162,3 @@ mkScalarTypeName PGVarchar  = pure $$(litName "String")
 mkScalarTypeName scalarType = mkName (toSQLTxt scalarType) `onNothing` throw400 ValidationFailed
   ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
   <> "valid GraphQL identifier")
-
--- FIXME: this doesn't belong here
-qualifiedObjectToName :: (ToTxt a, MonadError QErr m) => QualifiedObject a -> m Name
-qualifiedObjectToName objectName = do
-  let textName = snakeCaseQualObject objectName
-  mkName textName `onNothing` throw400 ValidationFailed
-    ("cannot include " <> objectName <<> " in the GraphQL schema because " <> textName
-    <<> " is not a valid GraphQL identifier")

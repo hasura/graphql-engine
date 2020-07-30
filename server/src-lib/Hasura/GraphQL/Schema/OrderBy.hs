@@ -9,15 +9,14 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Hasura.GraphQL.Parser         as P
 import qualified Hasura.RQL.DML.Select         as RQL
+import           Hasura.RQL.Types              as RQL
+import           Hasura.SQL.DML                as SQL
 
 import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Parser,
                                                 UnpreparedValue)
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Table
-import           Hasura.RQL.Types              as RQL
-import           Hasura.SQL.DML                as SQL
 import           Hasura.SQL.Types
 
 
@@ -42,12 +41,12 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
         "Ordering options when selecting data from " <> table <<> "."
   tableFields  <- tableSelectFields table selectPermissions
   fieldParsers <- sequenceA . catMaybes <$> traverse mkField tableFields
-  pure $ fmap (concat . catMaybes) $ P.object name (Just description) fieldParsers
+  pure $ concat . catMaybes <$> P.object name (Just description) fieldParsers
   where
     mkField
       :: FieldInfo
       -> m (Maybe (InputFieldsParser n (Maybe [RQL.AnnOrderByItemG UnpreparedValue])))
-    mkField fieldInfo = runMaybeT $ do
+    mkField fieldInfo = runMaybeT $
       case fieldInfo of
         FIColumn columnInfo -> do
           let fieldName = pgiName columnInfo

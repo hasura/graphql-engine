@@ -51,6 +51,7 @@ module Hasura.SQL.Types
   , QualifiedObject(..)
   , qualObjectToText
   , snakeCaseQualObject
+  , qualifiedObjectToName
 
   , PGScalarType(..)
   , WithScalarType(..)
@@ -69,6 +70,7 @@ import qualified Database.PG.Query             as Q
 import qualified Database.PG.Query.PTI         as PTI
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Error
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -306,6 +308,13 @@ snakeCaseQualObject :: ToTxt a => QualifiedObject a -> T.Text
 snakeCaseQualObject (QualifiedObject sn o)
   | sn == publicSchema = toTxt o
   | otherwise = getSchemaTxt sn <> "_" <> toTxt o
+
+qualifiedObjectToName :: (ToTxt a, MonadError QErr m) => QualifiedObject a -> m G.Name
+qualifiedObjectToName objectName = do
+  let textName = snakeCaseQualObject objectName
+  onNothing (G.mkName textName) $ throw400 ValidationFailed $
+    "cannot include " <> objectName <<> " in the GraphQL schema because " <> textName
+    <<> " is not a valid GraphQL identifier"
 
 type QualifiedTable = QualifiedObject TableName
 

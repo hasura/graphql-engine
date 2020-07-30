@@ -45,7 +45,6 @@ import qualified Hasura.SQL.DML                        as SQL
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Column          (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
@@ -1106,7 +1105,7 @@ functionArgs functionName (toList -> inputArgs) = do
      | otherwise -> do
          -- There are user-provided arguments: we need to parse an args object.
          argumentParsers <- sequenceA $ optional <> mandatory
-         objectName <- P.qualifiedObjectToName functionName <&> (<> $$(G.litName "_args"))
+         objectName <- qualifiedObjectToName functionName <&> (<> $$(G.litName "_args"))
          let fieldName    = $$(G.litName "args")
              fieldDesc    = G.Description $ "input parameters for function " <>> functionName
              objectParser = P.object objectName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do

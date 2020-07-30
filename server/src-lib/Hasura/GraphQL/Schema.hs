@@ -223,7 +223,7 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
     for selectPerms \perms -> do
-      displayName <- P.qualifiedObjectToName table
+      displayName <- qualifiedObjectToName table
       let fieldsDesc = G.Description $ "fetch data from the table: " <>> table
           aggName = displayName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "fetch aggregated fields from the table: " <>> table
@@ -239,7 +239,7 @@ query' allTables allFunctions allRemotes allActions nonObjectCustomTypes = do
         functionName = fiName function
     selectPerms <- tableSelectPermissions targetTable
     for selectPerms \perms -> do
-      displayName <- P.qualifiedObjectToName functionName
+      displayName <- qualifiedObjectToName functionName
       let functionDesc = G.Description $ "execute function " <> functionName <<> " which returns " <>> targetTable
           aggName = displayName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> targetTable
@@ -282,7 +282,7 @@ relayQuery' allTables allFunctions = do
       pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
                      <$> askTableInfo table
       selectPerms <- MaybeT $ tableSelectPermissions table
-      displayName <- P.qualifiedObjectToName table
+      displayName <- qualifiedObjectToName table
       let fieldName = displayName <> $$(G.litName "_connection")
           fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> table
       lift $ selectTableConnection table fieldName fieldDesc pkeyColumns selectPerms
@@ -294,7 +294,7 @@ relayQuery' allTables allFunctions = do
       pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
                      <$> askTableInfo returnTable
       selectPerms <- MaybeT $ tableSelectPermissions returnTable
-      displayName <- P.qualifiedObjectToName functionName
+      displayName <- qualifiedObjectToName functionName
       let fieldName = displayName <> $$(G.litName "_connection")
           fieldDesc = Just $ G.Description $ "execute function " <> functionName
                       <<> " which returns " <>> returnTable
@@ -493,7 +493,7 @@ mutation
 mutation allTables allRemotes allActions nonObjectCustomTypes = do
   mutationParsers <- for (toList allTables) \table -> do
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
-    displayName <- P.qualifiedObjectToName table
+    displayName <- qualifiedObjectToName table
     tablePerms  <- tablePermissions table
     for tablePerms \permissions -> do
       let selectPerms = _permSel permissions

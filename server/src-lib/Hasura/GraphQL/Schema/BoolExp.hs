@@ -12,7 +12,6 @@ import qualified Hasura.GraphQL.Parser         as P
 import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Parser,
                                                 UnpreparedValue, mkParameter)
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Column  (qualifiedObjectToName)
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.SQL.DML
@@ -40,7 +39,7 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
         "Boolean expression to filter rows from the table " <> table <<>
         ". All fields are combined with a logical 'AND'."
 
-  tableFieldParsers <- fmap catMaybes $ maybe
+  tableFieldParsers <- catMaybes <$> maybe
     (pure [])
     (traverse mkField <=< tableSelectFields table)
     selectPermissions
@@ -167,37 +166,37 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
     -- Ops for Geography type
     , guard (isScalarColumnWhere (== PGGeography) columnType) *>
       [ P.fieldOptional $$(G.litName "_st_intersects")
-        (Just $ "does the column spatially intersect the given geography value")
+        (Just "does the column spatially intersect the given geography value")
         (ASTIntersects . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_st_d_within")
-        (Just $ "is the column within a given distance from the given geography value")
+        (Just "is the column within a given distance from the given geography value")
         (ASTDWithinGeog <$> geogInputParser)
       ]
     -- Ops for Geometry type
     , guard (isScalarColumnWhere (== PGGeometry) columnType) *>
       [ P.fieldOptional $$(G.litName "_st_contains")
-        (Just $ "does the column contain the given geometry value")
+        (Just "does the column contain the given geometry value")
         (ASTContains   . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_st_crosses")
-        (Just $ "does the column cross the given geometry value")
+        (Just "does the column cross the given geometry value")
         (ASTCrosses    . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_st_equals")
-        (Just $ "is the column equal to given geometry value (directionality is ignored)")
+        (Just "is the column equal to given geometry value (directionality is ignored)")
         (ASTEquals     . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_st_overlaps")
-        (Just $ "does the column 'spatially overlap' (intersect but not completely contain) the given geometry value")
+        (Just "does the column 'spatially overlap' (intersect but not completely contain) the given geometry value")
         (ASTOverlaps   . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_st_touches")
-        (Just $ "does the column have atleast one point in common with the given geometry value")
+        (Just "does the column have atleast one point in common with the given geometry value")
         (ASTTouches    . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_st_within")
-        (Just $ "is the column contained in the given geometry value")
+        (Just "is the column contained in the given geometry value")
         (ASTWithin     . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_st_intersects")
-        (Just $ "does the column spatially intersect the given geometry value")
+        (Just "does the column spatially intersect the given geometry value")
         (ASTIntersects . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_st_d_within")
-        (Just $ "is the column within a given distance from the given geometry value")
+        (Just "is the column within a given distance from the given geometry value")
         (ASTDWithinGeom <$> geomInputParser)
       ]
     ]
