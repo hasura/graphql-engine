@@ -1,3 +1,5 @@
+**** Latest commit compared against master - 0ae53841156800dcf8758ed1a861e87dbb10fe11
+
 commit 0ae53841156800dcf8758ed1a861e87dbb10fe11
 Author: Phil Freeman <phil@hasura.io>
 Date:   Thu Jul 23 13:39:26 2020 -0700
