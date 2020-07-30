@@ -1,35 +1,31 @@
-import React, { Component, ReactNode } from 'react';
+import React, { Component } from 'react';
 import globals from '../../../Globals';
 import styles from '../../Error/ErrorPage.scss';
 
 const errorImageSrc = `${globals.assetsPath}/common/img/hasura_icon_green.svg`;
 
 interface ErrorState {
-  error: Error;
-  hasError: boolean;
+  error?: Error | null;
 }
 
 type Props = {
-  children: ReactNode;
   title: string;
   message: string;
 };
 
-class ComponentErrorBoundary extends Component<Props, ErrorState> {
+class ErrorBoundary extends Component<Props, ErrorState> {
   state: ErrorState = {
-    hasError: false,
-    error: new Error(''),
+    error: null,
   };
 
   componentDidCatch(error: Error) {
     this.setState({
-      hasError: true,
       error,
     });
   }
 
   render() {
-    if (this.state.hasError) {
+    if (this.state.error) {
       return (
         <div className={styles.viewContainer}>
           <div className={`container ${styles.centerContent}`}>
@@ -65,4 +61,4 @@ class ComponentErrorBoundary extends Component<Props, ErrorState> {
   }
 }
 
-export default ComponentErrorBoundary;
+export default ErrorBoundary;
