@@ -579,27 +579,13 @@ tableArgs table selectPermissions = do
         whereF   <- whereParser
         orderBy  <- orderByParser
         limit    <- fmap join $ P.fieldOptional limitName   limitDesc   $ P.nullable positiveInt
-        offset   <- fmap join $ P.fieldOptional offsetName  offsetDesc  $ P.nullable positiveInt
+        offset   <- fmap join $ P.fieldOptional offsetName  offsetDesc  $ P.nullable fakeBigInt
         distinct <- distinctParser
-
-    -- TODO: offset should be a bigint
-    --
-    -- Previous versions of the code used to also accept a string for the offset
-    -- despite the schema explicitly declaring it as an int; the suspected goal
-    -- of this was to allow for bigint offsets, but there's no surviving commit
-    -- message or documentation that states it explicity. A visible artefact of
-    -- this is the fact that in the SelectArgs we store a SQL expression for the
-    -- offet while the limit is stored as a normal int.
-    --
-    -- While it would be possible to write a custom parser that advertises
-    -- itself as an int, but also accepts strings, to replicate the old
-    -- behaviour, a much better approach would be to use custom scalar types.
-
         pure $ RQL.SelectArgs
           { RQL._saWhere    = whereF
           , RQL._saOrderBy  = orderBy
           , RQL._saLimit    = fromIntegral <$> limit
-          , RQL._saOffset   = txtEncoder . PGValInteger <$> offset
+          , RQL._saOffset   = txtEncoder <$> offset
           , RQL._saDistinct = distinct
           }
   pure $ selectArgs `P.bindFields`
@@ -607,12 +593,33 @@ tableArgs table selectPermissions = do
       traverse_ (validateDistinctOn $ RQL._saOrderBy args) $ RQL._saDistinct args
       pure args
   where
+    -- TODO: THIS IS A TEMPORARY FIX
+    -- while offset is exposed in the schema as a GraphQL Int, which
+    -- is a bounded Int32, previous versions of the code used to also
+    -- silently accept a string as an input for the offset as a way to
+    -- support int64 values (postgres bigint)
+    -- a much better way of supporting this would be to expose the
+    -- offset in the code as a postgres bigint, but for now, to avoid
+    -- a breaking change, we are defining a custom parser that also
+    -- accepts a string
+    fakeBigInt :: Parser 'Both n PGScalarValue
+    fakeBigInt = P.Parser
+      { pType = P.NonNullable $ P.TNamed $ P.mkDefinition $$(G.litName "Int") Nothing P.TIScalar
+      , pParser = P.peelVariable Nothing >=> \case
+          P.GraphQLValue (G.VInt    i) -> PGValBigInt <$> convertWith scientificToInteger (fromInteger i)
+          P.JSONValue    (J.Number  n) -> PGValBigInt <$> convertWith scientificToInteger n
+          P.GraphQLValue (G.VString s) -> pure $ PGValUnknown s
+          P.JSONValue    (J.String  s) -> pure $ PGValUnknown s
+          v ->  P.typeMismatch $$(G.litName "Int") "a 32-bit integer, or a 64-bit integer represented as a string" v
+      }
+    convertWith f = either (parseErrorWith ParseFailed . qeError) pure . runAesonParser f
+
     -- TH splices mess up ApplicativeDo
     -- see (FIXME: link to bug here)
-    limitName      = $$(G.litName "limit")
-    offsetName     = $$(G.litName "offset")
-    limitDesc      = Just $ G.Description "limit the number of rows returned"
-    offsetDesc     = Just $ G.Description "skip the first n rows. Use only with order_by"
+    limitName  = $$(G.litName "limit")
+    offsetName = $$(G.litName "offset")
+    limitDesc  = Just $ G.Description "limit the number of rows returned"
+    offsetDesc = Just $ G.Description "skip the first n rows. Use only with order_by"
 
     validateDistinctOn Nothing _ = return ()
     validateDistinctOn (Just orderByCols) distinctOnCols = do
