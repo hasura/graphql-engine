@@ -26,6 +26,7 @@ import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.GraphQL.Validate.SelectionSet   as V
+import qualified Hasura.Logging                         as L
 import qualified Hasura.SQL.DML                         as S
 import qualified Hasura.Tracing                         as Tracing
 
@@ -203,6 +204,7 @@ convertQuerySelSet
      , Has OrdByCtx r
      , Has SQLGenCtx r
      , Has UserInfo r
+     , Has (L.Logger L.Hasura) r
      , HasVersion
      , MonadIO m
      , Tracing.MonadTrace m
@@ -302,11 +304,11 @@ mkLazyRespTx
      , MonadTx tx
      , Tracing.MonadTrace tx
      )
-  => Env.Environment 
-  -> HTTP.Manager 
-  -> [N.Header] 
-  -> UserInfo 
-  -> [(G.Alias, ResolvedQuery)] 
+  => Env.Environment
+  -> HTTP.Manager
+  -> [N.Header]
+  -> UserInfo
+  -> [(G.Alias, ResolvedQuery)]
   -> m (tx EncJSON)
 mkLazyRespTx env manager reqHdrs userInfo resolved = do
   pure $ fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do

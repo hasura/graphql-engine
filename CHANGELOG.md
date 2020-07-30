@@ -6,6 +6,8 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add logs for action handlers
+- server: add request/response sizes in event triggers (and scheduled trigger) logs
 - console: update sidebar icons for different action and trigger types
 - console: add ErrorBoundary for VoyagerView and fix memory requirements of viz.js (close #4818) (#4856)
 
