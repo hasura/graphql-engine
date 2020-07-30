@@ -64,6 +64,7 @@ import           Hasura.SQL.Types
 import qualified Hasura.Tracing                       as Tracing
 
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
+import qualified Data.ByteString.Lazy                 as LBS
 import qualified Data.HashMap.Strict                  as M
 import qualified Data.TByteString                     as TBS
 import qualified Data.Text                            as T
@@ -203,8 +204,13 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       eventsNext <- LA.withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
         forM_ events $ \event -> do
+          tracingCtx <- liftIO (Tracing.extractEventContext (eEvent event))
+          let runTraceT = maybe
+                Tracing.runTraceT
+                Tracing.runTraceTInContext
+                tracingCtx
           t <- processEvent event
-            & Tracing.runTraceT "process event"
+            & runTraceT "process event"
             & withEventEngineCtx eeCtx
             & flip runReaderT (logger, httpMgr)
             & LA.async
@@ -267,9 +273,11 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
               etHeaders = map encodeHeader headerInfos
               headers = addDefaultHeaders etHeaders
               ep = createEventPayload retryConf e
+              payload = encode $ toJSON ep
               extraLogCtx = ExtraLogContext Nothing (epId ep) -- avoiding getting current time here to avoid another IO call with each event call
-          res <- runExceptT $ tryWebhook headers responseTimeout (toJSON ep) webhook
-          logHTTPForET res extraLogCtx
+              requestDetails = RequestDetails $ LBS.length payload
+          res <- runExceptT $ tryWebhook headers responseTimeout payload webhook
+          logHTTPForET res extraLogCtx requestDetails
           let decodedHeaders = map (decodeHeader logenv headerInfos) headers
           either
             (processError pool e retryConf decodedHeaders ep)
