@@ -363,6 +363,7 @@ inputValueToJSON = \case
   JSONValue    j -> j
   GraphQLValue g -> graphQLValueToJSON g
   where
+    graphQLValueToJSON :: G.Value Void -> A.Value
     graphQLValueToJSON = \case
       G.VNull                 -> A.Null
       G.VInt i                -> A.toJSON i

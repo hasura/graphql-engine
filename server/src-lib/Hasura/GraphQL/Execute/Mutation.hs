@@ -6,6 +6,7 @@ import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.HashSet                           as Set
 import qualified Data.IntMap                            as IntMap
 import qualified Data.Sequence                          as Seq
 import qualified Data.Sequence.NonEmpty                 as NE
@@ -24,7 +25,7 @@ import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
-import           Hasura.GraphQL.Execute.Insert          (convertToSQLTransaction, fmapAnnInsert)
+import           Hasura.GraphQL.Execute.Insert
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
@@ -34,7 +35,7 @@ import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
 convertDelete
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadError QErr m)
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
@@ -42,11 +43,12 @@ convertDelete
   -> Bool
   -> m RespTx
 convertDelete env usrVars rjCtx deleteOperation stringifyNum = do
-  pure $ RQL.execDeleteQuery env stringifyNum (Just rjCtx) (preparedDelete, planVariablesSequence usrVars planningState)
-  where (preparedDelete, planningState) = runIdentity $ runPlan $ RQL.traverseAnnDel prepareWithPlan deleteOperation
+  let (preparedDelete, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnDel prepareWithoutPlan deleteOperation
+  validateSessionVariables expectedVariables usrVars
+  pure $ RQL.execDeleteQuery env stringifyNum (Just rjCtx) (preparedDelete, Seq.empty)
 
 convertUpdate
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadError QErr m)
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
@@ -54,13 +56,15 @@ convertUpdate
   -> Bool
   -> m RespTx
 convertUpdate env usrVars rjCtx updateOperation stringifyNum = do
-  pure $ if null $ RQL.uqp1OpExps updateOperation
-    then pure $ RQL.buildEmptyMutResp $ RQL.uqp1Output preparedUpdate
-    else RQL.execUpdateQuery env stringifyNum (Just rjCtx) (preparedUpdate, Seq.empty)
-  where preparedUpdate = runIdentity $ RQL.traverseAnnUpd (pure . unpreparedToTextSQL) updateOperation
+  let (preparedUpdate, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnUpd prepareWithoutPlan updateOperation
+  if null $ RQL.uqp1OpExps updateOperation
+  then pure $ pure $ RQL.buildEmptyMutResp $ RQL.uqp1Output preparedUpdate
+  else do
+    validateSessionVariables expectedVariables usrVars
+    pure $ RQL.execUpdateQuery env stringifyNum (Just rjCtx) (preparedUpdate, Seq.empty)
 
 convertInsert
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadError QErr m)
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
@@ -68,8 +72,9 @@ convertInsert
   -> Bool
   -> m RespTx
 convertInsert env usrVars rjCtx insertOperation stringifyNum = do
+  let (preparedInsert, expectedVariables) = flip runState Set.empty $ traverseAnnInsert prepareWithoutPlan insertOperation
+  validateSessionVariables expectedVariables usrVars
   pure $ convertToSQLTransaction env preparedInsert rjCtx Seq.empty stringifyNum
-  where preparedInsert = fmapAnnInsert unpreparedToTextSQL insertOperation
 
 planVariablesSequence :: SessionVariables -> PlanningSt -> Seq.Seq Q.PrepArg
 planVariablesSequence usrVars = Seq.fromList . map fst . withUserVars usrVars . IntMap.elems . _psPrepped

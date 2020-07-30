@@ -8,7 +8,8 @@ module Hasura.GraphQL.Execute.Prepare
   , initPlanningSt
   , runPlan
   , prepareWithPlan
-  , unpreparedToTextSQL
+  , prepareWithoutPlan
+  , validateSessionVariables
   , withUserVars
   , buildTypedOperation
   ) where
@@ -20,6 +21,7 @@ import qualified Data.Aeson                             as J
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
 import qualified Data.IntMap                            as IntMap
+import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
@@ -28,7 +30,7 @@ import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.DML.Internal                (currentSession, sessVarFromCurrentSetting')
+import           Hasura.RQL.DML.Internal                (currentSession)
 import           Hasura.RQL.Types
 import           Hasura.Session
 import           Hasura.SQL.Types
@@ -60,14 +62,15 @@ data ExecutionStep db remote raw
 
 data PlanningSt
   = PlanningSt
-  { _psArgNumber :: !Int
-  , _psVariables :: !PlanVariables
-  , _psPrepped   :: !PrepArgMap
+  { _psArgNumber        :: !Int
+  , _psVariables        :: !PlanVariables
+  , _psPrepped          :: !PrepArgMap
+  , _psSessionVariables :: !(Set.HashSet SessionVariable)
   }
 
 initPlanningSt :: PlanningSt
 initPlanningSt =
-  PlanningSt 2 Map.empty IntMap.empty
+  PlanningSt 2 Map.empty IntMap.empty Set.empty
 
 runPlan :: StateT PlanningSt m a -> m (a, PlanningSt)
 runPlan = flip runStateT initPlanningSt
@@ -82,10 +85,8 @@ prepareWithPlan = \case
     return $ toPrepParam argNum (pstType colVal)
 
   UVSessionVar ty sessVar -> do
-    let sessVarVal =
-          S.SEOpApp (S.SQLOp "->>")
-          [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
-    return $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
+    sessVarVal <- retrieveAndFlagSessionVariableValue insertSessionVariable sessVar currentSessionExp
+    pure $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
       PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
       PGTypeArray _      -> sessVarVal
 
@@ -93,13 +94,32 @@ prepareWithPlan = \case
   UVSession        -> pure currentSessionExp
   where
     currentSessionExp = S.SEPrep 1
+    insertSessionVariable sessVar plan =
+      plan { _psSessionVariables = Set.insert sessVar $ _psSessionVariables plan }
 
-unpreparedToTextSQL :: UnpreparedValue -> S.SQLExp
-unpreparedToTextSQL = \case
-  UVParameter pgValue _   -> toTxtValue $ pcvValue pgValue
-  UVSessionVar ty sessVar -> sessVarFromCurrentSetting' ty sessVar
-  UVLiteral sqlExp        -> sqlExp
-  UVSession               -> currentSession
+prepareWithoutPlan :: (MonadState (Set.HashSet SessionVariable) m) => UnpreparedValue -> m S.SQLExp
+prepareWithoutPlan = \case
+  UVParameter pgValue _   -> pure $ toTxtValue $ pcvValue pgValue
+  UVLiteral sqlExp        -> pure $ sqlExp
+  UVSession               -> pure $ currentSession
+  UVSessionVar ty sessVar -> do
+    sessVarVal <- retrieveAndFlagSessionVariableValue Set.insert sessVar currentSession
+    -- TODO: this piece of code appears at least three times: twice here
+    -- and once in RQL.DML.Internal. Some de-duplication is in order.
+    pure $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
+      PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
+      PGTypeArray _      -> sessVarVal
+
+retrieveAndFlagSessionVariableValue
+  :: (MonadState s m)
+  => (SessionVariable -> s -> s)
+  -> SessionVariable
+  -> S.SQLExp
+  -> m S.SQLExp
+retrieveAndFlagSessionVariableValue updateState sessVar currentSessionExp = do
+  modify $ updateState sessVar
+  pure $ S.SEOpApp (S.SQLOp "->>")
+    [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
 
 withUserVars :: SessionVariables -> [(Q.PrepArg, PGScalarValue)] -> [(Q.PrepArg, PGScalarValue)]
 withUserVars usrVars list =
@@ -107,26 +127,32 @@ withUserVars usrVars list =
       prepArg = Q.toPrepVal (Q.AltJ usrVars)
   in (prepArg, usrVarsAsPgScalar):list
 
+validateSessionVariables :: MonadError QErr m => Set.HashSet SessionVariable -> SessionVariables -> m ()
+validateSessionVariables requiredVariables sessionVariables = do
+  let missingSessionVariables = requiredVariables `Set.difference` getSessionVariablesSet sessionVariables
+  unless (null missingSessionVariables) do
+    throw400 NotFound $ "missing session variables: " <> T.intercalate ", " (dquote . sessionVariableToText <$> toList missingSessionVariables)
+
 getVarArgNum :: (MonadState PlanningSt m) => G.Name -> m Int
 getVarArgNum var = do
-  PlanningSt curArgNum vars prepped <- get
+  PlanningSt curArgNum vars prepped sessionVariables <- get
   case Map.lookup var vars of
     Just argNum -> pure argNum
     Nothing     -> do
-      put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped
+      put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped sessionVariables
       pure curArgNum
 
 addPrepArg
   :: (MonadState PlanningSt m)
   => Int -> (Q.PrepArg, PGScalarValue) -> m ()
 addPrepArg argNum arg = do
-  PlanningSt curArgNum vars prepped <- get
-  put $ PlanningSt curArgNum vars $ IntMap.insert argNum arg prepped
+  PlanningSt curArgNum vars prepped sessionVariables <- get
+  put $ PlanningSt curArgNum vars (IntMap.insert argNum arg prepped) sessionVariables
 
 getNextArgNum :: (MonadState PlanningSt m) => m Int
 getNextArgNum = do
-  PlanningSt curArgNum vars prepped <- get
-  put $ PlanningSt (curArgNum + 1) vars prepped
+  PlanningSt curArgNum vars prepped sessionVariables <- get
+  put $ PlanningSt (curArgNum + 1) vars prepped sessionVariables
   return curArgNum
 
 unresolveVariables

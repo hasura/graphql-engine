@@ -30,7 +30,6 @@ import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.Extended                    as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.ByteString                        as B
-import qualified Data.Environment                       as E
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Sequence                          as Seq
@@ -57,11 +56,7 @@ import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
-
-import           Hasura.GraphQL.Utils
-
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value

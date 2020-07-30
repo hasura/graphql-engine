@@ -23,24 +23,16 @@ module Hasura.GraphQL.Execute
 
 import           Hasura.Prelude
 
-import           Data.Text.Conversions
-
 import qualified Data.Aeson                             as J
-import qualified Data.CaseInsensitive                   as CI
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 
 import qualified Data.HashSet                           as HS
 import qualified Data.List.NonEmpty                     as NE
-import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
-import qualified Network.Wreq                           as Wreq
-
-import           Control.Exception                      (try)
-import           Control.Lens
 
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.Inline          as EI
@@ -58,10 +50,8 @@ import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
-import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
-                                                         mkSetCookieHeaders)
+import           Hasura.Server.Utils                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
@@ -230,7 +220,6 @@ getResolvedExecPlan env pgExecCtx planCache userInfo sqlGenCtx
 
   planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo) opNameM queryStr
            queryType planCache
-  let usrVars = _uiSession userInfo
   case planM of
     -- plans are only for queries and subscriptions
     Just plan -> (Telem.Hit,) <$> case plan of

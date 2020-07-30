@@ -22,6 +22,7 @@ import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.CaseInsensitive                        as CI
+import qualified Data.Environment                            as Env
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
@@ -34,7 +35,6 @@ import qualified Network.HTTP.Types                          as H
 import qualified Network.Wai.Extended                        as Wai
 import qualified Network.WebSockets                          as WS
 import qualified StmContainers.Map                           as STMMap
-import qualified Data.Environment                            as Env
 
 import           Control.Concurrent.Extended                 (sleep)
 import           Control.Exception.Lifted
@@ -51,15 +51,13 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
                                                               resolveUserInfo)
 import           Hasura.Server.Cors
-import           Hasura.Server.Utils                         (RequestId,
-                                                              getRequestId)
+import           Hasura.Server.Utils                         (RequestId, getRequestId)
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll       as LQ
-import qualified Hasura.GraphQL.Execute.Query                as EQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
 import qualified Hasura.Server.Telemetry.Counters            as Telem

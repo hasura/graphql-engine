@@ -1,5 +1,5 @@
 module Hasura.GraphQL.Execute.Insert
-  ( fmapAnnInsert
+  ( traverseAnnInsert
   , convertToSQLTransaction
   ) where
 
@@ -43,34 +43,40 @@ import           Hasura.SQL.Value
 -- - is some of this code dead or unused? are there paths never taken?
 --   can it be simplified?
 
-fmapAnnInsert :: (a -> b) -> AnnMultiInsert a -> AnnMultiInsert b
-fmapAnnInsert f (annIns, mutationOutput) =
-  ( fmapMulti annIns
-  , runIdentity $ RQL.traverseMutationOutput (pure . f) mutationOutput
-  )
+traverseAnnInsert
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnMultiInsert a
+  -> f (AnnMultiInsert b)
+traverseAnnInsert f (annIns, mutationOutput) = (,)
+  <$> traverseMulti annIns
+  <*> RQL.traverseMutationOutput f mutationOutput
   where
-    fmapMulti (AnnIns objs table conflictClause (insertCheck, updateCheck) columns defaultValues) =
-      AnnIns
-        (fmap fmapObject objs)
-        table
-        (fmap (fmap f) conflictClause)
-        (fmapAnnBoolExp f insertCheck, fmap (fmapAnnBoolExp f) updateCheck)
-        columns
-        (fmap f defaultValues)
-    fmapSingle (AnnIns obj table conflictClause (insertCheck, updateCheck) columns defaultValues) =
-      AnnIns
-        (fmapObject obj)
-        table
-        (fmap (fmap f) conflictClause)
-        (fmapAnnBoolExp f insertCheck, fmap (fmapAnnBoolExp f) updateCheck)
-        columns
-        (fmap f defaultValues)
-    fmapObject (AnnInsObj columns objRels arrRels) =
-      AnnInsObj
-        (fmap (fmap f) columns)
-        (fmap (fmapRel fmapSingle) objRels)
-        (fmap (fmapRel fmapMulti)  arrRels)
-    fmapRel t (RelIns object relInfo) = RelIns (t object) relInfo
+    traverseMulti (AnnIns objs tableName conflictClause checkCond columns defaultValues) = AnnIns
+      <$> traverse traverseObject objs
+      <*> pure tableName
+      <*> traverse (traverse f) conflictClause
+      <*> ( (,)
+            <$> traverseAnnBoolExp f (fst checkCond)
+            <*> traverse (traverseAnnBoolExp f) (snd checkCond)
+          )
+      <*> pure columns
+      <*> traverse f defaultValues
+    traverseSingle (AnnIns obj tableName conflictClause checkCond columns defaultValues) = AnnIns
+      <$> traverseObject obj
+      <*> pure tableName
+      <*> traverse (traverse f) conflictClause
+      <*> ( (,)
+            <$> traverseAnnBoolExp f (fst checkCond)
+            <*> traverse (traverseAnnBoolExp f) (snd checkCond)
+          )
+      <*> pure columns
+      <*> traverse f defaultValues
+    traverseObject (AnnInsObj columns objRels arrRels) = AnnInsObj
+      <$> traverse (traverse f) columns
+      <*> traverse (traverseRel traverseSingle) objRels
+      <*> traverse (traverseRel traverseMulti)  arrRels
+    traverseRel z (RelIns object relInfo) = RelIns <$> z object <*> pure relInfo
 
 
 convertToSQLTransaction

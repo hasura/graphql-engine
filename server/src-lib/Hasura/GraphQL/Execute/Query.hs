@@ -140,28 +140,6 @@ mkCurPlanTx env manager reqHdrs userInfo fldPlans = do
 
   pure (mkLazyRespTx env manager reqHdrs userInfo resolved, mkGeneratedSqlMap resolved)
 
-getVarArgNum :: (MonadState PlanningSt m) => G.Name -> m Int
-getVarArgNum var = do
-  PlanningSt curArgNum vars prepped <- get
-  case Map.lookup var vars of
-    Just argNum -> pure argNum
-    Nothing     -> do
-      put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped
-      pure curArgNum
-
-addPrepArg
-  :: (MonadState PlanningSt m)
-  => Int -> (Q.PrepArg, PGScalarValue) -> m ()
-addPrepArg argNum arg = do
-  PlanningSt curArgNum vars prepped <- get
-  put $ PlanningSt curArgNum vars $ IntMap.insert argNum arg prepped
-
-getNextArgNum :: (MonadState PlanningSt m) => m Int
-getNextArgNum = do
-  PlanningSt curArgNum vars prepped <- get
-  put $ PlanningSt (curArgNum + 1) vars prepped
-  return curArgNum
-
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
   :: PlanVariables
@@ -237,10 +215,11 @@ convertQuerySelSet env gqlContext userInfo manager reqHeaders fields varDefs var
 
   -- Transform the RQL AST into a prepared SQL query
   queryPlans <- for unpreparedQueries \unpreparedQuery -> do
-    (preparedQuery, PlanningSt _ planVars planVals)
+    (preparedQuery, PlanningSt _ planVars planVals expectedVariables)
       <- flip runStateT initPlanningSt
          $ traverseQueryRootField prepareWithPlan unpreparedQuery
            >>= traverseAction convertActionQuery
+    validateSessionVariables expectedVariables $ _uiSession userInfo
     traverseDB (pure . irToRootFieldPlan planVars planVals) preparedQuery
       >>= traverseAction (pure . actionQueryToRootFieldPlan planVars planVals)
 

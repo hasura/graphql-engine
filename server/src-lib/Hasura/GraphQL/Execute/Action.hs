@@ -7,13 +7,13 @@ module Hasura.GraphQL.Execute.Action
 
 import           Hasura.Prelude
 
-
 import qualified Data.Aeson                           as J
 import qualified Data.Aeson.Casing                    as J
 import qualified Data.Aeson.TH                        as J
 import qualified Data.ByteString.Lazy                 as BL
 import qualified Data.CaseInsensitive                 as CI
 import qualified Data.HashMap.Strict                  as Map
+import qualified Data.HashSet                         as Set
 import qualified Data.Text                            as T
 import qualified Data.UUID                            as UUID
 import qualified Database.PG.Query                    as Q
@@ -37,19 +37,19 @@ import qualified Data.Environment                     as Env
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
-import           Hasura.GraphQL.Parser          hiding (column)
-import           Hasura.GraphQL.Utils           (showNames)
+import           Hasura.GraphQL.Parser                hiding (column)
+import           Hasura.GraphQL.Utils                 (showNames)
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.DML.Select          (asSingleRowJsonResp)
+import           Hasura.RQL.DML.Select                (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Utils            (mkClientHeadersForward, mkSetCookieHeaders)
-import           Hasura.Server.Version          (HasVersion)
+import           Hasura.Server.Utils                  (mkClientHeadersForward, mkSetCookieHeaders)
+import           Hasura.Server.Version                (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value               (PGScalarValue (..), toTxtValue)
+import           Hasura.SQL.Value                     (PGScalarValue (..), toTxtValue)
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -150,7 +150,8 @@ resolveActionExecution env userInfo annAction execContext = do
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
       selectAstUnresolved = processOutputSelectionSet webhookResponseExpression
                             outputType definitionList annFields stringifyNum
-  astResolved <- RS.traverseAnnSimpleSelect (pure . unpreparedToTextSQL) selectAstUnresolved
+  (astResolved, _expectedVariables) <- flip runStateT Set.empty $ RS.traverseAnnSimpleSelect prepareWithoutPlan selectAstUnresolved
+  -- TODO: verify variables here?
   let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
       jsonAggType = mkJsonAggSelect outputType
   return $ (,respHeaders) $
