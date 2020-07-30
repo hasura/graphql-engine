@@ -61,9 +61,9 @@ const createInsertMigration = (
     }
   };
   const customOnError = () => {};
-  const requestMessage = 'Creating migration';
-  const successMessage = 'Created migration!';
-  const errorMessage = 'Error in creating migration';
+  const requestMessage = 'Creating migration...';
+  const successMessage = 'Migration created';
+  const errorMessage = 'Creating migration failed';
 
   makeMigrationCall(
     dispatch,

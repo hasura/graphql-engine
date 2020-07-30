@@ -2,13 +2,13 @@ import React from 'react';
 import styles from '../../../Common/TableCommon/Table.scss';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 
-type MigrationCheckBoxProps = {
+type MigrationCheckboxProps = {
   isChecked: boolean;
   onChange: () => void;
   className: string;
 };
 
-const MigrationCheckBox: React.FC<MigrationCheckBoxProps> = ({
+const MigrationCheckbox: React.FC<MigrationCheckboxProps> = ({
   isChecked,
   onChange,
   className,
@@ -31,4 +31,4 @@ const MigrationCheckBox: React.FC<MigrationCheckBoxProps> = ({
   </div>
 );
 
-export default MigrationCheckBox;
+export default MigrationCheckbox;

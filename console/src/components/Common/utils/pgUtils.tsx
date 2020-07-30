@@ -30,7 +30,7 @@ export interface PrimaryKey {
   table_name: string;
   table_schema: string;
   constraint_name: string;
-  columns: Array<string>;
+  columns: string[];
 }
 
 export interface TableColumn extends BaseTableColumn {
@@ -588,7 +588,7 @@ export const getGroupedTableComputedFields = (
 export const createPKClause = (
   primaryKeyInfo: PrimaryKey,
   insertion: Record<string, any>,
-  columns: Array<BaseTableColumn>
+  columns: BaseTableColumn[]
 ): Record<string, any> => {
   const newPKClause: Record<string, any> = {};
   const hasPrimaryKeys = primaryKeyInfo?.columns;

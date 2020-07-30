@@ -11,14 +11,14 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { TableRow } from '../Common/Components/TableRow';
-import MigrationCheckBox from './MigrationCheckbox';
+import MigrationCheckbox from './MigrationCheckbox';
 import globals from '../../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 class InsertItem extends Component {
   constructor() {
     super();
-    this.state = { insertedRows: 0, isMigrationChecked: false };
+    this.state = { insertedRows: 0, isMigration: false };
   }
 
   componentDidMount() {
@@ -41,7 +41,7 @@ class InsertItem extends Component {
   }
 
   toggleMigrationCheckBox = () => {
-    this.setState(prev => ({ isMigrationChecked: !prev.isMigrationChecked }));
+    this.setState(prev => ({ isMigration: !prev.isMigration }));
   };
 
   render() {
@@ -170,10 +170,10 @@ class InsertItem extends Component {
               <div className={styles.form_flex}>
                 {elements}
                 {isCLIMode ? (
-                  <MigrationCheckBox
+                  <MigrationCheckbox
                     className={`form-group ${styles.migrationBoxPosStyles}`}
                     onChange={this.toggleMigrationCheckBox}
-                    isChecked={this.state.isMigrationChecked}
+                    isChecked={this.state.isMigration}
                   />
                 ) : null}
               </div>
@@ -200,11 +200,7 @@ class InsertItem extends Component {
                       }
                     });
                     dispatch(
-                      insertItem(
-                        tableName,
-                        inputValues,
-                        this.state.isMigrationChecked
-                      )
+                      insertItem(tableName, inputValues, this.state.isMigration)
                     ).then(() => {
                       this.nextInsert();
                     });
