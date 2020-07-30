@@ -8,6 +8,7 @@
 
 - server: add new `--conn-lifetime` and `HASURA_GRAPHQL_PG_CONN_LIFETIME` options for expiring connections after some amount of active time (#5087)
 - server: shrink libpq connection request/response buffers back to 1MB if they grow beyond 2MB, fixing leak-like behavior on active servers (#5087)
+- console: fix allowed queries through upload graphql file (close #5137) (#5252)
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
 
 
@@ -472,7 +473,6 @@ See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-
 - console: fix parsing of wrapped types in SDL (close #4099) (#4167)
 - console: misc actions fixes (#4059)
 - console: action relationship page improvements (fix #4062, #4130) (#4133)
-- console: fix allowed queries through upload graphql file (fix #5137) (#5252)
 - cli: fix init command to generate correct config (fix #4036) (#4038)
 - cli: fix parse error returned on console api (close #4126) (#4152)
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
