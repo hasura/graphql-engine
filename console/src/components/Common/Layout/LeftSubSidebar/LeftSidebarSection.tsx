@@ -53,6 +53,17 @@ const LeftSidebarSection = ({
     itemList = [...items];
   }
 
+  const getServiceIcon = () => {
+    switch (service) {
+      case 'cron':
+        return 'fa-calendar';
+      case 'data':
+        return 'fa-database';
+      default:
+        return 'fa-wrench';
+    }
+  };
+
   const getChildList = () => {
     let childList;
     if (itemList.length === 0) {
@@ -62,6 +73,8 @@ const LeftSidebarSection = ({
         </li>
       );
     } else {
+      const serviceIcon = getServiceIcon();
+
       childList = itemList.map(a => {
         let activeTableClass = '';
         if (currentItem && currentItem.name === a.name) {
@@ -76,7 +89,7 @@ const LeftSidebarSection = ({
           >
             <Link to={getServiceEntityLink(a.name)} data-test={a.name}>
               <i
-                className={`${styles.tableIcon} fa fa-wrench`}
+                className={`${styles.tableIcon} fa ${serviceIcon}`}
                 aria-hidden="true"
               />
               {a.name}
