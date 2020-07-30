@@ -167,7 +167,16 @@ class InsertItem extends Component {
         <div className={styles.insertContainer + ' container-fluid'}>
           <div className="col-xs-9">
             <form id="insertForm" className="form-horizontal">
-              {elements}
+              <div className={styles.form_flex}>
+                {elements}
+                {isCLIMode ? (
+                  <MigrationCheckBox
+                    className={`form-group ${styles.migrationBoxPosStyles}`}
+                    onChange={this.toggleMigrationCheckBox}
+                    isChecked={this.state.isMigrationChecked}
+                  />
+                ) : null}
+              </div>
               <div className={styles.display_flex}>
                 <Button
                   type="submit"
@@ -229,17 +238,6 @@ class InsertItem extends Component {
                 </Button>
                 {currentTable.is_enum ? (
                   <ReloadEnumValuesButton dispatch={dispatch} />
-                ) : null}
-                {isCLIMode ? (
-                  <MigrationCheckBox
-                    className={`${
-                      currentTable.is_enum || this.state.insertedRows > 0
-                        ? styles.m10
-                        : ''
-                    }`}
-                    onChange={this.toggleMigrationCheckBox}
-                    isChecked={this.state.isMigrationChecked}
-                  />
                 ) : null}
               </div>
             </form>
