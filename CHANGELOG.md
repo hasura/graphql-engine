@@ -8,7 +8,7 @@
 
 - server: add new `--conn-lifetime` and `HASURA_GRAPHQL_PG_CONN_LIFETIME` options for expiring connections after some amount of active time (#5087)
 - server: shrink libpq connection request/response buffers back to 1MB if they grow beyond 2MB, fixing leak-like behavior on active servers (#5087)
-- console: fix allowed queries through upload graphql file (close #5137) (#5252)
+- console: handle nested fragments in allowed queries (close #5137) (#5252)
 - docs: add note for managed databases in postgres requirements (close #1677, #3783) (#5228)
 
 
