@@ -9,7 +9,7 @@
 - server: add logs for action handlers
 - server: add request/response sizes in event triggers (and scheduled trigger) logs
 - console: update sidebar icons for different action and trigger types (#5445)
-- console: console: make add column UX consistent with others (#5486)
+- console: make add column UX consistent with others (#5486)
 
 ## `v1.3.0`
 
