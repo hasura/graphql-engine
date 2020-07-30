@@ -1256,7 +1256,7 @@ instance J.FromJSON NodeId where
       parseNodeIdV1 _ = fail "GUID version 1: expecting schema name, table name and at least one column value"
 
 throwInvalidNodeId :: MonadParse n => Text -> n a
-throwInvalidNodeId t = parseError $ "the node id is invalid: " <> t
+throwInvalidNodeId t = parseErrorWith ParseFailed $ "the node id is invalid: " <> t
 
 -- | The 'node' root field of a Relay request.
 node
