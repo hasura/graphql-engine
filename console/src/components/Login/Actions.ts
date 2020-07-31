@@ -6,11 +6,11 @@ import requestAction from '../../utils/requestAction';
 import { Dispatch } from '../../types';
 import globals from '../../Globals';
 
-type VerifyLoginProps = {
+type VerifyLoginOptions = {
   adminSecret: string;
   shouldPersist: boolean;
   successCallback: () => void;
-  errorCallback: (err?: Error) => void;
+  errorCallback: (err: Error) => void;
   dispatch: Dispatch;
 };
 
@@ -20,7 +20,7 @@ export const verifyLogin = ({
   successCallback,
   errorCallback,
   dispatch,
-}: VerifyLoginProps) => {
+}: VerifyLoginOptions) => {
   const url = Endpoints.getSchema;
   const requestOptions: RequestInit = {
     credentials: globalCookiePolicy,
