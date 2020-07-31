@@ -3,7 +3,7 @@ window.hdocs = (function () {
 
   return {
     setup: function () {
-      Array.from(document.getElementsByClassName('menuLink')).forEach(el => el.addEventListener('click', hdocs.toggleMenu));
+      Array.from(document.getElementsByClassName('menuLink')).forEach(function (el) { el.addEventListener('click', hdocs.toggleMenu) });
 
       document.getElementById('nav_tree_icon').addEventListener('click', hdocs.handleNavClick);
       document.getElementById('sidebar-close').addEventListener('click', hdocs.handleNavClick);
@@ -72,25 +72,23 @@ window.hdocs = (function () {
         },
       }
       fetch(DB_URL, options)
-        .then(response => {
+        .then(function (response) {
           return response.json();
         })
-        .then(data => {
+        .then(function (data) {
           const githubStar = data[0].star_count;
           document.getElementById("gitHubCount").innerHTML = hdocs.formatNumber(githubStar);
           document.getElementById("gitHubBtn").classList.remove("hide");
         })
-        .catch(e => {
-          console.error(e);
-        })
+        .catch(function (e) { {console.error(e);} })
     },
     setReleaseTags: function () {
       if (document.getElementsByClassName('latest-release-tag').length > 0) {
         hdocs.request('https://releases.hasura.io/graphql-engine?agent=docs.hasura.io', null, 'GET')
           .then(function (response) {
             const data = JSON.parse(response);
-            Array.from(document.getElementsByClassName('latest-release-tag')).forEach(el => el.innerHTML = data.latest);
-            Array.from(document.getElementsByClassName('latest-prerelease-tag')).forEach(el => el.innerHTML = data.prerelease);
+            Array.from(document.getElementsByClassName('latest-release-tag')).forEach(function (el) { el.innerHTML = data.latest });
+            Array.from(document.getElementsByClassName('latest-prerelease-tag')).forEach(function (el) { el.innerHTML = data.prerelease });
           })
           .catch(function (err) {
             console.log(err);
@@ -98,7 +96,7 @@ window.hdocs = (function () {
       }
     },
     setExternalLinks: function () {
-      Array.from(document.getElementsByClassName('.external')).forEach(el => el.setAttribute('target', '_blank'));
+      Array.from(document.getElementsByClassName('.external')).forEach(function (el) { el.setAttribute('target', '_blank') });
     },
     setupIntercom: function () {
       window.intercomSettings = {
@@ -113,12 +111,8 @@ window.hdocs = (function () {
     },
     transformSearchData: function (suggestions) {
       if (window.location.origin !== 'https://hasura.io') {
-        suggestions.forEach(suggestion => {
-          if (window.location.origin === 'http://localhost:8000') {
-            suggestion.url = suggestion.url.replace(/https:\/\/hasura.io\/docs\/[^\/]*/, window.location.origin)
-          } else {
-            suggestion.url = suggestion.url.replace('https://hasura.io\/docs', window.location.origin);
-          }
+        suggestions.forEach(function (suggestion) {
+          suggestion.url = suggestion.url.replace(/https:\/\/hasura.io\/docs\/[^\/]*/, window.location.origin);
         });
       }
 
@@ -239,7 +233,7 @@ window.hdocs = (function () {
 
       const targets = document.getElementsByClassName('graphiql');
 
-      for (let i = 0; i < targets.length; i++) {
+      for (var i = 0; i < targets.length; i++) {
         const target = targets[i];
 
         const endpoint = target.getElementsByClassName("endpoint")[0].innerHTML.trim();
@@ -258,7 +252,7 @@ window.hdocs = (function () {
         ReactDOM.render(graphiQLElement, target);
       }
 
-      Array.from(document.getElementsByClassName('variable-editor')).forEach(el => el.style.height = '120px');
+      Array.from(document.getElementsByClassName('variable-editor')).forEach(function (el) { el.style.height = '120px' });
     },
     formatNumber: function (number) {
       if (typeof number !== "number") return number;
