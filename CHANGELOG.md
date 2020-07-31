@@ -6,7 +6,8 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
-- console: update sidebar icons for different action and trigger types
+- console: handle nested fragments in allowed queries (close #5137) (#5252)
+- console: update sidebar icons for different action and trigger types (#5445)
 - console: make add column UX consistent with others (#5486)
 
 ## `v1.3.0`
@@ -33,8 +34,8 @@
 - server: have haskell runtime release blocks of memory back to the OS eagerly (related to #3388)
 - server: unlock locked scheduled events on graceful shutdown (#4928)
 - server: disable prepared statements for mutations as we end up with single-use objects which result in excessive memory consumption for mutation heavy workloads (#5255)
-- server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook. 
-**WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
+- server: include scheduled event metadata (`created_at`,`scheduled_time`,`id`, etc) along with the configured payload in the request body to the webhook.
+  **WARNING:** This is breaking for beta versions as the payload is now inside a key called `payload`.
 - console: allow configuring statement timeout on console RawSQL page (close #4998) (#5045)
 - console: support tracking partitioned tables (close #5071) (#5258)
 - console: add button to cancel one-off scheduled events and cron-trigger events (close #5161) (#5236)
@@ -44,9 +45,7 @@
 - docs: add 1-click deployment to Nhost page to the deployment guides (#5180)
 - docs: add hasura cloud to getting started section (close #5206) (#5208)
 
-
 ## `v1.3.0-beta.3`
-
 
 ### Bug fixes and improvements
 
@@ -148,9 +147,11 @@ Support for this is now added through the `add_computed_field` API.
 Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
 ### Manage seed migrations as SQL files
+
 A new `seeds` command is introduced in CLI, this will allow managing seed migrations as SQL files
 
 #### Creating seed
+
 ```
 # create a new seed file and use editor to add SQL content
 hasura seed create new_table_seed
@@ -161,7 +162,9 @@ hasura seed create table1_seed --from-table table1
 # create from data in multiple tables:
 hasura seed create tables_seed --from-table table1 --from-table table2
 ```
+
 #### Applying seed
+
 ```
 # apply all seeds on the database:
 hasura seed apply
