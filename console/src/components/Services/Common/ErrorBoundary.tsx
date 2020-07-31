@@ -1,4 +1,6 @@
+import Helmet from 'react-helmet';
 import React, { Component } from 'react';
+
 import globals from '../../../Globals';
 import styles from '../../Error/ErrorPage.scss';
 
@@ -9,8 +11,9 @@ interface ErrorState {
 }
 
 type Props = {
-  title: string;
+  title?: string;
   message: string;
+  helmetTitle: string;
 };
 
 class ErrorBoundary extends Component<Props, ErrorState> {
@@ -28,10 +31,11 @@ class ErrorBoundary extends Component<Props, ErrorState> {
     if (this.state.error) {
       return (
         <div className={styles.viewContainer}>
+          <Helmet title={this.props.helmetTitle} />
           <div className={`container ${styles.centerContent}`}>
             <div className={`row ${styles.message}`}>
               <div className="col-xs-8">
-                <h1>{this.props.title}</h1>
+                <h1>{this.props.title || 'Error'}</h1>
                 <br />
                 <h4 className={styles.errorDescription}>
                   {this.props.message}
