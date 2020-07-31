@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { clearLS } from '../../../../utils/localStorage';
+import { clearGraphiqlLS } from '../../../../utils/localStorage';
 
 class GraphiQLErrorBoundary extends React.Component {
   constructor(props) {
@@ -8,10 +8,10 @@ class GraphiQLErrorBoundary extends React.Component {
     this.state = { hasError: false, info: null };
   }
 
-  componentDidCatch(error, info) {
+  componentDidCatch(_error, info) {
     this.setState({ hasError: true, info: info });
     // most likely a localstorage issue
-    clearLS();
+    clearGraphiqlLS();
   }
 
   render() {

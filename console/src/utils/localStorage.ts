@@ -12,23 +12,19 @@ export const getLSItem = (key: string) => {
   return window.localStorage.getItem(key);
 };
 
-export const getParsedLSItem = (key: string) => {
+export const getParsedLSItem = (key: string, defaultVal: any = null) => {
   const value = getLSItem(key);
 
   if (!value) {
-    return null;
+    return defaultVal;
   }
 
   try {
     const jsonValue = JSON.parse(value);
 
-    if (!jsonValue) {
-      return null;
-    }
-
-    return jsonValue;
+    return jsonValue || defaultVal;
   } catch {
-    return null;
+    return defaultVal;
   }
 };
 
@@ -74,35 +70,37 @@ export const getItemWithExpiry = (key: string) => {
   return item.value;
 };
 
-// NOTE: use with extreme caution
-export const clearLS = () => {
-  window.localStorage.clear();
-};
-
 export const listLSKeys = () => {
   return Object.keys(window.localStorage);
 };
 
-// This is the list of the localStorage keys that are being used.
 export const LS_KEYS = {
-  consoleAdminSecret: 'CONSOLE_ADMIN_SECRET',
-  consoleLocalInfo: `CONSOLE_LOCAL_INFO:${globals.dataApiUrl}`,
-  versionUpdateCheckLastClosed: 'versionUpdateCheck: lastClosed',
-  rawSqlStatementTimeout: 'rawSql:rawSqlStatementTimeout',
+  consoleAdminSecret: 'console:adminSecret',
+  consoleLocalInfo: `console:localInfo:${globals.dataApiUrl}`,
+  versionUpdateCheckLastClosed: 'console:versionUpdateCheckLastClosed',
   loveConsent: 'console:loveIcon',
   proClick: 'console:pro',
   derivedActions: 'actions:derivedActions',
-  graphiqlQuery: 'graphiql:query',
-  apiExplorerEndpointSectionIsOpen: 'ApiExplorer:EndpointSectionIsOpen',
-  apiExplorerGraphiqlMode: 'ApiExplorer:GraphiQLMode',
-  apiExplorerHeaderSectionIsOpen: 'ApiExplorer:HeadersSectionIsOpen',
-  apiExplorerAdminSecretWasAdded: 'ApiExplorer:AdminSecretHeaderWasAdded',
-  apiExplorerConsoleGraphQLHeaders: 'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+  apiExplorerEndpointSectionIsOpen: 'apiExplorer:endpointSectionIsOpen',
+  apiExplorerGraphiqlMode: 'apiExplorer:graphiQLMode',
+  apiExplorerHeaderSectionIsOpen: 'apiExplorer:headersSectionIsOpen',
+  apiExplorerAdminSecretWasAdded: 'apiExplorer:adminSecretHeaderWasAdded',
+  apiExplorerConsoleGraphQLHeaders: 'apiExplorer:graphiqlHeaders',
   oneGraphExplorerWidth: 'graphiql:explorerWidth',
   oneGraphExplorerOpen: 'graphiql:explorerOpen',
   oneGraphExplorerCodeExporterOpen: 'graphiql:codeExporterOpen',
+  graphiqlQuery: 'graphiql:query',
   rawSQLKey: 'rawSql:sql',
+  rawSqlStatementTimeout: 'rawSql:rawSqlStatementTimeout',
   dataColumnsCollapsedKey: 'data:collapsed',
   dataPageSizeKey: 'data:pageSize',
   dataColumnsOrderKey: 'data:order',
+};
+
+export const clearGraphiqlLS = () => {
+  Object.values(LS_KEYS).forEach(lsKey => {
+    if (lsKey.startsWith('graphiql:')) {
+      window.localStorage.removeItem(lsKey);
+    }
+  });
 };
