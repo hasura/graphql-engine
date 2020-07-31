@@ -8,6 +8,7 @@ module Hasura.Session
   , SessionVariableValue
   , mkSessionVariable
   , SessionVariables
+  , filterSessionVariables
   , sessionVariableToText
   , mkSessionVariablesText
   , mkSessionVariables
@@ -80,6 +81,11 @@ type SessionVariableValue = Text
 newtype SessionVariables =
   SessionVariables { unSessionVariables :: Map.HashMap SessionVariable SessionVariableValue}
   deriving (Show, Eq, Hashable, Semigroup, Monoid)
+
+filterSessionVariables
+  :: (SessionVariable -> SessionVariableValue -> Bool)
+  -> SessionVariables -> SessionVariables
+filterSessionVariables f = SessionVariables . Map.filterWithKey f . unSessionVariables
 
 instance ToJSON SessionVariables where
   toJSON (SessionVariables varMap) =
