@@ -165,10 +165,10 @@ updateJwkRef (Logger logger) manager url jwkRef = do
   let urlT    = T.pack $ show url
       infoMsg = "refreshing JWK from endpoint: " <> urlT
   liftIO $ logger $ JwkRefreshLog LevelInfo (Just infoMsg) Nothing
-  res <- try $ Tracing.traceHttpRequest urlT do
+  res <- try $ do
     initReq <- liftIO $ HTTP.parseRequest $ show url
     let req = initReq { HTTP.requestHeaders = addDefaultHeaders (HTTP.requestHeaders initReq) }
-    pure $ Tracing.SuspendedRequest req \req' -> do
+    Tracing.tracedHttpRequest req \req' -> do
       liftIO $ HTTP.httpLbs req' manager
   resp <- either logAndThrowHttp return res
   let status = resp ^. Wreq.responseStatus
