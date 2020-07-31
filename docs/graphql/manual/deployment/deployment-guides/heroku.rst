@@ -9,7 +9,7 @@ Run Hasura GraphQL engine on Heroku
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 2
+  :depth: 1
   :local:
 
 Introduction
@@ -19,6 +19,11 @@ This guide shows how to deploy Hasura GraphQL engine on Heroku.
 
 Deploying Hasura with a new Postgres DB
 ---------------------------------------
+
+.. contents::
+  :backlinks: none
+  :depth: 1
+  :local:
 
 .. _heroku_one_click:
 
@@ -115,10 +120,15 @@ Deploying using an existing Postgres DB
 Let's say you have an existing `Heroku Postgres <https://www.heroku.com/postgres>`__ database with data in it, and you'd
 like to add GraphQL to it.
 
+.. contents::
+  :backlinks: none
+  :depth: 1
+  :local:
+
 .. note::
 
-   In case you're exposing an existing database (esp. if it is production), please :ref:`configure an admin secret key <heroku_secure>`
-   for the console and the GraphQL endpoint.
+   As you're exposing an existing database, please :ref:`configure an admin secret <heroku_secure>`
+   to prevent public access of the console and the GraphQL endpoint.
 
 Option 1: Via Heroku UI
 ^^^^^^^^^^^^^^^^^^^^^^^
