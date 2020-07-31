@@ -1338,7 +1338,7 @@ nodeField = do
 
         let allTuples = (firstPkColumn, firstColumnValue):alignedTuples
 
-        either (throwInvalidNodeId . qeError) pure $ runExcept $
+        either (parseErrorWith ParseFailed . qeError) pure $ runExcept $
           fmap RQL.BoolAnd $ for allTuples $ \(columnInfo, columnValue) -> do
             let modifyErrFn t = "value of column " <> pgiColumn columnInfo
                                 <<> " in node id: " <> t
