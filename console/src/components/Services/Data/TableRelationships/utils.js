@@ -383,7 +383,7 @@ const findTableIndex = (tables, { name, schema }) =>
   tables.findIndex(
     tbl => tbl.table.name === name && tbl.table.schema === schema
   );
-  
+
 const getRelationKey = type => {
   if (type === 'create_array_relationship') return 'array_relationships';
   if (type === 'create_object_relationship') return 'object_relationships';
