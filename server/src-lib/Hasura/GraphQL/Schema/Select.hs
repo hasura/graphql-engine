@@ -1256,7 +1256,7 @@ instance J.FromJSON NodeId where
       parseNodeIdV1 _ = fail "GUID version 1: expecting schema name, table name and at least one column value"
 
 throwInvalidNodeId :: MonadParse n => Text -> n a
-throwInvalidNodeId t = parseErrorWith ParseFailed $ "the node id is invalid: " <> t
+throwInvalidNodeId t = parseError $ "the node id is invalid: " <> t
 
 -- | The 'node' root field of a Relay request.
 node
@@ -1299,8 +1299,7 @@ nodeField = do
       NodeIdV1 (V1NodeId table columnValues) <- parseNodeId ident
       (perms, pkeyColumns, fields) <-
         onNothing (Map.lookup table parseds) $
-        withPath (++ [Key "args", Key "id"]) $
-        throwInvalidNodeId $ "the table " <>> ident
+        withArgsPath $  throwInvalidNodeId $ "the table " <>> ident
       whereExp <- buildNodeIdBoolExp columnValues pkeyColumns
       return $ RQL.AnnSelectG
         { RQL._asnFields   = fields
@@ -1318,7 +1317,8 @@ nodeField = do
   where
     parseNodeId :: Text -> n NodeId
     parseNodeId =
-      either (throwInvalidNodeId . T.pack) pure . J.eitherDecode . base64Decode
+      either (withArgsPath . throwInvalidNodeId . T.pack) pure . J.eitherDecode . base64Decode
+    withArgsPath = withPath (++ [Key "args", Key "id"])
 
     buildNodeIdBoolExp
       :: NESeq.NESeq J.Value
