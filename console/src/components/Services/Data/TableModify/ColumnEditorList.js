@@ -9,7 +9,6 @@ import {
   resetColumnEdit,
   editColumn,
   isColumnUnique,
-  setPrimaryKeys,
 } from '../TableModify/ModifyActions';
 import { ordinalColSort, ARRAY } from '../utils';
 import { defaultDataTypeToCast } from '../constants';
@@ -104,28 +103,6 @@ const ColumnEditorList = ({
 
       const isOk = getConfirmation(confirmMessage, true, colName);
       if (isOk) {
-        // pk contains Indexes of primary keys,
-        const pk = [];
-        // pkPresentflag represents whether the colName is below or above the primary Key
-        let pkPresentflag = true;
-        tableSchema.primary_key.columns.forEach(pkCol => {
-          const currentPKCol = pkCol;
-          tableSchema.columns.forEach((nonPKCol, colIndex) => {
-            if (nonPKCol.column_name === colName) {
-              pkPresentflag = false;
-            }
-            if (currentPKCol === nonPKCol.column_name) {
-              if (pkPresentflag) {
-                pk.push(colIndex);
-              } else {
-                pk.push(colIndex - 1);
-              }
-            }
-          });
-          pkPresentflag = true;
-        });
-        const pkKeys = [...pk.sort(), ''];
-        dispatch(setPrimaryKeys(pkKeys));
         dispatch(deleteColumnSql(col, tableSchema));
       }
     };

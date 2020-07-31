@@ -94,7 +94,9 @@ const PrimaryKeyEditor = ({
       savePrimaryKeys(tableSchema.table_name, currentSchema, pkConstraintName)
     );
   };
-
+  React.useEffect(() => {
+    setPkEditState();
+  }, [columns]);
   // remove
   const onRemove = () => {
     if (pkConstraintName) {
