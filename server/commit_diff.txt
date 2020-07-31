@@ -1,9 +1,1 @@
 **** Latest commit compared against master - 6ef70f963b20c15564d7ba6fa96d42ffef10f552
-
-commit 6ef70f963b20c15564d7ba6fa96d42ffef10f552
-Author: Auke Booij <auke@hasura.io>
-Date:   Fri Jul 31 13:50:32 2020 +0200
-
-    server: Fix compiler warning caused by GHC upgrade (#5489)
-
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
