@@ -18,6 +18,18 @@ interface Props {
 
 const LeftSidebar: React.FC<Props> = props => {
   const { triggers, currentTrigger, service } = props;
+
+  const getSidebarIcon = () => {
+    switch (service) {
+      case 'cron':
+        return 'fa-calendar';
+      case 'data':
+        return 'fa-database';
+      default:
+        return 'fa-wrench';
+    }
+  };
+
   const {
     getChildList: getTriggersList,
     getSearchInput,
@@ -38,7 +50,8 @@ const LeftSidebar: React.FC<Props> = props => {
     },
     items: triggers,
     currentItem: currentTrigger,
-    service,
+    service: 'triggers',
+    sidebarIcon: getSidebarIcon(),
   });
 
   // TODO, move to common utils

@@ -13,7 +13,7 @@ import           Data.Char                        (toLower)
 import           Data.Time
 import           Network.Wai.Handler.Warp         (HostPreference)
 
-import qualified Hasura.Cache                     as Cache
+import qualified Hasura.Cache.Bounded             as Cache
 import qualified Hasura.GraphQL.Execute           as E
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.Logging                   as L
