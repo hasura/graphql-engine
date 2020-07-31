@@ -1298,7 +1298,9 @@ nodeField = do
     \(ident, parseds) -> do
       NodeIdV1 (V1NodeId table columnValues) <- parseNodeId ident
       (perms, pkeyColumns, fields) <-
-        onNothing (Map.lookup table parseds) $ throwInvalidNodeId $ "the table " <>> ident
+        onNothing (Map.lookup table parseds) $
+        withPath (++ [Key "args", Key "id"]) $
+        throwInvalidNodeId $ "the table " <>> ident
       whereExp <- buildNodeIdBoolExp columnValues pkeyColumns
       return $ RQL.AnnSelectG
         { RQL._asnFields   = fields
