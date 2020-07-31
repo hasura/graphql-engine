@@ -20,6 +20,11 @@ flag developer
   default: False
   manual: True
 
+flag profiling
+  description: Configures the project to be profiling-compatible
+  default: False
+  manual: True
+
 common common-all
   ghc-options:
     -fmax-simplifier-iterations=20 -foptimal-applicative-do
@@ -27,6 +32,8 @@ common common-all
 
   if flag(developer)
     cpp-options: -DDeveloperAPIs
+  if flag(profiling)
+    cpp-options: -DPROFILING
 
   default-language: Haskell2010
   default-extensions:
@@ -240,10 +247,6 @@ library
                      , generic-arbitrary
                      , quickcheck-instances
 
-                     -- 0.6.1 is supposedly not okay for ghc 8.6:
-                     --   https://github.com/nomeata/ghc-heap-view/issues/27
-                     , ghc-heap-view
-
                      , directory
 
                      , random
@@ -267,6 +270,11 @@ library
 
                      -- scheduled triggers
                      , cron >= 0.6.2
+  if !flag(profiling)
+    build-depends:
+      -- 0.6.1 is supposedly not okay for ghc 8.6:
+      --   https://github.com/nomeata/ghc-heap-view/issues/27
+      ghc-heap-view
 
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans

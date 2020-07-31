@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE CPP                  #-}
 
 module Hasura.App where
 
@@ -15,7 +16,9 @@ import           Control.Monad.Trans.Control               (MonadBaseControl (..
 import           Control.Monad.Unique
 import           Data.Aeson                                ((.=))
 import           Data.Time.Clock                           (UTCTime)
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 import           GHC.Stats
 import           Options.Applicative
 import           System.Environment                        (getEnvironment)
@@ -317,7 +320,9 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   -- tool.
   --
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
+#ifndef PROFILING
   liftIO disableAssertNF
+#endif
 
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers

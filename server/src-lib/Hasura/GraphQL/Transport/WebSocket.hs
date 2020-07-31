@@ -1,5 +1,6 @@
 {-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE CPP             #-}
 
 module Hasura.GraphQL.Transport.WebSocket
   ( createWSServerApp
@@ -39,7 +40,9 @@ import qualified StmContainers.Map                           as STMMap
 import           Control.Concurrent.Extended                 (sleep)
 import           Control.Exception.Lifted
 import           Data.String
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery(..))
@@ -378,7 +381,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       -- crucial we don't lose lqId after addLiveQuery returns successfully.
       !lqId <- liftIO $ LQ.addLiveQuery logger subscriberMetadata lqMap lqOp liveQOnChange
       let !opName = _grOperationName q
+#ifndef PROFILING
       liftIO $ $assertNFHere $! (lqId, opName)  -- so we don't write thunks to mutable vars
+#endif
       liftIO $ STM.atomically $
         -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
         STMMap.insert (lqId, opName) opId opMap
@@ -695,7 +700,9 @@ onConnInit logger manager wsConn authMode connParamsM = do
         Left e -> do
           let !initErr = CSInitError $ qeError e
           liftIO $ do
+#ifndef PROFILING
             $assertNFHere initErr  -- so we don't write thunks to mutable vars
+#endif
             STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) initErr
 
           let connErr = ConnErrMsg $ qeError e
@@ -705,7 +712,9 @@ onConnInit logger manager wsConn authMode connParamsM = do
         Right (userInfo, expTimeM) -> do
           let !csInit = CSInitialised $ WsClientState userInfo expTimeM paramHeaders ipAddress
           liftIO $ do
+#ifndef PROFILING
             $assertNFHere csInit  -- so we don't write thunks to mutable vars
+#endif
             STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) csInit
 
           sendMsg wsConn SMConnAck

@@ -1,5 +1,6 @@
 {-# LANGUAGE NondecreasingIndentation #-}
 {-# LANGUAGE RankNTypes               #-}
+{-# LANGUAGE CPP #-}
 
 module Hasura.GraphQL.Transport.WebSocket.Server
   ( WSId(..)
@@ -45,7 +46,9 @@ import qualified Data.TByteString                            as TBS
 import qualified Data.UUID                                   as UUID
 import qualified Data.UUID.V4                                as UUID
 import           Data.Word                                   (Word16)
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 import           GHC.Int                                     (Int64)
 import           Hasura.Prelude
 import qualified ListT
@@ -172,7 +175,9 @@ closeConnWithCode wsConn code bs = do
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
 sendMsg wsConn = \ !resp -> do
+#ifndef PROFILING
   $assertNFHere resp  -- so we don't write thunks to mutable vars
+#endif
   STM.atomically $ STM.writeTQueue (_wcSendQ wsConn) resp
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
