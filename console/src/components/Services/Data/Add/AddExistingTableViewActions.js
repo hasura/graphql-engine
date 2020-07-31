@@ -171,7 +171,7 @@ const addAllUntrackedTablesSql = (tableList, skipMetadataReplace = false) => {
       // metadata replace is a fast solution to track all tables, which can be used when there is no exisitng metadata
       const fallback = () =>
         dispatch(addAllUntrackedTablesSql(tableList, true));
-      dispatch(
+      return dispatch(
         exportMetadata(metadata => {
           if (isMetadataEmpty(metadata)) {
             // nothing in the metadata => replace tablelist
