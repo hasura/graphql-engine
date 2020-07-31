@@ -11,9 +11,9 @@ module Hasura.RQL.DML.Delete
 import           Data.Aeson
 import           Instances.TH.Lift           ()
 
-import qualified Data.Sequence               as DS
-import qualified Data.Environment            as Env
-
+import qualified Data.Sequence            as DS
+import qualified Data.Environment         as Env
+import qualified Hasura.Tracing           as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -111,6 +111,7 @@ execDeleteQuery
   ( HasVersion
   , MonadTx m
   , MonadIO m
+  , Tracing.MonadTrace m
   )
   => Env.Environment
   -> Bool
@@ -126,6 +127,7 @@ execDeleteQuery env strfyNum remoteJoinCtx (u, p) =
 runDelete
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
      , MonadTx m, HasSQLGenCtx m, MonadIO m
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> DeleteQuery

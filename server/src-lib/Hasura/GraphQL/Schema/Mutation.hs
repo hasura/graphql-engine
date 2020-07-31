@@ -18,6 +18,7 @@ import qualified Data.HashSet                   as Set
 import qualified Data.List                      as L
 import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Data.Environment               as Env
 
 import qualified Hasura.GraphQL.Parser          as P
 import qualified Hasura.RQL.DML.Delete.Types    as RQL
@@ -26,6 +27,8 @@ import qualified Hasura.RQL.DML.Returning.Types as RQL
 import qualified Hasura.RQL.DML.Update          as RQL
 import qualified Hasura.RQL.DML.Update.Types    as RQL
 import qualified Hasura.SQL.DML                 as S
+import qualified Hasura.Tracing                 as Tracing
+
 
 import           Hasura.GraphQL.Parser          (FieldParser, InputFieldsParser, Kind (..), Parser,
                                                  UnpreparedValue (..), mkParameter)

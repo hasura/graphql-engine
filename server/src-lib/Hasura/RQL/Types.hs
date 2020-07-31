@@ -43,6 +43,7 @@ import           Control.Monad.Unique
 import           Hasura.Prelude
 import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Tracing                      (TraceT)
 
 import           Hasura.Db                           as R
 import           Hasura.RQL.Types.Action             as R
@@ -94,6 +95,8 @@ instance (UserInfoM m) => UserInfoM (ReaderT r m) where
   askUserInfo = lift askUserInfo
 instance (UserInfoM m) => UserInfoM (StateT s m) where
   askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (TraceT m) where
+  askUserInfo = lift askUserInfo
 
 askTabInfo
   :: (QErrM m, CacheRM m)
@@ -139,6 +142,8 @@ instance (HasHttpManager m) => HasHttpManager (StateT s m) where
   askHttpManager = lift askHttpManager
 instance (Monoid w, HasHttpManager m) => HasHttpManager (WriterT w m) where
   askHttpManager = lift askHttpManager
+instance (HasHttpManager m) => HasHttpManager (TraceT m) where
+  askHttpManager = lift askHttpManager
 
 -- class (Monad m) => HasGCtxMap m where
 --   askGCtxMap :: m GC.GCtxMap
@@ -164,6 +169,8 @@ instance (Monoid w, HasSQLGenCtx m) => HasSQLGenCtx (WriterT w m) where
   askSQLGenCtx = lift askSQLGenCtx
 instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCoreCacheRT m) where
   askSQLGenCtx = lift askSQLGenCtx
+instance (HasSQLGenCtx m) => HasSQLGenCtx (TraceT m) where
+  askSQLGenCtx = lift askSQLGenCtx
 
 class (Monad m) => HasSystemDefined m where
   askSystemDefined :: m SystemDefined
@@ -173,6 +180,8 @@ instance (HasSystemDefined m) => HasSystemDefined (ReaderT r m) where
 instance (HasSystemDefined m) => HasSystemDefined (StateT s m) where
   askSystemDefined = lift askSystemDefined
 instance (Monoid w, HasSystemDefined m) => HasSystemDefined (WriterT w m) where
+  askSystemDefined = lift askSystemDefined
+instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
   askSystemDefined = lift askSystemDefined
 
 newtype HasSystemDefinedT m a

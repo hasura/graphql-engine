@@ -34,17 +34,6 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
-import qualified Hasura.GraphQL.Context                 as C
-import qualified Hasura.GraphQL.Execute.Inline          as EI
-import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
-import qualified Hasura.GraphQL.Execute.Mutation        as EM
-import qualified Hasura.GraphQL.Execute.Plan            as EP
-import qualified Hasura.GraphQL.Execute.Prepare         as EPr
-import qualified Hasura.GraphQL.Execute.Query           as EQ
-import qualified Hasura.GraphQL.Execute.Types           as ET
-import qualified Hasura.Logging                         as L
-import qualified Hasura.Server.Telemetry.Counters       as Telem
-
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
@@ -55,6 +44,17 @@ import           Hasura.Server.Utils                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
+import qualified Hasura.GraphQL.Context                 as C
+import qualified Hasura.GraphQL.Execute.Inline          as EI
+import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
+import qualified Hasura.GraphQL.Execute.Mutation        as EM
+import qualified Hasura.GraphQL.Execute.Plan            as EP
+import qualified Hasura.GraphQL.Execute.Prepare         as EPr
+import qualified Hasura.GraphQL.Execute.Query           as EQ
+import qualified Hasura.GraphQL.Execute.Types           as ET
+import qualified Hasura.Logging                         as L
+import qualified Hasura.Server.Telemetry.Counters       as Telem
+import qualified Hasura.Tracing                         as Tracing
 
 
 type QueryParts = G.TypedOperationDefinition G.FragmentSpread G.Name
@@ -96,6 +96,10 @@ instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ExceptT e m) where
     lift $ checkGQLExecution ui det enableAL sc req
 
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ReaderT r m) where
+  checkGQLExecution ui det enableAL sc req =
+    lift $ checkGQLExecution ui det enableAL sc req
+
+instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (Tracing.TraceT m) where
   checkGQLExecution ui det enableAL sc req =
     lift $ checkGQLExecution ui det enableAL sc req
 
@@ -197,12 +201,14 @@ checkQueryInAllowlist enableAL userInfo req sc =
 
 getResolvedExecPlan
   :: forall m tx
-  . ( HasVersion
-    , MonadError QErr m
-    , MonadIO m
-    , MonadIO tx
-    , MonadTx tx
-    )
+   . ( HasVersion
+     , MonadError QErr m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     , MonadIO tx
+     , MonadTx tx
+     , Tracing.MonadTrace tx
+     )
   => Env.Environment
   -> PGExecCtx
   -> EP.PlanCache
@@ -214,7 +220,7 @@ getResolvedExecPlan
   -> HTTP.Manager
   -> [HTTP.Header]
   -> (GQLReqUnparsed, GQLReqParsed)
-  -> m (Telem.CacheHit,ResolvedExecutionPlan tx)
+  -> m (Telem.CacheHit, ResolvedExecutionPlan tx)
 getResolvedExecPlan env pgExecCtx planCache userInfo sqlGenCtx
   sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = do
 
@@ -341,6 +347,7 @@ execRemoteGQ
      , MonadError QErr m
      , MonadReader ExecutionCtx m
      , MonadQueryLog m
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> RequestId

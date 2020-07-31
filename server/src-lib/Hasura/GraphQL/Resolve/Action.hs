@@ -1,6 +1,8 @@
 --- In PDV this module is moved to Hasura.GraphQL.Execute.Action
 module Hasura.GraphQL.Resolve.Action
-  ( resolveAsyncActionQuery
+  ( ActionExecuteTx
+  , ActionExecuteResult(..)
+  , resolveAsyncActionQuery
   , asyncActionsProcessor
   , resolveActionExecution
   , resolveActionMutationAsync
@@ -35,22 +37,26 @@ import           Control.Monad.Trans.Control          (MonadBaseControl)
 
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
 import qualified Data.Environment                     as Env
+import qualified Hasura.Tracing                       as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
-import           Hasura.GraphQL.Parser          hiding (column)
-import           Hasura.GraphQL.Utils           (showNames)
+import           Hasura.GraphQL.Parser
+import           Hasura.GraphQL.Utils                 (showNames)
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.DML.Select          (asSingleRowJsonResp)
+import           Hasura.RQL.DML.Select                (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Utils            (mkClientHeadersForward, mkSetCookieHeaders)
-import           Hasura.Server.Version          (HasVersion)
+import           Hasura.Server.Utils                  (mkClientHeadersForward, mkSetCookieHeaders)
+import           Hasura.Server.Version                (HasVersion)
 import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value               (PGScalarValue (..), toTxtValue)
+
+type ActionExecuteTx =
+  forall tx. (MonadIO tx, MonadTx tx, Tracing.MonadTrace tx) => tx EncJSON
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -131,17 +137,53 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionInternalError)
 --     ActionMutationAsync ->
 --       (,[]) <$> resolveActionMutationAsync field sessionVariables
 
+-- resolveActionMutation
+--   :: ( HasVersion
+--      , MonadReusability m
+--      , MonadError QErr m
+--      , MonadReader r m
+--      , MonadIO m
+--      , Has FieldMap r
+--      , Has OrdByCtx r
+--      , Has SQLGenCtx r
+--      , Has HTTP.Manager r
+--      , Has [HTTP.Header] r
+--      , Tracing.MonadTrace m
+--      , MonadIO tx
+--      , MonadTx tx
+--      , Tracing.MonadTrace tx
+--      )
+--   => Env.Environment
+--   -> Field
+--   -> ActionMutationExecutionContext
+--   -> UserInfo
+--   -> m (tx EncJSON, HTTP.ResponseHeaders)
+-- resolveActionMutation env field executionContext userInfo =
+--   case executionContext of
+--     ActionMutationSyncWebhook executionContextSync ->
+--       resolveActionMutationSync env field executionContextSync userInfo
+--     ActionMutationAsync ->
+--       (,[]) <$> resolveActionMutationAsync field userInfo
+-- >>>>>>> 0dddbe9e9... Add MonadTrace and MonadExecuteQuery abstractions (#5383)
+
+data ActionExecuteResult
+  = ActionExecuteResult
+  { _aerTransaction :: !ActionExecuteTx
+  , _aerHeaders     :: !HTTP.ResponseHeaders
+  }
+
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionExecution
   :: ( HasVersion
      , MonadError QErr m
      , MonadIO m
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> UserInfo
   -> AnnActionExecution UnpreparedValue
   -> ActionExecContext
-  -> m (RespTx, HTTP.ResponseHeaders)
+  -> m ActionExecuteResult
 resolveActionExecution env userInfo annAction execContext = do
   let actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload
@@ -152,22 +194,24 @@ resolveActionExecution env userInfo annAction execContext = do
       selectAstUnresolved = processOutputSelectionSet webhookResponseExpression
                             outputType definitionList annFields stringifyNum
   astResolved <- RS.traverseAnnSimpleSelect (pure . unpreparedToTextSQL) selectAstUnresolved
-  let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
-      jsonAggType = mkJsonAggSelect outputType
-  return $ (,respHeaders) $
-    case maybeRemoteJoins of
-      Just remoteJoins ->
-        let query = Q.fromBuilder $ toSQL $
-                    RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
-        in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query [] remoteJoins
-      Nothing ->
-        asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
+  return $ ActionExecuteResult (executeAction astResolved) respHeaders
   where
     AnnActionExecution actionName outputType annFields inputPayload
       outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders stringifyNum = annAction
     ActionExecContext manager reqHeaders sessionVariables = execContext
 
+    executeAction :: RS.AnnSimpleSel -> ActionExecuteTx
+    executeAction astResolved = do
+      let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
+          jsonAggType = mkJsonAggSelect outputType
+      case maybeRemoteJoins of
+        Just remoteJoins ->
+          let query = Q.fromBuilder $ toSQL $
+                      RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
+          in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query [] remoteJoins
+        Nothing ->
+          liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
 
 {- Note: [Async action architecture]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -185,7 +229,9 @@ table provides the action response. See Note [Resolving async action query/subsc
 -- | Resolve asynchronous action mutation which returns only the action uuid
 resolveActionMutationAsync
   :: ( MonadError QErr m
-     , MonadTx tx)
+     , MonadTx tx
+     , Tracing.MonadTrace m
+     , Tracing.MonadTrace tx)
   => AnnActionMutationAsync
   -> [HTTP.Header]
   -> SessionVariables
@@ -218,6 +264,7 @@ action's type. Here, we treat the "output" field as a computed field to hdb_acti
 `jsonb_to_record` as custom SQL function.
 -}
 
+-- TODO: Add tracing here? Avoided now because currently the function is pure
 resolveAsyncActionQuery
   :: UserInfo
   -> AnnActionAsyncQuery UnpreparedValue
@@ -286,6 +333,7 @@ asyncActionsProcessor
      , MonadIO m
      , MonadBaseControl IO m
      , LA.Forall (LA.Pure m)
+     , Tracing.HasReporter m
      )
   => Env.Environment
   -> IORef (RebuildableSchemaCache Run, SchemaCacheVer)
@@ -304,7 +352,7 @@ asyncActionsProcessor env cacheRef pgPool httpManager = forever $ do
       either mempty return res
 
     callHandler :: ActionCache -> ActionLogItem -> m ()
-    callHandler actionCache actionLogItem = do
+    callHandler actionCache actionLogItem = Tracing.runTraceT "async actions processor" do
       let ActionLogItem actionId actionName reqHeaders
             sessionVariables inputPayload = actionLogItem
       case Map.lookup actionName actionCache of
@@ -375,7 +423,7 @@ asyncActionsProcessor env cacheRef pgPool httpManager = forever $ do
     getUndeliveredEvents = runTx undeliveredEventsQuery
 
 callWebhook
-  :: forall m. (HasVersion, MonadIO m, MonadError QErr m)
+  :: forall m. (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
   => Env.Environment
   -> HTTP.Manager
   -> GraphQLType
@@ -396,13 +444,14 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
       hdrs = contentType : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
       postPayload = J.toJSON actionWebhookPayload
       url = unResolvedWebhook resolvedWebhook
-  httpResponse <- do
+  httpResponse <- Tracing.traceHttpRequest url do
     initReq <- liftIO $ HTTP.parseRequest (T.unpack url)
     let req = initReq { HTTP.method         = "POST"
                       , HTTP.requestHeaders = addDefaultHeaders hdrs
                       , HTTP.requestBody    = HTTP.RequestBodyLBS (J.encode postPayload)
                       }
-    liftIO . try $ HTTP.httpLbs req manager
+    pure $ Tracing.SuspendedRequest req \req' ->
+      liftIO . try $ HTTP.httpLbs req' manager
   let requestInfo = ActionRequestInfo url postPayload $
                      confHeaders <> toHeadersConf clientHeaders
   case httpResponse of

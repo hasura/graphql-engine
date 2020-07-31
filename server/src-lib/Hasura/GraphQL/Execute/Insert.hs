@@ -21,6 +21,7 @@ import qualified Hasura.RQL.DML.Returning       as RQL
 import qualified Hasura.RQL.DML.Returning.Types as RQL
 import qualified Hasura.RQL.GBoolExp            as RQL
 import qualified Hasura.SQL.DML                 as S
+import qualified Hasura.Tracing                 as Tracing
 
 import           Hasura.Db
 import           Hasura.EncJSON
@@ -69,7 +70,7 @@ traverseAnnInsert f (annIns, mutationOutput) = (,)
 
 
 convertToSQLTransaction
-  :: (HasVersion, MonadTx m, MonadIO m)
+  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
   -> AnnMultiInsert S.SQLExp
   -> RQL.MutationRemoteJoinCtx
@@ -82,7 +83,7 @@ convertToSQLTransaction env (annIns, mutationOutput) rjCtx planVars stringifyNum
   else insertMultipleObjects env annIns [] rjCtx mutationOutput planVars stringifyNum
 
 insertMultipleObjects
-  :: (HasVersion, MonadTx m, MonadIO m)
+  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
   -> MultiObjIns S.SQLExp
   -> [(PGCol, S.SQLExp)]
@@ -127,7 +128,7 @@ insertMultipleObjects env multiObjIns additionalColumns rjCtx mutationOutput pla
       RQL.executeMutationOutputQuery env sqlQuery [] $ (,rjCtx) <$> remoteJoins
 
 insertObject
-  :: (HasVersion, MonadTx m, MonadIO m)
+  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
   -> SingleObjIns S.SQLExp
   -> [(PGCol, S.SQLExp)]
@@ -178,7 +179,7 @@ insertObject env singleObjIns additionalColumns rjCtx planVars stringifyNum = do
       <> table <<> " affects zero rows"
 
 insertObjRel
-  :: (HasVersion, MonadTx m, MonadIO m)
+  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
   -> Seq.Seq Q.PrepArg
   -> RQL.MutationRemoteJoinCtx
@@ -206,7 +207,7 @@ insertObjRel env planVars rjCtx stringifyNum objRelIns = do
              <> table <<> " affects zero rows"
 
 insertArrRel
-  :: (HasVersion, MonadTx m, MonadIO m)
+  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
   -> [(PGCol, S.SQLExp)]
   -> RQL.MutationRemoteJoinCtx
