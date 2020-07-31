@@ -29,6 +29,7 @@ import qualified Hasura.GraphQL.Resolve                 as RS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.GraphQL.Validate.SelectionSet   as GV
+import qualified Hasura.Logging                         as L
 import qualified Hasura.SQL.DML                         as S
 import qualified Hasura.Tracing                         as Tracing
 
@@ -90,20 +91,21 @@ getSessVarVal userInfo sessVar =
 explainField
   :: (MonadError QErr m, MonadTx m, HasVersion, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
+  -> L.Logger L.Hasura
   -> UserInfo
   -> GCtx
   -> SQLGenCtx
   -> QueryActionExecuter
   -> GV.Field
   -> m FieldPlan
-explainField env userInfo gCtx sqlGenCtx actionExecuter fld =
+explainField env logger userInfo gCtx sqlGenCtx actionExecuter fld =
   case fName of
     "__type"     -> return $ FieldPlan fName Nothing Nothing
     "__schema"   -> return $ FieldPlan fName Nothing Nothing
     "__typename" -> return $ FieldPlan fName Nothing Nothing
     _            -> do
       unresolvedAST <-
-        runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
+        runExplain (logger, queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
           evalReusabilityT $ RS.queryFldToPGAST env fld actionExecuter
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo) unresolvedAST
       let (query, remoteJoins) = RS.toPGQuery resolvedAST
@@ -133,6 +135,7 @@ explainGQLQuery
      , Tracing.MonadTrace tx
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> PGExecCtx
   -> (tx EncJSON -> m EncJSON)
   -> SchemaCache
@@ -140,7 +143,7 @@ explainGQLQuery
   -> QueryActionExecuter
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery env pgExecCtx runInTx sc sqlGenCtx actionExecuter (GQLExplain query userVarsRaw maybeIsRelay) = do
+explainGQLQuery env logger pgExecCtx runInTx sc sqlGenCtx actionExecuter (GQLExplain query userVarsRaw maybeIsRelay) = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g.
   -- notes in explainField:
   userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
@@ -155,11 +158,11 @@ explainGQLQuery env pgExecCtx runInTx sc sqlGenCtx actionExecuter (GQLExplain qu
   case rootSelSet of
     GV.RQuery selSet ->
       runInTx $ encJFromJValue . map snd <$>
-        GV.traverseObjectSelectionSet selSet (explainField env userInfo gCtx sqlGenCtx actionExecuter)
+        GV.traverseObjectSelectionSet selSet (explainField env logger userInfo gCtx sqlGenCtx actionExecuter)
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
     GV.RSubscription fields -> do
-      (plan, _) <- E.getSubsOp env pgExecCtx gCtx sqlGenCtx userInfo
+      (plan, _) <- E.getSubsOp env logger pgExecCtx gCtx sqlGenCtx userInfo
                      queryReusability actionExecuter fields
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
