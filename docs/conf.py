@@ -45,16 +45,15 @@ GRAPHIQL_DEFAULT_ENDPOINT = "http://localhost:8080/v1/graphql"
 if os.getenv("GRAPHIQL_DEFAULT_ENDPOINT"):
     GRAPHIQL_DEFAULT_ENDPOINT = os.getenv("GRAPHIQL_DEFAULT_ENDPOINT")
 
-sitemap_domain = "https://hasura-stg.hasura-app.io/docs/"
+BASE_DOMAIN = "hasura.io" if RELEASE_MODE == "production" else "hasura-stg.hasura-app.io"
 
-if(RELEASE_MODE == "production"):
-    sitemap_domain = "https://hasura.io/docs/"
+SITEMAP_DOMAIN = BASE_DOMAIN + '/docs'
 
 # set context
 html_context = {
-    "SITEMAP_DOMAIN": sitemap_domain,
-    "BASE_DOMAIN": "hasura.io" if RELEASE_MODE == "production" else "hasura-stg.hasura-app.io",
+    "BASE_DOMAIN": BASE_DOMAIN,
     "RELEASE_MODE": RELEASE_MODE,
+    "SITEMAP_DOMAIN": SITEMAP_DOMAIN,
     "GRAPHIQL_DEFAULT_ENDPOINT": GRAPHIQL_DEFAULT_ENDPOINT,
 }
 
