@@ -31,16 +31,19 @@ import           Hasura.Server.Version          (HasVersion)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
--- insert translation
 
 traverseAnnInsert
   :: (Applicative f)
   => (a -> f b)
-  -> AnnMultiInsert a
-  -> f (AnnMultiInsert b)
-traverseAnnInsert f (annIns, mutationOutput) = (,)
-  <$> traverseMulti annIns
-  <*> RQL.traverseMutationOutput f mutationOutput
+  -> AnnInsert a
+  -> f (AnnInsert b)
+traverseAnnInsert f (AnnInsert fieldName isSingle (annIns, mutationOutput)) = AnnInsert
+  <$> pure fieldName
+  <*> pure isSingle
+  <*> ( (,)
+        <$> traverseMulti annIns
+        <*> RQL.traverseMutationOutput f mutationOutput
+      )
   where
     traverseMulti (AnnIns objs tableName conflictClause checkCond columns defaultValues) = AnnIns
       <$> traverse traverseObject objs
@@ -72,15 +75,19 @@ traverseAnnInsert f (annIns, mutationOutput) = (,)
 convertToSQLTransaction
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
-  -> AnnMultiInsert S.SQLExp
+  -> AnnInsert S.SQLExp
   -> RQL.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m EncJSON
-convertToSQLTransaction env (annIns, mutationOutput) rjCtx planVars stringifyNum =
+convertToSQLTransaction env (AnnInsert fieldName isSingle (annIns, mutationOutput)) rjCtx planVars stringifyNum =
   if null $ _aiInsObj annIns
   then pure $ RQL.buildEmptyMutResp mutationOutput
-  else insertMultipleObjects env annIns [] rjCtx mutationOutput planVars stringifyNum
+  else withPaths ["selectionSet", fieldName, "args", suffix] $
+    insertMultipleObjects env annIns [] rjCtx mutationOutput planVars stringifyNum
+  where
+    withPaths p x = foldr ($) x $ withPathK <$> p
+    suffix = bool "objects" "object" isSingle
 
 insertMultipleObjects
   :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
@@ -101,7 +108,7 @@ insertMultipleObjects env multiObjIns additionalColumns rjCtx mutationOutput pla
     anyRelsToInsert = not $ null allInsArrRels && null allInsObjRels
 
     withoutRelsInsert = do
-      for_ (_aioColumns <$> insObjs) \column ->
+      indexedForM_ (_aioColumns <$> insObjs) \column ->
         validateInsert (map fst column) [] (map fst additionalColumns)
       let columnValues = map (mkSQLRow defVals) $ union additionalColumns . _aioColumns <$> insObjs
           columnNames  = Map.keys defVals
@@ -116,7 +123,7 @@ insertMultipleObjects env multiObjIns additionalColumns rjCtx mutationOutput pla
       RQL.execInsertQuery env stringifyNum (Just rjCtx) (insertQuery, planVars)
 
     withRelsInsert = do
-      insertRequests <- for insObjs \obj -> do
+      insertRequests <- indexedForM insObjs \obj -> do
         let singleObj = AnnIns obj table conflictClause checkCondition columnInfos defVals
         insertObject env singleObj additionalColumns rjCtx planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
@@ -186,14 +193,15 @@ insertObjRel
   -> Bool
   -> ObjRelIns S.SQLExp
   -> m (Int, [(PGCol, S.SQLExp)])
-insertObjRel env planVars rjCtx stringifyNum objRelIns = do
-  (affRows, colValM) <- insertObject env singleObjIns [] rjCtx planVars stringifyNum
-  colVal <- onNothing colValM $ throw400 NotSupported errMsg
-  retColsWithVals <- fetchFromColVals colVal rColInfos
-  let columns = flip mapMaybe (Map.toList mapCols) \(column, target) -> do
-        value <- lookup target retColsWithVals
-        Just (column, value)
-  return (affRows, columns)
+insertObjRel env planVars rjCtx stringifyNum objRelIns =
+  withPathK (relNameToTxt relName) $ do
+    (affRows, colValM) <- withPathK "data" $ insertObject env singleObjIns [] rjCtx planVars stringifyNum
+    colVal <- onNothing colValM $ throw400 NotSupported errMsg
+    retColsWithVals <- fetchFromColVals colVal rColInfos
+    let columns = flip mapMaybe (Map.toList mapCols) \(column, target) -> do
+          value <- lookup target retColsWithVals
+          Just (column, value)
+    pure (affRows, columns)
   where
     RelIns singleObjIns relInfo = objRelIns
     relName = riName relInfo
@@ -215,14 +223,16 @@ insertArrRel
   -> Bool
   -> ArrRelIns S.SQLExp
   -> m Int
-insertArrRel env resCols rjCtx planVars stringifyNum arrRelIns = do
-  let additionalColumns = flip mapMaybe resCols \(column, value) -> do
-        target <- Map.lookup column mapping
-        Just (target, value)
-  resBS <- insertMultipleObjects env multiObjIns additionalColumns rjCtx mutOutput planVars stringifyNum
-  resObj <- decodeEncJSON resBS
-  onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
-    throw500 "affected_rows not returned in array rel insert"
+insertArrRel env resCols rjCtx planVars stringifyNum arrRelIns =
+  withPathK (relNameToTxt $ riName relInfo) $ do
+    let additionalColumns = flip mapMaybe resCols \(column, value) -> do
+          target <- Map.lookup column mapping
+          Just (target, value)
+    resBS <- withPathK "data" $
+      insertMultipleObjects env multiObjIns additionalColumns rjCtx mutOutput planVars stringifyNum
+    resObj <- decodeEncJSON resBS
+    onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
+      throw500 "affected_rows not returned in array rel insert"
   where
     RelIns multiObjIns relInfo = arrRelIns
     mapping   = riMapping relInfo

@@ -23,6 +23,14 @@ import           Hasura.SQL.Types
 -- temporary emplacement: they are not part of the Schema and don't
 -- belong in this folder.
 
+-- FIXME: this deserves a better name / a complete overhaul
+data AnnInsert v
+  = AnnInsert
+  { _aiFieldName :: !Text
+  , _aiIsSingle  :: Bool
+  , _aiData      :: AnnMultiInsert v
+  }
+
 data AnnIns a v
   = AnnIns
   { _aiInsObj         :: !a

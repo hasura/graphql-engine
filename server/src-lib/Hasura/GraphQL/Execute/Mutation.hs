@@ -83,7 +83,7 @@ convertInsert
   => Env.Environment
   -> SessionVariables
   -> RQL.MutationRemoteJoinCtx
-  -> AnnMultiInsert UnpreparedValue
+  -> AnnInsert UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
 convertInsert env usrVars rjCtx insertOperation stringifyNum = do

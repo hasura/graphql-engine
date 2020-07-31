@@ -33,7 +33,7 @@ import qualified Hasura.RQL.Types.RemoteSchema as RQL
 import qualified Hasura.SQL.DML                as S
 
 import           Hasura.GraphQL.Parser
-import           Hasura.GraphQL.Schema.Insert  (AnnMultiInsert)
+import           Hasura.GraphQL.Schema.Insert  (AnnInsert)
 
 -- | For storing both a normal GQLContext and one for the backend variant.
 -- Currently, this is to enable the backend variant to have certain insert
@@ -100,9 +100,9 @@ type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments Variable)
 type QueryRootField v = RootField (QueryDB v) RemoteField (ActionQuery v) J.Value
 
 data MutationDB v
-  = MDBInsert (AnnMultiInsert v)
-  | MDBUpdate (RQL.AnnUpdG    v)
-  | MDBDelete (RQL.AnnDelG    v)
+  = MDBInsert (AnnInsert   v)
+  | MDBUpdate (RQL.AnnUpdG v)
+  | MDBDelete (RQL.AnnDelG v)
 
 data ActionMutation v
   = AMSync !(RQL.AnnActionExecution v)

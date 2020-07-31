@@ -53,7 +53,7 @@ insertIntoTable
   -> InsPermInfo          -- ^ insert permissions of the table
   -> Maybe SelPermInfo    -- ^ select permissions of the table (if any)
   -> Maybe UpdPermInfo    -- ^ update permissions of the table (if any)
-  -> m (FieldParser n (AnnMultiInsert UnpreparedValue))
+  -> m (FieldParser n (AnnInsert UnpreparedValue))
 insertIntoTable table fieldName description insertPerms selectPerms updatePerms = do
   columns         <- tableColumns table
   selectionParser <- mutationSelectionSet table selectPerms
@@ -71,7 +71,7 @@ insertIntoTable table fieldName description insertPerms selectPerms updatePerms 
         objects <- P.field objectsName (Just objectsDesc) objectsParser
         pure (conflictClause, objects)
   pure $ P.subselection fieldName description argsParser selectionParser
-    <&> \((conflictClause, objects), output) ->
+    <&> \((conflictClause, objects), output) -> AnnInsert (G.unName fieldName) False
        ( mkInsertObject objects table columns conflictClause insertPerms updatePerms
        , RQL.MOutMultirowFields output
        )
@@ -84,7 +84,7 @@ insertOneIntoTable
   -> InsPermInfo          -- ^ insert permissions of the table
   -> SelPermInfo          -- ^ select permissions of the table
   -> Maybe UpdPermInfo    -- ^ update permissions of the table (if any)
-  -> m (FieldParser n (AnnMultiInsert UnpreparedValue))
+  -> m (FieldParser n (AnnInsert UnpreparedValue))
 insertOneIntoTable table fieldName description insertPerms selectPerms updatePerms  = do
   columns         <- tableColumns table
   selectionParser <- tableSelectionSet table selectPerms
@@ -102,7 +102,7 @@ insertOneIntoTable table fieldName description insertPerms selectPerms updatePer
         object <- P.field objectName (Just objectDesc) objectParser
         pure (conflictClause, object)
   pure $ P.subselection fieldName description argsParser selectionParser
-    <&> \((conflictClause, object), output) ->
+    <&> \((conflictClause, object), output) -> AnnInsert (G.unName fieldName) True
        ( mkInsertObject [object] table columns conflictClause insertPerms updatePerms
        , RQL.MOutSinglerowObject output
        )
