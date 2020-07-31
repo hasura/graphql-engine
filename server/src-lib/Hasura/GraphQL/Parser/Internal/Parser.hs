@@ -448,7 +448,7 @@ object name description parser = Parser
       -- check for extraneous fields here, since the InputFieldsParser just
       -- handles parsing the fields it cares about
       for_ (M.keys fields) \fieldName -> do
-        unless (fieldName `S.member` fieldNames) $
+        unless (fieldName `S.member` fieldNames) $ withPath (++[Key (unName fieldName)]) $
           parseError $ name <<> " has no field named " <>> fieldName
       ifParser parser fields
 
