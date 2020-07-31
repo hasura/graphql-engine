@@ -148,24 +148,3 @@ Date:   Wed Jul 15 03:40:48 2020 -0700
     Add MonadTrace and MonadExecuteQuery abstractions (#5383)
 
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-
-(Done, but we should re-visit this, if we do query plan caching)
-commit 20cbe9cfd3e90b91d3f4faf370b081fc3859cbde
-Author: Auke Booij <auke@hasura.io>
-Date:   Mon May 18 14:27:56 2020 +0200
-
-    server: fix an introspection query caching issue (fix #4547) (#4661)
-
-    Introspection queries accept variables, but we need to make sure to
-    also touch the variables that we ignore, so that an introspection
-    query is marked not reusable if we are not able to build a correct
-    query plan for it.
-
-    A better solution here would be to deal with such unused variables
-    correctly, so that more introspection queries become reusable.
-
-    An even better solution would be to type-safely track *how* to reuse
-    which variables, rather than to split the reusage marking from the
-    planning.
-
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
