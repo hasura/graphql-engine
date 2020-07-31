@@ -442,7 +442,7 @@ object name description parser = Parser
   }
   where
     schemaType = NonNullable $ TNamed $ mkDefinition name description $
-                 TIInputObject (ifDefinitions parser)
+                 TIInputObject (InputObjectInfo (ifDefinitions parser))
     fieldNames = S.fromList (dName <$> ifDefinitions parser)
     parseFields fields = do
       -- check for extraneous fields here, since the InputFieldsParser just

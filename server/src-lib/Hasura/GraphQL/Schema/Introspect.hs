@@ -284,7 +284,7 @@ typeField =
       return $
         \case SomeType tp ->
                 case tp of
-                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInputObject fieldDefs))) ->
+                  P.Nullable (P.TNamed (P.Definition _ _ _ (P.TIInputObject (P.InputObjectInfo fieldDefs)))) ->
                     J.Array $ V.fromList $ map printer $ sortOn P.dName fieldDefs
                   _ -> J.Null
     ofType :: FieldParser n (SomeType -> J.Value)

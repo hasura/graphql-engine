@@ -23,6 +23,7 @@ module Hasura.GraphQL.Parser.Schema (
   , EnumValueInfo(..)
   , InputFieldInfo(..)
   , FieldInfo(..)
+  , InputObjectInfo(..)
   , ObjectInfo(..)
   , InterfaceInfo(..)
   , UnionInfo(..)
@@ -330,6 +331,12 @@ instance HasDefinition (NonNullableType k) (TypeInfo k) where
   definitionLens f (TNamed definition) = TNamed <$> f definition
   definitionLens f (TList t)           = TList <$> definitionLens f t
 
+data InputObjectInfo = InputObjectInfo ~[Definition InputFieldInfo]
+-- Note that we can't check for equality of the fields since there may be
+-- circularity. So we rather check for equality of names.
+instance Eq InputObjectInfo where
+  InputObjectInfo fields1 == InputObjectInfo fields2
+    =  Set.fromList (fmap dName fields1)     == Set.fromList (fmap dName fields2)
 data ObjectInfo = ObjectInfo ~[Definition FieldInfo] ~[Definition InterfaceInfo]
 -- Note that we can't check for equality of the fields and the interfaces since
 -- there may be circularity. So we rather check for equality of names.
@@ -350,7 +357,7 @@ data UnionInfo = UnionInfo ~[Definition ObjectInfo]
 data TypeInfo k where
   TIScalar :: TypeInfo 'Both
   TIEnum :: NonEmpty (Definition EnumValueInfo) -> TypeInfo 'Both
-  TIInputObject :: [Definition InputFieldInfo] -> TypeInfo 'Input
+  TIInputObject :: InputObjectInfo -> TypeInfo 'Input
   TIObject :: ObjectInfo -> TypeInfo 'Output
   TIInterface :: InterfaceInfo -> TypeInfo 'Output
   TIUnion :: UnionInfo -> TypeInfo 'Output
@@ -361,8 +368,13 @@ instance Eq (TypeInfo k) where
 -- | Like '==', but can compare 'TypeInfo's of different kinds.
 eqTypeInfo :: TypeInfo k1 -> TypeInfo k2 -> Bool
 eqTypeInfo TIScalar                TIScalar                = True
-eqTypeInfo (TIEnum values1)        (TIEnum values2)        = values1 == values2
-eqTypeInfo (TIInputObject fields1) (TIInputObject fields2) = fields1 == fields2
+eqTypeInfo (TIEnum values1)        (TIEnum values2)
+  = Set.fromList (toList values1) == Set.fromList (toList values2)
+-- NB the case for input objects currently has quadratic complexity, which is
+-- probably avoidable. HashSets should be able to get this down to
+-- O(n*log(n)). But this requires writing some Hashable instances by hand
+-- because we use some existential types and GADTs.
+eqTypeInfo (TIInputObject ioi1) (TIInputObject ioi2)       = ioi1 == ioi2
 eqTypeInfo (TIObject oi1) (TIObject oi2)                   = oi1 == oi2
 eqTypeInfo (TIInterface ii1) (TIInterface ii2)             = ii1 == ii2
 eqTypeInfo (TIUnion (UnionInfo objects1))       (TIUnion (UnionInfo objects2))
@@ -400,7 +412,8 @@ data Definition a = Definition
   , dDescription :: Maybe Description
   , dInfo        :: ~a
   -- ^ Lazy to allow mutually-recursive type definitions.
-  } deriving (Functor, Foldable, Traversable)
+  } deriving (Functor, Foldable, Traversable, Generic)
+instance Hashable a => Hashable (Definition a)
 
 mkDefinition :: Name -> Maybe Description -> a -> Definition a
 mkDefinition name description info = Definition name Nothing description info
@@ -436,7 +449,8 @@ addDefinitionUnique unique = over definitionLens \definition ->
 -- all definitions, so this is just a placeholder for use as @'Definition'
 -- 'EnumValueInfo'@.
 data EnumValueInfo = EnumValueInfo
-  deriving (Eq)
+  deriving (Eq, Generic)
+instance Hashable EnumValueInfo
 
 data InputFieldInfo
   -- | A required field with a non-nullable type.
@@ -567,7 +581,7 @@ instance HasTypeDefinitions (TypeInfo k) where
   accumulateTypeDefinitions = \case
     TIScalar                                              -> pure ()
     TIEnum _                                              -> pure ()
-    TIInputObject fields                                  -> accumulateTypeDefinitions fields
+    TIInputObject (InputObjectInfo fields)                -> accumulateTypeDefinitions fields
     TIObject (ObjectInfo fields interfaces)               ->
       accumulateTypeDefinitions fields >> accumulateTypeDefinitions interfaces
     TIInterface (InterfaceInfo fields interfaces objects) ->
@@ -575,6 +589,9 @@ instance HasTypeDefinitions (TypeInfo k) where
       >> accumulateTypeDefinitions interfaces
       >> accumulateTypeDefinitions objects
     TIUnion (UnionInfo objects)                           -> accumulateTypeDefinitions objects
+
+instance HasTypeDefinitions (Definition InputObjectInfo) where
+  accumulateTypeDefinitions = accumulateTypeDefinitions . fmap TIInputObject
 
 instance HasTypeDefinitions (Definition InputFieldInfo) where
   accumulateTypeDefinitions = accumulateTypeDefinitions . dInfo
