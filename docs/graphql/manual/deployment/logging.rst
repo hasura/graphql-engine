@@ -20,6 +20,9 @@ Based on your deployment method, the Hasura GraphQL engine logs can be accessed 
 - :ref:`On Heroku <heroku_logs>`
 - :ref:`On Docker <docker_logs>`
 - :ref:`On Kubernetes <kubernetes_logs>`
+- :ref:`On Digital Ocean <do_logs>`
+- :ref:`On Azure <azure_logs>`
+- :ref:`On Google Cloud & Kubernetes <gc_kubernetes_logs>`
 
 .. _log-types:
 

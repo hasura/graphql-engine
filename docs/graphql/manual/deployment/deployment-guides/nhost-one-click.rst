@@ -17,7 +17,7 @@ Introduction
 
 This guide shows how to deploy the Hasura GraphQL engine on `Nhost <https://nhost.io>`__.
 
-One-Click deploy on Nhost
+One-click deploy on Nhost
 -------------------------
 
 .. note::
