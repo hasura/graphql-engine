@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
 import { commonDataTypes } from '../utils';
-
+import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
 import {
@@ -11,7 +11,6 @@ import {
   inferDefaultValues,
 } from '../Common/utils';
 
-import Button from '../../../Common/Button/Button';
 import { addColSql } from '../TableModify/ModifyActions';
 
 import styles from './ModifyTable.scss';
@@ -38,9 +37,7 @@ const useColumnEditor = (dispatch, tableName) => {
     colDependentSQLGenerator,
   } = columnState;
 
-  const onSubmit = e => {
-    e.preventDefault();
-
+  const onSubmit = () => {
     // auto-trim column name
     const trimmedColName = colName.trim();
 
@@ -254,19 +251,6 @@ const ColumnCreator = ({
     );
   };
 
-  const getSubmitButton = () => {
-    return (
-      <Button
-        type="submit"
-        color="yellow"
-        size="sm"
-        data-test="add-column-button"
-      >
-        + Add column
-      </Button>
-    );
-  };
-
   const getFrequentlyUsedColumnSelector = () => {
     return (
       <FrequentlyUsedColumnSelector
@@ -276,24 +260,31 @@ const ColumnCreator = ({
     );
   };
 
-  return (
-    <div className={styles.activeEdit}>
-      <form
-        className={`form-inline ${styles.display_flex}`}
-        onSubmit={onSubmit}
-      >
+  const expandedContent = () => (
+    <div>
+      <form className={`form-inline ${styles.display_flex}`}>
         {getColumnNameInput()}
         {getColumnTypeInput()}
         {getColumnNullableInput()}
         {getColumnUniqueInput()}
         {getColumnDefaultInput()}
-
-        {getSubmitButton()}
       </form>
-      <div className={styles.add_mar_top}>
+      <div className={styles.add_mar_top_small}>
         {getFrequentlyUsedColumnSelector()}
       </div>
     </div>
+  );
+
+  return (
+    <ExpandableEditor
+      key={'new-col'}
+      editorExpanded={expandedContent}
+      property={'add-new-column'}
+      service={'modify-table'}
+      expandButtonText={'Add a new column'}
+      saveFunc={onSubmit}
+      isCollapsable
+    />
   );
 };
 

@@ -10,17 +10,8 @@
 }
 
 .head_wrapper {
-  font-family: 'Khula';
   font-size: 24px;
   font-weight: 600;
-}
-
-.subhead_wrapper {
-  font-family: 'Khula';
-  font-size: 16px;
-  font-weight: 600;
-  padding: 15px 0;
-  border-bottom: 1px solid #ccc;
 }
 
 .body_content {
@@ -37,12 +28,6 @@
 
 .small_content img {
   max-width: 100%;
-}
-
-.extra_small_content {
-  font-family: 'Gudea';
-  font-size: 12px;
-  color: #333;
 }
 
 .landing_page_wrapper p {
@@ -111,10 +96,6 @@
   text-decoration: underline;
 }
 
-.space_top_bot {
-  padding: 15px 0;
-}
-
 .space_wrapper {
   padding: 15px 15px;
   padding-bottom: 0;
@@ -124,51 +105,15 @@
   text-align: left;
 }
 
-.common_btn {
-  padding-top: 10px;
-}
-
-.common_btn button {
-  padding: 5px 15px;
-  background-color: #1CD3C6;
-  color: #000;
-  border-radius: 5px;
-  border: 1px solid #1CD3C6;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'Gudea';
-}
-
-.sign_in_wrapper1 {
-  text-align: left;
-}
-
-.sign_in_wrapper1 .get_start {
-  display: inline-block;
-  padding-right: 5px;
-}
-
-.sign_in_wrapper1 .common_btn {
-  display: inline-block;
-}
-
 .sign_in_wrapper {
   text-align: left;
   display: flex;
   align-items: center;
 }
 
-.tutorial_in_wrapper {
-  display: block;
-}
-
 .sign_in_wrapper .get_start {
   display: inline-block;
   padding-right: 5px;
-}
-
-.sign_in_wrapper .common_btn {
-  display: inline-block;
 }
 
 .get_start img {
@@ -186,44 +131,6 @@
   display: inline-block;
   width: 12px;
   padding-left: 5px;
-}
-
-.ref_link {
-  display: inline;
-  color: #333;
-  font-weight: 600;
-}
-
-.ref_link img {
-  display: inline-block;
-  width: 12px;
-  padding-left: 5px;
-}
-
-.tags_wrapper {
-  width: 100%;
-  text-align: left;
-}
-
-.tags_btn {
-  text-align: left;
-}
-
-.tags_wrapper .tags_btn {
-  padding-right: 10px;
-  display: inline-block;
-  margin-bottom: 10px;
-}
-
-.tags_btn button {
-  padding: 2px 7px;
-  background-color: #FEECC0;
-  color: #DFB653;
-  border-radius: 5px;
-  border: 1px solid #FEECC0;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'Gudea';
 }
 
 .wd_80 {
