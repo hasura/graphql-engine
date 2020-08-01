@@ -8,7 +8,8 @@ export type AllowedBadges =
   | 'community'
   | 'update'
   | 'event'
-  | 'security';
+  | 'security'
+  | 'error';
 
 interface BadgeProps {
   type: AllowedBadges;
@@ -22,6 +23,12 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
   ...props
 }) => {
   switch (type) {
+    case 'error':
+      return (
+        <StyledBadge {...props} bg="#001934" color="white">
+          error
+        </StyledBadge>
+      );
     case 'event':
       return (
         <StyledBadge {...props} bg="#001934" color="white">
