@@ -135,16 +135,8 @@ const setPreReleaseNotificationOptOutInDB = () => (
   return dispatch(setConsoleOptsInDB(options, successCb, errorCb));
 };
 
-const getReadAllNotificationsState = () => {
-  return {
-    read: 'all',
-    date: new Date().toISOString(),
-  };
-};
-
 const updateConsoleNotificationsInDB = (
-  updatedState: TelemetryConsoleNotification,
-  onSuccessText?: string
+  updatedState: TelemetryConsoleNotification
 ) => {
   return (
     dispatch: ThunkDispatch<ReduxState, {}, AnyAction>,
@@ -169,9 +161,6 @@ const updateConsoleNotificationsInDB = (
       dispatch(requestAction(url, options))
         // TODO: perhaps need to change the type for `data` here
         .then((data: any) => {
-          if (onSuccessText) {
-            dispatch(showSuccessNotification(onSuccessText));
-          }
           dispatch({
             type: UPDATE_CONSOLE_NOTIFICATIONS,
             data: data.returning[0].console_state.console_notifications,
@@ -308,5 +297,4 @@ export {
   setPreReleaseNotificationOptOutInDB,
   setTelemetryNotificationShownInDB,
   updateConsoleNotificationsInDB,
-  getReadAllNotificationsState,
 };
