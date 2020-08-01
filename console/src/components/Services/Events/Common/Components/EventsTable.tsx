@@ -53,6 +53,30 @@ const EventsTable: React.FC<Props> = props => {
     onCancelEvent,
   } = props;
 
+  const expanderIcon = {
+    expander: true,
+    Header: '',
+    accessor: 'expander',
+    Expander: ({ isExpanded }: { isExpanded: boolean }) => {
+      return (
+        <Button
+          color="white"
+          size="xs"
+          title={isExpanded ? 'Collapse row' : 'Expand row'}
+          onClick={e => {
+            e.preventDefault();
+          }}
+        >
+          {isExpanded ? (
+            <i className={'fa fa-expand'} />
+          ) : (
+            <i className={'fa fa-compress'} />
+          )}
+        </Button>
+      );
+    },
+  };
+
   if (rows.length === 0) {
     return <div className={styles.add_mar_top}>No data available</div>;
   }
@@ -92,23 +116,27 @@ const EventsTable: React.FC<Props> = props => {
     }
   };
 
-  const gridHeadings = sortedColumns.map(column => {
+  const gridHeadings: any = [expanderIcon];
+
+  sortedColumns.forEach(column => {
     if (column === 'actions') {
-      return { Header: '', accessor: column, width: 50 };
+      gridHeadings.push({ Header: '', accessor: column, width: 50 });
     }
-    return {
+    gridHeadings.push({
       Header: column,
       accessor: column,
-    };
+    });
   });
 
   const invocationColumns = ['status', 'id', 'created_at'];
 
-  const invocationGridHeadings = invocationColumns.map(column => {
-    return {
+  const invocationGridHeadings: any = [expanderIcon];
+
+  invocationColumns.forEach(column => {
+    invocationGridHeadings.push({
       Header: column,
       accessor: column,
-    };
+    });
   });
 
   const onCancelHandler = (id: string, scheduledAt: string) => {
