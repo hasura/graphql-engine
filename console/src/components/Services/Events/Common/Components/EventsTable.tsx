@@ -63,7 +63,8 @@ const EventsTable: React.FC<Props> = props => {
           color="white"
           size="xs"
           title={isExpanded ? 'Collapse row' : 'Expand row'}
-          onClick={e => {
+          // This is needed to remove focus on button when clicked (to avoid button style change)
+          onMouseDown={e => {
             e.preventDefault();
           }}
         >

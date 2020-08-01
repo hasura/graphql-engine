@@ -112,6 +112,10 @@ const InvocationLogsTable: React.FC<Props> = props => {
             color="white"
             size="xs"
             title={isExpanded ? 'Collapse row' : 'Expand row'}
+            // This is needed to remove focus on button when clicked (to avoid button style change)
+            onMouseDown={e => {
+              e.preventDefault();
+            }}
           >
             {isExpanded ? (
               <i className={'fa fa-expand'} />
