@@ -15,11 +15,11 @@ export type ConsoleNotification = {
   expiry_date?: NotificationDate;
 };
 
+// FIXME? : we may have to remove this
 export const defaultNotification: ConsoleNotification = {
-  subject: '',
+  subject: 'No updates available at the moment',
   created_at: Date.now(),
-  content:
-    "You're all caught up! \n There are no updates available at this point in time.",
+  content: "You're all caught up!",
   type: null,
   start_date: Date.now(),
   priority: 1,
@@ -31,7 +31,7 @@ export const errorNotification: ConsoleNotification = {
   created_at: Date.now(),
   content:
     'There was an error in fetching notifications. Try again in some time.',
-  type: null,
+  type: 'error',
   start_date: null,
   priority: 1,
   expiry_date: null,
