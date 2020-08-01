@@ -68,7 +68,7 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
               name="event_payload"
               value={JSON.stringify(latestLog.request, null, 4)}
               minLines={10}
-              maxLines={10}
+              maxLines={30}
               width="100%"
               showPrintMargin={false}
               showGutter={false}
@@ -88,7 +88,7 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
                 name="event_payload"
                 value={JSON.stringify(latestLog.response, null, 4)}
                 minLines={10}
-                maxLines={10}
+                maxLines={30}
                 width="100%"
                 showPrintMargin={false}
                 showGutter={false}
@@ -104,7 +104,7 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
                 name="event_payload"
                 value={JSON.stringify(error, null, 4)}
                 minLines={8}
-                maxLines={10}
+                maxLines={30}
                 width="100%"
                 showPrintMargin={false}
                 showGutter={false}
