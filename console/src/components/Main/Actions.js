@@ -5,6 +5,7 @@ import requestActionPlain from '../../utils/requestActionPlain';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import { getFeaturesCompatibility } from '../../helpers/versionUtils';
 import { defaultNotification, errorNotification } from './ConsoleNotification';
+import { updateConsoleNotificationsInDB } from '../../telemetry/Actions';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -42,15 +43,84 @@ const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
 const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 /* End */
 
-const fetchConsoleNotifications = () => dispatch => {
-  const url = globals.isProduction
-    ? Endpoints.consoleNotificationsProd
-    : Endpoints.consoleNotificationsStg;
-  const requestBody = {
+// helper methods
+
+function getConsoleNotificationsURL() {
+  const url = !globals.isProduction
+    ? Endpoints.consoleNotificationsStg
+    : Endpoints.consoleNotificationsProd;
+  return url;
+}
+
+function now() {
+  return new Date().toISOString();
+}
+
+function notificationDiff(listA, listB) {
+  if (listA.length !== listB.length) {
+    return [];
+  }
+
+  return listA.filter(
+    notif => !listB.some(newNotif => newNotif.id === notif.id)
+  );
+}
+
+const getReadAllNotificationsState = () => {
+  return {
+    read: 'all',
+    date: new Date().toISOString(),
+  };
+};
+
+// action definitions
+
+// to fetch and filter notifications
+const fetchConsoleNotifications = () => (dispatch, getState) => {
+  const url = getConsoleNotificationsURL();
+  const consoleStateDB = getState().telemetry.console_opts;
+
+  let lastReadAllTimeStamp;
+
+  if (consoleStateDB.console_notifications) {
+    lastReadAllTimeStamp = consoleStateDB.console_notifications.date;
+  }
+
+  const timeNow = now();
+  const startDateClause = {
+    $lte: timeNow,
+  };
+
+  if (lastReadAllTimeStamp) {
+    startDateClause.$gt = lastReadAllTimeStamp;
+  }
+
+  const query = {
     args: {
       limit: 20,
       table: 'console_notification',
       columns: ['*'],
+      where: {
+        $and: [
+          {
+            $or: [
+              {
+                expiry_date: {
+                  $gt: timeNow,
+                },
+              },
+              {
+                expiry_date: {
+                  $eq: null,
+                },
+              },
+            ],
+          },
+          {
+            created_at: startDateClause,
+          },
+        ],
+      },
       order_by: [
         {
           type: 'desc',
@@ -61,26 +131,60 @@ const fetchConsoleNotifications = () => dispatch => {
     type: 'select',
   };
   const options = {
+    body: JSON.stringify(query),
     method: 'POST',
-    body: JSON.stringify(requestBody),
-    headers: { 'content-type': 'application/json' },
+    headers: {
+      'content-type': 'application/json',
+    },
   };
+
   return dispatch(requestAction(url, options))
     .then(data => {
-      if (data.length) {
-        dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SUCCESS, data });
+      const currentNotifications = getState().main.consoleNotifications;
+      let responseData = data;
+
+      if (!responseData.length) {
+        if (currentNotifications) {
+          return;
+        }
+
+        dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT });
+        dispatch(
+          updateConsoleNotificationsInDB({
+            read: 'default',
+            date: timeNow,
+          })
+        );
         return;
       }
 
+      const responseDiff = notificationDiff(currentNotifications, responseData);
+
+      if (responseDiff.length) {
+        dispatch(
+          updateConsoleNotificationsInDB({
+            read: [],
+            date: timeNow,
+          })
+        );
+        // TODO: fix the order in which the notifications will appear in
+        responseData = [...responseDiff, ...responseData];
+      }
+
       dispatch({
-        type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT,
+        type: FETCH_CONSOLE_NOTIFICATIONS_SUCCESS,
+        data: responseData,
       });
     })
     .catch(err => {
       console.error(err);
-      dispatch({
-        type: FETCH_CONSOLE_NOTIFICATIONS_ERROR,
-      });
+      dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_ERROR });
+      dispatch(
+        updateConsoleNotificationsInDB({
+          read: 'error',
+          date: timeNow,
+        })
+      );
     });
 };
 
@@ -407,4 +511,5 @@ export {
   RUN_TIME_ERROR,
   registerRunTimeError,
   fetchConsoleNotifications,
+  getReadAllNotificationsState,
 };

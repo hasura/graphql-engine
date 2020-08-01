@@ -13,10 +13,13 @@ import ToolTip from '../Common/Tooltip/Tooltip';
 import {
   setPreReleaseNotificationOptOutInDB,
   updateConsoleNotificationsInDB,
-  getReadAllNotificationsState,
 } from '../../telemetry/Actions';
 import Button from '../Common/Button';
 import { showErrorNotification } from '../Services/Common/Notification';
+import {
+  getReadAllNotificationsState,
+  fetchConsoleNotifications,
+} from './Actions';
 
 const getDateString = (date: NotificationDate) => {
   if (!date) {
@@ -77,9 +80,9 @@ type NotificationProps = {
   showVersionUpdate: boolean;
   latestVersion: string;
   optOutCallback: () => void;
-  uuid: string;
-  dispatch: Dispatch;
+  onClickMarkAllAsRead: () => void;
   disableMarkAllAsReadBtn: boolean;
+  onClickViewMore: () => void;
 };
 
 type PreReleaseProps = Pick<NotificationProps, 'optOutCallback'>;
@@ -142,36 +145,37 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
   );
 };
 
-type BadgeViewMoreProps = {
-  // TODO: add read number props here
+interface BadgeViewMoreProps {
   numberNotifications: number;
-};
+}
 
-const ViewMoreOptions: React.FC<BadgeViewMoreProps> = ({
+interface ViewMoreProps extends BadgeViewMoreProps {
+  onClickViewMore: () => void;
+}
+
+const ViewMoreOptions: React.FC<ViewMoreProps> = ({
   numberNotifications,
+  onClickViewMore,
 }) => {
-  let buttonText = 'View More Notifications';
-  // FIXME: should be <= not just <
-  if (numberNotifications > 0 && numberNotifications < 20) {
-    return null;
-  }
-
+  const buttonText =
+    numberNotifications > 20
+      ? 'View older notifications'
+      : 'View more notifications';
   // if all read - no button
   // new > read notifs - See More notifications
   // if current < old - See older notifications
-
-  if (numberNotifications === 10) {
-    buttonText = 'View Older Notifications';
-  }
-
+  // if (numberNotifications === 10) {
+  //   buttonText = 'View Older Notifications';
+  // }
+  // TODO: think about the part where we might have to change the text
   return (
-    <Button className={styles.viewMoreNotifications}>
-      {buttonText} &rarr;{' '}
+    <Button className={styles.viewMoreNotifications} onClick={onClickViewMore}>
+      {buttonText} &rarr;
     </Button>
   );
 };
 
-const onClickMarkAllAsRead = (dispatch: Dispatch, uuid: string) => {
+const markAllAsRead = (dispatch: Dispatch, uuid: string) => {
   if (!uuid) {
     dispatch(
       showErrorNotification(
@@ -183,12 +187,7 @@ const onClickMarkAllAsRead = (dispatch: Dispatch, uuid: string) => {
   }
   try {
     const readAllState = getReadAllNotificationsState();
-    dispatch(
-      updateConsoleNotificationsInDB(
-        readAllState,
-        'Successfully marked all notifications as read'
-      )
-    );
+    dispatch(updateConsoleNotificationsInDB(readAllState));
   } catch (err) {
     dispatch(
       showErrorNotification('Failed to mark all notifications as read', err)
@@ -203,9 +202,9 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
       showVersionUpdate,
       latestVersion,
       optOutCallback,
-      uuid,
-      dispatch,
       disableMarkAllAsReadBtn,
+      onClickMarkAllAsRead,
+      onClickViewMore,
     },
     forwardedRef
   ) => (
@@ -232,7 +231,7 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
         </Flex>
         <Button
           title="Mark all as read"
-          onClick={() => onClickMarkAllAsRead(dispatch, uuid)}
+          onClick={onClickMarkAllAsRead}
           // TODO: this can change to a state dependent on when all we show the `View more button`
           disabled={disableMarkAllAsReadBtn}
         >
@@ -257,7 +256,10 @@ const Notifications = React.forwardRef<HTMLDivElement, NotificationProps>(
               {...props}
             />
           ))}
-        <ViewMoreOptions numberNotifications={data.length} />
+        <ViewMoreOptions
+          numberNotifications={data.length}
+          onClickViewMore={onClickViewMore}
+        />
       </Box>
     </Box>
   )
@@ -382,11 +384,24 @@ const HasuraNotifications: React.FC<Props> = ({
     props.dispatch(setPreReleaseNotificationOptOutInDB());
   };
 
+  const onClickViewMore = () => {
+    props.dispatch(fetchConsoleNotifications());
+  };
+
+  const onClickMarkAllAsRead = () => {
+    markAllAsRead(props.dispatch, props.hasura_uuid);
+  };
+
   let numberNotifications =
     consoleNotifications.length + (displayNewVersionNotif ? 1 : 0);
   // TODO: handle read logic here and send the appropriate number
   if (props.console_opts?.console_notifications) {
-    if (props.console_opts.console_notifications.read === 'all') {
+    const readValue = props.console_opts.console_notifications.read;
+    if (
+      readValue === 'all' ||
+      readValue === 'default' ||
+      readValue === 'error'
+    ) {
       // after `Mark all as read` or no new notifications case
       numberNotifications = 0;
     }
@@ -409,8 +424,8 @@ const HasuraNotifications: React.FC<Props> = ({
         showVersionUpdate={displayNewVersionNotif}
         latestVersion={latestVersion}
         optOutCallback={optOutCallback}
-        uuid={props.hasura_uuid}
-        dispatch={props.dispatch}
+        onClickMarkAllAsRead={onClickMarkAllAsRead}
+        onClickViewMore={onClickViewMore}
         disableMarkAllAsReadBtn={!numberNotifications}
       />
     </>
