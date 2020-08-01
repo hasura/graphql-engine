@@ -6,7 +6,6 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
-- server: add request/response sizes in event triggers (and scheduled trigger) logs
 - server: bugfix to allow HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE of 0 (#5363)
 - server: support only a bounded plan cache, with a default size of 4000 (closes #5363)
 - server: add logs for action handlers
