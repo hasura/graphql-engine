@@ -92,6 +92,7 @@ is_patch_release() {
 }
 
 build_and_push_patch_release() {
+  exit 1
   # find the latest patch release file
   PATCH_NUMBER=1
 
