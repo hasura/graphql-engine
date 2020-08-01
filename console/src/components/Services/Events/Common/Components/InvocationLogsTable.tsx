@@ -7,6 +7,7 @@ import 'react-table/react-table.css';
 import { FilterTableProps } from './types';
 import { Dispatch } from '../../../../../types';
 // import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
+import Button from '../../../../Common/Button/Button';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
@@ -100,11 +101,34 @@ const InvocationLogsTable: React.FC<Props> = props => {
     }
   };
 
-  const gridHeadings = sortedColumns.map(column => {
-    return {
+  const gridHeadings: any = [
+    {
+      expander: true,
+      Header: '',
+      accessor: 'expander',
+      Expander: ({ isExpanded }: { isExpanded: boolean }) => {
+        return (
+          <Button
+            color="white"
+            size="xs"
+            title={isExpanded ? 'Collapse row' : 'Expand row'}
+          >
+            {isExpanded ? (
+              <i className={'fa fa-expand'} />
+            ) : (
+              <i className={'fa fa-compress'} />
+            )}
+          </Button>
+        );
+      },
+    },
+  ];
+
+  sortedColumns.forEach(column => {
+    gridHeadings.push({
       Header: column,
       accessor: column,
-    };
+    });
   });
 
   const rowsFormatted = rows.map(r => {
