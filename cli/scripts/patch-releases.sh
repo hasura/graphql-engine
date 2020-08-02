@@ -63,6 +63,7 @@ is_patch_release() {
   
   if [ ! -n "${PR_NUMBER}" ]; then
     echo "cannot determine PR number :( exiting"
+    echo "GOT: ${PR_NUMBER}"
     exit 1
   fi
   echo "checking if PR ${PR_NUMBER} is a patch release"
