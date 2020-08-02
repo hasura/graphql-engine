@@ -135,7 +135,8 @@ is_patch_release() {
     exit 1
   fi
 
-  echo "voila this is a patch release!"
+  echo "this is a patch release!"
+  touch /tmp/is_patch_release
   exit 0
 }
 
