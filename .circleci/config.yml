@@ -399,9 +399,9 @@ jobs:
         paths:
         - /go/pkg
     - *wait_for_postgres
-    # - run:
-    #     name: test cli
-    #     command: .circleci/test-cli.sh
+    - run:
+        name: test cli
+        command: .circleci/test-cli.sh
     - run:
         name: build cli
         working_directory: cli
@@ -596,86 +596,86 @@ workflows:
   workflow_v20200414:
     jobs:
     - check_build_worthiness: *filter_only_vtags
-    # - test_and_build_cli_ext:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - check_build_worthiness
-    # - build_console:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - check_build_worthiness
-    # - build_server:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - check_build_worthiness
-    # - test_cli_with_last_release:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - test_and_build_cli_ext
-    #     - check_build_worthiness
-    # - build_image:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - build_server
-    #     - build_console
-    # - test_server_pg_12:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - build_server
-    # - test_server_pg_11:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - build_server
-    # - test_server_pg_10:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - build_server
-    # - test_server_pg_9.6:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - build_server
-    # - test_server_pg_9.5:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - build_server
-    # - server_unit_tests:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - build_server
-    # - test_server_upgrade:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - build_server
-    # - all_server_tests_pass:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - test_server_pg_12
-    #     - test_server_pg_11
-    #     - test_server_pg_10
-    #     - test_server_pg_9.6
-    #     - test_server_pg_9.5
-    #     - server_unit_tests
-    #     - test_server_upgrade
+    - test_and_build_cli_ext:
+        <<: *filter_only_vtags
+        requires:
+        - check_build_worthiness
+    - build_console:
+        <<: *filter_only_vtags
+        requires:
+        - check_build_worthiness
+    - build_server:
+        <<: *filter_only_vtags
+        requires:
+        - check_build_worthiness
+    - test_cli_with_last_release:
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_cli_ext
+        - check_build_worthiness
+    - build_image:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+        - build_console
+    - test_server_pg_12:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - test_server_pg_11:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - test_server_pg_10:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - test_server_pg_9.6:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - test_server_pg_9.5:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - server_unit_tests:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - test_server_upgrade:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
+    - all_server_tests_pass:
+        <<: *filter_only_vtags
+        requires:
+        - test_server_pg_12
+        - test_server_pg_11
+        - test_server_pg_10
+        - test_server_pg_9.6
+        - test_server_pg_9.5
+        - server_unit_tests
+        - test_server_upgrade
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:
-        # - test_and_build_cli_ext
-        # - build_server
-    # - test_and_build_cli_migrations:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - build_image
-    #     - test_and_build_cli
-    # - test_console:
-    #     <<: *filter_only_vtags
-    #     requires:
-    #     - build_console
-    #     - test_and_build_cli
-    #     - test_cli_with_last_release
-    # - deploy:
-    #     <<: *filter_only_vtags_channel_branches
-    #     requires:
-    #     - build_image
-    #     - test_console
-    #     - test_and_build_cli_migrations
-    #     - all_server_tests_pass
+        - test_and_build_cli_ext
+        - build_server
+    - test_and_build_cli_migrations:
+        <<: *filter_only_vtags
+        requires:
+        - build_image
+        - test_and_build_cli
+    - test_console:
+        <<: *filter_only_vtags
+        requires:
+        - build_console
+        - test_and_build_cli
+        - test_cli_with_last_release
+    - deploy:
+        <<: *filter_only_vtags_channel_branches
+        requires:
+        - build_image
+        - test_console
+        - test_and_build_cli_migrations
+        - all_server_tests_pass
