@@ -411,7 +411,7 @@ jobs:
           scripts/patch-releases.sh is_patch_release; 
           if [ -e /tmp/is_patch_release ]; then
             echo building and pushing patch release
-            (scripts/patch-releases.sh build_and_push_patch_release) && make ci-copy-binary /tmp/patch_release_version
+            (scripts/patch-releases.sh build_and_push_patch_release) && make ci-copy-binary $(cat /tmp/patch_release_version)
           else
             echo building cli
             make build && make compress && make ci-copy-binary

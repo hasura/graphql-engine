@@ -6,7 +6,7 @@ ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../../)"
 OUTPUT_DIR="${ROOT}/cli/_output"
 VERSION=$("${ROOT}"/scripts/get-version.sh)
 
-if [ -z "${1}" ]
+if [ -n "${1}" ]
 then
   VERSION=${1}
 fi
