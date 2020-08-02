@@ -1,7 +1,0 @@
-- args:
-    sql: CREATE TABLE "sql_function_table"("id" serial NOT NULL, "input" text NOT
-      NULL, "output" text , PRIMARY KEY ("id") )
-  type: run_sql
-- args:
-    name: sql_function_table
-  type: add_existing_table_or_view
