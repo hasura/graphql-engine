@@ -38,7 +38,7 @@ is_patch_release() {
   if ! command -v hub&> /dev/null
   then
     echo "installing hub"
-      sudo apt install hub
+      apt update && apt install hub
     exit
   fi
   # check if a Github PR is a valid candidate for a patch release
