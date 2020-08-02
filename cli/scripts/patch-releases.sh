@@ -55,7 +55,7 @@ is_patch_release() {
   
   if [ -n "${CIRCLECI}" ]; then
     echo "getting PR number from circle CI"
-    PR_NUMBER=${CIRCLE_PR_NUMBER}
+    PR_NUMBER=${CIRCLE_PR_NUMBER:-${CIRCLE_PULL_REQUEST##*/}}
   else
     # get PR number as an argument
     PR_NUMBER=$1
