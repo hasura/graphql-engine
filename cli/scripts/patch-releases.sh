@@ -146,7 +146,7 @@ build_and_push_patch_release() {
     GCLOUD_VERSION="207.0.0"
     curl -Lo /tmp/gcloud-${GCLOUD_VERSION}.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz
     tar -xzf /tmp/gcloud-${GCLOUD_VERSION}.tar.gz -C /usr/local
-    /usr/local/google-cloud-sdk/install.sh
+    /usr/local/google-cloud-sdk/install.sh --quiet
     EXPORT PATH="/usr/local/google-cloud-sdk/bin:$PATH"
   fi
   setup_gcloud
