@@ -35,6 +35,12 @@ create_patch_release_file() {
 }
 
 is_patch_release() {
+  if ! command -v hub&> /dev/null
+  then
+    echo "installing hub"
+      sudo apt install hub
+    exit
+  fi
   # check if a Github PR is a valid candidate for a patch release
   # this function can take an argument
   # which is expected to be the PR number
@@ -46,7 +52,7 @@ is_patch_release() {
   # * one an only one file should be changed in the PR
   # * this file should be cli/patch_releases/<semver>.md
   # * PR should have `c/cli` and `k/patch_release` labels
-
+  
   if [ -n "${CIRCLECI}" ]; then
     echo "getting PR number from circle CI"
     PR_NUMBER=${CIRCLE_PR_NUMBER}
@@ -59,35 +65,41 @@ is_patch_release() {
     echo "cannot determine PR number :( exiting"
     exit 1
   fi
+  echo "checking if PR ${PR_NUMBER} is a patch release"
 
-  GITHUB_API_BASE_URL="https://api.github.com/repos/hasura/graphql-engine/pulls"
+  GITHUB_API_BASE_URL="https://api.github.com/repos/scriptonist/temp-hasura-patch-releases-cli/pulls"
   SEMVER_REGEX='((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)'
   FILE_REGEX="^cli\/patch_releases\/v${SEMVER_REGEX}\.md$"
 
-  NO_OF_FILES=$(curl -s ${GITHUB_API_BASE_URL}/"${PR_NUMBER}"/files | jq '. | length')
-  PR_FILES=$(curl -s ${GITHUB_API_BASE_URL}/"${PR_NUMBER}"/files | jq )
+  NO_OF_FILES=$( hub api ${GITHUB_API_BASE_URL}/${PR_NUMBER}/files | jq '. | length')
+  PR_FILES=$(hub api "${GITHUB_API_BASE_URL}/${PR_NUMBER}/files" | jq)
 
   # validate number of changed files
-  if [[ ! $NO_OF_FILES -eq 1 ]] 
+  if [[ ! $NO_OF_FILES -eq 1 ]]
   then
     echo "diff has more than one file change, this is not expected. exiting"
     echo "$PR_FILES" | jq
     exit 1
   fi
 
-  # validate a patch_release file was changed  
-  FILENAME=$(echo "${PR_FILES}" | '.[].filename')
+  # validate a patch_release file was changed
+  FILENAME=$(echo "${PR_FILES}" | jq --raw-output '.[] | .filename')
+  echo "checking if ${FILENAME} matches the required regex"
   # if a file inside cli/patch_releases/<semver>.md changed exit with success
   # grep options: -o means output the match, -P means use Perl regex
   if (echo "${FILENAME}" | grep -oP "${FILE_REGEX}") then
     # validate PR has `c/cli` and `k/patch_release` label
-    LABEL_COUNT=$(curl -s ${GITHUB_API_BASE_URL/${PR_NUMBER}} | jq '.labels[] | select( .name | contains("c/cli", "k/patch_release")) | .name' | wc -l)
+    echo "checking if PR has the required labels"
+    LABEL_COUNT=$(hub api ${GITHUB_API_BASE_URL}/${PR_NUMBER} | jq '.labels[] | select( .name | contains("c/cli", "k/patch_release")) | .name' | wc -l)
     if [[ ! ${LABEL_COUNT} -eq 2 ]]
     then
       exit 1
     fi
+  else
+    exit 1
   fi
-  
+
+  echo "voila this is a patch release!"
   exit 0
 }
 
@@ -110,7 +122,7 @@ build_and_push_patch_release() {
     echo "no patch release found for ${LATEST_TAG}"
     exit 1
   fi
-  echo "building binaries for patch release " ${PATCH_VERSION}
+  echo "building binaries for patch release " "${PATCH_VERSION}"
   # build binaries
   "${ROOT}"/cli/scripts/build-cli.sh "${PATCH_VERSION}"
 	ls "${OUTPUT_DIR}"/"${PATCH_VERSION}"/cli-hasura-* | xargs upx
