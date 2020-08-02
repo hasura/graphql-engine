@@ -415,7 +415,7 @@ jobs:
             echo building cli
             make build && make compress
           fi
-          
+          # copy binaries to workspace 
           make ci-copy-binary
     - store_artifacts:
         path: /build/_cli_output
