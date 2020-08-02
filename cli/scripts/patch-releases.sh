@@ -32,9 +32,9 @@ then
 fi
 
 # validate required environment variables
-if [ -z "${GITHUB_USERNAME}" ]
+if [ -z "${GITHUB_USER}" ]
 then
-      echo "requires GITHUB_USERNAME environment variable to be set"
+      echo "requires GITHUB_USER environment variable to be set"
       exit 1
 fi
 
