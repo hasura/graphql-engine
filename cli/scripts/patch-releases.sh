@@ -176,7 +176,7 @@ build_and_push_patch_release() {
   # push binaries to gcloud bucket
   gsutil -m cp -r "${ROOT}"/cli/_output/"${PATCH_VERSION}/*" ${PATCH_RELEASES_GCLOUD_BUCKET}/"${PATCH_VERSION}/"
 
-  echo ${PATCH_VERSION} > /tmp/patch_release_version
+  echo "${PATCH_VERSION}" > /tmp/patch_release_version
 }
 
 if [ "$#" -lt 1 ]; then
