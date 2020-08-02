@@ -409,13 +409,11 @@ jobs:
           # if a patch release build and push assets, otherwise do a normal build
           if scripts/patch-releases.sh is_patch_release; then
             echo building and pushing patch release
-            scripts/patch-releases.sh build_and_push_patch_release
+            scripts/patch-releases.sh build_and_push_patch_release && make ci-copy-binary
           else
             echo building cli
-            make build && make compress
+            make build && make compress && make ci-copy-binary
           fi
-          # copy binaries to workspace 
-          make ci-copy-binary
     - store_artifacts:
         path: /build/_cli_output
         destination: cli
