@@ -41,6 +41,7 @@ is_patch_release() {
       apt update && apt install -y hub
     exit
   fi
+
   # check if a Github PR is a valid candidate for a patch release
   # this function can take an argument
   # which is expected to be the PR number
@@ -104,6 +105,7 @@ is_patch_release() {
 }
 
 build_and_push_patch_release() {
+  echo "starting patch release process"
   exit 1
   # find the latest patch release file
   PATCH_NUMBER=1

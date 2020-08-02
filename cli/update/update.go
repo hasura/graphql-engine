@@ -20,6 +20,10 @@ import (
 )
 
 const updateCheckURL = "https://releases.hasura.io/graphql-engine?agent=cli"
+// UpdateChecker implements  an interface which will be used
+type UpdateChecker interface {
+
+}
 
 type updateCheckResponse struct {
 	Latest     *semver.Version `json:"latest"`

@@ -407,8 +407,7 @@ jobs:
         working_directory: cli
         command: |
           # if a patch release build and push assets, otherwise do a normal build
-          scripts/patch-releases.sh is_patch_release 
-          if [ $? -eq 0 ]; then
+          if scripts/patch-releases.sh is_patch_release; then
             echo building and pushing patch release
             scripts/patch-releases.sh build_and_push_patch_release
           else
