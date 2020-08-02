@@ -12,6 +12,9 @@ PATCH_RELEASES_DIRECTORY="${ROOT}/cli/patch_releases"
 PATCH_RELEASES_GCLOUD_BUCKET="gs://hasura-oss-cli-cdn/test-releases"
 OUTPUT_DIR="${ROOT}/cli/_output"
 
+GITHUB_REPO_OWNER="scriptonist"
+GITHUB_REPO_NAME="temp-hasura-patch-releases-cli"
+
 # install required tools
 if ! command -v hub&> /dev/null
 then
@@ -99,8 +102,8 @@ is_patch_release() {
     exit 0
   fi
   echo "checking if PR ${PR_NUMBER} is a patch release"
-
-  GITHUB_API_BASE_URL="https://api.github.com/repos/scriptonist/temp-hasura-patch-releases-cli/pulls"
+  
+  GITHUB_API_BASE_URL="https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/pulls"
   SEMVER_REGEX='((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)'
   FILE_REGEX="^cli\/patch_releases\/v${SEMVER_REGEX}\.md$"
 
