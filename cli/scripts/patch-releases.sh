@@ -31,6 +31,19 @@ then
   apt-get -qq update && apt-get -qq install -y jq
 fi
 
+# validate required environment variables
+if [ -z "${GITHUB_USERNAME}" ]
+then
+      echo "requires GITHUB_USERNAME environment variable to be set"
+      exit 1
+fi
+
+if [ -z "${GITHUB_TOKEN}" ]
+then
+      echo "requires GITHUB_TOKEN environment variable to be set"
+      exit 1
+fi
+
 create_patch_release_file() {
   PATCH_NUMBER=1
 
