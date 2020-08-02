@@ -9,11 +9,11 @@ PATCH_RELEASE_FILENAME_HEAD="${LATEST_TAG}+cli."
 PATCH_RELEASE_FILENAME_TAIL=".md"
 PATCH_RELEASES_DIRECTORY="${ROOT}/cli/patch_releases"
 
-PATCH_RELEASES_GCLOUD_BUCKET="gs://hasura-oss-cli-cdn/test-releases"
+PATCH_RELEASES_GCLOUD_BUCKET="gs://hasura-oss-cli-cdn/patch-releases"
 OUTPUT_DIR="${ROOT}/cli/_output"
 
-GITHUB_REPO_OWNER="scriptonist"
-GITHUB_REPO_NAME="temp-hasura-patch-releases-cli"
+GITHUB_REPO_OWNER="hasura"
+GITHUB_REPO_NAME="graphql-engine"
 
 # install required tools
 if ! command -v hub&> /dev/null
