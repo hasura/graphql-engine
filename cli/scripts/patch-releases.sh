@@ -31,15 +31,6 @@ then
   apt-get -qq update && apt-get -qq install -y jq
 fi
 
-if ! command -v gsutil&> /dev/null
-then
-  GCLOUD_VERSION="207.0.0"
-  curl -Lo /tmp/gcloud-${GCLOUD_VERSION}.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz
-  tar -xzf /tmp/gcloud-${GCLOUD_VERSION}.tar.gz -C /usr/local
-  /usr/local/google-cloud-sdk/install.sh
-  EXPORT PATH="/usr/local/google-cloud-sdk/bin:$PATH"
-fi
-
 # validate required environment variables
 if [ -z "${GITHUB_USERNAME}" ]
 then
@@ -52,7 +43,6 @@ then
       echo "requires GITHUB_TOKEN environment variable to be set"
       exit 1
 fi
-
 
 # setup gcloud cli tool
 setup_gcloud() {
@@ -150,6 +140,16 @@ is_patch_release() {
 }
 
 build_and_push_patch_release() {
+  if ! command -v gsutil&> /dev/null
+  then
+    GCLOUD_VERSION="207.0.0"
+    curl -Lo /tmp/gcloud-${GCLOUD_VERSION}.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VERSION}-linux-x86_64.tar.gz
+    tar -xzf /tmp/gcloud-${GCLOUD_VERSION}.tar.gz -C /usr/local
+    /usr/local/google-cloud-sdk/install.sh
+    EXPORT PATH="/usr/local/google-cloud-sdk/bin:$PATH"
+  fi
+  setup_gcloud
+
   echo "starting patch release process"
   # find the latest patch release file
   PATCH_NUMBER=1
