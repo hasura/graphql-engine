@@ -410,7 +410,7 @@ jobs:
           scripts/patch-releases.sh is_patch_release 
           if [ $? -eq 0 ]; then
             echo building and pushing patch release
-            scripts/patch_releases build_and_push_patch_release
+            scripts/patch_releases.sh build_and_push_patch_release
           else
             echo building cli
             make build && make compress
