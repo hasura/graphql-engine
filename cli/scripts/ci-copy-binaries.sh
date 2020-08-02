@@ -12,5 +12,5 @@ then
 fi
 
 mkdir -p /build/_cli_output/binaries
-cp $(OUTPUT_DIR)/$(VERSION)/cli-hasura-* /build/_cli_output/binaries
-echo "$(VERSION)" > /build/_cli_output/version.txt
+cp ${OUTPUT_DIR}/${VERSION}/cli-hasura-* /build/_cli_output/binaries
+echo "${VERSION}" > /build/_cli_output/version.txt
